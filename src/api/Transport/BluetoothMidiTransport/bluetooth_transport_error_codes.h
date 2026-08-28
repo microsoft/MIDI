@@ -20,6 +20,9 @@
 
 #define BLUETOOTH_MIDI_ERROR_CODE_TRANSPORT_NOT_AVAILABLE       0x00000041
 
+// "always", "immediate", a whole number of seconds, or "default" for one device
+#define BLUETOOTH_MIDI_ERROR_CODE_INVALID_OFFLINE_RETENTION     0x00000051
+
 // connecting out to a device. These are deliberately separate even where Windows reports the
 // same HRESULT, because what a customer should do about them differs.
 #define BLUETOOTH_MIDI_ERROR_CODE_DEVICE_NOT_DISCOVERED         0x00000101

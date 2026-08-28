@@ -34,6 +34,10 @@ namespace Microsoft.Midi.ConsoleApp
             [CommandOption("-c|--clear")]
             public bool Clear { get; set; }
 
+            [LocalizedDescription("ParameterBluetoothKeepWhenOffline")]
+            [CommandOption("-k|--keep-when-offline")]
+            public string? KeepWhenOffline { get; set; }
+
             [LocalizedDescription("ParameterBluetoothTemporary")]
             [CommandOption("-t|--temporary")]
             [DefaultValue(false)]
@@ -45,6 +49,21 @@ namespace Microsoft.Midi.ConsoleApp
             if (string.IsNullOrWhiteSpace(settings.BluetoothDeviceId))
             {
                 return ValidationResult.Error("Missing Bluetooth device id. Use 'midi bluetooth list' to see the discovered devices.");
+            }
+
+            if (settings.KeepWhenOffline != null)
+            {
+                if (!BluetoothTransport.TryParseOfflineRetention(settings.KeepWhenOffline, out _))
+                {
+                    return ValidationResult.Error("--keep-when-offline must be 'always', 'immediate', 'default', or a whole number of seconds up to 86400.");
+                }
+
+                // Retention is a setting in its own right, so it does not need a name or image
+                // alongside it the way the other customizations do.
+                if (settings.Name == null && settings.Description == null && settings.Image == null && !settings.Clear)
+                {
+                    return ValidationResult.Success();
+                }
             }
 
             return BluetoothTransport.ValidateCustomizationOptions(
@@ -71,6 +90,27 @@ namespace Microsoft.Midi.ConsoleApp
                 AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatGeneralDetailMessage("Wake the device so it advertises, then use 'midi bluetooth list' to confirm the Bluetooth device id."));
 
                 return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
+            }
+
+            if (settings.KeepWhenOffline != null)
+            {
+                BluetoothTransport.TryParseOfflineRetention(settings.KeepWhenOffline, out var retentionSeconds);
+
+                if (!BluetoothTransport.ApplyOfflineRetention(bluetoothDeviceId, retentionSeconds, !settings.Temporary))
+                {
+                    return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
+                }
+
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess(
+                    $"This device's endpoint will be kept when it goes offline: {BluetoothTransport.DescribeOfflineRetention(retentionSeconds)}."));
+
+                AnsiConsole.WriteLine();
+
+                // Nothing else was asked for, so there is no customization to apply
+                if (settings.Name == null && settings.Description == null && settings.Image == null && !settings.Clear)
+                {
+                    return (int)MidiConsoleReturnCode.Success;
+                }
             }
 
             // The endpoint is matched on its instance id, which the transport derives from the

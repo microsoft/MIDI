@@ -18,6 +18,27 @@ namespace winrt::midibluetoothsetup::implementation
 {
     namespace
     {
+        // The wording for the value the customer just picked, for the status line.
+        winrt::hstring OfflineRetentionChoiceDescription(_In_ int32_t const seconds)
+        {
+            if (seconds == -2)
+            {
+                return res::GetString(L"OfflineRetentionUseDefault");
+            }
+
+            if (seconds < 0)
+            {
+                return res::GetString(L"OfflineRetentionAlways");
+            }
+
+            if (seconds == 0)
+            {
+                return res::GetString(L"OfflineRetentionImmediate");
+            }
+
+            return res::FormatString(L"OfflineRetentionSecondsFormat", winrt::to_hstring(seconds));
+        }
+
         template <typename TItem>
         TItem ItemFromSender(_In_ foundation::IInspectable const& sender) noexcept
         {
@@ -627,6 +648,90 @@ namespace winrt::midibluetoothsetup::implementation
         // awaiting a WinRT async object restores the caller's apartment context, so the caller
         // is back on the UI thread without this having to marshal
         co_return succeeded;
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnOfflineRetentionChanged(
+        foundation::IInspectable const& sender,
+        xaml::Controls::SelectionChangedEventArgs const&)
+    {
+        auto strongThis = get_strong();
+
+        auto const item = ItemFromSender<midibluetoothsetup::BluetoothDeviceItem>(sender);
+
+        if (item == nullptr || item.IsBusy())
+        {
+            co_return;
+        }
+
+        auto const combo = sender.try_as<xaml::Controls::ComboBox>();
+
+        if (combo == nullptr)
+        {
+            co_return;
+        }
+
+        auto const selectedIndex = combo.SelectedIndex();
+
+        // This fires while the row is being bound and whenever a refresh rewrites the selection,
+        // so anything which is not a real change from what the service already holds is ignored.
+        // Without this every refresh would write the configuration file again.
+        if (selectedIndex < 0 || selectedIndex == item.OfflineRetentionIndex())
+        {
+            co_return;
+        }
+
+        auto const deviceId = item.BluetoothDeviceId();
+        auto const seconds = implementation::BluetoothDeviceItem::OfflineRetentionSecondsFromIndex(selectedIndex);
+
+        item.IsBusy(true);
+
+        winrt::hstring errorMessage{};
+        bool succeeded{ false };
+
+        try
+        {
+            midi2bt::MidiBluetoothOfflineRetentionConfig config{ deviceId, seconds };
+
+            auto const sendResponse = midi2svc::MidiServiceTransportPluginConfigManager::SendUpdate(config);
+
+            if (sendResponse != nullptr &&
+                sendResponse.Status() == midi2svc::MidiServiceConfigResponseStatus::Success)
+            {
+                auto const saveResponse = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                succeeded = saveResponse != nullptr && saveResponse.Success();
+
+                if (!succeeded && saveResponse != nullptr)
+                {
+                    errorMessage = saveResponse.ErrorMessage();
+                }
+            }
+            else if (sendResponse != nullptr)
+            {
+                errorMessage = sendResponse.ServiceErrorMessage();
+            }
+        }
+        catch (...)
+        {
+        }
+
+        item.IsBusy(false);
+
+        if (succeeded)
+        {
+            SetDevicesStatus(res::FormatString(
+                L"StatusOfflineRetentionSetFormat",
+                item.DisplayName(),
+                OfflineRetentionChoiceDescription(seconds)));
+        }
+        else
+        {
+            SetDevicesStatus(errorMessage.empty() ?
+                res::GetString(L"StatusOfflineRetentionFailed") : errorMessage);
+        }
+
+        RequestRefreshAsync();
     }
 
     _Use_decl_annotations_

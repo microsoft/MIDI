@@ -64,6 +64,10 @@ public:
 
     STDMETHOD(WakeupBackgroundEndpointCreatorThread)();
 
+    // The link for an already-connected device went down. Windows retries the link itself, so this
+    // only records it and wakes the worker; the endpoint is deliberately left in place.
+    void OnConnectionDropped(_In_ winrt::hstring const& deviceId);
+
 private:
     HRESULT CreateParentDevice();
 
@@ -116,6 +120,13 @@ private:
 
     void QueueConnectIfWanted(_In_ winrt::hstring const& deviceId);
     void QueueNameResolutionIfNeeded(_In_ winrt::hstring const& deviceId);
+
+    // Retries every remembered device which is not connected, so a device that is not advertising
+    // is still picked up. Called on a timer by the background worker.
+    void QueueWantedConnections();
+
+    // Removes the endpoints of devices which have been offline longer than their retention allows.
+    void EnforceOfflineRetention();
 
     // False while the name is still being resolved. An endpoint created in that window would be
     // named after the Bluetooth address, which is meaningless to the user.
@@ -193,6 +204,10 @@ private:
     // kept and retried every time the device advertises.
     std::set<winrt::hstring> m_desiredConnections;
     std::map<winrt::hstring, uint64_t> m_lastConnectAttemptTimestamp;
+
+    // When each connected device's link went down, so retention can be measured from it. An entry
+    // exists only while a connection is present but offline.
+    std::map<winrt::hstring, uint64_t> m_connectionDropTimestamp;
 
     std::mutex m_pendingRequestsLock;
 

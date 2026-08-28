@@ -35,6 +35,21 @@ namespace
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_HAS_ENDPOINT_KEY, json::JsonValue::CreateBooleanValue(device.HasEndpoint));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INTERVAL_MS_KEY, json::JsonValue::CreateNumberValue(device.ConnectionIntervalUnits * 1.25));
 
+        // Both are reported: the first is what this device is set to, which may be "default", and
+        // the second is what that actually resolves to, so a caller can show either without
+        // having to know the transport setting.
+        deviceJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_KEY,
+            json::JsonValue::CreateStringValue(
+                MidiBleUtilities::OfflineRetentionToJsonString(
+                    TransportState::Current().GetDeviceOfflineRetentionSeconds(device.Id))));
+
+        deviceJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_EFFECTIVE_OFFLINE_RETENTION_KEY,
+            json::JsonValue::CreateStringValue(
+                MidiBleUtilities::OfflineRetentionToJsonString(
+                    TransportState::Current().GetEffectiveOfflineRetentionSeconds(device.Id))));
+
         return deviceJson;
     }
 
@@ -427,7 +442,7 @@ namespace
                 continue;
             }
 
-            auto deviceId = MidiBleProtocol::SafeJson::GetString(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ID_KEY);
+            auto const deviceId = MidiBleProtocol::SafeJson::GetString(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ID_KEY);
 
             // Every command keys on a 12 hex digit address, so anything else in the file is a
             // typo or tampering and would otherwise sit in the connect list forever.
@@ -448,6 +463,30 @@ namespace
             // Parked either way. The endpoint manager may not exist yet, and if it does it
             // drains this list again on the way up, so the id can never be dropped.
             TransportState::Current().AddConfiguredDeviceId(deviceId);
+
+            if (deviceObject.HasKey(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_KEY))
+            {
+                int32_t retentionSeconds{ MidiBleProtocol::OfflineRetentionUseTransportDefault };
+
+                if (MidiBleUtilities::TryOfflineRetentionFromJsonString(
+                    MidiBleProtocol::SafeJson::GetString(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_KEY),
+                    true,
+                    retentionSeconds))
+                {
+                    TransportState::Current().SetDeviceOfflineRetentionSeconds(deviceId, retentionSeconds);
+                }
+                else
+                {
+                    TraceLoggingWrite(
+                        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_WARNING,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                        TraceLoggingWideString(L"Ignoring an unusable offline retention for a configured Bluetooth MIDI device", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(deviceId.c_str(), "device id")
+                    );
+                }
+            }
 
             TraceLoggingWrite(
                 MidiBluetoothMidiTransportTelemetryProvider::Provider(),
@@ -773,6 +812,21 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
                 TransportState::Current().GetConnectionParameterPreference());
 
             TransportState::Current().SetConnectionParameterPreference(preference);
+        }
+
+        // Order against the devices array does not matter: retention is only ever evaluated by the
+        // background sweep, long after the whole section has been read.
+        if (jsonObject.HasKey(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_KEY))
+        {
+            int32_t retentionSeconds{ MidiBleProtocol::OfflineRetentionKeepAlways };
+
+            if (MidiBleUtilities::TryOfflineRetentionFromJsonString(
+                MidiBleProtocol::SafeJson::GetString(jsonObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_KEY),
+                false,
+                retentionSeconds))
+            {
+                TransportState::Current().SetDefaultOfflineRetentionSeconds(retentionSeconds);
+            }
         }
 
         LOG_IF_FAILED(ProcessEndpointCustomizations(jsonObject, responseObject));
@@ -1106,6 +1160,57 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
         }
         else
         {
+            responseObject.SetNamedValue(
+                MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PERSIST_REQUIRED_KEY,
+                json::JsonValue::CreateBooleanValue(true));
+
+            internal::SetConfigurationResponseObjectSuccess(responseObject);
+        }
+    }
+    else if (commandName == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_SET_OFFLINE_RETENTION)
+    {
+        // No device id means the transport default, which is what a device set to "default" uses.
+        auto const deviceId = GetCommandArgument(commandHelper, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_ARGUMENT_DEVICE_ID_KEY);
+        auto const requested = GetCommandArgument(commandHelper, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_KEY);
+
+        int32_t retentionSeconds{ MidiBleProtocol::OfflineRetentionKeepAlways };
+
+        if (!MidiBleUtilities::TryOfflineRetentionFromJsonString(requested, !deviceId.empty(), retentionSeconds))
+        {
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                BLUETOOTH_MIDI_ERROR_CODE_INVALID_OFFLINE_RETENTION,
+                L"Offline retention must be \"always\", \"immediate\", a whole number of seconds up to 86400, or \"default\" for a single device.");
+        }
+        else if (!deviceId.empty() && !MidiBleUtilities::IsWellFormedBluetoothDeviceId(std::wstring{ deviceId }))
+        {
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                BLUETOOTH_MIDI_ERROR_CODE_INVALID_DEVICE_ID,
+                L"That is not a usable Bluetooth device id.");
+        }
+        else
+        {
+            if (deviceId.empty())
+            {
+                TransportState::Current().SetDefaultOfflineRetentionSeconds(retentionSeconds);
+            }
+            else
+            {
+                TransportState::Current().SetDeviceOfflineRetentionSeconds(deviceId, retentionSeconds);
+            }
+
+            // Applied immediately: a device already offline should not have to wait for another
+            // drop before a shortened retention takes effect.
+            if (auto endpointManager = TransportState::Current().GetEndpointManager())
+            {
+                LOG_IF_FAILED(endpointManager->WakeupBackgroundEndpointCreatorThread());
+            }
+
+            responseObject.SetNamedValue(
+                MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_KEY,
+                json::JsonValue::CreateStringValue(MidiBleUtilities::OfflineRetentionToJsonString(retentionSeconds)));
+
             responseObject.SetNamedValue(
                 MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PERSIST_REQUIRED_KEY,
                 json::JsonValue::CreateBooleanValue(true));

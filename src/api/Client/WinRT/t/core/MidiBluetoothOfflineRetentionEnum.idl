@@ -1,0 +1,33 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\shared\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Bluetooth
+{
+    [contract(MidiTransportsBluetoothApiContract, 1)]
+
+    // How long a device's MIDI endpoint outlives the device going offline. Anything greater than
+    // zero is a number of seconds, so these name only the values which are not a duration.
+    //
+    // This matters because an application using WinMM or WinRT MIDI 1.0 has no way to ask whether
+    // a device is present. Whether the endpoint still exists is the only signal it gets.
+    enum MidiBluetoothOfflineRetention
+    {
+        // Only valid for a single device. Defers to the transport-wide setting.
+        UseTransportDefault = -2,
+
+        // The endpoint stays until the device is explicitly disconnected. This is the default.
+        KeepAlways = -1,
+
+        // The endpoint and its MIDI 1.0 ports are removed as soon as the link drops, and are
+        // recreated when the device comes back.
+        Immediate = 0,
+    };
+}

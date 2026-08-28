@@ -59,6 +59,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
                 deviceJson.GetNamedNumber(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_CONNECT_ERROR_HRESULT_KEY, 0.0));
             m_lastSendErrorHResult = static_cast<int32_t>(
                 deviceJson.GetNamedNumber(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_SEND_ERROR_HRESULT_KEY, 0.0));
+
+            m_offlineRetentionSeconds = btinternal::OfflineRetentionFromJsonString(
+                deviceJson.GetNamedString(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_KEY, L""));
+
+            m_effectiveOfflineRetentionSeconds = btinternal::OfflineRetentionFromJsonString(
+                deviceJson.GetNamedString(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_EFFECTIVE_OFFLINE_RETENTION_KEY, L""));
         }
         catch (...)
         {

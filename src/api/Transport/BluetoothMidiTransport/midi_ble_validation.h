@@ -203,6 +203,12 @@ namespace MidiBleProtocol
         PowerOptimized = 3,
     };
 
+    // How many seconds a MIDI endpoint outlives its device going offline. Sentinels rather than a
+    // separate enum plus a duration, so one value travels through the configuration file, the
+    // transport, the API and the tools. UseTransportDefault is only meaningful on a device.
+    constexpr int32_t OfflineRetentionKeepAlways{ -1 };
+    constexpr int32_t OfflineRetentionUseTransportDefault{ -2 };
+
     // Whether a Central which subscribes to this PC's peripheral is let through without asking.
     // WinRT cannot refuse a subscription, so "require approval" gates the MIDI endpoint and the
     // data path rather than the Bluetooth link itself.
@@ -316,8 +322,7 @@ namespace MidiBleUtilities
     }
 
     inline winrt::hstring ConnectionParameterPreferenceToJsonString(
-        _In_ MidiBleProtocol::ConnectionParameterPreference const preference)
-    {
+        _In_ MidiBleProtocol::ConnectionParameterPreference const preference)    {
         switch (preference)
         {
         case MidiBleProtocol::ConnectionParameterPreference::ThroughputOptimized:
@@ -358,6 +363,94 @@ namespace MidiBleUtilities
         }
 
         return fallback;
+    }
+
+    // Seconds an endpoint outlives its device going offline. Sentinels rather than a separate enum
+    // so one value travels through the config file, the transport, the API and the tools.
+    constexpr int32_t OfflineRetentionKeepAlways{ MidiBleProtocol::OfflineRetentionKeepAlways };
+    constexpr int32_t OfflineRetentionUseTransportDefault{ MidiBleProtocol::OfflineRetentionUseTransportDefault };
+
+    inline winrt::hstring OfflineRetentionToJsonString(_In_ int32_t const seconds)
+    {
+        if (seconds == OfflineRetentionUseTransportDefault)
+        {
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_VALUE_DEFAULT;
+        }
+
+        if (seconds < 0)
+        {
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_VALUE_ALWAYS;
+        }
+
+        if (seconds == 0)
+        {
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_VALUE_IMMEDIATE;
+        }
+
+        return winrt::to_hstring(seconds);
+    }
+
+    // Returns false for anything unrecognized so a command can report it rather than silently
+    // applying a fallback. Configuration file reads supply their own fallback instead.
+    inline bool TryOfflineRetentionFromJsonString(
+        _In_ winrt::hstring const& value,
+        _In_ bool const allowUseTransportDefault,
+        _Out_ int32_t& seconds)
+    {
+        seconds = OfflineRetentionKeepAlways;
+
+        if (value.empty())
+        {
+            return false;
+        }
+
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_VALUE_ALWAYS)
+        {
+            seconds = OfflineRetentionKeepAlways;
+            return true;
+        }
+
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_VALUE_IMMEDIATE)
+        {
+            seconds = 0;
+            return true;
+        }
+
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_VALUE_DEFAULT)
+        {
+            if (!allowUseTransportDefault)
+            {
+                return false;
+            }
+
+            seconds = OfflineRetentionUseTransportDefault;
+            return true;
+        }
+
+        // A bare number is seconds. Parsed by hand because the config file is editable by a
+        // standard user, so this is untrusted input and must not throw.
+        uint64_t parsed{ 0 };
+
+        for (auto const& ch : std::wstring{ value })
+        {
+            if (ch < L'0' || ch > L'9')
+            {
+                return false;
+            }
+
+            parsed = (parsed * 10) + static_cast<uint64_t>(ch - L'0');
+
+            // A retention longer than this is indistinguishable from "always" in practice, and
+            // capping here keeps the value inside an int32 for everything downstream.
+            if (parsed > 86400)
+            {
+                return false;
+            }
+        }
+
+        seconds = static_cast<int32_t>(parsed);
+
+        return true;
     }
 
     // The Bluetooth address is the only identifier both the advertisement watcher and the GATT

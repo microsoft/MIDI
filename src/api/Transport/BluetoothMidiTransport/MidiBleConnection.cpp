@@ -336,6 +336,17 @@ MidiBleConnection::OnDeviceConnectionStatusChanged(
                 }
             }
         }
+        else if (!m_isPeripheral)
+        {
+            // The endpoint is deliberately left in place: the session is set to maintain the
+            // connection, so Windows re-establishes the link on its own and apps keep their
+            // routing across a device sleeping or briefly going out of range. This only records
+            // the drop and lets the worker re-examine the device.
+            if (auto endpointManager = TransportState::Current().GetEndpointManager())
+            {
+                endpointManager->OnConnectionDropped(m_deviceId);
+            }
+        }
     }
     CATCH_LOG();
 }

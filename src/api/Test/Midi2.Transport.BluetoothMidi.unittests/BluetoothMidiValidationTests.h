@@ -55,6 +55,11 @@ public:
     TEST_METHOD(TestConnectionParameterPreferenceStringsRoundTrip);
     TEST_METHOD(TestConnectionParameterPreferenceFallsBackOnUnknownValue);
 
+    TEST_METHOD(TestOfflineRetentionKeywordsRoundTrip);
+    TEST_METHOD(TestOfflineRetentionAcceptsWholeSeconds);
+    TEST_METHOD(TestOfflineRetentionRejectsGarbage);
+    TEST_METHOD(TestOfflineRetentionAllowsDefaultOnlyWhenAsked);
+
     TEST_METHOD(TestGenericDeviceNameIsMatchedWholeAndCaseInsensitively);
 
     // peripheral client approval

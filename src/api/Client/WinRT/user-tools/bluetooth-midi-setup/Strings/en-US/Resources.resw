@@ -94,9 +94,6 @@
   <data name="DevicesDescription.Text" xml:space="preserve">
     <value>Devices are found by listening for advertisements, so a device which is switched off, asleep, or already connected to another host will not be listed.</value>
   </data>
-  <data name="DevicesRefreshButton.Content" xml:space="preserve">
-    <value>Refresh</value>
-  </data>
   <data name="NoDevicesText.Text" xml:space="preserve">
     <value>No Bluetooth MIDI devices have been discovered yet. Wake a device so it advertises, then wait a moment.</value>
   </data>
@@ -105,6 +102,44 @@
   </data>
   <data name="ConnectButton.Content" xml:space="preserve">
     <value>Connect</value>
+  </data>
+  <data name="OfflineRetentionLabel.Text" xml:space="preserve">
+    <value>Keep endpoint when offline</value>
+  </data>
+  <data name="OfflineRetentionUseDefaultItem.Content" xml:space="preserve">
+    <value>Use default</value>
+  </data>
+  <data name="OfflineRetentionAlwaysItem.Content" xml:space="preserve">
+    <value>Always</value>
+  </data>
+  <data name="OfflineRetentionImmediateItem.Content" xml:space="preserve">
+    <value>Remove immediately</value>
+  </data>
+  <data name="OfflineRetention30SecondsItem.Content" xml:space="preserve">
+    <value>After 30 seconds</value>
+  </data>
+  <data name="OfflineRetention5MinutesItem.Content" xml:space="preserve">
+    <value>After 5 minutes</value>
+  </data>
+  <data name="OfflineRetentionUseDefault" xml:space="preserve">
+    <value>the default</value>
+  </data>
+  <data name="OfflineRetentionAlways" xml:space="preserve">
+    <value>always</value>
+  </data>
+  <data name="OfflineRetentionImmediate" xml:space="preserve">
+    <value>removed immediately</value>
+  </data>
+  <data name="OfflineRetentionSecondsFormat" xml:space="preserve">
+    <value>{0} seconds</value>
+    <comment>{0} is a whole number of seconds</comment>
+  </data>
+  <data name="StatusOfflineRetentionSetFormat" xml:space="preserve">
+    <value>{0} will keep its endpoint when offline: {1}.</value>
+    <comment>{0} is the device name, {1} is the retention setting</comment>
+  </data>
+  <data name="StatusOfflineRetentionFailed" xml:space="preserve">
+    <value>The setting could not be changed.</value>
   </data>
   <data name="DisconnectButton.Content" xml:space="preserve">
     <value>Disconnect</value>

@@ -274,6 +274,80 @@ TransportState::GetConnectionParameterPreference()
 
 _Use_decl_annotations_
 void
+TransportState::SetDefaultOfflineRetentionSeconds(int32_t const seconds)
+{
+    m_defaultOfflineRetentionSeconds.store(seconds);
+}
+
+int32_t
+TransportState::GetDefaultOfflineRetentionSeconds()
+{
+    return m_defaultOfflineRetentionSeconds.load();
+}
+
+
+_Use_decl_annotations_
+void
+TransportState::SetDeviceOfflineRetentionSeconds(winrt::hstring const& deviceId, int32_t const seconds)
+{
+    if (deviceId.empty())
+    {
+        return;
+    }
+
+    auto lock = std::scoped_lock{ m_offlineRetentionLock };
+
+    if (seconds == MidiBleProtocol::OfflineRetentionUseTransportDefault)
+    {
+        // Stored as an absence rather than as a value, so the configuration file and the responses
+        // only ever mention devices which actually override the transport setting.
+        m_deviceOfflineRetentionSeconds.erase(deviceId);
+
+        return;
+    }
+
+    m_deviceOfflineRetentionSeconds.insert_or_assign(deviceId, seconds);
+}
+
+_Use_decl_annotations_
+int32_t
+TransportState::GetDeviceOfflineRetentionSeconds(winrt::hstring const& deviceId)
+{
+    auto lock = std::scoped_lock{ m_offlineRetentionLock };
+
+    if (auto entry = m_deviceOfflineRetentionSeconds.find(deviceId); entry != m_deviceOfflineRetentionSeconds.end())
+    {
+        return entry->second;
+    }
+
+    return MidiBleProtocol::OfflineRetentionUseTransportDefault;
+}
+
+_Use_decl_annotations_
+int32_t
+TransportState::GetEffectiveOfflineRetentionSeconds(winrt::hstring const& deviceId)
+{
+    auto const configured = GetDeviceOfflineRetentionSeconds(deviceId);
+
+    if (configured != MidiBleProtocol::OfflineRetentionUseTransportDefault)
+    {
+        return configured;
+    }
+
+    return GetDefaultOfflineRetentionSeconds();
+}
+
+std::map<winrt::hstring, int32_t>
+TransportState::GetDeviceOfflineRetentionOverrides()
+{
+    auto lock = std::scoped_lock{ m_offlineRetentionLock };
+
+    return m_deviceOfflineRetentionSeconds;
+}
+
+
+_Use_decl_annotations_
+void
 TransportState::SetRadioCapabilities(MidiBleProtocol::RadioCapabilities const& capabilities)
 {
     auto lock = std::scoped_lock{ m_radioCapabilitiesLock };

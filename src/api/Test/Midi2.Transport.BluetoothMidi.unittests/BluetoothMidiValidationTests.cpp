@@ -354,6 +354,65 @@ void BluetoothMidiValidationTests::TestConnectionParameterPreferenceFallsBackOnU
         static_cast<uint8_t>(parsed));
 }
 
+void BluetoothMidiValidationTests::TestOfflineRetentionKeywordsRoundTrip()
+{
+    int32_t seconds{ 0 };
+
+    VERIFY_IS_TRUE(MidiBleUtilities::TryOfflineRetentionFromJsonString(winrt::hstring{ L"always" }, true, seconds));
+    VERIFY_ARE_EQUAL(MidiBleProtocol::OfflineRetentionKeepAlways, seconds);
+    VERIFY_ARE_EQUAL(std::wstring{ L"always" }, std::wstring{ MidiBleUtilities::OfflineRetentionToJsonString(seconds) });
+
+    VERIFY_IS_TRUE(MidiBleUtilities::TryOfflineRetentionFromJsonString(winrt::hstring{ L"immediate" }, true, seconds));
+    VERIFY_ARE_EQUAL(0, seconds);
+    VERIFY_ARE_EQUAL(std::wstring{ L"immediate" }, std::wstring{ MidiBleUtilities::OfflineRetentionToJsonString(seconds) });
+
+    VERIFY_IS_TRUE(MidiBleUtilities::TryOfflineRetentionFromJsonString(winrt::hstring{ L"default" }, true, seconds));
+    VERIFY_ARE_EQUAL(MidiBleProtocol::OfflineRetentionUseTransportDefault, seconds);
+    VERIFY_ARE_EQUAL(std::wstring{ L"default" }, std::wstring{ MidiBleUtilities::OfflineRetentionToJsonString(seconds) });
+}
+
+void BluetoothMidiValidationTests::TestOfflineRetentionAcceptsWholeSeconds()
+{
+    int32_t seconds{ 0 };
+
+    VERIFY_IS_TRUE(MidiBleUtilities::TryOfflineRetentionFromJsonString(winrt::hstring{ L"30" }, true, seconds));
+    VERIFY_ARE_EQUAL(30, seconds);
+    VERIFY_ARE_EQUAL(std::wstring{ L"30" }, std::wstring{ MidiBleUtilities::OfflineRetentionToJsonString(seconds) });
+
+    VERIFY_IS_TRUE(MidiBleUtilities::TryOfflineRetentionFromJsonString(winrt::hstring{ L"86400" }, true, seconds));
+    VERIFY_ARE_EQUAL(86400, seconds);
+
+    // zero is spelled "immediate" on the way back out, so it does not round trip as "0"
+    VERIFY_IS_TRUE(MidiBleUtilities::TryOfflineRetentionFromJsonString(winrt::hstring{ L"0" }, true, seconds));
+    VERIFY_ARE_EQUAL(0, seconds);
+}
+
+void BluetoothMidiValidationTests::TestOfflineRetentionRejectsGarbage()
+{
+    int32_t seconds{ 0 };
+
+    VERIFY_IS_FALSE(MidiBleUtilities::TryOfflineRetentionFromJsonString(winrt::hstring{ L"" }, true, seconds));
+    VERIFY_IS_FALSE(MidiBleUtilities::TryOfflineRetentionFromJsonString(winrt::hstring{ L"forever" }, true, seconds));
+    VERIFY_IS_FALSE(MidiBleUtilities::TryOfflineRetentionFromJsonString(winrt::hstring{ L"30s" }, true, seconds));
+    VERIFY_IS_FALSE(MidiBleUtilities::TryOfflineRetentionFromJsonString(winrt::hstring{ L"-1" }, true, seconds));
+    VERIFY_IS_FALSE(MidiBleUtilities::TryOfflineRetentionFromJsonString(winrt::hstring{ L"1.5" }, true, seconds));
+
+    // past the cap, so it cannot overflow anything downstream
+    VERIFY_IS_FALSE(MidiBleUtilities::TryOfflineRetentionFromJsonString(winrt::hstring{ L"86401" }, true, seconds));
+    VERIFY_IS_FALSE(MidiBleUtilities::TryOfflineRetentionFromJsonString(winrt::hstring{ L"999999999999" }, true, seconds));
+}
+
+void BluetoothMidiValidationTests::TestOfflineRetentionAllowsDefaultOnlyWhenAsked()
+{
+    int32_t seconds{ 0 };
+
+    // the transport level has nothing to defer to, so "default" is not a value it can take
+    VERIFY_IS_FALSE(MidiBleUtilities::TryOfflineRetentionFromJsonString(winrt::hstring{ L"default" }, false, seconds));
+
+    VERIFY_IS_TRUE(MidiBleUtilities::TryOfflineRetentionFromJsonString(winrt::hstring{ L"always" }, false, seconds));
+    VERIFY_ARE_EQUAL(MidiBleProtocol::OfflineRetentionKeepAlways, seconds);
+}
+
 void BluetoothMidiValidationTests::TestGenericDeviceNameIsMatchedWholeAndCaseInsensitively()
 {
     VERIFY_IS_TRUE(MidiBleUtilities::IsGenericDeviceName(winrt::hstring{ L"iPhone" }));

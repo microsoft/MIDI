@@ -45,6 +45,15 @@ namespace midibluetoothsetup
         Microsoft.UI.Xaml.Visibility EndpointDeviceIdVisibility{ get; };
         Microsoft.UI.Xaml.Visibility IntervalVisibility{ get; };
 
+        // Position in the retention combo box rather than a duration, because the combo offers a
+        // few presets. -1 when the configured value is not one of them, which only happens if it
+        // was set from the console or by editing the configuration file.
+        Int32 OfflineRetentionIndex{ get; };
+        Microsoft.UI.Xaml.Visibility OfflineRetentionVisibility{ get; };
+
+        // Always readable, so a value the combo box cannot represent is still shown.
+        String OfflineRetentionText{ get; };
+
         // The most recent connection failure, in the transport's own words. More specific
         // than the error code, because several causes share one code.
         String LastErrorText{ get; };

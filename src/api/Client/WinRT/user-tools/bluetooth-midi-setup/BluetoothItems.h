@@ -274,6 +274,47 @@ namespace winrt::midibluetoothsetup::implementation
                 winrt::Microsoft::UI::Xaml::Visibility::Visible;
         }
 
+        // Order must match the ComboBoxItems in MainWindow.xaml.
+        static int32_t OfflineRetentionSecondsFromIndex(_In_ int32_t const index) noexcept
+        {
+            switch (index)
+            {
+            case 0: return -2;      // defer to the transport setting
+            case 1: return -1;      // keep the endpoint always
+            case 2: return 0;       // remove it as soon as the device goes offline
+            case 3: return 30;
+            case 4: return 300;
+            default: return -2;
+            }
+        }
+
+        int32_t OfflineRetentionIndex() const noexcept
+        {
+            switch (m_offlineRetentionSeconds)
+            {
+            case -2: return 0;
+            case -1: return 1;
+            case 0:  return 2;
+            case 30: return 3;
+            case 300: return 4;
+
+            // A duration set from the console or by editing the configuration file which is not
+            // one of the presets. Shown as no selection rather than rounded to one of them, and
+            // the real value is in OfflineRetentionText either way.
+            default: return -1;
+            }
+        }
+
+        winrt::hstring OfflineRetentionText() const noexcept { return m_offlineRetentionText; }
+
+        // Only a remembered device has an endpoint worth keeping when it goes away.
+        winrt::Microsoft::UI::Xaml::Visibility OfflineRetentionVisibility() const noexcept
+        {
+            return m_isRemembered ?
+                winrt::Microsoft::UI::Xaml::Visibility::Visible :
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
+        }
+
         winrt::Microsoft::UI::Xaml::Visibility ConnectedBadgeVisibility() const noexcept
         {
             return m_isConnected ?
@@ -342,7 +383,9 @@ namespace winrt::midibluetoothsetup::implementation
             _In_ bool const isPresent,
             _In_ bool const isPaired,
             _In_ bool const hasEndpoint,
-            _In_ bool const isRemembered) noexcept
+            _In_ bool const isRemembered,
+            _In_ int32_t const offlineRetentionSeconds,
+            _In_ winrt::hstring const& offlineRetentionText) noexcept
         {
             UpdateField(m_displayName, displayName, L"DisplayName");
             UpdateField(m_subtitleText, subtitleText, L"SubtitleText");
@@ -373,6 +416,13 @@ namespace winrt::midibluetoothsetup::implementation
             auto const connectedChanged = UpdateField(m_isConnected, isConnected, L"IsConnected");
             auto const rememberedChanged = UpdateField(m_isRemembered, isRemembered, L"IsRemembered");
 
+            if (UpdateField(m_offlineRetentionSeconds, offlineRetentionSeconds, L"OfflineRetentionSeconds"))
+            {
+                RaisePropertyChanged(L"OfflineRetentionIndex");
+            }
+
+            UpdateField(m_offlineRetentionText, offlineRetentionText, L"OfflineRetentionText");
+
             UpdateField(m_isPresent, isPresent, L"IsPresent");
             UpdateField(m_hasEndpoint, hasEndpoint, L"HasEndpoint");
 
@@ -386,6 +436,7 @@ namespace winrt::midibluetoothsetup::implementation
                 RaisePropertyChanged(L"ConnectVisibility");
                 RaisePropertyChanged(L"DisconnectVisibility");
                 RaisePropertyChanged(L"ForgetVisibility");
+                RaisePropertyChanged(L"OfflineRetentionVisibility");
             }
 
             RecordSignalSample(signalDecibels, isPresent && !isConnected);
@@ -421,6 +472,9 @@ namespace winrt::midibluetoothsetup::implementation
         bool m_isPresent{ false };
         bool m_isPaired{ false };
         bool m_hasEndpoint{ false };
+
+        int32_t m_offlineRetentionSeconds{ -2 };
+        winrt::hstring m_offlineRetentionText{};
         bool m_isRemembered{ false };
         bool m_isBusy{ false };
 

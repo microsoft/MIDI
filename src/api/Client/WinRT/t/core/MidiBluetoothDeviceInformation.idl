@@ -63,5 +63,13 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
 
         [noexcept] Int32 LastConnectErrorHResult{ get; };
         [noexcept] Int32 LastSendErrorHResult{ get; };
+
+        // Seconds this device's endpoint outlives it going offline, or one of the named values in
+        // MidiBluetoothOfflineRetention. This is what the device itself is set to, so it can be
+        // UseTransportDefault.
+        [noexcept] Int32 OfflineRetentionSeconds{ get; };
+
+        // The same, resolved against the transport setting, so it is never UseTransportDefault.
+        [noexcept] Int32 EffectiveOfflineRetentionSeconds{ get; };
     }
 }

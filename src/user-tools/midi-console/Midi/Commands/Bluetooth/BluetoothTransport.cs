@@ -114,6 +114,70 @@ namespace Microsoft.Midi.ConsoleApp
             return ValidationResult.Success();
         }
 
+        // "always", "immediate", "default", or whole seconds. Kept in one place because the
+        // console has to parse it before it can build the configuration.
+        internal static bool TryParseOfflineRetention(string value, out int seconds)
+        {
+            seconds = (int)MidiBluetoothOfflineRetention.KeepAlways;
+
+            switch (value.Trim().ToLowerInvariant())
+            {
+                case "always":
+                    seconds = (int)MidiBluetoothOfflineRetention.KeepAlways;
+                    return true;
+
+                case "immediate":
+                    seconds = (int)MidiBluetoothOfflineRetention.Immediate;
+                    return true;
+
+                case "default":
+                    seconds = (int)MidiBluetoothOfflineRetention.UseTransportDefault;
+                    return true;
+            }
+
+            if (int.TryParse(value.Trim(), out var parsed) && parsed >= 0 && parsed <= 86400)
+            {
+                seconds = parsed;
+                return true;
+            }
+
+            return false;
+        }
+
+        internal static string DescribeOfflineRetention(int seconds)
+        {
+            if (seconds == (int)MidiBluetoothOfflineRetention.UseTransportDefault) return "default";
+            if (seconds == (int)MidiBluetoothOfflineRetention.KeepAlways) return "always";
+            if (seconds == (int)MidiBluetoothOfflineRetention.Immediate) return "immediate";
+
+            return $"{seconds}s";
+        }
+
+        // An empty device id sets the transport-wide default instead of one device.
+        internal static bool ApplyOfflineRetention(string bluetoothDeviceId, int seconds, bool save)
+        {
+            var config = string.IsNullOrEmpty(bluetoothDeviceId)
+                ? new MidiBluetoothOfflineRetentionConfig(seconds)
+                : new MidiBluetoothOfflineRetentionConfig(bluetoothDeviceId, seconds);
+
+            var response = MidiServiceTransportPluginConfigManager.SendUpdate(config);
+
+            if (response.Status != MidiServiceConfigResponseStatus.Success)
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatError(
+                    $"The Bluetooth MIDI transport rejected the update. Status {response.Status}, code {response.ServiceErrorCode}."));
+
+                return false;
+            }
+
+            if (save)
+            {
+                ConfigFileSaver.ReportSave(config);
+            }
+
+            return true;
+        }
+
         // Applying a change and keeping it are separate steps, so a rejected change is never
         // written to the configuration file.
         internal static bool ApplyCustomization(

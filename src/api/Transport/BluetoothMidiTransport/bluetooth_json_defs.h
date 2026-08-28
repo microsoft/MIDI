@@ -122,3 +122,16 @@
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_MIN_INTERVAL_MS_KEY                    L"minConnectionIntervalMilliseconds"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_MAX_INTERVAL_MS_KEY                    L"maxConnectionIntervalMilliseconds"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INTERVAL_MS_KEY                        L"connectionIntervalMilliseconds"
+
+// How long a MIDI endpoint outlives its device going offline. An app using WinMM or WinRT MIDI 1.0
+// has no way to express "present", so whether the endpoint still exists is the only signal it gets
+// that the device is gone. Appears both at transport level, as the default, and on each device.
+// Values are "always", "immediate", a whole number of seconds, or "default" on a device to defer to
+// the transport setting.
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_KEY                  L"offlineRetention"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_VALUE_ALWAYS         L"always"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_VALUE_IMMEDIATE      L"immediate"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_VALUE_DEFAULT        L"default"
+
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_SET_OFFLINE_RETENTION          L"setOfflineRetention"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_EFFECTIVE_OFFLINE_RETENTION_KEY        L"effectiveOfflineRetention"

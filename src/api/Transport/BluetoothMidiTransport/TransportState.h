@@ -73,6 +73,17 @@ public:
     void SetConnectionParameterPreference(_In_ MidiBleProtocol::ConnectionParameterPreference const preference);
     MidiBleProtocol::ConnectionParameterPreference GetConnectionParameterPreference();
 
+    // How long an endpoint outlives its device going offline. The per-device value wins unless it
+    // is OfflineRetentionUseTransportDefault, so a customer can set one policy and override it for
+    // the odd device.
+    void SetDefaultOfflineRetentionSeconds(_In_ int32_t const seconds);
+    int32_t GetDefaultOfflineRetentionSeconds();
+
+    void SetDeviceOfflineRetentionSeconds(_In_ winrt::hstring const& deviceId, _In_ int32_t const seconds);
+    int32_t GetDeviceOfflineRetentionSeconds(_In_ winrt::hstring const& deviceId);
+    int32_t GetEffectiveOfflineRetentionSeconds(_In_ winrt::hstring const& deviceId);
+    std::map<winrt::hstring, int32_t> GetDeviceOfflineRetentionOverrides();
+
     // Probed once at start up. A machine with no usable radio still loads the transport, so this
     // is what lets every command explain itself rather than just doing nothing.
     void SetRadioCapabilities(_In_ MidiBleProtocol::RadioCapabilities const& capabilities);
@@ -186,6 +197,12 @@ private:
 
     std::atomic<MidiBleProtocol::ConnectionParameterPreference> m_connectionParameterPreference{
         MidiBleProtocol::ConnectionParameterPreference::ThroughputOptimized };
+
+    // Defaults to keeping the endpoint, which is the behavior before this was configurable.
+    std::atomic<int32_t> m_defaultOfflineRetentionSeconds{ MidiBleProtocol::OfflineRetentionKeepAlways };
+
+    std::mutex m_offlineRetentionLock;
+    std::map<winrt::hstring, int32_t> m_deviceOfflineRetentionSeconds;
 
     MidiBleProtocol::RadioCapabilities m_radioCapabilities{};
     std::mutex m_radioCapabilitiesLock;

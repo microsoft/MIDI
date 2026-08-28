@@ -1262,6 +1262,150 @@ CMidi2BluetoothMidiEndpointManager::QueueConnectIfWanted(winrt::hstring const& d
 }
 
 
+void
+CMidi2BluetoothMidiEndpointManager::QueueWantedConnections()
+{
+    std::vector<winrt::hstring> wanted;
+
+    {
+        auto lock = std::scoped_lock{ m_pendingRequestsLock };
+
+        wanted.assign(m_desiredConnections.begin(), m_desiredConnections.end());
+    }
+
+    // Copied out before the loop because QueueConnectIfWanted takes the same lock.
+    for (auto const& deviceId : wanted)
+    {
+        QueueConnectIfWanted(deviceId);
+    }
+}
+
+
+_Use_decl_annotations_
+void
+CMidi2BluetoothMidiEndpointManager::OnConnectionDropped(winrt::hstring const& deviceId)
+{
+    TraceLoggingWrite(
+        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"A connected BLE MIDI device dropped its link", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(deviceId.c_str(), "device id")
+    );
+
+    // Only the connected flag. UpdateDiscoveredDeviceConnectionState would also clear the protocol
+    // and the endpoint id, which are both still true of this device while the link is down.
+    {
+        auto lock = std::scoped_lock{ m_discoveredDevicesLock };
+
+        if (auto entry = m_discoveredDevices.find(deviceId); entry != m_discoveredDevices.end())
+        {
+            entry->second.IsConnected = false;
+        }
+    }
+
+    {
+        auto lock = std::scoped_lock{ m_pendingRequestsLock };
+
+        // First drop wins, so a device which flaps does not keep resetting its own retention clock.
+        m_connectionDropTimestamp.try_emplace(deviceId, NowInMilliseconds());
+    }
+
+    LOG_IF_FAILED(WakeupBackgroundEndpointCreatorThread());
+}
+
+
+void
+CMidi2BluetoothMidiEndpointManager::EnforceOfflineRetention()
+{
+    std::vector<winrt::hstring> expired;
+
+    auto const now = NowInMilliseconds();
+
+    for (auto const& connection : TransportState::Current().GetConnections())
+    {
+        if (connection == nullptr || connection->IsPeripheral())
+        {
+            continue;
+        }
+
+        auto const deviceId = connection->DeviceId();
+
+        if (connection->IsDeviceConnected())
+        {
+            auto lock = std::scoped_lock{ m_pendingRequestsLock };
+
+            m_connectionDropTimestamp.erase(deviceId);
+
+            continue;
+        }
+
+        auto const retentionSeconds = TransportState::Current().GetEffectiveOfflineRetentionSeconds(deviceId);
+
+        if (retentionSeconds == MidiBleProtocol::OfflineRetentionKeepAlways)
+        {
+            continue;
+        }
+
+        uint64_t droppedAt{ 0 };
+
+        {
+            auto lock = std::scoped_lock{ m_pendingRequestsLock };
+
+            auto entry = m_connectionDropTimestamp.find(deviceId);
+
+            if (entry == m_connectionDropTimestamp.end())
+            {
+                // Offline without a recorded drop, which happens if the link was already down when
+                // the connection was made. Treated as dropping now so it still ages out.
+                m_connectionDropTimestamp.try_emplace(deviceId, now);
+
+                continue;
+            }
+
+            droppedAt = entry->second;
+        }
+
+        if (now < droppedAt + (static_cast<uint64_t>(retentionSeconds) * 1000ull))
+        {
+            continue;
+        }
+
+        expired.push_back(deviceId);
+    }
+
+    for (auto const& deviceId : expired)
+    {
+        TraceLoggingWrite(
+            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Removing the endpoint of a device which has been offline past its retention", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(deviceId.c_str(), "device id"),
+            TraceLoggingInt32(TransportState::Current().GetEffectiveOfflineRetentionSeconds(deviceId), "retention seconds")
+        );
+
+        // Deliberately not DisconnectDevice: the device stays in the wanted set, so it reconnects
+        // and its endpoint is rebuilt as soon as it comes back.
+        LOG_IF_FAILED(DisconnectDeviceInternal(deviceId));
+
+        {
+            auto lock = std::scoped_lock{ m_pendingRequestsLock };
+
+            m_connectionDropTimestamp.erase(deviceId);
+
+            // The device is wanted again straight away, so an immediate retention does not have to
+            // wait out the retry interval before its endpoint can come back.
+            m_lastConnectAttemptTimestamp.erase(deviceId);
+        }
+    }
+}
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2BluetoothMidiEndpointManager::DisconnectDevice(winrt::hstring const& deviceId)
@@ -1343,6 +1487,7 @@ CMidi2BluetoothMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopTo
         bool peripheralClientChanged{ false };
 
         bool haveWork{ false };
+        bool haveWantedDevices{ false };
 
         {
             auto lock = std::scoped_lock{ m_pendingRequestsLock };
@@ -1362,6 +1507,8 @@ CMidi2BluetoothMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopTo
                 !nameResolutions.empty() ||
                 peripheralClientChanged;
 
+            haveWantedDevices = !m_desiredConnections.empty();
+
             // Reset under the same lock the producers queue under. Resetting outside it can
             // clear a signal raised for work queued after the swap, and the worker then sleeps
             // with a request sitting in the queue.
@@ -1373,7 +1520,25 @@ CMidi2BluetoothMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopTo
 
         if (!haveWork)
         {
-            m_backgroundEndpointCreatorThreadWakeup.wait();
+            if (haveWantedDevices)
+            {
+                // Timed rather than infinite. Advertisements are the usual trigger for a connect,
+                // but a bonded device which is not advertising produces none, so a device that
+                // failed once would otherwise never be tried again.
+                m_backgroundEndpointCreatorThreadWakeup.wait(MIDI_BLE_CONNECT_SWEEP_INTERVAL_MS);
+
+                if (!stopToken.stop_requested())
+                {
+                    EnforceOfflineRetention();
+                    QueueWantedConnections();
+                }
+            }
+            else
+            {
+                // Nothing is remembered, so a timer would have nothing to retry. A machine with no
+                // Bluetooth MIDI devices configured should not wake this thread at all.
+                m_backgroundEndpointCreatorThreadWakeup.wait();
+            }
 
             continue;
         }

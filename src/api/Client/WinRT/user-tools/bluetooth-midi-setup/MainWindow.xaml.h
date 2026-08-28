@@ -32,12 +32,11 @@ namespace winrt::midibluetoothsetup::implementation
             controls::NavigationView const& sender,
             controls::NavigationViewSelectionChangedEventArgs const& args);
 
-        void OnRefreshClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-
         winrt::fire_and_forget OnConnectDeviceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnDisconnectDeviceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnForgetDeviceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnCustomizeDeviceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnOfflineRetentionChanged(foundation::IInspectable const& sender, xaml::Controls::SelectionChangedEventArgs const& args);
         void OnCopyEndpointDeviceIdClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         winrt::fire_and_forget OnStartPeripheralClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);

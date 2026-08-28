@@ -76,13 +76,29 @@ namespace winrt::midibluetoothsetup::implementation
             }
         }
 
+        // Always shown, so a duration set from the console or the configuration file which is not
+        // one of the combo box presets is still visible.
+        winrt::hstring OfflineRetentionDescription(_In_ int32_t const seconds)
+        {
+            if (seconds < 0)
+            {
+                return res::GetString(L"OfflineRetentionAlways");
+            }
+
+            if (seconds == 0)
+            {
+                return res::GetString(L"OfflineRetentionImmediate");
+            }
+
+            return res::FormatString(L"OfflineRetentionSecondsFormat", winrt::to_hstring(seconds));
+        }
+
         // A connected device stops advertising, so its presence comes from the link. For the
         // rest, how long ago it was last heard from is the only presence signal Bluetooth offers.
         winrt::hstring PresenceDescription(
             _In_ bool const isConnected,
             _In_ bool const isPresent,
-            _In_ bool const hasBeenSeen,
-            _In_ foundation::TimeSpan const lastSeenAgo) noexcept
+            _In_ bool const hasBeenSeen,            _In_ foundation::TimeSpan const lastSeenAgo) noexcept
         {
             try
             {
@@ -363,11 +379,6 @@ namespace winrt::midibluetoothsetup::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::OnRefreshClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
-    {
-        RequestRefreshAsync();
-    }
-
     void MainWindow::StartRefreshTimer() noexcept
     {
         try
@@ -711,7 +722,9 @@ namespace winrt::midibluetoothsetup::implementation
                     device.IsPresent(),
                     device.IsPaired(),
                     device.HasEndpoint(),
-                    remembered);
+                    remembered,
+                    device.OfflineRetentionSeconds(),
+                    OfflineRetentionDescription(device.EffectiveOfflineRetentionSeconds()));
             }
 
             // The service drops a device it has not heard from for a while, so rows go away too

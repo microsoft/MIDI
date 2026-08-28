@@ -947,6 +947,9 @@ Timestamp</value>
   <data name="ParameterBluetoothCustomClear" xml:space="preserve">
     <value>Remove the name, description, and image customizations for this device</value>
   </data>
+  <data name="ParameterBluetoothKeepWhenOffline" xml:space="preserve">
+    <value>How long to keep this device's MIDI endpoint after it goes offline: always, immediate, default, or a number of seconds</value>
+  </data>
   <data name="ParameterBluetoothPeripheralProtocol" xml:space="preserve">
     <value>The BLE MIDI protocol to publish, either 'midi1' or 'midi2'. Only one can be published at a time, and the default is 'midi1' because that is what devices support today</value>
   </data>

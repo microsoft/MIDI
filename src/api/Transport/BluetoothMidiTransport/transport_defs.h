@@ -27,6 +27,13 @@
 // sleeping device costs a GATT timeout, so retries are deliberately unhurried.
 #define MIDI_BLE_CONNECT_RETRY_INTERVAL_MS                              10000
 
+// How often the worker re-examines the remembered devices which are not connected. Advertisements
+// are the usual trigger, but a bonded device which is not advertising produces none, so without
+// this a device that failed once is never tried again. Deliberately shorter than the retry
+// interval above, which is what actually paces the attempts: this only decides how soon after a
+// device becomes reachable the next attempt is allowed to happen.
+#define MIDI_BLE_CONNECT_SWEEP_INTERVAL_MS                              3000
+
 // A name which is only in the scan response may not be known to the Bluetooth stack yet when the
 // first advertisement arrives. A device is not listed or connectable until its name is known or
 // these attempts are exhausted, so this is kept short.

@@ -255,13 +255,6 @@
                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                             </StackPanel>
-
-                            <Button x:Name="DevicesRefreshButton"
-                                    x:Uid="DevicesRefreshButton"
-                                    Grid.Column="1"
-                                    VerticalAlignment="Top"
-                                    Content="Refresh"
-                                    Click="OnRefreshClick" />
                         </Grid>
 
                         <TextBlock x:Name="NoDevicesText"
@@ -316,25 +309,9 @@
                                                                TextWrapping="NoWrap"
                                                                TextTrimming="CharacterEllipsis"
                                                                Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                                                    <TextBlock Text="{x:Bind SubtitleText, Mode=OneWay}"
-                                                               TextWrapping="NoWrap"
-                                                               TextTrimming="CharacterEllipsis"
-                                                               Style="{ThemeResource CaptionTextBlockStyle}"
-                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                                     <TextBlock Text="{x:Bind StatusText, Mode=OneWay}"
                                                                TextWrapping="Wrap"
                                                                Style="{ThemeResource CaptionTextBlockStyle}" />
-                                                    <TextBlock Text="{x:Bind IntervalText, Mode=OneWay}"
-                                                               TextWrapping="NoWrap"
-                                                               TextTrimming="CharacterEllipsis"
-                                                               Visibility="{x:Bind IntervalVisibility, Mode=OneWay}"
-                                                               Style="{ThemeResource CaptionTextBlockStyle}"
-                                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                                                    <TextBlock Text="{x:Bind StatisticsText, Mode=OneWay}"
-                                                               TextWrapping="NoWrap"
-                                                               TextTrimming="CharacterEllipsis"
-                                                               Style="{ThemeResource CaptionTextBlockStyle}"
-                                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                                                 </StackPanel>
 
                                                 <!-- Signal history. The geometry is generated against a
@@ -375,6 +352,33 @@
                                                             Orientation="Horizontal"
                                                             Spacing="8"
                                                             VerticalAlignment="Center">
+                                                    <!-- An app using WinMM or WinRT MIDI 1.0 cannot ask whether a
+                                                         device is present, so whether the endpoint exists is the
+                                                         only signal it gets. -->
+                                                    <StackPanel Orientation="Vertical"
+                                                                Spacing="2"
+                                                                VerticalAlignment="Center"
+                                                                Visibility="{x:Bind OfflineRetentionVisibility, Mode=OneWay}">
+                                                        <TextBlock x:Uid="OfflineRetentionLabel"
+                                                                   Text="Keep endpoint when offline"
+                                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                        <ComboBox MinWidth="150"
+                                                                  SelectedIndex="{x:Bind OfflineRetentionIndex, Mode=OneWay}"
+                                                                  SelectionChanged="OnOfflineRetentionChanged">
+                                                            <ComboBoxItem x:Uid="OfflineRetentionUseDefaultItem" Content="Use default" />
+                                                            <ComboBoxItem x:Uid="OfflineRetentionAlwaysItem" Content="Always" />
+                                                            <ComboBoxItem x:Uid="OfflineRetentionImmediateItem" Content="Remove immediately" />
+                                                            <ComboBoxItem x:Uid="OfflineRetention30SecondsItem" Content="After 30 seconds" />
+                                                            <ComboBoxItem x:Uid="OfflineRetention5MinutesItem" Content="After 5 minutes" />
+                                                        </ComboBox>
+                                                        <!-- What the setting resolves to. The combo shows no selection
+                                                             for a duration which is not one of its presets, so this is
+                                                             the only place that value appears. -->
+                                                        <TextBlock Text="{x:Bind OfflineRetentionText, Mode=OneWay}"
+                                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                    </StackPanel>
                                                     <Button x:Uid="ConnectButton"
                                                             Content="Connect"
                                                             Style="{ThemeResource AccentButtonStyle}"

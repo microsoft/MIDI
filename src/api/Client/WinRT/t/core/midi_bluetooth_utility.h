@@ -138,6 +138,65 @@ namespace Windows::Devices::Midi2::Transports::Bluetooth::Internal
         return bluetooth::MidiBluetoothAddressType::Unknown;
     }
 
+    // Anything above zero is a number of seconds; the named values cover everything else. Mirrors
+    // the transport's parser, which is the only thing that writes these.
+    inline int32_t OfflineRetentionFromJsonString(_In_ winrt::hstring const& value) noexcept
+    {
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_VALUE_DEFAULT)
+        {
+            return static_cast<int32_t>(bluetooth::MidiBluetoothOfflineRetention::UseTransportDefault);
+        }
+
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_VALUE_IMMEDIATE)
+        {
+            return static_cast<int32_t>(bluetooth::MidiBluetoothOfflineRetention::Immediate);
+        }
+
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_VALUE_ALWAYS)
+        {
+            return static_cast<int32_t>(bluetooth::MidiBluetoothOfflineRetention::KeepAlways);
+        }
+
+        uint64_t parsed{ 0 };
+
+        for (auto const& ch : std::wstring{ value })
+        {
+            if (ch < L'0' || ch > L'9')
+            {
+                return static_cast<int32_t>(bluetooth::MidiBluetoothOfflineRetention::KeepAlways);
+            }
+
+            parsed = (parsed * 10) + static_cast<uint64_t>(ch - L'0');
+
+            if (parsed > 86400)
+            {
+                return static_cast<int32_t>(bluetooth::MidiBluetoothOfflineRetention::KeepAlways);
+            }
+        }
+
+        return static_cast<int32_t>(parsed);
+    }
+
+    inline winrt::hstring OfflineRetentionToJsonString(_In_ int32_t const seconds) noexcept
+    {
+        if (seconds == static_cast<int32_t>(bluetooth::MidiBluetoothOfflineRetention::UseTransportDefault))
+        {
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_VALUE_DEFAULT;
+        }
+
+        if (seconds < 0)
+        {
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_VALUE_ALWAYS;
+        }
+
+        if (seconds == 0)
+        {
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_VALUE_IMMEDIATE;
+        }
+
+        return winrt::to_hstring(seconds);
+    }
+
     // The transport keys everything on the 12 hex digit address, so the numeric form is recovered
     // from the id rather than sent twice.
     inline uint64_t BluetoothAddressFromDeviceId(_In_ winrt::hstring const& bluetoothDeviceId) noexcept

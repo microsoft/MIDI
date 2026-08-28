@@ -43,6 +43,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         int32_t LastConnectErrorHResult() const noexcept { return m_lastConnectErrorHResult; }
         int32_t LastSendErrorHResult() const noexcept { return m_lastSendErrorHResult; }
 
+        int32_t OfflineRetentionSeconds() const noexcept { return m_offlineRetentionSeconds; }
+        int32_t EffectiveOfflineRetentionSeconds() const noexcept { return m_effectiveOfflineRetentionSeconds; }
+
         void InternalInitializeFromJson(_In_ json::JsonObject const& deviceJson) noexcept;
 
     private:
@@ -66,5 +69,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         bluetooth::MidiBluetoothDeviceConnectErrorCode m_lastConnectErrorCode{ bluetooth::MidiBluetoothDeviceConnectErrorCode::Success };
         int32_t m_lastConnectErrorHResult{ 0 };
         int32_t m_lastSendErrorHResult{ 0 };
+
+        int32_t m_offlineRetentionSeconds{ static_cast<int32_t>(bluetooth::MidiBluetoothOfflineRetention::UseTransportDefault) };
+        int32_t m_effectiveOfflineRetentionSeconds{ static_cast<int32_t>(bluetooth::MidiBluetoothOfflineRetention::KeepAlways) };
     };
 }
