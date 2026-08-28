@@ -289,6 +289,9 @@
   <data name="HostStartedFormat" xml:space="preserve">
     <value>Started, listening on port {0}</value>
   </data>
+  <data name="HostStartedPortFallbackFormat" xml:space="preserve">
+    <value>Started on port {0}. Port {1} was in use by something else on this PC.</value>
+  </data>
   <data name="HostStopped" xml:space="preserve">
     <value>Stopped</value>
   </data>
@@ -386,7 +389,16 @@
     <value>The Product Instance Id has to be 42 characters or fewer.</value>
   </data>
   <data name="HostAutomaticPortCheckBox.Content" xml:space="preserve">
-    <value>Let Windows choose the network port</value>
+    <value>Let Windows choose a new port each time</value>
+  </data>
+  <data name="HostPortHelp.Text" xml:space="preserve">
+    <value>Keeping one port makes it easier for other devices to find this PC again after a restart.</value>
+  </data>
+  <data name="HostAllowPortFallbackCheckBox.Content" xml:space="preserve">
+    <value>If this port is unavailable, use another one</value>
+  </data>
+  <data name="HostAllowPortFallbackHelp.Text" xml:space="preserve">
+    <value>Something else on this PC could claim the port first. Windows will still start this host, and tell you the port changed.</value>
   </data>
   <data name="HostPortNumberBox.Header" xml:space="preserve">
     <value>Port</value>

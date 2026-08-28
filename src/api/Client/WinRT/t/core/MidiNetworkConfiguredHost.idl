@@ -29,6 +29,16 @@ namespace Windows.Devices.Midi2.Transports.Network
         [noexcept] String ActualPort{ get; };                  // string because DatagramSocket.LocalPort returns a string
         [noexcept] String ActualAddress{ get; };
 
+        // What the host was configured to use, or "auto". Compare with ActualPort to see whether
+        // the user got the port they asked for.
+        [noexcept] String ConfiguredPort{ get; };
+
+        [noexcept] Boolean AllowPortFallback{ get; };
+
+        // True when the configured port was unavailable and the host started on an allocated one.
+        // The host is working, but not where the user asked it to be, so this is worth surfacing.
+        [noexcept] Boolean UsedPortFallback{ get; };
+
         [noexcept] String UmpEndpointName{ get; };
         [noexcept] String ProductInstanceId{ get; };
 

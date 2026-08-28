@@ -44,6 +44,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool UseAutomaticPortAllocation() const noexcept { return m_useAutomaticPortAllocation; }
         void UseAutomaticPortAllocation(_In_ bool const value) noexcept { m_useAutomaticPortAllocation = value; }
 
+        bool AllowPortFallback() const noexcept { return m_allowPortFallback; }
+        void AllowPortFallback(_In_ bool const value) noexcept { m_allowPortFallback = value; }
+
         winrt::hstring ManuallyAssignedPort() const noexcept { return m_manuallyAssignedPort; }
         void ManuallyAssignedPort(_In_ winrt::hstring const& value) noexcept { m_manuallyAssignedPort = internal::TrimmedHStringCopy(value); }
 
@@ -66,6 +69,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring m_productInstanceId{};
         bool m_umpOnly{ true };
         bool m_useAutomaticPortAllocation{ true };
+        bool m_allowPortFallback{ true };
         winrt::hstring m_manuallyAssignedPort{};
         bool m_advertise{ true };
 

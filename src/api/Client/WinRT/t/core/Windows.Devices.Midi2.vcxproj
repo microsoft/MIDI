@@ -1033,6 +1033,9 @@
     <ClCompile Include="MidiNetworkClientDisconnectConfig.cpp">
       <DependentUpon>MidiNetworkClientDisconnectConfig.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="$(SolutionDir)inc\midi_network_port_picker.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="MidiNetworkTransportManager.cpp">
       <DependentUpon>MidiNetworkTransportManager.idl</DependentUpon>
     </ClCompile>

@@ -121,9 +121,11 @@ namespace
 
     // A newly created host lives only as a pending definition until the endpoint creation worker
     // instantiates it, and stopHost only knows about instantiated hosts.
-    bool WaitForHostPresent(_In_ std::wstring const& entryIdentifier)
+    bool WaitForHostPresent(
+        _In_ std::wstring const& entryIdentifier,
+        _In_ std::chrono::milliseconds const timeout = PendingPollTimeout)
     {
-        auto deadline = std::chrono::steady_clock::now() + PendingPollTimeout;
+        auto deadline = std::chrono::steady_clock::now() + timeout;
 
         while (std::chrono::steady_clock::now() < deadline)
         {
@@ -1523,6 +1525,243 @@ void NetworkMidiApprovalTests::StoppedHostIsNoLongerAdvertisedOnTheNetwork()
 // Two hosts sharing a port would mean two sockets fighting over the same inbound datagrams. The
 // second bind is the one that fails, at start time, long after the user pressed the button, so
 // the collision is caught up front instead.
+namespace
+{
+    // Holds a real UDP port for the lifetime of the object, so the service genuinely cannot bind
+    // it. Nothing about this is specific to MIDI: it stands in for whatever else on the machine
+    // got there first.
+    struct PortHolder
+    {
+        SOCKET Handle{ INVALID_SOCKET };
+        uint16_t Port{ 0 };
+
+        bool Hold(_In_ uint16_t const port)
+        {
+            Handle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+            if (Handle == INVALID_SOCKET) return false;
+
+            BOOL exclusive{ TRUE };
+            setsockopt(Handle, SOL_SOCKET, SO_EXCLUSIVEADDRUSE,
+                reinterpret_cast<char const*>(&exclusive), sizeof(exclusive));
+
+            sockaddr_in address{ };
+            address.sin_family = AF_INET;
+            address.sin_addr.s_addr = INADDR_ANY;
+            address.sin_port = htons(port);
+
+            if (bind(Handle, reinterpret_cast<sockaddr const*>(&address), sizeof(address)) == SOCKET_ERROR)
+            {
+                closesocket(Handle);
+                Handle = INVALID_SOCKET;
+
+                return false;
+            }
+
+            Port = port;
+
+            return true;
+        }
+
+        ~PortHolder()
+        {
+            if (Handle != INVALID_SOCKET) closesocket(Handle);
+        }
+    };
+
+    std::optional<uint16_t> ReadActualPort(_In_ std::wstring const& entryIdentifier)
+    {
+        auto result = EnumerateHosts();
+
+        if (!result.IsSuccess()) return std::nullopt;
+
+        auto response = ParseResponse(result);
+
+        if (!response.has_value()) return std::nullopt;
+
+        auto hosts = response->GetNamedArray(L"hosts", nullptr);
+
+        if (hosts == nullptr) return std::nullopt;
+
+        for (uint32_t i = 0; i < hosts.Size(); i++)
+        {
+            auto host = hosts.GetObjectAt(i);
+
+            if (_wcsicmp(std::wstring{ host.GetNamedString(L"entryIdentifier", L"") }.c_str(), entryIdentifier.c_str()) != 0)
+            {
+                continue;
+            }
+
+            auto const portText = std::wstring{ host.GetNamedString(L"actualPort", L"") };
+
+            if (portText.empty()) return std::nullopt;
+
+            return static_cast<uint16_t>(std::stoul(portText));
+        }
+
+        return std::nullopt;
+    }
+
+    bool ReadPortFallbackUsed(_In_ std::wstring const& entryIdentifier, _Out_ bool& found)
+    {
+        found = false;
+
+        auto result = EnumerateHosts();
+
+        if (!result.IsSuccess()) return false;
+
+        auto response = ParseResponse(result);
+
+        if (!response.has_value()) return false;
+
+        auto hosts = response->GetNamedArray(L"hosts", nullptr);
+
+        if (hosts == nullptr) return false;
+
+        for (uint32_t i = 0; i < hosts.Size(); i++)
+        {
+            auto host = hosts.GetObjectAt(i);
+
+            if (_wcsicmp(std::wstring{ host.GetNamedString(L"entryIdentifier", L"") }.c_str(), entryIdentifier.c_str()) != 0)
+            {
+                continue;
+            }
+
+            found = true;
+
+            return host.GetNamedBoolean(L"portFallbackUsed", false);
+        }
+
+        return false;
+    }
+
+    // A host which could not bind is still listed, with hasStarted false, so absence is the
+    // wrong thing to look for.
+    bool WaitForHostStarted(
+        _In_ std::wstring const& entryIdentifier,
+        _In_ std::chrono::milliseconds const timeout)
+    {
+        auto const deadline = std::chrono::steady_clock::now() + timeout;
+
+        do
+        {
+            auto response = ParseResponse(EnumerateHosts());
+
+            if (response.has_value())
+            {
+                auto hosts = response->GetNamedArray(L"hosts", nullptr);
+
+                if (hosts != nullptr)
+                {
+                    for (uint32_t i = 0; i < hosts.Size(); i++)
+                    {
+                        auto host = hosts.GetObjectAt(i);
+
+                        if (_wcsicmp(std::wstring{ host.GetNamedString(L"entryIdentifier", L"") }.c_str(), entryIdentifier.c_str()) == 0 &&
+                            host.GetNamedBoolean(L"hasStarted", false))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+
+            std::this_thread::sleep_for(PendingPollInterval);
+
+        } while (std::chrono::steady_clock::now() < deadline);
+
+        return false;
+    }
+}
+
+
+void NetworkMidiApprovalTests::HostFallsBackWhenTheConfiguredPortIsTakenByAnotherProcess()
+{
+    auto const blockedPort = PickLikelyFreePort();
+
+    VERIFY_IS_TRUE(blockedPort.has_value());
+
+    PortHolder holder;
+
+    VERIFY_IS_TRUE(holder.Hold(blockedPort.value()), L"Test took the port before the service could");
+
+    Log::Comment(String().Format(L"Holding port %d against the service", holder.Port));
+
+    auto entryIdentifier = MakeEntryIdentifier();
+
+    auto result = CreateHost(
+        entryIdentifier,
+        L"Port Fallback Host",
+        L"PORTFALLBACK",
+        MakeServiceInstanceName(),
+        false,
+        std::to_wstring(holder.Port),
+        false,
+        true);
+
+    auto cleanup = wil::scope_exit([&]() { RemoveHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(result.IsSuccess(), L"The host was accepted");
+
+    VERIFY_IS_TRUE(WaitForHostPresent(entryIdentifier), L"The host started despite its port being taken");
+
+    auto const actualPort = ReadActualPort(entryIdentifier);
+
+    VERIFY_IS_TRUE(actualPort.has_value(), L"The host reports a bound port");
+
+    Log::Comment(String().Format(L"Host bound to port %d instead of %d", actualPort.value(), holder.Port));
+
+    VERIFY_ARE_NOT_EQUAL(holder.Port, actualPort.value(), L"The host did not get the blocked port");
+
+    bool found{ false };
+
+    VERIFY_IS_TRUE(
+        ReadPortFallbackUsed(entryIdentifier, found),
+        L"The host reports that it fell back, so an app can tell the user");
+
+    VERIFY_IS_TRUE(found);
+}
+
+
+void NetworkMidiApprovalTests::HostWithoutFallbackDoesNotStartWhenItsPortIsTaken()
+{
+    auto const blockedPort = PickLikelyFreePort();
+
+    VERIFY_IS_TRUE(blockedPort.has_value());
+
+    PortHolder holder;
+
+    VERIFY_IS_TRUE(holder.Hold(blockedPort.value()));
+
+    auto entryIdentifier = MakeEntryIdentifier();
+
+    auto result = CreateHost(
+        entryIdentifier,
+        L"No Port Fallback Host",
+        L"NOPORTFALLBACK",
+        MakeServiceInstanceName(),
+        false,
+        std::to_wstring(holder.Port),
+        false,
+        false);
+
+    auto cleanup = wil::scope_exit([&]() { RemoveHost(entryIdentifier); });
+
+    // The entry is accepted; it is starting the host which fails, and that is deliberate. The
+    // user asked for one specific port and did not agree to any other.
+    if (result.IsSuccess())
+    {
+        VERIFY_IS_FALSE(
+            WaitForHostStarted(entryIdentifier, std::chrono::milliseconds(6000)),
+            L"A host refused its port and told not to move does not start");
+    }
+    else
+    {
+        Log::Comment(L"Creation itself was refused, which is also an acceptable outcome");
+    }
+}
+
+
 void NetworkMidiApprovalTests::SecondHostWithTheSameManualPortIsRejected()
 {
     VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");

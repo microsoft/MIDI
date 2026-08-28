@@ -24,6 +24,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         static winrt::hstring MidiNetworkUdpDnsDomain() noexcept;
         static winrt::hstring MidiNetworkUdpDnsSdQueryName() noexcept;
 
+        static uint16_t GenerateAvailableHostPort() noexcept;
+        static bool IsHostPortAvailable(_In_ uint16_t const port) noexcept;
+
         static const winrt::guid TransportId() noexcept { return internal::StringToGuid(MIDI_NETWORK_TRANSPORT_ID); }
 
 

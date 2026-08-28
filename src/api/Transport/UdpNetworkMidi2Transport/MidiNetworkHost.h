@@ -36,6 +36,9 @@ struct MidiNetworkHostDefinition
     bool UseAutomaticPortAllocation{ true };
     winrt::hstring Port;
 
+    // Only consulted when a specific port was configured.
+    bool AllowPortFallback{ true };
+
     winrt::hstring UmpEndpointName;
     winrt::hstring ProductInstanceId;
 
@@ -90,6 +93,9 @@ public:
 
     bool HasStarted() { return m_started; }
 
+    // True when the configured port was unavailable and the host started on an allocated one.
+    bool PortFallbackUsed() { return m_portFallbackUsed; }
+
     bool IsEnabled() { return m_enabled; }
 
     MidiNetworkHostDefinition GetDefinition() { return m_hostDefinition; }
@@ -111,6 +117,7 @@ private:
 //    winrt::hstring m_configIdentifier{};
 
     bool m_enabled{ true };
+    bool m_portFallbackUsed{ false };
     std::atomic<bool> m_started{ false };
     bool m_createUmpEndpointsOnly{ true };
 

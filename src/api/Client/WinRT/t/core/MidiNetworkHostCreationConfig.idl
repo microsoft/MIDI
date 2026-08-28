@@ -40,6 +40,11 @@ namespace Windows.Devices.Midi2.Transports.Network
         [noexcept] Boolean UseAutomaticPortAllocation;
         [noexcept] String ManuallyAssignedPort;
 
+        // Only meaningful with a specific port. When that port cannot be bound the host starts
+        // on an automatically allocated one instead of refusing to start, and reports that it
+        // did through MidiNetworkConfiguredHost.UsedPortFallback.
+        [noexcept] Boolean AllowPortFallback;
+
         [noexcept] Boolean Advertise;
 
         // what the host does when a remote client which is on neither list asks to connect

@@ -913,8 +913,8 @@
 
                             <CheckBox x:Name="HostAutomaticPortCheckBox"
                                       x:Uid="HostAutomaticPortCheckBox"
-                                      Content="Let Windows choose the network port"
-                                      IsChecked="True"
+                                      Content="Let Windows choose a new port each time"
+                                      IsChecked="False"
                                       Checked="OnCreateHostPortModeChanged"
                                       Unchecked="OnCreateHostPortModeChanged" />
 
@@ -926,8 +926,24 @@
                                        Minimum="1"
                                        Maximum="65535"
                                        Value="5004"
-                                       IsEnabled="False"
                                        SpinButtonPlacementMode="Compact" />
+
+                            <TextBlock x:Uid="HostPortHelp"
+                                       Text="Keeping one port makes it easier for other devices to find this PC again after a restart."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                            <CheckBox x:Name="HostAllowPortFallbackCheckBox"
+                                      x:Uid="HostAllowPortFallbackCheckBox"
+                                      Content="If this port is unavailable, use another one"
+                                      IsChecked="True" />
+
+                            <TextBlock x:Uid="HostAllowPortFallbackHelp"
+                                       Text="Something else on this PC could claim the port first. Windows will still start this host, and tell you the port changed."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         </StackPanel>
                     </Expander>
 

@@ -1422,7 +1422,9 @@ namespace winrt::midinetworksetup::implementation
                         res::FormatString(L"HostAddressValueFormat", host.ActualAddress(), host.ActualPort()),
                         host.ActualPort(),
                         host.HasStarted() ?
-                            res::FormatString(L"HostStartedFormat", host.ActualPort()) :
+                            (host.UsedPortFallback() ?
+                                res::FormatString(L"HostStartedPortFallbackFormat", host.ActualPort(), host.ConfiguredPort()) :
+                                res::FormatString(L"HostStartedFormat", host.ActualPort())) :
                             res::GetString(L"HostStopped"),
                         host.RemoteClientPolicy() == midi2net::MidiNetworkRemoteClientPolicy::RequireApproval ?
                             res::GetString(L"HostPolicyRequireApproval") :

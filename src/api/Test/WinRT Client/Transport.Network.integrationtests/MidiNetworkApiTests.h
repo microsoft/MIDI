@@ -135,6 +135,10 @@ public:
     // Updated has to say what changed. A real advertisement change cannot be forced on demand,
     // so the mask itself is checked directly. Offline.
     TEST_METHOD(TestDnssdServiceChangedFieldsNameEachChange);
+
+    // Host ports are generated once and kept, so the picker has to be right about what is free.
+    TEST_METHOD(TestGeneratedHostPortIsUsableAndInRange);
+    TEST_METHOD(TestPortPickerRejectsAPortTheServiceAlreadyHolds);
     TEST_METHOD(TestClientMatchCriteriaRoundTrip);
     TEST_METHOD(TestClientConnectConfigRoundTrip);
     TEST_METHOD(TestDisconnectUnknownClientFailsCleanly);

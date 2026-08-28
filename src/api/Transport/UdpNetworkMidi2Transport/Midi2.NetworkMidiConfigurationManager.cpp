@@ -1048,6 +1048,19 @@ CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateHosts(
             json::JsonValue::CreateStringValue(host->ActualPort()));
 
         hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONFIGURED_PORT_KEY,
+            json::JsonValue::CreateStringValue(
+                def.UseAutomaticPortAllocation ? MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO : def.Port));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ALLOW_PORT_FALLBACK_KEY,
+            json::JsonValue::CreateBooleanValue(def.AllowPortFallback));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_PORT_FALLBACK_USED_KEY,
+            json::JsonValue::CreateBooleanValue(host->PortFallbackUsed()));
+
+        hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_ADDRESS_KEY,
             json::JsonValue::CreateStringValue(host->ActualAddress()));
 
@@ -1938,6 +1951,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 }
 
                 definition->Port = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO));
+                definition->AllowPortFallback = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_PORT_FALLBACK_KEY, true);
 
                 definition->Authentication = MidiNetworkHostAuthenticationFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE));
                 definition->RemoteClientPolicy = MidiNetworkRemoteClientPolicyFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_VALUE_ALLOW_ANY));

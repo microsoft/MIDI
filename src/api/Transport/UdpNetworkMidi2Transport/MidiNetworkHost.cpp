@@ -464,6 +464,8 @@ MidiNetworkHost::Start()
 
     uint16_t boundPort{ 0 };
 
+    m_portFallbackUsed = false;
+
     try
     {
         socket.BindServiceNameAsync(winrt::to_hstring(m_hostDefinition.Port)).get();
@@ -480,24 +482,67 @@ MidiNetworkHost::Start()
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Unable to bind host socket to the requested port. Host not started.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(L"Unable to bind host socket to the requested port.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(m_hostDefinition.Port.c_str(), "port"),
             TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
         );
 
-        try
-        {
-            socket.MessageReceived(m_messageReceivedEventToken);
-            socket.Close();
-        }
-        CATCH_LOG();
+        // A configured port can be taken by something else which started first, and after a
+        // reboot that is entirely outside the user's control. Falling back keeps MIDI working;
+        // the host reports that it did so, so the settings app can offer a new port.
+        bool recovered{ false };
 
+        if (!m_hostDefinition.UseAutomaticPortAllocation && m_hostDefinition.AllowPortFallback)
         {
-            auto lock = m_socketLock.lock();
-            m_socket = nullptr;
+            try
+            {
+                socket.BindServiceNameAsync(L"").get();
+
+                boundPort = static_cast<uint16_t>(std::stoi(winrt::to_string(socket.Information().LocalPort())));
+
+                m_portFallbackUsed = true;
+                recovered = true;
+
+                TraceLoggingWrite(
+                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Configured port was unavailable. Host started on an automatically allocated port.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_hostDefinition.Port.c_str(), "configured port"),
+                    TraceLoggingUInt16(boundPort, "bound port")
+                );
+            }
+            CATCH_LOG();
         }
 
-        RETURN_IF_FAILED(hr);
+        if (!recovered)
+        {
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Host not started.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_hostDefinition.Port.c_str(), "port")
+            );
+
+            try
+            {
+                socket.MessageReceived(m_messageReceivedEventToken);
+                socket.Close();
+            }
+            CATCH_LOG();
+
+            {
+                auto lock = m_socketLock.lock();
+                m_socket = nullptr;
+            }
+
+            RETURN_IF_FAILED(hr);
+        }
     }
 
     // advertise

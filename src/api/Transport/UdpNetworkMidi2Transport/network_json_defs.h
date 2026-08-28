@@ -40,6 +40,11 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_KEY                          L"port"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO                   L"auto"
 
+// Only meaningful with a specific port. When the configured port cannot be bound the host falls
+// back to an automatically allocated one rather than refusing to start, and says so in
+// enumerateHosts so the settings app can tell the user their chosen port was taken.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_PORT_FALLBACK_KEY                   L"allowPortFallback"        // boolean, default true
+
 
 // Remote client approval. The old connectionPolicyIpv4 list and range options were never
 // really implemented, and an address is the wrong thing to approve anyway: a device is
@@ -176,6 +181,11 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_HAS_STARTED_KEY           L"hasStarted"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_ADDRESS_KEY        L"actualAddress"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_PORT_KEY           L"actualPort"
+
+// What the user asked for, and whether they got it. "auto" when no specific port was configured.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONFIGURED_PORT_KEY       L"configuredPort"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_PORT_FALLBACK_USED_KEY    L"portFallbackUsed"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ALLOW_PORT_FALLBACK_KEY   L"allowPortFallback"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NAME_KEY                  MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_PRODUCT_INSTANCE_ID_KEY   MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CREATE_MIDI1_PORTS_KEY    MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY

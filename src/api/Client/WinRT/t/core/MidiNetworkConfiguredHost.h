@@ -23,6 +23,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring ActualPort() const noexcept { return m_actualPort; }
         winrt::hstring ActualAddress() const noexcept { return m_actualAddress; }
 
+        winrt::hstring ConfiguredPort() const noexcept { return m_configuredPort; }
+        bool AllowPortFallback() const noexcept { return m_allowPortFallback; }
+        bool UsedPortFallback() const noexcept { return m_usedPortFallback; }
+
         winrt::hstring UmpEndpointName() const noexcept { return m_umpEndpointName; }
         winrt::hstring ProductInstanceId() const noexcept { return m_productInstanceId; }
 
@@ -46,6 +50,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             _In_ bool const hasStarted,
             _In_ winrt::hstring const& actualAddress,
             _In_ winrt::hstring const& actualPort,
+            _In_ winrt::hstring const& configuredPort,
+            _In_ bool const allowPortFallback,
+            _In_ bool const usedPortFallback,
             _In_ bool const createMidi1Ports,
             _In_ network::MidiNetworkRemoteClientPolicy const remoteClientPolicy) noexcept
         {
@@ -57,6 +64,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             m_hasStarted = hasStarted;
             m_actualAddress = actualAddress;
             m_actualPort = actualPort;
+            m_configuredPort = configuredPort;
+            m_allowPortFallback = allowPortFallback;
+            m_usedPortFallback = usedPortFallback;
             m_createMidi1Ports = createMidi1Ports;
             m_remoteClientPolicy = remoteClientPolicy;
         }
@@ -78,6 +88,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool m_hasStarted{ false };
         winrt::hstring m_actualAddress{};
         winrt::hstring m_actualPort{};
+        winrt::hstring m_configuredPort{};
+        bool m_allowPortFallback{ true };
+        bool m_usedPortFallback{ false };
         bool m_createMidi1Ports{ false };
         network::MidiNetworkRemoteClientPolicy m_remoteClientPolicy{ network::MidiNetworkRemoteClientPolicy::AllowAny };
 

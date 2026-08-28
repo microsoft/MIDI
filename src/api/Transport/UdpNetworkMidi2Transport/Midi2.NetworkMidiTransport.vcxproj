@@ -294,6 +294,9 @@
     <ClCompile Include="Midi2.NetworkMidiEndpointManager.cpp" />
     <ClCompile Include="Midi2.NetworkMidiBidi.cpp" />
     <ClCompile Include="Midi2.NetworkMidiPluginMetadataProvider.cpp" />
+    <ClCompile Include="$(SolutionDir)inc\midi_network_port_picker.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="MidiNetworkAdvertiser.cpp" />
     <ClCompile Include="MidiNetworkClient.cpp" />
     <ClCompile Include="MidiNetworkCredentials.cpp" />

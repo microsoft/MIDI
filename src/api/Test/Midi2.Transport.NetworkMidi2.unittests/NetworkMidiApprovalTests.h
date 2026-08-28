@@ -90,6 +90,12 @@ public:
     TEST_METHOD(HostWithAnOutOfRangePortIsRejected);
     TEST_METHOD(HostWithANonNumericPortIsRejected);
 
+    // A kept port can be taken by something outside this service, which after a reboot is not
+    // the user's fault. With fallback allowed the host still starts, on another port, and says
+    // so. Without it, the host refuses rather than moving somewhere nobody is expecting it.
+    TEST_METHOD(HostFallsBackWhenTheConfiguredPortIsTakenByAnotherProcess);
+    TEST_METHOD(HostWithoutFallbackDoesNotStartWhenItsPortIsTaken);
+
     // The identity a host puts on the wire has to be the identity it was configured with, or a
     // remote sees the advertised device and the connected device as two different things.
     TEST_METHOD(MaximumLengthIdentityStringsSurviveTheWire);

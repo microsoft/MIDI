@@ -1453,6 +1453,7 @@ void MidiNetworkApiTests::TestDiagDnssdWatcherPropertiesAcrossHostRemoval()
 
 
 #include "midi_dnssd_browser.h"
+#include "midi_network_port_picker.h"
 
 // The shared browser is what both the SDK watcher and the service transport sit on, so this is
 // the lowest level at which 1149 can be pinned down.
@@ -1658,6 +1659,80 @@ void MidiNetworkApiTests::TestDnssdServiceChangedFieldsNameEachChange()
         auto s = baseline; s.Port = 9999;
 
         VERIFY_ARE_EQUAL(baseline.DeviceId(), s.DeviceId());
+    }
+}
+
+void MidiNetworkApiTests::TestGeneratedHostPortIsUsableAndInRange()
+{
+    using namespace WindowsMidiServicesInternal;
+
+    uint16_t port{ 0 };
+
+    VERIFY_IS_TRUE(TryGenerateAvailableHostPort(port));
+
+    Log::Comment(String().Format(L"Generated port %d", port));
+
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(port, MidiNetworkGeneratedPortRangeLow);
+    VERIFY_IS_LESS_THAN_OR_EQUAL(port, MidiNetworkGeneratedPortRangeHigh);
+
+    // Below the Windows dynamic range, or the OS would hand it to some other process and the
+    // whole point of keeping the port is lost.
+    VERIFY_IS_LESS_THAN(port, static_cast<uint16_t>(49152));
+
+    VERIFY_IS_TRUE(IsUdpPortAvailable(port), L"A freshly generated port is free");
+
+    // Repeated calls must not keep handing out the same number.
+    bool sawDifferent{ false };
+
+    for (int i = 0; i < 10 && !sawDifferent; i++)
+    {
+        uint16_t another{ 0 };
+
+        VERIFY_IS_TRUE(TryGenerateAvailableHostPort(another));
+
+        sawDifferent = (another != port);
+    }
+
+    VERIFY_IS_TRUE(sawDifferent, L"Generated ports are randomised");
+}
+
+// The case a naive picker gets wrong. A port held by the MIDI service, which runs as
+// LocalSystem, reports WSAEACCES to a normal user process rather than WSAEADDRINUSE.
+void MidiNetworkApiTests::TestPortPickerRejectsAPortTheServiceAlreadyHolds()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto hosts = MidiNetworkTransportManager::GetConfiguredHosts();
+
+    VERIFY_IS_NOT_NULL(hosts);
+
+    std::vector<uint16_t> livePorts;
+
+    for (auto const& host : hosts)
+    {
+        if (!host.HasStarted()) continue;
+
+        auto const text = std::wstring{ host.ActualPort() };
+
+        if (text.empty()) continue;
+
+        livePorts.push_back(static_cast<uint16_t>(std::stoul(text)));
+    }
+
+    if (livePorts.empty())
+    {
+        Log::Result(TestResults::Skipped, L"No started host on this PC to test against.");
+
+        return;
+    }
+
+    for (auto const port : livePorts)
+    {
+        Log::Comment(String().Format(L"Live host port %d", port));
+
+        VERIFY_IS_FALSE(
+            WindowsMidiServicesInternal::IsUdpPortAvailable(port),
+            L"A port the service is already bound to is not offered as available");
     }
 }
 

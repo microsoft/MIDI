@@ -10,6 +10,8 @@
 #include "MidiNetworkHostCreationConfig.h"
 #include "Transports.Network.MidiNetworkHostCreationConfig.g.cpp"
 
+#include "midi_network_port_picker.h"
+
 // when this component goes in-box, move the json defs to the common json_defs.h
 #include "..\..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
 
@@ -104,9 +106,27 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             winrt::hstring instanceIdPrefix = L"winmidisrv";
             config->m_productInstanceId = instanceIdPrefix + internal::RemoveInvalidSWDUniqueIdCharacters(internal::GuidToString(config->m_id)).substr(0, 42 - instanceIdPrefix.size());
 
-            // use a dynamic port by default
-            config->m_useAutomaticPortAllocation = true;
-            config->m_manuallyAssignedPort = winrt::hstring{};
+            // A port generated once and kept, rather than a dynamic one which moves every time
+            // the service restarts. A remote which stores an address and port then finds the
+            // port has changed cannot reconnect on its own.
+            uint16_t generatedPort{ 0 };
+
+            if (::WindowsMidiServicesInternal::TryGenerateAvailableHostPort(generatedPort))
+            {
+                config->m_useAutomaticPortAllocation = false;
+                config->m_manuallyAssignedPort = winrt::to_hstring(generatedPort);
+            }
+            else
+            {
+                // Nothing free in the generated range is close to impossible, but a host with a
+                // dynamic port still works.
+                config->m_useAutomaticPortAllocation = true;
+                config->m_manuallyAssignedPort = winrt::hstring{};
+            }
+
+            // If the kept port is taken next time the service starts, prefer a working host on a
+            // different port over no host at all. The host reports that it did this.
+            config->m_allowPortFallback = true;
            
             // yes, we advertise over mDNS
             config->m_advertise = true;
@@ -169,6 +189,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             hostObject.SetNamedValue(
                 MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_KEY,
                 json::JsonValue::CreateStringValue(ManuallyAssignedPort()));
+
+            hostObject.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_PORT_FALLBACK_KEY,
+                json::JsonValue::CreateBooleanValue(AllowPortFallback()));
         }
 
         hostObject.SetNamedValue(

@@ -333,7 +333,8 @@ namespace NetworkMidiTest
         std::wstring const& serviceInstanceName,
         bool const requireApproval,
         std::wstring const& port,
-        bool const advertise)
+        bool const advertise,
+        bool const allowPortFallback)
     {
         // advertise defaults off so these short-lived test hosts do not appear over mDNS and get
         // picked up by anything else on the network. Only the tests which are specifically about
@@ -350,6 +351,7 @@ namespace NetworkMidiTest
             L"\"port\":\"" + EscapeJsonString(port) + L"\","
             L"\"enabled\":true,"
             L"\"advertise\":" + std::wstring(advertise ? L"true" : L"false") + L","
+            L"\"allowPortFallback\":" + std::wstring(allowPortFallback ? L"true" : L"false") + L","
             L"\"remoteClientPolicy\":\"" +
                 std::wstring(requireApproval ? L"requireApproval" : L"allowAny") + L"\""
             L"}}}}";

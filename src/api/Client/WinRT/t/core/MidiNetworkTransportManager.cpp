@@ -14,6 +14,8 @@
 
 #include "MidiNetworkAdvertisedHost.h"
 
+#include "midi_network_port_picker.h"
+
 #include "MidiNetworkHostCreationConfig.h"
 #include "MidiNetworkHostCreationResponse.h"
 
@@ -340,6 +342,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                                 entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_HAS_STARTED_KEY, false),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_ADDRESS_KEY, L""),
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_PORT_KEY, L""),
+                                entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONFIGURED_PORT_KEY, L""),
+                                entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ALLOW_PORT_FALLBACK_KEY, true),
+                                entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_PORT_FALLBACK_USED_KEY, false),
                                 entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CREATE_MIDI1_PORTS_KEY, false),
                                 RemoteClientPolicyFromString(entryObject.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_REMOTE_CLIENT_POLICY_KEY, L""))
                             );
@@ -1368,6 +1373,25 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     winrt::hstring MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryName() noexcept
     {
         return MidiNetworkUdpDnsServiceType() + L"." + MidiNetworkUdpDnsDomain();
+    }
+
+
+    uint16_t MidiNetworkTransportManager::GenerateAvailableHostPort() noexcept
+    {
+        uint16_t port{ 0 };
+
+        if (!::WindowsMidiServicesInternal::TryGenerateAvailableHostPort(port))
+        {
+            return 0;
+        }
+
+        return port;
+    }
+
+    _Use_decl_annotations_
+    bool MidiNetworkTransportManager::IsHostPortAvailable(uint16_t const port) noexcept
+    {
+        return ::WindowsMidiServicesInternal::IsUdpPortAvailable(port);
     }
 
 

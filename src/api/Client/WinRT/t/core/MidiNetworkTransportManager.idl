@@ -94,5 +94,13 @@ namespace Windows.Devices.Midi2.Transports.Network
         // The full DNS-SD query name, "_midi2._udp.local", as passed to DnsServiceBrowse.
         [noexcept] static String MidiNetworkUdpDnsSdQueryName{ get; };
 
+        // A free UDP port for a host to keep. Deliberately below the Windows dynamic range, so
+        // the OS will not hand it to another process while the service is not running. Zero if
+        // nothing suitable could be found.
+        [noexcept] static UInt16 GenerateAvailableHostPort();
+
+        // For validating a port a user typed in before trying to create the host with it.
+        [noexcept] static Boolean IsHostPortAvailable(UInt16 port);
+
     }
 }

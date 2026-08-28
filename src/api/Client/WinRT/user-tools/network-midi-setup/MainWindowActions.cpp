@@ -726,7 +726,10 @@ namespace winrt::midinetworksetup::implementation
 
         try
         {
-            HostPortNumberBox().IsEnabled(!IsCheckBoxChecked(HostAutomaticPortCheckBox()));
+            auto const automatic = IsCheckBoxChecked(HostAutomaticPortCheckBox());
+
+            HostPortNumberBox().IsEnabled(!automatic);
+            HostAllowPortFallbackCheckBox().IsEnabled(!automatic);
         }
         catch (...)
         {
@@ -793,6 +796,19 @@ namespace winrt::midinetworksetup::implementation
         HostCreateMidi1PortsCheckBox().IsChecked(!config.CreateOnlyUmpEndpoints());
         HostAutomaticPortCheckBox().IsChecked(config.UseAutomaticPortAllocation());
         HostPortNumberBox().IsEnabled(!config.UseAutomaticPortAllocation());
+        HostAllowPortFallbackCheckBox().IsChecked(config.AllowPortFallback());
+        HostAllowPortFallbackCheckBox().IsEnabled(!config.UseAutomaticPortAllocation());
+
+        // CreateDefault has already generated a free port, so the customer sees the number they
+        // are about to keep rather than an arbitrary placeholder.
+        if (!config.UseAutomaticPortAllocation() && !config.ManuallyAssignedPort().empty())
+        {
+            try
+            {
+                HostPortNumberBox().Value(std::stod(std::wstring{ config.ManuallyAssignedPort() }));
+            }
+            CATCH_LOG();
+        }
         HostPolicyAskRadio().IsChecked(true);
         CreateHostStatusText().Text(L"");
 
@@ -830,6 +846,8 @@ namespace winrt::midinetworksetup::implementation
                 {
                     config.ManuallyAssignedPort(winrt::hstring{ std::format(L"{}", port) });
                 }
+
+                config.AllowPortFallback(IsCheckBoxChecked(HostAllowPortFallbackCheckBox()));
             }
 
             auto const askFirst = HostPolicyAskRadio().IsChecked();
