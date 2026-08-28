@@ -818,6 +818,17 @@ CMidi2BluetoothMidiEndpointManager::ConnectDevice(winrt::hstring const& deviceId
         m_desiredConnections.insert(deviceId);
     }
 
+    TraceLoggingWrite(
+        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Device added to the wanted connections", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(deviceId.c_str(), "device id"),
+        TraceLoggingBool(IsDeviceNameable(deviceId), "nameable now")
+    );
+
     // Deferred until the device can be named. Name resolution queues the connection itself when
     // it finishes, so nothing is lost by waiting.
     QueueConnectIfWanted(deviceId);
@@ -831,7 +842,19 @@ CMidi2BluetoothMidiEndpointManager::ConnectConfiguredDevices()
 {
     RETURN_HR_IF(E_UNEXPECTED, !m_initialized);
 
-    for (auto const& deviceId : TransportState::Current().TakeConfiguredDeviceIds())
+    auto const configuredDeviceIds = TransportState::Current().TakeConfiguredDeviceIds();
+
+    TraceLoggingWrite(
+        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Draining the parked configuration", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingUInt64(static_cast<uint64_t>(configuredDeviceIds.size()), "parked device count")
+    );
+
+    for (auto const& deviceId : configuredDeviceIds)
     {
         TraceLoggingWrite(
             MidiBluetoothMidiTransportTelemetryProvider::Provider(),

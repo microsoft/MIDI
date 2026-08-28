@@ -369,22 +369,61 @@ namespace
 
         if (!MidiBleProtocol::SafeJson::TryGetArray(transportObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICES_ARRAY_KEY, devicesArray))
         {
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingWideString(L"No devices array in this configuration section, so nothing was queued for reconnect", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(transportObject.Stringify().c_str(), "transport section")
+            );
+
             return;
         }
 
         auto endpointManager = TransportState::Current().GetEndpointManager();
 
+        TraceLoggingWrite(
+            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingWideString(L"Reading the configured Bluetooth MIDI devices", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt32(devicesArray.Size(), "device count"),
+            TraceLoggingBool(endpointManager != nullptr, "endpoint manager available"),
+            TraceLoggingBool(endpointManager != nullptr && endpointManager->IsInitialized(), "endpoint manager initialized")
+        );
+
         for (auto const& entry : devicesArray)
         {
-            auto deviceObject = entry.try_as<json::JsonObject>();
-
-            if (deviceObject == nullptr)
+            // Iterating a JsonArray yields IJsonValue, which does not cast to JsonObject. It has
+            // to be asked for its object, the same way the remembered client list does it.
+            if (entry == nullptr || entry.ValueType() != json::JsonValueType::Object)
             {
+                TraceLoggingWrite(
+                    MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingWideString(L"Skipping a configured Bluetooth MIDI device which is not a JSON object", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                );
+
                 continue;
             }
 
+            auto const deviceObject = entry.GetObject();
+
             if (!MidiBleProtocol::SafeJson::GetBoolean(deviceObject, MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ENABLED_KEY, true))
             {
+                TraceLoggingWrite(
+                    MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingWideString(L"Skipping a configured Bluetooth MIDI device which is disabled", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(deviceObject.Stringify().c_str(), "device")
+                );
+
                 continue;
             }
 
@@ -409,6 +448,16 @@ namespace
             // Parked either way. The endpoint manager may not exist yet, and if it does it
             // drains this list again on the way up, so the id can never be dropped.
             TransportState::Current().AddConfiguredDeviceId(deviceId);
+
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingWideString(L"Parked a configured Bluetooth MIDI device for reconnect", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(deviceId.c_str(), "device id"),
+                TraceLoggingBool(endpointManager != nullptr && endpointManager->IsInitialized(), "connecting now")
+            );
 
             if (endpointManager != nullptr && endpointManager->IsInitialized())
             {
@@ -703,6 +752,17 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
     if (commandName.empty())
     {
         // not a command, so this is the transport's own section of the configuration file
+        TraceLoggingWrite(
+            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Processing the transport's own configuration file section", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingBool(jsonObject.HasKey(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICES_ARRAY_KEY), "has devices key"),
+            TraceLoggingBool(jsonObject.HasKey(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PERIPHERAL_KEY), "has peripheral key")
+        );
+
         QueueConfiguredDevices(jsonObject);
         QueueConfiguredPeripheral(jsonObject);
 

@@ -57,4 +57,29 @@
     </ProjectReference>
   </ItemGroup>
 
+  <!--
+    A native vcxproj reference contributes no copy-local binary, so without this the runtime DLL
+    never reaches a consuming tool's output folder. The C# projection below is regenerated from the
+    winmd on every build, so the tool ends up asking a stale binary for interfaces it does not
+    implement and throws InvalidCastException at the first call. Declaring it as Content is what
+    makes it flow through ProjectReference to every consumer.
+
+    Deliberately no Exists() condition: if the SDK has not been built the copy fails loudly, which
+    is far better than silently shipping yesterday's binary.
+  -->
+  <PropertyGroup>
+    <MidiNativeSdkOutputPath>$(MSBuildThisFileDirectory)..\..\..\..\vsfiles-sdk\out\Windows.Devices.Midi2\$(Platform)\$(Configuration)\</MidiNativeSdkOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="$(MidiNativeSdkOutputPath)Windows.Devices.Midi2.dll">
+      <Link>Windows.Devices.Midi2.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="$(MidiNativeSdkOutputPath)Windows.Devices.Midi2.pri">
+      <Link>Windows.Devices.Midi2.pri</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

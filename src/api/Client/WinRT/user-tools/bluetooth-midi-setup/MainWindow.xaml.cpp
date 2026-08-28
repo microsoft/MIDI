@@ -514,7 +514,15 @@ namespace winrt::midibluetoothsetup::implementation
                                         continue;
                                     }
 
-                                    auto const section = pair.Value().try_as<json::JsonObject>();
+                                    // Iterating a JsonObject yields IJsonValue, which does not
+                                    // cast to JsonObject. It has to be asked for its object.
+                                    if (pair.Value() == nullptr ||
+                                        pair.Value().ValueType() != json::JsonValueType::Object)
+                                    {
+                                        break;
+                                    }
+
+                                    auto const section = pair.Value().GetObject();
 
                                     if (section == nullptr || !section.HasKey(L"devices"))
                                     {
