@@ -294,17 +294,18 @@ namespace winrt::midibluetoothsetup::implementation
                 return;
             }
 
-            auto const showDevices =
-                native::AppSettings::Current().SelectedPageIndex() != native::AppSettings::PageIndexThisPc;
+            auto const pageIndex = native::AppSettings::Current().SelectedPageIndex();
 
             // the panels first, because selecting an item which is already selected raises no
             // selection changed event to do it for us
-            ShowDevicesPage(showDevices);
+            ShowPage(pageIndex);
 
             MainNavigation().SelectedItem(
-                showDevices ?
-                DevicesNavigationItem().as<foundation::IInspectable>() :
-                ThisPcNavigationItem().as<foundation::IInspectable>());
+                pageIndex == native::AppSettings::PageIndexThisPc ?
+                    ThisPcNavigationItem().as<foundation::IInspectable>() :
+                pageIndex == native::AppSettings::PageIndexSettings ?
+                    SettingsNavigationItem().as<foundation::IInspectable>() :
+                    DevicesNavigationItem().as<foundation::IInspectable>());
 
             StartRefreshTimer();
 
@@ -328,6 +329,7 @@ namespace winrt::midibluetoothsetup::implementation
                 TransportUnavailableBar().IsOpen(true);
                 DevicesPanel().Visibility(xaml::Visibility::Collapsed);
                 ThisPcPanel().Visibility(xaml::Visibility::Collapsed);
+                SettingsPanel().Visibility(xaml::Visibility::Collapsed);
             }
             MIDI_BTSETUP_CATCH_AND_LOG(L"Unable to show the transport unavailable message.")
         }
@@ -350,12 +352,15 @@ namespace winrt::midibluetoothsetup::implementation
             }
 
             auto const tag = winrt::unbox_value_or<winrt::hstring>(item.Tag(), winrt::hstring{});
-            auto const showDevices = tag != L"thispc";
 
-            ShowDevicesPage(showDevices);
+            auto const pageIndex =
+                tag == L"thispc" ? native::AppSettings::PageIndexThisPc :
+                tag == L"settings" ? native::AppSettings::PageIndexSettings :
+                native::AppSettings::PageIndexDevices;
 
-            native::AppSettings::Current().SelectedPageIndex(
-                showDevices ? native::AppSettings::PageIndexDevices : native::AppSettings::PageIndexThisPc);
+            ShowPage(pageIndex);
+
+            native::AppSettings::Current().SelectedPageIndex(pageIndex);
 
             // the page the customer just switched to should not show stale numbers
             RequestRefreshAsync();
@@ -363,7 +368,7 @@ namespace winrt::midibluetoothsetup::implementation
         MIDI_BTSETUP_CATCH_AND_LOG(L"Unable to switch pages.")
     }
 
-    void MainWindow::ShowDevicesPage(bool const showDevices) noexcept
+    void MainWindow::ShowPage(uint32_t const pageIndex) noexcept
     {
         try
         {
@@ -372,8 +377,14 @@ namespace winrt::midibluetoothsetup::implementation
                 return;
             }
 
-            DevicesPanel().Visibility(showDevices ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
-            ThisPcPanel().Visibility(showDevices ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+            DevicesPanel().Visibility(
+                pageIndex == native::AppSettings::PageIndexDevices ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            ThisPcPanel().Visibility(
+                pageIndex == native::AppSettings::PageIndexThisPc ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            SettingsPanel().Visibility(
+                pageIndex == native::AppSettings::PageIndexSettings ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
         }
         MIDI_BTSETUP_CATCH_AND_LOG(L"Unable to show the requested page.")
     }
@@ -591,6 +602,29 @@ namespace winrt::midibluetoothsetup::implementation
         ApplyDevices(snapshot);
         ApplyPeripheral(snapshot);
         ApplyPendingClients(snapshot);
+        ApplyTransportSettings();
+    }
+
+    void MainWindow::ApplyTransportSettings() noexcept
+    {
+        try
+        {
+            auto const seconds = midi2bt::MidiBluetoothTransportManager::GetDefaultOfflineRetentionSeconds();
+
+            if (seconds == m_defaultOfflineRetentionSeconds)
+            {
+                return;
+            }
+
+            m_defaultOfflineRetentionSeconds = seconds;
+
+            // This combo has no "use default" entry, so its indices are one lower than the
+            // per-device one's.
+            auto const deviceIndex = implementation::BluetoothDeviceItem::OfflineRetentionIndexFromSeconds(seconds);
+
+            DefaultOfflineRetentionCombo().SelectedIndex(deviceIndex < 1 ? -1 : deviceIndex - 1);
+        }
+        MIDI_BTSETUP_CATCH_AND_LOG(L"Unable to show the transport settings.")
     }
 
     void MainWindow::ApplyRadio(ServiceSnapshot const& snapshot) noexcept

@@ -137,9 +137,29 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         }
     }
 
-    collections::IVectorView<bluetooth::MidiBluetoothDeviceInformation> MidiBluetoothTransportManager::GetAvailableDevices() noexcept
+    int32_t MidiBluetoothTransportManager::GetDefaultOfflineRetentionSeconds() noexcept
     {
-        auto devices = winrt::single_threaded_vector<bluetooth::MidiBluetoothDeviceInformation>();
+        try
+        {
+            // Carried on the device list rather than by its own command, because that is the call
+            // every caller already makes to populate a view.
+            auto const outcome = SendTransportCommand(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_COMMAND_LIST_AVAILABLE_DEVICES, {});
+
+            if (outcome.Success && outcome.ResponseJson != nullptr)
+            {
+                return btinternal::OfflineRetentionFromJsonString(
+                    outcome.ResponseJson.GetNamedString(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_KEY, L""));
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return static_cast<int32_t>(bluetooth::MidiBluetoothOfflineRetention::KeepAlways);
+    }
+
+    collections::IVectorView<bluetooth::MidiBluetoothDeviceInformation> MidiBluetoothTransportManager::GetAvailableDevices() noexcept
+    {        auto devices = winrt::single_threaded_vector<bluetooth::MidiBluetoothDeviceInformation>();
 
         try
         {

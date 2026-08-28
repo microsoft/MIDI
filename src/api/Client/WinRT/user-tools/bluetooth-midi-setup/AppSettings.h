@@ -38,6 +38,7 @@ namespace midibluetoothsetup
 
         static constexpr uint32_t PageIndexDevices = 0;
         static constexpr uint32_t PageIndexThisPc = 1;
+        static constexpr uint32_t PageIndexSettings = 2;
 
     private:
         AppSettings() noexcept;

@@ -126,6 +126,14 @@
                         <FontIcon Glyph="&#xE977;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem x:Name="SettingsNavigationItem"
+                                    x:Uid="SettingsNavigationItem"
+                                    Content="Transport settings"
+                                    Tag="settings">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE713;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
 
             <Grid>
@@ -352,33 +360,6 @@
                                                             Orientation="Horizontal"
                                                             Spacing="8"
                                                             VerticalAlignment="Center">
-                                                    <!-- An app using WinMM or WinRT MIDI 1.0 cannot ask whether a
-                                                         device is present, so whether the endpoint exists is the
-                                                         only signal it gets. -->
-                                                    <StackPanel Orientation="Vertical"
-                                                                Spacing="2"
-                                                                VerticalAlignment="Center"
-                                                                Visibility="{x:Bind OfflineRetentionVisibility, Mode=OneWay}">
-                                                        <TextBlock x:Uid="OfflineRetentionLabel"
-                                                                   Text="Keep endpoint when offline"
-                                                                   Style="{ThemeResource CaptionTextBlockStyle}"
-                                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                                                        <ComboBox MinWidth="150"
-                                                                  SelectedIndex="{x:Bind OfflineRetentionIndex, Mode=OneWay}"
-                                                                  SelectionChanged="OnOfflineRetentionChanged">
-                                                            <ComboBoxItem x:Uid="OfflineRetentionUseDefaultItem" Content="Use default" />
-                                                            <ComboBoxItem x:Uid="OfflineRetentionAlwaysItem" Content="Always" />
-                                                            <ComboBoxItem x:Uid="OfflineRetentionImmediateItem" Content="Remove immediately" />
-                                                            <ComboBoxItem x:Uid="OfflineRetention30SecondsItem" Content="After 30 seconds" />
-                                                            <ComboBoxItem x:Uid="OfflineRetention5MinutesItem" Content="After 5 minutes" />
-                                                        </ComboBox>
-                                                        <!-- What the setting resolves to. The combo shows no selection
-                                                             for a duration which is not one of its presets, so this is
-                                                             the only place that value appears. -->
-                                                        <TextBlock Text="{x:Bind OfflineRetentionText, Mode=OneWay}"
-                                                                   Style="{ThemeResource CaptionTextBlockStyle}"
-                                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                                                    </StackPanel>
                                                     <Button x:Uid="ConnectButton"
                                                             Content="Connect"
                                                             Style="{ThemeResource AccentButtonStyle}"
@@ -392,17 +373,126 @@
                                                             Content="Forget"
                                                             Visibility="{x:Bind ForgetVisibility, Mode=OneWay}"
                                                             Click="OnForgetDeviceClick" />
-                                                    <Button x:Uid="CustomizeButton"
-                                                            Content="Rename"
-                                                            Visibility="{x:Bind CustomizeVisibility, Mode=OneWay}"
-                                                            Click="OnCustomizeDeviceClick" />
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <!-- Everything here is diagnostic or occasional, so it is out of the
+                                                 way until it is wanted. -->
+                                            <Expander x:Uid="DeviceDetailsExpander"
+                                                      Header="Details"
+                                                      HorizontalAlignment="Stretch"
+                                                      HorizontalContentAlignment="Stretch"
+                                                      Background="Transparent"
+                                                      BorderThickness="0">
+                                                <Grid Margin="0,4,0,4"
+                                                      ColumnSpacing="12"
+                                                      RowSpacing="6">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" MinWidth="140" />
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="Auto" />
+                                                    </Grid.RowDefinitions>
+
+                                                    <TextBlock x:Uid="DeviceAddressLabel"
+                                                               Grid.Row="0" Grid.Column="0"
+                                                               Text="Address"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <TextBlock Grid.Row="0" Grid.Column="1"
+                                                               Text="{x:Bind SubtitleText, Mode=OneWay}"
+                                                               TextWrapping="Wrap"
+                                                               IsTextSelectionEnabled="True"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                                                    <TextBlock x:Uid="EndpointDeviceIdLabel"
+                                                               Grid.Row="1" Grid.Column="0"
+                                                               Text="Endpoint device id"
+                                                               Visibility="{x:Bind EndpointDeviceIdVisibility, Mode=OneWay}"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <TextBlock Grid.Row="1" Grid.Column="1"
+                                                               Text="{x:Bind EndpointDeviceId, Mode=OneWay}"
+                                                               TextWrapping="Wrap"
+                                                               IsTextSelectionEnabled="True"
+                                                               Visibility="{x:Bind EndpointDeviceIdVisibility, Mode=OneWay}"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}" />
                                                     <Button x:Uid="CopyEndpointIdButton"
+                                                            Grid.Row="1" Grid.Column="2"
+                                                            VerticalAlignment="Top"
                                                             Visibility="{x:Bind EndpointDeviceIdVisibility, Mode=OneWay}"
                                                             Click="OnCopyEndpointDeviceIdClick">
                                                         <FontIcon Glyph="&#xE8C8;" FontSize="14" />
                                                     </Button>
-                                                </StackPanel>
-                                            </Grid>
+
+                                                    <TextBlock x:Uid="ConnectionIntervalLabel"
+                                                               Grid.Row="2" Grid.Column="0"
+                                                               Text="Connection interval"
+                                                               Visibility="{x:Bind IntervalVisibility, Mode=OneWay}"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <TextBlock Grid.Row="2" Grid.Column="1"
+                                                               Text="{x:Bind IntervalText, Mode=OneWay}"
+                                                               Visibility="{x:Bind IntervalVisibility, Mode=OneWay}"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                                                    <TextBlock x:Uid="DeviceStatisticsLabel"
+                                                               Grid.Row="3" Grid.Column="0"
+                                                               Text="Messages"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <TextBlock Grid.Row="3" Grid.Column="1"
+                                                               Text="{x:Bind StatisticsText, Mode=OneWay}"
+                                                               TextWrapping="Wrap"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                                                    <!-- An app using WinMM or WinRT MIDI 1.0 cannot ask whether a
+                                                         device is present, so whether the endpoint exists is the
+                                                         only signal it gets. -->
+                                                    <TextBlock x:Uid="OfflineRetentionLabel"
+                                                               Grid.Row="4" Grid.Column="0"
+                                                               Text="Keep endpoint when offline"
+                                                               TextWrapping="Wrap"
+                                                               VerticalAlignment="Center"
+                                                               Visibility="{x:Bind OfflineRetentionVisibility, Mode=OneWay}"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <StackPanel Grid.Row="4" Grid.Column="1"
+                                                                Orientation="Horizontal"
+                                                                Spacing="8"
+                                                                VerticalAlignment="Center"
+                                                                Visibility="{x:Bind OfflineRetentionVisibility, Mode=OneWay}">
+                                                        <ComboBox MinWidth="170"
+                                                                  SelectedIndex="{x:Bind OfflineRetentionIndex, Mode=OneWay}"
+                                                                  SelectionChanged="OnOfflineRetentionChanged">
+                                                            <ComboBoxItem x:Uid="OfflineRetentionUseDefaultItem" Content="Use default" />
+                                                            <ComboBoxItem x:Uid="OfflineRetentionAlwaysItem" Content="Always" />
+                                                            <ComboBoxItem x:Uid="OfflineRetentionImmediateItem" Content="Remove immediately" />
+                                                            <ComboBoxItem x:Uid="OfflineRetention30SecondsItem" Content="After 30 seconds" />
+                                                            <ComboBoxItem x:Uid="OfflineRetention5MinutesItem" Content="After 5 minutes" />
+                                                        </ComboBox>
+                                                        <!-- What the setting resolves to. The combo shows no selection
+                                                             for a duration which is not one of its presets, so this is
+                                                             the only place that value appears. -->
+                                                        <TextBlock Text="{x:Bind OfflineRetentionText, Mode=OneWay}"
+                                                                   VerticalAlignment="Center"
+                                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                    </StackPanel>
+                                                    <Button x:Uid="CustomizeButton"
+                                                            Grid.Row="4" Grid.Column="2"
+                                                            Content="Rename"
+                                                            VerticalAlignment="Center"
+                                                            Visibility="{x:Bind CustomizeVisibility, Mode=OneWay}"
+                                                            Click="OnCustomizeDeviceClick" />
+                                                </Grid>
+                                            </Expander>
 
                                             <!-- The transport's own wording, which is more specific than
                                                  an error code can be. -->
@@ -590,6 +680,57 @@
                                        TextWrapping="Wrap"
                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- ====================== Page 3: Transport settings ====================== -->
+                    <ScrollViewer x:Name="SettingsPanel"
+                                  Margin="16,12,16,16"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Visibility="Collapsed">
+                        <StackPanel Spacing="12" Margin="0,0,4,0">
+                            <StackPanel>
+                                <TextBlock x:Uid="SettingsHeader"
+                                           Text="Transport settings"
+                                           Style="{StaticResource SectionHeaderTextStyle}" />
+                                <TextBlock x:Uid="SettingsDescription"
+                                           Text="These apply to every Bluetooth MIDI device unless a device has been given its own setting."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+
+                            <Border Style="{StaticResource CardBorderStyle}">
+                                <StackPanel Spacing="10">
+                                    <TextBlock x:Uid="DefaultOfflineRetentionHeader"
+                                               Text="Keep endpoints when a device goes offline"
+                                               Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                                    <!-- An app using WinMM or WinRT MIDI 1.0 cannot ask whether a device is
+                                         present, so whether the endpoint exists is the only signal it gets
+                                         that the device has gone. -->
+                                    <TextBlock x:Uid="DefaultOfflineRetentionDescription"
+                                               Text="Keeping an endpoint means applications hold on to their MIDI ports while a device is switched off or out of range. Removing it means the ports disappear, which is the only way most applications can tell the device is gone."
+                                               TextWrapping="Wrap"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                    <ComboBox x:Name="DefaultOfflineRetentionCombo"
+                                              MinWidth="200"
+                                              HorizontalAlignment="Left"
+                                              SelectionChanged="OnDefaultOfflineRetentionChanged">
+                                        <ComboBoxItem x:Uid="OfflineRetentionAlwaysItem" Content="Always" />
+                                        <ComboBoxItem x:Uid="OfflineRetentionImmediateItem" Content="Remove immediately" />
+                                        <ComboBoxItem x:Uid="OfflineRetention30SecondsItem" Content="After 30 seconds" />
+                                        <ComboBoxItem x:Uid="OfflineRetention5MinutesItem" Content="After 5 minutes" />
+                                    </ComboBox>
+
+                                    <TextBlock x:Name="DefaultOfflineRetentionStatusText"
+                                               TextWrapping="Wrap"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>

@@ -106,6 +106,40 @@
   <data name="OfflineRetentionLabel.Text" xml:space="preserve">
     <value>Keep endpoint when offline</value>
   </data>
+  <data name="DeviceDetailsExpander.Header" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="SettingsNavigationItem.Content" xml:space="preserve">
+    <value>Transport settings</value>
+  </data>
+  <data name="SettingsHeader.Text" xml:space="preserve">
+    <value>Transport settings</value>
+  </data>
+  <data name="SettingsDescription.Text" xml:space="preserve">
+    <value>These apply to every Bluetooth MIDI device unless a device has been given its own setting.</value>
+  </data>
+  <data name="DefaultOfflineRetentionHeader.Text" xml:space="preserve">
+    <value>Keep endpoints when a device goes offline</value>
+  </data>
+  <data name="DefaultOfflineRetentionDescription.Text" xml:space="preserve">
+    <value>Keeping an endpoint means applications hold on to their MIDI ports while a device is switched off or out of range. Removing it means the ports disappear, which is the only way most applications can tell the device is gone.</value>
+  </data>
+  <data name="StatusDefaultOfflineRetentionSetFormat" xml:space="preserve">
+    <value>Endpoints will be kept when a device goes offline: {0}.</value>
+    <comment>{0} is the retention setting</comment>
+  </data>
+  <data name="DeviceAddressLabel.Text" xml:space="preserve">
+    <value>Address</value>
+  </data>
+  <data name="EndpointDeviceIdLabel.Text" xml:space="preserve">
+    <value>Endpoint device id</value>
+  </data>
+  <data name="ConnectionIntervalLabel.Text" xml:space="preserve">
+    <value>Connection interval</value>
+  </data>
+  <data name="DeviceStatisticsLabel.Text" xml:space="preserve">
+    <value>Messages</value>
+  </data>
   <data name="OfflineRetentionUseDefaultItem.Content" xml:space="preserve">
     <value>Use default</value>
   </data>

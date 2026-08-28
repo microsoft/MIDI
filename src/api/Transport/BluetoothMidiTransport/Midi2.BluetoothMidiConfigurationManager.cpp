@@ -860,6 +860,15 @@ CMidi2BluetoothMidiConfigurationManager::UpdateConfiguration(
         }
 
         responseObject.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_AVAILABLE_DEVICES_RESPONSE_KEY, devicesJson);
+
+        // The transport-wide default, so a caller can show it without having to find a device
+        // which happens to be deferring to it.
+        responseObject.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_OFFLINE_RETENTION_KEY,
+            json::JsonValue::CreateStringValue(
+                MidiBleUtilities::OfflineRetentionToJsonString(
+                    TransportState::Current().GetDefaultOfflineRetentionSeconds())));
+
         AddRadioCapabilitiesToResponse(responseObject);
         internal::SetConfigurationResponseObjectSuccess(responseObject);
     }

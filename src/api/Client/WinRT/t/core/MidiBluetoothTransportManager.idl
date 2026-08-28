@@ -82,5 +82,9 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
         // Null when the transport did not report it, which is what an older service looks like.
         // Otherwise this is how an application explains a machine with no usable Bluetooth.
         [noexcept] static MidiBluetoothRadioInformation GetRadioInformation();
+
+        // The transport-wide value every device set to UseTransportDefault falls back to. Never
+        // UseTransportDefault itself, because there is nothing above it to defer to.
+        [noexcept] static Int32 GetDefaultOfflineRetentionSeconds();
     }
 }

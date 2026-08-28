@@ -37,6 +37,7 @@ namespace winrt::midibluetoothsetup::implementation
         winrt::fire_and_forget OnForgetDeviceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnCustomizeDeviceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnOfflineRetentionChanged(foundation::IInspectable const& sender, xaml::Controls::SelectionChangedEventArgs const& args);
+        winrt::fire_and_forget OnDefaultOfflineRetentionChanged(foundation::IInspectable const& sender, xaml::Controls::SelectionChangedEventArgs const& args);
         void OnCopyEndpointDeviceIdClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         winrt::fire_and_forget OnStartPeripheralClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -87,7 +88,7 @@ namespace winrt::midibluetoothsetup::implementation
             _In_ bool const approve,
             _In_ midi2bt::MidiBluetoothApprovalScope const scope) noexcept;
 
-        void ShowDevicesPage(bool const showDevices) noexcept;
+        void ShowPage(uint32_t const pageIndex) noexcept;
 
         void SetDevicesStatus(winrt::hstring const& text) noexcept;
         void SetPeripheralStatus(winrt::hstring const& text) noexcept;
@@ -139,7 +140,13 @@ namespace winrt::midibluetoothsetup::implementation
         // a tick is skipped rather than queued when the previous refresh is still running
         std::atomic<bool> m_refreshInFlight{ false };
 
+        void ApplyTransportSettings() noexcept;
+
         bool m_transportUsable{ false };
+
+        // What the service currently holds, so the combo's SelectionChanged can tell a real change
+        // from the one it raises while being populated.
+        int32_t m_defaultOfflineRetentionSeconds{ -1 };
     };
 }
 

@@ -651,6 +651,84 @@ namespace winrt::midibluetoothsetup::implementation
     }
 
     _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnDefaultOfflineRetentionChanged(
+        foundation::IInspectable const& sender,
+        xaml::Controls::SelectionChangedEventArgs const&)
+    {
+        auto strongThis = get_strong();
+
+        auto const combo = sender.try_as<xaml::Controls::ComboBox>();
+
+        if (combo == nullptr)
+        {
+            co_return;
+        }
+
+        // No "use default" here: the transport setting is what a device defers TO, so the items
+        // start at Always and the indices are one lower than the per-device combo's.
+        auto const selectedIndex = combo.SelectedIndex();
+
+        if (selectedIndex < 0)
+        {
+            co_return;
+        }
+
+        auto const seconds = implementation::BluetoothDeviceItem::OfflineRetentionSecondsFromIndex(selectedIndex + 1);
+
+        // Set while the page was being populated rather than by the customer, so there is nothing
+        // to apply. Without this every refresh would rewrite the configuration file.
+        if (seconds == m_defaultOfflineRetentionSeconds)
+        {
+            co_return;
+        }
+
+        winrt::hstring errorMessage{};
+        bool succeeded{ false };
+
+        try
+        {
+            midi2bt::MidiBluetoothOfflineRetentionConfig config{ seconds };
+
+            auto const sendResponse = midi2svc::MidiServiceTransportPluginConfigManager::SendUpdate(config);
+
+            if (sendResponse != nullptr &&
+                sendResponse.Status() == midi2svc::MidiServiceConfigResponseStatus::Success)
+            {
+                auto const saveResponse = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                succeeded = saveResponse != nullptr && saveResponse.Success();
+
+                if (!succeeded && saveResponse != nullptr)
+                {
+                    errorMessage = saveResponse.ErrorMessage();
+                }
+            }
+            else if (sendResponse != nullptr)
+            {
+                errorMessage = sendResponse.ServiceErrorMessage();
+            }
+        }
+        catch (...)
+        {
+        }
+
+        if (succeeded)
+        {
+            m_defaultOfflineRetentionSeconds = seconds;
+
+            DefaultOfflineRetentionStatusText().Text(
+                res::FormatString(L"StatusDefaultOfflineRetentionSetFormat", OfflineRetentionChoiceDescription(seconds)));
+        }
+        else
+        {
+            DefaultOfflineRetentionStatusText().Text(
+                errorMessage.empty() ? res::GetString(L"StatusOfflineRetentionFailed") : errorMessage);
+        }
+
+        co_return;
+    }
+
+    _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::OnOfflineRetentionChanged(
         foundation::IInspectable const& sender,
         xaml::Controls::SelectionChangedEventArgs const&)

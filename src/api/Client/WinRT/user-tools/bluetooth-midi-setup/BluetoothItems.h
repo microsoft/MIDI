@@ -288,9 +288,9 @@ namespace winrt::midibluetoothsetup::implementation
             }
         }
 
-        int32_t OfflineRetentionIndex() const noexcept
+        static int32_t OfflineRetentionIndexFromSeconds(_In_ int32_t const seconds) noexcept
         {
-            switch (m_offlineRetentionSeconds)
+            switch (seconds)
             {
             case -2: return 0;
             case -1: return 1;
@@ -303,6 +303,11 @@ namespace winrt::midibluetoothsetup::implementation
             // the real value is in OfflineRetentionText either way.
             default: return -1;
             }
+        }
+
+        int32_t OfflineRetentionIndex() const noexcept
+        {
+            return OfflineRetentionIndexFromSeconds(m_offlineRetentionSeconds);
         }
 
         winrt::hstring OfflineRetentionText() const noexcept { return m_offlineRetentionText; }
