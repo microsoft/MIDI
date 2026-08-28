@@ -220,8 +220,7 @@
 #define UUID_IMidiSystemExclusiveReceivedEventArgs                          8087b303-0519-c0de-31d1-dd00E0303000
 
 #define UUID_IMidiSystemExclusiveReceiver                                   8087b303-0519-c0de-31d1-dd00E0304000
-
-#define UUID_IMidiSystemExclusiveReceiverFactory                            8087b303-0519-c0de-31d1-ff00E0305000
+#define UUID_IMidiSystemExclusiveReceiverFactory                            8087b303-0519-c0de-31d1-ff00E0304000
 
 
 // ========== Transports : Interface number 0F ========================================================================
@@ -368,7 +367,7 @@
 
 #define UUID_IMidiBluetoothPeripheralStatus                     8087b303-0519-c0de-31d1-dd00F0509000
 #define UUID_IMidiBluetoothPeripheralClient                     8087b303-0519-c0de-31d1-dd00F050A000
-#define UUID_IMidiBluetoothRadioInformation                    8087b303-0519-c0de-31d1-dd00F050B000
+#define UUID_IMidiBluetoothRadioInformation                     8087b303-0519-c0de-31d1-dd00F050B000
 
 #define UUID_IMidiBluetoothPeripheralClientDecisionResponse      8087b303-0519-c0de-31d1-dd00F050C000
 
