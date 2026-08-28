@@ -51,6 +51,10 @@ namespace winrt::midinetworksetup::implementation
         void OnCreateHostFieldChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args);
         void OnCreateHostPortModeChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        winrt::fire_and_forget OnCreateHostPrimaryButtonClick(
+            controls::ContentDialog const& sender,
+            controls::ContentDialogButtonClickEventArgs const& args);
+
         winrt::fire_and_forget OnStartStopHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnDeleteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 

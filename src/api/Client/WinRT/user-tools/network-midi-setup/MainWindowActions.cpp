@@ -714,6 +714,71 @@ namespace winrt::midinetworksetup::implementation
         UpdateCreateHostButtonState();
     }
 
+    // The name check briefly listens to the network, so it happens once here rather than while
+    // the customer is typing. Cancelling the click keeps the dialog open with the field filled
+    // in, so creating the host is one more click rather than a round trip through an error.
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnCreateHostPrimaryButtonClick(
+        controls::ContentDialog const& sender,
+        controls::ContentDialogButtonClickEventArgs const& args)
+    {
+        auto const typed = TextOf(HostServiceInstanceNameTextBox());
+
+        if (typed.empty())
+        {
+            co_return;
+        }
+
+        auto deferral = args.GetDeferral();
+
+        // Captured before leaving the UI thread, so the continuation lands back on it.
+        winrt::apartment_context uiThread;
+
+        sender.IsPrimaryButtonEnabled(false);
+        CreateHostStatusText().Text(res::GetString(L"HostCheckingServiceInstanceName"));
+
+        co_await winrt::resume_background();
+
+        bool available{ true };
+        winrt::hstring suggestion{ };
+
+        try
+        {
+            available = midi2net::MidiNetworkHostCreationConfig::IsServiceInstanceNameAvailable(typed);
+
+            if (!available)
+            {
+                suggestion = midi2net::MidiNetworkHostCreationConfig::MakeUniqueServiceInstanceName(typed);
+            }
+        }
+        catch (...)
+        {
+            // A check which could not run must not block the customer. The service still
+            // refuses a duplicate, so this fails open.
+            available = true;
+        }
+
+        co_await uiThread;
+
+        if (!available && !suggestion.empty())
+        {
+            args.Cancel(true);
+
+            HostServiceInstanceNameTextBox().Text(suggestion);
+
+            CreateHostStatusText().Text(
+                res::FormatString(L"HostServiceInstanceNameInUseFormat", suggestion));
+        }
+        else
+        {
+            CreateHostStatusText().Text(L"");
+        }
+
+        sender.IsPrimaryButtonEnabled(true);
+
+        deferral.Complete();
+    }
+
     _Use_decl_annotations_
     void MainWindow::OnCreateHostPortModeChanged(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {

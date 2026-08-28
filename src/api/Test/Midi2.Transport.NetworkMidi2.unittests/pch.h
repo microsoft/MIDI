@@ -51,6 +51,8 @@
 #include <winrt/Windows.Devices.Enumeration.h>
 #include <winrt/Windows.Networking.h>
 #include <winrt/Windows.Networking.Connectivity.h>
+#include <winrt/Windows.Networking.Sockets.h>
+#include <winrt/Windows.Networking.ServiceDiscovery.Dnssd.h>
 
 #include "MidiSequenceNumber.h" // this is in the network midi project
 #include "network_transport_error_codes.h" // shared with the service and the SDK

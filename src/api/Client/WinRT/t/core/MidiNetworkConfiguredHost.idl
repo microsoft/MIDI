@@ -44,6 +44,14 @@ namespace Windows.Devices.Midi2.Transports.Network
 
         [noexcept] String ServiceInstanceName{ get; };
 
+        // The DNS-SD instance label actually on the network. A responder renames a colliding
+        // label rather than refusing it, so this is not always the configured name.
+        [noexcept] String ActualServiceInstanceName{ get; };
+
+        // True when the above happened. The host works, but other devices see a different name
+        // than the one configured here, so this is worth showing.
+        [noexcept] Boolean ServiceInstanceNameWasChanged{ get; };
+
         [noexcept] Boolean CreateMidi1Ports{ get; };
 
         [noexcept] MidiNetworkRemoteClientPolicy RemoteClientPolicy{ get; };

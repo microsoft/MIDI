@@ -30,7 +30,17 @@ public:
 
     HRESULT Shutdown();
 
+    // A DNS-SD responder renames a colliding instance label instead of refusing to register it,
+    // so what is on the network is not necessarily what was configured.
+    bool InstanceNameWasChanged() const { return m_instanceNameWasChanged; }
+
+    // The label actually on the network, without the service type suffix. Empty if the platform
+    // did not tell us what it chose.
+    winrt::hstring ActualInstanceNameWithoutSuffix() const { return m_actualInstanceNameWithoutSuffix; }
+
 private:
     winrt::Windows::Networking::ServiceDiscovery::Dnssd::DnssdServiceInstance m_serviceInstance{ nullptr };
 
+    bool m_instanceNameWasChanged{ false };
+    winrt::hstring m_actualInstanceNameWithoutSuffix{ };
 };

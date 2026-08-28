@@ -19,6 +19,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         static network::MidiNetworkHostCreationConfig CreateDefault() noexcept;
 
+        static bool IsServiceInstanceNameAvailable(_In_ winrt::hstring const& serviceInstanceName) noexcept;
+        static winrt::hstring MakeUniqueServiceInstanceName(_In_ winrt::hstring const& baseServiceInstanceName) noexcept;
+
 
         static winrt::hstring EnsureCompliantServiceInstanceName(_In_ winrt::hstring const& serviceInstanceName) noexcept;
 

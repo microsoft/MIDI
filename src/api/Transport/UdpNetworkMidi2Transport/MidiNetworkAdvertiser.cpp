@@ -56,6 +56,9 @@ MidiNetworkAdvertiser::Advertise(
 
     auto fullServiceName = BuildFullServiceInstanceName(serviceInstanceNameWithoutSuffix);
 
+    m_instanceNameWasChanged = false;
+    m_actualInstanceNameWithoutSuffix = serviceInstanceNameWithoutSuffix;
+
     m_serviceInstance = DnssdServiceInstance(
         fullServiceName,
         hostName,
@@ -71,6 +74,49 @@ MidiNetworkAdvertiser::Advertise(
     switch (registration.Status())
     {
     case DnssdRegistrationStatus::Success:
+        // The responder renames a colliding instance label rather than refusing it, so the name
+        // on the wire is not necessarily the one we asked for. Recorded because everything else
+        // reports the configured name, and the two disagreeing is otherwise invisible.
+        if (registration.HasInstanceNameChanged())
+        {
+            m_instanceNameWasChanged = true;
+
+            // The platform updates the instance in place with whatever it settled on. Read back
+            // rather than assumed, and the service type suffix trimmed off again so this is the
+            // same shape as the configured name.
+            std::wstring registered{ };
+
+            try
+            {
+                registered = m_serviceInstance.DnssdServiceInstanceName();
+            }
+            CATCH_LOG();
+
+            std::wstring const suffix{ L"." DNS_PTR_SERVICE_TYPE };
+
+            if (registered.length() > suffix.length() &&
+                _wcsicmp(registered.c_str() + (registered.length() - suffix.length()), suffix.c_str()) == 0)
+            {
+                registered.resize(registered.length() - suffix.length());
+            }
+
+            if (!registered.empty())
+            {
+                m_actualInstanceNameWithoutSuffix = winrt::hstring{ registered };
+            }
+
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"DNS-SD renamed this host because its service instance name collided on the network", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(fullServiceName.c_str(), "requested name"),
+                TraceLoggingWideString(m_actualInstanceNameWithoutSuffix.c_str(), "actual name")
+            );
+        }
+
         TraceLoggingWrite(
             MidiNetworkMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,

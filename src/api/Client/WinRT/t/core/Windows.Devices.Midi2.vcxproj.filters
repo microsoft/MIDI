@@ -48,6 +48,7 @@
     <ClCompile Include="MidiConfigFile.cpp">
       <Filter>SDK\ServiceConfig</Filter>
     </ClCompile>
+    <ClCompile Include="$(SolutionDir)inc\midi_network_port_picker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="midi_stream_message_defs.h" />
@@ -72,7 +73,6 @@
     <ClInclude Include="MidiSystemExclusiveSendProgress.h">
       <Filter>SDK\Utilities\SysEx Transfer</Filter>
     </ClInclude>
-    <ClInclude Include="midi_network_defs.h" />
     <ClInclude Include="MidiNetworkConfiguredHost.h">
       <Filter>SDK\Transports\Network\Host</Filter>
     </ClInclude>
@@ -99,6 +99,9 @@
     </ClInclude>
     <ClInclude Include="MidiConfigFile.h">
       <Filter>SDK\ServiceConfig</Filter>
+    </ClInclude>
+    <ClInclude Include="midi_network_defs.h">
+      <Filter>SDK\Transports\Network</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -620,6 +623,15 @@
     </Midl>
     <Midl Include="MidiServiceEndpointCustomizationRemovalConfig.idl">
       <Filter>SDK\ServiceConfig</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothOfflineRetentionConfig.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothOfflineRetentionEnum.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkAdvertisedHostChangedPropertiesEnum.idl">
+      <Filter>SDK\Transports\Network\Watcher</Filter>
     </Midl>
   </ItemGroup>
   <ItemGroup>

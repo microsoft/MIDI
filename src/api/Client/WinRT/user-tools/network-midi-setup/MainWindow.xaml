@@ -848,6 +848,7 @@
                        Title="Create a Network MIDI 2.0 host"
                        PrimaryButtonText="Create"
                        CloseButtonText="Cancel"
+                       PrimaryButtonClick="OnCreateHostPrimaryButtonClick"
                        DefaultButton="Primary">
             <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="460">
                 <StackPanel Spacing="12" Width="440" Margin="0,4,4,4">
@@ -862,7 +863,7 @@
                                  Header="Network service name"
                                  TextChanged="OnCreateHostFieldChanged" />
                         <TextBlock x:Uid="HostServiceInstanceNameHelp"
-                                   Text="This has to be different from every other host on this PC. Periods are removed."
+                                   Text="This has to be different from every other host on this PC, and from anything else on your network. Periods are removed."
                                    TextWrapping="Wrap"
                                    Style="{ThemeResource CaptionTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />

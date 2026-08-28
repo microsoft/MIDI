@@ -1417,7 +1417,12 @@ namespace winrt::midinetworksetup::implementation
 
                     self->InternalUpdate(
                         host.UmpEndpointName().empty() ? host.ServiceInstanceName() : host.UmpEndpointName(),
-                        host.ServiceInstanceName(),
+                        // What other devices actually see, which is not the configured name if a
+                        // collision made the responder rename it.
+                        host.ServiceInstanceNameWasChanged() ?
+                            res::FormatString(L"HostServiceInstanceNameChangedFormat",
+                                host.ActualServiceInstanceName(), host.ServiceInstanceName()) :
+                            host.ServiceInstanceName(),
                         host.ProductInstanceId(),
                         res::FormatString(L"HostAddressValueFormat", host.ActualAddress(), host.ActualPort()),
                         host.ActualPort(),

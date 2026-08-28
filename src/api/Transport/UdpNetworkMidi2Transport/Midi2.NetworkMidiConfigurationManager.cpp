@@ -1081,6 +1081,14 @@ CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateHosts(
             json::JsonValue::CreateStringValue(def.ServiceInstanceName));
 
         hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_ACTUAL_SERVICE_INSTANCE_NAME_KEY,
+            json::JsonValue::CreateStringValue(host->ActualServiceInstanceName()));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SERVICE_INSTANCE_NAME_CHANGED_KEY,
+            json::JsonValue::CreateBooleanValue(host->ServiceInstanceNameWasChanged()));
+
+        hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_REMOTE_CLIENT_POLICY_KEY,
             json::JsonValue::CreateStringValue(
                 def.RemoteClientPolicy == MidiNetworkRemoteClientPolicy::PolicyRequireApproval ?

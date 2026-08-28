@@ -1736,6 +1736,62 @@ void MidiNetworkApiTests::TestPortPickerRejectsAPortTheServiceAlreadyHolds()
     }
 }
 
+void MidiNetworkApiTests::TestUnusedServiceInstanceNameIsReturnedUnchanged()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto const unused = winrt::hstring{ std::wstring{ L"midi-name-check-" } + std::to_wstring(GetTickCount64()) };
+
+    VERIFY_IS_TRUE(
+        MidiNetworkHostCreationConfig::IsServiceInstanceNameAvailable(unused),
+        L"A name nobody holds is available");
+
+    // No decoration when none is needed, or every host would end up called something-02.
+    VERIFY_ARE_EQUAL(
+        unused,
+        MidiNetworkHostCreationConfig::MakeUniqueServiceInstanceName(unused));
+}
+
+void MidiNetworkApiTests::TestServiceInstanceNameInUseIsDetectedAndAnAlternativeOffered()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto const suffix = MakeUniqueSuffix();
+
+    auto hostId = CreateTestHost(suffix);
+
+    VERIFY_IS_FALSE(hostId == winrt::guid{});
+
+    auto cleanup = wil::scope_exit([&] { RemoveTestHost(hostId); });
+
+    VerifyHostAppeared(hostId);
+
+    auto const taken = winrt::hstring{ std::wstring{ TestHostNamePrefix } + suffix };
+
+    Log::Comment(String().Format(L"Name held by the new host: %s", taken.c_str()));
+
+    // A stopped or non advertising host still holds its name, so this has to see the configured
+    // host rather than only what is on the wire.
+    VERIFY_IS_FALSE(
+        MidiNetworkHostCreationConfig::IsServiceInstanceNameAvailable(taken),
+        L"A name a configured host already holds is not available");
+
+    auto const alternative = MidiNetworkHostCreationConfig::MakeUniqueServiceInstanceName(taken);
+
+    Log::Comment(String().Format(L"Offered alternative: %s", alternative.c_str()));
+
+    VERIFY_ARE_NOT_EQUAL(taken, alternative);
+
+    VERIFY_IS_TRUE(
+        std::wstring{ alternative }.find(L"-02") != std::wstring::npos,
+        L"The first alternative is the original with -02 appended");
+
+    // The whole point of offering it is that it can actually be used.
+    VERIFY_IS_TRUE(
+        MidiNetworkHostCreationConfig::IsServiceInstanceNameAvailable(alternative),
+        L"The offered alternative is itself free");
+}
+
 void MidiNetworkApiTests::TestClientMatchCriteriaRoundTrip()
 {
     MidiNetworkClientMatchCriteria criteria;

@@ -1762,6 +1762,82 @@ void NetworkMidiApprovalTests::HostWithoutFallbackDoesNotStartWhenItsPortIsTaken
 }
 
 
+void NetworkMidiApprovalTests::HostReportsWhenDnssdRenamedItsServiceInstance()
+{
+    namespace dnssd = winrt::Windows::Networking::ServiceDiscovery::Dnssd;
+    namespace sockets = winrt::Windows::Networking::Sockets;
+
+    auto const contestedName = MakeServiceInstanceName();
+
+    // Registered by this process first, so the service has to collide with it. Nothing in the
+    // configuration manager can see this: it only knows about MIDI hosts.
+    sockets::DatagramSocket decoySocket;
+
+    dnssd::DnssdServiceInstance decoy{
+        winrt::hstring{ contestedName + L"._midi2._udp.local" },
+        nullptr,
+        5099 };
+
+    auto registration = decoy.RegisterDatagramSocketAsync(decoySocket).get();
+
+    if (registration.Status() != dnssd::DnssdRegistrationStatus::Success)
+    {
+        Log::Result(TestResults::Skipped, L"Could not register a competing DNS-SD instance on this PC.");
+
+        return;
+    }
+
+    auto releaseDecoy = wil::scope_exit([&]() { decoySocket.Close(); });
+
+    Log::Comment(String().Format(L"Decoy registered as '%s'", contestedName.c_str()));
+
+    auto entryIdentifier = MakeEntryIdentifier();
+
+    VERIFY_IS_TRUE(
+        CreateHost(entryIdentifier, L"Renamed Host", L"RENAMEDHOST", contestedName, false, L"auto", true).IsSuccess(),
+        L"Host created");
+
+    auto cleanup = wil::scope_exit([&]() { RemoveHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(WaitForHostStarted(entryIdentifier, std::chrono::milliseconds(15000)), L"Host started");
+
+    auto response = ParseResponse(EnumerateHosts());
+
+    VERIFY_IS_TRUE(response.has_value());
+
+    auto hosts = response->GetNamedArray(L"hosts", nullptr);
+
+    VERIFY_IS_NOT_NULL(hosts);
+
+    bool found{ false };
+
+    for (uint32_t i = 0; i < hosts.Size(); i++)
+    {
+        auto host = hosts.GetObjectAt(i);
+
+        if (_wcsicmp(std::wstring{ host.GetNamedString(L"entryIdentifier", L"") }.c_str(), entryIdentifier.c_str()) != 0)
+        {
+            continue;
+        }
+
+        found = true;
+
+        auto const configured = std::wstring{ host.GetNamedString(L"serviceInstanceName", L"") };
+        auto const actual = std::wstring{ host.GetNamedString(L"actualServiceInstanceName", L"") };
+        auto const changed = host.GetNamedBoolean(L"serviceInstanceNameChanged", false);
+
+        Log::Comment(String().Format(
+            L"configured '%s', actual '%s', changed %d", configured.c_str(), actual.c_str(), changed ? 1 : 0));
+
+        VERIFY_IS_TRUE(changed, L"The host reports that DNS-SD renamed it");
+
+        VERIFY_ARE_NOT_EQUAL(configured, actual, L"The reported name on the network is the new one");
+    }
+
+    VERIFY_IS_TRUE(found, L"The host was listed");
+}
+
+
 void NetworkMidiApprovalTests::SecondHostWithTheSameManualPortIsRejected()
 {
     VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");

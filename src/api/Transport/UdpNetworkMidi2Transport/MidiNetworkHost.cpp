@@ -306,6 +306,22 @@ MidiNetworkHost::CreateNetworkConnection(
     return S_OK;
 }
 
+bool
+MidiNetworkHost::ServiceInstanceNameWasChanged()
+{
+    return m_advertiser != nullptr && m_advertiser->InstanceNameWasChanged();
+}
+
+winrt::hstring
+MidiNetworkHost::ActualServiceInstanceName()
+{
+    if (m_advertiser == nullptr) return m_hostDefinition.ServiceInstanceName;
+
+    auto const actual = m_advertiser->ActualInstanceNameWithoutSuffix();
+
+    return actual.empty() ? m_hostDefinition.ServiceInstanceName : actual;
+}
+
 HRESULT
 MidiNetworkHost::Stop()
 {

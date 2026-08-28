@@ -139,6 +139,11 @@ public:
     // Host ports are generated once and kept, so the picker has to be right about what is free.
     TEST_METHOD(TestGeneratedHostPortIsUsableAndInRange);
     TEST_METHOD(TestPortPickerRejectsAPortTheServiceAlreadyHolds);
+
+    // The service refuses a duplicate service instance name, so the client has to be able to
+    // spot one before submitting, and to offer something that will work.
+    TEST_METHOD(TestServiceInstanceNameInUseIsDetectedAndAnAlternativeOffered);
+    TEST_METHOD(TestUnusedServiceInstanceNameIsReturnedUnchanged);
     TEST_METHOD(TestClientMatchCriteriaRoundTrip);
     TEST_METHOD(TestClientConnectConfigRoundTrip);
     TEST_METHOD(TestDisconnectUnknownClientFailsCleanly);

@@ -31,6 +31,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring ProductInstanceId() const noexcept { return m_productInstanceId; }
 
         winrt::hstring ServiceInstanceName() const noexcept { return m_serviceInstanceName; }
+        winrt::hstring ActualServiceInstanceName() const noexcept { return m_actualServiceInstanceName; }
+        bool ServiceInstanceNameWasChanged() const noexcept { return m_serviceInstanceNameWasChanged; }
 
         bool CreateMidi1Ports() const noexcept { return m_createMidi1Ports; }
 
@@ -47,6 +49,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             _In_ winrt::hstring const& umpEndpointName,
             _In_ winrt::hstring const& productInstanceId,
             _In_ winrt::hstring const& serviceInstanceName,
+            _In_ winrt::hstring const& actualServiceInstanceName,
+            _In_ bool const serviceInstanceNameWasChanged,
             _In_ bool const hasStarted,
             _In_ winrt::hstring const& actualAddress,
             _In_ winrt::hstring const& actualPort,
@@ -61,6 +65,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             m_umpEndpointName = umpEndpointName;
             m_productInstanceId = productInstanceId;
             m_serviceInstanceName = serviceInstanceName;
+            m_actualServiceInstanceName = actualServiceInstanceName;
+            m_serviceInstanceNameWasChanged = serviceInstanceNameWasChanged;
             m_hasStarted = hasStarted;
             m_actualAddress = actualAddress;
             m_actualPort = actualPort;
@@ -88,6 +94,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool m_hasStarted{ false };
         winrt::hstring m_actualAddress{};
         winrt::hstring m_actualPort{};
+        winrt::hstring m_actualServiceInstanceName{};
+        bool m_serviceInstanceNameWasChanged{ false };
         winrt::hstring m_configuredPort{};
         bool m_allowPortFallback{ true };
         bool m_usedPortFallback{ false };

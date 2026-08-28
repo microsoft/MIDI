@@ -359,7 +359,16 @@
     <value>Network service name</value>
   </data>
   <data name="HostServiceInstanceNameHelp.Text" xml:space="preserve">
-    <value>This has to be different from every other host on this PC. Periods are removed.</value>
+    <value>This has to be different from every other host on this PC, and from anything else on your network. Periods are removed.</value>
+  </data>
+  <data name="HostServiceInstanceNameInUseFormat" xml:space="preserve">
+    <value>That network service name was already in use, so it has been changed to "{0}". Select Create again to continue.</value>
+  </data>
+  <data name="HostCheckingServiceInstanceName" xml:space="preserve">
+    <value>Checking the network service name...</value>
+  </data>
+  <data name="HostServiceInstanceNameChangedFormat" xml:space="preserve">
+    <value>{0} (renamed, {1} was already in use on the network)</value>
   </data>
   <data name="HostPolicyLabel.Text" xml:space="preserve">
     <value>When a device asks to connect</value>

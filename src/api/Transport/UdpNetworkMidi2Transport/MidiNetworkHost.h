@@ -96,6 +96,14 @@ public:
     // True when the configured port was unavailable and the host started on an allocated one.
     bool PortFallbackUsed() { return m_portFallbackUsed; }
 
+    // True when a DNS-SD collision made the responder advertise this host under a different
+    // instance label than the one it was configured with.
+    bool ServiceInstanceNameWasChanged();
+
+    // What this host is actually called on the network. The configured name when it is not
+    // advertising, because then there is nothing on the wire to disagree with.
+    winrt::hstring ActualServiceInstanceName();
+
     bool IsEnabled() { return m_enabled; }
 
     MidiNetworkHostDefinition GetDefinition() { return m_hostDefinition; }

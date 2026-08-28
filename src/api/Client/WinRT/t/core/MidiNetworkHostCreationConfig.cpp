@@ -11,6 +11,9 @@
 #include "Transports.Network.MidiNetworkHostCreationConfig.g.cpp"
 
 #include "midi_network_port_picker.h"
+#include "midi_dnssd_browser.h"
+
+#include "MidiNetworkTransportManager.h"
 
 // when this component goes in-box, move the json defs to the common json_defs.h
 #include "..\..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
@@ -62,6 +65,114 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
 
 
+    _Use_decl_annotations_
+    bool MidiNetworkHostCreationConfig::IsServiceInstanceNameAvailable(winrt::hstring const& serviceInstanceName) noexcept
+    {
+        try
+        {
+            auto const wanted = internal::ToLowerTrimmedWStringCopy(
+                std::wstring{ EnsureCompliantServiceInstanceName(serviceInstanceName) });
+
+            if (wanted.empty())
+            {
+                return false;
+            }
+
+            // Hosts on this PC, including any which are configured but stopped. A stopped host
+            // still holds its name.
+            auto const configured = network::MidiNetworkTransportManager::GetConfiguredHosts();
+
+            if (configured != nullptr)
+            {
+                for (auto const& host : configured)
+                {
+                    if (internal::ToLowerTrimmedWStringCopy(std::wstring{ host.ServiceInstanceName() }) == wanted)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            // Anything else on the network advertising the same instance label. A short browse
+            // rather than a full enumeration, because a responder answers a fresh query at once.
+            ::WindowsMidiServicesInternal::MidiDnssdBrowser browser;
+
+            if (SUCCEEDED(browser.Start(
+                std::wstring{ network::MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryName() },
+                nullptr, nullptr, nullptr)))
+            {
+                auto stopBrowser = wil::scope_exit([&browser]() { browser.Stop(); });
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(1500));
+
+                for (auto const& service : browser.EnumeratedServices())
+                {
+                    if (internal::ToLowerTrimmedWStringCopy(service.ServiceInstanceName) == wanted)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, L"General exception checking service instance name availability.");
+
+            return false;
+        }
+    }
+
+
+    _Use_decl_annotations_
+    winrt::hstring MidiNetworkHostCreationConfig::MakeUniqueServiceInstanceName(winrt::hstring const& baseServiceInstanceName) noexcept
+    {
+        try
+        {
+            auto const cleaned = EnsureCompliantServiceInstanceName(baseServiceInstanceName);
+
+            if (cleaned.empty())
+            {
+                return cleaned;
+            }
+
+            if (IsServiceInstanceNameAvailable(cleaned))
+            {
+                return cleaned;
+            }
+
+            // Two digits reads as a name rather than an accident, and matches what people
+            // already write by hand. Beyond 99 the caller is doing something unusual and gets
+            // the plain name back to be rejected by the service.
+            for (int suffix = 2; suffix <= 99; suffix++)
+            {
+                auto const decoration = std::format(L"-{:02}", suffix);
+
+                // Truncated before the suffix is added, or a long machine name would push the
+                // digits off the end and every candidate would be the same string.
+                auto const room = MIDI_DNSSD_SERVICE_INSTANCE_NAME_MAX_BYTE_COUNT - decoration.length();
+
+                auto const candidate = EnsureCompliantServiceInstanceName(
+                    winrt::hstring{ internal::TruncateToUtf8ByteCount(std::wstring{ cleaned }, room) + decoration });
+
+                if (IsServiceInstanceNameAvailable(candidate))
+                {
+                    return candidate;
+                }
+            }
+
+            return cleaned;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, L"General exception making a unique service instance name.");
+
+            return baseServiceInstanceName;
+        }
+    }
+
+
     network::MidiNetworkHostCreationConfig MidiNetworkHostCreationConfig::CreateDefault() noexcept
     {
         try
@@ -97,7 +208,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             // builds the PTR record, so the suffix must not be stored here. We include
             // windows/midisrv because other implementations of this protocol already advertise
             // using the bare machine name.
-            config->m_serviceInstanceName = EnsureCompliantServiceInstanceName(
+            // Unique on the way out, so creating a second host on this PC, or standing up a PC
+            // imaged from another, does not produce a name the service will refuse.
+            config->m_serviceInstanceName = MakeUniqueServiceInstanceName(
                 winrt::hstring{ internal::RemoveInvalidSWDUniqueIdCharacters(name.c_str()) + L"_windows_midisrv" });
 
 

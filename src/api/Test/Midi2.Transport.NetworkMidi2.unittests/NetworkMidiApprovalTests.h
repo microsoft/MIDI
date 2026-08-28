@@ -96,6 +96,10 @@ public:
     TEST_METHOD(HostFallsBackWhenTheConfiguredPortIsTakenByAnotherProcess);
     TEST_METHOD(HostWithoutFallbackDoesNotStartWhenItsPortIsTaken);
 
+    // A DNS-SD responder renames a colliding instance label rather than refusing it, so the host
+    // can end up on the network under a name nothing else in the product knows about.
+    TEST_METHOD(HostReportsWhenDnssdRenamedItsServiceInstance);
+
     // The identity a host puts on the wire has to be the identity it was configured with, or a
     // remote sees the advertised device and the connected device as two different things.
     TEST_METHOD(MaximumLengthIdentityStringsSurviveTheWire);
