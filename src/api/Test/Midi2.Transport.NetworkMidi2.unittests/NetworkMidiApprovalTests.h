@@ -76,6 +76,12 @@ public:
     TEST_METHOD(RemovedHostReleasesItsServiceInstanceName);
     TEST_METHOD(RemovingAnUnknownHostReportsFailure);
 
+    // https://github.com/microsoft/MIDI/issues/1149. Releasing the name inside the service is
+    // not the same as taking the advertisement off the network. These ask mDNS directly, so a
+    // pass means the record is really gone from the wire rather than just out of a local cache.
+    TEST_METHOD(RemovedHostIsNoLongerAdvertisedOnTheNetwork);
+    TEST_METHOD(StoppedHostIsNoLongerAdvertisedOnTheNetwork);
+
     // Two hosts cannot share a UDP port. That includes a manual port colliding with one the
     // system already handed to a host which asked for automatic allocation.
     TEST_METHOD(SecondHostWithTheSameManualPortIsRejected);

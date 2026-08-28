@@ -89,11 +89,10 @@ namespace Windows.Devices.Midi2.Transports.Network
 
 
         [noexcept] static String MidiNetworkUdpDnsServiceType{ get; };
-        [noexcept] static String MidiNetworkUdpDnsSdQueryString{ get; };
         [noexcept] static String MidiNetworkUdpDnsDomain { get; };
-        [noexcept] static Windows.Devices.Enumeration.DeviceInformationKind MidiNetworkUdpDnsSdDeviceInformationKind{ get; };
 
-        [noexcept] static IVector<String> MidiNetworkUdpDnsSdQueryAdditionalProperties { get; };
+        // The full DNS-SD query name, "_midi2._udp.local", as passed to DnsServiceBrowse.
+        [noexcept] static String MidiNetworkUdpDnsSdQueryName{ get; };
 
     }
 }

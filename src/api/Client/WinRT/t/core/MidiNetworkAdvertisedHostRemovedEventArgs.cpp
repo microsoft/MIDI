@@ -16,18 +16,19 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     {
         return m_id;
     }
-    enumeration::DeviceInformationUpdate MidiNetworkAdvertisedHostRemovedEventArgs::DeviceInformationUpdate() noexcept
+
+    winrt::hstring MidiNetworkAdvertisedHostRemovedEventArgs::FullName() noexcept
     {
-        return m_deviceInformationUpdate;
+        return m_fullName;
     }
 
     _Use_decl_annotations_
     void MidiNetworkAdvertisedHostRemovedEventArgs::InternalInitialize(
         winrt::hstring const& id, 
-        enumeration::DeviceInformationUpdate const& args) noexcept
+        winrt::hstring const& fullName) noexcept
     {
         m_id = id;
-        m_deviceInformationUpdate = args;
+        m_fullName = fullName;
     }
 
 }

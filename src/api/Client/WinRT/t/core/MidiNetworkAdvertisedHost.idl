@@ -17,11 +17,12 @@ namespace Windows.Devices.Midi2.Transports.Network
     [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkAdvertisedHost", UUID_IMidiNetworkAdvertisedHost)]
     runtimeclass MidiNetworkAdvertisedHost
     {
-        // from Windows props
+        // Kept in the form Windows.Devices.Enumeration used, because configuration files store
+        // it as the client match id.
         [noexcept] String DeviceId { get; };
         [noexcept] String DeviceName{ get; };
 
-        // from SRV record
+        // from PTR and SRV records
         [noexcept] String FullName{ get; };
         [noexcept] String ServiceInstanceName{ get; };
         [noexcept] String ServiceType{ get; };
@@ -33,7 +34,17 @@ namespace Windows.Devices.Midi2.Transports.Network
         [noexcept] String UmpEndpointName{ get; };
         [noexcept] String ProductInstanceId{ get; };
 
+        // Everything the TXT record carried, so a device using a key this SDK predates is still
+        // readable without an SDK update.
+        [noexcept] Windows.Foundation.Collections.IMapView<String, String> TextAttributes{ get; };
+
+        // from A and AAAA records
         [noexcept] IVectorView<String> IPAddresses{ get; };
+        [noexcept] IVectorView<String> IPv4Addresses{ get; };
+        [noexcept] IVectorView<String> IPv6Addresses{ get; };
+
+        // When this host was last heard from, for a UI which shows how stale an entry is.
+        [noexcept] Windows.Foundation.DateTime LastSeenTime{ get; };
     };
 }
 

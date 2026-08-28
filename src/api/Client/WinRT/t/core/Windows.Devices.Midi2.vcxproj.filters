@@ -45,7 +45,9 @@
     <ClCompile Include="MidiSystemExclusiveReceiver.cpp">
       <Filter>SDK\Utilities\SysEx Transfer</Filter>
     </ClCompile>
-    <ClCompile Include="MidiConfigFile.cpp" />
+    <ClCompile Include="MidiConfigFile.cpp">
+      <Filter>SDK\ServiceConfig</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="midi_stream_message_defs.h" />
@@ -92,8 +94,12 @@
     <ClInclude Include="MidiSystemExclusiveReceiver.h">
       <Filter>SDK\Utilities\SysEx Transfer</Filter>
     </ClInclude>
-    <ClInclude Include="MidiConfigFile.h" />
-    <ClInclude Include="midi_bluetooth_utility.h" />
+    <ClInclude Include="midi_bluetooth_utility.h">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiConfigFile.h">
+      <Filter>SDK\ServiceConfig</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl">
@@ -543,28 +549,78 @@
     <Midl Include="MidiNetworkRemoteClientPolicyEnum.idl">
       <Filter>SDK\Transports\Network</Filter>
     </Midl>
-    <Midl Include="MidiServiceConfigSaveResponse.idl" />
-    <Midl Include="MidiServiceConfigSaveResultEnum.idl" />
-    <Midl Include="MidiBluetoothProtocolEnum.idl" />
-    <Midl Include="MidiBluetoothRadioInformation.idl" />
-    <Midl Include="MidiServiceEndpointCustomizationRemovalConfig.idl" />
-    <Midl Include="MidiBluetoothAddressTypeEnum.idl" />
-    <Midl Include="MidiBluetoothApprovalScopeEnum.idl" />
-    <Midl Include="MidiBluetoothPeripheralClientPolicyEnum.idl" />
-    <Midl Include="MidiBluetoothDeviceConnectErrorCodeEnum.idl" />
-    <Midl Include="MidiBluetoothDeviceDisconnectErrorCodeEnum.idl" />
-    <Midl Include="MidiBluetoothPeripheralErrorCodeEnum.idl" />
-    <Midl Include="MidiBluetoothPeripheralClientDecisionResponse.idl" />
-    <Midl Include="MidiBluetoothDeviceInformation.idl" />
-    <Midl Include="MidiBluetoothPeripheralClient.idl" />
-    <Midl Include="MidiBluetoothPeripheralStatus.idl" />
-    <Midl Include="MidiBluetoothDeviceConnectConfig.idl" />
-    <Midl Include="MidiBluetoothDeviceConnectResponse.idl" />
-    <Midl Include="MidiBluetoothDeviceDisconnectConfig.idl" />
-    <Midl Include="MidiBluetoothDeviceDisconnectResponse.idl" />
-    <Midl Include="MidiBluetoothPeripheralConfig.idl" />
-    <Midl Include="MidiBluetoothPeripheralResponse.idl" />
-    <Midl Include="MidiBluetoothTransportManager.idl" />
+    <Midl Include="MidiBluetoothAddressTypeEnum.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothApprovalScopeEnum.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothDeviceConnectConfig.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothDeviceConnectErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothDeviceConnectResponse.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothDeviceDisconnectConfig.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothDeviceDisconnectErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothDeviceDisconnectResponse.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothDeviceInformation.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothPeripheralClient.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothPeripheralClientDecisionResponse.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothPeripheralClientListConfig.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothPeripheralClientPolicyEnum.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothPeripheralConfig.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothPeripheralErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothPeripheralResponse.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothPeripheralStatus.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothProtocolEnum.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothRadioInformation.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothRememberedClient.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothTransportManager.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiServiceConfigSaveResponse.idl">
+      <Filter>SDK\ServiceConfig</Filter>
+    </Midl>
+    <Midl Include="MidiServiceConfigSaveResultEnum.idl">
+      <Filter>SDK\ServiceConfig</Filter>
+    </Midl>
+    <Midl Include="MidiServiceEndpointCustomizationRemovalConfig.idl">
+      <Filter>SDK\ServiceConfig</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />

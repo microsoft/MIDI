@@ -116,18 +116,16 @@ private:
         _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
     ));
 
-    enumeration::DeviceWatcher m_deviceWatcher{ nullptr };
-    winrt::event_token m_deviceWatcherAddedToken;
-    winrt::event_token m_deviceWatcherUpdatedToken;
-    winrt::event_token m_deviceWatcherRemovedToken;
-    winrt::event_token m_deviceWatcherStoppedToken;
+    ::WindowsMidiServicesInternal::MidiDnssdBrowser m_browser;
 
-    HRESULT OnDeviceWatcherAdded(_In_ enumeration::DeviceWatcher const&, _In_ enumeration::DeviceInformation const& args);
-    HRESULT OnDeviceWatcherUpdated(_In_ enumeration::DeviceWatcher const&, _In_ enumeration::DeviceInformationUpdate const& args);
-    HRESULT OnDeviceWatcherRemoved(_In_ enumeration::DeviceWatcher const&, _In_ enumeration::DeviceInformationUpdate const& args);
-    HRESULT OnDeviceWatcherStopped(_In_ enumeration::DeviceWatcher const&, _In_ foundation::IInspectable const&);
+    void OnAdvertisedHostAdded(_In_ ::WindowsMidiServicesInternal::MidiDnssdService const& service);
+    void OnAdvertisedHostUpdated(_In_ ::WindowsMidiServicesInternal::MidiDnssdService const& service);
+    void OnAdvertisedHostRemoved(_In_ std::wstring const& fullName, _In_ std::wstring const& deviceId);
 
-    std::map<winrt::hstring, enumeration::DeviceInformation> m_foundAdvertisedHosts;
+    // Keyed by the same id Windows.Devices.Enumeration used, because configuration files store
+    // it as the client match id.
+    mutable wil::srwlock m_advertisedHostsLock;
+    std::map<std::wstring, ::WindowsMidiServicesInternal::MidiDnssdService> m_foundAdvertisedHosts;
 
     // What each live endpoint was created from, so a customization arriving later can be matched
     // back to it. The remote's identity is not otherwise recoverable from an endpoint id.

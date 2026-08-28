@@ -16,13 +16,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         MidiNetworkAdvertisedHostRemovedEventArgs() = default;
 
         winrt::hstring HostDeviceId() noexcept;
-        enumeration::DeviceInformationUpdate DeviceInformationUpdate() noexcept;
+        winrt::hstring FullName() noexcept;
 
-
-        void InternalInitialize(_In_ winrt::hstring const& id, _In_ enumeration::DeviceInformationUpdate const& args) noexcept;
+        void InternalInitialize(_In_ winrt::hstring const& id, _In_ winrt::hstring const& fullName) noexcept;
 
     private:
         winrt::hstring m_id{ };
-        enumeration::DeviceInformationUpdate m_deviceInformationUpdate{ nullptr };
+        winrt::hstring m_fullName{ };
     };
 }

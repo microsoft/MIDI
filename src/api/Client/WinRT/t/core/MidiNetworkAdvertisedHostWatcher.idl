@@ -29,12 +29,14 @@ namespace Windows.Devices.Midi2.Transports.Network
 
         [noexcept] Windows.Foundation.Collections.IMapView<String, MidiNetworkAdvertisedHost> EnumeratedHosts{ get; };
 
-        [noexcept] Windows.Devices.Enumeration.DeviceWatcherStatus Status{ get; };
+        [noexcept] Boolean IsStarted{ get; };
 
         event Windows.Foundation.TypedEventHandler<MidiNetworkAdvertisedHostWatcher, MidiNetworkAdvertisedHostAddedEventArgs> Added;
         event Windows.Foundation.TypedEventHandler<MidiNetworkAdvertisedHostWatcher, MidiNetworkAdvertisedHostRemovedEventArgs> Removed;
         event Windows.Foundation.TypedEventHandler<MidiNetworkAdvertisedHostWatcher, MidiNetworkAdvertisedHostUpdatedEventArgs> Updated;
 
+        // mDNS discovery never truly finishes. This is raised once, a short settling period
+        // after Start, so a one-shot caller knows when the first round of replies is in.
         event Windows.Foundation.TypedEventHandler<MidiNetworkAdvertisedHostWatcher, IInspectable> EnumerationCompleted;
         event Windows.Foundation.TypedEventHandler<MidiNetworkAdvertisedHostWatcher, IInspectable> Stopped;
     }

@@ -1365,68 +1365,47 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         return L"local"; 
     }
 
-    winrt::hstring MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryString() noexcept
+    winrt::hstring MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryName() noexcept
     {
-        // protocol guid from https://learn.microsoft.com/en-us/windows/uwp/devices-sensors/enumerate-devices-over-a-network
-
-        return
-            L"System.Devices.AepService.ProtocolId:={4526e8c1-8aac-4153-9b16-55e86ada0e54} AND " \
-            L"System.Devices.Dnssd.ServiceName:=\"" + MidiNetworkTransportManager::MidiNetworkUdpDnsServiceType() + L"\" AND " \
-            L"System.Devices.Dnssd.Domain:=\"" + MidiNetworkTransportManager::MidiNetworkUdpDnsDomain() + L"\"";
-    }
-
-    enumeration::DeviceInformationKind MidiNetworkTransportManager::MidiNetworkUdpDnsSdDeviceInformationKind() noexcept
-    {
-        return enumeration::DeviceInformationKind::AssociationEndpointService;
+        return MidiNetworkUdpDnsServiceType() + L"." + MidiNetworkUdpDnsDomain();
     }
 
 
-    collections::IVector<winrt::hstring> MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryAdditionalProperties() noexcept
-    {
-        auto props = winrt::single_threaded_vector<winrt::hstring>();
-
-        // https://learn.microsoft.com/en-us/windows/win32/properties/props-system-devices-dnssd-domain
-        props.Append(L"System.Devices.AepService.ProtocolId");  // guid
-        props.Append(L"System.Devices.Dnssd.HostName");         // string
-        props.Append(L"System.Devices.Dnssd.FullName");         // string
-        props.Append(L"System.Devices.Dnssd.ServiceName");      // string
-        props.Append(L"System.Devices.Dnssd.Domain");           // string
-        props.Append(L"System.Devices.Dnssd.InstanceName");     // string
-        props.Append(L"System.Devices.IpAddress");              // multivalue string
-        props.Append(L"System.Devices.Dnssd.PortNumber");       // uint16_t
-        props.Append(L"System.Devices.Dnssd.TextAttributes");   // multivalue string
-
-        return props;
-    }
-
-
-
-	// this method takes way too long. This needs to be changed to pull from the cache in the 
-	// service via the json methods.
-
+    // A DNS-SD responder answers a fresh query almost immediately, so this browses for a short
+    // settling period and returns what replied. The previous implementation went through
+    // Windows.Devices.Enumeration and took a fixed thirty seconds every time.
     collections::IVectorView<network::MidiNetworkAdvertisedHost> MidiNetworkTransportManager::GetAdvertisedHosts() noexcept
     {
         auto results = winrt::single_threaded_vector<network::MidiNetworkAdvertisedHost>();
 
         try
         {
-            auto entries = enumeration::DeviceInformation::FindAllAsync(
-                MidiNetworkUdpDnsSdQueryString(), 
-                MidiNetworkUdpDnsSdQueryAdditionalProperties(),
-                MidiNetworkUdpDnsSdDeviceInformationKind()
-            ).get();
+            ::WindowsMidiServicesInternal::MidiDnssdBrowser browser;
 
-            if (entries && entries.Size() > 0)
+            auto const hr = browser.Start(
+                std::wstring{ MidiNetworkUdpDnsSdQueryName() },
+                nullptr,
+                nullptr,
+                nullptr);
+
+            if (FAILED(hr))
             {
-                for (auto const& entry : entries)
-                {
-                    auto host = winrt::make_self<network::implementation::MidiNetworkAdvertisedHost>();
+                LOG_IF_FAILED(hr);
 
-                    host->InternalUpdateFromDeviceInformation(entry);
+                return results.GetView();
+            }
 
-                    results.Append(*host);
-                }
+            auto stopBrowser = wil::scope_exit([&browser]() { browser.Stop(); });
 
+            std::this_thread::sleep_for(std::chrono::seconds(2));
+
+            for (auto const& service : browser.EnumeratedServices())
+            {
+                auto host = winrt::make_self<network::implementation::MidiNetworkAdvertisedHost>();
+
+                host->InternalInitializeFromDnssdService(service);
+
+                results.Append(*host);
             }
 
             // empty collection if nothing found

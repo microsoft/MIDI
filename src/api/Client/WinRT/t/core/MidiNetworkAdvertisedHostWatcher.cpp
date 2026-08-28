@@ -22,18 +22,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     {
         try
         {
+            m_browser.Stop();
             m_enumeratedHosts.Clear();
-
-            if (m_watcher != nullptr)
-            {
-                // unwire events
-
-                m_watcher.Added(m_deviceAddedEventRevokeToken);
-                m_watcher.Updated(m_deviceUpdatedEventRevokeToken);
-                m_watcher.Removed(m_deviceRemovedEventRevokeToken);
-                m_watcher.EnumerationCompleted(m_enumerationCompletedEventRevokeToken);
-                m_watcher.Stopped(m_stoppedEventRevokeToken);
-            }
         }
         catch (...)
         {
@@ -45,25 +35,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"exception unwiring event handlers", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                TraceLoggingWideString(L"exception shutting down the browser", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
 
-        }
-    }
-
-    _Use_decl_annotations_
-    void MidiNetworkAdvertisedHostWatcher::InternalInitialize(
-        enumeration::DeviceWatcher const& baseWatcher)
-    {
-        m_watcher = baseWatcher;
-
-        if (m_watcher != nullptr)
-        {
-            m_deviceAddedEventRevokeToken = m_watcher.Added({ this, &MidiNetworkAdvertisedHostWatcher::OnDeviceAdded });
-            m_deviceUpdatedEventRevokeToken = m_watcher.Updated({ this, &MidiNetworkAdvertisedHostWatcher::OnDeviceUpdated });
-            m_deviceRemovedEventRevokeToken = m_watcher.Removed({ this, &MidiNetworkAdvertisedHostWatcher::OnDeviceRemoved });
-            m_enumerationCompletedEventRevokeToken = m_watcher.EnumerationCompleted({ this, &MidiNetworkAdvertisedHostWatcher::OnEnumerationCompleted });
-            m_stoppedEventRevokeToken = m_watcher.Stopped({ this, &MidiNetworkAdvertisedHostWatcher::OnStopped });
         }
     }
 
@@ -72,14 +46,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     {
         try
         {
-
             auto watcher = winrt::make_self<MidiNetworkAdvertisedHostWatcher>();
-            auto baseWatcher = enumeration::DeviceInformation::CreateWatcher(
-                network::MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryString(),
-                network::MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryAdditionalProperties(),
-                network::MidiNetworkTransportManager::MidiNetworkUdpDnsSdDeviceInformationKind());
-
-            watcher->InternalInitialize(baseWatcher);
 
             return *watcher;
         }
@@ -93,7 +60,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
                 TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Exception creating MidiEndpointDeviceWatcher.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                TraceLoggingWideString(L"Exception creating MidiNetworkAdvertisedHostWatcher.", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
 
             return nullptr;
@@ -106,16 +73,34 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         try
         {
             m_enumeratedHosts.Clear();
+            m_enumerationCompletedRaised = false;
 
-            if (m_watcher)
+            auto const hr = m_browser.Start(
+                std::wstring{ network::MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryName() },
+                [this](::WindowsMidiServicesInternal::MidiDnssdService const& service) { OnServiceAdded(service); },
+                [this](::WindowsMidiServicesInternal::MidiDnssdService const& service, uint32_t const changed) { OnServiceUpdated(service, changed); },
+                [this](std::wstring const& fullName, std::wstring const& deviceId) { OnServiceRemoved(fullName, deviceId); });
+
+            if (FAILED(hr))
             {
-                m_watcher.Start();
+                LOG_IF_FAILED(hr);
+
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Unable to start the DNS-SD browse", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                );
+
+                return;
             }
+
+            ScheduleEnumerationCompleted();
         }
         catch (...)
         {
-            // Start throws if the watcher is already running or was aborted. Neither is worth
-            // terminating the caller over, and Status reports the real state.
             LOG_IF_FAILED(E_FAIL);
         }
     }
@@ -124,10 +109,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     {
         try
         {
-            if (m_watcher)
-            {
-                m_watcher.Stop();
-            }
+            if (!m_browser.IsRunning()) return;
+
+            m_browser.Stop();
+
+            if (m_stoppedEvent) m_stoppedEvent(*this, nullptr);
         }
         catch (...)
         {
@@ -136,21 +122,18 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     }
 
 
-    enumeration::DeviceWatcherStatus MidiNetworkAdvertisedHostWatcher::Status() noexcept
+    bool MidiNetworkAdvertisedHostWatcher::IsStarted() noexcept
     {
         try
         {
-            if (m_watcher)
-            {
-                return m_watcher.Status();
-            }
+            return m_browser.IsRunning();
         }
         catch (...)
         {
             LOG_IF_FAILED(E_FAIL);
         }
 
-        return enumeration::DeviceWatcherStatus::Aborted;
+        return false;
     }
 
     _Use_decl_annotations_
@@ -230,47 +213,32 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
 
     _Use_decl_annotations_
-    void MidiNetworkAdvertisedHostWatcher::OnDeviceAdded(
-        enumeration::DeviceWatcher /*source*/,
-        enumeration::DeviceInformation args)
+    network::MidiNetworkAdvertisedHost MidiNetworkAdvertisedHostWatcher::BuildHost(
+        ::WindowsMidiServicesInternal::MidiDnssdService const& service) noexcept
+    {
+        auto host = winrt::make_self<network::implementation::MidiNetworkAdvertisedHost>();
+
+        host->InternalInitializeFromDnssdService(service);
+
+        return *host;
+    }
+
+    _Use_decl_annotations_
+    void MidiNetworkAdvertisedHostWatcher::OnServiceAdded(
+        ::WindowsMidiServicesInternal::MidiDnssdService const& service) noexcept
     {
         try
         {
-            auto host = winrt::make_self<network::implementation::MidiNetworkAdvertisedHost>();
+            auto host = BuildHost(service);
 
-            host->InternalUpdateFromDeviceInformation(args);
+            m_enumeratedHosts.Insert(host.DeviceId(), host);
 
-            // add to our map
-
-            auto mapKey = host->DeviceId();
-
-            if (!m_enumeratedHosts.HasKey(mapKey))
+            if (m_deviceAddedEvent)
             {
-                m_enumeratedHosts.Insert(mapKey, *host);
+                auto newArgs = winrt::make_self<network::implementation::MidiNetworkAdvertisedHostAddedEventArgs>();
+                newArgs->InternalInitialize(host);
 
-                if (m_deviceAddedEvent)
-                {
-                    auto newArgs = winrt::make_self<network::implementation::MidiNetworkAdvertisedHostAddedEventArgs>();
-                    newArgs->InternalInitialize(*host);
-
-                    m_deviceAddedEvent(*this, *newArgs);
-                }
-            }
-            else
-            {
-                // duplicate key. This should never happen, but just in case ...
-
-                LOG_IF_FAILED(E_UNEXPECTED);   // this also generates a fallback error with file and line number info
-
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Duplicate endpoint device id. This is unexpected", MIDI_SDK_TRACE_MESSAGE_FIELD)
-                );
-
+                m_deviceAddedEvent(*this, *newArgs);
             }
         }
         catch (...)
@@ -286,24 +254,30 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                 TraceLoggingWideString(L"Exception in Added event, likely thrown by the application using this API", MIDI_SDK_TRACE_MESSAGE_FIELD)
             );
         }
-
     }
 
+    // Only raised when the advertised content actually changed, and it says what changed. The
+    // old device enumeration backing fired this on every re-announcement, which made it useless.
     _Use_decl_annotations_
-    void MidiNetworkAdvertisedHostWatcher::OnDeviceUpdated(
-        enumeration::DeviceWatcher /*source*/,
-        enumeration::DeviceInformationUpdate args)
+    void MidiNetworkAdvertisedHostWatcher::OnServiceUpdated(
+        ::WindowsMidiServicesInternal::MidiDnssdService const& service,
+        uint32_t const changedFields) noexcept
     {
         try
         {
-            auto newArgs = winrt::make_self<network::implementation::MidiNetworkAdvertisedHostUpdatedEventArgs>();
+            auto host = BuildHost(service);
 
-            newArgs->InternalInitialize(args.Id(), args);
-
-            // TODO: Update entry in collection with the updated properties in args
+            m_enumeratedHosts.Insert(host.DeviceId(), host);
 
             if (m_deviceUpdatedEvent)
             {
+                auto newArgs = winrt::make_self<network::implementation::MidiNetworkAdvertisedHostUpdatedEventArgs>();
+
+                newArgs->InternalInitialize(
+                    host.DeviceId(),
+                    static_cast<network::MidiNetworkAdvertisedHostChangedProperties>(changedFields),
+                    host);
+
                 m_deviceUpdatedEvent(*this, *newArgs);
             }
         }
@@ -323,23 +297,24 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     }
 
     _Use_decl_annotations_
-    void MidiNetworkAdvertisedHostWatcher::OnDeviceRemoved(
-        enumeration::DeviceWatcher /*source*/,
-        enumeration::DeviceInformationUpdate args)
+    void MidiNetworkAdvertisedHostWatcher::OnServiceRemoved(
+        std::wstring const& fullName,
+        std::wstring const& deviceId) noexcept
     {
         try
         {
-            auto newArgs = winrt::make_self<network::implementation::MidiNetworkAdvertisedHostRemovedEventArgs>();
+            winrt::hstring const key{ deviceId };
 
-            newArgs->InternalInitialize(args.Id(), args);
-
-            if (m_enumeratedHosts.HasKey(args.Id()))
+            if (m_enumeratedHosts.HasKey(key))
             {
-                m_enumeratedHosts.Remove(args.Id());
+                m_enumeratedHosts.Remove(key);
             }
 
             if (m_deviceRemovedEvent)
             {
+                auto newArgs = winrt::make_self<network::implementation::MidiNetworkAdvertisedHostRemovedEventArgs>();
+                newArgs->InternalInitialize(key, winrt::hstring{ fullName });
+
                 m_deviceRemovedEvent(*this, *newArgs);
             }
         }
@@ -358,51 +333,33 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         }
     }
 
-    _Use_decl_annotations_
-    void MidiNetworkAdvertisedHostWatcher::OnEnumerationCompleted(
-        enumeration::DeviceWatcher /*source*/,
-        foundation::IInspectable args)
+    void MidiNetworkAdvertisedHostWatcher::ScheduleEnumerationCompleted() noexcept
     {
         try
         {
-            if (m_enumerationCompletedEvent) m_enumerationCompletedEvent(*this, args);
+            auto strongThis = get_strong();
+
+            std::thread([strongThis, this]()
+                {
+                    // A responder answers a fresh query almost immediately. This is a settling
+                    // period, not a scan: the browse keeps running afterwards.
+                    std::this_thread::sleep_for(std::chrono::seconds(2));
+
+                    if (m_enumerationCompletedRaised.exchange(true)) return;
+
+                    try
+                    {
+                        if (m_enumerationCompletedEvent) m_enumerationCompletedEvent(*this, nullptr);
+                    }
+                    catch (...)
+                    {
+                        LOG_IF_FAILED(E_FAIL);
+                    }
+                }).detach();
         }
         catch (...)
         {
-            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
-
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Exception in Enumeration Completed event, likely thrown by the application using this API.", MIDI_SDK_TRACE_MESSAGE_FIELD)
-            );
-        }
-    }
-
-    _Use_decl_annotations_
-    void MidiNetworkAdvertisedHostWatcher::OnStopped(
-        enumeration::DeviceWatcher /*source*/,
-        foundation::IInspectable args)
-    {
-        try
-        {
-            if (m_stoppedEvent) m_stoppedEvent(*this, args);
-        }
-        catch (...)
-        {
-            LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
-
-            TraceLoggingWrite(
-                Midi2SdkTelemetryProvider::Provider(),
-                MIDI_SDK_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                TraceLoggingWideString(L"Exception in Enumeration Stopped event, likely thrown by the application using this API.", MIDI_SDK_TRACE_MESSAGE_FIELD)
-            );
+            LOG_IF_FAILED(E_FAIL);
         }
     }
 }

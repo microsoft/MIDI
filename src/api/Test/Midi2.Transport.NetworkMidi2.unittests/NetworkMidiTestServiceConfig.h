@@ -100,7 +100,8 @@ namespace NetworkMidiTest
         _In_ std::wstring const& productInstanceId,
         _In_ std::wstring const& serviceInstanceName,
         _In_ bool const requireApproval,
-        _In_ std::wstring const& port = L"auto");
+        _In_ std::wstring const& port = L"auto",
+        _In_ bool const advertise = false);
 
     ServiceConfigResult StartHost(_In_ std::wstring const& entryIdentifier);
 

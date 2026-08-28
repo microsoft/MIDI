@@ -1,6 +1,8 @@
 #pragma once
 #include "Transports.Network.MidiNetworkAdvertisedHostWatcher.g.h"
 
+#include "midi_dnssd_browser.h"
+
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
     struct MidiNetworkAdvertisedHostWatcher : MidiNetworkAdvertisedHostWatcherT<MidiNetworkAdvertisedHostWatcher>
@@ -13,7 +15,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         void Start() noexcept;
         void Stop() noexcept;
 
-        enumeration::DeviceWatcherStatus Status() noexcept;
+        bool IsStarted() noexcept;
 
         winrt::event_token Added(_In_ foundation::TypedEventHandler<network::MidiNetworkAdvertisedHostWatcher, network::MidiNetworkAdvertisedHostAddedEventArgs> const& handler);
         void Added(_In_ winrt::event_token const& token) noexcept;
@@ -36,31 +38,16 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         }
 
     private:
-        void InternalInitialize(
-            _In_ enumeration::DeviceWatcher const& baseWatcher);
+        network::MidiNetworkAdvertisedHost BuildHost(
+            _In_ ::WindowsMidiServicesInternal::MidiDnssdService const& service) noexcept;
 
+        void OnServiceAdded(_In_ ::WindowsMidiServicesInternal::MidiDnssdService const& service) noexcept;
+        void OnServiceUpdated(_In_ ::WindowsMidiServicesInternal::MidiDnssdService const& service, _In_ uint32_t const changedFields) noexcept;
+        void OnServiceRemoved(_In_ std::wstring const& fullName, _In_ std::wstring const& deviceId) noexcept;
 
-        // internal event handlers
-        void OnDeviceAdded(
-            _In_ enumeration::DeviceWatcher source,
-            _In_ enumeration::DeviceInformation args);
-
-        void OnDeviceUpdated(
-            _In_ enumeration::DeviceWatcher source,
-            _In_ enumeration::DeviceInformationUpdate args);
-
-        void OnDeviceRemoved(
-            _In_ enumeration::DeviceWatcher source,
-            _In_ enumeration::DeviceInformationUpdate args);
-
-        void OnEnumerationCompleted(
-            _In_ enumeration::DeviceWatcher source,
-            _In_ foundation::IInspectable args);
-
-        void OnStopped(
-            _In_ enumeration::DeviceWatcher source,
-            _In_ foundation::IInspectable args);
-
+        // mDNS never finishes. This raises EnumerationCompleted once, after a settling period,
+        // so a one-shot caller like midimdnsinfo has something to wait on.
+        void ScheduleEnumerationCompleted() noexcept;
 
         winrt::event<foundation::TypedEventHandler<network::MidiNetworkAdvertisedHostWatcher, network::MidiNetworkAdvertisedHostAddedEventArgs>> m_deviceAddedEvent;
         winrt::event<foundation::TypedEventHandler<network::MidiNetworkAdvertisedHostWatcher, network::MidiNetworkAdvertisedHostUpdatedEventArgs>> m_deviceUpdatedEvent;
@@ -69,18 +56,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::event<foundation::TypedEventHandler<network::MidiNetworkAdvertisedHostWatcher, foundation::IInspectable>> m_enumerationCompletedEvent;
         winrt::event<foundation::TypedEventHandler<network::MidiNetworkAdvertisedHostWatcher, foundation::IInspectable>> m_stoppedEvent;
 
-
-        winrt::event_token m_deviceAddedEventRevokeToken{ };
-        winrt::event_token m_deviceUpdatedEventRevokeToken{ };
-        winrt::event_token m_deviceRemovedEventRevokeToken{ };
-        winrt::event_token m_enumerationCompletedEventRevokeToken{ };
-        winrt::event_token m_stoppedEventRevokeToken{ };
-
         collections::IMap<winrt::hstring, network::MidiNetworkAdvertisedHost> m_enumeratedHosts =
             winrt::multi_threaded_map<winrt::hstring, network::MidiNetworkAdvertisedHost>();
 
-        enumeration::DeviceWatcher m_watcher{ nullptr };
+        ::WindowsMidiServicesInternal::MidiDnssdBrowser m_browser;
 
+        std::atomic<bool> m_enumerationCompletedRaised{ false };
     };
 }
 namespace winrt::Windows::Devices::Midi2::Transports::Network::factory_implementation

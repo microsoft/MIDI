@@ -22,10 +22,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         static winrt::hstring MidiNetworkUdpDnsServiceType() noexcept;
         static winrt::hstring MidiNetworkUdpDnsDomain() noexcept;
-        static winrt::hstring MidiNetworkUdpDnsSdQueryString() noexcept;
-        static enumeration::DeviceInformationKind MidiNetworkUdpDnsSdDeviceInformationKind() noexcept;
-
-        static collections::IVector<winrt::hstring> MidiNetworkUdpDnsSdQueryAdditionalProperties() noexcept;
+        static winrt::hstring MidiNetworkUdpDnsSdQueryName() noexcept;
 
         static const winrt::guid TransportId() noexcept { return internal::StringToGuid(MIDI_NETWORK_TRANSPORT_ID); }
 

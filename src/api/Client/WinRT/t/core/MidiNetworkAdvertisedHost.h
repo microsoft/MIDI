@@ -9,6 +9,8 @@
 #pragma once
 #include "Transports.Network.MidiNetworkAdvertisedHost.g.h"
 
+#include "midi_dnssd_browser.h"
+
 
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
@@ -27,25 +29,16 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring UmpEndpointName() const noexcept { return m_umpEndpointName; }
         winrt::hstring ProductInstanceId() const noexcept { return m_productInstanceId; }
 
+        foundation::DateTime LastSeenTime() const noexcept { return m_lastSeenTime; }
+
+        collections::IMapView<winrt::hstring, winrt::hstring> TextAttributes() noexcept { return m_textAttributes.GetView(); }
+
         collections::IVectorView<winrt::hstring> IPAddresses() noexcept { return m_ipAddresses.GetView(); }
+        collections::IVectorView<winrt::hstring> IPv4Addresses() noexcept { return m_ipv4Addresses.GetView(); }
+        collections::IVectorView<winrt::hstring> IPv6Addresses() noexcept { return m_ipv6Addresses.GetView(); }
 
-        void InternalInitialize(
-            _In_ winrt::hstring deviceId,
-            _In_ winrt::hstring deviceName,
-            _In_ winrt::hstring fullName,
-            _In_ winrt::hstring serviceInstanceName,
-            _In_ winrt::hstring serviceType,
-            _In_ winrt::hstring hostName,
-            _In_ uint16_t port,
-            _In_ winrt::hstring domain,
-            _In_ winrt::hstring umpEndpointName,
-            _In_ winrt::hstring productInstanceId,
-            _In_ collections::IVector<winrt::hstring> ipAddresses
-            ) noexcept;
-
-        void InternalUpdateFromDeviceInformation(
-            _In_ enumeration::DeviceInformation device
-            ) noexcept;
+        void InternalInitializeFromDnssdService(
+            _In_ ::WindowsMidiServicesInternal::MidiDnssdService const& service) noexcept;
 
     private:
         winrt::hstring m_deviceId{};
@@ -59,7 +52,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring m_umpEndpointName{};
         winrt::hstring m_productInstanceId{};
 
-        collections::IVector<winrt::hstring> m_ipAddresses = winrt::multi_threaded_vector<winrt::hstring>();
+        foundation::DateTime m_lastSeenTime{};
 
+        collections::IMap<winrt::hstring, winrt::hstring> m_textAttributes = winrt::multi_threaded_map<winrt::hstring, winrt::hstring>();
+
+        collections::IVector<winrt::hstring> m_ipAddresses = winrt::multi_threaded_vector<winrt::hstring>();
+        collections::IVector<winrt::hstring> m_ipv4Addresses = winrt::multi_threaded_vector<winrt::hstring>();
+        collections::IVector<winrt::hstring> m_ipv6Addresses = winrt::multi_threaded_vector<winrt::hstring>();
     };
 }

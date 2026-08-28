@@ -93,7 +93,7 @@ namespace
     }
 
 
-winrt::guid MidiNetworkApiTests::CreateTestHost(std::wstring const& nameSuffix)
+winrt::guid MidiNetworkApiTests::CreateTestHost(std::wstring const& nameSuffix, bool const advertise)
 {
     MidiNetworkHostCreationConfig config;
 
@@ -110,8 +110,7 @@ winrt::guid MidiNetworkApiTests::CreateTestHost(std::wstring const& nameSuffix)
     config.UseAutomaticPortAllocation(true);
     config.CreateOnlyUmpEndpoints(true);
 
-    // Not advertised, so these tests never put anything on the local network
-    config.Advertise(false);
+    config.Advertise(advertise);
 
     auto response = MidiNetworkTransportManager::CreateNetworkHostAsync(config).get();
 
@@ -1180,11 +1179,15 @@ void MidiNetworkApiTests::TestAdvertisedHostWatcherLifecycle()
     // only checks that the watcher reaches a sane state rather than that it finds anything.
     std::this_thread::sleep_for(std::chrono::seconds(2));
 
-    Log::Comment(String().Format(L"Watcher status: %d, hosts seen: %d",
-        (int)watcher.Status(),
+    Log::Comment(String().Format(L"Watcher started: %d, hosts seen: %d",
+        watcher.IsStarted() ? 1 : 0,
         watcher.EnumeratedHosts().Size()));
 
+    VERIFY_IS_TRUE(watcher.IsStarted());
+
     watcher.Stop();
+
+    VERIFY_IS_FALSE(watcher.IsStarted());
 
     watcher.Added(addedToken);
     watcher.Removed(removedToken);
@@ -1200,15 +1203,462 @@ void MidiNetworkApiTests::TestAdvertisedHostWatcherDoubleStartStopIsSafe()
     auto watcher = MidiNetworkAdvertisedHostWatcher::Create();
     VERIFY_IS_NOT_NULL(watcher);
 
-    // DeviceWatcher throws if it is started when already running, and these are noexcept,
-    // so an unguarded call would terminate the process rather than fail.
+    // Repeated calls in either direction have to be harmless, and these are all noexcept, so an
+    // unguarded throw would terminate the process rather than fail the test.
     watcher.Stop();
     watcher.Start();
     watcher.Start();
     watcher.Stop();
     watcher.Stop();
 
-    Log::Comment(String().Format(L"Watcher survived repeated start/stop, status %d", (int)watcher.Status()));
+    Log::Comment(String().Format(L"Watcher survived repeated start/stop, started %d", watcher.IsStarted() ? 1 : 0));
+
+    VERIFY_IS_FALSE(watcher.IsStarted());
+}
+
+// https://github.com/microsoft/MIDI/issues/1149. Creating a host raises Added; removing it has
+// to raise Removed. The transport tests prove the service stops answering mDNS queries and
+// multicasts a goodbye with TTL 0 for the PTR, SRV and TXT records, so a failure here is in the
+// watcher or the platform discovery layer beneath it, not in the advertisement.
+void MidiNetworkApiTests::TestAdvertisedHostWatcherRaisesAddedAndRemovedForARealHost()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto watcher = MidiNetworkAdvertisedHostWatcher::Create();
+
+    VERIFY_IS_NOT_NULL(watcher);
+
+    wil::unique_event addedSignal;
+    wil::unique_event removedSignal;
+
+    addedSignal.create(wil::EventOptions::ManualReset);
+    removedSignal.create(wil::EventOptions::ManualReset);
+
+    // The suffix is what makes this host's device id unique, and the id is how the two events
+    // are tied to this test rather than to whatever else is on the network.
+    auto const suffix = MakeUniqueSuffix();
+    auto const expectedInstanceFragment = std::wstring{ TestHostNamePrefix } + suffix;
+
+    std::mutex idLock;
+    std::wstring addedDeviceId;
+
+    auto addedToken = watcher.Added([&](auto&&, MidiNetworkAdvertisedHostAddedEventArgs const& args)
+        {
+            auto const id = std::wstring{ args.AddedHost().DeviceId() };
+
+            if (id.find(expectedInstanceFragment) != std::wstring::npos)
+            {
+                {
+                    auto lock = std::scoped_lock{ idLock };
+                    addedDeviceId = id;
+                }
+
+                addedSignal.SetEvent();
+            }
+        });
+
+    auto removedToken = watcher.Removed([&](auto&&, MidiNetworkAdvertisedHostRemovedEventArgs const& args)
+        {
+            auto const id = std::wstring{ args.HostDeviceId() };
+
+            if (id.find(expectedInstanceFragment) != std::wstring::npos)
+            {
+                removedSignal.SetEvent();
+            }
+        });
+
+    auto revoke = wil::scope_exit([&]()
+        {
+            watcher.Added(addedToken);
+            watcher.Removed(removedToken);
+            watcher.Stop();
+        });
+
+    watcher.Start();
+
+    // Started before the host exists, so the arrival is a genuine Added rather than part of
+    // the initial enumeration.
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+
+    auto hostId = CreateTestHost(suffix, true);
+
+    VERIFY_IS_FALSE(hostId == winrt::guid{});
+
+    auto cleanup = wil::scope_exit([&] { RemoveTestHost(hostId); });
+
+    VerifyHostAppeared(hostId);
+
+    VERIFY_IS_TRUE(
+        addedSignal.wait(30000),
+        L"The watcher raised Added for a newly advertised host");
+
+    {
+        auto lock = std::scoped_lock{ idLock };
+        Log::Comment(String().Format(L"Added device id: %s", addedDeviceId.c_str()));
+    }
+
+    MidiNetworkHostRemovalConfig removalConfig(hostId);
+
+    auto removalResponse = MidiNetworkTransportManager::RemoveNetworkHostAsync(removalConfig).get();
+
+    VERIFY_IS_NOT_NULL(removalResponse);
+    VERIFY_IS_TRUE(removalResponse.Success());
+
+    cleanup.release();
+
+    VERIFY_IS_TRUE(
+        removedSignal.wait(60000),
+        L"The watcher raised Removed once the host stopped advertising");
+}
+
+
+namespace
+{
+    std::wstring DescribeInspectable(winrt::Windows::Foundation::IInspectable const& value)
+    {
+        if (value == nullptr) return L"<null>";
+
+        if (auto v = value.try_as<winrt::hstring>())              return L"\"" + std::wstring{ *v } + L"\"";
+        if (auto v = value.try_as<bool>())                        return *v ? L"true" : L"false";
+        if (auto v = value.try_as<uint8_t>())                     return std::to_wstring(*v);
+        if (auto v = value.try_as<uint16_t>())                    return std::to_wstring(*v);
+        if (auto v = value.try_as<uint32_t>())                    return std::to_wstring(*v);
+        if (auto v = value.try_as<int32_t>())                     return std::to_wstring(*v);
+        if (auto v = value.try_as<uint64_t>())                    return std::to_wstring(*v);
+        if (auto v = value.try_as<winrt::guid>())                 return std::wstring{ winrt::to_hstring(*v) };
+
+        if (auto v = value.try_as<winrt::Windows::Foundation::IReferenceArray<winrt::hstring>>())
+        {
+            std::wstring joined{ L"[" };
+
+            for (auto const& item : v.Value())
+            {
+                joined += L"'" + std::wstring{ item } + L"' ";
+            }
+
+            return joined + L"]";
+        }
+
+        return L"<unhandled type>";
+    }
+}
+
+// Not a real test. Kept because reproducing 1149 needs a watcher that requests more properties
+// than the SDK's, and rebuilding that by hand each time is slow.
+void MidiNetworkApiTests::TestDiagDnssdWatcherPropertiesAcrossHostRemoval()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    namespace enumeration = winrt::Windows::Devices::Enumeration;
+
+    // Everything plausibly carrying a liveness signal. All are valid canonical names; an
+    // invalid one makes CreateWatcher throw.
+    auto props = winrt::single_threaded_vector<winrt::hstring>(
+        {
+            L"System.Devices.Dnssd.InstanceName",
+            L"System.Devices.Dnssd.HostName",
+            L"System.Devices.Dnssd.PortNumber",
+            L"System.Devices.Dnssd.TextAttributes",
+            L"System.Devices.Dnssd.Ttl",
+            L"System.Devices.InterfaceEnabled",
+            L"System.Devices.Aep.IsPresent",
+            L"System.Devices.Aep.IsConnected",
+            L"System.Devices.AepService.ParentAepIsPaired",
+        });
+
+    // The AQS is no longer part of the SDK surface, because discovery no longer goes through
+    // Windows.Devices.Enumeration. It is restated here because this test is about that layer.
+    auto watcher = enumeration::DeviceInformation::CreateWatcher(
+        L"System.Devices.AepService.ProtocolId:={4526e8c1-8aac-4153-9b16-55e86ada0e54} AND "
+        L"System.Devices.Dnssd.ServiceName:=\"_midi2._udp\" AND "
+        L"System.Devices.Dnssd.Domain:=\"local\"",
+        props,
+        enumeration::DeviceInformationKind::AssociationEndpointService);
+
+    auto const suffix = MakeUniqueSuffix();
+    auto const fragment = std::wstring{ TestHostNamePrefix } + suffix;
+
+    auto addedToken = watcher.Added([&](auto&&, enumeration::DeviceInformation const& info)
+        {
+            if (std::wstring{ info.Id() }.find(fragment) == std::wstring::npos) return;
+
+            Log::Comment(String().Format(L"[ADDED] %s", info.Id().c_str()));
+
+            for (auto const& kv : info.Properties())
+            {
+                Log::Comment(String().Format(L"        %s = %s",
+                    kv.Key().c_str(), DescribeInspectable(kv.Value()).c_str()));
+            }
+        });
+
+    auto updatedToken = watcher.Updated([&](auto&&, enumeration::DeviceInformationUpdate const& update)
+        {
+            if (std::wstring{ update.Id() }.find(fragment) == std::wstring::npos) return;
+
+            Log::Comment(String().Format(L"[UPDATED] %d changed propert(ies)", update.Properties().Size()));
+
+            for (auto const& kv : update.Properties())
+            {
+                Log::Comment(String().Format(L"        %s = %s",
+                    kv.Key().c_str(), DescribeInspectable(kv.Value()).c_str()));
+            }
+        });
+
+    auto removedToken = watcher.Removed([&](auto&&, enumeration::DeviceInformationUpdate const& update)
+        {
+            if (std::wstring{ update.Id() }.find(fragment) == std::wstring::npos) return;
+
+            Log::Comment(String().Format(L"[REMOVED] %s", update.Id().c_str()));
+        });
+
+    auto revoke = wil::scope_exit([&]()
+        {
+            watcher.Added(addedToken);
+            watcher.Updated(updatedToken);
+            watcher.Removed(removedToken);
+        });
+
+    watcher.Start();
+
+    std::this_thread::sleep_for(std::chrono::seconds(3));
+
+    auto hostId = CreateTestHost(suffix, true);
+
+    VERIFY_IS_FALSE(hostId == winrt::guid{});
+
+    auto cleanup = wil::scope_exit([&] { RemoveTestHost(hostId); });
+
+    VerifyHostAppeared(hostId);
+
+    Log::Comment(L"=== host is live, observing for 30s ===");
+    std::this_thread::sleep_for(std::chrono::seconds(30));
+
+    Log::Comment(L"=== removing host ===");
+
+    MidiNetworkHostRemovalConfig removalConfig(hostId);
+    auto removalResponse = MidiNetworkTransportManager::RemoveNetworkHostAsync(removalConfig).get();
+
+    VERIFY_IS_NOT_NULL(removalResponse);
+    VERIFY_IS_TRUE(removalResponse.Success());
+
+    cleanup.release();
+
+    Log::Comment(L"=== host removed, observing for 120s ===");
+    std::this_thread::sleep_for(std::chrono::seconds(120));
+
+    Log::Comment(L"=== done ===");
+
+    watcher.Stop();
+}
+
+
+#include "midi_dnssd_browser.h"
+
+// The shared browser is what both the SDK watcher and the service transport sit on, so this is
+// the lowest level at which 1149 can be pinned down.
+void MidiNetworkApiTests::TestDnssdBrowserReportsHostAddedAndRemoved()
+{
+    SKIP_IF_NO_NETWORK_TRANSPORT();
+
+    auto const suffix = MakeUniqueSuffix();
+    auto const expectedInstance = std::wstring{ TestHostNamePrefix } + suffix;
+
+    WindowsMidiServicesInternal::MidiDnssdBrowser browser;
+
+    wil::unique_event addedSignal;
+    wil::unique_event removedSignal;
+
+    addedSignal.create(wil::EventOptions::ManualReset);
+    removedSignal.create(wil::EventOptions::ManualReset);
+
+    std::mutex captureLock;
+    WindowsMidiServicesInternal::MidiDnssdService capturedAdd;
+    std::wstring capturedRemovedDeviceId;
+    int addedCount{ 0 };
+    int updatedCount{ 0 };
+
+    auto matches = [&expectedInstance](std::wstring const& name)
+        {
+            return name.find(expectedInstance) != std::wstring::npos;
+        };
+
+    auto hr = browser.Start(
+        L"_midi2._udp.local",
+        [&](WindowsMidiServicesInternal::MidiDnssdService const& service)
+        {
+            if (!matches(service.FullName)) return;
+
+            {
+                auto guard = std::scoped_lock{ captureLock };
+                capturedAdd = service;
+                addedCount++;
+            }
+
+            addedSignal.SetEvent();
+        },
+        [&](WindowsMidiServicesInternal::MidiDnssdService const& service, uint32_t const changedFields)
+        {
+            if (!matches(service.FullName)) return;
+
+            auto guard = std::scoped_lock{ captureLock };
+            updatedCount++;
+
+            // An update is only ever raised for a real change, so it must name at least one.
+            VERIFY_ARE_NOT_EQUAL(
+                static_cast<uint32_t>(WindowsMidiServicesInternal::MidiDnssdChangedNone),
+                changedFields);
+        },
+        [&](std::wstring const& fullName, std::wstring const& deviceId)
+        {
+            if (!matches(fullName)) return;
+
+            {
+                auto guard = std::scoped_lock{ captureLock };
+                capturedRemovedDeviceId = deviceId;
+            }
+
+            removedSignal.SetEvent();
+        });
+
+    VERIFY_SUCCEEDED(hr);
+    VERIFY_IS_TRUE(browser.IsRunning());
+
+    auto stopBrowser = wil::scope_exit([&]() { browser.Stop(); });
+
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+
+    auto hostId = CreateTestHost(suffix, true);
+
+    VERIFY_IS_FALSE(hostId == winrt::guid{});
+
+    auto cleanup = wil::scope_exit([&] { RemoveTestHost(hostId); });
+
+    VerifyHostAppeared(hostId);
+
+    VERIFY_IS_TRUE(addedSignal.wait(30000), L"The browser reported the new host");
+
+    {
+        auto guard = std::scoped_lock{ captureLock };
+
+        Log::Comment(String().Format(L"Added: full name '%s'", capturedAdd.FullName.c_str()));
+        Log::Comment(String().Format(L"       instance  '%s'", capturedAdd.ServiceInstanceName.c_str()));
+        Log::Comment(String().Format(L"       type '%s' domain '%s'", capturedAdd.ServiceType.c_str(), capturedAdd.Domain.c_str()));
+        Log::Comment(String().Format(L"       host '%s' port %d", capturedAdd.HostName.c_str(), capturedAdd.Port));
+        Log::Comment(String().Format(L"       device id '%s'", capturedAdd.DeviceId().c_str()));
+        Log::Comment(String().Format(L"       UMP endpoint name '%s'", capturedAdd.UmpEndpointName().c_str()));
+        Log::Comment(String().Format(L"       product instance id '%s'", capturedAdd.ProductInstanceId().c_str()));
+
+        for (auto const& address : capturedAdd.IPv4Addresses)
+        {
+            Log::Comment(String().Format(L"       IPv4 %s", address.c_str()));
+        }
+
+        for (auto const& address : capturedAdd.IPv6Addresses)
+        {
+            Log::Comment(String().Format(L"       IPv6 %s", address.c_str()));
+        }
+
+        // Everything a caller needs to connect has to be present on the Added report itself.
+        VERIFY_ARE_EQUAL(expectedInstance, capturedAdd.ServiceInstanceName);
+        VERIFY_ARE_EQUAL(std::wstring{ L"_midi2._udp" }, capturedAdd.ServiceType);
+        VERIFY_ARE_EQUAL(std::wstring{ L"local" }, capturedAdd.Domain);
+        VERIFY_IS_FALSE(capturedAdd.HostName.empty());
+        VERIFY_IS_GREATER_THAN(capturedAdd.Port, static_cast<uint16_t>(0));
+        VERIFY_IS_FALSE(capturedAdd.IPv4Addresses.empty(), L"At least one address was resolved");
+        VERIFY_ARE_EQUAL(expectedInstance, capturedAdd.UmpEndpointName());
+
+        // Existing configuration files store this exact form as the client match id.
+        VERIFY_ARE_EQUAL(
+            std::wstring{ L"DnsSd#" } + expectedInstance + L"._midi2._udp.local#0",
+            capturedAdd.DeviceId());
+
+        // Re-announcements repeat records constantly. Added must not fire again for them.
+        VERIFY_ARE_EQUAL(1, addedCount, L"Added fired exactly once despite re-announcements");
+    }
+
+    VERIFY_IS_TRUE(browser.EnumeratedServices().size() > 0);
+
+    MidiNetworkHostRemovalConfig removalConfig(hostId);
+    auto removalResponse = MidiNetworkTransportManager::RemoveNetworkHostAsync(removalConfig).get();
+
+    VERIFY_IS_NOT_NULL(removalResponse);
+    VERIFY_IS_TRUE(removalResponse.Success());
+
+    cleanup.release();
+
+    VERIFY_IS_TRUE(removedSignal.wait(30000), L"The browser reported the host going away");
+
+    {
+        auto guard = std::scoped_lock{ captureLock };
+
+        // The removal has to carry the same id the addition did, or a caller cannot correlate.
+        VERIFY_ARE_EQUAL(capturedAdd.DeviceId(), capturedRemovedDeviceId);
+
+        Log::Comment(String().Format(L"Updated fired %d time(s) while the host was live", updatedCount));
+    }
+}
+
+void MidiNetworkApiTests::TestDnssdServiceChangedFieldsNameEachChange()
+{
+    using namespace WindowsMidiServicesInternal;
+
+    MidiDnssdService baseline{ };
+    baseline.FullName = L"thing._midi2._udp.local";
+    baseline.HostName = L"thing.local";
+    baseline.Port = 5004;
+    baseline.IPv4Addresses = { L"192.168.1.10" };
+    baseline.IPv6Addresses = { L"fe80::1" };
+    baseline.TextAttributes = { { L"UMPEndpointName", L"Thing" } };
+
+    VERIFY_ARE_EQUAL(
+        static_cast<uint32_t>(MidiDnssdChangedNone),
+        baseline.ChangedFieldsSince(baseline),
+        L"An identical re-announcement reports no change");
+
+    {
+        auto s = baseline; s.HostName = L"other.local";
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(MidiDnssdChangedHostName), s.ChangedFieldsSince(baseline));
+    }
+
+    {
+        auto s = baseline; s.Port = 5006;
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(MidiDnssdChangedPort), s.ChangedFieldsSince(baseline));
+    }
+
+    {
+        auto s = baseline; s.IPv4Addresses = { L"192.168.1.11" };
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(MidiDnssdChangedIPv4Addresses), s.ChangedFieldsSince(baseline));
+    }
+
+    {
+        auto s = baseline; s.IPv6Addresses.push_back(L"fe80::2");
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(MidiDnssdChangedIPv6Addresses), s.ChangedFieldsSince(baseline));
+    }
+
+    {
+        auto s = baseline; s.TextAttributes[L"ProductInstanceId"] = L"ABC";
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(MidiDnssdChangedTextAttributes), s.ChangedFieldsSince(baseline));
+    }
+
+    // Several at once have to come back combined, not just the first one found.
+    {
+        auto s = baseline;
+        s.Port = 5008;
+        s.HostName = L"moved.local";
+        s.IPv4Addresses.clear();
+
+        VERIFY_ARE_EQUAL(
+            static_cast<uint32_t>(MidiDnssdChangedHostName | MidiDnssdChangedPort | MidiDnssdChangedIPv4Addresses),
+            s.ChangedFieldsSince(baseline),
+            L"Simultaneous changes are all reported");
+    }
+
+    // The DeviceId is the caller's correlation key and must not move for a content change.
+    {
+        auto s = baseline; s.Port = 9999;
+
+        VERIFY_ARE_EQUAL(baseline.DeviceId(), s.DeviceId());
+    }
 }
 
 void MidiNetworkApiTests::TestClientMatchCriteriaRoundTrip()
@@ -1719,25 +2169,25 @@ void MidiNetworkApiTests::TestHostCreationConfigAuthenticationTypeRoundTrip()
 
 void MidiNetworkApiTests::TestTransportManagerDnsSdConstantsAreUsable()
 {
-    // An app builds its own device queries from these, so an empty one is a silent failure.
     VERIFY_IS_FALSE(MidiNetworkTransportManager::MidiNetworkUdpDnsServiceType().empty());
-    VERIFY_IS_FALSE(MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryString().empty());
     VERIFY_IS_FALSE(MidiNetworkTransportManager::MidiNetworkUdpDnsDomain().empty());
+    VERIFY_IS_FALSE(MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryName().empty());
 
     Log::Comment(String().Format(
-        L"service type '%s', domain '%s'",
+        L"service type '%s', domain '%s', query name '%s'",
         MidiNetworkTransportManager::MidiNetworkUdpDnsServiceType().c_str(),
-        MidiNetworkTransportManager::MidiNetworkUdpDnsDomain().c_str()));
+        MidiNetworkTransportManager::MidiNetworkUdpDnsDomain().c_str(),
+        MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryName().c_str()));
 
     // Spec section 4.4 and RFC 6763: the advertisement lives under _midi2._udp
     VERIFY_IS_TRUE(
         std::wstring{ MidiNetworkTransportManager::MidiNetworkUdpDnsServiceType() }.find(L"_udp") != std::wstring::npos,
         L"The DNS-SD service type names the UDP protocol");
 
-    auto additionalProperties = MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryAdditionalProperties();
-
-    VERIFY_IS_NOT_NULL(additionalProperties);
-    VERIFY_IS_GREATER_THAN(additionalProperties.Size(), 0u, L"Discovery asks for the DNS-SD properties it needs");
+    // This is passed straight to DnsServiceBrowse, so it has to be the full query name.
+    VERIFY_ARE_EQUAL(
+        winrt::hstring{ L"_midi2._udp.local" },
+        MidiNetworkTransportManager::MidiNetworkUdpDnsSdQueryName());
 }
 
 void MidiNetworkApiTests::TestDuplicateServiceInstanceNameIsRejected()

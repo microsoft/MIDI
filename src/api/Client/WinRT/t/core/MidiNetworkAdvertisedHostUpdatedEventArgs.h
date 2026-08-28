@@ -16,12 +16,17 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         MidiNetworkAdvertisedHostUpdatedEventArgs() = default;
 
         winrt::hstring HostDeviceId() noexcept;
-        enumeration::DeviceInformationUpdate DeviceInformationUpdate() noexcept;
+        network::MidiNetworkAdvertisedHostChangedProperties ChangedProperties() noexcept;
+        network::MidiNetworkAdvertisedHost UpdatedHost() noexcept;
 
-        void InternalInitialize(_In_ winrt::hstring const& id, _In_ enumeration::DeviceInformationUpdate const& args) noexcept;
+        void InternalInitialize(
+            _In_ winrt::hstring const& id,
+            _In_ network::MidiNetworkAdvertisedHostChangedProperties const changedProperties,
+            _In_ network::MidiNetworkAdvertisedHost const& host) noexcept;
 
     private:
         winrt::hstring m_id{ };
-        enumeration::DeviceInformationUpdate m_deviceInformationUpdate{ nullptr };
+        network::MidiNetworkAdvertisedHostChangedProperties m_changedProperties{ network::MidiNetworkAdvertisedHostChangedProperties::None };
+        network::MidiNetworkAdvertisedHost m_host{ nullptr };
     };
 }

@@ -13,116 +13,64 @@
 
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
-
     _Use_decl_annotations_
-    void MidiNetworkAdvertisedHost::InternalInitialize(
-        winrt::hstring deviceId,
-        winrt::hstring deviceName,
-        winrt::hstring fullName,
-        winrt::hstring serviceInstanceName,
-        winrt::hstring serviceType,
-        winrt::hstring hostName,
-        uint16_t port,
-        winrt::hstring domain,
-        winrt::hstring umpEndpointName,
-        winrt::hstring productInstanceId,
-        collections::IVector<winrt::hstring> ipAddresses
+    void MidiNetworkAdvertisedHost::InternalInitializeFromDnssdService(
+        ::WindowsMidiServicesInternal::MidiDnssdService const& service
     ) noexcept
     {
-        m_deviceId = deviceId;
-        m_deviceName = deviceName;
-        m_fullName = fullName;
-        m_serviceInstanceName = serviceInstanceName;
-        m_serviceType = serviceType;
-        m_hostName = hostName;
-        m_port = port;
-        m_domain = domain;
-        m_umpEndpointName = umpEndpointName;
-        m_productInstanceId = productInstanceId;
-
-        m_ipAddresses.Clear();
-
-        for (auto const& ip : ipAddresses)
+        try
         {
-            m_ipAddresses.Append(ip);
-        }
-    }
+            m_deviceId = winrt::hstring{ service.DeviceId() };
+            m_fullName = winrt::hstring{ service.FullName };
+            m_serviceInstanceName = winrt::hstring{ service.ServiceInstanceName };
+            m_serviceType = winrt::hstring{ service.ServiceType };
+            m_hostName = winrt::hstring{ service.HostName };
+            m_port = service.Port;
+            m_domain = winrt::hstring{ service.Domain };
+            m_umpEndpointName = winrt::hstring{ service.UmpEndpointName() };
+            m_productInstanceId = winrt::hstring{ service.ProductInstanceId() };
 
+            // The advertised endpoint name is the only name a remote gives us, and it is more
+            // use to a person than the DNS-SD label.
+            m_deviceName = m_umpEndpointName.empty() ? m_serviceInstanceName : m_umpEndpointName;
 
-    _Use_decl_annotations_
-    void MidiNetworkAdvertisedHost::InternalUpdateFromDeviceInformation(
-        enumeration::DeviceInformation device
-    ) noexcept
-    {
-        //props.Append(L"System.Devices.AepService.ProtocolId");  // guid
-        //props.Append(L"System.Devices.Dnssd.HostName");         // string
-        //props.Append(L"System.Devices.Dnssd.FullName");         // string
-        //props.Append(L"System.Devices.Dnssd.ServiceName");      // string
-        //props.Append(L"System.Devices.Dnssd.Domain");           // string
-        //props.Append(L"System.Devices.Dnssd.InstanceName");     // string
-        //props.Append(L"System.Devices.IpAddress");              // multivalue string
-        //props.Append(L"System.Devices.Dnssd.PortNumber");       // uint16_t
-        //props.Append(L"System.Devices.Dnssd.TextAttributes");   // multivalue string
+            m_lastSeenTime = winrt::clock::now();
 
-        auto ipAddresses = winrt::single_threaded_vector<winrt::hstring>();
+            m_textAttributes.Clear();
 
-        if (device.Properties().HasKey(L"System.Devices.IpAddress"))
-        {
-            auto prop = device.Properties().Lookup(L"System.Devices.IpAddress").as<foundation::IReferenceArray<winrt::hstring>>();
-            winrt::com_array<winrt::hstring> array;
-            prop.GetStringArray(array);
-
-            for (auto const& ip : array)
+            for (auto const& attribute : service.TextAttributes)
             {
-                ipAddresses.Append(ip);
-            }
-        }
-
-        winrt::hstring umpEndpointName{ };
-        winrt::hstring productInstanceId{ };
-
-        if (device.Properties().HasKey(L"System.Devices.Dnssd.TextAttributes"))
-        {
-            auto txtEntryProp = device.Properties().Lookup(L"System.Devices.Dnssd.TextAttributes").as<foundation::IReferenceArray<winrt::hstring>>();
-            winrt::com_array<winrt::hstring> txtEntryArray;
-            txtEntryProp.GetStringArray(txtEntryArray);
-
-            for (auto const& txt : txtEntryArray)
-            {
-                // TODO: we potentially lose info here by converting from a wide string. Need to check spec to see if ascii-only.
-                auto s = winrt::to_string(txt);
-
-                // split on the = sign
-                std::string name = s.substr(0, s.find("="));
-                std::string value = s.substr(s.find("=") + 1);
-
-                if (name == "UMPEndpointName")
-                {
-                    umpEndpointName = winrt::to_hstring(value);
-                }
-                else if (name == "ProductInstanceId")
-                {
-                    productInstanceId = winrt::to_hstring(value);
-                }
+                m_textAttributes.Insert(winrt::hstring{ attribute.first }, winrt::hstring{ attribute.second });
             }
 
+            m_ipAddresses.Clear();
+            m_ipv4Addresses.Clear();
+            m_ipv6Addresses.Clear();
+
+            for (auto const& address : service.IPv4Addresses)
+            {
+                m_ipv4Addresses.Append(winrt::hstring{ address });
+                m_ipAddresses.Append(winrt::hstring{ address });
+            }
+
+            for (auto const& address : service.IPv6Addresses)
+            {
+                m_ipv6Addresses.Append(winrt::hstring{ address });
+                m_ipAddresses.Append(winrt::hstring{ address });
+            }
         }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);
 
-        InternalInitialize(
-            device.Id(),
-            device.Name(),
-            internal::GetDeviceInfoProperty<winrt::hstring>(device.Properties(), L"System.Devices.Dnssd.FullName", L""),
-            internal::GetDeviceInfoProperty<winrt::hstring>(device.Properties(), L"System.Devices.Dnssd.InstanceName", L""),
-            internal::GetDeviceInfoProperty<winrt::hstring>(device.Properties(), L"System.Devices.Dnssd.ServiceName", L""),
-            internal::GetDeviceInfoProperty<winrt::hstring>(device.Properties(), L"System.Devices.Dnssd.HostName", L""),
-            internal::GetDeviceInfoProperty<uint16_t>(device.Properties(), L"System.Devices.Dnssd.PortNumber", 0),
-            internal::GetDeviceInfoProperty<winrt::hstring>(device.Properties(), L"System.Devices.Dnssd.Domain", L""),
-            umpEndpointName,
-            productInstanceId,
-            ipAddresses
-        );
-
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Exception building an advertised host", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+        }
     }
-
-
 }

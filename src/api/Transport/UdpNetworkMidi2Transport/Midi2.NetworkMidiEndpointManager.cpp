@@ -83,41 +83,17 @@ CMidi2NetworkMidiEndpointManager::StartRemoteHostWatcher()
     // list of found hosts so we can handle both pre-configured reconnects as
     // well as connect requests that come later
 
-    // ProtocolId is mDNS: {4526e8c1-8aac-4153-9b16-55e86ada0e54}
-    // ServiceName is per MIDI spec: _midi2._udp"
-    // Domain is per MIDI spec: local
+    // Windows.Devices.Enumeration is deliberately not used here. Its DNS-SD watcher never
+    // raises Removed, even for a correct TTL 0 goodbye, so this map only ever grew and the
+    // service went on inviting devices which had left the network.
+    // https://github.com/microsoft/MIDI/issues/1149 and /issues/1003.
+    auto const hr = m_browser.Start(
+        std::wstring{ DNS_PTR_SERVICE_TYPE },
+        [this](::WindowsMidiServicesInternal::MidiDnssdService const& service) { OnAdvertisedHostAdded(service); },
+        [this](::WindowsMidiServicesInternal::MidiDnssdService const& service, uint32_t const) { OnAdvertisedHostUpdated(service); },
+        [this](std::wstring const& fullName, std::wstring const& deviceId) { OnAdvertisedHostRemoved(fullName, deviceId); });
 
-    winrt::hstring query = 
-        L"System.Devices.AepService.ProtocolId:={4526e8c1-8aac-4153-9b16-55e86ada0e54} AND " \
-        L"System.Devices.Dnssd.ServiceName:=\"_midi2._udp\" AND " \
-        L"System.Devices.Dnssd.Domain:=\"local\"";
-
-    auto props = winrt::single_threaded_vector<winrt::hstring>();
-
-    // https://learn.microsoft.com/en-us/windows/win32/properties/props-system-devices-dnssd-domain
-    props.Append(L"System.Devices.AepService.ProtocolId");  // guid
-    props.Append(L"System.Devices.Dnssd.HostName");         // string
-    props.Append(L"System.Devices.Dnssd.FullName");         // string
-    props.Append(L"System.Devices.Dnssd.ServiceName");      // string
-    props.Append(L"System.Devices.Dnssd.Domain");           // string
-    props.Append(L"System.Devices.Dnssd.InstanceName");     // string
-    props.Append(L"System.Devices.IpAddress");              // multivalue string
-    props.Append(L"System.Devices.Dnssd.PortNumber");       // uint16_t
-    props.Append(L"System.Devices.Dnssd.TextAttributes");   // multivalue string
-
-    m_deviceWatcher = enumeration::DeviceInformation::CreateWatcher(
-        query, 
-        props, 
-        enumeration::DeviceInformationKind::AssociationEndpointService);
-
-    // add event handlers
-    m_deviceWatcherAddedToken = m_deviceWatcher.Added({ this, &CMidi2NetworkMidiEndpointManager::OnDeviceWatcherAdded });
-    m_deviceWatcherUpdatedToken = m_deviceWatcher.Updated({ this, &CMidi2NetworkMidiEndpointManager::OnDeviceWatcherUpdated });
-    m_deviceWatcherRemovedToken = m_deviceWatcher.Removed({ this, &CMidi2NetworkMidiEndpointManager::OnDeviceWatcherRemoved });
-    m_deviceWatcherStoppedToken = m_deviceWatcher.Stopped({ this, &CMidi2NetworkMidiEndpointManager::OnDeviceWatcherStopped });
-
-    // start the watcher
-    m_deviceWatcher.Start();
+    RETURN_IF_FAILED(hr);
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -131,73 +107,16 @@ CMidi2NetworkMidiEndpointManager::StartRemoteHostWatcher()
     return S_OK;
 }
 
-// Reads one key from the DNS-SD TXT record. Spec section 4.4 defines UMPEndpointName and
-// ProductInstanceId. RFC 6763 makes TXT keys case-insensitive, so the comparison is too.
-static bool TryGetDnssdTextAttribute(
-    _In_ enumeration::DeviceInformation const& device,
-    _In_ std::wstring const& key,
-    _Out_ std::wstring& value)
-{
-    value.clear();
-
-    const winrt::hstring textAttributesPropertyKey = L"System.Devices.Dnssd.TextAttributes";
-
-    if (!device.Properties().HasKey(textAttributesPropertyKey))
-    {
-        return false;
-    }
-
-    auto prop = device.Properties().Lookup(textAttributesPropertyKey);
-
-    if (!prop)
-    {
-        return false;
-    }
-
-    try
-    {
-        auto attributes = prop.as<foundation::IReferenceArray<winrt::hstring>>();
-
-        winrt::com_array<winrt::hstring> entries;
-        attributes.GetStringArray(entries);
-
-        auto lowerKey = internal::ToLowerTrimmedWStringCopy(key);
-
-        for (auto const& entry : entries)
-        {
-            std::wstring text{ entry };
-
-            auto separator = text.find(L'=');
-
-            if (separator == std::wstring::npos)
-            {
-                continue;
-            }
-
-            if (internal::ToLowerTrimmedWStringCopy(text.substr(0, separator)) == lowerKey)
-            {
-                value = text.substr(separator + 1);
-
-                return true;
-            }
-        }
-    }
-    catch (...)
-    {
-        LOG_CAUGHT_EXCEPTION();
-    }
-
-    return false;
-}
-
 // mDNS is an unbounded source: a remote can advertise arbitrary text of arbitrary length. Values
-// which do not meet the specification are dropped rather than stored, so they can never reach a
+// which do not meet the specification are dropped rather than returned, so they can never reach a
 // comparison, a device property, or an SWD id.
 static bool TryGetAdvertisedProductInstanceId(
-    _In_ enumeration::DeviceInformation const& device,
+    _In_ ::WindowsMidiServicesInternal::MidiDnssdService const& service,
     _Out_ std::wstring& value)
 {
-    if (!TryGetDnssdTextAttribute(device, L"ProductInstanceId", value))
+    value = service.ProductInstanceId();
+
+    if (value.empty())
     {
         return false;
     }
@@ -214,10 +133,12 @@ static bool TryGetAdvertisedProductInstanceId(
 }
 
 static bool TryGetAdvertisedEndpointName(
-    _In_ enumeration::DeviceInformation const& device,
+    _In_ ::WindowsMidiServicesInternal::MidiDnssdService const& service,
     _Out_ std::wstring& value)
 {
-    if (!TryGetDnssdTextAttribute(device, L"UMPEndpointName", value))
+    value = service.UmpEndpointName();
+
+    if (value.empty())
     {
         return false;
     }
@@ -236,11 +157,11 @@ static bool TryGetAdvertisedEndpointName(
 // changes between machines, so the advertised Product Instance Id and UMP Endpoint Name are
 // accepted too. All comparisons are case-insensitive.
 static bool TryFindAdvertisedHost(
-    _In_ std::map<winrt::hstring, enumeration::DeviceInformation> const& advertisedHosts,
+    _In_ std::map<std::wstring, ::WindowsMidiServicesInternal::MidiDnssdService> const& advertisedHosts,
     _In_ winrt::hstring const& matchId,
-    _Out_ enumeration::DeviceInformation& found)
+    _Out_ ::WindowsMidiServicesInternal::MidiDnssdService& found)
 {
-    found = nullptr;
+    found = { };
 
     if (matchId.empty())
     {
@@ -251,7 +172,7 @@ static bool TryFindAdvertisedHost(
 
     for (auto const& entry : advertisedHosts)
     {
-        if (internal::ToLowerTrimmedWStringCopy(std::wstring{ entry.first }) == wanted)
+        if (internal::ToLowerTrimmedWStringCopy(entry.first) == wanted)
         {
             found = entry.second;
 
@@ -281,27 +202,16 @@ static bool TryFindAdvertisedHost(
 }
 
 _Use_decl_annotations_
-HRESULT
-CMidi2NetworkMidiEndpointManager::OnDeviceWatcherAdded(enumeration::DeviceWatcher const&, enumeration::DeviceInformation const& args)
+void
+CMidi2NetworkMidiEndpointManager::OnAdvertisedHostAdded(::WindowsMidiServicesInternal::MidiDnssdService const& service)
 {
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(args.Id().c_str(), "id"),
-        TraceLoggingWideString(args.Name().c_str(), "name")
-    );
-
     // TODO: Search our host entries to make sure the host is not *this* host
 
     std::wstring advertisedEndpointName{ };
     std::wstring advertisedProductInstanceId{ };
 
-    TryGetAdvertisedEndpointName(args, advertisedEndpointName);
-    TryGetAdvertisedProductInstanceId(args, advertisedProductInstanceId);
+    TryGetAdvertisedEndpointName(service, advertisedEndpointName);
+    TryGetAdvertisedProductInstanceId(service, advertisedProductInstanceId);
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -310,82 +220,34 @@ CMidi2NetworkMidiEndpointManager::OnDeviceWatcherAdded(enumeration::DeviceWatche
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"Discovered advertised host", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(service.DeviceId().c_str(), "id"),
         TraceLoggingWideString(advertisedEndpointName.c_str(), "UMP endpoint name"),
         TraceLoggingWideString(advertisedProductInstanceId.c_str(), "product instance id")
     );
 
-    m_foundAdvertisedHosts.insert_or_assign(args.Id(), args);
-
-    WakeupBackgroundEndpointCreatorThread();
-
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
-
-    return S_OK;
-}
-
-_Use_decl_annotations_
-HRESULT
-CMidi2NetworkMidiEndpointManager::OnDeviceWatcherUpdated(enumeration::DeviceWatcher const&, enumeration::DeviceInformationUpdate const& /*args*/)
-{
-    //TraceLoggingWrite(
-    //    MidiNetworkMidiTransportTelemetryProvider::Provider(),
-    //    MIDI_TRACE_EVENT_INFO,
-    //    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-    //    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-    //    TraceLoggingPointer(this, "this"),
-    //    TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-    //    TraceLoggingWideString(args.Id().c_str(), "id")
-    //);
-
-    // nothing to do here. We don't care about updates. This gets really spammy because
-    // the endpoint updates maybe with each mdns ad broadcast or something
-
-    return S_OK;
-}
-
-_Use_decl_annotations_
-HRESULT
-CMidi2NetworkMidiEndpointManager::OnDeviceWatcherRemoved(enumeration::DeviceWatcher const&, enumeration::DeviceInformationUpdate const& args)
-{
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(args.Id().c_str(), "id")
-    );
-
-    if (m_foundAdvertisedHosts.find(args.Id()) != m_foundAdvertisedHosts.end())
     {
-        m_foundAdvertisedHosts.erase(args.Id());
+        auto lock = m_advertisedHostsLock.lock_exclusive();
 
-        // we don't disconnect or anything here. That's handled in-protocol.
+        m_foundAdvertisedHosts.insert_or_assign(service.DeviceId(), service);
     }
 
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
+    WakeupBackgroundEndpointCreatorThread();
+}
 
-    return S_OK;
+// The address or port can change while a host stays put, so the stored copy is refreshed. A
+// configured client which is already connected is left alone; the protocol handles that.
+_Use_decl_annotations_
+void
+CMidi2NetworkMidiEndpointManager::OnAdvertisedHostUpdated(::WindowsMidiServicesInternal::MidiDnssdService const& service)
+{
+    auto lock = m_advertisedHostsLock.lock_exclusive();
+
+    m_foundAdvertisedHosts.insert_or_assign(service.DeviceId(), service);
 }
 
 _Use_decl_annotations_
-HRESULT
-CMidi2NetworkMidiEndpointManager::OnDeviceWatcherStopped(enumeration::DeviceWatcher const&, foundation::IInspectable const&)
+void
+CMidi2NetworkMidiEndpointManager::OnAdvertisedHostRemoved(std::wstring const& fullName, std::wstring const& deviceId)
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -393,11 +255,15 @@ CMidi2NetworkMidiEndpointManager::OnDeviceWatcherStopped(enumeration::DeviceWatc
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        TraceLoggingWideString(L"Advertised host went away", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(fullName.c_str(), "full name"),
+        TraceLoggingWideString(deviceId.c_str(), "id")
     );
 
-    // nothing to do here
-    return S_OK;
+    auto lock = m_advertisedHostsLock.lock_exclusive();
+
+    // we don't disconnect or anything here. That's handled in-protocol.
+    m_foundAdvertisedHosts.erase(deviceId);
 }
 
 HRESULT
@@ -1055,23 +921,29 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
                 !clientDefinition->MatchProductInstanceId.empty() ||
                 !clientDefinition->MatchUmpEndpointName.empty())
             {
-                enumeration::DeviceInformation advertisedHost{ nullptr };
+                ::WindowsMidiServicesInternal::MidiDnssdService advertisedHost{ };
 
                 // The device id first, then the device's own identity. A responder renames a
                 // colliding DNS-SD instance label and a user or firmware update can change it, so
                 // the id alone would silently stop matching a device which is still right there.
-                auto found = TryFindAdvertisedHost(m_foundAdvertisedHosts, clientDefinition->MatchId, advertisedHost);
+                bool found{ false };
 
-                if (!found)
                 {
-                    found = TryFindAdvertisedHost(
-                        m_foundAdvertisedHosts, clientDefinition->MatchProductInstanceId, advertisedHost);
-                }
+                    auto lock = m_advertisedHostsLock.lock_shared();
 
-                if (!found)
-                {
-                    found = TryFindAdvertisedHost(
-                        m_foundAdvertisedHosts, clientDefinition->MatchUmpEndpointName, advertisedHost);
+                    found = TryFindAdvertisedHost(m_foundAdvertisedHosts, clientDefinition->MatchId, advertisedHost);
+
+                    if (!found)
+                    {
+                        found = TryFindAdvertisedHost(
+                            m_foundAdvertisedHosts, clientDefinition->MatchProductInstanceId, advertisedHost);
+                    }
+
+                    if (!found)
+                    {
+                        found = TryFindAdvertisedHost(
+                            m_foundAdvertisedHosts, clientDefinition->MatchUmpEndpointName, advertisedHost);
+                    }
                 }
 
                 if (found)
@@ -1083,51 +955,29 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
                         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                         TraceLoggingPointer(this, "this"),
                         TraceLoggingWideString(L"Processing mdns entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingWideString(advertisedHost.Id().c_str(), "id")
+                        TraceLoggingWideString(advertisedHost.DeviceId().c_str(), "id")
                     );
 
-                    winrt::hstring hostNameOrIPAddress{};
-                    uint16_t port{ 0 };
+                    // IP address first, as that is the most reliable. The host name relies on
+                    // DNS being set up properly, which is often not the case on a network with
+                    // just some devices and a laptop.
+                    winrt::hstring hostNameOrIPAddress{ };
 
-                    const winrt::hstring hostNamePropertyKey = L"System.Devices.Dnssd.HostName";
-                    const winrt::hstring hostPortPropertyKey = L"System.Devices.Dnssd.PortNumber";
-                    const winrt::hstring ipAddressPropertyKey = L"System.Devices.IpAddress";
-
-                    // we use IP address first, as that is the most reliable
-                    if (advertisedHost.Properties().HasKey(ipAddressPropertyKey))
+                    if (!advertisedHost.IPv4Addresses.empty())
                     {
-                        auto prop = advertisedHost.Properties().Lookup(ipAddressPropertyKey).as<foundation::IReferenceArray<winrt::hstring>>();
-                        winrt::com_array<winrt::hstring> array;
-                        prop.GetStringArray(array);
-
                         // we only take the top one right now. We should take the others as well
-                        if (array.size() > 0)
-                        {
-                            hostNameOrIPAddress = array.at(0);
-                        }
+                        hostNameOrIPAddress = winrt::hstring{ advertisedHost.IPv4Addresses.front() };
                     }
-                    // next we get the host name if necessary, but this relies on DNS being set up properly,
-                    // which is often not the case on a network with just some devices and a laptop
-                    else if (hostNameOrIPAddress.empty() && advertisedHost.Properties().HasKey(hostNamePropertyKey))
+                    else if (!advertisedHost.IPv6Addresses.empty())
                     {
-                        auto prop = advertisedHost.Properties().Lookup(hostNamePropertyKey);
-
-                        if (prop)
-                        {
-                            hostNameOrIPAddress = winrt::unbox_value<winrt::hstring>(prop);
-                        }
+                        hostNameOrIPAddress = winrt::hstring{ advertisedHost.IPv6Addresses.front() };
                     }
-
-                    // we always need the port
-                    if (advertisedHost.Properties().HasKey(hostPortPropertyKey))
+                    else if (!advertisedHost.HostName.empty())
                     {
-                        auto prop = advertisedHost.Properties().Lookup(hostPortPropertyKey);
-
-                        if (prop)
-                        {
-                            port = winrt::unbox_value<uint16_t>(prop);
-                        }
+                        hostNameOrIPAddress = winrt::hstring{ advertisedHost.HostName };
                     }
+
+                    uint16_t const port = advertisedHost.Port;
 
                     LOG_IF_FAILED(StartNewClient(clientDefinition, hostNameOrIPAddress, port));
                 }
@@ -1982,32 +1832,13 @@ CMidi2NetworkMidiEndpointManager::Shutdown()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    if (m_deviceWatcher)
+    m_browser.Stop();
+
     {
-        if (m_deviceWatcherStoppedToken)
-        {
-            m_deviceWatcher.Stopped(m_deviceWatcherStoppedToken);
-        }
+        auto lock = m_advertisedHostsLock.lock_exclusive();
 
-        if (m_deviceWatcherAddedToken)
-        {
-            m_deviceWatcher.Added(m_deviceWatcherAddedToken);
-        }
-
-        if (m_deviceWatcherRemovedToken)
-        {
-            m_deviceWatcher.Removed(m_deviceWatcherRemovedToken);
-        }
-
-        if (m_deviceWatcherUpdatedToken)
-        {
-            m_deviceWatcher.Updated(m_deviceWatcherUpdatedToken);
-        }
-
-        m_deviceWatcher.Stop();
+        m_foundAdvertisedHosts.clear();
     }
-
-    m_foundAdvertisedHosts.clear();
 
     m_backgroundEndpointCreatorThread.request_stop();
     m_backgroundEndpointCreatorThreadWakeup.SetEvent();

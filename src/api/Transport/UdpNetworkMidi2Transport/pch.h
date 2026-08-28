@@ -142,6 +142,10 @@ struct MidiNetworkHostDefinition;
 
 #include "MidiNetworkAdvertiser.h"
 
+// Shared with the SDK. Windows.Devices.Enumeration is not used for discovery because its
+// DNS-SD watcher never reports a service going away. See the header for the measurements.
+#include "midi_dnssd_browser.h"
+
 
 #include "Midi2.NetworkMidiTransport.h"
 #include "Midi2.NetworkMidiBidi.h"

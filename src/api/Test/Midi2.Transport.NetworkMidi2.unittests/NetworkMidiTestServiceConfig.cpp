@@ -332,10 +332,12 @@ namespace NetworkMidiTest
         std::wstring const& productInstanceId,
         std::wstring const& serviceInstanceName,
         bool const requireApproval,
-        std::wstring const& port)
+        std::wstring const& port,
+        bool const advertise)
     {
-        // advertise is off so these short-lived test hosts do not appear over mDNS and get
-        // picked up by anything else on the network.
+        // advertise defaults off so these short-lived test hosts do not appear over mDNS and get
+        // picked up by anything else on the network. Only the tests which are specifically about
+        // the advertisement turn it on.
         // serviceInstanceName is set explicitly because it otherwise defaults to the machine
         // name, which the machine's own host is already using, and the parent device is created
         // from it. That collision is now rejected outright by the configuration manager.
@@ -347,18 +349,19 @@ namespace NetworkMidiTest
             L"\"networkProtocol\":\"udp\","
             L"\"port\":\"" + EscapeJsonString(port) + L"\","
             L"\"enabled\":true,"
-            L"\"advertise\":false,"
+            L"\"advertise\":" + std::wstring(advertise ? L"true" : L"false") + L","
             L"\"remoteClientPolicy\":\"" +
                 std::wstring(requireApproval ? L"requireApproval" : L"allowAny") + L"\""
             L"}}}}";
 
         Log::Comment(String().Format(
-            L"Creating host %s (%s) serviceInstanceName=%s port=%s policy=%s",
+            L"Creating host %s (%s) serviceInstanceName=%s port=%s policy=%s advertise=%d",
             entryIdentifier.c_str(),
             umpEndpointName.c_str(),
             serviceInstanceName.c_str(),
             port.c_str(),
-            requireApproval ? L"requireApproval" : L"allowAny"));
+            requireApproval ? L"requireApproval" : L"allowAny",
+            advertise ? 1 : 0));
 
         return SendNetworkTransportConfig(json);
     }

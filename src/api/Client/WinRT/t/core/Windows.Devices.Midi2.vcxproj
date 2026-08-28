@@ -1225,6 +1225,7 @@
     <Midl Include="MidiNetworkConfiguredClient.idl" />
     <Midl Include="MidiNetworkConfiguredHost.idl" />
     <Midl Include="MidiNetworkHostConnection.idl" />
+    <Midl Include="MidiNetworkAdvertisedHostChangedPropertiesEnum.idl" />
     <Midl Include="MidiNetworkRemoteClientPolicyEnum.idl" />
     <Midl Include="MidiNetworkHostCreationErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkHostRemovalErrorCodeEnum.idl" />

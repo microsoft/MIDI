@@ -116,6 +116,25 @@ public:
     // ---- feature coverage ----
     TEST_METHOD(TestAdvertisedHostWatcherLifecycle);
     TEST_METHOD(TestAdvertisedHostWatcherDoubleStartStopIsSafe);
+
+    // https://github.com/microsoft/MIDI/issues/1149. A watcher has to see a real host arrive
+    // and, more importantly, go away again.
+    TEST_METHOD(TestAdvertisedHostWatcherRaisesAddedAndRemovedForARealHost);
+
+    // Kept as the evidence for why discovery no longer goes through Windows.Devices.Enumeration:
+    // it dumps every property that layer reports across a host's whole life, and shows Removed
+    // never arriving. Ignored because it is a four minute observation, not an assertion.
+    BEGIN_TEST_METHOD(TestDiagDnssdWatcherPropertiesAcrossHostRemoval)
+        TEST_METHOD_PROPERTY(L"Ignore", L"true")
+    END_TEST_METHOD()
+
+    // The shared DNS-SD backing class used by both the SDK watcher and the service transport.
+    // This is the check that a host going away is actually reported, which is the whole of 1149.
+    TEST_METHOD(TestDnssdBrowserReportsHostAddedAndRemoved);
+
+    // Updated has to say what changed. A real advertisement change cannot be forced on demand,
+    // so the mask itself is checked directly. Offline.
+    TEST_METHOD(TestDnssdServiceChangedFieldsNameEachChange);
     TEST_METHOD(TestClientMatchCriteriaRoundTrip);
     TEST_METHOD(TestClientConnectConfigRoundTrip);
     TEST_METHOD(TestDisconnectUnknownClientFailsCleanly);
@@ -159,7 +178,9 @@ public:
 private:
 
     // Creates a host with a unique name and returns its id. Returns a zero guid on failure.
-    winrt::guid CreateTestHost(_In_ std::wstring const& nameSuffix);
+    // Advertising is off by default so these tests put nothing on the local network; only the
+    // discovery tests turn it on.
+    winrt::guid CreateTestHost(_In_ std::wstring const& nameSuffix, _In_ bool const advertise = false);
 
     // Best-effort teardown so a failed assert does not leave a host behind
     void RemoveTestHost(_In_ winrt::guid const& hostId);

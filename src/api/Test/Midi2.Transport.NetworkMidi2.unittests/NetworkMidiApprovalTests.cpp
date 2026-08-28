@@ -1417,6 +1417,109 @@ void NetworkMidiApprovalTests::RemovingAnUnknownHostReportsFailure()
 }
 
 
+namespace
+{
+    // Asks the network, not the platform's discovery cache, whether an instance is being
+    // advertised. Retries because a single query can be lost: mDNS is unacknowledged multicast.
+    bool WaitForAdvertisementState(
+        _In_ std::wstring const& serviceInstanceName,
+        _In_ bool const wantPresent,
+        _In_ std::chrono::milliseconds const timeout)
+    {
+        auto const deadline = std::chrono::steady_clock::now() + timeout;
+
+        do
+        {
+            bool present{ false };
+
+            auto const discovered = DiscoverMdnsServices("_midi2._udp.local", std::chrono::milliseconds(1500));
+
+            std::wstringstream seen;
+            seen << L"mDNS round saw " << discovered.size() << L" instance(s): ";
+
+            for (auto const& host : discovered)
+            {
+                seen << L"'" << host.InstanceName << L"' ";
+
+                if (_wcsicmp(host.InstanceName.c_str(), serviceInstanceName.c_str()) == 0)
+                {
+                    present = true;
+                }
+            }
+
+            Log::Comment(String().Format(L"%s (looking for '%s', want present=%d)",
+                seen.str().c_str(), serviceInstanceName.c_str(), wantPresent ? 1 : 0));
+
+            if (present == wantPresent)
+            {
+                return true;
+            }
+
+        } while (std::chrono::steady_clock::now() < deadline);
+
+        return false;
+    }
+}
+
+
+// https://github.com/microsoft/MIDI/issues/1149. A removed host must stop answering mDNS
+// queries. If it keeps answering, every watcher on the network goes on offering a host which
+// cannot be connected to, and no remove event is ever raised.
+void NetworkMidiApprovalTests::RemovedHostIsNoLongerAdvertisedOnTheNetwork()
+{
+    auto entryIdentifier = MakeEntryIdentifier();
+    auto serviceInstanceName = std::wstring{ L"midi2-advert-removed-" } + std::to_wstring(GetTickCount64());
+
+    VERIFY_IS_TRUE(
+        CreateHost(entryIdentifier, L"Advertisement Removal Host", L"ADVERTREMOVED", serviceInstanceName, false, L"auto", true).IsSuccess(),
+        L"Host created");
+
+    auto cleanup = wil::scope_exit([&]() { RemoveHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(WaitForHostPresent(entryIdentifier), L"Host was instantiated");
+
+    // The removal below proves nothing unless the host was demonstrably on the wire first.
+    VERIFY_IS_TRUE(
+        WaitForAdvertisementState(serviceInstanceName, true, std::chrono::milliseconds(15000)),
+        L"The new host answers mDNS queries");
+
+    VERIFY_IS_TRUE(RemoveHost(entryIdentifier).IsSuccess(), L"Host removed");
+
+    cleanup.release();
+
+    VERIFY_IS_TRUE(
+        WaitForAdvertisementState(serviceInstanceName, false, std::chrono::milliseconds(20000)),
+        L"A removed host stops answering mDNS queries");
+}
+
+
+// stopHost keeps the entry, but a stopped host has no socket bound and cannot be connected to,
+// so it must not go on advertising either.
+void NetworkMidiApprovalTests::StoppedHostIsNoLongerAdvertisedOnTheNetwork()
+{
+    auto entryIdentifier = MakeEntryIdentifier();
+    auto serviceInstanceName = std::wstring{ L"midi2-advert-stopped-" } + std::to_wstring(GetTickCount64());
+
+    VERIFY_IS_TRUE(
+        CreateHost(entryIdentifier, L"Advertisement Stop Host", L"ADVERTSTOPPED", serviceInstanceName, false, L"auto", true).IsSuccess(),
+        L"Host created");
+
+    auto cleanup = wil::scope_exit([&]() { RemoveHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(WaitForHostPresent(entryIdentifier), L"Host was instantiated");
+
+    VERIFY_IS_TRUE(
+        WaitForAdvertisementState(serviceInstanceName, true, std::chrono::milliseconds(15000)),
+        L"The new host answers mDNS queries");
+
+    VERIFY_IS_TRUE(StopHost(entryIdentifier).IsSuccess(), L"Host stopped");
+
+    VERIFY_IS_TRUE(
+        WaitForAdvertisementState(serviceInstanceName, false, std::chrono::milliseconds(20000)),
+        L"A stopped host stops answering mDNS queries");
+}
+
+
 // Two hosts sharing a port would mean two sockets fighting over the same inbound datagrams. The
 // second bind is the one that fails, at start time, long after the user pressed the button, so
 // the collision is caught up front instead.
