@@ -639,7 +639,7 @@ namespace NetworkMidiTest
             L"The client should still be waiting when the host finally accepts, and then establish the session.");
 
         VERIFY_ARE_EQUAL(static_cast<size_t>(0), client.Host().CountReceived(CommandCode::Bye),
-            L"The client must not have cancelled the invitation while the host was pending.");
+            L"The client must not have canceled the invitation while the host was pending.");
     }
 
 
@@ -977,7 +977,7 @@ namespace NetworkMidiTest
         // Let the client exhaust its invitation attempts and cancel with Bye 0x80
         auto give_up = client.Host().WaitForCommand(CommandCode::Bye, InvitationTimeout);
 
-        VERIFY_IS_TRUE(give_up.has_value(), L"The client never cancelled its unanswered invitation.");
+        VERIFY_IS_TRUE(give_up.has_value(), L"The client never canceled its unanswered invitation.");
 
         auto byeCommand = give_up->Find(CommandCode::Bye);
 
@@ -1180,7 +1180,7 @@ namespace NetworkMidiTest
 
         client.Host().ClearHistory();
 
-        // Keep the link busy for longer than the ping interval. Under the old behaviour the
+        // Keep the link busy for longer than the ping interval. Under the old behavior the
         // watchdog saw recent traffic on every tick and skipped the ping entirely.
         auto deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(12000);
         uint16_t sequenceNumber{ 0 };
@@ -1536,7 +1536,7 @@ namespace NetworkMidiTest
         if (capabilities == nullptr) return;
 
         // Every verb an app issues, plus the flag that says a name supplied at creation is
-        // honoured. An app refuses to run when any of these is missing, so removing one here is
+        // honored. An app refuses to run when any of these is missing, so removing one here is
         // a breaking change and this test is the reminder.
         wchar_t const* const required[]
         {

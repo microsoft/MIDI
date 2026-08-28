@@ -121,14 +121,12 @@ TransportState::Shutdown()
 }
 
 
+// The machine-wide identity every host and this PC's client identity are built from. Derived
+// rather than configurable: a remote recognizes this PC by it, so letting it be edited silently
+// breaks every remote which has already stored it.
 std::wstring
 TransportState::GetEffectiveProductInstanceId()
 {
-    if (!TransportSettings.ProductInstanceId.empty())
-    {
-        return TransportSettings.ProductInstanceId;
-    }
-
     // reserve() does not change size(), so the name has to be sized before it is written into
     // and resized to the returned length afterward. Otherwise every read of it sees an empty
     // string and the generated identity degrades to "-midisrv".

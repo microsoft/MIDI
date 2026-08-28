@@ -32,6 +32,14 @@ namespace winrt::midinetworksetup::implementation
             controls::NavigationView const& sender,
             controls::NavigationViewSelectionChangedEventArgs const& args);
 
+        void OnTransportSettingChanged(
+            controls::NumberBox const& sender,
+            controls::NumberBoxValueChangedEventArgs const& args);
+
+        void OnRestoreTransportSettingDefaultsClick(
+            foundation::IInspectable const& sender,
+            xaml::RoutedEventArgs const& args);
+
 
         winrt::fire_and_forget OnConnectRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnRetryRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -97,7 +105,17 @@ namespace winrt::midinetworksetup::implementation
         void ApplyRemoteHosts(ServiceSnapshot const& snapshot) noexcept;
         void ApplyLocalHosts(ServiceSnapshot const& snapshot) noexcept;
 
-        void ShowRemotePage(bool const showRemote) noexcept;
+        void ShowPage(uint32_t const pageIndex) noexcept;
+        winrt::Windows::Foundation::IInspectable NavigationItemForPage(uint32_t const pageIndex) noexcept;
+
+        // Reads what the transport is running with and puts it in the boxes. The boxes raise
+        // ValueChanged when they are filled in, so m_loadingTransportSettings suppresses the
+        // write-back that would otherwise follow.
+        void LoadTransportSettings() noexcept;
+        void QueueTransportSettingsWrite() noexcept;
+        void FlushPendingTransportSettingsWrite() noexcept;
+        winrt::fire_and_forget ApplyTransportSettingsAsync() noexcept;
+
         void UpdateManualConnectButton() noexcept;
         void UpdateCreateHostButtonState() noexcept;
 
@@ -155,6 +173,10 @@ namespace winrt::midinetworksetup::implementation
         winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_remoteStatusTimer{ nullptr };
         winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_localStatusTimer{ nullptr };
 
+        // Holding a NumberBox spinner raises ValueChanged on every step, and each one would
+        // otherwise be a round trip to the service and a rewrite of the configuration file.
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_transportSettingsWriteTimer{ nullptr };
+
         collections::IObservableVector<midinetworksetup::PendingInvitationItem> m_pendingInvitations{
             winrt::single_threaded_observable_vector<midinetworksetup::PendingInvitationItem>() };
 
@@ -168,6 +190,7 @@ namespace winrt::midinetworksetup::implementation
 
         bool m_loaded{ false };
         bool m_closing{ false };
+        bool m_loadingTransportSettings{ false };
         bool m_transportMissingReported{ false };
     };
 }

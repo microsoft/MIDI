@@ -305,7 +305,7 @@ MidiNetworkHostConnection::HandleIncomingInvitation(
 
     // Spec 6.4. If this host was configured to require authentication we must challenge,
     // never accept. Configuration validation refuses to start such a host today, so this is
-    // defence in depth rather than the primary control.
+    // defense in depth rather than the primary control.
     // TODO: https://github.com/microsoft/MIDI/issues/733
     if (m_authenticationKind != MidiNetworkAuthenticationKind::None)
     {

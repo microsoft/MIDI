@@ -2252,7 +2252,7 @@ void MidiNetworkApiTests::TestHostCreationConfigRemoteClientPolicyRoundTrip()
 {
     MidiNetworkHostCreationConfig config;
 
-    // The default has to stay permissive, or existing configurations change behaviour.
+    // The default has to stay permissive, or existing configurations change behavior.
     VERIFY_ARE_EQUAL(MidiNetworkRemoteClientPolicy::AllowAny, config.RemoteClientPolicy());
 
     config.RemoteClientPolicy(MidiNetworkRemoteClientPolicy::RequireApproval);

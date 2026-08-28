@@ -49,6 +49,7 @@ private:
     HRESULT RunCommandGetPendingRemoteClients(_Inout_ json::JsonObject& responseObject) noexcept;
     HRESULT RunCommandEnumerateClients(_Inout_ json::JsonObject& responseObject) noexcept;
     HRESULT RunCommandEnumerateHosts(_Inout_ json::JsonObject& responseObject) noexcept;
+    HRESULT RunCommandGetTransportSettings(_Inout_ json::JsonObject& responseObject) noexcept;
     HRESULT RunCommandStopHost(
         _In_ winrt::guid const& hostConfigEntryId,
         _Inout_ json::JsonObject& responseObject) noexcept;

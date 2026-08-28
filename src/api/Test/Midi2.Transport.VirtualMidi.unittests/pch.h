@@ -33,7 +33,7 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Data.Json.h>
 
-// the KIR which gates the behaviour under test. The tests have to no-op when it is disabled,
+// the KIR which gates the behavior under test. The tests have to no-op when it is disabled,
 // otherwise a rollback turns the suite red.
 #include <Feature_Servicing_MIDI2EndpointUniqueIdValidation.h>
 #include <Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit.h>

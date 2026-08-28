@@ -34,7 +34,7 @@ MidiNetworkDataWriter::Send()
                 TraceLoggingWideString(L"Timed out storing datagram to the output stream. Abandoning it.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
             );
 
-            // deliberately no GetResults() here: the operation was cancelled, not completed
+            // deliberately no GetResults() here: the operation was canceled, not completed
             RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_TIMEOUT));
         }
 

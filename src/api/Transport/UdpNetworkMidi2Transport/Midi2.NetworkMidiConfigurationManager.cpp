@@ -42,6 +42,64 @@ namespace
         }
     }
 
+    // Transport settings are corrected rather than refused, so anything the caller writes has to
+    // resolve to a usable number: absent, the wrong type, fractional, negative, or beyond the
+    // supported range all land on something the transport can actually run with.
+    uint32_t ReadClampedTransportSetting(
+        _In_ json::JsonObject const& section,
+        _In_ winrt::hstring const& name,
+        _In_ uint32_t const defaultValue,
+        _In_ uint32_t const lowerBound,
+        _In_ uint32_t const upperBound,
+        _Inout_ bool& anyAdjusted) noexcept
+    {
+        double rawValue{ 0.0 };
+
+        try
+        {
+            if (section == nullptr || !section.HasKey(name))
+            {
+                return defaultValue;
+            }
+
+            auto value = section.Lookup(name);
+
+            if (value == nullptr || value.ValueType() != json::JsonValueType::Number)
+            {
+                anyAdjusted = true;
+                return defaultValue;
+            }
+
+            rawValue = value.GetNumber();
+        }
+        catch (...)
+        {
+            anyAdjusted = true;
+            return defaultValue;
+        }
+
+        // NaN compares false against everything, so it would otherwise slip past both bounds
+        if (std::isnan(rawValue))
+        {
+            anyAdjusted = true;
+            return defaultValue;
+        }
+
+        if (rawValue < static_cast<double>(lowerBound))
+        {
+            anyAdjusted = true;
+            return lowerBound;
+        }
+
+        if (rawValue > static_cast<double>(upperBound))
+        {
+            anyAdjusted = true;
+            return upperBound;
+        }
+
+        return static_cast<uint32_t>(rawValue);
+    }
+
     // Entry identifiers are GUIDs. winrt::guid's string constructor validates length, separators
     // and every hex digit, and takes both the braced and unbraced forms, but it throws
     // std::invalid_argument rather than returning a failure.
@@ -1019,6 +1077,47 @@ CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateClients(
 //
 
 _Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiConfigurationManager::RunCommandGetTransportSettings(
+    json::JsonObject& responseObject) noexcept
+{
+    auto const& settings = TransportState::Current().TransportSettings;
+
+    json::JsonObject settingsObject;
+
+    settingsObject.SetNamedValue(
+        MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_FEC_PACKETS_KEY,
+        json::JsonValue::CreateNumberValue(settings.ForwardErrorCorrectionMaxCommandPacketCount));
+
+    settingsObject.SetNamedValue(
+        MIDI_CONFIG_JSON_NETWORK_MIDI_RETRANSMIT_BUFFER_SIZE_KEY,
+        json::JsonValue::CreateNumberValue(settings.RetransmitBufferMaxCommandPacketCount));
+
+    settingsObject.SetNamedValue(
+        MIDI_CONFIG_JSON_NETWORK_MIDI_OUTBOUND_PING_INTERVAL_KEY,
+        json::JsonValue::CreateNumberValue(static_cast<double>(settings.OutboundPingInterval)));
+
+    settingsObject.SetNamedValue(
+        MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_HOST_CONNECTIONS_KEY,
+        json::JsonValue::CreateNumberValue(settings.MaxHostConnections));
+
+    settingsObject.SetNamedValue(
+        MIDI_CONFIG_JSON_NETWORK_MIDI_INVITATION_PENDING_TIMEOUT_KEY,
+        json::JsonValue::CreateNumberValue(static_cast<double>(settings.InvitationPendingTimeout)));
+
+    settingsObject.SetNamedValue(
+        MIDI_CONFIG_JSON_NETWORK_MIDI_DIRECT_CONNECTION_SCAN_INTERVAL_KEY,
+        json::JsonValue::CreateNumberValue(static_cast<double>(settings.DirectConnectionScanInterval)));
+
+    responseObject.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_TRANSPORT_SETTINGS_RESPONSE_KEY, settingsObject);
+
+    internal::SetConfigurationResponseObjectSuccess(responseObject);
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
 HRESULT 
 CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateHosts(
     json::JsonObject& responseObject) noexcept
@@ -1359,6 +1458,7 @@ CMidi2NetworkMidiConfigurationManager::ProcessCommand(
 
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_CLIENTS, true);
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_HOSTS, true);
+        capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_GET_TRANSPORT_SETTINGS, true);
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_START_HOST, true);
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_STOP_HOST, true);
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_REMOVE_HOST, true);
@@ -1389,6 +1489,10 @@ CMidi2NetworkMidiConfigurationManager::ProcessCommand(
     else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_HOSTS)
     {
         RETURN_IF_FAILED(RunCommandEnumerateHosts(responseObject));
+    }
+    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_GET_TRANSPORT_SETTINGS)
+    {
+        RETURN_IF_FAILED(RunCommandGetTransportSettings(responseObject));
     }
     else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_START_HOST)
     {
@@ -1638,8 +1742,7 @@ CMidi2NetworkMidiConfigurationManager::ProcessCommand(
 //        "outboundPingInterval": 2000,
 //        "directConnectionScanInterval": 20000,
 //        "maxHostConnections": 64,
-//        "invitationPendingTimeout": 120000,
-//        "productInstanceId": "optional machine-wide identity, shared by hosts and clients"
+//        "invitationPendingTimeout": 120000
 //    },
 //    "create":
 //    {
@@ -1780,82 +1883,67 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
 
     if (transportSettingsSection != nullptr && transportSettingsSection.Size() > 0)
     {
-        uint32_t fecPackets{ };
-        uint32_t retransmitBuffer{};
-        uint32_t outboundPingInterval{};
-        uint32_t maxHostConnections{};
-        uint32_t invitationPendingTimeout{};
-        uint32_t directConnectionScanInterval{};
+        bool anySettingAdjusted{ false };
 
-        fecPackets = static_cast<uint32_t>(transportSettingsSection.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_FEC_PACKETS_KEY, MIDI_NETWORK_FEC_PACKET_COUNT_DEFAULT));
-        retransmitBuffer = static_cast<uint32_t>(transportSettingsSection.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_RETRANSMIT_BUFFER_SIZE_KEY, MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT));
-        outboundPingInterval = static_cast<uint32_t>(transportSettingsSection.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_OUTBOUND_PING_INTERVAL_KEY, MIDI_NETWORK_OUTBOUND_PING_INTERVAL_DEFAULT));
-        maxHostConnections = static_cast<uint32_t>(transportSettingsSection.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_HOST_CONNECTIONS_KEY, MIDI_NETWORK_HOST_MAX_CONNECTIONS_DEFAULT));
-        invitationPendingTimeout = static_cast<uint32_t>(transportSettingsSection.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_INVITATION_PENDING_TIMEOUT_KEY, MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_DEFAULT));
-        directConnectionScanInterval = static_cast<uint32_t>(transportSettingsSection.GetNamedNumber(MIDI_CONFIG_JSON_NETWORK_MIDI_DIRECT_CONNECTION_SCAN_INTERVAL_KEY, MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_DEFAULT));
+        auto const fecPackets = ReadClampedTransportSetting(
+            transportSettingsSection, MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_FEC_PACKETS_KEY,
+            MIDI_NETWORK_FEC_PACKET_COUNT_DEFAULT,
+            MIDI_NETWORK_FEC_PACKET_COUNT_LOWER_BOUND, MIDI_NETWORK_FEC_PACKET_COUNT_UPPER_BOUND,
+            anySettingAdjusted);
 
-        // Validate the above values. Out-of-range values are reported rather than quietly
-        // clamped, so a user who mistypes a setting finds out instead of wondering why it had
-        // no effect.
-        std::wstring settingsErrorMessage{ };
-        uint32_t settingsErrorCode{ NETWORK_ERROR_CODE_UNKNOWN_ERROR };
-        if (fecPackets < MIDI_NETWORK_FEC_PACKET_COUNT_LOWER_BOUND || fecPackets > MIDI_NETWORK_FEC_PACKET_COUNT_UPPER_BOUND)
-        {
-            settingsErrorMessage = internal::ResourceGetWString(IDS_ERROR_FEC_PACKET_COUNT_OUT_OF_RANGE);
-            settingsErrorCode = NETWORK_ERROR_CODE_FEC_PACKET_COUNT_OUT_OF_RANGE;
-        }
-        else if (retransmitBuffer < MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_LOWER_BOUND || retransmitBuffer > MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_UPPER_BOUND)
-        {
-            settingsErrorMessage = internal::ResourceGetWString(IDS_ERROR_RETRANSMIT_BUFFER_SIZE_OUT_OF_RANGE);
-            settingsErrorCode = NETWORK_ERROR_CODE_RETRANSMIT_BUFFER_SIZE_OUT_OF_RANGE;
-        }
-        else if (outboundPingInterval < MIDI_NETWORK_OUTBOUND_PING_INTERVAL_LOWER_BOUND || outboundPingInterval > MIDI_NETWORK_OUTBOUND_PING_INTERVAL_UPPER_BOUND)
-        {
-            settingsErrorMessage = internal::ResourceGetWString(IDS_ERROR_PING_INTERVAL_OUT_OF_RANGE);
-            settingsErrorCode = NETWORK_ERROR_CODE_PING_INTERVAL_OUT_OF_RANGE;
-        }
-        else if (maxHostConnections < MIDI_NETWORK_HOST_MAX_CONNECTIONS_LOWER_BOUND || maxHostConnections > MIDI_NETWORK_HOST_MAX_CONNECTIONS_ABSOLUTE_MAX)
-        {
-            settingsErrorMessage = internal::ResourceGetWString(IDS_ERROR_MAX_HOST_CONNECTIONS_OUT_OF_RANGE);
-            settingsErrorCode = NETWORK_ERROR_CODE_MAX_HOST_CONNECTIONS_OUT_OF_RANGE;
-        }
-        else if (invitationPendingTimeout < MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_LOWER_BOUND || invitationPendingTimeout > MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_UPPER_BOUND)
-        {
-            settingsErrorMessage = internal::ResourceGetWString(IDS_ERROR_INVITATION_PENDING_TIMEOUT_OUT_OF_RANGE);
-            settingsErrorCode = NETWORK_ERROR_CODE_INVITATION_PENDING_TIMEOUT_OUT_OF_RANGE;
-        }
-        else if (directConnectionScanInterval < MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_LOWER_BOUND || directConnectionScanInterval > MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_UPPER_BOUND)
-        {
-            settingsErrorMessage = internal::ResourceGetWString(IDS_ERROR_DIRECT_CONNECTION_SCAN_INTERVAL_OUT_OF_RANGE);
-            settingsErrorCode = NETWORK_ERROR_CODE_SCAN_INTERVAL_OUT_OF_RANGE;
-        }
+        auto const retransmitBuffer = ReadClampedTransportSetting(
+            transportSettingsSection, MIDI_CONFIG_JSON_NETWORK_MIDI_RETRANSMIT_BUFFER_SIZE_KEY,
+            MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT,
+            MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_LOWER_BOUND, MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_UPPER_BOUND,
+            anySettingAdjusted);
 
-        if (!settingsErrorMessage.empty())
+        auto const outboundPingInterval = ReadClampedTransportSetting(
+            transportSettingsSection, MIDI_CONFIG_JSON_NETWORK_MIDI_OUTBOUND_PING_INTERVAL_KEY,
+            MIDI_NETWORK_OUTBOUND_PING_INTERVAL_DEFAULT,
+            MIDI_NETWORK_OUTBOUND_PING_INTERVAL_LOWER_BOUND, MIDI_NETWORK_OUTBOUND_PING_INTERVAL_UPPER_BOUND,
+            anySettingAdjusted);
+
+        auto const maxHostConnections = ReadClampedTransportSetting(
+            transportSettingsSection, MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_HOST_CONNECTIONS_KEY,
+            MIDI_NETWORK_HOST_MAX_CONNECTIONS_DEFAULT,
+            MIDI_NETWORK_HOST_MAX_CONNECTIONS_LOWER_BOUND, MIDI_NETWORK_HOST_MAX_CONNECTIONS_ABSOLUTE_MAX,
+            anySettingAdjusted);
+
+        auto const invitationPendingTimeout = ReadClampedTransportSetting(
+            transportSettingsSection, MIDI_CONFIG_JSON_NETWORK_MIDI_INVITATION_PENDING_TIMEOUT_KEY,
+            MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_DEFAULT,
+            MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_LOWER_BOUND, MIDI_NETWORK_INVITATION_PENDING_TIMEOUT_UPPER_BOUND,
+            anySettingAdjusted);
+
+        auto const directConnectionScanInterval = ReadClampedTransportSetting(
+            transportSettingsSection, MIDI_CONFIG_JSON_NETWORK_MIDI_DIRECT_CONNECTION_SCAN_INTERVAL_KEY,
+            MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_DEFAULT,
+            MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_LOWER_BOUND, MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_UPPER_BOUND,
+            anySettingAdjusted);
+
+        // A bad value is corrected rather than rejected: refusing the whole command would take
+        // the user's hosts and clients down with it over a mistyped number.
+        if (anySettingAdjusted)
         {
             TraceLoggingWrite(
                 MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
+                MIDI_TRACE_EVENT_WARNING,
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Invalid transport setting in configuration", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(settingsErrorMessage.c_str(), "error"),
+                TraceLoggingWideString(L"One or more transport settings were missing, the wrong type, or out of range, and have been corrected", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingUInt32(fecPackets, "fec packets"),
                 TraceLoggingUInt32(retransmitBuffer, "retransmit buffer"),
                 TraceLoggingUInt32(outboundPingInterval, "ping interval"),
                 TraceLoggingUInt32(maxHostConnections, "max host connections"),
-                TraceLoggingUInt32(invitationPendingTimeout, "invitation pending timeout")
+                TraceLoggingUInt32(invitationPendingTimeout, "invitation pending timeout"),
+                TraceLoggingUInt32(directConnectionScanInterval, "direct connection scan interval")
             );
-
-            internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, settingsErrorCode, settingsErrorMessage);
-            internal::JsonStringifyObjectToOutParam(responseObject, response);
-
-            RETURN_IF_FAILED(E_INVALIDARG);
         }
 
         TransportState::Current().TransportSettings.ForwardErrorCorrectionMaxCommandPacketCount = static_cast<uint8_t>(fecPackets);
         TransportState::Current().TransportSettings.RetransmitBufferMaxCommandPacketCount = static_cast<uint16_t>(retransmitBuffer);
-        TransportState::Current().TransportSettings.OutboundPingInterval = static_cast<uint32_t>(outboundPingInterval);
+        TransportState::Current().TransportSettings.OutboundPingInterval = outboundPingInterval;
         TransportState::Current().TransportSettings.MaxHostConnections = static_cast<uint16_t>(maxHostConnections);
         TransportState::Current().TransportSettings.InvitationPendingTimeout = invitationPendingTimeout;
         TransportState::Current().TransportSettings.DirectConnectionScanInterval = directConnectionScanInterval;
@@ -1863,10 +1951,6 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
         // A settings-only update has now done everything it was asked to do. Without this the
         // response still says failure, because success is otherwise only set while creating.
         internal::SetConfigurationResponseObjectSuccess(responseObject);
-
-        // Optional. Left empty here means TransportState supplies the machine-derived default.
-        TransportState::Current().TransportSettings.ProductInstanceId = internal::TrimmedWStringCopy(
-            std::wstring{ transportSettingsSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_MACHINE_PRODUCT_INSTANCE_ID_KEY, L"") });
     }
 
     // "create" entries

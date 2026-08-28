@@ -425,7 +425,7 @@ void NetworkMidiErrorTests::SessionSurvivesUnrecoverableGap()
 
         Sleep(250);
 
-        // absorb whatever the host sends back, including retransmit requests we refuse to honour
+        // absorb whatever the host sends back, including retransmit requests we refuse to honor
         client.ReceivePacket(std::chrono::milliseconds(50));
     }
 

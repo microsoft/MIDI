@@ -516,7 +516,7 @@ void NetworkMidiMalformedTests::ValidCommandAfterUnknownCommandIsStillProcessed(
     UdpTestClient client;
 
     // A session is needed first: the host drops a whole datagram whose first command from an
-    // unknown remote is not an invitation, so the parsing behaviour would never be reached.
+    // unknown remote is not an invitation, so the parsing behavior would never be reached.
     VERIFY_IS_TRUE(EstablishSession(
         client,
         context.MakeUniqueEndpointName("AfterUnknown"),

@@ -173,6 +173,7 @@
   <ItemGroup>
     <ClInclude Include="framework.h" />
     <ClInclude Include="NetworkMidiApprovalTests.h" />
+    <ClInclude Include="NetworkMidiTransportSettingsTests.h" />
     <ClInclude Include="NetworkMidiClientTests.h" />
     <ClInclude Include="NetworkMidiErrorTests.h" />
     <ClInclude Include="NetworkMidiMalformedTests.h" />
@@ -190,6 +191,7 @@
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="NetworkMidiApprovalTests.cpp" />
+    <ClCompile Include="NetworkMidiTransportSettingsTests.cpp" />
     <ClCompile Include="NetworkMidiClientTests.cpp" />
     <ClCompile Include="NetworkMidiErrorTests.cpp" />
     <ClCompile Include="NetworkMidiMalformedTests.cpp" />

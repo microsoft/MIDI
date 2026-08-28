@@ -28,7 +28,7 @@ public:
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
     END_TEST_CLASS()
 
-    // basic behaviour through hand-rolled json
+    // basic behavior through hand-rolled json
     TEST_METHOD(TestEmptyCreateArrayIsAccepted);
     TEST_METHOD(TestMalformedJsonIsRejected);
 

@@ -325,6 +325,9 @@
 
 #define UUID_IMidiNetworkRemoteClientDisconnectResponse         8087b303-0519-c0de-31d1-dd00F0318000
 
+#define UUID_IMidiNetworkTransportSettings                      8087b303-0519-c0de-31d1-dd00F0319000
+#define UUID_IMidiNetworkTransportSettingsStatics               8087b303-0519-c0de-31d1-ee00F0319000
+
 // ============================================================================
 // Windows.Devices.Midi2.Transports.Virtual : Interface number 00F04
 

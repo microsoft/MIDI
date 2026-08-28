@@ -39,7 +39,7 @@ namespace midinetworksetup
             MaximumRefreshIntervalSeconds);
 
         auto const page = ReadDword(ValueSelectedPageIndex, PageIndexRemoteHosts);
-        m_selectedPageIndex = page > PageIndexLocalHosts ? PageIndexRemoteHosts : page;
+        m_selectedPageIndex = page > PageIndexTransportSettings ? PageIndexRemoteHosts : page;
     }
 
     void AppSettings::RefreshIntervalSeconds(uint32_t value) noexcept
@@ -50,7 +50,7 @@ namespace midinetworksetup
 
     void AppSettings::SelectedPageIndex(uint32_t value) noexcept
     {
-        m_selectedPageIndex = value > PageIndexLocalHosts ? PageIndexRemoteHosts : value;
+        m_selectedPageIndex = value > PageIndexTransportSettings ? PageIndexRemoteHosts : value;
         WriteDword(ValueSelectedPageIndex, m_selectedPageIndex);
     }
 }

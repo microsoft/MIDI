@@ -1720,7 +1720,7 @@ MidiSrvTransportTests::TestMidiSrvSynchronizedStartEarlyClientUseDoesNotCrash()
     // Regression test for Feature_Servicing_MIDI2SynchronizedStart.
     //
     // With that feature, the demand-start RPC interface is registered immediately while the device
-    // manager's Initialize() runs on a worker thread, signalling a named event once endpoint
+    // manager's Initialize() runs on a worker thread, signaling a named event once endpoint
     // enumeration completes. A well-behaved client waits on that event (via VerifyConnectivity)
     // before using the service. This test simulates a misbehaving/legacy client that does NOT wait
     // and instead immediately drives the service while initialization is still in progress, racing

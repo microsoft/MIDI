@@ -326,6 +326,19 @@ namespace NetworkMidiTest
     }
 
 
+    ServiceConfigResult SetRawTransportSettings(std::wstring const& settingsBodyJson)
+    {
+        return SendNetworkTransportConfig(L"{\"transportSettings\":{" + settingsBodyJson + L"}}");
+    }
+
+
+    ServiceConfigResult GetTransportSettings()
+    {
+        return SendNetworkTransportConfig(
+            L"{\"transportCommand\":{\"commandName\":\"getTransportSettings\"}}");
+    }
+
+
     ServiceConfigResult CreateHost(
         std::wstring const& entryIdentifier,
         std::wstring const& umpEndpointName,

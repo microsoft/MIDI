@@ -90,6 +90,14 @@ namespace NetworkMidiTest
     // every 20 seconds. Tests shorten it so a connection attempt is prompt.
     ServiceConfigResult SetDirectConnectionScanInterval(_In_ uint32_t const milliseconds);
 
+    // The body of a transportSettings object, verbatim. Lets a test put the wrong type or an
+    // absurd number in a field and see what the transport makes of it.
+    ServiceConfigResult SetRawTransportSettings(_In_ std::wstring const& settingsBodyJson);
+
+    // The getTransportSettings command, which reports what the transport is actually running
+    // with rather than what the caller asked for.
+    ServiceConfigResult GetTransportSettings();
+
     // Creates a host on an automatically chosen port. requireApproval puts remote clients into
     // the pending state instead of accepting them, which is what the approval tests need.
     // serviceInstanceName must be unique across hosts: it becomes the DNS-SD instance and the

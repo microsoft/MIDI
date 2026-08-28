@@ -61,7 +61,7 @@ public:
     TEST_METHOD(TestClientEndpointInUseRaisedOnConnectAndDisconnect);
     TEST_METHOD(TestClientEndpointInUseSurvivesDeviceTeardownFirst);
 
-    // general virtual device behaviour
+    // general virtual device behavior
     TEST_METHOD(TestEmptyNameGetsDefaultName);
     TEST_METHOD(TestMultipleVirtualDevicesHaveDistinctIdentities);
     TEST_METHOD(TestFunctionBlocksAreVisibleOnVirtualDevice);

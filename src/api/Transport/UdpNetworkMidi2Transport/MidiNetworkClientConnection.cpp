@@ -116,7 +116,7 @@ MidiNetworkClientConnection::OnWatchdogTick()
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Invitation was never approved by the remote host. Cancelling.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(L"Invitation was never approved by the remote host. Canceling.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(m_remoteHostName != nullptr ? m_remoteHostName.ToString().c_str() : L"", "remote hostname"),
             TraceLoggingWideString(m_remotePort.c_str(), "remote port"),
             TraceLoggingUInt64(elapsedMilliseconds, "elapsed milliseconds")
@@ -140,7 +140,7 @@ MidiNetworkClientConnection::OnWatchdogTick()
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Remote host never answered our invitation. Cancelling.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(L"Remote host never answered our invitation. Canceling.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(m_remoteHostName != nullptr ? m_remoteHostName.ToString().c_str() : L"", "remote hostname"),
             TraceLoggingWideString(m_remotePort.c_str(), "remote port")
         );
@@ -384,7 +384,7 @@ MidiNetworkClientConnection::HandleIncomingInvitationReplyAuthenticationRequired
         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
         TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
         TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Remote host requires authentication, which is not yet implemented. Cancelling the invitation.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(L"Remote host requires authentication, which is not yet implemented. Canceling the invitation.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingUInt32(static_cast<uint32_t>(kind), "authentication kind")
     );
 

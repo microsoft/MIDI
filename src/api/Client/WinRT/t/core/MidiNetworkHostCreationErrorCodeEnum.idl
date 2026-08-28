@@ -40,13 +40,6 @@ namespace Windows.Devices.Midi2.Transports.Network
         MalformedCredentialIdentifier =         NETWORK_ERROR_CODE_INVALID_CREDENTIAL_IDENTIFIER,
         AuthenticationNotImplemented =          NETWORK_ERROR_CODE_AUTHENTICATION_NOT_IMPLEMENTED,
 
-        ForwardErrorCorrectionPacketCountOutOfRange =   NETWORK_ERROR_CODE_FEC_PACKET_COUNT_OUT_OF_RANGE,
-        RetransmitBufferSizeOutOfRange =        NETWORK_ERROR_CODE_RETRANSMIT_BUFFER_SIZE_OUT_OF_RANGE,
-        PingIntervalOutOfRange =                NETWORK_ERROR_CODE_PING_INTERVAL_OUT_OF_RANGE,
-        MaxHostConnectionsOutOfRange =          NETWORK_ERROR_CODE_MAX_HOST_CONNECTIONS_OUT_OF_RANGE,
-        InvitationPendingTimeoutOutOfRange =    NETWORK_ERROR_CODE_INVITATION_PENDING_TIMEOUT_OUT_OF_RANGE,
-        ScanIntervalOutOfRange =                NETWORK_ERROR_CODE_SCAN_INTERVAL_OUT_OF_RANGE,
-
         InvalidArgument =                       NETWORK_ERROR_CODE_CLIENT_API_INVALID_ARGUMENT,
         ClientApiException =                    NETWORK_ERROR_CODE_CLIENT_API_EXCEPTION,
 

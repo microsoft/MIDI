@@ -72,10 +72,6 @@
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY              L"productInstanceId"
 
-// same key name, but in the transportSettings section. Machine-wide identity used by every
-// host and by this PC's client identity when they do not specify their own.
-#define MIDI_CONFIG_JSON_NETWORK_MIDI_MACHINE_PRODUCT_INSTANCE_ID_KEY           MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY
-
 
 
 
@@ -174,6 +170,11 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_TOTAL_NETWORK_PACKETS_RECEIVED_KEY    L"totalNetworkPacketsReceived"
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_ENUMERATE_HOSTS                  L"enumerateHosts"
+
+// Reports the values the transport is running with right now, which are not necessarily the
+// ones in the file: anything out of range or of the wrong type is corrected on the way in.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_GET_TRANSPORT_SETTINGS           L"getTransportSettings"
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_TRANSPORT_SETTINGS_RESPONSE_KEY               MIDI_CONFIG_JSON_NETWORK_MIDI_TRANSPORT_SETTINGS_KEY
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_HOSTS_ARRAY_KEY           MIDI_CONFIG_JSON_NETWORK_MIDI_HOSTS_KEY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CONFIG_ID_KEY             L"entryIdentifier"

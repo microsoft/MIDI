@@ -159,7 +159,7 @@ MidiNetworkRemoteClientDecision
 MidiNetworkHost::EvaluateRemoteClient(MidiNetworkRemoteClientIdentity const& identity)
 {
     // Spec 6.4 requires both fields in an invitation. Without them there is nothing a user
-    // could recognise or a list could match, so it is refused rather than approved.
+    // could recognize or a list could match, so it is refused rather than approved.
     if (!identity.IsValid())
     {
         return MidiNetworkRemoteClientDecision::DecisionDeny;

@@ -17,10 +17,6 @@ struct MidiTransportSettings
     uint16_t RetransmitBufferMaxCommandPacketCount{ MIDI_NETWORK_RETRANSMIT_BUFFER_PACKET_COUNT_DEFAULT };
     uint8_t ForwardErrorCorrectionMaxCommandPacketCount{ MIDI_NETWORK_FEC_PACKET_COUNT_DEFAULT };
     uint32_t DirectConnectionScanInterval{ MIDI_NETWORK_DIRECT_CONNECTION_SCAN_INTERVAL_DEFAULT };
-
-    // Machine-wide identity shared by every host and by this PC's client identity. Empty means
-    // the configuration did not supply one, so the machine-derived default is used instead.
-    std::wstring ProductInstanceId{ };
 };
 
 

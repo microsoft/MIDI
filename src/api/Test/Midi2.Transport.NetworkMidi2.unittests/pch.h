@@ -73,6 +73,7 @@
 #include "NetworkMidiTestContext.h"
 #include "NetworkMidiSessionTests.h"
 #include "NetworkMidiApprovalTests.h"
+#include "NetworkMidiTransportSettingsTests.h"
 #include "NetworkMidiErrorTests.h"
 #include "NetworkMidiMalformedTests.h"
 #include "NetworkMidiClientTests.h"

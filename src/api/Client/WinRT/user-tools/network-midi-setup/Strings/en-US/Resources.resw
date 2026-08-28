@@ -82,6 +82,78 @@
   <data name="LocalHostsNavigationItem.Content" xml:space="preserve">
     <value>This PC</value>
   </data>
+  <data name="SettingsNavigationItem.Content" xml:space="preserve">
+    <value>Transport settings</value>
+  </data>
+  <data name="SettingsHeader.Text" xml:space="preserve">
+    <value>Transport settings</value>
+  </data>
+  <data name="SettingsDescription.Text" xml:space="preserve">
+    <value>These apply to every Network MIDI 2.0 host and client on this PC. The defaults suit almost every network, so change them only if you have a reason to.</value>
+  </data>
+  <data name="SettingMaxHostConnectionsHeader.Text" xml:space="preserve">
+    <value>Most devices allowed at once</value>
+  </data>
+  <data name="SettingMaxHostConnectionsDescription.Text" xml:space="preserve">
+    <value>How many remote devices any one host on this PC will accept at the same time.</value>
+  </data>
+  <data name="SettingEffectImmediate.Text" xml:space="preserve">
+    <value>Takes effect right away. Devices already connected are not disconnected.</value>
+  </data>
+  <data name="SettingInvitationPendingTimeoutHeader.Text" xml:space="preserve">
+    <value>How long to wait for your permission</value>
+  </data>
+  <data name="SettingInvitationPendingTimeoutDescription.Text" xml:space="preserve">
+    <value>How long a device asking to connect stays in the waiting list before it is dropped, in milliseconds.</value>
+  </data>
+  <data name="SettingEffectNextRequest.Text" xml:space="preserve">
+    <value>Applies to the next device which asks to connect. Devices already waiting keep the old timeout.</value>
+  </data>
+  <data name="SettingScanIntervalHeader.Text" xml:space="preserve">
+    <value>How often to retry a device which is not answering</value>
+  </data>
+  <data name="SettingScanIntervalDescription.Text" xml:space="preserve">
+    <value>How often this PC tries a device you connected to by address again after it stops answering, in milliseconds.</value>
+  </data>
+  <data name="SettingEffectNextScan.Text" xml:space="preserve">
+    <value>Takes effect within one retry, so up to the old interval from now.</value>
+  </data>
+  <data name="SettingPingIntervalHeader.Text" xml:space="preserve">
+    <value>How often to check a quiet connection</value>
+  </data>
+  <data name="SettingPingIntervalDescription.Text" xml:space="preserve">
+    <value>How often a connection with nothing to send checks that the other end is still there, in milliseconds. Shorter notices a dropped device sooner and sends slightly more network traffic.</value>
+  </data>
+  <data name="SettingEffectWithinOneInterval.Text" xml:space="preserve">
+    <value>Reaches connections which are already open within one interval.</value>
+  </data>
+  <data name="SettingFecPacketsHeader.Text" xml:space="preserve">
+    <value>Repeated messages per packet</value>
+  </data>
+  <data name="SettingFecPacketsDescription.Text" xml:space="preserve">
+    <value>How many recently sent messages are repeated in each network packet, so a lost packet can be recovered without asking for it again. Higher values cope better with an unreliable network and make each packet larger.</value>
+  </data>
+  <data name="SettingEffectNewConnections.Text" xml:space="preserve">
+    <value>Applies to new connections. Reconnect a device for it to take effect there.</value>
+  </data>
+  <data name="SettingRetransmitBufferHeader.Text" xml:space="preserve">
+    <value>Messages kept for resending</value>
+  </data>
+  <data name="SettingRetransmitBufferDescription.Text" xml:space="preserve">
+    <value>How many sent messages are held on to in case the other end asks for them again. Higher values recover from longer gaps and use more memory per connection.</value>
+  </data>
+  <data name="SettingEffectNewConnections2.Text" xml:space="preserve">
+    <value>Applies to new connections. Reconnect a device for it to take effect there.</value>
+  </data>
+  <data name="RestoreSettingDefaultsButton.Content" xml:space="preserve">
+    <value>Restore defaults</value>
+  </data>
+  <data name="StatusTransportSettingsSaved" xml:space="preserve">
+    <value>Saved.</value>
+  </data>
+  <data name="StatusTransportSettingsFailed" xml:space="preserve">
+    <value>The settings could not be saved.</value>
+  </data>
   <data name="PendingInvitationsBar.Title" xml:space="preserve">
     <value>Devices are waiting for permission</value>
   </data>

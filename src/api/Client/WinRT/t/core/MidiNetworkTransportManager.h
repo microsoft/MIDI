@@ -48,6 +48,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         static collections::IVectorView<network::MidiNetworkConfiguredClient> GetConfiguredClients() noexcept;
         static collections::IVectorView<network::MidiNetworkPendingRemoteClient> GetPendingRemoteClients() noexcept;
 
+        static network::MidiNetworkTransportSettings GetTransportSettings() noexcept;
+
 
         static collections::IVectorView<network::MidiNetworkAdvertisedHost> GetAdvertisedHosts() noexcept;
 

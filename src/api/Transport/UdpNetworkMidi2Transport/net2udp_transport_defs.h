@@ -127,7 +127,7 @@ enum MidiNetworkRemoteClientDecision
 #define MIDI_NETWORK_SEND_TIMEOUT_MILLISECONDS                          2000
 
 // How long shutdown waits for the negotiation thread to leave before abandoning it. Negotiation
-// blocks inside the service and cannot be cancelled, so this only has to be long enough for a
+// blocks inside the service and cannot be canceled, so this only has to be long enough for a
 // thread that is not stuck.
 #define MIDI_NETWORK_NEGOTIATION_THREAD_EXIT_TIMEOUT_MILLISECONDS       2000
 

@@ -1866,7 +1866,7 @@ CMidi2NetworkMidiEndpointManager::Shutdown()
         m_backgroundHostEndpointCreationThread.join();
     }
 
-    // Deliberately not joined. A negotiation blocked inside the service cannot be cancelled from
+    // Deliberately not joined. A negotiation blocked inside the service cannot be canceled from
     // here, and waiting on it is what previously left the service unable to stop at all. Wait a
     // short time for a clean exit, and abandon the thread if it is stuck.
     m_backgroundNegotiationThread.request_stop();

@@ -428,7 +428,6 @@ protected:
     const uint16_t m_outgoingUmpEmptyPacketMaxIntervalMilliseconds{ 2000 };
     const uint16_t m_outgoingUmpEmptyPacketStartingIntervalMilliseconds{ 200 };
     uint16_t m_outgoingUmpEmptyPacketIntervalMilliseconds{ m_outgoingUmpEmptyPacketStartingIntervalMilliseconds };
-    const uint16_t m_outgoingPingIntervalMilliseconds{ 2000 };
     const uint16_t m_outgoingPingMaxIgnoredBeforeDisconnect{ 5 };
     const uint16_t m_outgoingPingTrackingMaxEntries{ 10 };
 

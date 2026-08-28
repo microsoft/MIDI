@@ -17,7 +17,7 @@
 // Accepted, a Bye, or an authentication reply. When this limiter suppresses a refusal, the
 // Host answers an Invitation with nothing at all, which is none of those three. A client
 // cannot then tell a full or unwilling host from an absent one until its own timeout.
-// This is the intended trade: honouring 6.4 unconditionally means any remote can make us
+// This is the intended trade: honoring 6.4 unconditionally means any remote can make us
 // emit one packet per packet it sends, to any address it cares to forge, and a
 // conformance bug is preferable to shipping an amplifier. The client's retry loop covers
 // the honest case, because the per-remote interval is short.

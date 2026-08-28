@@ -145,7 +145,10 @@ MidiNetworkConnection::ConnectionWatcherThreadWorker(std::stop_token stopToken)
     while (!m_shuttingDown && !stopToken.stop_requested())
     {
         auto threadWaitStartTimestamp = internal::GetCurrentMidiTimestamp();
-        m_connectionTimeoutEvent.wait(m_outgoingPingIntervalMilliseconds);
+
+        // Read each time round rather than captured at construction, so changing the setting
+        // reaches existing sessions within one interval instead of only new ones.
+        m_connectionTimeoutEvent.wait(TransportState::Current().TransportSettings.OutboundPingInterval);
 
         if (m_shuttingDown || stopToken.stop_requested())
         {

@@ -21,6 +21,8 @@ namespace winrt::midinetworksetup::implementation
 {
     namespace
     {
+        constexpr std::chrono::milliseconds TransportSettingsWriteDelay{ 750 };
+
         winrt::hstring EntryKeyOf(_In_ winrt::guid const& value) noexcept
         {
             try
@@ -480,6 +482,250 @@ namespace winrt::midinetworksetup::implementation
         UpdateManualConnectButton();
     }
 
+    // The transport clamps anything out of range, so the boxes carry the same bounds only to
+    // save the customer from typing a number which would be silently corrected.
+    void MainWindow::LoadTransportSettings() noexcept
+    {
+        try
+        {
+            auto const settings = midi2net::MidiNetworkTransportManager::GetTransportSettings();
+
+            if (settings == nullptr)
+            {
+                return;
+            }
+
+            m_loadingTransportSettings = true;
+
+            auto const applyTo = [](controls::NumberBox const& box, uint32_t const minimum, uint32_t const maximum, uint32_t const value)
+                {
+                    box.Minimum(static_cast<double>(minimum));
+                    box.Maximum(static_cast<double>(maximum));
+                    box.Value(static_cast<double>(value));
+                };
+
+            applyTo(
+                MaxHostConnectionsBox(),
+                midi2net::MidiNetworkTransportSettings::MinMaxHostConnections(),
+                midi2net::MidiNetworkTransportSettings::MaxMaxHostConnections(),
+                settings.MaxHostConnections());
+
+            applyTo(
+                InvitationPendingTimeoutBox(),
+                midi2net::MidiNetworkTransportSettings::MinInvitationPendingTimeoutMilliseconds(),
+                midi2net::MidiNetworkTransportSettings::MaxInvitationPendingTimeoutMilliseconds(),
+                settings.InvitationPendingTimeoutMilliseconds());
+
+            applyTo(
+                DirectConnectionScanIntervalBox(),
+                midi2net::MidiNetworkTransportSettings::MinDirectConnectionScanIntervalMilliseconds(),
+                midi2net::MidiNetworkTransportSettings::MaxDirectConnectionScanIntervalMilliseconds(),
+                settings.DirectConnectionScanIntervalMilliseconds());
+
+            applyTo(
+                OutboundPingIntervalBox(),
+                midi2net::MidiNetworkTransportSettings::MinOutboundPingIntervalMilliseconds(),
+                midi2net::MidiNetworkTransportSettings::MaxOutboundPingIntervalMilliseconds(),
+                settings.OutboundPingIntervalMilliseconds());
+
+            applyTo(
+                MaxFecPacketsBox(),
+                midi2net::MidiNetworkTransportSettings::MinMaxForwardErrorCorrectionCommandPackets(),
+                midi2net::MidiNetworkTransportSettings::MaxMaxForwardErrorCorrectionCommandPackets(),
+                settings.MaxForwardErrorCorrectionCommandPackets());
+
+            applyTo(
+                MaxRetransmitBufferBox(),
+                midi2net::MidiNetworkTransportSettings::MinMaxRetransmitBufferCommandPackets(),
+                midi2net::MidiNetworkTransportSettings::MaxMaxRetransmitBufferCommandPackets(),
+                settings.MaxRetransmitBufferCommandPackets());
+
+            m_loadingTransportSettings = false;
+        }
+        catch (...)
+        {
+            m_loadingTransportSettings = false;
+        }
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnTransportSettingChanged(controls::NumberBox const&, controls::NumberBoxValueChangedEventArgs const&)
+    {
+        if (!m_loaded || m_loadingTransportSettings)
+        {
+            return;
+        }
+
+        QueueTransportSettingsWrite();
+    }
+
+    // Long enough that holding a spinner or typing a four digit number settles into one write,
+    // short enough that letting go feels like it saved immediately.
+    void MainWindow::QueueTransportSettingsWrite() noexcept
+    {
+        try
+        {
+            auto queue = DispatcherQueue();
+
+            if (queue == nullptr)
+            {
+                ApplyTransportSettingsAsync();
+                return;
+            }
+
+            if (m_transportSettingsWriteTimer == nullptr)
+            {
+                m_transportSettingsWriteTimer = queue.CreateTimer();
+
+                if (m_transportSettingsWriteTimer == nullptr)
+                {
+                    ApplyTransportSettingsAsync();
+                    return;
+                }
+
+                m_transportSettingsWriteTimer.IsRepeating(false);
+
+                m_transportSettingsWriteTimer.Tick([weak = get_weak()](auto&& sender, auto&&)
+                    {
+                        sender.Stop();
+
+                        auto strong = weak.get();
+
+                        if (strong == nullptr || strong->m_closing)
+                        {
+                            return;
+                        }
+
+                        strong->ApplyTransportSettingsAsync();
+                    });
+            }
+
+            // Restarting the timer is what collapses a run of changes into one write
+            m_transportSettingsWriteTimer.Stop();
+            m_transportSettingsWriteTimer.Interval(TransportSettingsWriteDelay);
+            m_transportSettingsWriteTimer.Start();
+        }
+        catch (...)
+        {
+        }
+    }
+
+    void MainWindow::FlushPendingTransportSettingsWrite() noexcept
+    {
+        try
+        {
+            if (m_transportSettingsWriteTimer == nullptr || !m_transportSettingsWriteTimer.IsRunning())
+            {
+                return;
+            }
+
+            m_transportSettingsWriteTimer.Stop();
+
+            ApplyTransportSettingsAsync();
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnRestoreTransportSettingDefaultsClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            // A new settings object starts on the transport's own defaults, so they never have
+            // to be repeated here.
+            midi2net::MidiNetworkTransportSettings const defaults{};
+
+            m_loadingTransportSettings = true;
+
+            MaxHostConnectionsBox().Value(defaults.MaxHostConnections());
+            InvitationPendingTimeoutBox().Value(defaults.InvitationPendingTimeoutMilliseconds());
+            DirectConnectionScanIntervalBox().Value(defaults.DirectConnectionScanIntervalMilliseconds());
+            OutboundPingIntervalBox().Value(defaults.OutboundPingIntervalMilliseconds());
+            MaxFecPacketsBox().Value(defaults.MaxForwardErrorCorrectionCommandPackets());
+            MaxRetransmitBufferBox().Value(defaults.MaxRetransmitBufferCommandPackets());
+
+            m_loadingTransportSettings = false;
+
+            QueueTransportSettingsWrite();
+        }
+        catch (...)
+        {
+            m_loadingTransportSettings = false;
+        }
+    }
+
+    // Sent to the service first and only written to the file once it has agreed, the same order
+    // every other change on these pages uses.
+    winrt::fire_and_forget MainWindow::ApplyTransportSettingsAsync() noexcept
+    {
+        auto strongThis = get_strong();
+
+        winrt::hstring errorMessage{};
+        bool succeeded{ false };
+
+        try
+        {
+            // An empty NumberBox reports NaN, which would otherwise become a huge number on the
+            // way to uint32_t. Keeping the current value means clearing a box does nothing.
+            auto const valueOf = [](controls::NumberBox const& box, uint32_t const fallback)
+                {
+                    auto const value = box.Value();
+
+                    if (value != value || value < 0.0)
+                    {
+                        return fallback;
+                    }
+
+                    return static_cast<uint32_t>(value);
+                };
+
+            midi2net::MidiNetworkTransportSettings settings{};
+
+            settings.MaxHostConnections(valueOf(MaxHostConnectionsBox(), settings.MaxHostConnections()));
+            settings.InvitationPendingTimeoutMilliseconds(valueOf(InvitationPendingTimeoutBox(), settings.InvitationPendingTimeoutMilliseconds()));
+            settings.DirectConnectionScanIntervalMilliseconds(valueOf(DirectConnectionScanIntervalBox(), settings.DirectConnectionScanIntervalMilliseconds()));
+            settings.OutboundPingIntervalMilliseconds(valueOf(OutboundPingIntervalBox(), settings.OutboundPingIntervalMilliseconds()));
+            settings.MaxForwardErrorCorrectionCommandPackets(valueOf(MaxFecPacketsBox(), settings.MaxForwardErrorCorrectionCommandPackets()));
+            settings.MaxRetransmitBufferCommandPackets(valueOf(MaxRetransmitBufferBox(), settings.MaxRetransmitBufferCommandPackets()));
+
+            auto const sendResponse = midi2svc::MidiServiceTransportPluginConfigManager::SendUpdate(settings);
+
+            if (sendResponse != nullptr && sendResponse.Status() == midi2svc::MidiServiceConfigResponseStatus::Success)
+            {
+                auto const saveResponse = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(settings);
+
+                succeeded = saveResponse != nullptr && saveResponse.Success();
+
+                if (!succeeded && saveResponse != nullptr)
+                {
+                    errorMessage = saveResponse.ErrorMessage();
+                }
+            }
+            else if (sendResponse != nullptr)
+            {
+                errorMessage = sendResponse.ServiceErrorMessage();
+            }
+        }
+        catch (...)
+        {
+        }
+
+        try
+        {
+            SettingsStatusText().Text(
+                succeeded ?
+                res::GetString(L"StatusTransportSettingsSaved") :
+                (errorMessage.empty() ? res::GetString(L"StatusTransportSettingsFailed") : errorMessage));
+        }
+        catch (...)
+        {
+        }
+
+        co_return;
+    }
+
     void MainWindow::UpdateManualConnectButton() noexcept
     {
         try
@@ -715,7 +961,7 @@ namespace winrt::midinetworksetup::implementation
     }
 
     // The name check briefly listens to the network, so it happens once here rather than while
-    // the customer is typing. Cancelling the click keeps the dialog open with the field filled
+    // the customer is typing. Canceling the click keeps the dialog open with the field filled
     // in, so creating the host is one more click rather than a round trip through an error.
     _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::OnCreateHostPrimaryButtonClick(

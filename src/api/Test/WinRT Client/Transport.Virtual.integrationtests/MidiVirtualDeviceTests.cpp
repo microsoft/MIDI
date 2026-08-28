@@ -606,7 +606,7 @@ void MidiVirtualDeviceTests::TestDeviceSideNameKeepsSuffixWhenTruncated()
 
 
 // ============================================================================
-// General virtual device behaviour
+// General virtual device behavior
 // ============================================================================
 
 

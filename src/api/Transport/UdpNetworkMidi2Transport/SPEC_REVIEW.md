@@ -19,7 +19,7 @@ sections.
 [#733](https://github.com/microsoft/MIDI/issues/733). This is the only remaining feature-sized
 gap in the protocol.
 
-Current behaviour is deliberately fail-closed rather than fail-open:
+Current behavior is deliberately fail-closed rather than fail-open:
 
 - Configuration validation **refuses to start a host** configured for any authentication mode, so
   a user who asks for a password never silently gets an unprotected host.
@@ -121,7 +121,7 @@ Recorded so these are not re-investigated.
   talking to a dead session cannot make us flood it.
 - **Session Reset / Session Reset Reply** clear sequence state and acknowledge.
 - **First command must be an invitation.** A host allocates nothing for a remote whose opening
-  command is anything else, which is both spec conformance and the primary defence against a
+  command is anything else, which is both spec conformance and the primary defense against a
   forged source address costing us a connection and a thread.
 
 ### Data path
@@ -137,9 +137,9 @@ Recorded so these are not re-investigated.
   with NAK `CommandNotSupported` when buffering is disabled, per "If a Device does not implement
   the Retransmit mechanism, it shall reply to the Retransmit Request Command with a NAK Command
   with reason 0x01."
-- **Honouring a peer's refusal.** A NAK of `CommandNotSupported` for a retransmit request stops
+- **Honoring a peer's refusal.** A NAK of `CommandNotSupported` for a retransmit request stops
   us asking for the rest of the session, and a Retransmit Error abandons the current gap. Gaps
-  are abandoned after a bounded number of attempts and the receiver resynchronises rather than
+  are abandoned after a bounded number of attempts and the receiver resynchronizes rather than
   stalling — the subject of [#1003](https://github.com/microsoft/MIDI/issues/1003).
 - **Compound packet parsing.** Each command's declared payload length is validated against the
   datagram before parsing, and any payload a handler does not consume is skipped so that payload
@@ -154,9 +154,9 @@ Recorded so these are not re-investigated.
 
 - **`Bye` reason 0x03 (Too Many Missing UMP Packets) is never sent automatically.** It appears in
   the Bye reason table but the spec contains no requirement to send it — there is no "shall" for
-  it anywhere. Ending a session over unrecoverable loss is exactly the behaviour reported as a
+  it anywhere. Ending a session over unrecoverable loss is exactly the behavior reported as a
   bug in [#1003](https://github.com/microsoft/MIDI/issues/1003), where the reporter asked that we
-  "accept that some data unfortunately has been lost and just keep going." We resynchronise and
+  "accept that some data unfortunately has been lost and just keep going." We resynchronize and
   continue instead.
 - **`query-capabilities` reports `false` for `RESTART_ENDPOINT`, `DISCONNECT_ENDPOINT` and
   `RECONNECT_ENDPOINT`.** These are the generic per-endpoint verbs, which this transport does not
@@ -197,7 +197,7 @@ Recorded so these are not re-investigated.
 | Invitation Reply: Pending | Implemented (no action required) |
 | Invitation Reply: (User) Authentication Required | Declines cleanly (§1.1) |
 | Ping / Ping Reply | Implemented, with latency tracking |
-| NAK | Sent and honoured |
+| NAK | Sent and honored |
 | Bye / Bye Reply | Implemented, including reason 0x05 |
 | Session Reset / Reset Reply | Implemented |
 | UMP Data | Implemented, MTU-aware, gap-tolerant |

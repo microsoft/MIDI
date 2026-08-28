@@ -13,6 +13,7 @@
 #include "..\..\api\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
 
 #include "MidiNetworkAdvertisedHost.h"
+#include "MidiNetworkTransportSettings.h"
 
 #include "midi_network_port_picker.h"
 
@@ -289,9 +290,41 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
     }
 
 
-    collections::IVectorView<network::MidiNetworkConfiguredHost> MidiNetworkTransportManager::GetConfiguredHosts() noexcept
+    network::MidiNetworkTransportSettings MidiNetworkTransportManager::GetTransportSettings() noexcept
     {
-        auto results = winrt::single_threaded_vector<network::MidiNetworkConfiguredHost>();
+        auto settings = winrt::make_self<implementation::MidiNetworkTransportSettings>();
+
+        try
+        {
+            midi2::ServiceConfig::MidiServiceTransportCommand command(network::MidiNetworkTransportManager::TransportId());
+            command.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_GET_TRANSPORT_SETTINGS);
+
+            auto response = midi2::ServiceConfig::MidiServiceTransportPluginConfigManager::SendCommand(command);
+
+            if (response.Status() == midi2::ServiceConfig::MidiServiceConfigResponseStatus::Success)
+            {
+                auto responseJson = response.ResponseJson();
+
+                if (responseJson != nullptr && responseJson.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_TRANSPORT_SETTINGS_RESPONSE_KEY))
+                {
+                    settings->InternalInitialize(
+                        responseJson.GetNamedObject(MIDI_CONFIG_JSON_NETWORK_MIDI_TRANSPORT_SETTINGS_RESPONSE_KEY));
+                }
+            }
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"Exception reading the network transport settings.");
+        }
+
+        // An older service which does not know the command leaves the object on the defaults,
+        // which is what that service is running with anyway.
+        return *settings;
+    }
+
+
+    collections::IVectorView<network::MidiNetworkConfiguredHost> MidiNetworkTransportManager::GetConfiguredHosts() noexcept
+    {        auto results = winrt::single_threaded_vector<network::MidiNetworkConfiguredHost>();
 
         try
         {

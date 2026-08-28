@@ -231,17 +231,17 @@ namespace winrt::midinetworksetup::implementation
                 native::NetworkConfigFile::Current().OverridePath(options.ConfigFilePath);
             }
 
-            ShowRemotePage(native::AppSettings::Current().SelectedPageIndex() == native::AppSettings::PageIndexRemoteHosts);
+            ShowPage(native::AppSettings::Current().SelectedPageIndex());
 
-            MainNavigation().SelectedItem(
-                native::AppSettings::Current().SelectedPageIndex() == native::AppSettings::PageIndexLocalHosts ?
-                LocalHostsNavigationItem().as<foundation::IInspectable>() :
-                RemoteHostsNavigationItem().as<foundation::IInspectable>());
+            MainNavigation().SelectedItem(NavigationItemForPage(native::AppSettings::Current().SelectedPageIndex()));
 
             Closed([weak = get_weak()](auto&&, auto&&)
                 {
                     if (auto strong = weak.get())
                     {
+                        // Before m_closing, which the timer callback treats as a reason to skip
+                        strong->FlushPendingTransportSettingsWrite();
+
                         strong->m_closing = true;
                         strong->StopRefreshTimer();
                         strong->StopWatcher();
@@ -338,6 +338,7 @@ namespace winrt::midinetworksetup::implementation
 
             RemoteHostsPanel().Visibility(xaml::Visibility::Collapsed);
             LocalHostsPanel().Visibility(xaml::Visibility::Collapsed);
+            SettingsPanel().Visibility(xaml::Visibility::Collapsed);
             MainNavigation().IsEnabled(false);
         }
 
@@ -461,26 +462,72 @@ namespace winrt::midinetworksetup::implementation
 
             auto const item = args.SelectedItem().try_as<controls::NavigationViewItem>();
 
-            auto const isLocal = item != nullptr &&
-                item.Tag() != nullptr &&
-                winrt::unbox_value_or<winrt::hstring>(item.Tag(), L"") == L"local";
+            auto const tag = item != nullptr && item.Tag() != nullptr ?
+                winrt::unbox_value_or<winrt::hstring>(item.Tag(), L"") :
+                winrt::hstring{};
 
-            ShowRemotePage(!isLocal);
+            auto const pageIndex =
+                tag == L"local" ? native::AppSettings::PageIndexLocalHosts :
+                tag == L"settings" ? native::AppSettings::PageIndexTransportSettings :
+                native::AppSettings::PageIndexRemoteHosts;
 
-            native::AppSettings::Current().SelectedPageIndex(
-                isLocal ? native::AppSettings::PageIndexLocalHosts : native::AppSettings::PageIndexRemoteHosts);
+            // Leaving the page with a debounced write still waiting would quietly discard the
+            // customer's last change
+            if (pageIndex != native::AppSettings::PageIndexTransportSettings)
+            {
+                FlushPendingTransportSettingsWrite();
+            }
+
+            ShowPage(pageIndex);
+
+            native::AppSettings::Current().SelectedPageIndex(pageIndex);
+
+            if (pageIndex == native::AppSettings::PageIndexTransportSettings)
+            {
+                LoadTransportSettings();
+                return;
+            }
 
             RequestRefreshAsync();
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to change pages.")
     }
 
-    void MainWindow::ShowRemotePage(bool const showRemote) noexcept
+    _Use_decl_annotations_
+    foundation::IInspectable MainWindow::NavigationItemForPage(uint32_t const pageIndex) noexcept
     {
         try
         {
-            RemoteHostsPanel().Visibility(showRemote ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
-            LocalHostsPanel().Visibility(showRemote ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+            if (pageIndex == native::AppSettings::PageIndexLocalHosts)
+            {
+                return LocalHostsNavigationItem().as<foundation::IInspectable>();
+            }
+
+            if (pageIndex == native::AppSettings::PageIndexTransportSettings)
+            {
+                return SettingsNavigationItem().as<foundation::IInspectable>();
+            }
+
+            return RemoteHostsNavigationItem().as<foundation::IInspectable>();
+        }
+        catch (...)
+        {
+            return nullptr;
+        }
+    }
+
+    void MainWindow::ShowPage(uint32_t const pageIndex) noexcept
+    {
+        try
+        {
+            RemoteHostsPanel().Visibility(
+                pageIndex == native::AppSettings::PageIndexRemoteHosts ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            LocalHostsPanel().Visibility(
+                pageIndex == native::AppSettings::PageIndexLocalHosts ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            SettingsPanel().Visibility(
+                pageIndex == native::AppSettings::PageIndexTransportSettings ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
         }
         catch (...)
         {

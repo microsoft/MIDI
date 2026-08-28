@@ -327,11 +327,11 @@ void MidiSysExTransferTests::TestSysExFileTransferWithCancel()
     // this file take several seconds to send, so one second in we are mid-transfer.
     Sleep(1000);
 
-    LOG_OUTPUT(L"Cancelling the transfer");
+    LOG_OUTPUT(L"Canceling the transfer");
 
     operation.Cancel();
 
-    // A cancelled operation reports Canceled and throws from the result accessor
+    // A canceled operation reports Canceled and throws from the result accessor
     bool caughtCanceled{ false };
 
     try

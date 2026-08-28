@@ -603,6 +603,9 @@
     <ClInclude Include="MidiNetworkPendingRemoteClient.h">
       <DependentUpon>MidiNetworkPendingRemoteClient.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiNetworkTransportSettings.h">
+      <DependentUpon>MidiNetworkTransportSettings.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiNetworkConfiguredHost.h">
       <DependentUpon>MidiNetworkConfiguredHost.idl</DependentUpon>
     </ClInclude>
@@ -1051,6 +1054,9 @@
     <ClCompile Include="MidiNetworkPendingRemoteClient.cpp">
       <DependentUpon>MidiNetworkPendingRemoteClient.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiNetworkTransportSettings.cpp">
+      <DependentUpon>MidiNetworkTransportSettings.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiNetworkConfiguredHost.cpp">
       <DependentUpon>MidiNetworkConfiguredHost.idl</DependentUpon>
     </ClCompile>
@@ -1084,6 +1090,7 @@
     <Midl Include="MidiMessageStruct.idl" />
     <Midl Include="MidiMessageReceivedEventArgs.idl" />
     <Midl Include="MidiNetworkPendingRemoteClient.idl" />
+    <Midl Include="MidiNetworkTransportSettings.idl" />
     <Midl Include="MidiNetworkRemoteClientApprovalErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkRemoteClientApprovalResponse.idl" />
     <Midl Include="MidiNetworkRemoteClientApprovalConfig.idl" />

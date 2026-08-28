@@ -34,6 +34,7 @@ import "MidiNetworkRemoteClientApprovalResponse.idl";
 import "MidiNetworkRemoteClientDisconnectConfig.idl";
 import "MidiNetworkRemoteClientDisconnectResponse.idl";
 import "MidiNetworkPendingRemoteClient.idl";
+import "MidiNetworkTransportSettings.idl";
 
 namespace Windows.Devices.Midi2.Transports.Network
 {
@@ -82,6 +83,11 @@ namespace Windows.Devices.Midi2.Transports.Network
         [noexcept] static Windows.Foundation.Collections.IVectorView<MidiNetworkConfiguredClient> GetConfiguredClients();
 
         [noexcept] static Windows.Foundation.Collections.IVectorView<MidiNetworkPendingRemoteClient> GetPendingRemoteClients();
+
+        // The settings the transport is running with right now. These are not necessarily what
+        // the configuration file says: a value out of range or of the wrong type is corrected
+        // when it is read.
+        [noexcept] static MidiNetworkTransportSettings GetTransportSettings();
 
 
         // list the external hosts currently visible to this PC

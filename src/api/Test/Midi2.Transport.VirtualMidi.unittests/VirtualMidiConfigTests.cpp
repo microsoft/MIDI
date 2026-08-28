@@ -99,7 +99,7 @@ void VirtualMidiConfigTests::TestMalformedJsonIsRejected()
 
 void VirtualMidiConfigTests::TestUniqueIdWithInvalidCharactersIsRejected()
 {
-    // The behaviour under test is KIR-gated, so the test has to no-op when the KIR is off,
+    // The behavior under test is KIR-gated, so the test has to no-op when the KIR is off,
     // otherwise a rollback turns this suite red.
     if (!Feature_Servicing_MIDI2EndpointUniqueIdValidation::IsEnabled())
     {

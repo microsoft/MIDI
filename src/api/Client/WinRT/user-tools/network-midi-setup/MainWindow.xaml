@@ -126,6 +126,14 @@
                         <FontIcon Glyph="&#xE977;" />
                     </NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem x:Name="SettingsNavigationItem"
+                                    x:Uid="SettingsNavigationItem"
+                                    Content="Transport settings"
+                                    Tag="settings">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE713;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
 
             <Grid>
@@ -837,6 +845,183 @@
                                Style="{ThemeResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 </Grid>
+
+                <!-- ========================= Page 3: transport settings ========================= -->
+                <ScrollViewer x:Name="SettingsPanel"
+                              Margin="16,8,16,12"
+                              VerticalScrollBarVisibility="Auto"
+                              Visibility="Collapsed">
+                    <StackPanel Spacing="12" Margin="0,0,4,0" MaxWidth="720" HorizontalAlignment="Left">
+                        <StackPanel>
+                            <TextBlock x:Uid="SettingsHeader"
+                                       Text="Transport settings"
+                                       Style="{StaticResource SectionHeaderTextStyle}" />
+                            <TextBlock x:Uid="SettingsDescription"
+                                       Text="These apply to every Network MIDI 2.0 host and client on this PC. The defaults suit almost every network, so change them only if you have a reason to."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <Border Style="{StaticResource CardBorderStyle}">
+                            <StackPanel Spacing="10">
+                                <TextBlock x:Uid="SettingMaxHostConnectionsHeader"
+                                           Text="Most devices allowed at once"
+                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBlock x:Uid="SettingMaxHostConnectionsDescription"
+                                           Text="How many remote devices any one host on this PC will accept at the same time."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <NumberBox x:Name="MaxHostConnectionsBox"
+                                           MinWidth="160"
+                                           HorizontalAlignment="Left"
+                                           SpinButtonPlacementMode="Compact"
+                                           ValueChanged="OnTransportSettingChanged" />
+                                <TextBlock x:Uid="SettingEffectImmediate"
+                                           Text="Takes effect right away. Devices already connected are not disconnected."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardBorderStyle}">
+                            <StackPanel Spacing="10">
+                                <TextBlock x:Uid="SettingInvitationPendingTimeoutHeader"
+                                           Text="How long to wait for your permission"
+                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBlock x:Uid="SettingInvitationPendingTimeoutDescription"
+                                           Text="How long a device asking to connect stays in the waiting list before it is dropped, in milliseconds."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <NumberBox x:Name="InvitationPendingTimeoutBox"
+                                           MinWidth="160"
+                                           HorizontalAlignment="Left"
+                                           SpinButtonPlacementMode="Compact"
+                                           SmallChange="1000"
+                                           LargeChange="10000"
+                                           ValueChanged="OnTransportSettingChanged" />
+                                <TextBlock x:Uid="SettingEffectNextRequest"
+                                           Text="Applies to the next device which asks to connect. Devices already waiting keep the old timeout."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardBorderStyle}">
+                            <StackPanel Spacing="10">
+                                <TextBlock x:Uid="SettingScanIntervalHeader"
+                                           Text="How often to retry a device which is not answering"
+                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBlock x:Uid="SettingScanIntervalDescription"
+                                           Text="How often this PC tries a device you connected to by address again after it stops answering, in milliseconds."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <NumberBox x:Name="DirectConnectionScanIntervalBox"
+                                           MinWidth="160"
+                                           HorizontalAlignment="Left"
+                                           SpinButtonPlacementMode="Compact"
+                                           SmallChange="1000"
+                                           LargeChange="10000"
+                                           ValueChanged="OnTransportSettingChanged" />
+                                <TextBlock x:Uid="SettingEffectNextScan"
+                                           Text="Takes effect within one retry, so up to the old interval from now."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardBorderStyle}">
+                            <StackPanel Spacing="10">
+                                <TextBlock x:Uid="SettingPingIntervalHeader"
+                                           Text="How often to check a quiet connection"
+                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBlock x:Uid="SettingPingIntervalDescription"
+                                           Text="How often a connection with nothing to send checks that the other end is still there, in milliseconds. Shorter notices a dropped device sooner and sends slightly more network traffic."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <NumberBox x:Name="OutboundPingIntervalBox"
+                                           MinWidth="160"
+                                           HorizontalAlignment="Left"
+                                           SpinButtonPlacementMode="Compact"
+                                           SmallChange="250"
+                                           LargeChange="1000"
+                                           ValueChanged="OnTransportSettingChanged" />
+                                <TextBlock x:Uid="SettingEffectWithinOneInterval"
+                                           Text="Reaches connections which are already open within one interval."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardBorderStyle}">
+                            <StackPanel Spacing="10">
+                                <TextBlock x:Uid="SettingFecPacketsHeader"
+                                           Text="Repeated messages per packet"
+                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBlock x:Uid="SettingFecPacketsDescription"
+                                           Text="How many recently sent messages are repeated in each network packet, so a lost packet can be recovered without asking for it again. Higher values cope better with an unreliable network and make each packet larger."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <NumberBox x:Name="MaxFecPacketsBox"
+                                           MinWidth="160"
+                                           HorizontalAlignment="Left"
+                                           SpinButtonPlacementMode="Compact"
+                                           ValueChanged="OnTransportSettingChanged" />
+                                <TextBlock x:Uid="SettingEffectNewConnections"
+                                           Text="Applies to new connections. Reconnect a device for it to take effect there."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource CardBorderStyle}">
+                            <StackPanel Spacing="10">
+                                <TextBlock x:Uid="SettingRetransmitBufferHeader"
+                                           Text="Messages kept for resending"
+                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBlock x:Uid="SettingRetransmitBufferDescription"
+                                           Text="How many sent messages are held on to in case the other end asks for them again. Higher values recover from longer gaps and use more memory per connection."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <NumberBox x:Name="MaxRetransmitBufferBox"
+                                           MinWidth="160"
+                                           HorizontalAlignment="Left"
+                                           SpinButtonPlacementMode="Compact"
+                                           SmallChange="10"
+                                           LargeChange="100"
+                                           ValueChanged="OnTransportSettingChanged" />
+                                <TextBlock x:Uid="SettingEffectNewConnections2"
+                                           Text="Applies to new connections. Reconnect a device for it to take effect there."
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+                            <Button x:Name="RestoreSettingDefaultsButton"
+                                    x:Uid="RestoreSettingDefaultsButton"
+                                    Content="Restore defaults"
+                                    Click="OnRestoreTransportSettingDefaultsClick" />
+                            <TextBlock x:Name="SettingsStatusText"
+                                       TextWrapping="Wrap"
+                                       VerticalAlignment="Center"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
                 </Grid>
             </Grid>
         </NavigationView>

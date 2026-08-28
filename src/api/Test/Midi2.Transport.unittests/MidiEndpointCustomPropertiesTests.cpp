@@ -37,7 +37,7 @@ namespace
 
     void VerifyRejected(std::wstring const& imageValue)
     {
-        // The behaviour under test is KIR-gated, so the test has to no-op when the KIR is off,
+        // The behavior under test is KIR-gated, so the test has to no-op when the KIR is off,
         // otherwise a rollback turns this suite red.
         if (!Feature_Servicing_MIDI2EndpointImageFileNameValidation::IsEnabled())
         {
@@ -125,7 +125,7 @@ void MidiEndpointCustomPropertiesTests::TestWildcardImageIsRejected()
 
 void MidiEndpointCustomPropertiesTests::TestUngatedParserStillAcceptsAPath()
 {
-    // FromJson is what a rolled back build calls, so it has to keep its original behaviour
+    // FromJson is what a rolled back build calls, so it has to keep its original behavior
     // exactly. This is the "before" half of the KIR and must pass either way.
     auto const props = config::MidiEndpointCustomProperties::FromJson(
         CustomPropertiesWithImage(L"C:\\\\Windows\\\\System32\\\\evil.png"));
