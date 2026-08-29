@@ -217,47 +217,53 @@ CMidi2BluetoothMidiEndpointManager::Initialize(
 HRESULT
 CMidi2BluetoothMidiEndpointManager::StartAdvertisementWatcher()
 {
-    TraceLoggingWrite(
-        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
-
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
     try
     {
-        m_advertisementWatcher = bt::Advertisement::BluetoothLEAdvertisementWatcher();
-
-        // Active scanning also collects scan response data, which is where some peripherals put
-        // the service UUID and the complete local name.
-        m_advertisementWatcher.ScanningMode(bt::Advertisement::BluetoothLEScanningMode::Active);
-
-        winrt::guid midiServiceUuid{ MidiBleProtocol::MidiServiceUuid };
-        m_advertisementWatcher.AdvertisementFilter().Advertisement().ServiceUuids().Append(midiServiceUuid);
-
-        m_advertisementReceivedToken = m_advertisementWatcher.Received({ this, &CMidi2BluetoothMidiEndpointManager::OnAdvertisementReceived });
-        m_advertisementStoppedToken = m_advertisementWatcher.Stopped({ this, &CMidi2BluetoothMidiEndpointManager::OnAdvertisementWatcherStopped });
-
-        m_advertisementWatcher.Start();
-
-        // Status is the discriminator between "scanning, nothing in range yet" and "never
-        // started". Aborted here usually means the Bluetooth radio is off or unavailable to the
-        // service account, which otherwise looks identical to a silent room.
         TraceLoggingWrite(
             MidiBluetoothMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"BLE advertisement watcher started", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingUInt32(static_cast<uint32_t>(m_advertisementWatcher.Status()), "watcher status")
+            TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
-    }
-    CATCH_RETURN();
 
-    return S_OK;
+        try
+        {
+            m_advertisementWatcher = bt::Advertisement::BluetoothLEAdvertisementWatcher();
+
+            // Active scanning also collects scan response data, which is where some peripherals put
+            // the service UUID and the complete local name.
+            m_advertisementWatcher.ScanningMode(bt::Advertisement::BluetoothLEScanningMode::Active);
+
+            winrt::guid midiServiceUuid{ MidiBleProtocol::MidiServiceUuid };
+            m_advertisementWatcher.AdvertisementFilter().Advertisement().ServiceUuids().Append(midiServiceUuid);
+
+            m_advertisementReceivedToken = m_advertisementWatcher.Received({ this, &CMidi2BluetoothMidiEndpointManager::OnAdvertisementReceived });
+            m_advertisementStoppedToken = m_advertisementWatcher.Stopped({ this, &CMidi2BluetoothMidiEndpointManager::OnAdvertisementWatcherStopped });
+
+            m_advertisementWatcher.Start();
+
+            // Status is the discriminator between "scanning, nothing in range yet" and "never
+            // started". Aborted here usually means the Bluetooth radio is off or unavailable to the
+            // service account, which otherwise looks identical to a silent room.
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"BLE advertisement watcher started", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingUInt32(static_cast<uint32_t>(m_advertisementWatcher.Status()), "watcher status")
+            );
+        }
+        CATCH_RETURN();
+
+        return S_OK;
+    }
+    CATCH_RETURN()
 }
 
 
@@ -283,48 +289,54 @@ CMidi2BluetoothMidiEndpointManager::OnAdvertisementWatcherStopped(
 HRESULT
 CMidi2BluetoothMidiEndpointManager::StartGattServiceWatcher()
 {
-    TraceLoggingWrite(
-        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
-
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
     try
     {
-        winrt::guid midiBleServiceUuid{ MidiBleProtocol::MidiServiceUuid };
-        winrt::hstring query = gatt::GattDeviceService::GetDeviceSelectorFromUuid(midiBleServiceUuid);
-
-        auto props = winrt::single_threaded_vector<winrt::hstring>();
-
-        props.Append(L"System.DeviceInterface.Bluetooth.DeviceAddress");
-        props.Append(L"System.Devices.Aep.IsPaired");
-        props.Append(L"System.Devices.Connected");
-
-        m_deviceWatcher = enumeration::DeviceInformation::CreateWatcher(query, props);
-
-        m_deviceWatcherAddedToken = m_deviceWatcher.Added({ this, &CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherAdded });
-        m_deviceWatcherUpdatedToken = m_deviceWatcher.Updated({ this, &CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherUpdated });
-        m_deviceWatcherRemovedToken = m_deviceWatcher.Removed({ this, &CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherRemoved });
-        m_deviceWatcherStoppedToken = m_deviceWatcher.Stopped({ this, &CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherStopped });
-
-        m_deviceWatcher.Start();
-
         TraceLoggingWrite(
             MidiBluetoothMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"BLE MIDI GATT service watcher started", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingUInt32(static_cast<uint32_t>(m_deviceWatcher.Status()), "watcher status")
+            TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
-    }
-    CATCH_RETURN();
 
-    return S_OK;
+        try
+        {
+            winrt::guid midiBleServiceUuid{ MidiBleProtocol::MidiServiceUuid };
+            winrt::hstring query = gatt::GattDeviceService::GetDeviceSelectorFromUuid(midiBleServiceUuid);
+
+            auto props = winrt::single_threaded_vector<winrt::hstring>();
+
+            props.Append(L"System.DeviceInterface.Bluetooth.DeviceAddress");
+            props.Append(L"System.Devices.Aep.IsPaired");
+            props.Append(L"System.Devices.Connected");
+
+            m_deviceWatcher = enumeration::DeviceInformation::CreateWatcher(query, props);
+
+            m_deviceWatcherAddedToken = m_deviceWatcher.Added({ this, &CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherAdded });
+            m_deviceWatcherUpdatedToken = m_deviceWatcher.Updated({ this, &CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherUpdated });
+            m_deviceWatcherRemovedToken = m_deviceWatcher.Removed({ this, &CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherRemoved });
+            m_deviceWatcherStoppedToken = m_deviceWatcher.Stopped({ this, &CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherStopped });
+
+            m_deviceWatcher.Start();
+
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"BLE MIDI GATT service watcher started", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingUInt32(static_cast<uint32_t>(m_deviceWatcher.Status()), "watcher status")
+            );
+        }
+        CATCH_RETURN();
+
+        return S_OK;
+    }
+    CATCH_RETURN()
 }
 
 
@@ -369,80 +381,86 @@ CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherAdded(
     enumeration::DeviceInformation const& args
 )
 {
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
     try
     {
-        uint64_t address{ 0 };
-
-        auto const addressPropertyKey = winrt::hstring{ L"System.DeviceInterface.Bluetooth.DeviceAddress" };
-
-        if (args.Properties().HasKey(addressPropertyKey))
+        try
         {
-            auto property = args.Properties().Lookup(addressPropertyKey);
+            uint64_t address{ 0 };
 
-            if (property != nullptr)
+            auto const addressPropertyKey = winrt::hstring{ L"System.DeviceInterface.Bluetooth.DeviceAddress" };
+
+            if (args.Properties().HasKey(addressPropertyKey))
             {
-                // the property system has historically supplied this both as a formatted string
-                // and as a raw integer, so both are accepted
-                if (auto stringValue = property.try_as<foundation::IReference<winrt::hstring>>())
+                auto property = args.Properties().Lookup(addressPropertyKey);
+
+                if (property != nullptr)
                 {
-                    MidiBleUtilities::TryParseBluetoothAddress(std::wstring{ stringValue.Value() }, address);
-                }
-                else if (auto uint64Value = property.try_as<foundation::IReference<uint64_t>>())
-                {
-                    address = uint64Value.Value();
+                    // the property system has historically supplied this both as a formatted string
+                    // and as a raw integer, so both are accepted
+                    if (auto stringValue = property.try_as<foundation::IReference<winrt::hstring>>())
+                    {
+                        MidiBleUtilities::TryParseBluetoothAddress(std::wstring{ stringValue.Value() }, address);
+                    }
+                    else if (auto uint64Value = property.try_as<foundation::IReference<uint64_t>>())
+                    {
+                        address = uint64Value.Value();
+                    }
                 }
             }
-        }
 
-        if (address == 0)
-        {
-            // without an address there is nothing to correlate this with, and nothing to connect to
+            if (address == 0)
+            {
+                // without an address there is nothing to correlate this with, and nothing to connect to
+                TraceLoggingWrite(
+                    MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"BLE MIDI GATT service has no readable Bluetooth address", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(args.Id().c_str(), "id")
+                );
+
+                return S_OK;
+            }
+
+            MidiBleProtocol::DiscoveredDevice device{};
+
+            device.BluetoothAddress = address;
+            device.Id = MidiBleUtilities::FormatBluetoothAddress(address);
+            device.Name = args.Name();
+            device.GattServiceDeviceId = args.Id();
+            device.IsPaired = true;
+
+            // Deliberately no LastSeenTimestamp. This watcher reports what the system already knows
+            // about a paired device, which is not evidence the radio has heard it. Stamping it here
+            // made every remembered device look like it had been heard the moment the service started.
+
             TraceLoggingWrite(
                 MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_WARNING,
+                MIDI_TRACE_EVENT_INFO,
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"BLE MIDI GATT service has no readable Bluetooth address", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(args.Id().c_str(), "id")
+                TraceLoggingWideString(L"BLE MIDI GATT service found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(args.Id().c_str(), "id"),
+                TraceLoggingWideString(device.Name.c_str(), "name"),
+                TraceLoggingWideString(device.Id.c_str(), "device id")
             );
 
-            return S_OK;
+            MergeDiscoveredDevice(device);
+
+            // Windows enumerating the GATT service is the other moment a remembered device becomes
+            // reachable, and a bonded device which is not advertising only appears this way.
+            QueueConnectIfWanted(device.Id);
         }
+        CATCH_LOG();
 
-        MidiBleProtocol::DiscoveredDevice device{};
-
-        device.BluetoothAddress = address;
-        device.Id = MidiBleUtilities::FormatBluetoothAddress(address);
-        device.Name = args.Name();
-        device.GattServiceDeviceId = args.Id();
-        device.IsPaired = true;
-
-        // Deliberately no LastSeenTimestamp. This watcher reports what the system already knows
-        // about a paired device, which is not evidence the radio has heard it. Stamping it here
-        // made every remembered device look like it had been heard the moment the service started.
-
-        TraceLoggingWrite(
-            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"BLE MIDI GATT service found", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(args.Id().c_str(), "id"),
-            TraceLoggingWideString(device.Name.c_str(), "name"),
-            TraceLoggingWideString(device.Id.c_str(), "device id")
-        );
-
-        MergeDiscoveredDevice(device);
-
-        // Windows enumerating the GATT service is the other moment a remembered device becomes
-        // reachable, and a bonded device which is not advertising only appears this way.
-        QueueConnectIfWanted(device.Id);
+        return S_OK;
     }
-    CATCH_LOG();
-
-    return S_OK;
+    CATCH_RETURN()
 }
 
 
@@ -980,178 +998,214 @@ CMidi2BluetoothMidiEndpointManager::StopPeripheral()
 HRESULT
 CMidi2BluetoothMidiEndpointManager::RemovePeripheralEndpoint()
 {
-    winrt::hstring const peripheralDeviceId{ MIDI_BLE_PERIPHERAL_DEVICE_ID };
-
-    if (auto connection = TransportState::Current().GetConnectionByDeviceId(peripheralDeviceId))
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
+    try
     {
-        // the callback is released before the endpoint goes away, because removal re-enters
-        // synchronously through the bidi's Shutdown
-        LOG_IF_FAILED(connection->DisconnectMidiCallback());
+        winrt::hstring const peripheralDeviceId{ MIDI_BLE_PERIPHERAL_DEVICE_ID };
+
+        if (auto connection = TransportState::Current().GetConnectionByDeviceId(peripheralDeviceId))
+        {
+            // the callback is released before the endpoint goes away, because removal re-enters
+            // synchronously through the bidi's Shutdown
+            LOG_IF_FAILED(connection->DisconnectMidiCallback());
+        }
+
+        {
+            auto lock = std::scoped_lock{ m_createdEndpointsLock };
+
+            std::erase_if(
+                m_createdEndpoints,
+                [&peripheralDeviceId](CreatedEndpointRecord const& record) { return record.DeviceId == peripheralDeviceId; });
+        }
+
+        // Removing it from the table shuts it down; detaching only drops the peripheral's reference.
+        LOG_IF_FAILED(TransportState::Current().RemoveConnection(peripheralDeviceId));
+
+        if (auto peripheral = TransportState::Current().GetPeripheral())
+        {
+            LOG_IF_FAILED(peripheral->DetachConnection());
+        }
+
+        if (!m_peripheralEndpointInstanceId.empty())
+        {
+            LOG_IF_FAILED(DeleteEndpoint(m_peripheralEndpointInstanceId));
+            m_peripheralEndpointInstanceId.clear();
+        }
+
+        m_peripheralClientDeviceId = L"";
+        m_peripheralEvaluatedClientDeviceId = L"";
+
+        return S_OK;
     }
-
-    {
-        auto lock = std::scoped_lock{ m_createdEndpointsLock };
-
-        std::erase_if(
-            m_createdEndpoints,
-            [&peripheralDeviceId](CreatedEndpointRecord const& record) { return record.DeviceId == peripheralDeviceId; });
-    }
-
-    // Removing it from the table shuts it down; detaching only drops the peripheral's reference.
-    LOG_IF_FAILED(TransportState::Current().RemoveConnection(peripheralDeviceId));
-
-    if (auto peripheral = TransportState::Current().GetPeripheral())
-    {
-        LOG_IF_FAILED(peripheral->DetachConnection());
-    }
-
-    if (!m_peripheralEndpointInstanceId.empty())
-    {
-        LOG_IF_FAILED(DeleteEndpoint(m_peripheralEndpointInstanceId));
-        m_peripheralEndpointInstanceId.clear();
-    }
-
-    m_peripheralClientDeviceId = L"";
-    m_peripheralEvaluatedClientDeviceId = L"";
-
-    return S_OK;
+    CATCH_RETURN()
 }
 
 
 HRESULT
 CMidi2BluetoothMidiEndpointManager::ProcessPeripheralClientChange()
 {
-    auto peripheral = TransportState::Current().GetPeripheral();
-
-    auto const clientDeviceId = peripheral != nullptr ? peripheral->ActiveClientDeviceId() : winrt::hstring{};
-
-    // The same Central which already has an endpoint means nothing has changed.
-    if (!clientDeviceId.empty() && clientDeviceId == m_peripheralClientDeviceId)
-    {
-        return S_OK;
-    }
-
-    if (clientDeviceId != m_peripheralEvaluatedClientDeviceId)
-    {
-        // A different Central, or none, means the endpoint no longer represents what is connected.
-        LOG_IF_FAILED(RemovePeripheralEndpoint());
-
-        // Whoever was waiting or was let through is no longer the device on the link, so neither
-        // their request nor an "allow once" granted to them may carry over.
-        TransportState::Current().ClearPendingPeripheralClient();
-        TransportState::Current().ClearPeripheralClientLinkDecision();
-
-        m_peripheralEvaluatedClientDeviceId = clientDeviceId;
-    }
-
-    if (peripheral == nullptr || clientDeviceId.empty())
-    {
-        return S_OK;
-    }
-
-    // The remote device's own name is what the endpoint is called, so the user sees the phone or
-    // tablet which connected rather than this PC.
-    winrt::hstring remoteName{};
-    winrt::hstring remoteAddress{};
-
-    // Every identity WinRT offers is recorded, because which of them survives a resolvable private
-    // address rotation is what decides the endpoint's identity, and that cannot be reasoned out
-    // from the API surface alone.
-    winrt::hstring remoteBluetoothDeviceId{};
-    winrt::hstring remoteAddressType{ L"unspecified" };
-    bool remoteIsPaired{ false };
-    bt::BluetoothLEDevice remoteDevice{ nullptr };
-
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
     try
     {
-        if (auto device = MidiBleUtilities::AwaitWithTimeout(
-            bt::BluetoothLEDevice::FromIdAsync(clientDeviceId),
-            MidiBleUtilities::BleOperationTimeoutMilliseconds,
-            bt::BluetoothLEDevice{ nullptr }))
+        auto peripheral = TransportState::Current().GetPeripheral();
+
+        auto const clientDeviceId = peripheral != nullptr ? peripheral->ActiveClientDeviceId() : winrt::hstring{};
+
+        // The same Central which already has an endpoint means nothing has changed.
+        if (!clientDeviceId.empty() && clientDeviceId == m_peripheralClientDeviceId)
         {
-            remoteDevice = device;
-            remoteName = device.Name();
-            remoteAddress = MidiBleUtilities::FormatBluetoothAddress(device.BluetoothAddress());
-            remoteAddressType = MidiBleUtilities::BluetoothAddressTypeToString(device.BluetoothAddressType());
+            return S_OK;
+        }
 
-            if (auto bluetoothDeviceId = device.BluetoothDeviceId())
-            {
-                remoteBluetoothDeviceId = bluetoothDeviceId.Id();
-            }
+        if (clientDeviceId != m_peripheralEvaluatedClientDeviceId)
+        {
+            // A different Central, or none, means the endpoint no longer represents what is connected.
+            LOG_IF_FAILED(RemovePeripheralEndpoint());
 
-            if (auto deviceInformation = device.DeviceInformation())
+            // Whoever was waiting or was let through is no longer the device on the link, so neither
+            // their request nor an "allow once" granted to them may carry over.
+            TransportState::Current().ClearPendingPeripheralClient();
+            TransportState::Current().ClearPeripheralClientLinkDecision();
+
+            m_peripheralEvaluatedClientDeviceId = clientDeviceId;
+        }
+
+        if (peripheral == nullptr || clientDeviceId.empty())
+        {
+            return S_OK;
+        }
+
+        // The remote device's own name is what the endpoint is called, so the user sees the phone or
+        // tablet which connected rather than this PC.
+        winrt::hstring remoteName{};
+        winrt::hstring remoteAddress{};
+
+        // Every identity WinRT offers is recorded, because which of them survives a resolvable private
+        // address rotation is what decides the endpoint's identity, and that cannot be reasoned out
+        // from the API surface alone.
+        winrt::hstring remoteBluetoothDeviceId{};
+        winrt::hstring remoteAddressType{ L"unspecified" };
+        bool remoteIsPaired{ false };
+        bt::BluetoothLEDevice remoteDevice{ nullptr };
+
+        try
+        {
+            if (auto device = MidiBleUtilities::AwaitWithTimeout(
+                bt::BluetoothLEDevice::FromIdAsync(clientDeviceId),
+                MidiBleUtilities::BleOperationTimeoutMilliseconds,
+                bt::BluetoothLEDevice{ nullptr }))
             {
-                if (auto pairing = deviceInformation.Pairing())
+                remoteDevice = device;
+                remoteName = device.Name();
+                remoteAddress = MidiBleUtilities::FormatBluetoothAddress(device.BluetoothAddress());
+                remoteAddressType = MidiBleUtilities::BluetoothAddressTypeToString(device.BluetoothAddressType());
+
+                if (auto bluetoothDeviceId = device.BluetoothDeviceId())
                 {
-                    remoteIsPaired = pairing.IsPaired();
+                    remoteBluetoothDeviceId = bluetoothDeviceId.Id();
+                }
+
+                if (auto deviceInformation = device.DeviceInformation())
+                {
+                    if (auto pairing = deviceInformation.Pairing())
+                    {
+                        remoteIsPaired = pairing.IsPaired();
+                    }
                 }
             }
         }
-    }
-    CATCH_LOG();
+        CATCH_LOG();
 
-    auto const hasGenericName = MidiBleUtilities::IsGenericDeviceName(remoteName);
+        auto const hasGenericName = MidiBleUtilities::IsGenericDeviceName(remoteName);
 
-    TraceLoggingWrite(
-        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"A Central connected to the BLE MIDI peripheral", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(clientDeviceId.c_str(), "client device id"),
-        TraceLoggingWideString(remoteName.c_str(), "remote name"),
-        TraceLoggingWideString(remoteAddress.c_str(), "remote address"),
-        TraceLoggingWideString(remoteAddressType.c_str(), "remote address type"),
-        TraceLoggingWideString(remoteBluetoothDeviceId.c_str(), "remote bluetooth device id"),
-        TraceLoggingBool(remoteIsPaired, "remote is paired"),
-        TraceLoggingBool(hasGenericName, "remote name is generic")
-    );
-
-    MidiBleProtocol::PendingPeripheralClient candidate{};
-    candidate.BluetoothDeviceId = clientDeviceId;
-    candidate.Name = remoteName;
-    candidate.Address = remoteAddress;
-    candidate.AddressType = remoteAddressType;
-    candidate.IsPaired = remoteIsPaired;
-    candidate.HasGenericName = hasGenericName;
-
-    // Taken from the device rather than the formatted string, because the classification is in
-    // the top two bits of the address.
-    candidate.IsRememberable = MidiBleUtilities::IsRememberableAddress(
-        remoteAddressType,
-        remoteDevice != nullptr ? remoteDevice.BluetoothAddress() : 0,
-        remoteIsPaired);
-
-    FILETIME requestedTime{};
-    GetSystemTimeAsFileTime(&requestedTime);
-    candidate.RequestedFileTime =
-        (static_cast<uint64_t>(requestedTime.dwHighDateTime) << 32) | requestedTime.dwLowDateTime;
-
-    auto const decision = TransportState::Current().EvaluatePeripheralClient(candidate);
-
-    // The Central stays subscribed either way, because WinRT cannot refuse a subscription. What
-    // approval controls is whether an endpoint exists and whether anything is read off the link.
-    if (decision != MidiBleProtocol::PeripheralClientDecision::Allowed)
-    {
         TraceLoggingWrite(
             MidiBluetoothMidiTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(
-                decision == MidiBleProtocol::PeripheralClientDecision::Denied ?
-                    L"A Central was denied, so no endpoint was created for it" :
-                    L"A Central is waiting for approval, so no endpoint was created for it",
-                MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(L"A Central connected to the BLE MIDI peripheral", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(clientDeviceId.c_str(), "client device id"),
             TraceLoggingWideString(remoteName.c_str(), "remote name"),
-            TraceLoggingWideString(remoteAddress.c_str(), "remote address")
+            TraceLoggingWideString(remoteAddress.c_str(), "remote address"),
+            TraceLoggingWideString(remoteAddressType.c_str(), "remote address type"),
+            TraceLoggingWideString(remoteBluetoothDeviceId.c_str(), "remote bluetooth device id"),
+            TraceLoggingBool(remoteIsPaired, "remote is paired"),
+            TraceLoggingBool(hasGenericName, "remote name is generic")
         );
 
-        // Recorded so the status command can describe who is waiting even though there is no
-        // connection to read it from.
+        MidiBleProtocol::PendingPeripheralClient candidate{};
+        candidate.BluetoothDeviceId = clientDeviceId;
+        candidate.Name = remoteName;
+        candidate.Address = remoteAddress;
+        candidate.AddressType = remoteAddressType;
+        candidate.IsPaired = remoteIsPaired;
+        candidate.HasGenericName = hasGenericName;
+
+        // Taken from the device rather than the formatted string, because the classification is in
+        // the top two bits of the address.
+        candidate.IsRememberable = MidiBleUtilities::IsRememberableAddress(
+            remoteAddressType,
+            remoteDevice != nullptr ? remoteDevice.BluetoothAddress() : 0,
+            remoteIsPaired);
+
+        FILETIME requestedTime{};
+        GetSystemTimeAsFileTime(&requestedTime);
+        candidate.RequestedFileTime =
+            (static_cast<uint64_t>(requestedTime.dwHighDateTime) << 32) | requestedTime.dwLowDateTime;
+
+        auto const decision = TransportState::Current().EvaluatePeripheralClient(candidate);
+
+        // The Central stays subscribed either way, because WinRT cannot refuse a subscription. What
+        // approval controls is whether an endpoint exists and whether anything is read off the link.
+        if (decision != MidiBleProtocol::PeripheralClientDecision::Allowed)
+        {
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(
+                    decision == MidiBleProtocol::PeripheralClientDecision::Denied ?
+                        L"A Central was denied, so no endpoint was created for it" :
+                        L"A Central is waiting for approval, so no endpoint was created for it",
+                    MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(clientDeviceId.c_str(), "client device id"),
+                TraceLoggingWideString(remoteName.c_str(), "remote name"),
+                TraceLoggingWideString(remoteAddress.c_str(), "remote address")
+            );
+
+            // Recorded so the status command can describe who is waiting even though there is no
+            // connection to read it from.
+            peripheral->SetRemoteClientInfo(MidiBleRemoteClientInfo{
+                remoteName,
+                remoteAddress,
+                remoteAddressType,
+                remoteBluetoothDeviceId,
+                remoteIsPaired,
+                hasGenericName });
+
+            peripheral->SetRemoteDevice(remoteDevice);
+
+            return S_OK;
+        }
+
+        std::wstring endpointName{ remoteName };
+
+        if (endpointName.empty())
+        {
+            endpointName = remoteAddress.empty() ?
+                std::wstring{ MIDI_BLE_PERIPHERAL_UNKNOWN_CLIENT_NAME } :
+                std::wstring{ MIDI_BLE_PERIPHERAL_UNKNOWN_CLIENT_NAME } + L" " + std::wstring{ remoteAddress };
+        }
+
+        std::shared_ptr<MidiBleConnection> connection{ nullptr };
+        RETURN_IF_FAILED(peripheral->AttachConnection(clientDeviceId, winrt::hstring{ endpointName }, connection));
+        RETURN_HR_IF_NULL(E_UNEXPECTED, connection);
+
         peripheral->SetRemoteClientInfo(MidiBleRemoteClientInfo{
             remoteName,
             remoteAddress,
@@ -1162,54 +1216,30 @@ CMidi2BluetoothMidiEndpointManager::ProcessPeripheralClientChange()
 
         peripheral->SetRemoteDevice(remoteDevice);
 
+        RETURN_IF_FAILED(TransportState::Current().AddConnection(connection));
+
+        // A bonded device reports the identity address recorded at bonding, which survives both the
+        // address rotation and a reconnect, so it is what the endpoint is keyed on. Without a bond
+        // there is no stable identity to key on at all.
+        auto const instanceId = remoteIsPaired ?
+            BuildPeripheralEndpointDeviceInstanceId(endpointName, remoteAddress) :
+            internal::NormalizeDeviceInstanceIdWStringCopy(MIDI_BLE_PERIPHERAL_UNPAIRED_ENDPOINT_INSTANCE_ID);
+
+        RETURN_IF_FAILED(CreateEndpoint(
+            connection,
+            endpointName,
+            peripheral->Protocol() == MidiBleProtocol::Protocol::Midi2Ump ?
+                MIDI_BLE_PERIPHERAL_MIDI2_ENDPOINT_DESCRIPTION :
+                MIDI_BLE_PERIPHERAL_MIDI1_ENDPOINT_DESCRIPTION,
+            instanceId,
+            remoteAddress.empty() ? std::wstring{ MIDI_BLE_PERIPHERAL_DEVICE_ID } : std::wstring{ remoteAddress }));
+
+        m_peripheralEndpointInstanceId = connection->EndpointDeviceInstanceId();
+        m_peripheralClientDeviceId = clientDeviceId;
+
         return S_OK;
     }
-
-    std::wstring endpointName{ remoteName };
-
-    if (endpointName.empty())
-    {
-        endpointName = remoteAddress.empty() ?
-            std::wstring{ MIDI_BLE_PERIPHERAL_UNKNOWN_CLIENT_NAME } :
-            std::wstring{ MIDI_BLE_PERIPHERAL_UNKNOWN_CLIENT_NAME } + L" " + std::wstring{ remoteAddress };
-    }
-
-    std::shared_ptr<MidiBleConnection> connection{ nullptr };
-    RETURN_IF_FAILED(peripheral->AttachConnection(clientDeviceId, winrt::hstring{ endpointName }, connection));
-    RETURN_HR_IF_NULL(E_UNEXPECTED, connection);
-
-    peripheral->SetRemoteClientInfo(MidiBleRemoteClientInfo{
-        remoteName,
-        remoteAddress,
-        remoteAddressType,
-        remoteBluetoothDeviceId,
-        remoteIsPaired,
-        hasGenericName });
-
-    peripheral->SetRemoteDevice(remoteDevice);
-
-    RETURN_IF_FAILED(TransportState::Current().AddConnection(connection));
-
-    // A bonded device reports the identity address recorded at bonding, which survives both the
-    // address rotation and a reconnect, so it is what the endpoint is keyed on. Without a bond
-    // there is no stable identity to key on at all.
-    auto const instanceId = remoteIsPaired ?
-        BuildPeripheralEndpointDeviceInstanceId(endpointName, remoteAddress) :
-        internal::NormalizeDeviceInstanceIdWStringCopy(MIDI_BLE_PERIPHERAL_UNPAIRED_ENDPOINT_INSTANCE_ID);
-
-    RETURN_IF_FAILED(CreateEndpoint(
-        connection,
-        endpointName,
-        peripheral->Protocol() == MidiBleProtocol::Protocol::Midi2Ump ?
-            MIDI_BLE_PERIPHERAL_MIDI2_ENDPOINT_DESCRIPTION :
-            MIDI_BLE_PERIPHERAL_MIDI1_ENDPOINT_DESCRIPTION,
-        instanceId,
-        remoteAddress.empty() ? std::wstring{ MIDI_BLE_PERIPHERAL_DEVICE_ID } : std::wstring{ remoteAddress }));
-
-    m_peripheralEndpointInstanceId = connection->EndpointDeviceInstanceId();
-    m_peripheralClientDeviceId = clientDeviceId;
-
-    return S_OK;
+    CATCH_RETURN()
 }
 
 
@@ -1468,145 +1498,166 @@ _Use_decl_annotations_
 HRESULT
 CMidi2BluetoothMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToken)
 {
-    TraceLoggingWrite(
-        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
-
-    // COM and WinRT calls from this thread fail CO_E_NOTINITIALIZED without this
-    winrt::init_apartment();
-
-    // Without this the thread parks in wait() and never sees the stop request, so the jthread
-    // destructor's join would hang forever.
-    std::stop_callback wakeOnStop{ stopToken, [this]() { m_backgroundEndpointCreatorThreadWakeup.SetEvent(); } };
-
-    while (!stopToken.stop_requested())
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
+    try
     {
-        std::deque<winrt::hstring> connectRequests;
-        std::deque<winrt::hstring> disconnectRequests;
-        std::deque<std::wstring> negotiations;
-        std::deque<winrt::hstring> nameResolutions;
-        bool peripheralClientChanged{ false };
+        TraceLoggingWrite(
+            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
 
-        bool haveWork{ false };
-        bool haveWantedDevices{ false };
+        // COM and WinRT calls from this thread fail CO_E_NOTINITIALIZED without this
+        winrt::init_apartment();
 
+        // Without this the thread parks in wait() and never sees the stop request, so the jthread
+        // destructor's join would hang forever.
+        std::stop_callback wakeOnStop{ stopToken, [this]() { m_backgroundEndpointCreatorThreadWakeup.SetEvent(); } };
+
+        while (!stopToken.stop_requested())
         {
-            auto lock = std::scoped_lock{ m_pendingRequestsLock };
-
-            connectRequests.swap(m_pendingConnectRequests);
-            disconnectRequests.swap(m_pendingDisconnectRequests);
-            negotiations.swap(m_pendingNegotiations);
-            nameResolutions.swap(m_pendingNameResolutions);
-
-            peripheralClientChanged = m_peripheralClientChangePending;
-            m_peripheralClientChangePending = false;
-
-            haveWork =
-                !connectRequests.empty() ||
-                !disconnectRequests.empty() ||
-                !negotiations.empty() ||
-                !nameResolutions.empty() ||
-                peripheralClientChanged;
-
-            haveWantedDevices = !m_desiredConnections.empty();
-
-            // Reset under the same lock the producers queue under. Resetting outside it can
-            // clear a signal raised for work queued after the swap, and the worker then sleeps
-            // with a request sitting in the queue.
-            if (!haveWork)
+            try
             {
-                m_backgroundEndpointCreatorThreadWakeup.ResetEvent();
-            }
-        }
+                std::deque<winrt::hstring> connectRequests;
+                std::deque<winrt::hstring> disconnectRequests;
+                std::deque<std::wstring> negotiations;
+                std::deque<winrt::hstring> nameResolutions;
+                bool peripheralClientChanged{ false };
 
-        if (!haveWork)
-        {
-            if (haveWantedDevices)
-            {
-                // Timed rather than infinite. Advertisements are the usual trigger for a connect,
-                // but a bonded device which is not advertising produces none, so a device that
-                // failed once would otherwise never be tried again.
-                m_backgroundEndpointCreatorThreadWakeup.wait(MIDI_BLE_CONNECT_SWEEP_INTERVAL_MS);
+                bool haveWork{ false };
+                bool haveWantedDevices{ false };
 
-                if (!stopToken.stop_requested())
                 {
-                    EnforceOfflineRetention();
-                    QueueWantedConnections();
+                    auto lock = std::scoped_lock{ m_pendingRequestsLock };
+
+                    connectRequests.swap(m_pendingConnectRequests);
+                    disconnectRequests.swap(m_pendingDisconnectRequests);
+                    negotiations.swap(m_pendingNegotiations);
+                    nameResolutions.swap(m_pendingNameResolutions);
+
+                    peripheralClientChanged = m_peripheralClientChangePending;
+                    m_peripheralClientChangePending = false;
+
+                    haveWork =
+                        !connectRequests.empty() ||
+                        !disconnectRequests.empty() ||
+                        !negotiations.empty() ||
+                        !nameResolutions.empty() ||
+                        peripheralClientChanged;
+
+                    haveWantedDevices = !m_desiredConnections.empty();
+
+                    // Reset under the same lock the producers queue under. Resetting outside it can
+                    // clear a signal raised for work queued after the swap, and the worker then sleeps
+                    // with a request sitting in the queue.
+                    if (!haveWork)
+                    {
+                        m_backgroundEndpointCreatorThreadWakeup.ResetEvent();
+                    }
+                }
+
+                if (!haveWork)
+                {
+                    if (haveWantedDevices)
+                    {
+                        // Timed rather than infinite. Advertisements are the usual trigger for a connect,
+                        // but a bonded device which is not advertising produces none, so a device that
+                        // failed once would otherwise never be tried again.
+                        m_backgroundEndpointCreatorThreadWakeup.wait(MIDI_BLE_CONNECT_SWEEP_INTERVAL_MS);
+
+                        if (!stopToken.stop_requested())
+                        {
+                            EnforceOfflineRetention();
+                            QueueWantedConnections();
+                        }
+                    }
+                    else
+                    {
+                        // Nothing is remembered, so a timer would have nothing to retry. A machine with no
+                        // Bluetooth MIDI devices configured should not wake this thread at all.
+                        m_backgroundEndpointCreatorThreadWakeup.wait();
+                    }
+
+                    continue;
+                }
+
+                // disconnects run first so a reconnect request in the same pass gets a clean slate
+                for (auto const& deviceId : disconnectRequests)
+                {
+                    if (stopToken.stop_requested())
+                    {
+                        break;
+                    }
+
+                    LOG_IF_FAILED(DisconnectDeviceInternal(deviceId));
+                }
+
+                if (peripheralClientChanged && !stopToken.stop_requested())
+                {
+                    LOG_IF_FAILED(ProcessPeripheralClientChange());
+                }
+
+                for (auto const& deviceId : connectRequests)
+                {
+                    if (stopToken.stop_requested())
+                    {
+                        break;
+                    }
+
+                    LOG_IF_FAILED(ConnectDeviceInternal(deviceId));
+                }
+
+                for (auto const& endpointDeviceInterfaceId : negotiations)
+                {
+                    if (stopToken.stop_requested())
+                    {
+                        break;
+                    }
+
+                    LOG_IF_FAILED(InitiateDiscoveryAndNegotiation(endpointDeviceInterfaceId));
+                }
+
+                // last, because it is cosmetic and must never delay a connection
+                for (auto const& deviceId : nameResolutions)
+                {
+                    if (stopToken.stop_requested())
+                    {
+                        break;
+                    }
+
+                    LOG_IF_FAILED(ResolveDeviceNameInternal(deviceId));
                 }
             }
-            else
+            // One bad iteration must not end the worker. An exception leaving this thread
+            // would terminate the service, and returning would stop all further work.
+            catch (...)
             {
-                // Nothing is remembered, so a timer would have nothing to retry. A machine with no
-                // Bluetooth MIDI devices configured should not wake this thread at all.
-                m_backgroundEndpointCreatorThreadWakeup.wait();
+                TraceLoggingWrite(
+                    MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingWideString(L"Exception in worker iteration. Continuing.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                );
             }
-
-            continue;
         }
 
-        // disconnects run first so a reconnect request in the same pass gets a clean slate
-        for (auto const& deviceId : disconnectRequests)
-        {
-            if (stopToken.stop_requested())
-            {
-                break;
-            }
+        TraceLoggingWrite(
+            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
 
-            LOG_IF_FAILED(DisconnectDeviceInternal(deviceId));
-        }
-
-        if (peripheralClientChanged && !stopToken.stop_requested())
-        {
-            LOG_IF_FAILED(ProcessPeripheralClientChange());
-        }
-
-        for (auto const& deviceId : connectRequests)
-        {
-            if (stopToken.stop_requested())
-            {
-                break;
-            }
-
-            LOG_IF_FAILED(ConnectDeviceInternal(deviceId));
-        }
-
-        for (auto const& endpointDeviceInterfaceId : negotiations)
-        {
-            if (stopToken.stop_requested())
-            {
-                break;
-            }
-
-            LOG_IF_FAILED(InitiateDiscoveryAndNegotiation(endpointDeviceInterfaceId));
-        }
-
-        // last, because it is cosmetic and must never delay a connection
-        for (auto const& deviceId : nameResolutions)
-        {
-            if (stopToken.stop_requested())
-            {
-                break;
-            }
-
-            LOG_IF_FAILED(ResolveDeviceNameInternal(deviceId));
-        }
+        return S_OK;
     }
-
-    TraceLoggingWrite(
-        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
-
-    return S_OK;
+    CATCH_RETURN()
 }
 
 
@@ -1614,14 +1665,20 @@ _Use_decl_annotations_
 HRESULT
 CMidi2BluetoothMidiEndpointManager::ConnectDeviceInternal(winrt::hstring const& deviceId)
 {
-    winrt::hstring failureDetail{};
-    uint32_t errorCode{ BLUETOOTH_MIDI_ERROR_CODE_UNKNOWN_ERROR };
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
+    try
+    {
+        winrt::hstring failureDetail{};
+        uint32_t errorCode{ BLUETOOTH_MIDI_ERROR_CODE_UNKNOWN_ERROR };
 
-    auto hr = ConnectDeviceCore(deviceId, failureDetail, errorCode);
+        auto hr = ConnectDeviceCore(deviceId, failureDetail, errorCode);
 
-    RecordConnectResult(deviceId, hr, failureDetail, errorCode);
+        RecordConnectResult(deviceId, hr, failureDetail, errorCode);
 
-    return hr;
+        return hr;
+    }
+    CATCH_RETURN()
 }
 
 
@@ -1958,106 +2015,112 @@ _Use_decl_annotations_
 HRESULT
 CMidi2BluetoothMidiEndpointManager::ResolveDeviceNameInternal(winrt::hstring const& deviceId)
 {
-    MidiBleProtocol::DiscoveredDevice discoveredDevice{};
-
-    RETURN_HR_IF(S_FALSE, !TryGetDiscoveredDevice(deviceId, discoveredDevice));
-    RETURN_HR_IF(S_FALSE, !discoveredDevice.Name.empty());
-    RETURN_HR_IF(S_FALSE, discoveredDevice.BluetoothAddress == 0);
-
-    winrt::hstring resolvedName{};
-    bool isPaired{ false };
-
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
     try
     {
-        // Works for unpaired devices too: this reads what the Bluetooth stack already knows
-        // about the device rather than connecting to it.
-        auto bleDevice = MidiBleUtilities::AwaitWithTimeout(
-            bt::BluetoothLEDevice::FromBluetoothAddressAsync(discoveredDevice.BluetoothAddress),
-            MidiBleUtilities::BleOperationTimeoutMilliseconds,
-            bt::BluetoothLEDevice{ nullptr });
+        MidiBleProtocol::DiscoveredDevice discoveredDevice{};
 
-        if (bleDevice == nullptr)
+        RETURN_HR_IF(S_FALSE, !TryGetDiscoveredDevice(deviceId, discoveredDevice));
+        RETURN_HR_IF(S_FALSE, !discoveredDevice.Name.empty());
+        RETURN_HR_IF(S_FALSE, discoveredDevice.BluetoothAddress == 0);
+
+        winrt::hstring resolvedName{};
+        bool isPaired{ false };
+
+        try
         {
-            return S_FALSE;
-        }
+            // Works for unpaired devices too: this reads what the Bluetooth stack already knows
+            // about the device rather than connecting to it.
+            auto bleDevice = MidiBleUtilities::AwaitWithTimeout(
+                bt::BluetoothLEDevice::FromBluetoothAddressAsync(discoveredDevice.BluetoothAddress),
+                MidiBleUtilities::BleOperationTimeoutMilliseconds,
+                bt::BluetoothLEDevice{ nullptr });
 
-        resolvedName = bleDevice.Name();
-
-        if (auto deviceInformation = bleDevice.DeviceInformation())
-        {
-            if (auto pairing = deviceInformation.Pairing())
+            if (bleDevice == nullptr)
             {
-                isPaired = pairing.IsPaired();
+                return S_FALSE;
             }
-        }
-    }
-    CATCH_RETURN();
 
-    if (resolvedName.empty())
-    {
-        bool gaveUp{ false };
+            resolvedName = bleDevice.Name();
 
-        {
-            auto lock = std::scoped_lock{ m_pendingRequestsLock };
-
-            if (auto attempts = m_nameResolutionAttempts.find(deviceId); attempts != m_nameResolutionAttempts.end())
+            if (auto deviceInformation = bleDevice.DeviceInformation())
             {
-                if (attempts->second.Count >= MIDI_BLE_NAME_RESOLUTION_MAX_ATTEMPTS && !attempts->second.GaveUp)
+                if (auto pairing = deviceInformation.Pairing())
                 {
-                    attempts->second.GaveUp = true;
-                    gaveUp = true;
+                    isPaired = pairing.IsPaired();
                 }
             }
         }
+        CATCH_RETURN();
 
-        if (gaveUp)
+        if (resolvedName.empty())
         {
-            TraceLoggingWrite(
-                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_WARNING,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Could not resolve a name for this device. It will be listed by address.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(deviceId.c_str(), "device id")
-            );
+            bool gaveUp{ false };
 
-            // it is listable now, so a connection which was waiting on the name can proceed
-            QueueConnectIfWanted(deviceId);
-        }
-
-        return S_FALSE;
-    }
-
-    {
-        auto lock = std::scoped_lock{ m_discoveredDevicesLock };
-
-        if (auto entry = m_discoveredDevices.find(deviceId); entry != m_discoveredDevices.end())
-        {
-            if (entry->second.Name.empty())
             {
-                entry->second.Name = resolvedName;
+                auto lock = std::scoped_lock{ m_pendingRequestsLock };
+
+                if (auto attempts = m_nameResolutionAttempts.find(deviceId); attempts != m_nameResolutionAttempts.end())
+                {
+                    if (attempts->second.Count >= MIDI_BLE_NAME_RESOLUTION_MAX_ATTEMPTS && !attempts->second.GaveUp)
+                    {
+                        attempts->second.GaveUp = true;
+                        gaveUp = true;
+                    }
+                }
             }
 
-            entry->second.IsPaired = entry->second.IsPaired || isPaired;
+            if (gaveUp)
+            {
+                TraceLoggingWrite(
+                    MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Could not resolve a name for this device. It will be listed by address.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(deviceId.c_str(), "device id")
+                );
+
+                // it is listable now, so a connection which was waiting on the name can proceed
+                QueueConnectIfWanted(deviceId);
+            }
+
+            return S_FALSE;
         }
+
+        {
+            auto lock = std::scoped_lock{ m_discoveredDevicesLock };
+
+            if (auto entry = m_discoveredDevices.find(deviceId); entry != m_discoveredDevices.end())
+            {
+                if (entry->second.Name.empty())
+                {
+                    entry->second.Name = resolvedName;
+                }
+
+                entry->second.IsPaired = entry->second.IsPaired || isPaired;
+            }
+        }
+
+        TraceLoggingWrite(
+            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Resolved a BLE MIDI device name which was not advertised", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(deviceId.c_str(), "device id"),
+            TraceLoggingWideString(resolvedName.c_str(), "name")
+        );
+
+        // a connection which was waiting on the name can proceed now that the endpoint can be named
+        QueueConnectIfWanted(deviceId);
+
+        return S_OK;
     }
-
-    TraceLoggingWrite(
-        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Resolved a BLE MIDI device name which was not advertised", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(deviceId.c_str(), "device id"),
-        TraceLoggingWideString(resolvedName.c_str(), "name")
-    );
-
-    // a connection which was waiting on the name can proceed now that the endpoint can be named
-    QueueConnectIfWanted(deviceId);
-
-    return S_OK;
+    CATCH_RETURN()
 }
 
 
@@ -2157,170 +2220,176 @@ CMidi2BluetoothMidiEndpointManager::CreateEndpoint(
     std::wstring const& uniqueIdentifier
 )
 {
-    RETURN_HR_IF_NULL(E_INVALIDARG, connection);
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_midiDeviceManager);
-    RETURN_HR_IF(E_UNEXPECTED, m_parentDeviceId.empty());
-    RETURN_HR_IF(E_INVALIDARG, endpointName.empty());
-    RETURN_HR_IF(E_INVALIDARG, instanceId.empty());
-
-    bool const isUmpNative = connection->Protocol() == MidiBleProtocol::Protocol::Midi2Ump;
-
-    std::wstring transportCode{ TRANSPORT_CODE };
-
-    std::vector<DEVPROPERTY> interfaceDevProperties;
-
-    // The user's customization is looked up before the device node is created, so an endpoint is
-    // never published under the wrong name and then renamed a moment later.
-    WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria matchCriteria{};
-    matchCriteria.DeviceInstanceId = winrt::hstring{ instanceId };
-    matchCriteria.TransportSuppliedEndpointName = winrt::hstring{ endpointName };
-
-    std::wstring customName{};
-    std::wstring customDescription{};
-    std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties{ nullptr };
-
-    if (auto configurationManager = TransportState::Current().GetConfigurationManager())
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
+    try
     {
-        customProperties = configurationManager->CustomPropertiesCache()->GetProperties(matchCriteria);
+        RETURN_HR_IF_NULL(E_INVALIDARG, connection);
+        RETURN_HR_IF_NULL(E_UNEXPECTED, m_midiDeviceManager);
+        RETURN_HR_IF(E_UNEXPECTED, m_parentDeviceId.empty());
+        RETURN_HR_IF(E_INVALIDARG, endpointName.empty());
+        RETURN_HR_IF(E_INVALIDARG, instanceId.empty());
 
-        if (customProperties != nullptr)
+        bool const isUmpNative = connection->Protocol() == MidiBleProtocol::Protocol::Midi2Ump;
+
+        std::wstring transportCode{ TRANSPORT_CODE };
+
+        std::vector<DEVPROPERTY> interfaceDevProperties;
+
+        // The user's customization is looked up before the device node is created, so an endpoint is
+        // never published under the wrong name and then renamed a moment later.
+        WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria matchCriteria{};
+        matchCriteria.DeviceInstanceId = winrt::hstring{ instanceId };
+        matchCriteria.TransportSuppliedEndpointName = winrt::hstring{ endpointName };
+
+        std::wstring customName{};
+        std::wstring customDescription{};
+        std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties{ nullptr };
+
+        if (auto configurationManager = TransportState::Current().GetConfigurationManager())
         {
-            if (!customProperties->Name.empty())
-            {
-                customName = customProperties->Name;
-            }
+            customProperties = configurationManager->CustomPropertiesCache()->GetProperties(matchCriteria);
 
-            if (!customProperties->Description.empty())
+            if (customProperties != nullptr)
             {
-                customDescription = customProperties->Description;
-            }
+                if (!customProperties->Name.empty())
+                {
+                    customName = customProperties->Name;
+                }
 
-            // image, MIDI 1.0 port naming, and the device capability hints
-            customProperties->WriteNonCommonProperties(interfaceDevProperties);
+                if (!customProperties->Description.empty())
+                {
+                    customDescription = customProperties->Description;
+                }
+
+                // image, MIDI 1.0 port naming, and the device capability hints
+                customProperties->WriteNonCommonProperties(interfaceDevProperties);
+            }
         }
-    }
 
-    // The user's name is what every app shows, including those which know nothing about MIDI
-    // properties, so it becomes the device node name and not only a MIDI property.
-    std::wstring friendlyName = customName.empty() ? endpointName : customName;
+        // The user's name is what every app shows, including those which know nothing about MIDI
+        // properties, so it becomes the device node name and not only a MIDI property.
+        std::wstring friendlyName = customName.empty() ? endpointName : customName;
 
-    DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
+        DEVPROP_BOOLEAN devPropTrue = DEVPROP_TRUE;
 
-    // These two own the memory the group terminal block and name table properties point at, so
-    // they have to outlive the ActivateEndpoint call below.
-    std::vector<std::byte> groupTerminalBlockData{ };
-    WindowsMidiServicesNamingLib::MidiEndpointNameTable nameTable{ };
+        // These two own the memory the group terminal block and name table properties point at, so
+        // they have to outlive the ActivateEndpoint call below.
+        std::vector<std::byte> groupTerminalBlockData{ };
+        WindowsMidiServicesNamingLib::MidiEndpointNameTable nameTable{ };
 
-    if (!isUmpNative)
-    {
-        // A BLE MIDI 1.0 device presents as a UMP endpoint but has no endpoint discovery to run,
-        // so the service is told discovery is done and can create the MIDI 1.0 ports immediately
-        // instead of waiting for a negotiation that will never happen.
-        interfaceDevProperties.push_back({ { PKEY_MIDI_EndpointDiscoveryProcessComplete, DEVPROP_STORE_SYSTEM, nullptr },
-            DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), (PVOID)&devPropTrue });
+        if (!isUmpNative)
+        {
+            // A BLE MIDI 1.0 device presents as a UMP endpoint but has no endpoint discovery to run,
+            // so the service is told discovery is done and can create the MIDI 1.0 ports immediately
+            // instead of waiting for a negotiation that will never happen.
+            interfaceDevProperties.push_back({ { PKEY_MIDI_EndpointDiscoveryProcessComplete, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_BOOLEAN, static_cast<ULONG>(sizeof(devPropTrue)), (PVOID)&devPropTrue });
 
-        LOG_IF_FAILED(MidiBleUtilities::BuildMidi1PortProperties(
-            friendlyName,
-            customProperties,
-            groupTerminalBlockData,
-            nameTable,
-            interfaceDevProperties));
-    }
+            LOG_IF_FAILED(MidiBleUtilities::BuildMidi1PortProperties(
+                friendlyName,
+                customProperties,
+                groupTerminalBlockData,
+                nameTable,
+                interfaceDevProperties));
+        }
 
-    MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
+        MIDIENDPOINTCOMMONPROPERTIES commonProperties{};
 
-    commonProperties.TransportId = TRANSPORT_LAYER_GUID;
-    commonProperties.EndpointDeviceType = MidiEndpointDeviceType::MidiEndpointDeviceType_Normal;
-    commonProperties.FriendlyName = friendlyName.c_str();
-    commonProperties.TransportCode = transportCode.c_str();
-    commonProperties.EndpointName = endpointName.c_str();
-    commonProperties.EndpointDescription = endpointDescription.c_str();
-    commonProperties.CustomEndpointName = customName.empty() ? nullptr : customName.c_str();
-    commonProperties.CustomEndpointDescription = customDescription.empty() ? nullptr : customDescription.c_str();
-    commonProperties.UniqueIdentifier = uniqueIdentifier.c_str();
+        commonProperties.TransportId = TRANSPORT_LAYER_GUID;
+        commonProperties.EndpointDeviceType = MidiEndpointDeviceType::MidiEndpointDeviceType_Normal;
+        commonProperties.FriendlyName = friendlyName.c_str();
+        commonProperties.TransportCode = transportCode.c_str();
+        commonProperties.EndpointName = endpointName.c_str();
+        commonProperties.EndpointDescription = endpointDescription.c_str();
+        commonProperties.CustomEndpointName = customName.empty() ? nullptr : customName.c_str();
+        commonProperties.CustomEndpointDescription = customDescription.empty() ? nullptr : customDescription.c_str();
+        commonProperties.UniqueIdentifier = uniqueIdentifier.c_str();
 
-    // Either way the service sees UMP. The native format is what tells apps, and the service's
-    // own transform selection, that the wire format is really a MIDI 1.0 byte stream.
-    commonProperties.SupportedDataFormats = MidiDataFormats::MidiDataFormats_UMP;
-    commonProperties.NativeDataFormat = isUmpNative ? MidiDataFormats::MidiDataFormats_UMP : MidiDataFormats::MidiDataFormats_ByteStream;
+        // Either way the service sees UMP. The native format is what tells apps, and the service's
+        // own transform selection, that the wire format is really a MIDI 1.0 byte stream.
+        commonProperties.SupportedDataFormats = MidiDataFormats::MidiDataFormats_UMP;
+        commonProperties.NativeDataFormat = isUmpNative ? MidiDataFormats::MidiDataFormats_UMP : MidiDataFormats::MidiDataFormats_ByteStream;
 
-    UINT32 capabilities{ 0 };
-    capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
-    capabilities |= MidiEndpointCapabilities_SupportsMultiClient;
-    capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
+        UINT32 capabilities{ 0 };
+        capabilities |= MidiEndpointCapabilities_SupportsMidi1Protocol;
+        capabilities |= MidiEndpointCapabilities_SupportsMultiClient;
+        capabilities |= MidiEndpointCapabilities_GenerateIncomingTimestamps;
 
-    if (isUmpNative)
-    {
-        capabilities |= MidiEndpointCapabilities_SupportsMidi2Protocol;
-    }
+        if (isUmpNative)
+        {
+            capabilities |= MidiEndpointCapabilities_SupportsMidi2Protocol;
+        }
 
-    commonProperties.Capabilities = (MidiEndpointCapabilities)capabilities;
+        commonProperties.Capabilities = (MidiEndpointCapabilities)capabilities;
 
-    SW_DEVICE_CREATE_INFO createInfo{};
-    createInfo.cbSize = sizeof(createInfo);
-    createInfo.pszInstanceId = instanceId.c_str();
-    createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
-    createInfo.pszDeviceDescription = friendlyName.c_str();
+        SW_DEVICE_CREATE_INFO createInfo{};
+        createInfo.cbSize = sizeof(createInfo);
+        createInfo.pszInstanceId = instanceId.c_str();
+        createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
+        createInfo.pszDeviceDescription = friendlyName.c_str();
 
-    wil::unique_cotaskmem_string newDeviceInterfaceId;
+        wil::unique_cotaskmem_string newDeviceInterfaceId;
 
-    auto activateHR = m_midiDeviceManager->ActivateEndpoint(
-        m_parentDeviceId.c_str(),
-        false,                                          // when false, WinMM MIDI 1.0 ports are created as well
-        MidiFlow::MidiFlowBidirectional,
-        &commonProperties,
-        (ULONG)interfaceDevProperties.size(),
-        (ULONG)0,
-        interfaceDevProperties.size() > 0 ? interfaceDevProperties.data() : nullptr,
-        nullptr,
-        &createInfo,
-        &newDeviceInterfaceId);
+        auto activateHR = m_midiDeviceManager->ActivateEndpoint(
+            m_parentDeviceId.c_str(),
+            false,                                          // when false, WinMM MIDI 1.0 ports are created as well
+            MidiFlow::MidiFlowBidirectional,
+            &commonProperties,
+            (ULONG)interfaceDevProperties.size(),
+            (ULONG)0,
+            interfaceDevProperties.size() > 0 ? interfaceDevProperties.data() : nullptr,
+            nullptr,
+            &createInfo,
+            &newDeviceInterfaceId);
 
-    RETURN_IF_FAILED(activateHR);
+        RETURN_IF_FAILED(activateHR);
 
-    // S_FALSE means the instance id is already active and no interface id was returned, which
-    // RETURN_IF_FAILED does not catch
-    if (activateHR == S_FALSE || newDeviceInterfaceId.get() == nullptr)
-    {
+        // S_FALSE means the instance id is already active and no interface id was returned, which
+        // RETURN_IF_FAILED does not catch
+        if (activateHR == S_FALSE || newDeviceInterfaceId.get() == nullptr)
+        {
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"This device already has an active endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(instanceId.c_str(), "instance id")
+            );
+
+            RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_DEVICE_ALREADY_ATTACHED));
+        }
+
+        connection->SetEndpointDeviceInstanceId(internal::NormalizeDeviceInstanceIdWStringCopy(instanceId));
+        connection->SetEndpointDeviceInterfaceId(internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId.get()));
+
+        {
+            auto lock = std::scoped_lock{ m_createdEndpointsLock };
+
+            m_createdEndpoints.push_back(CreatedEndpointRecord{
+                connection->DeviceId(),
+                winrt::hstring{ connection->EndpointDeviceInterfaceId() },
+                winrt::hstring{ connection->EndpointDeviceInstanceId() },
+                winrt::hstring{ endpointName } });
+        }
+
         TraceLoggingWrite(
             MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_WARNING,
+            MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"This device already has an active endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(instanceId.c_str(), "instance id")
+            TraceLoggingWideString(L"BLE MIDI endpoint activated", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(instanceId.c_str(), "instance id"),
+            TraceLoggingWideString(friendlyName.c_str(), "friendly name"),
+            TraceLoggingWideString(newDeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
         );
 
-        RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_DEVICE_ALREADY_ATTACHED));
+        return S_OK;
     }
-
-    connection->SetEndpointDeviceInstanceId(internal::NormalizeDeviceInstanceIdWStringCopy(instanceId));
-    connection->SetEndpointDeviceInterfaceId(internal::NormalizeEndpointInterfaceIdWStringCopy(newDeviceInterfaceId.get()));
-
-    {
-        auto lock = std::scoped_lock{ m_createdEndpointsLock };
-
-        m_createdEndpoints.push_back(CreatedEndpointRecord{
-            connection->DeviceId(),
-            winrt::hstring{ connection->EndpointDeviceInterfaceId() },
-            winrt::hstring{ connection->EndpointDeviceInstanceId() },
-            winrt::hstring{ endpointName } });
-    }
-
-    TraceLoggingWrite(
-        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"BLE MIDI endpoint activated", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(instanceId.c_str(), "instance id"),
-        TraceLoggingWideString(friendlyName.c_str(), "friendly name"),
-        TraceLoggingWideString(newDeviceInterfaceId.get(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-    );
-
-    return S_OK;
+    CATCH_RETURN()
 }
 
 

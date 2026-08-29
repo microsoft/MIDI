@@ -17,6 +17,8 @@ namespace
     // JsonObject::GetNamedObject throws when the name is present but holds something other
     // than an object, and every value here comes from a caller who can put any type anywhere.
     // The two-argument overload only covers the name being absent.
+    void TraceWrongJsonType(_In_ winrt::hstring const& name, _In_ wchar_t const* const expected) noexcept;
+
     json::JsonObject SafeGetNamedObject(_In_ json::JsonObject const& parent, _In_ winrt::hstring const& name) noexcept
     {
         try
@@ -30,6 +32,7 @@ namespace
 
             if (value == nullptr || value.ValueType() != json::JsonValueType::Object)
             {
+                TraceWrongJsonType(name, L"object");
                 return nullptr;
             }
 
@@ -40,6 +43,22 @@ namespace
         {
             return nullptr;
         }
+    }
+
+    // A key that is present but holds the wrong type is a mistake in the configuration, not a
+    // normal absence, and the fallback is otherwise invisible: the customer sees a host that is
+    // silently not enabled, with nothing in the log to explain it.
+    void TraceWrongJsonType(_In_ winrt::hstring const& name, _In_ wchar_t const* const expected) noexcept
+    {
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingWideString(L"Configuration value is the wrong type. The default was used instead.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(name.c_str(), "key"),
+            TraceLoggingWideString(expected, "expected type")
+        );
     }
 
     // Same hazard as SafeGetNamedObject, for the other value types. The two-argument
@@ -62,6 +81,7 @@ namespace
 
             if (value == nullptr || value.ValueType() != json::JsonValueType::String)
             {
+                TraceWrongJsonType(name, L"string");
                 return defaultValue;
             }
 
@@ -89,6 +109,7 @@ namespace
 
             if (value == nullptr || value.ValueType() != json::JsonValueType::Boolean)
             {
+                TraceWrongJsonType(name, L"boolean");
                 return defaultValue;
             }
 
@@ -113,6 +134,7 @@ namespace
 
             if (value == nullptr || value.ValueType() != json::JsonValueType::Array)
             {
+                TraceWrongJsonType(name, L"array");
                 return nullptr;
             }
 

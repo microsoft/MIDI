@@ -67,18 +67,24 @@ _Use_decl_annotations_
 HRESULT
 TransportState::StartPeripheral(MidiBleProtocol::Protocol const protocol)
 {
-    auto lock = std::scoped_lock{ m_peripheralLock };
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
+    try
+    {
+        auto lock = std::scoped_lock{ m_peripheralLock };
 
-    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED), m_peripheral != nullptr && m_peripheral->IsRunning());
+        RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED), m_peripheral != nullptr && m_peripheral->IsRunning());
 
-    auto peripheral = std::make_shared<MidiBlePeripheral>();
-    RETURN_IF_NULL_ALLOC(peripheral);
+        auto peripheral = std::make_shared<MidiBlePeripheral>();
+        RETURN_IF_NULL_ALLOC(peripheral);
 
-    RETURN_IF_FAILED(peripheral->Start(protocol));
+        RETURN_IF_FAILED(peripheral->Start(protocol));
 
-    m_peripheral = peripheral;
+        m_peripheral = peripheral;
 
-    return S_OK;
+        return S_OK;
+    }
+    CATCH_RETURN()
 }
 
 

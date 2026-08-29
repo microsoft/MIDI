@@ -97,62 +97,68 @@ MidiBlePeripheral::AttachConnection(
     std::shared_ptr<MidiBleConnection>& connection
 )
 {
-    connection = nullptr;
-
-    RETURN_HR_IF(E_UNEXPECTED, !m_running.load());
-    RETURN_HR_IF(E_INVALIDARG, remoteDeviceId.empty());
-
-    auto newConnection = std::make_shared<MidiBleConnection>();
-    RETURN_IF_NULL_ALLOC(newConnection);
-
-    MidiBlePeripheralLink link{};
-
-    link.WritePacket = [weakThis = weak_from_this()](std::vector<uint8_t> const& packet) -> HRESULT
-        {
-            if (auto self = weakThis.lock())
-            {
-                return self->NotifyPacket(packet);
-            }
-
-            return HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED);
-        };
-
-    link.MaxAttPayloadByteCount = [weakThis = weak_from_this()]() -> size_t
-        {
-            if (auto self = weakThis.lock())
-            {
-                return self->MaxNotificationByteCount();
-            }
-
-            return MinimumNotificationByteCount;
-        };
-
-    link.IsConnected = [weakThis = weak_from_this()]() -> bool
-        {
-            if (auto self = weakThis.lock())
-            {
-                return self->IsClientSubscribed();
-            }
-
-            return false;
-        };
-
-    RETURN_IF_FAILED(newConnection->InitializeAsPeripheral(
-        MIDI_BLE_PERIPHERAL_DEVICE_ID,
-        remoteDeviceName,
-        m_protocol,
-        link));
-
-    RETURN_IF_FAILED(newConnection->Start());
-
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
+    try
     {
-        auto lock = std::scoped_lock{ m_connectionLock };
-        m_connection = newConnection;
+        connection = nullptr;
+
+        RETURN_HR_IF(E_UNEXPECTED, !m_running.load());
+        RETURN_HR_IF(E_INVALIDARG, remoteDeviceId.empty());
+
+        auto newConnection = std::make_shared<MidiBleConnection>();
+        RETURN_IF_NULL_ALLOC(newConnection);
+
+        MidiBlePeripheralLink link{};
+
+        link.WritePacket = [weakThis = weak_from_this()](std::vector<uint8_t> const& packet) -> HRESULT
+            {
+                if (auto self = weakThis.lock())
+                {
+                    return self->NotifyPacket(packet);
+                }
+
+                return HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED);
+            };
+
+        link.MaxAttPayloadByteCount = [weakThis = weak_from_this()]() -> size_t
+            {
+                if (auto self = weakThis.lock())
+                {
+                    return self->MaxNotificationByteCount();
+                }
+
+                return MinimumNotificationByteCount;
+            };
+
+        link.IsConnected = [weakThis = weak_from_this()]() -> bool
+            {
+                if (auto self = weakThis.lock())
+                {
+                    return self->IsClientSubscribed();
+                }
+
+                return false;
+            };
+
+        RETURN_IF_FAILED(newConnection->InitializeAsPeripheral(
+            MIDI_BLE_PERIPHERAL_DEVICE_ID,
+            remoteDeviceName,
+            m_protocol,
+            link));
+
+        RETURN_IF_FAILED(newConnection->Start());
+
+        {
+            auto lock = std::scoped_lock{ m_connectionLock };
+            m_connection = newConnection;
+        }
+
+        connection = newConnection;
+
+        return S_OK;
     }
-
-    connection = newConnection;
-
-    return S_OK;
+    CATCH_RETURN()
 }
 
 
@@ -240,119 +246,125 @@ _Use_decl_annotations_
 HRESULT
 MidiBlePeripheral::CreateServiceProvider(MidiBleProtocol::Protocol const protocol)
 {
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
     try
     {
-        auto providerResult = MidiBleUtilities::AwaitWithTimeout(
-            gatt::GattServiceProvider::CreateAsync(winrt::guid{ MidiBleProtocol::MidiServiceUuid }),
-            MidiBleUtilities::BleOperationTimeoutMilliseconds,
-            gatt::GattServiceProviderResult{ nullptr });
-
-        RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_SERVICE_NOT_ACTIVE), providerResult);
-
-        if (providerResult.Error() != bt::BluetoothError::Success)
+        try
         {
-            TraceLoggingWrite(
-                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Unable to create the BLE MIDI GATT service", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingUInt32(static_cast<uint32_t>(providerResult.Error()), "bluetooth error")
-            );
+            auto providerResult = MidiBleUtilities::AwaitWithTimeout(
+                gatt::GattServiceProvider::CreateAsync(winrt::guid{ MidiBleProtocol::MidiServiceUuid }),
+                MidiBleUtilities::BleOperationTimeoutMilliseconds,
+                gatt::GattServiceProviderResult{ nullptr });
 
-            RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_SERVICE_NOT_ACTIVE));
+            RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_SERVICE_NOT_ACTIVE), providerResult);
+
+            if (providerResult.Error() != bt::BluetoothError::Success)
+            {
+                TraceLoggingWrite(
+                    MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Unable to create the BLE MIDI GATT service", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingUInt32(static_cast<uint32_t>(providerResult.Error()), "bluetooth error")
+                );
+
+                RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_SERVICE_NOT_ACTIVE));
+            }
+
+            m_serviceProvider = providerResult.ServiceProvider();
+            RETURN_HR_IF_NULL(E_UNEXPECTED, m_serviceProvider);
+
+            gatt::GattLocalCharacteristicParameters parameters{};
+
+            // Notify carries data to the Central, WriteWithoutResponse carries data from it, and Read
+            // exists only for the connection handshake, which answers with an empty payload.
+            parameters.CharacteristicProperties(
+                gatt::GattCharacteristicProperties::Notify |
+                gatt::GattCharacteristicProperties::WriteWithoutResponse |
+                gatt::GattCharacteristicProperties::Read);
+
+            parameters.ReadProtectionLevel(gatt::GattProtectionLevel::Plain);
+            parameters.WriteProtectionLevel(gatt::GattProtectionLevel::Plain);
+
+            // Only one MIDI characteristic is published. The specification allows a Peripheral to
+            // implement a single protocol, and WinRT provides no way to reject the subscription a
+            // Central makes to the characteristic it prefers, so offering both would let a Central
+            // subscribe to the one we are not serving.
+            auto const characteristicUuid = protocol == MidiBleProtocol::Protocol::Midi2Ump ?
+                winrt::guid{ MidiBleProtocol::Midi2UmpCharacteristicUuid } :
+                winrt::guid{ MidiBleProtocol::Midi1DataIoCharacteristicUuid };
+
+            auto characteristicResult = MidiBleUtilities::AwaitWithTimeout(
+                m_serviceProvider.Service().CreateCharacteristicAsync(characteristicUuid, parameters),
+                MidiBleUtilities::BleOperationTimeoutMilliseconds,
+                gatt::GattLocalCharacteristicResult{ nullptr });
+
+            RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_SERVICE_NOT_ACTIVE), characteristicResult);
+
+            if (characteristicResult.Error() != bt::BluetoothError::Success)
+            {
+                TraceLoggingWrite(
+                    MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Unable to create the BLE MIDI data I/O characteristic", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingUInt32(static_cast<uint32_t>(characteristicResult.Error()), "bluetooth error")
+                );
+
+                RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_SERVICE_NOT_ACTIVE));
+            }
+
+            m_characteristic = characteristicResult.Characteristic();
+            RETURN_HR_IF_NULL(E_UNEXPECTED, m_characteristic);
+
+            m_readRequestedToken = m_characteristic.ReadRequested(
+                [weakThis = weak_from_this()](gatt::GattLocalCharacteristic const& sender, gatt::GattReadRequestedEventArgs const& args)
+                {
+                    if (auto self = weakThis.lock())
+                    {
+                        self->OnReadRequested(sender, args);
+                    }
+                });
+
+            m_writeRequestedToken = m_characteristic.WriteRequested(
+                [weakThis = weak_from_this()](gatt::GattLocalCharacteristic const& sender, gatt::GattWriteRequestedEventArgs const& args)
+                {
+                    if (auto self = weakThis.lock())
+                    {
+                        self->OnWriteRequested(sender, args);
+                    }
+                });
+
+            m_subscribedClientsChangedToken = m_characteristic.SubscribedClientsChanged(
+                [weakThis = weak_from_this()](gatt::GattLocalCharacteristic const& sender, foundation::IInspectable const& args)
+                {
+                    if (auto self = weakThis.lock())
+                    {
+                        self->OnSubscribedClientsChanged(sender, args);
+                    }
+                });
+
+            m_advertisementStatusChangedToken = m_serviceProvider.AdvertisementStatusChanged(
+                [weakThis = weak_from_this()](gatt::GattServiceProvider const& sender, gatt::GattServiceProviderAdvertisementStatusChangedEventArgs const& args)
+                {
+                    if (auto self = weakThis.lock())
+                    {
+                        self->OnAdvertisementStatusChanged(sender, args);
+                    }
+                });
+
+            m_advertisedName = MidiBleUtilities::GetLocalBluetoothName();
         }
+        CATCH_RETURN();
 
-        m_serviceProvider = providerResult.ServiceProvider();
-        RETURN_HR_IF_NULL(E_UNEXPECTED, m_serviceProvider);
-
-        gatt::GattLocalCharacteristicParameters parameters{};
-
-        // Notify carries data to the Central, WriteWithoutResponse carries data from it, and Read
-        // exists only for the connection handshake, which answers with an empty payload.
-        parameters.CharacteristicProperties(
-            gatt::GattCharacteristicProperties::Notify |
-            gatt::GattCharacteristicProperties::WriteWithoutResponse |
-            gatt::GattCharacteristicProperties::Read);
-
-        parameters.ReadProtectionLevel(gatt::GattProtectionLevel::Plain);
-        parameters.WriteProtectionLevel(gatt::GattProtectionLevel::Plain);
-
-        // Only one MIDI characteristic is published. The specification allows a Peripheral to
-        // implement a single protocol, and WinRT provides no way to reject the subscription a
-        // Central makes to the characteristic it prefers, so offering both would let a Central
-        // subscribe to the one we are not serving.
-        auto const characteristicUuid = protocol == MidiBleProtocol::Protocol::Midi2Ump ?
-            winrt::guid{ MidiBleProtocol::Midi2UmpCharacteristicUuid } :
-            winrt::guid{ MidiBleProtocol::Midi1DataIoCharacteristicUuid };
-
-        auto characteristicResult = MidiBleUtilities::AwaitWithTimeout(
-            m_serviceProvider.Service().CreateCharacteristicAsync(characteristicUuid, parameters),
-            MidiBleUtilities::BleOperationTimeoutMilliseconds,
-            gatt::GattLocalCharacteristicResult{ nullptr });
-
-        RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_SERVICE_NOT_ACTIVE), characteristicResult);
-
-        if (characteristicResult.Error() != bt::BluetoothError::Success)
-        {
-            TraceLoggingWrite(
-                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Unable to create the BLE MIDI data I/O characteristic", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingUInt32(static_cast<uint32_t>(characteristicResult.Error()), "bluetooth error")
-            );
-
-            RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_SERVICE_NOT_ACTIVE));
-        }
-
-        m_characteristic = characteristicResult.Characteristic();
-        RETURN_HR_IF_NULL(E_UNEXPECTED, m_characteristic);
-
-        m_readRequestedToken = m_characteristic.ReadRequested(
-            [weakThis = weak_from_this()](gatt::GattLocalCharacteristic const& sender, gatt::GattReadRequestedEventArgs const& args)
-            {
-                if (auto self = weakThis.lock())
-                {
-                    self->OnReadRequested(sender, args);
-                }
-            });
-
-        m_writeRequestedToken = m_characteristic.WriteRequested(
-            [weakThis = weak_from_this()](gatt::GattLocalCharacteristic const& sender, gatt::GattWriteRequestedEventArgs const& args)
-            {
-                if (auto self = weakThis.lock())
-                {
-                    self->OnWriteRequested(sender, args);
-                }
-            });
-
-        m_subscribedClientsChangedToken = m_characteristic.SubscribedClientsChanged(
-            [weakThis = weak_from_this()](gatt::GattLocalCharacteristic const& sender, foundation::IInspectable const& args)
-            {
-                if (auto self = weakThis.lock())
-                {
-                    self->OnSubscribedClientsChanged(sender, args);
-                }
-            });
-
-        m_advertisementStatusChangedToken = m_serviceProvider.AdvertisementStatusChanged(
-            [weakThis = weak_from_this()](gatt::GattServiceProvider const& sender, gatt::GattServiceProviderAdvertisementStatusChangedEventArgs const& args)
-            {
-                if (auto self = weakThis.lock())
-                {
-                    self->OnAdvertisementStatusChanged(sender, args);
-                }
-            });
-
-        m_advertisedName = MidiBleUtilities::GetLocalBluetoothName();
+        return S_OK;
     }
-    CATCH_RETURN();
-
-    return S_OK;
+    CATCH_RETURN()
 }
 
 
@@ -681,57 +693,63 @@ _Use_decl_annotations_
 HRESULT
 MidiBlePeripheral::NotifyPacket(std::vector<uint8_t> const& packet)
 {
-    RETURN_HR_IF(S_FALSE, packet.empty());
-
-    auto characteristic = m_characteristic;
-    RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), characteristic);
-
-    auto client = ActiveClient();
-
-    // Nothing is listening. This is not an error: an endpoint with no Central connected is the
-    // normal state of a published peripheral.
-    if (client == nullptr)
-    {
-        return S_FALSE;
-    }
-
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
     try
     {
-        DataWriter writer;
-        writer.WriteBytes(winrt::array_view<uint8_t const>(packet));
+        RETURN_HR_IF(S_FALSE, packet.empty());
 
-        // The overload which takes a client notifies only that client, which is what keeps a
-        // second Central from being fed data meant for the first.
-        auto result = MidiBleUtilities::AwaitWithTimeout(
-            characteristic.NotifyValueAsync(writer.DetachBuffer(), client),
-            MidiBleUtilities::BleDataOperationTimeoutMilliseconds,
-            gatt::GattClientNotificationResult{ nullptr });
+        auto characteristic = m_characteristic;
+        RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), characteristic);
 
-        if (result == nullptr)
+        auto client = ActiveClient();
+
+        // Nothing is listening. This is not an error: an endpoint with no Central connected is the
+        // normal state of a published peripheral.
+        if (client == nullptr)
         {
             return S_FALSE;
         }
 
-        auto const status = result.Status();
-
-        if (status != gatt::GattCommunicationStatus::Success)
+        try
         {
-            TraceLoggingWrite(
-                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_WARNING,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"BLE MIDI peripheral notification failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingUInt32(static_cast<uint32_t>(status), "gatt communication status")
-            );
+            DataWriter writer;
+            writer.WriteBytes(winrt::array_view<uint8_t const>(packet));
 
-            RETURN_IF_FAILED(E_FAIL);
+            // The overload which takes a client notifies only that client, which is what keeps a
+            // second Central from being fed data meant for the first.
+            auto result = MidiBleUtilities::AwaitWithTimeout(
+                characteristic.NotifyValueAsync(writer.DetachBuffer(), client),
+                MidiBleUtilities::BleDataOperationTimeoutMilliseconds,
+                gatt::GattClientNotificationResult{ nullptr });
+
+            if (result == nullptr)
+            {
+                return S_FALSE;
+            }
+
+            auto const status = result.Status();
+
+            if (status != gatt::GattCommunicationStatus::Success)
+            {
+                TraceLoggingWrite(
+                    MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"BLE MIDI peripheral notification failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingUInt32(static_cast<uint32_t>(status), "gatt communication status")
+                );
+
+                RETURN_IF_FAILED(E_FAIL);
+            }
         }
-    }
-    CATCH_RETURN();
+        CATCH_RETURN();
 
-    return S_OK;
+        return S_OK;
+    }
+    CATCH_RETURN()
 }
 
 

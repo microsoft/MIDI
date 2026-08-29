@@ -1056,44 +1056,65 @@ _Use_decl_annotations_
 HRESULT
 MidiBleConnection::WriterWorker(std::stop_token stopToken)
 {
-    // COM calls made from this thread fail CO_E_NOTINITIALIZED without this
-    winrt::init_apartment();
-
-    // Without this the thread parks in wait() and never sees the stop request, so the jthread
-    // destructor's join would hang forever.
-    std::stop_callback wakeOnStop{ stopToken, [this]() { m_outgoingPacketsAvailable.SetEvent(); } };
-
-    while (!stopToken.stop_requested() && !m_shutdown.load())
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
+    try
     {
-        std::vector<uint8_t> packet;
-        bool havePacket{ false };
+        // COM calls made from this thread fail CO_E_NOTINITIALIZED without this
+        winrt::init_apartment();
 
+        // Without this the thread parks in wait() and never sees the stop request, so the jthread
+        // destructor's join would hang forever.
+        std::stop_callback wakeOnStop{ stopToken, [this]() { m_outgoingPacketsAvailable.SetEvent(); } };
+
+        while (!stopToken.stop_requested() && !m_shutdown.load())
         {
-            auto lock = std::scoped_lock{ m_outgoingQueueLock };
-
-            if (!m_outgoingPackets.empty())
+            try
             {
-                packet = std::move(m_outgoingPackets.front());
-                m_outgoingPackets.pop_front();
-                havePacket = true;
+                std::vector<uint8_t> packet;
+                bool havePacket{ false };
+
+                {
+                    auto lock = std::scoped_lock{ m_outgoingQueueLock };
+
+                    if (!m_outgoingPackets.empty())
+                    {
+                        packet = std::move(m_outgoingPackets.front());
+                        m_outgoingPackets.pop_front();
+                        havePacket = true;
+                    }
+                    else
+                    {
+                        m_outgoingPacketsAvailable.ResetEvent();
+                    }
+                }
+
+                if (havePacket)
+                {
+                    LOG_IF_FAILED(WritePacketToDevice(packet));
+                }
+                else
+                {
+                    m_outgoingPacketsAvailable.wait();
+                }
             }
-            else
+            // One bad iteration must not end the worker. An exception leaving this thread
+            // would terminate the service, and returning would stop all further work.
+            catch (...)
             {
-                m_outgoingPacketsAvailable.ResetEvent();
+                TraceLoggingWrite(
+                    MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingWideString(L"Exception in worker iteration. Continuing.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                );
             }
         }
 
-        if (havePacket)
-        {
-            LOG_IF_FAILED(WritePacketToDevice(packet));
-        }
-        else
-        {
-            m_outgoingPacketsAvailable.wait();
-        }
+        return S_OK;
     }
-
-    return S_OK;
+    CATCH_RETURN()
 }
 
 
@@ -1101,72 +1122,78 @@ _Use_decl_annotations_
 HRESULT
 MidiBleConnection::WritePacketToDevice(std::vector<uint8_t> const& packet)
 {
-    RETURN_HR_IF(S_FALSE, packet.empty());
-    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), m_shutdown.load());
-
-    if (m_isPeripheral)
-    {
-        RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), m_peripheralLink.WritePacket);
-
-        auto const hr = m_peripheralLink.WritePacket(packet);
-
-        if (SUCCEEDED(hr))
-        {
-            if (hr == S_OK)
-            {
-                m_packetsSent++;
-            }
-
-            m_lastSendErrorHresult = 0;
-        }
-        else
-        {
-            m_lastSendErrorHresult = static_cast<int32_t>(hr);
-        }
-
-        return hr;
-    }
-
-    auto characteristic = m_characteristic;
-    RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), characteristic);
-
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
     try
     {
-        DataWriter writer;
-        writer.WriteBytes(winrt::array_view<uint8_t const>(packet));
+        RETURN_HR_IF(S_FALSE, packet.empty());
+        RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), m_shutdown.load());
 
-        // the Central always writes without response
-        auto status = MidiBleUtilities::AwaitWithTimeout(
-            characteristic.WriteValueAsync(writer.DetachBuffer(), gatt::GattWriteOption::WriteWithoutResponse),
-            MidiBleUtilities::BleDataOperationTimeoutMilliseconds,
-            gatt::GattCommunicationStatus::Unreachable);
-
-        if (status != gatt::GattCommunicationStatus::Success)
+        if (m_isPeripheral)
         {
-            m_lastSendErrorHresult = static_cast<int32_t>(E_FAIL);
+            RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), m_peripheralLink.WritePacket);
 
-            TraceLoggingWrite(
-                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_WARNING,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"BLE MIDI characteristic write failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(m_deviceId.c_str(), "device id"),
-                TraceLoggingUInt32(static_cast<uint32_t>(status), "gatt communication status")
-            );
+            auto const hr = m_peripheralLink.WritePacket(packet);
 
-            return S_FALSE;
+            if (SUCCEEDED(hr))
+            {
+                if (hr == S_OK)
+                {
+                    m_packetsSent++;
+                }
+
+                m_lastSendErrorHresult = 0;
+            }
+            else
+            {
+                m_lastSendErrorHresult = static_cast<int32_t>(hr);
+            }
+
+            return hr;
         }
 
-        m_packetsSent++;
-        m_lastSendErrorHresult = 0;
-    }
-    catch (...)
-    {
-        m_lastSendErrorHresult = static_cast<int32_t>(winrt::to_hresult());
-        RETURN_CAUGHT_EXCEPTION();
-    }
+        auto characteristic = m_characteristic;
+        RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), characteristic);
 
-    return S_OK;
+        try
+        {
+            DataWriter writer;
+            writer.WriteBytes(winrt::array_view<uint8_t const>(packet));
+
+            // the Central always writes without response
+            auto status = MidiBleUtilities::AwaitWithTimeout(
+                characteristic.WriteValueAsync(writer.DetachBuffer(), gatt::GattWriteOption::WriteWithoutResponse),
+                MidiBleUtilities::BleDataOperationTimeoutMilliseconds,
+                gatt::GattCommunicationStatus::Unreachable);
+
+            if (status != gatt::GattCommunicationStatus::Success)
+            {
+                m_lastSendErrorHresult = static_cast<int32_t>(E_FAIL);
+
+                TraceLoggingWrite(
+                    MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"BLE MIDI characteristic write failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_deviceId.c_str(), "device id"),
+                    TraceLoggingUInt32(static_cast<uint32_t>(status), "gatt communication status")
+                );
+
+                return S_FALSE;
+            }
+
+            m_packetsSent++;
+            m_lastSendErrorHresult = 0;
+        }
+        catch (...)
+        {
+            m_lastSendErrorHresult = static_cast<int32_t>(winrt::to_hresult());
+            RETURN_CAUGHT_EXCEPTION();
+        }
+
+        return S_OK;
+    }
+    CATCH_RETURN()
 }

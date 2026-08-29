@@ -33,39 +33,45 @@ HRESULT
 CMidi2BluetoothMidiPluginMetadataProvider::GetMetadata(
     PTRANSPORTMETADATA metadata)
 {
-    TraceLoggingWrite(
-        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
-
-    RETURN_HR_IF_NULL(E_INVALIDARG, metadata);
-
-    metadata->TransportId = TRANSPORT_LAYER_GUID;
-
-    wil::unique_cotaskmem_string tempString;
-    tempString = wil::make_cotaskmem_string_nothrow(TRANSPORT_CODE);
-    RETURN_IF_NULL_ALLOC(tempString.get());
-    metadata->TransportCode = tempString.release();
-
-    internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_NAME, &metadata->Name);
-    internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_DESCRIPTION, &metadata->Description);
-    internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_AUTHOR, &metadata->Author);
-    internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_VERSION, &metadata->Version);
-
-    metadata->SmallImagePath = NULL;                        // TODO
-    //metadata->ClientConfigurationAssemblyName = NULL;       // TODO
-
-    metadata->Flags = (MetadataFlags)(
-        MetadataFlags::MetadataFlags_IsRuntimeCreatableBySettings | 
-        MetadataFlags::MetadataFlags_IsClientConfigurable
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
+    try
+    {
+        TraceLoggingWrite(
+            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
         );
 
+        RETURN_HR_IF_NULL(E_INVALIDARG, metadata);
 
-    return S_OK;
+        metadata->TransportId = TRANSPORT_LAYER_GUID;
+
+        wil::unique_cotaskmem_string tempString;
+        tempString = wil::make_cotaskmem_string_nothrow(TRANSPORT_CODE);
+        RETURN_IF_NULL_ALLOC(tempString.get());
+        metadata->TransportCode = tempString.release();
+
+        internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_NAME, &metadata->Name);
+        internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_DESCRIPTION, &metadata->Description);
+        internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_AUTHOR, &metadata->Author);
+        internal::ResourceCopyToCoString(IDS_PLUGIN_METADATA_VERSION, &metadata->Version);
+
+        metadata->SmallImagePath = NULL;                        // TODO
+        //metadata->ClientConfigurationAssemblyName = NULL;       // TODO
+
+        metadata->Flags = (MetadataFlags)(
+            MetadataFlags::MetadataFlags_IsRuntimeCreatableBySettings | 
+            MetadataFlags::MetadataFlags_IsClientConfigurable
+            );
+
+
+        return S_OK;
+    }
+    CATCH_RETURN()
 }
 
 HRESULT
