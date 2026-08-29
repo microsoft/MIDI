@@ -16,8 +16,17 @@
 
 // Network MIDI 2.0 authentication (spec 6.5, 6.6, and the digests in 6.9 and 6.10).
 //
-// The digest is implemented and tested. Credential STORAGE is not wired up yet.
-// See https://github.com/microsoft/MIDI/issues/733
+// DECISION, Aug 29 2026: the first Windows release of Network MIDI 2.0 ships WITHOUT credential
+// support. Not because it could not be built, but because nothing below yields a store worth the
+// promise that shipping it would imply. Treat this as a deliberate fast-follow, not as unfinished
+// work for someone to quietly complete.
+//
+// The digest itself IS implemented and tested. Only storage is absent, and the gap is closed at
+// both ends rather than left open: configuration validation refuses to start a host asking for
+// authentication instead of downgrading it, and an unrecognized command inside a session is
+// answered with NAK CommandNotSupported. A device which does implement authentication, or the
+// remote management being added to the specification, is therefore refused cleanly rather than
+// half-served. See https://github.com/microsoft/MIDI/issues/733
 //
 // Design constraints which shape everything in this file:
 //
@@ -194,8 +203,17 @@
 //    to. Either way IsWellFormed below is what keeps it inside our own namespace.
 //  - How a secret is revoked and how a session is torn down when it is.
 //
-// These are low-value credentials, but they are still credentials, and a bug here would be a
-// way to read secrets the service was never meant to see.
+// These are low-value credentials today, but that is an assumption rather than a property, and
+// it holds only while a session can do nothing except carry MIDI. Remote management is being
+// added to the specification. If a credential ever gates reconfiguring somebody's rig rather
+// than playing notes into it, everything above wants re-reading with that in mind: how much the
+// offline crack is then worth, what a malicious plugin gains, and whether one secret per host is
+// even the right granularity. Worth establishing from the specification before planning any of
+// it: whether management is gated by the same invitation-time digest or something separate,
+// whether there is any notion of authorization level rather than all-or-nothing, and whether a
+// host can accept MIDI while refusing management. None of that has been looked at here.
+//
+// Either way a bug here would be a way to read secrets the service was never meant to see.
 
 enum class MidiNetworkAuthenticationKind
 {

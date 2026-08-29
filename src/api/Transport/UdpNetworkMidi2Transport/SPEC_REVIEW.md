@@ -12,18 +12,35 @@ sections.
 
 ## 1. Open items
 
-### 1.1 Authentication is not implemented
+### 1.1 Authentication is deliberately not shipping in v1
 
 `Invitation with Authentication`, `Invitation with User Authentication`, and the two
 `Invitation Reply: ... Authentication Required` commands are unimplemented. Tracked as
-[#733](https://github.com/microsoft/MIDI/issues/733). This is the only remaining feature-sized
-gap in the protocol.
+[#733](https://github.com/microsoft/MIDI/issues/733).
+
+**This is a decision, not a gap.** The first Windows release ships without credential support,
+as a deliberate fast-follow. The digest was implemented and proven against the specification's
+own test vectors; what was not solved to anyone's satisfaction is *where the secrets live*.
+`MidiNetworkCredentials.h` records every approach investigated and why each was rejected, so the
+next person starts from the measurements rather than repeating them. Read it before reopening
+this.
+
+Two things make the answer harder than it looks, and both are written up there: the digest is a
+single un-iterated SHA-256, so a passive capture of one invitation exchange gives an offline
+attack on the secret; and a transport plugin runs inside midisrv, so no ACL protects a secret
+from code the user was persuaded to install.
+
+Remote management being added to the specification is a further reason to wait rather than
+guess. It changes what a credential is protecting, and that has not been investigated here.
 
 Current behavior is deliberately fail-closed rather than fail-open:
 
 - Configuration validation **refuses to start a host** configured for any authentication mode, so
   a user who asks for a password never silently gets an unprotected host.
 - Inbound authentication commands are answered with a Bye rather than ignored.
+- An unrecognized command inside an established session is answered with
+  `NAK CommandNotSupported`, and outside one is ignored, so commands added to the specification
+  later, including management, are refused cleanly rather than half-served.
 - `MidiNetworkCredentials.h` holds the credential-resolution seam, the security constraints, and
   what is known about where secrets can live. Read that before starting the work.
 - `MidiNetworkGenerateCryptoNonce` is implemented (`BCryptGenRandom`).
