@@ -344,10 +344,6 @@
                                                         Content="Try again"
                                                         Visibility="{x:Bind RetryVisibility, Mode=OneWay}"
                                                         Click="OnRetryRemoteHostClick" />
-                                                <Button x:Uid="ReassociateButton"
-                                                        Content="Reconnect to..."
-                                                        Visibility="{x:Bind ReassociateVisibility, Mode=OneWay}"
-                                                        Click="OnReassociateRemoteHostClick" />
                                                 <Button Content="{x:Bind DisconnectLabel, Mode=OneWay}"
                                                         Visibility="{x:Bind DisconnectVisibility, Mode=OneWay}"
                                                         Click="OnDisconnectRemoteHostClick" />
@@ -372,6 +368,7 @@
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
                                                 <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
@@ -429,6 +426,14 @@
                                                            Visibility="{x:Bind NotAdvertisedVisibility, Mode=OneWay}"
                                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                                <Button x:Uid="ReassociateButton"
+                                                        Grid.Row="4" Grid.Column="0" Grid.ColumnSpan="3"
+                                                        Margin="0,8,0,0"
+                                                        HorizontalAlignment="Left"
+                                                        Content="Relink to..."
+                                                        Visibility="{x:Bind ReassociateVisibility, Mode=OneWay}"
+                                                        Click="OnReassociateRemoteHostClick" />
                                             </Grid>
                                         </Expander>
                                     </StackPanel>
@@ -1195,8 +1200,8 @@
         </ContentDialog>
         <ContentDialog x:Name="ReassociateDialog"
                        x:Uid="ReassociateDialog"
-                       Title="Reconnect this to a different device"
-                       PrimaryButtonText="Reconnect"
+                       Title="Relink this to a different device"
+                       PrimaryButtonText="Relink"
                        CloseButtonText="Cancel"
                        DefaultButton="Close"
                        IsPrimaryButtonEnabled="False">
@@ -1219,7 +1224,7 @@
                     </ListView.ItemTemplate>
                 </ListView>
                 <TextBlock x:Uid="ReassociateDialogHint"
-                           Text="The name you chose for this device in Windows is kept. Only which device it points at changes."
+                           Text="The name you chose is kept. The MIDI endpoint takes its identity from the device, so anything saved against the old endpoint does not follow."
                            TextWrapping="Wrap"
                            Style="{ThemeResource CaptionTextBlockStyle}"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />

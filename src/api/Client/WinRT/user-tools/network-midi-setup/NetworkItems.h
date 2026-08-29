@@ -316,6 +316,7 @@ namespace winrt::midinetworksetup::implementation
 
         // Offered only when the saved device is missing from the network. Re-pointing an entry
         // whose device is present would just be a disguised way of connecting to something else.
+        // Shown as "Relink" in the UI, deliberately not worded as connecting.
         winrt::Microsoft::UI::Xaml::Visibility ReassociateVisibility() const noexcept
         {
             return (m_isConfigured && !m_isAdvertised && !m_isBusy) ?
