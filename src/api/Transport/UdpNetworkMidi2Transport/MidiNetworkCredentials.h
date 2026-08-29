@@ -82,7 +82,7 @@
 // we could store in place of it. The service must hold recoverable secrets.
 //
 // Generating the secret removes the reuse risk, but only for kind 2, where we own it. For kind 1
-// the remote device decides, so the only defences are that we never reveal it, never log it, and
+// the remote device decides, so the only defenses are that we never reveal it, never log it, and
 // make replacing it easy. The user has to be told plainly that these are not stored securely and
 // that a credential used anywhere else must never be used here.
 //
@@ -127,7 +127,7 @@
 // written by the setup app running elevated, holding secrets encrypted with machine DPAPI. The
 // encryption is not the access control and must not be mistaken for it. The ACL is. What DPAPI
 // buys is that a copy taken off the machine, by backup or by someone copying the folder, is
-// useless.  Needing elevation to write is also what gates the kind 2 reveal.
+// useless. Needing elevation to write is also what gates the kind 2 reveal.
 //
 // A second service running as the signed-in user is not needed, and would not have worked: such
 // a service is not running when nobody is signed in, which is precisely the case that has to
@@ -136,6 +136,49 @@
 //
 // What is left is irreducible. An administrator can take ownership, or run as SYSTEM, and read
 // anything, which is true of every credential store on Windows.
+//
+// The boundary also ends at the process, and that is the more believable route in. A transport
+// plugin is loaded into midisrv, so it runs with the service SID and can read whatever the
+// service can. Installing one takes administrator, so it is not an escalation, but it is the
+// realistic attack: a plugin the user was persuaded to install, signed by a reputable signer,
+// which is at least what makes it revocable afterwards.
+//
+// If that ever has to be defended against, the answer is not a tighter ACL but a narrower
+// interface. The transport never needs the secret, only the digest. A store offering "compute
+// this digest" and "verify this digest", which never returns secret material, would keep
+// passwords out of a plugin's address space altogether. That implies the store lives behind
+// something which is not midisrv, and it is the one argument for a second process that holds up.
+//
+// Rejected approaches, listed so that nobody spends the time again:
+//
+//  - Secrets in the configuration file. It is portable between machines by design, and it lives
+//    in a folder any account can read.
+//  - The store in C:\ProgramData\Microsoft\MIDI. Everyone has read, Authenticated Users have
+//    write, and it grants create without delete.
+//  - One-way or salted storage. Spec 6.9 and 6.10 hash the secret itself and both roles have to
+//    recompute it, so it can never be stored irreversibly.
+//  - The per-user Credential Locker, and impersonating the user to reach it. Nobody is signed in
+//    at boot, and a per-machine configuration cannot say whose locker to read. The size limit is
+//    not the reason.
+//  - RPC client impersonation. It is only valid during a live call from a client, which is not
+//    the case that needs solving. The impersonation code in MidiSrvRpc.cpp cannot help here.
+//  - DPAPI-NG with a SID= protection descriptor. It needs a domain Key Distribution Service.
+//    Measured off-domain: protect fails with NTE_ENCRYPTION_FAILURE and there is no root key.
+//  - DPAPI in either form as an access control. Both LOCAL=machine and the classic machine scope
+//    were round-tripped here by an ordinary interactive user. Kept only so that a copy taken off
+//    the machine is useless.
+//  - Generating a passphrase for the user. There is no enumerable word list on Windows, and the
+//    setup app is not going to ship one.
+//  - A second service running as the signed-in user, for identity reasons. It is not running
+//    when nobody is signed in. That is a different question from the plugin isolation above,
+//    which a second process would genuinely address.
+//  - Anything needing user presence, such as a TPM-bound or Hello-gated unlock. It breaks
+//    unattended startup, which is the case that has to work.
+//
+// Considered but not measured, rather than rejected outright: LSA private data
+// (LsaStorePrivateData). It is the traditional Windows answer for a service secret, but reading
+// it wants policy rights LocalService does not have, and it is discouraged for new code. Worth a
+// second look only if this ever runs as SYSTEM.
 //
 // The configuration file is meant to be portable between machines, so the store deliberately
 // does not travel with it. On a second PC every identifier dangles and the user re-enters the
