@@ -215,8 +215,17 @@
   <data name="RemoteHostConnected" xml:space="preserve">
     <value>Connected</value>
   </data>
-  <data name="RemoteHostConnecting" xml:space="preserve">
-    <value>Connecting...</value>
+  <data name="RemoteHostTryingToConnect" xml:space="preserve">
+    <value>Trying to connect...</value>
+    <comment>The device is visible on the network and a connection is being attempted.</comment>
+  </data>
+  <data name="RemoteHostWaitingToAppear" xml:space="preserve">
+    <value>Waiting for the device to appear on the network...</value>
+    <comment>A saved device which is not announcing itself, usually because it is switched off. Nothing is being attempted until it reappears.</comment>
+  </data>
+  <data name="RemoteHostWaitingToAnswer" xml:space="preserve">
+    <value>Waiting for the device to answer at that address...</value>
+    <comment>A saved device connected to by address rather than by discovery, so there is no announcement to wait for.</comment>
   </data>
   <data name="RemoteHostFailed" xml:space="preserve">
     <value>Windows could not connect to this device.</value>

@@ -1331,12 +1331,28 @@ namespace winrt::midinetworksetup::implementation
 
                     row->Connected = client.IsSessionActive();
 
+                    // "Connecting" is not what is happening when the device cannot be seen at
+                    // all. Nothing is attempted until it announces itself, so somebody looking at
+                    // a device which is switched off should be told that, rather than watching a
+                    // connect which is not being tried.
+                    auto const notConnectedStatus = [&client, &row]()
+                        {
+                            if (row->Advertised)
+                            {
+                                return res::GetString(L"RemoteHostTryingToConnect");
+                            }
+
+                            return client.ConfiguredDirectAddress().empty() ?
+                                res::GetString(L"RemoteHostWaitingToAppear") :
+                                res::GetString(L"RemoteHostWaitingToAnswer");
+                        };
+
                     switch (client.EntryState())
                     {
                     case midi2net::MidiNetworkClientEntryState::Active:
                         row->Status = client.IsSessionActive() ?
                             res::GetString(L"RemoteHostConnected") :
-                            res::GetString(L"RemoteHostConnecting");
+                            notConnectedStatus();
                         break;
 
                     case midi2net::MidiNetworkClientEntryState::Failed:
@@ -1348,7 +1364,7 @@ namespace winrt::midinetworksetup::implementation
                         break;
 
                     default:
-                        row->Status = res::GetString(L"RemoteHostConnecting");
+                        row->Status = notConnectedStatus();
                         break;
                     }
 
