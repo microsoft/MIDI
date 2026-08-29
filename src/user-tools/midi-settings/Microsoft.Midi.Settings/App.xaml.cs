@@ -154,9 +154,6 @@ public partial class App : Application
                     services.AddTransient<EndpointsAllPage>();
                     services.AddTransient<EndpointsAllViewModel>();
 
-                    services.AddTransient<EndpointsBle10Page>();
-                    services.AddTransient<EndpointsBle10ViewModel>();
-
                     services.AddTransient<GlobalMidiSettingsPage>();
                     services.AddTransient<GlobalMidiSettingsViewModel>();
 
@@ -185,17 +182,6 @@ public partial class App : Application
 
                     services.AddTransient<FirstRunExperiencePage>();
                     services.AddTransient<FirstRunExperienceViewModel>();
-
-
-                    services.AddTransient<MidiVirtualPatchBaySetupPage>();
-                    services.AddTransient<MidiVirtualPatchBaySetupViewModel>();
-
-                    services.AddTransient<EndpointBridgesPage>();
-                    services.AddTransient<EndpointBridgeViewModel>();
-
-                    services.AddTransient<BluetoothBridgesPage>();
-                    services.AddTransient<BluetoothBridgeViewModel>();
-
 
                     // Configuration
                     services.Configure<LocalSettingsOptions>(context.Configuration.GetSection(nameof(LocalSettingsOptions)));

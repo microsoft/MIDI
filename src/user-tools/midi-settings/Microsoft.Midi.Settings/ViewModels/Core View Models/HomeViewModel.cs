@@ -25,16 +25,6 @@ namespace Microsoft.Midi.Settings.ViewModels
     {
 
         
-        public ICommand CommonTaskAssignMidi1DeviceToNewDriverCommand
-        {
-            get; private set;
-        }
-
-        public ICommand CommonTaskSetServiceAutoStartCommand
-        {
-            get; private set;
-        }
-
         public ICommand LaunchFirstRunExperienceCommand
         {
             get; private set;
@@ -118,12 +108,6 @@ namespace Microsoft.Midi.Settings.ViewModels
         }
 
 
-        [ObservableProperty]
-        private bool isNetworkMidi2Available;
-
-        [ObservableProperty]
-        private bool isBasicLoopbackTransportAvailable;
-
         public string CurrentConfigurationName
         {
             get
@@ -202,18 +186,6 @@ namespace Microsoft.Midi.Settings.ViewModels
 
             ToolApps = _toolsService.GetInstalledTools();
 
-            CommonTaskAssignMidi1DeviceToNewDriverCommand = new RelayCommand(
-                () =>
-                {
-                    _navigationService.NavigateTo(typeof(AdvancedUsbSettingsViewModel).FullName!);
-                });
-
-            CommonTaskSetServiceAutoStartCommand = new RelayCommand(
-                () =>
-                {
-                    _navigationService.NavigateTo(typeof(GlobalMidiSettingsViewModel).FullName!);
-                });
-
             LaunchFirstRunExperienceCommand = new RelayCommand(
                 () =>
                 {
@@ -234,14 +206,6 @@ namespace Microsoft.Midi.Settings.ViewModels
                 {
                     _diagnosticsService.CaptureMidiDiagOutputToNotepad();
                 });
-
-            IsBasicLoopbackTransportAvailable = _transportInfoService.IsTransportAvailable("BLOOP") && IsValidConfigLoaded;
-
-            //LaunchNewSdkVersionUpdateCommand = new RelayCommand(
-            //    () => 
-            //    {
-            //    });
-
 
         }
 

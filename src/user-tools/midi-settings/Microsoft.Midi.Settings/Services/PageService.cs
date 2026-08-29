@@ -24,9 +24,6 @@ public class PageService : IPageService
     {
         Configure<EndpointsAllViewModel, EndpointsAllPage>();
 
-        Configure<EndpointsBle10ViewModel, EndpointsBle10Page>();
-
-
         Configure<DeviceDetailViewModel, DeviceDetailPage>();
 
         Configure<ForDevelopersViewModel, ForDevelopersPage>();
@@ -43,15 +40,6 @@ public class PageService : IPageService
         Configure<GlobalMidiSettingsViewModel, GlobalMidiSettingsPage>();
 
         Configure<FirstRunExperienceViewModel, FirstRunExperiencePage>();
-        Configure<WindowsSettingsViewModel, WindowsSettingsPage>();
-        Configure<LivePerformanceSettingsViewModel, LivePerformanceSettingsPage>();
-        Configure<AdvancedUsbSettingsViewModel, AdvancedUsbSettingsPage>();
-
-        Configure<MidiVirtualPatchBaySetupViewModel, MidiVirtualPatchBaySetupPage>();
-
-        Configure<BluetoothBridgeViewModel, BluetoothBridgesPage>();
-        Configure<EndpointBridgeViewModel, EndpointBridgesPage>();
-
 
         Configure<HomeViewModel, HomePage>();
     }
