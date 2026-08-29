@@ -660,6 +660,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectDirect(
     winrt::hstring const& remotePort,
     winrt::hstring const& umpEndpointName,
     winrt::hstring const& customEndpointName,
+    bool const createMidi1Ports,
     json::JsonObject& responseObject) noexcept
 try
 {
@@ -708,8 +709,7 @@ try
 
     auto clientDefinition = std::make_shared<MidiNetworkClientDefinition>();
 
-    // TODO: These should be parameters
-    clientDefinition->CreateMidi1Ports = true;
+    clientDefinition->CreateMidi1Ports = createMidi1Ports;
     clientDefinition->EntryIdentifier = configEntryId;
     clientDefinition->MatchDirectHostNameOrIPAddress = remoteAddress;
     clientDefinition->MatchDirectPort = remotePort;
@@ -753,6 +753,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectMdns(
     winrt::hstring const& matchId,
     winrt::hstring const& umpEndpointName,
     winrt::hstring const& customEndpointName,
+    bool const createMidi1Ports,
     json::JsonObject& responseObject) noexcept
 try
 {
@@ -779,7 +780,7 @@ try
 
     auto clientDefinition = std::make_shared<MidiNetworkClientDefinition>();
 
-    clientDefinition->CreateMidi1Ports = true;
+    clientDefinition->CreateMidi1Ports = createMidi1Ports;
     clientDefinition->EntryIdentifier = configEntryId;
     clientDefinition->MatchId = matchId;
     clientDefinition->LocalEndpointName = umpEndpointName;
@@ -1614,6 +1615,25 @@ namespace
             winrt::hstring{};
     }
 
+    // Boolean command arguments arrive as text. An absent one means the caller did not say, so
+    // it takes the default rather than reading as false and silently turning something off.
+    bool OptionalCommandArgumentBool(
+        _In_ internal::MidiTransportCommandHelper& commandHelper,
+        _In_ std::wstring const& key,
+        _In_ bool const defaultValue)
+    {
+        auto arg = commandHelper.Arguments()->find(key);
+
+        if (arg == commandHelper.Arguments()->end())
+        {
+            return defaultValue;
+        }
+
+        auto const value = internal::ToLowerTrimmedWStringCopy(arg->second);
+
+        return value == L"true" || value == L"1";
+    }
+
     // FILETIME to ISO 8601 UTC, with the full 100ns resolution so the value round-trips. An
     // unset time returns empty rather than a 1601 date, which would read as a real answer.
     std::wstring PendingRequestTimeToString(uint64_t const fileTime)
@@ -1912,6 +1932,7 @@ try
                 port->second.c_str(), 
                 name->second.c_str(),
                 OptionalCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY),
+                OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT),
                 responseObject));
         }
         else
@@ -1942,6 +1963,7 @@ try
                 winrt::hstring{ internal::TrimmedWStringCopy(matchId->second) },
                 name->second.c_str(),
                 OptionalCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY),
+                OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT),
                 responseObject));
         }
         else
@@ -2571,6 +2593,11 @@ try
 
                     definition->CustomEndpointName = internal::TrimmedHStringCopy(
                         SafeGetNamedString(clientEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY, L""));
+
+                    definition->CreateMidi1Ports = SafeGetNamedBoolean(
+                        clientEntry,
+                        MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY,
+                        MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT);
 
                     winrt::hstring localEndpointName{ };
                     winrt::hstring localProductInstanceId{ };

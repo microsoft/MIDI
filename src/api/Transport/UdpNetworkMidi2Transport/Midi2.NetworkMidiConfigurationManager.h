@@ -68,6 +68,7 @@ private:
         _In_ winrt::hstring const& remotePort,
         _In_ winrt::hstring const& umpEndpointName,
         _In_ winrt::hstring const& customEndpointName,
+        _In_ bool const createMidi1Ports,
         _Inout_ json::JsonObject& responseObject) noexcept;
 
     // Connects to an mDNS-discovered host by its Windows device id. The address and port are
@@ -78,6 +79,7 @@ private:
         _In_ winrt::hstring const& matchId,
         _In_ winrt::hstring const& umpEndpointName,
         _In_ winrt::hstring const& customEndpointName,
+        _In_ bool const createMidi1Ports,
         _Inout_ json::JsonObject& responseObject) noexcept;
 
     HRESULT RunCommandDisconnectClient(

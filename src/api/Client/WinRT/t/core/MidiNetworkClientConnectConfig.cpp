@@ -50,6 +50,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             );
         }
 
+        // Written even when it matches the default, because it decides how the endpoint is built
+        // and an entry which does not say cannot be rebuilt the same way after a restart.
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY,
+            json::JsonValue::CreateBooleanValue(!CreateOnlyUmpEndpoints()));
+
         clientObject.SetNamedValue(
             WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey,
             matchObject);

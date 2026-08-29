@@ -1021,6 +1021,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
                     creationConfig.CustomEndpointName());
             }
 
+            // Decides whether the endpoint is built with MIDI 1.0 ports, so it has to reach the
+            // service with the creation rather than afterwards.
+            cmd.Arguments().Insert(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY,
+                creationConfig.CreateOnlyUmpEndpoints() ? L"false" : L"true");
+
             co_await winrt::resume_background();
 
             // the service sends the invitation and waits for the reply, so this can take a while
