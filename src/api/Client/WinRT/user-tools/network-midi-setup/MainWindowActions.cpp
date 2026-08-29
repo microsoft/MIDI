@@ -292,10 +292,185 @@ namespace winrt::midinetworksetup::implementation
     }
 
     _Use_decl_annotations_
+    void MainWindow::OnReassociateSelectionChanged(
+        foundation::IInspectable const&,
+        controls::SelectionChangedEventArgs const&)
+    {
+        try
+        {
+            ReassociateDialog().IsPrimaryButtonEnabled(
+                ReassociateDialogList().SelectedItem() != nullptr);
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<bool> MainWindow::PromptForReassociateTargetAsync(
+        winrt::hstring const entryName,
+        std::shared_ptr<midinetworksetup::RemoteHostItem> chosen)
+    {
+        if (m_openDialog != nullptr)
+        {
+            co_return false;
+        }
+
+        try
+        {
+            // Only devices which are on the network and not already saved. Offering one which is
+            // already configured would produce two entries pointing at the same device.
+            auto candidates = winrt::single_threaded_observable_vector<midinetworksetup::RemoteHostItem>();
+
+            for (auto const& candidate : m_remoteHosts)
+            {
+                if (candidate != nullptr && candidate.IsAdvertised() && !candidate.IsConfigured())
+                {
+                    candidates.Append(candidate);
+                }
+            }
+
+            if (candidates.Size() == 0)
+            {
+                SetRemoteStatus(res::GetString(L"ReassociateNoCandidates"));
+                co_return false;
+            }
+
+            ReassociateDialogText().Text(res::FormatString(L"ReassociatePromptFormat", entryName));
+            ReassociateDialogList().ItemsSource(candidates);
+            ReassociateDialogList().SelectedItem(nullptr);
+            ReassociateDialog().IsPrimaryButtonEnabled(false);
+            ReassociateDialog().XamlRoot(Content().XamlRoot());
+
+            m_openDialog = ReassociateDialog();
+
+            auto const result = co_await ReassociateDialog().ShowAsync();
+
+            m_openDialog = nullptr;
+
+            if (result != controls::ContentDialogResult::Primary)
+            {
+                co_return false;
+            }
+
+            auto const selected = ReassociateDialogList().SelectedItem();
+
+            if (selected == nullptr)
+            {
+                co_return false;
+            }
+
+            *chosen = selected.as<midinetworksetup::RemoteHostItem>();
+
+            co_return true;
+        }
+        catch (...)
+        {
+            m_openDialog = nullptr;
+
+            co_return false;
+        }
+    }
+
+    // Points a saved entry at a different device, keeping the entry and the name the customer
+    // chose. Used when a device changes the identity it advertises, typically after a firmware
+    // update, so the saved entry can never match it again.
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnReassociateRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        auto item = ItemOf<midinetworksetup::RemoteHostItem>(sender);
+
+        if (item == nullptr || item.ClientId().empty())
+        {
+            co_return;
+        }
+
+        winrt::guid clientId{};
+
+        if (!TryParseKey(item.ClientId(), clientId))
+        {
+            co_return;
+        }
+
+        auto const entryName = item.DisplayName();
+
+        // What the customer actually chose, which may be nothing. Using the row's display name
+        // here would pin a name the service had only derived from the device.
+        auto const savedCustomName =
+            native::NetworkConfigFile::Current().GetClientCustomEndpointName(item.ClientId());
+
+        auto target = std::make_shared<midinetworksetup::RemoteHostItem>(nullptr);
+
+        if (!co_await PromptForReassociateTargetAsync(entryName, target) || *target == nullptr)
+        {
+            co_return;
+        }
+
+        auto weak = get_weak();
+        auto queue = DispatcherQueue();
+
+        item.IsBusy(true);
+
+        auto const oldKey = item.ClientId();
+
+        co_await winrt::resume_background();
+
+        bool removed{ false };
+
+        try
+        {
+            // The old entry has to go first: the identifier is being reused, and two entries
+            // cannot hold it. Removing it live also stops the service retrying a device which
+            // is never coming back.
+            midi2net::MidiNetworkClientDisconnectConfig config{};
+            config.ClientId(clientId);
+
+            auto const response = co_await midi2net::MidiNetworkTransportManager::DisconnectNetworkClientAsync(config);
+
+            removed = response != nullptr && response.Success();
+
+            if (removed)
+            {
+                removed = native::NetworkConfigFile::Current().RemoveClient(oldKey);
+            }
+        }
+        catch (...)
+        {
+            removed = false;
+        }
+
+        if (queue != nullptr)
+        {
+            queue.TryEnqueue([weak, item, target, entryName, savedCustomName, clientId, removed]()
+                {
+                    item.IsBusy(false);
+
+                    auto strong = weak.get();
+
+                    if (strong == nullptr)
+                    {
+                        return;
+                    }
+
+                    if (!removed)
+                    {
+                        strong->SetRemoteStatus(res::GetString(L"ReassociateFailed"));
+                        return;
+                    }
+
+                    // Whatever name the customer had chosen is carried over, which is the thing
+                    // they would otherwise have to set up again.
+                    strong->ConnectRemoteHostAsync(*target, false, savedCustomName, clientId);
+                });
+        }
+    }
+
+    _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::ConnectRemoteHostAsync(
         midinetworksetup::RemoteHostItem const item,
         bool const reuseExistingEntry,
-        winrt::hstring const customEndpointName)
+        winrt::hstring const customEndpointName,
+        winrt::guid const explicitClientId)
     {
         if (item == nullptr)
         {
@@ -316,7 +491,12 @@ namespace winrt::midinetworksetup::implementation
         // configuration file entry stays the one the customer already has
         winrt::guid clientId{};
 
-        if (!reuseExistingEntry || !TryParseKey(item.ClientId(), clientId))
+        if (explicitClientId != winrt::guid{})
+        {
+            // re-associating: the entry being kept is not the one supplying the match criteria
+            clientId = explicitClientId;
+        }
+        else if (!reuseExistingEntry || !TryParseKey(item.ClientId(), clientId))
         {
             clientId = foundation::GuidHelper::CreateNewGuid();
         }

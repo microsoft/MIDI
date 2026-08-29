@@ -200,6 +200,32 @@
   <data name="RetryButton.Content" xml:space="preserve">
     <value>Try again</value>
   </data>
+  <data name="ReassociateButton.Content" xml:space="preserve">
+    <value>Reconnect to...</value>
+    <comment>Points a saved entry at a different device, for when a device changed the identity it advertises.</comment>
+  </data>
+  <data name="ReassociateDialog.Title" xml:space="preserve">
+    <value>Reconnect this to a different device</value>
+  </data>
+  <data name="ReassociateDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Reconnect</value>
+  </data>
+  <data name="ReassociateDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ReassociateDialogHint.Text" xml:space="preserve">
+    <value>The name you chose for this device in Windows is kept. Only which device it points at changes.</value>
+  </data>
+  <data name="ReassociatePromptFormat" xml:space="preserve">
+    <value>{0} is not on the network. If it came back with a different identity, for example after a firmware update, choose it below and this saved connection will point at it instead.</value>
+    <comment>{0} is the name of the saved entry</comment>
+  </data>
+  <data name="ReassociateNoCandidates" xml:space="preserve">
+    <value>There are no unused devices on the network to reconnect this to.</value>
+  </data>
+  <data name="ReassociateFailed" xml:space="preserve">
+    <value>Windows could not release the old saved connection, so nothing was changed.</value>
+  </data>
   <data name="RemoteHostDetailsExpander.Header" xml:space="preserve">
     <value>Details</value>
   </data>

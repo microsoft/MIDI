@@ -314,6 +314,15 @@ namespace winrt::midinetworksetup::implementation
                 winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
         }
 
+        // Offered only when the saved device is missing from the network. Re-pointing an entry
+        // whose device is present would just be a disguised way of connecting to something else.
+        winrt::Microsoft::UI::Xaml::Visibility ReassociateVisibility() const noexcept
+        {
+            return (m_isConfigured && !m_isAdvertised && !m_isBusy) ?
+                winrt::Microsoft::UI::Xaml::Visibility::Visible :
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
+        }
+
         winrt::Microsoft::UI::Xaml::Visibility NotAdvertisedVisibility() const noexcept
         {
             return m_isAdvertised ?
@@ -403,6 +412,9 @@ namespace winrt::midinetworksetup::implementation
             if (UpdateField(m_isAdvertised, isAdvertised, L"IsAdvertised"))
             {
                 RaisePropertyChanged(L"NotAdvertisedVisibility");
+
+                // the re-associate button only exists while the device is missing
+                RaisePropertyChanged(L"ReassociateVisibility");
             }
 
             if (connectedChanged)
@@ -442,6 +454,7 @@ namespace winrt::midinetworksetup::implementation
         {
             RaisePropertyChanged(L"ConnectVisibility");
             RaisePropertyChanged(L"RetryVisibility");
+            RaisePropertyChanged(L"ReassociateVisibility");
             RaisePropertyChanged(L"DisconnectVisibility");
         }
 

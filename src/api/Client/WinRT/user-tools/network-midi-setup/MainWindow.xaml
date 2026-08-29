@@ -344,6 +344,10 @@
                                                         Content="Try again"
                                                         Visibility="{x:Bind RetryVisibility, Mode=OneWay}"
                                                         Click="OnRetryRemoteHostClick" />
+                                                <Button x:Uid="ReassociateButton"
+                                                        Content="Reconnect to..."
+                                                        Visibility="{x:Bind ReassociateVisibility, Mode=OneWay}"
+                                                        Click="OnReassociateRemoteHostClick" />
                                                 <Button Content="{x:Bind DisconnectLabel, Mode=OneWay}"
                                                         Visibility="{x:Bind DisconnectVisibility, Mode=OneWay}"
                                                         Click="OnDisconnectRemoteHostClick" />
@@ -1184,6 +1188,38 @@
                          PlaceholderText="Optional" />
                 <TextBlock x:Uid="ConnectNameDialogHint"
                            Text="Leave this empty to use the name the device reports."
+                           TextWrapping="Wrap"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+        </ContentDialog>
+        <ContentDialog x:Name="ReassociateDialog"
+                       x:Uid="ReassociateDialog"
+                       Title="Reconnect this to a different device"
+                       PrimaryButtonText="Reconnect"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Close"
+                       IsPrimaryButtonEnabled="False">
+            <StackPanel Spacing="8" MaxWidth="440">
+                <TextBlock x:Name="ReassociateDialogText" TextWrapping="Wrap" />
+                <ListView x:Name="ReassociateDialogList"
+                          SelectionMode="Single"
+                          MaxHeight="260"
+                          SelectionChanged="OnReassociateSelectionChanged">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="local:RemoteHostItem">
+                            <StackPanel Margin="0,4,0,4">
+                                <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
+                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBlock Text="{x:Bind SubtitleText, Mode=OneWay}"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+                <TextBlock x:Uid="ReassociateDialogHint"
+                           Text="The name you chose for this device in Windows is kept. Only which device it points at changes."
                            TextWrapping="Wrap"
                            Style="{ThemeResource CaptionTextBlockStyle}"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />

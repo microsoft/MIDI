@@ -43,6 +43,8 @@ namespace winrt::midinetworksetup::implementation
 
         winrt::fire_and_forget OnConnectRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnRetryRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnReassociateRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnReassociateSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnCopyEndpointDeviceIdClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnDisconnectRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
@@ -159,11 +161,19 @@ namespace winrt::midinetworksetup::implementation
         winrt::fire_and_forget ConnectRemoteHostAsync(
             midinetworksetup::RemoteHostItem const item,
             bool const reuseExistingEntry,
-            winrt::hstring const customEndpointName);
+            winrt::hstring const customEndpointName,
+            winrt::guid const explicitClientId = winrt::guid{});
 
         foundation::IAsyncOperation<bool> PromptForConnectNameAsync(
             winrt::hstring const deviceName,
             std::shared_ptr<winrt::hstring> customName);
+
+        // Picks which advertised device a saved entry should point at instead. Deliberately a
+        // choice rather than an automatic match: guessing which device replaced another has
+        // caused trouble before, and the customer knows which unit they updated.
+        foundation::IAsyncOperation<bool> PromptForReassociateTargetAsync(
+            winrt::hstring const entryName,
+            std::shared_ptr<midinetworksetup::RemoteHostItem> chosen);
 
         static winrt::hstring DescribeLatency(uint64_t const ticks) noexcept;
         static winrt::hstring JoinAddresses(collections::IVectorView<winrt::hstring> const& addresses) noexcept;

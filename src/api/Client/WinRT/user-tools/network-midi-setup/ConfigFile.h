@@ -78,6 +78,11 @@ namespace midinetworksetup
         // and the saved entry is the only place the old value survives.
         winrt::hstring GetClientMatchProductInstanceId(_In_ winrt::hstring const& clientIdKey) noexcept;
 
+        // The name the customer chose for this entry, or empty when they accepted the name the
+        // device reports. The difference matters: carrying an empty value forward keeps the
+        // endpoint following the device's own name instead of pinning what it happened to be.
+        winrt::hstring GetClientCustomEndpointName(_In_ winrt::hstring const& clientIdKey) noexcept;
+
     private:
         NetworkConfigFile() noexcept;
 

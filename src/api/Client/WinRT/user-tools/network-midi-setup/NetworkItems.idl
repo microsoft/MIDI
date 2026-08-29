@@ -73,6 +73,10 @@ namespace midinetworksetup
 
         Microsoft.UI.Xaml.Visibility ConnectVisibility{ get; };
         Microsoft.UI.Xaml.Visibility RetryVisibility{ get; };
+
+        // Only for a saved entry whose device is not on the network, which is the case where
+        // pointing it at a different device is a sensible thing to offer.
+        Microsoft.UI.Xaml.Visibility ReassociateVisibility{ get; };
         Microsoft.UI.Xaml.Visibility DisconnectVisibility{ get; };
         Microsoft.UI.Xaml.Visibility NotAdvertisedVisibility{ get; };
         Microsoft.UI.Xaml.Visibility ConnectedBadgeVisibility{ get; };

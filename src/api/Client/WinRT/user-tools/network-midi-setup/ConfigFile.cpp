@@ -738,6 +738,36 @@ namespace midinetworksetup
     }
 
     _Use_decl_annotations_
+    winrt::hstring NetworkConfigFile::GetClientCustomEndpointName(winrt::hstring const& clientIdKey) noexcept
+    {
+        json::JsonObject config{ nullptr };
+
+        if (!LoadCached(config))
+        {
+            return {};
+        }
+
+        auto clients = GetEntriesObject(config, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY, false);
+
+        auto client = FindObject(clients, ResolveKey(clients, clientIdKey));
+
+        if (client == nullptr)
+        {
+            return {};
+        }
+
+        try
+        {
+            return client.GetNamedString(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY, L"");
+        }
+        catch (...)
+        {
+            return {};
+        }
+    }
+
+    _Use_decl_annotations_
     bool NetworkConfigFile::SetRemoteClientDecision(
         winrt::hstring const& hostIdKey,
         winrt::hstring const& umpEndpointName,
