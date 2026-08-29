@@ -123,6 +123,7 @@ BEGIN
     IDS_ERROR_INVITATION_NOT_APPROVED               "Invitation was not approved in time."
     IDS_ERROR_MISSING_REMOTE_CLIENT_IDENTITY        "A remote client decision needs both the UMP endpoint name and the product instance id of the client."
     IDS_ERROR_SERVICE_INSTANCE_NAME_IN_USE          "Another host is already using this service instance name. Each host needs its own, because the name identifies the host on the network and names its parent device."
+    IDS_ERROR_SERVICE_INSTANCE_NAME_TOO_LONG        "The service instance name is too long. It is a single DNS label, so it is limited to 63 bytes."
     IDS_ERROR_INVALID_ENTRY_IDENTIFIER              "Entry identifiers must be GUIDs, for example {2C1B4D5E-8F3A-4C7B-9E1D-6A5B3C2D1E0F}."
     IDS_ERROR_ENDPOINT_NAME_TOO_LONG                "The UMP endpoint name is longer than the 98 bytes the MIDI 2.0 specification allows."
     IDS_ERROR_PRODUCT_INSTANCE_ID_TOO_LONG          "The product instance id is longer than the 42 bytes the MIDI 2.0 specification allows."

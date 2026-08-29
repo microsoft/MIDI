@@ -124,6 +124,20 @@ bool NetworkMidiTransportSettingsTests::ClassSetup()
 
 bool NetworkMidiTransportSettingsTests::ClassCleanup()
 {
+    // Safety net. A test which fails an assertion unwinds through its own scope_exit, but one
+    // which is skipped or blocked does not run at all, and a leaked host keeps advertising.
+    for (auto const& entry : {
+        L"{6f9619ff-8b86-d011-b42d-00cf4fc964ff}",
+        L"{6f9619ff-8b86-d011-b42d-00cf4fc964fe}",
+        L"{6f9619ff-8b86-d011-b42d-00cf4fc964fd}",
+        L"{6f9619ff-8b86-d011-b42d-00cf4fc964fc}",
+        L"{6f9619ff-8b86-d011-b42d-00cf4fc964fb}" })
+    {
+        StopHost(entry);
+        RemoveHost(entry);
+        DisconnectClient(entry);
+    }
+
     if (g_haveOriginalSettings)
     {
         // Stringify wraps the body in braces, which SetRawTransportSettings adds itself
@@ -283,4 +297,148 @@ void NetworkMidiTransportSettingsTests::ProductInstanceIdIsNoLongerATransportSet
     VERIFY_IS_FALSE(
         settings->HasKey(L"productInstanceId"),
         L"productInstanceId is not reported as a transport setting");
+}
+
+
+// The transport runs inside the service on a COM boundary. Every assertion below is really the
+// same one: the call returns rather than throwing, and the service is still answering afterwards.
+namespace
+{
+    void VerifyServiceStillResponds()
+    {
+        VERIFY_IS_TRUE(ReadSettings().has_value(), L"The service still answers after the malformed payload");
+    }
+
+    // A malformed entry which still carries a usable name is ACCEPTED, so these tests create
+    // live hosts and clients in the running service. Left behind they keep advertising, hold
+    // sockets, and are picked up by the background scanner, which is not this suite's business
+    // and is not the next suite's problem either.
+    void ForgetEntry(_In_ std::wstring const& entryIdentifier)
+    {
+        StopHost(entryIdentifier);
+        RemoveHost(entryIdentifier);
+        DisconnectClient(entryIdentifier);
+    }
+
+    // The scan interval governs how aggressively the background creator retries these entries.
+    // A previous test in this class drives it to its floor, so anything creating an entry puts
+    // it back first rather than inheriting a 250 ms scan.
+    void RestoreDefaultScanInterval()
+    {
+        SetRawTransportSettings(L"\"directConnectionScanInterval\":" + std::to_wstring(ScanDefault));
+    }
+}
+
+
+void NetworkMidiTransportSettingsTests::WrongTypesInAHostEntryDoNotThrow()
+{
+    RestoreDefaultScanInterval();
+
+    std::wstring const entry{ L"{6f9619ff-8b86-d011-b42d-00cf4fc964ff}" };
+    auto cleanup = wil::scope_exit([&] { ForgetEntry(entry); });
+
+    // Every field the host parse reads, each holding a type it is not expecting. Before the
+    // accessors were made type-safe, the first of these threw out of UpdateConfiguration.
+    auto const result = SendRawCreateSection(
+        L"\"hosts\":{\"" + entry + L"\":{"
+        L"\"networkProtocol\":42,"
+        L"\"enabled\":\"yes\","
+        L"\"advertise\":\"no\","
+        L"\"createMidi1Ports\":\"true\","
+        L"\"name\":123,"
+        L"\"productInstanceId\":false,"
+        L"\"port\":9004,"
+        L"\"allowPortFallback\":\"maybe\","
+        L"\"authentication\":7,"
+        L"\"remoteClientPolicy\":[\"requireApproval\"],"
+        L"\"serviceInstanceName\":{\"nested\":1},"
+        L"\"customEndpointName\":null"
+        L"}}");
+
+    VERIFY_IS_TRUE(result.CallSucceeded, L"The call returned rather than throwing");
+
+    VerifyServiceStillResponds();
+}
+
+
+void NetworkMidiTransportSettingsTests::WrongTypesInAClientEntryDoNotThrow()
+{
+    RestoreDefaultScanInterval();
+
+    std::wstring const entry{ L"{6f9619ff-8b86-d011-b42d-00cf4fc964fe}" };
+    auto cleanup = wil::scope_exit([&] { ForgetEntry(entry); });
+
+    auto const result = SendRawCreateSection(
+        L"\"clients\":{\"" + entry + L"\":{"
+        L"\"networkProtocol\":true,"
+        L"\"enabled\":\"yes\","
+        L"\"customEndpointName\":99,"
+        L"\"match\":{"
+        L"\"id\":12345,"
+        L"\"directHostNameOrIP\":[\"127.0.0.1\"],"
+        L"\"directPort\":{\"p\":1},"
+        L"\"umpProductInstanceId\":false,"
+        L"\"umpEndpointName\":null"
+        L"}}}");
+
+    VERIFY_IS_TRUE(result.CallSucceeded, L"The call returned rather than throwing");
+
+    VerifyServiceStillResponds();
+}
+
+
+void NetworkMidiTransportSettingsTests::WrongTypesInAnAllowedClientsArrayDoNotThrow()
+{
+    RestoreDefaultScanInterval();
+
+    // Both of these carry a usable name, so the host is accepted and started rather than
+    // refused. They have to be removed again or they keep advertising.
+    std::wstring const wrongTypeEntry{ L"{6f9619ff-8b86-d011-b42d-00cf4fc964fd}" };
+    std::wstring const badElementsEntry{ L"{6f9619ff-8b86-d011-b42d-00cf4fc964fc}" };
+
+    auto cleanup = wil::scope_exit([&]
+        {
+            ForgetEntry(wrongTypeEntry);
+            ForgetEntry(badElementsEntry);
+        });
+
+    // The array itself is the wrong type in one case, and holds non-object elements in the
+    // other. Both used to reach GetNamedArray / GetObjectAt unguarded.
+    auto const wrongArrayType = SendRawCreateSection(
+        L"\"hosts\":{\"" + wrongTypeEntry + L"\":{"
+        L"\"name\":\"WrongArrayType\",\"allowedClients\":\"not-an-array\"}}");
+
+    VERIFY_IS_TRUE(wrongArrayType.CallSucceeded, L"A non-array allowedClients returns rather than throwing");
+
+    auto const badElements = SendRawCreateSection(
+        L"\"hosts\":{\"" + badElementsEntry + L"\":{"
+        L"\"name\":\"BadElements\",\"allowedClients\":[1,\"two\",null,{\"umpEndpointName\":5}]}}");
+
+    VERIFY_IS_TRUE(badElements.CallSucceeded, L"Non-object array elements are skipped rather than throwing");
+
+    VerifyServiceStillResponds();
+}
+
+
+void NetworkMidiTransportSettingsTests::OverlongServiceInstanceNameIsRejected()
+{
+    RestoreDefaultScanInterval();
+
+    std::wstring const entry{ L"{6f9619ff-8b86-d011-b42d-00cf4fc964fb}" };
+    auto cleanup = wil::scope_exit([&] { ForgetEntry(entry); });
+
+    // A DNS label is 63 bytes. The SDK truncates on the way in, but a hand-written
+    // configuration file reaches the transport without passing through it.
+    std::wstring const tooLong(120, L'a');
+
+    auto const result = SendRawCreateSection(
+        L"\"hosts\":{\"" + entry + L"\":{"
+        L"\"name\":\"Overlong Label Test\","
+        L"\"serviceInstanceName\":\"" + tooLong + L"\"}}");
+
+    VERIFY_IS_TRUE(result.CallSucceeded, L"The call returned rather than throwing");
+
+    VERIFY_IS_FALSE(result.ReportedSuccess, L"An over-long service instance name is refused");
+
+    VerifyServiceStillResponds();
 }

@@ -112,6 +112,9 @@ namespace NetworkMidiTest
         _In_ bool const advertise = false,
         _In_ bool const allowPortFallback = true);
 
+    // The body of a "create" object, verbatim, so a test can put the wrong type in any field.
+    ServiceConfigResult SendRawCreateSection(_In_ std::wstring const& createBodyJson);
+
     ServiceConfigResult StartHost(_In_ std::wstring const& entryIdentifier);
 
     // Safe to call for a host which is already stopped or was never created.

@@ -360,40 +360,72 @@ CMidi2NetworkMidiEndpointManager::HostEndpointCreationWorker(std::stop_token sto
 
     while (!stopToken.stop_requested())
     {
-        if (m_backgroundHostEndpointCreationThreadWakeup.is_signaled())
+        try
         {
-            m_backgroundHostEndpointCreationThreadWakeup.ResetEvent();
-        }
-
-        std::vector<PendingHostEndpointCreation> requests;
-
-        {
-            auto lock = m_pendingHostEndpointCreationsLock.lock();
-            requests.swap(m_pendingHostEndpointCreations);
-        }
-
-        size_t remainingInBatch{ requests.size() };
-
-        for (auto const& request : requests)
-        {
-            remainingInBatch--;
-
-            if (request.Connection == nullptr)
+            if (m_backgroundHostEndpointCreationThreadWakeup.is_signaled())
             {
-                continue;
+                m_backgroundHostEndpointCreationThreadWakeup.ResetEvent();
             }
 
-            if (stopToken.stop_requested())
+            std::vector<PendingHostEndpointCreation> requests;
+
             {
-                LOG_IF_FAILED(request.Connection->FailHostSessionEndpointCreation(E_ABORT));
-                continue;
+                auto lock = m_pendingHostEndpointCreationsLock.lock();
+                requests.swap(m_pendingHostEndpointCreations);
             }
 
-            // The remote said Bye while this sat in the queue. Creating the endpoint now would
-            // be immediately undone, and that teardown competes with the rest of this batch.
-            if (request.Connection->IsHostEndpointCreationAbandoned())
+            size_t remainingInBatch{ requests.size() };
+
+            for (auto const& request : requests)
             {
-                request.Connection->CancelPendingHostEndpointCreation();
+                remainingInBatch--;
+
+                if (request.Connection == nullptr)
+                {
+                    continue;
+                }
+
+                if (stopToken.stop_requested())
+                {
+                    LOG_IF_FAILED(request.Connection->FailHostSessionEndpointCreation(E_ABORT));
+                    continue;
+                }
+
+                // The remote said Bye while this sat in the queue. Creating the endpoint now would
+                // be immediately undone, and that teardown competes with the rest of this batch.
+                if (request.Connection->IsHostEndpointCreationAbandoned())
+                {
+                    request.Connection->CancelPendingHostEndpointCreation();
+
+                    TraceLoggingWrite(
+                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Skipped host endpoint creation, remote already said Bye", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingUInt64(static_cast<uint64_t>(remainingInBatch), "remaining in batch")
+                    );
+
+                    continue;
+                }
+
+                std::wstring newDeviceInstanceId{ };
+                std::wstring newEndpointDeviceInterfaceId{ };
+
+                auto queuedMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - request.QueuedAt).count();
+
+                auto activationStarted = std::chrono::steady_clock::now();
+
+                auto hr = request.Connection->CreateHostEndpointForPendingInvitation(
+                    request.ClientUmpEndpointName,
+                    request.ClientProductInstanceId,
+                    newDeviceInstanceId,
+                    newEndpointDeviceInterfaceId);
+
+                auto activationMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now() - activationStarted).count();
 
                 TraceLoggingWrite(
                     MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -401,58 +433,42 @@ CMidi2NetworkMidiEndpointManager::HostEndpointCreationWorker(std::stop_token sto
                     TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                     TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                     TraceLoggingPointer(this, "this"),
-                    TraceLoggingWideString(L"Skipped host endpoint creation, remote already said Bye", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                    TraceLoggingUInt64(static_cast<uint64_t>(remainingInBatch), "remaining in batch")
+                    TraceLoggingWideString(L"Host endpoint creation completed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingInt64(static_cast<int64_t>(queuedMilliseconds), "queued ms"),
+                    TraceLoggingInt64(static_cast<int64_t>(activationMilliseconds), "activation ms"),
+                    TraceLoggingUInt64(static_cast<uint64_t>(remainingInBatch), "remaining in batch"),
+                    TraceLoggingHResult(hr, "hresult")
                 );
 
-                continue;
+                if (SUCCEEDED(hr))
+                {
+                    LOG_IF_FAILED(request.Connection->CompleteHostSessionAfterEndpointCreated(
+                        newDeviceInstanceId,
+                        newEndpointDeviceInterfaceId));
+                }
+                else
+                {
+                    LOG_IF_FAILED(request.Connection->FailHostSessionEndpointCreation(hr));
+                }
             }
 
-            std::wstring newDeviceInstanceId{ };
-            std::wstring newEndpointDeviceInterfaceId{ };
-
-            auto queuedMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now() - request.QueuedAt).count();
-
-            auto activationStarted = std::chrono::steady_clock::now();
-
-            auto hr = request.Connection->CreateHostEndpointForPendingInvitation(
-                request.ClientUmpEndpointName,
-                request.ClientProductInstanceId,
-                newDeviceInstanceId,
-                newEndpointDeviceInterfaceId);
-
-            auto activationMilliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(
-                std::chrono::steady_clock::now() - activationStarted).count();
-
-            TraceLoggingWrite(
-                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_INFO,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Host endpoint creation completed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingInt64(static_cast<int64_t>(queuedMilliseconds), "queued ms"),
-                TraceLoggingInt64(static_cast<int64_t>(activationMilliseconds), "activation ms"),
-                TraceLoggingUInt64(static_cast<uint64_t>(remainingInBatch), "remaining in batch"),
-                TraceLoggingHResult(hr, "hresult")
-            );
-
-            if (SUCCEEDED(hr))
+            if (!stopToken.stop_requested())
             {
-                LOG_IF_FAILED(request.Connection->CompleteHostSessionAfterEndpointCreated(
-                    newDeviceInstanceId,
-                    newEndpointDeviceInterfaceId));
-            }
-            else
-            {
-                LOG_IF_FAILED(request.Connection->FailHostSessionEndpointCreation(hr));
+                m_backgroundHostEndpointCreationThreadWakeup.wait();
             }
         }
-
-        if (!stopToken.stop_requested())
+        // One bad entry must not end the worker. An exception leaving this thread would
+        // terminate the service, and returning would leave nothing creating endpoints again.
+        catch (...)
         {
-            m_backgroundHostEndpointCreationThreadWakeup.wait();
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Exception in worker iteration. Continuing.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
         }
     }
 
@@ -494,31 +510,47 @@ CMidi2NetworkMidiEndpointManager::NegotiationWorker(std::stop_token stopToken)
 
     while (!stopToken.stop_requested())
     {
-        if (m_backgroundNegotiationThreadWakeup.is_signaled())
+        try
         {
-            m_backgroundNegotiationThreadWakeup.ResetEvent();
-        }
-
-        std::vector<std::wstring> negotiations;
-
-        {
-            auto lock = m_pendingNegotiationsLock.lock();
-            negotiations.swap(m_pendingNegotiations);
-        }
-
-        for (auto const& endpointDeviceInterfaceId : negotiations)
-        {
-            if (stopToken.stop_requested())
+            if (m_backgroundNegotiationThreadWakeup.is_signaled())
             {
-                break;
+                m_backgroundNegotiationThreadWakeup.ResetEvent();
             }
 
-            LOG_IF_FAILED(InitiateDiscoveryAndNegotiation(endpointDeviceInterfaceId));
-        }
+            std::vector<std::wstring> negotiations;
 
-        if (!stopToken.stop_requested())
+            {
+                auto lock = m_pendingNegotiationsLock.lock();
+                negotiations.swap(m_pendingNegotiations);
+            }
+
+            for (auto const& endpointDeviceInterfaceId : negotiations)
+            {
+                if (stopToken.stop_requested())
+                {
+                    break;
+                }
+
+                LOG_IF_FAILED(InitiateDiscoveryAndNegotiation(endpointDeviceInterfaceId));
+            }
+
+            if (!stopToken.stop_requested())
+            {
+                m_backgroundNegotiationThreadWakeup.wait();
+            }
+        }
+        // One bad entry must not end the worker. An exception leaving this thread would
+        // terminate the service, and returning would leave nothing creating endpoints again.
+        catch (...)
         {
-            m_backgroundNegotiationThreadWakeup.wait();
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Exception in worker iteration. Continuing.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
         }
     }
 
@@ -556,31 +588,47 @@ CMidi2NetworkMidiEndpointManager::ConnectionShutdownWorker(std::stop_token stopT
 
     while (!stopToken.stop_requested())
     {
-        if (m_backgroundConnectionShutdownThreadWakeup.is_signaled())
+        try
         {
-            m_backgroundConnectionShutdownThreadWakeup.ResetEvent();
-        }
-
-        // Connections released by the receive path. Drained into a local copy so the lock is not
-        // held across Shutdown, which joins worker threads and calls into the service.
-        std::vector<std::shared_ptr<MidiNetworkConnection>> shutdowns;
-
-        {
-            auto lock = m_pendingConnectionShutdownsLock.lock();
-            shutdowns.swap(m_pendingConnectionShutdowns);
-        }
-
-        for (auto const& connection : shutdowns)
-        {
-            if (connection != nullptr)
+            if (m_backgroundConnectionShutdownThreadWakeup.is_signaled())
             {
-                LOG_IF_FAILED(connection->Shutdown());
+                m_backgroundConnectionShutdownThreadWakeup.ResetEvent();
+            }
+
+            // Connections released by the receive path. Drained into a local copy so the lock is not
+            // held across Shutdown, which joins worker threads and calls into the service.
+            std::vector<std::shared_ptr<MidiNetworkConnection>> shutdowns;
+
+            {
+                auto lock = m_pendingConnectionShutdownsLock.lock();
+                shutdowns.swap(m_pendingConnectionShutdowns);
+            }
+
+            for (auto const& connection : shutdowns)
+            {
+                if (connection != nullptr)
+                {
+                    LOG_IF_FAILED(connection->Shutdown());
+                }
+            }
+
+            if (!stopToken.stop_requested())
+            {
+                m_backgroundConnectionShutdownThreadWakeup.wait();
             }
         }
-
-        if (!stopToken.stop_requested())
+        // One bad entry must not end the worker. An exception leaving this thread would
+        // terminate the service, and returning would leave nothing creating endpoints again.
+        catch (...)
         {
-            m_backgroundConnectionShutdownThreadWakeup.wait();
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Exception in worker iteration. Continuing.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
         }
     }
 
@@ -810,246 +858,262 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
 
     while (!stopToken.stop_requested())
     {
-        TraceLoggingWrite(
-            MidiNetworkMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_INFO,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Background worker loop", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-        );
-
-        if (m_backgroundEndpointCreatorThreadWakeup.is_signaled())
+        try
         {
-            m_backgroundEndpointCreatorThreadWakeup.ResetEvent();
-        }
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Background worker loop", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
 
-        // Negotiation runs on its own thread. It calls into the service and can block there
-        // behind a PnP notification, which used to stop this loop creating any client at all.
-
-        // run through host entries
-
-        for (auto& definition : TransportState::Current().GetPendingHostDefinitions())
-        {
-            if (definition->State != MidiNetworkEntryState::Pending)
+            if (m_backgroundEndpointCreatorThreadWakeup.is_signaled())
             {
-                continue;
+                m_backgroundEndpointCreatorThreadWakeup.ResetEvent();
             }
 
-            if (!definition->IsEnabled)
+            // Negotiation runs on its own thread. It calls into the service and can block there
+            // behind a PnP notification, which used to stop this loop creating any client at all.
+
+            // run through host entries
+
+            for (auto& definition : TransportState::Current().GetPendingHostDefinitions())
             {
-                continue;
-            }
-
-            auto host = std::make_shared<MidiNetworkHost>();
-            LOG_IF_NULL_ALLOC(host);
-
-            if (host != nullptr)
-            {
-                auto initializeResult = host->Initialize(*definition);
-
-                if (FAILED(initializeResult))
+                if (definition->State != MidiNetworkEntryState::Pending)
                 {
-                    LOG_IF_FAILED(initializeResult);
-
-                    TraceLoggingWrite(
-                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_ERROR,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Host definition rejected during initialization. Host not started.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingGuid(definition->EntryIdentifier, "entry identifier"),
-                        TraceLoggingWideString(definition->UmpEndpointName.c_str(), "name"),
-                        TraceLoggingHResult(initializeResult, MIDI_TRACE_EVENT_HRESULT_FIELD)
-                    );
-
-                    // Initialize assigns the definition last, so a rejected host has an empty one.
-                    // Starting it anyway bound a socket and published a nameless host that no
-                    // caller could identify or remove.
-                    LOG_IF_FAILED(TransportState::Current().MarkHostDefinitionFailed(definition->EntryIdentifier));
-
                     continue;
                 }
 
-                if (!host->HasStarted())
+                if (!definition->IsEnabled)
                 {
-                    LOG_IF_FAILED(host->Start());
+                    continue;
                 }
 
-                LOG_IF_FAILED(TransportState::Current().MarkHostDefinitionLive(definition->EntryIdentifier));
+                auto host = std::make_shared<MidiNetworkHost>();
+                LOG_IF_NULL_ALLOC(host);
 
-                // The definition can be removed while the host above is being built, so
-                // registration is conditional on it still being there. Losing that race means
-                // this host is unreachable and must not be left holding a socket and a service
-                // instance name.
-                if (!TransportState::Current().AddHostIfStillPending(host, definition->EntryIdentifier))
+                if (host != nullptr)
                 {
-                    TraceLoggingWrite(
-                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Host entry was removed while the host was being created. Shutting it back down.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingGuid(definition->EntryIdentifier, "entry identifier")
-                    );
+                    auto initializeResult = host->Initialize(*definition);
 
-                    LOG_IF_FAILED(host->Shutdown());
-                }
-            }
-        }
-
-        // Run through client definition entries. These aren't actual clients
-        // but are instead just parameters needed to create connections to hosts when
-        // they come online.
-
-        for (auto const& clientDefinition : TransportState::Current().GetPendingClientDefinitions())
-        {
-            if (clientDefinition->State != MidiNetworkEntryState::Pending)
-            {
-                continue;
-            }
-
-            if (!clientDefinition->Enabled)
-            {
-                continue;
-            }
-
-            // --- connect via mDNS entry
-            if (!clientDefinition->MatchId.empty() ||
-                !clientDefinition->MatchProductInstanceId.empty() ||
-                !clientDefinition->MatchUmpEndpointName.empty())
-            {
-                ::WindowsMidiServicesInternal::MidiDnssdService advertisedHost{ };
-
-                // The device id first, then the device's own identity. A responder renames a
-                // colliding DNS-SD instance label and a user or firmware update can change it, so
-                // the id alone would silently stop matching a device which is still right there.
-                bool found{ false };
-
-                {
-                    auto lock = m_advertisedHostsLock.lock_shared();
-
-                    found = TryFindAdvertisedHost(m_foundAdvertisedHosts, clientDefinition->MatchId, advertisedHost);
-
-                    if (!found)
+                    if (FAILED(initializeResult))
                     {
-                        found = TryFindAdvertisedHost(
-                            m_foundAdvertisedHosts, clientDefinition->MatchProductInstanceId, advertisedHost);
+                        LOG_IF_FAILED(initializeResult);
+
+                        TraceLoggingWrite(
+                            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Host definition rejected during initialization. Host not started.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingGuid(definition->EntryIdentifier, "entry identifier"),
+                            TraceLoggingWideString(definition->UmpEndpointName.c_str(), "name"),
+                            TraceLoggingHResult(initializeResult, MIDI_TRACE_EVENT_HRESULT_FIELD)
+                        );
+
+                        // Initialize assigns the definition last, so a rejected host has an empty one.
+                        // Starting it anyway bound a socket and published a nameless host that no
+                        // caller could identify or remove.
+                        LOG_IF_FAILED(TransportState::Current().MarkHostDefinitionFailed(definition->EntryIdentifier));
+
+                        continue;
                     }
 
-                    if (!found)
+                    if (!host->HasStarted())
                     {
-                        found = TryFindAdvertisedHost(
-                            m_foundAdvertisedHosts, clientDefinition->MatchUmpEndpointName, advertisedHost);
+                        LOG_IF_FAILED(host->Start());
+                    }
+
+                    LOG_IF_FAILED(TransportState::Current().MarkHostDefinitionLive(definition->EntryIdentifier));
+
+                    // The definition can be removed while the host above is being built, so
+                    // registration is conditional on it still being there. Losing that race means
+                    // this host is unreachable and must not be left holding a socket and a service
+                    // instance name.
+                    if (!TransportState::Current().AddHostIfStillPending(host, definition->EntryIdentifier))
+                    {
+                        TraceLoggingWrite(
+                            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_INFO,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Host entry was removed while the host was being created. Shutting it back down.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingGuid(definition->EntryIdentifier, "entry identifier")
+                        );
+
+                        LOG_IF_FAILED(host->Shutdown());
+                    }
+                }
+            }
+
+            // Run through client definition entries. These aren't actual clients
+            // but are instead just parameters needed to create connections to hosts when
+            // they come online.
+
+            for (auto const& clientDefinition : TransportState::Current().GetPendingClientDefinitions())
+            {
+                if (clientDefinition->State != MidiNetworkEntryState::Pending)
+                {
+                    continue;
+                }
+
+                if (!clientDefinition->Enabled)
+                {
+                    continue;
+                }
+
+                // --- connect via mDNS entry
+                if (!clientDefinition->MatchId.empty() ||
+                    !clientDefinition->MatchProductInstanceId.empty() ||
+                    !clientDefinition->MatchUmpEndpointName.empty())
+                {
+                    ::WindowsMidiServicesInternal::MidiDnssdService advertisedHost{ };
+
+                    // The device id first, then the device's own identity. A responder renames a
+                    // colliding DNS-SD instance label and a user or firmware update can change it, so
+                    // the id alone would silently stop matching a device which is still right there.
+                    bool found{ false };
+
+                    {
+                        auto lock = m_advertisedHostsLock.lock_shared();
+
+                        found = TryFindAdvertisedHost(m_foundAdvertisedHosts, clientDefinition->MatchId, advertisedHost);
+
+                        if (!found)
+                        {
+                            found = TryFindAdvertisedHost(
+                                m_foundAdvertisedHosts, clientDefinition->MatchProductInstanceId, advertisedHost);
+                        }
+
+                        if (!found)
+                        {
+                            found = TryFindAdvertisedHost(
+                                m_foundAdvertisedHosts, clientDefinition->MatchUmpEndpointName, advertisedHost);
+                        }
+                    }
+
+                    if (found)
+                    {
+                        TraceLoggingWrite(
+                            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_INFO,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Processing mdns entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(advertisedHost.DeviceId().c_str(), "id")
+                        );
+
+                        // IP address first, as that is the most reliable. The host name relies on
+                        // DNS being set up properly, which is often not the case on a network with
+                        // just some devices and a laptop.
+                        winrt::hstring hostNameOrIPAddress{ };
+
+                        if (!advertisedHost.IPv4Addresses.empty())
+                        {
+                            // we only take the top one right now. We should take the others as well
+                            hostNameOrIPAddress = winrt::hstring{ advertisedHost.IPv4Addresses.front() };
+                        }
+                        else if (!advertisedHost.IPv6Addresses.empty())
+                        {
+                            hostNameOrIPAddress = winrt::hstring{ advertisedHost.IPv6Addresses.front() };
+                        }
+                        else if (!advertisedHost.HostName.empty())
+                        {
+                            hostNameOrIPAddress = winrt::hstring{ advertisedHost.HostName };
+                        }
+
+                        uint16_t const port = advertisedHost.Port;
+
+                        LOG_IF_FAILED(StartNewClient(clientDefinition, hostNameOrIPAddress, port));
                     }
                 }
 
-                if (found)
+                // --- connect via direct host information / ip
+                else if (!clientDefinition->MatchDirectPort.empty())
                 {
-                    TraceLoggingWrite(
-                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Processing mdns entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingWideString(advertisedHost.DeviceId().c_str(), "id")
-                    );
+                    // TODO: Check to make sure we've waited at least the minimum probe interval before checking these
 
-                    // IP address first, as that is the most reliable. The host name relies on
-                    // DNS being set up properly, which is often not the case on a network with
-                    // just some devices and a laptop.
+                    uint16_t port{ 0 };
+                    wchar_t* end;
+                    auto bigport = wcstoul(clientDefinition->MatchDirectPort.c_str(), &end, 10);
+
+                    // If port number is 0 or > int16.max then error out
+                    if (bigport == 0 || bigport > UINT16_MAX)
+                    {
+                        LOG_IF_FAILED(E_INVALIDARG);
+                        // TODO: report the error
+                        continue;
+                    }
+
+                    port = static_cast<uint16_t>(bigport);
+
+
+                    // we have the required port number, so let's check for either host name or IP address
+
                     winrt::hstring hostNameOrIPAddress{ };
 
-                    if (!advertisedHost.IPv4Addresses.empty())
+                    // by IP address
+                    if (!clientDefinition->MatchDirectHostNameOrIPAddress.empty())
                     {
-                        // we only take the top one right now. We should take the others as well
-                        hostNameOrIPAddress = winrt::hstring{ advertisedHost.IPv4Addresses.front() };
-                    }
-                    else if (!advertisedHost.IPv6Addresses.empty())
-                    {
-                        hostNameOrIPAddress = winrt::hstring{ advertisedHost.IPv6Addresses.front() };
-                    }
-                    else if (!advertisedHost.HostName.empty())
-                    {
-                        hostNameOrIPAddress = winrt::hstring{ advertisedHost.HostName };
-                    }
+                        TraceLoggingWrite(
+                            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                            MIDI_TRACE_EVENT_INFO,
+                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                            TraceLoggingPointer(this, "this"),
+                            TraceLoggingWideString(L"Processing direct connection entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                            TraceLoggingWideString(clientDefinition->MatchDirectHostNameOrIPAddress.c_str(), "remote IP address"),
+                            TraceLoggingWideString(clientDefinition->MatchDirectPort.c_str(), "remote port")
+                        );
 
-                    uint16_t const port = advertisedHost.Port;
+                        hostNameOrIPAddress = clientDefinition->MatchDirectHostNameOrIPAddress;
+
+                    }
+                    // by host name
+                    //else if (!clientDefinition->MatchDirectHostName.empty())
+                    //{
+                    //    TraceLoggingWrite(
+                    //        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    //        MIDI_TRACE_EVENT_INFO,
+                    //        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    //        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    //        TraceLoggingPointer(this, "this"),
+                    //        TraceLoggingWideString(L"Processing direct connection entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    //        TraceLoggingWideString(clientDefinition->MatchDirectHostName.c_str(), "remote host name"),
+                    //        TraceLoggingWideString(clientDefinition->MatchDirectPort.c_str(), "remote port")
+                    //    );
+
+                    //    hostNameOrIPAddress = clientDefinition->MatchDirectHostName;
+                    //}
+
+                    // TODO: Check to see if the client is actually online
 
                     LOG_IF_FAILED(StartNewClient(clientDefinition, hostNameOrIPAddress, port));
                 }
             }
 
-            // --- connect via direct host information / ip
-            else if (!clientDefinition->MatchDirectPort.empty())
-            {
-                // TODO: Check to make sure we've waited at least the minimum probe interval before checking these
-
-                uint16_t port{ 0 };
-                wchar_t* end;
-                auto bigport = wcstoul(clientDefinition->MatchDirectPort.c_str(), &end, 10);
-
-                // If port number is 0 or > int16.max then error out
-                if (bigport == 0 || bigport > UINT16_MAX)
-                {
-                    LOG_IF_FAILED(E_INVALIDARG);
-                    // TODO: report the error
-                    continue;
-                }
-
-                port = static_cast<uint16_t>(bigport);
-
-
-                // we have the required port number, so let's check for either host name or IP address
-                
-                winrt::hstring hostNameOrIPAddress{ };
-
-                // by IP address
-                if (!clientDefinition->MatchDirectHostNameOrIPAddress.empty())
-                {
-                    TraceLoggingWrite(
-                        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_INFO,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Processing direct connection entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingWideString(clientDefinition->MatchDirectHostNameOrIPAddress.c_str(), "remote IP address"),
-                        TraceLoggingWideString(clientDefinition->MatchDirectPort.c_str(), "remote port")
-                    );
-
-                    hostNameOrIPAddress = clientDefinition->MatchDirectHostNameOrIPAddress;
-
-                }
-                // by host name
-                //else if (!clientDefinition->MatchDirectHostName.empty())
-                //{
-                //    TraceLoggingWrite(
-                //        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                //        MIDI_TRACE_EVENT_INFO,
-                //        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                //        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                //        TraceLoggingPointer(this, "this"),
-                //        TraceLoggingWideString(L"Processing direct connection entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                //        TraceLoggingWideString(clientDefinition->MatchDirectHostName.c_str(), "remote host name"),
-                //        TraceLoggingWideString(clientDefinition->MatchDirectPort.c_str(), "remote port")
-                //    );
-
-                //    hostNameOrIPAddress = clientDefinition->MatchDirectHostName;
-                //}
-
-                // TODO: Check to see if the client is actually online
-
-                LOG_IF_FAILED(StartNewClient(clientDefinition, hostNameOrIPAddress, port));
-            }
+            // wait for notification of new hosts online or new entries added via config
+            // the most time we wait is the DirectConnectionScanInterval
+            m_backgroundEndpointCreatorThreadWakeup.wait(TransportState::Current().TransportSettings.DirectConnectionScanInterval);
         }
-
-        // wait for notification of new hosts online or new entries added via config
-        // the most time we wait is the DirectConnectionScanInterval
-        m_backgroundEndpointCreatorThreadWakeup.wait(TransportState::Current().TransportSettings.DirectConnectionScanInterval);
+        // One bad entry must not end the worker. An exception leaving this thread would
+        // terminate the service, and returning would leave nothing creating endpoints again.
+        catch (...)
+        {
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Exception in worker iteration. Continuing.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+        }
     }
 
     TraceLoggingWrite(

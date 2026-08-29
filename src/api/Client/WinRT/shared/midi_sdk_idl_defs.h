@@ -128,7 +128,6 @@
 #define UUID_IMidiEndpointUserSuppliedInfoFactory                           8087b303-0519-c0de-31d1-ff0040015000
 
 #define UUID_IMidi1PortNameTableEntry                                       8087b303-0519-c0de-31d1-dd0040016000
-#define UUID_IMidiEndpointAssociatedPortDeviceInformation	                8087b303-0519-c0de-31d1-dd0040017000
 #define UUID_IMidiEndpointDevicePropertyHelperStatics		                8087b303-0519-c0de-31d1-ee0040018000
 #define UUID_IMidiEndpointDeviceHelperStatics				                8087b303-0519-c0de-31d1-ee0040019000
 
@@ -143,7 +142,6 @@
 #define UUID_IMidiLegacyPortDeviceWatcherStatics				            8087b303-0519-c0de-31d1-ee004001E000
 
 #define UUID_IMidiParentDeviceInformation                                   8087b303-0519-c0de-31d1-dd004001F000
-#define UUID_IMidiParentDeviceInformationStatics                            8087b303-0519-c0de-31d1-ee004001F000
 
 
 
@@ -326,6 +324,7 @@
 
 #define UUID_IMidiNetworkTransportSettings                      8087b303-0519-c0de-31d1-dd00F0319000
 #define UUID_IMidiNetworkTransportSettingsStatics               8087b303-0519-c0de-31d1-ee00F0319000
+#define UUID_IMidiNetworkTransportSettingsFactory               8087b303-0519-c0de-31d1-ff00F0319000
 
 // ============================================================================
 // Windows.Devices.Midi2.Transports.Virtual : Interface number 00F04

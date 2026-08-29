@@ -42,6 +42,88 @@ namespace
         }
     }
 
+    // Same hazard as SafeGetNamedObject, for the other value types. The two-argument
+    // GetNamedString / GetNamedBoolean / GetNamedNumber overloads only cover the name being
+    // ABSENT: a name that is present holding the wrong type still throws, and this runs on a
+    // COM boundary inside the service.
+    winrt::hstring SafeGetNamedString(
+        _In_ json::JsonObject const& parent,
+        _In_ winrt::hstring const& name,
+        _In_ winrt::hstring const& defaultValue) noexcept
+    {
+        try
+        {
+            if (parent == nullptr || !parent.HasKey(name))
+            {
+                return defaultValue;
+            }
+
+            auto value = parent.Lookup(name);
+
+            if (value == nullptr || value.ValueType() != json::JsonValueType::String)
+            {
+                return defaultValue;
+            }
+
+            return value.GetString();
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
+    }
+
+    bool SafeGetNamedBoolean(
+        _In_ json::JsonObject const& parent,
+        _In_ winrt::hstring const& name,
+        _In_ bool const defaultValue) noexcept
+    {
+        try
+        {
+            if (parent == nullptr || !parent.HasKey(name))
+            {
+                return defaultValue;
+            }
+
+            auto value = parent.Lookup(name);
+
+            if (value == nullptr || value.ValueType() != json::JsonValueType::Boolean)
+            {
+                return defaultValue;
+            }
+
+            return value.GetBoolean();
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
+    }
+
+    json::JsonArray SafeGetNamedArray(_In_ json::JsonObject const& parent, _In_ winrt::hstring const& name) noexcept
+    {
+        try
+        {
+            if (parent == nullptr || !parent.HasKey(name))
+            {
+                return nullptr;
+            }
+
+            auto value = parent.Lookup(name);
+
+            if (value == nullptr || value.ValueType() != json::JsonValueType::Array)
+            {
+                return nullptr;
+            }
+
+            return value.GetArray();
+        }
+        catch (...)
+        {
+            return nullptr;
+        }
+    }
+
     // Transport settings are corrected rather than refused, so anything the caller writes has to
     // resolve to a usable number: absent, the wrong type, fractional, negative, or beyond the
     // supported range all land on something the transport can actually run with.
@@ -220,12 +302,7 @@ ReadRemoteClientIdentityList(
     _In_ std::wstring const& arrayKey,
     _Inout_ std::vector<std::wstring>& keys)
 {
-    if (!parent.HasKey(arrayKey))
-    {
-        return;
-    }
-
-    auto entries = parent.GetNamedArray(arrayKey, nullptr);
+    auto entries = SafeGetNamedArray(parent, winrt::hstring{ arrayKey });
 
     if (entries == nullptr)
     {
@@ -234,6 +311,16 @@ ReadRemoteClientIdentityList(
 
     for (uint32_t i = 0; i < entries.Size(); i++)
     {
+        auto element = entries.GetAt(i);
+
+        // an array can hold anything, so a non-object element is skipped rather than fetched
+        // as one, which would throw. windows.h renames IJsonValue::GetObject, so the fetch has
+        // to go through JsonArray::GetObjectAt, which is unaffected.
+        if (element == nullptr || element.ValueType() != json::JsonValueType::Object)
+        {
+            continue;
+        }
+
         auto entry = entries.GetObjectAt(i);
 
         if (entry == nullptr)
@@ -243,8 +330,8 @@ ReadRemoteClientIdentityList(
 
         MidiNetworkRemoteClientIdentity identity{};
 
-        identity.UmpEndpointName = internal::TrimmedWStringCopy(std::wstring{ entry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY, L"") });
-        identity.ProductInstanceId = internal::TrimmedWStringCopy(std::wstring{ entry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY, L"") });
+        identity.UmpEndpointName = internal::TrimmedWStringCopy(std::wstring{ SafeGetNamedString(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY, L"") });
+        identity.ProductInstanceId = internal::TrimmedWStringCopy(std::wstring{ SafeGetNamedString(entry, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY, L"") });
 
         if (!identity.IsValid())
         {
@@ -376,6 +463,16 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
         return E_NOTIMPL;
     }
 
+    // The SDK truncates this on the way in, but a configuration file written by hand reaches
+    // here without ever passing through it, and an over-long label goes straight to
+    // DnsServiceRegister.
+    if (internal::ExceedsUtf8ByteCount(std::wstring{ definition.ServiceInstanceName }, MIDI_DNSSD_SERVICE_INSTANCE_NAME_MAX_BYTE_COUNT))
+    {
+        errorMessage = internal::ResourceGetHString(IDS_ERROR_SERVICE_INSTANCE_NAME_TOO_LONG);
+        errorCode = NETWORK_ERROR_CODE_SERVICE_INSTANCE_NAME_TOO_LONG;
+        return E_INVALIDARG;
+    }
+
     return S_OK;
 
 }
@@ -386,6 +483,7 @@ HRESULT
 CMidi2NetworkMidiConfigurationManager::RunCommandStopHost(
     winrt::guid const& hostEntryId,
     json::JsonObject& responseObject) noexcept
+try
 {
     auto host = TransportState::Current().GetHost(hostEntryId);
 
@@ -406,6 +504,21 @@ CMidi2NetworkMidiConfigurationManager::RunCommandStopHost(
         return S_OK;
     }
 }
+catch (...)
+{
+    // noexcept, so an escaping exception would terminate the service rather than fail the
+    // command. The JSON response builders below can all throw on a low memory condition.
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exception running command", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return E_FAIL;
+}
 
 // Stops the host and removes the entry. stopHost deliberately keeps the entry so the host can be
 // started again, which also means it keeps holding its service instance name. This is the verb
@@ -416,6 +529,7 @@ HRESULT
 CMidi2NetworkMidiConfigurationManager::RunCommandRemoveHost(
     winrt::guid const& hostEntryId,
     json::JsonObject& responseObject) noexcept
+try
 {
     // Detached first, so nothing can start it again while it is being shut down, and so the
     // state lock is not held across a Shutdown which blocks on the network.
@@ -444,12 +558,28 @@ CMidi2NetworkMidiConfigurationManager::RunCommandRemoveHost(
 
     return S_OK;
 }
+catch (...)
+{
+    // noexcept, so an escaping exception would terminate the service rather than fail the
+    // command. The JSON response builders below can all throw on a low memory condition.
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exception running command", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return E_FAIL;
+}
 
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiConfigurationManager::RunCommandStartHost(
     winrt::guid const& hostEntryId,
     json::JsonObject& responseObject) noexcept
+try
 {
     auto host = TransportState::Current().GetHost(hostEntryId);
 
@@ -476,6 +606,21 @@ CMidi2NetworkMidiConfigurationManager::RunCommandStartHost(
         return S_OK;
     }
 }
+catch (...)
+{
+    // noexcept, so an escaping exception would terminate the service rather than fail the
+    // command. The JSON response builders below can all throw on a low memory condition.
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exception running command", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return E_FAIL;
+}
 
 
 
@@ -488,6 +633,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectDirect(
     winrt::hstring const& umpEndpointName,
     winrt::hstring const& customEndpointName,
     json::JsonObject& responseObject) noexcept
+try
 {
 
     if (remoteAddress.empty())
@@ -555,6 +701,21 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectDirect(
 
     return S_OK;
 }
+catch (...)
+{
+    // noexcept, so an escaping exception would terminate the service rather than fail the
+    // command. The JSON response builders below can all throw on a low memory condition.
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exception running command", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return E_FAIL;
+}
 
 
 _Use_decl_annotations_
@@ -565,6 +726,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectMdns(
     winrt::hstring const& umpEndpointName,
     winrt::hstring const& customEndpointName,
     json::JsonObject& responseObject) noexcept
+try
 {
     if (matchId.empty())
     {
@@ -606,6 +768,21 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectMdns(
 
     return S_OK;
 }
+catch (...)
+{
+    // noexcept, so an escaping exception would terminate the service rather than fail the
+    // command. The JSON response builders below can all throw on a low memory condition.
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exception running command", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return E_FAIL;
+}
 
 
 _Use_decl_annotations_
@@ -613,6 +790,7 @@ HRESULT
 CMidi2NetworkMidiConfigurationManager::RunCommandDisconnectClient(
     winrt::guid const& configEntryId,
     json::JsonObject& responseObject) noexcept
+try
 {
 
     if (configEntryId == winrt::guid{})
@@ -644,6 +822,21 @@ CMidi2NetworkMidiConfigurationManager::RunCommandDisconnectClient(
 
     return S_OK;
 }
+catch (...)
+{
+    // noexcept, so an escaping exception would terminate the service rather than fail the
+    // command. The JSON response builders below can all throw on a low memory condition.
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exception running command", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return E_FAIL;
+}
 
 
 // A user decision about a remote client, arriving from the settings app after it polled and saw
@@ -661,6 +854,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandRemoteClientDecision(
     bool const approve,
     bool const persist,
     json::JsonObject& responseObject) noexcept
+try
 {
     if (hostEntryId == winrt::guid{})
     {
@@ -731,6 +925,21 @@ CMidi2NetworkMidiConfigurationManager::RunCommandRemoteClientDecision(
 
     return S_OK;
 }
+catch (...)
+{
+    // noexcept, so an escaping exception would terminate the service rather than fail the
+    // command. The JSON response builders below can all throw on a low memory condition.
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exception running command", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return E_FAIL;
+}
 
 
 // Ends the sessions a single remote client holds with one of our hosts. Deliberately records
@@ -742,6 +951,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandDisconnectRemoteClient(
     winrt::guid const& hostEntryId,
     MidiNetworkRemoteClientIdentity const& identity,
     json::JsonObject& responseObject) noexcept
+try
 {
     if (hostEntryId == winrt::guid{})
     {
@@ -798,6 +1008,21 @@ CMidi2NetworkMidiConfigurationManager::RunCommandDisconnectRemoteClient(
 
     return S_OK;
 }
+catch (...)
+{
+    // noexcept, so an escaping exception would terminate the service rather than fail the
+    // command. The JSON response builders below can all throw on a low memory condition.
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exception running command", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return E_FAIL;
+}
 
 
 _Use_decl_annotations_
@@ -810,7 +1035,7 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
 
     try
     {
-        auto updateArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY, nullptr);
+        auto updateArray = SafeGetNamedArray(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY);
 
         if (updateArray == nullptr || updateArray.Size() == 0)
         {
@@ -821,6 +1046,14 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
         // JsonArray::GetObjectAt is unaffected.
         for (uint32_t i = 0; i < updateArray.Size(); i++)
         {
+            auto element = updateArray.GetAt(i);
+
+            // one malformed element should cost its own customization, not every one after it
+            if (element == nullptr || element.ValueType() != json::JsonValueType::Object)
+            {
+                continue;
+            }
+
             auto updateObject = updateArray.GetObjectAt(i);
 
             if (updateObject == nullptr)
@@ -828,8 +1061,8 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
                 continue;
             }
 
-            auto matchObject = updateObject.GetNamedObject(
-                WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey, nullptr);
+            auto matchObject = SafeGetNamedObject(
+                updateObject, WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey);
 
             if (matchObject == nullptr)
             {
@@ -837,7 +1070,10 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
                 continue;
             }
 
-            if (!updateObject.HasKey(WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey))
+            auto customPropertiesObject = SafeGetNamedObject(
+                updateObject, WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey);
+
+            if (customPropertiesObject == nullptr)
             {
                 continue;
             }
@@ -849,12 +1085,12 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
             if (Feature_Servicing_MIDI2EndpointImageFileNameValidation::IsEnabled())
             {
                 customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJsonRejectingImagePath(
-                    updateObject.GetNamedObject(WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey));
+                    customPropertiesObject);
             }
             else
             {
                 customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJson(
-                    updateObject.GetNamedObject(WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey));
+                    customPropertiesObject);
             }
 
             if (matchCriteria == nullptr || customProperties == nullptr)
@@ -938,6 +1174,7 @@ _Use_decl_annotations_
 HRESULT 
 CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateClients(
     json::JsonObject& responseObject) noexcept
+try
 {
     json::JsonArray clientsArray;
 
@@ -1052,6 +1289,21 @@ CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateClients(
     return S_OK;
 
 }
+catch (...)
+{
+    // noexcept, so an escaping exception would terminate the service rather than fail the
+    // command. The JSON response builders below can all throw on a low memory condition.
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exception running command", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return E_FAIL;
+}
 
 
 
@@ -1080,6 +1332,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiConfigurationManager::RunCommandGetTransportSettings(
     json::JsonObject& responseObject) noexcept
+try
 {
     auto const& settings = TransportState::Current().TransportSettings;
 
@@ -1115,12 +1368,28 @@ CMidi2NetworkMidiConfigurationManager::RunCommandGetTransportSettings(
 
     return S_OK;
 }
+catch (...)
+{
+    // noexcept, so an escaping exception would terminate the service rather than fail the
+    // command. The JSON response builders below can all throw on a low memory condition.
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exception running command", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return E_FAIL;
+}
 
 
 _Use_decl_annotations_
 HRESULT 
 CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateHosts(
     json::JsonObject& responseObject) noexcept
+try
 {
     json::JsonArray hostsArray;
 
@@ -1285,6 +1554,21 @@ CMidi2NetworkMidiConfigurationManager::RunCommandEnumerateHosts(
 
     return S_OK;
 }
+catch (...)
+{
+    // noexcept, so an escaping exception would terminate the service rather than fail the
+    // command. The JSON response builders below can all throw on a low memory condition.
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exception running command", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return E_FAIL;
+}
 
 
 namespace
@@ -1361,6 +1645,7 @@ _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiConfigurationManager::RunCommandGetPendingRemoteClients(
     json::JsonObject& responseObject) noexcept
+try
 {
     json::JsonArray clientsArray;
 
@@ -1423,6 +1708,21 @@ CMidi2NetworkMidiConfigurationManager::RunCommandGetPendingRemoteClients(
 
     return S_OK;
 }
+catch (...)
+{
+    // noexcept, so an escaping exception would terminate the service rather than fail the
+    // command. The JSON response builders below can all throw on a low memory condition.
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exception running command", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return E_FAIL;
+}
 
 
 _Use_decl_annotations_
@@ -1430,6 +1730,7 @@ HRESULT
 CMidi2NetworkMidiConfigurationManager::ProcessCommand(
     json::JsonObject const& transportObject,
     json::JsonObject& responseObject) noexcept
+try
 {
     auto commandHelper = internal::MidiTransportCommandHelper::ParseCommand(transportObject);
 
@@ -1730,6 +2031,21 @@ CMidi2NetworkMidiConfigurationManager::ProcessCommand(
     // we return S_OK no matter what, so the response object will be parsed
     return S_OK;
 }
+catch (...)
+{
+    // noexcept, so an escaping exception would terminate the service rather than fail the
+    // command. The JSON response builders below can all throw on a low memory condition.
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exception running command", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return E_FAIL;
+}
 
 
 //"{C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6}":
@@ -1809,6 +2125,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     LPCWSTR configurationJsonSection,
     LPWSTR* response
 )
+try
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -2010,7 +2327,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 uint32_t validationErrorCode{ NETWORK_ERROR_CODE_UNKNOWN_ERROR };
 
                 // currently, UDP is the only allowed protocol
-                auto protocol = internal::ToLowerTrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP));
+                auto protocol = internal::ToLowerTrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP));
 
                 if (protocol != MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP)
                 {
@@ -2026,27 +2343,27 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                     continue;
                 }
 
-                definition->IsEnabled = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY, true);
-                definition->Advertise = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_MDNS_ADVERTISE_KEY, true);
+                definition->IsEnabled = SafeGetNamedBoolean(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY, true);
+                definition->Advertise = SafeGetNamedBoolean(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_MDNS_ADVERTISE_KEY, true);
 
                 definition->CustomEndpointName = internal::TrimmedHStringCopy(
-                    hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY, L""));
+                    SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY, L""));
 
-                definition->CreateMidi1Ports = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT);
+                definition->CreateMidi1Ports = SafeGetNamedBoolean(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT);
 
-                definition->UmpEndpointName = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L""));
-                definition->ProductInstanceId = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY, L""));
+                definition->UmpEndpointName = internal::TrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L""));
+                definition->ProductInstanceId = internal::TrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY, L""));
 
                 if (definition->ProductInstanceId.empty())
                 {
                     definition->ProductInstanceId = winrt::hstring{ TransportState::Current().GetEffectiveProductInstanceId() };
                 }
 
-                definition->Port = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO));
-                definition->AllowPortFallback = hostEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_PORT_FALLBACK_KEY, true);
+                definition->Port = internal::TrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PORT_VALUE_AUTO));
+                definition->AllowPortFallback = SafeGetNamedBoolean(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOW_PORT_FALLBACK_KEY, true);
 
-                definition->Authentication = MidiNetworkHostAuthenticationFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE));
-                definition->RemoteClientPolicy = MidiNetworkRemoteClientPolicyFromJsonString(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_VALUE_ALLOW_ANY));
+                definition->Authentication = MidiNetworkHostAuthenticationFromJsonString(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_VALUE_NONE));
+                definition->RemoteClientPolicy = MidiNetworkRemoteClientPolicyFromJsonString(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_REMOTE_CLIENT_POLICY_VALUE_ALLOW_ANY));
 
                 ReadRemoteClientIdentityList(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOWED_CLIENTS_KEY, definition->AllowedClientKeys);
                 ReadRemoteClientIdentityList(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_DENIED_CLIENTS_KEY, definition->DeniedClientKeys);
@@ -2060,19 +2377,19 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                     if (definition->Authentication == MidiNetworkHostAuthentication::PasswordAuthentication)
                     {
                         definition->AuthenticationCredentialIdentifier = internal::TrimmedHStringCopy(
-                            hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_GLOBAL_PASSWORD_KEY, L""));
+                            SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_GLOBAL_PASSWORD_KEY, L""));
                     }
                     else if (definition->Authentication == MidiNetworkHostAuthentication::UserAuthentication)
                     {
                         definition->AuthenticationCredentialIdentifier = internal::TrimmedHStringCopy(
-                            hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_USER_AUTH_KEY, L""));
+                            SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_HOST_AUTHENTICATION_USER_AUTH_KEY, L""));
                     }
                 }
 
 
                 // generate host name and other info
 
-                auto serviceInstanceNamePrefix = internal::TrimmedHStringCopy(hostEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_SERVICE_INSTANCE_NAME_KEY, L""));
+                auto serviceInstanceNamePrefix = internal::TrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_SERVICE_INSTANCE_NAME_KEY, L""));
 
                 // if the provided service instance name is empty, default to 
                 // machine name. If that name is already in use, add an additional
@@ -2208,7 +2525,7 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                 RETURN_IF_NULL_ALLOC(definition);
 
                 // currently, UDP is the only allowed protocol
-                auto protocol = internal::ToLowerTrimmedHStringCopy(clientEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP));
+                    auto protocol = internal::ToLowerTrimmedHStringCopy(SafeGetNamedString(clientEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_KEY, MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP));
 
                 if (protocol != MIDI_CONFIG_JSON_NETWORK_MIDI_NETWORK_PROTOCOL_VALUE_UDP)
                 {
@@ -2222,10 +2539,10 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                         continue;
                     }
 
-                    definition->Enabled = clientEntry.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY, true);
+                    definition->Enabled = SafeGetNamedBoolean(clientEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY, true);
 
                     definition->CustomEndpointName = internal::TrimmedHStringCopy(
-                        clientEntry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY, L""));
+                        SafeGetNamedString(clientEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY, L""));
 
                     winrt::hstring localEndpointName{ };
                     winrt::hstring localProductInstanceId{ };
@@ -2258,14 +2575,14 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
                     if (matchSection)
                     {
                         // for the moment, we only match on the actual device id, so must be mdns-advertised
-                        definition->MatchId = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_ID_KEY, L""));
+                        definition->MatchId = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_ID_KEY, L""));
 
                         // direct connection properties
-                        definition->MatchDirectHostNameOrIPAddress = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_HOST_NAME_OR_IP_ADDRESS_KEY, L""));
-                        definition->MatchDirectPort = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_PORT_KEY, L""));
+                        definition->MatchDirectHostNameOrIPAddress = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_HOST_NAME_OR_IP_ADDRESS_KEY, L""));
+                        definition->MatchDirectPort = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_PORT_KEY, L""));
 
-                    definition->MatchProductInstanceId = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_PID_KEY, L""));
-                    definition->MatchUmpEndpointName = internal::TrimmedHStringCopy(matchSection.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_NAME_KEY, L""));
+                        definition->MatchProductInstanceId = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_PID_KEY, L""));
+                        definition->MatchUmpEndpointName = internal::TrimmedHStringCopy(SafeGetNamedString(matchSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_NAME_KEY, L""));
 
 
                         TransportState::Current().AddPendingClientDefinition(definition);
@@ -2357,6 +2674,41 @@ CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     internal::JsonStringifyObjectToOutParam(responseObject, response);
 
     return S_OK;
+}
+catch (winrt::hresult_error const& ex)
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exception processing the configuration payload", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(ex.message().c_str(), "error"),
+        TraceLoggingHResult(ex.code(), MIDI_TRACE_EVENT_HRESULT_FIELD)
+    );
+
+    return ex.code();
+}
+catch (std::bad_alloc const&)
+{
+    return E_OUTOFMEMORY;
+}
+catch (...)
+{
+    // Deliberately not wil::ResultFromCaughtException here. This is the outermost handler on a
+    // COM boundary fed attacker-shaped JSON, and WIL fail-fasts on an exception type it does
+    // not recognise, which would turn the guard into the crash.
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Unrecognized exception processing the configuration payload", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return E_UNEXPECTED;
 }
 
 

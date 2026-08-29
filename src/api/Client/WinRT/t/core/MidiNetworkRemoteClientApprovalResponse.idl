@@ -18,7 +18,7 @@ namespace Windows.Devices.Midi2.Transports.Network
     [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkRemoteClientApprovalResponse", UUID_IMidiNetworkRemoteClientApprovalResponse)]
     runtimeclass MidiNetworkRemoteClientApprovalResponse
     {
-[noexcept] Guid HostId{ get; };
+        [noexcept] Guid HostId{ get; };
         [noexcept] Guid ClientId{ get; };
 
         [noexcept] String RemoteClientName{ get; };

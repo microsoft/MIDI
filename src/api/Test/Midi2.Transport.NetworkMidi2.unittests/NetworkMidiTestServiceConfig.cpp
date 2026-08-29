@@ -339,6 +339,12 @@ namespace NetworkMidiTest
     }
 
 
+    ServiceConfigResult SendRawCreateSection(std::wstring const& createBodyJson)
+    {
+        return SendNetworkTransportConfig(L"{\"create\":{" + createBodyJson + L"}}");
+    }
+
+
     ServiceConfigResult CreateHost(
         std::wstring const& entryIdentifier,
         std::wstring const& umpEndpointName,

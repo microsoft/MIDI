@@ -34,4 +34,11 @@ public:
     TEST_METHOD(MalformedNumbersFallBackToTheDefault);
     TEST_METHOD(AbsentSettingsAreLeftAlone);
     TEST_METHOD(ProductInstanceIdIsNoLongerATransportSetting);
+
+    // Wrongly typed values anywhere in a host or client entry. Every one of these used to throw
+    // out of a COM boundary rather than being refused.
+    TEST_METHOD(WrongTypesInAHostEntryDoNotThrow);
+    TEST_METHOD(WrongTypesInAClientEntryDoNotThrow);
+    TEST_METHOD(WrongTypesInAnAllowedClientsArrayDoNotThrow);
+    TEST_METHOD(OverlongServiceInstanceNameIsRejected);
 };
