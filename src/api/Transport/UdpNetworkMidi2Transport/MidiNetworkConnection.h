@@ -361,15 +361,6 @@ protected:
     // reflects why. The already-attached reason differs per role.
     HRESULT RefuseSessionForEndpointCreationFailure(_In_ HRESULT const creationResult);
 
-    // Spec Appendix B. Deliberately not written from guesswork: getting this wrong produces a
-    // scheme which looks like it works against our own implementation and nothing else.
-    HRESULT ComputeAuthenticationDigest(
-        _In_reads_bytes_(nonceByteCount) uint8_t const* nonce,
-        _In_ size_t const nonceByteCount,
-        _In_ MidiNetworkSecret const& secret,
-        _Out_writes_bytes_(digestByteCount) uint8_t* digest,
-        _In_ size_t const digestByteCount);
-
     HRESULT HandleIncomingBye();
     HRESULT HandleIncomingByeReply();
 

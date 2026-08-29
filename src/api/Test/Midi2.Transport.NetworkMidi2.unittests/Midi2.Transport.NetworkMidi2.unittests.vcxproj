@@ -186,6 +186,7 @@
     <ClInclude Include="NetworkMidiTestServiceConfig.h" />
     <ClInclude Include="NetworkMidiTestMdns.h" />
     <ClInclude Include="SequenceNumberTests.h" />
+    <ClInclude Include="AuthenticationDigestTests.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -210,6 +211,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SequenceNumberTests.cpp" />
+    <ClCompile Include="AuthenticationDigestTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

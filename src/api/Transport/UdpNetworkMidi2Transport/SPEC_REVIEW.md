@@ -25,10 +25,12 @@ Current behavior is deliberately fail-closed rather than fail-open:
   a user who asks for a password never silently gets an unprotected host.
 - Inbound authentication commands are answered with a Bye rather than ignored.
 - `MidiNetworkCredentials.h` holds the credential-resolution seam, the security constraints, and
-  the open questions about where secrets live. Read that before starting the work.
+  what is known about where secrets can live. Read that before starting the work.
 - `MidiNetworkGenerateCryptoNonce` is implemented (`BCryptGenRandom`).
-- `ComputeAuthenticationDigest` is deliberately **not** implemented. It must follow Appendix B
-  exactly; an approximation would interoperate with nothing while appearing to work locally.
+- The authentication digest **is** implemented, as `MidiNetworkComputeAuthenticationDigest` and
+  `MidiNetworkComputeUserAuthenticationDigest`. Both worked examples from spec 6.9 and 6.10 are
+  unit tests, along with cases pinning the part order, the absence of any separator, and the
+  UTF-8 conversion of the wide user name. What remains unimplemented is credential *storage*.
 
 The capabilities byte is correctly a bitmap (spec Table 11: D0 = supports Invitation with
 Authentication, D1 = supports Invitation with User Authentication), but we advertise

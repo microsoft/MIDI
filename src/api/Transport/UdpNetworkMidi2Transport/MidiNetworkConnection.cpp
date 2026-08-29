@@ -1063,30 +1063,6 @@ MidiNetworkConnection::HandleIncomingInvitationReplyPending()
     return S_OK;
 }
 
-_Use_decl_annotations_
-HRESULT
-MidiNetworkConnection::ComputeAuthenticationDigest(
-    uint8_t const* nonce,
-    size_t const nonceByteCount,
-    MidiNetworkSecret const& secret,
-    uint8_t* digest,
-    size_t const digestByteCount)
-{
-    UNREFERENCED_PARAMETER(nonce);
-    UNREFERENCED_PARAMETER(nonceByteCount);
-    UNREFERENCED_PARAMETER(secret);
-
-    RETURN_HR_IF_NULL(E_INVALIDARG, digest);
-    RETURN_HR_IF(E_INVALIDARG, digestByteCount == 0);
-
-    SecureZeroMemory(digest, digestByteCount);
-
-    // Must follow spec Appendix B exactly, including the order the nonce and secret are fed to
-    // the hash. Approximating it would interoperate with nothing and would look like it worked.
-    // TODO: https://github.com/microsoft/MIDI/issues/733
-    return E_NOTIMPL;
-}
-
 
 _Use_decl_annotations_
 HRESULT

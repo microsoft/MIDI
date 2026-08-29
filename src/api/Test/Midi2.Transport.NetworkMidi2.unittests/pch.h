@@ -63,6 +63,7 @@
 #include <Midi2MidiSrvTransport.h>
 
 #include "SequenceNumberTests.h"
+#include "AuthenticationDigestTests.h"
 
 #include "NetworkMidiTestProtocol.h"
 #include "NetworkMidiTestMdns.h"
