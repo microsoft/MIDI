@@ -51,7 +51,7 @@
 // as a client proves by computing it. Neither can be stored one-way.
 //
 // The consequence for the design is that whether a secret may be revealed is a property of the
-// stored ENTRY, recorded by the service when it writes it, and never a property of the
+// stored ENTRY, recorded by the setup app when it writes it, and never a property of the
 // identifier. An identifier is attacker-influenced, so it must not be able to claim to be kind
 // 2 and thereby coax a reveal of a kind 1 secret.
 //
