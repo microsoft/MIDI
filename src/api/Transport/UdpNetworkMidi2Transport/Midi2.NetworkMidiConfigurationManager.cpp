@@ -2726,7 +2726,7 @@ catch (...)
 {
     // Deliberately not wil::ResultFromCaughtException here. This is the outermost handler on a
     // COM boundary fed attacker-shaped JSON, and WIL fail-fasts on an exception type it does
-    // not recognise, which would turn the guard into the crash.
+    // not recognize, which would turn the guard into the crash.
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_ERROR,

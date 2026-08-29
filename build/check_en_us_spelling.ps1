@@ -125,10 +125,16 @@ $replacements = [ordered]@{
 
     # -ce -> -se
     'licence'         = 'license'
+    'licences'        = 'licenses'
     'defence'         = 'defense'
+    'defences'        = 'defenses'
     'offence'         = 'offense'
+    'offences'        = 'offenses'
     'pretence'        = 'pretense'
+    'pretences'       = 'pretenses'
     'practise'        = 'practice'
+    'practised'       = 'practiced'
+    'practising'      = 'practicing'
 
     # -ise / -isation -> -ize / -ization
     'analyse'         = 'analyze'
