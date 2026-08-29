@@ -56,6 +56,14 @@ A saved change is merged into what is already in the file, so a caller only has 
 
 Because a merge cannot remove a key, clearing a value means writing it as empty rather than leaving it out.
 
+## Comments in the file
+
+JSON has no comments, so the configuration file uses a `_comment` key, which the service never reads back. `SaveUpdate` writes one into each transport's section naming that transport, so somebody opening the file can tell which GUID is which without looking it up. The name comes from the transport's own metadata rather than a fixed table, so it cannot drift from what is displayed elsewhere.
+
+Individual configuration types may write their own. `MidiNetworkClientConnectConfig` and `MidiBluetoothDeviceConnectConfig` both expose a `Comment` property which is written into the entry they create, so an entry identified only by an address is still readable.
+
+When the file is written, `_comment` is emitted as the first key of the object it describes, wherever it happens to sit in memory. A `_comment` already in the file is preserved by a merge like any other key.
+
 ## Concurrency
 
 The file is read, merged and written under a single handle held for the whole operation. The service is never blocked from reading it, another writer waits briefly and then receives `ErrorConfigFileBusy`, and a caller which crashes releases its hold immediately because the lock is the file handle itself.

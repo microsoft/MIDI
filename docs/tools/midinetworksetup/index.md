@@ -137,6 +137,12 @@ network, and it has to be different from every other host on this PC.
 On a home studio network, letting any device connect is convenient. Anywhere you don't control
 who's on the network, ask first.
 
+> **There is no password option in this release.** The Network MIDI 2.0 specification defines
+> optional password and user authentication, and Windows MIDI Services does not support either
+> yet. **Ask me first** is how you control who gets in. See
+> [How Network MIDI 2.0 works in Windows]({{ site.baseurl }}/kb/network-midi2-transport/) for what
+> that means in practice.
+
 **Advertise this host on the network** is what makes this PC appear in other devices' lists.
 Switch it off and devices can still connect, but they'll need the address typed in by hand.
 
@@ -182,6 +188,34 @@ background color** to choose your own.
 **Refresh connection details every (seconds)** sets how often the app asks the MIDI service for
 connection state, round trip times, and packet counts. Three to five seconds suits most people. A shorter
 interval gives a more detailed graph at the cost of asking the service more often. The polling only happens while this app is running.
+
+### Transport settings
+
+Further down the settings panel are the transport settings. These are different from everything
+above: they belong to the MIDI service, not to this app, and they apply to **every** Network MIDI
+2.0 host and client on this PC. They also persist once changed, whether or not this app is
+running.
+
+The defaults suit almost every network. Change them only if you have a reason to.
+
+| Setting | What it does | When it takes effect |
+|---|---|---|
+| **Most devices allowed at once** | How many remote devices any one host on this PC will accept at the same time | Right away. Devices already connected are not disconnected |
+| **How long to wait for your permission** | How long a device asking to connect stays in the waiting list before it is dropped | The next device which asks. Devices already waiting keep the old timeout |
+| **How often to retry a device which is not answering** | How often this PC retries a device you connected to by address after it stops answering | Within one retry, so up to the old interval from now |
+| **How often to check a quiet connection** | How often a connection with nothing to send checks the other end is still there. Shorter notices a dropped device sooner and sends slightly more traffic | Reaches open connections within one interval |
+| **Repeated messages per packet** | How many recently sent messages are repeated in each packet, so a lost packet can be recovered without asking again. Higher copes better with an unreliable network and makes each packet larger | New connections. Reconnect a device for it to apply there |
+| **Messages kept for resending** | How many sent messages are held in case the other end asks for them again. Higher recovers from longer gaps and uses more memory per connection | New connections. Reconnect a device for it to apply there |
+
+Each box shows the range it accepts. A value outside that range is corrected rather than
+rejected, so if a number changes after you type it, that is why.
+
+The two that matter most in practice are **How often to check a quiet connection**, if you want a
+dropped device noticed sooner, and **Repeated messages per packet**, if you are on Wi-Fi or a
+busy network and are losing messages.
+
+For the exact defaults, ranges, and the configuration file keys behind these, see
+[How Network MIDI 2.0 works in Windows]({{ site.baseurl }}/kb/network-midi2-transport/).
 
 The pin button next to the minimize button keeps the window above your other windows, which is
 handy while you're setting a device up.
