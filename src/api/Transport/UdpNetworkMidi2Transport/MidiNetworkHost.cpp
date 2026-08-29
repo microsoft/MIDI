@@ -251,59 +251,65 @@ MidiNetworkHost::CreateNetworkConnection(
     winrt::hstring const& remotePort,
     std::shared_ptr<MidiNetworkConnection>& connection)
 {
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
-
-    connection = nullptr;
-
-    auto socket = GetSocket();
-    RETURN_HR_IF_NULL(E_UNEXPECTED, socket);
-
-    auto conn = std::make_shared<MidiNetworkHostConnection>();
-    RETURN_IF_NULL_ALLOC(conn);
-
-    RETURN_IF_FAILED(conn->Initialize(
-        m_hostDefinition.EntryIdentifier,
-        m_parentDeviceInstanceId,
-        socket,
-        remoteHostName,
-        remotePort,
-        m_hostEndpointName,
-        m_hostProductInstanceId,
-        TransportState::Current().TransportSettings.RetransmitBufferMaxCommandPacketCount,
-        TransportState::Current().TransportSettings.ForwardErrorCorrectionMaxCommandPacketCount,
-        m_createUmpEndpointsOnly,
-        AuthenticationKindFromHostAuthentication(m_hostDefinition.Authentication),
-        MidiNetworkCredentialIdentifier{ std::wstring{ m_hostDefinition.AuthenticationCredentialIdentifier } }
-    ));
-
-    // Another thread pool thread may have created one for this same remote while we were
-    // initializing. Whichever landed in the map first wins, and the loser is torn down.
-    auto winner = TransportState::Current().AddNetworkConnectionIfAbsent(remoteHostName, remotePort, conn);
-
-    if (winner != conn)
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
+    try
     {
-        LOG_IF_FAILED(conn->Shutdown());
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        connection = nullptr;
+
+        auto socket = GetSocket();
+        RETURN_HR_IF_NULL(E_UNEXPECTED, socket);
+
+        auto conn = std::make_shared<MidiNetworkHostConnection>();
+        RETURN_IF_NULL_ALLOC(conn);
+
+        RETURN_IF_FAILED(conn->Initialize(
+            m_hostDefinition.EntryIdentifier,
+            m_parentDeviceInstanceId,
+            socket,
+            remoteHostName,
+            remotePort,
+            m_hostEndpointName,
+            m_hostProductInstanceId,
+            TransportState::Current().TransportSettings.RetransmitBufferMaxCommandPacketCount,
+            TransportState::Current().TransportSettings.ForwardErrorCorrectionMaxCommandPacketCount,
+            m_createUmpEndpointsOnly,
+            AuthenticationKindFromHostAuthentication(m_hostDefinition.Authentication),
+            MidiNetworkCredentialIdentifier{ std::wstring{ m_hostDefinition.AuthenticationCredentialIdentifier } }
+        ));
+
+        // Another thread pool thread may have created one for this same remote while we were
+        // initializing. Whichever landed in the map first wins, and the loser is torn down.
+        auto winner = TransportState::Current().AddNetworkConnectionIfAbsent(remoteHostName, remotePort, conn);
+
+        if (winner != conn)
+        {
+            LOG_IF_FAILED(conn->Shutdown());
+        }
+
+        connection = winner;
+
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        return S_OK;
     }
-
-    connection = winner;
-
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
-
-    return S_OK;
+    CATCH_RETURN()
 }
 
 bool

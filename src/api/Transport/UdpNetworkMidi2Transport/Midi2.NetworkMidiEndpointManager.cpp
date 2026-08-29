@@ -720,21 +720,9 @@ CMidi2NetworkMidiEndpointManager::StartNewClient(
     winrt::hstring const& hostNameOrIPAddress, 
     uint16_t const hostPort)
 {
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingWideString(hostNameOrIPAddress.c_str(), "host name or ip"),
-        TraceLoggingUInt16(hostPort, "host port")
-        );
-
-    // TODO: Need a lock in here to make sure two passes of the creation
-    // loop aren't both trying to create the same client
-
-    if (!IsNetworkAvailable())
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
+    try
     {
         TraceLoggingWrite(
             MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -742,76 +730,15 @@ CMidi2NetworkMidiEndpointManager::StartNewClient(
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"No network is available. Skipping this client until one is.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(hostNameOrIPAddress.c_str(), "host name or ip")
-        );
+            TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(hostNameOrIPAddress.c_str(), "host name or ip"),
+            TraceLoggingUInt16(hostPort, "host port")
+            );
 
-        // Not an error, and the definition is deliberately left uncreated so the next scan
-        // retries it once the machine is back on a network.
-        return S_FALSE;
-    }
+        // TODO: Need a lock in here to make sure two passes of the creation
+        // loop aren't both trying to create the same client
 
-    // reserve() does not change size(), so the name has to be sized before it is written into
-    // and resized to the returned length afterward. Otherwise every read of it sees an empty
-    // string and the generated names degrade to "-midisrv".
-    DWORD nameLen = MAX_COMPUTERNAME_LENGTH + 1;
-    std::wstring machineName;
-    machineName.resize(nameLen);
-
-    std::wstring root;
-
-    if (GetComputerName(machineName.data(), &nameLen))
-    {
-        machineName.resize(nameLen);
-
-        root = internal::ToLowerTrimmedWStringCopy(machineName) + L"-midisrv";
-    }
-    else
-    {
-        root = L"windows-midisrv";
-    }
-
-    if (clientDefinition->LocalProductInstanceId.empty())
-    {
-        // shared with the hosts, so a remote sees one identity for this PC in either role
-        clientDefinition->LocalProductInstanceId = TransportState::Current().GetEffectiveProductInstanceId();
-    }
-
-    if (clientDefinition->LocalEndpointName.empty())
-    {
-        clientDefinition->LocalEndpointName = root;
-    }
-
-
-    auto client = std::make_shared<MidiNetworkClient>();
-    RETURN_IF_NULL_ALLOC(client);
-
-    // A reconnect still has the previous client registered. Left in place it keeps its socket
-    // and threads, and lookups by entry identifier find the dead one.
-    auto previousClient = TransportState::Current().GetClient(clientDefinition->EntryIdentifier);
-
-    if (previousClient != nullptr)
-    {
-        LOG_IF_FAILED(previousClient->Shutdown());
-        LOG_IF_FAILED(TransportState::Current().RemoveLiveClient(clientDefinition->EntryIdentifier));
-    }
-
-    auto initHr = client->Initialize(*clientDefinition);
-    RETURN_IF_FAILED(initHr);
-
-    // != 0 for the hostPort is hacky, but for MIDI, we shouldn't expect ports < 1024 anyway
-    if (!hostNameOrIPAddress.empty() && hostPort != 0)
-    {
-        HostName hostName(hostNameOrIPAddress);
-        winrt::hstring portNumberString = winrt::to_hstring(hostPort);
-
-        auto startHr = client->Start(hostName, portNumberString);
-        RETURN_IF_FAILED(startHr);
-
-        // Building a client means an invitation, a reply and then endpoint creation, and the
-        // entry can be removed while that is in flight. Registering it anyway leaves a client
-        // no caller can see or disconnect, still holding its socket and its MIDI endpoint.
-        if (!TransportState::Current().AddClientIfStillPending(client, clientDefinition->EntryIdentifier))
+        if (!IsNetworkAvailable())
         {
             TraceLoggingWrite(
                 MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -819,21 +746,100 @@ CMidi2NetworkMidiEndpointManager::StartNewClient(
                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                 TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                 TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Client entry was removed while the client was being created. Shutting it back down.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingGuid(clientDefinition->EntryIdentifier, "entry identifier")
+                TraceLoggingWideString(L"No network is available. Skipping this client until one is.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(hostNameOrIPAddress.c_str(), "host name or ip")
             );
 
-            LOG_IF_FAILED(client->Shutdown());
+            // Not an error, and the definition is deliberately left uncreated so the next scan
+            // retries it once the machine is back on a network.
+            return S_FALSE;
+        }
+
+        // reserve() does not change size(), so the name has to be sized before it is written into
+        // and resized to the returned length afterward. Otherwise every read of it sees an empty
+        // string and the generated names degrade to "-midisrv".
+        DWORD nameLen = MAX_COMPUTERNAME_LENGTH + 1;
+        std::wstring machineName;
+        machineName.resize(nameLen);
+
+        std::wstring root;
+
+        if (GetComputerName(machineName.data(), &nameLen))
+        {
+            machineName.resize(nameLen);
+
+            root = internal::ToLowerTrimmedWStringCopy(machineName) + L"-midisrv";
+        }
+        else
+        {
+            root = L"windows-midisrv";
+        }
+
+        if (clientDefinition->LocalProductInstanceId.empty())
+        {
+            // shared with the hosts, so a remote sees one identity for this PC in either role
+            clientDefinition->LocalProductInstanceId = TransportState::Current().GetEffectiveProductInstanceId();
+        }
+
+        if (clientDefinition->LocalEndpointName.empty())
+        {
+            clientDefinition->LocalEndpointName = root;
+        }
+
+
+        auto client = std::make_shared<MidiNetworkClient>();
+        RETURN_IF_NULL_ALLOC(client);
+
+        // A reconnect still has the previous client registered. Left in place it keeps its socket
+        // and threads, and lookups by entry identifier find the dead one.
+        auto previousClient = TransportState::Current().GetClient(clientDefinition->EntryIdentifier);
+
+        if (previousClient != nullptr)
+        {
+            LOG_IF_FAILED(previousClient->Shutdown());
+            LOG_IF_FAILED(TransportState::Current().RemoveLiveClient(clientDefinition->EntryIdentifier));
+        }
+
+        auto initHr = client->Initialize(*clientDefinition);
+        RETURN_IF_FAILED(initHr);
+
+        // != 0 for the hostPort is hacky, but for MIDI, we shouldn't expect ports < 1024 anyway
+        if (!hostNameOrIPAddress.empty() && hostPort != 0)
+        {
+            HostName hostName(hostNameOrIPAddress);
+            winrt::hstring portNumberString = winrt::to_hstring(hostPort);
+
+            auto startHr = client->Start(hostName, portNumberString);
+            RETURN_IF_FAILED(startHr);
+
+            // Building a client means an invitation, a reply and then endpoint creation, and the
+            // entry can be removed while that is in flight. Registering it anyway leaves a client
+            // no caller can see or disconnect, still holding its socket and its MIDI endpoint.
+            if (!TransportState::Current().AddClientIfStillPending(client, clientDefinition->EntryIdentifier))
+            {
+                TraceLoggingWrite(
+                    MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Client entry was removed while the client was being created. Shutting it back down.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingGuid(clientDefinition->EntryIdentifier, "entry identifier")
+                );
+
+                LOG_IF_FAILED(client->Shutdown());
+
+                return S_OK;
+            }
+
+            LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionLive(clientDefinition->EntryIdentifier));
 
             return S_OK;
         }
 
-        LOG_IF_FAILED(TransportState::Current().MarkClientDefinitionLive(clientDefinition->EntryIdentifier));
-
-        return S_OK;
+        return E_FAIL;
     }
-
-    return E_FAIL;
+    CATCH_RETURN()
 }
 
 
@@ -1132,52 +1138,58 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
 HRESULT
 CMidi2NetworkMidiEndpointManager::CreateParentDeviceForClients()
 {
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
+    try
+    {
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
 
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_midiDeviceManager);
-
-
-    // the parent device parameters are set by the transport (this)
-    std::wstring parentDeviceName{ TRANSPORT_CLIENT_PARENT_DEVICE_NAME };
-    std::wstring parentDeviceInstanceId{ internal::NormalizeDeviceInstanceIdWStringCopy(TRANSPORT_CLIENT_PARENT_ID) };
-
-    SW_DEVICE_CREATE_INFO createInfo = {};
-    createInfo.cbSize = sizeof(createInfo);
-    createInfo.pszInstanceId = parentDeviceInstanceId.c_str();
-    createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
-    createInfo.pszDeviceDescription = parentDeviceName.c_str();
-    createInfo.pContainerId = &m_containerId;
-
-    wil::unique_cotaskmem_string newParentDeviceId;
-
-    RETURN_IF_FAILED(m_midiDeviceManager->ActivateVirtualParentDevice(
-        0,
-        nullptr,
-        &createInfo,
-        &newParentDeviceId
-    ));
-
-    m_clientParentDeviceInstanceId = newParentDeviceId.get();
-    //m_clientParentDeviceInstanceId = parentDeviceInstanceId;
+        RETURN_HR_IF_NULL(E_UNEXPECTED, m_midiDeviceManager);
 
 
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(m_clientParentDeviceInstanceId.c_str(), "New parent device instance id")
-    );
+        // the parent device parameters are set by the transport (this)
+        std::wstring parentDeviceName{ TRANSPORT_CLIENT_PARENT_DEVICE_NAME };
+        std::wstring parentDeviceInstanceId{ internal::NormalizeDeviceInstanceIdWStringCopy(TRANSPORT_CLIENT_PARENT_ID) };
 
-    return S_OK;
+        SW_DEVICE_CREATE_INFO createInfo = {};
+        createInfo.cbSize = sizeof(createInfo);
+        createInfo.pszInstanceId = parentDeviceInstanceId.c_str();
+        createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
+        createInfo.pszDeviceDescription = parentDeviceName.c_str();
+        createInfo.pContainerId = &m_containerId;
+
+        wil::unique_cotaskmem_string newParentDeviceId;
+
+        RETURN_IF_FAILED(m_midiDeviceManager->ActivateVirtualParentDevice(
+            0,
+            nullptr,
+            &createInfo,
+            &newParentDeviceId
+        ));
+
+        m_clientParentDeviceInstanceId = newParentDeviceId.get();
+        //m_clientParentDeviceInstanceId = parentDeviceInstanceId;
+
+
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(m_clientParentDeviceInstanceId.c_str(), "New parent device instance id")
+        );
+
+        return S_OK;
+    }
+    CATCH_RETURN()
 }
 
 _Use_decl_annotations_
@@ -1188,74 +1200,80 @@ CMidi2NetworkMidiEndpointManager::CreateParentDeviceForHost(
     std::wstring& createdNewDeviceInstanceId
 )
 {
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
-
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_midiDeviceManager);
-
-    // the parent device parameters are set by the transport (this)
-    std::wstring parentDeviceId{ internal::NormalizeDeviceInstanceIdWStringCopy(TRANSPORT_HOST_PARENT_ID_PREFIX + std::wstring{ serviceInstanceId.c_str() }) };
-    std::wstring parentName{ TRANSPORT_HOST_PARENT_NAME_PREFIX + name };
-
-    wil::unique_cotaskmem_string newParentDeviceId;
-
-    SW_DEVICE_CREATE_INFO createInfo = {};
-    createInfo.cbSize = sizeof(createInfo);
-    createInfo.pszInstanceId = parentDeviceId.c_str();
-    createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
-    createInfo.pszDeviceDescription = parentName.c_str();
-    createInfo.pContainerId = &m_containerId;
-
-    // NOTE: This will fail if the parent device already exists. Since there's no function to
-    // remove the virtual parent currently in the MIDI Device Manager, this will fail the second
-    // time it is called (so after a Stop and then start)
-    auto activateHr = m_midiDeviceManager->ActivateVirtualParentDevice(
-        0,
-        nullptr,
-        &createInfo,
-        &newParentDeviceId
-    );
-
-    if (FAILED(activateHr))
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
+    try
     {
-        // The instance id is derived from the service instance name, so it is known whether or
-        // not activation just created it. Returning it anyway is what lets a host restart:
-        // the caller gets a usable parent instead of an empty string it would silently build
-        // every one of its endpoints on.
-        createdNewDeviceInstanceId = parentDeviceId;
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        RETURN_HR_IF_NULL(E_UNEXPECTED, m_midiDeviceManager);
+
+        // the parent device parameters are set by the transport (this)
+        std::wstring parentDeviceId{ internal::NormalizeDeviceInstanceIdWStringCopy(TRANSPORT_HOST_PARENT_ID_PREFIX + std::wstring{ serviceInstanceId.c_str() }) };
+        std::wstring parentName{ TRANSPORT_HOST_PARENT_NAME_PREFIX + name };
+
+        wil::unique_cotaskmem_string newParentDeviceId;
+
+        SW_DEVICE_CREATE_INFO createInfo = {};
+        createInfo.cbSize = sizeof(createInfo);
+        createInfo.pszInstanceId = parentDeviceId.c_str();
+        createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
+        createInfo.pszDeviceDescription = parentName.c_str();
+        createInfo.pContainerId = &m_containerId;
+
+        // NOTE: This will fail if the parent device already exists. Since there's no function to
+        // remove the virtual parent currently in the MIDI Device Manager, this will fail the second
+        // time it is called (so after a Stop and then start)
+        auto activateHr = m_midiDeviceManager->ActivateVirtualParentDevice(
+            0,
+            nullptr,
+            &createInfo,
+            &newParentDeviceId
+        );
+
+        if (FAILED(activateHr))
+        {
+            // The instance id is derived from the service instance name, so it is known whether or
+            // not activation just created it. Returning it anyway is what lets a host restart:
+            // the caller gets a usable parent instead of an empty string it would silently build
+            // every one of its endpoints on.
+            createdNewDeviceInstanceId = parentDeviceId;
+
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Parent device could not be activated. Reusing the existing instance id, which is the expected result of restarting a host.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(parentDeviceId.c_str(), "parent device instance id"),
+                TraceLoggingHResult(activateHr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+            );
+
+            return S_FALSE;
+        }
+
+        createdNewDeviceInstanceId = newParentDeviceId.get();
 
         TraceLoggingWrite(
             MidiNetworkMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_WARNING,
+            MIDI_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Parent device could not be activated. Reusing the existing instance id, which is the expected result of restarting a host.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(parentDeviceId.c_str(), "parent device instance id"),
-            TraceLoggingHResult(activateHr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+            TraceLoggingWideString(parentDeviceId.c_str(), "New parent device instance id")
         );
 
-        return S_FALSE;
+        return S_OK;
     }
-
-    createdNewDeviceInstanceId = newParentDeviceId.get();
-
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(parentDeviceId.c_str(), "New parent device instance id")
-    );
-
-    return S_OK;
+    CATCH_RETURN()
 }
 
 _Use_decl_annotations_
@@ -1564,6 +1582,9 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     std::wstring& createdNewDeviceInstanceId,
     std::wstring& createdNewEndpointDeviceInterfaceId
 )
+// Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an escaping
+// WinRT exception would unwind past them into a worker thread.
+try
 {
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -1854,6 +1875,7 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
 
     return S_OK;
 }
+CATCH_RETURN()
 
 
 _Use_decl_annotations_

@@ -151,18 +151,24 @@ MidiNetworkDataWriter::Initialize(
     winrt::Windows::Storage::Streams::IOutputStream stream
 )
 {
-    RETURN_HR_IF_NULL(E_INVALIDARG, stream);
-    m_stream = stream;
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
+    try
+    {
+        RETURN_HR_IF_NULL(E_INVALIDARG, stream);
+        m_stream = stream;
 
-    winrt::Windows::Storage::Streams::DataWriter writer(m_stream);
+        winrt::Windows::Storage::Streams::DataWriter writer(m_stream);
 
-    m_dataWriter = writer;
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+        m_dataWriter = writer;
+        RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
 
-    // per Network MIDI 2.0 specification
-    m_dataWriter.ByteOrder(winrt::Windows::Storage::Streams::ByteOrder::BigEndian);
+        // per Network MIDI 2.0 specification
+        m_dataWriter.ByteOrder(winrt::Windows::Storage::Streams::ByteOrder::BigEndian);
 
-    return S_OK;
+        return S_OK;
+    }
+    CATCH_RETURN()
 }
 
 _Use_decl_annotations_

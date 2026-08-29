@@ -355,126 +355,132 @@ CMidi2NetworkMidiConfigurationManager::ValidateHostDefinition(
     winrt::hstring& errorMessage,
     uint32_t& errorCode)
 {
-    errorMessage = L"";
-    errorCode = NETWORK_ERROR_CODE_UNKNOWN_ERROR;
-
-    // is there a unique identifier?
-
-    if (definition.EntryIdentifier == winrt::guid{})
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
+    try
     {
-        errorMessage = internal::ResourceGetHString(IDS_ERROR_MISSING_ENTRY_IDENTIFIER);
-        errorCode = NETWORK_ERROR_CODE_MISSING_ENTRY_IDENTIFIER;
-        return E_INVALIDARG;
-    }
+        errorMessage = L"";
+        errorCode = NETWORK_ERROR_CODE_UNKNOWN_ERROR;
 
-    // TODO: was that identifier already in use?
+        // is there a unique identifier?
 
-
-    if (definition.UmpEndpointName.empty())
-    {
-        errorMessage = internal::ResourceGetHString(IDS_ERROR_MISSING_NAME);
-        errorCode = NETWORK_ERROR_CODE_MISSING_ENDPOINT_NAME;
-        return E_INVALIDARG;
-    }
-
-    // Enforced here as well as in MidiNetworkHost::Initialize, because a definition rejected
-    // there is skipped silently, which looked to the caller like a host that was created and
-    // then vanished. The limit is a UTF-8 byte count, so hstring::size() is the wrong measure.
-    if (internal::ExceedsUtf8ByteCount(std::wstring{ definition.UmpEndpointName }, MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT))
-    {
-        errorMessage = internal::ResourceGetHString(IDS_ERROR_ENDPOINT_NAME_TOO_LONG);
-        errorCode = NETWORK_ERROR_CODE_ENDPOINT_NAME_TOO_LONG;
-        return E_INVALIDARG;
-    }
-
-    if (definition.ProductInstanceId.empty())
-    {
-        errorMessage = internal::ResourceGetHString(IDS_ERROR_MISSING_PRODUCT_INSTANCE_ID);
-        errorCode = NETWORK_ERROR_CODE_MISSING_PRODUCT_INSTANCE_ID;
-        return E_INVALIDARG;
-    }
-
-    if (internal::ExceedsUtf8ByteCount(std::wstring{ definition.ProductInstanceId }, MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT))
-    {
-        errorMessage = internal::ResourceGetHString(IDS_ERROR_PRODUCT_INSTANCE_ID_TOO_LONG);
-        errorCode = NETWORK_ERROR_CODE_PRODUCT_INSTANCE_ID_TOO_LONG;
-        return E_INVALIDARG;
-    }
-
-    // Spec range is ASCII 32-126, which is wider than a device identifier allows. The value is
-    // kept as supplied because it is meaningful on the device; it gets stripped only where it is
-    // used to build an SWD id.
-    if (!internal::ContainsOnlyPrintableAscii(std::wstring{ definition.ProductInstanceId }))
-    {
-        errorMessage = internal::ResourceGetHString(IDS_ERROR_INVALID_PRODUCT_INSTANCE_ID);
-        errorCode = NETWORK_ERROR_CODE_INVALID_PRODUCT_INSTANCE_ID;
-        return E_INVALIDARG;
-    }
-
-    // A manually assigned port has to be a real port number. An unparseable or out-of-range
-    // value used to be carried all the way to the socket bind, which failed much later and much
-    // less clearly.
-    if (!definition.UseAutomaticPortAllocation)
-    {
-        auto const portText = internal::TrimmedWStringCopy(std::wstring{ definition.Port });
-
-        bool valid = !portText.empty() &&
-            std::all_of(portText.begin(), portText.end(), [](wchar_t const ch) { return iswdigit(ch) != 0; });
-
-        if (valid)
+        if (definition.EntryIdentifier == winrt::guid{})
         {
-            auto const value = wcstoul(portText.c_str(), nullptr, 10);
-
-            valid = (value >= 1 && value <= 65535);
-        }
-
-        if (!valid)
-        {
-            errorMessage = internal::ResourceGetHString(IDS_ERROR_INVALID_HOST_PORT);
-            errorCode = NETWORK_ERROR_CODE_INVALID_HOST_PORT;
-            return E_INVALIDARG;
-        }
-    }
-
-    // validate user authentication
-    if (definition.Authentication != MidiNetworkHostAuthentication::NoAuthentication)
-    {
-        if (definition.AuthenticationCredentialIdentifier.empty())
-        {
-            errorMessage = internal::ResourceGetHString(IDS_ERROR_MISSING_CREDENTIAL_IDENTIFIER);
-            errorCode = NETWORK_ERROR_CODE_MISSING_CREDENTIAL_IDENTIFIER;
+            errorMessage = internal::ResourceGetHString(IDS_ERROR_MISSING_ENTRY_IDENTIFIER);
+            errorCode = NETWORK_ERROR_CODE_MISSING_ENTRY_IDENTIFIER;
             return E_INVALIDARG;
         }
 
-        MidiNetworkCredentialIdentifier identifier{ std::wstring{ definition.AuthenticationCredentialIdentifier } };
+        // TODO: was that identifier already in use?
 
-        if (!identifier.IsWellFormed())
+
+        if (definition.UmpEndpointName.empty())
         {
-            errorMessage = internal::ResourceGetHString(IDS_ERROR_INVALID_CREDENTIAL_IDENTIFIER);
-            errorCode = NETWORK_ERROR_CODE_INVALID_CREDENTIAL_IDENTIFIER;
+            errorMessage = internal::ResourceGetHString(IDS_ERROR_MISSING_NAME);
+            errorCode = NETWORK_ERROR_CODE_MISSING_ENDPOINT_NAME;
             return E_INVALIDARG;
         }
 
-        // Refused rather than silently downgraded. Accepting unauthenticated invitations on a
-        // host the user asked to protect would be worse than refusing to start it.
-        // https://github.com/microsoft/MIDI/issues/733
-        errorMessage = internal::ResourceGetHString(IDS_ERROR_AUTHENTICATION_NOT_IMPLEMENTED);
-        errorCode = NETWORK_ERROR_CODE_AUTHENTICATION_NOT_IMPLEMENTED;
-        return E_NOTIMPL;
+        // Enforced here as well as in MidiNetworkHost::Initialize, because a definition rejected
+        // there is skipped silently, which looked to the caller like a host that was created and
+        // then vanished. The limit is a UTF-8 byte count, so hstring::size() is the wrong measure.
+        if (internal::ExceedsUtf8ByteCount(std::wstring{ definition.UmpEndpointName }, MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT))
+        {
+            errorMessage = internal::ResourceGetHString(IDS_ERROR_ENDPOINT_NAME_TOO_LONG);
+            errorCode = NETWORK_ERROR_CODE_ENDPOINT_NAME_TOO_LONG;
+            return E_INVALIDARG;
+        }
+
+        if (definition.ProductInstanceId.empty())
+        {
+            errorMessage = internal::ResourceGetHString(IDS_ERROR_MISSING_PRODUCT_INSTANCE_ID);
+            errorCode = NETWORK_ERROR_CODE_MISSING_PRODUCT_INSTANCE_ID;
+            return E_INVALIDARG;
+        }
+
+        if (internal::ExceedsUtf8ByteCount(std::wstring{ definition.ProductInstanceId }, MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT))
+        {
+            errorMessage = internal::ResourceGetHString(IDS_ERROR_PRODUCT_INSTANCE_ID_TOO_LONG);
+            errorCode = NETWORK_ERROR_CODE_PRODUCT_INSTANCE_ID_TOO_LONG;
+            return E_INVALIDARG;
+        }
+
+        // Spec range is ASCII 32-126, which is wider than a device identifier allows. The value is
+        // kept as supplied because it is meaningful on the device; it gets stripped only where it is
+        // used to build an SWD id.
+        if (!internal::ContainsOnlyPrintableAscii(std::wstring{ definition.ProductInstanceId }))
+        {
+            errorMessage = internal::ResourceGetHString(IDS_ERROR_INVALID_PRODUCT_INSTANCE_ID);
+            errorCode = NETWORK_ERROR_CODE_INVALID_PRODUCT_INSTANCE_ID;
+            return E_INVALIDARG;
+        }
+
+        // A manually assigned port has to be a real port number. An unparseable or out-of-range
+        // value used to be carried all the way to the socket bind, which failed much later and much
+        // less clearly.
+        if (!definition.UseAutomaticPortAllocation)
+        {
+            auto const portText = internal::TrimmedWStringCopy(std::wstring{ definition.Port });
+
+            bool valid = !portText.empty() &&
+                std::all_of(portText.begin(), portText.end(), [](wchar_t const ch) { return iswdigit(ch) != 0; });
+
+            if (valid)
+            {
+                auto const value = wcstoul(portText.c_str(), nullptr, 10);
+
+                valid = (value >= 1 && value <= 65535);
+            }
+
+            if (!valid)
+            {
+                errorMessage = internal::ResourceGetHString(IDS_ERROR_INVALID_HOST_PORT);
+                errorCode = NETWORK_ERROR_CODE_INVALID_HOST_PORT;
+                return E_INVALIDARG;
+            }
+        }
+
+        // validate user authentication
+        if (definition.Authentication != MidiNetworkHostAuthentication::NoAuthentication)
+        {
+            if (definition.AuthenticationCredentialIdentifier.empty())
+            {
+                errorMessage = internal::ResourceGetHString(IDS_ERROR_MISSING_CREDENTIAL_IDENTIFIER);
+                errorCode = NETWORK_ERROR_CODE_MISSING_CREDENTIAL_IDENTIFIER;
+                return E_INVALIDARG;
+            }
+
+            MidiNetworkCredentialIdentifier identifier{ std::wstring{ definition.AuthenticationCredentialIdentifier } };
+
+            if (!identifier.IsWellFormed())
+            {
+                errorMessage = internal::ResourceGetHString(IDS_ERROR_INVALID_CREDENTIAL_IDENTIFIER);
+                errorCode = NETWORK_ERROR_CODE_INVALID_CREDENTIAL_IDENTIFIER;
+                return E_INVALIDARG;
+            }
+
+            // Refused rather than silently downgraded. Accepting unauthenticated invitations on a
+            // host the user asked to protect would be worse than refusing to start it.
+            // https://github.com/microsoft/MIDI/issues/733
+            errorMessage = internal::ResourceGetHString(IDS_ERROR_AUTHENTICATION_NOT_IMPLEMENTED);
+            errorCode = NETWORK_ERROR_CODE_AUTHENTICATION_NOT_IMPLEMENTED;
+            return E_NOTIMPL;
+        }
+
+        // The SDK truncates this on the way in, but a configuration file written by hand reaches
+        // here without ever passing through it, and an over-long label goes straight to
+        // DnsServiceRegister.
+        if (internal::ExceedsUtf8ByteCount(std::wstring{ definition.ServiceInstanceName }, MIDI_DNSSD_SERVICE_INSTANCE_NAME_MAX_BYTE_COUNT))
+        {
+            errorMessage = internal::ResourceGetHString(IDS_ERROR_SERVICE_INSTANCE_NAME_TOO_LONG);
+            errorCode = NETWORK_ERROR_CODE_SERVICE_INSTANCE_NAME_TOO_LONG;
+            return E_INVALIDARG;
+        }
+
+        return S_OK;
+
     }
-
-    // The SDK truncates this on the way in, but a configuration file written by hand reaches
-    // here without ever passing through it, and an over-long label goes straight to
-    // DnsServiceRegister.
-    if (internal::ExceedsUtf8ByteCount(std::wstring{ definition.ServiceInstanceName }, MIDI_DNSSD_SERVICE_INSTANCE_NAME_MAX_BYTE_COUNT))
-    {
-        errorMessage = internal::ResourceGetHString(IDS_ERROR_SERVICE_INSTANCE_NAME_TOO_LONG);
-        errorCode = NETWORK_ERROR_CODE_SERVICE_INSTANCE_NAME_TOO_LONG;
-        return E_INVALIDARG;
-    }
-
-    return S_OK;
-
+    CATCH_RETURN()
 }
 
 

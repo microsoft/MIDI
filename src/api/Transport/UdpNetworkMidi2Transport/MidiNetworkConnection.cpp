@@ -354,41 +354,47 @@ MidiNetworkConnection::ConnectMidiCallback(
     wil::com_ptr_nothrow<IMidiCallback> callback
 )
 {
-    RETURN_HR_IF_NULL(E_INVALIDARG, callback);
-
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingPointer(callback.get(), "callback")
-    );
-
-    // the previous callback wasn't disconnected. Something 
-    // is not as it should be, so we'll fail.
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
+    try
     {
-        auto lock = m_callbackLock.lock();
+        RETURN_HR_IF_NULL(E_INVALIDARG, callback);
 
-        if (m_callback != nullptr)
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingPointer(callback.get(), "callback")
+        );
+
+        // the previous callback wasn't disconnected. Something 
+        // is not as it should be, so we'll fail.
         {
-            RETURN_IF_FAILED(E_UNEXPECTED);
+            auto lock = m_callbackLock.lock();
+
+            if (m_callback != nullptr)
+            {
+                RETURN_IF_FAILED(E_UNEXPECTED);
+            }
+
+            m_callback = callback;
         }
 
-        m_callback = callback;
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+        return S_OK;
     }
-
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-    );
-
-    return S_OK;
+    CATCH_RETURN()
 }
 
 HRESULT
