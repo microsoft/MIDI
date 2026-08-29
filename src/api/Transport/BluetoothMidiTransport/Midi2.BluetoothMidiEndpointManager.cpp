@@ -1451,7 +1451,13 @@ CMidi2BluetoothMidiEndpointManager::StartBackgroundEndpointCreator()
 
     m_backgroundEndpointCreatorThread = std::jthread([this](std::stop_token stopToken)
         {
-            LOG_IF_FAILED(EndpointCreatorWorker(stopToken));
+            // LOG_IF_FAILED handles an HRESULT, not an exception, and an exception leaving a
+            // jthread body terminates the whole service.
+            try
+            {
+                LOG_IF_FAILED(EndpointCreatorWorker(stopToken));
+            }
+            CATCH_LOG();
         });
 
     return S_OK;

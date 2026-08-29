@@ -161,10 +161,16 @@ MidiBleConnection::Start()
 
     m_writerThread = std::jthread([weakThis = weak_from_this()](std::stop_token stopToken)
         {
-            if (auto self = weakThis.lock())
+            // LOG_IF_FAILED handles an HRESULT, not an exception, and an exception leaving a
+            // jthread body terminates the whole service.
+            try
             {
-                LOG_IF_FAILED(self->WriterWorker(stopToken));
+                if (auto self = weakThis.lock())
+                {
+                    LOG_IF_FAILED(self->WriterWorker(stopToken));
+                }
             }
+            CATCH_LOG();
         });
 
     // A peripheral has no Characteristic to subscribe to and no BluetoothLEDevice to watch. Its
