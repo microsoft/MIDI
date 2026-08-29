@@ -91,6 +91,14 @@
   <data name="SettingsDescription.Text" xml:space="preserve">
     <value>These apply to every Network MIDI 2.0 host and client on this PC. The defaults suit almost every network, so change them only if you have a reason to.</value>
   </data>
+  <data name="SettingSecondsFormat" xml:space="preserve">
+    <value>{0} seconds</value>
+    <comment>Shown beside a setting entered in milliseconds. {0} is the value in seconds to two decimal places.</comment>
+  </data>
+  <data name="SettingDefaultValueFormat" xml:space="preserve">
+    <value>Default is {0}.</value>
+    <comment>Appended to the end of a setting description. {0} is the default value for that setting.</comment>
+  </data>
   <data name="SettingMaxHostConnectionsHeader.Text" xml:space="preserve">
     <value>Most devices allowed at once</value>
   </data>
@@ -563,7 +571,7 @@
     <value>{0} will be disconnected and removed from this PC's saved connections.</value>
   </data>
   <data name="DisconnectedFormat" xml:space="preserve">
-    <value>{0} was disconnected.</value>
+    <value>{0} was disconnected and removed from your saved connections.</value>
   </data>
   <data name="DisconnectFailedGeneral" xml:space="preserve">
     <value>Windows could not disconnect that device.</value>

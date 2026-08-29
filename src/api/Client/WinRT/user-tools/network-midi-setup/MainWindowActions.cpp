@@ -541,6 +541,9 @@ namespace winrt::midinetworksetup::implementation
                 settings.MaxRetransmitBufferCommandPackets());
 
             m_loadingTransportSettings = false;
+
+            AppendTransportSettingDefaults();
+            UpdateTransportSettingSecondsText();
         }
         catch (...)
         {
@@ -548,9 +551,79 @@ namespace winrt::midinetworksetup::implementation
         }
     }
 
+    void MainWindow::UpdateTransportSettingSecondsText() noexcept
+    {
+        try
+        {
+            auto const show = [](controls::NumberBox const& box, controls::TextBlock const& text)
+                {
+                    auto const value = box.Value();
+
+                    // An empty box reads as NaN rather than zero, and formatting that would put
+                    // "nan seconds" on screen.
+                    if (std::isnan(value))
+                    {
+                        text.Text(L"");
+                        return;
+                    }
+
+                    text.Text(res::FormatString(
+                        L"SettingSecondsFormat",
+                        winrt::hstring{ std::format(L"{:.2f}", value / 1000.0) }));
+                };
+
+            show(InvitationPendingTimeoutBox(), InvitationPendingTimeoutSecondsText());
+            show(DirectConnectionScanIntervalBox(), DirectConnectionScanIntervalSecondsText());
+            show(OutboundPingIntervalBox(), OutboundPingIntervalSecondsText());
+        }
+        catch (...)
+        {
+        }
+    }
+
+    void MainWindow::AppendTransportSettingDefaults() noexcept
+    {
+        if (m_transportSettingDefaultsShown)
+        {
+            return;
+        }
+
+        try
+        {
+            // A default-constructed settings object holds exactly the defaults the transport
+            // uses, so these cannot drift from the service the way a table here would.
+            midi2net::MidiNetworkTransportSettings const defaults{};
+
+            auto const append = [](controls::TextBlock const& text, uint32_t const value)
+                {
+                    text.Text(
+                        text.Text() +
+                        L" " +
+                        res::FormatString(
+                            L"SettingDefaultValueFormat",
+                            winrt::hstring{ std::format(L"{}", value) }));
+                };
+
+            append(MaxHostConnectionsDescriptionText(), defaults.MaxHostConnections());
+            append(InvitationPendingTimeoutDescriptionText(), defaults.InvitationPendingTimeoutMilliseconds());
+            append(DirectConnectionScanIntervalDescriptionText(), defaults.DirectConnectionScanIntervalMilliseconds());
+            append(OutboundPingIntervalDescriptionText(), defaults.OutboundPingIntervalMilliseconds());
+            append(MaxFecPacketsDescriptionText(), defaults.MaxForwardErrorCorrectionCommandPackets());
+            append(MaxRetransmitBufferDescriptionText(), defaults.MaxRetransmitBufferCommandPackets());
+
+            m_transportSettingDefaultsShown = true;
+        }
+        catch (...)
+        {
+        }
+    }
+
     _Use_decl_annotations_
     void MainWindow::OnTransportSettingChanged(controls::NumberBox const&, controls::NumberBoxValueChangedEventArgs const&)
     {
+        // Updated even while loading, so the readout matches the box from the moment it is filled.
+        UpdateTransportSettingSecondsText();
+
         if (!m_loaded || m_loadingTransportSettings)
         {
             return;

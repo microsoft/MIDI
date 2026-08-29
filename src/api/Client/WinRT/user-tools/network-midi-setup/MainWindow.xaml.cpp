@@ -1047,6 +1047,72 @@ namespace winrt::midinetworksetup::implementation
         }
     }
 
+    _Use_decl_annotations_
+    winrt::hstring MainWindow::DisplayAddressForLocalHost(winrt::hstring const& actualAddress) noexcept
+    {
+        try
+        {
+            // "::" and "0.0.0.0" both mean "every interface". Anything else is a real address
+            // the host was pinned to, and is worth showing as it is.
+            if (!actualAddress.empty() && actualAddress != L"::" && actualAddress != L"0.0.0.0")
+            {
+                return actualAddress;
+            }
+
+            std::wstring ipv4{};
+            std::wstring ipv6{};
+
+            for (auto const& hostName : networking::Connectivity::NetworkInformation::GetHostNames())
+            {
+                if (hostName == nullptr)
+                {
+                    continue;
+                }
+
+                // Without adapter information the name is not something another device can reach,
+                // which also drops the loopback entries.
+                if (hostName.IPInformation() == nullptr)
+                {
+                    continue;
+                }
+
+                auto const type = hostName.Type();
+
+                if (type != networking::HostNameType::Ipv4 && type != networking::HostNameType::Ipv6)
+                {
+                    continue;
+                }
+
+                auto& target = type == networking::HostNameType::Ipv4 ? ipv4 : ipv6;
+
+                if (!target.empty())
+                {
+                    target += L", ";
+                }
+
+                target += hostName.CanonicalName();
+            }
+
+            // IPv4 is what people are asked for by almost every device, so IPv6 is only offered
+            // when there is no IPv4 address to give.
+            if (!ipv4.empty())
+            {
+                return winrt::hstring{ ipv4 };
+            }
+
+            if (!ipv6.empty())
+            {
+                return winrt::hstring{ ipv6 };
+            }
+
+            return actualAddress;
+        }
+        catch (...)
+        {
+            return actualAddress;
+        }
+    }
+
     void MainWindow::ApplyRemoteHosts(ServiceSnapshot const& snapshot) noexcept
     {
         try
@@ -1471,7 +1537,7 @@ namespace winrt::midinetworksetup::implementation
                                 host.ActualServiceInstanceName(), host.ServiceInstanceName()) :
                             host.ServiceInstanceName(),
                         host.ProductInstanceId(),
-                        res::FormatString(L"HostAddressValueFormat", host.ActualAddress(), host.ActualPort()),
+                        res::FormatString(L"HostAddressValueFormat", DisplayAddressForLocalHost(host.ActualAddress()), host.ActualPort()),
                         host.ActualPort(),
                         host.HasStarted() ?
                             (host.UsedPortFallback() ?

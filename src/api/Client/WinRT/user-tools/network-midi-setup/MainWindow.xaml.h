@@ -116,6 +116,14 @@ namespace winrt::midinetworksetup::implementation
         void FlushPendingTransportSettingsWrite() noexcept;
         winrt::fire_and_forget ApplyTransportSettingsAsync() noexcept;
 
+        // The intervals are entered in milliseconds because that is the unit the service takes,
+        // but a five or six digit number is hard to judge at a glance.
+        void UpdateTransportSettingSecondsText() noexcept;
+
+        // Appends the default to each setting's description, so the customer can see it without
+        // having to reset the box to find out what it was.
+        void AppendTransportSettingDefaults() noexcept;
+
         void UpdateManualConnectButton() noexcept;
         void UpdateCreateHostButtonState() noexcept;
 
@@ -160,6 +168,11 @@ namespace winrt::midinetworksetup::implementation
         static winrt::hstring DescribeLatency(uint64_t const ticks) noexcept;
         static winrt::hstring JoinAddresses(collections::IVectorView<winrt::hstring> const& addresses) noexcept;
 
+        // A host listens on every interface, so the service reports the wildcard address. That is
+        // accurate, and useless to somebody who has to type an address into a synth, so this
+        // supplies the addresses of this PC instead.
+        static winrt::hstring DisplayAddressForLocalHost(winrt::hstring const& actualAddress) noexcept;
+
         midiapp::WindowChrome m_chrome{};
 
         controls::ContentDialog m_openDialog{ nullptr };
@@ -191,6 +204,10 @@ namespace winrt::midinetworksetup::implementation
         bool m_loaded{ false };
         bool m_closing{ false };
         bool m_loadingTransportSettings{ false };
+
+        // The defaults are appended to the description text once, so a later reload does not
+        // append them a second time.
+        bool m_transportSettingDefaultsShown{ false };
         bool m_transportMissingReported{ false };
     };
 }

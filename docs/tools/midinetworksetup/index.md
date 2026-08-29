@@ -78,8 +78,15 @@ For MIDI, you normally want a situation where the round-trip latency is under 5 
 
 > If all your connections show high round-trip network latency, it's worth looking at your network usage, and if you are saturating the same network with other audio or video. Most wired networks have plenty of bandwidth though, so the most common cause of high latency is using a WiFi connection instead of Wired. You may also find you have gaming-focused network accelerator software running, which may actually cause worse performance. 
 
-Select **Disconnect** to end a connection. The device stays in the list and can be reconnected
-whenever you like. Disconnecting doesn't block anything.
+Select **Disconnect** to end a connection. This also removes the device from this PC's saved
+connections, so it will not reconnect on its own afterwards. The device stays visible in the list
+for as long as it is switched on and announcing itself, and you can connect to it again whenever
+you like. Disconnecting doesn't block anything.
+
+This is also how you get rid of an entry you no longer want. A device which is no longer on the
+network, or which has changed how it announces itself after a firmware update, shows as **Not
+found on the network**. Select **Disconnect** on that entry and it is forgotten and disappears
+from the list. This works whether or not the device was ever actually connected.
 
 ### Device details
 
