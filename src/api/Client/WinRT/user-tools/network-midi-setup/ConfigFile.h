@@ -73,6 +73,11 @@ namespace midinetworksetup
         // true when the file has a host or client entry with this identifier
         bool HasHostEntry(_In_ winrt::hstring const& hostIdKey) noexcept;
 
+        // The product instance id a saved client entry is matching on. When a device changes its
+        // identity, usually in a firmware update, nothing on the network matches this any more
+        // and the saved entry is the only place the old value survives.
+        winrt::hstring GetClientMatchProductInstanceId(_In_ winrt::hstring const& clientIdKey) noexcept;
+
     private:
         NetworkConfigFile() noexcept;
 

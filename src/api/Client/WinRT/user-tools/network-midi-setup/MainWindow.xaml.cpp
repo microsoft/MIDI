@@ -1123,6 +1123,7 @@ namespace winrt::midinetworksetup::implementation
                 winrt::hstring DisplayName{};
                 winrt::hstring Subtitle{};
                 winrt::hstring ProductInstanceId{};
+                winrt::hstring ProductInstanceIdLabel{};
                 winrt::hstring Addresses{};
                 winrt::hstring DeviceId{};
                 winrt::hstring ConnectAddress{};
@@ -1331,6 +1332,22 @@ namespace winrt::midinetworksetup::implementation
 
                     row->Connected = client.IsSessionActive();
 
+                    // A device which is not advertising reports nothing, so the row would show an
+                    // empty identity and no reason for the entry never matching. The saved entry
+                    // still holds what it is looking for, and when a firmware update changes a
+                    // device's identity that stale value is the whole explanation.
+                    if (row->ProductInstanceId.empty())
+                    {
+                        auto const expected =
+                            native::NetworkConfigFile::Current().GetClientMatchProductInstanceId(clientKey);
+
+                        if (!expected.empty())
+                        {
+                            row->ProductInstanceId = expected;
+                            row->ProductInstanceIdLabel = res::GetString(L"ExpectedProductInstanceIdLabel");
+                        }
+                    }
+
                     // "Connecting" is not what is happening when the device cannot be seen at
                     // all. Nothing is attempted until it announces itself, so somebody looking at
                     // a device which is switched off should be told that, rather than watching a
@@ -1437,6 +1454,9 @@ namespace winrt::midinetworksetup::implementation
                     row.DisplayName,
                     row.Subtitle,
                     row.ProductInstanceId,
+                    row.ProductInstanceIdLabel.empty() ?
+                        res::GetString(L"ProductInstanceIdLabel") :
+                        row.ProductInstanceIdLabel,
                     row.Addresses,
                     row.DeviceId,
                     row.ConnectAddress,

@@ -700,6 +700,44 @@ namespace midinetworksetup
     }
 
     _Use_decl_annotations_
+    winrt::hstring NetworkConfigFile::GetClientMatchProductInstanceId(winrt::hstring const& clientIdKey) noexcept
+    {
+        json::JsonObject config{ nullptr };
+
+        if (!LoadCached(config))
+        {
+            return {};
+        }
+
+        auto clients = GetEntriesObject(config, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY, false);
+
+        auto client = FindObject(clients, ResolveKey(clients, clientIdKey));
+
+        if (client == nullptr)
+        {
+            return {};
+        }
+
+        try
+        {
+            auto const match = client.GetNamedObject(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_OBJECT_KEY, nullptr);
+
+            if (match == nullptr)
+            {
+                return {};
+            }
+
+            return match.GetNamedString(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_MATCH_UMP_ENDPOINT_PID_KEY, L"");
+        }
+        catch (...)
+        {
+            return {};
+        }
+    }
+
+    _Use_decl_annotations_
     bool NetworkConfigFile::SetRemoteClientDecision(
         winrt::hstring const& hostIdKey,
         winrt::hstring const& umpEndpointName,

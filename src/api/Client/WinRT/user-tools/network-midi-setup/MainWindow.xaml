@@ -374,9 +374,8 @@
                                                     <RowDefinition Height="Auto" />
                                                 </Grid.RowDefinitions>
 
-                                                <TextBlock x:Uid="ProductInstanceIdLabel"
-                                                           Grid.Row="0" Grid.Column="0"
-                                                           Text="Product Instance Id"
+                                                <TextBlock Grid.Row="0" Grid.Column="0"
+                                                           Text="{x:Bind ProductInstanceIdLabel, Mode=OneWay}"
                                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                                 <TextBlock Grid.Row="0" Grid.Column="1"

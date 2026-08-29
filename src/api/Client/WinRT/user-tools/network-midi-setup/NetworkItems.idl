@@ -42,6 +42,10 @@ namespace midinetworksetup
         String SubtitleText{ get; };
 
         String ProductInstanceId{ get; };
+
+        // Says whether the value above is what the device is reporting now, or what the saved
+        // entry is still looking for.
+        String ProductInstanceIdLabel{ get; };
         String AddressesText{ get; };
         String DeviceId{ get; };
 

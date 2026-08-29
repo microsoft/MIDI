@@ -258,8 +258,13 @@
   <data name="AddressesFormat" xml:space="preserve">
     <value>Addresses: {0}</value>
   </data>
-  <data name="ProductInstanceIdLabel.Text" xml:space="preserve">
+  <data name="ProductInstanceIdLabel" xml:space="preserve">
     <value>Product Instance Id</value>
+    <comment>Shown when the device is on the network and reporting its own identity.</comment>
+  </data>
+  <data name="ExpectedProductInstanceIdLabel" xml:space="preserve">
+    <value>Expected Product Instance Id</value>
+    <comment>Shown instead of Product Instance Id when the device is not on the network, so the value is the one the saved entry is looking for rather than one the device reported.</comment>
   </data>
   <data name="AddressesLabel.Text" xml:space="preserve">
     <value>Addresses</value>

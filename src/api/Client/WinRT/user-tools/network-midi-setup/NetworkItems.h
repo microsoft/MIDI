@@ -268,6 +268,7 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring DisplayName() const noexcept { return m_displayName; }
         winrt::hstring SubtitleText() const noexcept { return m_subtitleText; }
         winrt::hstring ProductInstanceId() const noexcept { return m_productInstanceId; }
+        winrt::hstring ProductInstanceIdLabel() const noexcept { return m_productInstanceIdLabel; }
         winrt::hstring AddressesText() const noexcept { return m_addressesText; }
         winrt::hstring DeviceId() const noexcept { return m_deviceId; }
         winrt::hstring ConnectAddress() const noexcept { return m_connectAddress; }
@@ -362,6 +363,7 @@ namespace winrt::midinetworksetup::implementation
             _In_ winrt::hstring const& displayName,
             _In_ winrt::hstring const& subtitleText,
             _In_ winrt::hstring const& productInstanceId,
+            _In_ winrt::hstring const& productInstanceIdLabel,
             _In_ winrt::hstring const& addressesText,
             _In_ winrt::hstring const& deviceId,
             _In_ winrt::hstring const& connectAddress,
@@ -379,6 +381,7 @@ namespace winrt::midinetworksetup::implementation
             UpdateField(m_displayName, displayName, L"DisplayName");
             UpdateField(m_subtitleText, subtitleText, L"SubtitleText");
             UpdateField(m_productInstanceId, productInstanceId, L"ProductInstanceId");
+            UpdateField(m_productInstanceIdLabel, productInstanceIdLabel, L"ProductInstanceIdLabel");
             UpdateField(m_addressesText, addressesText, L"AddressesText");
             UpdateField(m_deviceId, deviceId, L"DeviceId");
             UpdateField(m_connectAddress, connectAddress, L"ConnectAddress");
@@ -446,6 +449,7 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring m_displayName{};
         winrt::hstring m_subtitleText{};
         winrt::hstring m_productInstanceId{};
+        winrt::hstring m_productInstanceIdLabel{};
         winrt::hstring m_addressesText{};
         winrt::hstring m_deviceId{};
         winrt::hstring m_connectAddress{};
