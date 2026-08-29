@@ -23,8 +23,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         winrt::hstring BluetoothDeviceId() const noexcept { return m_bluetoothDeviceId; }
         void BluetoothDeviceId(_In_ winrt::hstring const& value) noexcept { m_bluetoothDeviceId = value; }
 
+        winrt::hstring Comment() const noexcept { return m_comment; }
+        void Comment(_In_ winrt::hstring const& value) noexcept { m_comment = value; }
+
     private:
         winrt::hstring m_bluetoothDeviceId{};
+        winrt::hstring m_comment{};
     };
 }
 

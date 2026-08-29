@@ -275,6 +275,9 @@ namespace winrt::midibluetoothsetup::implementation
         {
             midi2bt::MidiBluetoothDeviceConnectConfig config{ deviceId };
 
+            // a bare bluetooth address in the configuration file says nothing about the device
+            config.Comment(displayName);
+
             response = co_await midi2bt::MidiBluetoothTransportManager::ConnectDeviceAsync(config);
 
             // Connecting and remembering are separate steps, so a connection the service

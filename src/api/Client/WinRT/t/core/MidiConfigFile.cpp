@@ -9,6 +9,8 @@
 #include "pch.h"
 #include "MidiConfigFile.h"
 
+#include "MidiReporting.h"
+
 namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 {
     namespace
@@ -86,21 +88,44 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
                     uint32_t index{ 0 };
 
+                    auto const appendMember =
+                        [&text, &index, &object, depth](
+                            winrt::hstring const& key,
+                            json::IJsonValue const& value)
+                        {
+                            AppendIndent(text, depth + 1);
+
+                            text += json::JsonValue::CreateStringValue(key).Stringify();
+                            text += L": ";
+
+                            AppendPretty(text, value, depth + 1);
+
+                            if (++index < object.Size())
+                            {
+                                text += L",";
+                            }
+
+                            text += L"\n";
+                        };
+
+                    // The comment says what the object is, so it leads regardless of where the
+                    // map happened to put it. Json objects have no inherent order.
+                    auto const commentKey = winrt::hstring{ MIDI_CONFIG_JSON_COMMON_COMMENT_KEY };
+                    auto const hasComment = object.HasKey(commentKey);
+
+                    if (hasComment)
+                    {
+                        appendMember(commentKey, object.GetNamedValue(commentKey));
+                    }
+
                     for (auto const& pair : object)
                     {
-                        AppendIndent(text, depth + 1);
-
-                        text += json::JsonValue::CreateStringValue(pair.Key()).Stringify();
-                        text += L": ";
-
-                        AppendPretty(text, pair.Value(), depth + 1);
-
-                        if (++index < object.Size())
+                        if (hasComment && pair.Key() == commentKey)
                         {
-                            text += L",";
+                            continue;
                         }
 
-                        text += L"\n";
+                        appendMember(pair.Key(), pair.Value());
                     }
 
                     AppendIndent(text, depth);
@@ -688,6 +713,28 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
             }
         }
 
+        // The transport reports its own name, which is the only source that cannot drift from what
+        // the customer sees elsewhere. This is cosmetic, so not reaching the service simply means
+        // no comment is written.
+        std::wstring TransportDisplayName(_In_ winrt::guid const& transportId) noexcept
+        {
+            try
+            {
+                for (auto const& transport : rpt::MidiReporting::GetInstalledTransportPlugins())
+                {
+                    if (transport.TransportId() == transportId)
+                    {
+                        return std::wstring{ transport.Name() };
+                    }
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return {};
+        }
+
         std::wstring TodayStamp() noexcept
         {
             SYSTEMTIME now{};
@@ -916,6 +963,10 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
             outcome.ConfigFilePath = winrt::hstring{ path };
 
+            // Resolved before the file is opened. This asks the service for the name, and the
+            // service reads this same file, so the two must not be made to wait on each other.
+            auto const transportName = TransportDisplayName(transportId);
+
             // This handle is the write lock. Sharing read means the service is never blocked from
             // reading, and because the handle is owned by the process, a crash releases it rather
             // than leaving a stale lock behind.
@@ -1013,6 +1064,15 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
             {
                 outcome.Result = svc::MidiServiceConfigSaveResult::ErrorProcessingConfigJson;
                 return outcome;
+            }
+
+            // Json has no comments, so this names the transport for anyone reading the file by
+            // hand. It is refreshed on every save and is never read back by the service.
+            if (!transportName.empty())
+            {
+                persistedSection.SetNamedValue(
+                    MIDI_CONFIG_JSON_COMMON_COMMENT_KEY,
+                    json::JsonValue::CreateStringValue(winrt::hstring{ transportName }));
             }
 
             MergeTransportSection(persistedSection, transportSection);

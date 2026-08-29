@@ -28,7 +28,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         if (!Comment().empty())
         {
             clientObject.SetNamedValue(
-                L"_comment",            // todo: standardize this key
+                MIDI_CONFIG_JSON_COMMON_COMMENT_KEY,
                 json::JsonValue::CreateStringValue(Comment()));
         }
 

@@ -28,6 +28,15 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
                 MIDI_CONFIG_JSON_BLUETOOTH_MIDI_DEVICE_ENABLED_KEY,
                 json::JsonValue::CreateBooleanValue(true));
 
+            // Json has no comments. This is how the device is named for anyone reading the file,
+            // because a bluetooth address on its own says nothing about which device it is.
+            if (!m_comment.empty())
+            {
+                deviceJson.SetNamedValue(
+                    MIDI_CONFIG_JSON_COMMON_COMMENT_KEY,
+                    json::JsonValue::CreateStringValue(m_comment));
+            }
+
             json::JsonArray devicesJson;
             devicesJson.Append(deviceJson);
 

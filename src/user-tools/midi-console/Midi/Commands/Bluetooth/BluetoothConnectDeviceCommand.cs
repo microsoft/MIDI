@@ -93,6 +93,12 @@ namespace Microsoft.Midi.ConsoleApp
                 return (int)MidiConsoleReturnCode.Success;
             }
 
+            // a bare bluetooth address in the configuration file says nothing about the device
+            if (response.Device != null && !string.IsNullOrEmpty(response.Device.Name))
+            {
+                config.Comment = response.Device.Name;
+            }
+
             ConfigFileSaver.ReportSave(config);
 
             return (int)MidiConsoleReturnCode.Success;

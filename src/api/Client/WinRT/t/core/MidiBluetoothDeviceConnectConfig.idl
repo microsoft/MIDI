@@ -25,5 +25,7 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
         MidiBluetoothDeviceConnectConfig(String bluetoothDeviceId);
 
         [noexcept] String BluetoothDeviceId;
+
+        [noexcept] String Comment;                      // optional comment that is put into the config file
     }
 }

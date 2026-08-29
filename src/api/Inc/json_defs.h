@@ -65,6 +65,10 @@
 
 // common properties
 
+// Json has no comments, so a key the service never reads stands in for one. It is written to make
+// the file readable by a human, and is preserved, but never acted upon, when the file is merged.
+#define MIDI_CONFIG_JSON_COMMON_COMMENT_KEY                                                 L"_comment"
+
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_ENDPOINT_DEVICE_ID_PROPERTY                        L"endpointId"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY                                      L"name"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY                               L"description"
