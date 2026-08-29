@@ -413,11 +413,17 @@ namespace winrt::midinetworksetup::implementation
         }
 
         if (!co_await ConfirmAsync(
-            res::GetString(L"DisconnectConfirmTitle"),
-            res::FormatString(L"DisconnectConfirmMessageFormat", displayName)))
+            item.IsConnected() ?
+                res::GetString(L"DisconnectConfirmTitle") :
+                res::GetString(L"ForgetConfirmTitle"),
+            item.IsConnected() ?
+                res::FormatString(L"DisconnectConfirmMessageFormat", displayName) :
+                res::FormatString(L"ForgetConfirmMessageFormat", displayName)))
         {
             co_return;
         }
+
+        auto const wasConnected = item.IsConnected();
 
         item.IsBusy(true);
 
@@ -440,7 +446,9 @@ namespace winrt::midinetworksetup::implementation
                 }
                 else
                 {
-                    message = res::FormatString(L"DisconnectedFormat", displayName);
+                    message = wasConnected ?
+                        res::FormatString(L"DisconnectedFormat", displayName) :
+                        res::FormatString(L"ForgottenFormat", displayName);
                 }
             }
             else

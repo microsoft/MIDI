@@ -279,6 +279,7 @@ namespace winrt::midinetworksetup::implementation
 
         bool IsConnected() const noexcept { return m_isConnected; }
         bool IsConfigured() const noexcept { return m_isConfigured; }
+        winrt::hstring DisconnectLabel() const noexcept { return m_disconnectLabel; }
         bool IsAdvertised() const noexcept { return m_isAdvertised; }
 
         bool IsBusy() const noexcept { return m_isBusy; }
@@ -372,7 +373,8 @@ namespace winrt::midinetworksetup::implementation
             _In_ uint64_t const latencyTicks,
             _In_ bool const isConnected,
             _In_ bool const isConfigured,
-            _In_ bool const isAdvertised) noexcept
+            _In_ bool const isAdvertised,
+            _In_ winrt::hstring const& disconnectLabel) noexcept
         {
             UpdateField(m_displayName, displayName, L"DisplayName");
             UpdateField(m_subtitleText, subtitleText, L"SubtitleText");
@@ -390,6 +392,7 @@ namespace winrt::midinetworksetup::implementation
             }
 
             UpdateField(m_clientId, clientId, L"ClientId");
+            UpdateField(m_disconnectLabel, disconnectLabel, L"DisconnectLabel");
 
             auto const connectedChanged = UpdateField(m_isConnected, isConnected, L"IsConnected");
             auto const configuredChanged = UpdateField(m_isConfigured, isConfigured, L"IsConfigured");
@@ -456,6 +459,7 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring m_clientId{};
         bool m_isConnected{ false };
         bool m_isConfigured{ false };
+        winrt::hstring m_disconnectLabel{};
         bool m_isAdvertised{ false };
         bool m_isBusy{ false };
 

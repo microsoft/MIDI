@@ -344,8 +344,7 @@
                                                         Content="Try again"
                                                         Visibility="{x:Bind RetryVisibility, Mode=OneWay}"
                                                         Click="OnRetryRemoteHostClick" />
-                                                <Button x:Uid="DisconnectButton"
-                                                        Content="Disconnect"
+                                                <Button Content="{x:Bind DisconnectLabel, Mode=OneWay}"
                                                         Visibility="{x:Bind DisconnectVisibility, Mode=OneWay}"
                                                         Click="OnDisconnectRemoteHostClick" />
                                                 <ProgressRing IsActive="{x:Bind IsBusy, Mode=OneWay}"

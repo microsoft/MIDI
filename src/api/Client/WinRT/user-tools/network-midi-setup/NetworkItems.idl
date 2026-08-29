@@ -61,6 +61,10 @@ namespace midinetworksetup
         Boolean IsConnected{ get; };
         Boolean IsConfigured{ get; };
         Boolean IsAdvertised{ get; };
+
+        // Disconnecting always forgets the entry, so the label says so when there is no session
+        // to end and the only thing the button does is remove it.
+        String DisconnectLabel{ get; };
         Boolean IsBusy;
 
         Microsoft.UI.Xaml.Visibility ConnectVisibility{ get; };

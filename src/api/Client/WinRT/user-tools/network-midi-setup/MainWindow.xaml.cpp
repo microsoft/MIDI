@@ -1432,7 +1432,10 @@ namespace winrt::midinetworksetup::implementation
                     row.LatencyTicks,
                     row.Connected,
                     row.Configured,
-                    row.Advertised);
+                    row.Advertised,
+                    row.Connected ?
+                        res::GetString(L"RemoteHostDisconnectAndForgetLabel") :
+                        res::GetString(L"RemoteHostForgetLabel"));
             }
 
             for (int32_t i = static_cast<int32_t>(m_remoteHosts.Size()) - 1; i >= 0; i--)
