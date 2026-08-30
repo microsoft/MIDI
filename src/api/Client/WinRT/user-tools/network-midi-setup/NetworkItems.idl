@@ -62,6 +62,9 @@ namespace midinetworksetup
         // Full path to the endpoint's image in the shared assets folder, empty when it has none.
         String ImagePath{ get; };
 
+        // The same image ready to bind, because a path on its own will not bind to Image.Source.
+        Microsoft.UI.Xaml.Media.ImageSource ImageSource{ get; };
+
         // empty when this PC has no configured client entry for the host
         String ClientId{ get; };
 

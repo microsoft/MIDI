@@ -372,7 +372,7 @@
                                                         Margin="0,4,0,0"
                                                         CornerRadius="4"
                                                         Visibility="{x:Bind ImageVisibility, Mode=OneWay}">
-                                                    <Image Source="{x:Bind ImagePath, Mode=OneWay}"
+                                                    <Image Source="{x:Bind ImageSource, Mode=OneWay}"
                                                            Stretch="Uniform" />
                                                 </Border>
 

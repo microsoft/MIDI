@@ -277,6 +277,44 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring StatisticsText() const noexcept { return m_statisticsText; }
         winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
         winrt::hstring ImagePath() const noexcept { return m_imagePath; }
+
+        // built on first use: the stored value is a file path, which will not bind to Image.Source
+        winrt::Microsoft::UI::Xaml::Media::ImageSource ImageSource() const noexcept
+        {
+            if (m_imageSource == nullptr && !m_imagePath.empty())
+            {
+                try
+                {
+                    winrt::Windows::Foundation::Uri const uri{ L"file:///" + m_imagePath };
+
+                    std::wstring const path{ m_imagePath };
+
+                    // BitmapImage cannot render SVG, and the shipped endpoint art is SVG
+                    if (path.size() > 4 && _wcsicmp(path.c_str() + path.size() - 4, L".svg") == 0)
+                    {
+                        winrt::Microsoft::UI::Xaml::Media::Imaging::SvgImageSource svg{};
+
+                        svg.UriSource(uri);
+
+                        m_imageSource = svg;
+                    }
+                    else
+                    {
+                        winrt::Microsoft::UI::Xaml::Media::Imaging::BitmapImage bitmap{};
+
+                        bitmap.DecodePixelHeight(72);
+                        bitmap.UriSource(uri);
+
+                        m_imageSource = bitmap;
+                    }
+                }
+                catch (...)
+                {
+                }
+            }
+
+            return m_imageSource;
+        }
         winrt::hstring ClientId() const noexcept { return m_clientId; }
 
         bool IsConnected() const noexcept { return m_isConnected; }
@@ -425,6 +463,9 @@ namespace winrt::midinetworksetup::implementation
 
             if (UpdateField(m_imagePath, imagePath, L"ImagePath"))
             {
+                m_imageSource = nullptr;
+
+                RaisePropertyChanged(L"ImageSource");
                 RaisePropertyChanged(L"ImageVisibility");
             }
 
@@ -500,6 +541,7 @@ namespace winrt::midinetworksetup::implementation
 
         winrt::hstring m_endpointDeviceId{};
         winrt::hstring m_imagePath{};
+        mutable winrt::Microsoft::UI::Xaml::Media::ImageSource m_imageSource{ nullptr };
         winrt::hstring m_clientId{};
         bool m_isConnected{ false };
         bool m_isConfigured{ false };
