@@ -42,6 +42,10 @@
 #include <unordered_map>
 #include <vector>
 
+// Must come before the other WIL headers: it teaches WIL about cppwinrt exceptions. Without it,
+// LOG_CAUGHT_EXCEPTION on a winrt::hresult_error is treated as an unknown exception and fail-fasts
+// the process (0x8007023E) instead of logging.
+#include <wil/cppwinrt.h>
 #include <wil/com.h>
 #include <wil/resource.h>
 #include <wil/result_macros.h>

@@ -19,15 +19,16 @@ the case rather than demanding them up front.
 Across the top are the other Windows MIDI Services apps. Only the ones actually installed on this PC
 appear, so the toolbar reflects what you can really do:
 
-- **Loopback** creates and manages loopback endpoints
-- **Bluetooth** connects Bluetooth LE MIDI devices (installed with the Bluetooth MIDI transport)
-- **Network** sets up Network MIDI 2.0 (installed with the Network MIDI 2.0 transport)
-- **SysEx** sends and receives system exclusive files
+- **Loopback Setup** creates and manages loopback endpoints
+- **Bluetooth Setup** connects Bluetooth LE MIDI devices (installed with the Bluetooth MIDI transport)
+- **Network Setup** sets up Network MIDI 2.0 (installed with the Network MIDI 2.0 transport)
+- **SysEx Send/Receive** sends and receives system exclusive files
+- **Monitor** watches the messages flowing through an endpoint
 - **Scratch Pad** sends hand-written MIDI messages
-- **Troubleshoot** checks the health of MIDI on this PC and repairs common problems
+- **Troubleshoot and Fix** checks the health of MIDI on this PC and repairs common problems
 
-On the right, **MIDI Settings** opens the machine-wide settings described below. It is not a separate
-app; it opens in this window.
+Last on the toolbar, **Global MIDI Settings** opens the machine-wide settings described below. It is
+not a separate app; it opens in this window.
 
 ## Endpoints
 
@@ -60,7 +61,8 @@ Selecting an endpoint opens its details:
 - the transport it arrived on, and its native data format
 - the product instance ID and serial number
 - the endpoint device ID, with a button to copy it
-- every MIDI 1.0 input and output port belonging to this endpoint, kept live as ports appear and go away
+- every MIDI 1.0 input/source and output/destination port belonging to this endpoint, kept live as
+  ports appear and go away
 - whether the device reports an identifier of its own
 
 That last one matters more than it looks. A device that reports a serial number or a product instance ID

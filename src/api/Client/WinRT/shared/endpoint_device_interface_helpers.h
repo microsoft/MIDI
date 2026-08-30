@@ -8,6 +8,10 @@
 
 #pragma once
 
+// These helpers are called from synchronous public API, which an app may call on its UI thread,
+// so every async wait here has to go through RunOnBackgroundThreadAndWait.
+#include "async_helper.h"
+
 //#include "SetupAPI.h"
 //#include "MidiDefs.h"   // for DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI. Unfortunately, pulls in a lot of other baggage
 
@@ -28,10 +32,16 @@ namespace WindowsMidiServicesInternal
             auto additionalTestProperties = winrt::single_threaded_vector<winrt::hstring>();
             additionalTestProperties.Append(STRING_PKEY_MIDI_TransportLayer);
 
-            auto testDevice = enumeration::DeviceInformation::CreateFromIdAsync(
-                normalizedDeviceId,
-                additionalTestProperties,
-                enumeration::DeviceInformationKind::DeviceInterface).get();
+            // STA-safe: the inner co_await runs on the thread pool, so the outer wait never
+            // blocks the caller's apartment.
+            auto testDevice = internal::RunOnBackgroundThreadAndWait(
+                [normalizedDeviceId, additionalTestProperties]()
+                {
+                    return enumeration::DeviceInformation::CreateFromIdAsync(
+                        normalizedDeviceId,
+                        additionalTestProperties,
+                        enumeration::DeviceInformationKind::DeviceInterface);
+                });
 
             if (testDevice != nullptr)
             {
@@ -64,11 +74,16 @@ namespace WindowsMidiServicesInternal
             auto additionalTestProperties = winrt::single_threaded_vector<winrt::hstring>();
             additionalTestProperties.Append(L"System.Devices.InterfaceEnabled");
 
-
-            auto testDevice = enumeration::DeviceInformation::CreateFromIdAsync(
-                normalizedDeviceId,
-                additionalTestProperties,
-                enumeration::DeviceInformationKind::DeviceInterface).get();
+            // STA-safe: the inner co_await runs on the thread pool, so the outer wait never
+            // blocks the caller's apartment.
+            auto testDevice = internal::RunOnBackgroundThreadAndWait(
+                [normalizedDeviceId, additionalTestProperties]()
+                {
+                    return enumeration::DeviceInformation::CreateFromIdAsync(
+                        normalizedDeviceId,
+                        additionalTestProperties,
+                        enumeration::DeviceInformationKind::DeviceInterface);
+                });
 
             if (testDevice != nullptr)
             {

@@ -260,8 +260,34 @@ namespace winrt::midisettings::implementation
 
             if (auto const userInfo = endpoint.GetUserSuppliedInfo())
             {
-                description = userInfo.Description();
+                description = TrimmedOrEmpty(userInfo.Description());
                 imageFileName = userInfo.ImageFileName();
+            }
+
+            winrt::hstring serialNumber{};
+            winrt::hstring transportText{};
+
+            if (auto const transportInfo = endpoint.GetTransportSuppliedInfo())
+            {
+                // What the customer wrote wins; the transport's own words are better than nothing.
+                if (description.empty())
+                {
+                    description = TrimmedOrEmpty(transportInfo.Description());
+                }
+
+                serialNumber = TrimmedOrEmpty(transportInfo.SerialNumber());
+
+                transportText = res::FormatString(
+                    L"TransportWithCodeFormat",
+                    TransportDisplayName(transportInfo.TransportCode()),
+                    transportInfo.TransportCode());
+
+                DetailNativeFormatText().Text(
+                    transportInfo.NativeDataFormat() == midi2enum::MidiEndpointNativeDataFormat::UniversalMidiPacketFormat ?
+                    res::GetString(L"NativeFormatUmp") :
+                    transportInfo.NativeDataFormat() == midi2enum::MidiEndpointNativeDataFormat::Midi1ByteFormat ?
+                    res::GetString(L"NativeFormatBytes") :
+                    res::GetString(L"NativeFormatUnknown"));
             }
 
             DetailDescriptionText().Text(description);
@@ -293,26 +319,6 @@ namespace winrt::midisettings::implementation
                 DetailImage().Source(bitmap);
             }
 
-            winrt::hstring serialNumber{};
-            winrt::hstring transportText{};
-
-            if (auto const transportInfo = endpoint.GetTransportSuppliedInfo())
-            {
-                serialNumber = TrimmedOrEmpty(transportInfo.SerialNumber());
-
-                transportText = res::FormatString(
-                    L"TransportWithCodeFormat",
-                    TransportDisplayName(transportInfo.TransportCode()),
-                    transportInfo.TransportCode());
-
-                DetailNativeFormatText().Text(
-                    transportInfo.NativeDataFormat() == midi2enum::MidiEndpointNativeDataFormat::UniversalMidiPacketFormat ?
-                    res::GetString(L"NativeFormatUmp") :
-                    transportInfo.NativeDataFormat() == midi2enum::MidiEndpointNativeDataFormat::Midi1ByteFormat ?
-                    res::GetString(L"NativeFormatBytes") :
-                    res::GetString(L"NativeFormatUnknown"));
-            }
-
             DetailTransportText().Text(transportText);
 
             winrt::hstring productInstanceId{};
@@ -327,7 +333,11 @@ namespace winrt::midisettings::implementation
             DetailProductInstanceIdText().Text(productInstanceId.empty() ? notSupplied : productInstanceId);
             DetailSerialNumberText().Text(serialNumber.empty() ? notSupplied : serialNumber);
 
-            DetailEndpointIdTextBox().Text(endpoint.EndpointDeviceId());
+            DetailEndpointIdText().Text(endpoint.EndpointDeviceId());
+
+            // the value is ellipsized when it does not fit, so the whole of it lives here too
+            controls::ToolTipService::SetToolTip(
+                DetailEndpointIdText(), winrt::box_value(endpoint.EndpointDeviceId()));
 
             // Without one of these the endpoint id changes when the device is plugged into a
             // different port, and any customization stored against it stops matching.
@@ -408,7 +418,7 @@ namespace winrt::midisettings::implementation
         {
             winrt::Windows::ApplicationModel::DataTransfer::DataPackage package{};
 
-            package.SetText(DetailEndpointIdTextBox().Text());
+            package.SetText(DetailEndpointIdText().Text());
 
             winrt::Windows::ApplicationModel::DataTransfer::Clipboard::SetContent(package);
 

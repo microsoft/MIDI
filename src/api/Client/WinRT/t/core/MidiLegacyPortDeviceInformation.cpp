@@ -436,21 +436,29 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
             if (flow == midi2enum::Midi1PortFlow::MidiMessageSource)
             {
-                // get all sources
-                auto sourceDevices = enumeration::DeviceInformation::FindAllAsync(
-                    winrt::Windows::Devices::Midi::MidiInPort::GetDeviceSelector(),
-                    GetAdditionalPropertiesList()).get();
+                // get all sources. STA-safe: the inner co_await runs on the thread pool.
+                auto sourceDevices = internal::RunOnBackgroundThreadAndWait(
+                    []()
+                    {
+                        return enumeration::DeviceInformation::FindAllAsync(
+                            winrt::Windows::Devices::Midi::MidiInPort::GetDeviceSelector(),
+                            GetAdditionalPropertiesList());
+                    });
 
                 AddAllDeviceInformationEntriesToPortsList(sourceDevices, results);
 
             }
             else if (flow == midi2enum::Midi1PortFlow::MidiMessageDestination)
             {
-                // get all destinations
-                auto destinationDevices = enumeration::DeviceInformation::FindAllAsync(
-                    winrt::Windows::Devices::Midi::MidiOutPort::GetDeviceSelector(),
-                    GetAdditionalPropertiesList(),
-                    enumeration::DeviceInformationKind::DeviceInterface).get();
+                // get all destinations. STA-safe: the inner co_await runs on the thread pool.
+                auto destinationDevices = internal::RunOnBackgroundThreadAndWait(
+                    []()
+                    {
+                        return enumeration::DeviceInformation::FindAllAsync(
+                            winrt::Windows::Devices::Midi::MidiOutPort::GetDeviceSelector(),
+                            GetAdditionalPropertiesList(),
+                            enumeration::DeviceInformationKind::DeviceInterface);
+                    });
 
                 AddAllDeviceInformationEntriesToPortsList(destinationDevices, results);
             }
@@ -503,11 +511,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
             for (auto const& selector : { sourceSelector , destinationSelector })
             {
-                // get all sources
-                auto devices = enumeration::DeviceInformation::FindAllAsync(
-                    selector,
-                    GetAdditionalPropertiesList(),
-                    enumeration::DeviceInformationKind::DeviceInterface).get();
+                // get all sources. STA-safe: the inner co_await runs on the thread pool.
+                auto devices = internal::RunOnBackgroundThreadAndWait(
+                    [selector]()
+                    {
+                        return enumeration::DeviceInformation::FindAllAsync(
+                            selector,
+                            GetAdditionalPropertiesList(),
+                            enumeration::DeviceInformationKind::DeviceInterface);
+                    });
 
                 TraceLoggingWrite(
                     Midi2SdkTelemetryProvider::Provider(),
@@ -573,11 +585,15 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
         {
             for (auto const& selector : { sourceSelector , destinationSelector })
             {
-                // get all sources
-                auto devices = enumeration::DeviceInformation::FindAllAsync(
-                    selector,
-                    GetAdditionalPropertiesList(),
-                    enumeration::DeviceInformationKind::DeviceInterface).get();
+                // get all sources. STA-safe: the inner co_await runs on the thread pool.
+                auto devices = internal::RunOnBackgroundThreadAndWait(
+                    [selector]()
+                    {
+                        return enumeration::DeviceInformation::FindAllAsync(
+                            selector,
+                            GetAdditionalPropertiesList(),
+                            enumeration::DeviceInformationKind::DeviceInterface);
+                    });
 
                 AddAllDeviceInformationEntriesToPortsList(devices, results);
 

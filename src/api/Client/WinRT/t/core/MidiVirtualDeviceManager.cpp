@@ -64,12 +64,16 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
             additionalProperties.Append(STRING_PKEY_MIDI_TransportLayer);
 
             // we can't include custom properties in the selector, so we need to get all
-            // the midi interfaces and run through them, checking the associator
-            auto devices = enumeration::DeviceInformation::FindAllAsync(
-                midi2::MidiEndpointConnection::GetDeviceSelector(),
-                additionalProperties,
-                enumeration::DeviceInformationKind::DeviceInterface
-            ).get();
+            // the midi interfaces and run through them, checking the associator.
+            // STA-safe: the inner co_await runs on the thread pool.
+            auto devices = internal::RunOnBackgroundThreadAndWait(
+                [additionalProperties]()
+                {
+                    return enumeration::DeviceInformation::FindAllAsync(
+                        midi2::MidiEndpointConnection::GetDeviceSelector(),
+                        additionalProperties,
+                        enumeration::DeviceInformationKind::DeviceInterface);
+                });
 
             winrt::hstring stringifiedAssociationId { internal::GuidToString(associationId) };
 

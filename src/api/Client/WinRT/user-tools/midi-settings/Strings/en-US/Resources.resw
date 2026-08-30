@@ -120,7 +120,7 @@
     <value>MIDI Loopback Setup</value>
   </data>
   <data name="LoopbackSetupButtonText.Text" xml:space="preserve">
-    <value>Loopback</value>
+    <value>Loopback Setup</value>
   </data>
   <data name="BluetoothSetupButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Bluetooth MIDI Setup</value>
@@ -129,7 +129,7 @@
     <value>Bluetooth MIDI Setup</value>
   </data>
   <data name="BluetoothSetupButtonText.Text" xml:space="preserve">
-    <value>Bluetooth</value>
+    <value>Bluetooth Setup</value>
   </data>
   <data name="NetworkSetupButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Network MIDI 2.0 Setup</value>
@@ -138,7 +138,7 @@
     <value>Network MIDI 2.0 Setup</value>
   </data>
   <data name="NetworkSetupButtonText.Text" xml:space="preserve">
-    <value>Network</value>
+    <value>Network Setup</value>
   </data>
   <data name="SysExButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>MIDI SysEx Tool</value>
@@ -147,7 +147,16 @@
     <value>MIDI SysEx Tool</value>
   </data>
   <data name="SysExButtonText.Text" xml:space="preserve">
-    <value>SysEx</value>
+    <value>SysEx Send/Receive</value>
+  </data>
+  <data name="MonitorButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI Monitor</value>
+  </data>
+  <data name="MonitorButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>MIDI Monitor</value>
+  </data>
+  <data name="MonitorButtonText.Text" xml:space="preserve">
+    <value>Monitor</value>
   </data>
   <data name="ScratchPadButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>MIDI Scratch Pad</value>
@@ -165,16 +174,16 @@
     <value>MIDI Troubleshooting and Repair</value>
   </data>
   <data name="TroubleshooterButtonText.Text" xml:space="preserve">
-    <value>Troubleshoot</value>
+    <value>Troubleshoot and Fix</value>
   </data>
   <data name="GlobalSettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Global MIDI settings</value>
+    <value>Global MIDI Settings</value>
   </data>
   <data name="GlobalSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Global MIDI settings</value>
+    <value>Global MIDI Settings</value>
   </data>
   <data name="GlobalSettingsButtonText.Text" xml:space="preserve">
-    <value>MIDI Settings</value>
+    <value>Global MIDI Settings</value>
   </data>
 
   <!-- Banners -->
@@ -314,10 +323,10 @@
     <value>Copy the endpoint device ID</value>
   </data>
   <data name="DetailSourcePortsLabel.Text" xml:space="preserve">
-    <value>MIDI 1.0 input ports</value>
+    <value>MIDI 1.0 Input/Source Ports</value>
   </data>
   <data name="DetailDestinationPortsLabel.Text" xml:space="preserve">
-    <value>MIDI 1.0 output ports</value>
+    <value>MIDI 1.0 Output/Destination Ports</value>
   </data>
   <data name="DetailNoSourcePortsText.Text" xml:space="preserve">
     <value>None</value>

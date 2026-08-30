@@ -78,6 +78,9 @@ namespace winrt::Windows::Devices::Midi2::Utilities::SysExTransfer::implementati
 
 
         const uint32_t chunkSize = 512;
+
+        // safe to block: this coroutine resumed on the thread pool above, so we are never on the
+        // caller's apartment here
         auto bytesRead = reader.LoadAsync(chunkSize).get();
 
         //bool done = (bytesRead == 0);

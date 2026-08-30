@@ -181,6 +181,7 @@ namespace winrt::midisettings::implementation
             ApplyToolButton(BluetoothSetupButton(), BluetoothSetupIcon(), native::MidiTool::BluetoothSetup);
             ApplyToolButton(NetworkSetupButton(), NetworkSetupIcon(), native::MidiTool::NetworkSetup);
             ApplyToolButton(SysExButton(), SysExIcon(), native::MidiTool::SysEx);
+            ApplyToolButton(MonitorButton(), MonitorIcon(), native::MidiTool::Monitor);
             ApplyToolButton(ScratchPadButton(), ScratchPadIcon(), native::MidiTool::ScratchPad);
             ApplyToolButton(TroubleshooterButton(), TroubleshooterIcon(), native::MidiTool::Troubleshooter);
 
@@ -193,6 +194,7 @@ namespace winrt::midisettings::implementation
 
             auto const utilitiesInstalled =
                 native::GetToolLocation(native::MidiTool::SysEx).Installed ||
+                native::GetToolLocation(native::MidiTool::Monitor).Installed ||
                 native::GetToolLocation(native::MidiTool::ScratchPad).Installed ||
                 native::GetToolLocation(native::MidiTool::Troubleshooter).Installed;
 
@@ -255,6 +257,12 @@ namespace winrt::midisettings::implementation
     void MainWindow::OnSysExClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
         native::LaunchTool(native::MidiTool::SysEx);
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnMonitorClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        native::LaunchTool(native::MidiTool::Monitor);
     }
 
     _Use_decl_annotations_

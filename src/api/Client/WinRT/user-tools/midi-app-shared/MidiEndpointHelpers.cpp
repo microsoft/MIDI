@@ -316,18 +316,53 @@ namespace midiapp
     {
         std::vector<midi2enum::MidiEndpointDeviceInformation> devices{};
 
-        try
+        if (watcher == nullptr)
         {
-            if (watcher == nullptr)
+            return devices;
+        }
+
+        // The watcher rewrites this map from its own thread as devices arrive, and enumerating a
+        // WinRT collection while it changes throws E_CHANGED_STATE. Taking another pass is the
+        // remedy; during discovery the map settles within one or two.
+        for (int attempt = 0; attempt < 5; attempt++)
+        {
+            devices.clear();
+
+            try
             {
+                for (auto const& entry : watcher.EnumeratedEndpointDevices())
+                {
+                    devices.push_back(entry.Value());
+                }
+
+                break;
+            }
+            catch (winrt::hresult_changed_state const&)
+            {
+                continue;
+            }
+            catch (winrt::hresult_error const& ex)
+            {
+                // Not LOG_CAUGHT_EXCEPTION: without wil/cppwinrt.h in the consuming app, WIL
+                // cannot classify a cppwinrt exception and fail-fasts the process instead.
+                LOG_HR(static_cast<HRESULT>(ex.code()));
+
+                devices.clear();
+
                 return devices;
             }
-
-            for (auto const& entry : watcher.EnumeratedEndpointDevices())
+            catch (...)
             {
-                devices.push_back(entry.Value());
-            }
+                LOG_HR(E_UNEXPECTED);
 
+                devices.clear();
+
+                return devices;
+            }
+        }
+
+        try
+        {
             std::sort(devices.begin(), devices.end(),
                 [](auto const& left, auto const& right)
                 {
@@ -337,7 +372,7 @@ namespace midiapp
         }
         catch (...)
         {
-            LOG_CAUGHT_EXCEPTION();
+            LOG_HR(E_UNEXPECTED);
         }
 
         return devices;

@@ -28,133 +28,166 @@
             </Style>
 
             <!-- One tool button: the real icon of the installed executable above its name, so
-                 the toolbar matches what the customer sees in the Start Menu. -->
+                 the toolbar matches what the customer sees in the Start Menu. Fixed height,
+                 because the labels are a mix of one and two lines. -->
             <Style x:Key="ToolButtonStyle" TargetType="Button">
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="BorderThickness" Value="0" />
-                <Setter Property="Padding" Value="10,6,10,6" />
-                <Setter Property="MinWidth" Value="76" />
-                <Setter Property="VerticalAlignment" Value="Stretch" />
+                <Setter Property="Padding" Value="8,6,8,6" />
+                <Setter Property="MinWidth" Value="92" />
+                <Setter Property="Height" Value="74" />
+                <!-- so the icons line up across the row whether the label wraps or not -->
+                <Setter Property="VerticalContentAlignment" Value="Top" />
+            </Style>
+
+            <Style x:Key="ToolButtonTextStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="MaxWidth" Value="76" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="TextAlignment" Value="Center" />
+                <Setter Property="MaxLines" Value="2" />
+                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                <Setter Property="HorizontalAlignment" Value="Center" />
             </Style>
 
             <Style x:Key="ToolSeparatorStyle" TargetType="Rectangle">
                 <Setter Property="Width" Value="1" />
-                <Setter Property="Height" Value="34" />
+                <Setter Property="Height" Value="40" />
                 <Setter Property="Margin" Value="6,0,6,0" />
                 <Setter Property="VerticalAlignment" Value="Center" />
                 <Setter Property="Fill" Value="{ThemeResource DividerStrokeColorDefaultBrush}" />
             </Style>
 
+            <!-- One surface per endpoint, shared by the card and the list row so the two views
+                 read as the same thing at different densities. -->
+            <Style x:Key="EndpointSurfaceStyle" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="8" />
+            </Style>
+
             <!-- Card view. Fixed size, because a wrap grid gives every cell the same box: without
                  it a long description pushes one card's buttons below its neighbors'. -->
             <DataTemplate x:Key="EndpointCardTemplate" x:DataType="local:EndpointItem">
-                <Grid Width="228" Height="248" Padding="12" RowSpacing="8">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
+                <Border Style="{StaticResource EndpointSurfaceStyle}"
+                        Width="230"
+                        Height="252"
+                        Margin="2"
+                        Padding="12">
+                    <Grid RowSpacing="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
 
-                    <Border Grid.Row="0"
-                            Height="88"
-                            CornerRadius="4"
-                            Background="{ThemeResource SubtleFillColorSecondaryBrush}">
-                        <Image Source="{x:Bind Image, Mode=OneWay}"
-                               Stretch="Uniform"
-                               Margin="8" />
-                    </Border>
+                        <Border Grid.Row="0"
+                                Height="88"
+                                CornerRadius="4"
+                                Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                            <Image Source="{x:Bind Image, Mode=OneWay}"
+                                   Stretch="Uniform"
+                                   Margin="8" />
+                        </Border>
 
-                    <StackPanel Grid.Row="1" Spacing="2" VerticalAlignment="Top">
-                        <TextBlock Text="{x:Bind Name, Mode=OneWay}"
-                                   Style="{ThemeResource BodyStrongTextBlockStyle}"
-                                   TextWrapping="Wrap"
-                                   MaxLines="2"
-                                   TextTrimming="CharacterEllipsis" />
-                        <TextBlock Text="{x:Bind DetailText, Mode=OneWay}"
-                                   Style="{ThemeResource CaptionTextBlockStyle}"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                   TextWrapping="Wrap"
-                                   MaxLines="3"
-                                   TextTrimming="CharacterEllipsis" />
-                    </StackPanel>
+                        <StackPanel Grid.Row="1" Spacing="2" VerticalAlignment="Top">
+                            <TextBlock Text="{x:Bind Name, Mode=OneWay}"
+                                       Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                       TextWrapping="Wrap"
+                                       MaxLines="2"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{x:Bind DetailText, Mode=OneWay}"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       TextWrapping="Wrap"
+                                       MaxLines="3"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
 
-                    <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="4">
-                        <Button x:Uid="EndpointMonitorButton"
-                                Visibility="{x:Bind MonitorVisibility, Mode=OneWay}"
-                                Tag="{x:Bind EndpointDeviceId, Mode=OneWay}"
-                                Click="OnEndpointMonitorClick"
-                                Padding="8,4,8,4">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <FontIcon Glyph="&#xE9D9;" FontSize="14" />
-                                <TextBlock x:Uid="EndpointMonitorButtonText" Text="Monitor" />
-                            </StackPanel>
-                        </Button>
-                        <Button x:Uid="EndpointPanicButton"
-                                Tag="{x:Bind EndpointDeviceId, Mode=OneWay}"
-                                Click="OnEndpointPanicClick"
-                                Padding="8,4,8,4">
-                            <StackPanel Orientation="Horizontal" Spacing="6">
-                                <FontIcon Glyph="&#xE711;" FontSize="14" />
-                                <TextBlock x:Uid="EndpointPanicButtonText" Text="Panic" />
-                            </StackPanel>
-                        </Button>
-                    </StackPanel>
-                </Grid>
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="4">
+                            <Button x:Uid="EndpointMonitorButton"
+                                    Visibility="{x:Bind MonitorVisibility, Mode=OneWay}"
+                                    Tag="{x:Bind EndpointDeviceId, Mode=OneWay}"
+                                    Click="OnEndpointMonitorClick"
+                                    Padding="8,4,8,4">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE9D9;" FontSize="14" />
+                                    <TextBlock x:Uid="EndpointMonitorButtonText" Text="Monitor" />
+                                </StackPanel>
+                            </Button>
+                            <Button x:Uid="EndpointPanicButton"
+                                    Tag="{x:Bind EndpointDeviceId, Mode=OneWay}"
+                                    Click="OnEndpointPanicClick"
+                                    Padding="8,4,8,4">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE711;" FontSize="14" />
+                                    <TextBlock x:Uid="EndpointPanicButtonText" Text="Panic" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
             </DataTemplate>
 
             <DataTemplate x:Key="EndpointRowTemplate" x:DataType="local:EndpointItem">
-                <Grid ColumnSpacing="12" Padding="4,6,4,6">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource EndpointSurfaceStyle}"
+                        Margin="0,3,0,3"
+                        Padding="12,8,12,8">
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
 
-                    <Border Grid.Column="0"
-                            Width="40"
-                            Height="40"
-                            CornerRadius="4"
-                            Background="{ThemeResource SubtleFillColorSecondaryBrush}">
-                        <Image Source="{x:Bind Image, Mode=OneWay}" Stretch="Uniform" Margin="3" />
-                    </Border>
+                        <Border Grid.Column="0"
+                                Width="40"
+                                Height="40"
+                                CornerRadius="4"
+                                Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                            <Image Source="{x:Bind Image, Mode=OneWay}" Stretch="Uniform" Margin="3" />
+                        </Border>
 
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
-                        <TextBlock Text="{x:Bind Name, Mode=OneWay}"
-                                   Style="{ThemeResource BodyStrongTextBlockStyle}"
-                                   TextTrimming="CharacterEllipsis" />
-                        <TextBlock Text="{x:Bind Description, Mode=OneWay}"
-                                   Visibility="{x:Bind DescriptionVisibility, Mode=OneWay}"
-                                   Style="{ThemeResource CaptionTextBlockStyle}"
-                                   TextTrimming="CharacterEllipsis" />
-                        <TextBlock Text="{x:Bind DetailText, Mode=OneWay}"
-                                   Style="{ThemeResource CaptionTextBlockStyle}"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                   TextTrimming="CharacterEllipsis" />
-                    </StackPanel>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                            <TextBlock Text="{x:Bind Name, Mode=OneWay}"
+                                       Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{x:Bind Description, Mode=OneWay}"
+                                       Visibility="{x:Bind DescriptionVisibility, Mode=OneWay}"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{x:Bind DetailText, Mode=OneWay}"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
 
-                    <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-                        <Button x:Uid="EndpointMonitorButton"
-                                Visibility="{x:Bind MonitorVisibility, Mode=OneWay}"
-                                Tag="{x:Bind EndpointDeviceId, Mode=OneWay}"
-                                Click="OnEndpointMonitorClick"
-                                Padding="8,4,8,4">
-                            <FontIcon Glyph="&#xE9D9;" FontSize="14" />
-                        </Button>
-                        <Button x:Uid="EndpointPanicButton"
-                                Tag="{x:Bind EndpointDeviceId, Mode=OneWay}"
-                                Click="OnEndpointPanicClick"
-                                Padding="8,4,8,4">
-                            <FontIcon Glyph="&#xE711;" FontSize="14" />
-                        </Button>
-                    </StackPanel>
-                </Grid>
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                            <Button x:Uid="EndpointMonitorButton"
+                                    Visibility="{x:Bind MonitorVisibility, Mode=OneWay}"
+                                    Tag="{x:Bind EndpointDeviceId, Mode=OneWay}"
+                                    Click="OnEndpointMonitorClick"
+                                    Padding="8,4,8,4">
+                                <FontIcon Glyph="&#xE9D9;" FontSize="14" />
+                            </Button>
+                            <Button x:Uid="EndpointPanicButton"
+                                    Tag="{x:Bind EndpointDeviceId, Mode=OneWay}"
+                                    Click="OnEndpointPanicClick"
+                                    Padding="8,4,8,4">
+                                <FontIcon Glyph="&#xE711;" FontSize="14" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
             </DataTemplate>
 
             <DataTemplate x:Key="Midi1PortTemplate" x:DataType="local:Midi1PortItem">
                 <Grid ColumnSpacing="8" Margin="0,2,0,2">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
+                        <!-- fixed, not Auto: every row is its own Grid, so an Auto column is
+                             sized per row and the group and port text would not line up -->
+                        <ColumnDefinition Width="124" />
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Grid.Column="0"
@@ -164,7 +197,9 @@
                                TextTrimming="CharacterEllipsis" />
                     <TextBlock Grid.Column="1"
                                Text="{x:Bind DetailText, Mode=OneWay}"
-                               Style="{StaticResource PropertyLabelStyle}" />
+                               Style="{StaticResource PropertyLabelStyle}"
+                               TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis" />
                 </Grid>
             </DataTemplate>
 
@@ -225,7 +260,7 @@
                     BorderThickness="0"
                     Background="Transparent"
                     Click="OnAppearanceButtonClick">
-                <FontIcon Glyph="&#xE790;" FontSize="14" />
+                <FontIcon Glyph="&#xE713;" FontSize="14" />
             </Button>
 
             <ToggleButton x:Name="AlwaysOnTopToggle"
@@ -252,117 +287,113 @@
                 BorderThickness="0,1,0,1"
                 BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
                 Padding="8,4,8,4">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Disabled"
+                          HorizontalScrollMode="Auto"
+                          VerticalScrollMode="Disabled">
+                <StackPanel x:Name="ToolButtonPanel" Orientation="Horizontal" Spacing="2">
 
-                <ScrollViewer Grid.Column="0"
-                              HorizontalScrollBarVisibility="Auto"
-                              VerticalScrollBarVisibility="Disabled"
-                              HorizontalScrollMode="Auto"
-                              VerticalScrollMode="Disabled">
-                    <StackPanel x:Name="ToolButtonPanel" Orientation="Horizontal" Spacing="2">
+                    <Button x:Name="LoopbackSetupButton"
+                            x:Uid="LoopbackSetupButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnLoopbackSetupClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Image x:Name="LoopbackSetupIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                            <TextBlock x:Uid="LoopbackSetupButtonText"
+                                       Text="Loopback Setup"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
 
-                        <Button x:Name="LoopbackSetupButton"
-                                x:Uid="LoopbackSetupButton"
-                                Style="{StaticResource ToolButtonStyle}"
-                                Click="OnLoopbackSetupClick">
-                            <StackPanel Spacing="4" HorizontalAlignment="Center">
-                                <Image x:Name="LoopbackSetupIcon" Width="24" Height="24" HorizontalAlignment="Center" />
-                                <TextBlock x:Uid="LoopbackSetupButtonText"
-                                           Text="Loopback"
-                                           HorizontalAlignment="Center"
-                                           Style="{ThemeResource CaptionTextBlockStyle}" />
-                            </StackPanel>
-                        </Button>
+                    <Button x:Name="BluetoothSetupButton"
+                            x:Uid="BluetoothSetupButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnBluetoothSetupClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Image x:Name="BluetoothSetupIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                            <TextBlock x:Uid="BluetoothSetupButtonText"
+                                       Text="Bluetooth Setup"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
 
-                        <Button x:Name="BluetoothSetupButton"
-                                x:Uid="BluetoothSetupButton"
-                                Style="{StaticResource ToolButtonStyle}"
-                                Click="OnBluetoothSetupClick">
-                            <StackPanel Spacing="4" HorizontalAlignment="Center">
-                                <Image x:Name="BluetoothSetupIcon" Width="24" Height="24" HorizontalAlignment="Center" />
-                                <TextBlock x:Uid="BluetoothSetupButtonText"
-                                           Text="Bluetooth"
-                                           HorizontalAlignment="Center"
-                                           Style="{ThemeResource CaptionTextBlockStyle}" />
-                            </StackPanel>
-                        </Button>
+                    <Button x:Name="NetworkSetupButton"
+                            x:Uid="NetworkSetupButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnNetworkSetupClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Image x:Name="NetworkSetupIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                            <TextBlock x:Uid="NetworkSetupButtonText"
+                                       Text="Network Setup"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
 
-                        <Button x:Name="NetworkSetupButton"
-                                x:Uid="NetworkSetupButton"
-                                Style="{StaticResource ToolButtonStyle}"
-                                Click="OnNetworkSetupClick">
-                            <StackPanel Spacing="4" HorizontalAlignment="Center">
-                                <Image x:Name="NetworkSetupIcon" Width="24" Height="24" HorizontalAlignment="Center" />
-                                <TextBlock x:Uid="NetworkSetupButtonText"
-                                           Text="Network"
-                                           HorizontalAlignment="Center"
-                                           Style="{ThemeResource CaptionTextBlockStyle}" />
-                            </StackPanel>
-                        </Button>
+                    <Rectangle x:Name="SetupToolsSeparator" Style="{StaticResource ToolSeparatorStyle}" />
 
-                        <Rectangle x:Name="SetupToolsSeparator" Style="{StaticResource ToolSeparatorStyle}" />
+                    <Button x:Name="SysExButton"
+                            x:Uid="SysExButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnSysExClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Image x:Name="SysExIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                            <TextBlock x:Uid="SysExButtonText"
+                                       Text="SysEx Send/Receive"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
 
-                        <Button x:Name="SysExButton"
-                                x:Uid="SysExButton"
-                                Style="{StaticResource ToolButtonStyle}"
-                                Click="OnSysExClick">
-                            <StackPanel Spacing="4" HorizontalAlignment="Center">
-                                <Image x:Name="SysExIcon" Width="24" Height="24" HorizontalAlignment="Center" />
-                                <TextBlock x:Uid="SysExButtonText"
-                                           Text="SysEx"
-                                           HorizontalAlignment="Center"
-                                           Style="{ThemeResource CaptionTextBlockStyle}" />
-                            </StackPanel>
-                        </Button>
+                    <Button x:Name="MonitorButton"
+                            x:Uid="MonitorButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnMonitorClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Image x:Name="MonitorIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                            <TextBlock x:Uid="MonitorButtonText"
+                                       Text="Monitor"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
 
-                        <Button x:Name="ScratchPadButton"
-                                x:Uid="ScratchPadButton"
-                                Style="{StaticResource ToolButtonStyle}"
-                                Click="OnScratchPadClick">
-                            <StackPanel Spacing="4" HorizontalAlignment="Center">
-                                <Image x:Name="ScratchPadIcon" Width="24" Height="24" HorizontalAlignment="Center" />
-                                <TextBlock x:Uid="ScratchPadButtonText"
-                                           Text="Scratch Pad"
-                                           HorizontalAlignment="Center"
-                                           Style="{ThemeResource CaptionTextBlockStyle}" />
-                            </StackPanel>
-                        </Button>
+                    <Button x:Name="ScratchPadButton"
+                            x:Uid="ScratchPadButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnScratchPadClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Image x:Name="ScratchPadIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                            <TextBlock x:Uid="ScratchPadButtonText"
+                                       Text="Scratch Pad"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
 
-                        <Button x:Name="TroubleshooterButton"
-                                x:Uid="TroubleshooterButton"
-                                Style="{StaticResource ToolButtonStyle}"
-                                Click="OnTroubleshooterClick">
-                            <StackPanel Spacing="4" HorizontalAlignment="Center">
-                                <Image x:Name="TroubleshooterIcon" Width="24" Height="24" HorizontalAlignment="Center" />
-                                <TextBlock x:Uid="TroubleshooterButtonText"
-                                           Text="Troubleshoot"
-                                           HorizontalAlignment="Center"
-                                           Style="{ThemeResource CaptionTextBlockStyle}" />
-                            </StackPanel>
-                        </Button>
+                    <Button x:Name="TroubleshooterButton"
+                            x:Uid="TroubleshooterButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnTroubleshooterClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Image x:Name="TroubleshooterIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                            <TextBlock x:Uid="TroubleshooterButtonText"
+                                       Text="Troubleshoot and Fix"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
 
-                        <Rectangle x:Name="UtilityToolsSeparator" Style="{StaticResource ToolSeparatorStyle}" />
-                    </StackPanel>
-                </ScrollViewer>
+                    <Rectangle x:Name="UtilityToolsSeparator" Style="{StaticResource ToolSeparatorStyle}" />
 
-                <Button Grid.Column="1"
-                        x:Name="GlobalSettingsButton"
-                        x:Uid="GlobalSettingsButton"
-                        Style="{StaticResource ToolButtonStyle}"
-                        Click="OnGlobalSettingsClick">
-                    <StackPanel Spacing="4" HorizontalAlignment="Center">
-                        <FontIcon Glyph="&#xE713;" FontSize="20" HorizontalAlignment="Center" />
-                        <TextBlock x:Uid="GlobalSettingsButtonText"
-                                   Text="MIDI Settings"
-                                   HorizontalAlignment="Center"
-                                   Style="{ThemeResource CaptionTextBlockStyle}" />
-                    </StackPanel>
-                </Button>
-            </Grid>
+                    <Button x:Name="GlobalSettingsButton"
+                            x:Uid="GlobalSettingsButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnGlobalSettingsClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <FontIcon Glyph="&#xE774;" FontSize="20" HorizontalAlignment="Center" Height="24" />
+                            <TextBlock x:Uid="GlobalSettingsButtonText"
+                                       Text="Global MIDI Settings"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </ScrollViewer>
         </Border>
 
         <!-- ================================ Endpoints ==================================== -->
@@ -440,7 +471,14 @@
                       ItemTemplate="{StaticResource EndpointCardTemplate}"
                       SelectionMode="Single"
                       IsItemClickEnabled="True"
-                      ItemClick="OnEndpointClick" />
+                      ItemClick="OnEndpointClick">
+                <GridView.ItemContainerStyle>
+                    <!-- so the first card lines up with the filter row above it -->
+                    <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}">
+                        <Setter Property="Padding" Value="0" />
+                    </Style>
+                </GridView.ItemContainerStyle>
+            </GridView>
 
             <ListView x:Name="EndpointListView"
                       x:Uid="EndpointListView"
@@ -449,7 +487,16 @@
                       ItemTemplate="{StaticResource EndpointRowTemplate}"
                       SelectionMode="Single"
                       IsItemClickEnabled="True"
-                      ItemClick="OnEndpointClick" />
+                      ItemClick="OnEndpointClick">
+                <ListView.ItemContainerStyle>
+                    <!-- BasedOn is required: a bare style replaces the implicit one and takes the
+                         selection and focus visuals with it. -->
+                    <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>
 
             <TextBlock x:Name="NoEndpointsText"
                        x:Uid="NoEndpointsText"
@@ -475,12 +522,18 @@
                        Title="Endpoint"
                        CloseButtonText="Close">
             <!-- The template sizes itself from this key rather than from MaxWidth, so setting
-                 MaxWidth on the dialog has no effect at all. -->
+                 MaxWidth on the dialog has no effect at all. Wide enough that a typical endpoint
+                 device id sits on one line beside its label. -->
             <ContentDialog.Resources>
-                <x:Double x:Key="ContentDialogMaxWidth">820</x:Double>
+                <x:Double x:Key="ContentDialogMaxWidth">920</x:Double>
             </ContentDialog.Resources>
-            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="520">
-                <StackPanel Width="700" Spacing="12" Margin="0,4,12,4">
+            <!-- horizontal scrolling is a fallback: the content has a fixed width, so on a window
+                 too narrow to show the whole dialog it scrolls rather than clipping silently -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Auto"
+                          HorizontalScrollMode="Auto"
+                          MaxHeight="520">
+                <StackPanel Width="840" Spacing="12" Margin="0,4,12,4">
 
                     <Grid ColumnSpacing="16">
                         <Grid.ColumnDefinitions>
@@ -543,10 +596,12 @@
 
                     <Grid ColumnSpacing="12" RowSpacing="6">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="140" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
@@ -555,47 +610,47 @@
 
                         <TextBlock Grid.Row="0" Grid.Column="0" x:Uid="DetailTransportLabel"
                                    Text="Transport" Style="{StaticResource PropertyLabelStyle}" />
-                        <TextBlock Grid.Row="0" Grid.Column="1" x:Name="DetailTransportText"
+                        <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" x:Name="DetailTransportText"
                                    Style="{StaticResource PropertyValueStyle}" />
 
                         <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="DetailNativeFormatLabel"
                                    Text="Native data format" Style="{StaticResource PropertyLabelStyle}" />
-                        <TextBlock Grid.Row="1" Grid.Column="1" x:Name="DetailNativeFormatText"
+                        <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" x:Name="DetailNativeFormatText"
                                    Style="{StaticResource PropertyValueStyle}" />
 
                         <TextBlock Grid.Row="2" Grid.Column="0" x:Uid="DetailProductInstanceIdLabel"
                                    Text="Product instance ID" Style="{StaticResource PropertyLabelStyle}" />
-                        <TextBlock Grid.Row="2" Grid.Column="1" x:Name="DetailProductInstanceIdText"
+                        <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" x:Name="DetailProductInstanceIdText"
                                    Style="{StaticResource PropertyValueStyle}" />
 
                         <TextBlock Grid.Row="3" Grid.Column="0" x:Uid="DetailSerialNumberLabel"
                                    Text="Serial number" Style="{StaticResource PropertyLabelStyle}" />
-                        <TextBlock Grid.Row="3" Grid.Column="1" x:Name="DetailSerialNumberText"
+                        <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" x:Name="DetailSerialNumberText"
                                    Style="{StaticResource PropertyValueStyle}" />
-                    </Grid>
 
-                    <StackPanel Spacing="4">
-                        <TextBlock x:Uid="DetailEndpointIdLabel"
-                                   Text="Endpoint device ID"
-                                   Style="{StaticResource PropertyLabelStyle}" />
-                        <Grid ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBox x:Name="DetailEndpointIdTextBox"
-                                     Grid.Column="0"
-                                     IsReadOnly="True"
-                                     FontFamily="Cascadia Mono, Consolas, Courier New"
-                                     FontSize="11" />
-                            <Button x:Name="DetailCopyIdButton"
-                                    x:Uid="DetailCopyIdButton"
-                                    Grid.Column="1"
-                                    Click="OnDetailCopyIdClick">
-                                <FontIcon Glyph="&#xE8C8;" FontSize="14" />
-                            </Button>
-                        </Grid>
-                    </StackPanel>
+                        <TextBlock Grid.Row="4" Grid.Column="0" x:Uid="DetailEndpointIdLabel"
+                                   Text="Endpoint device ID" Style="{StaticResource PropertyLabelStyle}" />
+                        <!-- Ellipsized rather than wrapped: an id longer than the dialog would
+                             otherwise take two lines and push this row out of line with the rest.
+                             The whole value is on the tooltip and behind the copy button. -->
+                        <TextBlock Grid.Row="4" Grid.Column="1"
+                                   x:Name="DetailEndpointIdText"
+                                   VerticalAlignment="Center"
+                                   IsTextSelectionEnabled="True"
+                                   TextWrapping="NoWrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   FontFamily="Cascadia Mono, Consolas, Courier New"
+                                   FontSize="11" />
+                        <Button Grid.Row="4" Grid.Column="2"
+                                x:Name="DetailCopyIdButton"
+                                x:Uid="DetailCopyIdButton"
+                                Padding="8,2,8,2"
+                                MinWidth="0"
+                                VerticalAlignment="Center"
+                                Click="OnDetailCopyIdClick">
+                            <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                        </Button>
+                    </Grid>
 
                     <Grid ColumnSpacing="16">
                         <Grid.ColumnDefinitions>
@@ -605,7 +660,7 @@
 
                         <StackPanel Grid.Column="0" Spacing="4">
                             <TextBlock x:Uid="DetailSourcePortsLabel"
-                                       Text="MIDI 1.0 input ports"
+                                       Text="MIDI 1.0 Input/Source Ports"
                                        Style="{ThemeResource BodyStrongTextBlockStyle}" />
                             <ItemsControl x:Name="DetailSourcePortsList"
                                           ItemTemplate="{StaticResource Midi1PortTemplate}" />
@@ -617,7 +672,7 @@
 
                         <StackPanel Grid.Column="1" Spacing="4">
                             <TextBlock x:Uid="DetailDestinationPortsLabel"
-                                       Text="MIDI 1.0 output ports"
+                                       Text="MIDI 1.0 Output/Destination Ports"
                                        Style="{ThemeResource BodyStrongTextBlockStyle}" />
                             <ItemsControl x:Name="DetailDestinationPortsList"
                                           ItemTemplate="{StaticResource Midi1PortTemplate}" />
