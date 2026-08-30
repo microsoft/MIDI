@@ -1060,8 +1060,6 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
     json::JsonObject const& jsonObject,
     json::JsonObject& responseObject) noexcept
 {
-    UNREFERENCED_PARAMETER(responseObject);
-
     try
     {
         auto updateArray = SafeGetNamedArray(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY);
@@ -1070,6 +1068,10 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
         {
             return S_OK;
         }
+
+        // The caller assumes failure until something says otherwise, and a payload which carries
+        // only customizations reaches none of the places which say so.
+        bool anyCustomizationAccepted{ false };
 
         // Indexed rather than ranged, because windows.h renames IJsonValue::GetObject and
         // JsonArray::GetObjectAt is unaffected.
@@ -1132,6 +1134,8 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
             // path reads this cache before it activates the device node.
             LOG_HR_IF(E_FAIL, !m_customPropertiesCache->Add(matchCriteria, customProperties));
 
+            anyCustomizationAccepted = true;
+
             TraceLoggingWrite(
                 MidiNetworkMidiTransportTelemetryProvider::Provider(),
                 MIDI_TRACE_EVENT_INFO,
@@ -1168,6 +1172,11 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
                     static_cast<ULONG>(endpointDevProperties.size()),
                     endpointDevProperties.data()));
             }
+        }
+
+        if (anyCustomizationAccepted)
+        {
+            internal::SetConfigurationResponseObjectSuccess(responseObject);
         }
     }
     catch (...)
@@ -2244,6 +2253,12 @@ try
     auto updateSection = SafeGetNamedObject(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY);
     auto removeSection = SafeGetNamedObject(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY);
 
+    // Endpoint customization, in the array form every other transport uses. Kept separate from
+    // the object-shaped "update" below, which is for this transport's own host and client
+    // entries. Done before the create section because that one hands definitions to the endpoint
+    // creator thread, and an endpoint built before this cache is filled would miss its name.
+    LOG_IF_FAILED(ProcessEndpointCustomizations(jsonObject, responseObject));
+
     // transport-global settings
 
     // TODO: Move these to registry instead?
@@ -2684,10 +2699,6 @@ try
         // this needs to allow for activating and deactivating existing entries, as well as setting the endpoint names and
 
     }
-
-    // Endpoint customization, in the array form every other transport uses. Kept separate from
-    // the object-shaped "update" above, which is for this transport's own host and client entries.
-    LOG_IF_FAILED(ProcessEndpointCustomizations(jsonObject, responseObject));
 
     // "remove" entries
     if (removeSection != nullptr && removeSection.Size() > 0)
