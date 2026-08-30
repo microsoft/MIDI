@@ -346,6 +346,31 @@ namespace midinetworksetup
                 return nullptr;
             }
         }
+
+        // Same shape for a client entry. The merge cannot delete a key, so a partial entry only
+        // adds or replaces what it names and the match criteria are left alone.
+        json::JsonObject BuildClientSection(
+            _In_ winrt::hstring const& clientKey,
+            _In_ json::JsonObject const& clientChange) noexcept
+        {
+            try
+            {
+                json::JsonObject clients{};
+                clients.SetNamedValue(clientKey, clientChange);
+
+                json::JsonObject createObject{};
+                createObject.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY, clients);
+
+                json::JsonObject section{};
+                section.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY, createObject);
+
+                return section;
+            }
+            catch (...)
+            {
+                return nullptr;
+            }
+        }
     }
 
 
@@ -764,6 +789,44 @@ namespace midinetworksetup
         catch (...)
         {
             return {};
+        }
+    }
+
+    _Use_decl_annotations_
+    bool NetworkConfigFile::SetClientCreateMidi1Ports(
+        winrt::hstring const& clientIdKey,
+        bool const createMidi1Ports) noexcept
+    {
+        json::JsonObject config{ nullptr };
+
+        if (!Load(config))
+        {
+            return false;
+        }
+
+        auto clients = GetEntriesObject(config, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY, false);
+
+        auto client = FindObject(clients, ResolveKey(clients, clientIdKey));
+
+        if (client == nullptr)
+        {
+            m_lastError = resources::GetString(L"ConfigFileClientEntryMissingError");
+            return false;
+        }
+
+        try
+        {
+            json::JsonObject clientChange{};
+            clientChange.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY,
+                json::JsonValue::CreateBooleanValue(createMidi1Ports));
+
+            return SaveSection(BuildClientSection(ResolveKey(clients, clientIdKey), clientChange));
+        }
+        catch (...)
+        {
+            m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path);
+            return false;
         }
     }
 

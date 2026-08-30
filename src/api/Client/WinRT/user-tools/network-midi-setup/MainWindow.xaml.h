@@ -45,6 +45,7 @@ namespace winrt::midinetworksetup::implementation
         winrt::fire_and_forget OnRetryRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnReassociateRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnReassociateSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        winrt::fire_and_forget OnCustomizeRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCopyEndpointDeviceIdClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnDisconnectRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
@@ -174,6 +175,13 @@ namespace winrt::midinetworksetup::implementation
         foundation::IAsyncOperation<bool> PromptForReassociateTargetAsync(
             winrt::hstring const entryName,
             std::shared_ptr<midinetworksetup::RemoteHostItem> chosen);
+
+        // Shows the customization for an endpoint which already exists and saves the result. The
+        // MIDI 1.0 ports choice is handled separately, because it is decided when the endpoint is
+        // built rather than written to it.
+        foundation::IAsyncOperation<bool> ShowCustomizeDialogAsync(
+            midinetworksetup::RemoteHostItem const item,
+            std::shared_ptr<winrt::hstring> errorMessage);
 
         static winrt::hstring DescribeLatency(uint64_t const ticks) noexcept;
         static winrt::hstring JoinAddresses(collections::IVectorView<winrt::hstring> const& addresses) noexcept;

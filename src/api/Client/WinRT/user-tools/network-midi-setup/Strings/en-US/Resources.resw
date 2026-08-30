@@ -227,6 +227,59 @@
   <data name="ReassociateFailed" xml:space="preserve">
     <value>Windows could not release the old saved entry, so nothing was changed.</value>
   </data>
+  <data name="CustomizeButton.Content" xml:space="preserve">
+    <value>Customize...</value>
+    <comment>Opens the dialog for changing the name, description and image Windows shows for this device.</comment>
+  </data>
+  <data name="CustomizeDialog.Title" xml:space="preserve">
+    <value>Customize this device</value>
+  </data>
+  <data name="CustomizeDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="CustomizeDialog.SecondaryButtonText" xml:space="preserve">
+    <value>Reset</value>
+    <comment>Removes the saved customization so the device is shown the way it reports itself.</comment>
+  </data>
+  <data name="CustomizeDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="CustomizeNameBox.Header" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="CustomizeDescriptionBox.Header" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="CustomizeImageBox.Header" xml:space="preserve">
+    <value>Image file name</value>
+  </data>
+  <data name="CustomizeHelpText.Text" xml:space="preserve">
+    <value>Leave a box empty to use what the device reports. The image is a file name only, from the shared endpoint images folder.</value>
+  </data>
+  <data name="CustomizeCreateMidi1PortsCheckBox.Content" xml:space="preserve">
+    <value>Create MIDI 1.0 ports for this device</value>
+    <comment>MIDI 1.0 ports are what older applications use. They are built along with the endpoint.</comment>
+  </data>
+  <data name="CustomizeCreateMidi1PortsHint.Text" xml:space="preserve">
+    <value>MIDI 1.0 ports are built with the endpoint, so changing this takes effect the next time this device connects.</value>
+    <comment>Explains why this one setting, unlike the others in the same dialog, does not apply immediately.</comment>
+  </data>
+  <data name="CustomizeTransportNameFormat" xml:space="preserve">
+    <value>This device reports itself as {0}.</value>
+    <comment>{0} is the name the device supplies. Shown so the customer can tell what they are replacing.</comment>
+  </data>
+  <data name="StatusImageMustBeFileName" xml:space="preserve">
+    <value>The image must be a file name only, without a folder or a drive.</value>
+  </data>
+  <data name="StatusCustomizationSaved" xml:space="preserve">
+    <value>The customization was saved.</value>
+  </data>
+  <data name="StatusCustomizationNotSaved" xml:space="preserve">
+    <value>The customization was not saved.</value>
+  </data>
+  <data name="ConfigFileClientEntryMissingError" xml:space="preserve">
+    <value>There is no saved entry for this device, so the setting could not be stored.</value>
+  </data>
   <data name="RemoteHostDetailsExpander.Header" xml:space="preserve">
     <value>Details</value>
   </data>

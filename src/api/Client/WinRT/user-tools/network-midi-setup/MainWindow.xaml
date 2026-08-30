@@ -373,6 +373,7 @@
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
                                                     <RowDefinition Height="Auto" />
+                                                    <RowDefinition Height="Auto" />
                                                 </Grid.RowDefinitions>
 
                                                 <TextBlock Grid.Row="0" Grid.Column="0"
@@ -434,6 +435,14 @@
                                                         Content="Relink to..."
                                                         Visibility="{x:Bind ReassociateVisibility, Mode=OneWay}"
                                                         Click="OnReassociateRemoteHostClick" />
+
+                                                <Button x:Uid="CustomizeButton"
+                                                        Grid.Row="5" Grid.Column="0" Grid.ColumnSpan="3"
+                                                        Margin="0,8,0,0"
+                                                        HorizontalAlignment="Left"
+                                                        Content="Customize..."
+                                                        Visibility="{x:Bind CustomizeVisibility, Mode=OneWay}"
+                                                        Click="OnCustomizeRemoteHostClick" />
                                             </Grid>
                                         </Expander>
                                     </StackPanel>
@@ -1228,6 +1237,52 @@
                            TextWrapping="Wrap"
                            Style="{ThemeResource CaptionTextBlockStyle}"
                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+        </ContentDialog>
+
+        <ContentDialog x:Name="CustomizeDialog"
+                       x:Uid="CustomizeDialog"
+                       Title="Customize this device"
+                       PrimaryButtonText="Save"
+                       SecondaryButtonText="Reset"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Primary">
+            <StackPanel Spacing="12" Width="420">
+                <TextBlock x:Name="CustomizeTransportNameText"
+                           TextWrapping="Wrap"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                <TextBox x:Name="CustomizeNameBox"
+                         x:Uid="CustomizeNameBox"
+                         Header="Name" />
+
+                <TextBox x:Name="CustomizeDescriptionBox"
+                         x:Uid="CustomizeDescriptionBox"
+                         Header="Description"
+                         AcceptsReturn="True"
+                         TextWrapping="Wrap"
+                         Height="80" />
+
+                <TextBox x:Name="CustomizeImageBox"
+                         x:Uid="CustomizeImageBox"
+                         Header="Image file name" />
+
+                <TextBlock x:Uid="CustomizeHelpText"
+                           Text="Leave a box empty to use what the device reports. The image is a file name only, from the shared endpoint images folder."
+                           TextWrapping="Wrap"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                <CheckBox x:Name="CustomizeCreateMidi1PortsCheckBox"
+                          x:Uid="CustomizeCreateMidi1PortsCheckBox"
+                          Content="Create MIDI 1.0 ports for this device" />
+
+                <TextBlock x:Uid="CustomizeCreateMidi1PortsHint"
+                           Text="MIDI 1.0 ports are built with the endpoint, so changing this takes effect the next time this device connects."
+                           TextWrapping="Wrap"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
             </StackPanel>
         </ContentDialog>
     </Grid>

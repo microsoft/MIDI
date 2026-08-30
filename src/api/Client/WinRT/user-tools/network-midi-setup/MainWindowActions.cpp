@@ -75,6 +75,17 @@ namespace winrt::midinetworksetup::implementation
             }
         }
 
+        // The image is loaded by name from a known folder, so a path would either escape that
+        // folder or simply fail to load.
+        bool IsBareFileName(_In_ winrt::hstring const& value) noexcept
+        {
+            std::wstring const copy{ value };
+
+            return copy.find(L'\\') == std::wstring::npos &&
+                copy.find(L'/') == std::wstring::npos &&
+                copy.find(L':') == std::wstring::npos;
+        }
+
         winrt::hstring TextOf(_In_ controls::TextBox const& box) noexcept
         {
             try
@@ -567,6 +578,241 @@ namespace winrt::midinetworksetup::implementation
                     }
                 });
         }
+    }
+
+    // ============================== Customization ==============================
+
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<bool> MainWindow::ShowCustomizeDialogAsync(
+        midinetworksetup::RemoteHostItem const item,
+        std::shared_ptr<winrt::hstring> errorMessage)
+    {
+        if (m_openDialog != nullptr || item == nullptr || item.EndpointDeviceId().empty())
+        {
+            co_return false;
+        }
+
+        auto strongThis = get_strong();
+
+        // Both the values on screen and the identity the customization is keyed on come from the
+        // endpoint rather than the row, because the row carries what was discovered on the
+        // network and this has to describe what Windows actually created.
+        winrt::hstring deviceInstanceId{};
+        winrt::hstring transportSuppliedName{};
+        winrt::hstring currentName{};
+        winrt::hstring currentDescription{};
+        winrt::hstring currentImage{};
+        bool currentCreateMidi1Ports{ true };
+
+        try
+        {
+            auto const info = midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(
+                item.EndpointDeviceId());
+
+            if (info == nullptr)
+            {
+                co_return false;
+            }
+
+            deviceInstanceId = info.DeviceInstanceId();
+            currentCreateMidi1Ports = info.IsMidi1PortCreationEnabled();
+
+            auto const transportInfo = info.GetTransportSuppliedInfo();
+            transportSuppliedName = transportInfo.Name();
+
+            auto const userInfo = info.GetUserSuppliedInfo();
+
+            if (userInfo != nullptr)
+            {
+                currentName = userInfo.Name();
+                currentDescription = userInfo.Description();
+                currentImage = userInfo.ImageFileName();
+            }
+        }
+        catch (...)
+        {
+            co_return false;
+        }
+
+        if (deviceInstanceId.empty())
+        {
+            co_return false;
+        }
+
+        controls::ContentDialogResult result{ controls::ContentDialogResult::None };
+
+        try
+        {
+            CustomizeTransportNameText().Text(transportSuppliedName.empty() ?
+                winrt::hstring{} :
+                res::FormatString(L"CustomizeTransportNameFormat", transportSuppliedName));
+
+            CustomizeNameBox().Text(currentName);
+            CustomizeDescriptionBox().Text(currentDescription);
+            CustomizeImageBox().Text(currentImage);
+            CustomizeCreateMidi1PortsCheckBox().IsChecked(currentCreateMidi1Ports);
+
+            CustomizeDialog().XamlRoot(Content().XamlRoot());
+
+            m_openDialog = CustomizeDialog();
+
+            result = co_await CustomizeDialog().ShowAsync();
+
+            m_openDialog = nullptr;
+        }
+        catch (...)
+        {
+            m_openDialog = nullptr;
+
+            co_return false;
+        }
+
+        if (result == controls::ContentDialogResult::None)
+        {
+            co_return false;
+        }
+
+        auto const reset = result == controls::ContentDialogResult::Secondary;
+
+        auto const name = reset ? winrt::hstring{} : TextOf(CustomizeNameBox());
+        auto const description = reset ? winrt::hstring{} : TextOf(CustomizeDescriptionBox());
+        auto const image = reset ? winrt::hstring{} : TextOf(CustomizeImageBox());
+
+        if (!image.empty() && !IsBareFileName(image))
+        {
+            SetRemoteStatus(res::GetString(L"StatusImageMustBeFileName"));
+
+            co_return false;
+        }
+
+        auto const checkBoxState = CustomizeCreateMidi1PortsCheckBox().IsChecked();
+
+        // Reset clears the display customization only. Taking the ports away as well would be a
+        // destructive surprise from a button pressed to clear a name, and would not be undone by
+        // pressing it again.
+        auto const createMidi1Ports = reset ?
+            currentCreateMidi1Ports :
+            (checkBoxState != nullptr && checkBoxState.Value());
+
+        auto const clientKey = item.ClientId();
+
+        co_await winrt::resume_background();
+
+        bool succeeded{ false };
+        winrt::hstring failure{};
+
+        try
+        {
+            midi2svc::MidiServiceConfigEndpointMatchCriteria match{};
+            match.DeviceInstanceId(deviceInstanceId);
+
+            midi2svc::MidiServiceEndpointCustomizationConfig config{
+                midi2net::MidiNetworkTransportManager::TransportId() };
+
+            config.MatchCriteria(match);
+            config.Name(name);
+            config.Description(description);
+            config.ImageFileName(image);
+
+            // What is on screen is the whole customization, so emptying a box has to clear the
+            // stored value rather than leaving it out of the save.
+            config.ClearDisplayProperties(true);
+
+            auto const sendResponse = midi2svc::MidiServiceTransportPluginConfigManager::SendUpdate(config);
+
+            if (sendResponse != nullptr &&
+                sendResponse.Status() == midi2svc::MidiServiceConfigResponseStatus::Success)
+            {
+                if (reset)
+                {
+                    // Saving three empty values would leave a stored entry which says nothing,
+                    // so the entry comes out of the file instead.
+                    midi2svc::MidiServiceEndpointCustomizationRemovalConfig removal{
+                        midi2net::MidiNetworkTransportManager::TransportId(), match };
+
+                    auto const saveResponse = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(removal);
+
+                    succeeded = saveResponse != nullptr && saveResponse.Success();
+
+                    if (!succeeded && saveResponse != nullptr)
+                    {
+                        failure = saveResponse.ErrorMessage();
+                    }
+                }
+                else
+                {
+                    auto const saveResponse = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+                    succeeded = saveResponse != nullptr && saveResponse.Success();
+
+                    if (!succeeded && saveResponse != nullptr)
+                    {
+                        failure = saveResponse.ErrorMessage();
+                    }
+                }
+            }
+            else if (sendResponse != nullptr)
+            {
+                failure = sendResponse.ServiceErrorMessage();
+            }
+
+            // Kept out of the customization above on purpose: this one is read when the endpoint
+            // is built, so it belongs to the entry which creates it and cannot be pushed live.
+            if (succeeded && !clientKey.empty() && createMidi1Ports != currentCreateMidi1Ports)
+            {
+                if (!native::NetworkConfigFile::Current().SetClientCreateMidi1Ports(clientKey, createMidi1Ports))
+                {
+                    failure = native::NetworkConfigFile::Current().LastErrorMessage();
+                    succeeded = false;
+                }
+            }
+        }
+        catch (...)
+        {
+        }
+
+        if (errorMessage != nullptr)
+        {
+            *errorMessage = failure;
+        }
+
+        // awaiting a WinRT async object restores the caller's apartment context, so the caller
+        // is back on the UI thread without this having to marshal
+        co_return succeeded;
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnCustomizeRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        auto item = ItemOf<midinetworksetup::RemoteHostItem>(sender);
+
+        if (item == nullptr)
+        {
+            co_return;
+        }
+
+        auto strongThis = get_strong();
+
+        auto errorMessage = std::make_shared<winrt::hstring>();
+
+        auto const succeeded = co_await ShowCustomizeDialogAsync(item, errorMessage);
+
+        try
+        {
+            if (succeeded)
+            {
+                SetRemoteStatus(res::GetString(L"StatusCustomizationSaved"));
+            }
+            else
+            {
+                SetRemoteStatus(errorMessage->empty() ?
+                    res::GetString(L"StatusCustomizationNotSaved") :
+                    *errorMessage);
+            }
+
+            RequestRefreshAsync();
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to report the result of customizing a device.")
     }
 
     _Use_decl_annotations_

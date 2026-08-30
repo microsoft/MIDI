@@ -345,6 +345,15 @@ namespace winrt::midinetworksetup::implementation
                 winrt::Microsoft::UI::Xaml::Visibility::Visible;
         }
 
+        // A customization is matched on the endpoint's device instance id, which can only be read
+        // from an endpoint that exists. Offering this earlier would have nothing to key it on.
+        winrt::Microsoft::UI::Xaml::Visibility CustomizeVisibility() const noexcept
+        {
+            return (!m_endpointDeviceId.empty() && !m_isBusy) ?
+                winrt::Microsoft::UI::Xaml::Visibility::Visible :
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
+        }
+
         winrt::Microsoft::UI::Xaml::Visibility LatencyGraphVisibility() const noexcept
         {
             return m_latency.HasSamples() ?
@@ -402,6 +411,7 @@ namespace winrt::midinetworksetup::implementation
             if (UpdateField(m_endpointDeviceId, endpointDeviceId, L"EndpointDeviceId"))
             {
                 RaisePropertyChanged(L"EndpointDeviceIdVisibility");
+                RaisePropertyChanged(L"CustomizeVisibility");
             }
 
             UpdateField(m_clientId, clientId, L"ClientId");
@@ -457,6 +467,7 @@ namespace winrt::midinetworksetup::implementation
             RaisePropertyChanged(L"RetryVisibility");
             RaisePropertyChanged(L"ReassociateVisibility");
             RaisePropertyChanged(L"DisconnectVisibility");
+            RaisePropertyChanged(L"CustomizeVisibility");
         }
 
         winrt::hstring m_matchKey{};

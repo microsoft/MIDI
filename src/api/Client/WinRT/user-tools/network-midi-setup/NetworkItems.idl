@@ -82,6 +82,9 @@ namespace midinetworksetup
         Microsoft.UI.Xaml.Visibility ConnectedBadgeVisibility{ get; };
         Microsoft.UI.Xaml.Visibility EndpointDeviceIdVisibility{ get; };
 
+        // Only once there is an endpoint, because that is what a customization is keyed on.
+        Microsoft.UI.Xaml.Visibility CustomizeVisibility{ get; };
+
         // Round trip latency over the last several polls, newest at the right. Rendered as a
         // filled sparkline, so the geometry is produced here rather than in the template.
         Microsoft.UI.Xaml.Visibility LatencyGraphVisibility{ get; };
