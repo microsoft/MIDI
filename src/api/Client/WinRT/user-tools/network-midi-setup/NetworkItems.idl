@@ -59,6 +59,9 @@ namespace midinetworksetup
         String StatisticsText{ get; };
         String EndpointDeviceId{ get; };
 
+        // Full path to the endpoint's image in the shared assets folder, empty when it has none.
+        String ImagePath{ get; };
+
         // empty when this PC has no configured client entry for the host
         String ClientId{ get; };
 
@@ -81,6 +84,8 @@ namespace midinetworksetup
         Microsoft.UI.Xaml.Visibility NotAdvertisedVisibility{ get; };
         Microsoft.UI.Xaml.Visibility ConnectedBadgeVisibility{ get; };
         Microsoft.UI.Xaml.Visibility EndpointDeviceIdVisibility{ get; };
+
+        Microsoft.UI.Xaml.Visibility ImageVisibility{ get; };
 
         // Only once there is an endpoint, because that is what a customization is keyed on.
         Microsoft.UI.Xaml.Visibility CustomizeVisibility{ get; };

@@ -1131,6 +1131,7 @@ namespace winrt::midinetworksetup::implementation
                 winrt::hstring Status{};
                 winrt::hstring Statistics{};
                 winrt::hstring EndpointDeviceId{};
+                winrt::hstring ImagePath{};
                 winrt::hstring ClientId{};
                 uint64_t LatencyTicks{ 0 };
                 bool Connected{ false };
@@ -1330,6 +1331,29 @@ namespace winrt::midinetworksetup::implementation
                     row->ClientId = clientKey;
                     row->EndpointDeviceId = client.EndpointDeviceId();
 
+                    // Resolved here rather than in the row type, because it is a file system
+                    // lookup and the rows are rebuilt on every poll.
+                    if (!row->EndpointDeviceId.empty())
+                    {
+                        try
+                        {
+                            auto const info = midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(
+                                row->EndpointDeviceId);
+
+                            if (info != nullptr)
+                            {
+                                if (auto const userInfo = info.GetUserSuppliedInfo())
+                                {
+                                    row->ImagePath = midiapp::ResolveEndpointImagePath(userInfo.ImageFileName());
+                                }
+                            }
+                        }
+                        catch (...)
+                        {
+                            row->ImagePath = winrt::hstring{};
+                        }
+                    }
+
                     row->Connected = client.IsSessionActive();
 
                     // A device which is not advertising reports nothing, so the row would show an
@@ -1464,6 +1488,7 @@ namespace winrt::midinetworksetup::implementation
                     row.Status,
                     row.Statistics,
                     row.EndpointDeviceId,
+                    row.ImagePath,
                     row.ClientId,
                     row.LatencyTicks,
                     row.Connected,

@@ -46,6 +46,8 @@ namespace winrt::midinetworksetup::implementation
         winrt::fire_and_forget OnReassociateRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnReassociateSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         winrt::fire_and_forget OnCustomizeRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnBrowseForImageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnRemoveImageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCopyEndpointDeviceIdClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnDisconnectRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 

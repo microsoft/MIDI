@@ -248,7 +248,17 @@
     <value>Image file name</value>
   </data>
   <data name="CustomizeHelpText.Text" xml:space="preserve">
-    <value>Leave a box empty to use what the device reports. The image is a file name only, from the shared endpoint images folder.</value>
+    <value>Leave a box empty to use what the device reports. Browsing for an image copies it into the shared endpoint images folder. Remove clears the image from this device without deleting the file.</value>
+  </data>
+  <data name="CustomizeBrowseImageButton.Content" xml:space="preserve">
+    <value>Browse...</value>
+  </data>
+  <data name="CustomizeRemoveImageButton.Content" xml:space="preserve">
+    <value>Remove</value>
+    <comment>Clears the image from this endpoint. Does not delete the file.</comment>
+  </data>
+  <data name="StatusImageCopyFailed" xml:space="preserve">
+    <value>That image could not be copied into the shared endpoint images folder.</value>
   </data>
   <data name="SettingsTitle" xml:space="preserve">
     <value>Appearance</value>

@@ -359,7 +359,25 @@
                                                   HorizontalContentAlignment="Stretch"
                                                   Background="Transparent"
                                                   BorderThickness="0">
-                                            <Grid Margin="0,4,0,4"
+                                            <Grid ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <Border Grid.Column="0"
+                                                        Width="72"
+                                                        Height="72"
+                                                        VerticalAlignment="Top"
+                                                        Margin="0,4,0,0"
+                                                        CornerRadius="4"
+                                                        Visibility="{x:Bind ImageVisibility, Mode=OneWay}">
+                                                    <Image Source="{x:Bind ImagePath, Mode=OneWay}"
+                                                           Stretch="Uniform" />
+                                                </Border>
+
+                                            <Grid Grid.Column="1"
+                                                  Margin="0,4,0,4"
                                                   ColumnSpacing="12"
                                                   RowSpacing="4">
                                                 <Grid.ColumnDefinitions>
@@ -443,6 +461,7 @@
                                                         Content="Customize..."
                                                         Visibility="{x:Bind CustomizeVisibility, Mode=OneWay}"
                                                         Click="OnCustomizeRemoteHostClick" />
+                                            </Grid>
                                             </Grid>
                                         </Expander>
                                     </StackPanel>
@@ -1264,12 +1283,35 @@
                          TextWrapping="Wrap"
                          Height="80" />
 
-                <TextBox x:Name="CustomizeImageBox"
-                         x:Uid="CustomizeImageBox"
-                         Header="Image file name" />
+                <Grid ColumnSpacing="8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox x:Name="CustomizeImageBox"
+                             x:Uid="CustomizeImageBox"
+                             Grid.Column="0"
+                             Header="Image file name" />
+
+                    <Button x:Name="CustomizeBrowseImageButton"
+                            x:Uid="CustomizeBrowseImageButton"
+                            Grid.Column="1"
+                            Content="Browse..."
+                            VerticalAlignment="Bottom"
+                            Click="OnBrowseForImageClick" />
+
+                    <Button x:Name="CustomizeRemoveImageButton"
+                            x:Uid="CustomizeRemoveImageButton"
+                            Grid.Column="2"
+                            Content="Remove"
+                            VerticalAlignment="Bottom"
+                            Click="OnRemoveImageClick" />
+                </Grid>
 
                 <TextBlock x:Uid="CustomizeHelpText"
-                           Text="Leave a box empty to use what the device reports. The image is a file name only, from the shared endpoint images folder."
+                           Text="Leave a box empty to use what the device reports. Browsing for an image copies it into the shared endpoint images folder. Remove clears the image from this device without deleting the file."
                            TextWrapping="Wrap"
                            Style="{ThemeResource CaptionTextBlockStyle}"
                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />

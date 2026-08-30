@@ -13,6 +13,12 @@ namespace midiapp
     // the stored name is not a plain file inside the shared assets folder.
     winrt::hstring ResolveEndpointImagePath(winrt::hstring const& imageFileName) noexcept;
 
+    // Copies a chosen image into the shared endpoint assets folder and hands back the bare file
+    // name to store. Only that folder is ever read from, so a picked file has to become a copy
+    // there first. An identical copy is reused rather than duplicated, and a different file
+    // which wants a taken name is given a new one rather than overwriting someone else's image.
+    winrt::hstring ImportEndpointImage(winrt::hstring const& sourcePath) noexcept;
+
     // Name of the function block or group terminal block covering this group, if any.
     winrt::hstring DescribeGroup(
         winrt::Windows::Devices::Midi2::Enumeration::MidiEndpointDeviceInformation const& endpoint,

@@ -276,6 +276,7 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring StatusText() const noexcept { return m_statusText; }
         winrt::hstring StatisticsText() const noexcept { return m_statisticsText; }
         winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
+        winrt::hstring ImagePath() const noexcept { return m_imagePath; }
         winrt::hstring ClientId() const noexcept { return m_clientId; }
 
         bool IsConnected() const noexcept { return m_isConnected; }
@@ -345,6 +346,13 @@ namespace winrt::midinetworksetup::implementation
                 winrt::Microsoft::UI::Xaml::Visibility::Visible;
         }
 
+        winrt::Microsoft::UI::Xaml::Visibility ImageVisibility() const noexcept
+        {
+            return m_imagePath.empty() ?
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
+                winrt::Microsoft::UI::Xaml::Visibility::Visible;
+        }
+
         // A customization is matched on the endpoint's device instance id, which can only be read
         // from an endpoint that exists. Offering this earlier would have nothing to key it on.
         winrt::Microsoft::UI::Xaml::Visibility CustomizeVisibility() const noexcept
@@ -390,6 +398,7 @@ namespace winrt::midinetworksetup::implementation
             _In_ winrt::hstring const& statusText,
             _In_ winrt::hstring const& statisticsText,
             _In_ winrt::hstring const& endpointDeviceId,
+            _In_ winrt::hstring const& imagePath,
             _In_ winrt::hstring const& clientId,
             _In_ uint64_t const latencyTicks,
             _In_ bool const isConnected,
@@ -412,6 +421,11 @@ namespace winrt::midinetworksetup::implementation
             {
                 RaisePropertyChanged(L"EndpointDeviceIdVisibility");
                 RaisePropertyChanged(L"CustomizeVisibility");
+            }
+
+            if (UpdateField(m_imagePath, imagePath, L"ImagePath"))
+            {
+                RaisePropertyChanged(L"ImageVisibility");
             }
 
             UpdateField(m_clientId, clientId, L"ClientId");
@@ -485,6 +499,7 @@ namespace winrt::midinetworksetup::implementation
         LatencyHistory m_latency{};
 
         winrt::hstring m_endpointDeviceId{};
+        winrt::hstring m_imagePath{};
         winrt::hstring m_clientId{};
         bool m_isConnected{ false };
         bool m_isConfigured{ false };

@@ -17,6 +17,14 @@ namespace midiapp
     {
         constexpr wchar_t EndpointImageFolder[] = LR"(%allusersprofile%\Microsoft\MIDI\Assets\Endpoints\)";
 
+        // Marks an image the customer supplied, so the folder stays readable next to the
+        // defaults which ship with the product.
+        constexpr wchar_t EndpointImageNamePrefix[] = L"ep-";
+
+        // An endpoint image is a small icon or photo. The cap is here so that picking a huge
+        // file fails quickly instead of reading it all in to compare it.
+        constexpr uint64_t MaxEndpointImageBytes = 32ull * 1024 * 1024;
+
         winrt::hstring ExpandPath(std::wstring const& path) noexcept
         {
             wchar_t expanded[MAX_PATH + 1]{};
@@ -27,6 +35,46 @@ namespace midiapp
             }
 
             return winrt::hstring{ expanded };
+        }
+
+        std::vector<uint8_t> ReadAllBytes(std::wstring const& path) noexcept
+        {
+            std::vector<uint8_t> bytes{};
+
+            wil::unique_hfile file{ ::CreateFileW(
+                path.c_str(),
+                GENERIC_READ,
+                FILE_SHARE_READ,
+                nullptr,
+                OPEN_EXISTING,
+                FILE_ATTRIBUTE_NORMAL,
+                nullptr) };
+
+            if (!file)
+            {
+                return bytes;
+            }
+
+            LARGE_INTEGER size{};
+
+            if (!::GetFileSizeEx(file.get(), &size) ||
+                size.QuadPart <= 0 ||
+                static_cast<uint64_t>(size.QuadPart) > MaxEndpointImageBytes)
+            {
+                return bytes;
+            }
+
+            bytes.resize(static_cast<size_t>(size.QuadPart));
+
+            DWORD read{ 0 };
+
+            if (!::ReadFile(file.get(), bytes.data(), static_cast<DWORD>(bytes.size()), &read, nullptr) ||
+                read != bytes.size())
+            {
+                bytes.clear();
+            }
+
+            return bytes;
         }
     }
 
@@ -63,6 +111,111 @@ namespace midiapp
             }
 
             return fullPath;
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+
+        return {};
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring ImportEndpointImage(winrt::hstring const& sourcePath) noexcept
+    {
+        try
+        {
+            if (sourcePath.empty())
+            {
+                return {};
+            }
+
+            std::wstring const source{ sourcePath };
+
+            auto const separator = source.find_last_of(L"\\/");
+
+            std::wstring name = separator == std::wstring::npos ?
+                source :
+                source.substr(separator + 1);
+
+            // The stored value is read back as a bare name, so anything the resolver would
+            // later refuse is dropped here rather than stored and silently ignored.
+            std::wstring cleaned{};
+
+            for (auto const ch : name)
+            {
+                if (ch == L'\\' || ch == L'/' || ch == L':' || ch == L'%' || ch == L'?' ||
+                    ch == L'*' || ch == L'"' || ch == L'<' || ch == L'>' || ch == L'|')
+                {
+                    continue;
+                }
+
+                cleaned += ch;
+            }
+
+            if (cleaned.empty() || cleaned == L"." || cleaned == L".." || cleaned.size() > MAX_PATH)
+            {
+                return {};
+            }
+
+            if (_wcsnicmp(cleaned.c_str(), EndpointImageNamePrefix, wcslen(EndpointImageNamePrefix)) != 0)
+            {
+                cleaned = EndpointImageNamePrefix + cleaned;
+            }
+
+            auto const folder = ExpandPath(EndpointImageFolder);
+
+            if (folder.empty())
+            {
+                return {};
+            }
+
+            std::wstring const folderPath{ folder };
+
+            if (!::PathFileExistsW(folderPath.c_str()))
+            {
+                ::CreateDirectoryW(folderPath.c_str(), nullptr);
+            }
+
+            auto const incoming = ReadAllBytes(source);
+
+            if (incoming.empty())
+            {
+                return {};
+            }
+
+            auto const dot = cleaned.find_last_of(L'.');
+
+            auto const stem = dot == std::wstring::npos ? cleaned : cleaned.substr(0, dot);
+            auto const extension = dot == std::wstring::npos ? std::wstring{} : cleaned.substr(dot);
+
+            // A name already in use by the same image is reused. One in use by a different image
+            // belongs to another endpoint, so this gets its own name instead of replacing it.
+            for (uint32_t attempt = 1; attempt <= 64; attempt++)
+            {
+                auto const candidate = attempt == 1 ?
+                    stem + extension :
+                    stem + L" (" + std::to_wstring(attempt) + L")" + extension;
+
+                auto const destination = folderPath + candidate;
+
+                if (::PathFileExistsW(destination.c_str()))
+                {
+                    if (ReadAllBytes(destination) == incoming)
+                    {
+                        return winrt::hstring{ candidate };
+                    }
+
+                    continue;
+                }
+
+                if (::CopyFileW(source.c_str(), destination.c_str(), TRUE))
+                {
+                    return winrt::hstring{ candidate };
+                }
+
+                return {};
+            }
         }
         catch (...)
         {

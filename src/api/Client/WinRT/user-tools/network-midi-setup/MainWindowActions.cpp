@@ -86,6 +86,15 @@ namespace winrt::midinetworksetup::implementation
                 copy.find(L':') == std::wstring::npos;
         }
 
+        // Awaiting this from the UI thread does the copy on a worker and comes back on the UI
+        // thread, because awaiting a WinRT async object restores the apartment context.
+        foundation::IAsyncOperation<winrt::hstring> ImportImageAsync(winrt::hstring sourcePath)
+        {
+            co_await winrt::resume_background();
+
+            co_return midiapp::ImportEndpointImage(sourcePath);
+        }
+
         winrt::hstring TextOf(_In_ controls::TextBox const& box) noexcept
         {
             try
@@ -813,6 +822,79 @@ namespace winrt::midinetworksetup::implementation
             RequestRefreshAsync();
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to report the result of customizing a device.")
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnBrowseForImageClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        auto strongThis = get_strong();
+
+        try
+        {
+            winrt::Windows::Storage::Pickers::FileOpenPicker picker{};
+
+            // A picker in a desktop app has no window of its own to sit over, so it is given
+            // this one. Without it the call fails rather than showing anything.
+            HWND handle{ nullptr };
+
+            if (auto const native = try_as<::IWindowNative>())
+            {
+                LOG_IF_FAILED(native->get_WindowHandle(&handle));
+            }
+
+            if (handle == nullptr)
+            {
+                co_return;
+            }
+
+            if (auto const initialize = picker.as<::IInitializeWithWindow>())
+            {
+                LOG_IF_FAILED(initialize->Initialize(handle));
+            }
+
+            picker.ViewMode(winrt::Windows::Storage::Pickers::PickerViewMode::Thumbnail);
+            picker.SuggestedStartLocation(winrt::Windows::Storage::Pickers::PickerLocationId::PicturesLibrary);
+
+            for (auto const& extension : { L".png", L".jpg", L".jpeg", L".bmp", L".gif", L".svg" })
+            {
+                picker.FileTypeFilter().Append(extension);
+            }
+
+            auto const file = co_await picker.PickSingleFileAsync();
+
+            if (file == nullptr)
+            {
+                co_return;
+            }
+
+            auto const sourcePath = file.Path();
+
+            // Copied rather than referenced, so the stored value is always a name inside the
+            // shared folder and cannot break when the customer moves the original.
+            auto const importedName = co_await ImportImageAsync(sourcePath);
+
+            if (importedName.empty())
+            {
+                SetRemoteStatus(res::GetString(L"StatusImageCopyFailed"));
+
+                co_return;
+            }
+
+            CustomizeImageBox().Text(importedName);
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to choose an image.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnRemoveImageClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            // Only the reference goes. The file stays in the shared folder, where another
+            // endpoint may well be using it.
+            CustomizeImageBox().Text(winrt::hstring{});
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to clear the image.")
     }
 
     _Use_decl_annotations_
