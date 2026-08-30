@@ -1,0 +1,69 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+import "IMidiServiceTransportPluginConfig.idl";
+import "MidiNetworkAuthenticationTypeEnum.idl";
+import "MidiNetworkRemoteClientPolicyEnum.idl";
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    [contract(MidiTransportsNetworkApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostCreationConfig", UUID_IMidiNetworkHostCreationConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostCreationConfigFactory", UUID_IMidiNetworkHostCreationConfigFactory)]
+    [static_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostCreationConfigStatics", UUID_IMidiNetworkHostCreationConfigStatics)]
+    runtimeclass MidiNetworkHostCreationConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiNetworkHostCreationConfig();
+
+        [noexcept] static MidiNetworkHostCreationConfig CreateDefault();
+
+        // Strips what would corrupt the DNS-SD record and truncates to the label byte limit.
+        [noexcept] static String EnsureCompliantServiceInstanceName(String serviceInstanceName);
+
+        // False if a host on this PC already holds the name, or if anything on the local network
+        // is currently advertising it. Two hosts cannot share a name, and a name already on the
+        // network makes this PC hard to tell apart from whatever is using it.
+        [noexcept] static Boolean IsServiceInstanceNameAvailable(String serviceInstanceName);
+
+        // The supplied name if it is free, otherwise the same name with -02, -03 and so on
+        // appended until one is. Already compliant on return.
+        [noexcept] static String MakeUniqueServiceInstanceName(String baseServiceInstanceName);
+
+        [noexcept] Guid HostId { get; };
+
+        [noexcept] String Name;
+        [noexcept] String ServiceInstanceName;
+        [noexcept] String ProductInstanceId;
+
+        [noexcept] Boolean CreateOnlyUmpEndpoints;
+
+        [noexcept] Boolean UseAutomaticPortAllocation;
+        [noexcept] String ManuallyAssignedPort;
+
+        // Only meaningful with a specific port. When that port cannot be bound the host starts
+        // on an automatically allocated one instead of refusing to start, and reports that it
+        // did through MidiNetworkConfiguredHost.UsedPortFallback.
+        [noexcept] Boolean AllowPortFallback;
+
+        [noexcept] Boolean Advertise;
+
+        // what the host does when a remote client which is on neither list asks to connect
+        [noexcept] MidiNetworkRemoteClientPolicy RemoteClientPolicy;
+
+        [noexcept] MidiNetworkAuthenticationType AuthenticationType;
+
+        // todo: password key etc.
+
+
+    }
+}

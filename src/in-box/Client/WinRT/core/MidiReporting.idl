@@ -1,0 +1,31 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiServiceTransportPluginInfo.idl";
+import "MidiServiceSessionInfo.idl";
+
+namespace Windows.Devices.Midi2.Reporting
+{
+    [contract(MidiReportingApiContract, 1)]
+    
+    [static_name("Windows.Devices.Midi2.Reporting.IMidiReportingStatics", UUID_IMidiReportingStatics)]
+    static runtimeclass MidiReporting
+    {
+        [noexcept] static IVectorView<MidiServiceTransportPluginInfo> GetInstalledTransportPlugins();
+
+        [noexcept] static IVectorView<MidiServiceSessionInfo> GetActiveSessions();
+
+        [noexcept] static IVectorView<MidiServiceSessionInfo> FindAllSessionsWithMatchingOpenUmpEndpoint(String endpointDeviceId, Boolean includeRelatedMidi1Ports);
+        [noexcept] static IVectorView<MidiServiceSessionInfo> FindAllSessionsWithMatchingOpenUmpEndpointOrMidi1Ports(IVectorView<String> endpointsAndPorts);
+
+    }
+}
+

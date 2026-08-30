@@ -509,7 +509,7 @@ stages:
       displayName: 'Restore Console NuGet Packages'
       inputs:
         command: 'restore'
-        restoreSolution: '$(Build.SourcesDirectory)\src\user-tools\midi-console\midi-console.sln'
+        restoreSolution: '$(Build.SourcesDirectory)\src\in-box\user-tools\midi-console\Midi\Midi.csproj'
         feedsToUse: 'config'
         nugetConfigPath: '$(Build.SourcesDirectory)\NuGet.config'
 
@@ -517,7 +517,7 @@ stages:
       displayName: 'Build MIDI Console ($(BuildPlatform))'
       inputs:
         command: 'build'
-        projects: '$(Build.SourcesDirectory)\src\user-tools\midi-console\Midi\Midi.csproj'
+        projects: '$(Build.SourcesDirectory)\src\in-box\user-tools\midi-console\Midi\Midi.csproj'
         arguments: >
           --configuration $(BuildConfiguration)
           --runtime $(RuntimeIdentifier)
@@ -537,7 +537,7 @@ stages:
     #     KeyVaultUrl: 'https://yourkeyvault.vault.azure.net/'
     #     CertificateName: '$(SigningCertificateName)'
     #     SignedFilePath: |
-    #       $(Build.SourcesDirectory)\src\user-tools\midi-console\Midi\bin\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)\midi.exe
+    #       $(Build.SourcesDirectory)\src\in-box\user-tools\midi-console\Midi\bin\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)\midi.exe
     #     TimeStampServer: '$(SigningTimeStampServer)'
     #     FileDigest: 'SHA256'
     #     TimeStampDigest: 'SHA256'
@@ -546,7 +546,7 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: 'Publish Console Binaries'
       inputs:
-        targetPath: '$(Build.SourcesDirectory)\src\user-tools\midi-console\Midi\bin\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)'
+        targetPath: '$(Build.SourcesDirectory)\src\in-box\user-tools\midi-console\Midi\bin\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)'
         artifact: 'ConsoleApp-$(BuildPlatform)'
 
   - job: BuildPowerShellModule
@@ -705,7 +705,7 @@ stages:
     - task: MSBuild@1
       displayName: 'Build Setup Bundle ($(BuildPlatform))'
       inputs:
-        solution: '$(Build.SourcesDirectory)\src\app-sdk\sdk-runtime-installer\midi-services-app-sdk-runtime-setup.sln'
+        solution: '$(Build.SourcesDirectory)\src\installers\api-and-tools-installer\midi-services-app-sdk-runtime-setup.sln'
         platform: '$(BuildPlatform)'
         configuration: '$(BuildConfiguration)'
         msbuildArchitecture: 'x64'
@@ -727,7 +727,7 @@ stages:
     #     KeyVaultUrl: 'https://yourkeyvault.vault.azure.net/'
     #     CertificateName: '$(SigningCertificateName)'
     #     SignedFilePath: |
-    #       $(Build.SourcesDirectory)\src\app-sdk\sdk-runtime-installer\main-bundle\bin\$(BuildPlatform)\$(BuildConfiguration)\WindowsMidiServicesSdkRuntimeSetup.exe
+    #       $(Build.SourcesDirectory)\src\installers\api-and-tools-installer\main-bundle\bin\$(BuildPlatform)\$(BuildConfiguration)\WindowsMidiServicesSdkRuntimeSetup.exe
     #     TimeStampServer: '$(SigningTimeStampServer)'
     #     FileDigest: 'SHA256'
     #     TimeStampDigest: 'SHA256'
@@ -736,7 +736,7 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: 'Publish Installer'
       inputs:
-        targetPath: '$(Build.SourcesDirectory)\src\app-sdk\sdk-runtime-installer\main-bundle\bin\$(BuildPlatform)\$(BuildConfiguration)\WindowsMidiServicesSdkRuntimeSetup.exe'
+        targetPath: '$(Build.SourcesDirectory)\src\installers\api-and-tools-installer\main-bundle\bin\$(BuildPlatform)\$(BuildConfiguration)\WindowsMidiServicesSdkRuntimeSetup.exe'
         artifact: 'Installer-$(BuildPlatform)'
 
 - stage: PublishRelease

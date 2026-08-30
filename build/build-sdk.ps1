@@ -4,7 +4,7 @@
 
 .DESCRIPTION
     Replaces the old Nuke build (build/nuke_build). Everything the release needs now lives in
-    a single solution (src/api/Midi2-AppSDK.sln), so this script is mostly: build that solution
+    a single solution (src/in-box/Midi2-AppSDK.sln), so this script is mostly: build that solution
     per platform, publish the .NET apps, copy the results into build/staging, then build the
     WiX installer against build/staging.
 
@@ -93,8 +93,8 @@ $BuildRoot = $PSScriptRoot
 $RepoRoot = Split-Path -Parent $BuildRoot
 
 $SourceRoot = Join-Path $RepoRoot 'src'
-$ApiRoot = Join-Path $SourceRoot 'api'
-$UserToolsRoot = Join-Path $SourceRoot 'user-tools'
+$ApiRoot = Join-Path $SourceRoot 'in-box'
+$UserToolsRoot = Join-Path $ApiRoot 'user-tools'
 
 $SdkSolution = Join-Path $ApiRoot 'Midi2-AppSDK.sln'
 $SdkOutRoot = Join-Path $ApiRoot 'vsfiles-sdk\out'
@@ -106,7 +106,7 @@ $NuspecFile = Join-Path $ApiRoot 'Client\WinRT\NuGet\Windows.Devices.Midi2.NuGet
 $ConsoleProject = Join-Path $UserToolsRoot 'midi-console\Midi\Midi.csproj'
 $PowerShellProject = Join-Path $ApiRoot 'Client\WinRT\powershell\WindowsMidiServices.csproj'
 
-$SetupSolutionRoot = Join-Path $SourceRoot 'app-sdk\sdk-runtime-installer'
+$SetupSolutionRoot = Join-Path $SourceRoot 'installers\api-and-tools-installer'
 $SetupSolution = Join-Path $SetupSolutionRoot 'midi-services-app-sdk-runtime-setup.sln'
 
 $DesignRoot = Join-Path $RepoRoot 'design'
@@ -172,7 +172,7 @@ $Arm64EcProjects = @(
     'Libs\SDK-MidiEndpointNamingLib\MidiEndpointNamingLib.vcxproj'
     'Libs\SDK-MidiPnpLib\MidiPnpLib.vcxproj'
     'Client\WinRT\com-extensions-idl\com-extensions-idl.vcxproj'
-    'Client\WinRT\t\core\Windows.Devices.Midi2.vcxproj'
+    'Client\WinRT\core\Windows.Devices.Midi2.vcxproj'
 )
 
 # ----------------------------------------------------------------------------------------------

@@ -4,8 +4,8 @@
 
 .DESCRIPTION
     The Bluetooth preview is a single installer that spans both release trains: the transport
-    comes out of src/api/Midi2.sln like the other service plugins, and the Bluetooth MIDI Setup
-    app plus its app-local copy of the API come out of src/api/Midi2-AppSDK.sln. That is why it
+    comes out of src/in-box/Midi2.sln like the other service plugins, and the Bluetooth MIDI Setup
+    app plus its app-local copy of the API come out of src/in-box/Midi2-AppSDK.sln. That is why it
     has its own script rather than being another entry in build-plugins.ps1.
 
     Version numbers come from build/version-plugins.json and are written to
@@ -19,8 +19,8 @@
 .PARAMETER Target
     One or more of:
       Version  Compute versions and write BundleInfo.wxi.
-      Service  Build src/api/Midi2.sln for each platform (the transport).
-      App      Build src/api/Midi2-AppSDK.sln for each platform (the setup app and the SDK).
+      Service  Build src/in-box/Midi2.sln for each platform (the transport).
+      App      Build src/in-box/Midi2-AppSDK.sln for each platform (the setup app and the SDK).
       Stage    Copy the transport into build/staging/api, and the app payload into
                build/staging/bluetooth-app.
       Setup    Build the installer.
@@ -95,7 +95,7 @@ $BuildRoot = $PSScriptRoot
 $RepoRoot = Split-Path -Parent $BuildRoot
 
 $SourceRoot = Join-Path $RepoRoot 'src'
-$ApiRoot = Join-Path $SourceRoot 'api'
+$ApiRoot = Join-Path $SourceRoot 'in-box'
 
 $ServiceSolution = Join-Path $ApiRoot 'Midi2.sln'
 $ServiceOutRoot = Join-Path $ApiRoot 'VSFiles'
@@ -114,7 +114,7 @@ $BundleInfoFile = Join-Path $VersionStagingFolder 'BundleInfo.wxi'
 
 $VersionFile = Join-Path $BuildRoot 'version-plugins.json'
 
-$SetupSolutionDir = Join-Path $SourceRoot 'oob-setup-bluetooth'
+$SetupSolutionDir = Join-Path $SourceRoot 'installers\oob-setup-bluetooth'
 $SetupSolution = Join-Path $SetupSolutionDir 'midi-services-bluetooth-midi-preview-setup.sln'
 
 $BundleName = 'WindowsMidiServicesBluetoothMidiSetup'
@@ -126,7 +126,7 @@ $env:MIDI_REPO_ROOT = $RepoRoot.TrimEnd('\')
 
 $TransportBinary = 'Midi2.BluetoothMidiTransport'
 
-# The app payload, as referenced by src/oob-setup-bluetooth/api-package/WindowsMidiServices.wxs.
+# The app payload, as referenced by src/installers/oob-setup-bluetooth/api-package/WindowsMidiServices.wxs.
 # The .exp, .lib and .pdb files in the same output folder are deliberately not shipped; the two
 # pdbs alone are over 160 MB.
 $AppPayload = @(

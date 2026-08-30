@@ -1,0 +1,90 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiBluetoothDeviceInformation.idl";
+
+import "MidiBluetoothDeviceConnectConfig.idl";
+import "MidiBluetoothDeviceConnectResponse.idl";
+
+import "MidiBluetoothDeviceDisconnectConfig.idl";
+import "MidiBluetoothDeviceDisconnectResponse.idl";
+
+import "MidiBluetoothPeripheralConfig.idl";
+import "MidiBluetoothPeripheralResponse.idl";
+import "MidiBluetoothPeripheralStatus.idl";
+import "MidiBluetoothPeripheralClient.idl";
+import "MidiBluetoothPeripheralClientDecisionResponse.idl";
+import "MidiBluetoothApprovalScopeEnum.idl";
+import "MidiBluetoothRadioInformation.idl";
+
+namespace Windows.Devices.Midi2.Transports.Bluetooth
+{
+    [contract(MidiTransportsBluetoothApiContract, 1)]
+
+    // One manager covers both Bluetooth Low Energy MIDI 1.0 and 2.0. Which protocol a device
+    // speaks is chosen by the transport, which prefers MIDI 2.0 whenever a device offers it.
+    [static_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothTransportManagerStatics", UUID_IMidiBluetoothTransportManagerStatics)]
+    static runtimeclass MidiBluetoothTransportManager
+    {
+        [noexcept] static Boolean IsTransportAvailable{ get; };
+
+        [noexcept] static Guid TransportId{ get; };
+
+        // Every Bluetooth MIDI device this PC has seen advertising, whether or not it is connected
+        [noexcept] static IVectorView<MidiBluetoothDeviceInformation> GetAvailableDevices();
+
+        // Null when no device with that address has been discovered
+        [noexcept] static MidiBluetoothDeviceInformation GetDevice(String bluetoothDeviceId);
+
+        // Connecting takes seconds: the radio has to find the device, open its GATT service, and
+        // subscribe to a characteristic.
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiBluetoothDeviceConnectResponse> ConnectDeviceAsync(
+            MidiBluetoothDeviceConnectConfig connectConfig);
+
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiBluetoothDeviceDisconnectResponse> DisconnectDeviceAsync(
+            MidiBluetoothDeviceDisconnectConfig disconnectConfig);
+
+        // Publishes this PC so other devices can connect to it
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiBluetoothPeripheralResponse> StartPeripheralAsync(
+            MidiBluetoothPeripheralConfig peripheralConfig);
+
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiBluetoothPeripheralResponse> StopPeripheralAsync();
+
+        [noexcept] static MidiBluetoothPeripheralStatus GetPeripheralStatus();
+
+        // Remote Centrals which have connected and are waiting for a decision. Bluetooth does not
+        // let Windows refuse the connection, so one of these is connected but has no MIDI
+        // endpoint and moves no data until it is approved.
+        [noexcept] static IVectorView<MidiBluetoothPeripheralClient> GetPendingPeripheralClients();
+
+        // The address must be the one reported for the client which is waiting, so a decision made
+        // against a stale list is rejected rather than applied to whoever connected since.
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiBluetoothPeripheralClientDecisionResponse> ApprovePeripheralClientAsync(
+            String bluetoothAddress,
+            MidiBluetoothApprovalScope scope);
+
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiBluetoothPeripheralClientDecisionResponse> DenyPeripheralClientAsync(
+            String bluetoothAddress,
+            MidiBluetoothApprovalScope scope);
+
+        // Drops a remembered allow or deny, so the device is asked about again next time
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiBluetoothPeripheralClientDecisionResponse> ForgetPeripheralClientAsync(
+            String bluetoothAddress);
+
+        // Null when the transport did not report it, which is what an older service looks like.
+        // Otherwise this is how an application explains a machine with no usable Bluetooth.
+        [noexcept] static MidiBluetoothRadioInformation GetRadioInformation();
+
+        // The transport-wide value every device set to UseTransportDefault falls back to. Never
+        // UseTransportDefault itself, because there is nothing above it to defer to.
+        [noexcept] static Int32 GetDefaultOfflineRetentionSeconds();
+    }
+}

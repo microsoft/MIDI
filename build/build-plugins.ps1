@@ -13,7 +13,7 @@
 .PARAMETER Target
     One or more of:
       Version  Compute versions and write BundleInfo.wxi.
-      Service  Build src/api/Midi2.sln for each platform.
+      Service  Build src/in-box/Midi2.sln for each platform.
       Stage    Copy the transport binaries into build/staging/api, and the shared API headers
                into src/shared/api-ref (mididiag and midi2monitor have that on their IncludePath).
       Setup    Build the Network MIDI 2.0 and Basic Loopback installers.
@@ -88,7 +88,7 @@ $BuildRoot = $PSScriptRoot
 $RepoRoot = Split-Path -Parent $BuildRoot
 
 $SourceRoot = Join-Path $RepoRoot 'src'
-$ApiRoot = Join-Path $SourceRoot 'api'
+$ApiRoot = Join-Path $SourceRoot 'in-box'
 
 $ServiceSolution = Join-Path $ApiRoot 'Midi2.sln'
 $ServiceOutRoot = Join-Path $ApiRoot 'VSFiles'
@@ -124,7 +124,7 @@ $Plugins = @(
     [pscustomobject]@{
         Name         = 'Network MIDI 2.0'
         Binary       = 'Midi2.NetworkMidiTransport'
-        SolutionDir  = Join-Path $SourceRoot 'oob-setup-network'
+        SolutionDir  = Join-Path $SourceRoot 'installers\oob-setup-network'
         Solution     = 'midi-services-network-midi-preview-setup.sln'
         BundleName   = 'WindowsMidiServicesNetworkMidiSetup'
         InstallerName = 'Windows MIDI Services (Network MIDI 2.0 Preview)'
@@ -134,7 +134,7 @@ $Plugins = @(
     [pscustomobject]@{
         Name         = 'Basic Loopback MIDI'
         Binary       = 'Midi2.BasicLoopbackMidiTransport'
-        SolutionDir  = Join-Path $SourceRoot 'oob-setup-basic-loopback'
+        SolutionDir  = Join-Path $SourceRoot 'installers\oob-setup-basic-loopback'
         Solution     = 'midi-services-basic-loopback-setup.sln'
         BundleName   = 'WindowsMidiServicesBasicLoopbackSetup'
         InstallerName = 'Windows MIDI Services (Basic MIDI 1.0 Loopback Preview)'

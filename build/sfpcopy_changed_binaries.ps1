@@ -7,7 +7,7 @@
 
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
-    [string] $SourceDir = "g:\Github\microsoft\midi\src\api\VSFiles\x64\Release",
+    [string] $SourceDir = "g:\Github\microsoft\midi\src\in-box\VSFiles\x64\Release",
     [string] $SfpCopy   = "g:\sfpcopy.exe",
     [string] $DestDir   = (Join-Path $env:WINDIR "System32"),
 

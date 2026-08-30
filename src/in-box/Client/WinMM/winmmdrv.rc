@@ -1,0 +1,36 @@
+//
+//    Copyright (C) Microsoft.  All rights reserved.
+//
+
+#include <windows.h>
+#include <ntverp.h>
+#include "resource.h"
+
+#define VER_FILETYPE                VFT_DLL
+#define VER_FILESUBTYPE             VFT_UNKNOWN
+#define VER_FILEDESCRIPTION_STR     "Windows MIDI Services WinMM service interface driver"
+#define VER_INTERNALNAME_STR        "wdmaud2.drv"
+#define VER_ORIGINALFILENAME_STR    "wdmaud2.drv"
+
+#include "common.ver"
+
+STRINGTABLE
+BEGIN
+    // default name of mixer line
+    IDS_DEFAULT_LINENAME_UNNAMED    "Unnamed"
+    IDS_DEFAULT_LINENAME_WAVE       "Wave"
+    IDS_SUBMIXER_DSTLINE_SHORT      "Volume"
+    IDS_SUBMIXER_DSTLINE_LONG       "Master Volume"
+    IDS_SUBMIXER_SRCLINE_SHORT      "Volume"
+    IDS_SUBMIXER_SRCLINE_LONG       "Master Volume"
+    IDS_SUBMIXER_CDLINE_SHORT       "CDAudio"
+    IDS_SUBMIXER_CDLINE_LONG        "CD Audio"
+    IDS_SUBMIXER_VOLUME_SHORT       "Volume"
+    IDS_SUBMIXER_VOLUME_LONG        "Volume"
+    IDS_SUBMIXER_MUTE_SHORT         "Mute"
+    IDS_SUBMIXER_MUTE_LONG          "Mute"
+
+    IDS_MIDI_UNAVAILABLE_ENDPOINT       "(unavailable)"
+    IDS_MIDI_DEFAULT_WINMM_SESSION_NAME "WinMM client"
+END
+

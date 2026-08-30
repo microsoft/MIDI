@@ -1,0 +1,31 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+
+namespace Windows.Devices.Midi2.ServiceConfig
+{
+    [contract(MidiServiceConfigApiContract, 1)]
+    
+    [static_name("Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportCommonCommandsStatics", UUID_IMidiServiceTransportCommonCommandsStatics)]
+    static runtimeclass MidiServiceTransportCommonCommands
+    {
+        [noexcept] static String QueryCapabilities{ get; };
+
+        [noexcept] static String ListEntries{ get; };
+
+        [noexcept] static String RestartEndpoint{ get; };
+        [noexcept] static String DisconnectEndpoint{ get; };
+        [noexcept] static String ReconnectEndpoint{ get; };
+
+    }
+}

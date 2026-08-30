@@ -1,0 +1,38 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+namespace Windows.Devices.Midi2.Transports.Loopback
+{
+    [contract(MidiTransportsLoopbackApiContract, 1)]
+    
+    [interface_name("Windows.Devices.Midi2.Transports.Loopback.IMidiLoopbackEndpointDefinition", UUID_IMidiLoopbackEndpointDefinition)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Loopback.IMidiLoopbackEndpointDefinitionFactory", UUID_IMidiLoopbackEndpointDefinitionFactory)]
+    runtimeclass MidiLoopbackEndpointDefinition
+    {
+        MidiLoopbackEndpointDefinition();
+        MidiLoopbackEndpointDefinition(String name);
+        MidiLoopbackEndpointDefinition(String name, String description);
+        MidiLoopbackEndpointDefinition(String name, String description, String uniqueId);
+
+        [noexcept] String Name;
+        [noexcept] String UniqueId;
+        [noexcept] String Description;
+
+        // Bare file name of a picture in the shared endpoint assets folder, not a path. An app
+        // is expected to copy the customer's chosen file into that folder and name it here.
+        [noexcept] String ImageFileName;
+
+        // Defaults to false so that MIDI 1.0 ports are created alongside the UMP endpoint.
+        [noexcept] Boolean CreateOnlyUmpEndpoint;
+    };
+}

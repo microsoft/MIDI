@@ -1,0 +1,43 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    // One remote client which has reached a host on this PC. Absence from the host's collection
+    // is how a caller learns a remote client went away; nothing reports departures separately.
+    [contract(MidiTransportsNetworkApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostConnection", UUID_IMidiNetworkHostConnection)]
+    runtimeclass MidiNetworkHostConnection
+    {
+        [noexcept] String UmpEndpointName{ get; };
+        [noexcept] String ProductInstanceId{ get; };
+
+        // live socket address, so it changes between reconnects. Display only, never for matching
+        [noexcept] String RemoteAddress{ get; };
+        [noexcept] String RemotePort{ get; };
+
+        [noexcept] Boolean IsSessionActive{ get; };
+
+        // true when the host is holding the invitation until the user approves or denies it
+        [noexcept] Boolean IsPendingApproval{ get; };
+
+        [noexcept] String EndpointDeviceId{ get; };
+
+        // Measured from the Ping Reply round trip, averaged over the samples taken since this was
+        // last read. Zero until the first reply arrives.
+        [noexcept] UInt64 CurrentLatencyTicks{ get; };
+
+        [noexcept] UInt32 RetransmitCount{ get; };                 // command packets we resent because this client asked
+        [noexcept] UInt32 RetransmitRequestCount{ get; };          // retransmit requests this client sent us
+        [noexcept] UInt64 TotalCountNetworkPacketsSent{ get; };
+        [noexcept] UInt64 TotalCountNetworkPacketsReceived{ get; };
+    };
+}

@@ -1,0 +1,24 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Bluetooth
+{
+    [contract(MidiTransportsBluetoothApiContract, 1)]
+
+    // A random address is re-generated periodically for privacy, so it is not a durable way to
+    // recognize a phone or tablet which has connected to this PC.
+    enum MidiBluetoothAddressType
+    {
+        Unknown = 0,
+        Public = 1,
+        Random = 2,
+    };
+}

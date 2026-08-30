@@ -5,7 +5,7 @@ rem The Bluetooth LE MIDI transport is preview code with no installer of its own
 rem also does the COM and transport plugin registration that an installer would normally do.
 
 set servicepath="%ProgramFiles%\Windows MIDI Services\Service"
-set buildoutput="%midi_repo_root%src\api\VSFiles\x64\Release"
+set buildoutput="%midi_repo_root%src\in-box\VSFiles\x64\Release"
 
 echo Stopping midisrv
 net stop midisrv

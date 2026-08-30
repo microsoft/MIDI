@@ -9,7 +9,7 @@
 # Windows MIDI Services ships in en-US, so "colour", "centre" and "cancelled" are bugs.
 #
 #   pwsh -File build\check_en_us_spelling.ps1
-#   pwsh -File build\check_en_us_spelling.ps1 -Path src\api\Client\WinRT\user-tools
+#   pwsh -File build\check_en_us_spelling.ps1 -Path src\in-box\user-tools
 #
 # Exits 1 when anything is found, so it can gate a build.
 #
