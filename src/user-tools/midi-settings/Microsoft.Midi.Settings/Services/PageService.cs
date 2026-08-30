@@ -29,13 +29,10 @@ public class PageService : IPageService
         Configure<ForDevelopersViewModel, ForDevelopersPage>();
 
         //Configure<MainViewModel, MainPage>();
-        Configure<ManagementSessionsViewModel, ManagementSessionsPage>();
         Configure<PluginsProcessingViewModel, PluginsProcessingPage>();
-        Configure<PluginsTransportViewModel, PluginsTransportPage>();
         Configure<SettingsViewModel, SettingsPage>();
         Configure<ConfigurationsViewModel, ConfigurationsPage>();
         Configure<ToolsTestViewModel, ToolsTestPage>();
-        Configure<TroubleshootingViewModel, TroubleshootingPage>();
 
         Configure<GlobalMidiSettingsViewModel, GlobalMidiSettingsPage>();
 

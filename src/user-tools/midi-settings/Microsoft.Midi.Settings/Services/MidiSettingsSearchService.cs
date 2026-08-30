@@ -189,22 +189,6 @@ public class MidiSettingsSearchService : IMidiSettingsSearchService
         }
 
 
-        // add all transports
-
-        foreach (var transport in _transportInfoService.GetAllTransports())
-        {
-            var result = new MidiSettingsSearchResult();
-
-            result.Glyph = TransportGlyph;
-            result.DestinationKey = typeof(PluginsTransportViewModel).FullName!;
-            result.DisplayText = transport.Name;
-            result.ResultType = "Transport";
-            result.Keywords.Add(transport.TransportCode.ToLower());
-            result.Keywords.Add(transport.Description.ToLower());
-
-            AllItems.Add(result);
-        }
-
 
         // maybe add all current session names
 

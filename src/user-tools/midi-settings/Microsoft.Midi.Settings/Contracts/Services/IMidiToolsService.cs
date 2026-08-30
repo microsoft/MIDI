@@ -16,7 +16,8 @@ public enum MidiToolApp
     NetworkSetup,
     ScratchPad,
     SysEx,
-    Monitor
+    Monitor,
+    Troubleshooter
 }
 
 public enum MidiMonitorTool

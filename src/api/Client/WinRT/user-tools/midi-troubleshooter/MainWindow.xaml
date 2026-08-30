@@ -1,0 +1,1058 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="miditroubleshooter.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:miditroubleshooter"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid" Loaded="OnRootLoaded" SizeChanged="OnRootSizeChanged" Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid.Resources>
+            <Style x:Key="SectionHeaderTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}">
+                <Setter Property="Margin" Value="0,0,0,4" />
+            </Style>
+
+            <Style x:Key="CardBorderStyle" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="8" />
+                <Setter Property="Padding" Value="12" />
+            </Style>
+
+            <Style x:Key="PropertyLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="PropertyValueStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="IsTextSelectionEnabled" Value="True" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="TextWrapping" Value="NoWrap" />
+                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+            </Style>
+
+            <Style x:Key="OutputTextBoxStyle" TargetType="TextBox">
+                <Setter Property="IsReadOnly" Value="True" />
+                <Setter Property="AcceptsReturn" Value="True" />
+                <Setter Property="TextWrapping" Value="NoWrap" />
+                <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, Courier New" />
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Auto" />
+                <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+                <Setter Property="ScrollViewer.HorizontalScrollMode" Value="Enabled" />
+                <Setter Property="ScrollViewer.VerticalScrollMode" Value="Enabled" />
+            </Style>
+
+            <!-- One glyph per state rather than a brush built in code, so the colors follow the
+                 theme when the customer switches it from the appearance flyout. -->
+            <DataTemplate x:Key="RegistryEntryTemplate" x:DataType="local:RegistryEntryItem">
+                <Grid ColumnSpacing="8" Margin="0,2,0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="230" />
+                        <ColumnDefinition Width="Auto" MinWidth="130" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <FontIcon Grid.Column="0" Glyph="&#xE73E;" FontSize="12"
+                              Visibility="{x:Bind OkVisibility, Mode=OneWay}"
+                              Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
+                    <FontIcon Grid.Column="0" Glyph="&#xE7BA;" FontSize="12"
+                              Visibility="{x:Bind WarningVisibility, Mode=OneWay}"
+                              Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                    <FontIcon Grid.Column="0" Glyph="&#xEA39;" FontSize="12"
+                              Visibility="{x:Bind ErrorVisibility, Mode=OneWay}"
+                              Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+
+                    <TextBlock Grid.Column="1" Text="{x:Bind Name, Mode=OneWay}"
+                               Style="{StaticResource PropertyValueStyle}" />
+                    <TextBlock Grid.Column="2" Text="{x:Bind Value, Mode=OneWay}"
+                               Style="{StaticResource PropertyValueStyle}" />
+                    <TextBlock Grid.Column="3" Text="{x:Bind Comment, Mode=OneWay}"
+                               Style="{StaticResource PropertyLabelStyle}"
+                               TextWrapping="Wrap" />
+                </Grid>
+            </DataTemplate>
+        </Grid.Resources>
+
+        <!-- hidden when a system backdrop is in use, so the material shows through -->
+        <Border x:Name="WindowFill"
+                Grid.Row="0"
+                Grid.RowSpan="3"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
+
+        <!-- a separate layer, so switching back to the default color just hides it and the
+             theme bound fill underneath returns -->
+        <Border x:Name="WindowTint"
+                Grid.Row="0"
+                Grid.RowSpan="3"
+                Visibility="Collapsed" />
+
+        <!-- ============================ Title bar drag region ============================ -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+
+            <Image x:Name="AppTitleBarIcon"
+                   Grid.Column="1"
+                   Width="16"
+                   Height="16"
+                   Margin="12,0,0,0"
+                   VerticalAlignment="Center" />
+
+            <TextBlock x:Name="AppTitleTextBlock"
+                       Grid.Column="2"
+                       Text="MIDI Troubleshooting and Repair"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+
+            <Button x:Name="AppearanceButton"
+                    x:Uid="AppearanceButton"
+                    Grid.Column="3"
+                    Width="46"
+                    Height="32"
+                    VerticalAlignment="Top"
+                    Padding="0"
+                    BorderThickness="0"
+                    Background="Transparent"
+                    Click="OnAppearanceButtonClick">
+                <FontIcon Glyph="&#xE713;" FontSize="14" />
+            </Button>
+
+            <ToggleButton x:Name="AlwaysOnTopToggle"
+                          x:Uid="AlwaysOnTopToggle"
+                          Grid.Column="4"
+                          Width="46"
+                          Height="32"
+                          VerticalAlignment="Top"
+                          Padding="0"
+                          BorderThickness="0"
+                          Click="OnAlwaysOnTopToggled">
+                <ToggleButton.Resources>
+                    <SolidColorBrush x:Key="ToggleButtonBackground" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
+                </ToggleButton.Resources>
+                <FontIcon Glyph="&#xE718;" FontSize="14" />
+            </ToggleButton>
+        </Grid>
+
+        <!-- ===================== System information, above every page ===================== -->
+        <!-- Outside the navigation frame on purpose: a support engineer needs these numbers
+             whichever page the customer happens to be looking at. -->
+        <Border Grid.Row="1"
+                Margin="16,0,16,8"
+                Style="{StaticResource CardBorderStyle}">
+            <Grid ColumnSpacing="10" RowSpacing="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" MinWidth="120" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" MinWidth="100" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" MinWidth="100" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock x:Uid="SystemInfoWindowsLabel" Grid.Row="0" Grid.Column="0"
+                           Text="Windows" Style="{StaticResource PropertyLabelStyle}" />
+                <TextBlock x:Name="SystemInfoWindowsValue" Grid.Row="0" Grid.Column="1"
+                           Style="{StaticResource PropertyValueStyle}" />
+
+                <TextBlock x:Uid="SystemInfoArchitectureLabel" Grid.Row="0" Grid.Column="2"
+                           Text="Architecture" Style="{StaticResource PropertyLabelStyle}" />
+                <TextBlock x:Name="SystemInfoArchitectureValue" Grid.Row="0" Grid.Column="3"
+                           Style="{StaticResource PropertyValueStyle}" />
+
+                <TextBlock x:Uid="SystemInfoCultureLabel" Grid.Row="0" Grid.Column="4"
+                           Text="Culture" Style="{StaticResource PropertyLabelStyle}" />
+                <TextBlock x:Name="SystemInfoCultureValue" Grid.Row="0" Grid.Column="5"
+                           Style="{StaticResource PropertyValueStyle}" />
+
+                <TextBlock x:Uid="SystemInfoWindowsAppSdkLabel" Grid.Row="1" Grid.Column="0"
+                           Text="Windows App SDK" Style="{StaticResource PropertyLabelStyle}" />
+                <TextBlock x:Name="SystemInfoWindowsAppSdkValue" Grid.Row="1" Grid.Column="1"
+                           Style="{StaticResource PropertyValueStyle}" />
+
+                <TextBlock x:Uid="SystemInfoApiModeLabel" Grid.Row="1" Grid.Column="2"
+                           Text="API mode" Style="{StaticResource PropertyLabelStyle}" />
+                <TextBlock x:Name="SystemInfoApiModeValue" Grid.Row="1" Grid.Column="3"
+                           Style="{StaticResource PropertyValueStyle}" />
+
+                <TextBlock x:Uid="SystemInfoDeveloperModeLabel" Grid.Row="1" Grid.Column="4"
+                           Text="Developer mode" Style="{StaticResource PropertyLabelStyle}" />
+                <TextBlock x:Name="SystemInfoDeveloperModeValue" Grid.Row="1" Grid.Column="5"
+                           Style="{StaticResource PropertyValueStyle}" />
+            </Grid>
+        </Border>
+
+        <!-- ================================= Navigation ================================= -->
+        <NavigationView x:Name="MainNavigation"
+                        Grid.Row="2"
+                        IsSettingsVisible="False"
+                        IsBackButtonVisible="Collapsed"
+                        IsPaneToggleButtonVisible="False"
+                        OpenPaneLength="230"
+                        PaneDisplayMode="Left"
+                        SelectionChanged="OnNavigationSelectionChanged">
+            <NavigationView.MenuItems>
+                <NavigationViewItem x:Name="ApiModeNavigationItem" x:Uid="ApiModeNavigationItem"
+                                    Content="API mode" Tag="apimode">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE9D5;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="DiagnosticsNavigationItem" x:Uid="DiagnosticsNavigationItem"
+                                    Content="Diagnostics" Tag="diagnostics">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE9F9;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="CaptureNavigationItem" x:Uid="CaptureNavigationItem"
+                                    Content="Capture repro log" Tag="capture">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE95E;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                <NavigationViewItemHeader x:Name="ServiceHealthHeader" x:Uid="ServiceHealthHeader"
+                                          Content="Service health" />
+
+                <NavigationViewItem x:Name="SessionsNavigationItem" x:Uid="SessionsNavigationItem"
+                                    Content="Active sessions" Tag="sessions">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE7EE;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="TransportsNavigationItem" x:Uid="TransportsNavigationItem"
+                                    Content="Enabled transports" Tag="transports">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE968;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="ServiceNavigationItem" x:Uid="ServiceNavigationItem"
+                                    Content="MIDI service" Tag="service">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xF156;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                <NavigationViewItemHeader x:Name="RegistryAndDriversHeader" x:Uid="RegistryAndDriversHeader"
+                                          Content="Registry and drivers" />
+
+                <NavigationViewItem x:Name="RegistryNavigationItem" x:Uid="RegistryNavigationItem"
+                                    Content="Registry" Tag="registry">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE90F;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="DriversNavigationItem" x:Uid="DriversNavigationItem"
+                                    Content="Drivers" Tag="drivers">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE977;" />
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <!-- Shown above every page, because almost every repair here needs it and the
+                     customer should not have to find out one failed action at a time. -->
+                <InfoBar x:Name="ElevationBar"
+                         x:Uid="ElevationBar"
+                         Grid.Row="0"
+                         Severity="Warning"
+                         IsOpen="False"
+                         IsClosable="False"
+                         Title="Running without administrator rights"
+                         Message="Diagnostics and reports work, but repairs, the API mode and the service controls do not."
+                         Margin="16,12,16,0">
+                    <InfoBar.ActionButton>
+                        <Button x:Uid="RestartElevatedButton"
+                                Content="Restart as administrator"
+                                Click="OnRestartElevatedClick" />
+                    </InfoBar.ActionButton>
+                </InfoBar>
+
+                <!-- ================================ API mode ================================ -->
+                <ScrollViewer x:Name="ApiModePanel" Grid.Row="1" Padding="16,12,16,16" Visibility="Collapsed">
+                    <StackPanel Spacing="12" MaxWidth="900" HorizontalAlignment="Left">
+                        <TextBlock x:Uid="ApiModePageTitle" Text="API mode"
+                                   Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <TextBlock x:Uid="ApiModePageDescription"
+                                   Text="The API mode decides which MIDI stack Windows uses. Changing it needs a restart."
+                                   TextWrapping="Wrap" />
+
+                        <HyperlinkButton x:Uid="ApiModeLearnMoreLink"
+                                         Content="Read about the API modes"
+                                         NavigateUri="https://microsoft.github.io/MIDI/kb/how-to-change-api-mode/"
+                                         Padding="0" />
+
+                        <Border Style="{StaticResource CardBorderStyle}">
+                            <StackPanel Spacing="12">
+                                <RadioButton x:Name="ApiModeServicesRadio" x:Uid="ApiModeServicesRadio"
+                                             GroupName="ApiModeGroup"
+                                             Checked="OnApiModeSelectionChanged">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock x:Uid="ApiModeServicesName" Text="0 - Windows MIDI Services"
+                                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                        <TextBlock x:Uid="ApiModeServicesDescription"
+                                                   Text="The default. Multi-client MIDI, loopback endpoints, Network MIDI 2.0, Bluetooth LE MIDI and MIDI 2.0 devices."
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+                                </RadioButton>
+
+                                <RadioButton x:Name="ApiModeLegacyRadio" x:Uid="ApiModeLegacyRadio"
+                                             GroupName="ApiModeGroup"
+                                             Checked="OnApiModeSelectionChanged">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock x:Uid="ApiModeLegacyName" Text="1 - Legacy MIDI"
+                                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                        <TextBlock x:Uid="ApiModeLegacyDescription"
+                                                   Text="The MIDI stack as it was before Windows MIDI Services. No multi-client access, no built-in loopbacks, no Network MIDI 2.0 and no MIDI 2.0 devices. Choose this if you have an application, driver, or device incompatibility with Windows MIDI Services, or you need to use legacy WinMM user-mode drivers (typically &quot;.drv&quot;), or DirectMusic drivers."
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+                                </RadioButton>
+
+                                <RadioButton x:Name="ApiModeHybridRadio" x:Uid="ApiModeHybridRadio"
+                                             GroupName="ApiModeGroup"
+                                             Checked="OnApiModeSelectionChanged">
+                                    <StackPanel Spacing="2">
+                                        <TextBlock x:Uid="ApiModeHybridName" Text="2 - Hybrid"
+                                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                        <TextBlock x:Uid="ApiModeHybridDescription"
+                                                   Text="Not recommended for most customers. Devices on a MIDI 1.0 driver appear only to the old APIs, and devices on the new driver only to the new API. The two do not see each other."
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </StackPanel>
+                                </RadioButton>
+                            </StackPanel>
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" Spacing="12">
+                            <Button x:Name="ApplyApiModeButton" x:Uid="ApplyApiModeButton"
+                                    Content="Apply and prompt to restart"
+                                    Style="{ThemeResource AccentButtonStyle}"
+                                    Click="OnApplyApiModeClick" />
+                            <TextBlock x:Name="ApiModeStatusText"
+                                       VerticalAlignment="Center"
+                                       TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- =============================== Diagnostics =============================== -->
+                <Grid x:Name="DiagnosticsPanel" Grid.Row="1" Margin="16,12,16,16" Visibility="Collapsed"
+                      RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock x:Uid="DiagnosticsPageDescription" Grid.Row="0"
+                               Text="These reports are what support asks for first. Run them, then copy the text into your issue or email."
+                               TextWrapping="Wrap" />
+
+                    <Grid Grid.Row="1" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button x:Name="RunMidiDiagButton" x:Uid="RunMidiDiagButton" Grid.Column="0"
+                                Content="Run mididiag" Click="OnRunMidiDiagClick" />
+                        <Button x:Name="CopyMidiDiagButton" x:Uid="CopyMidiDiagButton" Grid.Column="1"
+                                Content="Copy all" IsEnabled="False" Click="OnCopyMidiDiagClick" />
+                        <Button x:Name="SaveMidiDiagButton" x:Uid="SaveMidiDiagButton" Grid.Column="2"
+                                Content="Save as..." IsEnabled="False" Click="OnSaveMidiDiagClick" />
+                        <TextBlock x:Name="MidiDiagStatusText" Grid.Column="3"
+                                   VerticalAlignment="Center" Margin="8,0,0,0"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Grid>
+
+                    <TextBox x:Name="MidiDiagOutputBox" x:Uid="MidiDiagOutputBox" Grid.Row="2"
+                             Style="{StaticResource OutputTextBoxStyle}" MinHeight="120" />
+
+                    <Grid Grid.Row="3" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button x:Name="RunMidiKsInfoButton" x:Uid="RunMidiKsInfoButton" Grid.Column="0"
+                                Content="Run midiksinfo" Click="OnRunMidiKsInfoClick" />
+                        <Button x:Name="CopyMidiKsInfoButton" x:Uid="CopyMidiKsInfoButton" Grid.Column="1"
+                                Content="Copy all" IsEnabled="False" Click="OnCopyMidiKsInfoClick" />
+                        <Button x:Name="SaveMidiKsInfoButton" x:Uid="SaveMidiKsInfoButton" Grid.Column="2"
+                                Content="Save as..." IsEnabled="False" Click="OnSaveMidiKsInfoClick" />
+                        <TextBlock x:Name="MidiKsInfoStatusText" Grid.Column="3"
+                                   VerticalAlignment="Center" Margin="8,0,0,0"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </Grid>
+
+                    <TextBox x:Name="MidiKsInfoOutputBox" x:Uid="MidiKsInfoOutputBox" Grid.Row="4"
+                             Style="{StaticResource OutputTextBoxStyle}" MinHeight="120" />
+                </Grid>
+
+                <!-- ============================ Capture repro log ============================ -->
+                <Grid x:Name="CapturePanel" Grid.Row="1" Margin="16,12,16,16" Visibility="Collapsed"
+                      RowSpacing="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Spacing="6">
+                        <TextBlock x:Uid="CapturePageTitle" Text="Capture a repro log"
+                                   Style="{ThemeResource SubtitleTextBlockStyle}" />
+                        <TextBlock x:Uid="CapturePageDescription"
+                                   Text="Start the capture, reproduce the problem, then stop it. Everything is collected into a single zip file to attach to your issue or send to support."
+                                   TextWrapping="Wrap" MaxWidth="900" HorizontalAlignment="Left" />
+                    </StackPanel>
+
+                    <Border Grid.Row="1" Style="{StaticResource CardBorderStyle}">
+                        <StackPanel Spacing="6">
+                            <CheckBox x:Name="CaptureSystemInfoCheck" x:Uid="CaptureSystemInfoCheck"
+                                      Content="Include system reports (ddodiag, dxdiag, plug and play state)"
+                                      IsChecked="True" />
+                            <CheckBox x:Name="CaptureMidiDiagCheck" x:Uid="CaptureMidiDiagCheck"
+                                      Content="Include mididiag output" IsChecked="True" />
+                            <CheckBox x:Name="CaptureMidiKsInfoCheck" x:Uid="CaptureMidiKsInfoCheck"
+                                      Content="Include midiksinfo output" IsChecked="True" />
+                            <CheckBox x:Name="CaptureTimeTravelCheck" x:Uid="CaptureTimeTravelCheck"
+                                      Content="Include a time travel trace of the MIDI service (much larger)"
+                                      IsChecked="True" />
+                            <TextBlock x:Name="CaptureProfileText"
+                                       Style="{StaticResource PropertyLabelStyle}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+
+                    <Grid Grid.Row="2" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button x:Name="StartCaptureButton" x:Uid="StartCaptureButton" Grid.Column="0"
+                                Content="Start capture" Style="{ThemeResource AccentButtonStyle}"
+                                Click="OnStartCaptureClick" />
+                        <Button x:Name="StopCaptureButton" x:Uid="StopCaptureButton" Grid.Column="1"
+                                Content="Stop and save..." IsEnabled="False" Click="OnStopCaptureClick" />
+                        <Button x:Name="CancelCaptureButton" x:Uid="CancelCaptureButton" Grid.Column="2"
+                                Content="Cancel capture" IsEnabled="False" Click="OnCancelCaptureClick" />
+                        <ProgressRing x:Name="CaptureProgressRing" Grid.Column="3"
+                                      Width="20" Height="20" IsActive="False" VerticalAlignment="Center" />
+                        <TextBlock x:Name="CaptureStatusText" Grid.Column="4"
+                                   VerticalAlignment="Center" Margin="8,0,0,0"
+                                   TextWrapping="Wrap" />
+                    </Grid>
+
+                    <TextBox x:Name="CaptureLogBox" x:Uid="CaptureLogBox" Grid.Row="3"
+                             Style="{StaticResource OutputTextBoxStyle}"
+                             TextWrapping="Wrap" MinHeight="120" />
+                </Grid>
+
+                <!-- ============================= Active sessions ============================= -->
+                <Grid x:Name="SessionsPanel" Grid.Row="1" Margin="16,12,16,16" Visibility="Collapsed"
+                      RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Spacing="2">
+                            <TextBlock x:Uid="SessionsPageTitle" Text="Active sessions"
+                                       Style="{ThemeResource SubtitleTextBlockStyle}" />
+                            <TextBlock x:Name="SessionsStatusText"
+                                       Style="{StaticResource PropertyLabelStyle}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <Button x:Name="RefreshSessionsButton" x:Uid="RefreshSessionsButton" Grid.Column="1"
+                                Content="Refresh" VerticalAlignment="Top" Click="OnRefreshServiceHealthClick" />
+                    </Grid>
+
+                    <ListView x:Name="SessionsListView" Grid.Row="1"
+                              SelectionMode="None"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0,2,0,2" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="local:SessionItem">
+                                <Expander HorizontalAlignment="Stretch"
+                                          HorizontalContentAlignment="Stretch">
+                                    <Expander.Header>
+                                        <Grid ColumnSpacing="12" Margin="0,4,0,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0" Spacing="1">
+                                                <TextBlock Text="{x:Bind Title, Mode=OneWay}"
+                                                           Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{x:Bind ProcessText, Mode=OneWay}"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                <TextBlock Text="{x:Bind StartedText, Mode=OneWay}"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </StackPanel>
+
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{x:Bind ConnectionCountText, Mode=OneWay}"
+                                                       VerticalAlignment="Center"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}" />
+                                        </Grid>
+                                    </Expander.Header>
+
+                                    <ItemsControl ItemsSource="{x:Bind Connections, Mode=OneWay}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="local:SessionConnectionItem">
+                                                <StackPanel Spacing="1" Margin="0,4,0,8">
+                                                    <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
+                                                               Style="{ThemeResource BodyTextBlockStyle}"
+                                                               TextWrapping="Wrap" />
+                                                    <TextBlock Text="{x:Bind EndpointDeviceId, Mode=OneWay}"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               IsTextSelectionEnabled="True"
+                                                               TextWrapping="Wrap"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    <StackPanel Orientation="Horizontal" Spacing="12">
+                                                        <TextBlock Text="{x:Bind CountText, Mode=OneWay}"
+                                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                        <TextBlock Text="{x:Bind ConnectedSinceText, Mode=OneWay}"
+                                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                    </StackPanel>
+                                                </StackPanel>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </Expander>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+
+                <!-- =========================== Enabled transports =========================== -->
+                <Grid x:Name="TransportsPanel" Grid.Row="1" Margin="16,12,16,16" Visibility="Collapsed"
+                      RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Spacing="2">
+                            <TextBlock x:Uid="TransportsPageTitle" Text="Enabled transports"
+                                       Style="{ThemeResource SubtitleTextBlockStyle}" />
+                            <TextBlock x:Name="TransportsStatusText"
+                                       Style="{StaticResource PropertyLabelStyle}"
+                                       TextWrapping="Wrap" />
+                            <HyperlinkButton x:Uid="TransportsLearnMoreLink"
+                                             Content="Why a transport may not load"
+                                             NavigateUri="https://microsoft.github.io/MIDI/kb/service-plugin-not-loaded/"
+                                             Padding="0" />
+                        </StackPanel>
+
+                        <Button x:Name="RefreshTransportsButton" x:Uid="RefreshTransportsButton" Grid.Column="1"
+                                Content="Refresh" VerticalAlignment="Top" Click="OnRefreshServiceHealthClick" />
+                    </Grid>
+
+                    <ListView x:Name="TransportsListView" Grid.Row="1"
+                              SelectionMode="None"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0,2,0,2" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="local:TransportItem">
+                                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,4">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <FontIcon Grid.Column="0" Glyph="&#xE73E;" FontSize="16"
+                                                  VerticalAlignment="Top" Margin="0,2,0,0"
+                                                  Visibility="{x:Bind OkVisibility, Mode=OneWay}"
+                                                  Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
+                                        <FontIcon Grid.Column="0" Glyph="&#xE7BA;" FontSize="16"
+                                                  VerticalAlignment="Top" Margin="0,2,0,0"
+                                                  Visibility="{x:Bind WarningVisibility, Mode=OneWay}"
+                                                  Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                                        <FontIcon Grid.Column="0" Glyph="&#xEA39;" FontSize="16"
+                                                  VerticalAlignment="Top" Margin="0,2,0,0"
+                                                  Visibility="{x:Bind ErrorVisibility, Mode=OneWay}"
+                                                  Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+
+                                        <StackPanel Grid.Column="1" Spacing="2">
+                                            <TextBlock Text="{x:Bind Name, Mode=OneWay}"
+                                                       Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                                       TextWrapping="Wrap" />
+                                            <TextBlock Text="{x:Bind Description, Mode=OneWay}"
+                                                       Visibility="{x:Bind DescriptionVisibility, Mode=OneWay}"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            <TextBlock Text="{x:Bind DetailText, Mode=OneWay}"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            <TextBlock Text="{x:Bind ModuleText, Mode=OneWay}"
+                                                       Visibility="{x:Bind ModuleVisibility, Mode=OneWay}"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       IsTextSelectionEnabled="True"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="2" Spacing="2" VerticalAlignment="Top">
+                                            <TextBlock Text="{x:Bind StatusText, Mode=OneWay}"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       HorizontalAlignment="Right" />
+                                            <TextBlock Text="{x:Bind CodeText, Mode=OneWay}"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       HorizontalAlignment="Right"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+
+                <!-- ============================== MIDI service ============================== -->
+                <ScrollViewer x:Name="ServicePanel" Grid.Row="1" Padding="16,12,16,16" Visibility="Collapsed">
+                    <StackPanel Spacing="12" MaxWidth="900" HorizontalAlignment="Left">
+                        <TextBlock x:Uid="ServicePageTitle" Text="MIDI service"
+                                   Style="{ThemeResource SubtitleTextBlockStyle}" />
+
+                        <Border Style="{StaticResource CardBorderStyle}">
+                            <Grid ColumnSpacing="12" RowSpacing="4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" MinWidth="130" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock x:Uid="ServiceStateLabel" Grid.Row="0" Grid.Column="0"
+                                           Text="Status" Style="{StaticResource PropertyLabelStyle}" />
+                                <TextBlock x:Name="ServiceStateValue" Grid.Row="0" Grid.Column="1"
+                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                                <TextBlock x:Uid="ServiceStartModeLabel" Grid.Row="1" Grid.Column="0"
+                                           Text="Startup type" Style="{StaticResource PropertyLabelStyle}" />
+                                <TextBlock x:Name="ServiceStartModeValue" Grid.Row="1" Grid.Column="1"
+                                           Style="{StaticResource PropertyValueStyle}" />
+
+                                <TextBlock x:Uid="ServiceAccountLabel" Grid.Row="2" Grid.Column="0"
+                                           Text="Runs as" Style="{StaticResource PropertyLabelStyle}" />
+                                <TextBlock x:Name="ServiceAccountValue" Grid.Row="2" Grid.Column="1"
+                                           Style="{StaticResource PropertyValueStyle}" />
+
+                                <TextBlock x:Uid="ServiceProcessLabel" Grid.Row="3" Grid.Column="0"
+                                           Text="Process" Style="{StaticResource PropertyLabelStyle}" />
+                                <TextBlock x:Name="ServiceProcessValue" Grid.Row="3" Grid.Column="1"
+                                           Style="{StaticResource PropertyValueStyle}" />
+
+                                <TextBlock x:Uid="ServiceImageLabel" Grid.Row="4" Grid.Column="0"
+                                           Text="Image" Style="{StaticResource PropertyLabelStyle}" />
+                                <TextBlock x:Name="ServiceImageValue" Grid.Row="4" Grid.Column="1"
+                                           Style="{StaticResource PropertyValueStyle}"
+                                           TextWrapping="Wrap" TextTrimming="None" />
+
+                                <TextBlock x:Uid="ServiceVersionLabel" Grid.Row="5" Grid.Column="0"
+                                           Text="Version" Style="{StaticResource PropertyLabelStyle}" />
+                                <TextBlock x:Name="ServiceVersionValue" Grid.Row="5" Grid.Column="1"
+                                           Style="{StaticResource PropertyValueStyle}" />
+                            </Grid>
+                        </Border>
+
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button x:Name="RestartServiceButton" x:Uid="RestartServiceButton"
+                                    Content="Restart the MIDI service"
+                                    Style="{ThemeResource AccentButtonStyle}"
+                                    Click="OnRestartServiceClick" />
+                            <Button x:Name="RefreshServiceButton" x:Uid="RefreshServiceButton"
+                                    Content="Refresh" Click="OnRefreshServiceHealthClick" />
+                            <ProgressRing x:Name="ServiceProgressRing" Width="20" Height="20"
+                                          IsActive="False" VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <Border Style="{StaticResource CardBorderStyle}">
+                            <StackPanel Spacing="6">
+                                <TextBlock x:Uid="ServiceStartWithWindowsTitle"
+                                           Text="Start with Windows"
+                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBlock x:Uid="ServiceStartWithWindowsDescription"
+                                           Text="The service normally starts on demand when the first MIDI application asks for it. Starting it with Windows will reduce first-app app startup time for DAWs and other apps which use MIDI, and is the recommended option for musicians and anyone who uses MIDI regularly."
+                                           TextWrapping="Wrap"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <StackPanel Orientation="Horizontal" Spacing="8">
+                                    <Button x:Name="SetAutomaticStartButton" x:Uid="SetAutomaticStartButton"
+                                            Content="Start automatically" Click="OnSetAutomaticStartClick" />
+                                    <Button x:Name="SetManualStartButton" x:Uid="SetManualStartButton"
+                                            Content="Start on demand" Click="OnSetManualStartClick" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+
+                        <TextBlock x:Name="ServiceStatusText" TextWrapping="Wrap" />
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- ================================ Registry ================================ -->
+                <Grid x:Name="RegistryPanel" Grid.Row="1" Margin="16,12,16,16" Visibility="Collapsed"
+                      RowSpacing="8">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Spacing="2">
+                            <TextBlock x:Uid="RegistryPageTitle" Text="Registry"
+                                       Style="{ThemeResource SubtitleTextBlockStyle}" />
+                            <HyperlinkButton x:Uid="RegistryLearnMoreLink"
+                                             Content="Which registry entries Windows MIDI Services needs"
+                                             NavigateUri="https://microsoft.github.io/MIDI/kb/required-registry-entries/"
+                                             Padding="0" />
+                        </StackPanel>
+
+                        <Button x:Name="RefreshRegistryButton" x:Uid="RefreshRegistryButton" Grid.Column="1"
+                                Content="Refresh" VerticalAlignment="Top" Click="OnRefreshRegistryClick" />
+                    </Grid>
+
+                    <InfoBar x:Name="LegacyModeBar" x:Uid="LegacyModeBar" Grid.Row="1"
+                             Severity="Informational" IsOpen="False" IsClosable="False"
+                             Title="This PC is in Legacy MIDI mode"
+                             Message="Legacy mode deliberately does not use midisrv or wdmaud2.drv, so these entries are left alone. Change the API mode first if you want the Windows MIDI Services layout back." />
+
+                    <Grid Grid.Row="2" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button x:Name="RepairRegistryButton" x:Uid="RepairRegistryButton" Grid.Column="0"
+                                Content="Repair these entries"
+                                Style="{ThemeResource AccentButtonStyle}"
+                                IsEnabled="False"
+                                Click="OnRepairRegistryClick" />
+                        <TextBlock x:Name="RegistryStatusText" Grid.Column="1"
+                                   VerticalAlignment="Center" Margin="8,0,0,0"
+                                   TextWrapping="Wrap" />
+                    </Grid>
+
+                    <ScrollViewer Grid.Row="3">
+                        <StackPanel Spacing="12">
+                            <StackPanel Spacing="4">
+                                <TextBlock x:Uid="RegistryDrivers32Header"
+                                           Text="Drivers32 for 64-bit applications"
+                                           Style="{StaticResource SectionHeaderTextStyle}" />
+                                <ItemsControl x:Name="Drivers32ItemsControl"
+                                              ItemTemplate="{StaticResource RegistryEntryTemplate}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="4">
+                                <TextBlock x:Uid="RegistryDrivers32WowHeader"
+                                           Text="Drivers32 for 32-bit applications"
+                                           Style="{StaticResource SectionHeaderTextStyle}" />
+                                <ItemsControl x:Name="Drivers32WowItemsControl"
+                                              ItemTemplate="{StaticResource RegistryEntryTemplate}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="4">
+                                <TextBlock x:Uid="RegistryServiceRootHeader"
+                                           Text="Windows MIDI Services"
+                                           Style="{StaticResource SectionHeaderTextStyle}" />
+                                <ItemsControl x:Name="ServiceRootItemsControl"
+                                              ItemTemplate="{StaticResource RegistryEntryTemplate}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="4">
+                                <TextBlock x:Uid="RegistryTransportsHeader"
+                                           Text="Registered transports"
+                                           Style="{StaticResource SectionHeaderTextStyle}" />
+                                <ItemsControl x:Name="RegistryTransportsItemsControl"
+                                              ItemTemplate="{StaticResource RegistryEntryTemplate}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+
+                <!-- ================================= Drivers ================================= -->
+                <Grid x:Name="DriversPanel" Grid.Row="1" Margin="16,12,16,16" Visibility="Collapsed"
+                      RowSpacing="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Spacing="2">
+                            <TextBlock x:Uid="DriversPageTitle" Text="Drivers"
+                                       Style="{ThemeResource SubtitleTextBlockStyle}" />
+                            <HyperlinkButton x:Uid="DriversLearnMoreLink"
+                                             Content="How to switch between the MIDI class drivers"
+                                             NavigateUri="https://microsoft.github.io/MIDI/kb/how-to-switch-between-class-drivers/"
+                                             Padding="0" />
+                        </StackPanel>
+
+                        <Button x:Name="RefreshDriversButton" x:Uid="RefreshDriversButton" Grid.Column="1"
+                                Content="Refresh" VerticalAlignment="Top" Click="OnRefreshDriversClick" />
+                    </Grid>
+
+                    <StackPanel Grid.Row="1" Spacing="8">
+                        <Border Style="{StaticResource CardBorderStyle}">
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Spacing="4">
+                                    <TextBlock x:Uid="KorgDriverTitle"
+                                               Text="KORG USB MIDI driver"
+                                               Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                    <TextBlock x:Uid="KorgDriverDescription"
+                                               Text="The KORG USB MIDI driver is not needed with Windows MIDI Services and is a common cause of missing or duplicated ports. This removes the driver package and any device using it."
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock x:Name="KorgDriverStatusText"
+                                               Style="{StaticResource PropertyLabelStyle}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+
+                                <Button x:Name="RemoveKorgDriverButton" x:Uid="RemoveKorgDriverButton"
+                                        Grid.Column="1" VerticalAlignment="Center"
+                                        Content="Uninstall" IsEnabled="False"
+                                        Click="OnRemoveKorgDriverClick" />
+                            </Grid>
+                        </Border>
+
+                        <Border Style="{StaticResource CardBorderStyle}">
+                            <Grid ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <StackPanel Grid.Column="0" Spacing="4">
+                                    <TextBlock x:Uid="KorgBleDriverTitle"
+                                               Text="KORG BLE-MIDI driver"
+                                               Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                    <TextBlock x:Uid="KorgBleDriverDescription"
+                                               Text="Windows MIDI Services has Bluetooth LE MIDI built in, so this driver is no longer needed and can conflict with the in-box support. This removes the driver package and any device using it."
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <TextBlock x:Name="KorgBleDriverStatusText"
+                                               Style="{StaticResource PropertyLabelStyle}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+
+                                <Button x:Name="RemoveKorgBleDriverButton" x:Uid="RemoveKorgBleDriverButton"
+                                        Grid.Column="1" VerticalAlignment="Center"
+                                        Content="Uninstall" IsEnabled="False"
+                                        Click="OnRemoveKorgBleDriverClick" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+
+                    <Grid Grid.Row="2" ColumnSpacing="8" RowSpacing="4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <!-- text first, so it lines up with the cards above whether or not the
+                             ring is spinning -->
+                        <TextBlock x:Name="DriversStatusText" Grid.Row="0" Grid.Column="0"
+                                   VerticalAlignment="Center" TextWrapping="Wrap" />
+                        <ProgressRing x:Name="DriversProgressRing" Grid.Row="0" Grid.Column="1"
+                                      Width="20" Height="20" IsActive="False" VerticalAlignment="Center" />
+
+                        <TextBlock x:Uid="DriversCautionText" Grid.Row="1" Grid.Column="0"
+                                   Grid.ColumnSpan="2"
+                                   Text="Not everything listed here is a MIDI device. Windows offers the MIDI class driver for any USB audio device, and forcing it onto one that cannot use it may stop the device working or make the PC stop responding. It recovers on the next startup, but only change the driver for a device you know is a MIDI device."
+                                   TextWrapping="Wrap"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   Style="{ThemeResource CaptionTextBlockStyle}" />
+                    </Grid>
+
+                    <ListView x:Name="DriversListView" Grid.Row="3"
+                              SelectionMode="None"
+                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem">
+                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                <Setter Property="Padding" Value="0,2,0,2" />
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate x:DataType="local:DriverDeviceItem">
+                                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,4">
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" MinWidth="180" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0" Spacing="2">
+                                            <TextBlock Text="{x:Bind Name, Mode=OneWay}"
+                                                       Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                                       TextWrapping="Wrap" />
+                                            <TextBlock Text="{x:Bind DriverText, Mode=OneWay}"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       TextWrapping="Wrap" />
+                                            <TextBlock Text="{x:Bind DetailText, Mode=OneWay}"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       IsTextSelectionEnabled="True"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            <TextBlock Text="{x:Bind ProblemText, Mode=OneWay}"
+                                                       Visibility="{x:Bind ProblemVisibility, Mode=OneWay}"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8"
+                                                    VerticalAlignment="Center">
+                                            <Button x:Uid="UseUmpDriverButton"
+                                                    Content="Use new MIDI driver"
+                                                    IsEnabled="{x:Bind CanUseUniversalMidiPacketDriver, Mode=OneWay}"
+                                                    Click="OnUseUmpDriverClick" />
+                                            <Button x:Uid="UseClassicDriverButton"
+                                                    Content="Use classic driver"
+                                                    IsEnabled="{x:Bind CanUseClassicDriver, Mode=OneWay}"
+                                                    Click="OnUseClassicDriverClick" />
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+                </Grid>
+
+                <!-- ============================ Shared dialogs ============================ -->
+                <ContentDialog x:Name="ConfirmDialog"
+                               x:Uid="ConfirmDialog"
+                               PrimaryButtonText="Yes"
+                               CloseButtonText="Cancel"
+                               DefaultButton="Close">
+                    <ScrollViewer MaxHeight="360">
+                        <TextBlock x:Name="ConfirmDialogText" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                    </ScrollViewer>
+                </ContentDialog>
+
+                <ContentDialog x:Name="RestartComputerDialog"
+                               x:Uid="RestartComputerDialog"
+                               Title="Restart now?"
+                               PrimaryButtonText="Restart now"
+                               CloseButtonText="Later"
+                               DefaultButton="Close">
+                    <TextBlock x:Name="RestartComputerDialogText" TextWrapping="Wrap" />
+                </ContentDialog>
+            </Grid>
+        </NavigationView>
+    </Grid>
+</Window>

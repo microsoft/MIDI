@@ -13,10 +13,6 @@
                   Name="MIDI Loopback Setup"
                   Target="[#midiloopbacksetupExe]"
                   WorkingDirectory="TOOL_LOOPSETUP_FOLDER" />
-        <Shortcut Id="Shortcut_midinetworksetup"
-                  Name="Network MIDI 2.0 Setup"
-                  Target="[#midinetworksetupExe]"
-                  WorkingDirectory="TOOL_NETWORKSETUP_FOLDER" />
         <Shortcut Id="Shortcut_midiscratchpad"
                   Name="MIDI Scratch Pad"
                   Target="[#midiscratchpadExe]"
@@ -29,6 +25,10 @@
                   Name="MIDI Monitor"
                   Target="[#midi2monitorExe]"
                   WorkingDirectory="TOOL_MONITOR_FOLDER" />
+        <Shortcut Id="Shortcut_miditroubleshooter"
+                  Name="MIDI Troubleshooting and Repair"
+                  Target="[#miditroubleshooterExe]"
+                  WorkingDirectory="TOOL_TROUBLESHOOTER_FOLDER" />
         <RemoveFolder Id="RemoveMidiProgramsFolder_Tools" Directory="MIDI_PROGRAMS_FOLDER" On="uninstall" />
         <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
           <RegistryValue Type="string" Name="ToolAppShortcuts" Value="installed" KeyPath="yes" />

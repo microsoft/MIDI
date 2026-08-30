@@ -93,6 +93,10 @@ $ApiRoot = Join-Path $SourceRoot 'api'
 $ServiceSolution = Join-Path $ApiRoot 'Midi2.sln'
 $ServiceOutRoot = Join-Path $ApiRoot 'VSFiles'
 
+# Only built when a selected plugin ships a GUI app alongside its transport.
+$AppSdkSolution = Join-Path $ApiRoot 'Midi2-AppSDK.sln'
+$AppSdkOutRoot = Join-Path $ApiRoot 'vsfiles-sdk\out'
+
 $StagingRoot = Join-Path $BuildRoot 'staging'
 $ReleaseRoot = Join-Path $BuildRoot 'release'
 $ApiStagingRoot = Join-Path $StagingRoot 'api'
@@ -113,6 +117,9 @@ $NetworkTransportFolder = Join-Path $ApiRoot 'Transport\UdpNetworkMidi2Transport
 $env:MIDI_REPO_ROOT = $RepoRoot.TrimEnd('\')
 
 # Each plugin: the transport binaries it stages, its installer solution, and its bundle name.
+# AppName, when present, is a GUI tool that ships in the same installer as the transport, because
+# the tool is useless without it. AppFolder must match MidiToolsService.ToolDefinitions in the
+# Settings app, which resolves tools by convention path.
 $Plugins = @(
     [pscustomobject]@{
         Name         = 'Network MIDI 2.0'
@@ -121,6 +128,8 @@ $Plugins = @(
         Solution     = 'midi-services-network-midi-preview-setup.sln'
         BundleName   = 'WindowsMidiServicesNetworkMidiSetup'
         InstallerName = 'Windows MIDI Services (Network MIDI 2.0 Preview)'
+        AppName      = 'midinetworksetup'
+        AppStagingName = 'network-app'
     }
     [pscustomobject]@{
         Name         = 'Basic Loopback MIDI'
@@ -129,7 +138,25 @@ $Plugins = @(
         Solution     = 'midi-services-basic-loopback-setup.sln'
         BundleName   = 'WindowsMidiServicesBasicLoopbackSetup'
         InstallerName = 'Windows MIDI Services (Basic MIDI 1.0 Loopback Preview)'
+        AppName      = $null
+        AppStagingName = $null
     }
+)
+
+# The app payload, as referenced by each plugin's WindowsMidiServices.wxs. The .exp, .lib and
+# .pdb files in the same output folder are deliberately not shipped; the pdbs alone are huge.
+# Names are prefixed with the app name where they carry it.
+$AppPayloadCommon = @(
+    'App.xbf'
+    'MainWindow.xbf'
+    'resources.pri'
+    'Microsoft.WindowsAppRuntime.Bootstrap.dll'
+    'Microsoft.Web.WebView2.Core.dll'
+    'Microsoft.Web.WebView2.Core.winmd'
+    'MidiAppShared.winmd'
+    'Windows.Devices.Midi2.dll'
+    'Windows.Devices.Midi2.winmd'
+    'Windows.Devices.Midi2.pri'
 )
 
 # Headers consumers compile against. mididiag and midi2monitor put src/shared/api-ref/<platform>
@@ -310,6 +337,17 @@ function Invoke-ServiceTarget {
         Invoke-MSBuild -ProjectOrSolution $ServiceSolution -BuildPlatform $plat `
             -Properties @{ 'NoWarn' = 'MIDL2111' }
     }
+
+    # A plugin that ships a GUI app needs the App SDK solution as well, which is the only
+    # reason this script ever touches that train.
+    if (@($Plugins | Where-Object { $_.AppName }).Count -gt 0) {
+        Write-Step 'Build plugin apps'
+
+        foreach ($plat in $Platform) {
+            Invoke-MSBuild -ProjectOrSolution $AppSdkSolution -BuildPlatform $plat `
+                -Properties @{ 'NoWarn' = 'MIDL2111' }
+        }
+    }
 }
 
 # ----------------------------------------------------------------------------------------------
@@ -342,6 +380,19 @@ function Invoke-StageTarget {
         }
 
         Write-Detail "Staged $($Plugins.Count) transports -> api\$plat"
+
+        foreach ($plugin in $Plugins | Where-Object { $_.AppName }) {
+            $appSource = Join-Path $AppSdkOutRoot "$($plugin.AppName)\$plat\$Configuration"
+            $appDestination = Join-Path $StagingRoot "$($plugin.AppStagingName)\$plat"
+
+            $payload = @("$($plugin.AppName).exe", "$($plugin.AppName).winmd") + $AppPayloadCommon
+
+            foreach ($file in $payload) {
+                Copy-Staged -Source (Join-Path $appSource $file) -Destination $appDestination
+            }
+
+            Write-Detail "Staged $($payload.Count) app files -> $($plugin.AppStagingName)\$plat"
+        }
     }
 
     # Not needed by the installers, but mididiag and midi2monitor compile against these, so the
@@ -421,7 +472,13 @@ function Invoke-ReleaseTarget {
 function Invoke-CleanTarget {
     Write-Step 'Clean'
 
-    foreach ($path in @($ApiStagingRoot, (Join-Path $ServiceOutRoot 'intermediate'))) {
+    $paths = @($ApiStagingRoot, (Join-Path $ServiceOutRoot 'intermediate'))
+
+    foreach ($plugin in $Plugins | Where-Object { $_.AppStagingName }) {
+        $paths += Join-Path $StagingRoot $plugin.AppStagingName
+    }
+
+    foreach ($path in $paths) {
         if (Test-Path $path) {
             Remove-Item $path -Recurse -Force
             Write-Detail "Removed $path"

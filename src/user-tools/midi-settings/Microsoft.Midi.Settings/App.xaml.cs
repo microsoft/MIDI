@@ -160,22 +160,13 @@ public partial class App : Application
                     services.AddTransient<DeviceDetailPage>();
                     services.AddTransient<DeviceDetailViewModel>();
 
-                    services.AddTransient<ManagementSessionsPage>();
-                    services.AddTransient<ManagementSessionsViewModel>();
-
                     services.AddTransient<PluginsProcessingPage>();
                     services.AddTransient<PluginsProcessingViewModel>();
-
-                    services.AddTransient<PluginsTransportPage>();
-                    services.AddTransient<PluginsTransportViewModel>();
 
                     services.AddTransient<ConfigurationsPage>();
                     services.AddTransient<ConfigurationsViewModel>();
                     services.AddTransient<ToolsTestPage>();
                     services.AddTransient<ToolsTestViewModel>();
-
-                    services.AddTransient<TroubleshootingPage>();
-                    services.AddTransient<TroubleshootingViewModel>();
 
                     services.AddTransient<HomePage>();
                     services.AddTransient<HomeViewModel>();

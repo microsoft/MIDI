@@ -144,12 +144,15 @@ $ConsoleTools = @(
 # convention at %ProgramFiles%\Windows MIDI Services\Tools\<Folder>\<exe> - see
 # MidiToolsService.ToolDefinitions - so Folder must match that table exactly.
 # Display names come from Resources.resw (ToolApp_*_Name) so the Start Menu matches the app.
+# Network MIDI 2.0 Setup and Bluetooth MIDI Setup are deliberately NOT here: each ships in the
+# installer that carries its transport, because the app is useless without it, and two installers
+# writing the same files to the same folder would break each other's uninstall.
 $GuiTools = @(
     [pscustomobject]@{ Name = 'midiloopbacksetup'; Folder = 'LoopSetup';    Display = 'MIDI Loopback Setup';    DirectoryId = 'TOOL_LOOPSETUP_FOLDER' }
-    [pscustomobject]@{ Name = 'midinetworksetup';  Folder = 'NetworkSetup'; Display = 'Network MIDI 2.0 Setup'; DirectoryId = 'TOOL_NETWORKSETUP_FOLDER' }
     [pscustomobject]@{ Name = 'midiscratchpad';    Folder = 'ScratchPad';   Display = 'MIDI Scratch Pad';       DirectoryId = 'TOOL_SCRATCHPAD_FOLDER' }
     [pscustomobject]@{ Name = 'midisysextool';     Folder = 'SysEx';        Display = 'MIDI SysEx Tool';        DirectoryId = 'TOOL_SYSEX_FOLDER' }
     [pscustomobject]@{ Name = 'midi2monitor';      Folder = 'Monitor';      Display = 'MIDI Monitor';           DirectoryId = 'TOOL_MONITOR_FOLDER' }
+    [pscustomobject]@{ Name = 'miditroubleshooter'; Folder = 'Troubleshooter'; Display = 'MIDI Troubleshooting and Repair'; DirectoryId = 'TOOL_TROUBLESHOOTER_FOLDER' }
 )
 
 # Start Menu group shared by every MIDI GUI app, including MIDI Settings.

@@ -1,6 +1,8 @@
 ﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
 
     <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
+    <?define AppStagingFolder=$(StagingSourceRootFolder)\network-app\$(var.Platform) ?>
+
     <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
     <?include $(StagingVersionIncludeFile) ?>
 
@@ -25,7 +27,15 @@
         <StandardDirectory Id="ProgramFiles64Folder">
             <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
                 <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
+                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
+                    <!-- Name must match MidiToolsService.ToolDefinitions in the Settings app -->
+                    <Directory Id="TOOL_NETWORKSETUP_FOLDER" Name="NetworkSetup" />
+                </Directory>
             </Directory>
+        </StandardDirectory>
+
+        <StandardDirectory Id="ProgramMenuFolder">
+            <Directory Id="MIDI_PROGRAMS_FOLDER" Name="Windows MIDI (Preview)" />
         </StandardDirectory>
         
         <!--
@@ -69,6 +79,64 @@
             </RegistryKey>
         </Component>
 
+      <!-- ==========================================================================
+           Network MIDI 2.0 Setup app, with an app-local copy of the API so that it does not
+           depend on the App SDK runtime installer being present. The app ships here rather than
+           in the App SDK installer because it is useless without this transport, and because two
+           installers writing the same files would break each other's uninstall.
+           ========================================================================== -->
+
+      <Component Id="NetworkSetupApp"
+                 Bitness="always64"
+                 Directory="TOOL_NETWORKSETUP_FOLDER"
+                 Guid="7f2c4e19-0a53-4d8b-9f61-2c7de4b3a105">
+
+        <File Id="midinetworksetupExe"
+              Source="$(AppStagingFolder)\midinetworksetup.exe"
+              Vital="true" />
+        <File Source="$(AppStagingFolder)\midinetworksetup.winmd" />
+        <File Source="$(AppStagingFolder)\App.xbf" />
+        <File Source="$(AppStagingFolder)\MainWindow.xbf" />
+        <File Source="$(AppStagingFolder)\resources.pri" />
+
+        <!-- Locates and loads the Windows App Runtime for this unpackaged app -->
+        <File Source="$(AppStagingFolder)\Microsoft.WindowsAppRuntime.Bootstrap.dll" />
+
+        <File Source="$(AppStagingFolder)\Microsoft.Web.WebView2.Core.dll" />
+        <File Source="$(AppStagingFolder)\Microsoft.Web.WebView2.Core.winmd" />
+        <File Source="$(AppStagingFolder)\MidiAppShared.winmd" />
+      </Component>
+
+      <Component Id="NetworkSetupAppLocalApi"
+                 Bitness="always64"
+                 Directory="TOOL_NETWORKSETUP_FOLDER"
+                 Guid="b6a1d370-58f4-49c2-8e0d-31f96c07a2be">
+
+        <File Source="$(AppStagingFolder)\Windows.Devices.Midi2.dll" Vital="true" />
+        <File Source="$(AppStagingFolder)\Windows.Devices.Midi2.winmd" />
+        <File Source="$(AppStagingFolder)\Windows.Devices.Midi2.pri" />
+      </Component>
+
+      <Component Id="NetworkSetupAppShortcut"
+                 Bitness="always64"
+                 Directory="MIDI_PROGRAMS_FOLDER"
+                 Guid="c4e8b25f-9d17-4a63-bb80-5e2a1f7c3d4a">
+
+        <Shortcut Id="Shortcut_midinetworksetup"
+                  Name="Network MIDI 2.0 Setup"
+                  Target="[#midinetworksetupExe]"
+                  WorkingDirectory="TOOL_NETWORKSETUP_FOLDER" />
+
+        <!-- Only removes the folder if the App SDK tools have not also put shortcuts in it -->
+        <RemoveFolder Id="RemoveMidiProgramsFolder_NetworkSetup"
+                      Directory="MIDI_PROGRAMS_FOLDER"
+                      On="uninstall" />
+
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Network MIDI 2.0 Preview">
+          <RegistryValue Type="string" Name="NetworkSetupShortcut" Value="installed" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+
       <!-- midisrv only picks the transport up when it restarts -->
       <Component Id="RestartService"
                  Bitness="always64"
@@ -85,6 +153,9 @@
       <Feature Id="WindowsMIDIServices">
         <ComponentRef Id="WindowsServiceAbstractions"/>
         <ComponentRef Id="ConfigurationRegistryEntries"/>
+        <ComponentRef Id="NetworkSetupApp"/>
+        <ComponentRef Id="NetworkSetupAppLocalApi"/>
+        <ComponentRef Id="NetworkSetupAppShortcut"/>
         <ComponentRef Id="RestartService"/>
       </Feature>
 

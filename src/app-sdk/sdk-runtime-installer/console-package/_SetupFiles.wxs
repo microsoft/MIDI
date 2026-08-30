@@ -203,11 +203,17 @@
       <Component Id="c843E3EC854E288C2" Bitness="always64" Directory="CONSOLEAPP_INSTALLFOLDER"> <!-- WebView2Loader.dll -->
         <File Id="f843E3EC854E288C2" Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\WebView2Loader.dll" Vital="true" />
       </Component>
+      <Component Id="c56A8DA1F28173C48" Bitness="always64" Directory="CONSOLEAPP_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.dll -->
+        <File Id="f56A8DA1F28173C48" Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Windows.Devices.Midi2.dll" Vital="true" />
+      </Component>
       <Component Id="c19E048B0F3912E2D" Bitness="always64" Directory="CONSOLEAPP_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.NetProjection.dll -->
         <File Id="f19E048B0F3912E2D" Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Windows.Devices.Midi2.NetProjection.dll" Vital="true" />
       </Component>
       <Component Id="c135FBFF5EB9665F6" Bitness="always64" Directory="CONSOLEAPP_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.NetProjection.pdb -->
         <File Id="f135FBFF5EB9665F6" Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Windows.Devices.Midi2.NetProjection.pdb" Vital="true" />
+      </Component>
+      <Component Id="c9F532449AFA7CFE3" Bitness="always64" Directory="CONSOLEAPP_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.pri -->
+        <File Id="f9F532449AFA7CFE3" Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Windows.Devices.Midi2.pri" Vital="true" />
       </Component>
       <Component Id="c2AE473B67F8F93C8" Bitness="always64" Directory="CONSOLEAPP_INSTALLFOLDER"> <!-- WinRT.Runtime.dll -->
         <File Id="f2AE473B67F8F93C8" Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\WinRT.Runtime.dll" Vital="true" />

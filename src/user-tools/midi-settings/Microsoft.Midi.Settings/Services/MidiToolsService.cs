@@ -48,6 +48,9 @@ public class MidiToolsService : IMidiToolsService
 
         new(MidiToolApp.Monitor, "Monitor", "midi2monitor.exe",
             "ToolApp_Monitor_Name", "ToolApp_Monitor_Description", "ToolApp-Monitor.png"),
+
+        new(MidiToolApp.Troubleshooter, "Troubleshooter", "miditroubleshooter.exe",
+            "ToolApp_Troubleshooter_Name", "ToolApp_Troubleshooter_Description", "ToolApp-Troubleshooter.png"),
     ];
 
     private readonly IMidiConsoleToolsService _consoleToolsService;

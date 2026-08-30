@@ -1,0 +1,94 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+// Row types for the lists in this tool. They implement INotifyPropertyChanged because the
+// service health pages poll every few seconds: rebuilding the collections instead would throw
+// away the scroll position and close every expander the customer had opened.
+namespace miditroubleshooter
+{
+    // One endpoint or MIDI 1.0 port a session currently has open.
+    [default_interface]
+    runtimeclass SessionConnectionItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        SessionConnectionItem();
+
+        String EndpointDeviceId{ get; };
+        String DisplayName{ get; };
+        String CountText{ get; };
+        String ConnectedSinceText{ get; };
+    }
+
+    // One application connected to the MIDI service.
+    [default_interface]
+    runtimeclass SessionItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        SessionItem();
+
+        String SessionId{ get; };
+        String Title{ get; };
+        String ProcessText{ get; };
+        String StartedText{ get; };
+        String ConnectionCountText{ get; };
+
+        Windows.Foundation.Collections.IObservableVector<SessionConnectionItem> Connections{ get; };
+    }
+
+    // A service transport plugin, whether or not it managed to load.
+    [default_interface]
+    runtimeclass TransportItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        TransportItem();
+
+        String TransportId{ get; };
+        String Name{ get; };
+        String CodeText{ get; };
+        String Description{ get; };
+        String DetailText{ get; };
+        String ModuleText{ get; };
+        String StatusText{ get; };
+
+        Microsoft.UI.Xaml.Visibility OkVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility WarningVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility ErrorVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility DescriptionVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility ModuleVisibility{ get; };
+    }
+
+    // One value read out of the registry, with the reason it is or is not correct.
+    [default_interface]
+    runtimeclass RegistryEntryItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        RegistryEntryItem();
+
+        String Name{ get; };
+        String Value{ get; };
+        String Comment{ get; };
+
+        Microsoft.UI.Xaml.Visibility OkVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility WarningVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility ErrorVisibility{ get; };
+    }
+
+    // A USB device the two in-box class drivers compete for.
+    [default_interface]
+    runtimeclass DriverDeviceItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        DriverDeviceItem();
+
+        String InstanceId{ get; };
+        String Name{ get; };
+        String DetailText{ get; };
+        String DriverText{ get; };
+        String ProblemText{ get; };
+
+        Boolean CanUseUniversalMidiPacketDriver{ get; };
+        Boolean CanUseClassicDriver{ get; };
+        Boolean IsBusy;
+
+        Microsoft.UI.Xaml.Visibility ProblemVisibility{ get; };
+    }
+}

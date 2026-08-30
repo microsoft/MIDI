@@ -19,6 +19,8 @@
     url: /tools/midinetworksetup/
   - text: MIDI Loopback Setup
     url: /tools/midiloopbacksetup/
+  - text: MIDI Troubleshooting and Repair
+    url: /tools/miditroubleshooter/
   - text: MIDI Console
     url: /tools/console/
   - text: MIDI Diagnostics

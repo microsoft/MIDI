@@ -7,8 +7,6 @@
   <Fragment>
     <DirectoryRef Id="TOOL_LOOPSETUP_FOLDER">
     </DirectoryRef>
-    <DirectoryRef Id="TOOL_NETWORKSETUP_FOLDER">
-    </DirectoryRef>
     <DirectoryRef Id="TOOL_SCRATCHPAD_FOLDER">
     </DirectoryRef>
     <DirectoryRef Id="TOOL_SYSEX_FOLDER">
@@ -16,6 +14,8 @@
     <DirectoryRef Id="TOOL_MONITOR_FOLDER">
       <Directory Id="TOOL_MONITOR_FOLDER_Styles" Name="Styles">
       </Directory>
+    </DirectoryRef>
+    <DirectoryRef Id="TOOL_TROUBLESHOOTER_FOLDER">
     </DirectoryRef>
 
     <ComponentGroup Id="SdkRedistFiles">
@@ -79,32 +79,6 @@
       </Component>
       <Component Id="c307543351D3650DD" Bitness="always64" Directory="TOOL_LOOPSETUP_FOLDER"> <!-- Windows.Devices.Midi2.pri -->
         <File Id="f307543351D3650DD" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\LoopSetup\Windows.Devices.Midi2.pri" Vital="true" />
-      </Component>
-
-      <!-- app-sdk\$(var.Platform)\NetworkSetup -->
-      <Component Id="c5D96C97DEFE27545" Bitness="always64" Directory="TOOL_NETWORKSETUP_FOLDER"> <!-- App.xbf -->
-        <File Id="f5D96C97DEFE27545" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\NetworkSetup\App.xbf" Vital="true" />
-      </Component>
-      <Component Id="cE49A11A7401B0319" Bitness="always64" Directory="TOOL_NETWORKSETUP_FOLDER"> <!-- MainWindow.xbf -->
-        <File Id="fE49A11A7401B0319" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\NetworkSetup\MainWindow.xbf" Vital="true" />
-      </Component>
-      <Component Id="c31CF0E178E9B3E8F" Bitness="always64" Directory="TOOL_NETWORKSETUP_FOLDER"> <!-- Microsoft.Web.WebView2.Core.dll -->
-        <File Id="f31CF0E178E9B3E8F" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\NetworkSetup\Microsoft.Web.WebView2.Core.dll" Vital="true" />
-      </Component>
-      <Component Id="cD386C3FE073961D9" Bitness="always64" Directory="TOOL_NETWORKSETUP_FOLDER"> <!-- Microsoft.WindowsAppRuntime.Bootstrap.dll -->
-        <File Id="fD386C3FE073961D9" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\NetworkSetup\Microsoft.WindowsAppRuntime.Bootstrap.dll" Vital="true" />
-      </Component>
-      <Component Id="cBB110F30AEA05FA4" Bitness="always64" Directory="TOOL_NETWORKSETUP_FOLDER"> <!-- midinetworksetup.exe -->
-        <File Id="midinetworksetupExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\NetworkSetup\midinetworksetup.exe" Vital="true" />
-      </Component>
-      <Component Id="cB83D17E691B6FAB9" Bitness="always64" Directory="TOOL_NETWORKSETUP_FOLDER"> <!-- resources.pri -->
-        <File Id="fB83D17E691B6FAB9" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\NetworkSetup\resources.pri" Vital="true" />
-      </Component>
-      <Component Id="c0C002569E6921845" Bitness="always64" Directory="TOOL_NETWORKSETUP_FOLDER"> <!-- Windows.Devices.Midi2.dll -->
-        <File Id="f0C002569E6921845" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\NetworkSetup\Windows.Devices.Midi2.dll" Vital="true" />
-      </Component>
-      <Component Id="cBE5AC129B95FD875" Bitness="always64" Directory="TOOL_NETWORKSETUP_FOLDER"> <!-- Windows.Devices.Midi2.pri -->
-        <File Id="fBE5AC129B95FD875" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\NetworkSetup\Windows.Devices.Midi2.pri" Vital="true" />
       </Component>
 
       <!-- app-sdk\$(var.Platform)\ScratchPad -->
@@ -191,6 +165,32 @@
       <!-- app-sdk\$(var.Platform)\Monitor\Styles -->
       <Component Id="cA8A27593953D92AB" Bitness="always64" Directory="TOOL_MONITOR_FOLDER_Styles"> <!-- MonitorStyles.xbf -->
         <File Id="fA8A27593953D92AB" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Monitor\Styles\MonitorStyles.xbf" Vital="true" />
+      </Component>
+
+      <!-- app-sdk\$(var.Platform)\Troubleshooter -->
+      <Component Id="cAE62618B4C1337AA" Bitness="always64" Directory="TOOL_TROUBLESHOOTER_FOLDER"> <!-- App.xbf -->
+        <File Id="fAE62618B4C1337AA" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Troubleshooter\App.xbf" Vital="true" />
+      </Component>
+      <Component Id="cE70B7832B8BB51AA" Bitness="always64" Directory="TOOL_TROUBLESHOOTER_FOLDER"> <!-- MainWindow.xbf -->
+        <File Id="fE70B7832B8BB51AA" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Troubleshooter\MainWindow.xbf" Vital="true" />
+      </Component>
+      <Component Id="cDFDD6BE063775F5C" Bitness="always64" Directory="TOOL_TROUBLESHOOTER_FOLDER"> <!-- Microsoft.Web.WebView2.Core.dll -->
+        <File Id="fDFDD6BE063775F5C" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Troubleshooter\Microsoft.Web.WebView2.Core.dll" Vital="true" />
+      </Component>
+      <Component Id="c9598E652ECDC9D55" Bitness="always64" Directory="TOOL_TROUBLESHOOTER_FOLDER"> <!-- Microsoft.WindowsAppRuntime.Bootstrap.dll -->
+        <File Id="f9598E652ECDC9D55" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Troubleshooter\Microsoft.WindowsAppRuntime.Bootstrap.dll" Vital="true" />
+      </Component>
+      <Component Id="c240881ADEF6162D7" Bitness="always64" Directory="TOOL_TROUBLESHOOTER_FOLDER"> <!-- miditroubleshooter.exe -->
+        <File Id="miditroubleshooterExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Troubleshooter\miditroubleshooter.exe" Vital="true" />
+      </Component>
+      <Component Id="cC3CB5AC4E7595C5A" Bitness="always64" Directory="TOOL_TROUBLESHOOTER_FOLDER"> <!-- resources.pri -->
+        <File Id="fC3CB5AC4E7595C5A" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Troubleshooter\resources.pri" Vital="true" />
+      </Component>
+      <Component Id="cFF223671559FA6D4" Bitness="always64" Directory="TOOL_TROUBLESHOOTER_FOLDER"> <!-- Windows.Devices.Midi2.dll -->
+        <File Id="fFF223671559FA6D4" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Troubleshooter\Windows.Devices.Midi2.dll" Vital="true" />
+      </Component>
+      <Component Id="cDC11B3DD4DF2BAF2" Bitness="always64" Directory="TOOL_TROUBLESHOOTER_FOLDER"> <!-- Windows.Devices.Midi2.pri -->
+        <File Id="fDC11B3DD4DF2BAF2" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Troubleshooter\Windows.Devices.Midi2.pri" Vital="true" />
       </Component>
 
       <!-- CollectMidiLogs -->

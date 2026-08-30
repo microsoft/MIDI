@@ -15,15 +15,11 @@
       <Directory Id="SETTINGSAPP_INSTALLFOLDER_Themes" Name="Themes">
       </Directory>
       <Directory Id="SETTINGSAPP_INSTALLFOLDER_Views" Name="Views">
-        <Directory Id="SETTINGSAPP_INSTALLFOLDER_Views_Bridge_Pages" Name="Bridge Pages">
-        </Directory>
         <Directory Id="SETTINGSAPP_INSTALLFOLDER_Views_Core_Pages" Name="Core Pages">
         </Directory>
         <Directory Id="SETTINGSAPP_INSTALLFOLDER_Views_Endpoint_Management_Pages" Name="Endpoint Management Pages">
         </Directory>
         <Directory Id="SETTINGSAPP_INSTALLFOLDER_Views_Tools_Pages" Name="Tools Pages">
-        </Directory>
-        <Directory Id="SETTINGSAPP_INSTALLFOLDER_Views_Transport_Setup_Pages" Name="Transport Setup Pages">
         </Directory>
       </Directory>
     </DirectoryRef>
@@ -313,8 +309,14 @@
       <Component Id="cBF766E44A40FB02E" Bitness="always64" Directory="SETTINGSAPP_INSTALLFOLDER"> <!-- WebView2Loader.dll -->
         <File Id="fBF766E44A40FB02E" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\WebView2Loader.dll" Vital="true" />
       </Component>
+      <Component Id="c3298EFEB723496C1" Bitness="always64" Directory="SETTINGSAPP_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.dll -->
+        <File Id="f3298EFEB723496C1" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Windows.Devices.Midi2.dll" Vital="true" />
+      </Component>
       <Component Id="c8D1B0DA5777DE03A" Bitness="always64" Directory="SETTINGSAPP_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.NetProjection.dll -->
         <File Id="f8D1B0DA5777DE03A" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Windows.Devices.Midi2.NetProjection.dll" Vital="true" />
+      </Component>
+      <Component Id="c7378B645EFEAFEA5" Bitness="always64" Directory="SETTINGSAPP_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.pri -->
+        <File Id="f7378B645EFEAFEA5" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Windows.Devices.Midi2.pri" Vital="true" />
       </Component>
       <Component Id="c3DAA2F4E3EC86FFD" Bitness="always64" Directory="SETTINGSAPP_INSTALLFOLDER"> <!-- WinRT.Runtime.dll -->
         <File Id="f3DAA2F4E3EC86FFD" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\WinRT.Runtime.dll" Vital="true" />
@@ -405,6 +407,9 @@
       <Component Id="c27EFE970841BA250" Bitness="always64" Directory="SETTINGSAPP_INSTALLFOLDER_Assets"> <!-- ToolApp-SysEx.png -->
         <File Id="f27EFE970841BA250" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Assets\ToolApp-SysEx.png" Vital="true" />
       </Component>
+      <Component Id="c4C3DBC50A3BD2DBA" Bitness="always64" Directory="SETTINGSAPP_INSTALLFOLDER_Assets"> <!-- ToolApp-Troubleshooter.png -->
+        <File Id="f4C3DBC50A3BD2DBA" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Assets\ToolApp-Troubleshooter.png" Vital="true" />
+      </Component>
 
       <!-- midi-settings\$(var.Platform)\Controls -->
       <Component Id="c279F0B0DEB495009" Bitness="always64" Directory="SETTINGSAPP_INSTALLFOLDER_Controls"> <!-- MidiEndpointAndGroupPickerControl.xbf -->
@@ -434,14 +439,6 @@
       <!-- midi-settings\$(var.Platform)\Themes -->
       <Component Id="c31B5614F96424727" Bitness="always64" Directory="SETTINGSAPP_INSTALLFOLDER_Themes"> <!-- Generic.xbf -->
         <File Id="f31B5614F96424727" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Themes\Generic.xbf" Vital="true" />
-      </Component>
-
-      <!-- midi-settings\$(var.Platform)\Views\Bridge Pages -->
-      <Component Id="c6009C55086DE8E98" Bitness="always64" Directory="SETTINGSAPP_INSTALLFOLDER_Views_Bridge_Pages"> <!-- BluetoothBridgesPage.xbf -->
-        <File Id="f6009C55086DE8E98" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Bridge Pages\BluetoothBridgesPage.xbf" Vital="true" />
-      </Component>
-      <Component Id="c08D63FE05092A873" Bitness="always64" Directory="SETTINGSAPP_INSTALLFOLDER_Views_Bridge_Pages"> <!-- EndpointBridgesPage.xbf -->
-        <File Id="f08D63FE05092A873" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Bridge Pages\EndpointBridgesPage.xbf" Vital="true" />
       </Component>
 
       <!-- midi-settings\$(var.Platform)\Views\Core Pages -->
@@ -488,28 +485,11 @@
       </Component>
 
       <!-- midi-settings\$(var.Platform)\Views\Tools Pages -->
-      <Component Id="cDDD8B4C843BECF60" Bitness="always64" Directory="SETTINGSAPP_INSTALLFOLDER_Views_Tools_Pages"> <!-- AdvancedUsbSettingsPage.xbf -->
-        <File Id="fDDD8B4C843BECF60" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\AdvancedUsbSettingsPage.xbf" Vital="true" />
-      </Component>
-      <Component Id="cC5583262899CA1F9" Bitness="always64" Directory="SETTINGSAPP_INSTALLFOLDER_Views_Tools_Pages"> <!-- LivePerformanceSettingsPage.xbf -->
-        <File Id="fC5583262899CA1F9" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\LivePerformanceSettingsPage.xbf" Vital="true" />
-      </Component>
       <Component Id="c1BA97BA8138994CA" Bitness="always64" Directory="SETTINGSAPP_INSTALLFOLDER_Views_Tools_Pages"> <!-- ToolsTestPage.xbf -->
         <File Id="f1BA97BA8138994CA" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\ToolsTestPage.xbf" Vital="true" />
       </Component>
       <Component Id="c024E707E2356D0B4" Bitness="always64" Directory="SETTINGSAPP_INSTALLFOLDER_Views_Tools_Pages"> <!-- TroubleshootingPage.xbf -->
         <File Id="f024E707E2356D0B4" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\TroubleshootingPage.xbf" Vital="true" />
-      </Component>
-      <Component Id="c3983502B43D3185A" Bitness="always64" Directory="SETTINGSAPP_INSTALLFOLDER_Views_Tools_Pages"> <!-- WindowsSettingsPage.xbf -->
-        <File Id="f3983502B43D3185A" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Tools Pages\WindowsSettingsPage.xbf" Vital="true" />
-      </Component>
-
-      <!-- midi-settings\$(var.Platform)\Views\Transport Setup Pages -->
-      <Component Id="c033A755E03B5D13D" Bitness="always64" Directory="SETTINGSAPP_INSTALLFOLDER_Views_Transport_Setup_Pages"> <!-- EndpointsBle10Page.xbf -->
-        <File Id="f033A755E03B5D13D" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Transport Setup Pages\EndpointsBle10Page.xbf" Vital="true" />
-      </Component>
-      <Component Id="cC4EEBDA0A3036B93" Bitness="always64" Directory="SETTINGSAPP_INSTALLFOLDER_Views_Transport_Setup_Pages"> <!-- MidiVirtualPatchBaySetupPage.xbf -->
-        <File Id="fC4EEBDA0A3036B93" Source="$(StagingSourceRootFolder)\midi-settings\$(var.Platform)\Views\Transport Setup Pages\MidiVirtualPatchBaySetupPage.xbf" Vital="true" />
       </Component>
 
       <!-- Assets\Endpoints -->
