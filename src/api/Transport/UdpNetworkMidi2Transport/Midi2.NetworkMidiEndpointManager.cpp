@@ -1631,7 +1631,12 @@ try
     // later. The customization is cached by the configuration manager whether or not the
     // endpoint existed when it arrived, which is what makes this work for a connection the user
     // names as they create it.
+    // Computed here rather than at activation because a saved customization is matched on it.
+    // It is derived from the remote's identity, so it is the same on every reconnect.
+    std::wstring instanceId = BuildEndpointDeviceInstanceId(endpointName, remoteEndpointProductInstanceId);
+
     WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria matchCriteria{};
+    matchCriteria.DeviceInstanceId = instanceId;
     matchCriteria.TransportSuppliedEndpointName = endpointName;
     matchCriteria.DeviceProductInstanceId = remoteEndpointProductInstanceId;
     matchCriteria.NetworkStaticIPAddress = hostName != nullptr ? hostName.CanonicalName() : L"";
@@ -1673,11 +1678,15 @@ try
         }
     }
 
+    // Held for the rest of the function because the property values written below point into it,
+    // and because only the name and description can be supplied while the node is being created.
+    std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties{ nullptr };
+
     auto configurationManager = TransportState::Current().GetConfigurationManager();
 
     if (configurationManager != nullptr)
     {
-        auto customProperties = configurationManager->CustomPropertiesCache()->GetProperties(matchCriteria);
+        customProperties = configurationManager->CustomPropertiesCache()->GetProperties(matchCriteria);
 
         if (customProperties != nullptr)
         {
@@ -1716,9 +1725,6 @@ try
 
     SW_DEVICE_CREATE_INFO createInfo = {};
     createInfo.cbSize = sizeof(createInfo);
-
-
-    std::wstring instanceId = BuildEndpointDeviceInstanceId(endpointName, remoteEndpointProductInstanceId);
 
     createInfo.pszInstanceId = instanceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
@@ -1862,6 +1868,22 @@ try
             winrt::hstring{ createdNewDeviceInstanceId },
             winrt::hstring{ endpointName },
             winrt::hstring{ remoteEndpointProductInstanceId } });
+    }
+
+    // Everything the node could not be created with. A network endpoint is never live when its
+    // customization arrives, so without this an image or a port naming choice would be cached
+    // and then silently dropped.
+    if (customProperties != nullptr)
+    {
+        std::vector<DEVPROPERTY> customDevProperties{};
+
+        if (customProperties->WriteAllProperties(customDevProperties) && customDevProperties.size() > 0)
+        {
+            LOG_IF_FAILED(m_midiDeviceManager->UpdateEndpointProperties(
+                createdNewEndpointDeviceInterfaceId.c_str(),
+                static_cast<ULONG>(customDevProperties.size()),
+                customDevProperties.data()));
+        }
     }
 
     TraceLoggingWrite(
