@@ -32,32 +32,14 @@ namespace midiapp
 
             return color;
         }
-    }
 
-    wux::Media::Imaging::WriteableBitmap WindowChrome::LoadIconImageSource(
-        uint16_t const resourceId,
-        int32_t const sizePixels) noexcept
-    {
-        try
+        wux::Media::Imaging::WriteableBitmap IconToBitmap(
+            _In_ HICON const icon,
+            _In_ int32_t const sizePixels) noexcept
         {
-            if (sizePixels <= 0)
-            {
-                return nullptr;
-            }
-
-            auto const instance = reinterpret_cast<HINSTANCE>(&__ImageBase);
-
-            wil::unique_hicon icon{ static_cast<HICON>(::LoadImageW(
-                instance, MAKEINTRESOURCEW(resourceId), IMAGE_ICON, sizePixels, sizePixels, LR_DEFAULTCOLOR)) };
-
-            if (!icon)
-            {
-                return nullptr;
-            }
-
             ICONINFO info{};
 
-            if (!::GetIconInfo(icon.get(), &info))
+            if (!::GetIconInfo(icon, &info))
             {
                 return nullptr;
             }
@@ -126,6 +108,75 @@ namespace midiapp
             bitmap.Invalidate();
 
             return bitmap;
+        }
+    }
+
+    wux::Media::Imaging::WriteableBitmap WindowChrome::LoadIconImageSource(
+        uint16_t const resourceId,
+        int32_t const sizePixels) noexcept
+    {
+        try
+        {
+            if (sizePixels <= 0)
+            {
+                return nullptr;
+            }
+
+            auto const instance = reinterpret_cast<HINSTANCE>(&__ImageBase);
+
+            wil::unique_hicon icon{ static_cast<HICON>(::LoadImageW(
+                instance, MAKEINTRESOURCEW(resourceId), IMAGE_ICON, sizePixels, sizePixels, LR_DEFAULTCOLOR)) };
+
+            if (!icon)
+            {
+                return nullptr;
+            }
+
+            return IconToBitmap(icon.get(), sizePixels);
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+
+            return nullptr;
+        }
+    }
+
+    _Use_decl_annotations_
+    wux::Media::Imaging::WriteableBitmap WindowChrome::LoadIconImageSourceFromFile(
+        std::wstring const& executablePath,
+        int32_t const sizePixels) noexcept
+    {
+        try
+        {
+            if (sizePixels <= 0 || executablePath.empty())
+            {
+                return nullptr;
+            }
+
+            // Resource only mapping: no code from the other executable is run, and no DllMain
+            // or static initializer in it is given a chance to execute.
+            wil::unique_hmodule module{ ::LoadLibraryExW(
+                executablePath.c_str(),
+                nullptr,
+                LOAD_LIBRARY_AS_DATAFILE | LOAD_LIBRARY_AS_IMAGE_RESOURCE) };
+
+            if (!module)
+            {
+                return nullptr;
+            }
+
+            // Every tool in this family puts its application icon at resource id 1, which is
+            // also what Explorer picks.
+            wil::unique_hicon icon{ static_cast<HICON>(::LoadImageW(
+                module.get(), MAKEINTRESOURCEW(1), IMAGE_ICON, sizePixels, sizePixels, LR_DEFAULTCOLOR)) };
+
+            if (!icon)
+            {
+                return nullptr;
+            }
+
+            return IconToBitmap(icon.get(), sizePixels);
         }
         catch (...)
         {

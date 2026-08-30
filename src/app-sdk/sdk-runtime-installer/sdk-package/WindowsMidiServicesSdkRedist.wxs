@@ -20,10 +20,11 @@
             <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
                 <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
                     <!-- One folder per GUI tool, each with its own copy of the SDK runtime.
-                         These names are a contract with MidiToolsService.ToolDefinitions in the
-                         Settings app, which resolves tools by convention path.
+                         These names are a contract with ToolLauncher.cpp in midi-settings, which
+                         resolves the other tools by convention path.
                          NetworkSetup and BluetoothSetup are not here: those apps ship in the
                          installer that carries their transport. -->
+                    <Directory Id="TOOL_SETTINGS_FOLDER" Name="Settings" />
                     <Directory Id="TOOL_LOOPSETUP_FOLDER" Name="LoopSetup" />
                     <Directory Id="TOOL_SCRATCHPAD_FOLDER" Name="ScratchPad" />
                     <Directory Id="TOOL_SYSEX_FOLDER" Name="SysEx" />
@@ -33,6 +34,19 @@
                 <Directory Id="COLLECTMIDILOGS_INSTALLFOLDER" Name="Collect MIDI Logs">
                 </Directory>
             </Directory>
+        </StandardDirectory>
+
+        <!-- Shared endpoint and transport artwork. Every MIDI app reads it, and the customer's
+             own endpoint pictures are stored alongside it, so it lives under ProgramData. -->
+        <StandardDirectory Id="CommonAppDataFolder">
+          <Directory Name="Microsoft">
+            <Directory Id="CONFIGURATION_FOLDER" Name="MIDI">
+              <Directory Id="CONFIGURATION_ASSETS_FOLDER" Name="Assets">
+                <Directory Id="CONFIGURATION_ASSETS_ENDPOINTS_FOLDER" Name="Endpoints" />
+                <Directory Id="CONFIGURATION_ASSETS_TRANSPORTS_FOLDER" Name="Transports" />
+              </Directory>
+            </Directory>
+          </Directory>
         </StandardDirectory>
 
         <!--

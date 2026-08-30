@@ -104,7 +104,6 @@ $SdkNuGetOutput = Join-Path $ApiRoot 'vsfiles-sdk\PublishedNuGet'
 $NuspecFile = Join-Path $ApiRoot 'Client\WinRT\NuGet\Windows.Devices.Midi2.NuGet\nuget\Windows.Devices.Midi2.nuspec'
 
 $ConsoleProject = Join-Path $UserToolsRoot 'midi-console\Midi\Midi.csproj'
-$SettingsProject = Join-Path $UserToolsRoot 'midi-settings\Microsoft.Midi.Settings\Microsoft.Midi.Settings.csproj'
 $PowerShellProject = Join-Path $ApiRoot 'Client\WinRT\powershell\WindowsMidiServices.csproj'
 
 $SetupSolutionRoot = Join-Path $SourceRoot 'app-sdk\sdk-runtime-installer'
@@ -140,14 +139,15 @@ $ConsoleTools = @(
     'midifixreg'
 )
 
-# GUI tools each install into their OWN subfolder of Tools. The Settings app resolves them by
-# convention at %ProgramFiles%\Windows MIDI Services\Tools\<Folder>\<exe> - see
-# MidiToolsService.ToolDefinitions - so Folder must match that table exactly.
+# GUI tools each install into their OWN subfolder of Tools. MIDI Settings resolves the others by
+# convention at %ProgramFiles%\Windows MIDI Services\Tools\<Folder>\<exe> - see ToolLauncher.cpp
+# in midi-settings - so Folder must match that table exactly.
 # Display names come from Resources.resw (ToolApp_*_Name) so the Start Menu matches the app.
 # Network MIDI 2.0 Setup and Bluetooth MIDI Setup are deliberately NOT here: each ships in the
 # installer that carries its transport, because the app is useless without it, and two installers
 # writing the same files to the same folder would break each other's uninstall.
 $GuiTools = @(
+    [pscustomobject]@{ Name = 'midisettings';      Folder = 'Settings';     Display = 'MIDI Settings';          DirectoryId = 'TOOL_SETTINGS_FOLDER' }
     [pscustomobject]@{ Name = 'midiloopbacksetup'; Folder = 'LoopSetup';    Display = 'MIDI Loopback Setup';    DirectoryId = 'TOOL_LOOPSETUP_FOLDER' }
     [pscustomobject]@{ Name = 'midiscratchpad';    Folder = 'ScratchPad';   Display = 'MIDI Scratch Pad';       DirectoryId = 'TOOL_SCRATCHPAD_FOLDER' }
     [pscustomobject]@{ Name = 'midisysextool';     Folder = 'SysEx';        Display = 'MIDI SysEx Tool';        DirectoryId = 'TOOL_SYSEX_FOLDER' }
@@ -570,54 +570,6 @@ function Get-MSBuildProperty {
     return $value.Trim()
 }
 
-function Copy-DotNetBuildOutput {
-    param(
-        [Parameter(Mandatory)] [string] $Project,
-        [Parameter(Mandatory)] [string] $BuildPlatform,
-        [Parameter(Mandatory)] [string] $RuntimeIdentifier,
-        [Parameter(Mandatory)] [string] $Destination,
-        [Parameter(Mandatory)] $Version
-    )
-
-    # Publish is not usable for the WinUI app: with EnableMsixTooling the publish path expects the
-    # packaged PRI name (resources.pri) while the build emits $(TargetName).pri, so it dies with
-    # MSB3030. Forcing resources.pri would break resource lookup in the unpackaged app, which
-    # loads MidiSettings.pri. Build output already carries the full dependency closure for an
-    # app project, so copy that instead - this is what the old Nuke build did.
-    $properties = @{
-        'RuntimeIdentifier' = $RuntimeIdentifier
-        'SelfContained'     = 'false'
-        'Version'           = $Version.SemVer
-        'VersionPrefix'     = $Version.MajorMinorPatch
-        'AssemblyVersion'   = $Version.NumericVersion
-        'FileVersion'       = $Version.NumericVersion
-    }
-
-    Write-Detail "build+copy $(Split-Path -Leaf $Project) [$BuildPlatform / $RuntimeIdentifier]"
-
-    Invoke-MSBuild -ProjectOrSolution $Project -BuildPlatform $BuildPlatform `
-        -Targets @('Restore', 'Build') -SolutionDir $ApiRoot -Serial -Properties $properties
-
-    $targetDir = Get-MSBuildProperty -Project $Project -BuildPlatform $BuildPlatform `
-        -Name 'TargetDir' -Properties $properties
-
-    if (-not (Test-Path $targetDir)) { throw "Build output folder not found: $targetDir" }
-
-    if (Test-Path $Destination) { Remove-Item $Destination -Recurse -Force }
-    New-Item -ItemType Directory -Force -Path $Destination | Out-Null
-
-    # Symbols for every transitive package would roughly double the installer.
-    Get-ChildItem $targetDir -Force | Where-Object { $_.Extension -ne '.pdb' } | ForEach-Object {
-        Copy-Item $_.FullName -Destination $Destination -Recurse -Force
-    }
-
-    $produced = @(Get-ChildItem $Destination -File)
-    $subFolders = @(Get-ChildItem $Destination -Directory)
-    if ($produced.Count -eq 0) { throw "Nothing was copied from $targetDir" }
-
-    Write-Detail "  $($produced.Count) files, $($subFolders.Count) subfolders"
-}
-
 function Invoke-StageTarget {
     param($Version)
 
@@ -679,14 +631,6 @@ function Invoke-StageTarget {
         $consoleStaging = Join-Path $StagingRoot "midi-console\$plat"
         Publish-DotNetApp -Project $ConsoleProject -BuildPlatform $plat -RuntimeIdentifier $rid `
             -Destination $consoleStaging -Version $Version
-
-        # --- MIDI Settings ------------------------------------------------------------------
-        # Modern RIDs only. The csproj still lists the legacy win10-* RIDs and sets UseRidGraph
-        # to tolerate them, but that opt-in does not flow to the referenced NuGet projection
-        # project, which then fails restore with NETSDK1083.
-        $settingsStaging = Join-Path $StagingRoot "midi-settings\$plat"
-        Copy-DotNetBuildOutput -Project $SettingsProject -BuildPlatform $plat -RuntimeIdentifier $rid `
-            -Destination $settingsStaging -Version $Version
 
         # --- PowerShell module --------------------------------------------------------------
         $psStaging = Join-Path $StagingRoot "midi-powershell\$plat"
@@ -928,6 +872,11 @@ function New-SetupFileLists {
 
     $sdkDirs['CollectMidiLogs'] = 'COLLECTMIDILOGS_INSTALLFOLDER'
 
+    # The shared endpoint and transport art lives under ProgramData rather than Program Files,
+    # because every MIDI app reads it and the customer's own pictures land beside it.
+    $sdkDirs['Assets\Endpoints'] = 'CONFIGURATION_ASSETS_ENDPOINTS_FOLDER'
+    $sdkDirs['Assets\Transports'] = 'CONFIGURATION_ASSETS_TRANSPORTS_FOLDER'
+
     New-WixFileListFragment `
         -OutputFile (Join-Path $SetupSolutionRoot 'sdk-package\_SetupFiles.wxs') `
         -ComponentGroupId 'SdkRedistFiles' `
@@ -944,22 +893,6 @@ function New-SetupFileLists {
         -ComponentGroupId 'ConsoleAppFiles' `
         -DirectoryMap $consoleDirs `
         -FileIdOverrides @{ 'midi.exe' = 'MidiConsoleExe' }
-
-    # --- MIDI Settings ---
-    # The app root is walked recursively, so new Views/Styles/etc. folders are installed without
-    # any .wxs edit. The shared endpoint/transport art installs under ProgramData instead, so
-    # those two stay explicit.
-    $settingsDirs = [ordered]@{
-        'midi-settings\$(var.Platform)' = 'SETTINGSAPP_INSTALLFOLDER'
-        'Assets\Endpoints'              = 'CONFIGURATION_ASSETS_ENDPOINTS_FOLDER'
-        'Assets\Transports'             = 'CONFIGURATION_ASSETS_TRANSPORTS_FOLDER'
-    }
-    New-WixFileListFragment `
-        -OutputFile (Join-Path $SetupSolutionRoot 'settings-package\_SetupFiles.wxs') `
-        -ComponentGroupId 'SettingsAppFiles' `
-        -DirectoryMap $settingsDirs `
-        -RecurseRoots @('midi-settings\$(var.Platform)') `
-        -FileIdOverrides @{ 'MidiSettings.exe' = 'ShortcutTargetExe' }
 
     $psDirs = [ordered]@{ 'midi-powershell\$(var.Platform)' = 'POWERSHELL_MODULE_INSTALLFOLDER' }
     New-WixFileListFragment `

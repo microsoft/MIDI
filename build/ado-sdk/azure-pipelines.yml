@@ -21,7 +21,7 @@
 # - SDK DLLs (Microsoft.Windows.Devices.Midi2.dll)
 # - Tool executables (mididiag.exe, midiksinfo.exe, etc.)
 # - Console application (midi.exe)
-# - Settings application (MidiSettings.exe)
+# - Settings application (midisettings.exe, built with the other GUI tools)
 # - PowerShell module DLL (WindowsMidiServices.dll)
 # - PowerShell scripts (.ps1, .psd1 files)
 # - Installer executables (WindowsMidiServicesSdkRuntimeSetup.exe)
@@ -549,70 +549,6 @@ stages:
         targetPath: '$(Build.SourcesDirectory)\src\user-tools\midi-console\Midi\bin\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)'
         artifact: 'ConsoleApp-$(BuildPlatform)'
 
-  - job: BuildSettingsApp
-    displayName: 'Build MIDI Settings'
-    strategy:
-      matrix:
-        x64:
-          BuildPlatform: 'x64'
-          RuntimeIdentifier: 'win-x64'
-        # Uncomment when Arm64 support is ready
-        # Arm64:
-        #   BuildPlatform: 'Arm64'
-        #   RuntimeIdentifier: 'win-arm64'
-    steps:
-    - checkout: self
-
-    - task: DownloadPipelineArtifact@2
-      displayName: 'Download NuGet Package'
-      inputs:
-        artifact: 'NuGetPackage'
-        targetPath: '$(Build.SourcesDirectory)\build\release\nuget'
-
-    - task: NuGetCommand@2
-      displayName: 'Restore Settings NuGet Packages'
-      inputs:
-        command: 'restore'
-        restoreSolution: '$(Build.SourcesDirectory)\src\user-tools\midi-settings\midi-settings.sln'
-        feedsToUse: 'config'
-        nugetConfigPath: '$(Build.SourcesDirectory)\NuGet.config'
-
-    - task: DotNetCoreCLI@2
-      displayName: 'Build MIDI Settings ($(BuildPlatform))'
-      inputs:
-        command: 'build'
-        projects: '$(Build.SourcesDirectory)\src\user-tools\midi-settings\Microsoft.Midi.Settings\Microsoft.Midi.Settings.csproj'
-        arguments: >
-          --configuration $(BuildConfiguration)
-          --runtime $(RuntimeIdentifier)
-          /p:Version=$(BuildVersionFullString)
-          /p:FileVersion=$(BuildVersionFileFullString)
-          /p:AssemblyVersion=$(BuildVersionAssemblyFullString)
-          /p:PublishSingleFile=false
-          /p:PublishTrimmed=false
-          /p:SelfContained=false
-
-    # TODO: Configure code signing for Settings application
-    # Uncomment and configure the following task to sign the settings executable
-    # - task: AzureSignTool@3
-    #   displayName: 'Sign MIDI Settings Executable ($(BuildPlatform))'
-    #   inputs:
-    #     ConnectedServiceName: 'YourAzureServiceConnection'
-    #     KeyVaultUrl: 'https://yourkeyvault.vault.azure.net/'
-    #     CertificateName: '$(SigningCertificateName)'
-    #     SignedFilePath: |
-    #       $(Build.SourcesDirectory)\src\user-tools\midi-settings\Microsoft.Midi.Settings\bin\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)\MidiSettings.exe
-    #     TimeStampServer: '$(SigningTimeStampServer)'
-    #     FileDigest: 'SHA256'
-    #     TimeStampDigest: 'SHA256'
-    #     Description: '$(SigningDescription) - Settings Application'
-
-    - task: PublishPipelineArtifact@1
-      displayName: 'Publish Settings Binaries'
-      inputs:
-        targetPath: '$(Build.SourcesDirectory)\src\user-tools\midi-settings\Microsoft.Midi.Settings\bin\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)'
-        artifact: 'SettingsApp-$(BuildPlatform)'
-
   - job: BuildPowerShellModule
     displayName: 'Build PowerShell Module'
     strategy:
@@ -866,6 +802,5 @@ stages:
           Write-Host "  - SDK Runtime Installer (x64)"
           Write-Host "  - SDK Runtime Installer (Arm64)"
           Write-Host "  - Console App (x64, Arm64)"
-          Write-Host "  - Settings App (x64)"
           Write-Host "  - PowerShell Module (x64, Arm64)"
           Write-Host "======================================"

@@ -23,7 +23,7 @@
     
 
         <!-- hard-coded path because sharing a directory with the other MSI is not possible. Would have to write to registry -->
-        <!--<Variable Name="LaunchTarget" Value="[ProgramFiles64Folder]\Windows MIDI Services\Tools\Settings\MidiSettings.exe"/> -->
+        <!--<Variable Name="LaunchTarget" Value="[ProgramFiles64Folder]\Windows MIDI Services\Tools\Settings\midisettings.exe"/> -->
 
         <WixVariable Id="WixUIDialogBmp" Value="midi_installer_logo.bmp" />
 
@@ -150,15 +150,6 @@
                 Permanent="no"
                 Compressed="yes"
                 SourceFile="WindowsMIDIServicesConsoleStandAloneSetup.msi">
-            </MsiPackage>
-
-            
-            <MsiPackage
-                Id="MidiServicesSettingsSetup"
-                Vital="yes"
-                Permanent="no"
-                Compressed="yes"
-                SourceFile="WindowsMIDIServicesSettingsAppStandAloneSetup.msi">
             </MsiPackage>
 
             <MsiPackage

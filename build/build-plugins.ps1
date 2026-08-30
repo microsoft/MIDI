@@ -118,7 +118,7 @@ $env:MIDI_REPO_ROOT = $RepoRoot.TrimEnd('\')
 
 # Each plugin: the transport binaries it stages, its installer solution, and its bundle name.
 # AppName, when present, is a GUI tool that ships in the same installer as the transport, because
-# the tool is useless without it. AppFolder must match MidiToolsService.ToolDefinitions in the
+# the tool is useless without it. AppFolder must match ToolLauncher.cpp in midi-settings in the
 # Settings app, which resolves tools by convention path.
 $Plugins = @(
     [pscustomobject]@{

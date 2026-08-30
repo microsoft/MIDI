@@ -1,0 +1,500 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="AppTitle" xml:space="preserve">
+    <value>MIDI Settings</value>
+  </data>
+
+  <!-- Title bar -->
+  <data name="AppearanceButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Window appearance</value>
+  </data>
+  <data name="AppearanceButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Window appearance</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Keep this window on top</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keep this window on top</value>
+  </data>
+
+  <!-- Appearance flyout -->
+  <data name="AppearanceTitle" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="AppearanceThemeLabel" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="AppearanceThemeSystem" xml:space="preserve">
+    <value>Use system setting</value>
+  </data>
+  <data name="AppearanceThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="AppearanceThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="AppearanceBackdropLabel" xml:space="preserve">
+    <value>Window background</value>
+  </data>
+  <data name="AppearanceBackdropSolid" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="AppearanceBackdropMica" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="AppearanceBackdropAcrylic" xml:space="preserve">
+    <value>Acrylic</value>
+  </data>
+  <data name="AppearanceCustomColorCheckBox" xml:space="preserve">
+    <value>Use a custom background color</value>
+  </data>
+  <data name="AppearanceColorPickerName" xml:space="preserve">
+    <value>Background color</value>
+  </data>
+
+  <!-- Toolbar -->
+  <data name="LoopbackSetupButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI Loopback Setup</value>
+  </data>
+  <data name="LoopbackSetupButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>MIDI Loopback Setup</value>
+  </data>
+  <data name="LoopbackSetupButtonText.Text" xml:space="preserve">
+    <value>Loopback</value>
+  </data>
+  <data name="BluetoothSetupButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Bluetooth MIDI Setup</value>
+  </data>
+  <data name="BluetoothSetupButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Bluetooth MIDI Setup</value>
+  </data>
+  <data name="BluetoothSetupButtonText.Text" xml:space="preserve">
+    <value>Bluetooth</value>
+  </data>
+  <data name="NetworkSetupButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Network MIDI 2.0 Setup</value>
+  </data>
+  <data name="NetworkSetupButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Network MIDI 2.0 Setup</value>
+  </data>
+  <data name="NetworkSetupButtonText.Text" xml:space="preserve">
+    <value>Network</value>
+  </data>
+  <data name="SysExButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI SysEx Tool</value>
+  </data>
+  <data name="SysExButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>MIDI SysEx Tool</value>
+  </data>
+  <data name="SysExButtonText.Text" xml:space="preserve">
+    <value>SysEx</value>
+  </data>
+  <data name="ScratchPadButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI Scratch Pad</value>
+  </data>
+  <data name="ScratchPadButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>MIDI Scratch Pad</value>
+  </data>
+  <data name="ScratchPadButtonText.Text" xml:space="preserve">
+    <value>Scratch Pad</value>
+  </data>
+  <data name="TroubleshooterButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI Troubleshooting and Repair</value>
+  </data>
+  <data name="TroubleshooterButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>MIDI Troubleshooting and Repair</value>
+  </data>
+  <data name="TroubleshooterButtonText.Text" xml:space="preserve">
+    <value>Troubleshoot</value>
+  </data>
+  <data name="GlobalSettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Global MIDI settings</value>
+  </data>
+  <data name="GlobalSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Global MIDI settings</value>
+  </data>
+  <data name="GlobalSettingsButtonText.Text" xml:space="preserve">
+    <value>MIDI Settings</value>
+  </data>
+
+  <!-- Banners -->
+  <data name="FirstRunBar.Title" xml:space="preserve">
+    <value>Finish setting up Windows MIDI Services</value>
+  </data>
+  <data name="FirstRunBar.Message" xml:space="preserve">
+    <value>Creating a configuration file lets your endpoint names, pictures and other settings survive a restart.</value>
+  </data>
+  <data name="FirstRunActionButton.Content" xml:space="preserve">
+    <value>Open MIDI settings</value>
+  </data>
+  <data name="ServiceBar.Title" xml:space="preserve">
+    <value>The MIDI service is not responding</value>
+  </data>
+  <data name="ServiceBar.Message" xml:space="preserve">
+    <value>Endpoints will appear here as soon as the service is available again.</value>
+  </data>
+
+  <!-- Endpoint list -->
+  <data name="TransportFilterComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show endpoints from</value>
+  </data>
+  <data name="TransportFilterAll" xml:space="preserve">
+    <value>All transports</value>
+  </data>
+  <data name="CardViewToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Card view</value>
+  </data>
+  <data name="CardViewToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Card view</value>
+  </data>
+  <data name="ListViewToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>List view</value>
+  </data>
+  <data name="ListViewToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>List view</value>
+  </data>
+  <data name="EndpointCardView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI endpoints</value>
+  </data>
+  <data name="EndpointListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI endpoints</value>
+  </data>
+  <data name="NoEndpointsText.Text" xml:space="preserve">
+    <value>No MIDI endpoints match this filter.</value>
+  </data>
+  <data name="EndpointCountFormat" xml:space="preserve">
+    <value>{0} endpoints</value>
+  </data>
+  <data name="EndpointMonitorButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Monitor this endpoint</value>
+  </data>
+  <data name="EndpointMonitorButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Monitor this endpoint</value>
+  </data>
+  <data name="EndpointMonitorButtonText.Text" xml:space="preserve">
+    <value>Monitor</value>
+  </data>
+  <data name="EndpointPanicButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Send MIDI panic to this endpoint</value>
+  </data>
+  <data name="EndpointPanicButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Stop all notes and reset all controllers</value>
+  </data>
+  <data name="EndpointPanicButtonText.Text" xml:space="preserve">
+    <value>Panic</value>
+  </data>
+
+  <!-- Endpoint descriptions -->
+  <data name="NativeFormatUmp" xml:space="preserve">
+    <value>Native UMP</value>
+  </data>
+  <data name="NativeFormatBytes" xml:space="preserve">
+    <value>Native MIDI 1.0 bytes</value>
+  </data>
+  <data name="NativeFormatUnknown" xml:space="preserve">
+    <value>Unknown data format</value>
+  </data>
+  <data name="MultiClient" xml:space="preserve">
+    <value>Multi-client</value>
+  </data>
+  <data name="TransportWithCodeFormat" xml:space="preserve">
+    <value>{0} ({1})</value>
+  </data>
+  <data name="ValueNotSupplied" xml:space="preserve">
+    <value>Not supplied</value>
+  </data>
+  <data name="Midi1PortDetailFormat" xml:space="preserve">
+    <value>Group {0}, port {1}</value>
+  </data>
+
+  <!-- Endpoint details -->
+  <data name="EndpointDetailDialog.Title" xml:space="preserve">
+    <value>Endpoint</value>
+  </data>
+  <data name="EndpointDetailDialog.CloseButtonText" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="DetailCustomizeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Customize this endpoint</value>
+  </data>
+  <data name="DetailCustomizeButtonText.Text" xml:space="preserve">
+    <value>Customize</value>
+  </data>
+  <data name="DetailMonitorButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Monitor this endpoint</value>
+  </data>
+  <data name="DetailMonitorButtonText.Text" xml:space="preserve">
+    <value>Monitor</value>
+  </data>
+  <data name="DetailPanicButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Send MIDI panic to this endpoint</value>
+  </data>
+  <data name="DetailPanicButtonText.Text" xml:space="preserve">
+    <value>Panic</value>
+  </data>
+  <data name="DetailTransportLabel.Text" xml:space="preserve">
+    <value>Transport</value>
+  </data>
+  <data name="DetailNativeFormatLabel.Text" xml:space="preserve">
+    <value>Native data format</value>
+  </data>
+  <data name="DetailProductInstanceIdLabel.Text" xml:space="preserve">
+    <value>Product instance ID</value>
+  </data>
+  <data name="DetailSerialNumberLabel.Text" xml:space="preserve">
+    <value>Serial number</value>
+  </data>
+  <data name="DetailEndpointIdLabel.Text" xml:space="preserve">
+    <value>Endpoint device ID</value>
+  </data>
+  <data name="DetailCopyIdButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Copy the endpoint device ID</value>
+  </data>
+  <data name="DetailCopyIdButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Copy the endpoint device ID</value>
+  </data>
+  <data name="DetailSourcePortsLabel.Text" xml:space="preserve">
+    <value>MIDI 1.0 input ports</value>
+  </data>
+  <data name="DetailDestinationPortsLabel.Text" xml:space="preserve">
+    <value>MIDI 1.0 output ports</value>
+  </data>
+  <data name="DetailNoSourcePortsText.Text" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="DetailNoDestinationPortsText.Text" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="UniqueIdPresent" xml:space="preserve">
+    <value>This device reports an identifier of its own, so your customizations stay with it when it is plugged into a different port.</value>
+  </data>
+  <data name="UniqueIdMissing" xml:space="preserve">
+    <value>This device does not report a serial number or product instance ID. Customizations are matched by the port it is plugged into, so they may not follow it elsewhere.</value>
+  </data>
+  <data name="EndpointIdCopied" xml:space="preserve">
+    <value>Copied to the clipboard.</value>
+  </data>
+  <data name="MonitorLaunchFailed" xml:space="preserve">
+    <value>MIDI Monitor could not be started. Install the Windows MIDI Services tools to use it.</value>
+  </data>
+  <data name="PanicSentFormat" xml:space="preserve">
+    <value>Sent all notes off, all sound off and reset all controllers to {0}.</value>
+  </data>
+  <data name="PanicFailedFormat" xml:space="preserve">
+    <value>MIDI panic could not be sent. {0}</value>
+  </data>
+
+  <!-- Customization -->
+  <data name="CustomizeDialog.Title" xml:space="preserve">
+    <value>Customize endpoint</value>
+  </data>
+  <data name="CustomizeDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="CustomizeDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="CustomizeNameTextBox.Header" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="CustomizeDescriptionTextBox.Header" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="CustomizeImageHeader.Text" xml:space="preserve">
+    <value>Picture</value>
+  </data>
+  <data name="CustomizeBrowseImageButton.Content" xml:space="preserve">
+    <value>Choose...</value>
+  </data>
+  <data name="CustomizeClearImageButton.Content" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="CustomizePortNamingBar.Title" xml:space="preserve">
+    <value>MIDI 1.0 port names</value>
+  </data>
+  <data name="CustomizePortNamingBar.Message" xml:space="preserve">
+    <value>Naming the individual MIDI 1.0 ports of this device is not available in this preview. Use the MIDI console for now.</value>
+  </data>
+  <data name="ImageCopyFailed" xml:space="preserve">
+    <value>That picture could not be copied into the shared MIDI pictures folder.</value>
+  </data>
+  <data name="CustomizeSaved" xml:space="preserve">
+    <value>The endpoint was updated and saved to the configuration file.</value>
+  </data>
+  <data name="CustomizeFailed" xml:space="preserve">
+    <value>The MIDI service did not accept the change.</value>
+  </data>
+  <data name="CustomizeFailedFormat" xml:space="preserve">
+    <value>The MIDI service did not accept the change. {0}</value>
+  </data>
+  <data name="CustomizeNotSaved" xml:space="preserve">
+    <value>The change was applied, but it could not be saved and will be lost when the service restarts.</value>
+  </data>
+  <data name="CustomizeNotSavedFormat" xml:space="preserve">
+    <value>The change was applied, but it could not be saved and will be lost when the service restarts. {0}</value>
+  </data>
+
+  <!-- Global settings -->
+  <data name="GlobalSettingsDialog.Title" xml:space="preserve">
+    <value>Global MIDI settings</value>
+  </data>
+  <data name="GlobalSettingsDialog.CloseButtonText" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="GlobalElevationBar.Title" xml:space="preserve">
+    <value>Administrator rights are needed</value>
+  </data>
+  <data name="GlobalElevationBar.Message" xml:space="preserve">
+    <value>These settings are shared by everyone who uses this PC.</value>
+  </data>
+  <data name="GlobalElevationButton.Content" xml:space="preserve">
+    <value>Restart as administrator</value>
+  </data>
+  <data name="GlobalConfigFileHeader.Text" xml:space="preserve">
+    <value>Configuration file</value>
+  </data>
+  <data name="GlobalConfigFileHelp.Text" xml:space="preserve">
+    <value>Your endpoint names, pictures and transport setup are stored here. Only one file is active at a time.</value>
+  </data>
+  <data name="ConfigFileComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Configuration file</value>
+  </data>
+  <data name="ConfigFileApplyButton.Content" xml:space="preserve">
+    <value>Use this file</value>
+  </data>
+  <data name="NewConfigNameTextBox.PlaceholderText" xml:space="preserve">
+    <value>New configuration name</value>
+  </data>
+  <data name="NewConfigNameTextBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>New configuration name</value>
+  </data>
+  <data name="CreateConfigButton.Content" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="CopyConfigButton.Content" xml:space="preserve">
+    <value>Save a copy of the active file...</value>
+  </data>
+  <data name="GlobalPortNamingHeader.Text" xml:space="preserve">
+    <value>Default MIDI 1.0 port naming</value>
+  </data>
+  <data name="GlobalPortNamingHelp.Text" xml:space="preserve">
+    <value>How ports are named for older apps which use WinMM or WinRT MIDI 1.0. Changing this renames ports, so apps may need to be pointed at them again.</value>
+  </data>
+  <data name="PortNamingClassicRadio.Content" xml:space="preserve">
+    <value>Compatible with older Windows (recommended)</value>
+  </data>
+  <data name="PortNamingNewStyleRadio.Content" xml:space="preserve">
+    <value>New style, based on the endpoint and block names</value>
+  </data>
+  <data name="GlobalServiceHeader.Text" xml:space="preserve">
+    <value>MIDI service</value>
+  </data>
+  <data name="GlobalServiceHelp.Text" xml:space="preserve">
+    <value>Changing the configuration file or the port naming takes effect when the service restarts.</value>
+  </data>
+  <data name="RestartServiceButton.Content" xml:space="preserve">
+    <value>Restart the MIDI service</value>
+  </data>
+  <data name="ConfigFileCurrentFormat" xml:space="preserve">
+    <value>{0} (in use)</value>
+  </data>
+  <data name="ConfigFileNoSelection" xml:space="preserve">
+    <value>Choose a configuration file first.</value>
+  </data>
+  <data name="ConfigFileNoneActive" xml:space="preserve">
+    <value>There is no active configuration file to copy.</value>
+  </data>
+  <data name="ConfigFileFailedFormat" xml:space="preserve">
+    <value>That did not work. {0}</value>
+  </data>
+  <data name="ConfigFileChangedRestartNeeded" xml:space="preserve">
+    <value>The configuration file was changed. Restart the MIDI service to use it.</value>
+  </data>
+  <data name="ConfigFileCreatedRestartNeeded" xml:space="preserve">
+    <value>The configuration file was created and is now the active one. Restart the MIDI service to use it.</value>
+  </data>
+  <data name="ConfigFileCopiedFormat" xml:space="preserve">
+    <value>Copied to {0}</value>
+  </data>
+  <data name="ConfigNameNotUsable" xml:space="preserve">
+    <value>Enter a name using letters, numbers, spaces, hyphens or underscores.</value>
+  </data>
+  <data name="PortNamingChangedRestartNeeded" xml:space="preserve">
+    <value>The default port naming was changed. Restart the MIDI service to use it.</value>
+  </data>
+  <data name="PortNamingFailedFormat" xml:space="preserve">
+    <value>The default port naming could not be changed. {0}</value>
+  </data>
+  <data name="ServiceRestarting" xml:space="preserve">
+    <value>Restarting the MIDI service...</value>
+  </data>
+  <data name="ServiceRestarted" xml:space="preserve">
+    <value>The MIDI service restarted.</value>
+  </data>
+  <data name="ServiceRestartFailedFormat" xml:space="preserve">
+    <value>The MIDI service could not be restarted. {0}</value>
+  </data>
+  <data name="ElevationDeclined" xml:space="preserve">
+    <value>Administrator rights were not granted, so these settings cannot be changed.</value>
+  </data>
+</root>

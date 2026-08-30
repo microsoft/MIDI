@@ -28,7 +28,7 @@
             <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
                 <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
                 <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
-                    <!-- Name must match MidiToolsService.ToolDefinitions in the Settings app -->
+                    <!-- Name must match ToolLauncher.cpp in the MIDI Settings app -->
                     <Directory Id="TOOL_NETWORKSETUP_FOLDER" Name="NetworkSetup" />
                 </Directory>
             </Directory>

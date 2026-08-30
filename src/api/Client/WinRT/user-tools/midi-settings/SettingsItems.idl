@@ -1,0 +1,63 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+// Row types for the lists in this app. They implement INotifyPropertyChanged because the
+// endpoint watcher updates rows in place: rebuilding the collection would throw away the
+// scroll position and the customer's selection every time a device announced itself.
+namespace midisettings
+{
+    // One MIDI endpoint, shown as a card or as a list row.
+    [default_interface]
+    runtimeclass EndpointItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        EndpointItem();
+
+        String EndpointDeviceId{ get; };
+        String Name{ get; };
+        String Description{ get; };
+        String TransportCode{ get; };
+        String DetailText{ get; };
+
+        // Resolved from the customer's own picture, then the transport's default art. Built on
+        // first use, because a file path string will not bind to Image.Source.
+        Microsoft.UI.Xaml.Media.ImageSource Image{ get; };
+
+        Microsoft.UI.Xaml.Visibility DescriptionVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility MonitorVisibility{ get; };
+    }
+
+    // One WinMM / WinRT MIDI 1.0 port belonging to an endpoint.
+    [default_interface]
+    runtimeclass Midi1PortItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        Midi1PortItem();
+
+        String PortDeviceId{ get; };
+        String Name{ get; };
+        String DetailText{ get; };
+    }
+
+    // An entry in the transport filter drop-down. An empty code means every transport.
+    [default_interface]
+    runtimeclass TransportChoice
+    {
+        TransportChoice();
+
+        String DisplayName{ get; };
+        String TransportCode{ get; };
+    }
+
+    // A configuration file found in the machine configuration folder.
+    [default_interface]
+    runtimeclass ConfigFileChoice
+    {
+        ConfigFileChoice();
+
+        String DisplayName{ get; };
+        String FileName{ get; };
+    }
+}

@@ -53,6 +53,12 @@ namespace midiapp
             uint16_t resourceId,
             int32_t sizePixels) noexcept;
 
+        // The main icon of another executable, for a tool that launches its siblings. The file
+        // is mapped as data only, so nothing in it is ever executed or initialized.
+        static winrt::Microsoft::UI::Xaml::Media::Imaging::WriteableBitmap LoadIconImageSourceFromFile(
+            std::wstring const& executablePath,
+            int32_t sizePixels) noexcept;
+
         // Static, because this runs before Activate and therefore before Initialize.
         static void RestorePlacement(
             winrt::Microsoft::UI::Xaml::Window const& window,
