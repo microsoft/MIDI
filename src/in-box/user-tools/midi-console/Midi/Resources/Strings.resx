@@ -298,7 +298,7 @@
     <value>Monitoring incoming messages on</value>
   </data>
   <data name="MonitorPressEscapeToStopMonitoringMessage" xml:space="preserve">
-    <value>Press escape to stop monitoring.</value>
+    <value>Press escape to stop monitoring, enter or space to insert a separator, or 'i' to redisplay the header info.</value>
   </data>
   <data name="MonitorSessionNameSuffix" xml:space="preserve">
     <value>Monitor</value>

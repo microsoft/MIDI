@@ -44,9 +44,9 @@ namespace Microsoft.Midi.ConsoleApp
             switch (purpose)
             {
                 case MidiEndpointDevicePurpose.DiagnosticPing:
-                    return "⚙";
-                case MidiEndpointDevicePurpose.DiagnosticLoopback:
                     return "🛠️";
+                case MidiEndpointDevicePurpose.DiagnosticLoopback:
+                    return "⚙";
                 case MidiEndpointDevicePurpose.NormalMessageEndpoint:
                     return "🎹";
                 case MidiEndpointDevicePurpose.VirtualDeviceResponder:
@@ -69,6 +69,10 @@ namespace Microsoft.Midi.ConsoleApp
             else if (device.GetTransportSuppliedInfo().TransportCode.ToLower() == "net2udp")
             {
                 return "🛜";
+            }
+            else if (device.GetTransportSuppliedInfo().TransportCode.ToLower() == "blemidi")
+            {
+                return "📱";
             }
             else
             {
