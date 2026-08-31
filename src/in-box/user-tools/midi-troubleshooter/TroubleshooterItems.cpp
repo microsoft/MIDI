@@ -86,11 +86,13 @@ namespace winrt::miditroubleshooter::implementation
         winrt::hstring const& name,
         winrt::hstring const& value,
         winrt::hstring const& comment,
-        uint32_t severity) noexcept
+        uint32_t severity,
+        winrt::hstring const& detail) noexcept
     {
         m_name = name;
         m_value = value;
         m_comment = comment;
+        m_detail = detail;
 
         m_okVisibility = severity == 0 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;
         m_warningVisibility = severity == 1 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;

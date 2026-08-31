@@ -68,6 +68,10 @@ namespace miditroubleshooter
         String Value{ get; };
         String Comment{ get; };
 
+        // The module path for a transport, shown on its own line. Empty for plain entries.
+        String Detail{ get; };
+        Microsoft.UI.Xaml.Visibility DetailVisibility{ get; };
+
         Microsoft.UI.Xaml.Visibility OkVisibility{ get; };
         Microsoft.UI.Xaml.Visibility WarningVisibility{ get; };
         Microsoft.UI.Xaml.Visibility ErrorVisibility{ get; };

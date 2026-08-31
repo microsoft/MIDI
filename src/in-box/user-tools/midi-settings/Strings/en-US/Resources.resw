@@ -428,8 +428,14 @@
   <data name="ConfigFileComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Configuration file</value>
   </data>
+  <data name="ConfigFileActiveLabel.Text" xml:space="preserve">
+    <value>Active configuration</value>
+  </data>
   <data name="ConfigFileApplyButton.Content" xml:space="preserve">
     <value>Use this file</value>
+  </data>
+  <data name="ConfigFileCreateLabel.Text" xml:space="preserve">
+    <value>Create a new configuration</value>
   </data>
   <data name="NewConfigNameTextBox.PlaceholderText" xml:space="preserve">
     <value>New configuration name</value>
@@ -439,6 +445,12 @@
   </data>
   <data name="CreateConfigButton.Content" xml:space="preserve">
     <value>Create</value>
+  </data>
+  <data name="NewConfigNameHelp.Text" xml:space="preserve">
+    <value>Give it a short name you will recognize later, such as Studio or Live. The new file starts empty, so your current names, pictures and transport setup are not copied into it. Creating a file does not switch to it: pick it above, then choose Use this file.</value>
+  </data>
+  <data name="ConfigFileCopyLabel.Text" xml:space="preserve">
+    <value>Back up the active configuration</value>
   </data>
   <data name="CopyConfigButton.Content" xml:space="preserve">
     <value>Save a copy of the active file...</value>

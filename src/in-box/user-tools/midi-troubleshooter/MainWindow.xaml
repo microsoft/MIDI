@@ -82,6 +82,57 @@
                                TextWrapping="Wrap" />
                 </Grid>
             </DataTemplate>
+
+            <!-- Transports get their own template: the class id and module path are far too long
+                 for the shared row, and every row is its own Grid, so an Auto column would be
+                 measured per item and the values would not line up down the page. -->
+            <DataTemplate x:Key="RegistryTransportTemplate" x:DataType="local:RegistryEntryItem">
+                <Grid Margin="0,0,0,14" RowSpacing="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="24" />
+                        <ColumnDefinition Width="260" />
+                        <ColumnDefinition Width="300" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <FontIcon Grid.Row="0" Grid.Column="0" Glyph="&#xE73E;" FontSize="12"
+                              HorizontalAlignment="Left"
+                              Visibility="{x:Bind OkVisibility, Mode=OneWay}"
+                              Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
+                    <FontIcon Grid.Row="0" Grid.Column="0" Glyph="&#xE7BA;" FontSize="12"
+                              HorizontalAlignment="Left"
+                              Visibility="{x:Bind WarningVisibility, Mode=OneWay}"
+                              Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                    <FontIcon Grid.Row="0" Grid.Column="0" Glyph="&#xEA39;" FontSize="12"
+                              HorizontalAlignment="Left"
+                              Visibility="{x:Bind ErrorVisibility, Mode=OneWay}"
+                              Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+
+                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{x:Bind Name, Mode=OneWay}"
+                               Margin="0,0,12,0"
+                               Style="{StaticResource PropertyValueStyle}" />
+                    <TextBlock Grid.Row="0" Grid.Column="2" Text="{x:Bind Value, Mode=OneWay}"
+                               Margin="0,0,12,0"
+                               Style="{StaticResource PropertyValueStyle}" />
+                    <TextBlock Grid.Row="0" Grid.Column="3" Text="{x:Bind Comment, Mode=OneWay}"
+                               Style="{StaticResource PropertyLabelStyle}"
+                               TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis" />
+
+                    <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3"
+                               Text="{x:Bind Detail, Mode=OneWay}"
+                               Visibility="{x:Bind DetailVisibility, Mode=OneWay}"
+                               Style="{StaticResource PropertyLabelStyle}"
+                               FontFamily="Cascadia Mono, Consolas, Courier New"
+                               FontSize="11"
+                               IsTextSelectionEnabled="True"
+                               TextWrapping="Wrap" />
+                </Grid>
+            </DataTemplate>
         </Grid.Resources>
 
         <!-- hidden when a system backdrop is in use, so the material shows through -->
@@ -860,7 +911,7 @@
                                            Text="Registered transports"
                                            Style="{StaticResource SectionHeaderTextStyle}" />
                                 <ItemsControl x:Name="RegistryTransportsItemsControl"
-                                              ItemTemplate="{StaticResource RegistryEntryTemplate}" />
+                                              ItemTemplate="{StaticResource RegistryTransportTemplate}" />
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>

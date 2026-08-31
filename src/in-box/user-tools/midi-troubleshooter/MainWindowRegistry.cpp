@@ -77,10 +77,9 @@ namespace winrt::miditroubleshooter::implementation
                 winrt::get_self<RegistryEntryItem>(item)->Initialize(
                     winrt::hstring{ transport.Name },
                     winrt::hstring{ transport.ClassId },
-                    transport.ModulePath.empty() ?
-                        comment :
-                        res::FormatString(L"RegistryTransportCommentFormat", comment, winrt::hstring{ transport.ModulePath }),
-                    severity);
+                    comment,
+                    severity,
+                    winrt::hstring{ transport.ModulePath });
 
                 m_transportRegistryEntries.Append(item);
             }

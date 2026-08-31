@@ -66,6 +66,23 @@
                 <Setter Property="CornerRadius" Value="8" />
             </Style>
 
+            <!-- Groups the controls of one global setting onto the same surface, so each group
+                 reads as a block instead of a run of loose controls. -->
+            <Style x:Key="SettingsCardStyle" TargetType="Border" BasedOn="{StaticResource EndpointSurfaceStyle}">
+                <Setter Property="Padding" Value="16" />
+            </Style>
+
+            <!-- The row actions share a width, otherwise the combo box and text box beside them
+                 stop at different x positions and the column looks ragged. -->
+            <Style x:Key="SettingsRowButtonStyle" TargetType="Button">
+                <Setter Property="MinWidth" Value="128" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+            </Style>
+
+            <Style x:Key="SettingsSubLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+
             <!-- Card view. Fixed size, because a wrap grid gives every cell the same box: without
                  it a long description pushes one card's buttons below its neighbors'. -->
             <DataTemplate x:Key="EndpointCardTemplate" x:DataType="local:EndpointItem">
@@ -760,10 +777,10 @@
                        Title="Global MIDI settings"
                        CloseButtonText="Close">
             <ContentDialog.Resources>
-                <x:Double x:Key="ContentDialogMaxWidth">720</x:Double>
+                <x:Double x:Key="ContentDialogMaxWidth">760</x:Double>
             </ContentDialog.Resources>
-            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="560">
-                <StackPanel Width="600" Spacing="16" Margin="0,4,12,4">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="600">
+                <StackPanel Width="640" Spacing="24" Margin="0,4,12,8">
 
                     <InfoBar x:Name="GlobalElevationBar"
                              x:Uid="GlobalElevationBar"
@@ -779,7 +796,7 @@
                         </InfoBar.ActionButton>
                     </InfoBar>
 
-                    <StackPanel Spacing="6">
+                    <StackPanel Spacing="8">
                         <TextBlock x:Uid="GlobalConfigFileHeader"
                                    Text="Configuration file"
                                    Style="{ThemeResource BodyStrongTextBlockStyle}" />
@@ -788,46 +805,75 @@
                                    TextWrapping="Wrap"
                                    Style="{StaticResource PropertyLabelStyle}" />
 
-                        <Grid ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <ComboBox x:Name="ConfigFileComboBox"
-                                      x:Uid="ConfigFileComboBox"
-                                      Grid.Column="0"
-                                      HorizontalAlignment="Stretch"
-                                      ItemTemplate="{StaticResource ConfigFileChoiceTemplate}" />
-                            <Button x:Name="ConfigFileApplyButton"
-                                    x:Uid="ConfigFileApplyButton"
-                                    Grid.Column="1"
-                                    Content="Use this file"
-                                    Click="OnApplyConfigFileClick" />
-                        </Grid>
+                        <Border Style="{StaticResource SettingsCardStyle}">
+                            <StackPanel Spacing="20">
 
-                        <Grid ColumnSpacing="8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBox x:Name="NewConfigNameTextBox"
-                                     x:Uid="NewConfigNameTextBox"
-                                     Grid.Column="0"
-                                     PlaceholderText="New configuration name" />
-                            <Button x:Name="CreateConfigButton"
-                                    x:Uid="CreateConfigButton"
-                                    Grid.Column="1"
-                                    Content="Create"
-                                    Click="OnCreateConfigFileClick" />
-                        </Grid>
+                                <StackPanel Spacing="8">
+                                    <TextBlock x:Uid="ConfigFileActiveLabel"
+                                               Text="Active configuration"
+                                               Style="{StaticResource SettingsSubLabelStyle}" />
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox x:Name="ConfigFileComboBox"
+                                                  x:Uid="ConfigFileComboBox"
+                                                  Grid.Column="0"
+                                                  HorizontalAlignment="Stretch"
+                                                  ItemTemplate="{StaticResource ConfigFileChoiceTemplate}" />
+                                        <Button x:Name="ConfigFileApplyButton"
+                                                x:Uid="ConfigFileApplyButton"
+                                                Grid.Column="1"
+                                                Style="{StaticResource SettingsRowButtonStyle}"
+                                                Content="Use this file"
+                                                Click="OnApplyConfigFileClick" />
+                                    </Grid>
+                                </StackPanel>
 
-                        <Button x:Name="CopyConfigButton"
-                                x:Uid="CopyConfigButton"
-                                Content="Save a copy of the active file..."
-                                Click="OnCopyConfigFileClick" />
+                                <StackPanel Spacing="8">
+                                    <TextBlock x:Uid="ConfigFileCreateLabel"
+                                               Text="Create a new configuration"
+                                               Style="{StaticResource SettingsSubLabelStyle}" />
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox x:Name="NewConfigNameTextBox"
+                                                 x:Uid="NewConfigNameTextBox"
+                                                 Grid.Column="0"
+                                                 HorizontalAlignment="Stretch"
+                                                 PlaceholderText="New configuration name" />
+                                        <Button x:Name="CreateConfigButton"
+                                                x:Uid="CreateConfigButton"
+                                                Grid.Column="1"
+                                                Style="{StaticResource SettingsRowButtonStyle}"
+                                                Content="Create"
+                                                Click="OnCreateConfigFileClick" />
+                                    </Grid>
+                                    <TextBlock x:Uid="NewConfigNameHelp"
+                                               Text="Give it a short name you will recognize later, such as Studio or Live. The new file starts empty, so your current names, pictures and transport setup are not copied into it. Creating a file does not switch to it: pick it above, then choose Use this file."
+                                               TextWrapping="Wrap"
+                                               Style="{StaticResource PropertyLabelStyle}" />
+                                </StackPanel>
+
+                                <StackPanel Spacing="8">
+                                    <TextBlock x:Uid="ConfigFileCopyLabel"
+                                               Text="Back up the active configuration"
+                                               Style="{StaticResource SettingsSubLabelStyle}" />
+                                    <Button x:Name="CopyConfigButton"
+                                            x:Uid="CopyConfigButton"
+                                            HorizontalAlignment="Left"
+                                            Content="Save a copy of the active file..."
+                                            Click="OnCopyConfigFileClick" />
+                                </StackPanel>
+
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
 
-                    <StackPanel Spacing="6">
+                    <StackPanel Spacing="8">
                         <TextBlock x:Uid="GlobalPortNamingHeader"
                                    Text="Default MIDI 1.0 port naming"
                                    Style="{ThemeResource BodyStrongTextBlockStyle}" />
@@ -836,19 +882,23 @@
                                    TextWrapping="Wrap"
                                    Style="{StaticResource PropertyLabelStyle}" />
 
-                        <RadioButton x:Name="PortNamingClassicRadio"
-                                     x:Uid="PortNamingClassicRadio"
-                                     GroupName="PortNaming"
-                                     Content="Compatible with older Windows (recommended)"
-                                     Click="OnPortNamingChanged" />
-                        <RadioButton x:Name="PortNamingNewStyleRadio"
-                                     x:Uid="PortNamingNewStyleRadio"
-                                     GroupName="PortNaming"
-                                     Content="New style, based on the endpoint and block names"
-                                     Click="OnPortNamingChanged" />
+                        <Border Style="{StaticResource SettingsCardStyle}">
+                            <StackPanel Spacing="12">
+                                <RadioButton x:Name="PortNamingClassicRadio"
+                                             x:Uid="PortNamingClassicRadio"
+                                             GroupName="PortNaming"
+                                             Content="Compatible with older Windows (recommended)"
+                                             Click="OnPortNamingChanged" />
+                                <RadioButton x:Name="PortNamingNewStyleRadio"
+                                             x:Uid="PortNamingNewStyleRadio"
+                                             GroupName="PortNaming"
+                                             Content="New style, based on the endpoint and block names"
+                                             Click="OnPortNamingChanged" />
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
 
-                    <StackPanel Spacing="6">
+                    <StackPanel Spacing="8">
                         <TextBlock x:Uid="GlobalServiceHeader"
                                    Text="MIDI service"
                                    Style="{ThemeResource BodyStrongTextBlockStyle}" />
@@ -856,10 +906,13 @@
                                    Text="Changing the configuration file or the port naming takes effect when the service restarts."
                                    TextWrapping="Wrap"
                                    Style="{StaticResource PropertyLabelStyle}" />
-                        <Button x:Name="RestartServiceButton"
-                                x:Uid="RestartServiceButton"
-                                Content="Restart the MIDI service"
-                                Click="OnRestartServiceClick" />
+                        <Border Style="{StaticResource SettingsCardStyle}">
+                            <Button x:Name="RestartServiceButton"
+                                    x:Uid="RestartServiceButton"
+                                    HorizontalAlignment="Left"
+                                    Content="Restart the MIDI service"
+                                    Click="OnRestartServiceClick" />
+                        </Border>
                     </StackPanel>
 
                     <TextBlock x:Name="GlobalStatusText"

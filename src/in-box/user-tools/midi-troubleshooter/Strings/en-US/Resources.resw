@@ -810,9 +810,6 @@
   <data name="RegistryCommentTransportFileMissing" xml:space="preserve">
     <value>The registered file is not on this PC</value>
   </data>
-  <data name="RegistryTransportCommentFormat" xml:space="preserve">
-    <value>{0} - {1}</value>
-  </data>
   <data name="TransportNameMidisrv" xml:space="preserve">
     <value>(Midisrv transport)</value>
   </data>

@@ -183,6 +183,12 @@ namespace winrt::miditroubleshooter::implementation
         winrt::hstring Name() const noexcept { return m_name; }
         winrt::hstring Value() const noexcept { return m_value; }
         winrt::hstring Comment() const noexcept { return m_comment; }
+        winrt::hstring Detail() const noexcept { return m_detail; }
+
+        xaml::Visibility DetailVisibility() const noexcept
+        {
+            return m_detail.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible;
+        }
 
         xaml::Visibility OkVisibility() const noexcept { return m_okVisibility; }
         xaml::Visibility WarningVisibility() const noexcept { return m_warningVisibility; }
@@ -192,13 +198,15 @@ namespace winrt::miditroubleshooter::implementation
             winrt::hstring const& name,
             winrt::hstring const& value,
             winrt::hstring const& comment,
-            uint32_t severity) noexcept;
+            uint32_t severity,
+            winrt::hstring const& detail = {}) noexcept;
 
         MIDI_TSHOOT_OBSERVABLE_ITEM()
 
         winrt::hstring m_name{};
         winrt::hstring m_value{};
         winrt::hstring m_comment{};
+        winrt::hstring m_detail{};
 
         xaml::Visibility m_okVisibility{ xaml::Visibility::Visible };
         xaml::Visibility m_warningVisibility{ xaml::Visibility::Collapsed };
