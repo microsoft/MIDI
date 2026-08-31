@@ -49,6 +49,7 @@
 #include <Midi2MidiSrvTransport.h>
 
 #include "TransportConfigTestHelper.h"
+#include "..\inc\MidiTestDeviceNodes.h"
 
 #endif //PCH_H
 

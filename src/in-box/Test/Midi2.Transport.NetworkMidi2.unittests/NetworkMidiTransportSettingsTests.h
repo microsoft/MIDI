@@ -27,6 +27,9 @@ public:
     TEST_CLASS_SETUP(ClassSetup);
     TEST_CLASS_CLEANUP(ClassCleanup);
 
+    TEST_METHOD_SETUP(TestSetup);
+    TEST_METHOD_CLEANUP(TestCleanup);
+
     TEST_METHOD(SettingsAreReportedBack);
     TEST_METHOD(ValuesAboveTheRangeAreClampedToTheMaximum);
     TEST_METHOD(ValuesBelowTheRangeAreClampedToTheMinimum);
@@ -41,4 +44,8 @@ public:
     TEST_METHOD(WrongTypesInAClientEntryDoNotThrow);
     TEST_METHOD(WrongTypesInAnAllowedClientsArrayDoNotThrow);
     TEST_METHOD(OverlongServiceInstanceNameIsRejected);
+
+private:
+
+    MidiTest::DeviceNodeTracker m_deviceNodeTracker{};
 };

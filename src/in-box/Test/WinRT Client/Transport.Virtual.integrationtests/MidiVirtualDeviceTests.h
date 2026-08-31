@@ -22,8 +22,8 @@ public:
     //TEST_CLASS_SETUP(ClassSetup);
     //TEST_CLASS_CLEANUP(ClassCleanup);
 
-    //TEST_METHOD_SETUP(TestSetup);
-    //TEST_METHOD_CLEANUP(TestCleanup);
+    TEST_METHOD_SETUP(TestSetup);
+    TEST_METHOD_CLEANUP(TestCleanup);
 
     TEST_METHOD(TestCreateVirtualDevice);
 
@@ -69,5 +69,6 @@ public:
 
 private:
 
+    MidiTest::DeviceNodeTracker m_deviceNodeTracker{};
 
 };

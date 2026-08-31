@@ -210,6 +210,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Inc\MidiTestCommon.h" />
+    <ClInclude Include="..\..\Inc\MidiTestDeviceNodes.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

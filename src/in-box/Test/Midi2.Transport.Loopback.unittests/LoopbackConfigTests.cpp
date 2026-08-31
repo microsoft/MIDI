@@ -374,6 +374,24 @@ namespace
 }
 
 
+// A loopback created here through the service leaves a deactivated software device node behind
+// for each of its UMP endpoints and each of their MIDI 1.0 ports, because the service never
+// deletes one. These two hooks remove exactly the nodes this test method caused to be created.
+bool LoopbackConfigTests::TestSetup()
+{
+    m_deviceNodeTracker.Start();
+
+    return true;
+}
+
+bool LoopbackConfigTests::TestCleanup()
+{
+    m_deviceNodeTracker.RemoveDeviceNodesCreatedSinceStart();
+
+    return true;
+}
+
+
 void LoopbackConfigTests::TestCreateAndRemoveLoopbackPair()
 {
     if (!LoopbackAvailable())

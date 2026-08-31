@@ -25,6 +25,9 @@ public:
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.dll")
     END_TEST_CLASS()
 
+    TEST_METHOD_SETUP(TestSetup);
+    TEST_METHOD_CLEANUP(TestCleanup);
+
     // 100,000 MIDI 1.0 UMP messages, sent 10 at a time through the COM extensions
     TEST_METHOD(BenchmarkComExtensionsSendReceive);
 
@@ -75,5 +78,7 @@ public:
 
 private:
     std::function<void(GUID, GUID, UINT64, UINT32, UINT32*)> m_midiInCallback;
+
+    MidiTest::DeviceNodeTracker m_deviceNodeTracker{};
 
 };

@@ -45,6 +45,7 @@ using namespace winrt::Windows::Devices::Midi2::Utilities::Messages;
 #include "MidiDefs.h"
 
 #include "..\SdkTestCommon.h"
+#include "..\..\inc\MidiTestDeviceNodes.h"
 
 #include "MidiVirtualDeviceTests.h"
 

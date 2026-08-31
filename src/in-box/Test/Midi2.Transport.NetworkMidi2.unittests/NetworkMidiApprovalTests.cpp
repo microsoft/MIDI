@@ -576,6 +576,25 @@ bool NetworkMidiApprovalTests::ClassCleanup()
 }
 
 
+// A host, and every remote client which connects to one, leaves a deactivated software device
+// node behind for its UMP endpoint and any MIDI 1.0 ports created alongside it, because the
+// service never deletes one. These two hooks remove exactly the nodes this test method caused
+// to be created.
+bool NetworkMidiApprovalTests::TestSetup()
+{
+    m_deviceNodeTracker.Start();
+
+    return true;
+}
+
+bool NetworkMidiApprovalTests::TestCleanup()
+{
+    m_deviceNodeTracker.RemoveDeviceNodesCreatedSinceStart();
+
+    return true;
+}
+
+
 void NetworkMidiApprovalTests::InvitationIsHeldPendingAndAppearsInEnumerateHosts()
 {
     VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");

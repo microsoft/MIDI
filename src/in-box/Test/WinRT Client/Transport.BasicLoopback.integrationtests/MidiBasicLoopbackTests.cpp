@@ -18,6 +18,23 @@
 
 #pragma comment(lib, "winmm.lib")
 
+// Every loopback created here leaves a deactivated software device node behind for its UMP
+// endpoint and each of that endpoint's MIDI 1.0 ports, because the service never deletes one.
+// These two hooks remove exactly the nodes this test method caused to be created.
+bool MidiBasicLoopbackTests::TestSetup()
+{
+    m_deviceNodeTracker.Start();
+
+    return true;
+}
+
+bool MidiBasicLoopbackTests::TestCleanup()
+{
+    m_deviceNodeTracker.RemoveDeviceNodesCreatedSinceStart();
+
+    return true;
+}
+
 void MidiBasicLoopbackTests::TestUnicodeGtbAndDeviceNames()
 {
     auto previousStdoutMode = _setmode(_fileno(stdout), _O_U16TEXT);  // _O_WTEXT

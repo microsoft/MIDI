@@ -26,6 +26,9 @@ public:
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Midi2.NetworkMidiTransport.dll")
     END_TEST_CLASS()
 
+    TEST_METHOD_SETUP(TestSetup);
+    TEST_METHOD_CLEANUP(TestCleanup);
+
     // Packet framing
     TEST_METHOD(BadSignatureIsIgnored);
     TEST_METHOD(EmptyAndRuntDatagramsAreIgnored);
@@ -69,4 +72,8 @@ public:
 
     // Overall survival
     TEST_METHOD(ServiceSurvivesRandomFuzzing);
+
+private:
+
+    MidiTest::DeviceNodeTracker m_deviceNodeTracker{};
 };

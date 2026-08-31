@@ -62,6 +62,8 @@
 #include <WindowsMidiServices_i.c>
 #include <Midi2MidiSrvTransport.h>
 
+#include "..\inc\MidiTestDeviceNodes.h"
+
 #include "SequenceNumberTests.h"
 #include "AuthenticationDigestTests.h"
 

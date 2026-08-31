@@ -429,6 +429,25 @@ namespace NetworkMidiTest
     }
 
 
+    // Each client the service connects leaves a deactivated software device node behind for its
+    // UMP endpoint and any MIDI 1.0 ports created alongside it, because the service never
+    // deletes one. These two hooks remove exactly the nodes this test method caused to be
+    // created.
+    bool ClientTests::TestSetup()
+    {
+        m_deviceNodeTracker.Start();
+
+        return true;
+    }
+
+    bool ClientTests::TestCleanup()
+    {
+        m_deviceNodeTracker.RemoveDeviceNodesCreatedSinceStart();
+
+        return true;
+    }
+
+
     // ------------------------------------------------------------------------------
     // Connection establishment
     // ------------------------------------------------------------------------------

@@ -221,6 +221,25 @@ namespace
 }
 
 
+// Each virtual device leaves a deactivated software device node behind for its device-side and
+// its client-visible UMP endpoint, and for the MIDI 1.0 ports created alongside them, because
+// the service never deletes one. These two hooks remove exactly the nodes this test method
+// caused to be created.
+bool MidiVirtualDeviceTests::TestSetup()
+{
+    m_deviceNodeTracker.Start();
+
+    return true;
+}
+
+bool MidiVirtualDeviceTests::TestCleanup()
+{
+    m_deviceNodeTracker.RemoveDeviceNodesCreatedSinceStart();
+
+    return true;
+}
+
+
 void MidiVirtualDeviceTests::TestCreateVirtualDevice()
 {
     {
