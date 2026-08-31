@@ -19,7 +19,7 @@ namespace Windows.Devices.Midi2.Transports.Network
 {
     [contract(MidiTransportsNetworkApiContract, 1)]
     [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostCreationConfig", UUID_IMidiNetworkHostCreationConfig)]
-    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostCreationConfigFactory", UUID_IMidiNetworkHostCreationConfigFactory)]
+    //[constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostCreationConfigFactory", UUID_IMidiNetworkHostCreationConfigFactory)]
     [static_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostCreationConfigStatics", UUID_IMidiNetworkHostCreationConfigStatics)]
     runtimeclass MidiNetworkHostCreationConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {

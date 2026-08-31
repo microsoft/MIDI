@@ -20,7 +20,7 @@ namespace Windows.Devices.Midi2.ClientPlugins
     [contract(MidiClientPluginsApiContract, 1)]
     
     [interface_name("Windows.Devices.Midi2.ClientPlugins.IMidiChannelEndpointListener", UUID_IMidiChannelEndpointListener)]
-    [constructor_name("Windows.Devices.Midi2.ClientPlugins.IMidiChannelEndpointListenerFactory", UUID_IMidiChannelEndpointListenerFactory)]
+    //[constructor_name("Windows.Devices.Midi2.ClientPlugins.IMidiChannelEndpointListenerFactory", UUID_IMidiChannelEndpointListenerFactory)]
     runtimeclass MidiChannelEndpointListener : Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin,
                                                Windows.Devices.Midi2.IMidiMessageReceivedEventSource
     {

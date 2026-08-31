@@ -18,6 +18,11 @@
 // last field format ddxxxxxxxxxx for exclusive-to non-static default interfaces
 // last field format eexxxxxxxxxx for exclusive-to static interfaces
 // last field format ffxxxxxxxxxx for factory / constructor interfaces
+//
+// A commented-out ffxxxxxxxxxx entry means a class factory was considered for that runtimeclass
+// but is not appropriate: the class has only a default constructor, which activates through
+// IActivationFactory, so midlrt emits no factory interface and the UUID would never be used.
+// The value stays reserved here so it is not handed to something else later.
 
 
 // ============================================================================
@@ -76,13 +81,13 @@
 // Windows.Devices.Midi2.ClientPlugins : Interface number 002
 
 #define UUID_IMidiChannelEndpointListener					                8087b303-0519-c0de-31d1-dd0020001000
-#define UUID_IMidiChannelEndpointListenerFactory			                8087b303-0519-c0de-31d1-ff0020001000
+//#define UUID_IMidiChannelEndpointListenerFactory			                8087b303-0519-c0de-31d1-ff0020001000
 
 #define UUID_IMidiGroupEndpointListener						                8087b303-0519-c0de-31d1-dd0020002000
-#define UUID_IMidiGroupEndpointListenerFactory				                8087b303-0519-c0de-31d1-ff0020002000
+//#define UUID_IMidiGroupEndpointListenerFactory				                8087b303-0519-c0de-31d1-ff0020002000
 
 #define UUID_IMidiMessageTypeEndpointListener				                8087b303-0519-c0de-31d1-dd0020003000
-#define UUID_IMidiMessageTypeEndpointListenerFactory		                8087b303-0519-c0de-31d1-ff0020003000
+//#define UUID_IMidiMessageTypeEndpointListenerFactory		                8087b303-0519-c0de-31d1-ff0020003000
 
 
 // ============================================================================
@@ -107,7 +112,7 @@
 
 #define UUID_IMidiFunctionBlock								                8087b303-0519-c0de-31d1-dd004000f000
 #define UUID_IMidiFunctionBlockStatics						                8087b303-0519-c0de-31d1-ee004000f000
-#define UUID_IMidiFunctionBlockFactory  					                8087b303-0519-c0de-31d1-ff004000f000
+//#define UUID_IMidiFunctionBlockFactory  					                8087b303-0519-c0de-31d1-ff004000f000
 
 #define UUID_IMidiGroupTerminalBlock						                8087b303-0519-c0de-31d1-dd0040010000
 #define UUID_IMidiGroupTerminalBlockStatics					                8087b303-0519-c0de-31d1-ee0040010000
@@ -158,8 +163,8 @@
 
 #define UUID_IMidiServiceTransportPluginConfigManagerStatics                8087b303-0519-c0de-31d1-ee0060001000
 
-#define UUID_IMidiServiceMidiServiceEndpointCustomizationConfig             8087b303-0519-c0de-31d1-dd0060002000
-#define UUID_IMidiServiceMidiServiceEndpointCustomizationConfigFactory      8087b303-0519-c0de-31d1-ff0060002000
+#define UUID_IMidiServiceEndpointCustomizationConfig                        8087b303-0519-c0de-31d1-dd0060002000
+#define UUID_IMidiServiceEndpointCustomizationConfigFactory                 8087b303-0519-c0de-31d1-ff0060002000
 
 #define UUID_IMidiServiceTransportCommand                                   8087b303-0519-c0de-31d1-dd0060003000
 #define UUID_IMidiServiceTransportCommandFactory                            8087b303-0519-c0de-31d1-ff0060003000
@@ -168,7 +173,7 @@
 
 #define UUID_IMidiServiceConfigEndpointMatchCriteria                        8087b303-0519-c0de-31d1-dd0060005000
 #define UUID_IMidiServiceConfigEndpointMatchCriteriaStatics                 8087b303-0519-c0de-31d1-ee0060005000
-#define UUID_IMidiServiceConfigEndpointMatchCriteriaFactory                 8087b303-0519-c0de-31d1-ff0060005000
+//#define UUID_IMidiServiceConfigEndpointMatchCriteriaFactory                 8087b303-0519-c0de-31d1-ff0060005000
 
 #define UUID_IMidiServiceTransportPluginConfig				                "8087b303-0519-c0de-31d1-cc0060006000"
 
@@ -201,7 +206,7 @@
 //#define UUID_IMidiUniversalSystemExclusive7MessageBuilderStatics            8087b303-0519-c0de-31d1-ee00E0106000
 
 #define UUID_IMidiBytestreamToUmpMessageConverterState                      8087b303-0519-c0de-31d1-dd00E0108000
-#define UUID_IMidiBytestreamToUmpMessageConverterStateFactory               8087b303-0519-c0de-31d1-ff00E0108000
+//#define UUID_IMidiBytestreamToUmpMessageConverterStateFactory               8087b303-0519-c0de-31d1-ff00E0108000
 
 // ============================================================================
 // Windows.Devices.Midi2.Utilities.SysExTransfer : Interface number 00E03
@@ -270,7 +275,7 @@
 
 #define UUID_IMidiNetworkHostCreationConfig                     8087b303-0519-c0de-31d1-dd00F0302000
 #define UUID_IMidiNetworkHostCreationConfigStatics              8087b303-0519-c0de-31d1-ee00F0302000
-#define UUID_IMidiNetworkHostCreationConfigFactory              8087b303-0519-c0de-31d1-ff00F0302000
+//#define UUID_IMidiNetworkHostCreationConfigFactory              8087b303-0519-c0de-31d1-ff00F0302000
 
 #define UUID_IMidiNetworkHostCreationResponse                   8087b303-0519-c0de-31d1-dd00F0303000
 
@@ -281,7 +286,7 @@
 #define UUID_IMidiNetworkHostUpdateResponse                     8087b303-0519-c0de-31d1-dd00F0306000
 
 #define UUID_IMidiNetworkClientConnectConfig                    8087b303-0519-c0de-31d1-dd00F0307000
-#define UUID_IMidiNetworkClientConnectConfigFactory             8087b303-0519-c0de-31d1-ff00F0307000
+//#define UUID_IMidiNetworkClientConnectConfigFactory             8087b303-0519-c0de-31d1-ff00F0307000
 
 #define UUID_IMidiNetworkClientConnectResponse                  8087b303-0519-c0de-31d1-dd00F0308000
 
@@ -291,7 +296,7 @@
 #define UUID_IMidiNetworkClientDisconnectResponse               8087b303-0519-c0de-31d1-dd00F030A000
 
 #define UUID_IMidiNetworkClientMatchCriteria                    8087b303-0519-c0de-31d1-dd00F030B000
-#define UUID_IMidiNetworkClientMatchCriteriaFactory             8087b303-0519-c0de-31d1-ff00F030B000
+//#define UUID_IMidiNetworkClientMatchCriteriaFactory             8087b303-0519-c0de-31d1-ff00F030B000
 
 #define UUID_IMidiNetworkConfiguredHost                         8087b303-0519-c0de-31d1-dd00F030C000
 #define UUID_IMidiNetworkConfiguredClient                       8087b303-0519-c0de-31d1-dd00F030D000
@@ -320,7 +325,7 @@
 
 #define UUID_IMidiNetworkTransportSettings                      8087b303-0519-c0de-31d1-dd00F0319000
 #define UUID_IMidiNetworkTransportSettingsStatics               8087b303-0519-c0de-31d1-ee00F0319000
-#define UUID_IMidiNetworkTransportSettingsFactory               8087b303-0519-c0de-31d1-ff00F0319000
+//#define UUID_IMidiNetworkTransportSettingsFactory               8087b303-0519-c0de-31d1-ff00F0319000
 
 // ============================================================================
 // Windows.Devices.Midi2.Transports.Virtual : Interface number 00F04

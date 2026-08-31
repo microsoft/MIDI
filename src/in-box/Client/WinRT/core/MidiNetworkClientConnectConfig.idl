@@ -18,7 +18,7 @@ namespace Windows.Devices.Midi2.Transports.Network
 {
     [contract(MidiTransportsNetworkApiContract, 1)]
     [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientConnectConfig", UUID_IMidiNetworkClientConnectConfig)]
-    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientConnectConfigFactory", UUID_IMidiNetworkClientConnectConfigFactory)]
+    //[constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientConnectConfigFactory", UUID_IMidiNetworkClientConnectConfigFactory)]
 	runtimeclass MidiNetworkClientConnectConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
 		MidiNetworkClientConnectConfig();
