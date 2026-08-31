@@ -638,7 +638,20 @@ namespace Microsoft.Midi.ConsoleApp
                                 AnsiConsole.WriteLine();
                                 AnsiConsole.MarkupLine("🛑 " + Strings.MonitorEscapePressedMessage);
                             }
-                            
+                            else if (keyInfo.Key == ConsoleKey.Spacebar || keyInfo.Key == ConsoleKey.Enter)
+                            {
+                                // show separator line if they hit spacebar or enter
+                                displayTable.OutputSeparatorLine();
+                            }
+                            else if (keyInfo.Key == ConsoleKey.I)
+                            {
+                                // display info
+                                AnsiConsole.WriteLine();
+                                AnsiConsole.MarkupLine(Strings.MonitorMonitoringOnEndpointLabel + " " + AnsiMarkupFormatter.FormatEndpointName(endpointName));
+                                AnsiConsole.WriteLine();
+                                displayTable.OutputHeader();
+                            }
+
                         }
 
                         if (_hasEndpointDisconnected)

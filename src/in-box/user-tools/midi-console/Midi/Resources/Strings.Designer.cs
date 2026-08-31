@@ -178,7 +178,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Create a temporary basic MIDI 1.0 loopback endpoint for connecting two MIDI 1.0 applications together..
+        ///   Looks up a localized string similar to Create a basic MIDI 1.0 loopback endpoint for connecting two MIDI 1.0 applications together. This lasts until the service restarts unless --save-to-config is used..
         /// </summary>
         internal static string CommandCreateBasicLoopbackDescription {
             get {
@@ -187,7 +187,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Create a temporary set of MIDI 2.0 (and MIDI 1.0) loopback endpoints, connected to each other. Messages sent to the A loopback will be received by B, and messages sent to B will be received by A. .
+        ///   Looks up a localized string similar to Create a set of MIDI 2.0 (and MIDI 1.0) loopback endpoints, connected to each other. Messages sent to the A loopback will be received by B, and messages sent to B will be received by A. These last until the service restarts unless --save-to-config is used. .
         /// </summary>
         internal static string CommandCreateLoopbackDescription {
             get {
@@ -300,6 +300,24 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string CommandEnumerateTransportPluginsDescription {
             get {
                 return ResourceManager.GetString("CommandEnumerateTransportPluginsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List the basic MIDI 1.0 loopback endpoints which exist right now, and whether each one is saved in the configuration file..
+        /// </summary>
+        internal static string CommandListBasicLoopbackDescription {
+            get {
+                return ResourceManager.GetString("CommandListBasicLoopbackDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List the MIDI 2.0 loopback endpoint pairs which exist right now, and whether each one is saved in the configuration file..
+        /// </summary>
+        internal static string CommandListLoopbackDescription {
+            get {
+                return ResourceManager.GetString("CommandListLoopbackDescription", resourceCulture);
             }
         }
         
@@ -718,6 +736,24 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to This version of the MIDI service cannot list loopback endpoints..
+        /// </summary>
+        internal static string ErrorLoopbackListNotSupported {
+            get {
+                return ResourceManager.GetString("ErrorLoopbackListNotSupported", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The loopback transport is not available on this PC..
+        /// </summary>
+        internal static string ErrorLoopbackTransportNotAvailable {
+            get {
+                return ResourceManager.GetString("ErrorLoopbackTransportNotAvailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The Windows MIDI Services feature does not appear to be enabled on this PC. Enablement for supported versions of Windows will come through Windows Update. If you believe this to be in error, then a driver uninstaller or registry tool may have fouled the registry entries for MIDI. Please run the midifixreg tool from an Administrator command prompt..
         /// </summary>
         internal static string ErrorMidiFeatureNotEnabled {
@@ -759,60 +795,6 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string ErrorRemovingLoopback {
             get {
                 return ResourceManager.GetString("ErrorRemovingLoopback", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to The loopback transport is not available on this PC..
-        /// </summary>
-        internal static string ErrorLoopbackTransportNotAvailable {
-            get {
-                return ResourceManager.GetString("ErrorLoopbackTransportNotAvailable", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to This version of the MIDI service cannot list loopback endpoints..
-        /// </summary>
-        internal static string ErrorLoopbackListNotSupported {
-            get {
-                return ResourceManager.GetString("ErrorLoopbackListNotSupported", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to There are no loopback endpoints right now..
-        /// </summary>
-        internal static string MessageNoLoopbacksFound {
-            get {
-                return ResourceManager.GetString("MessageNoLoopbacksFound", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Use the association id with the remove command..
-        /// </summary>
-        internal static string MessageLoopbackListDetails {
-            get {
-                return ResourceManager.GetString("MessageLoopbackListDetails", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to List the MIDI 2.0 loopback endpoint pairs which exist right now..
-        /// </summary>
-        internal static string CommandListLoopbackDescription {
-            get {
-                return ResourceManager.GetString("CommandListLoopbackDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to List the basic MIDI 1.0 loopback endpoints which exist right now..
-        /// </summary>
-        internal static string CommandListBasicLoopbackDescription {
-            get {
-                return ResourceManager.GetString("CommandListBasicLoopbackDescription", resourceCulture);
             }
         }
         
@@ -1015,7 +997,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to This endpoint will disappear when the MIDI service or PC is restarted. To create permanent loopback endpoints, use the MIDI Settings app..
+        ///   Looks up a localized string similar to This endpoint will disappear when the MIDI service or PC is restarted. Use --save-to-config to keep it..
         /// </summary>
         internal static string MessageBasicLoopbackCreationSuccessDetails {
             get {
@@ -1035,11 +1017,20 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         /// <summary>
         ///   Looks up a localized string similar to Unlike classic MIDI 1.0 loopbacks, these are fully MIDI 2.0-compatible bidirectional endpoints. Messages sent to Loopback A will be received by Loopback B. Messages sent by B will be received by A. MIDI 1.0 apps will see 4 created ports (2 sources, 2 destinations) as a result.
         ///
-        ///These endpoints will disappear when the service or PC is restarted. To create permanent loopback endpoints, use the MIDI Settings app..
+        ///These endpoints will disappear when the service or PC is restarted. Use --save-to-config to keep them..
         /// </summary>
         internal static string MessageLoopbackCreationSuccessDetails {
             get {
                 return ResourceManager.GetString("MessageLoopbackCreationSuccessDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Use the association id with the remove command. Anything not saved will be gone after the MIDI service restarts..
+        /// </summary>
+        internal static string MessageLoopbackListDetails {
+            get {
+                return ResourceManager.GetString("MessageLoopbackListDetails", resourceCulture);
             }
         }
         
@@ -1049,6 +1040,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string MessageLoopbackRemovalSuccess {
             get {
                 return ResourceManager.GetString("MessageLoopbackRemovalSuccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are no loopback endpoints right now..
+        /// </summary>
+        internal static string MessageNoLoopbacksFound {
+            get {
+                return ResourceManager.GetString("MessageNoLoopbacksFound", resourceCulture);
             }
         }
         
@@ -1125,7 +1125,7 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Press escape to stop monitoring..
+        ///   Looks up a localized string similar to Press escape to stop monitoring, enter or space to insert a separator, or &apos;i&apos; to redisplay the header info..
         /// </summary>
         internal static string MonitorPressEscapeToStopMonitoringMessage {
             get {
@@ -1319,6 +1319,114 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string NotificationLegacyPortDeviceWatcherStopped {
             get {
                 return ResourceManager.GetString("NotificationLegacyPortDeviceWatcherStopped", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to How long the decision applies: once, untilRestart, or always. Always is only available for a device whose address does not change..
+        /// </summary>
+        internal static string ParameterBluetoothApprovalScope {
+            get {
+                return ResourceManager.GetString("ParameterBluetoothApprovalScope", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The twelve hex digit Bluetooth address of the device which connected to this PC.
+        /// </summary>
+        internal static string ParameterBluetoothClientAddress {
+            get {
+                return ResourceManager.GetString("ParameterBluetoothClientAddress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Which connection parameters to request: &apos;throughput&apos; for the lowest interval Windows offers, &apos;balanced&apos;, &apos;power&apos; to save battery, or &apos;system&apos; to make no request at all.
+        /// </summary>
+        internal static string ParameterBluetoothConnectionParameters {
+            get {
+                return ResourceManager.GetString("ParameterBluetoothConnectionParameters", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove the name, description, and image customizations for this device.
+        /// </summary>
+        internal static string ParameterBluetoothCustomClear {
+            get {
+                return ResourceManager.GetString("ParameterBluetoothCustomClear", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The description to show for this device. Use an empty string to remove the description.
+        /// </summary>
+        internal static string ParameterBluetoothCustomDescription {
+            get {
+                return ResourceManager.GetString("ParameterBluetoothCustomDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The file name of the image to show for this device. This is a file name only, not a path.
+        /// </summary>
+        internal static string ParameterBluetoothCustomImage {
+            get {
+                return ResourceManager.GetString("ParameterBluetoothCustomImage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name to show for this device instead of the name the device reports. Use an empty string to go back to the device-supplied name.
+        /// </summary>
+        internal static string ParameterBluetoothCustomName {
+            get {
+                return ResourceManager.GetString("ParameterBluetoothCustomName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Bluetooth MIDI device id, as shown by the &apos;bluetooth list&apos; command.
+        /// </summary>
+        internal static string ParameterBluetoothDeviceId {
+            get {
+                return ResourceManager.GetString("ParameterBluetoothDeviceId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Also remove this device from the configuration file, instead of only stopping it from connecting on its own.
+        /// </summary>
+        internal static string ParameterBluetoothForget {
+            get {
+                return ResourceManager.GetString("ParameterBluetoothForget", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to How long to keep this device&apos;s MIDI endpoint after it goes offline: always, immediate, default, or a number of seconds.
+        /// </summary>
+        internal static string ParameterBluetoothKeepWhenOffline {
+            get {
+                return ResourceManager.GetString("ParameterBluetoothKeepWhenOffline", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The BLE MIDI protocol to publish, either &apos;midi1&apos; or &apos;midi2&apos;. Only one can be published at a time, and the default is &apos;midi1&apos; because that is what devices support today.
+        /// </summary>
+        internal static string ParameterBluetoothPeripheralProtocol {
+            get {
+                return ResourceManager.GetString("ParameterBluetoothPeripheralProtocol", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do not save this device to the configuration file. It will be forgotten when the service restarts.
+        /// </summary>
+        internal static string ParameterBluetoothTemporary {
+            get {
+                return ResourceManager.GetString("ParameterBluetoothTemporary", resourceCulture);
             }
         }
         
@@ -1670,6 +1778,15 @@ namespace Microsoft.Midi.ConsoleApp.Resources {
         internal static string ParameterListenerMessagesFilter {
             get {
                 return ResourceManager.GetString("ParameterListenerMessagesFilter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Also save this change to the configuration file so it survives a restart of the MIDI service.
+        /// </summary>
+        internal static string ParameterLoopbackSaveToConfig {
+            get {
+                return ResourceManager.GetString("ParameterLoopbackSaveToConfig", resourceCulture);
             }
         }
         

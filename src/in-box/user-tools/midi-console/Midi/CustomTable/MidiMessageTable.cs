@@ -197,10 +197,15 @@ namespace Microsoft.Midi.ConsoleApp
             BuildStringFormats();
         }
 
+        public void OutputSeparatorLine()
+        {
+            AnsiConsole.MarkupLine(_separatorLine);
+        }
+
         public void OutputHeader()
         {
             AnsiConsole.MarkupLine(_headerFormat);
-            AnsiConsole.MarkupLine(_separatorLine);
+            OutputSeparatorLine();
         }
 
         public void OutputRow(ReceivedMidiMessage message)

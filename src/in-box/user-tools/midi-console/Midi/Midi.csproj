@@ -71,6 +71,7 @@
   <PropertyGroup>
     <NoWarn>$(NoWarn);CS8625;CS8618;CS8305</NoWarn>
     <SupportedOSPlatformVersion>10.0.26100.0</SupportedOSPlatformVersion>
+    <BaseOutputPath>$(SolutionDir)vsfiles-sdk\out\midi-console\</BaseOutputPath>
   </PropertyGroup>
 
   <!-- For versioning info: https://learn.microsoft.com/en-us/nuget/concepts/dependency-resolution#floating-versions -->

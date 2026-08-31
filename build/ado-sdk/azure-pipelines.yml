@@ -521,6 +521,8 @@ stages:
         arguments: >
           --configuration $(BuildConfiguration)
           --runtime $(RuntimeIdentifier)
+          /p:Platform=$(BuildPlatform)
+          /p:SolutionDir=$(Build.SourcesDirectory)\src\in-box\
           /p:Version=$(BuildVersionFullString)
           /p:FileVersion=$(BuildVersionFileFullString)
           /p:AssemblyVersion=$(BuildVersionAssemblyFullString)
@@ -537,7 +539,7 @@ stages:
     #     KeyVaultUrl: 'https://yourkeyvault.vault.azure.net/'
     #     CertificateName: '$(SigningCertificateName)'
     #     SignedFilePath: |
-    #       $(Build.SourcesDirectory)\src\in-box\user-tools\midi-console\Midi\bin\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)\midi.exe
+    #       $(Build.SourcesDirectory)\src\in-box\vsfiles-sdk\out\midi-console\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)\midi.exe
     #     TimeStampServer: '$(SigningTimeStampServer)'
     #     FileDigest: 'SHA256'
     #     TimeStampDigest: 'SHA256'
@@ -546,7 +548,7 @@ stages:
     - task: PublishPipelineArtifact@1
       displayName: 'Publish Console Binaries'
       inputs:
-        targetPath: '$(Build.SourcesDirectory)\src\in-box\user-tools\midi-console\Midi\bin\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)'
+        targetPath: '$(Build.SourcesDirectory)\src\in-box\vsfiles-sdk\out\midi-console\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)'
         artifact: 'ConsoleApp-$(BuildPlatform)'
 
   - job: BuildPowerShellModule
@@ -693,12 +695,12 @@ stages:
         script: |
           $bundleInfoFile = "$(Build.SourcesDirectory)\build\staging\version\BundleInfo.wxi"
           $content = @"
-<Include>
-  <?define SetupVersionName="$(VersionName) $(BuildPlatform)" ?>
-  <?define SetupVersionNumber="$(BuildVersionFullString)" ?>
-  <?define MidiSdkAndToolsVersion="$(BuildVersionFullString)" ?>
-</Include>
-"@
+          <Include>
+            <?define SetupVersionName="$(VersionName) $(BuildPlatform)" ?>
+            <?define SetupVersionNumber="$(BuildVersionFullString)" ?>
+            <?define MidiSdkAndToolsVersion="$(BuildVersionFullString)" ?>
+          </Include>
+          "@
           New-Item -ItemType Directory -Force -Path (Split-Path $bundleInfoFile) | Out-Null
           Set-Content -Path $bundleInfoFile -Value $content
 
