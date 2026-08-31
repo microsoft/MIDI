@@ -17,6 +17,8 @@ The remote Central which has connected to this PC. This is the opposite directio
 | `BluetoothAddress` | The remote's Bluetooth address. |
 | `BluetoothAddressType` | Whether that address is public or random. |
 | `IsPaired` | True when the remote is paired with this PC. |
+| `IsRememberable` | False when the device's address rotates for privacy, which means it cannot be recognized again and `MidiBluetoothApprovalScope.Always` cannot be used for it. Pairing the device makes it rememberable. |
+| `ApprovalRequestedTime` | When this device started waiting for a decision. Zero for a client which is already connected, because nothing is waiting on it. |
 | `WindowsDeviceId` | A Windows device interface id, unlike the address-based ids used elsewhere in this namespace. |
 | `ConnectionInterval` | The interval the remote asked for when it connected. |
 

@@ -19,6 +19,7 @@ Implements `IMidiServiceTransportPluginConfig`.
 | Property | Description |
 | -------- | ----------- |
 | `BluetoothDeviceId` | The twelve hex digit Bluetooth address of the device. |
+| `Comment` | An optional comment written into the configuration file alongside the entry. It has no effect on the connection and exists to make the file readable. |
 | `TransportId` | The Bluetooth transport's GUID. |
 | `ConfigJson` | The configuration file representation of this connection. |
 

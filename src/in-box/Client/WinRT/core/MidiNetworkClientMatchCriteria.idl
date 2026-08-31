@@ -17,7 +17,7 @@ namespace Windows.Devices.Midi2.Transports.Network
 {
     [contract(MidiTransportsNetworkApiContract, 1)]
     [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientMatchCriteria", UUID_IMidiNetworkClientMatchCriteria)]
-    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientMatchCriteriaFactory", UUID_IMidiNetworkClientMatchCriteriaFactory)]
+    //[constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientMatchCriteriaFactory", UUID_IMidiNetworkClientMatchCriteriaFactory)]
 	runtimeclass MidiNetworkClientMatchCriteria
 	{
 		MidiNetworkClientMatchCriteria();

@@ -18,7 +18,7 @@ namespace Windows.Devices.Midi2.ServiceConfig
     
     [interface_name("Windows.Devices.Midi2.ServiceConfig.IMidiServiceConfigEndpointMatchCriteria", UUID_IMidiServiceConfigEndpointMatchCriteria)]
     [static_name("Windows.Devices.Midi2.ServiceConfig.IMidiServiceConfigEndpointMatchCriteriaStatics", UUID_IMidiServiceConfigEndpointMatchCriteriaStatics)]
-    [constructor_name("Windows.Devices.Midi2.ServiceConfig.IMidiServiceConfigEndpointMatchCriteriaFactory", UUID_IMidiServiceConfigEndpointMatchCriteriaFactory)]
+    //[constructor_name("Windows.Devices.Midi2.ServiceConfig.IMidiServiceConfigEndpointMatchCriteriaFactory", UUID_IMidiServiceConfigEndpointMatchCriteriaFactory)]
     runtimeclass MidiServiceConfigEndpointMatchCriteria
     {
         MidiServiceConfigEndpointMatchCriteria();

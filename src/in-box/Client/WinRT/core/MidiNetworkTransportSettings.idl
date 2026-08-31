@@ -24,7 +24,7 @@ namespace Windows.Devices.Midi2.Transports.Network
     // ends up somewhere usable. Read the object back afterwards to see what was actually taken.
     [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkTransportSettings", UUID_IMidiNetworkTransportSettings)]
     [static_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkTransportSettingsStatics", UUID_IMidiNetworkTransportSettingsStatics)]
-    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkTransportSettingsFactory", UUID_IMidiNetworkTransportSettingsFactory)]
+    //[constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkTransportSettingsFactory", UUID_IMidiNetworkTransportSettingsFactory)]
     runtimeclass MidiNetworkTransportSettings : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
     {
         MidiNetworkTransportSettings();

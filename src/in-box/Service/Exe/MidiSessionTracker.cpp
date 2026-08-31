@@ -9,6 +9,8 @@
 #include "stdafx.h"
 #include <filesystem>
 
+#include "Feature_Servicing_MIDI2SessionTrackerConnectionTime.h"
+
 
 _Use_decl_annotations_
 std::vector<MidiSessionEntry>::iterator
@@ -587,7 +589,15 @@ CMidiSessionTracker::GetSessionList(
         {
             json::JsonObject connectionObject;
 
-            internal::JsonSetDateTimeProperty(sessionObject, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_TIME_PROPERTY_KEY, connectionIter->second.EarliestStartTime);
+            if (Feature_Servicing_MIDI2SessionTrackerConnectionTime::IsEnabled())
+            {
+                internal::JsonSetDateTimeProperty(connectionObject, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_TIME_PROPERTY_KEY, connectionIter->second.EarliestStartTime);
+            }
+            else
+            {
+                internal::JsonSetDateTimeProperty(sessionObject, MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_TIME_PROPERTY_KEY, connectionIter->second.EarliestStartTime);
+            }
+
             connectionObject.SetNamedValue(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_COUNT_PROPERTY_KEY, json::JsonValue::CreateNumberValue(connectionIter->second.InstanceCount));
             connectionObject.SetNamedValue(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY, json::JsonValue::CreateStringValue(connectionIter->second.ConnectedEndpointInterfaceId));
             

@@ -13,7 +13,7 @@ This class is the legacy equivalent of `MidiEndpointDeviceWatcher`, but for MIDI
 | Static Method | Description |
 | ------------- | ----------- |
 | `Create()` | Create a watcher for all MIDI 1.0 ports |
-| `Create(flow)` | Create a watcher for MIDI 1.0 ports in the specified direction |
+| `CreateForFlow(flow)` | Create a watcher for MIDI 1.0 ports in the specified `Midi1PortFlow` direction |
 
 ## Methods
 
@@ -21,13 +21,24 @@ This class is the legacy equivalent of `MidiEndpointDeviceWatcher`, but for MIDI
 | ------ | ----------- |
 | `Start()` | Begin enumeration. Wire up event handlers before calling this. |
 | `Stop()` | Stop enumeration. |
+| `GetEnumeratedPortsForFlow(flow)` | The enumerated ports in one direction. |
+| `GetEnumeratedPortForNumber(portNumber, flow)` | The enumerated port with a given WinMM port number and direction, or null. |
+| `GetEnumeratedPortsForParent(parentDeviceInstanceId)` | The enumerated ports belonging to one parent device. An overload also takes a `flow`. |
+| `GetEnumeratedPortsForAssociatedEndpoint(endpointDeviceId)` | The enumerated ports belonging to one UMP endpoint. An overload also takes a `flow`. |
+| `GetEnumeratedPortsForAssociatedEndpointAndGroup(endpointDeviceId, group)` | The enumerated ports for one group of one UMP endpoint. An overload also takes a `flow`. |
+| `GetEnumeratedPortsForName(portName)` | The enumerated ports with a given name. Names are not unique, so this returns a collection. An overload also takes a `flow`. |
+| `GetEnumeratedPortsForDriverDeviceInterfaceId(driverDeviceInterfaceId)` | The enumerated ports behind one driver device interface. An overload also takes a `flow`. |
+
+These all work against the ports already enumerated and are a snapshot in time. None of them re-queries the system, so a port which has appeared since the last event will not be in the result.
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
 | `Status` | The current `DeviceWatcherStatus` |
-| `EnumeratedEndpointDevices` | Map of all currently enumerated MIDI 1.0 ports, keyed by port device id |
+| `EnumeratedPorts` | Map of all currently enumerated MIDI 1.0 ports, keyed by port device id |
+| `CountSourcePorts` | How many source, or input, ports are currently enumerated |
+| `CountDestinationPorts` | How many destination, or output, ports are currently enumerated |
 
 ## Events
 

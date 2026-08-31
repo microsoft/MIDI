@@ -12,10 +12,10 @@ Returned in `MidiBluetoothDeviceDisconnectResponse`.
 
 | Value | Numeric Value | Description |
 | ----- | ------------- | ----------- |
-| `Success` | `0` | The device was disconnected |
-| `DeviceNotFound` | `1` | No device with that address has been discovered |
-| `NotConnected` | `2` | The device was not connected |
-| `InvalidBluetoothDeviceId` | `7` | The Bluetooth device id was missing or malformed |
-| `TransportNotAvailable` | `8` | The Bluetooth MIDI transport is not running |
-| `DisconnectFailed` | `9` | The device could not be disconnected |
-| `Unexpected` | `2000` | An unexpected error occurred |
+| `Success` | `0x00000000` | The device was disconnected |
+| `MissingBluetoothDeviceId` | `0x00000031` | No Bluetooth device id was supplied |
+| `InvalidBluetoothDeviceId` | `0x00000032` | The Bluetooth device id was malformed |
+| `TransportNotAvailable` | `0x00000041` | The Bluetooth MIDI transport is not running |
+| `DeviceNotDiscovered` | `0x00000101` | No device with that address has been discovered |
+| `NotConnected` | `0x00000111` | The device was not connected |
+| `Unexpected` | `0x11002011` | An unexpected error occurred |

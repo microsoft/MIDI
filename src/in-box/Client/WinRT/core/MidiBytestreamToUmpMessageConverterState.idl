@@ -15,7 +15,7 @@ namespace Windows.Devices.Midi2.Utilities.Messages
     [contract(MidiMessageUtilityApiContract, 1)]
 
     [interface_name("Windows.Devices.Midi2.Utilities.Messages.IMidiBytestreamToUmpMessageConverterState", UUID_IMidiBytestreamToUmpMessageConverterState)]
-    [constructor_name("Windows.Devices.Midi2.Utilities.Messages.IMidiBytestreamToUmpMessageConverterStateFactory", UUID_IMidiBytestreamToUmpMessageConverterStateFactory)]
+    //[constructor_name("Windows.Devices.Midi2.Utilities.Messages.IMidiBytestreamToUmpMessageConverterStateFactory", UUID_IMidiBytestreamToUmpMessageConverterStateFactory)]
     runtimeclass MidiBytestreamToUmpMessageConverterState
     {
         MidiBytestreamToUmpMessageConverterState();

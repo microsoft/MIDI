@@ -20,7 +20,9 @@ Describes a host for remote clients to connect to. Pass to `MidiNetworkTransport
 | Function | Description |
 | -------- | ----------- |
 | `CreateDefault()` | Create a configuration pre-populated with sensible defaults, including a name derived from the computer name. |
-| `EnsureCompliantServiceInstanceName(serviceInstanceName)` | Returns a version of the supplied service instance name which is valid for use as an mDNS service instance name. |
+| `EnsureCompliantServiceInstanceName(serviceInstanceName)` | Returns a version of the supplied service instance name which is valid for use as an mDNS service instance name. Strips what would corrupt the DNS-SD record and truncates to the label byte limit. |
+| `IsServiceInstanceNameAvailable(serviceInstanceName)` | False if a host on this PC already holds the name, or if anything on the local network is currently advertising it. |
+| `MakeUniqueServiceInstanceName(baseServiceInstanceName)` | The supplied name if it is free, otherwise the same name with `-02`, `-03` and so on appended until one is. Already compliant on return. |
 
 ## Properties
 
@@ -33,6 +35,7 @@ Describes a host for remote clients to connect to. Pass to `MidiNetworkTransport
 | `CreateOnlyUmpEndpoints` | When true, only UMP endpoints are created. When false, MIDI 1.0 ports are created alongside them. |
 | `UseAutomaticPortAllocation` | When true, the service picks a UDP port. When false, `ManuallyAssignedPort` is used. |
 | `ManuallyAssignedPort` | The UDP port to bind, as a string. Ignored when `UseAutomaticPortAllocation` is true. |
+| `AllowPortFallback` | Only meaningful with a specific port. When that port cannot be bound the host starts on an automatically allocated one instead of refusing to start, and reports that it did through `MidiNetworkConfiguredHost.UsedPortFallback`. |
 | `Advertise` | When true, the host is advertised over mDNS so remote devices can discover it. When false, it is reachable only by direct address. |
 | `RemoteClientPolicy` | How this host handles unknown remote clients. `AllowAny` accepts unless explicitly denied; `RequireApproval` keeps clients pending until approved or denied. |
 | `AuthenticationType` | The authentication this host requires. Only `NoAuthentication` is currently accepted; anything else is rejected at configuration time. See `MidiNetworkAuthenticationType`. |

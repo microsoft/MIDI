@@ -21,7 +21,7 @@ namespace Windows.Devices.Midi2.Enumeration
     [contract(MidiEnumerationApiContract, 1)]
     [interface_name("Windows.Devices.Midi2.Enumeration.IMidiFunctionBlock", UUID_IMidiFunctionBlock)]
     [static_name("Windows.Devices.Midi2.Enumeration.IMidiFunctionBlockStatics", UUID_IMidiFunctionBlockStatics)]
-    [constructor_name("Windows.Devices.Midi2.Enumeration.IMidiFunctionBlockFactory", UUID_IMidiFunctionBlockFactory)]
+    //[constructor_name("Windows.Devices.Midi2.Enumeration.IMidiFunctionBlockFactory", UUID_IMidiFunctionBlockFactory)]
     runtimeclass MidiFunctionBlock : Windows.Foundation.IStringable
     {
         MidiFunctionBlock();

@@ -1,6 +1,6 @@
 ---
 layout: sdk_reference_page
-title: MidiProtocolEnum
+title: MidiProtocol
 namespace: Windows.Devices.Midi2.Enumeration
 type: enum
 description: Indicates the protocol configuration for a endpoint, group, or function block
