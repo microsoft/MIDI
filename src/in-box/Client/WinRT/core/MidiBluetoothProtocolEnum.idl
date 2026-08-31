@@ -1,0 +1,25 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Bluetooth
+{
+    [contract(MidiTransportsBluetoothApiContract, 1)]
+
+    // Which Bluetooth MIDI protocol a device speaks. This is reported, not chosen: when a device
+    // offers both, the transport always prefers BLE MIDI 2.0. The only place an application picks
+    // a protocol is when publishing this PC as a peripheral, where one must be advertised.
+    enum MidiBluetoothProtocol
+    {
+        Unknown = 0,
+        BluetoothLowEnergyMidi1 = 1,
+        BluetoothLowEnergyMidi2Ump = 2,
+    };
+}

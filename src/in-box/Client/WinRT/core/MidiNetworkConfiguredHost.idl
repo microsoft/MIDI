@@ -1,0 +1,63 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiNetworkHostConnection.idl";
+import "MidiNetworkRemoteClientPolicyEnum.idl";
+
+
+// TODO: Change to runtimeclass
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    [contract(MidiTransportsNetworkApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkConfiguredHost", UUID_IMidiNetworkConfiguredHost)]
+    runtimeclass MidiNetworkConfiguredHost
+    {
+        [noexcept] Guid HostId{ get;} ;  // internal id we use to match up in config file
+
+        [noexcept] Boolean IsEnabled{ get; };                  // true if this is allows to connect. Mostly for pre-configured connections
+        [noexcept] Boolean HasStarted{ get; };                 // true if this has started
+
+        [noexcept] String ActualPort{ get; };                  // string because DatagramSocket.LocalPort returns a string
+        [noexcept] String ActualAddress{ get; };
+
+        // What the host was configured to use, or "auto". Compare with ActualPort to see whether
+        // the user got the port they asked for.
+        [noexcept] String ConfiguredPort{ get; };
+
+        [noexcept] Boolean AllowPortFallback{ get; };
+
+        // True when the configured port was unavailable and the host started on an allocated one.
+        // The host is working, but not where the user asked it to be, so this is worth surfacing.
+        [noexcept] Boolean UsedPortFallback{ get; };
+
+        [noexcept] String UmpEndpointName{ get; };
+        [noexcept] String ProductInstanceId{ get; };
+
+        [noexcept] String ServiceInstanceName{ get; };
+
+        // The DNS-SD instance label actually on the network. A responder renames a colliding
+        // label rather than refusing it, so this is not always the configured name.
+        [noexcept] String ActualServiceInstanceName{ get; };
+
+        // True when the above happened. The host works, but other devices see a different name
+        // than the one configured here, so this is worth showing.
+        [noexcept] Boolean ServiceInstanceNameWasChanged{ get; };
+
+        [noexcept] Boolean CreateMidi1Ports{ get; };
+
+        [noexcept] MidiNetworkRemoteClientPolicy RemoteClientPolicy{ get; };
+
+        // remote clients which have reached this host, including any waiting for user approval
+        [noexcept] Windows.Foundation.Collections.IVectorView<MidiNetworkHostConnection> Connections{ get; };
+    };
+}
+

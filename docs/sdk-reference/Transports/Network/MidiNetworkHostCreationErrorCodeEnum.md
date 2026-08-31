@@ -23,21 +23,16 @@ Returned in `MidiNetworkHostCreationResponse.ErrorCode`.
 | `InvalidOrMissingProductInstanceId` | `0x00000042` | `ProductInstanceId` was missing or blank |
 | `ProductInstanceIdTooLong` | `0x00000046` | `ProductInstanceId` is longer than the 42 bytes the specification allows |
 | `ServiceInstanceNameInUse` | `0x00000043` | Another host is already using this `ServiceInstanceName` |
+| `ServiceInstanceNameTooLong` | `0x0000004A` | `ServiceInstanceName` is longer than mDNS allows |
 | `InvalidNetworkProtocol` | `0x00000044` | The network protocol specified is not supported. Only UDP is |
+| `InvalidNetworkPort` | `0x00000048` | The requested port is outside the range of valid UDP ports |
+| `NetworkPortInUse` | `0x00000049` | The requested port is already in use on this PC |
 | `InvalidOrMissingCredentialIdentifier` | `0x00000051` | Authentication was requested but no credential identifier was supplied |
 | `MalformedCredentialIdentifier` | `0x00000052` | The supplied credential identifier is not valid |
 | `AuthenticationNotImplemented` | `0x00000053` | Authentication is not yet implemented. Configure the host for no authentication |
-| `ForwardErrorCorrectionPacketCountOutOfRange` | `0x00000081` | The transport-wide forward error correction packet count is out of range |
-| `RetransmitBufferSizeOutOfRange` | `0x00000082` | The transport-wide retransmit buffer size is out of range |
-| `PingIntervalOutOfRange` | `0x00000083` | The transport-wide outbound ping interval is out of range |
-| `MaxHostConnectionsOutOfRange` | `0x00000084` | The transport-wide maximum host connection count is out of range |
-| `InvitationPendingTimeoutOutOfRange` | `0x00000085` | The transport-wide invitation pending timeout is out of range |
-| `ScanIntervalOutOfRange` | `0x00000086` | The transport-wide direct connection scan interval is out of range |
 | `InvalidArgument` | `0x11000055` | An invalid argument was supplied by the caller |
 | `ClientApiException` | `0x11002011` | An exception occurred in the client API |
-| `T` | `i` | m |
-| `0` | `x` | 1 |
-| `T` | `h` | e |
+| `TimedOutWaitingForHostToStart` | `0x110005B4` | The service accepted the definition, but the host did not start in time |
 
 ## Remarks
 

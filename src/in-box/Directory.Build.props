@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+
+  <!-- Points every vcpkg manifest project under src/api at the patched libmidi2 port.
+       The overlay lives under src/api because the internal Windows build repo is rooted
+       there and cannot see anything above it, and mirrors that repo's own layout at
+       src/in-box/Libs/LibMidi2/overlay-ports.
+       Remove the overlay and this property once the upstream fix for the uninitialized
+       bytestreamToUMP running status bytes reaches the vcpkg registry. -->
+  <PropertyGroup>
+    <VcpkgAdditionalInstallOptions>$(VcpkgAdditionalInstallOptions) --overlay-ports="$(MSBuildThisFileDirectory)Libs\LibMidi2\overlay-ports"</VcpkgAdditionalInstallOptions>
+  </PropertyGroup>
+
+</Project>

@@ -13,6 +13,7 @@ This class provides static properties containing the standard command verb strin
 | Static Property | Description |
 | --------------- | ----------- |
 | `QueryCapabilities` | Verb to query the capabilities of a transport |
+| `ListEntries` | Verb to list the entries a transport currently holds |
 | `RestartEndpoint` | Verb to restart a specific endpoint |
 | `DisconnectEndpoint` | Verb to disconnect a specific endpoint |
 | `ReconnectEndpoint` | Verb to reconnect a previously disconnected endpoint |

@@ -1,0 +1,46 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+import "IMidiServiceTransportPluginConfig.idl";
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    [contract(MidiTransportsNetworkApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientMatchCriteria", UUID_IMidiNetworkClientMatchCriteria)]
+    //[constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientMatchCriteriaFactory", UUID_IMidiNetworkClientMatchCriteriaFactory)]
+	runtimeclass MidiNetworkClientMatchCriteria
+	{
+		MidiNetworkClientMatchCriteria();
+
+		// Windows mDNS-discovered host's id (full id from DeviceInformation.Id() )
+		[noexcept] String DeviceId;
+
+		// The device's own identity, per the specification's recall pair. The DNS-SD instance
+		// label behind DeviceId is a name, not an identity: a responder renames it to resolve a
+		// collision, and a user or a firmware update can change it. Supplying these as well lets
+		// a reconnect still find the device after that happens.
+		[noexcept] String ProductInstanceId;
+		[noexcept] String UmpEndpointName;
+
+		// For IP based connection
+		[noexcept] String DirectHostNameOrIPAddress;
+
+		// required for IP or host name
+		[noexcept] UInt16 DirectPort;
+
+
+
+		[noexcept] String GetConfigJson();
+	}
+}
+

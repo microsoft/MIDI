@@ -22,7 +22,11 @@ Describes a host advertised on the local network. Obtained from `MidiNetworkAdve
 | `Domain` | The DNS-SD domain |
 | `UmpEndpointName` | The UMP Endpoint Name advertised by the host |
 | `ProductInstanceId` | The Product Instance Id advertised by the host |
+| `TextAttributes` | Everything the mDNS TXT record carried, as a map. A device using a key this SDK predates is still readable through this without an SDK update |
 | `IPAddresses` | The IP addresses the host advertised. May contain more than one |
+| `IPv4Addresses` | Just the IPv4 addresses, from the A records |
+| `IPv6Addresses` | Just the IPv6 addresses, from the AAAA records |
+| `LastSeenTime` | When this host was last heard from, for a UI which shows how stale an entry is |
 
 ## Remarks
 

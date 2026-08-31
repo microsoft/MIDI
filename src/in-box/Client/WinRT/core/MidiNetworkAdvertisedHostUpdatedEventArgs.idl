@@ -1,0 +1,32 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiNetworkAdvertisedHost.idl";
+import "MidiNetworkAdvertisedHostChangedPropertiesEnum.idl";
+
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    [contract(MidiTransportsNetworkApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkAdvertisedHostUpdatedEventArgs", UUID_IMidiNetworkAdvertisedHostUpdatedEventArgs)]
+    runtimeclass MidiNetworkAdvertisedHostUpdatedEventArgs
+    {
+        [noexcept] String HostDeviceId { get; };
+
+        // Which fields changed. This is only ever raised for a real change, never for a simple
+        // re-announcement, so this is never None.
+        [noexcept] MidiNetworkAdvertisedHostChangedProperties ChangedProperties{ get; };
+
+        // The host as it now stands, rather than a bag of changed property keys.
+        [noexcept] MidiNetworkAdvertisedHost UpdatedHost{ get; };
+    }
+}
+

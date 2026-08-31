@@ -31,7 +31,7 @@ Although the intent is to move everyone to the new API, the new MIDI API include
 
 ## Subscribe to port update/remove notifications with the Watcher
 
-Today, many apps have a loop which repeatedly calls `MidiIn/OutGetNumDevs` and looks for changes. When done on the UI thread, this isn't a great idea, but it works. (Another option would have been to use the CM_NOTIFY functionality to look for devices with the right interface classes -- an example is this may be found in the wdmaud2.drv project in [MidiSrvPorts.cpp](https://github.com/microsoft/MIDI/blob/main/src/api/Client/WinMM/MidiSrvPorts.cpp)) 
+Today, many apps have a loop which repeatedly calls `MidiIn/OutGetNumDevs` and looks for changes. When done on the UI thread, this isn't a great idea, but it works. (Another option would have been to use the CM_NOTIFY functionality to look for devices with the right interface classes -- an example is this may be found in the wdmaud2.drv project in [MidiSrvPorts.cpp](https://github.com/microsoft/MIDI/blob/main/src/in-box/Client/WinMM/MidiSrvPorts.cpp)) 
 
 Another approach is to set up a Device Watcher. This is a WinRT concept which raises events when devices are added/updated or removed. Because we store many custom properties in our created MIDI devices, the API includes specialized device watchers:
 - `Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceWatcher` for the Endpoints created for use with the new API

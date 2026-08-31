@@ -109,6 +109,8 @@ If you need to do long-running processing of incoming messages, add them to your
 | Event | Description |
 | -------- | ----------- |
 | `MessageReceived (source, args)` | From `IMidiMessageReceivedEventSource`. This is the event for receiving MIDI Messages, one at a time. |
+| `EndpointDeviceDisconnected (source, args)` | From `IMidiEndpointConnectionSource`. Raised when the endpoint device has disconnected. |
+| `EndpointDeviceReconnected (source, args)` | From `IMidiEndpointConnectionSource`. Raised when the endpoint device has reconnected, when automatic reconnection is enabled. |
 
 > # Note: 
 > Wire up event handlers and add message processing plugins prior to calling `Open()`. 

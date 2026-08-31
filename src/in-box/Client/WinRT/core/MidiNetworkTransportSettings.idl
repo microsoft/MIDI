@@ -1,0 +1,72 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App SDK and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "IMidiServiceTransportPluginConfig.idl";
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    [contract(MidiTransportsNetworkApiContract, 1)]
+
+    // The settings which apply to the Network MIDI 2.0 transport as a whole rather than to any
+    // one host or client. Read the current values with
+    // MidiNetworkTransportManager.GetTransportSettings, change what you need, then send it to
+    // apply it now and save it to keep it across a service restart.
+    //
+    // Values outside the supported range are clamped rather than refused, so a setting always
+    // ends up somewhere usable. Read the object back afterwards to see what was actually taken.
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkTransportSettings", UUID_IMidiNetworkTransportSettings)]
+    [static_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkTransportSettingsStatics", UUID_IMidiNetworkTransportSettingsStatics)]
+    //[constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkTransportSettingsFactory", UUID_IMidiNetworkTransportSettingsFactory)]
+    runtimeclass MidiNetworkTransportSettings : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiNetworkTransportSettings();
+
+        // How many previously sent command packets are repeated in each outgoing datagram. Higher
+        // values recover better from loss at the cost of larger datagrams. Read by a connection
+        // when it is created, so this reaches existing sessions only when they reconnect.
+        UInt32 MaxForwardErrorCorrectionCommandPackets;
+
+        // How many sent command packets are held for retransmission when the remote asks for
+        // them. Read when a connection is created.
+        UInt32 MaxRetransmitBufferCommandPackets;
+
+        // How often an idle session pings the remote to prove the connection is still alive.
+        // Read on each pass of the connection watcher, so a change reaches existing sessions
+        // within one interval.
+        UInt32 OutboundPingIntervalMilliseconds;
+
+        // How long a remote client waiting for approval is held before it is dropped. Read when
+        // an invitation arrives, so it applies to invitations from this point on.
+        UInt32 InvitationPendingTimeoutMilliseconds;
+
+        // The most simultaneous remote clients any one host on this PC will accept. Checked as
+        // each invitation arrives, so a change applies right away. Lowering it does not
+        // disconnect clients which are already connected.
+        UInt32 MaxHostConnections;
+
+        // How often the transport retries a configured direct connection which is not answering.
+        // Read at the top of each scan, so a change takes effect within one scan.
+        UInt32 DirectConnectionScanIntervalMilliseconds;
+
+        static UInt32 MinMaxForwardErrorCorrectionCommandPackets{ get; };
+        static UInt32 MaxMaxForwardErrorCorrectionCommandPackets{ get; };
+        static UInt32 MinMaxRetransmitBufferCommandPackets{ get; };
+        static UInt32 MaxMaxRetransmitBufferCommandPackets{ get; };
+        static UInt32 MinOutboundPingIntervalMilliseconds{ get; };
+        static UInt32 MaxOutboundPingIntervalMilliseconds{ get; };
+        static UInt32 MinInvitationPendingTimeoutMilliseconds{ get; };
+        static UInt32 MaxInvitationPendingTimeoutMilliseconds{ get; };
+        static UInt32 MinMaxHostConnections{ get; };
+        static UInt32 MaxMaxHostConnections{ get; };
+        static UInt32 MinDirectConnectionScanIntervalMilliseconds{ get; };
+        static UInt32 MaxDirectConnectionScanIntervalMilliseconds{ get; };
+    }
+}

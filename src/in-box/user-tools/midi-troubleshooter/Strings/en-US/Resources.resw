@@ -1,0 +1,1011 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <data name="AppTitle" xml:space="preserve">
+    <value>MIDI Troubleshooting and Repair</value>
+  </data>
+  <data name="ValueUnknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+
+  <!-- Title bar -->
+  <data name="AppearanceButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Appearance and settings</value>
+  </data>
+  <data name="AppearanceButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Appearance and settings</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Keep this window on top</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keep this window on top</value>
+  </data>
+
+  <!-- Appearance flyout -->
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>Appearance and settings</value>
+  </data>
+  <data name="SettingsThemeLabel" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="SettingsThemeSystem" xml:space="preserve">
+    <value>Use system setting</value>
+  </data>
+  <data name="SettingsThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="SettingsThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="SettingsBackdropLabel" xml:space="preserve">
+    <value>Window material</value>
+  </data>
+  <data name="SettingsBackdropSolid" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="SettingsBackdropMica" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="SettingsBackdropAcrylic" xml:space="preserve">
+    <value>Acrylic</value>
+  </data>
+  <data name="SettingsCustomColorCheckBox" xml:space="preserve">
+    <value>Use a custom window color</value>
+  </data>
+  <data name="SettingsColorPickerName" xml:space="preserve">
+    <value>Window color</value>
+  </data>
+  <data name="SettingsRefreshIntervalLabel" xml:space="preserve">
+    <value>Refresh interval, in seconds</value>
+  </data>
+  <data name="SettingsRefreshIntervalHelp" xml:space="preserve">
+    <value>How often the sessions, transports and service pages ask the MIDI service for its current state.</value>
+  </data>
+
+  <!-- System information strip -->
+  <data name="SystemInfoWindowsLabel.Text" xml:space="preserve">
+    <value>Windows</value>
+  </data>
+  <data name="SystemInfoArchitectureLabel.Text" xml:space="preserve">
+    <value>Architecture</value>
+  </data>
+  <data name="SystemInfoCultureLabel.Text" xml:space="preserve">
+    <value>Culture</value>
+  </data>
+  <data name="SystemInfoWindowsAppSdkLabel.Text" xml:space="preserve">
+    <value>Windows App SDK</value>
+  </data>
+  <data name="SystemInfoApiModeLabel.Text" xml:space="preserve">
+    <value>API mode</value>
+  </data>
+  <data name="SystemInfoDeveloperModeLabel.Text" xml:space="preserve">
+    <value>Developer mode</value>
+  </data>
+  <data name="DeveloperModeEnabled" xml:space="preserve">
+    <value>Enabled</value>
+  </data>
+  <data name="DeveloperModeDisabled" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="SystemInfoWindowsFormat" xml:space="preserve">
+    <value>{0} ({1})</value>
+    <comment>{0} is the Windows edition, {1} is the version number</comment>
+  </data>
+  <data name="SystemInfoComputerFormat" xml:space="preserve">
+    <value>Computer: {0}, troubleshooter version {1}</value>
+  </data>
+
+  <!-- Navigation -->
+  <data name="ApiModeNavigationItem.Content" xml:space="preserve">
+    <value>API mode</value>
+  </data>
+  <data name="DiagnosticsNavigationItem.Content" xml:space="preserve">
+    <value>Diagnostics</value>
+  </data>
+  <data name="CaptureNavigationItem.Content" xml:space="preserve">
+    <value>Capture repro log</value>
+  </data>
+  <data name="ServiceHealthHeader.Content" xml:space="preserve">
+    <value>Service health</value>
+  </data>
+  <data name="SessionsNavigationItem.Content" xml:space="preserve">
+    <value>Active sessions</value>
+  </data>
+  <data name="TransportsNavigationItem.Content" xml:space="preserve">
+    <value>Enabled transports</value>
+  </data>
+  <data name="ServiceNavigationItem.Content" xml:space="preserve">
+    <value>MIDI service</value>
+  </data>
+  <data name="RegistryAndDriversHeader.Content" xml:space="preserve">
+    <value>Registry and drivers</value>
+  </data>
+  <data name="RegistryNavigationItem.Content" xml:space="preserve">
+    <value>Registry</value>
+  </data>
+  <data name="DriversNavigationItem.Content" xml:space="preserve">
+    <value>Drivers</value>
+  </data>
+
+  <!-- Elevation -->
+  <data name="ElevationBar.Title" xml:space="preserve">
+    <value>Running without administrator rights</value>
+  </data>
+  <data name="ElevationBar.Message" xml:space="preserve">
+    <value>Diagnostics and reports work, but repairs, the API mode and the service controls do not.</value>
+  </data>
+  <data name="RestartElevatedButton.Content" xml:space="preserve">
+    <value>Restart as administrator</value>
+  </data>
+  <data name="ElevationDeclined" xml:space="preserve">
+    <value>The tool was not restarted with administrator rights, so repairs are still unavailable.</value>
+  </data>
+  <data name="ElevationRequiredForAction" xml:space="preserve">
+    <value>That action needs administrator rights. Use "Restart as administrator" and try again.</value>
+  </data>
+
+  <!-- API mode page -->
+  <data name="ApiModePageTitle.Text" xml:space="preserve">
+    <value>API mode</value>
+  </data>
+  <data name="ApiModePageDescription.Text" xml:space="preserve">
+    <value>The API mode decides which MIDI stack Windows uses. Changing it needs a restart.</value>
+  </data>
+  <data name="ApiModeLearnMoreLink.Content" xml:space="preserve">
+    <value>Read about the API modes</value>
+  </data>
+  <data name="ApiModeServicesName.Text" xml:space="preserve">
+    <value>0 - Windows MIDI Services</value>
+  </data>
+  <data name="ApiModeServicesDescription.Text" xml:space="preserve">
+    <value>The default. Multi-client MIDI, loopback endpoints, Network MIDI 2.0, Bluetooth LE MIDI, MIDI 2.0 devices and the combined MIDI 1.0 and MIDI 2.0 class driver.</value>
+  </data>
+  <data name="ApiModeLegacyName.Text" xml:space="preserve">
+    <value>1 - Legacy MIDI</value>
+  </data>
+  <data name="ApiModeLegacyDescription.Text" xml:space="preserve">
+    <value>The MIDI stack as it was before Windows MIDI Services. No multi-client access, no built-in loopbacks, no Network MIDI 2.0 and no MIDI 2.0 devices. Choose this if you have an application, driver, or device incompatibility with Windows MIDI Services, or you need to use legacy WinMM user-mode drivers (typically ".drv"), or DirectMusic drivers.</value>
+  </data>
+  <data name="ApiModeHybridName.Text" xml:space="preserve">
+    <value>2 - Hybrid</value>
+  </data>
+  <data name="ApiModeHybridDescription.Text" xml:space="preserve">
+    <value>Not recommended for most customers. Devices on a MIDI 1.0 driver appear only to the old APIs, and devices on the new class driver only to the new API. The two do not see each other.</value>
+  </data>
+  <data name="ApplyApiModeButton.Content" xml:space="preserve">
+    <value>Apply and prompt to restart</value>
+  </data>
+  <data name="ApiModeServicesRadio.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Mode 0, Windows MIDI Services</value>
+  </data>
+  <data name="ApiModeLegacyRadio.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Mode 1, Legacy MIDI</value>
+  </data>
+  <data name="ApiModeHybridRadio.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Mode 2, Hybrid</value>
+  </data>
+  <data name="ApiModeServicesShortName" xml:space="preserve">
+    <value>Windows MIDI Services</value>
+  </data>
+  <data name="ApiModeLegacyShortName" xml:space="preserve">
+    <value>Legacy MIDI</value>
+  </data>
+  <data name="ApiModeHybridShortName" xml:space="preserve">
+    <value>Hybrid</value>
+  </data>
+  <data name="ApiModeCurrentFormat" xml:space="preserve">
+    <value>This PC is using {0}.</value>
+  </data>
+  <data name="ApiModePendingFormat" xml:space="preserve">
+    <value>Apply to switch to {0}. A restart is needed before it takes effect.</value>
+  </data>
+  <data name="ApiModeConfirmTitle" xml:space="preserve">
+    <value>Change the API mode?</value>
+  </data>
+  <data name="ApiModeConfirmMessageFormat" xml:space="preserve">
+    <value>This PC will be set to {0}. Nothing changes until Windows is restarted, and you will be asked before anything restarts.</value>
+  </data>
+  <data name="ApiModeWriteFailed" xml:space="preserve">
+    <value>The API mode could not be written. Check that this tool is running as administrator.</value>
+  </data>
+  <data name="ApiModeChangedRestartNeeded" xml:space="preserve">
+    <value>The API mode was changed. Restart Windows for it to take effect.</value>
+  </data>
+  <data name="ApiModeRestartMessageFormat" xml:space="preserve">
+    <value>This PC is now set to {0}, but the change does not take effect until Windows restarts. Save your work in other applications before restarting.</value>
+  </data>
+
+  <!-- Diagnostics page -->
+  <data name="DiagnosticsPageDescription.Text" xml:space="preserve">
+    <value>These reports are what support asks for first. Run them, then copy the text into your issue or email.</value>
+  </data>
+  <data name="RunMidiDiagButton.Content" xml:space="preserve">
+    <value>Run mididiag</value>
+  </data>
+  <data name="CopyMidiDiagButton.Content" xml:space="preserve">
+    <value>Copy all</value>
+  </data>
+  <data name="SaveMidiDiagButton.Content" xml:space="preserve">
+    <value>Save as...</value>
+  </data>
+  <data name="MidiDiagOutputBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI diagnostics report</value>
+  </data>
+  <data name="RunMidiKsInfoButton.Content" xml:space="preserve">
+    <value>Run midiksinfo</value>
+  </data>
+  <data name="CopyMidiKsInfoButton.Content" xml:space="preserve">
+    <value>Copy all</value>
+  </data>
+  <data name="SaveMidiKsInfoButton.Content" xml:space="preserve">
+    <value>Save as...</value>
+  </data>
+  <data name="MidiKsInfoOutputBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Kernel streaming report</value>
+  </data>
+  <data name="DiagnosticsToolMissingFormat" xml:space="preserve">
+    <value>{0} could not be found. Install the Windows MIDI Services SDK runtime and try again.</value>
+  </data>
+  <data name="DiagnosticsRunning" xml:space="preserve">
+    <value>Running. This can take a minute or two.</value>
+  </data>
+  <data name="DiagnosticsComplete" xml:space="preserve">
+    <value>Finished.</value>
+  </data>
+  <data name="DiagnosticsTimedOut" xml:space="preserve">
+    <value>The report took too long and was stopped. What was collected is shown below.</value>
+  </data>
+  <data name="DiagnosticsFailed" xml:space="preserve">
+    <value>The report could not be run.</value>
+  </data>
+  <data name="DiagnosticsCopied" xml:space="preserve">
+    <value>Copied to the clipboard.</value>
+  </data>
+  <data name="SaveTextFileType" xml:space="preserve">
+    <value>Text file</value>
+  </data>
+  <data name="SaveZipFileType" xml:space="preserve">
+    <value>Zip archive</value>
+  </data>
+
+  <!-- Capture page -->
+  <data name="CapturePageTitle.Text" xml:space="preserve">
+    <value>Capture a repro log</value>
+  </data>
+  <data name="CapturePageDescription.Text" xml:space="preserve">
+    <value>Start the capture, reproduce the problem, then stop it. Everything is collected into a single zip file to attach to your issue or send to support.</value>
+  </data>
+  <data name="CaptureSystemInfoCheck.Content" xml:space="preserve">
+    <value>Include system reports (ddodiag, dxdiag, plug and play state)</value>
+  </data>
+  <data name="CaptureMidiDiagCheck.Content" xml:space="preserve">
+    <value>Include mididiag output</value>
+  </data>
+  <data name="CaptureMidiKsInfoCheck.Content" xml:space="preserve">
+    <value>Include midiksinfo output</value>
+  </data>
+  <data name="CaptureTimeTravelCheck.Content" xml:space="preserve">
+    <value>Include a time travel trace of the MIDI service (much larger)</value>
+  </data>
+  <data name="StartCaptureButton.Content" xml:space="preserve">
+    <value>Start capture</value>
+  </data>
+  <data name="StopCaptureButton.Content" xml:space="preserve">
+    <value>Stop and save...</value>
+  </data>
+  <data name="CancelCaptureButton.Content" xml:space="preserve">
+    <value>Cancel capture</value>
+  </data>
+  <data name="CaptureLogBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Capture log</value>
+  </data>
+  <data name="CaptureProfileMissing" xml:space="preserve">
+    <value>providers.wprp could not be found, so a trace cannot be recorded. Install the Windows MIDI Services SDK runtime and try again.</value>
+  </data>
+  <data name="CaptureProfileFoundFormat" xml:space="preserve">
+    <value>Trace profile: {0}</value>
+  </data>
+  <data name="CaptureStarting" xml:space="preserve">
+    <value>Starting the trace...</value>
+  </data>
+  <data name="CaptureReproduceNow" xml:space="preserve">
+    <value>Tracing. Reproduce the problem now, then choose "Stop and save".</value>
+  </data>
+  <data name="CaptureCollecting" xml:space="preserve">
+    <value>Stopping the trace and collecting reports. This can take several minutes.</value>
+  </data>
+  <data name="CaptureSavedFormat" xml:space="preserve">
+    <value>Saved to {0}</value>
+  </data>
+  <data name="CaptureFailed" xml:space="preserve">
+    <value>The capture failed.</value>
+  </data>
+  <data name="CaptureCancelTitle" xml:space="preserve">
+    <value>Cancel the capture?</value>
+  </data>
+  <data name="CaptureCancelMessage" xml:space="preserve">
+    <value>The trace is discarded and nothing is saved.</value>
+  </data>
+  <data name="CaptureCanceling" xml:space="preserve">
+    <value>Canceling...</value>
+  </data>
+  <data name="CaptureCanceled" xml:space="preserve">
+    <value>The capture was canceled and nothing was saved.</value>
+  </data>
+  <data name="CaptureErrorAlreadyRunning" xml:space="preserve">
+    <value>A capture is already running.</value>
+  </data>
+  <data name="CaptureErrorNotRunning" xml:space="preserve">
+    <value>No capture is running.</value>
+  </data>
+  <data name="CaptureErrorNoWpr" xml:space="preserve">
+    <value>wpr.exe could not be found, so a trace cannot be recorded.</value>
+  </data>
+  <data name="CaptureErrorNoProfile" xml:space="preserve">
+    <value>providers.wprp could not be found, so a trace cannot be recorded.</value>
+  </data>
+  <data name="CaptureErrorFolderFormat" xml:space="preserve">
+    <value>The working folder {0} could not be created.</value>
+  </data>
+  <data name="CaptureErrorWprStartFailed" xml:space="preserve">
+    <value>The trace could not be started. Another recording may already be running.</value>
+  </data>
+  <data name="CaptureErrorNoZipFormat" xml:space="preserve">
+    <value>The package could not be written. The collected files are still in {0}.</value>
+  </data>
+  <data name="CaptureErrorUnexpected" xml:space="preserve">
+    <value>An unexpected error occurred.</value>
+  </data>
+  <data name="CaptureLogWorkingFolderFormat" xml:space="preserve">
+    <value>Working folder: {0}</value>
+  </data>
+  <data name="CaptureLogTracingStarted" xml:space="preserve">
+    <value>Tracing started.</value>
+  </data>
+  <data name="CaptureLogTracingCanceled" xml:space="preserve">
+    <value>Tracing canceled.</value>
+  </data>
+  <data name="CaptureLogTimeTravelStarted" xml:space="preserve">
+    <value>Time travel tracing attached to the MIDI service.</value>
+  </data>
+  <data name="CaptureLogTimeTravelFailed" xml:space="preserve">
+    <value>Time travel tracing could not attach to the MIDI service. The rest of the capture continues without it.</value>
+  </data>
+  <data name="CaptureLogTimeTravelNoService" xml:space="preserve">
+    <value>The MIDI service is not running, so there was nothing to attach a time travel trace to.</value>
+  </data>
+  <data name="CaptureLogTimeTravelStopped" xml:space="preserve">
+    <value>Time travel tracing stopped.</value>
+  </data>
+  <data name="CaptureLogTraceWritten" xml:space="preserve">
+    <value>Trace written to Repro.etl.</value>
+  </data>
+  <data name="CaptureLogTraceStopFailed" xml:space="preserve">
+    <value>The trace could not be stopped cleanly.</value>
+  </data>
+  <data name="CaptureLogSummaryWritten" xml:space="preserve">
+    <value>Capture summary written.</value>
+  </data>
+  <data name="CaptureLogMidiDiagCaptured" xml:space="preserve">
+    <value>mididiag output captured.</value>
+  </data>
+  <data name="CaptureLogMidiKsInfoCaptured" xml:space="preserve">
+    <value>midiksinfo output captured.</value>
+  </data>
+  <data name="CaptureLogDdoDiag" xml:space="preserve">
+    <value>ddodiag report captured.</value>
+  </data>
+  <data name="CaptureLogDxDiag" xml:space="preserve">
+    <value>dxdiag report captured.</value>
+  </data>
+  <data name="CaptureLogPnpState" xml:space="preserve">
+    <value>Plug and play state exported.</value>
+  </data>
+  <data name="CaptureLogToolTimedOutFormat" xml:space="preserve">
+    <value>Skipped, took too long: {0}</value>
+  </data>
+  <data name="CaptureLogPackageWrittenFormat" xml:space="preserve">
+    <value>Package written to {0}</value>
+  </data>
+
+  <!-- Sessions page -->
+  <data name="SessionsPageTitle.Text" xml:space="preserve">
+    <value>Active sessions</value>
+  </data>
+  <data name="RefreshSessionsButton.Content" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="SessionsNone" xml:space="preserve">
+    <value>No applications are connected to the MIDI service right now.</value>
+  </data>
+  <data name="SessionsCountFormat" xml:space="preserve">
+    <value>{0} connected application(s).</value>
+  </data>
+  <data name="SessionsServiceNotRunning" xml:space="preserve">
+    <value>The MIDI service is not running, so there are no sessions to show.</value>
+  </data>
+  <data name="SessionsUnavailable" xml:space="preserve">
+    <value>The list of sessions could not be read from the MIDI service.</value>
+  </data>
+  <data name="SessionUnnamed" xml:space="preserve">
+    <value>(unnamed session)</value>
+  </data>
+  <data name="SessionProcessFormat" xml:space="preserve">
+    <value>{0}, process {1}</value>
+  </data>
+  <data name="SessionStartedFormat" xml:space="preserve">
+    <value>Started {0}</value>
+  </data>
+  <data name="SessionConnectionCountFormat" xml:space="preserve">
+    <value>{0} open connection(s)</value>
+  </data>
+  <data name="SessionConnectionInstancesFormat" xml:space="preserve">
+    <value>{0} instance(s)</value>
+  </data>
+  <data name="SessionConnectionSinceFormat" xml:space="preserve">
+    <value>since {0}</value>
+  </data>
+
+  <!-- Transports page -->
+  <data name="TransportsPageTitle.Text" xml:space="preserve">
+    <value>Enabled transports</value>
+  </data>
+  <data name="TransportsLearnMoreLink.Content" xml:space="preserve">
+    <value>Why a transport may not load</value>
+  </data>
+  <data name="RefreshTransportsButton.Content" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="TransportStatusLoaded" xml:space="preserve">
+    <value>Loaded</value>
+  </data>
+  <data name="TransportStatusDisabled" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="TransportStatusNotLoaded" xml:space="preserve">
+    <value>Did not load</value>
+  </data>
+  <data name="TransportStatusNotRegistered" xml:space="preserve">
+    <value>Not registered</value>
+  </data>
+  <data name="TransportStatusFileMissing" xml:space="preserve">
+    <value>File missing</value>
+  </data>
+  <data name="TransportStatusServiceNotRunning" xml:space="preserve">
+    <value>Service not running</value>
+  </data>
+  <data name="TransportStatusClientComponent" xml:space="preserve">
+    <value>Registered</value>
+  </data>
+  <data name="TransportClientComponentDescription" xml:space="preserve">
+    <value>Part of the service itself rather than a plugin, so it is never listed as loaded.</value>
+  </data>
+  <data name="TransportDetailFormat" xml:space="preserve">
+    <value>Version {0}, by {1}</value>
+  </data>
+  <data name="TransportVersionOnlyFormat" xml:space="preserve">
+    <value>Version {0}</value>
+  </data>
+  <data name="TransportModuleFormat" xml:space="preserve">
+    <value>{0}</value>
+  </data>
+  <data name="TransportsAllLoadedFormat" xml:space="preserve">
+    <value>{0} transport(s), all loaded.</value>
+  </data>
+  <data name="TransportsProblemFormat" xml:space="preserve">
+    <value>{0} transport(s), {1} not loaded or disabled.</value>
+  </data>
+
+  <!-- Service page -->
+  <data name="ServicePageTitle.Text" xml:space="preserve">
+    <value>MIDI service</value>
+  </data>
+  <data name="ServiceStateLabel.Text" xml:space="preserve">
+    <value>Status</value>
+  </data>
+  <data name="ServiceStartModeLabel.Text" xml:space="preserve">
+    <value>Startup type</value>
+  </data>
+  <data name="ServiceAccountLabel.Text" xml:space="preserve">
+    <value>Runs as</value>
+  </data>
+  <data name="ServiceProcessLabel.Text" xml:space="preserve">
+    <value>Process</value>
+  </data>
+  <data name="ServiceImageLabel.Text" xml:space="preserve">
+    <value>Image</value>
+  </data>
+  <data name="ServiceVersionLabel.Text" xml:space="preserve">
+    <value>Version</value>
+  </data>
+  <data name="RestartServiceButton.Content" xml:space="preserve">
+    <value>Restart the MIDI service</value>
+  </data>
+  <data name="RefreshServiceButton.Content" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="ServiceStartWithWindowsTitle.Text" xml:space="preserve">
+    <value>Start with Windows</value>
+  </data>
+  <data name="ServiceStartWithWindowsDescription.Text" xml:space="preserve">
+    <value>The service normally starts on demand when the first MIDI application asks for it. Starting it with Windows will reduce first-app app startup time for DAWs and other apps which use MIDI, and is the recommended option for musicians and anyone who uses MIDI regularly.</value>
+  </data>
+  <data name="SetAutomaticStartButton.Content" xml:space="preserve">
+    <value>Start automatically</value>
+  </data>
+  <data name="SetManualStartButton.Content" xml:space="preserve">
+    <value>Start on demand</value>
+  </data>
+  <data name="ServiceStateRunning" xml:space="preserve">
+    <value>Running</value>
+  </data>
+  <data name="ServiceStateStopped" xml:space="preserve">
+    <value>Stopped</value>
+  </data>
+  <data name="ServiceStatePaused" xml:space="preserve">
+    <value>Paused</value>
+  </data>
+  <data name="ServiceStateStarting" xml:space="preserve">
+    <value>Starting</value>
+  </data>
+  <data name="ServiceStateStopping" xml:space="preserve">
+    <value>Stopping</value>
+  </data>
+  <data name="ServiceStatePausing" xml:space="preserve">
+    <value>Pausing</value>
+  </data>
+  <data name="ServiceStateResuming" xml:space="preserve">
+    <value>Resuming</value>
+  </data>
+  <data name="ServiceStateNotInstalled" xml:space="preserve">
+    <value>Not installed</value>
+  </data>
+  <data name="ServiceStateUnknown" xml:space="preserve">
+    <value>Unknown</value>
+  </data>
+  <data name="ServiceStartAutomatic" xml:space="preserve">
+    <value>Automatic, with Windows</value>
+  </data>
+  <data name="ServiceStartAutomaticDelayed" xml:space="preserve">
+    <value>Automatic, delayed start</value>
+  </data>
+  <data name="ServiceStartManual" xml:space="preserve">
+    <value>On demand</value>
+  </data>
+  <data name="ServiceStartDisabled" xml:space="preserve">
+    <value>Disabled</value>
+  </data>
+  <data name="ServiceStartBoot" xml:space="preserve">
+    <value>Boot</value>
+  </data>
+  <data name="ServiceStartSystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="ServiceNoProcess" xml:space="preserve">
+    <value>Not running</value>
+  </data>
+  <data name="ServiceProcessFormat" xml:space="preserve">
+    <value>Process id {0}</value>
+  </data>
+  <data name="ServiceRestartConfirmTitle" xml:space="preserve">
+    <value>Restart the MIDI service?</value>
+  </data>
+  <data name="ServiceRestartConfirmMessage" xml:space="preserve">
+    <value>Every application using MIDI loses its connections and has to reconnect. Save your work first.</value>
+  </data>
+  <data name="ServiceRestarting" xml:space="preserve">
+    <value>Restarting the service...</value>
+  </data>
+  <data name="ServiceRestarted" xml:space="preserve">
+    <value>The MIDI service was restarted.</value>
+  </data>
+  <data name="ServiceRestartFailedFormat" xml:space="preserve">
+    <value>The MIDI service could not be restarted. {0}</value>
+  </data>
+  <data name="ServiceStartModeChanged" xml:space="preserve">
+    <value>The startup type was changed.</value>
+  </data>
+  <data name="ServiceStartModeFailedFormat" xml:space="preserve">
+    <value>The startup type could not be changed. {0}</value>
+  </data>
+
+  <!-- Registry page -->
+  <data name="RegistryPageTitle.Text" xml:space="preserve">
+    <value>Registry</value>
+  </data>
+  <data name="RegistryLearnMoreLink.Content" xml:space="preserve">
+    <value>Which registry entries Windows MIDI Services needs</value>
+  </data>
+  <data name="RefreshRegistryButton.Content" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="LegacyModeBar.Title" xml:space="preserve">
+    <value>This PC is in Legacy MIDI mode</value>
+  </data>
+  <data name="LegacyModeBar.Message" xml:space="preserve">
+    <value>Legacy mode deliberately does not use midisrv or wdmaud2.drv, so these entries are left alone. Change the API mode first if you want the Windows MIDI Services layout back.</value>
+  </data>
+  <data name="RepairRegistryButton.Content" xml:space="preserve">
+    <value>Repair these entries</value>
+  </data>
+  <data name="RegistryDrivers32Header.Text" xml:space="preserve">
+    <value>Drivers32 for 64-bit applications</value>
+  </data>
+  <data name="RegistryDrivers32WowHeader.Text" xml:space="preserve">
+    <value>Drivers32 for 32-bit applications</value>
+  </data>
+  <data name="RegistryServiceRootHeader.Text" xml:space="preserve">
+    <value>Windows MIDI Services</value>
+  </data>
+  <data name="RegistryTransportsHeader.Text" xml:space="preserve">
+    <value>Registered transports</value>
+  </data>
+  <data name="RegistryScanning" xml:space="preserve">
+    <value>Reading the registry...</value>
+  </data>
+  <data name="RegistryHealthy" xml:space="preserve">
+    <value>Everything Windows MIDI Services needs is present and correct.</value>
+  </data>
+  <data name="RegistryProblemsFoundFormat" xml:space="preserve">
+    <value>{0} problem(s) found. Repairing them needs a restart afterwards.</value>
+  </data>
+  <data name="RegistryLegacyModeNoChanges" xml:space="preserve">
+    <value>No changes are offered while this PC is in Legacy MIDI mode.</value>
+  </data>
+  <data name="RegistryRepairConfirmTitle" xml:space="preserve">
+    <value>Repair the registry entries?</value>
+  </data>
+  <data name="RegistryRepairConfirmIntro" xml:space="preserve">
+    <value>These changes will be made:</value>
+  </data>
+  <data name="RegistryRepairConfirmOutro" xml:space="preserve">
+    <value>Close your MIDI applications first. Windows has to be restarted afterwards for the changes to take effect.</value>
+  </data>
+  <data name="RegistryRepairing" xml:space="preserve">
+    <value>Repairing...</value>
+  </data>
+  <data name="RegistryRepairSucceeded" xml:space="preserve">
+    <value>The registry entries were repaired.</value>
+  </data>
+  <data name="RegistryRepairPartlyFailed" xml:space="preserve">
+    <value>Some entries could not be repaired. Check that this tool is running as administrator.</value>
+  </data>
+  <data name="RegistryRepairRestartMessage" xml:space="preserve">
+    <value>The registry entries were repaired, but the audio and MIDI services read them at startup. Restart Windows for the changes to take effect. Save your work in other applications first.</value>
+  </data>
+  <data name="RegistryValueMissing" xml:space="preserve">
+    <value>(missing)</value>
+  </data>
+  <data name="RegistryValueWrongType" xml:space="preserve">
+    <value>(wrong type)</value>
+  </data>
+  <data name="RegistryScope64Bit" xml:space="preserve">
+    <value>64-bit</value>
+  </data>
+  <data name="RegistryScope32Bit" xml:space="preserve">
+    <value>32-bit</value>
+  </data>
+  <data name="RegistryCommentInBoxSynth" xml:space="preserve">
+    <value>In-box synthesizer support</value>
+  </data>
+  <data name="RegistryCommentServiceInterface" xml:space="preserve">
+    <value>Hands enumeration to the MIDI service</value>
+  </data>
+  <data name="RegistryCommentMustBeFormat" xml:space="preserve">
+    <value>Must be {0}</value>
+  </data>
+  <data name="RegistryCommentMidi0Invalid" xml:space="preserve">
+    <value>Invalid name. The first entry must be called midi, not midi0.</value>
+  </data>
+  <data name="RegistryCommentMidiMapper" xml:space="preserve">
+    <value>MIDI mapper. Not used by Windows MIDI Services.</value>
+  </data>
+  <data name="RegistryCommentNotUsedByMidi" xml:space="preserve">
+    <value>Not used by Windows MIDI Services</value>
+  </data>
+  <data name="RegistryCommentTransferCompleteOk" xml:space="preserve">
+    <value>Required flag. Tells Windows the MIDI service handles enumeration.</value>
+  </data>
+  <data name="RegistryCommentTransferCompleteWrong" xml:space="preserve">
+    <value>Must be a DWORD set to 1</value>
+  </data>
+  <data name="RegistryCommentWrongType" xml:space="preserve">
+    <value>Unexpected value type</value>
+  </data>
+  <data name="RegistryCommentUnrecognizedEntry" xml:space="preserve">
+    <value>Unrecognized driver. Windows MIDI Services does not load drivers from here.</value>
+  </data>
+  <data name="RegistryCommentDeprecatedKorgUsbDriver" xml:space="preserve">
+    <value>Deprecated KORG USB driver</value>
+  </data>
+  <data name="RegistryCommentKorgBluetoothDriver" xml:space="preserve">
+    <value>KORG Bluetooth MIDI driver</value>
+  </data>
+  <data name="RegistryCommentCoolSoftMidiMapper" xml:space="preserve">
+    <value>CoolSoft MIDI Mapper</value>
+  </data>
+  <data name="RegistryCommentCoolSoftVirtualMidiSynth" xml:space="preserve">
+    <value>CoolSoft VirtualMIDISynth</value>
+  </data>
+  <data name="RegistryCommentServiceRootMissing" xml:space="preserve">
+    <value>The Windows MIDI Services registry key is missing. Reinstall the SDK runtime.</value>
+  </data>
+  <data name="RegistryCommentCurrentConfig" xml:space="preserve">
+    <value>Configuration file the service reads</value>
+  </data>
+  <data name="RegistryCommentCurrentConfigMissing" xml:space="preserve">
+    <value>No configuration file is set, so loopbacks and other configured endpoints will not be created.</value>
+  </data>
+  <data name="RegistryCommentTransportOk" xml:space="preserve">
+    <value>Registered and enabled</value>
+  </data>
+  <data name="RegistryCommentTransportBuiltIn" xml:space="preserve">
+    <value>Built into the service</value>
+  </data>
+  <data name="RegistryCommentTransportDisabled" xml:space="preserve">
+    <value>Disabled in the registry</value>
+  </data>
+  <data name="RegistryCommentTransportNotRegistered" xml:space="preserve">
+    <value>No COM registration for this class id</value>
+  </data>
+  <data name="RegistryCommentTransportFileMissing" xml:space="preserve">
+    <value>The registered file is not on this PC</value>
+  </data>
+  <data name="TransportNameMidisrv" xml:space="preserve">
+    <value>(Midisrv transport)</value>
+  </data>
+  <data name="TransportNameDiagnostics" xml:space="preserve">
+    <value>(Diagnostics transport)</value>
+  </data>
+  <data name="RepairSetValueFormat" xml:space="preserve">
+    <value>Set {0} to {1} ({2})</value>
+  </data>
+  <data name="RepairDeleteValueFormat" xml:space="preserve">
+    <value>Delete {0} ({1})</value>
+  </data>
+  <data name="RepairSetTransferComplete" xml:space="preserve">
+    <value>Set MidisrvTransferComplete to 1</value>
+  </data>
+  <data name="RepairCannotOpenKeyFormat" xml:space="preserve">
+    <value>{0} could not be opened for writing.</value>
+  </data>
+  <data name="RepairDeletedValueFormat" xml:space="preserve">
+    <value>Deleted {0}</value>
+  </data>
+  <data name="RepairDeleteFailedFormat" xml:space="preserve">
+    <value>{0} could not be deleted.</value>
+  </data>
+  <data name="RepairWroteValueFormat" xml:space="preserve">
+    <value>Set {0} to {1}</value>
+  </data>
+  <data name="RepairWriteFailedFormat" xml:space="preserve">
+    <value>{0} could not be written.</value>
+  </data>
+
+  <!-- Drivers page -->
+  <data name="DriversPageTitle.Text" xml:space="preserve">
+    <value>Drivers</value>
+  </data>
+  <data name="DriversLearnMoreLink.Content" xml:space="preserve">
+    <value>How to switch between the MIDI class drivers</value>
+  </data>
+  <data name="RefreshDriversButton.Content" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="KorgDriverTitle.Text" xml:space="preserve">
+    <value>KORG USB MIDI driver</value>
+  </data>
+  <data name="KorgDriverDescription.Text" xml:space="preserve">
+    <value>The KORG USB MIDI driver is not needed with Windows MIDI Services and is a common cause of missing or duplicated ports. This removes the driver package and any device using it.</value>
+  </data>
+  <data name="RemoveKorgDriverButton.Content" xml:space="preserve">
+    <value>Uninstall</value>
+  </data>
+  <data name="KorgBleDriverTitle.Text" xml:space="preserve">
+    <value>KORG BLE-MIDI driver</value>
+  </data>
+  <data name="KorgBleDriverDescription.Text" xml:space="preserve">
+    <value>Windows MIDI Services has Bluetooth LE MIDI built in, so this driver is no longer needed and can conflict with the in-box support. This removes the driver package and any device using it.</value>
+  </data>
+  <data name="RemoveKorgBleDriverButton.Content" xml:space="preserve">
+    <value>Uninstall</value>
+  </data>
+  <data name="DriversCautionText.Text" xml:space="preserve">
+    <value>Not everything listed here is a MIDI device. Windows offers the MIDI class driver for any USB audio device, and forcing it onto one that cannot use it may stop the device working or make the PC stop responding. It recovers on the next startup, but only change the driver for a device you know is a MIDI device.</value>
+  </data>
+  <data name="KorgBleDriverNotInstalled" xml:space="preserve">
+    <value>No KORG BLE-MIDI driver package is installed on this PC.</value>
+  </data>
+  <data name="KorgBleRemoveConfirmOutro" xml:space="preserve">
+    <value>Close your MIDI applications first. Bluetooth LE MIDI devices then use the Windows MIDI Services Bluetooth support instead, which you set up in the Windows MIDI Bluetooth Setup app.</value>
+  </data>
+  <data name="UseUmpDriverButton.Content" xml:space="preserve">
+    <value>Use new MIDI driver</value>
+  </data>
+  <data name="UseClassicDriverButton.Content" xml:space="preserve">
+    <value>Use classic driver</value>
+  </data>
+  <data name="DriversScanning" xml:space="preserve">
+    <value>Looking for USB MIDI devices...</value>
+  </data>
+  <data name="DriversNoDevices" xml:space="preserve">
+    <value>No class compliant USB audio or MIDI devices are connected.</value>
+  </data>
+  <data name="DriversDeviceCountFormat" xml:space="preserve">
+    <value>{0} device(s) found.</value>
+  </data>
+  <data name="DriverKindUmp" xml:space="preserve">
+    <value>New MIDI 1.0 and MIDI 2.0 class driver</value>
+  </data>
+  <data name="DriverKindClassic" xml:space="preserve">
+    <value>Classic USB audio class driver</value>
+  </data>
+  <data name="DriverKindUsbAudio2" xml:space="preserve">
+    <value>In-box USB Audio 2.0 driver (audio only, no MIDI)</value>
+  </data>
+  <data name="DriverKindVendorFormat" xml:space="preserve">
+    <value>Vendor driver from {0}</value>
+  </data>
+  <data name="DriverKindUnknown" xml:space="preserve">
+    <value>Unrecognized driver</value>
+  </data>
+  <data name="DriverCurrentFormat" xml:space="preserve">
+    <value>{0} - {1}, version {2}</value>
+  </data>
+  <data name="DriverProblemFormat" xml:space="preserve">
+    <value>This device has a problem. Device Manager problem code {0}.</value>
+  </data>
+  <data name="DriverChangeConfirmTitle" xml:space="preserve">
+    <value>Change the driver?</value>
+  </data>
+  <data name="DriverChangeToUmpConfirmFormat" xml:space="preserve">
+    <value>{0} will be switched to the new combined MIDI 1.0 and MIDI 2.0 class driver. Close your MIDI applications first. Some devices need to be unplugged and plugged back in, and a restart is usually needed.
+
+Only do this for a MIDI device. Windows offers this driver for any USB audio device, and forcing it onto one that is not class compliant can stop the device working or make the PC stop responding until it is restarted.</value>
+  </data>
+  <data name="DriverChangeToClassicConfirmFormat" xml:space="preserve">
+    <value>{0} will be switched to the classic USB audio class driver. MIDI 2.0 will not be available on this device. Close your MIDI applications first. Some devices need to be unplugged and plugged back in, and a restart is usually needed.</value>
+  </data>
+  <data name="DriverChanging" xml:space="preserve">
+    <value>Changing the driver...</value>
+  </data>
+  <data name="DriverChangeRestartMessage" xml:space="preserve">
+    <value>The driver was changed. Unplug the device, restart Windows, then plug it back in. Save your work in other applications first.</value>
+  </data>
+  <data name="DriversDriverChanged" xml:space="preserve">
+    <value>The driver was changed.</value>
+  </data>
+  <data name="DriversErrorDeviceNotFound" xml:space="preserve">
+    <value>That device is no longer connected.</value>
+  </data>
+  <data name="DriversErrorNoDriverList" xml:space="preserve">
+    <value>The list of compatible drivers could not be built for that device.</value>
+  </data>
+  <data name="DriversErrorDriverNotAvailable" xml:space="preserve">
+    <value>That driver is not compatible with this device.</value>
+  </data>
+  <data name="DriversErrorSelectFailedFormat" xml:space="preserve">
+    <value>The driver could not be selected. Windows error {0}.</value>
+  </data>
+  <data name="DriversErrorInstallFailedFormat" xml:space="preserve">
+    <value>The driver could not be installed. Windows error {0}.</value>
+  </data>
+  <data name="DriversErrorUnexpected" xml:space="preserve">
+    <value>An unexpected error occurred.</value>
+  </data>
+  <data name="DriversErrorNoPnpUtil" xml:space="preserve">
+    <value>pnputil.exe could not be found, so the driver package cannot be removed.</value>
+  </data>
+  <data name="DriversNoKorgPackages" xml:space="preserve">
+    <value>No KORG driver package is installed.</value>
+  </data>
+  <data name="DriversRemovedPackageFormat" xml:space="preserve">
+    <value>Removed {0}.</value>
+  </data>
+  <data name="DriversRemoveFailedFormat" xml:space="preserve">
+    <value>{0} could not be removed. pnputil returned {1}.</value>
+  </data>
+  <data name="DriversKorgRemoved" xml:space="preserve">
+    <value>The KORG driver package was removed.</value>
+  </data>
+  <data name="DriversKorgRemovalIncomplete" xml:space="preserve">
+    <value>Some KORG driver packages could not be removed.</value>
+  </data>
+  <data name="KorgDriverNotInstalled" xml:space="preserve">
+    <value>No KORG USB MIDI driver package is installed on this PC.</value>
+  </data>
+  <data name="KorgDriverFoundFormat" xml:space="preserve">
+    <value>{0} KORG driver package(s) installed: {1}</value>
+  </data>
+  <data name="KorgRemoveConfirmTitle" xml:space="preserve">
+    <value>Uninstall the KORG driver?</value>
+  </data>
+  <data name="KorgRemoveConfirmIntro" xml:space="preserve">
+    <value>These driver packages will be removed, along with any device using them:</value>
+  </data>
+  <data name="KorgRemoveConfirmOutro" xml:space="preserve">
+    <value>Close your MIDI applications first. Devices that were using this driver fall back to the in-box class driver.</value>
+  </data>
+  <data name="KorgRemoving" xml:space="preserve">
+    <value>Removing the KORG driver package...</value>
+  </data>
+  <data name="KorgRemoveRestartMessage" xml:space="preserve">
+    <value>The KORG driver package was removed. Restart Windows to finish. Save your work in other applications first.</value>
+  </data>
+
+  <!-- Dialogs -->
+  <data name="ConfirmDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="ConfirmDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="RestartComputerDialog.Title" xml:space="preserve">
+    <value>Restart now?</value>
+  </data>
+  <data name="RestartComputerDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Restart now</value>
+  </data>
+  <data name="RestartComputerDialog.CloseButtonText" xml:space="preserve">
+    <value>Later</value>
+  </data>
+</root>

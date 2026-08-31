@@ -13,4 +13,5 @@ Supplied by `MidiNetworkAdvertisedHostWatcher.Updated`.
 | Property | Description |
 | -------- | ----------- |
 | `HostDeviceId` | The device id of the host which changed |
-| `DeviceInformationUpdate` | The underlying `DeviceInformationUpdate` carrying the changed properties |
+| `ChangedProperties` | Which fields changed, as `MidiNetworkAdvertisedHostChangedProperties`. This is only ever raised for a real change, never for a simple re-announcement, so it is never `None` |
+| `UpdatedHost` | The host as it now stands, rather than a bag of changed property keys |

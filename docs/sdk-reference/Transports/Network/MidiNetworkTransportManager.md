@@ -15,10 +15,8 @@ The entry point for all Network MIDI 2.0 management. All members are static.
 | `IsTransportAvailable` | Returns true if the Network MIDI 2.0 transport is available in the service. |
 | `TransportId` | Returns the GUID of this transport. |
 | `MidiNetworkUdpDnsServiceType` | The DNS-SD service type used by Network MIDI 2.0, for use with your own discovery code. |
-| `MidiNetworkUdpDnsSdQueryString` | The AQS query string for enumerating Network MIDI 2.0 hosts through `Windows.Devices.Enumeration`. |
 | `MidiNetworkUdpDnsDomain` | The DNS-SD domain used for discovery. |
-| `MidiNetworkUdpDnsSdDeviceInformationKind` | The `DeviceInformationKind` to use when enumerating with the query string above. |
-| `MidiNetworkUdpDnsSdQueryAdditionalProperties` | The additional properties to request when enumerating, so that the returned `DeviceInformation` carries the host name, port, and MIDI-specific fields. |
+| `MidiNetworkUdpDnsSdQueryName` | The full DNS-SD query name, `_midi2._udp.local`, as passed to `DnsServiceBrowse`. |
 
 ## Static Methods
 
@@ -36,6 +34,9 @@ The entry point for all Network MIDI 2.0 management. All members are static.
 | `GetConfiguredClients()` | Returns a collection of `MidiNetworkConfiguredClient` for every configured client, connected or not. |
 | `GetPendingRemoteClients()` | Returns a collection of `MidiNetworkPendingRemoteClient` waiting for a user decision. Poll this to drive an approval UI. |
 | `GetAdvertisedHosts()` | Returns a one-shot snapshot of `MidiNetworkAdvertisedHost` currently visible on the network. For ongoing updates use `MidiNetworkAdvertisedHostWatcher`. |
+| `GetTransportSettings()` | Returns a [MidiNetworkTransportSettings](MidiNetworkTransportSettings) holding the settings the transport is running with right now. These are not necessarily what the configuration file says, because a value out of range or of the wrong type is corrected when it is read. |
+| `GenerateAvailableHostPort()` | Returns a free UDP port for a host to keep, or zero if nothing suitable was found. Deliberately below the Windows dynamic range, so the operating system will not hand it to another process while the service is not running. |
+| `IsHostPortAvailable(port)` | Returns true if the port can be used for a host. Intended for validating a port a user typed in, before trying to create the host with it. |
 
 ## Remarks
 

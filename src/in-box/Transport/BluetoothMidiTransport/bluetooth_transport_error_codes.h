@@ -1,0 +1,63 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#pragma once
+
+// this file is shared with the client SDK IDL file and so must contain
+// defines that are valid in C++ and MIDL
+
+#define BLUETOOTH_MIDI_ERROR_CODE_UNKNOWN_ERROR                 0x00000000
+#define BLUETOOTH_MIDI_ERROR_CODE_UNRECOGNIZED_COMMAND          0x00000001
+#define BLUETOOTH_MIDI_ERROR_CODE_INVALID_JSON                  0x00000011
+
+#define BLUETOOTH_MIDI_ERROR_CODE_MISSING_DEVICE_ID             0x00000031
+#define BLUETOOTH_MIDI_ERROR_CODE_INVALID_DEVICE_ID             0x00000032
+
+#define BLUETOOTH_MIDI_ERROR_CODE_TRANSPORT_NOT_AVAILABLE       0x00000041
+
+// "always", "immediate", a whole number of seconds, or "default" for one device
+#define BLUETOOTH_MIDI_ERROR_CODE_INVALID_OFFLINE_RETENTION     0x00000051
+
+// connecting out to a device. These are deliberately separate even where Windows reports the
+// same HRESULT, because what a customer should do about them differs.
+#define BLUETOOTH_MIDI_ERROR_CODE_DEVICE_NOT_DISCOVERED         0x00000101
+#define BLUETOOTH_MIDI_ERROR_CODE_DEVICE_NOT_AVAILABLE          0x00000102
+#define BLUETOOTH_MIDI_ERROR_CODE_MIDI_SERVICE_NOT_FOUND        0x00000103
+#define BLUETOOTH_MIDI_ERROR_CODE_MIDI_CHARACTERISTIC_NOT_FOUND 0x00000104
+#define BLUETOOTH_MIDI_ERROR_CODE_DEVICE_UNREACHABLE            0x00000105
+#define BLUETOOTH_MIDI_ERROR_CODE_GATT_ACCESS_DENIED            0x00000106
+#define BLUETOOTH_MIDI_ERROR_CODE_GATT_PROTOCOL_ERROR           0x00000107
+#define BLUETOOTH_MIDI_ERROR_CODE_DEVICE_IN_USE                 0x00000108
+#define BLUETOOTH_MIDI_ERROR_CODE_ALREADY_CONNECTED             0x00000109
+#define BLUETOOTH_MIDI_ERROR_CODE_SESSION_CREATION_FAILED       0x0000010A
+#define BLUETOOTH_MIDI_ERROR_CODE_OPERATION_ABORTED             0x0000010B
+#define BLUETOOTH_MIDI_ERROR_CODE_NOTIFY_FAILED                 0x0000010C
+#define BLUETOOTH_MIDI_ERROR_CODE_ENDPOINT_CREATION_FAILED      0x0000010D
+
+#define BLUETOOTH_MIDI_ERROR_CODE_NOT_CONNECTED                 0x00000111
+
+// publishing this PC as a peripheral
+#define BLUETOOTH_MIDI_ERROR_CODE_PERIPHERAL_ALREADY_RUNNING    0x00000201
+#define BLUETOOTH_MIDI_ERROR_CODE_PERIPHERAL_NOT_RUNNING        0x00000202
+#define BLUETOOTH_MIDI_ERROR_CODE_PERIPHERAL_ROLE_NOT_AVAILABLE 0x00000203
+#define BLUETOOTH_MIDI_ERROR_CODE_PERIPHERAL_NO_CLIENT          0x00000204
+#define BLUETOOTH_MIDI_ERROR_CODE_PERIPHERAL_INVALID_PROTOCOL   0x00000205
+#define BLUETOOTH_MIDI_ERROR_CODE_PERIPHERAL_ADVERTISING_FAILED 0x00000206
+
+// approving or denying a Central which subscribed to this PC
+#define BLUETOOTH_MIDI_ERROR_CODE_CLIENT_NOT_PENDING            0x00000211
+#define BLUETOOTH_MIDI_ERROR_CODE_CLIENT_IDENTITY_MISMATCH      0x00000212
+#define BLUETOOTH_MIDI_ERROR_CODE_INVALID_APPROVAL_SCOPE        0x00000213
+#define BLUETOOTH_MIDI_ERROR_CODE_MISSING_CLIENT_ADDRESS        0x00000214
+#define BLUETOOTH_MIDI_ERROR_CODE_CLIENT_NOT_REMEMBERED         0x00000215
+#define BLUETOOTH_MIDI_ERROR_CODE_ADDRESS_NOT_REMEMBERABLE      0x00000216
+
+// the radio itself, rather than any one device
+#define BLUETOOTH_MIDI_ERROR_CODE_RADIO_NOT_AVAILABLE           0x00000301
+#define BLUETOOTH_MIDI_ERROR_CODE_RADIO_NOT_SUPPORTED           0x00000302
+#define BLUETOOTH_MIDI_ERROR_CODE_PROTOCOL_NOT_SUPPORTED        0x00000303

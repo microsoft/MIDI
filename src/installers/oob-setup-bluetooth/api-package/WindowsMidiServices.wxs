@@ -1,0 +1,192 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
+    <?define TransportStagingFolder=$(StagingSourceRootFolder)\api\$(var.Platform) ?>
+    <?define AppStagingFolder=$(StagingSourceRootFolder)\bluetooth-app\$(var.Platform) ?>
+
+    <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
+    <?include $(StagingVersionIncludeFile) ?>
+
+    <!-- Shared by the preview transport and any in-box version, which is what makes the
+         uninstall behaviour below matter. -->
+    <?define BluetoothTransportClsid={5dc87270-f318-4838-a4f9-6aadc63e925f} ?>
+    <?define BluetoothTransportPluginKeyName=Midi2BluetoothMidiTransport ?>
+
+    <Package Name="Microsoft Windows MIDI Services (Bluetooth MIDI Preview) $(var.Platform)"
+             Manufacturer="Microsoft Corporation"
+             Version="$(MidiPluginsNumericVersion)"
+             UpgradeCode="33ef0c51-c5d3-458b-a58f-d66253b7ed7f"
+             Scope="perMachine"
+             Compressed="true">
+
+        <MediaTemplate EmbedCab="yes" />
+
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
+                <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
+                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
+                    <Directory Id="TOOL_BLUETOOTHSETUP_FOLDER" Name="BluetoothSetup" />
+                </Directory>
+            </Directory>
+        </StandardDirectory>
+
+        <StandardDirectory Id="ProgramMenuFolder">
+            <Directory Id="MIDI_PROGRAMS_FOLDER" Name="Windows MIDI (Preview)" />
+        </StandardDirectory>
+
+        <!-- ==========================================================================
+             Transport
+
+             Deliberately no SelfRegCost here. Self-registration also self-UNregisters, and
+             DllUnregisterServer removes the CLSID no matter who owns it by then. Customers who
+             uninstalled a preview transport after an in-box version had shipped were left with an
+             in-box transport that could not load, because its CLSID and its transport plugin key
+             had just been deleted. Registration is done from the custom actions at the bottom of
+             this file instead, and removal only happens when the registration still points at the
+             file this package installed.
+             ========================================================================== -->
+
+        <Component Id="BluetoothTransport"
+                   Bitness="always64"
+                   Directory="SERVICE_INSTALLFOLDER"
+                   Guid="1613365a-91e4-454e-b8f6-06325da85204">
+
+            <File Id="Midi2BluetoothMidiTransportDll"
+                  Source="$(TransportStagingFolder)\Midi2.BluetoothMidiTransport.dll"
+                  Vital="true" />
+            <File Source="$(TransportStagingFolder)\Midi2.BluetoothMidiTransport.pdb" />
+        </Component>
+
+        <!-- ==========================================================================
+             Bluetooth MIDI Setup app, with an app-local copy of the API so that it does not
+             depend on the App SDK runtime installer being present.
+             ========================================================================== -->
+
+        <Component Id="BluetoothSetupApp"
+                   Bitness="always64"
+                   Directory="TOOL_BLUETOOTHSETUP_FOLDER"
+                   Guid="28e1103a-2b24-4a30-9dc1-e3cef76cc06c">
+
+            <File Id="midibluetoothsetupExe"
+                  Source="$(AppStagingFolder)\midibluetoothsetup.exe"
+                  Vital="true" />
+            <File Source="$(AppStagingFolder)\midibluetoothsetup.winmd" />
+            <File Source="$(AppStagingFolder)\App.xbf" />
+            <File Source="$(AppStagingFolder)\MainWindow.xbf" />
+            <File Source="$(AppStagingFolder)\resources.pri" />
+
+            <!-- Locates and loads the Windows App Runtime for this unpackaged app -->
+            <File Source="$(AppStagingFolder)\Microsoft.WindowsAppRuntime.Bootstrap.dll" />
+
+            <File Source="$(AppStagingFolder)\Microsoft.Web.WebView2.Core.dll" />
+            <File Source="$(AppStagingFolder)\Microsoft.Web.WebView2.Core.winmd" />
+            <File Source="$(AppStagingFolder)\MidiAppShared.winmd" />
+        </Component>
+
+        <Component Id="BluetoothSetupAppLocalApi"
+                   Bitness="always64"
+                   Directory="TOOL_BLUETOOTHSETUP_FOLDER"
+                   Guid="25988c8c-5e26-4bc1-afd0-cb1848503f4e">
+
+            <File Source="$(AppStagingFolder)\Windows.Devices.Midi2.dll" Vital="true" />
+            <File Source="$(AppStagingFolder)\Windows.Devices.Midi2.winmd" />
+            <File Source="$(AppStagingFolder)\Windows.Devices.Midi2.pri" />
+        </Component>
+
+        <Component Id="BluetoothSetupAppShortcut"
+                   Bitness="always64"
+                   Directory="MIDI_PROGRAMS_FOLDER"
+                   Guid="09b22819-60e9-4362-b105-50025afe5aa3">
+
+            <Shortcut Id="Shortcut_midibluetoothsetup"
+                      Name="Bluetooth MIDI Setup"
+                      Target="[#midibluetoothsetupExe]"
+                      WorkingDirectory="TOOL_BLUETOOTHSETUP_FOLDER" />
+
+            <!-- Only removes the folder if the App SDK tools have not also put shortcuts in it -->
+            <RemoveFolder Id="RemoveMidiProgramsFolder_BluetoothSetup"
+                          Directory="MIDI_PROGRAMS_FOLDER"
+                          On="uninstall" />
+
+            <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Bluetooth MIDI Preview">
+                <RegistryValue Type="string" Name="BluetoothSetupShortcut" Value="installed" KeyPath="yes" />
+            </RegistryKey>
+        </Component>
+
+        <!-- The transport is only picked up when the service restarts -->
+        <Component Id="RestartService"
+                   Bitness="always64"
+                   Directory="SERVICE_INSTALLFOLDER"
+                   Guid="8a09cb1c-b3a6-4157-b707-92cf9e06f2f5">
+
+            <ServiceControl Id="midisrv" Name="midisrv" Start="both" Stop="both" />
+        </Component>
+
+        <Feature Id="WindowsMIDIServices">
+            <ComponentRef Id="BluetoothTransport" />
+            <ComponentRef Id="BluetoothSetupApp" />
+            <ComponentRef Id="BluetoothSetupAppLocalApi" />
+            <ComponentRef Id="BluetoothSetupAppShortcut" />
+            <ComponentRef Id="RestartService" />
+        </Feature>
+
+
+        <Binary Id="CustomActionBinary"
+                SourceFile="$(var.customactions.TargetDir)$(var.customactions.TargetName).CA.dll" />
+
+        <!-- The registry keys the transport needs may be owned by an earlier in-box or preview
+             install, so ownership is taken before anything is written to them. -->
+        <CustomAction Id="Action_TakeRegistryOwnership"
+                      Impersonate="no"
+                      Execute="deferred"
+                      BinaryRef="CustomActionBinary"
+                      DllEntry="TakeRegistryOwnership"
+                      Return="check" />
+
+        <!-- Deferred custom actions cannot read properties, so everything they need is handed
+             over through CustomActionData. -->
+        <SetProperty Id="Action_RegisterBluetoothTransport"
+                     Value="DllPath=[SERVICE_INSTALLFOLDER]Midi2.BluetoothMidiTransport.dll;Clsid=$(BluetoothTransportClsid);PluginKeyName=$(BluetoothTransportPluginKeyName)"
+                     Before="Action_RegisterBluetoothTransport"
+                     Sequence="execute" />
+
+        <CustomAction Id="Action_RegisterBluetoothTransport"
+                      Impersonate="no"
+                      Execute="deferred"
+                      BinaryRef="CustomActionBinary"
+                      DllEntry="RegisterTransportComServer"
+                      Return="check" />
+
+        <SetProperty Id="Action_UnregisterBluetoothTransport"
+                     Value="DllPath=[SERVICE_INSTALLFOLDER]Midi2.BluetoothMidiTransport.dll;Clsid=$(BluetoothTransportClsid);PluginKeyName=$(BluetoothTransportPluginKeyName)"
+                     Before="Action_UnregisterBluetoothTransport"
+                     Sequence="execute" />
+
+        <CustomAction Id="Action_UnregisterBluetoothTransport"
+                      Impersonate="no"
+                      Execute="deferred"
+                      BinaryRef="CustomActionBinary"
+                      DllEntry="UnregisterTransportComServerIfOwned"
+                      Return="check" />
+
+        <InstallExecuteSequence>
+            <Custom Action="Action_TakeRegistryOwnership"
+                    Before="CreateFolders"
+                    Condition='(NOT Installed) AND NOT (REMOVE="ALL")' />
+
+            <!-- After InstallFiles so the DLL regsvr32 is pointed at is already on disk -->
+            <Custom Action="Action_RegisterBluetoothTransport"
+                    After="InstallFiles"
+                    Condition='NOT (REMOVE="ALL")' />
+
+            <!-- Before RemoveFiles so the DLL is still there to unregister itself. A major
+                 upgrade removes the old package after installing the new one, so this is
+                 restricted to a real uninstall; otherwise the upgrade would tear down the
+                 registration it had just written. -->
+            <Custom Action="Action_UnregisterBluetoothTransport"
+                    Before="RemoveFiles"
+                    Condition='(REMOVE="ALL") AND NOT UPGRADINGPRODUCTCODE' />
+        </InstallExecuteSequence>
+
+    </Package>
+</Wix>

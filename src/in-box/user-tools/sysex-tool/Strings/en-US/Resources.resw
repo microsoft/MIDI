@@ -1,0 +1,315 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- ============================ Application ============================ -->
+  <data name="AppDisplayName" xml:space="preserve">
+    <value>Windows MIDI SysEx Utility</value>
+  </data>
+  <data name="WindowTitleFormat" xml:space="preserve">
+    <value>{0} - {1}</value>
+    <comment>{0} is the device name, {1} is the application name</comment>
+  </data>
+  <data name="CommonClose" xml:space="preserve">
+    <value>Close</value>
+  </data>
+
+  <!-- ============================ Title bar ============================== -->
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService/ToolTip" xml:space="preserve">
+    <value>Keep this window on top of other windows</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties/Name" xml:space="preserve">
+    <value>Always on top</value>
+  </data>
+
+  <!-- ============================ Header ================================= -->
+  <data name="EndpointPickerLabel.Text" xml:space="preserve">
+    <value>MIDI device</value>
+  </data>
+  <data name="EndpointPicker.PlaceholderText" xml:space="preserve">
+    <value>Choose a device</value>
+  </data>
+  <data name="EndpointPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties/Name" xml:space="preserve">
+    <value>MIDI device</value>
+  </data>
+  <data name="GroupPickerLabel.Text" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="GroupPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties/Name" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="ModePickerLabel.Text" xml:space="preserve">
+    <value>Task</value>
+  </data>
+  <data name="SendModeButton.Content" xml:space="preserve">
+    <value>Send a file</value>
+  </data>
+  <data name="ReceiveModeButton.Content" xml:space="preserve">
+    <value>Receive</value>
+  </data>
+  <data name="GroupChoiceFormat" xml:space="preserve">
+    <value>Group {0}</value>
+    <comment>{0} is the group number, 1 through 16</comment>
+  </data>
+  <data name="GroupChoiceNamedFormat" xml:space="preserve">
+    <value>Group {0} - {1}</value>
+    <comment>{0} is the group number, {1} is the name declared by the device</comment>
+  </data>
+
+  <!-- ============================ Send page ============================== -->
+  <data name="SendFilePathBox.Header" xml:space="preserve">
+    <value>System Exclusive file</value>
+  </data>
+  <data name="SendFilePathBox.PlaceholderText" xml:space="preserve">
+    <value>Choose a .syx file to send</value>
+  </data>
+  <data name="BrowseSendFileButton.Content" xml:space="preserve">
+    <value>Browse...</value>
+  </data>
+  <data name="BrowseSendFileButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties/Name" xml:space="preserve">
+    <value>Browse for a System Exclusive file</value>
+  </data>
+  <data name="MessageCountBox.Header" xml:space="preserve">
+    <value>Messages per transfer</value>
+  </data>
+  <data name="MessageCountBox.[using:Microsoft.UI.Xaml.Controls]ToolTipService/ToolTip" xml:space="preserve">
+    <value>How many messages to send at a time. Lower this if older hardware cannot keep up.</value>
+  </data>
+  <data name="SpacingBox.Header" xml:space="preserve">
+    <value>Delay between transfers (ms)</value>
+  </data>
+  <data name="SpacingBox.[using:Microsoft.UI.Xaml.Controls]ToolTipService/ToolTip" xml:space="preserve">
+    <value>How long to wait between transfers. Raise this if older hardware cannot keep up.</value>
+  </data>
+  <data name="SendButton" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="CancelSendButton" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="SendReady" xml:space="preserve">
+    <value>Choose a device, a group, and a file to send.</value>
+  </data>
+  <data name="SendStarting" xml:space="preserve">
+    <value>Sending...</value>
+  </data>
+  <data name="SendProgressFormat" xml:space="preserve">
+    <value>{0} of {1} bytes read, {2} messages sent</value>
+    <comment>{0} is bytes read from the file, {1} is the file size, {2} is the message count</comment>
+  </data>
+  <data name="SendSucceededFormat" xml:space="preserve">
+    <value>Sent {0} bytes.</value>
+    <comment>{0} is the number of bytes in the file</comment>
+  </data>
+  <data name="SendFailed" xml:space="preserve">
+    <value>The transfer did not finish. Check that the device is connected and try again.</value>
+  </data>
+  <data name="SendCanceled" xml:space="preserve">
+    <value>The transfer was canceled. The device may have received part of the data.</value>
+  </data>
+  <data name="SendErrorNoFile" xml:space="preserve">
+    <value>Choose a System Exclusive file to send.</value>
+  </data>
+  <data name="SendErrorNoDestination" xml:space="preserve">
+    <value>Choose a device and a group to send to.</value>
+  </data>
+
+  <!-- ============================ Receive page =========================== -->
+  <data name="ColumnHeaderMessage.Text" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="ColumnHeaderWords.Text" xml:space="preserve">
+    <value>UMP words</value>
+  </data>
+  <data name="ColumnHeaderBytes.Text" xml:space="preserve">
+    <value>System Exclusive bytes</value>
+  </data>
+  <data name="DumpListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties/Name" xml:space="preserve">
+    <value>Received data</value>
+  </data>
+  <data name="StartReceivingButton" xml:space="preserve">
+    <value>Start receiving</value>
+  </data>
+  <data name="StopReceivingButton" xml:space="preserve">
+    <value>Stop receiving</value>
+  </data>
+  <data name="ReceiveStatusFormat" xml:space="preserve">
+    <value>{0} bytes, {1} complete messages</value>
+    <comment>{0} is the byte count, {1} is the number of complete System Exclusive messages</comment>
+  </data>
+  <data name="ReceiveStatusIncomplete" xml:space="preserve">
+    <value>The last message has no closing F7 byte yet.</value>
+  </data>
+  <data name="ReceiveStatusDisallowedFormat" xml:space="preserve">
+    <value>This data may have errors: {0} bytes are not allowed inside System Exclusive.</value>
+    <comment>{0} is the count of disallowed bytes</comment>
+  </data>
+  <data name="ReceiveStatusTruncatedFormat" xml:space="preserve">
+    <value>Only the first {0} messages are shown. Saving still writes every byte.</value>
+    <comment>{0} is the maximum number of displayed messages</comment>
+  </data>
+  <data name="ReceiveErrorNoSource" xml:space="preserve">
+    <value>Choose a device and a group to receive from.</value>
+  </data>
+  <data name="ReceiveErrorStartFailed" xml:space="preserve">
+    <value>Unable to start receiving from this device.</value>
+  </data>
+  <data name="SaveButton.Content" xml:space="preserve">
+    <value>Save...</value>
+  </data>
+  <data name="SaveButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties/Name" xml:space="preserve">
+    <value>Save the received data to a file</value>
+  </data>
+  <data name="ClearButton.Content" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="ClearButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties/Name" xml:space="preserve">
+    <value>Clear the received data</value>
+  </data>
+  <data name="SaveSucceededFormat" xml:space="preserve">
+    <value>Saved {0} bytes.</value>
+    <comment>{0} is the number of bytes written</comment>
+  </data>
+  <data name="SaveFailed" xml:space="preserve">
+    <value>Unable to save the file.</value>
+  </data>
+
+  <!-- ============================ Settings =============================== -->
+  <data name="SettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService/ToolTip" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties/Name" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsThemeLabel" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="SettingsThemeSystem" xml:space="preserve">
+    <value>Use system setting</value>
+  </data>
+  <data name="SettingsThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="SettingsThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="SettingsBackdropLabel" xml:space="preserve">
+    <value>Window background</value>
+  </data>
+  <data name="SettingsBackdropSolid" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="SettingsBackdropMica" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="SettingsBackdropAcrylic" xml:space="preserve">
+    <value>Acrylic</value>
+  </data>
+  <data name="SettingsCustomColorCheckBox" xml:space="preserve">
+    <value>Use a custom background color</value>
+  </data>
+  <data name="SettingsColorPickerName" xml:space="preserve">
+    <value>Background color</value>
+  </data>
+  <data name="SettingsLibraryFolderLabel" xml:space="preserve">
+    <value>System Exclusive library folder</value>
+  </data>
+  <data name="SettingsLibraryFolderBrowse" xml:space="preserve">
+    <value>Change folder...</value>
+  </data>
+  <data name="SettingsReceiveBufferLabel" xml:space="preserve">
+    <value>Receive buffer size (KB)</value>
+  </data>
+
+  <!-- ============================ Service ================================ -->
+  <data name="ServiceUnavailableTitle" xml:space="preserve">
+    <value>Windows MIDI Services is not available</value>
+  </data>
+  <data name="ServiceUnavailableBody" xml:space="preserve">
+    <value>The Windows MIDI Services service is not running, so no devices can be found. Start the service and then restart this app.</value>
+  </data>
+
+  <!-- ============================ Command line =========================== -->
+  <data name="CommandLineErrorMissingValue" xml:space="preserve">
+    <value>The option {0} needs a value.</value>
+    <comment>{0} is the option as typed</comment>
+  </data>
+  <data name="CommandLineErrorInvalidGroup" xml:space="preserve">
+    <value>{0} is not a group number between 1 and 16.</value>
+    <comment>{0} is the value as typed</comment>
+  </data>
+  <data name="CommandLineErrorUnknownOption" xml:space="preserve">
+    <value>{0} is not an option this app understands.</value>
+    <comment>{0} is the option as typed</comment>
+  </data>
+  <data name="CommandLineErrorTooManyEndpoints" xml:space="preserve">
+    <value>Only one endpoint device id can be given, so {0} was unexpected.</value>
+    <comment>{0} is the extra argument as typed</comment>
+  </data>
+  <data name="CommandLineErrorGroupWithoutEndpoint" xml:space="preserve">
+    <value>A group can only be chosen when an endpoint device id is also given.</value>
+  </data>
+  <data name="CommandLineErrorGeneral" xml:space="preserve">
+    <value>The command line could not be read.</value>
+  </data>
+</root>

@@ -1,6 +1,6 @@
 ---
 layout: sdk_reference_page
-title: Midi1PortFlowEnum
+title: Midi1PortFlow
 namespace: Windows.Devices.Midi2.Enumeration
 type: enum
 description: Enumeration specifying the direction or flow of a MIDI 1.0 port.

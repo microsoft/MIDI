@@ -1,0 +1,123 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+// Row types for the lists in this tool. They implement INotifyPropertyChanged because the
+// pages poll the service every couple of seconds: rebuilding the collections instead would
+// throw away the selection, the scroll position and any open expander on every tick.
+namespace midibluetoothsetup
+{
+    // One Bluetooth MIDI device this PC has seen. Discovered devices and remembered ones are
+    // folded into a single row, because to the customer they are one thing.
+    [default_interface]
+    runtimeclass BluetoothDeviceItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        BluetoothDeviceItem();
+
+        // the twelve hex digit address. Stable across refreshes, so rows can be matched
+        // rather than recreated, and it is the key for every command.
+        String BluetoothDeviceId{ get; };
+
+        String DisplayName{ get; };
+        String SubtitleText{ get; };
+
+        String StatusText{ get; };
+        String StatisticsText{ get; };
+        String IntervalText{ get; };
+
+        String EndpointDeviceId{ get; };
+        String EndpointDeviceInstanceId{ get; };
+
+        Boolean IsConnected{ get; };
+        Boolean IsPresent{ get; };
+        Boolean IsPaired{ get; };
+        Boolean HasEndpoint{ get; };
+        Boolean IsBusy;
+
+        Microsoft.UI.Xaml.Visibility ConnectVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility DisconnectVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility ForgetVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility CustomizeVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility ConnectedBadgeVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility EndpointDeviceIdVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility IntervalVisibility{ get; };
+
+        // Position in the retention combo box rather than a duration, because the combo offers a
+        // few presets. -1 when the configured value is not one of them, which only happens if it
+        // was set from the console or by editing the configuration file.
+        Int32 OfflineRetentionIndex{ get; };
+        Microsoft.UI.Xaml.Visibility OfflineRetentionVisibility{ get; };
+
+        // Always readable, so a value the combo box cannot represent is still shown.
+        String OfflineRetentionText{ get; };
+
+        // The most recent connection failure, in the transport's own words. More specific
+        // than the error code, because several causes share one code.
+        String LastErrorText{ get; };
+        Microsoft.UI.Xaml.Visibility LastErrorVisibility{ get; };
+
+        // Signal strength over a rolling window, newest at the right, on a fixed decibel
+        // scale so two devices are comparable and a stationary one reads as a flat line.
+        // A device stops advertising once connected, so the trace is only shown while it is
+        // still being heard from.
+        Microsoft.UI.Xaml.Visibility SignalGraphVisibility{ get; };
+        Microsoft.UI.Xaml.Media.PointCollection SignalLinePoints{ get; };
+        Microsoft.UI.Xaml.Media.PointCollection SignalFillPoints{ get; };
+        String SignalText{ get; };
+    }
+
+    // The remote device which has connected to this PC while it is published as a peripheral.
+    [default_interface]
+    runtimeclass PeripheralClientItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        PeripheralClientItem();
+
+        String DisplayName{ get; };
+        String AddressText{ get; };
+        String StatusText{ get; };
+        String StatisticsText{ get; };
+        String IntervalText{ get; };
+
+        String EndpointDeviceId{ get; };
+        String EndpointDeviceInstanceId{ get; };
+
+        Boolean IsPaired{ get; };
+        Boolean HasGenericName{ get; };
+        Boolean IsBusy;
+
+        Microsoft.UI.Xaml.Visibility EndpointDeviceIdVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility PairingHintVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility GenericNameHintVisibility{ get; };
+    }
+
+    // A remote device which has connected to this PC and is waiting for a decision. Bluetooth
+    // gives Windows no way to refuse the connection, so it is connected but has no endpoint and
+    // moves no data until somebody decides.
+    [default_interface]
+    runtimeclass PendingClientItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        PendingClientItem();
+
+        // the twelve hex digit address, which is what the decision is keyed on
+        String BluetoothAddress{ get; };
+
+        String Headline{ get; };
+        String Detail{ get; };
+
+        Boolean IsBusy;
+
+        // False when the device's address rotates, so it cannot be recognized again and a
+        // permanent decision about it cannot be applied.
+        Boolean CanRememberDecision{ get; };
+
+        // Enable states, computed so the buttons need no converter
+        Boolean CanDecide{ get; };
+        Boolean CanDecidePermanently{ get; };
+
+        // Shown only when a permanent decision is unavailable, to say why
+        Microsoft.UI.Xaml.Visibility RotatingAddressHintVisibility{ get; };
+    }
+}

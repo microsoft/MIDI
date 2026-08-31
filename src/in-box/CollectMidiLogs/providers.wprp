@@ -1,0 +1,141 @@
+<?xml version="1.0" standalone="yes"?>
+<WindowsPerformanceRecorder Version="1.0" Author="" Team="" Comments="" Company="Microsoft Corporation" Copyright="Microsoft Corporation" Tag="">
+  <Profiles>
+    <!-- Collector for system tracing -->
+    <SystemCollector Id="SystemCollector" Name="System Collector">
+      <BufferSize Value="256" />
+      <Buffers Value="3" PercentageOfTotalMemory="true" MaximumBufferSpace="256" />
+    </SystemCollector>
+    <EventCollector Id="PagedPoolCollector" Name="PagedPoolCollector">
+      <BufferSize Value="256" />
+      <Buffers Value="3" PercentageOfTotalMemory="true" MaximumBufferSpace="64" />
+    </EventCollector>
+    <EventCollector Id="NonpagedPoolCollector" Name="NonpagedPoolCollector">
+      <BufferSize Value="256" />
+      <Buffers Value="3" PercentageOfTotalMemory="true" MaximumBufferSpace="64" />
+    </EventCollector>
+    <!-- USB and PnP get their own buffer budget so their volume cannot evict the MIDI events -->
+    <EventCollector Id="UsbPnpCollector" Name="UsbPnpCollector">
+      <BufferSize Value="256" />
+      <Buffers Value="3" PercentageOfTotalMemory="true" MaximumBufferSpace="128" />
+    </EventCollector>
+    <SystemProvider Id="SystemProvider">
+      <Keywords>
+        <Keyword Value="CpuConfig" />
+        <Keyword Value="CSwitch" />
+        <Keyword Value="DiskIO" />
+        <Keyword Value="DPC" />
+        <Keyword Value="HardFaults" />
+        <Keyword Value="Interrupt" />
+        <Keyword Value="KernelQueue" />
+        <Keyword Value="Loader" />
+        <Keyword Value="Power" />
+        <Keyword Value="ProcessThread" />
+        <Keyword Value="ReadyThread" />
+        <Keyword Value="SampledProfile" />
+        <Keyword Value="WDFDPC" />
+        <Keyword Value="WDFInterrupt" />
+      </Keywords>
+      <Stacks>
+        <Stack Value="CSwitch" />
+        <Stack Value="ProcessCreate" />
+        <Stack Value="ProcessDelete" />
+        <Stack Value="ReadyThread" />
+        <Stack Value="SampledProfile" />
+        <Stack Value="ThreadCreate" />
+        <Stack Value="ThreadDelete" />
+      </Stacks>
+    </SystemProvider>
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.MidiSrv" Name="f42d2441-aac3-5216-0150-3c0f50006b64" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.MidiSrvTransport" Name="c22d26fd-947b-5df1-a0f8-bc62d26d188d" Level="5" NonPagedMemory="false" />
+
+    <!-- Cross-process pipe. This is where send stalls and dropped buffers are reported. -->
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.MidiXproc" Name="159b4b38-c2b9-58bc-f3cc-dcd31ca44d21" Level="5" NonPagedMemory="false" />
+
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.KSTransport" Name="a8d144fe-be0c-5484-25a9-512d2f6445d5" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.KSAggregateTransport" Name="07e90998-c326-56f8-e99b-20afb12e1b4f" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.DiagnosticsTransport" Name="84856b86-fe14-51a3-96fa-b9683533d40b" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.LoopbackMidiTransport" Name="23324529-7840-5bb4-9d74-c61e306f00d0" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.BasicLoopbackMidiTransport" Name="9590999c-248c-5425-cd81-44bcf6df74c8" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.VirtualMidiTransport" Name="8d08cf09-eca5-58d0-f722-4ef1eca95be2" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.NetworkMidiTransport" Name="69964598-a2da-5f65-9288-a394b9633704" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.BluetoothMidiTransport" Name="ad3b4351-d4a9-5be4-5f69-4fa6c5db220c" Level="5" NonPagedMemory="false" />
+
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.BS2UMPTransform" Name="b4d50468-e9d8-5080-5b75-e49eb39fee9c" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.SchedulerTransform" Name="8e536c97-6c77-5695-9dbe-ff05129b564e" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.UmpProtocolDownscalerTransform" Name="98249e74-b9b4-5c91-d52e-e44464686064" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.UMP2BSTransform" Name="9d78b191-f0f9-5542-7353-85ec5df01503" Level="5" NonPagedMemory="false" />
+
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.WdmAud2" Name="e6443bc1-e9c5-5a3f-cfb6-abcd62e52e41" Level="5" NonPagedMemory="false" />
+
+    <EventProvider Id="TraceLogging/Windows.Devices.Midi2.Api" Name="5c055d9e-0ac2-58ee-f647-c1f00339a6ec" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.Sdk" Name="d7c0ce6e-6762-5795-cc08-ab155270fc72" Level="5" NonPagedMemory="false" />
+
+    <EventProvider Id="TraceLogging/Microsoft.Midi.Settings" Name="66eaccfa-db3a-58d6-bf78-778229bf5a18" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Midi.Console" Name="ce8536f1-a223-5028-7c7f-c64452906687" Level="5" NonPagedMemory="false" />
+
+    <EventProvider Id="WPP/usbmidi2.sys" Name="d360bed7-f0d2-4547-aa66-bbfbeb53db7e" Level="5" NonPagedMemory="true">
+      <Keywords>
+        <Keyword Value="0x7FFFFFFF" />
+      </Keywords>
+    </EventProvider>
+
+    <!-- Device arrival/removal and USB stack state. Level 4 (Information) deliberately: level 5
+         on the host controller providers logs every transfer and fills the ring in seconds. -->
+    <EventProvider Id="Microsoft-Windows-Kernel-PnP" Name="9c205a39-1250-487d-abd7-e831c6290539" Level="4" NonPagedMemory="true" />
+    <EventProvider Id="Microsoft-Windows-USB-USBHUB3" Name="ac52ad17-cc01-4f85-8df5-4dce4333c99b" Level="4" NonPagedMemory="true" />
+    <EventProvider Id="Microsoft-Windows-USB-UCX" Name="36da592d-e43a-4e28-af6f-4bc57c5a11e8" Level="4" NonPagedMemory="true" />
+    <EventProvider Id="Microsoft-Windows-USB-USBXHCI" Name="30e1d284-5d88-459c-83fd-6345b39b19ec" Level="4" NonPagedMemory="true" />
+    <EventProvider Id="Microsoft-Windows-USB-USBHUB" Name="7426a56b-e2d5-4b30-bdef-b31815c1a74a" Level="4" NonPagedMemory="true" />
+    <EventProvider Id="Microsoft-Windows-USB-USBPORT" Name="c88a4ef5-d048-4013-9408-e04b7db2814a" Level="4" NonPagedMemory="true" />
+
+    <EventProvider Id="Microsoft-Windows-Audio" Name="ae4bd3be-f36f-45b6-8d21-bdd6fb832853" Level="4" NonPagedMemory="false" />
+    <Profile Id="midi.Verbose.Memory" LoggingMode="Memory" Name="midi" DetailLevel="Verbose" Description="midi profile">
+      <Collectors>
+        <SystemCollectorId Value="SystemCollector">
+          <SystemProviderId Value="SystemProvider" />
+        </SystemCollectorId>
+        <EventCollectorId Value="PagedPoolCollector">
+          <EventProviders>
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.MidiSrv" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.MidiSrvTransport" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.MidiXproc" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.KSTransport" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.KSAggregateTransport" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.DiagnosticsTransport" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.LoopbackMidiTransport" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.BasicLoopbackMidiTransport" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.VirtualMidiTransport" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.NetworkMidiTransport" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.BluetoothMidiTransport" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.BS2UMPTransform" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.SchedulerTransform" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.UmpProtocolDownscalerTransform" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.UMP2BSTransform" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.WdmAud2" />
+            <EventProviderId Value="TraceLogging/Microsoft.Midi.Settings" />
+            <EventProviderId Value="TraceLogging/Microsoft.Midi.Console" />
+            <EventProviderId Value="TraceLogging/Windows.Devices.Midi2.Api" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Sdk" />
+            <EventProviderId Value="Microsoft-Windows-Audio" />
+          </EventProviders>
+        </EventCollectorId>
+        <EventCollectorId Value="NonpagedPoolCollector">
+          <EventProviders>
+            <EventProviderId Value="WPP/usbmidi2.sys" />
+          </EventProviders>
+        </EventCollectorId>
+        <EventCollectorId Value="UsbPnpCollector">
+          <EventProviders>
+            <EventProviderId Value="Microsoft-Windows-Kernel-PnP" />
+            <EventProviderId Value="Microsoft-Windows-USB-USBHUB3" />
+            <EventProviderId Value="Microsoft-Windows-USB-UCX" />
+            <EventProviderId Value="Microsoft-Windows-USB-USBXHCI" />
+            <EventProviderId Value="Microsoft-Windows-USB-USBHUB" />
+            <EventProviderId Value="Microsoft-Windows-USB-USBPORT" />
+          </EventProviders>
+        </EventCollectorId>
+      </Collectors>
+    </Profile>
+  </Profiles>
+</WindowsPerformanceRecorder>

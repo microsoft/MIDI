@@ -1,0 +1,926 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="midisettings.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:midisettings"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid" Loaded="OnRootLoaded" SizeChanged="OnRootSizeChanged" Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid.Resources>
+            <Style x:Key="PropertyLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                <Setter Property="VerticalAlignment" Value="Top" />
+            </Style>
+
+            <Style x:Key="PropertyValueStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="IsTextSelectionEnabled" Value="True" />
+                <Setter Property="VerticalAlignment" Value="Top" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+
+            <!-- One tool button: the real icon of the installed executable above its name, so
+                 the toolbar matches what the customer sees in the Start Menu. Fixed height,
+                 because the labels are a mix of one and two lines. -->
+            <Style x:Key="ToolButtonStyle" TargetType="Button">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Padding" Value="8,6,8,6" />
+                <Setter Property="MinWidth" Value="92" />
+                <Setter Property="Height" Value="74" />
+                <!-- so the icons line up across the row whether the label wraps or not -->
+                <Setter Property="VerticalContentAlignment" Value="Top" />
+            </Style>
+
+            <Style x:Key="ToolButtonTextStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="MaxWidth" Value="76" />
+                <Setter Property="TextWrapping" Value="Wrap" />
+                <Setter Property="TextAlignment" Value="Center" />
+                <Setter Property="MaxLines" Value="2" />
+                <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+                <Setter Property="HorizontalAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="ToolSeparatorStyle" TargetType="Rectangle">
+                <Setter Property="Width" Value="1" />
+                <Setter Property="Height" Value="40" />
+                <Setter Property="Margin" Value="6,0,6,0" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Fill" Value="{ThemeResource DividerStrokeColorDefaultBrush}" />
+            </Style>
+
+            <!-- One surface per endpoint, shared by the card and the list row so the two views
+                 read as the same thing at different densities. -->
+            <Style x:Key="EndpointSurfaceStyle" TargetType="Border">
+                <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
+                <Setter Property="BorderThickness" Value="1" />
+                <Setter Property="CornerRadius" Value="8" />
+            </Style>
+
+            <!-- Groups the controls of one global setting onto the same surface, so each group
+                 reads as a block instead of a run of loose controls. -->
+            <Style x:Key="SettingsCardStyle" TargetType="Border" BasedOn="{StaticResource EndpointSurfaceStyle}">
+                <Setter Property="Padding" Value="16" />
+            </Style>
+
+            <!-- The row actions share a width, otherwise the combo box and text box beside them
+                 stop at different x positions and the column looks ragged. -->
+            <Style x:Key="SettingsRowButtonStyle" TargetType="Button">
+                <Setter Property="MinWidth" Value="128" />
+                <Setter Property="HorizontalAlignment" Value="Stretch" />
+            </Style>
+
+            <Style x:Key="SettingsSubLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="TextWrapping" Value="Wrap" />
+            </Style>
+
+            <!-- Card view. Fixed size, because a wrap grid gives every cell the same box: without
+                 it a long description pushes one card's buttons below its neighbors'. -->
+            <DataTemplate x:Key="EndpointCardTemplate" x:DataType="local:EndpointItem">
+                <Border Style="{StaticResource EndpointSurfaceStyle}"
+                        Width="230"
+                        Height="252"
+                        Margin="2"
+                        Padding="12">
+                    <Grid RowSpacing="8">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0"
+                                Height="88"
+                                CornerRadius="4"
+                                Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                            <Image Source="{x:Bind Image, Mode=OneWay}"
+                                   Stretch="Uniform"
+                                   Margin="8" />
+                        </Border>
+
+                        <StackPanel Grid.Row="1" Spacing="2" VerticalAlignment="Top">
+                            <TextBlock Text="{x:Bind Name, Mode=OneWay}"
+                                       Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                       TextWrapping="Wrap"
+                                       MaxLines="2"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{x:Bind DetailText, Mode=OneWay}"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       TextWrapping="Wrap"
+                                       MaxLines="3"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="4">
+                            <Button x:Uid="EndpointMonitorButton"
+                                    Visibility="{x:Bind MonitorVisibility, Mode=OneWay}"
+                                    Tag="{x:Bind EndpointDeviceId, Mode=OneWay}"
+                                    Click="OnEndpointMonitorClick"
+                                    Padding="8,4,8,4">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE9D9;" FontSize="14" />
+                                    <TextBlock x:Uid="EndpointMonitorButtonText" Text="Monitor" />
+                                </StackPanel>
+                            </Button>
+                            <Button x:Uid="EndpointPanicButton"
+                                    Tag="{x:Bind EndpointDeviceId, Mode=OneWay}"
+                                    Click="OnEndpointPanicClick"
+                                    Padding="8,4,8,4">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE711;" FontSize="14" />
+                                    <TextBlock x:Uid="EndpointPanicButtonText" Text="Panic" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </DataTemplate>
+
+            <DataTemplate x:Key="EndpointRowTemplate" x:DataType="local:EndpointItem">
+                <Border Style="{StaticResource EndpointSurfaceStyle}"
+                        Margin="0,3,0,3"
+                        Padding="12,8,12,8">
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0"
+                                Width="40"
+                                Height="40"
+                                CornerRadius="4"
+                                Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                            <Image Source="{x:Bind Image, Mode=OneWay}" Stretch="Uniform" Margin="3" />
+                        </Border>
+
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
+                            <TextBlock Text="{x:Bind Name, Mode=OneWay}"
+                                       Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{x:Bind Description, Mode=OneWay}"
+                                       Visibility="{x:Bind DescriptionVisibility, Mode=OneWay}"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{x:Bind DetailText, Mode=OneWay}"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                            <Button x:Uid="EndpointMonitorButton"
+                                    Visibility="{x:Bind MonitorVisibility, Mode=OneWay}"
+                                    Tag="{x:Bind EndpointDeviceId, Mode=OneWay}"
+                                    Click="OnEndpointMonitorClick"
+                                    Padding="8,4,8,4">
+                                <FontIcon Glyph="&#xE9D9;" FontSize="14" />
+                            </Button>
+                            <Button x:Uid="EndpointPanicButton"
+                                    Tag="{x:Bind EndpointDeviceId, Mode=OneWay}"
+                                    Click="OnEndpointPanicClick"
+                                    Padding="8,4,8,4">
+                                <FontIcon Glyph="&#xE711;" FontSize="14" />
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </DataTemplate>
+
+            <DataTemplate x:Key="Midi1PortTemplate" x:DataType="local:Midi1PortItem">
+                <Grid ColumnSpacing="8" Margin="0,2,0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <!-- fixed, not Auto: every row is its own Grid, so an Auto column is
+                             sized per row and the group and port text would not line up -->
+                        <ColumnDefinition Width="124" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                               Text="{x:Bind Name, Mode=OneWay}"
+                               Style="{StaticResource PropertyValueStyle}"
+                               TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis" />
+                    <TextBlock Grid.Column="1"
+                               Text="{x:Bind DetailText, Mode=OneWay}"
+                               Style="{StaticResource PropertyLabelStyle}"
+                               TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis" />
+                </Grid>
+            </DataTemplate>
+
+            <DataTemplate x:Key="TransportChoiceTemplate" x:DataType="local:TransportChoice">
+                <TextBlock Text="{x:Bind DisplayName}" />
+            </DataTemplate>
+
+            <DataTemplate x:Key="ConfigFileChoiceTemplate" x:DataType="local:ConfigFileChoice">
+                <TextBlock Text="{x:Bind DisplayName}" />
+            </DataTemplate>
+        </Grid.Resources>
+
+        <!-- hidden when a system backdrop is in use, so the material shows through -->
+        <Border x:Name="WindowFill"
+                Grid.Row="0"
+                Grid.RowSpan="3"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
+
+        <!-- a separate layer, so switching back to the default color just hides it and the
+             theme bound fill underneath returns -->
+        <Border x:Name="WindowTint"
+                Grid.Row="0"
+                Grid.RowSpan="3"
+                Visibility="Collapsed" />
+
+        <!-- ============================ Title bar drag region ============================ -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+
+            <Image x:Name="AppTitleBarIcon"
+                   Grid.Column="1"
+                   Width="16"
+                   Height="16"
+                   Margin="12,0,0,0"
+                   VerticalAlignment="Center" />
+
+            <TextBlock x:Name="AppTitleTextBlock"
+                       Grid.Column="2"
+                       Text="MIDI Settings"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+
+            <Button x:Name="AppearanceButton"
+                    x:Uid="AppearanceButton"
+                    Grid.Column="3"
+                    Width="46"
+                    Height="32"
+                    VerticalAlignment="Top"
+                    Padding="0"
+                    BorderThickness="0"
+                    Background="Transparent"
+                    Click="OnAppearanceButtonClick">
+                <FontIcon Glyph="&#xE713;" FontSize="14" />
+            </Button>
+
+            <ToggleButton x:Name="AlwaysOnTopToggle"
+                          x:Uid="AlwaysOnTopToggle"
+                          Grid.Column="4"
+                          Width="46"
+                          Height="32"
+                          VerticalAlignment="Top"
+                          Padding="0"
+                          BorderThickness="0"
+                          Click="OnAlwaysOnTopToggled">
+                <ToggleButton.Resources>
+                    <SolidColorBrush x:Key="ToggleButtonBackground" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
+                </ToggleButton.Resources>
+                <FontIcon Glyph="&#xE718;" FontSize="14" />
+            </ToggleButton>
+        </Grid>
+
+        <!-- =============================== Application toolbar =========================== -->
+        <Border Grid.Row="1"
+                BorderThickness="0,1,0,1"
+                BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
+                Padding="8,4,8,4">
+            <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Disabled"
+                          HorizontalScrollMode="Auto"
+                          VerticalScrollMode="Disabled">
+                <StackPanel x:Name="ToolButtonPanel" Orientation="Horizontal" Spacing="2">
+
+                    <Button x:Name="LoopbackSetupButton"
+                            x:Uid="LoopbackSetupButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnLoopbackSetupClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Image x:Name="LoopbackSetupIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                            <TextBlock x:Uid="LoopbackSetupButtonText"
+                                       Text="Loopback Setup"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="BluetoothSetupButton"
+                            x:Uid="BluetoothSetupButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnBluetoothSetupClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Image x:Name="BluetoothSetupIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                            <TextBlock x:Uid="BluetoothSetupButtonText"
+                                       Text="Bluetooth Setup"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="NetworkSetupButton"
+                            x:Uid="NetworkSetupButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnNetworkSetupClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Image x:Name="NetworkSetupIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                            <TextBlock x:Uid="NetworkSetupButtonText"
+                                       Text="Network Setup"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
+
+                    <Rectangle x:Name="SetupToolsSeparator" Style="{StaticResource ToolSeparatorStyle}" />
+
+                    <Button x:Name="SysExButton"
+                            x:Uid="SysExButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnSysExClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Image x:Name="SysExIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                            <TextBlock x:Uid="SysExButtonText"
+                                       Text="SysEx Send/Receive"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="MonitorButton"
+                            x:Uid="MonitorButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnMonitorClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Image x:Name="MonitorIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                            <TextBlock x:Uid="MonitorButtonText"
+                                       Text="Monitor"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="ScratchPadButton"
+                            x:Uid="ScratchPadButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnScratchPadClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Image x:Name="ScratchPadIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                            <TextBlock x:Uid="ScratchPadButtonText"
+                                       Text="Scratch Pad"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button x:Name="TroubleshooterButton"
+                            x:Uid="TroubleshooterButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnTroubleshooterClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Image x:Name="TroubleshooterIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                            <TextBlock x:Uid="TroubleshooterButtonText"
+                                       Text="Troubleshoot and Fix"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
+
+                    <Rectangle x:Name="UtilityToolsSeparator" Style="{StaticResource ToolSeparatorStyle}" />
+
+                    <Button x:Name="GlobalSettingsButton"
+                            x:Uid="GlobalSettingsButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnGlobalSettingsClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <FontIcon Glyph="&#xE774;" FontSize="20" HorizontalAlignment="Center" Height="24" />
+                            <TextBlock x:Uid="GlobalSettingsButtonText"
+                                       Text="Global MIDI Settings"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </ScrollViewer>
+        </Border>
+
+        <!-- ================================ Endpoints ==================================== -->
+        <Grid Grid.Row="2" Padding="16,12,16,12" RowSpacing="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <InfoBar x:Name="FirstRunBar"
+                     x:Uid="FirstRunBar"
+                     Grid.Row="0"
+                     IsOpen="False"
+                     IsClosable="False"
+                     Severity="Informational"
+                     Title="Finish setting up Windows MIDI Services"
+                     Message="Creating a configuration file lets your endpoint names, pictures and other settings survive a restart.">
+                <InfoBar.ActionButton>
+                    <Button x:Uid="FirstRunActionButton"
+                            Content="Open MIDI settings"
+                            Click="OnGlobalSettingsClick" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+
+            <InfoBar x:Name="ServiceBar"
+                     x:Uid="ServiceBar"
+                     Grid.Row="0"
+                     IsOpen="False"
+                     IsClosable="False"
+                     Severity="Warning"
+                     Title="The MIDI service is not responding"
+                     Message="Endpoints will appear here as soon as the service is available again." />
+
+            <Grid Grid.Row="1" ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <ComboBox x:Name="TransportFilterComboBox"
+                          x:Uid="TransportFilterComboBox"
+                          Grid.Column="0"
+                          MinWidth="260"
+                          ItemTemplate="{StaticResource TransportChoiceTemplate}"
+                          SelectionChanged="OnTransportFilterChanged" />
+
+                <TextBlock x:Name="EndpointCountText"
+                           Grid.Column="1"
+                           VerticalAlignment="Center"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="0" VerticalAlignment="Center">
+                    <ToggleButton x:Name="CardViewToggle"
+                                  x:Uid="CardViewToggle"
+                                  Click="OnCardViewClick"
+                                  Padding="10,6,10,6">
+                        <FontIcon Glyph="&#xE80A;" FontSize="14" />
+                    </ToggleButton>
+                    <ToggleButton x:Name="ListViewToggle"
+                                  x:Uid="ListViewToggle"
+                                  Click="OnListViewClick"
+                                  Padding="10,6,10,6">
+                        <FontIcon Glyph="&#xE8FD;" FontSize="14" />
+                    </ToggleButton>
+                </StackPanel>
+            </Grid>
+
+            <GridView x:Name="EndpointCardView"
+                      x:Uid="EndpointCardView"
+                      Grid.Row="2"
+                      ItemTemplate="{StaticResource EndpointCardTemplate}"
+                      SelectionMode="Single"
+                      IsItemClickEnabled="True"
+                      ItemClick="OnEndpointClick">
+                <GridView.ItemContainerStyle>
+                    <!-- so the first card lines up with the filter row above it -->
+                    <Style TargetType="GridViewItem" BasedOn="{StaticResource DefaultGridViewItemStyle}">
+                        <Setter Property="Padding" Value="0" />
+                    </Style>
+                </GridView.ItemContainerStyle>
+            </GridView>
+
+            <ListView x:Name="EndpointListView"
+                      x:Uid="EndpointListView"
+                      Grid.Row="2"
+                      Visibility="Collapsed"
+                      ItemTemplate="{StaticResource EndpointRowTemplate}"
+                      SelectionMode="Single"
+                      IsItemClickEnabled="True"
+                      ItemClick="OnEndpointClick">
+                <ListView.ItemContainerStyle>
+                    <!-- BasedOn is required: a bare style replaces the implicit one and takes the
+                         selection and focus visuals with it. -->
+                    <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                        <Setter Property="Padding" Value="0" />
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                    </Style>
+                </ListView.ItemContainerStyle>
+            </ListView>
+
+            <TextBlock x:Name="NoEndpointsText"
+                       x:Uid="NoEndpointsText"
+                       Grid.Row="2"
+                       Visibility="Collapsed"
+                       Text="No MIDI endpoints match this filter."
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Style="{ThemeResource BodyTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+            <TextBlock x:Name="StatusText"
+                       Grid.Row="3"
+                       TextWrapping="Wrap"
+                       Style="{ThemeResource CaptionTextBlockStyle}"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+        </Grid>
+
+        <!-- Declared here rather than built in code so the fields stay localizable through the
+             normal x:Uid pipeline. A ContentDialog draws nothing until it is shown. -->
+        <ContentDialog x:Name="EndpointDetailDialog"
+                       x:Uid="EndpointDetailDialog"
+                       Title="Endpoint"
+                       CloseButtonText="Close">
+            <!-- The template sizes itself from this key rather than from MaxWidth, so setting
+                 MaxWidth on the dialog has no effect at all. Wide enough that a typical endpoint
+                 device id sits on one line beside its label. -->
+            <ContentDialog.Resources>
+                <x:Double x:Key="ContentDialogMaxWidth">920</x:Double>
+            </ContentDialog.Resources>
+            <!-- horizontal scrolling is a fallback: the content has a fixed width, so on a window
+                 too narrow to show the whole dialog it scrolls rather than clipping silently -->
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Auto"
+                          HorizontalScrollMode="Auto"
+                          MaxHeight="520">
+                <StackPanel Width="840" Spacing="12" Margin="0,4,12,4">
+
+                    <Grid ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0"
+                                Width="88"
+                                Height="88"
+                                CornerRadius="4"
+                                VerticalAlignment="Top"
+                                Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                            <Image x:Name="DetailImage" Stretch="Uniform" Margin="6" />
+                        </Border>
+
+                        <StackPanel Grid.Column="1" Spacing="8" VerticalAlignment="Top">
+                            <!-- the endpoint name is the dialog title, so only the description
+                                 goes here rather than saying the same thing twice -->
+                            <TextBlock x:Name="DetailDescriptionText"
+                                       Style="{ThemeResource BodyTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       TextWrapping="Wrap"
+                                       IsTextSelectionEnabled="True" />
+
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <Button x:Name="DetailCustomizeButton"
+                                        x:Uid="DetailCustomizeButton"
+                                        Click="OnDetailCustomizeClick">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE70F;" FontSize="14" />
+                                        <TextBlock x:Uid="DetailCustomizeButtonText" Text="Customize" />
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="DetailMonitorButton"
+                                        x:Uid="DetailMonitorButton"
+                                        Click="OnDetailMonitorClick">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE9D9;" FontSize="14" />
+                                        <TextBlock x:Uid="DetailMonitorButtonText" Text="Monitor" />
+                                    </StackPanel>
+                                </Button>
+                                <Button x:Name="DetailPanicButton"
+                                        x:Uid="DetailPanicButton"
+                                        Click="OnDetailPanicClick">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE711;" FontSize="14" />
+                                        <TextBlock x:Uid="DetailPanicButtonText" Text="Panic" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+
+                    <InfoBar x:Name="DetailUniqueIdBar"
+                             IsOpen="True"
+                             IsClosable="False"
+                             Severity="Informational"
+                             Message="" />
+
+                    <Grid ColumnSpacing="12" RowSpacing="6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="140" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0" Grid.Column="0" x:Uid="DetailTransportLabel"
+                                   Text="Transport" Style="{StaticResource PropertyLabelStyle}" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" x:Name="DetailTransportText"
+                                   Style="{StaticResource PropertyValueStyle}" />
+
+                        <TextBlock Grid.Row="1" Grid.Column="0" x:Uid="DetailNativeFormatLabel"
+                                   Text="Native data format" Style="{StaticResource PropertyLabelStyle}" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" x:Name="DetailNativeFormatText"
+                                   Style="{StaticResource PropertyValueStyle}" />
+
+                        <TextBlock Grid.Row="2" Grid.Column="0" x:Uid="DetailProductInstanceIdLabel"
+                                   Text="Product instance ID" Style="{StaticResource PropertyLabelStyle}" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" x:Name="DetailProductInstanceIdText"
+                                   Style="{StaticResource PropertyValueStyle}" />
+
+                        <TextBlock Grid.Row="3" Grid.Column="0" x:Uid="DetailSerialNumberLabel"
+                                   Text="Serial number" Style="{StaticResource PropertyLabelStyle}" />
+                        <TextBlock Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" x:Name="DetailSerialNumberText"
+                                   Style="{StaticResource PropertyValueStyle}" />
+
+                        <TextBlock Grid.Row="4" Grid.Column="0" x:Uid="DetailEndpointIdLabel"
+                                   Text="Endpoint device ID" Style="{StaticResource PropertyLabelStyle}" />
+                        <!-- Ellipsized rather than wrapped: an id longer than the dialog would
+                             otherwise take two lines and push this row out of line with the rest.
+                             The whole value is on the tooltip and behind the copy button. -->
+                        <TextBlock Grid.Row="4" Grid.Column="1"
+                                   x:Name="DetailEndpointIdText"
+                                   VerticalAlignment="Center"
+                                   IsTextSelectionEnabled="True"
+                                   TextWrapping="NoWrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   FontFamily="Cascadia Mono, Consolas, Courier New"
+                                   FontSize="11" />
+                        <Button Grid.Row="4" Grid.Column="2"
+                                x:Name="DetailCopyIdButton"
+                                x:Uid="DetailCopyIdButton"
+                                Padding="8,2,8,2"
+                                MinWidth="0"
+                                VerticalAlignment="Center"
+                                Click="OnDetailCopyIdClick">
+                            <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                        </Button>
+                    </Grid>
+
+                    <Grid ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Spacing="4">
+                            <TextBlock x:Uid="DetailSourcePortsLabel"
+                                       Text="MIDI 1.0 Input/Source Ports"
+                                       Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <ItemsControl x:Name="DetailSourcePortsList"
+                                          ItemTemplate="{StaticResource Midi1PortTemplate}" />
+                            <TextBlock x:Name="DetailNoSourcePortsText"
+                                       x:Uid="DetailNoSourcePortsText"
+                                       Text="None"
+                                       Style="{StaticResource PropertyLabelStyle}" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Spacing="4">
+                            <TextBlock x:Uid="DetailDestinationPortsLabel"
+                                       Text="MIDI 1.0 Output/Destination Ports"
+                                       Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <ItemsControl x:Name="DetailDestinationPortsList"
+                                          ItemTemplate="{StaticResource Midi1PortTemplate}" />
+                            <TextBlock x:Name="DetailNoDestinationPortsText"
+                                       x:Uid="DetailNoDestinationPortsText"
+                                       Text="None"
+                                       Style="{StaticResource PropertyLabelStyle}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock x:Name="DetailStatusText"
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </ScrollViewer>
+        </ContentDialog>
+
+        <ContentDialog x:Name="CustomizeDialog"
+                       x:Uid="CustomizeDialog"
+                       Title="Customize endpoint"
+                       PrimaryButtonText="Save"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Primary">
+            <ContentDialog.Resources>
+                <x:Double x:Key="ContentDialogMaxWidth">620</x:Double>
+            </ContentDialog.Resources>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="480">
+                <StackPanel Width="500" Spacing="12" Margin="0,4,12,4">
+                    <TextBox x:Name="CustomizeNameTextBox"
+                             x:Uid="CustomizeNameTextBox"
+                             Header="Name" />
+
+                    <TextBox x:Name="CustomizeDescriptionTextBox"
+                             x:Uid="CustomizeDescriptionTextBox"
+                             Header="Description" />
+
+                    <StackPanel Spacing="4">
+                        <TextBlock x:Uid="CustomizeImageHeader" Text="Picture" Style="{ThemeResource BodyTextBlockStyle}" />
+                        <Grid ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0"
+                                    Width="56"
+                                    Height="56"
+                                    CornerRadius="4"
+                                    Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                                <Image x:Name="CustomizeImagePreview" Stretch="Uniform" Margin="4" />
+                            </Border>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <Button x:Name="CustomizeBrowseImageButton"
+                                        x:Uid="CustomizeBrowseImageButton"
+                                        Content="Choose..."
+                                        Click="OnCustomizeBrowseImageClick" />
+                                <Button x:Name="CustomizeClearImageButton"
+                                        x:Uid="CustomizeClearImageButton"
+                                        Content="Clear"
+                                        Click="OnCustomizeClearImageClick" />
+                            </StackPanel>
+                        </Grid>
+                    </StackPanel>
+
+                    <InfoBar x:Name="CustomizePortNamingBar"
+                             x:Uid="CustomizePortNamingBar"
+                             IsOpen="False"
+                             IsClosable="False"
+                             Severity="Informational"
+                             Title="MIDI 1.0 port names"
+                             Message="Naming the individual MIDI 1.0 ports of this device is not available in this preview. Use the MIDI console for now." />
+
+                    <TextBlock x:Name="CustomizeStatusText"
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </ScrollViewer>
+        </ContentDialog>
+
+        <ContentDialog x:Name="GlobalSettingsDialog"
+                       x:Uid="GlobalSettingsDialog"
+                       Title="Global MIDI settings"
+                       CloseButtonText="Close">
+            <ContentDialog.Resources>
+                <x:Double x:Key="ContentDialogMaxWidth">760</x:Double>
+            </ContentDialog.Resources>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="600">
+                <StackPanel Width="640" Spacing="24" Margin="0,4,12,8">
+
+                    <InfoBar x:Name="GlobalElevationBar"
+                             x:Uid="GlobalElevationBar"
+                             IsOpen="False"
+                             IsClosable="False"
+                             Severity="Informational"
+                             Title="Administrator rights are needed"
+                             Message="These settings are shared by everyone who uses this PC.">
+                        <InfoBar.ActionButton>
+                            <Button x:Uid="GlobalElevationButton"
+                                    Content="Restart as administrator"
+                                    Click="OnRestartElevatedClick" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
+
+                    <StackPanel Spacing="8">
+                        <TextBlock x:Uid="GlobalConfigFileHeader"
+                                   Text="Configuration file"
+                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock x:Uid="GlobalConfigFileHelp"
+                                   Text="Your endpoint names, pictures and transport setup are stored here. Only one file is active at a time."
+                                   TextWrapping="Wrap"
+                                   Style="{StaticResource PropertyLabelStyle}" />
+
+                        <Border Style="{StaticResource SettingsCardStyle}">
+                            <StackPanel Spacing="20">
+
+                                <StackPanel Spacing="8">
+                                    <TextBlock x:Uid="ConfigFileActiveLabel"
+                                               Text="Active configuration"
+                                               Style="{StaticResource SettingsSubLabelStyle}" />
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <ComboBox x:Name="ConfigFileComboBox"
+                                                  x:Uid="ConfigFileComboBox"
+                                                  Grid.Column="0"
+                                                  HorizontalAlignment="Stretch"
+                                                  ItemTemplate="{StaticResource ConfigFileChoiceTemplate}" />
+                                        <Button x:Name="ConfigFileApplyButton"
+                                                x:Uid="ConfigFileApplyButton"
+                                                Grid.Column="1"
+                                                Style="{StaticResource SettingsRowButtonStyle}"
+                                                Content="Use this file"
+                                                Click="OnApplyConfigFileClick" />
+                                    </Grid>
+                                </StackPanel>
+
+                                <StackPanel Spacing="8">
+                                    <TextBlock x:Uid="ConfigFileCreateLabel"
+                                               Text="Create a new configuration"
+                                               Style="{StaticResource SettingsSubLabelStyle}" />
+                                    <Grid ColumnSpacing="12">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox x:Name="NewConfigNameTextBox"
+                                                 x:Uid="NewConfigNameTextBox"
+                                                 Grid.Column="0"
+                                                 HorizontalAlignment="Stretch"
+                                                 PlaceholderText="New configuration name" />
+                                        <Button x:Name="CreateConfigButton"
+                                                x:Uid="CreateConfigButton"
+                                                Grid.Column="1"
+                                                Style="{StaticResource SettingsRowButtonStyle}"
+                                                Content="Create"
+                                                Click="OnCreateConfigFileClick" />
+                                    </Grid>
+                                    <TextBlock x:Uid="NewConfigNameHelp"
+                                               Text="Give it a short name you will recognize later, such as Studio or Live. The new file starts empty, so your current names, pictures and transport setup are not copied into it. Creating a file does not switch to it: pick it above, then choose Use this file."
+                                               TextWrapping="Wrap"
+                                               Style="{StaticResource PropertyLabelStyle}" />
+                                </StackPanel>
+
+                                <StackPanel Spacing="8">
+                                    <TextBlock x:Uid="ConfigFileCopyLabel"
+                                               Text="Back up the active configuration"
+                                               Style="{StaticResource SettingsSubLabelStyle}" />
+                                    <Button x:Name="CopyConfigButton"
+                                            x:Uid="CopyConfigButton"
+                                            HorizontalAlignment="Left"
+                                            Content="Save a copy of the active file..."
+                                            Click="OnCopyConfigFileClick" />
+                                </StackPanel>
+
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Spacing="8">
+                        <TextBlock x:Uid="GlobalPortNamingHeader"
+                                   Text="Default MIDI 1.0 port naming"
+                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock x:Uid="GlobalPortNamingHelp"
+                                   Text="How ports are named for older apps which use WinMM or WinRT MIDI 1.0. Changing this renames ports, so apps may need to be pointed at them again."
+                                   TextWrapping="Wrap"
+                                   Style="{StaticResource PropertyLabelStyle}" />
+
+                        <Border Style="{StaticResource SettingsCardStyle}">
+                            <StackPanel Spacing="12">
+                                <RadioButton x:Name="PortNamingClassicRadio"
+                                             x:Uid="PortNamingClassicRadio"
+                                             GroupName="PortNaming"
+                                             Content="Compatible with older Windows (recommended)"
+                                             Click="OnPortNamingChanged" />
+                                <RadioButton x:Name="PortNamingNewStyleRadio"
+                                             x:Uid="PortNamingNewStyleRadio"
+                                             GroupName="PortNaming"
+                                             Content="New style, based on the endpoint and block names"
+                                             Click="OnPortNamingChanged" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Spacing="8">
+                        <TextBlock x:Uid="GlobalServiceHeader"
+                                   Text="MIDI service"
+                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock x:Uid="GlobalServiceHelp"
+                                   Text="Changing the configuration file or the port naming takes effect when the service restarts."
+                                   TextWrapping="Wrap"
+                                   Style="{StaticResource PropertyLabelStyle}" />
+                        <Border Style="{StaticResource SettingsCardStyle}">
+                            <Button x:Name="RestartServiceButton"
+                                    x:Uid="RestartServiceButton"
+                                    HorizontalAlignment="Left"
+                                    Content="Restart the MIDI service"
+                                    Click="OnRestartServiceClick" />
+                        </Border>
+                    </StackPanel>
+
+                    <TextBlock x:Name="GlobalStatusText"
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </ScrollViewer>
+        </ContentDialog>
+    </Grid>
+</Window>

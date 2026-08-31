@@ -23,6 +23,7 @@ Pass to `MidiNetworkTransportManager.ConnectNetworkClientAsync`.
 | `Comment` | Optional comment written to the configuration file. Not used by the service |
 | `CreateOnlyUmpEndpoints` | When true, only UMP endpoints are created. When false, MIDI 1.0 ports are created alongside them |
 | `UmpEndpointName` | The UMP Endpoint Name to use for the local end of this connection |
+| `CustomEndpointName` | What the customer chose to call the MIDI endpoint this connection creates. It is applied before the endpoint is activated, so the endpoint and its MIDI 1.0 ports are never created under the remote's own name and renamed afterwards. Leave it empty to use the name the remote announces |
 | `MatchCriteria` | A `MidiNetworkClientMatchCriteria` identifying the remote host |
 
 ## Remarks

@@ -1,0 +1,126 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#pragma once
+
+#include <windows.h>
+#include <unknwn.h>
+#include <restrictederrorinfo.h>
+#include <hstring.h>
+#include <shlwapi.h>
+#include <shellapi.h>
+#include <shobjidl_core.h>
+#include <shlobj_core.h>
+#include <knownfolders.h>
+#include <pathcch.h>
+
+#include <winmeta.h>
+#include <TraceLoggingProvider.h>
+
+#include <algorithm>
+#include <array>
+#include <atomic>
+#include <chrono>
+#include <cstdint>
+#include <format>
+#include <fstream>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <optional>
+#include <sstream>
+#include <string>
+#include <string_view>
+#include <thread>
+#include <tuple>
+#include <unordered_map>
+#include <vector>
+
+// Must come before the other WIL headers: it installs the translator that teaches WIL about
+// cppwinrt exceptions. Without it, CATCH_LOG / LOG_CAUGHT_EXCEPTION on a winrt::hresult_error is
+// treated as an unknown exception and FAIL-FASTS the process (0x8007023E) instead of logging.
+#include <wil/cppwinrt.h>
+#include <wil/com.h>
+#include <wil/resource.h>
+#include <wil/result_macros.h>
+#include <wil/tracelogging.h>
+#include <wil/registry.h>
+#include <wil/registry_helpers.h>
+
+#undef GetCurrentTime
+#undef small
+
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.Foundation.Numerics.h>
+#include <winrt/Windows.Globalization.DateTimeFormatting.h>
+#include <winrt/Windows.Storage.h>
+#include <winrt/Windows.Storage.Pickers.h>
+#include <winrt/Windows.Storage.Streams.h>
+#include <winrt/Windows.Devices.Enumeration.h>
+#include <winrt/Windows.Graphics.h>
+#include <winrt/Windows.ApplicationModel.DataTransfer.h>
+#include <winrt/Windows.System.h>
+#include <winrt/Windows.UI.h>
+#include <winrt/Windows.UI.Text.h>
+
+#include <winrt/Microsoft.UI.h>
+#include <winrt/Microsoft.UI.Composition.h>
+#include <winrt/Microsoft.UI.Composition.SystemBackdrops.h>
+#include <winrt/Microsoft.UI.Dispatching.h>
+#include <winrt/Microsoft.UI.Input.h>
+#include <winrt/Microsoft.UI.Text.h>
+#include <winrt/Microsoft.UI.Windowing.h>
+#include <winrt/Microsoft.UI.Xaml.h>
+#include <winrt/Microsoft.UI.Xaml.Automation.h>
+#include <winrt/Microsoft.UI.Xaml.Controls.h>
+#include <winrt/Microsoft.UI.Xaml.Controls.Primitives.h>
+#include <winrt/Microsoft.UI.Xaml.Data.h>
+#include <winrt/Microsoft.UI.Xaml.Documents.h>
+#include <winrt/Microsoft.UI.Xaml.Input.h>
+#include <winrt/Microsoft.UI.Xaml.Interop.h>
+#include <winrt/Microsoft.UI.Xaml.Markup.h>
+#include <winrt/Microsoft.UI.Xaml.Media.h>
+#include <winrt/Microsoft.UI.Xaml.Media.Imaging.h>
+#include <winrt/Microsoft.UI.Xaml.Navigation.h>
+#include <winrt/Microsoft.UI.Xaml.Shapes.h>
+#include <winrt/Microsoft.Windows.ApplicationModel.Resources.h>
+
+#include <winrt/Windows.Devices.Midi2.h>
+#include <winrt/Windows.Devices.Midi2.Enumeration.h>
+#include <winrt/Windows.Devices.Midi2.Enumeration.Legacy.h>
+#include <winrt/Windows.Devices.Midi2.Reporting.h>
+
+#include <microsoft.ui.xaml.window.h>
+#include <shobjidl.h>
+
+// projection for the shared user tool types, generated from midi-app-shared\MidiAppShared.idl
+#include <winrt/MidiAppShared.h>
+
+namespace foundation = ::winrt::Windows::Foundation;
+namespace collections = ::winrt::Windows::Foundation::Collections;
+namespace xaml = ::winrt::Microsoft::UI::Xaml;
+namespace controls = ::winrt::Microsoft::UI::Xaml::Controls;
+namespace media = ::winrt::Microsoft::UI::Xaml::Media;
+namespace midi2 = ::winrt::Windows::Devices::Midi2;
+namespace midi2enum = ::winrt::Windows::Devices::Midi2::Enumeration;
+namespace midi2legacy = ::winrt::Windows::Devices::Midi2::Enumeration::Legacy;
+namespace midi2rept = ::winrt::Windows::Devices::Midi2::Reporting;
+namespace appshared = ::winrt::MidiAppShared;
+
+#include "Telemetry.h"
+
+#include "WindowChrome.h"
+#include "AppearanceFlyout.h"
+
+// XAML generated type info activates these shared types by name, so their declarations have to
+// be reachable from every translation unit.
+#include "EndpointChoice.h"
+#include "NamedChoice.h"
+
+// same reason: the row types are used from data templates but have no .xaml file of their own
+#include "TroubleshooterItems.h"

@@ -1,0 +1,144 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util='http://wixtoolset.org/schemas/v4/wxs/util'>
+
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
+    <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
+    <?include $(StagingVersionIncludeFile) ?>
+
+    <!-- Shared with any in-box version of this transport, which is what makes the uninstall
+         behaviour below matter. -->
+    <?define BasicLoopbackTransportClsid={10088473-9478-4E62-850B-3D2315E135B8} ?>
+    <?define BasicLoopbackTransportPluginKeyName=Midi2BasicLoopbackMidiTransport ?>
+
+    <Package  
+          Name="Microsoft Windows MIDI Services Basic Loopback $(var.Platform)"
+          Manufacturer="Microsoft Corporation"
+          Version="$(MidiPluginsNumericVersion)"
+          UpgradeCode="10088473-9478-4e62-850b-3d2315e135b8"
+          Scope="perMachine"
+          Compressed="true"
+          
+          >
+       
+        <MediaTemplate EmbedCab="yes" />
+
+        
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
+                <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
+            </Directory>
+        </StandardDirectory>
+        
+        <!--
+          Deliberately no SelfRegCost here. Self-registration also self-UNregisters, and
+          DllUnregisterServer removes the CLSID no matter who owns it by then. Customers who
+          uninstalled this preview after an in-box version had shipped were left with an in-box
+          transport that could not load, because its CLSID and its transport plugin key had just
+          been deleted. Registration is done from the custom actions at the bottom of this file
+          instead, and removal only happens when the registration still points at the file this
+          package installed.
+        -->
+        <Component Id="WindowsServicePlugins"
+                   Bitness="always64"
+                   Directory="SERVICE_INSTALLFOLDER"
+                   Guid="934b1877-4837-426c-acf8-6e9196604dbe"  >
+
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.BasicLoopbackMidiTransport.dll" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.BasicLoopbackMidiTransport.pdb" />
+        </Component>
+        
+
+        <!--
+          This component no longer writes the transport plugin key; the custom actions do, so that
+          uninstall can decline to remove a registration that has since been taken over by an
+          in-box transport. It still exists, and MUST keep its original GUID, because MSI reference
+          counts components across products. Burn uninstalls the superseded bundle after the new
+          one is installed, so if this GUID disappeared, that uninstall would drop the reference
+          count to zero and take the plugin key with it.
+        -->
+        <Component Id="ConfigurationRegistryEntries"
+                Bitness="always64"
+                Directory="SERVICE_INSTALLFOLDER"
+                Guid="f551be12-739b-4d55-bfe8-3d7c901cc30e"
+                NeverOverwrite="false">
+
+            <RegistryKey Root="HKLM"
+                         Key="SOFTWARE\Microsoft\Windows MIDI Services\Basic Loopback Preview">
+                <RegistryValue Type="string" Name="TransportRegistration" Value="installed" KeyPath="yes" />
+            </RegistryKey>
+        </Component>
+
+      <Component Id="RestartService"
+                  Bitness="always64"
+                  Directory="SERVICE_INSTALLFOLDER"
+                  Guid="CECA5130-47A4-4AEF-A086-24323969F1F1">
+
+        <ServiceControl Id="midisrv" Name="midisrv"
+                        Start="both" 
+                        Stop="both"/>
+      
+      </Component>
+
+
+      <Feature Id="WindowsMIDIServices">
+        <ComponentRef Id="WindowsServicePlugins"/>
+        <ComponentRef Id="ConfigurationRegistryEntries"/>
+        <ComponentRef Id="RestartService"/>
+      </Feature>
+
+      
+      <Binary Id="CustomActionBinary"
+              SourceFile="$(var.customactions.TargetDir)$(var.customactions.TargetName).CA.dll" />
+
+      <CustomAction Id="Action_TakeRegistryOwnership"
+                    Impersonate="no"
+                    Execute="deferred"
+                    BinaryRef="CustomActionBinary"
+                    DllEntry="TakeRegistryOwnership"
+                    Return="check"/>
+
+      <!-- Deferred custom actions cannot read properties, so everything they need is handed over
+           through CustomActionData. -->
+      <SetProperty Id="Action_RegisterBasicLoopbackTransport"
+                   Value="DllPath=[SERVICE_INSTALLFOLDER]Midi2.BasicLoopbackMidiTransport.dll;Clsid=$(BasicLoopbackTransportClsid);PluginKeyName=$(BasicLoopbackTransportPluginKeyName)"
+                   Before="Action_RegisterBasicLoopbackTransport"
+                   Sequence="execute" />
+
+      <CustomAction Id="Action_RegisterBasicLoopbackTransport"
+                    Impersonate="no"
+                    Execute="deferred"
+                    BinaryRef="CustomActionBinary"
+                    DllEntry="RegisterTransportComServer"
+                    Return="check" />
+
+      <SetProperty Id="Action_UnregisterBasicLoopbackTransport"
+                   Value="DllPath=[SERVICE_INSTALLFOLDER]Midi2.BasicLoopbackMidiTransport.dll;Clsid=$(BasicLoopbackTransportClsid);PluginKeyName=$(BasicLoopbackTransportPluginKeyName)"
+                   Before="Action_UnregisterBasicLoopbackTransport"
+                   Sequence="execute" />
+
+      <CustomAction Id="Action_UnregisterBasicLoopbackTransport"
+                    Impersonate="no"
+                    Execute="deferred"
+                    BinaryRef="CustomActionBinary"
+                    DllEntry="UnregisterTransportComServerIfOwned"
+                    Return="check" />
+
+      <InstallExecuteSequence>
+        <Custom Action="Action_TakeRegistryOwnership"
+                Before="CreateFolders"
+                Condition='(NOT Installed) AND NOT (REMOVE="ALL")' />
+
+        <!-- After InstallFiles so the DLL regsvr32 is pointed at is already on disk -->
+        <Custom Action="Action_RegisterBasicLoopbackTransport"
+                After="InstallFiles"
+                Condition='NOT (REMOVE="ALL")' />
+
+        <!-- Before RemoveFiles so the DLL is still there to unregister itself -->
+        <Custom Action="Action_UnregisterBasicLoopbackTransport"
+                Before="RemoveFiles"
+                Condition='(REMOVE="ALL") AND NOT UPGRADINGPRODUCTCODE' />
+
+      </InstallExecuteSequence>      
+      
+    </Package>
+</Wix>

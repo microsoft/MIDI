@@ -32,9 +32,9 @@ In the current codebase, transports follow this same pattern. For example, `TRAN
 
 Examples:
 
-- [Network MIDI 2.0 transport GUID mapping](https://github.com/microsoft/MIDI/blob/main/src/api/Transport/UdpNetworkMidi2Transport/net2udp_transport_defs.h)
-- [Network MIDI 2.0 COM class implementation](https://github.com/microsoft/MIDI/blob/main/src/api/Transport/UdpNetworkMidi2Transport/Midi2.NetworkMidiTransport.h)
-- [Basic Loopback transport GUID mapping](https://github.com/microsoft/MIDI/blob/main/src/api/Transport/BasicLoopbackMidiTransport/basic_loopback_transport_defs.h)
+- [Network MIDI 2.0 transport GUID mapping](https://github.com/microsoft/MIDI/blob/main/src/in-box/Transport/UdpNetworkMidi2Transport/net2udp_transport_defs.h)
+- [Network MIDI 2.0 COM class implementation](https://github.com/microsoft/MIDI/blob/main/src/in-box/Transport/UdpNetworkMidi2Transport/Midi2.NetworkMidiTransport.h)
+- [Basic Loopback transport GUID mapping](https://github.com/microsoft/MIDI/blob/main/src/in-box/Transport/BasicLoopbackMidiTransport/basic_loopback_transport_defs.h)
 
 This one-GUID approach keeps activation, metadata reporting, and configuration routing consistent.
 
@@ -49,7 +49,7 @@ Transport-facing message format is represented by `MidiDataFormats` in the servi
 
 Reference:
 
-- [WindowsMidiServices.idl (MidiDataFormats and transport interfaces)](https://github.com/microsoft/MIDI/blob/main/src/api/idl/WindowsMidiServices.idl)
+- [WindowsMidiServices.idl (MidiDataFormats and transport interfaces)](https://github.com/microsoft/MIDI/blob/main/src/in-box/idl/WindowsMidiServices.idl)
 
 Recommendation:
 
@@ -64,8 +64,8 @@ The `position`/timestamp fields passed through service transport interfaces are 
 
 References:
 
-- [WindowsMidiServices.idl (timestamp semantics in callback and transport comments)](https://github.com/microsoft/MIDI/blob/main/src/api/idl/WindowsMidiServices.idl)
-- [midi_timestamp.h (QPC helper functions)](https://github.com/microsoft/MIDI/blob/main/src/api/Inc/midi_timestamp.h)
+- [WindowsMidiServices.idl (timestamp semantics in callback and transport comments)](https://github.com/microsoft/MIDI/blob/main/src/in-box/idl/WindowsMidiServices.idl)
+- [midi_timestamp.h (QPC helper functions)](https://github.com/microsoft/MIDI/blob/main/src/in-box/Inc/midi_timestamp.h)
 
 Guidance:
 
@@ -84,7 +84,7 @@ Relevant interfaces and methods:
 
 Reference:
 
-- [WindowsMidiServices.idl (IMidiBidirectional and IMidiCallback)](https://github.com/microsoft/MIDI/blob/main/src/api/idl/WindowsMidiServices.idl)
+- [WindowsMidiServices.idl (IMidiBidirectional and IMidiCallback)](https://github.com/microsoft/MIDI/blob/main/src/in-box/idl/WindowsMidiServices.idl)
 
 ### Multiple messages per call
 
@@ -99,7 +99,7 @@ Guidance for transport developers:
 
 You can use either approach:
 
-- Use a copy of the in-repo UMP iterator helper: [ump_iterator.h](https://github.com/microsoft/MIDI/blob/main/src/api/Inc/ump_iterator.h)
+- Use a copy of the in-repo UMP iterator helper: [ump_iterator.h](https://github.com/microsoft/MIDI/blob/main/src/in-box/Inc/ump_iterator.h)
 - Implement your own parser/iterator if it is more appropriate for your codebase
 
 ### Message grouping intent
@@ -124,9 +124,9 @@ Primary interfaces include:
 
 References:
 
-- [WindowsMidiServices.idl (transport, endpoint manager, configuration, metadata)](https://github.com/microsoft/MIDI/blob/main/src/api/idl/WindowsMidiServices.idl)
-- [Basic Loopback transport Activate pattern](https://github.com/microsoft/MIDI/blob/main/src/api/Transport/BasicLoopbackMidiTransport/Midi2.BasicLoopbackMidiTransport.cpp)
-- [Network transport Activate pattern](https://github.com/microsoft/MIDI/blob/main/src/api/Transport/UdpNetworkMidi2Transport/Midi2.NetworkMidiTransport.cpp)
+- [WindowsMidiServices.idl (transport, endpoint manager, configuration, metadata)](https://github.com/microsoft/MIDI/blob/main/src/in-box/idl/WindowsMidiServices.idl)
+- [Basic Loopback transport Activate pattern](https://github.com/microsoft/MIDI/blob/main/src/in-box/Transport/BasicLoopbackMidiTransport/Midi2.BasicLoopbackMidiTransport.cpp)
+- [Network transport Activate pattern](https://github.com/microsoft/MIDI/blob/main/src/in-box/Transport/UdpNetworkMidi2Transport/Midi2.NetworkMidiTransport.cpp)
 
 ### About the “Transport Factory”
 
@@ -140,8 +140,8 @@ For endpoint publication, your `IMidiEndpointManager` implementation creates and
 
 References:
 
-- [Network MIDI Endpoint Manager](https://github.com/microsoft/MIDI/blob/main/src/api/Transport/UdpNetworkMidi2Transport/Midi2.NetworkMidiEndpointManager.cpp)
-- [Basic Loopback Endpoint Manager](https://github.com/microsoft/MIDI/blob/main/src/api/Transport/BasicLoopbackMidiTransport/Midi2.BasicLoopbackMidiEndpointManager.cpp)
+- [Network MIDI Endpoint Manager](https://github.com/microsoft/MIDI/blob/main/src/in-box/Transport/UdpNetworkMidi2Transport/Midi2.NetworkMidiEndpointManager.cpp)
+- [Basic Loopback Endpoint Manager](https://github.com/microsoft/MIDI/blob/main/src/in-box/Transport/BasicLoopbackMidiTransport/Midi2.BasicLoopbackMidiEndpointManager.cpp)
 
 If your transport needs to expose legacy MIDI 1.0 ports in addition to UMP endpoints, provide an explicit configuration switch and keep the behavior deterministic.
 
@@ -152,9 +152,9 @@ The Network MIDI 2.0 transport shows this pattern:
 
 References:
 
-- [Network config key `createMidi1Ports`](https://github.com/microsoft/MIDI/blob/main/src/api/Transport/UdpNetworkMidi2Transport/network_json_defs.h)
-- [Network configuration processing (`UpdateConfiguration`)](https://github.com/microsoft/MIDI/blob/main/src/api/Transport/UdpNetworkMidi2Transport/Midi2.NetworkMidiConfigurationManager.cpp)
-- [Network host/client endpoint mode selection](https://github.com/microsoft/MIDI/blob/main/src/api/Transport/UdpNetworkMidi2Transport/MidiNetworkHost.cpp)
+- [Network config key `createMidi1Ports`](https://github.com/microsoft/MIDI/blob/main/src/in-box/Transport/UdpNetworkMidi2Transport/network_json_defs.h)
+- [Network configuration processing (`UpdateConfiguration`)](https://github.com/microsoft/MIDI/blob/main/src/in-box/Transport/UdpNetworkMidi2Transport/Midi2.NetworkMidiConfigurationManager.cpp)
+- [Network host/client endpoint mode selection](https://github.com/microsoft/MIDI/blob/main/src/in-box/Transport/UdpNetworkMidi2Transport/MidiNetworkHost.cpp)
 
 ## Midisrv is the only client
 
@@ -169,8 +169,8 @@ The service:
 
 References:
 
-- [Transport registry enumeration and CLSID parsing](https://github.com/microsoft/MIDI/blob/main/src/api/Service/Exe/MidiConfigurationManager.cpp)
-- [Transport activation and manager initialization](https://github.com/microsoft/MIDI/blob/main/src/api/Service/Exe/MidiDeviceManager.cpp)
+- [Transport registry enumeration and CLSID parsing](https://github.com/microsoft/MIDI/blob/main/src/in-box/Service/Exe/MidiConfigurationManager.cpp)
+- [Transport activation and manager initialization](https://github.com/microsoft/MIDI/blob/main/src/in-box/Service/Exe/MidiDeviceManager.cpp)
 
 ## Versioning and compatibility contract
 
@@ -185,8 +185,8 @@ Recommendations:
 
 References:
 
-- [MidiServiceTransportPluginConfigManager.idl](https://github.com/microsoft/MIDI/blob/main/src/api/Client/WinRT/t/core/MidiServiceTransportPluginConfigManager.idl)
-- [MidiServiceTransportCommonCommands.idl](https://github.com/microsoft/MIDI/blob/main/src/api/Client/WinRT/t/core/MidiServiceTransportCommonCommands.idl)
+- [MidiServiceTransportPluginConfigManager.idl](https://github.com/microsoft/MIDI/blob/main/src/in-box/Client/WinRT/core/MidiServiceTransportPluginConfigManager.idl)
+- [MidiServiceTransportCommonCommands.idl](https://github.com/microsoft/MIDI/blob/main/src/in-box/Client/WinRT/core/MidiServiceTransportCommonCommands.idl)
 
 ## Required registry entries
 
@@ -204,8 +204,8 @@ Windows MIDI Services constants define these values:
 
 References:
 
-- [Registry key/value constants](https://github.com/microsoft/MIDI/blob/main/src/api/Inc/MidiDefs.h)
-- [How service reads Enabled and CLSID](https://github.com/microsoft/MIDI/blob/main/src/api/Service/Exe/MidiConfigurationManager.cpp)
+- [Registry key/value constants](https://github.com/microsoft/MIDI/blob/main/src/in-box/Inc/MidiDefs.h)
+- [How service reads Enabled and CLSID](https://github.com/microsoft/MIDI/blob/main/src/in-box/Service/Exe/MidiConfigurationManager.cpp)
 
 Illustrative example:
 
@@ -301,8 +301,8 @@ Recommendations:
 
 Reference examples:
 
-- [MidiServiceConfigResponse.idl](https://github.com/microsoft/MIDI/blob/main/src/api/Client/WinRT/t/core/MidiServiceConfigResponse.idl)
-- [basic_loopback_transport_error_codes.h](https://github.com/microsoft/MIDI/blob/main/src/api/Transport/BasicLoopbackMidiTransport/basic_loopback_transport_error_codes.h)
+- [MidiServiceConfigResponse.idl](https://github.com/microsoft/MIDI/blob/main/src/in-box/Client/WinRT/core/MidiServiceConfigResponse.idl)
+- [basic_loopback_transport_error_codes.h](https://github.com/microsoft/MIDI/blob/main/src/in-box/Transport/BasicLoopbackMidiTransport/basic_loopback_transport_error_codes.h)
 
 ## Lifecycle state model
 
@@ -325,7 +325,7 @@ Recommendations:
 
 Reference:
 
-- [WindowsMidiServices.idl](https://github.com/microsoft/MIDI/blob/main/src/api/idl/WindowsMidiServices.idl)
+- [WindowsMidiServices.idl](https://github.com/microsoft/MIDI/blob/main/src/in-box/idl/WindowsMidiServices.idl)
 
 ## Stability guidance
 
@@ -371,9 +371,9 @@ This keeps policy decisions outside the service UI surface while preserving a se
 
 References:
 
-- [Network setup tool approval flow](https://github.com/microsoft/MIDI/blob/main/src/api/Client/WinRT/user-tools/network-midi-setup/MainWindowActions.cpp)
-- [Network transport manager command/config flow](https://github.com/microsoft/MIDI/blob/main/src/api/Client/WinRT/t/core/MidiNetworkTransportManager.cpp)
-- [Network approval config type](https://github.com/microsoft/MIDI/blob/main/src/api/Client/WinRT/t/core/MidiNetworkRemoteClientApprovalConfig.idl)
+- [Network setup tool approval flow](https://github.com/microsoft/MIDI/blob/main/src/in-box/user-tools/network-midi-setup/MainWindowActions.cpp)
+- [Network transport manager command/config flow](https://github.com/microsoft/MIDI/blob/main/src/in-box/Client/WinRT/core/MidiNetworkTransportManager.cpp)
+- [Network approval config type](https://github.com/microsoft/MIDI/blob/main/src/in-box/Client/WinRT/core/MidiNetworkRemoteClientApprovalConfig.idl)
 
 ## Diagnostics and supportability
 
@@ -398,11 +398,11 @@ The WinRT API provides a straightforward way to send custom transport JSON, invo
 
 Key API surface:
 
-- [IMidiServiceTransportPluginConfig](https://github.com/microsoft/MIDI/blob/main/src/api/Client/WinRT/t/core/IMidiServiceTransportPluginConfig.idl)
-- [MidiServiceTransportPluginConfigManager](https://github.com/microsoft/MIDI/blob/main/src/api/Client/WinRT/t/core/MidiServiceTransportPluginConfigManager.idl)
-- [MidiServiceTransportCommand](https://github.com/microsoft/MIDI/blob/main/src/api/Client/WinRT/t/core/MidiServiceTransportCommand.idl)
-- [MidiServiceTransportCommonCommands](https://github.com/microsoft/MIDI/blob/main/src/api/Client/WinRT/t/core/MidiServiceTransportCommonCommands.idl)
-- [MidiServiceConfigResponse](https://github.com/microsoft/MIDI/blob/main/src/api/Client/WinRT/t/core/MidiServiceConfigResponse.idl)
+- [IMidiServiceTransportPluginConfig](https://github.com/microsoft/MIDI/blob/main/src/in-box/Client/WinRT/core/IMidiServiceTransportPluginConfig.idl)
+- [MidiServiceTransportPluginConfigManager](https://github.com/microsoft/MIDI/blob/main/src/in-box/Client/WinRT/core/MidiServiceTransportPluginConfigManager.idl)
+- [MidiServiceTransportCommand](https://github.com/microsoft/MIDI/blob/main/src/in-box/Client/WinRT/core/MidiServiceTransportCommand.idl)
+- [MidiServiceTransportCommonCommands](https://github.com/microsoft/MIDI/blob/main/src/in-box/Client/WinRT/core/MidiServiceTransportCommonCommands.idl)
+- [MidiServiceConfigResponse](https://github.com/microsoft/MIDI/blob/main/src/in-box/Client/WinRT/core/MidiServiceConfigResponse.idl)
 
 Example (C++/WinRT):
 
@@ -449,18 +449,18 @@ void ConfigureTransport(guid transportId)
 
 For real usage examples in this repo, see:
 
-- [Transport config manager implementation](https://github.com/microsoft/MIDI/blob/main/src/api/Client/WinRT/t/core/MidiServiceTransportPluginConfigManager.cpp)
-- [Basic Loopback runtime config/update usage](https://github.com/microsoft/MIDI/blob/main/src/api/Client/WinRT/t/core/MidiBasicLoopbackManager.cpp)
-- [Network transport command usage](https://github.com/microsoft/MIDI/blob/main/src/api/Client/WinRT/t/core/MidiNetworkTransportManager.cpp)
+- [Transport config manager implementation](https://github.com/microsoft/MIDI/blob/main/src/in-box/Client/WinRT/core/MidiServiceTransportPluginConfigManager.cpp)
+- [Basic Loopback runtime config/update usage](https://github.com/microsoft/MIDI/blob/main/src/in-box/Client/WinRT/core/MidiBasicLoopbackManager.cpp)
+- [Network transport command usage](https://github.com/microsoft/MIDI/blob/main/src/in-box/Client/WinRT/core/MidiNetworkTransportManager.cpp)
 
 ## Existing transport examples in this repo
 
 These built-in transports are good reference points when creating your own COM transport plugin:
 
-- [UdpNetworkMidi2Transport](https://github.com/microsoft/MIDI/tree/main/src/api/Transport/UdpNetworkMidi2Transport)
-- [KSTransport](https://github.com/microsoft/MIDI/tree/main/src/api/Transport/KSTransport)
-- [BasicLoopbackMidiTransport](https://github.com/microsoft/MIDI/tree/main/src/api/Transport/BasicLoopbackMidiTransport)
-- [LoopbackMidiTransport](https://github.com/microsoft/MIDI/tree/main/src/api/Transport/LoopbackMidiTransport)
+- [UdpNetworkMidi2Transport](https://github.com/microsoft/MIDI/tree/main/src/in-box/Transport/UdpNetworkMidi2Transport)
+- [KSTransport](https://github.com/microsoft/MIDI/tree/main/src/in-box/Transport/KSTransport)
+- [BasicLoopbackMidiTransport](https://github.com/microsoft/MIDI/tree/main/src/in-box/Transport/BasicLoopbackMidiTransport)
+- [LoopbackMidiTransport](https://github.com/microsoft/MIDI/tree/main/src/in-box/Transport/LoopbackMidiTransport)
 
 These examples show how to structure COM activation, endpoint/config managers, metadata reporting, and transport lifecycle behavior.
 
