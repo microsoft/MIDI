@@ -13,5 +13,5 @@ Used to indicate which function block messages you want to receive when you requ
 | Property | Value | Description |
 | -------- | ------- | ------ |
 | `None` | `0x00000000` | No information requested |
-| `RequestFunctionBlockInformation` | `0x00000001` | Request the core function block information |
+| `RequestFunctionBlockInfo` | `0x00000001` | Request the core function block information |
 | `RequestFunctionBlockName` | `0x00000002` | Request a set of function block name messages |

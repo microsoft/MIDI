@@ -16,4 +16,5 @@ This class represents an active transient basic loopback endpoint. Instances are
 | `EndpointDeviceId` | The full endpoint device id for this loopback endpoint |
 | `Name` | The name of the loopback endpoint |
 | `Description` | The description of the loopback endpoint |
+| `ImageFileName` | The bare file name of the endpoint's picture within the shared endpoint assets folder, empty when there is none |
 | `IsMuted` | True if this loopback is currently muted |

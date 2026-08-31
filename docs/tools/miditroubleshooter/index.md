@@ -19,6 +19,8 @@ At the top of every page is a strip with the version of Windows, the architectur
 region, the Windows App SDK version and the current API mode. That's the first thing support asks for,
 so it stays visible wherever you are in the app.
 
+![The MIDI Troubleshooting and Repair main window]({{ site.baseurl }}/assets/images/miditroubleshooter.png)
+
 ## API mode
 
 Windows can run MIDI in one of three modes. This page shows which one this PC is using, explains what
@@ -43,6 +45,8 @@ There's more detail in [How to change the API mode]({{ site.baseurl }}/kb/how-to
 Two reports, each with a button to run it, a box showing the output, and **Copy all** and **Save as**
 buttons.
 
+![The two diagnostic reports, with output]({{ site.baseurl }}/assets/images/miditroubleshooter-diagnostics.png)
+
 **mididiag** is the broad one. It walks the registry, the transports, every MIDI endpoint the service
 knows about and the old MIDI 1.0 APIs, and reports what it found.
 
@@ -56,6 +60,8 @@ GitHub issue or your email to support.
 
 This is the one to use when somebody asks you for "a trace". It replaces the older CollectMidiLogs
 script, and does the whole job inside the app.
+
+![Choosing what to include in a repro log capture]({{ site.baseurl }}/assets/images/miditroubleshooter-capture.png)
 
 Choose what to include, select **Start capture**, reproduce whatever is going wrong, then select
 **Stop and save**. You're asked where to put the zip file, and Explorer opens with it selected when
@@ -84,6 +90,8 @@ Every application currently connected to the MIDI service, with the process it b
 started. Expand one to see which endpoints and MIDI 1.0 ports it has open, how many times each is open,
 and since when.
 
+![The applications connected to the MIDI service and what each has open]({{ site.baseurl }}/assets/images/miditroubleshooter-sessions.png)
+
 This page is purely informational; there is nothing to change here. It's for answering the question
 "what has that device open?" when something reports a device as busy or in use.
 
@@ -96,6 +104,8 @@ This page lists everything registered on the PC, and marks each one as loaded, d
 transport that is registered but didn't load is the reason a whole class of device can go missing at
 once, and it's shown with a clear icon rather than simply being absent from the list.
 
+![Every registered transport and whether it loaded]({{ site.baseurl }}/assets/images/miditroubleshooter-transports.png)
+
 If something here is not loading, see [Why a service plugin may not load correctly]({{ site.baseurl }}/kb/service-plugin-not-loaded/).
 The usual cause for a third-party transport is that it isn't signed and Developer Mode is off.
 
@@ -103,6 +113,8 @@ The usual cause for a third-party transport is that it isn't signed and Develope
 
 The state of the MIDI service itself: whether it's running, how it's set to start, the account it runs
 under, its process id, and the version of the service on disk.
+
+![The state of the MIDI service]({{ site.baseurl }}/assets/images/miditroubleshooter-service.png)
 
 **Restart the MIDI service** stops and restarts it. Every application using MIDI loses its connections
 and has to reconnect, so close or save your work first.
@@ -122,6 +134,8 @@ description of what it's for. If anything is wrong, **Repair these entries** lis
 change, asks you to confirm, and then makes only those changes. Windows has to be restarted afterwards,
 because the audio and MIDI services read these values when they start.
 
+![The registry values Windows MIDI Services depends on]({{ site.baseurl }}/assets/images/miditroubleshooter-registry.png)
+
 If the PC is in Legacy MIDI mode, no changes are offered. Legacy mode deliberately does not use the
 service, so "repairing" the values would undo the mode you chose.
 
@@ -131,6 +145,8 @@ There's a full description of what belongs here in
 ## Drivers
 
 Two jobs on this page.
+
+![Removing vendor drivers and switching the MIDI class driver]({{ site.baseurl }}/assets/images/miditroubleshooter-drivers.png)
 
 ### Removing drivers you no longer need
 

@@ -23,6 +23,7 @@ Returned in `MidiNetworkHostCreationResponse.ErrorCode`.
 | `InvalidOrMissingProductInstanceId` | `0x00000042` | `ProductInstanceId` was missing or blank |
 | `ProductInstanceIdTooLong` | `0x00000046` | `ProductInstanceId` is longer than the 42 bytes the specification allows |
 | `ServiceInstanceNameInUse` | `0x00000043` | Another host is already using this `ServiceInstanceName` |
+| `ServiceInstanceNameTooLong` | `0x0000004A` | `ServiceInstanceName` is longer than mDNS allows |
 | `InvalidNetworkProtocol` | `0x00000044` | The network protocol specified is not supported. Only UDP is |
 | `InvalidNetworkPort` | `0x00000048` | The requested port is outside the range of valid UDP ports |
 | `NetworkPortInUse` | `0x00000049` | The requested port is already in use on this PC |

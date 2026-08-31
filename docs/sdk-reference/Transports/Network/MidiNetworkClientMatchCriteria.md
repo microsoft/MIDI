@@ -19,8 +19,12 @@ Supplies either a discovered device id or a direct address. Used by `MidiNetwork
 | Property | Description |
 | -------- | ----------- |
 | `DeviceId` | The device id of a host discovered over mDNS, as reported by `MidiNetworkAdvertisedHost.DeviceId` |
+| `ProductInstanceId` | The device's own product instance id, per the specification's recall pair |
+| `UmpEndpointName` | The device's own UMP Endpoint Name, the other half of that pair |
 | `DirectHostNameOrIPAddress` | Host name or IP address of the remote host, for a direct connection |
 | `DirectPort` | UDP port of the remote host, for a direct connection |
+
+Supplying `ProductInstanceId` and `UmpEndpointName` as well as `DeviceId` is worth doing. The DNS-SD instance label behind `DeviceId` is a name, not an identity: a responder renames it to resolve a collision, and a customer or a firmware update can change it. The identity pair lets a reconnect still find the device after that happens.
 
 ## Methods
 

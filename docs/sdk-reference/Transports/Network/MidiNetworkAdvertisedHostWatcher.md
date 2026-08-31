@@ -19,7 +19,7 @@ A device watcher specialized for Network MIDI 2.0 hosts advertised over mDNS.
 | Property | Description |
 | -------- | ----------- |
 | `EnumeratedHosts` | A map of device id to `MidiNetworkAdvertisedHost` for everything found so far |
-| `Status` | The underlying `DeviceWatcherStatus` |
+| `IsStarted` | True while the watcher is running |
 
 ## Methods
 

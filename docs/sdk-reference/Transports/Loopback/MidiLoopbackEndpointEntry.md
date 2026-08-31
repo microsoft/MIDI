@@ -15,3 +15,4 @@ Represents one side (A or B) of an active transient loopback endpoint pair. Acce
 | `EndpointDeviceId` | The full endpoint device id for this side of the loopback |
 | `Name` | The name of this loopback endpoint |
 | `Description` | The description of this loopback endpoint |
+| `ImageFileName` | The bare file name of the endpoint's picture within the shared endpoint assets folder, empty when there is none |

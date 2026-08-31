@@ -21,6 +21,8 @@ Unless you are authoring a new transport, it is not recommended that you use thi
 | `SendCommand(command)` | Sends a `MidiServiceTransportCommand` to the service. Returns a `MidiServiceConfigResponse`. |
 | `SaveUpdate(configUpdate)` | Writes an `IMidiServiceTransportPluginConfig` into the configuration file so it survives a service restart. Returns a `MidiServiceConfigSaveResponse`. |
 | `SaveUpdate(transportId, fullConfigObject)` | Writes a raw JSON configuration object into the configuration file for the specified transport. Returns a `MidiServiceConfigSaveResponse`. |
+| `QueryCapability(transportId, capabilityQueryKey)` | Returns true when the named transport reports that capability. Use it before offering a feature which not every transport implements. |
+| `QueryAllCapabilities(transportId)` | Returns every capability the named transport reports, as a map of key to boolean. |
 
 ## Static Properties
 

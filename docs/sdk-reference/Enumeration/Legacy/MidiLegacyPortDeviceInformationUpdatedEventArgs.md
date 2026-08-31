@@ -13,5 +13,6 @@ Raised by `MidiLegacyPortDeviceWatcher` when a MIDI 1.0 port's properties have b
 | Property | Description |
 | -------- | ----------- |
 | `UpdatedDevice` | The updated `MidiLegacyPortDeviceInformation` |
+| `DeviceInformationUpdate` | The underlying `Windows.Devices.Enumeration.DeviceInformationUpdate`, for an application which needs the raw changed properties |
 | `IsNameUpdated` | True if the name was updated |  
 | `IsNumberUpdated` | True if the WinMM port number was updated |

@@ -16,6 +16,7 @@ This class provides information about a MIDI 1.0 port (source or destination) cr
 | `PortDeviceInstanceId` | The device instance id for this MIDI 1.0 port |
 | `Name` | The friendly name of the port |
 | `ContainerId` | The container GUID for this device |
+| `TransportId` | The GUID of the transport which created the UMP endpoint behind this port |
 | `AssociatedEndpointDeviceId` | The full device id of the parent Windows MIDI Services UMP endpoint |
 | `ParentDeviceInstanceId` | The device instance id of the parent device |
 | `DriverDeviceInterfaceId` | The driver device interface id |

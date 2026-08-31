@@ -24,6 +24,20 @@ description: The primary class used to discover and connect Bluetooth MIDI devic
 | `StartPeripheralAsync(peripheralConfig)` | Publishes this PC so other devices can connect to it. Returns a `MidiBluetoothPeripheralResponse`. |
 | `StopPeripheralAsync()` | Stops publishing this PC. Returns a `MidiBluetoothPeripheralResponse`. |
 | `GetPeripheralStatus()` | Returns the current `MidiBluetoothPeripheralStatus`. |
+| `GetPendingPeripheralClients()` | Returns the remote Centrals which have connected and are waiting for a decision, as `MidiBluetoothPeripheralClient` entries. |
+| `ApprovePeripheralClientAsync(bluetoothAddress, scope)` | Approves a waiting remote Central for the given `MidiBluetoothApprovalScope`. Returns a `MidiBluetoothPeripheralClientDecisionResponse`. |
+| `DenyPeripheralClientAsync(bluetoothAddress, scope)` | Denies a waiting remote Central. |
+| `ForgetPeripheralClientAsync(bluetoothAddress)` | Drops a remembered allow or deny, so the device is asked about again next time. |
+| `GetRadioInformation()` | Returns what this PC's Bluetooth radio can do, as `MidiBluetoothRadioInformation`, or null on a service too old to report it. |
+| `GetDefaultOfflineRetentionSeconds()` | Returns the transport-wide value every device set to `UseTransportDefault` falls back to. Never `UseTransportDefault` itself. |
+
+One manager covers both Bluetooth Low Energy MIDI 1.0 and 2.0. Which protocol a device speaks is chosen by the transport, which prefers MIDI 2.0 whenever a device offers it.
+
+## Approving a remote Central
+
+Bluetooth does not let Windows refuse an incoming connection. A remote Central which connects while the policy is `RequireApproval` stays connected but has no MIDI endpoint and moves no data until it is decided about, so an application which never calls `GetPendingPeripheralClients` leaves it stuck there silently.
+
+The address passed to `ApprovePeripheralClientAsync` and `DenyPeripheralClientAsync` must be the one reported for the client which is waiting. A decision made against a stale list is rejected with `ClientIdentityMismatch` rather than applied to whoever connected since.
 
 Connecting and disconnecting are asynchronous because the radio has to find the device, open its GATT service, and subscribe to a characteristic. That takes seconds, and longer for a device which is asleep.
 
