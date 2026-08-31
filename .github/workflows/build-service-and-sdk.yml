@@ -24,7 +24,7 @@ jobs:
         service-build-platform: [x86, x64, Arm64EC]
     steps:
     - name: Checkout code
-      uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       with:
         submodules: true
 
@@ -68,7 +68,7 @@ jobs:
 
      
     - name: Setup NuGet
-      uses: NuGet/setup-nuget@12c57947e9458a5b976961b08ea0706a17dd71ae # v3.0.0
+      uses: NuGet/setup-nuget@b26b823c478ee115be5c9403e62c90b0bf943843 # v3.1.0
       
     - name: Restore Service NuGet packages for Midi2 Solution
       run: nuget restore ${{ env.MIDI2_SOLUTION }}
