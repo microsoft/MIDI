@@ -9,6 +9,8 @@
 
 #include "MainWindow.g.h"
 
+#include <limits>
+
 #include "AppSettings.h"
 #include "BluetoothItems.h"
 #include "WindowChrome.h"
@@ -147,8 +149,11 @@ namespace winrt::midibluetoothsetup::implementation
         bool m_transportUsable{ false };
 
         // What the service currently holds, so the combo's SelectionChanged can tell a real change
-        // from the one it raises while being populated.
-        int32_t m_defaultOfflineRetentionSeconds{ -1 };
+        // from the one it raises while being populated. The initial value must not be one any
+        // setting can take, or the first refresh mistakes itself for a no-op and never populates.
+        static constexpr int32_t RetentionNotLoaded{ std::numeric_limits<int32_t>::min() };
+
+        int32_t m_defaultOfflineRetentionSeconds{ RetentionNotLoaded };
     };
 }
 

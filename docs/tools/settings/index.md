@@ -14,6 +14,8 @@ Most of what you do day to day works as a standard user. Only the machine-wide s
 **MIDI Settings** button on the toolbar need administrator rights, and the app tells you when that is
 the case rather than demanding them up front.
 
+![The MIDI Settings main window, showing endpoints as cards]({{ site.baseurl }}/assets/images/midisettings.png)
+
 ## The toolbar
 
 Across the top are the other Windows MIDI Services apps. Only the ones actually installed on this PC
@@ -37,6 +39,8 @@ The main area lists every MIDI endpoint on the PC. Two views:
 - **Cards** shows each endpoint as a tile with its picture. Good for picking a device by sight.
 - **List** is denser and shows each endpoint's description as well.
 
+![The same endpoints in list view]({{ site.baseurl }}/assets/images/midisettings-list.png)
+
 The drop-down on the left filters by transport, so you can look at just the Bluetooth devices, or just
 the loopbacks. Your choice of view and filter is remembered.
 
@@ -56,6 +60,8 @@ is restarted underneath it.
 ## Endpoint details
 
 Selecting an endpoint opens its details:
+
+![The details for a single endpoint]({{ site.baseurl }}/assets/images/midisettings-details.png)
 
 - the name, description and picture
 - the transport it arrived on, and its native data format
@@ -78,6 +84,8 @@ protocol, stream configuration - is available from the MIDI console. It is too m
 a picture to it. Pictures are copied into a shared folder, so every MIDI app shows the same artwork for
 the same device.
 
+![Giving an endpoint a name, description and picture]({{ site.baseurl }}/assets/images/midisettings-customize.png)
+
 The change is applied to the running service immediately and saved to the configuration file so it
 survives a restart.
 
@@ -88,6 +96,8 @@ survives a restart.
 
 These are shared by everyone who uses the PC, so they need administrator rights. If the app is not
 running elevated it says so and offers to restart itself with the rights it needs.
+
+![The global MIDI settings, shared by everyone who uses the PC]({{ site.baseurl }}/assets/images/midisettings-global.png)
 
 **Configuration file** - your endpoint names, pictures and transport setup are stored in a configuration
 file under `%ALLUSERSPROFILE%\Microsoft\MIDI`. Only one is active at a time. You can switch between
