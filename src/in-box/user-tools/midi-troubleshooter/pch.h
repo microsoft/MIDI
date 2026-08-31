@@ -57,6 +57,7 @@
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Foundation.Numerics.h>
+#include <winrt/Windows.Globalization.DateTimeFormatting.h>
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Storage.Pickers.h>
 #include <winrt/Windows.Storage.Streams.h>
@@ -91,6 +92,7 @@
 
 #include <winrt/Windows.Devices.Midi2.h>
 #include <winrt/Windows.Devices.Midi2.Enumeration.h>
+#include <winrt/Windows.Devices.Midi2.Enumeration.Legacy.h>
 #include <winrt/Windows.Devices.Midi2.Reporting.h>
 
 #include <microsoft.ui.xaml.window.h>
@@ -106,6 +108,7 @@ namespace controls = ::winrt::Microsoft::UI::Xaml::Controls;
 namespace media = ::winrt::Microsoft::UI::Xaml::Media;
 namespace midi2 = ::winrt::Windows::Devices::Midi2;
 namespace midi2enum = ::winrt::Windows::Devices::Midi2::Enumeration;
+namespace midi2legacy = ::winrt::Windows::Devices::Midi2::Enumeration::Legacy;
 namespace midi2rept = ::winrt::Windows::Devices::Midi2::Reporting;
 namespace appshared = ::winrt::MidiAppShared;
 

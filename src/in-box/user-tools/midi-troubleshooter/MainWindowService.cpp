@@ -75,34 +75,50 @@ namespace winrt::miditroubleshooter::implementation
                     return {};
                 }
 
-                auto const fileTime = winrt::clock::to_file_time(value);
+                // the customer's own date and time format, and their time zone, rather than a
+                // fixed pattern which reads as a foreign one nearly everywhere
+                winrt::Windows::Globalization::DateTimeFormatting::DateTimeFormatter const formatter{ L"shortdate shorttime" };
 
-                FILETIME raw{};
-                raw.dwLowDateTime = static_cast<DWORD>(fileTime.value & 0xFFFFFFFF);
-                raw.dwHighDateTime = static_cast<DWORD>(fileTime.value >> 32);
-
-                FILETIME local{};
-
-                if (!::FileTimeToLocalFileTime(&raw, &local))
-                {
-                    return {};
-                }
-
-                SYSTEMTIME systemTime{};
-
-                if (!::FileTimeToSystemTime(&local, &systemTime))
-                {
-                    return {};
-                }
-
-                return winrt::hstring{ std::format(L"{:04}-{:02}-{:02} {:02}:{:02}:{:02}",
-                    systemTime.wYear, systemTime.wMonth, systemTime.wDay,
-                    systemTime.wHour, systemTime.wMinute, systemTime.wSecond) };
+                return formatter.Format(value);
             }
             catch (...)
             {
                 return {};
             }
+        }
+
+        // A session reports only the device id it opened, so the readable name has to be looked up.
+        // Falls back to the id for an endpoint which has gone away since the session opened it.
+        winrt::hstring ConnectionDisplayName(_In_ winrt::hstring const& deviceId) noexcept
+        {
+            try
+            {
+                if (midi2enum::MidiEndpointDeviceHelper::IsPossibleWindowsMidiServicesEndpointDeviceId(deviceId))
+                {
+                    if (auto const info = midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(deviceId))
+                    {
+                        if (!info.Name().empty())
+                        {
+                            return info.Name();
+                        }
+                    }
+                }
+                else if (midi2enum::MidiEndpointDeviceHelper::IsPossibleWindowsMidiServicesLegacyApiPortDeviceId(deviceId))
+                {
+                    if (auto const info = midi2legacy::MidiLegacyPortDeviceInformation::CreateFromPortDeviceId(deviceId))
+                    {
+                        if (!info.Name().empty())
+                        {
+                            return info.Name();
+                        }
+                    }
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return deviceId;
         }
 
         winrt::hstring ServiceStateText(_In_ native::ServiceState const state) noexcept
@@ -323,7 +339,7 @@ namespace winrt::miditroubleshooter::implementation
 
                     winrt::get_self<SessionConnectionItem>(rows.GetAt(i))->Update(
                         deviceId,
-                        deviceId,
+                        ConnectionDisplayName(deviceId),
                         res::FormatString(L"SessionConnectionInstancesFormat",
                             static_cast<uint32_t>(connection.InstanceCount())),
                         res::FormatString(L"SessionConnectionSinceFormat",
