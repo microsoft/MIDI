@@ -1,0 +1,28 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+import "MidiNetworkHostRemovalErrorCodeEnum.idl";
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    [contract(MidiTransportsNetworkApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostRemovalResponse", UUID_IMidiNetworkHostRemovalResponse)]
+    runtimeclass MidiNetworkHostRemovalResponse
+    {
+        [noexcept] Guid HostId{ get; };
+
+        [noexcept] Boolean Success{ get; };
+        [noexcept] MidiNetworkHostRemovalErrorCode ErrorCode{ get; };
+        [noexcept] String ErrorMessage{ get; };
+    };
+}
+

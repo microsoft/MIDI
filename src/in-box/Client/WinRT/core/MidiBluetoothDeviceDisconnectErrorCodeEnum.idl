@@ -1,0 +1,33 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+// error codes shared with the service
+#include "..\..\..\Transport\BluetoothMidiTransport\bluetooth_transport_error_codes.h"
+
+namespace Windows.Devices.Midi2.Transports.Bluetooth
+{
+    [contract(MidiTransportsBluetoothApiContract, 1)]
+
+    enum MidiBluetoothDeviceDisconnectErrorCode
+    {
+        Success =                       0,
+
+        MissingBluetoothDeviceId =      BLUETOOTH_MIDI_ERROR_CODE_MISSING_DEVICE_ID,
+        InvalidBluetoothDeviceId =      BLUETOOTH_MIDI_ERROR_CODE_INVALID_DEVICE_ID,
+
+        TransportNotAvailable =         BLUETOOTH_MIDI_ERROR_CODE_TRANSPORT_NOT_AVAILABLE,
+
+        DeviceNotDiscovered =           BLUETOOTH_MIDI_ERROR_CODE_DEVICE_NOT_DISCOVERED,
+        NotConnected =                  BLUETOOTH_MIDI_ERROR_CODE_NOT_CONNECTED,
+
+        Unexpected =                    0x11002011,
+    };
+}

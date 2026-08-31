@@ -1,0 +1,623 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://github.com/microsoft/MIDI/
+// ============================================================================
+
+#include "pch.h"
+
+HRESULT
+MidiNetworkDataWriter::Send()
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    auto lock = m_dataWriterLock.lock();
+
+    try
+    {
+        auto storeOperation = m_dataWriter.StoreAsync();
+
+        if (storeOperation.wait_for(std::chrono::milliseconds(MIDI_NETWORK_SEND_TIMEOUT_MILLISECONDS)) ==
+            winrt::Windows::Foundation::AsyncStatus::Started)
+        {
+            storeOperation.Cancel();
+
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Timed out storing datagram to the output stream. Abandoning it.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+            );
+
+            // deliberately no GetResults() here: the operation was canceled, not completed
+            RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_TIMEOUT));
+        }
+
+        storeOperation.GetResults();
+    }
+    catch (...)
+    {
+        // an unreachable or torn-down remote must not take the service down
+        auto hr = wil::ResultFromCaughtException();
+
+        TraceLoggingWrite(
+            MidiNetworkMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_ERROR,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exception storing datagram to the output stream", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
+        );
+
+        RETURN_IF_FAILED(hr);
+    }
+
+    m_countNetworkPacketsSent++;
+
+    return S_OK;
+}
+
+HRESULT
+MidiNetworkDataWriter::DiscardPendingData()
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+
+    auto lock = m_dataWriterLock.lock();
+
+    try
+    {
+        if (m_dataWriter.UnstoredBufferLength() > 0)
+        {
+            m_dataWriter.DetachBuffer();
+        }
+    }
+    catch (...)
+    {
+        RETURN_IF_FAILED(wil::ResultFromCaughtException());
+    }
+
+    return S_OK;
+}
+
+
+
+HRESULT 
+MidiNetworkDataWriter::WriteUdpPacketHeader()
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    auto lock = m_dataWriterLock.lock();
+
+    m_dataWriter.WriteUInt32(MIDI_UDP_PAYLOAD_HEADER);
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT 
+MidiNetworkDataWriter::InternalWriteCommandHeader(
+    MidiNetworkCommandCode commandCode, 
+    byte payloadLengthIn32BitWords,
+    uint16_t commandSpecificData
+)
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    auto lock = m_dataWriterLock.lock();
+
+    m_dataWriter.WriteByte(commandCode);
+    m_dataWriter.WriteByte(payloadLengthIn32BitWords);
+    m_dataWriter.WriteUInt16(commandSpecificData);
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkDataWriter::InternalWriteCommandHeader(
+    MidiNetworkCommandCode commandCode,
+    byte payloadLengthIn32BitWords,
+    byte commandSpecificData1,
+    byte commandSpecificData2
+)
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    // don't lock here. the calling method will lock
+    //auto lock = m_dataWriterLock.lock();
+
+    m_dataWriter.WriteByte(commandCode);
+    m_dataWriter.WriteByte(payloadLengthIn32BitWords);
+    m_dataWriter.WriteByte(commandSpecificData1);
+    m_dataWriter.WriteByte(commandSpecificData2);
+
+    return S_OK;
+}
+
+
+
+_Use_decl_annotations_
+HRESULT 
+MidiNetworkDataWriter::Initialize(
+    winrt::Windows::Storage::Streams::IOutputStream stream
+)
+{
+    // Declared HRESULT, so it must not throw: callers use RETURN_IF_FAILED and an
+    // escaping WinRT exception would unwind past them into a worker thread.
+    try
+    {
+        RETURN_HR_IF_NULL(E_INVALIDARG, stream);
+        m_stream = stream;
+
+        winrt::Windows::Storage::Streams::DataWriter writer(m_stream);
+
+        m_dataWriter = writer;
+        RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+
+        // per Network MIDI 2.0 specification
+        m_dataWriter.ByteOrder(winrt::Windows::Storage::Streams::ByteOrder::BigEndian);
+
+        return S_OK;
+    }
+    CATCH_RETURN()
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkDataWriter::WriteCommandPing(uint32_t pingId)
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    byte payloadLengthIn32BitWords{ 1 };
+
+    auto lock = m_dataWriterLock.lock();
+
+    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_Ping, payloadLengthIn32BitWords, 0));
+    m_dataWriter.WriteUInt32(pingId);
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkDataWriter::WriteCommandPingReply(uint32_t pingId)
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    byte payloadLengthIn32BitWords{ 1 };
+
+    auto lock = m_dataWriterLock.lock();
+
+    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_PingReply, payloadLengthIn32BitWords, 0));
+    m_dataWriter.WriteUInt32(pingId);
+
+    return S_OK;
+}
+
+
+
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkDataWriter::WriteCommandNAK(
+    uint32_t originalCommandHeader,
+    MidiNetworkCommandNAKReason reason,
+    std::wstring textMessage
+)
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    byte payloadLengthIn32BitWords{ 1 };    // 1 here to account for the original command header
+
+    std::string utf8{};
+
+    if (!textMessage.empty())
+    {
+        utf8 = ConvertWStringToUTF8(textMessage, MIDI_MAX_NAK_MESSAGE_BYTE_COUNT);
+    }
+
+    payloadLengthIn32BitWords += CalculatePaddedStringSizeIn32BitWords(utf8, MIDI_MAX_NAK_MESSAGE_BYTE_COUNT);
+
+    auto lock = m_dataWriterLock.lock();
+
+    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_NAK, payloadLengthIn32BitWords, reason, 0));
+
+    m_dataWriter.WriteUInt32(originalCommandHeader);
+
+    // write the text
+    WritePaddedString(utf8, MIDI_MAX_NAK_MESSAGE_BYTE_COUNT);
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkDataWriter::WriteCommandBye(
+    MidiNetworkCommandByeReason reason, 
+    std::wstring textMessage
+)
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    byte payloadLengthIn32BitWords{ 0 };    // 1 here to account for the original command header
+
+    std::string utf8{};
+
+    if (!textMessage.empty())
+    {
+        utf8 = ConvertWStringToUTF8(textMessage, MIDI_MAX_BYE_MESSAGE_BYTE_COUNT);
+    }
+
+    payloadLengthIn32BitWords += CalculatePaddedStringSizeIn32BitWords(utf8, MIDI_MAX_BYE_MESSAGE_BYTE_COUNT);
+
+    auto lock = m_dataWriterLock.lock();
+
+    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_Bye, payloadLengthIn32BitWords, reason, 0));
+
+    // write the text
+    WritePaddedString(utf8, MIDI_MAX_BYE_MESSAGE_BYTE_COUNT);
+
+    return S_OK;
+}
+
+HRESULT 
+MidiNetworkDataWriter::WriteCommandByeReply()
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    auto lock = m_dataWriterLock.lock();
+
+    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_ByeReply, MIDI_COMMAND_PAYLOAD_LENGTH_NO_PAYLOAD, 0));
+
+    return S_OK;
+}
+
+HRESULT 
+MidiNetworkDataWriter::WriteCommandSessionReset()
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    auto lock = m_dataWriterLock.lock();
+
+    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_SessionReset, MIDI_COMMAND_PAYLOAD_LENGTH_NO_PAYLOAD, 0));
+
+    return S_OK;
+}
+
+HRESULT 
+MidiNetworkDataWriter::WriteCommandSessionResetReply()
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    auto lock = m_dataWriterLock.lock();
+
+    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_SessionResetReply, MIDI_COMMAND_PAYLOAD_LENGTH_NO_PAYLOAD, 0));
+
+    return S_OK;
+}
+
+#define MIDI_NETWORK_RESERVED_UINT16 ((uint16_t)0)
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkDataWriter::WriteCommandRetransmitRequest(
+    MidiSequenceNumber sequenceNumber,
+    uint16_t numberOfUmpCommands
+)
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    byte payloadLengthIn32BitWords{ 1 };    // 1 here to account for number of UMP commands
+
+    auto lock = m_dataWriterLock.lock();
+
+    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_RetransmitRequest, payloadLengthIn32BitWords, sequenceNumber.Value()));
+
+    m_dataWriter.WriteUInt16(numberOfUmpCommands);
+    m_dataWriter.WriteUInt16(MIDI_NETWORK_RESERVED_UINT16);
+
+    return S_OK;
+}
+
+// todo: change errorReason to an enum. See page 47 - 7.2.4
+_Use_decl_annotations_
+HRESULT
+MidiNetworkDataWriter::WriteCommandRetransmitError(
+    MidiSequenceNumber sequenceNumber, 
+    MidiNetworkCommandRetransmitErrorReason errorReason
+)
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    byte payloadLengthIn32BitWords{ 1 };    // 1 here to account for sequence number
+
+    auto lock = m_dataWriterLock.lock();
+
+    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_RetransmitError, payloadLengthIn32BitWords, errorReason, 0));
+
+    m_dataWriter.WriteUInt16(sequenceNumber.Value());
+    m_dataWriter.WriteUInt16(MIDI_NETWORK_RESERVED_UINT16);
+
+    return S_OK;
+}
+
+// todo: change the capabilities to a bitmap enum
+_Use_decl_annotations_
+HRESULT
+MidiNetworkDataWriter::WriteCommandInvitation(
+    MidiNetworkCommandInvitationCapabilities capabilities,
+    std::wstring clientUmpEndpointName, 
+    std::wstring clientProductInstanceId
+)
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    byte payloadLengthIn32BitWords{ 0 };
+
+    auto endpointNameUtf8 = ConvertWStringToUTF8(clientUmpEndpointName, MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT);
+    auto productInstanceIdUtf8 = ConvertWStringToUTF8(clientProductInstanceId, MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT);
+
+    byte umpEndpointNameLengthIn32BitWords{ CalculatePaddedStringSizeIn32BitWords(endpointNameUtf8, MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT) };
+    byte productInstanceIdLengthIn32BitWords{ CalculatePaddedStringSizeIn32BitWords(productInstanceIdUtf8, MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT) };
+
+    payloadLengthIn32BitWords += umpEndpointNameLengthIn32BitWords;
+    payloadLengthIn32BitWords += productInstanceIdLengthIn32BitWords;
+
+
+    auto lock = m_dataWriterLock.lock();
+
+    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandClientToHost_Invitation, payloadLengthIn32BitWords, umpEndpointNameLengthIn32BitWords, capabilities));
+
+    WritePaddedString(endpointNameUtf8, MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT);
+    WritePaddedString(productInstanceIdUtf8, MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT);
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkDataWriter::WriteCommandInvitationWithAuthentication(
+    std::string cryptoNonce, 
+    std::string sharedSecret
+)
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    UNREFERENCED_PARAMETER(cryptoNonce);
+    UNREFERENCED_PARAMETER(sharedSecret);
+
+    auto lock = m_dataWriterLock.lock();
+
+    // todo: we should NAK this for now
+
+    return E_NOTIMPL;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkDataWriter::WriteCommandInvitationWithUserAuthentication(
+    std::string cryptoNonce, 
+    std::string userName, 
+    std::string password
+)
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    UNREFERENCED_PARAMETER(cryptoNonce);
+    UNREFERENCED_PARAMETER(userName);
+    UNREFERENCED_PARAMETER(password);
+
+    auto lock = m_dataWriterLock.lock();
+
+    // TODO: we should NAK this for now
+
+    return E_NOTIMPL;
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkDataWriter::WriteCommandInvitationReplyAccepted(
+    std::wstring hostUmpEndpointName, 
+    std::wstring hostProductInstanceId
+)
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    RETURN_HR_IF(E_INVALIDARG, hostUmpEndpointName.empty());
+    RETURN_HR_IF(E_INVALIDARG, hostProductInstanceId.empty());
+
+    byte payloadLengthIn32BitWords{ 0 };
+
+    auto endpointNameUtf8 = ConvertWStringToUTF8(hostUmpEndpointName, MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT);
+    byte umpEndpointNameLengthIn32BitWords{ CalculatePaddedStringSizeIn32BitWords(endpointNameUtf8, MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT) };
+    payloadLengthIn32BitWords += umpEndpointNameLengthIn32BitWords;
+
+    auto productInstanceIdUtf8 = ConvertWStringToUTF8(hostProductInstanceId, MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT);
+    byte productInstanceIdLengthIn32BitWords{ CalculatePaddedStringSizeIn32BitWords(productInstanceIdUtf8, MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT) };
+    payloadLengthIn32BitWords += productInstanceIdLengthIn32BitWords;
+
+
+    auto lock = m_dataWriterLock.lock();
+
+    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandHostToClient_InvitationReplyAccepted, payloadLengthIn32BitWords, umpEndpointNameLengthIn32BitWords, 0));
+
+    WritePaddedString(endpointNameUtf8, MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT);
+    WritePaddedString(productInstanceIdUtf8, MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT);
+
+    return S_OK;
+}
+
+_Use_decl_annotations_
+HRESULT 
+MidiNetworkDataWriter::WriteCommandInvitationReplyPending(
+    std::wstring hostUmpEndpointName, 
+    std::wstring hostProductInstanceId
+)
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    RETURN_HR_IF(E_INVALIDARG, hostUmpEndpointName.empty());
+    RETURN_HR_IF(E_INVALIDARG, hostProductInstanceId.empty());
+
+    // Spec 6.6. Same payload framing as Invitation Reply: Accepted.
+    byte payloadLengthIn32BitWords{ 0 };
+
+    auto endpointNameUtf8 = ConvertWStringToUTF8(hostUmpEndpointName, MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT);
+    byte umpEndpointNameLengthIn32BitWords{ CalculatePaddedStringSizeIn32BitWords(endpointNameUtf8, MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT) };
+    payloadLengthIn32BitWords += umpEndpointNameLengthIn32BitWords;
+
+    auto productInstanceIdUtf8 = ConvertWStringToUTF8(hostProductInstanceId, MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT);
+    byte productInstanceIdLengthIn32BitWords{ CalculatePaddedStringSizeIn32BitWords(productInstanceIdUtf8, MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT) };
+    payloadLengthIn32BitWords += productInstanceIdLengthIn32BitWords;
+
+    auto lock = m_dataWriterLock.lock();
+
+    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandHostToClient_InvitationReplyPending, payloadLengthIn32BitWords, umpEndpointNameLengthIn32BitWords, 0));
+
+    WritePaddedString(endpointNameUtf8, MIDI_MAX_UMP_ENDPOINT_NAME_BYTE_COUNT);
+    WritePaddedString(productInstanceIdUtf8, MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT);
+
+    return S_OK;
+}
+
+// todo: change authenticationState to an enum (see spec page 31)
+_Use_decl_annotations_
+HRESULT 
+MidiNetworkDataWriter::WriteCommandInvitationReplyAuthenticationRequired(
+    std::string cryptoNonce, 
+    byte authenticationState, 
+    std::wstring hostUmpEndpointName, 
+    std::wstring hostProductInstanceId
+)
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    UNREFERENCED_PARAMETER(cryptoNonce);
+    UNREFERENCED_PARAMETER(authenticationState);
+    UNREFERENCED_PARAMETER(hostUmpEndpointName);
+    UNREFERENCED_PARAMETER(hostProductInstanceId);
+
+    auto lock = m_dataWriterLock.lock();
+
+    // TODO
+
+    return E_NOTIMPL;
+}
+
+// todo: change authenticationState to an enum (different from other enum) See page 33
+_Use_decl_annotations_
+HRESULT 
+MidiNetworkDataWriter::WriteCommandInvitationReplyUserAuthenticationRequired(
+    std::string cryptoNonce, 
+    byte authenticationState, 
+    std::wstring hostUmpEndpointName, 
+    std::wstring hostProductInstanceId
+)
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    UNREFERENCED_PARAMETER(cryptoNonce);
+    UNREFERENCED_PARAMETER(authenticationState);
+    UNREFERENCED_PARAMETER(hostUmpEndpointName);
+    UNREFERENCED_PARAMETER(hostProductInstanceId);
+
+    auto lock = m_dataWriterLock.lock();
+
+    // TODO
+
+    return E_NOTIMPL;
+}
+
+// can send multiple UMP messages. If more than the max
+// words are provided, will fail. Can be  zero words, in 
+// which case a command is still sent out as a keep-alive 
+// idle type of message (7.2.1)
+_Use_decl_annotations_
+HRESULT
+MidiNetworkDataWriter::WriteCommandUmpMessages(
+    MidiSequenceNumber sequenceNumber,
+    std::vector<uint32_t> words
+)
+{
+    RETURN_HR_IF(E_INVALIDARG, words.size() > MIDI_MAX_UMP_WORDS_PER_PACKET);
+
+    return WriteCommandUmpMessages(sequenceNumber, words.data(), static_cast<uint8_t>(words.size()));
+}
+
+_Use_decl_annotations_
+HRESULT
+MidiNetworkDataWriter::WriteCommandUmpMessages(
+    MidiSequenceNumber sequenceNumber,
+    uint32_t const* words,
+    uint8_t const wordCount
+)
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_dataWriter);
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_stream);
+
+    RETURN_HR_IF(E_INVALIDARG, wordCount > MIDI_MAX_UMP_WORDS_PER_PACKET);
+    RETURN_HR_IF(E_INVALIDARG, wordCount > 0 && words == nullptr);
+
+    auto lock = m_dataWriterLock.lock();
+    RETURN_IF_FAILED(InternalWriteCommandHeader(MidiNetworkCommandCode::CommandCommon_UmpData, wordCount, sequenceNumber.Value()));
+
+    // we make the assumption that the calling code has already validated that the words
+    // are complete messages, or zero-length. We don't check again here.
+
+    for (uint8_t i = 0; i < wordCount; i++)
+    {
+        m_dataWriter.WriteUInt32(words[i]);
+    }
+
+    return S_OK;
+}
+
+HRESULT
+MidiNetworkDataWriter::Shutdown()
+{
+    auto lock = m_dataWriterLock.lock();
+
+    if (m_dataWriter != nullptr)
+    {
+        try
+        {
+            // the stream belongs to the socket, which may be shared with other connections
+            // and outlive us. DataWriter::Close() would close it, so detach it first.
+            m_dataWriter.DetachStream();
+            m_dataWriter.Close();
+        }
+        CATCH_LOG();
+
+        m_dataWriter = nullptr;
+    }
+
+    m_stream = nullptr;
+
+    return S_OK;
+}

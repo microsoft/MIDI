@@ -1,0 +1,33 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+// error codes shared with service
+#include "..\..\..\Transport\UdpNetworkMidi2Transport\network_transport_error_codes.h"
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    [contract(MidiTransportsNetworkApiContract, 1)]
+    enum MidiNetworkHostUpdateErrorCode
+    {
+        NoErrorInformationAvailable =           NETWORK_ERROR_CODE_UNKNOWN_ERROR,
+        UnrecognizedCommand =                   NETWORK_ERROR_CODE_UNRECOGNIZED_COMMAND,
+
+        HostNotFound =                          NETWORK_ERROR_CODE_HOST_NOT_FOUND,
+        UnableToStartHost =                     NETWORK_ERROR_CODE_UNABLE_TO_START_HOST,
+        UnableToStopHost =                      NETWORK_ERROR_CODE_UNABLE_TO_STOP_HOST,
+
+        InvalidOrMissingEntryIdentifier =       NETWORK_ERROR_CODE_MISSING_ENTRY_IDENTIFIER,
+        MalformedEntryIdentifier =              NETWORK_ERROR_CODE_INVALID_ENTRY_IDENTIFIER,
+
+        InvalidArgument =                       NETWORK_ERROR_CODE_CLIENT_API_INVALID_ARGUMENT,
+        ClientApiException =                    NETWORK_ERROR_CODE_CLIENT_API_EXCEPTION,
+    };
+}

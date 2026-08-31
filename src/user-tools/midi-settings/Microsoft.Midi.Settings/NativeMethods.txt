@@ -1,6 +1,0 @@
-﻿FileOpenDialog
-IFileOpenDialog
-CoCreateInstance
-//RtlAdjustPrivilege
-MonitorFromWindow
-GetMonitorInfo

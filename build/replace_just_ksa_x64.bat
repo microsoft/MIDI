@@ -4,7 +4,7 @@ echo This must be run as administrator.
 set servicepath="%ProgramFiles%\Windows MIDI Services\Service"
 set apipath="%ProgramFiles%\Windows MIDI Services\API"
 set dmppath="%ProgramFiles%\Windows MIDI Services\"
-set buildoutput="%midi_repo_root%src\api\VSFiles\x64\Release"
+set buildoutput="%midi_repo_root%src\in-box\VSFiles\x64\Release"
 
 
 

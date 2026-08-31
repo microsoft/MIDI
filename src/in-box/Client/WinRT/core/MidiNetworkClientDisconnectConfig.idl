@@ -1,0 +1,29 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+import "IMidiServiceTransportPluginConfig.idl";
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    [contract(MidiTransportsNetworkApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientDisconnectConfig", UUID_IMidiNetworkClientDisconnectConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientDisconnectConfigFactory", UUID_IMidiNetworkClientDisconnectConfigFactory)]
+    runtimeclass MidiNetworkClientDisconnectConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiNetworkClientDisconnectConfig();
+        MidiNetworkClientDisconnectConfig(Guid clientId);
+
+        [noexcept] Guid ClientId;							// GUID we use in the config file and for subsequent edits/deletes
+    }
+}
+

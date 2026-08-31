@@ -1,0 +1,199 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#pragma once
+
+#ifndef JSON_DEFS_H
+#define JSON_DEFS_H
+
+#pragma once
+
+//#define MIDI_CONFIG_JSON_ENDPOINT_CUSTOM_NAME_PROPERTY_KEY               L"customName"
+//#define MIDI_CONFIG_JSON_ENDPOINT_CUSTOM_DESCRIPTION_PROPERTY_KEY        L"customDescription"
+//#define MIDI_CONFIG_JSON_ENDPOINT_FORCE_SINGLE_CLIENT_PROPERTY_KEY              L"forceSingleClientOnly"
+
+
+// structural
+
+#define MIDI_CONFIG_JSON_HEADER_OBJECT                                                      L"header"
+#define MIDI_CONFIG_JSON_HEADER_PRODUCT_KEY                                                 L"product"
+#define MIDI_CONFIG_JSON_HEADER_FILE_VERSION_KEY                                            L"fileVersion"
+
+
+
+#define MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT                                   L"endpointTransportPluginSettings"
+#define MIDI_CONFIG_JSON_ENDPOINT_PROCESSING_PLUGIN_SETTINGS_OBJECT                         L"endpointProcessingPluginSettings"
+
+// common transport commands
+
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_KEY                                       L"transportCommand"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_RESPONSE                                  L"transportCommandResponse"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_NAME_KEY                                  L"commandName"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMON_COMMAND_ARGUMENTS_KEY                             L"commandArguments"
+
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_QUERY_CAPABILITIES                               L"queryCapabilities"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_RESTART_ENDPOINT                                 L"restartEndpoint"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_DISCONNECT_ENDPOINT                              L"disconnectEndpoint"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_RECONNECT_ENDPOINT                               L"reconnectEndpoint"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_MUTE_ENDPOINT                                    L"mute"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_UNMUTE_ENDPOINT                                  L"unmute"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_LIST_ENTRIES                                     L"listEntries"
+
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_ENDPOINT                    L"customizeEndpoint"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_PORTS                       L"customizePorts"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RESTART_ENDPOINT                      MIDI_CONFIG_JSON_TRANSPORT_COMMAND_RESTART_ENDPOINT
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_DISCONNECT_ENDPOINT                   MIDI_CONFIG_JSON_TRANSPORT_COMMAND_DISCONNECT_ENDPOINT
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RECONNECT_ENDPOINT                    MIDI_CONFIG_JSON_TRANSPORT_COMMAND_RECONNECT_ENDPOINT
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT                         MIDI_CONFIG_JSON_TRANSPORT_COMMAND_MUTE_ENDPOINT
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_LIST_ENTRIES                          MIDI_CONFIG_JSON_TRANSPORT_COMMAND_LIST_ENTRIES
+
+// the transport honors an image file name given in the create section, and reports it back
+// from listEntries. A transport which cannot must say so, or a client offers the customer a
+// picture that silently never appears.
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CREATE_WITH_IMAGE                     L"createWithImage"
+
+// the transport reports whether apps are connected to a virtual device's client-visible endpoint
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CLIENT_ENDPOINT_IN_USE_NOTIFICATION    L"clientEndpointInUseNotification"
+
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ID                     L"endpointId"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID         L"associationId"
+
+// common properties
+
+// Json has no comments, so a key the service never reads stands in for one. It is written to make
+// the file readable by a human, and is preserved, but never acted upon, when the file is merged.
+#define MIDI_CONFIG_JSON_COMMON_COMMENT_KEY                                                 L"_comment"
+
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_ENDPOINT_DEVICE_ID_PROPERTY                        L"endpointId"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY                                      L"name"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY                               L"description"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_UNIQUE_ID_PROPERTY                                 L"uniqueIdentifier"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MANUFACTURER_PROPERTY                              L"manufacturer"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_ENABLED_PROPERTY                                   L"enabled"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY                                  L"umpOnly"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY                                     L"muted"
+
+// bare file name within the shared endpoint assets folder. Same key the endpoint customization
+// path uses, so one endpoint has one place its picture is named.
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY                                     L"image"
+
+
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY                                         L"create"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY                                         L"update"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY                                         L"remove"
+
+
+
+#define MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY                        L"success"
+#define MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_MESSAGE_PROPERTY_KEY                        L"message"
+#define MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_ERROR_CODE_PROPERTY_KEY                     L"errorCode"
+
+
+#define MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_CREATED_MIDI1_SOURCE_PORTS_ARRAY_KEY        L"createdSourcePorts"
+#define MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_CREATED_MIDI1_DESTINATION_PORTS_ARRAY_KEY   L"createdDestinationPorts"
+
+
+
+
+// Virtual MIDI transport configuration
+
+#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_ASSOCIATION_ID_PROPERTY_KEY                L"associationIdentifier"
+#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_UNIQUE_ID_MAX_LEN                          32
+
+
+#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_DEVICES_ARRAY_KEY         L"createdDevices"
+#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_RESPONSE_CREATED_ID_PROPERTY_KEY           L"id"
+
+
+
+// MIDI 2.0 loopback MIDI transport configuration
+#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_A_KEY                            L"endpointA"
+#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_B_KEY                            L"endpointB"
+
+#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_A_ID_KEY        L"endpointA"
+#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_B_ID_KEY        L"endpointB"
+
+#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_LIST_ARRAY_KEY                        L"entries"
+#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ASSOCIATION_ID_KEY                    MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_ASSOCIATION_ID_PROPERTY_KEY
+#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY                MIDI_CONFIG_JSON_ENDPOINT_COMMON_ENDPOINT_DEVICE_ID_PROPERTY
+#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_NAME_KEY                              MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY
+#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY                       MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY
+#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_IMAGE_KEY                             MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY
+#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_MUTED_KEY                             MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY
+
+#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_A_KEY                        MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_A_KEY
+#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_ENDPOINT_B_KEY                        MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICE_ENDPOINT_B_KEY
+
+
+// simple MIDI 1.0 loopback support
+#define MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_ENDPOINT_KEY                        L"endpoint"
+#define MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_RESPONSE_CREATED_ENDPOINT_ID_KEY    MIDI_CONFIG_JSON_ENDPOINT_COMMON_ENDPOINT_DEVICE_ID_PROPERTY
+
+#define MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_LIST_ARRAY_KEY                  L"entries"
+#define MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_ASSOCIATION_ID_KEY              MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_DEVICE_ASSOCIATION_ID_PROPERTY_KEY
+
+#define MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY          MIDI_CONFIG_JSON_ENDPOINT_COMMON_ENDPOINT_DEVICE_ID_PROPERTY
+#define MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_NAME_KEY                        MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY
+#define MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY                 MIDI_CONFIG_JSON_ENDPOINT_COMMON_DESCRIPTION_PROPERTY
+#define MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_IMAGE_KEY                       MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY
+#define MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_MUTED_KEY                       MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY
+
+
+
+// Virtual patch bay transport configuration
+
+#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_PATCH_BAY_SOURCES_KEY                             L"sources"
+#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_PATCH_BAY_DESTINATIONS_KEY                        L"destinations"
+#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_PATCH_BAY_SOURCE_GROUPS_KEY                       L"groupIndexes"
+#define MIDI_CONFIG_JSON_ENDPOINT_VIRTUAL_PATCH_BAY_DESTINATION_GROUP_MAP_KEY               L"groupMap"
+
+
+// Session tracker. These are used in the service and in the client API
+
+#define MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ARRAY_PROPERTY_KEY                         L"sessions"
+
+#define MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_ID_PROPERTY_KEY                            L"id"
+#define MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_NAME_PROPERTY_KEY                          L"name"
+#define MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_ID_PROPERTY_KEY                            L"clientProcessId"
+#define MIDI_SESSION_TRACKER_JSON_RESULT_PROCESS_NAME_PROPERTY_KEY                          L"processName"
+#define MIDI_SESSION_TRACKER_JSON_RESULT_SESSION_TIME_PROPERTY_KEY                          L"startTime"
+
+
+#define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ARRAY_PROPERTY_KEY                      L"connections"
+
+#define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_TIME_PROPERTY_KEY                       L"earliestStartTime"
+#define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_COUNT_PROPERTY_KEY                      L"instanceCount"
+#define MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY                L"endpointId"
+
+
+// plugin information reporting 
+
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_NAME_PROPERTY_KEY                           L"name"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_TRANSPORT_CODE_PROPERTY_KEY                 L"transportCode"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY                    L"description"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_AUTHOR_PROPERTY_KEY                         L"author"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IMAGE_FILENAME_PROPERTY_KEY                 L"imageFileName"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_VERSION_PROPERTY_KEY                        L"version"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_RT_CREATABLE_APPS_PROPERTY_KEY           L"isRuntimeCreatableByApps"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_RT_CREATABLE_SETTINGS_PROPERTY_KEY       L"isRuntimeCreatableBySettings"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY              L"isSystemManaged"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY         L"isClientConfigurable"
+#define MIDI_SERVICE_JSON_TRANSPORT_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY         L"clientConfigAssembly"
+
+
+#define MIDI_SERVICE_JSON_TRANSFORM_PLUGIN_INFO_NAME_PROPERTY_KEY                           L"name"
+#define MIDI_SERVICE_JSON_TRANSFORM_PLUGIN_INFO_DESCRIPTION_PROPERTY_KEY                    L"description"
+#define MIDI_SERVICE_JSON_TRANSFORM_PLUGIN_INFO_AUTHOR_PROPERTY_KEY                         L"author"
+#define MIDI_SERVICE_JSON_TRANSFORM_PLUGIN_INFO_IMAGE_FILENAME_PROPERTY_KEY                 L"imageFileName"
+#define MIDI_SERVICE_JSON_TRANSFORM_PLUGIN_INFO_VERSION_PROPERTY_KEY                        L"version"
+#define MIDI_SERVICE_JSON_TRANSFORM_PLUGIN_INFO_IS_SYSTEM_MANAGED_PROPERTY_KEY              L"isSystemManaged"
+#define MIDI_SERVICE_JSON_TRANSFORM_PLUGIN_INFO_IS_CLIENT_CONFIGURABLE_PROPERTY_KEY         L"isClientConfigurable"
+#define MIDI_SERVICE_JSON_TRANSFORM_PLUGIN_INFO_CLIENT_CONFIG_ASSEMBLY_PROPERTY_KEY         L"clientConfigAssembly"
+
+
+#endif

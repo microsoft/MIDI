@@ -1,0 +1,787 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve">
+    <value>Windows MIDI Network Setup</value>
+  </data>
+  <data name="UnnamedDevice" xml:space="preserve">
+    <value>Unnamed device</value>
+  </data>
+  <data name="AppearanceButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="AppearanceButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Keep this window on top</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keep this window on top</value>
+  </data>
+  <data name="RemoteHostsNavigationItem.Content" xml:space="preserve">
+    <value>Network devices</value>
+  </data>
+  <data name="LocalHostsNavigationItem.Content" xml:space="preserve">
+    <value>This PC</value>
+  </data>
+  <data name="SettingsNavigationItem.Content" xml:space="preserve">
+    <value>Transport settings</value>
+  </data>
+  <data name="SettingsHeader.Text" xml:space="preserve">
+    <value>Transport settings</value>
+  </data>
+  <data name="SettingsDescription.Text" xml:space="preserve">
+    <value>These apply to every Network MIDI 2.0 host and client on this PC. The defaults suit almost every network, so change them only if you have a reason to.</value>
+  </data>
+  <data name="SettingSecondsFormat" xml:space="preserve">
+    <value>{0} seconds</value>
+    <comment>Shown beside a setting entered in milliseconds. {0} is the value in seconds to two decimal places.</comment>
+  </data>
+  <data name="SettingDefaultValueFormat" xml:space="preserve">
+    <value>Default is {0}.</value>
+    <comment>Appended to the end of a setting description. {0} is the default value for that setting.</comment>
+  </data>
+  <data name="SettingMaxHostConnectionsHeader.Text" xml:space="preserve">
+    <value>Most devices allowed at once</value>
+  </data>
+  <data name="SettingMaxHostConnectionsDescription.Text" xml:space="preserve">
+    <value>How many remote devices any one host on this PC will accept at the same time.</value>
+  </data>
+  <data name="SettingEffectImmediate.Text" xml:space="preserve">
+    <value>Takes effect right away. Devices already connected are not disconnected.</value>
+  </data>
+  <data name="SettingInvitationPendingTimeoutHeader.Text" xml:space="preserve">
+    <value>How long to wait for your permission</value>
+  </data>
+  <data name="SettingInvitationPendingTimeoutDescription.Text" xml:space="preserve">
+    <value>How long a device asking to connect stays in the waiting list before it is dropped, in milliseconds.</value>
+  </data>
+  <data name="SettingEffectNextRequest.Text" xml:space="preserve">
+    <value>Applies to the next device which asks to connect. Devices already waiting keep the old timeout.</value>
+  </data>
+  <data name="SettingScanIntervalHeader.Text" xml:space="preserve">
+    <value>How often to retry a device which is not answering</value>
+  </data>
+  <data name="SettingScanIntervalDescription.Text" xml:space="preserve">
+    <value>How often this PC tries a device you connected to by address again after it stops answering, in milliseconds.</value>
+  </data>
+  <data name="SettingEffectNextScan.Text" xml:space="preserve">
+    <value>Takes effect within one retry, so up to the old interval from now.</value>
+  </data>
+  <data name="SettingPingIntervalHeader.Text" xml:space="preserve">
+    <value>How often to check a quiet connection</value>
+  </data>
+  <data name="SettingPingIntervalDescription.Text" xml:space="preserve">
+    <value>How often a connection with nothing to send checks that the other end is still there, in milliseconds. Shorter notices a dropped device sooner and sends slightly more network traffic.</value>
+  </data>
+  <data name="SettingEffectWithinOneInterval.Text" xml:space="preserve">
+    <value>Reaches connections which are already open within one interval.</value>
+  </data>
+  <data name="SettingFecPacketsHeader.Text" xml:space="preserve">
+    <value>Repeated messages per packet</value>
+  </data>
+  <data name="SettingFecPacketsDescription.Text" xml:space="preserve">
+    <value>How many recently sent messages are repeated in each network packet, so a lost packet can be recovered without asking for it again. Higher values cope better with an unreliable network and make each packet larger.</value>
+  </data>
+  <data name="SettingEffectNewConnections.Text" xml:space="preserve">
+    <value>Applies to new connections. Reconnect a device for it to take effect there.</value>
+  </data>
+  <data name="SettingRetransmitBufferHeader.Text" xml:space="preserve">
+    <value>Messages kept for resending</value>
+  </data>
+  <data name="SettingRetransmitBufferDescription.Text" xml:space="preserve">
+    <value>How many sent messages are held on to in case the other end asks for them again. Higher values recover from longer gaps and use more memory per connection.</value>
+  </data>
+  <data name="SettingEffectNewConnections2.Text" xml:space="preserve">
+    <value>Applies to new connections. Reconnect a device for it to take effect there.</value>
+  </data>
+  <data name="RestoreSettingDefaultsButton.Content" xml:space="preserve">
+    <value>Restore defaults</value>
+  </data>
+  <data name="StatusTransportSettingsSaved" xml:space="preserve">
+    <value>Saved.</value>
+  </data>
+  <data name="StatusTransportSettingsFailed" xml:space="preserve">
+    <value>The settings could not be saved.</value>
+  </data>
+  <data name="PendingInvitationsBar.Title" xml:space="preserve">
+    <value>Devices are waiting for permission</value>
+  </data>
+  <data name="AllowOnceButton.Content" xml:space="preserve">
+    <value>Allow once</value>
+  </data>
+  <data name="AllowAlwaysButton.Content" xml:space="preserve">
+    <value>Always allow</value>
+  </data>
+  <data name="DenyOnceButton.Content" xml:space="preserve">
+    <value>Deny</value>
+  </data>
+  <data name="BlockButton.Content" xml:space="preserve">
+    <value>Block</value>
+  </data>
+  <data name="PendingInvitationHeadlineFormat" xml:space="preserve">
+    <value>{0} wants to connect to {1}</value>
+    <comment>{0} is the remote device name, {1} is the name of the host on this PC</comment>
+  </data>
+  <data name="PendingInvitationDetailFormat" xml:space="preserve">
+    <value>From {0}. Product Instance Id {1}.</value>
+    <comment>{0} is the network address the request came from, {1} is the device's product instance id</comment>
+  </data>
+  <data name="RemoteHostsHeader.Text" xml:space="preserve">
+    <value>Network MIDI 2.0 devices</value>
+  </data>
+  <data name="RemoteHostsDescription.Text" xml:space="preserve">
+    <value>Devices found on your network, and the ones this PC is connected to.</value>
+  </data>
+  <data name="RemoteHostsListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Network MIDI 2.0 devices</value>
+  </data>
+  <data name="ConnectButton.Content" xml:space="preserve">
+    <value>Connect</value>
+  </data>
+  <data name="RetryButton.Content" xml:space="preserve">
+    <value>Try again</value>
+  </data>
+  <data name="ReassociateButton.Content" xml:space="preserve">
+    <value>Relink to...</value>
+    <comment>Points a saved entry at a different device, for when a device changed the identity it advertises. Deliberately not worded as connecting, which is a different action on this page.</comment>
+  </data>
+  <data name="ReassociateDialog.Title" xml:space="preserve">
+    <value>Relink this to a different device</value>
+  </data>
+  <data name="ReassociateDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Relink</value>
+  </data>
+  <data name="ReassociateDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ReassociateDialogHint.Text" xml:space="preserve">
+    <value>The name you chose is kept. The MIDI endpoint takes its identity from the device, so anything saved against the old endpoint does not follow.</value>
+    <comment>The endpoint's unique identifier is derived from the device's product instance id, so relinking to a device with a different identity creates a new endpoint identity.</comment>
+  </data>
+  <data name="ReassociatePromptFormat" xml:space="preserve">
+    <value>{0} is not on the network. If it came back with a different identity, for example after a firmware update, choose it below and this saved entry will point at it instead.</value>
+    <comment>{0} is the name of the saved entry</comment>
+  </data>
+  <data name="ReassociateNoCandidates" xml:space="preserve">
+    <value>There are no unused devices on the network to relink this to.</value>
+  </data>
+  <data name="ReassociateFailed" xml:space="preserve">
+    <value>Windows could not release the old saved entry, so nothing was changed.</value>
+  </data>
+  <data name="CustomizeButton.Content" xml:space="preserve">
+    <value>Customize...</value>
+    <comment>Opens the dialog for changing the name, description and image Windows shows for this device.</comment>
+  </data>
+  <data name="CustomizeDialog.Title" xml:space="preserve">
+    <value>Customize this device</value>
+  </data>
+  <data name="CustomizeDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="CustomizeDialog.SecondaryButtonText" xml:space="preserve">
+    <value>Reset</value>
+    <comment>Removes the saved customization so the device is shown the way it reports itself.</comment>
+  </data>
+  <data name="CustomizeDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="CustomizeNameBox.Header" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="CustomizeDescriptionBox.Header" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="CustomizeImageBox.Header" xml:space="preserve">
+    <value>Image file name</value>
+  </data>
+  <data name="CustomizeHelpText.Text" xml:space="preserve">
+    <value>Leave a box empty to use what the device reports. Browsing for an image copies it into the shared endpoint images folder. Remove clears the image from this device without deleting the file.</value>
+  </data>
+  <data name="CustomizeCreateMidi1PortsCheckBox.Content" xml:space="preserve">
+    <value>Create MIDI 1.0 ports for this device</value>
+    <comment>MIDI 1.0 ports are what older applications use. They are built along with the endpoint.</comment>
+  </data>
+  <data name="CustomizeCreateMidi1PortsHint.Text" xml:space="preserve">
+    <value>MIDI 1.0 ports are built with the endpoint, so changing this takes effect the next time this device connects.</value>
+    <comment>Explains why this one setting, unlike the others in the same dialog, does not apply immediately.</comment>
+  </data>
+  <data name="CustomizeTransportNameFormat" xml:space="preserve">
+    <value>This device reports itself as {0}.</value>
+    <comment>{0} is the name the device supplies. Shown so the customer can tell what they are replacing.</comment>
+  </data>
+  <data name="StatusImageMustBeFileName" xml:space="preserve">
+    <value>The image must be a file name only, without a folder or a drive.</value>
+  </data>
+  <data name="StatusImageCopyFailed" xml:space="preserve">
+    <value>That image could not be copied into the shared endpoint images folder.</value>
+  </data>
+  <data name="CustomizeBrowseImageButton.Content" xml:space="preserve">
+    <value>Browse...</value>
+  </data>
+  <data name="CustomizeRemoveImageButton.Content" xml:space="preserve">
+    <value>Remove</value>
+    <comment>Clears the image from this endpoint. Does not delete the file.</comment>
+  </data>
+  <data name="StatusCustomizationSaved" xml:space="preserve">
+    <value>The customization was saved.</value>
+  </data>
+  <data name="StatusCustomizationNotSaved" xml:space="preserve">
+    <value>The customization was not saved.</value>
+  </data>
+  <data name="ConfigFileClientEntryMissingError" xml:space="preserve">
+    <value>There is no saved entry for this device, so the setting could not be stored.</value>
+  </data>
+  <data name="RemoteHostDetailsExpander.Header" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="RemoteHostNotAdvertisedText.Text" xml:space="preserve">
+    <value>This device is no longer being advertised on the network.</value>
+  </data>
+  <data name="NoRemoteHostsText.Text" xml:space="preserve">
+    <value>Looking for Network MIDI 2.0 devices...</value>
+  </data>
+  <data name="RemoteHostAvailable" xml:space="preserve">
+    <value>Available</value>
+  </data>
+  <data name="RemoteHostConnected" xml:space="preserve">
+    <value>Connected</value>
+  </data>
+  <data name="RemoteHostTryingToConnect" xml:space="preserve">
+    <value>Trying to connect...</value>
+    <comment>The device is visible on the network and a connection is being attempted.</comment>
+  </data>
+  <data name="RemoteHostWaitingToAppear" xml:space="preserve">
+    <value>Waiting for the device to appear on the network...</value>
+    <comment>A saved device which is not announcing itself, usually because it is switched off. Nothing is being attempted until it reappears.</comment>
+  </data>
+  <data name="RemoteHostWaitingToAnswer" xml:space="preserve">
+    <value>Waiting for the device to answer at that address...</value>
+    <comment>A saved device connected to by address rather than by discovery, so there is no announcement to wait for.</comment>
+  </data>
+  <data name="RemoteHostFailed" xml:space="preserve">
+    <value>Windows could not connect to this device.</value>
+  </data>
+  <data name="RemoteHostUnavailable" xml:space="preserve">
+    <value>Not answering. Connect again to retry.</value>
+  </data>
+  <data name="RemoteHostNotFound" xml:space="preserve">
+    <value>Not found on the network</value>
+  </data>
+  <data name="RemoteHostSubtitleFormat" xml:space="preserve">
+    <value>on {0}, port {1}</value>
+    <comment>{0} is the host name, {1} is the network port</comment>
+  </data>
+  <data name="RemoteHostDirectSubtitleFormat" xml:space="preserve">
+    <value>{0}, port {1}</value>
+    <comment>{0} is the address, {1} is the network port</comment>
+  </data>
+  <data name="RemoteHostStatisticsFormat" xml:space="preserve">
+    <value>{0} · {1} packets sent · {2} received · {3} retransmits</value>
+    <comment>{0} is the round trip time, {1} to {3} are counts</comment>
+  </data>
+  <data name="LatencyFormat" xml:space="preserve">
+    <value>Round trip {0} ms</value>
+    <comment>{0} is a number of milliseconds</comment>
+  </data>
+  <data name="LatencyUnknown" xml:space="preserve">
+    <value>Round trip not measured yet</value>
+  </data>
+  <data name="AddressesFormat" xml:space="preserve">
+    <value>Addresses: {0}</value>
+  </data>
+  <data name="ProductInstanceIdLabel" xml:space="preserve">
+    <value>Product Instance Id</value>
+    <comment>Shown when the device is on the network and reporting its own identity.</comment>
+  </data>
+  <data name="ExpectedProductInstanceIdLabel" xml:space="preserve">
+    <value>Expected Product Instance Id</value>
+    <comment>Shown instead of Product Instance Id when the device is not on the network, so the value is the one the saved entry is looking for rather than one the device reported.</comment>
+  </data>
+  <data name="AddressesLabel.Text" xml:space="preserve">
+    <value>Addresses</value>
+  </data>
+  <data name="EndpointDeviceIdLabel.Text" xml:space="preserve">
+    <value>MIDI Endpoint</value>
+  </data>
+  <data name="CopyEndpointDeviceIdButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Copy the MIDI Endpoint id</value>
+  </data>
+  <data name="CopyEndpointDeviceIdButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Copy the MIDI Endpoint id</value>
+  </data>
+  <data name="EndpointDeviceIdCopied" xml:space="preserve">
+    <value>The MIDI Endpoint id was copied to the clipboard.</value>
+  </data>
+  <data name="EndpointDeviceIdCopyFailed" xml:space="preserve">
+    <value>The MIDI Endpoint id could not be copied to the clipboard.</value>
+  </data>
+  <data name="ManualConnectExpander.Header" xml:space="preserve">
+    <value>Connect to a device by address</value>
+  </data>
+  <data name="ManualConnectDescription.Text" xml:space="preserve">
+    <value>Use this when a device is not advertised on your network. Windows will keep the entry and try again later if the device is not answering now.</value>
+  </data>
+  <data name="ManualAddressTextBox.Header" xml:space="preserve">
+    <value>Host name or IP address</value>
+  </data>
+  <data name="ManualPortNumberBox.Header" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="ManualNameTextBox.Header" xml:space="preserve">
+    <value>Name that device will see</value>
+  </data>
+  <data name="ManualCustomNameTextBox.Header" xml:space="preserve">
+    <value>Name to show in Windows</value>
+  </data>
+  <data name="ManualCustomNameTextBox.PlaceholderText" xml:space="preserve">
+    <value>Optional</value>
+  </data>
+  <data name="ConnectNameDialog.Title" xml:space="preserve">
+    <value>Connect to this device</value>
+  </data>
+  <data name="ConnectNameDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Connect</value>
+  </data>
+  <data name="ConnectNameDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ConnectNameDialogTextBox.Header" xml:space="preserve">
+    <value>Name to show in Windows</value>
+  </data>
+  <data name="ConnectNameDialogTextBox.PlaceholderText" xml:space="preserve">
+    <value>Optional</value>
+  </data>
+  <data name="ConnectNameDialogHint.Text" xml:space="preserve">
+    <value>Leave this empty to use the name the device reports.</value>
+  </data>
+  <data name="ConnectNamePromptFormat" xml:space="preserve">
+    <value>Windows will connect to {0}.</value>
+  </data>
+  <data name="TransportUnavailableMessage" xml:space="preserve">
+    <value>A compatible version of Network MIDI 2.0 is either not installed or not enabled on this PC.</value>
+  </data>
+  <data name="TransportUnavailableBar.Title" xml:space="preserve">
+    <value>Network MIDI 2.0 is not available</value>
+  </data>
+  <data name="TransportUnavailableBar.Message" xml:space="preserve">
+    <value>A compatible version of Network MIDI 2.0 is either not installed or not enabled on this PC.</value>
+  </data>
+  <data name="ManualConnectButton.Content" xml:space="preserve">
+    <value>Connect</value>
+  </data>
+  <data name="LocalHostsHeader.Text" xml:space="preserve">
+    <value>Network MIDI 2.0 hosts on this PC</value>
+  </data>
+  <data name="LocalHostsDescription.Text" xml:space="preserve">
+    <value>A host lets other devices on your network connect to this PC. Most people need only one.</value>
+  </data>
+  <data name="CreateHostButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Create a host</value>
+  </data>
+  <data name="CreateHostButtonText.Text" xml:space="preserve">
+    <value>Create host</value>
+  </data>
+  <data name="LocalHostsListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Hosts on this PC</value>
+  </data>
+  <data name="DeleteHostButton.Content" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="NoConnectedDevicesText.Text" xml:space="preserve">
+    <value>No devices are connected to this host.</value>
+  </data>
+  <data name="DisconnectRemoteClientButton.Content" xml:space="preserve">
+    <value>Disconnect</value>
+  </data>
+  <data name="BlockRemoteClientButton.Content" xml:space="preserve">
+    <value>Block</value>
+  </data>
+  <data name="RememberedDevicesExpander.Header" xml:space="preserve">
+    <value>Remembered decisions</value>
+  </data>
+  <data name="ForgetClientButton.Content" xml:space="preserve">
+    <value>Forget</value>
+  </data>
+  <data name="HostDetailsExpander.Header" xml:space="preserve">
+    <value>Details</value>
+  </data>
+  <data name="NoLocalHostsText.Text" xml:space="preserve">
+    <value>This PC does not have a Network MIDI 2.0 host yet. Create one so other devices can connect to it.</value>
+  </data>
+  <data name="HostStartedFormat" xml:space="preserve">
+    <value>Started, listening on port {0}</value>
+  </data>
+  <data name="HostStartedPortFallbackFormat" xml:space="preserve">
+    <value>Started on port {0}. Port {1} was in use by something else on this PC.</value>
+  </data>
+  <data name="HostStopped" xml:space="preserve">
+    <value>Stopped</value>
+  </data>
+  <data name="HostStartedMessageFormat" xml:space="preserve">
+    <value>{0} started.</value>
+  </data>
+  <data name="HostStoppedMessageFormat" xml:space="preserve">
+    <value>{0} stopped.</value>
+  </data>
+  <data name="HostAddressValueFormat" xml:space="preserve">
+    <value>{0}, port {1}</value>
+  </data>
+  <data name="HostPolicyAllowAny" xml:space="preserve">
+    <value>Any device on your network can connect to this host.</value>
+  </data>
+  <data name="HostPolicyRequireApproval" xml:space="preserve">
+    <value>You are asked before an unknown device can connect.</value>
+  </data>
+  <data name="HostNoConnections" xml:space="preserve">
+    <value>No devices connected</value>
+  </data>
+  <data name="HostConnectionCountFormat" xml:space="preserve">
+    <value>{0} device(s) connected</value>
+  </data>
+  <data name="StartHostButton" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="StopHostButton" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="ConnectionPendingApproval" xml:space="preserve">
+    <value>Waiting for your permission</value>
+  </data>
+  <data name="ConnectionActiveFormat" xml:space="preserve">
+    <value>Connected from {0}, port {1}</value>
+  </data>
+  <data name="ConnectionInactiveFormat" xml:space="preserve">
+    <value>Not in a session. Last seen at {0}, port {1}.</value>
+  </data>
+  <data name="KnownClientAllowed" xml:space="preserve">
+    <value>Always allowed</value>
+  </data>
+  <data name="KnownClientBlocked" xml:space="preserve">
+    <value>Blocked</value>
+  </data>
+  <data name="CreateHostDialog.Title" xml:space="preserve">
+    <value>Create a Network MIDI 2.0 host</value>
+  </data>
+  <data name="CreateHostDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="CreateHostDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ConfirmDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Yes</value>
+  </data>
+  <data name="ConfirmDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="HostNameTextBox.Header" xml:space="preserve">
+    <value>Name other devices will see</value>
+  </data>
+  <data name="HostServiceInstanceNameTextBox.Header" xml:space="preserve">
+    <value>Network service name</value>
+  </data>
+  <data name="HostServiceInstanceNameHelp.Text" xml:space="preserve">
+    <value>This has to be different from every other host on this PC, and from anything else on your network. Periods are removed.</value>
+  </data>
+  <data name="HostServiceInstanceNameInUseFormat" xml:space="preserve">
+    <value>That network service name was already in use, so it has been changed to "{0}". Select Create again to continue.</value>
+  </data>
+  <data name="HostCheckingServiceInstanceName" xml:space="preserve">
+    <value>Checking the network service name...</value>
+  </data>
+  <data name="HostServiceInstanceNameChangedFormat" xml:space="preserve">
+    <value>{0} (renamed, {1} was already in use on the network)</value>
+  </data>
+  <data name="HostPolicyLabel.Text" xml:space="preserve">
+    <value>When a device asks to connect</value>
+  </data>
+  <data name="HostPolicyAskRadio.Content" xml:space="preserve">
+    <value>Ask me first</value>
+  </data>
+  <data name="HostPolicyAllowAnyRadio.Content" xml:space="preserve">
+    <value>Let any device connect</value>
+  </data>
+  <data name="HostAdvertiseCheckBox.Content" xml:space="preserve">
+    <value>Advertise this host on the network</value>
+  </data>
+  <data name="HostCreateMidi1PortsCheckBox.Content" xml:space="preserve">
+    <value>Also create MIDI 1.0 ports for connected devices</value>
+  </data>
+  <data name="HostAdvancedExpander.Header" xml:space="preserve">
+    <value>Advanced</value>
+  </data>
+  <data name="HostProductInstanceIdTextBox.Header" xml:space="preserve">
+    <value>Product Instance Id</value>
+  </data>
+  <data name="HostProductInstanceIdHelp.Text" xml:space="preserve">
+    <value>Identifies this PC to other devices. 42 characters or fewer.</value>
+  </data>
+  <data name="HostProductInstanceIdTooLong" xml:space="preserve">
+    <value>The Product Instance Id has to be 42 characters or fewer.</value>
+  </data>
+  <data name="HostAutomaticPortCheckBox.Content" xml:space="preserve">
+    <value>Let Windows choose a new port each time</value>
+  </data>
+  <data name="HostPortHelp.Text" xml:space="preserve">
+    <value>Keeping one port makes it easier for other devices to find this PC again after a restart.</value>
+  </data>
+  <data name="HostAllowPortFallbackCheckBox.Content" xml:space="preserve">
+    <value>If this port is unavailable, use another one</value>
+  </data>
+  <data name="HostAllowPortFallbackHelp.Text" xml:space="preserve">
+    <value>Something else on this PC could claim the port first. Windows will still start this host, and tell you the port changed.</value>
+  </data>
+  <data name="HostPortNumberBox.Header" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsThemeLabel" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="SettingsThemeSystem" xml:space="preserve">
+    <value>Use system setting</value>
+  </data>
+  <data name="SettingsThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="SettingsThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="SettingsBackdropLabel" xml:space="preserve">
+    <value>Window background</value>
+  </data>
+  <data name="SettingsBackdropSolid" xml:space="preserve">
+    <value>Solid color</value>
+  </data>
+  <data name="SettingsBackdropMica" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="SettingsBackdropAcrylic" xml:space="preserve">
+    <value>Acrylic</value>
+  </data>
+  <data name="SettingsCustomColorCheckBox" xml:space="preserve">
+    <value>Use a custom background color</value>
+  </data>
+  <data name="SettingsColorPickerName" xml:space="preserve">
+    <value>Background color</value>
+  </data>
+  <data name="SettingsRefreshIntervalLabel" xml:space="preserve">
+    <value>Refresh connection details every (seconds)</value>
+  </data>
+  <data name="SettingsRefreshIntervalHelp" xml:space="preserve">
+    <value>How often this tool asks the MIDI service for connection state, round trip times and packet counts.</value>
+  </data>
+  <data name="TransportUnavailableError" xml:space="preserve">
+    <value>The Network MIDI 2.0 transport is not available. Check that Windows MIDI Services is installed and running.</value>
+  </data>
+  <data name="ConfigFileOverrideNotice" xml:space="preserve">
+    <value>Using an alternate configuration file: {0}</value>
+  </data>
+  <data name="ConfigFileNoPathError" xml:space="preserve">
+    <value>Windows could not work out where the MIDI configuration file is.</value>
+  </data>
+  <data name="ConfigFileReadError" xml:space="preserve">
+    <value>The MIDI configuration file could not be read: {0}</value>
+  </data>
+  <data name="ConfigFileParseError" xml:space="preserve">
+    <value>The MIDI configuration file is not valid JSON, so it was left alone: {0}</value>
+  </data>
+  <data name="ConfigFileWriteError" xml:space="preserve">
+    <value>The MIDI configuration file could not be written, so this change will be lost when the service restarts: {0} (error {1})</value>
+  </data>
+  <data name="ConfigFileHostEntryMissingError" xml:space="preserve">
+    <value>The change was applied, but there is no entry for this host in the configuration file to remember it in.</value>
+  </data>
+  <data name="ConnectingToDeviceFormat" xml:space="preserve">
+    <value>Connecting to {0}...</value>
+  </data>
+  <data name="ConnectRequestedFormat" xml:space="preserve">
+    <value>Windows is connecting to {0}. This can take a few seconds.</value>
+  </data>
+  <data name="ConnectFailedGeneral" xml:space="preserve">
+    <value>Windows could not connect to that device.</value>
+  </data>
+  <data name="ConnectFailedFormat" xml:space="preserve">
+    <value>Windows could not connect to that device. {0}</value>
+  </data>
+  <data name="DisconnectConfirmTitle" xml:space="preserve">
+    <value>Disconnect this device?</value>
+  </data>
+  <data name="DisconnectConfirmMessageFormat" xml:space="preserve">
+    <value>{0} will be disconnected and removed from this PC's saved connections.</value>
+  </data>
+  <data name="RemoteHostDisconnectAndForgetLabel" xml:space="preserve">
+    <value>Disconnect and forget</value>
+    <comment>Button on a device which is currently connected. Ends the session and removes the saved connection.</comment>
+  </data>
+  <data name="RemoteHostForgetLabel" xml:space="preserve">
+    <value>Forget</value>
+    <comment>Button on a saved device which is not connected. There is no session to end, so it only removes the saved connection.</comment>
+  </data>
+  <data name="ForgetConfirmTitle" xml:space="preserve">
+    <value>Forget this device?</value>
+  </data>
+  <data name="ForgetConfirmMessageFormat" xml:space="preserve">
+    <value>{0} will be removed from this PC's saved connections. You can connect to it again whenever it is back on the network.</value>
+  </data>
+  <data name="ForgottenFormat" xml:space="preserve">
+    <value>{0} was removed from your saved connections.</value>
+  </data>
+  <data name="DisconnectedFormat" xml:space="preserve">
+    <value>{0} was disconnected and removed from your saved connections.</value>
+  </data>
+  <data name="DisconnectFailedGeneral" xml:space="preserve">
+    <value>Windows could not disconnect that device.</value>
+  </data>
+  <data name="DisconnectFailedFormat" xml:space="preserve">
+    <value>Windows could not disconnect that device. {0}</value>
+  </data>
+  <data name="InvitationAllowedOnceFormat" xml:space="preserve">
+    <value>{0} was allowed to connect this time.</value>
+  </data>
+  <data name="InvitationAllowedAlwaysFormat" xml:space="preserve">
+    <value>{0} is now always allowed to connect.</value>
+  </data>
+  <data name="InvitationDeniedOnceFormat" xml:space="preserve">
+    <value>{0} was denied.</value>
+  </data>
+  <data name="InvitationBlockedFormat" xml:space="preserve">
+    <value>{0} is now blocked.</value>
+  </data>
+  <data name="InvitationAnswerFailedGeneral" xml:space="preserve">
+    <value>Windows could not answer that request.</value>
+  </data>
+  <data name="InvitationAnswerFailedFormat" xml:space="preserve">
+    <value>Windows could not answer that request. {0}</value>
+  </data>
+  <data name="CreatingHostFormat" xml:space="preserve">
+    <value>Creating {0}...</value>
+  </data>
+  <data name="HostCreatedFormat" xml:space="preserve">
+    <value>{0} was created. It can take a few seconds to appear.</value>
+  </data>
+  <data name="CreateHostFailedGeneral" xml:space="preserve">
+    <value>Windows could not create the host.</value>
+  </data>
+  <data name="CreateHostFailedFormat" xml:space="preserve">
+    <value>Windows could not create the host. {0}</value>
+  </data>
+  <data name="HostChangeFailedGeneral" xml:space="preserve">
+    <value>Windows could not change that host.</value>
+  </data>
+  <data name="HostChangeFailedFormat" xml:space="preserve">
+    <value>Windows could not change that host. {0}</value>
+  </data>
+  <data name="DeleteHostConfirmTitle" xml:space="preserve">
+    <value>Delete this host?</value>
+  </data>
+  <data name="DeleteHostConfirmMessageFormat" xml:space="preserve">
+    <value>{0} will be stopped and removed. Any device connected to it will be disconnected.</value>
+  </data>
+  <data name="HostDeletedFormat" xml:space="preserve">
+    <value>{0} was deleted.</value>
+  </data>
+  <data name="DisconnectRemoteClientConfirmTitle" xml:space="preserve">
+    <value>Disconnect this device?</value>
+  </data>
+  <data name="DisconnectRemoteClientConfirmMessageFormat" xml:space="preserve">
+    <value>{0} will be disconnected. It can connect again unless you block it.</value>
+  </data>
+  <data name="BlockRemoteClientConfirmTitle" xml:space="preserve">
+    <value>Block this device?</value>
+  </data>
+  <data name="BlockRemoteClientConfirmMessageFormat" xml:space="preserve">
+    <value>{0} will be disconnected and will not be allowed to connect to this host again until you forget it.</value>
+  </data>
+  <data name="RemoteClientDisconnectedFormat" xml:space="preserve">
+    <value>{0} was disconnected.</value>
+  </data>
+  <data name="RemoteClientBlockedFormat" xml:space="preserve">
+    <value>{0} is now blocked.</value>
+  </data>
+  <data name="KnownClientForgottenFormat" xml:space="preserve">
+    <value>{0} was forgotten. The MIDI service keeps the old decision until it restarts.</value>
+  </data>
+  <data name="KnownClientForgetFailedGeneral" xml:space="preserve">
+    <value>Windows could not forget that device.</value>
+  </data>
+  <data name="CommandLineUnrecognizedArgument" xml:space="preserve">
+    <value>Unrecognized command line argument.</value>
+  </data>
+  <data name="CommandLineMissingConfigFilePath" xml:space="preserve">
+    <value>The configfile switch needs a file path after it.</value>
+  </data>
+  <data name="ServiceInstanceNameLabel.Text" xml:space="preserve">
+    <value>Network service name</value>
+  </data>
+  <data name="HostProductInstanceIdLabel.Text" xml:space="preserve">
+    <value>Product Instance Id</value>
+  </data>
+  <data name="HostAddressLabel.Text" xml:space="preserve">
+    <value>Address</value>
+  </data>
+  <data name="HostDetailsPolicyLabel.Text" xml:space="preserve">
+    <value>New connections</value>
+  </data>
+</root>

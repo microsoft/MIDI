@@ -20,7 +20,7 @@ The .ico to write. Overwritten if it exists.
 
 .EXAMPLE
 .\make_app_icon.ps1 -SourcePath ..\design\AppIcon-MIDI-SysEx-Tool@2x.png `
-                    -DestinationPath ..\src\api\Client\WinRT\user-tools\sysex-tool\Assets\AppIcon.ico
+                    -DestinationPath ..\src\in-box\user-tools\sysex-tool\Assets\AppIcon.ico
 #>
 
 [CmdletBinding()]

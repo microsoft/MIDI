@@ -5,6 +5,8 @@ tool: midi2monitor
 description: Watch the MIDI messages coming from your instruments and controllers
 ---
 
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
+
 MIDI Monitor shows you the MIDI messages arriving from a keyboard, controller, synth, or any
 other MIDI device on your PC. It's the tool to reach for when you want to answer questions like
 "is this knob actually sending anything?", "which channel is my keyboard on?", or "what exactly

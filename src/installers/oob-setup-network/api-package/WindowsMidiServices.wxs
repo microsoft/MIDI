@@ -1,0 +1,218 @@
+﻿<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
+    <?define AppStagingFolder=$(StagingSourceRootFolder)\network-app\$(var.Platform) ?>
+
+    <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
+    <?include $(StagingVersionIncludeFile) ?>
+
+    <!-- Shared with any in-box version of this transport, which is what makes the uninstall
+         behaviour below matter. -->
+    <?define NetworkTransportClsid={C95DCD1F-CDE3-4C2D-913C-528CB8A4CBE6} ?>
+    <?define NetworkTransportPluginKeyName=Midi2NetworkMidiTransport ?>
+
+    <Package  
+          Name="Microsoft Windows MIDI Services (Preview Service Plugins) $(var.Platform)"
+          Manufacturer="Microsoft Corporation"
+          Version="$(MidiPluginsNumericVersion)"
+          UpgradeCode="2d53aa96-4021-41fe-b5ef-6df7e345a0b9"
+          Scope="perMachine"
+          Compressed="true"
+          
+          >
+       
+        <MediaTemplate EmbedCab="yes" />
+
+        
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
+                <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
+                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
+                    <!-- Name must match ToolLauncher.cpp in the MIDI Settings app -->
+                    <Directory Id="TOOL_NETWORKSETUP_FOLDER" Name="NetworkSetup" />
+                </Directory>
+            </Directory>
+        </StandardDirectory>
+
+        <StandardDirectory Id="ProgramMenuFolder">
+            <Directory Id="MIDI_PROGRAMS_FOLDER" Name="Windows MIDI (Preview)" />
+        </StandardDirectory>
+        
+        <!--
+          Deliberately no SelfRegCost here. Self-registration also self-UNregisters, and
+          DllUnregisterServer removes the CLSID no matter who owns it by then. Customers who
+          uninstalled this preview after an in-box version had shipped were left with an in-box
+          transport that could not load, because its CLSID and its transport plugin key had just
+          been deleted. Registration is done from the custom actions at the bottom of this file
+          instead, and removal only happens when the registration still points at the file this
+          package installed.
+        -->
+        <Component Id="WindowsServiceAbstractions"
+                   Bitness="always64"
+                   Directory="SERVICE_INSTALLFOLDER"
+                   Guid="3727cc9a-c427-4237-a733-5c6b10b33a9d"  >
+
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.NetworkMidiTransport.dll" Vital="true" />
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.NetworkMidiTransport.pdb" />
+
+
+        </Component>
+        
+
+            <!--
+              This component no longer writes the transport plugin key; the custom actions do, so
+              that uninstall can decline to remove a registration that has since been taken over by
+              an in-box transport. It still exists, and MUST keep its original GUID, because MSI
+              reference counts components across products. Burn uninstalls the superseded bundle
+              after the new one is installed, so if this GUID disappeared, that uninstall would drop
+              the reference count to zero and take the plugin key with it.
+            -->
+            <Component Id="ConfigurationRegistryEntries"
+                   Bitness="always64"
+                   Directory="SERVICE_INSTALLFOLDER"
+                   Guid="1a92e5a9-a210-48d5-a37c-63b0573b68ee"
+                   NeverOverwrite="false">
+
+            <RegistryKey Root="HKLM"
+                         Key="SOFTWARE\Microsoft\Windows MIDI Services\Network MIDI 2.0 Preview">
+                <RegistryValue Type="string" Name="TransportRegistration" Value="installed" KeyPath="yes" />
+            </RegistryKey>
+        </Component>
+
+      <!-- ==========================================================================
+           Network MIDI 2.0 Setup app, with an app-local copy of the API so that it does not
+           depend on the App SDK runtime installer being present. The app ships here rather than
+           in the App SDK installer because it is useless without this transport, and because two
+           installers writing the same files would break each other's uninstall.
+           ========================================================================== -->
+
+      <Component Id="NetworkSetupApp"
+                 Bitness="always64"
+                 Directory="TOOL_NETWORKSETUP_FOLDER"
+                 Guid="7f2c4e19-0a53-4d8b-9f61-2c7de4b3a105">
+
+        <File Id="midinetworksetupExe"
+              Source="$(AppStagingFolder)\midinetworksetup.exe"
+              Vital="true" />
+        <File Source="$(AppStagingFolder)\midinetworksetup.winmd" />
+        <File Source="$(AppStagingFolder)\App.xbf" />
+        <File Source="$(AppStagingFolder)\MainWindow.xbf" />
+        <File Source="$(AppStagingFolder)\resources.pri" />
+
+        <!-- Locates and loads the Windows App Runtime for this unpackaged app -->
+        <File Source="$(AppStagingFolder)\Microsoft.WindowsAppRuntime.Bootstrap.dll" />
+
+        <File Source="$(AppStagingFolder)\Microsoft.Web.WebView2.Core.dll" />
+        <File Source="$(AppStagingFolder)\Microsoft.Web.WebView2.Core.winmd" />
+        <File Source="$(AppStagingFolder)\MidiAppShared.winmd" />
+      </Component>
+
+      <Component Id="NetworkSetupAppLocalApi"
+                 Bitness="always64"
+                 Directory="TOOL_NETWORKSETUP_FOLDER"
+                 Guid="b6a1d370-58f4-49c2-8e0d-31f96c07a2be">
+
+        <File Source="$(AppStagingFolder)\Windows.Devices.Midi2.dll" Vital="true" />
+        <File Source="$(AppStagingFolder)\Windows.Devices.Midi2.winmd" />
+        <File Source="$(AppStagingFolder)\Windows.Devices.Midi2.pri" />
+      </Component>
+
+      <Component Id="NetworkSetupAppShortcut"
+                 Bitness="always64"
+                 Directory="MIDI_PROGRAMS_FOLDER"
+                 Guid="c4e8b25f-9d17-4a63-bb80-5e2a1f7c3d4a">
+
+        <Shortcut Id="Shortcut_midinetworksetup"
+                  Name="Network MIDI 2.0 Setup"
+                  Target="[#midinetworksetupExe]"
+                  WorkingDirectory="TOOL_NETWORKSETUP_FOLDER" />
+
+        <!-- Only removes the folder if the App SDK tools have not also put shortcuts in it -->
+        <RemoveFolder Id="RemoveMidiProgramsFolder_NetworkSetup"
+                      Directory="MIDI_PROGRAMS_FOLDER"
+                      On="uninstall" />
+
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Network MIDI 2.0 Preview">
+          <RegistryValue Type="string" Name="NetworkSetupShortcut" Value="installed" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+
+      <!-- midisrv only picks the transport up when it restarts -->
+      <Component Id="RestartService"
+                 Bitness="always64"
+                 Directory="SERVICE_INSTALLFOLDER"
+                 Guid="22B38E00-2220-405C-8857-C08478909474">
+
+        <ServiceControl Id="midisrv" Name="midisrv"
+                        Start="both"
+                        Stop="both"/>
+
+      </Component>
+
+
+      <Feature Id="WindowsMIDIServices">
+        <ComponentRef Id="WindowsServiceAbstractions"/>
+        <ComponentRef Id="ConfigurationRegistryEntries"/>
+        <ComponentRef Id="NetworkSetupApp"/>
+        <ComponentRef Id="NetworkSetupAppLocalApi"/>
+        <ComponentRef Id="NetworkSetupAppShortcut"/>
+        <ComponentRef Id="RestartService"/>
+      </Feature>
+
+
+      <Binary Id="CustomActionBinary"
+              SourceFile="$(var.customactions.TargetDir)$(var.customactions.TargetName).CA.dll" />
+
+      <!-- The registry keys the transport needs may be owned by an earlier in-box or preview
+           install, so ownership is taken before anything is written to them. -->
+      <CustomAction Id="Action_TakeRegistryOwnership"
+                    Impersonate="no"
+                    Execute="deferred"
+                    BinaryRef="CustomActionBinary"
+                    DllEntry="TakeRegistryOwnership"
+                    Return="check"/>
+
+      <!-- Deferred custom actions cannot read properties, so everything they need is handed over
+           through CustomActionData. -->
+      <SetProperty Id="Action_RegisterNetworkTransport"
+                   Value="DllPath=[SERVICE_INSTALLFOLDER]Midi2.NetworkMidiTransport.dll;Clsid=$(NetworkTransportClsid);PluginKeyName=$(NetworkTransportPluginKeyName)"
+                   Before="Action_RegisterNetworkTransport"
+                   Sequence="execute" />
+
+      <CustomAction Id="Action_RegisterNetworkTransport"
+                    Impersonate="no"
+                    Execute="deferred"
+                    BinaryRef="CustomActionBinary"
+                    DllEntry="RegisterTransportComServer"
+                    Return="check" />
+
+      <SetProperty Id="Action_UnregisterNetworkTransport"
+                   Value="DllPath=[SERVICE_INSTALLFOLDER]Midi2.NetworkMidiTransport.dll;Clsid=$(NetworkTransportClsid);PluginKeyName=$(NetworkTransportPluginKeyName)"
+                   Before="Action_UnregisterNetworkTransport"
+                   Sequence="execute" />
+
+      <CustomAction Id="Action_UnregisterNetworkTransport"
+                    Impersonate="no"
+                    Execute="deferred"
+                    BinaryRef="CustomActionBinary"
+                    DllEntry="UnregisterTransportComServerIfOwned"
+                    Return="check" />
+
+      <InstallExecuteSequence>
+        <Custom Action="Action_TakeRegistryOwnership"
+                Before="CreateFolders"
+                Condition='(NOT Installed) AND NOT (REMOVE="ALL")' />
+
+        <!-- After InstallFiles so the DLL regsvr32 is pointed at is already on disk -->
+        <Custom Action="Action_RegisterNetworkTransport"
+                After="InstallFiles"
+                Condition='NOT (REMOVE="ALL")' />
+
+        <!-- Before RemoveFiles so the DLL is still there to unregister itself -->
+        <Custom Action="Action_UnregisterNetworkTransport"
+                Before="RemoveFiles"
+                Condition='(REMOVE="ALL") AND NOT UPGRADINGPRODUCTCODE' />
+      </InstallExecuteSequence>
+
+    </Package>
+</Wix>

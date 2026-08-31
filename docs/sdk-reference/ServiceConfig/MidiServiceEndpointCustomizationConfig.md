@@ -25,6 +25,7 @@ This class is used to send endpoint customization settings to the service. It co
 | `Name` | Display name for this customization |
 | `Description` | Description of this customization |
 | `ImageFileName` | Path to an icon file for this customization |
+| `ClearDisplayProperties` | Set this when the caller owns the whole set, as an editor does. An empty name, description, or image is then written as empty rather than left out, which is what clears a stored value |
 | `MatchCriteria` | The `MidiServiceConfigEndpointMatchCriteria` that identifies which endpoint this applies to |
 | `RequiresNoteOffTranslation` | True if the endpoint requires Note On velocity 0 to be translated to Note Off |
 | `SupportsMidiPolyphonicExpression` | True if the endpoint supports MIDI Polyphonic Expression (MPE) |
@@ -38,3 +39,5 @@ This class is used to send endpoint customization settings to the service. It co
 | ------ | ----------- |
 | `AddMidi1SourcePortCustomName(group, name)` | Add a custom name for a MIDI 1.0 source port for the specified group |
 | `AddMidi1DestinationPortCustomName(group, name)` | Add a custom name for a MIDI 1.0 destination port for the specified group |
+
+An empty `Name`, `Description`, or `ImageFileName` is left out of the saved configuration, so that saving a name does not wipe a stored description. Because of that, an entry cannot be emptied by overwriting it. Use `MidiServiceEndpointCustomizationRemovalConfig` to delete a stored customization outright.

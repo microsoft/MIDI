@@ -5,6 +5,8 @@ tool: midiloopbacksetup
 description: Create loopback endpoints so apps on this PC can send MIDI to each other
 ---
 
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
+
 MIDI Loopback Setup creates loopback MIDI endpoints: virtual MIDI connections that exist only on
 this PC, with no cable and no hardware. Send MIDI to one and it arrives back in another app, which
 is how you get a sequencer talking to a software synth, a lighting program listening to your DAW,

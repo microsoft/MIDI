@@ -1,0 +1,52 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+import "MidiNetworkClientMatchCriteria.idl";
+import "IMidiServiceTransportPluginConfig.idl";
+import "MidiGroup.idl";
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    [contract(MidiTransportsNetworkApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientConnectConfig", UUID_IMidiNetworkClientConnectConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientConnectConfigFactory", UUID_IMidiNetworkClientConnectConfigFactory)]
+	runtimeclass MidiNetworkClientConnectConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+		MidiNetworkClientConnectConfig();
+
+		[noexcept] Guid ClientId;						// GUID  we use in the config file and for subsequent edits/deletes
+		[noexcept] String Comment;						// optional comment that is put into the config file
+		[noexcept] Boolean CreateOnlyUmpEndpoints;	    // todo: this will also need a table of port names
+		//Boolean AutoReconnect;				// true if we reconnect after any disconnects. Otherwise, we connect only once.
+
+
+		[noexcept] String UmpEndpointName;				// the name THIS PC announces to the remote. Empty means derive it from the machine name.
+
+		// Optional. What the user chose to call the MIDI endpoint this connection creates. It is
+		// applied before the endpoint is activated, so the endpoint and its MIDI 1.0 ports are
+		// never created under the remote's own name and renamed afterwards. Leave it empty to use
+		// the name the remote device announces.
+		[noexcept] String CustomEndpointName;
+
+
+		// sets the criteria we look for when creating the endpoint. mDNS is generally preferred.
+		[noexcept] MidiNetworkClientMatchCriteria MatchCriteria;
+
+		// TODO: authentication information from vault
+
+
+		//TODO: do we need to specify protocol here?
+
+
+    }
+}
+

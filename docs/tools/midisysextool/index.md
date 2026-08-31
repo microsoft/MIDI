@@ -5,6 +5,8 @@ tool: midisysextool
 description: Send System Exclusive files to a device, and capture dumps back to disk
 ---
 
+> This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
+
 The MIDI SysEx Utility sends System Exclusive files to an instrument and captures System Exclusive
 data coming back from one. Although not intended to be a fully-featured librarian, it covers most of what people mean by "patch librarian" jobs: loading
 a bank of sounds you downloaded, backing up the sounds you've made, applying a firmware update, or

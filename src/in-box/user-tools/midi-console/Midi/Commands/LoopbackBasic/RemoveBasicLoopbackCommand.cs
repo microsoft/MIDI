@@ -1,0 +1,65 @@
+﻿// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+using Windows.Foundation;
+
+namespace Microsoft.Midi.ConsoleApp
+{
+    internal class RemoveBasicLoopbackCommand : Command<RemoveBasicLoopbackCommand.Settings>
+    {
+        internal class Settings : CommandSettings
+        {
+            [LocalizedDescription("ParameterRemoveLoopbackAssociationId")]
+            [CommandOption("-i|--association-id")]
+            public Guid AssociationId { get; set; }
+
+            [LocalizedDescription("ParameterLoopbackSaveToConfig")]
+            [CommandOption("-s|--save-to-config")]
+            public bool SaveToConfig { get; set; }
+        }
+
+        public override ValidationResult Validate(CommandContext context, Settings settings)
+        {
+
+            return ValidationResult.Success();
+        }
+
+
+        public override int Execute(CommandContext context, Settings settings, CancellationToken cancellationToken)
+        {
+            LoggingService.Current.LogInfo("Enter Execute Command");
+
+            var config = new MidiBasicLoopbackRemovalConfig(settings.AssociationId);
+
+            var removalResponse = MidiBasicLoopbackManager.RemoveTransientLoopback(config);
+
+            if (removalResponse.Success)
+            {
+                AnsiConsole.MarkupLine(AnsiMarkupFormatter.FormatSuccess(Strings.MessageLoopbackRemovalSuccess));
+                AnsiConsole.WriteLine();
+
+                if (settings.SaveToConfig)
+                {
+                    ConfigFileSaver.ReportSave(config);
+                    AnsiConsole.WriteLine();
+                }
+
+                return (int)MidiConsoleReturnCode.Success;
+            }
+            else
+            {
+                AnsiConsole.WriteLine(AnsiMarkupFormatter.FormatError(Strings.ErrorRemovingLoopback));
+                AnsiConsole.WriteLine(AnsiMarkupFormatter.FormatError(removalResponse.ErrorMessage));
+
+                return (int)MidiConsoleReturnCode.ErrorGeneralFailure;
+            }
+
+        }
+
+    }
+}

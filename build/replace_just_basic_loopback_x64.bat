@@ -2,7 +2,7 @@
 echo This must be run as administrator.
 
 set servicepath="%ProgramFiles%\Windows MIDI Services\Service"
-set buildoutput="%midi_repo_root%src\api\VSFiles\x64\Release"
+set buildoutput="%midi_repo_root%src\in-box\VSFiles\x64\Release"
 
 echo Stopping midisrv
 net stop midisrv

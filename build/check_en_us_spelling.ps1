@@ -9,7 +9,7 @@
 # Windows MIDI Services ships in en-US, so "colour", "centre" and "cancelled" are bugs.
 #
 #   pwsh -File build\check_en_us_spelling.ps1
-#   pwsh -File build\check_en_us_spelling.ps1 -Path src\api\Client\WinRT\user-tools
+#   pwsh -File build\check_en_us_spelling.ps1 -Path src\in-box\user-tools
 #
 # Exits 1 when anything is found, so it can gate a build.
 #
@@ -28,8 +28,10 @@ param(
         '*.cs', '*.idl', '*.xaml', '*.ps1', '*.psm1', '*.psd1', '*.json', '*.yml', '*.yaml'
     ),
 
-    # Third party, generated, and build output. These are not ours to reword.
-    [string] $ExcludePattern = '\\(vcpkg|vcpkg_installed|node_modules|_site|obj|bin|packages|Generated Files|GeneratedFiles|intermediate|VSFiles|vsfiles-sdk|nuke_build|\.git)\\|\\build\\(release|staging)\\',
+    # Third party, generated, and build output. These are not ours to reword. The _p.c / _i.c /
+    # dlldata.c files are MIDL proxy stub output, which sits beside its source rather than in a
+    # generated folder, so it has to be named here.
+    [string] $ExcludePattern = '\\(vcpkg|vcpkg_installed|node_modules|_site|obj|bin|packages|Generated Files|GeneratedFiles|intermediate|VSFiles|vsfiles-sdk|nuke_build|\.git)\\|\\build\\(release|staging)\\|_[pi]\.c$|\\dlldata\.c$',
 
     # Counts per term and per folder instead of every hit. For triaging a large backlog.
     [switch] $Summary,
@@ -50,6 +52,9 @@ $ErrorActionPreference = 'Stop'
 #   - "spectre" is deliberately absent: this repo uses Spectre.Console and the /Qspectre switch
 #   - "grey" is deliberately absent: it is third party API surface here (dye::grey, on_grey,
 #     Spectre's [grey] markup) and an author's name in a sample. Prefer "gray" in prose anyway.
+#   - "marshalling" is deliberately absent: every occurrence in this repo is API surface we do
+#     not name (System.Runtime.InteropServices.Marshalling, StringMarshalling,
+#     USER_MARSHAL_MARSHALLING_ROUTINE). Prefer "marshaling" in prose anyway.
 $replacements = [ordered]@{
     # doubled consonant before a suffix
     'cancelled'       = 'canceled'
@@ -69,8 +74,6 @@ $replacements = [ordered]@{
     'fuelling'        = 'fueling'
     'totalled'        = 'totaled'
     'totalling'       = 'totaling'
-    'marshalled'      = 'marshaled'
-    'marshalling'     = 'marshaling'
 
     # single consonant where en-US doubles
     'fulfil'          = 'fulfill'
@@ -122,10 +125,16 @@ $replacements = [ordered]@{
 
     # -ce -> -se
     'licence'         = 'license'
+    'licences'        = 'licenses'
     'defence'         = 'defense'
+    'defences'        = 'defenses'
     'offence'         = 'offense'
+    'offences'        = 'offenses'
     'pretence'        = 'pretense'
+    'pretences'       = 'pretenses'
     'practise'        = 'practice'
+    'practised'       = 'practiced'
+    'practising'      = 'practicing'
 
     # -ise / -isation -> -ize / -ization
     'analyse'         = 'analyze'

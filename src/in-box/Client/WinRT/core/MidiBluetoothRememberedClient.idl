@@ -1,0 +1,27 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Bluetooth
+{
+    [contract(MidiTransportsBluetoothApiContract, 1)]
+
+    // A remembered allow or deny decision about a remote Central. Only a device whose address
+    // does not rotate can be remembered, so an entry here always has a usable address.
+    [interface_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothRememberedClient", UUID_IMidiBluetoothRememberedClient)]
+    runtimeclass MidiBluetoothRememberedClient
+    {
+        // the twelve hex digit address, which is what the decision is matched on
+        [noexcept] String BluetoothAddress{ get; };
+
+        // carried so the configuration file is readable, not used for matching
+        [noexcept] String Name{ get; };
+    }
+}

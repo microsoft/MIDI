@@ -1,0 +1,40 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiBluetoothDeviceConnectErrorCodeEnum.idl";
+import "MidiBluetoothDeviceInformation.idl";
+
+namespace Windows.Devices.Midi2.Transports.Bluetooth
+{
+    [contract(MidiTransportsBluetoothApiContract, 1)]
+
+    [interface_name("Windows.Devices.Midi2.Transports.Bluetooth.IMidiBluetoothDeviceConnectResponse", UUID_IMidiBluetoothDeviceConnectResponse)]
+    runtimeclass MidiBluetoothDeviceConnectResponse
+    {
+        [noexcept] Boolean Success{ get; };
+
+        [noexcept] MidiBluetoothDeviceConnectErrorCode ErrorCode{ get; };
+
+        // The transport's own wording, which is more specific than the error code can be. Some
+        // causes share a code, and this is what tells them apart.
+        [noexcept] String ErrorMessage{ get; };
+
+        // Preserved so a cause the error code cannot distinguish is still diagnosable
+        [noexcept] Int32 ErrorHResult{ get; };
+
+        // False when the address is not one this PC has seen advertising. A connection request is
+        // remembered either way, so this is how a caller knows the device was not actually there.
+        [noexcept] Boolean IsKnown{ get; };
+
+        // Null when the device could not be resolved
+        [noexcept] MidiBluetoothDeviceInformation Device{ get; };
+    }
+}
