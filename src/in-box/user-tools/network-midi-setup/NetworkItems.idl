@@ -116,8 +116,13 @@ namespace midinetworksetup
         String StatusText{ get; };
         String StatisticsText{ get; };
 
+        // empty until the session is up and the host has created an endpoint for this client
+        String EndpointDeviceId{ get; };
+
         Boolean IsPendingApproval{ get; };
         Boolean IsBusy;
+
+        Microsoft.UI.Xaml.Visibility MonitorVisibility{ get; };
 
         // matches the remote host rows: round trip latency over a rolling window
         Microsoft.UI.Xaml.Visibility ConnectedBadgeVisibility{ get; };

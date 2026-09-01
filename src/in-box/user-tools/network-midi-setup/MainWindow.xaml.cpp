@@ -1676,6 +1676,7 @@ namespace winrt::midinetworksetup::implementation
                                         FormatCount(connection.TotalCountNetworkPacketsReceived()),
                                         FormatCount(connection.RetransmitCount())) :
                                     winrt::hstring{},
+                                connection.EndpointDeviceId(),
                                 connection.CurrentLatencyTicks(),
                                 connection.IsSessionActive(),
                                 connection.IsPendingApproval());

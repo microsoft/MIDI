@@ -276,6 +276,46 @@ namespace winrt::midinetworksetup::implementation
     }
 
     _Use_decl_annotations_
+    void MainWindow::OnMonitorRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            auto item = ItemOf<midinetworksetup::RemoteHostItem>(sender);
+
+            if (item == nullptr || item.EndpointDeviceId().empty())
+            {
+                return;
+            }
+
+            if (!midiapp::LaunchMonitorForEndpoint(item.EndpointDeviceId()))
+            {
+                SetRemoteStatus(res::GetString(L"StatusMonitorNotAvailable"));
+            }
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to open the MIDI monitor for a remote device.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnMonitorHostConnectionClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            auto item = ItemOf<midinetworksetup::HostConnectionItem>(sender);
+
+            if (item == nullptr || item.EndpointDeviceId().empty())
+            {
+                return;
+            }
+
+            if (!midiapp::LaunchMonitorForEndpoint(item.EndpointDeviceId()))
+            {
+                SetLocalStatus(res::GetString(L"StatusMonitorNotAvailable"));
+            }
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to open the MIDI monitor for a connected client.")
+    }
+
+    _Use_decl_annotations_
     void MainWindow::OnCopyEndpointDeviceIdClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
     {
         auto item = ItemOf<midinetworksetup::RemoteHostItem>(sender);

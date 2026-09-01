@@ -427,16 +427,32 @@
                                                            TextWrapping="Wrap"
                                                            Visibility="{x:Bind EndpointDeviceIdVisibility, Mode=OneWay}"
                                                            Style="{ThemeResource CaptionTextBlockStyle}" />
-                                                <Button x:Uid="CopyEndpointDeviceIdButton"
-                                                        Grid.Row="2" Grid.Column="2"
-                                                        Padding="6,2,6,2"
-                                                        VerticalAlignment="Top"
-                                                        Background="Transparent"
-                                                        BorderThickness="0"
-                                                        Visibility="{x:Bind EndpointDeviceIdVisibility, Mode=OneWay}"
-                                                        Click="OnCopyEndpointDeviceIdClick">
-                                                    <FontIcon Glyph="&#xE8C8;" FontSize="14" />
-                                                </Button>
+                                                <!-- These sit against the id rather than at the far right of the row.
+                                                     A network endpoint is bidirectional, so Monitor needs no test for
+                                                     whether the device sends anything: it always can. -->
+                                                <StackPanel Grid.Row="2" Grid.Column="2"
+                                                            Orientation="Horizontal"
+                                                            Spacing="4"
+                                                            VerticalAlignment="Top"
+                                                            Visibility="{x:Bind EndpointDeviceIdVisibility, Mode=OneWay}">
+                                                    <Button x:Uid="CopyEndpointDeviceIdButton"
+                                                            Padding="6,2,6,2"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            Click="OnCopyEndpointDeviceIdClick">
+                                                        <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                                                    </Button>
+                                                    <Button x:Uid="MonitorEndpointButton"
+                                                            Padding="6,2,6,2"
+                                                            Background="Transparent"
+                                                            BorderThickness="0"
+                                                            Click="OnMonitorRemoteHostClick">
+                                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                                            <FontIcon Glyph="&#xE9D9;" FontSize="14" />
+                                                            <TextBlock x:Uid="MonitorEndpointButtonText" Text="Monitor" />
+                                                        </StackPanel>
+                                                    </Button>
+                                                </StackPanel>
 
                                                 <TextBlock x:Uid="RemoteHostNotAdvertisedText"
                                                            Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3"
@@ -740,6 +756,16 @@
                                                                         Orientation="Horizontal"
                                                                         Spacing="8"
                                                                         VerticalAlignment="Center">
+                                                                <Button x:Uid="MonitorEndpointButton"
+                                                                        Background="Transparent"
+                                                                        BorderThickness="0"
+                                                                        Visibility="{x:Bind MonitorVisibility, Mode=OneWay}"
+                                                                        Click="OnMonitorHostConnectionClick">
+                                                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                        <FontIcon Glyph="&#xE9D9;" FontSize="14" />
+                                                                        <TextBlock x:Uid="MonitorEndpointButtonText" Text="Monitor" />
+                                                                    </StackPanel>
+                                                                </Button>
                                                                 <Button x:Uid="DisconnectRemoteClientButton"
                                                                         Content="Disconnect"
                                                                         Click="OnDisconnectRemoteClientClick" />

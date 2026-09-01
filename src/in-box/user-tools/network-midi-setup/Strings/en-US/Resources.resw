@@ -368,6 +368,18 @@
   <data name="CopyEndpointDeviceIdButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Copy the MIDI Endpoint id</value>
   </data>
+  <data name="MonitorEndpointButtonText.Text" xml:space="preserve">
+    <value>Monitor</value>
+  </data>
+  <data name="MonitorEndpointButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Watch this endpoint in the MIDI monitor</value>
+  </data>
+  <data name="MonitorEndpointButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Watch the messages this device sends, using the MIDI monitor</value>
+  </data>
+  <data name="StatusMonitorNotAvailable" xml:space="preserve">
+    <value>The MIDI monitor could not be started. It may not be installed.</value>
+  </data>
   <data name="EndpointDeviceIdCopied" xml:space="preserve">
     <value>The MIDI Endpoint id was copied to the clipboard.</value>
   </data>
