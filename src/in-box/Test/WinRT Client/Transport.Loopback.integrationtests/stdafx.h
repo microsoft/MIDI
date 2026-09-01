@@ -46,6 +46,7 @@ using namespace winrt::Windows::Devices::Midi2::Transports::Loopback;
 #include "MidiDefs.h"
 
 #include "..\SdkTestCommon.h"
+#include "..\..\inc\MidiTestDeviceNodes.h"
 
 // these are artifacts of the com-extensions-idl project
 #include "WindowsMidiServicesAppSdkComExtensions.h"

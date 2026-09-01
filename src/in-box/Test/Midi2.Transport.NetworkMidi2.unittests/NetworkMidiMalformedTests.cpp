@@ -108,6 +108,25 @@ namespace
 }
 
 
+// The configuration fuzzing here reaches the create section, and an entry which is malformed but
+// still carries a usable name is accepted and started, so this class does create endpoints. The
+// service deactivates rather than deletes one, so these two hooks remove exactly the nodes this
+// test method caused to be created.
+bool NetworkMidiMalformedTests::TestSetup()
+{
+    m_deviceNodeTracker.Start();
+
+    return true;
+}
+
+bool NetworkMidiMalformedTests::TestCleanup()
+{
+    m_deviceNodeTracker.RemoveDeviceNodesCreatedSinceStart();
+
+    return true;
+}
+
+
 void NetworkMidiMalformedTests::BadSignatureIsIgnored()
 {
     SKIP_IF_NO_HOST();

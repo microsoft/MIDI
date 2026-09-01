@@ -93,6 +93,24 @@ namespace
     }
 
 
+// Every host and every connected client leaves a deactivated software device node behind for its
+// UMP endpoint, and for any MIDI 1.0 ports created alongside it, because the service never
+// deletes one. These two hooks remove exactly the nodes this test method caused to be created.
+bool MidiNetworkApiTests::TestSetup()
+{
+    m_deviceNodeTracker.Start();
+
+    return true;
+}
+
+bool MidiNetworkApiTests::TestCleanup()
+{
+    m_deviceNodeTracker.RemoveDeviceNodesCreatedSinceStart();
+
+    return true;
+}
+
+
 winrt::guid MidiNetworkApiTests::CreateTestHost(std::wstring const& nameSuffix, bool const advertise)
 {
     MidiNetworkHostCreationConfig config;

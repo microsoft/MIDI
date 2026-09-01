@@ -24,6 +24,9 @@ public:
     TEST_CLASS_SETUP(ClassSetup);
     TEST_CLASS_CLEANUP(ClassCleanup);
 
+    TEST_METHOD_SETUP(TestSetup);
+    TEST_METHOD_CLEANUP(TestCleanup);
+
     // The client is held pending and shows up in the polling feed rather than being accepted.
     TEST_METHOD(InvitationIsHeldPendingAndAppearsInEnumerateHosts);
 
@@ -109,4 +112,8 @@ public:
     // then unreachable and held its socket and service instance name until a restart. Several
     // tests in this file create and remove without waiting, so this leaked silently.
     TEST_METHOD(CreateThenImmediatelyRemoveLeavesNoHostBehind);
+
+private:
+
+    MidiTest::DeviceNodeTracker m_deviceNodeTracker{};
 };

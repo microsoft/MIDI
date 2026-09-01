@@ -24,6 +24,9 @@ public:
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
     END_TEST_CLASS()
 
+    TEST_METHOD_SETUP(TestSetup);
+    TEST_METHOD_CLEANUP(TestCleanup);
+
     // basic behavior through hand-rolled json
     TEST_METHOD(TestCreateAndRemoveLoopbackPair);
     TEST_METHOD(TestCreateWithMissingNameIsRejected);
@@ -58,4 +61,8 @@ public:
     TEST_METHOD(TestUpdateRenamesBothSidesOfAPair);
     TEST_METHOD(TestUpdateWithDuplicateNamesChangesNothing);
     TEST_METHOD(TestUpdateWithBlankNameIsRejected);
+
+private:
+
+    MidiTest::DeviceNodeTracker m_deviceNodeTracker{};
 };

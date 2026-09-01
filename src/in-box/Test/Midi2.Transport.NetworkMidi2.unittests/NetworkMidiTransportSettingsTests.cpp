@@ -155,6 +155,24 @@ bool NetworkMidiTransportSettingsTests::ClassCleanup()
 }
 
 
+// A malformed host entry which still carries a usable name is accepted and started, so these
+// tests do create endpoints, and the service deactivates rather than deletes one. These two
+// hooks remove exactly the nodes this test method caused to be created.
+bool NetworkMidiTransportSettingsTests::TestSetup()
+{
+    m_deviceNodeTracker.Start();
+
+    return true;
+}
+
+bool NetworkMidiTransportSettingsTests::TestCleanup()
+{
+    m_deviceNodeTracker.RemoveDeviceNodesCreatedSinceStart();
+
+    return true;
+}
+
+
 void NetworkMidiTransportSettingsTests::SettingsAreReportedBack()
 {
     auto const settings = ApplyAndRead(DefaultsBody());

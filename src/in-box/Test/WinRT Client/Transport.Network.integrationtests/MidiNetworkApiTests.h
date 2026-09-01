@@ -24,6 +24,9 @@ public:
         TEST_CLASS_PROPERTY(L"BinaryUnderTest", L"Windows.Devices.Midi2.dll")
     END_TEST_CLASS()
 
+    TEST_METHOD_SETUP(TestSetup);
+    TEST_METHOD_CLEANUP(TestCleanup);
+
     // Transport is present and reports a stable id
     TEST_METHOD(TestTransportIsAvailable);
     TEST_METHOD(TestTransportIdIsStable);
@@ -197,4 +200,6 @@ private:
     bool HostIsPresent(_In_ winrt::guid const& hostId);
     bool HostIsAbsent(_In_ winrt::guid const& hostId);
     void VerifyHostAppeared(_In_ winrt::guid const& hostId);
+
+    MidiTest::DeviceNodeTracker m_deviceNodeTracker{};
 };

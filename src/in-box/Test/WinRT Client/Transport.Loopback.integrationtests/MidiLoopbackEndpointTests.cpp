@@ -89,6 +89,24 @@ static void RemoveTestLoopback(winrt::guid const& associationId)
 }
 
 
+// Every loopback created here leaves a deactivated software device node behind for each of its
+// UMP endpoints and each of their MIDI 1.0 ports, because the service never deletes one. These
+// two hooks remove exactly the nodes this test method caused to be created.
+bool MidiLoopbackEndpointTests::TestSetup()
+{
+    m_deviceNodeTracker.Start();
+
+    return true;
+}
+
+bool MidiLoopbackEndpointTests::TestCleanup()
+{
+    m_deviceNodeTracker.RemoveDeviceNodesCreatedSinceStart();
+
+    return true;
+}
+
+
 void MidiLoopbackEndpointTests::TestUnicodeGtbAndDeviceNames()
 {
     auto previousStdoutMode = _setmode(_fileno(stdout), _O_U16TEXT);  // _O_WTEXT

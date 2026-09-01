@@ -21,6 +21,23 @@
 #define BENCHMARK_RECEIVE_TIMEOUT_MS    120000
 
 
+// Every benchmark creates its own loopback, and the service deactivates rather than deletes an
+// endpoint, so each run would otherwise leave a set of software device nodes behind.
+bool MidiBasicLoopbackBenchmarks::TestSetup()
+{
+    m_deviceNodeTracker.Start();
+
+    return true;
+}
+
+bool MidiBasicLoopbackBenchmarks::TestCleanup()
+{
+    m_deviceNodeTracker.RemoveDeviceNodesCreatedSinceStart();
+
+    return true;
+}
+
+
 // Prints a consistent summary for every benchmark in this file. All timings come
 // from MidiClock ticks, converted using the MidiClock conversion helpers.
 static void ReportBenchmarkResults(
