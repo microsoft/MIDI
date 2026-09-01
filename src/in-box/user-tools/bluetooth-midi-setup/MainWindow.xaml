@@ -423,13 +423,32 @@
                                                                IsTextSelectionEnabled="True"
                                                                Visibility="{x:Bind EndpointDeviceIdVisibility, Mode=OneWay}"
                                                                Style="{ThemeResource CaptionTextBlockStyle}" />
-                                                    <Button x:Uid="CopyEndpointIdButton"
-                                                            Grid.Row="1" Grid.Column="2"
-                                                            VerticalAlignment="Top"
-                                                            Visibility="{x:Bind EndpointDeviceIdVisibility, Mode=OneWay}"
-                                                            Click="OnCopyEndpointDeviceIdClick">
-                                                        <FontIcon Glyph="&#xE8C8;" FontSize="14" />
-                                                    </Button>
+
+                                                    <!-- These sit against the id rather than at the far right of the row.
+                                                         ColumnSpacing already contributes 12, so the margin makes it 20. -->
+                                                    <StackPanel Grid.Row="1" Grid.Column="2"
+                                                                Orientation="Horizontal"
+                                                                Spacing="4"
+                                                                Margin="8,0,0,0"
+                                                                VerticalAlignment="Top"
+                                                                Visibility="{x:Bind EndpointDeviceIdVisibility, Mode=OneWay}">
+                                                        <Button x:Uid="CopyEndpointIdButton"
+                                                                Background="Transparent"
+                                                                BorderBrush="Transparent"
+                                                                Click="OnCopyEndpointDeviceIdClick">
+                                                            <FontIcon Glyph="&#xE8C8;" FontSize="14" />
+                                                        </Button>
+                                                        <Button x:Uid="MonitorEndpointButton"
+                                                                Background="Transparent"
+                                                                BorderBrush="Transparent"
+                                                                Visibility="{x:Bind MonitorVisibility, Mode=OneWay}"
+                                                                Click="OnMonitorEndpointClick">
+                                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                                <FontIcon Glyph="&#xE9D9;" FontSize="14" />
+                                                                <TextBlock x:Uid="MonitorEndpointButtonText" Text="Monitor" />
+                                                            </StackPanel>
+                                                        </Button>
+                                                    </StackPanel>
 
                                                     <TextBlock x:Uid="ConnectionIntervalLabel"
                                                                Grid.Row="2" Grid.Column="0"

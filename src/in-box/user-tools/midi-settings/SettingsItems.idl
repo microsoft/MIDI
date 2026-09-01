@@ -41,6 +41,24 @@ namespace midisettings
         String DetailText{ get; };
     }
 
+    // One row in the MIDI 1.0 port naming grids. The three generated names are shown side by
+    // side so the customer can see what each naming approach would produce before choosing,
+    // and CustomName overrides whichever of them is selected.
+    [default_interface]
+    runtimeclass Midi1PortNameItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        Midi1PortNameItem();
+
+        UInt8 GroupIndex{ get; };
+        String GroupNumberText{ get; };
+        String CurrentName{ get; };
+        String LegacyCompatibleName{ get; };
+        String NewStyleName{ get; };
+
+        // Two-way bound to the text box in the row.
+        String CustomName;
+    }
+
     // An entry in the transport filter drop-down. An empty code means every transport.
     [default_interface]
     runtimeclass TransportChoice

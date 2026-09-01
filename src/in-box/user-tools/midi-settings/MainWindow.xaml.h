@@ -59,6 +59,8 @@ namespace winrt::midisettings::implementation
         // Customization
         void OnCustomizeBrowseImageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCustomizeClearImageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnCustomizePortNamesClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnMidi1PortNamesApproachChanged(foundation::IInspectable const& sender, xaml::Controls::SelectionChangedEventArgs const& args);
 
         // Global settings
         winrt::fire_and_forget OnApplyConfigFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -106,6 +108,10 @@ namespace winrt::midisettings::implementation
         foundation::IAsyncAction ShowCustomizeDialogAsync(winrt::hstring const& endpointDeviceId);
         void UpdateCustomizeImagePreview() noexcept;
 
+        foundation::IAsyncAction ShowMidi1PortNamesDialogAsync(winrt::hstring const& endpointDeviceId);
+        void PopulateMidi1PortNames(midi2enum::MidiEndpointDeviceInformation const& endpoint) noexcept;
+        void UpdateMidi1PortNamesApproachCaption() noexcept;
+
         winrt::fire_and_forget SendPanicAsync(winrt::hstring const& endpointDeviceId) noexcept;
 
         // --- global settings ---
@@ -128,6 +134,16 @@ namespace winrt::midisettings::implementation
         // only safe to touch while it is actually up.
         bool m_detailDialogOpen{ false };
         bool m_customizeRequested{ false };
+
+        // Set when the customize dialog is hidden to make room for the port names dialog, so the
+        // caller knows to bring customize back afterwards rather than returning to the details.
+        bool m_portNamesRequested{ false };
+
+        // What the customer had typed when they stepped out to the port names dialog. Without
+        // this, coming back would re-read the endpoint and silently discard their edits.
+        bool m_customizeEditsPending{ false };
+        winrt::hstring m_pendingCustomizeName{};
+        winrt::hstring m_pendingCustomizeDescription{};
 
         midi2enum::MidiEndpointDeviceWatcher m_endpointWatcher{ nullptr };
         winrt::event_token m_endpointAddedToken{};
@@ -163,6 +179,18 @@ namespace winrt::midisettings::implementation
         // Bare file name of the picture chosen in the customization dialog, already copied into
         // the shared assets folder. Empty means no picture.
         winrt::hstring m_customizeImageFileName{};
+
+        winrt::hstring m_portNamesEndpointDeviceId{};
+
+        collections::IObservableVector<midisettings::Midi1PortNameItem> m_midi1PortNameSources{
+            winrt::single_threaded_observable_vector<midisettings::Midi1PortNameItem>() };
+        collections::IObservableVector<midisettings::Midi1PortNameItem> m_midi1PortNameDestinations{
+            winrt::single_threaded_observable_vector<midisettings::Midi1PortNameItem>() };
+
+        // Kept alongside the rows so the resolved "current name" column can be recalculated when
+        // the naming style changes, without re-reading the table from the service.
+        std::vector<midi2enum::Midi1PortNameTableEntry> m_midi1PortNameSourceEntries{};
+        std::vector<midi2enum::Midi1PortNameTableEntry> m_midi1PortNameDestinationEntries{};
     };
 }
 

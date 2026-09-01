@@ -10,6 +10,7 @@
 
 #include "EndpointItem.g.cpp"
 #include "Midi1PortItem.g.cpp"
+#include "Midi1PortNameItem.g.cpp"
 #include "TransportChoice.g.cpp"
 #include "ConfigFileChoice.g.cpp"
 
@@ -98,5 +99,27 @@ namespace winrt::midisettings::implementation
         UpdateField(m_portDeviceId, portDeviceId, L"PortDeviceId");
         UpdateField(m_name, name, L"Name");
         UpdateField(m_detailText, detailText, L"DetailText");
+    }
+
+    _Use_decl_annotations_
+    void Midi1PortNameItem::Update(
+        uint8_t const groupIndex,
+        winrt::hstring const& currentName,
+        winrt::hstring const& legacyCompatibleName,
+        winrt::hstring const& newStyleName,
+        winrt::hstring const& customName) noexcept
+    {
+        if (m_groupIndex != groupIndex)
+        {
+            m_groupIndex = groupIndex;
+            RaisePropertyChanged(L"GroupIndex");
+        }
+
+        // groups are 0-based in the API and 1-based everywhere a customer sees them
+        UpdateField(m_groupNumberText, winrt::hstring{ std::to_wstring(groupIndex + 1) }, L"GroupNumberText");
+        UpdateField(m_currentName, currentName, L"CurrentName");
+        UpdateField(m_legacyCompatibleName, legacyCompatibleName, L"LegacyCompatibleName");
+        UpdateField(m_newStyleName, newStyleName, L"NewStyleName");
+        UpdateField(m_customName, customName, L"CustomName");
     }
 }
