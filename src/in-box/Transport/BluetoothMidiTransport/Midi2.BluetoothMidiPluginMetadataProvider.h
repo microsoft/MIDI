@@ -16,8 +16,8 @@ class CMidi2BluetoothMidiPluginMetadataProvider :
 
 {
 public:
-    STDMETHOD(Initialize());
-    STDMETHOD(GetMetadata(_Out_ PTRANSPORTMETADATA metadata));
+    STDMETHOD(Initialize)();
+    STDMETHOD(GetMetadata)(_Out_ PTRANSPORTMETADATA metadata);
     STDMETHOD(Shutdown)();
 
 private:

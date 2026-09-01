@@ -106,8 +106,8 @@ namespace Microsoft.Midi.ConsoleApp
             table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Presence"));
             table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Interval"));
             table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Signal"));
-            table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Msgs In"));
-            table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Msgs Out"));
+            table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("In (msg/pkt)"));
+            table.AddColumn(AnsiMarkupFormatter.FormatTableColumnHeading("Out (msg/pkt)"));
 
             var connectErrors = new List<string>();
 
@@ -121,8 +121,8 @@ namespace Microsoft.Midi.ConsoleApp
                     FormatPresence(device.IsConnected, device.IsPresent, device.HasBeenSeen, device.LastSeenAgo),
                     device.ConnectionInterval > TimeSpan.Zero ? $"{device.ConnectionInterval.TotalMilliseconds:N2} ms" : "-",
                     FormatSignalStrength(device.SignalStrengthDecibelMilliwatts),
-                    device.HasEndpoint ? device.MessagesReceived.ToString() : "-",
-                    device.HasEndpoint ? device.MessagesSent.ToString() : "-");
+                    device.HasEndpoint ? $"{device.MessagesReceived} / {device.PacketsReceived}" : "-",
+                    device.HasEndpoint ? $"{device.MessagesSent} / {device.PacketsSent}" : "-");
 
                 if (!string.IsNullOrEmpty(device.LastConnectError))
                 {

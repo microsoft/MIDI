@@ -28,6 +28,8 @@ namespace
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_CONNECT_ERROR_CODE_KEY, json::JsonValue::CreateNumberValue(static_cast<double>(device.LastConnectErrorCode)));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_MESSAGES_RECEIVED_KEY, json::JsonValue::CreateNumberValue(static_cast<double>(device.MessagesReceived)));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_MESSAGES_SENT_KEY, json::JsonValue::CreateNumberValue(static_cast<double>(device.MessagesSent)));
+        deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PACKETS_RECEIVED_KEY, json::JsonValue::CreateNumberValue(static_cast<double>(device.PacketsReceived)));
+        deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PACKETS_SENT_KEY, json::JsonValue::CreateNumberValue(static_cast<double>(device.PacketsSent)));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_SEND_ERROR_HRESULT_KEY, json::JsonValue::CreateNumberValue(device.LastSendErrorHresult));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_PRESENT_KEY, json::JsonValue::CreateBooleanValue(device.IsPresent));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_SEEN_AGO_MS_KEY, json::JsonValue::CreateNumberValue(static_cast<double>(device.LastSeenAgoMilliseconds)));
@@ -250,6 +252,8 @@ namespace
         winrt::hstring connectedDeviceName{};
         uint64_t messagesReceived{ 0 };
         uint64_t messagesSent{ 0 };
+        uint64_t packetsReceived{ 0 };
+        uint64_t packetsSent{ 0 };
 
         if (isRunning)
         {
@@ -262,6 +266,8 @@ namespace
                 connectedDeviceName = connection->DeviceName();
                 messagesReceived = connection->MessagesReceived();
                 messagesSent = connection->MessagesSent();
+                packetsReceived = connection->PacketsReceived();
+                packetsSent = connection->PacketsSent();
             }
         }
 
@@ -322,6 +328,14 @@ namespace
         peripheralJson.SetNamedValue(
             MIDI_CONFIG_JSON_BLUETOOTH_MIDI_MESSAGES_SENT_KEY,
             json::JsonValue::CreateNumberValue(static_cast<double>(messagesSent)));
+
+        peripheralJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PACKETS_RECEIVED_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(packetsReceived)));
+
+        peripheralJson.SetNamedValue(
+            MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PACKETS_SENT_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(packetsSent)));
 
         responseObject.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PERIPHERAL_KEY, peripheralJson);
     }

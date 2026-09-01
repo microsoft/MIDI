@@ -47,6 +47,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
             m_messagesSent = static_cast<uint64_t>(
                 deviceJson.GetNamedNumber(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_MESSAGES_SENT_KEY, 0.0));
 
+            m_packetsReceived = static_cast<uint64_t>(
+                deviceJson.GetNamedNumber(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PACKETS_RECEIVED_KEY, 0.0));
+            m_packetsSent = static_cast<uint64_t>(
+                deviceJson.GetNamedNumber(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PACKETS_SENT_KEY, 0.0));
+
             m_connectionInterval = btinternal::TimeSpanFromMilliseconds(
                 deviceJson.GetNamedNumber(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INTERVAL_MS_KEY, 0.0));
 

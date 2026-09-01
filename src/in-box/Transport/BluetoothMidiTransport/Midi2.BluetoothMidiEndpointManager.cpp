@@ -753,6 +753,8 @@ CMidi2BluetoothMidiEndpointManager::GetDiscoveredDevices()
         {
             device.MessagesReceived = connection->MessagesReceived();
             device.MessagesSent = connection->MessagesSent();
+            device.PacketsReceived = connection->PacketsReceived();
+            device.PacketsSent = connection->PacketsSent();
             device.LastSendErrorHresult = connection->LastSendErrorHresult();
 
             // The stored flag only records that a connection object exists. Asking the device

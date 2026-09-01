@@ -35,6 +35,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
 
         uint64_t MessagesReceived() const noexcept { return m_messagesReceived; }
         uint64_t MessagesSent() const noexcept { return m_messagesSent; }
+        uint64_t PacketsReceived() const noexcept { return m_packetsReceived; }
+        uint64_t PacketsSent() const noexcept { return m_packetsSent; }
 
         foundation::TimeSpan ConnectionInterval() const noexcept { return m_connectionInterval; }
 
@@ -64,6 +66,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         winrt::hstring m_endpointDeviceInstanceId{};
         uint64_t m_messagesReceived{ 0 };
         uint64_t m_messagesSent{ 0 };
+        uint64_t m_packetsReceived{ 0 };
+        uint64_t m_packetsSent{ 0 };
         foundation::TimeSpan m_connectionInterval{};
         winrt::hstring m_lastConnectError{};
         bluetooth::MidiBluetoothDeviceConnectErrorCode m_lastConnectErrorCode{ bluetooth::MidiBluetoothDeviceConnectErrorCode::Success };

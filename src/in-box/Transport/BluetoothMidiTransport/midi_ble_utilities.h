@@ -56,6 +56,10 @@ namespace MidiBleProtocol
         // filled in from the live connection when one exists
         uint64_t MessagesReceived{ 0 };
         uint64_t MessagesSent{ 0 };
+
+        // Counted before decoding, so these move even when nothing decodes.
+        uint64_t PacketsReceived{ 0 };
+        uint64_t PacketsSent{ 0 };
         int32_t LastSendErrorHresult{ 0 };
 
         // computed when the list is taken, because both are relative to now
