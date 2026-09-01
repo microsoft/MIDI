@@ -12,7 +12,7 @@
 #include "MidiDefs.h"
 #include "json_defs.h"
 
-#include "..\..\in-box\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
+#include "..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
 
 namespace midinetworksetup
 {

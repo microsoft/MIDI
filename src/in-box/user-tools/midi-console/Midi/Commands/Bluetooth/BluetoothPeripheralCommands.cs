@@ -140,6 +140,8 @@ namespace Microsoft.Midi.ConsoleApp
                 : "require approval");
             table.AddRow("Messages in", status.IsClientConnected ? status.MessagesReceived.ToString() : "-");
             table.AddRow("Messages out", status.IsClientConnected ? status.MessagesSent.ToString() : "-");
+            table.AddRow("Packets in", status.IsClientConnected ? status.PacketsReceived.ToString() : "-");
+            table.AddRow("Packets out", status.IsClientConnected ? status.PacketsSent.ToString() : "-");
 
             if (!string.IsNullOrEmpty(status.EndpointDeviceId))
             {

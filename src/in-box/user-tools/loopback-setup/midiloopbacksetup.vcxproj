@@ -92,12 +92,12 @@
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;WINRT_LEAN_AND_MEAN;NOMINMAX;DISABLE_XAML_GENERATED_MAIN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level4</WarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)Inc;$(GeneratedFilesDir);$(ProjectDir);$(ProjectDir)..\..\in-box\user-tools\midi-app-shared</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)Inc;$(GeneratedFilesDir);$(ProjectDir);$(ProjectDir)..\midi-app-shared</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /permissive- /bigobj /utf-8</AdditionalOptions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(ProjectDir)..\..\in-box\user-tools\midi-app-shared</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(ProjectDir)..\midi-app-shared</AdditionalIncludeDirectories>
     </Midl>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -141,14 +141,14 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClInclude>
     <!-- shared with the other Windows MIDI Services user tools; see midi-app-shared\README.md -->
-    <ClInclude Include="..\..\in-box\user-tools\midi-app-shared\NamedChoice.h" />
-    <ClInclude Include="..\..\in-box\user-tools\midi-app-shared\EndpointChoice.h" />
-    <ClInclude Include="..\..\in-box\user-tools\midi-app-shared\MidiAppSettings.h" />
-    <ClInclude Include="..\..\in-box\user-tools\midi-app-shared\WindowChrome.h" />
-    <ClInclude Include="..\..\in-box\user-tools\midi-app-shared\EmbeddedAssets.h" />
-    <ClInclude Include="..\..\in-box\user-tools\midi-app-shared\EndpointImageAssets.h" />
-    <ClInclude Include="..\..\in-box\user-tools\midi-app-shared\MidiEndpointHelpers.h" />
-    <ClInclude Include="..\..\in-box\user-tools\midi-app-shared\AppearanceFlyout.h" />
+    <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
+    <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
+    <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
+    <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
+    <ClInclude Include="..\midi-app-shared\EmbeddedAssets.h" />
+    <ClInclude Include="..\midi-app-shared\EndpointImageAssets.h" />
+    <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
+    <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -171,18 +171,18 @@
     <ClCompile Include="MainWindowActions.cpp">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
-    <ClCompile Include="..\..\in-box\user-tools\midi-app-shared\NamedChoice.cpp" />
-    <ClCompile Include="..\..\in-box\user-tools\midi-app-shared\EndpointChoice.cpp" />
-    <ClCompile Include="..\..\in-box\user-tools\midi-app-shared\MidiAppSettings.cpp" />
-    <ClCompile Include="..\..\in-box\user-tools\midi-app-shared\WindowChrome.cpp" />
-    <ClCompile Include="..\..\in-box\user-tools\midi-app-shared\EmbeddedAssets.cpp" />
-    <ClCompile Include="..\..\in-box\user-tools\midi-app-shared\EndpointImageAssets.cpp" />
-    <ClCompile Include="..\..\in-box\user-tools\midi-app-shared\MidiEndpointHelpers.cpp" />
-    <ClCompile Include="..\..\in-box\user-tools\midi-app-shared\AppearanceFlyout.cpp" />
+    <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
+    <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
+    <ClCompile Include="..\midi-app-shared\EmbeddedAssets.cpp" />
+    <ClCompile Include="..\midi-app-shared\EndpointImageAssets.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
+    <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="..\..\in-box\user-tools\midi-app-shared\MidiAppShared.idl" />
+    <Midl Include="..\midi-app-shared\MidiAppShared.idl" />
     <Midl Include="LoopbackItems.idl" />
     <Midl Include="MainWindow.idl">
       <DependentUpon>MainWindow.xaml</DependentUpon>
@@ -212,10 +212,10 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260101001" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\in-box\Client\WinRT\com-extensions-idl\com-extensions-idl.vcxproj">
+    <ProjectReference Include="..\..\Client\WinRT\com-extensions-idl\com-extensions-idl.vcxproj">
       <Project>{9a508d6d-08cb-473a-995e-d069f00eb8bb}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\in-box\Client\WinRT\core\Windows.Devices.Midi2.vcxproj">
+    <ProjectReference Include="..\..\Client\WinRT\core\Windows.Devices.Midi2.vcxproj">
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
     </ProjectReference>
   </ItemGroup>

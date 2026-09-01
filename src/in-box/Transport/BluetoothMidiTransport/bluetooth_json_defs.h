@@ -36,6 +36,11 @@
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_CONNECT_ERROR_CODE_KEY            L"lastConnectErrorCode"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_MESSAGES_RECEIVED_KEY                  L"messagesReceived"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_MESSAGES_SENT_KEY                      L"messagesSent"
+
+// GATT packets, counted before any decoding. Packets moving while messages stay at zero is the
+// only way to tell a device which sends nothing apart from one this transport cannot decode.
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PACKETS_RECEIVED_KEY                   L"packetsReceived"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PACKETS_SENT_KEY                       L"packetsSent"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_SEND_ERROR_HRESULT_KEY            L"lastSendErrorHresult"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_PRESENT_KEY                         L"isPresent"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_SEEN_AGO_MS_KEY                   L"lastSeenAgoMilliseconds"

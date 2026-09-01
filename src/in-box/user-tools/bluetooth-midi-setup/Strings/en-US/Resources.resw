@@ -342,7 +342,7 @@
     <value>{0} - {1}</value>
   </data>
   <data name="MessageCountsFormat" xml:space="preserve">
-    <value>{0} messages in, {1} out</value>
+    <value>{0} messages in, {1} out ({2} packets in, {3} out)</value>
   </data>
   <data name="SignalStrengthFormat" xml:space="preserve">
     <value>{0} dBm (scale {1} to {2})</value>

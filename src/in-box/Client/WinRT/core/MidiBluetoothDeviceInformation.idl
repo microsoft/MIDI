@@ -52,6 +52,12 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
         [noexcept] UInt64 MessagesReceived{ get; };
         [noexcept] UInt64 MessagesSent{ get; };
 
+        // GATT packets, counted before any decoding. Packets climbing while MessagesReceived
+        // stays at zero means the device is transmitting something this transport cannot decode;
+        // both at zero means the device is sending nothing at all.
+        [noexcept] UInt64 PacketsReceived{ get; };
+        [noexcept] UInt64 PacketsSent{ get; };
+
         // What the link actually negotiated. Zero when not connected.
         [noexcept] Windows.Foundation.TimeSpan ConnectionInterval{ get; };
 

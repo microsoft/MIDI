@@ -15,7 +15,7 @@
 
 // Capability key names, so the app can tell a compatible transport from an older one. Pure
 // preprocessor defines; the SDK includes the same header.
-#include "..\..\in-box\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
+#include "..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
 
 #include <winrt/Microsoft.UI.Xaml.Media.Animation.h>
 

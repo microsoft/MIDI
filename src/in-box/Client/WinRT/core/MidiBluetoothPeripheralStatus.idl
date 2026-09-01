@@ -45,6 +45,10 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
         [noexcept] UInt64 MessagesReceived{ get; };
         [noexcept] UInt64 MessagesSent{ get; };
 
+        // GATT packets, counted before any decoding, so these move even when nothing decodes
+        [noexcept] UInt64 PacketsReceived{ get; };
+        [noexcept] UInt64 PacketsSent{ get; };
+
         // Null when nothing is connected
         [noexcept] MidiBluetoothPeripheralClient ConnectedClient{ get; };
 
