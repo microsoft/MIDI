@@ -68,8 +68,8 @@ In the majority of cases, you do not necessarily have to pair a Bluetooth MIDI d
 - the endpoint device ID, with a button to copy it
 - the connection interval which was negotiated, which is the main thing determining latency and how
   often messages can be delivered
-- how many messages have gone in and out since the connection was made, which is the quickest way to
-  tell whether a device is actually sending anything
+- how many messages and how many Bluetooth packets have gone in and out since the connection was
+  made, which is the quickest way to tell whether a device is actually sending anything
 - **Rename** gives the endpoint a name of your own, the same customization the MIDI Settings app offers
 
 ## Keeping an endpoint when a device goes offline
@@ -115,18 +115,50 @@ something is connected. Until then the page says nothing is connected, and that 
 - **Bluetooth LE MIDI 2.0** implements the draft standard for testing and development.
   Almost nothing supports it yet, and while it is selected a MIDI 1.0 device cannot connect. This feature is not yet available in Windows MIDI Services, but will be after the specification is finalized.
 
-## When a device won't connect
+## Troubleshooting
 
-**Check that it is awake and advertising.** This is by far the most common cause. Switch the device
-off and on again, and look at the list within the following few seconds.
+### Common reasons a device may not connect
 
-**Check that it is not connected to something else.** A tablet or phone sitting on the same desk
-will happily hold on to the device and keep it off the air. Additionally, if the device is paired to this PC, the older WinRT MIDI 1.0 API may connect to the device first. The remedy there is to unpair the device, or to delete the device's entry in Sound, video and game controllers in Device Manager. This will not be a concern when Bluetooth MIDI Ships in a regular Windows release.
+**It is asleep or not advertising.** This is by far the most common cause. Switch the device off and
+on again, and look at the list within the following few seconds. Many battery-powered controllers
+sleep aggressively to save power.
 
-**Check the batteries.** A device low on power may advertise but fail to hold a connection.
+**It is connected to something else.** A tablet or phone sitting on the same desk will happily hold
+on to the device and keep it off the air. Bluetooth LE MIDI peripherals talk to one central at a
+time, so you have to disconnect it there first.
 
-**Try Forget, then connect again.** If a device previously connected and now will not, clearing what
-Windows remembers about it and starting over is a reasonable next step.
+**It needs to be paired.** Most Bluetooth MIDI devices can be connected to without pairing, but some
+require it. Windows will usually prompt you when that is the case, so watch for a notification after
+pressing **Connect**.
+
+**Its batteries are low.** A device low on power may advertise but fail to hold a connection.
+
+**Windows is remembering something stale.** If a device previously connected and now will not, use
+**Forget**, then connect again.
 
 If Bluetooth MIDI is not installed or not enabled on this PC, the app tells you so when it starts,
 and the rest of the window stays empty. Nothing here works until that is sorted out.
+
+### Connects, but does not transmit data
+
+Sometimes a device connects, shows as **Connected**, and then sends nothing at all. Open **Details**
+and look at the message and packet counts, which tell you which half of the problem you have:
+
+- **Both are zero.** Nothing is arriving from the device. Work through the causes below.
+- **Packets are increasing but messages are not.** The device is transmitting, but this transport
+  cannot decode what it is sending. That points to a problem on our side rather than anything you
+  can fix, so please report it along with the make and model of the device.
+
+**It may still be paired with another device.** This is the most common cause, and it happens even
+though the connection itself succeeds: a device which is still paired with a phone or tablet will
+accept a connection from this PC and then quietly send nothing. Unpair it from the other device,
+remove the pairing from this PC, and then pair it with this PC again.
+
+**It may be in use by the older Bluetooth MIDI support in Windows.** Windows still includes its
+original WinRT MIDI 1.0 Bluetooth MIDI stack, and for a device which is *paired* with this PC, that
+stack can claim the device first. In Device Manager, under **Software devices**, look for the
+**MIDI Bluetooth In** and **MIDI Bluetooth Out** entries for the device, and uninstall them.
+
+> Claiming by the older stack applies only during the preview period, while the previous Bluetooth
+> MIDI support is still enabled. It will not be a concern when Bluetooth MIDI ships in a regular
+> Windows release.
