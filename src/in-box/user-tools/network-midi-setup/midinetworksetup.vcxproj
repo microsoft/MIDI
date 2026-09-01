@@ -6,11 +6,11 @@
     <CppWinRTGenerateWindowsMetadata>true</CppWinRTGenerateWindowsMetadata>
     <MinimalCoreWin>false</MinimalCoreWin>
     <VCProjectVersion>17.0</VCProjectVersion>
-    <ProjectGuid>{47908667-46E7-4189-A568-1F1D1A866611}</ProjectGuid>
+    <ProjectGuid>{1E51E1B2-5D99-44B4-B3AD-A1B0156E4479}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>midibluetoothsetup</RootNamespace>
-    <ProjectName>midibluetoothsetup</ProjectName>
-    <TargetName>midibluetoothsetup</TargetName>
+    <RootNamespace>midinetworksetup</RootNamespace>
+    <ProjectName>midinetworksetup</ProjectName>
+    <TargetName>midinetworksetup</TargetName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
     <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0</WindowsTargetPlatformVersion>
@@ -92,12 +92,12 @@
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;WINRT_LEAN_AND_MEAN;NOMINMAX;DISABLE_XAML_GENERATED_MAIN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level4</WarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)Inc;$(GeneratedFilesDir);$(ProjectDir);$(ProjectDir)..\..\in-box\user-tools\midi-app-shared</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)Inc;$(GeneratedFilesDir);$(ProjectDir);$(ProjectDir)..\midi-app-shared</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /permissive- /bigobj /utf-8</AdditionalOptions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
     <Midl>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(ProjectDir)..\..\in-box\user-tools\midi-app-shared</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(ProjectDir)..\midi-app-shared</AdditionalIncludeDirectories>
     </Midl>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -128,8 +128,9 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="CommandLineOptions.h" />
-    <ClInclude Include="BluetoothItems.h">
-      <DependentUpon>BluetoothItems.idl</DependentUpon>
+    <ClInclude Include="ConfigFile.h" />
+    <ClInclude Include="NetworkItems.h">
+      <DependentUpon>NetworkItems.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
@@ -140,12 +141,12 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClInclude>
     <!-- shared with the other Windows MIDI Services user tools; see midi-app-shared\README.md -->
-    <ClInclude Include="..\..\in-box\user-tools\midi-app-shared\NamedChoice.h" />
-    <ClInclude Include="..\..\in-box\user-tools\midi-app-shared\EndpointChoice.h" />
-    <ClInclude Include="..\..\in-box\user-tools\midi-app-shared\MidiAppSettings.h" />
-    <ClInclude Include="..\..\in-box\user-tools\midi-app-shared\WindowChrome.h" />
-    <ClInclude Include="..\..\in-box\user-tools\midi-app-shared\MidiEndpointHelpers.h" />
-    <ClInclude Include="..\..\in-box\user-tools\midi-app-shared\AppearanceFlyout.h" />
+    <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
+    <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
+    <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
+    <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
+    <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
+    <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -154,8 +155,9 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="AppSettings.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
-    <ClCompile Include="BluetoothItems.cpp">
-      <DependentUpon>BluetoothItems.idl</DependentUpon>
+    <ClCompile Include="ConfigFile.cpp" />
+    <ClCompile Include="NetworkItems.cpp">
+      <DependentUpon>NetworkItems.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="StringResources.cpp" />
     <ClCompile Include="App.xaml.cpp">
@@ -167,17 +169,17 @@
     <ClCompile Include="MainWindowActions.cpp">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
-    <ClCompile Include="..\..\in-box\user-tools\midi-app-shared\NamedChoice.cpp" />
-    <ClCompile Include="..\..\in-box\user-tools\midi-app-shared\EndpointChoice.cpp" />
-    <ClCompile Include="..\..\in-box\user-tools\midi-app-shared\MidiAppSettings.cpp" />
-    <ClCompile Include="..\..\in-box\user-tools\midi-app-shared\WindowChrome.cpp" />
-    <ClCompile Include="..\..\in-box\user-tools\midi-app-shared\MidiEndpointHelpers.cpp" />
-    <ClCompile Include="..\..\in-box\user-tools\midi-app-shared\AppearanceFlyout.cpp" />
+    <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
+    <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
+    <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="..\..\in-box\user-tools\midi-app-shared\MidiAppShared.idl" />
-    <Midl Include="BluetoothItems.idl" />
+    <Midl Include="..\midi-app-shared\MidiAppShared.idl" />
+    <Midl Include="NetworkItems.idl" />
     <Midl Include="MainWindow.idl">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Midl>
@@ -197,7 +199,7 @@
     <ResourceCompile Include="Resources.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Manifest Include="midibluetoothsetup.exe.manifest" />
+    <Manifest Include="midinetworksetup.exe.manifest" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.CppWinRT" Version="3.0.260520.1" />
@@ -206,10 +208,10 @@
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260101001" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\in-box\Client\WinRT\com-extensions-idl\com-extensions-idl.vcxproj">
+    <ProjectReference Include="..\..\Client\WinRT\com-extensions-idl\com-extensions-idl.vcxproj">
       <Project>{9a508d6d-08cb-473a-995e-d069f00eb8bb}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\in-box\Client\WinRT\core\Windows.Devices.Midi2.vcxproj">
+    <ProjectReference Include="..\..\Client\WinRT\core\Windows.Devices.Midi2.vcxproj">
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
     </ProjectReference>
   </ItemGroup>

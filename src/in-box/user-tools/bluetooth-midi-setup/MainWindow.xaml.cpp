@@ -727,11 +727,15 @@ namespace winrt::midibluetoothsetup::implementation
                 auto const name = device.Name().empty() ?
                     res::GetString(L"UnknownDeviceName") : device.Name();
 
+                // Packets are counted before decoding, so packets moving while messages stay at
+                // zero means the device is sending something this transport cannot decode.
                 auto const statistics = device.HasEndpoint() ?
                     res::FormatString(
                         L"MessageCountsFormat",
                         static_cast<int64_t>(device.MessagesReceived()),
-                        static_cast<int64_t>(device.MessagesSent())) :
+                        static_cast<int64_t>(device.MessagesSent()),
+                        static_cast<int64_t>(device.PacketsReceived()),
+                        static_cast<int64_t>(device.PacketsSent())) :
                     winrt::hstring{};
 
                 auto const protocol = device.SelectedProtocol();
@@ -883,7 +887,9 @@ namespace winrt::midibluetoothsetup::implementation
                 res::FormatString(
                     L"MessageCountsFormat",
                     static_cast<int64_t>(status.MessagesReceived()),
-                    static_cast<int64_t>(status.MessagesSent())),
+                    static_cast<int64_t>(status.MessagesSent()),
+                    static_cast<int64_t>(status.PacketsReceived()),
+                    static_cast<int64_t>(status.PacketsSent())),
                 IntervalDescription(client.ConnectionInterval()),
                 status.EndpointDeviceId(),
                 status.EndpointDeviceInstanceId(),
