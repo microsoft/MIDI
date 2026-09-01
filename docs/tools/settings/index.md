@@ -89,8 +89,32 @@ the same device.
 The change is applied to the running service immediately and saved to the configuration file so it
 survives a restart.
 
-> Naming the individual MIDI 1.0 ports of a USB device is not in this release. Use the MIDI console for
-> that in the meantime.
+## Naming the MIDI 1.0 ports of a device
+
+A USB device attached through Kernel Streaming gets a MIDI 1.0 port for each of its groups, and those
+are what older applications see through WinMM and WinRT MIDI 1.0. **Edit port names**, in the customize
+dialog, is where you name them. It only appears for devices which have those ports.
+
+![Naming the individual MIDI 1.0 ports of a device]({{ site.baseurl }}/assets/images/midisettings-port-names.png)
+
+Inputs and outputs are listed separately, in group order. For each port you see the name it has now,
+the two names Windows can generate for it, and a box for a name of your own.
+
+**Name style for this device** overrides the machine-wide default for this one device:
+
+- **Use the global default** follows the setting in Global MIDI settings, and tells you which style
+  that currently resolves to
+- **Compatible with older Windows** keeps the name older applications have always seen
+- **New style, based on the endpoint and block names** is clearer, especially on a multi-port interface
+
+Seeing both generated names side by side is the point of the grid: you can tell what switching style
+would do to each port before you commit to it.
+
+A name of your own overrides whichever style is selected, and is capped at 31 characters because that
+is all WinMM stores. Leave the box empty to use the generated name.
+
+> Renaming takes effect when the MIDI service restarts, and applications which remember ports by name
+> will need to be pointed at them again. There is a button to restart the service in Global MIDI settings.
 
 ## Global MIDI settings
 
