@@ -145,6 +145,7 @@
     <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
     <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
+    <ClInclude Include="..\midi-app-shared\MonitorLauncher.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
   </ItemGroup>
   <ItemGroup>
@@ -172,6 +173,7 @@
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
+    <ClCompile Include="..\midi-app-shared\MonitorLauncher.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>

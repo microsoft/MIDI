@@ -378,11 +378,113 @@
   <data name="CustomizeClearImageButton.Content" xml:space="preserve">
     <value>Clear</value>
   </data>
-  <data name="CustomizePortNamingBar.Title" xml:space="preserve">
+  <data name="CustomizePortNamingHeader.Text" xml:space="preserve">
     <value>MIDI 1.0 port names</value>
   </data>
-  <data name="CustomizePortNamingBar.Message" xml:space="preserve">
-    <value>Naming the individual MIDI 1.0 ports of this device is not available in this preview. Use the MIDI console for now.</value>
+  <data name="CustomizePortNamingHelp.Text" xml:space="preserve">
+    <value>This device creates a MIDI 1.0 port for each group. You can choose the style of name they use, and name any of them yourself.</value>
+  </data>
+  <data name="CustomizePortNamesButton.Content" xml:space="preserve">
+    <value>Edit port names...</value>
+  </data>
+  <data name="Midi1PortNamesDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="Midi1PortNamesDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="Midi1PortNamesTitleFormat" xml:space="preserve">
+    <value>MIDI 1.0 port names for {0}</value>
+  </data>
+  <data name="Midi1PortNamesHelp.Text" xml:space="preserve">
+    <value>These are the ports older apps see through WinMM and WinRT MIDI 1.0. Choose which style of name to use, and optionally give any individual port a name of your own.</value>
+  </data>
+  <data name="Midi1PortNamesApproachHeader.Text" xml:space="preserve">
+    <value>Name style for this device</value>
+  </data>
+  <data name="Midi1PortNamesApproachCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Name style for this device</value>
+  </data>
+  <data name="Midi1PortNamesApproachDefaultItem.Content" xml:space="preserve">
+    <value>Use the global default</value>
+  </data>
+  <data name="Midi1PortNamesApproachClassicItem.Content" xml:space="preserve">
+    <value>Compatible with older Windows</value>
+  </data>
+  <data name="Midi1PortNamesApproachNewStyleItem.Content" xml:space="preserve">
+    <value>New style, based on the endpoint and block names</value>
+  </data>
+  <data name="Midi1PortNamesDefaultIsClassic" xml:space="preserve">
+    <value>The global default is currently names compatible with older Windows.</value>
+  </data>
+  <data name="Midi1PortNamesDefaultIsNewStyle" xml:space="preserve">
+    <value>The global default is currently new style names.</value>
+  </data>
+  <data name="Midi1PortNamesSourcesHeader.Text" xml:space="preserve">
+    <value>Inputs, which send to this PC</value>
+  </data>
+  <data name="Midi1PortNamesDestinationsHeader.Text" xml:space="preserve">
+    <value>Outputs, which this PC sends to</value>
+  </data>
+  <data name="Midi1PortNamesGroupColumn.Text" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="Midi1PortNamesCurrentColumn.Text" xml:space="preserve">
+    <value>Current name</value>
+  </data>
+  <data name="Midi1PortNamesLegacyColumn.Text" xml:space="preserve">
+    <value>Compatible with older Windows</value>
+  </data>
+  <data name="Midi1PortNamesNewStyleColumn.Text" xml:space="preserve">
+    <value>New style</value>
+  </data>
+  <data name="Midi1PortNamesCustomColumn.Text" xml:space="preserve">
+    <value>Your own name</value>
+  </data>
+  <data name="Midi1PortNamesGroupColumn2.Text" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="Midi1PortNamesCurrentColumn2.Text" xml:space="preserve">
+    <value>Current name</value>
+  </data>
+  <data name="Midi1PortNamesLegacyColumn2.Text" xml:space="preserve">
+    <value>Compatible with older Windows</value>
+  </data>
+  <data name="Midi1PortNamesNewStyleColumn2.Text" xml:space="preserve">
+    <value>New style</value>
+  </data>
+  <data name="Midi1PortNamesCustomColumn2.Text" xml:space="preserve">
+    <value>Your own name</value>
+  </data>
+  <data name="Midi1PortNameCustomTextBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Your own name for this port</value>
+  </data>
+  <data name="Midi1PortNamesNoSourcesText.Text" xml:space="preserve">
+    <value>This device has no MIDI 1.0 inputs.</value>
+  </data>
+  <data name="Midi1PortNamesNoDestinationsText.Text" xml:space="preserve">
+    <value>This device has no MIDI 1.0 outputs.</value>
+  </data>
+  <data name="Midi1PortNamesRestartBar.Title" xml:space="preserve">
+    <value>Renaming takes effect on the next service restart</value>
+  </data>
+  <data name="Midi1PortNamesRestartBar.Message" xml:space="preserve">
+    <value>Apps which remember ports by name will need to be pointed at them again.</value>
+  </data>
+  <data name="Midi1PortNamesSaved" xml:space="preserve">
+    <value>The MIDI 1.0 port names were saved. Restart the MIDI service to use them.</value>
+  </data>
+  <data name="Midi1PortNamesFailed" xml:space="preserve">
+    <value>The MIDI 1.0 port names could not be changed.</value>
+  </data>
+  <data name="Midi1PortNamesFailedFormat" xml:space="preserve">
+    <value>The MIDI 1.0 port names could not be changed. {0}</value>
+  </data>
+  <data name="Midi1PortNamesNotSaved" xml:space="preserve">
+    <value>The MIDI 1.0 port names were applied but could not be saved to the configuration file.</value>
+  </data>
+  <data name="Midi1PortNamesNotSavedFormat" xml:space="preserve">
+    <value>The MIDI 1.0 port names were applied but could not be saved to the configuration file. {0}</value>
   </data>
   <data name="ImageCopyFailed" xml:space="preserve">
     <value>That picture could not be copied into the shared MIDI pictures folder.</value>

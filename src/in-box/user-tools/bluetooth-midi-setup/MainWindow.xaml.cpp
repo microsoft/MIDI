@@ -166,6 +166,55 @@ namespace winrt::midibluetoothsetup::implementation
             }
         }
 
+        // True when the endpoint can send something worth watching. An endpoint which declares
+        // nothing is treated as a source, the same assumption MidiEndpointHelpers makes about
+        // groups, so a device which describes itself poorly stays usable.
+        bool EndpointIsMessageSource(_In_ winrt::hstring const& endpointDeviceId) noexcept
+        {
+            try
+            {
+                if (endpointDeviceId.empty())
+                {
+                    return false;
+                }
+
+                auto const endpoint =
+                    midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(endpointDeviceId);
+
+                if (endpoint == nullptr)
+                {
+                    return false;
+                }
+
+                auto const functionBlocks = endpoint.GetDeclaredFunctionBlocks();
+                auto const groupTerminalBlocks = endpoint.GetGroupTerminalBlocks();
+
+                for (auto const& block : functionBlocks)
+                {
+                    if (block.Direction() == midi2enum::MidiFunctionBlockDirection::BlockOutput ||
+                        block.Direction() == midi2enum::MidiFunctionBlockDirection::Bidirectional)
+                    {
+                        return true;
+                    }
+                }
+
+                for (auto const& block : groupTerminalBlocks)
+                {
+                    if (block.Direction() == midi2enum::MidiGroupTerminalBlockDirection::BlockOutput ||
+                        block.Direction() == midi2enum::MidiGroupTerminalBlockDirection::Bidirectional)
+                    {
+                        return true;
+                    }
+                }
+
+                return functionBlocks.Size() == 0 && groupTerminalBlocks.Size() == 0;
+            }
+            catch (...)
+            {
+                return false;
+            }
+        }
+
         // The bare twelve hex digit form, which is what every command keys on.
         winrt::hstring AddressKey(_In_ uint64_t const address) noexcept
         {
@@ -761,6 +810,7 @@ namespace winrt::midibluetoothsetup::implementation
                     device.IsPaired(),
                     device.HasEndpoint(),
                     remembered,
+                    device.HasEndpoint() && EndpointIsMessageSource(device.EndpointDeviceId()),
                     device.OfflineRetentionSeconds(),
                     OfflineRetentionDescription(device.EffectiveOfflineRetentionSeconds()));
             }

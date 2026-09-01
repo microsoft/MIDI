@@ -504,10 +504,20 @@ namespace winrt::midisettings::implementation
             CustomizeDescriptionTextBox().Text(description);
             CustomizeStatusText().Text({});
 
+            // Coming back from the port names dialog restores what was typed, rather than the
+            // stored values, so stepping out to rename ports does not discard an edit in progress.
+            if (m_customizeEditsPending)
+            {
+                m_customizeEditsPending = false;
+
+                CustomizeNameTextBox().Text(m_pendingCustomizeName);
+                CustomizeDescriptionTextBox().Text(m_pendingCustomizeDescription);
+            }
+
             UpdateCustomizeImagePreview();
 
-            // KS and KSAggregate are the transports which create MIDI 1.0 ports per group, and
-            // naming those individually is not in this preview yet.
+            // KS and KSAggregate are the transports which create a MIDI 1.0 port per group, so
+            // they are the only ones with per-port names to edit.
             winrt::hstring transportCode{};
             winrt::guid transportId{};
 
@@ -517,12 +527,31 @@ namespace winrt::midisettings::implementation
                 transportId = transportInfo.TransportId();
             }
 
-            CustomizePortNamingBar().IsOpen(
-                transportCode == L"KS" || transportCode == L"KSA");
+            CustomizePortNamingPanel().Visibility(
+                (transportCode == L"KS" || transportCode == L"KSA") && endpoint.IsMidi1PortCreationEnabled() ?
+                    xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            m_portNamesRequested = false;
 
             CustomizeDialog().XamlRoot(Content().XamlRoot());
 
             auto const result = co_await CustomizeDialog().ShowAsync();
+
+            // Stepping out to the port names dialog and back is not a cancel, so nothing is
+            // applied here and the customize dialog is reopened when it closes.
+            if (m_portNamesRequested && !m_closing)
+            {
+                m_portNamesRequested = false;
+
+                co_await ShowMidi1PortNamesDialogAsync(endpointDeviceId);
+
+                if (!m_closing)
+                {
+                    co_await ShowCustomizeDialogAsync(endpointDeviceId);
+                }
+
+                co_return;
+            }
 
             if (result != controls::ContentDialogResult::Primary || m_closing)
             {

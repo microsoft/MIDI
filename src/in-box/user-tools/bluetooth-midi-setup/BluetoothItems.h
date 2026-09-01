@@ -274,6 +274,14 @@ namespace winrt::midibluetoothsetup::implementation
                 winrt::Microsoft::UI::Xaml::Visibility::Visible;
         }
 
+        // Only worth offering when the endpoint can actually send something to watch.
+        winrt::Microsoft::UI::Xaml::Visibility MonitorVisibility() const noexcept
+        {
+            return m_canMonitor ?
+                winrt::Microsoft::UI::Xaml::Visibility::Visible :
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
+        }
+
         // Order must match the ComboBoxItems in MainWindow.xaml.
         static int32_t OfflineRetentionSecondsFromIndex(_In_ int32_t const index) noexcept
         {
@@ -389,6 +397,7 @@ namespace winrt::midibluetoothsetup::implementation
             _In_ bool const isPaired,
             _In_ bool const hasEndpoint,
             _In_ bool const isRemembered,
+            _In_ bool const canMonitor,
             _In_ int32_t const offlineRetentionSeconds,
             _In_ winrt::hstring const& offlineRetentionText) noexcept
         {
@@ -430,6 +439,11 @@ namespace winrt::midibluetoothsetup::implementation
 
             UpdateField(m_isPresent, isPresent, L"IsPresent");
             UpdateField(m_hasEndpoint, hasEndpoint, L"HasEndpoint");
+
+            if (UpdateField(m_canMonitor, canMonitor, L"CanMonitor"))
+            {
+                RaisePropertyChanged(L"MonitorVisibility");
+            }
 
             if (connectedChanged)
             {
@@ -477,6 +491,7 @@ namespace winrt::midibluetoothsetup::implementation
         bool m_isPresent{ false };
         bool m_isPaired{ false };
         bool m_hasEndpoint{ false };
+        bool m_canMonitor{ false };
 
         int32_t m_offlineRetentionSeconds{ -2 };
         winrt::hstring m_offlineRetentionText{};

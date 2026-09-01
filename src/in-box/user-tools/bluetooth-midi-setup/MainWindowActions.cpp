@@ -600,6 +600,26 @@ namespace winrt::midibluetoothsetup::implementation
         MIDI_BTSETUP_CATCH_AND_LOG(L"Unable to copy the endpoint id.")
     }
 
+    _Use_decl_annotations_
+    void MainWindow::OnMonitorEndpointClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            auto const item = ItemFromSender<midibluetoothsetup::BluetoothDeviceItem>(sender);
+
+            if (item == nullptr)
+            {
+                return;
+            }
+
+            if (!midiapp::LaunchMonitorForEndpoint(item.EndpointDeviceId()))
+            {
+                SetDevicesStatus(res::GetString(L"StatusMonitorNotAvailable"));
+            }
+        }
+        MIDI_BTSETUP_CATCH_AND_LOG(L"Unable to open the MIDI monitor for an endpoint.")
+    }
+
 
     // ============================== Customization ==============================
 

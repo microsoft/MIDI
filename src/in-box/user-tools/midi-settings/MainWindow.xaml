@@ -224,6 +224,57 @@
                 <TextBlock Text="{x:Bind DisplayName}" />
             </DataTemplate>
 
+            <!-- Column widths are repeated in the header row above each grid. They are fixed for
+                 the same reason as Midi1PortTemplate: each row is its own Grid, so Auto would be
+                 sized per row and nothing would line up down the column. -->
+            <DataTemplate x:Key="Midi1PortNameTemplate" x:DataType="local:Midi1PortNameItem">
+                <Grid ColumnSpacing="12" Margin="0,3,0,3">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="44" />
+                        <ColumnDefinition Width="200" />
+                        <ColumnDefinition Width="200" />
+                        <ColumnDefinition Width="200" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                               Text="{x:Bind GroupNumberText, Mode=OneWay}"
+                               Style="{StaticResource PropertyValueStyle}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+
+                    <TextBlock Grid.Column="1"
+                               Text="{x:Bind CurrentName, Mode=OneWay}"
+                               Style="{StaticResource PropertyValueStyle}"
+                               VerticalAlignment="Center"
+                               TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis"
+                               ToolTipService.ToolTip="{x:Bind CurrentName, Mode=OneWay}" />
+
+                    <TextBlock Grid.Column="2"
+                               Text="{x:Bind LegacyCompatibleName, Mode=OneWay}"
+                               Style="{StaticResource PropertyLabelStyle}"
+                               VerticalAlignment="Center"
+                               TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis"
+                               ToolTipService.ToolTip="{x:Bind LegacyCompatibleName, Mode=OneWay}" />
+
+                    <TextBlock Grid.Column="3"
+                               Text="{x:Bind NewStyleName, Mode=OneWay}"
+                               Style="{StaticResource PropertyLabelStyle}"
+                               VerticalAlignment="Center"
+                               TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis"
+                               ToolTipService.ToolTip="{x:Bind NewStyleName, Mode=OneWay}" />
+
+                    <TextBox Grid.Column="4"
+                             x:Uid="Midi1PortNameCustomTextBox"
+                             Text="{x:Bind CustomName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                             MaxLength="31"
+                             VerticalAlignment="Center" />
+                </Grid>
+            </DataTemplate>
+
             <DataTemplate x:Key="ConfigFileChoiceTemplate" x:DataType="local:ConfigFileChoice">
                 <TextBlock Text="{x:Bind DisplayName}" />
             </DataTemplate>
@@ -756,15 +807,132 @@
                         </Grid>
                     </StackPanel>
 
-                    <InfoBar x:Name="CustomizePortNamingBar"
-                             x:Uid="CustomizePortNamingBar"
-                             IsOpen="False"
-                             IsClosable="False"
-                             Severity="Informational"
-                             Title="MIDI 1.0 port names"
-                             Message="Naming the individual MIDI 1.0 ports of this device is not available in this preview. Use the MIDI console for now." />
+                    <StackPanel x:Name="CustomizePortNamingPanel" Spacing="4" Visibility="Collapsed">
+                        <TextBlock x:Uid="CustomizePortNamingHeader"
+                                   Text="MIDI 1.0 port names"
+                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock x:Uid="CustomizePortNamingHelp"
+                                   Style="{StaticResource PropertyLabelStyle}"
+                                   TextWrapping="Wrap"
+                                   Text="This device creates a MIDI 1.0 port for each group. You can choose the style of name they use, and name any of them yourself." />
+                        <Button x:Name="CustomizePortNamesButton"
+                                x:Uid="CustomizePortNamesButton"
+                                Content="Edit port names..."
+                                HorizontalAlignment="Left"
+                                Margin="0,4,0,0"
+                                Click="OnCustomizePortNamesClick" />
+                    </StackPanel>
 
                     <TextBlock x:Name="CustomizeStatusText"
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </ScrollViewer>
+        </ContentDialog>
+
+        <ContentDialog x:Name="Midi1PortNamesDialog"
+                       x:Uid="Midi1PortNamesDialog"
+                       Title="MIDI 1.0 port names"
+                       PrimaryButtonText="Save"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Primary">
+            <ContentDialog.Resources>
+                <x:Double x:Key="ContentDialogMaxWidth">1080</x:Double>
+            </ContentDialog.Resources>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="560">
+                <StackPanel Width="980" Spacing="20" Margin="0,4,12,4">
+
+                    <TextBlock x:Uid="Midi1PortNamesHelp"
+                               Style="{StaticResource PropertyLabelStyle}"
+                               TextWrapping="Wrap"
+                               Text="These are the ports older apps see through WinMM and WinRT MIDI 1.0. Choose which style of name to use, and optionally give any individual port a name of your own." />
+
+                    <StackPanel Spacing="4">
+                        <TextBlock x:Uid="Midi1PortNamesApproachHeader"
+                                   Text="Name style for this device"
+                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <ComboBox x:Name="Midi1PortNamesApproachCombo"
+                                  x:Uid="Midi1PortNamesApproachCombo"
+                                  MinWidth="400"
+                                  SelectionChanged="OnMidi1PortNamesApproachChanged">
+                            <ComboBoxItem x:Uid="Midi1PortNamesApproachDefaultItem" Content="Use the global default" />
+                            <ComboBoxItem x:Uid="Midi1PortNamesApproachClassicItem" Content="Compatible with older Windows" />
+                            <ComboBoxItem x:Uid="Midi1PortNamesApproachNewStyleItem" Content="New style, based on the endpoint and block names" />
+                        </ComboBox>
+                        <TextBlock x:Name="Midi1PortNamesApproachCaption"
+                                   Style="{StaticResource PropertyLabelStyle}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock x:Uid="Midi1PortNamesSourcesHeader"
+                                   Text="Inputs, which send to this PC"
+                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                        <Grid ColumnSpacing="12" Margin="0,4,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="44" />
+                                <ColumnDefinition Width="200" />
+                                <ColumnDefinition Width="200" />
+                                <ColumnDefinition Width="200" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" x:Uid="Midi1PortNamesGroupColumn" Text="Group" Style="{StaticResource PropertyLabelStyle}" HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="1" x:Uid="Midi1PortNamesCurrentColumn" Text="Current name" Style="{StaticResource PropertyLabelStyle}" />
+                            <TextBlock Grid.Column="2" x:Uid="Midi1PortNamesLegacyColumn" Text="Compatible with older Windows" Style="{StaticResource PropertyLabelStyle}" />
+                            <TextBlock Grid.Column="3" x:Uid="Midi1PortNamesNewStyleColumn" Text="New style" Style="{StaticResource PropertyLabelStyle}" />
+                            <TextBlock Grid.Column="4" x:Uid="Midi1PortNamesCustomColumn" Text="Your own name" Style="{StaticResource PropertyLabelStyle}" />
+                        </Grid>
+
+                        <ItemsControl x:Name="Midi1PortNamesSourcesItemsControl"
+                                      ItemTemplate="{StaticResource Midi1PortNameTemplate}" />
+
+                        <TextBlock x:Name="Midi1PortNamesNoSourcesText"
+                                   x:Uid="Midi1PortNamesNoSourcesText"
+                                   Text="This device has no MIDI 1.0 inputs."
+                                   Style="{StaticResource PropertyLabelStyle}"
+                                   Visibility="Collapsed" />
+                    </StackPanel>
+
+                    <StackPanel Spacing="4">
+                        <TextBlock x:Uid="Midi1PortNamesDestinationsHeader"
+                                   Text="Outputs, which this PC sends to"
+                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                        <Grid ColumnSpacing="12" Margin="0,4,0,2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="44" />
+                                <ColumnDefinition Width="200" />
+                                <ColumnDefinition Width="200" />
+                                <ColumnDefinition Width="200" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" x:Uid="Midi1PortNamesGroupColumn2" Text="Group" Style="{StaticResource PropertyLabelStyle}" HorizontalAlignment="Center" />
+                            <TextBlock Grid.Column="1" x:Uid="Midi1PortNamesCurrentColumn2" Text="Current name" Style="{StaticResource PropertyLabelStyle}" />
+                            <TextBlock Grid.Column="2" x:Uid="Midi1PortNamesLegacyColumn2" Text="Compatible with older Windows" Style="{StaticResource PropertyLabelStyle}" />
+                            <TextBlock Grid.Column="3" x:Uid="Midi1PortNamesNewStyleColumn2" Text="New style" Style="{StaticResource PropertyLabelStyle}" />
+                            <TextBlock Grid.Column="4" x:Uid="Midi1PortNamesCustomColumn2" Text="Your own name" Style="{StaticResource PropertyLabelStyle}" />
+                        </Grid>
+
+                        <ItemsControl x:Name="Midi1PortNamesDestinationsItemsControl"
+                                      ItemTemplate="{StaticResource Midi1PortNameTemplate}" />
+
+                        <TextBlock x:Name="Midi1PortNamesNoDestinationsText"
+                                   x:Uid="Midi1PortNamesNoDestinationsText"
+                                   Text="This device has no MIDI 1.0 outputs."
+                                   Style="{StaticResource PropertyLabelStyle}"
+                                   Visibility="Collapsed" />
+                    </StackPanel>
+
+                    <InfoBar x:Uid="Midi1PortNamesRestartBar"
+                             IsOpen="True"
+                             IsClosable="False"
+                             Severity="Informational"
+                             Title="Renaming takes effect on the next service restart"
+                             Message="Apps which remember ports by name will need to be pointed at them again." />
+
+                    <TextBlock x:Name="Midi1PortNamesStatusText"
                                TextWrapping="Wrap"
                                Style="{ThemeResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />

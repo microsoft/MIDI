@@ -182,6 +182,9 @@
     <ClCompile Include="MainWindowGlobal.cpp">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MainWindowPortNames.cpp">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </ClCompile>
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointImageAssets.cpp" />
