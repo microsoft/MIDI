@@ -258,21 +258,25 @@ namespace winrt::midinetworksetup::implementation
     _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::OnConnectRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
     {
-        auto item = ItemOf<midinetworksetup::RemoteHostItem>(sender);
-
-        if (item == nullptr)
+        try
         {
-            co_return;
+            auto item = ItemOf<midinetworksetup::RemoteHostItem>(sender);
+
+            if (item == nullptr)
+            {
+                co_return;
+            }
+
+            auto customName = std::make_shared<winrt::hstring>();
+
+            if (!co_await PromptForConnectNameAsync(item.DisplayName(), customName))
+            {
+                co_return;
+            }
+
+            ConnectRemoteHostAsync(item, false, *customName);
         }
-
-        auto customName = std::make_shared<winrt::hstring>();
-
-        if (!co_await PromptForConnectNameAsync(item.DisplayName(), customName))
-        {
-            co_return;
-        }
-
-        ConnectRemoteHostAsync(item, false, *customName);
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to start connecting to a remote device.")
     }
 
     _Use_decl_annotations_
@@ -346,7 +350,11 @@ namespace winrt::midinetworksetup::implementation
     _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::OnRetryRemoteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
     {
-        ConnectRemoteHostAsync(ItemOf<midinetworksetup::RemoteHostItem>(sender), true, winrt::hstring{});
+        try
+        {
+            ConnectRemoteHostAsync(ItemOf<midinetworksetup::RemoteHostItem>(sender), true, winrt::hstring{});
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to retry a remote device.")
 
         co_return;
     }
@@ -2154,41 +2162,49 @@ namespace winrt::midinetworksetup::implementation
     _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::OnDisconnectRemoteClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
     {
-        auto item = ItemOf<midinetworksetup::HostConnectionItem>(sender);
-
-        if (item == nullptr)
+        try
         {
-            co_return;
-        }
+            auto item = ItemOf<midinetworksetup::HostConnectionItem>(sender);
 
-        if (!co_await ConfirmAsync(
-            res::GetString(L"DisconnectRemoteClientConfirmTitle"),
-            res::FormatString(L"DisconnectRemoteClientConfirmMessageFormat", item.DisplayName())))
-        {
-            co_return;
-        }
+            if (item == nullptr)
+            {
+                co_return;
+            }
 
-        DisconnectRemoteClientAsync(item);
+            if (!co_await ConfirmAsync(
+                res::GetString(L"DisconnectRemoteClientConfirmTitle"),
+                res::FormatString(L"DisconnectRemoteClientConfirmMessageFormat", item.DisplayName())))
+            {
+                co_return;
+            }
+
+            DisconnectRemoteClientAsync(item);
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to disconnect a remote client.")
     }
 
     _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::OnBlockRemoteClientClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
     {
-        auto item = ItemOf<midinetworksetup::HostConnectionItem>(sender);
-
-        if (item == nullptr)
+        try
         {
-            co_return;
-        }
+            auto item = ItemOf<midinetworksetup::HostConnectionItem>(sender);
 
-        if (!co_await ConfirmAsync(
-            res::GetString(L"BlockRemoteClientConfirmTitle"),
-            res::FormatString(L"BlockRemoteClientConfirmMessageFormat", item.DisplayName())))
-        {
-            co_return;
-        }
+            if (item == nullptr)
+            {
+                co_return;
+            }
 
-        AnswerRemoteClientAsync(item, false, false);
+            if (!co_await ConfirmAsync(
+                res::GetString(L"BlockRemoteClientConfirmTitle"),
+                res::FormatString(L"BlockRemoteClientConfirmMessageFormat", item.DisplayName())))
+            {
+                co_return;
+            }
+
+            AnswerRemoteClientAsync(item, false, false);
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to block a remote client.")
     }
 
     _Use_decl_annotations_

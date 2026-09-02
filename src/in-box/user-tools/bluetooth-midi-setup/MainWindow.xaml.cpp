@@ -480,6 +480,10 @@ namespace winrt::midibluetoothsetup::implementation
     // queued when the previous refresh is still going, or a slow service would build a backlog.
     winrt::fire_and_forget MainWindow::RequestRefreshAsync() noexcept
     {
+        // GatherSnapshot and the flag below are members, and both are touched after the thread
+        // switch, so this has to outlive a close which happens while the gather is running.
+        auto strongThis = get_strong();
+
         auto weak = get_weak();
 
         if (!m_loaded || m_closing || !m_transportUsable)
@@ -500,12 +504,16 @@ namespace winrt::midibluetoothsetup::implementation
 
         if (queue == nullptr)
         {
+            m_refreshInFlight.store(false);
+
             co_return;
         }
 
         // there is no resume_foreground overload for the Microsoft.UI dispatcher in this
-        // projection, so the result is marshaled back with TryEnqueue
-        queue.TryEnqueue([weak, snapshot = std::move(snapshot)]()
+        // projection, so the result is marshaled back with TryEnqueue. The flag is cleared in
+        // there, so a queue which refuses the work has to clear it here or every later refresh
+        // is skipped and the page silently stops updating.
+        if (!queue.TryEnqueue([weak, snapshot = std::move(snapshot)]()
             {
                 auto strong = weak.get();
 
@@ -520,7 +528,10 @@ namespace winrt::midibluetoothsetup::implementation
                 }
 
                 strong->m_refreshInFlight.store(false);
-            });
+            }))
+        {
+            m_refreshInFlight.store(false);
+        }
     }
 
     MainWindow::ServiceSnapshot MainWindow::GatherSnapshot() noexcept
