@@ -565,8 +565,18 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring AddressText() const noexcept { return m_addressText; }
         winrt::hstring StatusText() const noexcept { return m_statusText; }
         winrt::hstring StatisticsText() const noexcept { return m_statisticsText; }
+        winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
 
         bool IsPendingApproval() const noexcept { return m_isPendingApproval; }
+
+        // A network endpoint is bidirectional, so there is always something to watch once one
+        // exists. It only exists while the session is up.
+        winrt::Microsoft::UI::Xaml::Visibility MonitorVisibility() const noexcept
+        {
+            return m_endpointDeviceId.empty() ?
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
+                winrt::Microsoft::UI::Xaml::Visibility::Visible;
+        }
 
         winrt::Microsoft::UI::Xaml::Visibility ConnectedBadgeVisibility() const noexcept
         {
@@ -612,6 +622,7 @@ namespace winrt::midinetworksetup::implementation
             _In_ winrt::hstring const& addressText,
             _In_ winrt::hstring const& statusText,
             _In_ winrt::hstring const& statisticsText,
+            _In_ winrt::hstring const& endpointDeviceId,
             _In_ uint64_t const latencyTicks,
             _In_ bool const isSessionActive,
             _In_ bool const isPendingApproval) noexcept
@@ -621,6 +632,11 @@ namespace winrt::midinetworksetup::implementation
             UpdateField(m_statusText, statusText, L"StatusText");
             UpdateField(m_statisticsText, statisticsText, L"StatisticsText");
             UpdateField(m_isPendingApproval, isPendingApproval, L"IsPendingApproval");
+
+            if (UpdateField(m_endpointDeviceId, endpointDeviceId, L"EndpointDeviceId"))
+            {
+                RaisePropertyChanged(L"MonitorVisibility");
+            }
 
             if (UpdateField(m_isSessionActive, isSessionActive, L"IsSessionActive"))
             {
@@ -648,6 +664,7 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring m_addressText{};
         winrt::hstring m_statusText{};
         winrt::hstring m_statisticsText{};
+        winrt::hstring m_endpointDeviceId{};
 
         LatencyHistory m_latency{};
 

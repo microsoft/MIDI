@@ -5,6 +5,7 @@
 
 #include <Feature_Servicing_MIDI2BsToUMPConv.h>
 #include <Feature_Servicing_MIDI2WinMMShortMessageNoSendWait.h>
+#include <Feature_Servicing_MIDI2WinMMCompleteLongBufferOnFailure.h>
 
 #define CALC_TICKS(pos) ((DWORD) (((pos) * 1000.0) / m_qpcFrequency))
 
@@ -198,7 +199,14 @@ CMidiPort::ModMessage(UINT msg, DWORD_PTR param1, DWORD_PTR param2)
     switch(msg)
     {
         case MODM_LONGDATA:
-            RETURN_IF_FAILED(SendLongMessage(reinterpret_cast<MIDIHDR*>(param1)));
+            if (Feature_Servicing_MIDI2WinMMCompleteLongBufferOnFailure::IsEnabled())
+            {
+                RETURN_IF_FAILED(SendLongMessageCompletingBuffer(reinterpret_cast<MIDIHDR*>(param1)));
+            }
+            else
+            {
+                RETURN_IF_FAILED(SendLongMessage(reinterpret_cast<MIDIHDR*>(param1)));
+            }
             break;
         case MODM_DATA:
             RETURN_IF_FAILED(SendMidiMessage(static_cast<UINT32>(param1)));
@@ -1020,6 +1028,79 @@ CMidiPort::SendLongMessage(LPMIDIHDR buffer)
     WinmmClientCallback(MOM_DONE, (DWORD_PTR) buffer, 0);
     return S_OK;
 }
+
+// Start add with Feature_Servicing_MIDI2WinMMCompleteLongBufferOnFailure
+_Use_decl_annotations_
+HRESULT
+CMidiPort::SendLongMessageCompletingBuffer(LPMIDIHDR buffer)
+{
+    TraceLoggingWrite(
+        WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Start", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingPointer(buffer, "buffer"));
+
+    auto exitCallback = wil::scope_exit([&]()
+    {
+        TraceLoggingWrite(
+            WdmAud2TelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_VERBOSE,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"End", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingPointer(buffer, "buffer"));
+    });
+
+    HRESULT sendResult = S_OK;
+
+    {
+        auto lock = m_Lock.lock();
+
+        // This should be on an initialized midi out port
+        RETURN_HR_IF(E_INVALIDARG, nullptr == m_MidisrvTransport);
+
+        // The buffer provided must be valid
+        RETURN_HR_IF(E_INVALIDARG, nullptr == buffer);
+        RETURN_HR_IF(HRESULT_FROM_MMRESULT(MMSYSERR_INVALFLAG), !(buffer->dwFlags & MHDR_PREPARED));
+
+        buffer->dwFlags &= (~MHDR_DONE);
+        buffer->dwFlags |= MHDR_INQUEUE;
+
+        UINT32 bytesSent = 0;
+        do
+        {
+            UINT32 bytesToSend = min(MAXIMUM_LOOPED_BYTESTREAM_DATASIZE, buffer->dwBufferLength - bytesSent);
+            // For legacy compatibility purposes, always wait for the message send to complete
+            sendResult = m_MidisrvTransport->SendMidiMessage(MessageOptionFlags_WaitForSendComplete, buffer->lpData + bytesSent, bytesToSend, 0);
+            if (FAILED(sendResult))
+            {
+                LOG_IF_FAILED(sendResult);
+                break;
+            }
+
+            bytesSent += bytesToSend;
+        }
+        while (bytesSent < buffer->dwBufferLength);
+    }
+
+    // A buffer we have taken is always given back, even when the send failed. Apps have no
+    // other way to reclaim one, and many treat MHDR_DONE as the only signal that a buffer
+    // has returned to their pool, so keeping it strands that buffer for the life of the port.
+    buffer->dwFlags &= (~MHDR_INQUEUE);
+    buffer->dwFlags |= MHDR_DONE;
+
+    // client callback indicating this buffer is completed.
+    WinmmClientCallback(MOM_DONE, (DWORD_PTR) buffer, 0);
+
+    RETURN_IF_FAILED(sendResult);
+
+    return S_OK;
+}
+// End add with Feature_Servicing_MIDI2WinMMCompleteLongBufferOnFailure
 
 _Use_decl_annotations_
 void

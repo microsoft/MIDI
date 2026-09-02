@@ -48,6 +48,9 @@ private:
     HRESULT GetDevCaps(_In_ MidiFlow flow, _In_ UINT portNumber, _In_ DWORD_PTR midiCaps);
     HRESULT GetDevCaps(_In_ MidiFlow flow, _In_ UINT portNumber, _In_ DWORD_PTR midiCaps, _In_ DWORD_PTR midiCapsSize);
     HRESULT Open(_In_ MidiFlow flow, _In_ UINT portNumber, _In_ const MIDIOPENDESC* midiOpenDesc, _In_ DWORD_PTR flags, _In_ MidiPortHandle* openedPort);
+    // Start add with Feature_Servicing_MIDI2WinMMPortHandleSlotWidth
+    HRESULT OpenIntoPointerSizedSlot(_In_ MidiFlow flow, _In_ UINT portNumber, _In_ const MIDIOPENDESC* midiOpenDesc, _In_ DWORD_PTR flags, _In_ DWORD_PTR* openedPort);
+    // End add with Feature_Servicing_MIDI2WinMMPortHandleSlotWidth
     HRESULT Close(_In_ MidiFlow flow, _In_ MidiPortHandle portHandle);
     HRESULT ForwardMidMessage(_In_ UINT msg, _In_ MidiPortHandle portHandle, _In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
     HRESULT ForwardModMessage(_In_ UINT msg, _In_ MidiPortHandle portHandle, _In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
