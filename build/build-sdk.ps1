@@ -958,6 +958,41 @@ function Invoke-ReleaseTarget {
         Write-Detail "Installer -> $name"
     }
 
+    # A crash report gives a module name, a build timestamp and an offset. Without the pdb from
+    # that exact build the offset cannot be turned back into a function, and the build output is
+    # overwritten by the next build. Kept in a subfolder because these are far larger than the
+    # installers they belong to.
+    foreach ($plat in $Platform) {
+        $symbolFolder = Join-Path $folder "symbols\$plat"
+        New-Item -ItemType Directory -Force -Path $symbolFolder | Out-Null
+
+        $sdkBinarySourcePlatform = if ($plat -eq 'Arm64') { 'Arm64EC' } else { $plat }
+
+        $sources = @(Join-Path $SdkOutRoot "Windows.Devices.Midi2\$sdkBinarySourcePlatform\$Configuration\Windows.Devices.Midi2.pdb")
+
+        foreach ($tool in $ConsoleTools) {
+            $sources += Join-Path $SdkOutRoot "$tool\$plat\$Configuration\$tool.pdb"
+        }
+
+        foreach ($tool in $GuiTools) {
+            $sources += Join-Path $SdkOutRoot "$($tool.Name)\$plat\$Configuration\$($tool.Name).pdb"
+        }
+
+        $copied = 0
+
+        foreach ($source in $sources) {
+            if (Test-Path $source) {
+                Copy-Item $source -Destination $symbolFolder -Force
+                $copied++
+            }
+            else {
+                Write-Note "Symbols not found: $source"
+            }
+        }
+
+        Write-Detail "Symbols -> symbols\$plat ($copied files)"
+    }
+
     Write-Host ''
     Write-Host "     Release folder: $folder" -ForegroundColor Green
 }
