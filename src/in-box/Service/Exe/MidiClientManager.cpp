@@ -1517,6 +1517,14 @@ CMidiClientManager::DestroyMidiClientDeferredPipeShutdown(
     std::wstring inUseReportingTarget{ };
     bool endpointInUse{ false };
 
+    // Also captured under the lock and used after it is released. The session tracker takes
+    // its own lock, and a thread holding m_ClientManagerLock exclusive must not wait on it:
+    // the session rundown path takes them in the opposite order.
+    bool removeClientConnection{ false };
+    GUID removedSessionId{ };
+    DWORD removedClientProcessId{ 0 };
+    std::wstring removedEndpointId{ };
+
     {
         auto lock = m_ClientManagerLock.lock_exclusive();
 
@@ -1539,7 +1547,10 @@ CMidiClientManager::DestroyMidiClientDeferredPipeShutdown(
                 inUseReportingTarget = GetEndpointInUseReportingTarget(endpointId);
             }
 
-            m_SessionTracker->RemoveClientEndpointConnection(midiClientPipe->SessionId(), midiClientPipe->ClientProcessId(), client->second->MidiDevice().c_str(), clientHandle);
+            removeClientConnection = true;
+            removedSessionId = midiClientPipe->SessionId();
+            removedClientProcessId = midiClientPipe->ClientProcessId();
+            removedEndpointId = endpointId;
 
             // remove this client from all of the transforms and disconnect it and any transforms no longer in use
             for (auto transform = m_TransformPipes.begin(); transform != m_TransformPipes.end();)
@@ -1614,6 +1625,13 @@ CMidiClientManager::DestroyMidiClientDeferredPipeShutdown(
         {
             RETURN_IF_FAILED(E_INVALIDARG);
         }
+    }
+
+    // kept ahead of the pipe shutdowns below, which is where it sat when it ran under the lock
+    if (removeClientConnection)
+    {
+        LOG_IF_FAILED(m_SessionTracker->RemoveClientEndpointConnection(
+            removedSessionId, removedClientProcessId, removedEndpointId.c_str(), clientHandle));
     }
 
     if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
