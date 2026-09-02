@@ -18,6 +18,7 @@ namespace midisettings
         NetworkSetup,
         SysEx,
         ScratchPad,
+        Keyboard,
         Troubleshooter,
         Monitor
     };

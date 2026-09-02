@@ -167,6 +167,15 @@
   <data name="ScratchPadButtonText.Text" xml:space="preserve">
     <value>Scratch Pad</value>
   </data>
+  <data name="KeyboardButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Windows MIDI Keyboard</value>
+  </data>
+  <data name="KeyboardButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Windows MIDI Keyboard</value>
+  </data>
+  <data name="KeyboardButtonText.Text" xml:space="preserve">
+    <value>Virtual Keyboard</value>
+  </data>
   <data name="TroubleshooterButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>MIDI Troubleshooting and Repair</value>
   </data>

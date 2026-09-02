@@ -37,6 +37,7 @@ namespace winrt::midisettings::implementation
         void OnSysExClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnMonitorClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnScratchPadClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnKeyboardClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnTroubleshooterClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnGlobalSettingsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 

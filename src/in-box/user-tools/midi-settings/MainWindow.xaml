@@ -435,6 +435,18 @@
                         </StackPanel>
                     </Button>
 
+                    <Button x:Name="KeyboardButton"
+                            x:Uid="KeyboardButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnKeyboardClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Image x:Name="KeyboardIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                            <TextBlock x:Uid="KeyboardButtonText"
+                                       Text="Virtual Keyboard"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
+
                     <Button x:Name="TroubleshooterButton"
                             x:Uid="TroubleshooterButton"
                             Style="{StaticResource ToolButtonStyle}"

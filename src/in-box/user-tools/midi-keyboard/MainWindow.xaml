@@ -1,0 +1,577 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="midikeyboard.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:midikeyboard"
+    xmlns:shared="using:MidiAppShared"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid"
+          Loaded="OnRootLoaded"
+          SizeChanged="OnRootSizeChanged"
+          Background="Transparent"
+          PreviewKeyDown="OnRootPreviewKeyDown"
+          PreviewKeyUp="OnRootPreviewKeyUp">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- hidden when a system backdrop is in use, so the material shows through -->
+        <Border x:Name="WindowFill"
+                Grid.Row="0"
+                Grid.RowSpan="3"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
+
+        <!-- a separate layer, so switching back to the default color just hides it and the
+             theme bound fill underneath returns -->
+        <Border x:Name="WindowTint"
+                Grid.Row="0"
+                Grid.RowSpan="3"
+                Visibility="Collapsed" />
+
+        <!-- ============================ Title bar drag region ============================ -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+
+            <Image x:Name="AppTitleBarIcon"
+                   Grid.Column="1"
+                   Width="16"
+                   Height="16"
+                   Margin="12,0,0,0"
+                   VerticalAlignment="Center" />
+
+            <TextBlock x:Name="AppTitleTextBlock"
+                       Grid.Column="2"
+                       Text="Windows MIDI Keyboard"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+
+            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top">
+                <StackPanel.Resources>
+                    <SolidColorBrush x:Key="ToggleButtonBackground" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
+                </StackPanel.Resources>
+
+                <ToggleButton x:Name="SettingsToggle"
+                              x:Uid="SettingsToggle"
+                              AutomationProperties.AutomationId="SettingsToggle"
+                              Width="46"
+                              Height="32"
+                              Padding="0"
+                              BorderThickness="0"
+                              Click="OnSettingsToggleClick">
+                    <FontIcon Glyph="&#xE713;" FontSize="14" />
+                </ToggleButton>
+
+                <ToggleButton x:Name="AlwaysOnTopToggle"
+                              x:Uid="AlwaysOnTopToggle"
+                              AutomationProperties.AutomationId="AlwaysOnTopToggle"
+                              Width="46"
+                              Height="32"
+                              Padding="0"
+                              BorderThickness="0"
+                              Click="OnAlwaysOnTopToggled">
+                    <FontIcon Glyph="&#xE718;" FontSize="14" />
+                </ToggleButton>
+            </StackPanel>
+        </Grid>
+
+        <!-- ============================== Performance strip ============================== -->
+        <Border x:Name="CommandStrip"
+                Grid.Row="1"
+                Margin="12,0,12,8"
+                Padding="12,8,12,8"
+                CornerRadius="8"
+                Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                BorderThickness="1">
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" MinWidth="120" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- where the notes are going -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                    <Ellipse x:Name="ConnectionStateDot"
+                             Width="10"
+                             Height="10"
+                             VerticalAlignment="Center"
+                             Fill="{ThemeResource TextFillColorDisabledBrush}" />
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock x:Name="ConnectionNameText"
+                                   AutomationProperties.AutomationId="ConnectionNameText"
+                                   Text=""
+                                   TextTrimming="CharacterEllipsis"
+                                   TextWrapping="NoWrap" />
+                        <TextBlock x:Name="ConnectionDetailText"
+                                   AutomationProperties.AutomationId="ConnectionDetailText"
+                                   Text=""
+                                   TextTrimming="CharacterEllipsis"
+                                   TextWrapping="NoWrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- octave shift, the one thing a player reaches for mid performance -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <TextBlock x:Uid="OctaveLabel"
+                               Text="Octave"
+                               VerticalAlignment="Center"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <Button x:Name="OctaveDownButton"
+                            x:Uid="OctaveDownButton"
+                            AutomationProperties.AutomationId="OctaveDownButton"
+                            Width="34"
+                            Padding="0"
+                            Click="OnOctaveDownClick">
+                        <FontIcon Glyph="&#xE76B;" FontSize="12" />
+                    </Button>
+                    <TextBlock x:Name="OctaveRangeText"
+                               AutomationProperties.AutomationId="OctaveRangeText"
+                               Text=""
+                               MinWidth="82"
+                               TextAlignment="Center"
+                               VerticalAlignment="Center" />
+                    <Button x:Name="OctaveUpButton"
+                            x:Uid="OctaveUpButton"
+                            AutomationProperties.AutomationId="OctaveUpButton"
+                            Width="34"
+                            Padding="0"
+                            Click="OnOctaveUpClick">
+                        <FontIcon Glyph="&#xE76C;" FontSize="12" />
+                    </Button>
+                </StackPanel>
+
+                <!-- arpeggiator -->
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+                    <TextBlock x:Uid="ArpeggiatorLabel"
+                               Text="Arp"
+                               VerticalAlignment="Center"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <ComboBox x:Name="ArpModeComboBox"
+                              x:Uid="ArpModeComboBox"
+                              AutomationProperties.AutomationId="ArpModeComboBox"
+                              MinWidth="132"
+                              SelectionChanged="OnArpModeChanged" />
+                    <NumberBox x:Name="ArpBpmBox"
+                               x:Uid="ArpBpmBox"
+                               AutomationProperties.AutomationId="ArpBpmBox"
+                               Width="104"
+                               Minimum="20"
+                               Maximum="400"
+                               SmallChange="1"
+                               LargeChange="10"
+                               SpinButtonPlacementMode="Compact"
+                               ValueChanged="OnArpBpmChanged" />
+                    <ComboBox x:Name="ArpRateComboBox"
+                              x:Uid="ArpRateComboBox"
+                              AutomationProperties.AutomationId="ArpRateComboBox"
+                              MinWidth="104"
+                              SelectionChanged="OnArpRateChanged" />
+                </StackPanel>
+
+                <Button x:Name="PanicButton"
+                        x:Uid="PanicButton"
+                        AutomationProperties.AutomationId="PanicButton"
+                        Grid.Column="3"
+                        VerticalAlignment="Center"
+                        Click="OnPanicClick">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE711;" FontSize="12" />
+                        <TextBlock x:Uid="PanicButtonText" Text="All notes off" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- ============================== Performance area =============================== -->
+        <Grid x:Name="PerformanceGrid" Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" MinWidth="240" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <!-- pitch and modulation ribbons. This moves between column 0 and column 2 rather
+                 than being declared twice, so there is one set of controls to keep in step. -->
+            <StackPanel x:Name="RibbonPanel"
+                        Grid.Column="0"
+                        Orientation="Horizontal"
+                        Spacing="10"
+                        Margin="12,0,4,12">
+                <Grid Width="48">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Border x:Name="PitchRibbonTrack"
+                            x:Uid="PitchRibbonTrack"
+                            AutomationProperties.AutomationId="PitchRibbonTrack"
+                            Grid.Row="0"
+                            CornerRadius="10"
+                            BorderThickness="1"
+                            PointerPressed="OnPitchRibbonPointerPressed"
+                            PointerMoved="OnPitchRibbonPointerMoved"
+                            PointerReleased="OnPitchRibbonPointerReleased"
+                            PointerCanceled="OnPitchRibbonPointerReleased"
+                            PointerCaptureLost="OnPitchRibbonPointerReleased">
+                        <Canvas x:Name="PitchRibbonCanvas" SizeChanged="OnRibbonSizeChanged">
+                            <!-- carries the composition drop shadow that makes the light glow -->
+                            <Border x:Name="PitchRibbonGlowHost" IsHitTestVisible="False" />
+                            <Rectangle x:Name="PitchRibbonLight" Height="20" RadiusX="8" RadiusY="8" />
+                            <!-- above the light, so the center is still marked when the light is resting on it -->
+                            <Rectangle x:Name="PitchRibbonCenterMark" Height="2" Opacity="0.7" />
+                        </Canvas>
+                    </Border>
+                    <TextBlock x:Uid="PitchRibbonLabel"
+                               Grid.Row="1"
+                               Text="PITCH"
+                               Margin="0,6,0,0"
+                               TextAlignment="Center"
+                               FontSize="10"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Grid>
+
+                <Grid Width="48">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+                    <Border x:Name="ModRibbonTrack"
+                            x:Uid="ModRibbonTrack"
+                            AutomationProperties.AutomationId="ModRibbonTrack"
+                            Grid.Row="0"
+                            CornerRadius="10"
+                            BorderThickness="1"
+                            PointerPressed="OnModRibbonPointerPressed"
+                            PointerMoved="OnModRibbonPointerMoved"
+                            PointerReleased="OnModRibbonPointerReleased"
+                            PointerCanceled="OnModRibbonPointerReleased"
+                            PointerCaptureLost="OnModRibbonPointerReleased">
+                        <Canvas x:Name="ModRibbonCanvas" SizeChanged="OnRibbonSizeChanged">
+                            <Border x:Name="ModRibbonGlowHost" IsHitTestVisible="False" />
+                            <Rectangle x:Name="ModRibbonLight" Height="20" RadiusX="8" RadiusY="8" />
+                        </Canvas>
+                    </Border>
+                    <TextBlock x:Uid="ModRibbonLabel"
+                               Grid.Row="1"
+                               Text="MOD"
+                               Margin="0,6,0,0"
+                               TextAlignment="Center"
+                               FontSize="10"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Grid>
+            </StackPanel>
+
+            <!-- the keys themselves are built in code and positioned on this canvas -->
+            <Border x:Name="KeyboardFrame"
+                    Grid.Column="1"
+                    Margin="8,0,8,12"
+                    CornerRadius="6"
+                    BorderThickness="1">
+                <Canvas x:Name="KeyboardCanvas"
+                        x:Uid="KeyboardCanvas"
+                        AutomationProperties.AutomationId="KeyboardCanvas"
+                        Background="Transparent"
+                        IsTabStop="True"
+                        UseSystemFocusVisuals="False"
+                        SizeChanged="OnKeyboardSizeChanged"
+                        PointerPressed="OnKeyboardPointerPressed"
+                        PointerMoved="OnKeyboardPointerMoved"
+                        PointerReleased="OnKeyboardPointerReleased"
+                        PointerCanceled="OnKeyboardPointerReleased"
+                        PointerCaptureLost="OnKeyboardPointerReleased" />
+            </Border>
+
+            <!-- ================================ Settings ================================ -->
+            <Border x:Name="SettingsPanel"
+                    Grid.Column="3"
+                    Width="392"
+                    Margin="0,0,12,12"
+                    Padding="0"
+                    CornerRadius="8"
+                    Visibility="Collapsed"
+                    Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                    BorderThickness="1">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,12,16,16">
+                    <StackPanel Spacing="10">
+
+                        <TextBlock x:Uid="SettingsSectionConnection"
+                                   Text="Connection"
+                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                        <RadioButtons x:Name="ConnectionModeRadios"
+                                      x:Uid="ConnectionModeRadios"
+                                      AutomationProperties.AutomationId="ConnectionModeRadios"
+                                      SelectionChanged="OnConnectionModeChanged">
+                            <RadioButton x:Uid="ConnectionModeVirtual" Content="Virtual device (other apps play this keyboard)" />
+                            <RadioButton x:Uid="ConnectionModeEndpoint" Content="Existing MIDI endpoint" />
+                        </RadioButtons>
+
+                        <StackPanel x:Name="EndpointSettingsPanel" Spacing="10" Visibility="Collapsed">
+                            <StackPanel Spacing="4">
+                                <TextBlock x:Uid="EndpointPickerLabel"
+                                           Text="MIDI destination"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <ComboBox x:Name="EndpointComboBox"
+                                          x:Uid="EndpointComboBox"
+                                          AutomationProperties.AutomationId="EndpointComboBox"
+                                          HorizontalAlignment="Stretch"
+                                          SelectionChanged="OnEndpointSelectionChanged">
+                                    <ComboBox.ItemContainerStyle>
+                                        <Style TargetType="ComboBoxItem">
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                        </Style>
+                                    </ComboBox.ItemContainerStyle>
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate x:DataType="shared:EndpointChoice">
+                                            <Grid ColumnSpacing="8">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{x:Bind DisplayName}"
+                                                           VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <Image Grid.Column="1"
+                                                       Height="18"
+                                                       MaxWidth="32"
+                                                       Source="{x:Bind ImageSource}"
+                                                       Visibility="{x:Bind ImageVisibility}" />
+                                            </Grid>
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
+                            </StackPanel>
+
+                            <Grid ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Spacing="4">
+                                    <TextBlock x:Uid="GroupPickerLabel"
+                                               Text="Transmit group"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <ComboBox x:Name="GroupComboBox"
+                                              x:Uid="GroupComboBox"
+                                              AutomationProperties.AutomationId="GroupComboBox"
+                                              HorizontalAlignment="Stretch"
+                                              SelectionChanged="OnGroupSelectionChanged" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Spacing="4">
+                                    <TextBlock x:Uid="ChannelPickerLabel"
+                                               Text="Transmit channel"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    <ComboBox x:Name="ChannelComboBox"
+                                              x:Uid="ChannelComboBox"
+                                              AutomationProperties.AutomationId="ChannelComboBox"
+                                              HorizontalAlignment="Stretch"
+                                              SelectionChanged="OnChannelSelectionChanged" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+
+                        <TextBlock x:Name="VirtualDeviceHint"
+                                   x:Uid="VirtualDeviceHint"
+                                   Text="Other applications will see this keyboard as a MIDI device."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                        <Border Height="1" Margin="0,4,0,4" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                        <TextBlock x:Uid="SettingsSectionKeyboard"
+                                   Text="Keyboard"
+                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                        <Grid ColumnSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <NumberBox x:Name="BaseOctaveBox"
+                                       x:Uid="BaseOctaveBox"
+                                       AutomationProperties.AutomationId="BaseOctaveBox"
+                                       Grid.Column="0"
+                                       Header="Base octave"
+                                       Minimum="-2"
+                                       Maximum="8"
+                                       SmallChange="1"
+                                       SpinButtonPlacementMode="Compact"
+                                       ValueChanged="OnBaseOctaveChanged" />
+                            <NumberBox x:Name="OctaveCountBox"
+                                       x:Uid="OctaveCountBox"
+                                       AutomationProperties.AutomationId="OctaveCountBox"
+                                       Grid.Column="1"
+                                       Header="Octaves"
+                                       Minimum="1"
+                                       Maximum="10"
+                                       SmallChange="1"
+                                       SpinButtonPlacementMode="Compact"
+                                       ValueChanged="OnOctaveCountChanged" />
+                            <NumberBox x:Name="TransposeBox"
+                                       x:Uid="TransposeBox"
+                                       AutomationProperties.AutomationId="TransposeBox"
+                                       Grid.Column="2"
+                                       Header="Transpose"
+                                       Minimum="-24"
+                                       Maximum="24"
+                                       SmallChange="1"
+                                       SpinButtonPlacementMode="Compact"
+                                       ValueChanged="OnTransposeChanged" />
+                        </Grid>
+
+                        <CheckBox x:Name="ShowNoteNamesCheckBox"
+                                  x:Uid="ShowNoteNamesCheckBox"
+                                  AutomationProperties.AutomationId="ShowNoteNamesCheckBox"
+                                  Content="Show note names and numbers"
+                                  Click="OnShowNoteNamesChanged" />
+
+                        <CheckBox x:Name="ShowComputerKeysCheckBox"
+                                  x:Uid="ShowComputerKeysCheckBox"
+                                  AutomationProperties.AutomationId="ShowComputerKeysCheckBox"
+                                  Content="Show computer keyboard keys"
+                                  Click="OnShowComputerKeysChanged" />
+
+                        <Border Height="1" Margin="0,4,0,4" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                        <TextBlock x:Uid="SettingsSectionExpression"
+                                   Text="Expression"
+                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                        <StackPanel Spacing="4">
+                            <TextBlock x:Uid="RibbonPositionLabel"
+                                       Text="Pitch and mod ribbons"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <ComboBox x:Name="RibbonPositionComboBox"
+                                      x:Uid="RibbonPositionComboBox"
+                                      AutomationProperties.AutomationId="RibbonPositionComboBox"
+                                      HorizontalAlignment="Stretch"
+                                      SelectionChanged="OnRibbonPositionChanged" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="4">
+                            <TextBlock x:Uid="VelocityModeLabel"
+                                       Text="Key velocity"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <ComboBox x:Name="VelocityModeComboBox"
+                                      x:Uid="VelocityModeComboBox"
+                                      AutomationProperties.AutomationId="VelocityModeComboBox"
+                                      HorizontalAlignment="Stretch"
+                                      SelectionChanged="OnVelocityModeChanged" />
+                        </StackPanel>
+
+                        <Grid x:Name="VelocityRangePanel" ColumnSpacing="10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <NumberBox x:Name="VelocityMinimumBox"
+                                       x:Uid="VelocityMinimumBox"
+                                       AutomationProperties.AutomationId="VelocityMinimumBox"
+                                       Grid.Column="0"
+                                       Header="Softest"
+                                       Minimum="1"
+                                       Maximum="127"
+                                       SmallChange="1"
+                                       SpinButtonPlacementMode="Compact"
+                                       ValueChanged="OnVelocityMinimumChanged" />
+                            <NumberBox x:Name="VelocityMaximumBox"
+                                       x:Uid="VelocityMaximumBox"
+                                       AutomationProperties.AutomationId="VelocityMaximumBox"
+                                       Grid.Column="1"
+                                       Header="Hardest"
+                                       Minimum="1"
+                                       Maximum="127"
+                                       SmallChange="1"
+                                       SpinButtonPlacementMode="Compact"
+                                       ValueChanged="OnVelocityMaximumChanged" />
+                        </Grid>
+
+                        <NumberBox x:Name="FixedVelocityBox"
+                                   x:Uid="FixedVelocityBox"
+                                   AutomationProperties.AutomationId="FixedVelocityBox"
+                                   Header="Fixed velocity"
+                                   Minimum="1"
+                                   Maximum="127"
+                                   SmallChange="1"
+                                   SpinButtonPlacementMode="Compact"
+                                   Visibility="Collapsed"
+                                   ValueChanged="OnFixedVelocityChanged" />
+
+                        <StackPanel Spacing="4">
+                            <TextBlock x:Uid="KeyPressureLabel"
+                                       Text="Key pressure (drag up a key)"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <ComboBox x:Name="KeyPressureComboBox"
+                                      x:Uid="KeyPressureComboBox"
+                                      AutomationProperties.AutomationId="KeyPressureComboBox"
+                                      HorizontalAlignment="Stretch"
+                                      SelectionChanged="OnKeyPressureChanged" />
+                        </StackPanel>
+
+                        <NumberBox x:Name="PerNoteControllerBox"
+                                   x:Uid="PerNoteControllerBox"
+                                   AutomationProperties.AutomationId="PerNoteControllerBox"
+                                   Header="Per-note controller number"
+                                   Minimum="0"
+                                   Maximum="127"
+                                   SmallChange="1"
+                                   SpinButtonPlacementMode="Compact"
+                                   Visibility="Collapsed"
+                                   ValueChanged="OnPerNoteControllerChanged" />
+
+                        <Border Height="1" Margin="0,4,0,4" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
+
+                        <Button x:Name="AppearanceButton"
+                                x:Uid="AppearanceButton"
+                                AutomationProperties.AutomationId="AppearanceButton"
+                                HorizontalAlignment="Stretch"
+                                Click="OnAppearanceClick">
+                            <StackPanel Orientation="Horizontal" Spacing="8">
+                                <FontIcon Glyph="&#xE790;" FontSize="14" />
+                                <TextBlock x:Uid="AppearanceButtonText" Text="Appearance" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
