@@ -29,8 +29,20 @@
 // has been released. That also stops a single wedged device from blocking every other
 // CreateMidiClient and DestroyMidiClient for the duration of its teardown.
 //
-// Rolling this back restores calling Shutdown on the device and transform pipes while
-// m_ClientManagerLock is held exclusive.
+// The same function also defers its CMidiSessionTracker::RemoveClientEndpointConnection call
+// until after the exclusive lock is released. That call takes the session tracker's own lock,
+// and the session rundown path takes the two in the opposite order: RemoveClientSessionInternal
+// holds the session tracker lock while it calls DestroyMidiClient, which reaches OnDeviceRemoved
+// and asks for m_ClientManagerLock. Holding m_ClientManagerLock while waiting on the session
+// tracker therefore deadlocks two threads against each other whenever a client teardown overlaps
+// a session rundown. That inversion is older than this KIR and exists in the rolled back path
+// too; it only became reachable once the single thread self-deadlock above stopped happening
+// first. Both deferrals are gated together because the fixed code path only runs when this
+// feature is enabled, so a separate gate could never be useful on its own.
+//
+// Rolling this back restores calling Shutdown on the device and transform pipes, and removing
+// the client's endpoint connection from the session tracker, while m_ClientManagerLock is held
+// exclusive.
 class Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock
 {
 public:
