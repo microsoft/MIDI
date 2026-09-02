@@ -128,7 +128,7 @@ namespace winrt::midisettings::implementation
     }
 
     _Use_decl_annotations_
-    winrt::fire_and_forget MainWindow::SendPanicAsync(winrt::hstring const& endpointDeviceId) noexcept
+    winrt::fire_and_forget MainWindow::SendPanicAsync(winrt::hstring endpointDeviceId) noexcept
     {
         auto lifetime = get_strong();
 
@@ -195,7 +195,7 @@ namespace winrt::midisettings::implementation
     // ------------------------------------------------------------------------------------
 
     _Use_decl_annotations_
-    foundation::IAsyncAction MainWindow::ShowEndpointDetailAsync(winrt::hstring const& endpointDeviceId)
+    foundation::IAsyncAction MainWindow::ShowEndpointDetailAsync(winrt::hstring endpointDeviceId)
     {
         auto lifetime = get_strong();
 
@@ -473,7 +473,7 @@ namespace winrt::midisettings::implementation
     // ------------------------------------------------------------------------------------
 
     _Use_decl_annotations_
-    foundation::IAsyncAction MainWindow::ShowCustomizeDialogAsync(winrt::hstring const& endpointDeviceId)
+    foundation::IAsyncAction MainWindow::ShowCustomizeDialogAsync(winrt::hstring endpointDeviceId)
     {
         auto lifetime = get_strong();
 

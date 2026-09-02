@@ -219,7 +219,7 @@ namespace winrt::midisettings::implementation
     }
 
     _Use_decl_annotations_
-    foundation::IAsyncAction MainWindow::ShowMidi1PortNamesDialogAsync(winrt::hstring const& endpointDeviceId)
+    foundation::IAsyncAction MainWindow::ShowMidi1PortNamesDialogAsync(winrt::hstring endpointDeviceId)
     {
         auto lifetime = get_strong();
 
