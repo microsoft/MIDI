@@ -1594,8 +1594,8 @@ namespace winrt::midinetworksetup::implementation
     // in, so creating the host is one more click rather than a round trip through an error.
     _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::OnCreateHostPrimaryButtonClick(
-        controls::ContentDialog const& sender,
-        controls::ContentDialogButtonClickEventArgs const& args)
+        controls::ContentDialog sender,
+        controls::ContentDialogButtonClickEventArgs args)
     {
         auto const typed = TextOf(HostServiceInstanceNameTextBox());
 
@@ -1604,6 +1604,7 @@ namespace winrt::midinetworksetup::implementation
             co_return;
         }
 
+        auto strongThis = get_strong();
         auto deferral = args.GetDeferral();
 
         // Captured before leaving the UI thread, so the continuation lands back on it.

@@ -66,9 +66,11 @@ namespace winrt::midinetworksetup::implementation
         void OnCreateHostFieldChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args);
         void OnCreateHostPortModeChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        // By value, not by reference: this is a coroutine, and a reference parameter is not kept
+        // in the coroutine frame, so it dangles once the first co_await returns control to XAML.
         winrt::fire_and_forget OnCreateHostPrimaryButtonClick(
-            controls::ContentDialog const& sender,
-            controls::ContentDialogButtonClickEventArgs const& args);
+            controls::ContentDialog sender,
+            controls::ContentDialogButtonClickEventArgs args);
 
         winrt::fire_and_forget OnStartStopHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnDeleteHostClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
