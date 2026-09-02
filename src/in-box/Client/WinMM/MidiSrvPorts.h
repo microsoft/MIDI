@@ -53,6 +53,9 @@ private:
     // End add with Feature_Servicing_MIDI2WinMMPortHandleSlotWidth
     HRESULT Close(_In_ MidiFlow flow, _In_ MidiPortHandle portHandle);
     HRESULT ForwardMidMessage(_In_ UINT msg, _In_ MidiPortHandle portHandle, _In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
+    // Start add with Feature_Servicing_MIDI2WinMMCleanupAfterDeviceRemoval
+    HRESULT ForwardMidMessageAllowingCleanup(_In_ UINT msg, _In_ MidiPortHandle portHandle, _In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
+    // End add with Feature_Servicing_MIDI2WinMMCleanupAfterDeviceRemoval
     HRESULT ForwardModMessage(_In_ UINT msg, _In_ MidiPortHandle portHandle, _In_ DWORD_PTR param1, _In_ DWORD_PTR param2);
 
     HRESULT GetOpenedPort(_In_ MidiFlow flow, _In_ MidiPortHandle portHandle, _In_ wil::com_ptr_nothrow<CMidiPort> &port);

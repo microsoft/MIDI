@@ -9,6 +9,7 @@
 #include "Feature_Servicing_MIDI2NumDevsPerf.h"
 #include "Feature_Servicing_MIDI2LegacyControl.h"
 #include "Feature_Servicing_MIDI2WinMMPortHandleSlotWidth.h"
+#include "Feature_Servicing_MIDI2WinMMCleanupAfterDeviceRemoval.h"
 
 using unique_hdevinfo = wil::unique_any_handle_invalid<decltype(&::SetupDiDestroyDeviceInfoList), ::SetupDiDestroyDeviceInfoList>;
 
@@ -294,7 +295,14 @@ CMidiPorts::MidMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
             hr = GetDeviceInterface(MidiFlowIn, deviceID, msg, param1, param2);
             break;
         default:
-            hr = ForwardMidMessage(msg, (MidiPortHandle) user, param1, param2);
+            if (Feature_Servicing_MIDI2WinMMCleanupAfterDeviceRemoval::IsEnabled())
+            {
+                hr = ForwardMidMessageAllowingCleanup(msg, (MidiPortHandle) user, param1, param2);
+            }
+            else
+            {
+                hr = ForwardMidMessage(msg, (MidiPortHandle) user, param1, param2);
+            }
     }
 
     return MMRESULT_FROM_HRESULT(hr);
@@ -1288,6 +1296,39 @@ CMidiPorts::ForwardMidMessage(UINT msg, MidiPortHandle portHandle, DWORD_PTR par
     RETURN_IF_FAILED(port->MidMessage(msg, param1, param2));
     return S_OK;
 }
+
+// Start add with Feature_Servicing_MIDI2WinMMCleanupAfterDeviceRemoval
+_Use_decl_annotations_
+HRESULT
+CMidiPorts::ForwardMidMessageAllowingCleanup(UINT msg, MidiPortHandle portHandle, DWORD_PTR param1, DWORD_PTR param2)
+{
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_VERBOSE,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue(msg, "msg"),
+        TraceLoggingValue(portHandle, "MidiPortHandle"),
+        TraceLoggingValue(param1, "param1"),
+        TraceLoggingValue(param2, "param2"));
+
+    // Stop and reset are the documented way for a client to get its queued input buffers back,
+    // and neither one touches the device. Refusing them once the device is gone leaves close
+    // permanently answering MIDIERR_STILLPLAYING, so the port and its service connection are
+    // stranded until the process exits.
+    if (MIDM_STOP == msg || MIDM_RESET == msg)
+    {
+        wil::com_ptr_nothrow<CMidiPort> port;
+
+        RETURN_IF_FAILED(GetOpenedPort(MidiFlowIn, portHandle, port));
+        RETURN_IF_FAILED(port->MidMessage(msg, param1, param2));
+
+        return S_OK;
+    }
+
+    return ForwardMidMessage(msg, portHandle, param1, param2);
+}
+// End add with Feature_Servicing_MIDI2WinMMCleanupAfterDeviceRemoval
 
 _Use_decl_annotations_
 HRESULT
