@@ -56,6 +56,9 @@ private:
 
     HRESULT SendMidiMessage(_In_ UINT32 midiMessage);
     HRESULT SendLongMessage(_In_ LPMIDIHDR buffer);
+    // Start add with Feature_Servicing_MIDI2WinMMCompleteLongBufferOnFailure
+    HRESULT SendLongMessageCompletingBuffer(_In_ LPMIDIHDR buffer);
+    // End add with Feature_Servicing_MIDI2WinMMCompleteLongBufferOnFailure
 
     HRESULT CompleteLongBuffer(_In_ UINT message, _In_ LONGLONG position);
     

@@ -8,6 +8,7 @@
 #include "Feature_Servicing_MIDI2DevCaps2.h"
 #include "Feature_Servicing_MIDI2NumDevsPerf.h"
 #include "Feature_Servicing_MIDI2LegacyControl.h"
+#include "Feature_Servicing_MIDI2WinMMPortHandleSlotWidth.h"
 
 using unique_hdevinfo = wil::unique_any_handle_invalid<decltype(&::SetupDiDestroyDeviceInfoList), ::SetupDiDestroyDeviceInfoList>;
 
@@ -15,7 +16,9 @@ using unique_hdevinfo = wil::unique_any_handle_invalid<decltype(&::SetupDiDestro
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 #define HINST_WDMAUD2 ((HINSTANCE)&__ImageBase)
 
-DWORD CMEventCallback
+// PCM_NOTIFY_CALLBACK is __stdcall, which only matters on x86, where the default
+// convention would otherwise make this project fail to build.
+DWORD CALLBACK CMEventCallback
 (
     HCMNOTIFICATION,
     PVOID Context,
@@ -269,7 +272,14 @@ CMidiPorts::MidMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
             hr = GetDevCaps(MidiFlowIn, deviceID, param1, param2);
             break;
         case MIDM_OPEN:
-            hr = Open(MidiFlowIn, deviceID, (MIDIOPENDESC *) param1, param2, (MidiPortHandle*) user);
+            if (Feature_Servicing_MIDI2WinMMPortHandleSlotWidth::IsEnabled())
+            {
+                hr = OpenIntoPointerSizedSlot(MidiFlowIn, deviceID, (MIDIOPENDESC *) param1, param2, (DWORD_PTR*) user);
+            }
+            else
+            {
+                hr = Open(MidiFlowIn, deviceID, (MIDIOPENDESC *) param1, param2, (MidiPortHandle*) user);
+            }
             break;
         case MIDM_CLOSE:
             // Forward the message to the open port, if one exists, giving the port an opportunity to
@@ -332,7 +342,14 @@ CMidiPorts::ModMessage(UINT deviceID, UINT msg, DWORD_PTR user, DWORD_PTR param1
             hr = GetDevCaps(MidiFlowOut, deviceID, param1, param2);
             break;
         case MODM_OPEN:
-            hr = Open(MidiFlowOut, deviceID, (MIDIOPENDESC *) param1, param2, (MidiPortHandle*) user);
+            if (Feature_Servicing_MIDI2WinMMPortHandleSlotWidth::IsEnabled())
+            {
+                hr = OpenIntoPointerSizedSlot(MidiFlowOut, deviceID, (MIDIOPENDESC *) param1, param2, (DWORD_PTR*) user);
+            }
+            else
+            {
+                hr = Open(MidiFlowOut, deviceID, (MIDIOPENDESC *) param1, param2, (MidiPortHandle*) user);
+            }
             break;
         case MODM_CLOSE:
             // Forward the message to the open port, if one exists, giving the port an opportunity to
@@ -1144,6 +1161,25 @@ CMidiPorts::Open(MidiFlow flow, UINT portNumber, const MIDIOPENDESC* midiOpenDes
 
     return S_OK;
 }
+
+// Start add with Feature_Servicing_MIDI2WinMMPortHandleSlotWidth
+_Use_decl_annotations_
+HRESULT
+CMidiPorts::OpenIntoPointerSizedSlot(MidiFlow flow, UINT portNumber, const MIDIOPENDESC* midiOpenDesc, DWORD_PTR flags, DWORD_PTR* openedPort)
+{
+    RETURN_HR_IF(E_POINTER, nullptr == openedPort);
+
+    // winmm hands us a DWORD_PTR sized slot inside its own handle, so the handle is taken in a
+    // local of our own width and narrowed on the way out rather than written over the slot.
+    MidiPortHandle localPortHandle{ 0 };
+
+    RETURN_IF_FAILED(Open(flow, portNumber, midiOpenDesc, flags, &localPortHandle));
+
+    *openedPort = static_cast<DWORD_PTR>(localPortHandle);
+
+    return S_OK;
+}
+// End add with Feature_Servicing_MIDI2WinMMPortHandleSlotWidth
 
 _Use_decl_annotations_
 HRESULT
