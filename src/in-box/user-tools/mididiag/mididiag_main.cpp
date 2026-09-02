@@ -548,19 +548,6 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
             OutputRegDWordNumericValue(MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_DISCOVERY_TIMEOUT, rootKey.get(), MIDI_DISCOVERY_TIMEOUT_REG_VALUE);
             OutputRegDWordBooleanValue(MIDIDIAG_FIELD_LABEL_REGISTRY_ROOT_USE_MMCSS, rootKey.get(), MIDI_USE_MMCSS_REG_VALUE);
 
-
-            //// MIDI 2 device using UMP driver
-            //auto midi2keyValue = wil::reg::try_get_value_dword(rootKey.get(), MIDI_MIDI1_PORT_NAMING_MIDI2_UMP_DEFAULT_REG_VALUE);
-            //if (midi2keyValue.has_value())
-            //{
-            //    auto namingSelection = (Midi1PortNameSelectionProperty)midi2keyValue.value();
-            //    OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI2_UMP_NAME_TABLE_SELECTION, GetDisplayValueFromNamingSelection(namingSelection));
-            //}
-            //else
-            //{
-            //    OutputStringField(MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI2_UMP_NAME_TABLE_SELECTION, L"Not present. Defaulted to: " + GetDisplayValueFromNamingSelection((Midi1PortNameSelectionProperty)MIDI_MIDI1_PORT_NAMING_MIDI1_UMP_DRIVER_DEFAULT_VALUE));
-            //}
-
             OutputItemSeparator();
         }
         else
@@ -599,30 +586,6 @@ bool DoSectionMidi2RegistryEntries(_In_ bool const verbose)
         }
 
         OutputItemSeparator();
-
-        // list values under the desktop app sdk runtime
-
-        wil::unique_hkey sdkRuntimeRootKey{ };
-        if (SUCCEEDED(wil::reg::open_unique_key_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_APP_SDK_REG_KEY, sdkRuntimeRootKey)))
-        {
-            auto sdkRuntimeInstalledValue = wil::reg::try_get_value_string(sdkRuntimeRootKey.get(), MIDI_APP_SDK_INSTALLED_REG_VALUE);
-
-            if (sdkRuntimeInstalledValue.has_value())
-            {
-                OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_SDK_INSTALLED, sdkRuntimeInstalledValue.value());
-            }
-            else
-            {
-                OutputError(internal::ResourceGetWString(IDS_ERROR_NO_SDK_INSTALLED_VALUE));
-            }
-        }
-        else
-        {
-            OutputError(internal::ResourceGetWString(IDS_ERROR_NO_SDK_ROOT_KEY));
-        }
-
-        OutputItemSeparator();
-
 
         //  List midisrvtransport info, even though it is not in the Windows MIDI Services registry key
 
@@ -1509,6 +1472,7 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
 {
     UNREFERENCED_PARAMETER(verbose);
 
+#if false
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_FEATURE_ENABLEMENT);
 
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinRtStartup::IsEnabled(),             L"MIDI2WinRtStartup");
@@ -1541,7 +1505,7 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2XProcSendWaitTimeouts::IsEnabled(),    L"MIDI2XProcSendWaitTimeouts (stop aborting sends to devices that are slow to accept data)");
 
     
-    
+#endif    
         
 
     return true;
