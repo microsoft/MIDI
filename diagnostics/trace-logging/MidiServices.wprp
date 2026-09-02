@@ -60,6 +60,17 @@
     <EventProvider Id="EventProvider_SettingsApp" Name="*Microsoft.Midi.Settings"/>
     <EventProvider Id="EventProvider_ConsoleApp" Name="*Microsoft.Midi.Console"/>
 
+    <!-- The WinUI tools. Each one owns its provider, so a report about a single app can be read
+         without the others' events in the way. -->
+    <EventProvider Id="EventProvider_SettingsAppNative" Name="*Microsoft.Windows.Midi2.Settings"/>
+    <EventProvider Id="EventProvider_NetworkSetupApp" Name="*Microsoft.Windows.Midi2.NetworkSetup"/>
+    <EventProvider Id="EventProvider_BluetoothSetupApp" Name="*Microsoft.Windows.Midi2.BluetoothSetup"/>
+    <EventProvider Id="EventProvider_LoopbackSetupApp" Name="*Microsoft.Windows.Midi2.LoopbackSetup"/>
+    <EventProvider Id="EventProvider_MonitorApp" Name="*Microsoft.Windows.Midi2.Monitor"/>
+    <EventProvider Id="EventProvider_ScratchPadApp" Name="*Microsoft.Windows.Midi2.ScratchPad"/>
+    <EventProvider Id="EventProvider_SysExToolApp" Name="*Microsoft.Windows.Midi2.SysExTool"/>
+    <EventProvider Id="EventProvider_TroubleshooterApp" Name="*Microsoft.Windows.Midi2.Troubleshooter"/>
+
     <!-- Microsoft-Windows-Kernel-PnP -->
     <EventProvider Id="EventProvider_KernelPnP" Name="9C205A39-1250-487D-ABD7-E831C6290539" NonPagedMemory="true" Level="5" />
 
@@ -125,6 +136,15 @@
 
             <EventProviderId Value="EventProvider_SettingsApp"/>
             <EventProviderId Value="EventProvider_ConsoleApp"/>
+
+            <EventProviderId Value="EventProvider_SettingsAppNative"/>
+            <EventProviderId Value="EventProvider_NetworkSetupApp"/>
+            <EventProviderId Value="EventProvider_BluetoothSetupApp"/>
+            <EventProviderId Value="EventProvider_LoopbackSetupApp"/>
+            <EventProviderId Value="EventProvider_MonitorApp"/>
+            <EventProviderId Value="EventProvider_ScratchPadApp"/>
+            <EventProviderId Value="EventProvider_SysExToolApp"/>
+            <EventProviderId Value="EventProvider_TroubleshooterApp"/>
 
             <EventProviderId Value="EventProvider_UserPnP"/>
             <EventProviderId Value="EventProvider_UmdfDriverFrameworks"/>

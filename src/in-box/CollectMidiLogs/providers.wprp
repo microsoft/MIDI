@@ -74,6 +74,18 @@
     <EventProvider Id="TraceLogging/Microsoft.Midi.Settings" Name="66eaccfa-db3a-58d6-bf78-778229bf5a18" Level="5" NonPagedMemory="false" />
     <EventProvider Id="TraceLogging/Microsoft.Midi.Console" Name="ce8536f1-a223-5028-7c7f-c64452906687" Level="5" NonPagedMemory="false" />
 
+    <!-- The WinUI tools. Each one owns its provider, so a report about a single app can be read
+         without the others' events in the way. GUIDs are the name hashes, so they must be kept
+         in step with the provider names in each app's Telemetry.h. -->
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.Settings" Name="a0754983-bad3-5c5f-29f3-2949ed06ae4d" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.NetworkSetup" Name="8d258c25-e7b4-5d73-ec89-d1532de50566" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.BluetoothSetup" Name="95d87ae2-f81b-51a8-a4a2-bdc459065b9f" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.LoopbackSetup" Name="779e7e5e-1ce4-54bb-17f0-b57b95f9e41f" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.Monitor" Name="fd60bb52-ed89-5529-9203-76f87e574739" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.ScratchPad" Name="870ce634-cad0-541e-2eba-206739a2b310" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.SysExTool" Name="cebee286-ab08-5aee-b8a4-5183ee4ed779" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.Troubleshooter" Name="3b9d5955-7963-50ee-a951-d1752f852cad" Level="5" NonPagedMemory="false" />
+
     <EventProvider Id="WPP/usbmidi2.sys" Name="d360bed7-f0d2-4547-aa66-bbfbeb53db7e" Level="5" NonPagedMemory="true">
       <Keywords>
         <Keyword Value="0x7FFFFFFF" />
@@ -115,6 +127,14 @@
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.WdmAud2" />
             <EventProviderId Value="TraceLogging/Microsoft.Midi.Settings" />
             <EventProviderId Value="TraceLogging/Microsoft.Midi.Console" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Settings" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.NetworkSetup" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.BluetoothSetup" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.LoopbackSetup" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Monitor" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.ScratchPad" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.SysExTool" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Troubleshooter" />
             <EventProviderId Value="TraceLogging/Windows.Devices.Midi2.Api" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Sdk" />
             <EventProviderId Value="Microsoft-Windows-Audio" />
