@@ -461,6 +461,40 @@ function Invoke-ReleaseTarget {
         }
     }
 
+    # A crash report gives a module name, a build timestamp and an offset. Without the pdb from
+    # that exact build the offset cannot be turned back into a function, and the build output is
+    # overwritten by the next build. Kept in a subfolder because these are far larger than the
+    # installers they belong to.
+    foreach ($plat in $Platform) {
+        $symbolFolder = Join-Path $folder "symbols\$plat"
+        New-Item -ItemType Directory -Force -Path $symbolFolder | Out-Null
+
+        $sources = @()
+
+        foreach ($plugin in $Plugins) {
+            $sources += Join-Path $ServiceOutRoot "$plat\$Configuration\$($plugin.Binary).pdb"
+
+            # the setup app ships in its transport's installer, so its symbols belong here too
+            if ($plugin.AppName) {
+                $sources += Join-Path $AppSdkOutRoot "$($plugin.AppName)\$plat\$Configuration\$($plugin.AppName).pdb"
+            }
+        }
+
+        $copied = 0
+
+        foreach ($source in $sources) {
+            if (Test-Path $source) {
+                Copy-Item $source -Destination $symbolFolder -Force
+                $copied++
+            }
+            else {
+                Write-Note "Symbols not found: $source"
+            }
+        }
+
+        Write-Detail "Symbols -> symbols\$plat ($copied files)"
+    }
+
     Write-Host ''
     Write-Host "     Release folder: $folder" -ForegroundColor Green
 }

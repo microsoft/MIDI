@@ -624,11 +624,11 @@ namespace winrt::midibluetoothsetup::implementation
     // ============================== Customization ==============================
 
     foundation::IAsyncOperation<bool> MainWindow::ShowCustomizeDialogAsync(
-        winrt::hstring const& endpointDeviceInstanceId,
-        winrt::hstring const& transportSuppliedName,
-        winrt::hstring const& currentName,
-        winrt::hstring const& currentDescription,
-        winrt::hstring const& currentImage)
+        winrt::hstring endpointDeviceInstanceId,
+        winrt::hstring transportSuppliedName,
+        winrt::hstring currentName,
+        winrt::hstring currentDescription,
+        winrt::hstring currentImage)
     {
         if (m_openDialog != nullptr || endpointDeviceInstanceId.empty())
         {

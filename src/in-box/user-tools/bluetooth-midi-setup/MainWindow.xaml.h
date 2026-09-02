@@ -112,13 +112,14 @@ namespace winrt::midibluetoothsetup::implementation
         // yes / cancel confirmation, used before anything destructive
         foundation::IAsyncOperation<bool> ConfirmAsync(winrt::hstring const& title, winrt::hstring const& message);
 
-        // shared by the device rows and the peripheral's connected client
+        // shared by the device rows and the peripheral's connected client. By value, because a
+        // coroutine does not keep reference parameters in its frame and these outlive a suspend.
         foundation::IAsyncOperation<bool> ShowCustomizeDialogAsync(
-            winrt::hstring const& endpointDeviceInstanceId,
-            winrt::hstring const& transportSuppliedName,
-            winrt::hstring const& currentName,
-            winrt::hstring const& currentDescription,
-            winrt::hstring const& currentImage);
+            winrt::hstring endpointDeviceInstanceId,
+            winrt::hstring transportSuppliedName,
+            winrt::hstring currentName,
+            winrt::hstring currentDescription,
+            winrt::hstring currentImage);
 
         midiapp::WindowChrome m_chrome{};
 

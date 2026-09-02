@@ -101,18 +101,18 @@ namespace winrt::midisettings::implementation
         midi2enum::MidiEndpointDeviceInformation FindEndpoint(winrt::hstring const& endpointDeviceId) noexcept;
 
         // --- details and customization ---
-        foundation::IAsyncAction ShowEndpointDetailAsync(winrt::hstring const& endpointDeviceId);
+        foundation::IAsyncAction ShowEndpointDetailAsync(winrt::hstring endpointDeviceId);
         void PopulateDetail(midi2enum::MidiEndpointDeviceInformation const& endpoint) noexcept;
         void RefreshDetailPorts() noexcept;
 
-        foundation::IAsyncAction ShowCustomizeDialogAsync(winrt::hstring const& endpointDeviceId);
+        foundation::IAsyncAction ShowCustomizeDialogAsync(winrt::hstring endpointDeviceId);
         void UpdateCustomizeImagePreview() noexcept;
 
-        foundation::IAsyncAction ShowMidi1PortNamesDialogAsync(winrt::hstring const& endpointDeviceId);
+        foundation::IAsyncAction ShowMidi1PortNamesDialogAsync(winrt::hstring endpointDeviceId);
         void PopulateMidi1PortNames(midi2enum::MidiEndpointDeviceInformation const& endpoint) noexcept;
         void UpdateMidi1PortNamesApproachCaption() noexcept;
 
-        winrt::fire_and_forget SendPanicAsync(winrt::hstring const& endpointDeviceId) noexcept;
+        winrt::fire_and_forget SendPanicAsync(winrt::hstring endpointDeviceId) noexcept;
 
         // --- global settings ---
         void RefreshGlobalSettings() noexcept;

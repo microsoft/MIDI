@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Generated from build\version-plugins.json by build-plugins.ps1 or build-bluetooth.ps1. Do not edit. -->
 <Include>
-  <?define SetupVersionName="Plugin Preview 3" ?>
-  <?define SetupVersionNumber="1.0.18-preview.3" ?>
-  <?define MidiSdkAndToolsVersion="1.0.18-preview.3" ?>
-  <?define MidiPluginsNumericVersion="1.0.18.0" ?>
+  <?define SetupVersionName="Plugin Preview 4" ?>
+  <?define SetupVersionNumber="1.0.19-preview.4" ?>
+  <?define MidiSdkAndToolsVersion="1.0.19-preview.4" ?>
+  <?define MidiPluginsNumericVersion="1.0.19.0" ?>
 </Include>

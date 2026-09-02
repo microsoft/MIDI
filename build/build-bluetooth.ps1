@@ -407,6 +407,34 @@ function Invoke-ReleaseTarget {
         Write-Detail "Installer -> $name"
     }
 
+    # A crash report gives a module name, a build timestamp and an offset. Without the pdb from
+    # that exact build the offset cannot be turned back into a function, and the build output is
+    # overwritten by the next build. Kept in a subfolder because these are far larger than the
+    # installers they belong to.
+    foreach ($plat in $Platform) {
+        $symbolFolder = Join-Path $folder "symbols\$plat"
+        New-Item -ItemType Directory -Force -Path $symbolFolder | Out-Null
+
+        $sources = @(
+            (Join-Path $ServiceOutRoot "$plat\$Configuration\$TransportBinary.pdb"),
+            (Join-Path $AppSdkOutRoot "midibluetoothsetup\$plat\$Configuration\midibluetoothsetup.pdb")
+        )
+
+        $copied = 0
+
+        foreach ($source in $sources) {
+            if (Test-Path $source) {
+                Copy-Item $source -Destination $symbolFolder -Force
+                $copied++
+            }
+            else {
+                Write-Note "Symbols not found: $source"
+            }
+        }
+
+        Write-Detail "Symbols -> symbols\$plat ($copied files)"
+    }
+
     Write-Host ''
     Write-Host "     Release folder: $folder" -ForegroundColor Green
 }

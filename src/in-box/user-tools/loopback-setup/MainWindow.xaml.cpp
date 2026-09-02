@@ -637,6 +637,10 @@ namespace winrt::midiloopbacksetup::implementation
 
     winrt::fire_and_forget MainWindow::RequestRefreshAsync() noexcept
     {
+        // GatherSnapshot and the flag below are members, and both are touched after the thread
+        // switch, so this has to outlive a close which happens while the gather is running.
+        auto strongThis = get_strong();
+
         if (m_closing || m_reordering || m_refreshInProgress.exchange(true))
         {
             co_return;
@@ -652,10 +656,14 @@ namespace winrt::midiloopbacksetup::implementation
 
         if (queue == nullptr)
         {
+            m_refreshInProgress = false;
+
             co_return;
         }
 
-        queue.TryEnqueue([weak, snapshot = std::move(snapshot)]()
+        // The flag is cleared in the lambda, so a queue which refuses the work has to clear it
+        // here or every later refresh is skipped and the page silently stops updating.
+        if (!queue.TryEnqueue([weak, snapshot = std::move(snapshot)]()
             {
                 auto strong = weak.get();
 
@@ -670,7 +678,10 @@ namespace winrt::midiloopbacksetup::implementation
                 }
 
                 strong->m_refreshInProgress = false;
-            });
+            }))
+        {
+            m_refreshInProgress = false;
+        }
     }
 
     void MainWindow::ApplySnapshot(ServiceSnapshot const& snapshot) noexcept

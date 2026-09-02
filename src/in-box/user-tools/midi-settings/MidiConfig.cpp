@@ -376,12 +376,6 @@ namespace midisettings::config
 
             auto const fullPath = folder + fileName;
 
-            if (::PathFileExistsW(fullPath.c_str()))
-            {
-                errorMessage = L"A configuration file with that name already exists.";
-                return false;
-            }
-
             json::JsonObject document{};
             json::JsonObject header{};
 
@@ -398,19 +392,40 @@ namespace midisettings::config
             auto const text = winrt::to_string(document.Stringify());
 
             // In place write. The folder grants write but not delete to standard users, so a
-            // temp file and rename is not available here.
-            std::ofstream stream{ fullPath, std::ios::binary | std::ios::trunc };
+            // temp file and rename is not available here. CREATE_NEW rather than a test followed
+            // by a truncating open, because any user can write to this folder and a file which
+            // appeared in between would be overwritten.
+            wil::unique_hfile file{ ::CreateFileW(
+                fullPath.c_str(),
+                GENERIC_WRITE,
+                0,
+                nullptr,
+                CREATE_NEW,
+                FILE_ATTRIBUTE_NORMAL,
+                nullptr) };
 
-            if (!stream.is_open())
+            if (!file)
             {
-                errorMessage = L"The configuration file could not be created.";
+                auto const error = ::GetLastError();
+
+                errorMessage = error == ERROR_FILE_EXISTS || error == ERROR_ALREADY_EXISTS ?
+                    L"A configuration file with that name already exists." :
+                    L"The configuration file could not be created.";
+
                 return false;
             }
 
-            stream.write(text.data(), static_cast<std::streamsize>(text.size()));
-            stream.close();
+            DWORD written{ 0 };
 
-            return stream.good();
+            if (!::WriteFile(file.get(), text.data(), static_cast<DWORD>(text.size()), &written, nullptr) ||
+                written != text.size())
+            {
+                errorMessage = L"The configuration file could not be created.";
+
+                return false;
+            }
+
+            return true;
         }
         MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to create the configuration file.")
 
