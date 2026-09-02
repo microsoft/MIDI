@@ -31,7 +31,8 @@ if ($PSBoundParameters.ContainsKey('specifiedOutputFile'))
 }
 else
 {
-    $outputFileName = "$PSScriptRoot\${outDirName}.zip";    
+    $outputFileName = "$env:TEMP\$tempOutDirName.zip";
+    Write-Host "Output will be here: $outputFileName";
 }
 
 $system32 = "${env:windir}\system32";
