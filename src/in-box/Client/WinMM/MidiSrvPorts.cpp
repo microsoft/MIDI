@@ -10,6 +10,7 @@
 #include "Feature_Servicing_MIDI2LegacyControl.h"
 #include "Feature_Servicing_MIDI2WinMMPortHandleSlotWidth.h"
 #include "Feature_Servicing_MIDI2WinMMCleanupAfterDeviceRemoval.h"
+#include "Feature_Servicing_MIDI2WinMMInterfaceRemovalPerf.h"
 
 using unique_hdevinfo = wil::unique_any_handle_invalid<decltype(&::SetupDiDestroyDeviceInfoList), ::SetupDiDestroyDeviceInfoList>;
 
@@ -97,7 +98,14 @@ CMidiPorts::MidiInterfaceChange
             // else it's already present so noop.
             if (!IsArrival)
             {
-                RETURN_IF_FAILED(RefreshPortsForFlow(Flow));
+                if (Feature_Servicing_MIDI2WinMMInterfaceRemovalPerf::IsEnabled())
+                {
+                    RETURN_IF_FAILED(RemovePortForInterface(Flow, notifiedInterface));
+                }
+                else
+                {
+                    RETURN_IF_FAILED(RefreshPortsForFlow(Flow));
+                }
 
                 for (auto const& [portHandle, openPort] : m_OpenPorts)
                 {
@@ -988,6 +996,38 @@ CMidiPorts::RefreshPortsForFlow(MidiFlow flow)
 
     return S_OK;
 }
+
+// Start add with Feature_Servicing_MIDI2WinMMInterfaceRemovalPerf
+_Use_decl_annotations_
+HRESULT
+CMidiPorts::RemovePortForInterface(MidiFlow flow, std::wstring const& interfaceId)
+{
+    TraceLoggingWrite(WdmAud2TelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingValue((int)flow, "MidiFlow"));
+
+    RETURN_HR_IF(E_INVALIDARG, flow != MidiFlowIn && flow != MidiFlowOut);
+
+    auto& ports = m_MidiPortInfo[flow];
+
+    for (auto it = ports.begin(); it != ports.end(); it++)
+    {
+        if (it->second.InterfaceId == interfaceId)
+        {
+            ports.erase(it);
+            break;
+        }
+    }
+
+    // The count is the highest port number in use, and the map is ordered by port number.
+    m_MidiPortCount[flow] = ports.empty() ? 0 : ports.rbegin()->first;
+
+    return S_OK;
+}
+// End add with Feature_Servicing_MIDI2WinMMInterfaceRemovalPerf
 
 
 _Use_decl_annotations_

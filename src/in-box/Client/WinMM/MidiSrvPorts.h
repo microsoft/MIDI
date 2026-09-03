@@ -45,6 +45,9 @@ private:
     HRESULT GetMidiDeviceCount(_In_ MidiFlow flow, _In_ UINT32& count);
     // End remove with Feature_Servicing_MIDI2NumDevsPerf
     HRESULT RefreshPortsForFlow(_In_ MidiFlow flow);
+    // Start add with Feature_Servicing_MIDI2WinMMInterfaceRemovalPerf
+    HRESULT RemovePortForInterface(_In_ MidiFlow flow, _In_ std::wstring const& interfaceId);
+    // End add with Feature_Servicing_MIDI2WinMMInterfaceRemovalPerf
     HRESULT GetDevCaps(_In_ MidiFlow flow, _In_ UINT portNumber, _In_ DWORD_PTR midiCaps);
     HRESULT GetDevCaps(_In_ MidiFlow flow, _In_ UINT portNumber, _In_ DWORD_PTR midiCaps, _In_ DWORD_PTR midiCapsSize);
     HRESULT Open(_In_ MidiFlow flow, _In_ UINT portNumber, _In_ const MIDIOPENDESC* midiOpenDesc, _In_ DWORD_PTR flags, _In_ MidiPortHandle* openedPort);
