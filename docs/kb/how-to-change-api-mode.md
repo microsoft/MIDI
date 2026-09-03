@@ -57,6 +57,16 @@ This will eventually be in the MIDI Settings app, once the feature is fully enab
 5. Set the value: one of the above modes: 0, 1, 2
 6. Reboot for it to take effect.
 
+## Change using the MIDI Troubleshooting and Repair App
+
+> Important note: This app will start shipping in Windows near the end of 2026, and is currently available only for developers and technical users through our GitHub repo [https://aka.ms/midirepo](https://aka.ms/midirepo).
+
+The **API mode** page in the MIDI Troubleshooting and Repair app shows which mode this PC is using, describes what each mode gives you and takes away, and lets you change it without editing the registry. Because the setting is machine-wide and only takes effect after a restart, the app writes the value and then asks whether you want to restart now.
+
+![The API mode page in the MIDI Troubleshooting and Repair app]({{ site.baseurl }}/assets/images/miditroubleshooter.png)
+
+More information: [MIDI Troubleshooting and Repair]({{ site.baseurl }}/tools/miditroubleshooter/)
+
 ## Important tips
 
 - Do not use the current MIDI tools (MIDI Console, MIDI Settings) if you are in Legacy Mode. Some of these try to force start the service.
