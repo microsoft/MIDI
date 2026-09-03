@@ -189,6 +189,12 @@ namespace winrt::midikeyboard::implementation
 
         double m_pitchValue{ 0.0 };
         double m_modValue{ 0.0 };
+
+        // last value actually put on the wire, so holding a finger still on a ribbon does not
+        // repeat the same controller message every pointer move. Empty forces the next send.
+        std::optional<uint32_t> m_lastPitchSent{};
+        std::optional<uint32_t> m_lastModSent{};
+
         uint32_t m_pitchPointerId{ 0 };
         uint32_t m_modPointerId{ 0 };
         bool m_pitchCaptured{ false };

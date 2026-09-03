@@ -71,7 +71,7 @@ namespace midikeyboard
             static_cast<int32_t>(ReadDword(ValueBaseOctave, static_cast<uint32_t>(1))),
             MinimumBaseOctave, MaximumBaseOctave);
 
-        m_octaveCount = std::clamp(ReadDword(ValueOctaveCount, 4u), MinimumOctaveCount, MaximumOctaveCount);
+        m_octaveCount = std::clamp(ReadDword(ValueOctaveCount, 3u), MinimumOctaveCount, MaximumOctaveCount);
 
         m_transpose = std::clamp(
             static_cast<int32_t>(ReadDword(ValueTranspose, static_cast<uint32_t>(0))),

@@ -175,7 +175,11 @@ namespace midikeyboard
         uint32_t m_transmitChannelNumber{ 1 };
 
         int32_t m_baseOctave{ 1 };
-        uint32_t m_octaveCount{ 4 };
+
+        // three octaves is the most that still leaves the keys playable at the default window
+        // size; a wider window is what earns more of them
+        uint32_t m_octaveCount{ 3 };
+
         int32_t m_transpose{ 0 };
 
         RibbonPosition m_ribbons{ RibbonPosition::Left };

@@ -1299,6 +1299,11 @@ namespace winrt::midikeyboard::implementation
             m_arpeggiator.Reset();
             m_arpeggiatorSoundingNote = -1;
 
+            // this resets pitch bend on the wire, so the cached values no longer reflect the
+            // receiver and the next ribbon move has to be sent even if the value is unchanged
+            m_lastPitchSent.reset();
+            m_lastModSent.reset();
+
             m_output.SendAllNotesOff(TransmitGroupIndex(), TransmitChannelIndex());
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to stop all notes.")
@@ -1771,6 +1776,13 @@ namespace winrt::midikeyboard::implementation
             ? PitchBendCenter
             : NormalizedToUnsigned((m_pitchValue + 1.0) / 2.0);
 
+        if (m_lastPitchSent.has_value() && m_lastPitchSent.value() == scaled)
+        {
+            return;
+        }
+
+        m_lastPitchSent = scaled;
+
         m_output.SendPitchBend(TransmitGroupIndex(), TransmitChannelIndex(), scaled);
     }
 
@@ -1786,8 +1798,17 @@ namespace winrt::midikeyboard::implementation
             return;
         }
 
+        auto const scaled = NormalizedToUnsigned(m_modValue);
+
+        if (m_lastModSent.has_value() && m_lastModSent.value() == scaled)
+        {
+            return;
+        }
+
+        m_lastModSent = scaled;
+
         m_output.SendControlChange(TransmitGroupIndex(), TransmitChannelIndex(),
-            ModulationController, NormalizedToUnsigned(m_modValue));
+            ModulationController, scaled);
     }
 
     _Use_decl_annotations_
