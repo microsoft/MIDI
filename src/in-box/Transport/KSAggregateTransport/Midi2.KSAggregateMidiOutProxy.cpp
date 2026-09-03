@@ -187,7 +187,8 @@ CMidi2KSAggregateMidiOutProxy::Callback(
         TraceLoggingPointer(this, "this"),
         TraceLoggingWideString(L"MidiOut callback received from translation. Sending data to device.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
         TraceLoggingUInt32(static_cast<uint32_t>(optionFlags), "optionFlags"),
-        TraceLoggingHexUInt32Array(static_cast<uint32_t*>(data), static_cast<uint16_t>(length / sizeof(uint32_t)), "data"),
+        // Post-translation data is a MIDI 1.0 bytestream, not UMP words
+        TraceLoggingHexUInt8Array(static_cast<uint8_t*>(data), static_cast<uint16_t>(length), "data"),
         TraceLoggingUInt32(static_cast<uint32_t>(length), "length bytes"),
         TraceLoggingUInt64(static_cast<uint64_t>(timestamp), MIDI_TRACE_EVENT_MESSAGE_TIMESTAMP_FIELD)
     );
