@@ -383,3 +383,4 @@ build/dependencies/winui/WindowsAppRuntimeInstall-arm64.exe
 *.winmd
 *.dll
 *.exe
+src/in-box/settings.VisualStudio.json
