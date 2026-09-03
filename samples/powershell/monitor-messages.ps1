@@ -1,12 +1,13 @@
-#Requires -Version 7.4
+#Requires -Version 7.6
 import-module WindowsMidiServices
 
-$sdkinfo = Start-Midi | Write-Output
+# Confirms Windows MIDI Services is available before anything else is attempted.
+Start-Midi
 
 # List all available endpoints. Enumeration functions do not require an active session.
 Write-Host
 Write-Host "Available MIDI Endpoints" -ForegroundColor White
-$endpoints = Get-MidiEndpointDeviceInfoList | Sort-Object -Property Name
+$endpoints = Get-MidiEndpointDeviceInfo | Sort-Object -Property Name
 
 $index = 0
 foreach ($endpoint in $endpoints)
@@ -109,6 +110,5 @@ else
 
 # Cleanly shut down the SDK, stop WinRT activation redirection, etc.
 #Write-Host "Shutting down the SDK"
-Stop-Midi
 
 Write-Host "Finished."

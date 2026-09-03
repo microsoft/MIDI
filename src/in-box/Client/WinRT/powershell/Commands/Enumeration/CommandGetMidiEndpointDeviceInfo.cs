@@ -9,13 +9,17 @@
 
 using System.Management.Automation;
 
+using Windows.Devices.Midi2.Enumeration;
+
 namespace WindowsMidiServices
 {
 
     [Cmdlet(VerbsCommon.Get, "MidiEndpointDeviceInfo")]
-    public class CommandGetMidiEndpointDeviceInfo : Cmdlet
+    [OutputType(typeof(MidiEndpointDeviceInfo))]
+    public class CommandGetMidiEndpointDeviceInfo : MidiCmdletBase
     {
-        [Parameter(Mandatory = true, Position = 0)]
+        // Omitting this returns every endpoint on the PC.
+        [Parameter(Mandatory = false, Position = 0, ValueFromPipelineByPropertyName = true)]
         public string? EndpointDeviceId
         {
             get; set;
@@ -23,16 +27,32 @@ namespace WindowsMidiServices
 
         protected override void ProcessRecord()
         {
-            if (string.IsNullOrEmpty(EndpointDeviceId))
+            RequireMidiServices();
+
+            if (string.IsNullOrWhiteSpace(EndpointDeviceId))
             {
-                throw new ArgumentNullException("Endpoint Device Id is null or empty.");
+                foreach (var sdkDevice in MidiEndpointDeviceInformation.FindAll())
+                {
+                    WriteObject(new MidiEndpointDeviceInfo(sdkDevice));
+                }
+
+                return;
             }
 
-            var sdkDevice = Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(EndpointDeviceId);
+            var device = MidiEndpointDeviceInformation.CreateFromEndpointDeviceId(EndpointDeviceId);
 
-            var device = new MidiEndpointDeviceInfo(sdkDevice);
+            if (device is null)
+            {
+                WriteNonTerminating(
+                    new ItemNotFoundException($"No MIDI endpoint was found with the identifier \"{EndpointDeviceId}\"."),
+                    "MidiEndpointNotFound",
+                    ErrorCategory.ObjectNotFound,
+                    EndpointDeviceId);
 
-            WriteObject(device);
+                return;
+            }
+
+            WriteObject(new MidiEndpointDeviceInfo(device));
         }
     }
 

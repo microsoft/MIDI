@@ -6,40 +6,45 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Management.Automation;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WindowsMidiServices
 {
 
-    [Cmdlet(VerbsLifecycle.Stop, "MidiSession")]
-    public class CommandStopMidiSession : Cmdlet
+    [Cmdlet(VerbsLifecycle.Stop, "MidiSession", SupportsShouldProcess = true)]
+    public class CommandStopMidiSession : MidiCmdletBase
     {
-        [Parameter(Mandatory = true, Position = 0)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
         public MidiSession? Session { get; set; }
 
         protected override void ProcessRecord()
         {
-            if (Session == null)
+            if (Session is null)
             {
-                throw new ArgumentNullException("Session is null.");
+                ThrowTerminating(
+                    new ArgumentNullException(nameof(Session)),
+                    "MidiSessionRequired",
+                    ErrorCategory.InvalidArgument);
+
+                return;
             }
 
-            if (Session.BackingSession != null)
+            if (Session.BackingSession is null)
             {
-                WriteVerbose("MIDI Session stopped.");
-                Session.BackingSession.Dispose();
-            }
-            else
-            {
-                WriteVerbose("MIDI Session was not previously started.");
+                WriteVerbose("The MIDI session was already stopped.");
+                return;
             }
 
-            Session = null;
+            if (!ShouldProcess(Session.Name, "Stop MIDI session"))
+            {
+                return;
+            }
+
+            // Closing the session also closes every endpoint connection opened from it.
+            Session.BackingSession.Dispose();
+            Session.BackingSession = null;
+
+            WriteVerbose("MIDI session stopped.");
         }
 
 

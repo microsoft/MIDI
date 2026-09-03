@@ -6,12 +6,7 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Management.Automation;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WindowsMidiServices
 {
@@ -19,15 +14,13 @@ namespace WindowsMidiServices
     // terminate or shutdown, so we'll just use start/stop
 
     [Cmdlet(VerbsLifecycle.Start, "Midi")]
-    public class InitializeCommand : Cmdlet
+    public class CommandStartMidi : MidiCmdletBase
     {
         protected override void ProcessRecord()
         {
-            if (Windows.Devices.Midi2.MidiApi.EnsureServiceAvailable())
-            {
-                WriteVerbose("MIDI Initialized.");
-            }
+            RequireMidiServices();
 
+            WriteVerbose("Windows MIDI Services is available.");
         }
 
     }

@@ -20,7 +20,7 @@ namespace WindowsMidiServices
         public UInt64 ProcessIdentifier => BackingSessionInfo.ProcessId;
         public string ProcessName => BackingSessionInfo.ProcessName;
 
-        public IReadOnlyList<MidiSessionInfoOpenConnection> Connections;
+        public IReadOnlyList<MidiSessionInfoOpenConnection> Connections { get; }
 
 
         internal Windows.Devices.Midi2.Reporting.MidiServiceSessionInfo BackingSessionInfo { get; set; }

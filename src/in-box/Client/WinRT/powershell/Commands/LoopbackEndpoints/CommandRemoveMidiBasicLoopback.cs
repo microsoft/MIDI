@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of the Windows MIDI Services App API and should be used
@@ -6,22 +6,19 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-
-using Windows.Devices.Midi2.Transports.Loopback;
 using System.Management.Automation;
+
+using Windows.Devices.Midi2.Transports.BasicLoopback;
 
 namespace WindowsMidiServices
 {
 
-    [Cmdlet(VerbsCommon.Remove, "MidiLoopback", SupportsShouldProcess = true)]
-    [OutputType(typeof(MidiLoopbackRemovalResponse))]
-    public class CommandRemoveMidiLoopback : MidiCmdletBase
+    [Cmdlet(VerbsCommon.Remove, "MidiBasicLoopback", SupportsShouldProcess = true)]
+    [OutputType(typeof(MidiBasicLoopbackRemovalResponse))]
+    public class CommandRemoveMidiBasicLoopback : MidiCmdletBase
     {
         [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
-        public Guid AssociationId
-        {
-            get; set;
-        }
+        public Guid AssociationId { get; set; }
 
         [Parameter]
         public SwitchParameter PassThru { get; set; }
@@ -29,22 +26,22 @@ namespace WindowsMidiServices
         protected override void ProcessRecord()
         {
             RequireMidiServices();
-            RequireTransport(MidiLoopbackManager.IsTransportAvailable, "MIDI 2.0 loopback");
+            RequireTransport(MidiBasicLoopbackManager.IsTransportAvailable, "MIDI 1.0 basic loopback");
 
-            if (!ShouldProcess(AssociationId.ToString(), "Remove MIDI 2.0 loopback endpoint pair"))
+            if (!ShouldProcess(AssociationId.ToString(), "Remove MIDI 1.0 basic loopback endpoint"))
             {
                 return;
             }
 
-            var removalConfig = new MidiLoopbackRemovalConfig(AssociationId);
+            var removalConfig = new MidiBasicLoopbackRemovalConfig(AssociationId);
 
-            var response = MidiLoopbackManager.RemoveTransientLoopback(removalConfig);
+            var response = MidiBasicLoopbackManager.RemoveTransientLoopback(removalConfig);
 
             if (response is null || !response.Success)
             {
                 WriteNonTerminating(
-                    new InvalidOperationException(response is null ? "Unable to remove the loopback." : response.ErrorMessage),
-                    "MidiLoopbackRemovalFailed",
+                    new InvalidOperationException(response is null ? "Unable to remove the basic loopback." : response.ErrorMessage),
+                    "MidiBasicLoopbackRemovalFailed",
                     ErrorCategory.InvalidOperation,
                     AssociationId);
 
@@ -59,6 +56,5 @@ namespace WindowsMidiServices
             }
         }
     }
-
 
 }

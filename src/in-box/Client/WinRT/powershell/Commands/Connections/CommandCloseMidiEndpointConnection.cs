@@ -7,18 +7,13 @@
 // ============================================================================
 
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Management.Automation;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WindowsMidiServices
 {
 
-    [Cmdlet(VerbsCommon.Close, "MidiEndpointConnection")]
-    public class CommandCloseMidiEndpointConnection : Cmdlet
+    [Cmdlet(VerbsCommon.Close, "MidiEndpointConnection", SupportsShouldProcess = true)]
+    public class CommandCloseMidiEndpointConnection : MidiCmdletBase
     {
         [Parameter(Mandatory = true, Position = 0)]
         public MidiSession? Session
@@ -26,7 +21,7 @@ namespace WindowsMidiServices
             get; set;
         }
 
-        [Parameter(Mandatory = true, Position = 1)]
+        [Parameter(Mandatory = true, Position = 1, ValueFromPipeline = true)]
         public MidiEndpointConnection? Connection
         {
             get; set;
@@ -34,26 +29,36 @@ namespace WindowsMidiServices
 
         protected override void ProcessRecord()
         {
-            if (Session == null)
+            if (Session?.BackingSession is null)
             {
-                throw new ArgumentNullException("Session is null.");
+                ThrowTerminating(
+                    new ArgumentException("An open MIDI session is required.", nameof(Session)),
+                    "MidiSessionRequired",
+                    ErrorCategory.InvalidArgument);
+
+                return;
             }
 
-            if (Session.BackingSession == null)
+            if (Connection?.BackingConnection is null)
             {
-                throw new ArgumentNullException("Underlying session is null.");
+                ThrowTerminating(
+                    new ArgumentNullException(nameof(Connection)),
+                    "MidiConnectionRequired",
+                    ErrorCategory.InvalidArgument);
+
+                return;
             }
 
-            if (Connection == null)
+            var id = Connection.ConnectionId;
+
+            if (!ShouldProcess(Connection.EndpointDeviceId, "Close MIDI endpoint connection"))
             {
-                throw new ArgumentNullException("Endpoint connection is null.");
+                return;
             }
 
-            Guid id = Connection.ConnectionId;
+            Session.BackingSession.DisconnectEndpointConnection(id);
 
-            Session.BackingSession!.DisconnectEndpointConnection(id);
-
-            WriteVerbose($"MIDI Endpoint Connection {id} closed.");
+            WriteVerbose($"MIDI endpoint connection {id} closed.");
         }
     }
 

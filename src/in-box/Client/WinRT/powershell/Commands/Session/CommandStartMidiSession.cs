@@ -6,45 +6,39 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Management.Automation;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WindowsMidiServices
 {
 
 
     [Cmdlet(VerbsLifecycle.Start, "MidiSession")]
-    public class CommandStartMidiSession : Cmdlet
+    [OutputType(typeof(MidiSession))]
+    public class CommandStartMidiSession : MidiCmdletBase
     {
         [Parameter(Mandatory = true, Position = 0)]
-        public string? Name { get; set; }
+        [ValidateNotNullOrWhiteSpace]
+        public string Name { get; set; } = string.Empty;
 
         protected override void ProcessRecord()
         {
-            if (string.IsNullOrEmpty(Name))
+            RequireMidiServices();
+
+            var backingSession = Windows.Devices.Midi2.MidiSession.Create(Name);
+
+            if (backingSession is null)
             {
-                throw new ArgumentNullException("Name is null or empty.");
+                ThrowTerminating(
+                    new InvalidOperationException($"Unable to create the MIDI session \"{Name}\"."),
+                    "MidiSessionCreationFailed",
+                    ErrorCategory.ResourceUnavailable,
+                    Name);
+
+                return;
             }
 
-            // todo: check to see if initialized. If not, throw
-
-            var backingSession = Windows.Devices.Midi2.MidiSession.Create(Name!);
-
-            if (backingSession != null)
-            {
-                var session = new MidiSession(backingSession);
-
-                WriteVerbose("MIDI Session started.");
-                WriteObject(session);
-            }
-            else
-            {
-                throw new ArgumentException("Unable to create session. Has MIDI been initialized with Start-Midi?");
-            }
+            WriteVerbose("MIDI session started.");
+            WriteObject(new MidiSession(backingSession));
         }
     }
 

@@ -6,29 +6,22 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Management.Automation;
-using System.Text;
-using System.Threading.Tasks;
 
 using Windows.Devices.Midi2.Utilities.Messages;
 
 namespace WindowsMidiServices
 {
     [Cmdlet(VerbsCommon.Get, "MidiMessageInfo")]
-    public class CommandGetMidiMessageInfo : Cmdlet
+    [OutputType(typeof(MidiMessageInfo))]
+    public class CommandGetMidiMessageInfo : MidiCmdletBase
     {
-        [Parameter(Mandatory = true, Position = 0)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
+        [ValidateCount(1, 4)]
         public UInt32[] Words { get; set; } = [];
+
         protected override void ProcessRecord()
         {
-            if (Words.Length > 4 || Words.Length < 1)
-            {
-                throw new ArgumentException("MIDI Words must comprise one and only one valid MIDI UMP message (1-4 32-bit words)");
-            }
-
             var info = new MidiMessageInfo();
 
             info.MessageType = MidiMessageHelper.GetMessageTypeFromMessageFirstWord(Words[0]);

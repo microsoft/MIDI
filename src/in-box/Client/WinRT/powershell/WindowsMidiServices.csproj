@@ -34,15 +34,31 @@
 
       <NoWin32Manifest>true</NoWin32Manifest>
 
+      <!-- Referenced projects bring their .pdb along by default. That drags the ~90 MB native SDK
+           symbol file into the module folder, where nothing reads it. Release symbols are gathered
+           separately by build\build-sdk.ps1. -->
+      <AllowedReferenceRelatedFileExtensions>.xml</AllowedReferenceRelatedFileExtensions>
+
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.3.1" />
-    <PackageReference Include="System.Management.Automation" Version="7.4.7" />
+
+    <!-- PowerShell supplies these at run time from its own load context, so the copies this
+         package would place beside the module are never used. -->
+    <PackageReference Include="System.Management.Automation" Version="7.4.7" ExcludeAssets="runtime" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\NuGet\Windows.Devices.Midi2.NuGet\Windows.Devices.Midi2.NuGet.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- FormatsToProcess in the manifest resolves relative to the module folder, so this has to
+         travel with the assembly for both build and publish. -->
+    <Content Include="WindowsMidiServices.format.ps1xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 

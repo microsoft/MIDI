@@ -6,23 +6,19 @@
 // Further information: https://aka.ms/midi
 // ============================================================================
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Management.Automation;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WindowsMidiServices
 {
 
     [Cmdlet(VerbsCommunications.Send, "MidiMessage")]
-    public class CommandSendMidiMessage : Cmdlet
+    public class CommandSendMidiMessage : MidiCmdletBase
     {
         [Parameter(Mandatory = true, Position = 0)]
         public MidiEndpointConnection? Connection { get; set; }
 
-        [Parameter(Mandatory = true, Position = 1)]
+        [Parameter(Mandatory = true, Position = 1, ValueFromPipeline = true)]
+        [ValidateCount(1, 4)]
         public UInt32[] Words { get; set; } = [];
 
         [Parameter()]
@@ -30,36 +26,21 @@ namespace WindowsMidiServices
 
         protected override void ProcessRecord()
         {
-            if (Words.Length > 4 || Words.Length < 1)
-            {
-                throw new ArgumentException("MIDI Words must comprise one and only one valid MIDI UMP message (1-4 32-bit words)");
-            }
+            var connection = RequireOpenConnection(Connection);
 
-            if (Connection == null)
-            {
-                throw new ArgumentNullException("Connection is null.");
-            }
-
-            if (Connection.BackingConnection == null)
-            {
-                throw new ArgumentNullException("Underlying connection is null.");
-            }
-
-            // todo: some data validation to ensure the words are a single message only
-
-            // todo: return value
-            var result = Connection.BackingConnection.SendSingleMessageWordArray(Timestamp, 0, (byte)Words.Length, Words);
+            var result = connection.SendSingleMessageWordArray(Timestamp, 0, (byte)Words.Length, Words);
 
             if (Windows.Devices.Midi2.MidiEndpointConnection.SendMessageSucceeded(result))
             {
-                WriteVerbose($"MIDI Message with {Words.Length.ToString()} UMP words sent with timestamp {Timestamp}.");
-            }
-            else
-            {
-                WriteVerbose("MIDI Message failed to send");
-                WriteObject(result);
+                WriteVerbose($"MIDI message with {Words.Length} UMP words sent with timestamp {Timestamp}.");
+                return;
             }
 
+            WriteNonTerminating(
+                new InvalidOperationException($"The MIDI message was not sent. Send result: {result}."),
+                "MidiMessageSendFailed",
+                ErrorCategory.WriteError,
+                result);
         }
     }
 }
