@@ -23,9 +23,6 @@
       <Component Id="cD8E5E22F8F51176D" Bitness="always64" Directory="CONSOLEAPP_INSTALLFOLDER"> <!-- Microsoft.Devices.Midi2.Tools.Shared.dll -->
         <File Id="fD8E5E22F8F51176D" Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Devices.Midi2.Tools.Shared.dll" Vital="true" />
       </Component>
-      <Component Id="c274D1AC94D9F6B4E" Bitness="always64" Directory="CONSOLEAPP_INSTALLFOLDER"> <!-- Microsoft.Devices.Midi2.Tools.Shared.pdb -->
-        <File Id="f274D1AC94D9F6B4E" Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Devices.Midi2.Tools.Shared.pdb" Vital="true" />
-      </Component>
       <Component Id="c02DAA1FEE5B19F50" Bitness="always64" Directory="CONSOLEAPP_INSTALLFOLDER"> <!-- Microsoft.Extensions.DependencyInjection.Abstractions.dll -->
         <File Id="f02DAA1FEE5B19F50" Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Microsoft.Extensions.DependencyInjection.Abstractions.dll" Vital="true" />
       </Component>
@@ -158,9 +155,6 @@
       <Component Id="c84E1FFF50C4D037D" Bitness="always64" Directory="CONSOLEAPP_INSTALLFOLDER"> <!-- midi.exe -->
         <File Id="MidiConsoleExe" Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.exe" Vital="true" />
       </Component>
-      <Component Id="cEC24B7C6C7471615" Bitness="always64" Directory="CONSOLEAPP_INSTALLFOLDER"> <!-- midi.pdb -->
-        <File Id="fEC24B7C6C7471615" Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.pdb" Vital="true" />
-      </Component>
       <Component Id="cFFC3DAC685380BD8" Bitness="always64" Directory="CONSOLEAPP_INSTALLFOLDER"> <!-- midi.runtimeconfig.json -->
         <File Id="fFFC3DAC685380BD8" Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\midi.runtimeconfig.json" Vital="true" />
       </Component>
@@ -208,9 +202,6 @@
       </Component>
       <Component Id="c19E048B0F3912E2D" Bitness="always64" Directory="CONSOLEAPP_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.NetProjection.dll -->
         <File Id="f19E048B0F3912E2D" Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Windows.Devices.Midi2.NetProjection.dll" Vital="true" />
-      </Component>
-      <Component Id="c135FBFF5EB9665F6" Bitness="always64" Directory="CONSOLEAPP_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.NetProjection.pdb -->
-        <File Id="f135FBFF5EB9665F6" Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Windows.Devices.Midi2.NetProjection.pdb" Vital="true" />
       </Component>
       <Component Id="c9F532449AFA7CFE3" Bitness="always64" Directory="CONSOLEAPP_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.pri -->
         <File Id="f9F532449AFA7CFE3" Source="$(StagingSourceRootFolder)\midi-console\$(var.Platform)\Windows.Devices.Midi2.pri" Vital="true" />

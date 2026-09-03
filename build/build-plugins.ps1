@@ -145,6 +145,8 @@ $Plugins = @(
 
 # The app payload, as referenced by each plugin's WindowsMidiServices.wxs. The .exp, .lib and
 # .pdb files in the same output folder are deliberately not shipped; the pdbs alone are huge.
+# Neither are the .winmd files: C++/WinRT resolves types at compile time and activation goes
+# through the registry, so nothing reads metadata at run time.
 # Names are prefixed with the app name where they carry it.
 $AppPayloadCommon = @(
     'App.xbf'
@@ -152,10 +154,7 @@ $AppPayloadCommon = @(
     'resources.pri'
     'Microsoft.WindowsAppRuntime.Bootstrap.dll'
     'Microsoft.Web.WebView2.Core.dll'
-    'Microsoft.Web.WebView2.Core.winmd'
-    'MidiAppShared.winmd'
     'Windows.Devices.Midi2.dll'
-    'Windows.Devices.Midi2.winmd'
     'Windows.Devices.Midi2.pri'
 )
 
@@ -374,9 +373,9 @@ function Invoke-StageTarget {
         $destination = Join-Path $ApiStagingRoot $plat
 
         foreach ($plugin in $Plugins) {
-            foreach ($ext in @('dll', 'pdb')) {
-                Copy-Staged -Source (Join-Path $sourceFolder "$($plugin.Binary).$ext") -Destination $destination
-            }
+            # No pdb: symbols are archived with the release rather than installed. The Release
+            # target below takes them straight from the build output.
+            Copy-Staged -Source (Join-Path $sourceFolder "$($plugin.Binary).dll") -Destination $destination
         }
 
         Write-Detail "Staged $($Plugins.Count) transports -> api\$plat"
@@ -385,7 +384,7 @@ function Invoke-StageTarget {
             $appSource = Join-Path $AppSdkOutRoot "$($plugin.AppName)\$plat\$Configuration"
             $appDestination = Join-Path $StagingRoot "$($plugin.AppStagingName)\$plat"
 
-            $payload = @("$($plugin.AppName).exe", "$($plugin.AppName).winmd") + $AppPayloadCommon
+            $payload = @("$($plugin.AppName).exe") + $AppPayloadCommon
 
             foreach ($file in $payload) {
                 Copy-Staged -Source (Join-Path $appSource $file) -Destination $appDestination

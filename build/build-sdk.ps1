@@ -493,6 +493,30 @@ function Copy-Staged {
     Copy-Item -Path $Source -Destination $Destination -Force
 }
 
+# Symbols are archived with the release rather than installed. A customer is almost never in a
+# position to debug in place, and the pdbs dwarf the binaries they belong to, but we still need
+# the exact ones from a given build to make sense of a crash reported against it later.
+function Move-StagedSymbols {
+    param(
+        [Parameter(Mandatory)] [string] $Folder,
+        [Parameter(Mandatory)] [string] $BuildPlatform
+    )
+
+    if (-not (Test-Path $Folder)) { return }
+
+    $symbols = @(Get-ChildItem $Folder -File -Recurse -Filter '*.pdb')
+    if ($symbols.Count -eq 0) { return }
+
+    $symbolStaging = Join-Path $StagingRoot "symbols\$BuildPlatform"
+    New-Item -ItemType Directory -Force -Path $symbolStaging | Out-Null
+
+    foreach ($pdb in $symbols) {
+        Move-Item $pdb.FullName -Destination (Join-Path $symbolStaging $pdb.Name) -Force
+    }
+
+    Write-Detail "  $($symbols.Count) pdb -> staging\symbols\$BuildPlatform"
+}
+
 function Publish-DotNetApp {
     param(
         [Parameter(Mandatory)] [string] $Project,
@@ -590,7 +614,10 @@ function Invoke-StageTarget {
         New-Item -ItemType Directory -Force -Path $appSdkStaging | Out-Null
 
         $sdkBinFolder = Join-Path $SdkOutRoot "Windows.Devices.Midi2\$sdkBinarySourcePlatform\$Configuration"
-        foreach ($ext in @('dll', 'winmd', 'pri', 'pdb')) {
+
+        # No .winmd and no .pdb. Metadata is read at compile time only, and the NuGet package is
+        # where a developer gets it. Symbols are archived with the release instead.
+        foreach ($ext in @('dll', 'pri')) {
             Copy-Staged -Source (Join-Path $sdkBinFolder "Windows.Devices.Midi2.$ext") -Destination $appSdkStaging
         }
 
@@ -633,11 +660,15 @@ function Invoke-StageTarget {
         Publish-DotNetApp -Project $ConsoleProject -BuildPlatform $plat -RuntimeIdentifier $rid `
             -Destination $consoleStaging -Version $Version
 
+        Move-StagedSymbols -Folder $consoleStaging -BuildPlatform $plat
+
         # --- PowerShell module --------------------------------------------------------------
         $psStaging = Join-Path $StagingRoot "midi-powershell\$plat"
 
         Publish-DotNetApp -Project $PowerShellProject -BuildPlatform $plat -RuntimeIdentifier $rid `
             -Destination $psStaging -Version $Version
+
+        Move-StagedSymbols -Folder $psStaging -BuildPlatform $plat
 
         $manifest = Join-Path $psStaging 'WindowsMidiServices.psd1'
         Copy-Item (Join-Path (Split-Path -Parent $PowerShellProject) 'WindowsMidiServices.psd1') `
@@ -961,8 +992,8 @@ function Invoke-ReleaseTarget {
 
     # A crash report gives a module name, a build timestamp and an offset. Without the pdb from
     # that exact build the offset cannot be turned back into a function, and the build output is
-    # overwritten by the next build. Kept in a subfolder because these are far larger than the
-    # installers they belong to.
+    # overwritten by the next build. This is the only copy that survives, because nothing here is
+    # installed on a customer's PC.
     foreach ($plat in $Platform) {
         $symbolFolder = Join-Path $folder "symbols\$plat"
         New-Item -ItemType Directory -Force -Path $symbolFolder | Out-Null
@@ -977,6 +1008,16 @@ function Invoke-ReleaseTarget {
 
         foreach ($tool in $GuiTools) {
             $sources += Join-Path $SdkOutRoot "$($tool.Name)\$plat\$Configuration\$($tool.Name).pdb"
+        }
+
+        # The managed packages publish into staging, so their symbols were set aside there rather
+        # than being looked for under a per-project output path.
+        $stagedSymbols = Join-Path $StagingRoot "symbols\$plat"
+        if (Test-Path $stagedSymbols) {
+            $sources += @(Get-ChildItem $stagedSymbols -File -Filter '*.pdb' | Select-Object -ExpandProperty FullName)
+        }
+        else {
+            Write-Note "No staged symbols for $plat - run the Stage target"
         }
 
         $copied = 0

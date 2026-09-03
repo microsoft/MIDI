@@ -128,19 +128,16 @@ $TransportBinary = 'Midi2.BluetoothMidiTransport'
 
 # The app payload, as referenced by src/installers/oob-setup-bluetooth/api-package/WindowsMidiServices.wxs.
 # The .exp, .lib and .pdb files in the same output folder are deliberately not shipped; the two
-# pdbs alone are over 160 MB.
+# pdbs alone are over 160 MB. Neither are the .winmd files: C++/WinRT resolves types at compile
+# time and activation goes through the registry, so nothing reads metadata at run time.
 $AppPayload = @(
     'midibluetoothsetup.exe'
-    'midibluetoothsetup.winmd'
     'App.xbf'
     'MainWindow.xbf'
     'resources.pri'
     'Microsoft.WindowsAppRuntime.Bootstrap.dll'
     'Microsoft.Web.WebView2.Core.dll'
-    'Microsoft.Web.WebView2.Core.winmd'
-    'MidiAppShared.winmd'
     'Windows.Devices.Midi2.dll'
-    'Windows.Devices.Midi2.winmd'
     'Windows.Devices.Midi2.pri'
 )
 
@@ -338,9 +335,9 @@ function Invoke-StageTarget {
         $transportSource = Join-Path $ServiceOutRoot "$plat\$Configuration"
         $transportDestination = Join-Path $ApiStagingRoot $plat
 
-        foreach ($ext in @('dll', 'pdb')) {
-            Copy-Staged -Source (Join-Path $transportSource "$TransportBinary.$ext") -Destination $transportDestination
-        }
+        # No pdb: symbols are archived with the release rather than installed. The Release target
+        # below takes them straight from the build output.
+        Copy-Staged -Source (Join-Path $transportSource "$TransportBinary.dll") -Destination $transportDestination
 
         Write-Detail "Staged $TransportBinary -> api\$plat"
 
