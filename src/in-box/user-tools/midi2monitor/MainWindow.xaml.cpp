@@ -541,13 +541,108 @@ namespace winrt::midi2monitor::implementation
                 return;
             }
 
+            // read first: a rebuild moves the viewport before there is a chance to look
+            auto const wasAtEnd = IsMessageListAtEnd();
+
             m_listSource->Refresh();
+
+            if (wasAtEnd)
+            {
+                ScrollMessageListToEnd();
+            }
 
             auto const hasRows = m_listSource->Size() > 0;
 
             EmptyStatePanel().Visibility(hasRows ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to refresh the message list.")
+    }
+
+    controls::ScrollViewer MainWindow::MessageListScrollViewer() noexcept
+    {
+        try
+        {
+            if (m_messagesScrollViewer != nullptr)
+            {
+                return m_messagesScrollViewer;
+            }
+
+            // the ScrollViewer only exists once the ListView template has been applied
+            std::function<controls::ScrollViewer(xaml::DependencyObject const&)> find =
+                [&find](xaml::DependencyObject const& node) -> controls::ScrollViewer
+                {
+                    auto const count = media::VisualTreeHelper::GetChildrenCount(node);
+
+                    for (int32_t i = 0; i < count; i++)
+                    {
+                        auto const child = media::VisualTreeHelper::GetChild(node, i);
+
+                        if (auto const viewer = child.try_as<controls::ScrollViewer>())
+                        {
+                            return viewer;
+                        }
+
+                        if (auto const found = find(child))
+                        {
+                            return found;
+                        }
+                    }
+
+                    return nullptr;
+                };
+
+            m_messagesScrollViewer = find(MessagesListView());
+
+            return m_messagesScrollViewer;
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to find the message list scroll viewer.")
+
+        return nullptr;
+    }
+
+    bool MainWindow::IsMessageListAtEnd() noexcept
+    {
+        try
+        {
+            auto const viewer = MessageListScrollViewer();
+
+            // before the template is applied, following the newest message is the right default
+            if (viewer == nullptr || viewer.ScrollableHeight() <= 0.0)
+            {
+                return true;
+            }
+
+            return viewer.VerticalOffset() >= viewer.ScrollableHeight() - 4.0;
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to read the message list scroll position.")
+
+        return false;
+    }
+
+    void MainWindow::ScrollMessageListToEnd() noexcept
+    {
+        try
+        {
+            if (m_dispatcherQueue == nullptr)
+            {
+                return;
+            }
+
+            // the extent is stale until layout has run, so the scroll is queued behind it
+            m_dispatcherQueue.TryEnqueue(
+                winrt::Microsoft::UI::Dispatching::DispatcherQueuePriority::Low,
+                [weak = get_weak()]()
+                {
+                    if (auto strong = weak.get())
+                    {
+                        if (auto const viewer = strong->MessageListScrollViewer())
+                        {
+                            viewer.ChangeView(nullptr, viewer.ScrollableHeight(), nullptr, true);
+                        }
+                    }
+                });
+        }
+        MIDI_MONITOR_CATCH_AND_LOG(L"Unable to scroll the message list to the end.")
     }
 
     void MainWindow::UpdateStatusLine() noexcept

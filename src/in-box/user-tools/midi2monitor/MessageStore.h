@@ -66,7 +66,13 @@ namespace midi2monitor
         uint64_t TotalMessageCount{ 0 };
         uint64_t RealTimeMessageCount{ 0 };
         uint64_t DroppedMessageCount{ 0 };
-        uint64_t Generation{ 0 };       // bumped whenever existing rows shift or disappear
+
+        // bumped only for changes that cannot be described incrementally: clear, filter change
+        uint64_t Generation{ 0 };
+
+        // running total of visible rows dropped off the front, so a slide can be reported as
+        // removals plus appends rather than a rebuild
+        uint64_t VisibleEvictedCount{ 0 };
     };
 
     // Fixed capacity ring of retained records plus the filtered list of what is currently on
@@ -116,6 +122,9 @@ namespace midi2monitor
         uint64_t m_realTimeMessageCount{ 0 };
         uint64_t m_droppedMessageCount{ 0 };
         uint64_t m_generation{ 0 };
+
+        // monotonic for the life of the store, never reset
+        uint64_t m_visibleEvictedCount{ 0 };
 
         MessageTraits m_hiddenTraits{ MessageTraits::Clock | MessageTraits::ActiveSense };
     };

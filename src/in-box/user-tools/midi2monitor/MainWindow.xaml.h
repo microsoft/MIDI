@@ -119,6 +119,12 @@ namespace winrt::midi2monitor::implementation
         void RefreshMessageList() noexcept;
         void UpdateStatusLine() noexcept;
 
+        // The list follows new messages only while the customer is already at the end. A full
+        // refresh cannot rely on ItemsUpdatingScrollMode, so the position is restored by hand.
+        controls::ScrollViewer MessageListScrollViewer() noexcept;
+        bool IsMessageListAtEnd() noexcept;
+        void ScrollMessageListToEnd() noexcept;
+
         void ApplyStartupOptions() noexcept;
         void ApplyZoom(uint32_t zoomPercent, bool updateSlider, bool updateChoice) noexcept;
         std::vector<::midi2monitor::MessageRecord> SelectedRecords() noexcept;
@@ -136,6 +142,8 @@ namespace winrt::midi2monitor::implementation
 
         ::midi2monitor::MessagePipeline m_pipeline{};
         winrt::com_ptr<::midi2monitor::MessageListSource> m_listSource{ nullptr };
+
+        controls::ScrollViewer m_messagesScrollViewer{ nullptr };
 
         winrt::Microsoft::UI::Dispatching::DispatcherQueue m_dispatcherQueue{ nullptr };
 

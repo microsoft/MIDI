@@ -130,6 +130,7 @@ namespace midi2monitor
             m_generation = snapshot.Generation;
             m_hasGeneration = true;
             m_count = snapshot.VisibleCount;
+            m_visibleEvicted = snapshot.VisibleEvictedCount;
             m_cache.clear();
 
             RaiseChange(collections::CollectionChange::Reset, 0);
@@ -143,13 +144,22 @@ namespace midi2monitor
         {
             auto const snapshot = m_pipeline.Snapshot();
 
-            if (!m_hasGeneration || snapshot.Generation != m_generation || snapshot.VisibleCount < m_count)
+            auto const seenEver = m_count + static_cast<size_t>(m_visibleEvicted);
+            auto const snapshotSeenEver = snapshot.VisibleCount + static_cast<size_t>(snapshot.VisibleEvictedCount);
+
+            // a clear, a filter change or anything that ran backwards cannot be described
+            // incrementally, so the list is rebuilt
+            if (!m_hasGeneration ||
+                snapshot.Generation != m_generation ||
+                snapshot.VisibleEvictedCount < m_visibleEvicted ||
+                snapshotSeenEver < seenEver)
             {
                 auto const grew = snapshot.VisibleCount > m_count;
 
                 m_generation = snapshot.Generation;
                 m_hasGeneration = true;
                 m_count = snapshot.VisibleCount;
+                m_visibleEvicted = snapshot.VisibleEvictedCount;
                 m_cache.clear();
 
                 RaiseChange(collections::CollectionChange::Reset, 0);
@@ -157,31 +167,39 @@ namespace midi2monitor
                 return grew;
             }
 
-            if (snapshot.VisibleCount == m_count)
+            auto const removed = static_cast<size_t>(snapshot.VisibleEvictedCount - m_visibleEvicted);
+            auto const appended = snapshotSeenEver - seenEver;
+
+            if (removed == 0 && appended == 0)
             {
                 return false;
             }
 
-            auto const previousCount = m_count;
-            auto const added = snapshot.VisibleCount - previousCount;
+            m_visibleEvicted = snapshot.VisibleEvictedCount;
 
-            m_count = snapshot.VisibleCount;
-
-            if (added > MaximumIncrementalInserts)
+            if (removed + appended > MaximumIncrementalInserts)
             {
+                m_count = snapshot.VisibleCount;
                 m_cache.clear();
                 RaiseChange(collections::CollectionChange::Reset, 0);
-            }
-            else
-            {
-                for (size_t i = 0; i < added; i++)
-                {
-                    RaiseChange(collections::CollectionChange::ItemInserted,
-                        static_cast<uint32_t>(previousCount + i));
-                }
+
+                return appended > 0;
             }
 
-            return true;
+            // XAML reads Size() from inside these handlers, so the count moves one at a time
+            for (size_t i = 0; i < removed; i++)
+            {
+                m_count--;
+                RaiseChange(collections::CollectionChange::ItemRemoved, 0);
+            }
+
+            for (size_t i = 0; i < appended; i++)
+            {
+                m_count++;
+                RaiseChange(collections::CollectionChange::ItemInserted, static_cast<uint32_t>(m_count - 1));
+            }
+
+            return appended > 0;
         }
         MIDI_MONITOR_CATCH_AND_LOG(L"Unable to refresh the message list.")
 
