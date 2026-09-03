@@ -62,7 +62,6 @@
                    Guid="934b1877-4837-426c-acf8-6e9196604dbe"  >
 
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.BasicLoopbackMidiTransport.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.BasicLoopbackMidiTransport.pdb" />
         </Component>
         
 

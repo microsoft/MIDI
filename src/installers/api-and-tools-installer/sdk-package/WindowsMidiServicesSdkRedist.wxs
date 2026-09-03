@@ -27,6 +27,7 @@
                     <Directory Id="TOOL_SETTINGS_FOLDER" Name="Settings" />
                     <Directory Id="TOOL_LOOPSETUP_FOLDER" Name="LoopSetup" />
                     <Directory Id="TOOL_SCRATCHPAD_FOLDER" Name="ScratchPad" />
+                    <Directory Id="TOOL_KEYBOARD_FOLDER" Name="Keyboard" />
                     <Directory Id="TOOL_SYSEX_FOLDER" Name="SysEx" />
                     <Directory Id="TOOL_MONITOR_FOLDER" Name="Monitor" />
                     <Directory Id="TOOL_TROUBLESHOOTER_FOLDER" Name="Troubleshooter" />

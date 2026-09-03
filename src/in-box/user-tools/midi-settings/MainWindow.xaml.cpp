@@ -183,6 +183,7 @@ namespace winrt::midisettings::implementation
             ApplyToolButton(SysExButton(), SysExIcon(), native::MidiTool::SysEx);
             ApplyToolButton(MonitorButton(), MonitorIcon(), native::MidiTool::Monitor);
             ApplyToolButton(ScratchPadButton(), ScratchPadIcon(), native::MidiTool::ScratchPad);
+            ApplyToolButton(KeyboardButton(), KeyboardIcon(), native::MidiTool::Keyboard);
             ApplyToolButton(TroubleshooterButton(), TroubleshooterIcon(), native::MidiTool::Troubleshooter);
 
             // A separator with nothing on one side of it reads as a stray line, so each one
@@ -196,6 +197,7 @@ namespace winrt::midisettings::implementation
                 native::GetToolLocation(native::MidiTool::SysEx).Installed ||
                 native::GetToolLocation(native::MidiTool::Monitor).Installed ||
                 native::GetToolLocation(native::MidiTool::ScratchPad).Installed ||
+                native::GetToolLocation(native::MidiTool::Keyboard).Installed ||
                 native::GetToolLocation(native::MidiTool::Troubleshooter).Installed;
 
             SetupToolsSeparator().Visibility(setupInstalled && utilitiesInstalled ?
@@ -269,6 +271,12 @@ namespace winrt::midisettings::implementation
     void MainWindow::OnScratchPadClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
         native::LaunchTool(native::MidiTool::ScratchPad);
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnKeyboardClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        native::LaunchTool(native::MidiTool::Keyboard);
     }
 
     _Use_decl_annotations_

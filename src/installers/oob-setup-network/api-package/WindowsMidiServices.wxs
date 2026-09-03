@@ -71,7 +71,6 @@
                    Guid="3727cc9a-c427-4237-a733-5c6b10b33a9d"  >
 
             <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.NetworkMidiTransport.dll" Vital="true" />
-            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.NetworkMidiTransport.pdb" />
 
 
         </Component>
@@ -112,7 +111,6 @@
         <File Id="midinetworksetupExe"
               Source="$(AppStagingFolder)\midinetworksetup.exe"
               Vital="true" />
-        <File Source="$(AppStagingFolder)\midinetworksetup.winmd" />
         <File Source="$(AppStagingFolder)\App.xbf" />
         <File Source="$(AppStagingFolder)\MainWindow.xbf" />
         <File Source="$(AppStagingFolder)\resources.pri" />
@@ -121,8 +119,6 @@
         <File Source="$(AppStagingFolder)\Microsoft.WindowsAppRuntime.Bootstrap.dll" />
 
         <File Source="$(AppStagingFolder)\Microsoft.Web.WebView2.Core.dll" />
-        <File Source="$(AppStagingFolder)\Microsoft.Web.WebView2.Core.winmd" />
-        <File Source="$(AppStagingFolder)\MidiAppShared.winmd" />
       </Component>
 
       <Component Id="NetworkSetupAppLocalApi"
@@ -131,7 +127,6 @@
                  Guid="b6a1d370-58f4-49c2-8e0d-31f96c07a2be">
 
         <File Source="$(AppStagingFolder)\Windows.Devices.Midi2.dll" Vital="true" />
-        <File Source="$(AppStagingFolder)\Windows.Devices.Midi2.winmd" />
         <File Source="$(AppStagingFolder)\Windows.Devices.Midi2.pri" />
       </Component>
 

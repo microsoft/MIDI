@@ -9,65 +9,131 @@
 
 using System.Management.Automation;
 
-using global::Windows.Devices.Midi2.Reporting;
 using global::Windows.Devices.Midi2.Transports.Loopback;
 
 namespace WindowsMidiServices
 {
 
-    [Cmdlet(VerbsCommon.New, "MidiLoopback")]
-    public class CommandNewMidiLoopback : Cmdlet
+    [Cmdlet(VerbsCommon.New, "MidiLoopback", SupportsShouldProcess = true, DefaultParameterSetName = BaseNameParameterSet)]
+    [OutputType(typeof(MidiLoopbackEntry))]
+    public class CommandNewMidiLoopback : MidiCmdletBase
     {
-        [Parameter(Mandatory = true, Position = 0)]
-        public required string LoopbackBaseName
-        {
-            get; set;
-        }
+        private const string BaseNameParameterSet = "BaseName";
+        private const string SeparateNamesParameterSet = "SeparateNames";
 
-        [Parameter(Mandatory = true, Position = 1)]
-        public required string UniqueIdentifier
-        {
-            get; set;
-        }
+        // " (A)" and " (B)" are appended to this, matching what the other Windows MIDI Services
+        // tools create.
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = BaseNameParameterSet)]
+        [ValidateNotNullOrWhiteSpace]
+        public string BaseName { get; set; } = string.Empty;
 
-        [Parameter(Mandatory = false, Position = 2)]
-        public string? Description
-        {
-            get; set;
-        }
+        [Parameter(Mandatory = true, Position = 0, ParameterSetName = SeparateNamesParameterSet)]
+        [ValidateNotNullOrWhiteSpace]
+        public string NameA { get; set; } = string.Empty;
+
+        [Parameter(Mandatory = true, Position = 1, ParameterSetName = SeparateNamesParameterSet)]
+        [ValidateNotNullOrWhiteSpace]
+        public string NameB { get; set; } = string.Empty;
+
+        [Parameter]
+        public string Description { get; set; } = string.Empty;
+
+        [Parameter]
+        public string UniqueId { get; set; } = string.Empty;
+
+        [Parameter]
+        public SwitchParameter Muted { get; set; }
+
+        [Parameter]
+        public SwitchParameter SaveToConfiguration { get; set; }
 
         protected override void ProcessRecord()
         {
-            try 
+            RequireMidiServices();
+            RequireTransport(MidiLoopbackManager.IsTransportAvailable, "MIDI 2.0 loopback");
+
+            string nameA;
+            string nameB;
+
+            if (ParameterSetName == BaseNameParameterSet)
             {
-                var sdkSessions = MidiReporting.GetActiveSessions();
+                var root = LoopbackNaming.Truncate(BaseName, LoopbackNaming.MaxPortNameLength - LoopbackNaming.SuffixA.Length);
+
+                nameA = root + LoopbackNaming.SuffixA;
+                nameB = root + LoopbackNaming.SuffixB;
             }
-            catch
+            else
             {
-                throw new Exception("No midi session found. Make sure to first run \"Start-MidiSession\"");
+                nameA = LoopbackNaming.Truncate(NameA, LoopbackNaming.MaxPortNameLength);
+                nameB = LoopbackNaming.Truncate(NameB, LoopbackNaming.MaxPortNameLength);
             }
 
-            var loopbackA = new MidiLoopbackEndpointDefinition($"{LoopbackBaseName} (A)", UniqueIdentifier, Description);
-            var loopbackB = new MidiLoopbackEndpointDefinition($"{LoopbackBaseName} (B)", UniqueIdentifier, Description);
-
-            var creationConfig = new MidiLoopbackCreationConfig(loopbackA, loopbackB);
-            
-            try
+            if (string.Equals(nameA, nameB, StringComparison.OrdinalIgnoreCase))
             {
-                var createdEndpoint = MidiLoopbackManager.CreateTransientLoopback(creationConfig);
-
-                WriteObject(createdEndpoint);
+                ThrowTerminating(
+                    new ArgumentException($"The two endpoint names must differ within the first {LoopbackNaming.MaxPortNameLength} characters."),
+                    "MidiLoopbackDuplicateName",
+                    ErrorCategory.InvalidArgument,
+                    nameA);
             }
-            catch (Exception e)
+
+            var uniqueId = string.IsNullOrWhiteSpace(UniqueId)
+                ? LoopbackNaming.NewUniqueId()
+                : LoopbackNaming.CleanUniqueId(UniqueId);
+
+            if (string.IsNullOrEmpty(uniqueId))
             {
-                ErrorRecord err = new ErrorRecord(
-                    e,
-                    "LoopbackCreationError",
-                    ErrorCategory.DeviceError,
-                    null);
-                WriteError(err);
+                ThrowTerminating(
+                    new ArgumentException("The unique identifier must contain at least one letter or digit."),
+                    "MidiLoopbackInvalidUniqueId",
+                    ErrorCategory.InvalidArgument,
+                    UniqueId);
+            }
+
+            if (MidiLoopbackManager.DoesLoopbackAExist(uniqueId) || MidiLoopbackManager.DoesLoopbackBExist(uniqueId))
+            {
+                ThrowTerminating(
+                    new ArgumentException($"A loopback with the unique identifier \"{uniqueId}\" already exists."),
+                    "MidiLoopbackAlreadyExists",
+                    ErrorCategory.ResourceExists,
+                    uniqueId);
+            }
+
+            if (!ShouldProcess($"{nameA} / {nameB}", "Create MIDI 2.0 loopback endpoint pair"))
+            {
                 return;
             }
+
+            var creationConfig = new MidiLoopbackCreationConfig(
+                new MidiLoopbackEndpointDefinition(nameA, Description, uniqueId),
+                new MidiLoopbackEndpointDefinition(nameB, Description, uniqueId))
+            {
+                IsMuted = Muted.IsPresent
+            };
+
+            var response = MidiLoopbackManager.CreateTransientLoopback(creationConfig);
+
+            if (response is null || !response.Success)
+            {
+                ThrowTerminating(
+                    new InvalidOperationException(response is null ? "Unable to create the loopback." : response.ErrorMessage),
+                    "MidiLoopbackCreationFailed",
+                    ErrorCategory.InvalidOperation,
+                    creationConfig);
+
+                return;
+            }
+
+            if (SaveToConfiguration.IsPresent)
+            {
+                SaveToConfigurationFile(creationConfig);
+            }
+            else
+            {
+                WriteVerbose("This loopback is transient and will disappear when the service restarts. Use -SaveToConfiguration to keep it.");
+            }
+
+            WriteObject(response.CreatedLoopbackEntry);
         }
     }
 

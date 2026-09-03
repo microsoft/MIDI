@@ -1,0 +1,410 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- ==================================== App ==================================== -->
+  <data name="AppDisplayName" xml:space="preserve">
+    <value>Windows MIDI Keyboard</value>
+  </data>
+  <data name="VirtualDeviceDescription" xml:space="preserve">
+    <value>Virtual MIDI device created by the Windows MIDI Keyboard app</value>
+  </data>
+
+  <!-- ================================= Title bar ================================= -->
+  <data name="SettingsToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Always on top</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keep this window above other windows</value>
+  </data>
+
+  <!-- ============================== Performance strip ============================= -->
+  <data name="OctaveLabel.Text" xml:space="preserve">
+    <value>Octave</value>
+  </data>
+  <data name="OctaveDownButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Down one octave</value>
+  </data>
+  <data name="OctaveDownButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Down one octave (Page Down)</value>
+  </data>
+  <data name="OctaveUpButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Up one octave</value>
+  </data>
+  <data name="OctaveUpButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Up one octave (Page Up)</value>
+  </data>
+  <data name="OctaveRangeFormat" xml:space="preserve">
+    <value>{0} - {1}</value>
+    <comment>Lowest and highest note shown on the keyboard, for example C2 - C6</comment>
+  </data>
+  <data name="ArpeggiatorLabel.Text" xml:space="preserve">
+    <value>Arp</value>
+    <comment>Short label for the arpeggiator controls. Keep it brief.</comment>
+  </data>
+  <data name="ArpModeComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Arpeggiator pattern</value>
+  </data>
+  <data name="ArpBpmBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Arpeggiator tempo in beats per minute</value>
+  </data>
+  <data name="ArpBpmBox.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Tempo in beats per minute</value>
+  </data>
+  <data name="ArpRateComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Arpeggiator note length</value>
+  </data>
+  <data name="PanicButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>All notes off</value>
+  </data>
+  <data name="PanicButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Stop every sounding note and reset the ribbons</value>
+  </data>
+  <data name="PanicButtonText.Text" xml:space="preserve">
+    <value>All notes off</value>
+  </data>
+
+  <!-- =============================== Arpeggiator ================================== -->
+  <data name="ArpModeOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="ArpModeUp" xml:space="preserve">
+    <value>Up</value>
+  </data>
+  <data name="ArpModeUpDown" xml:space="preserve">
+    <value>Up and down</value>
+  </data>
+  <data name="ArpModeUpDownRepeat" xml:space="preserve">
+    <value>Up and down, ends repeated</value>
+  </data>
+  <data name="ArpModeDown" xml:space="preserve">
+    <value>Down</value>
+  </data>
+  <data name="ArpModeRandom" xml:space="preserve">
+    <value>Random</value>
+  </data>
+  <data name="ArpModeAsPlayed" xml:space="preserve">
+    <value>In order played</value>
+  </data>
+  <data name="ArpRateQuarter" xml:space="preserve">
+    <value>1/4</value>
+  </data>
+  <data name="ArpRateEighth" xml:space="preserve">
+    <value>1/8</value>
+  </data>
+  <data name="ArpRateEighthTriplet" xml:space="preserve">
+    <value>1/8 triplet</value>
+  </data>
+  <data name="ArpRateSixteenth" xml:space="preserve">
+    <value>1/16</value>
+  </data>
+  <data name="ArpRateSixteenthTriplet" xml:space="preserve">
+    <value>1/16 triplet</value>
+  </data>
+  <data name="ArpRateThirtySecond" xml:space="preserve">
+    <value>1/32</value>
+  </data>
+
+  <!-- ================================= Ribbons ==================================== -->
+  <data name="PitchRibbonTrack.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Pitch bend ribbon</value>
+  </data>
+  <data name="PitchRibbonLabel.Text" xml:space="preserve">
+    <value>PITCH</value>
+  </data>
+  <data name="ModRibbonTrack.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Modulation ribbon</value>
+  </data>
+  <data name="ModRibbonLabel.Text" xml:space="preserve">
+    <value>MOD</value>
+  </data>
+  <data name="KeyboardCanvas.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Performance keyboard</value>
+  </data>
+
+  <!-- ================================ Connection ================================== -->
+  <data name="SettingsSectionConnection.Text" xml:space="preserve">
+    <value>Connection</value>
+  </data>
+  <data name="ConnectionModeRadios.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Connection type</value>
+  </data>
+  <data name="ConnectionModeVirtual.Content" xml:space="preserve">
+    <value>Virtual device that other apps can play</value>
+  </data>
+  <data name="ConnectionModeEndpoint.Content" xml:space="preserve">
+    <value>An existing MIDI endpoint</value>
+  </data>
+  <data name="EndpointPickerLabel.Text" xml:space="preserve">
+    <value>MIDI destination</value>
+  </data>
+  <data name="EndpointComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI destination</value>
+  </data>
+  <data name="EndpointComboBox.PlaceholderText" xml:space="preserve">
+    <value>Choose a device</value>
+  </data>
+  <data name="GroupPickerLabel.Text" xml:space="preserve">
+    <value>Transmit group</value>
+  </data>
+  <data name="GroupComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Transmit group</value>
+  </data>
+  <data name="ChannelPickerLabel.Text" xml:space="preserve">
+    <value>Transmit channel</value>
+  </data>
+  <data name="ChannelComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Transmit channel</value>
+  </data>
+  <data name="VirtualDeviceHint.Text" xml:space="preserve">
+    <value>Other applications see this keyboard as a MIDI device named Windows MIDI Keyboard. Choose it as a MIDI input in your DAW or synthesizer.</value>
+  </data>
+  <data name="GroupChoiceFormat" xml:space="preserve">
+    <value>Group {0}</value>
+  </data>
+  <data name="GroupChoiceNamedFormat" xml:space="preserve">
+    <value>Group {0} - {1}</value>
+    <comment>{1} is the name of the function block or group terminal block covering the group</comment>
+  </data>
+  <data name="ChannelChoiceFormat" xml:space="preserve">
+    <value>Channel {0}</value>
+  </data>
+  <data name="ConnectionConnecting" xml:space="preserve">
+    <value>Connecting...</value>
+  </data>
+  <data name="ConnectionFailed" xml:space="preserve">
+    <value>Could not connect</value>
+  </data>
+  <data name="ConnectionServiceUnavailable" xml:space="preserve">
+    <value>Windows MIDI Services is not running</value>
+  </data>
+  <data name="ConnectionVirtualDeviceFailed" xml:space="preserve">
+    <value>Could not create the virtual device</value>
+  </data>
+  <data name="ConnectionNoEndpoint" xml:space="preserve">
+    <value>Choose a MIDI destination in settings</value>
+  </data>
+  <data name="ConnectionVirtualDeviceName" xml:space="preserve">
+    <value>Windows MIDI Keyboard</value>
+    <comment>Name shown while the app is acting as its own MIDI device</comment>
+  </data>
+  <data name="ConnectionVirtualDeviceDetail" xml:space="preserve">
+    <value>This keyboard is a virtual controller.</value>
+  </data>
+  <data name="ConnectionVirtualDeviceDetailToolTip" xml:space="preserve">
+    <value>This keyboard is a virtual controller, and appears in apps just like physical MIDI controllers</value>
+  </data>
+  <data name="ConnectionEndpointDetailFormat" xml:space="preserve">
+    <value>Group {0}, channel {1}</value>
+  </data>
+
+  <!-- ================================= Keyboard =================================== -->
+  <data name="SettingsSectionKeyboard.Text" xml:space="preserve">
+    <value>Keyboard</value>
+  </data>
+  <data name="BaseOctaveBox.Header" xml:space="preserve">
+    <value>Base octave</value>
+  </data>
+  <data name="BaseOctaveBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Base octave</value>
+  </data>
+  <data name="OctaveCountBox.Header" xml:space="preserve">
+    <value>Octaves</value>
+  </data>
+  <data name="OctaveCountBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Number of octaves shown</value>
+  </data>
+  <data name="TransposeBox.Header" xml:space="preserve">
+    <value>Transpose</value>
+  </data>
+  <data name="TransposeBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Transpose in semitones</value>
+  </data>
+  <data name="ShowNoteNamesCheckBox.Content" xml:space="preserve">
+    <value>Show note names and numbers</value>
+  </data>
+  <data name="ShowComputerKeysCheckBox.Content" xml:space="preserve">
+    <value>Show computer keyboard keys</value>
+  </data>
+
+  <!-- ================================ Expression ================================== -->
+  <data name="SettingsSectionExpression.Text" xml:space="preserve">
+    <value>Expression</value>
+  </data>
+  <data name="RibbonPositionLabel.Text" xml:space="preserve">
+    <value>Pitch and mod ribbons</value>
+  </data>
+  <data name="RibbonPositionComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Pitch and mod ribbons</value>
+  </data>
+  <data name="RibbonPositionLeft" xml:space="preserve">
+    <value>Left of the keys</value>
+  </data>
+  <data name="RibbonPositionRight" xml:space="preserve">
+    <value>Right of the keys</value>
+  </data>
+  <data name="RibbonPositionDisabled" xml:space="preserve">
+    <value>Hidden</value>
+  </data>
+  <data name="VelocityModeLabel.Text" xml:space="preserve">
+    <value>Key velocity</value>
+  </data>
+  <data name="VelocityModeComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Key velocity</value>
+  </data>
+  <data name="VelocityModeKeyLocation" xml:space="preserve">
+    <value>From where the key is struck</value>
+  </data>
+  <data name="VelocityModeFixed" xml:space="preserve">
+    <value>Fixed</value>
+  </data>
+  <data name="VelocityModeOff" xml:space="preserve">
+    <value>Off, every note at full</value>
+  </data>
+  <data name="VelocityMinimumBox.Header" xml:space="preserve">
+    <value>Softest</value>
+  </data>
+  <data name="VelocityMinimumBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Softest velocity</value>
+  </data>
+  <data name="VelocityMaximumBox.Header" xml:space="preserve">
+    <value>Hardest</value>
+  </data>
+  <data name="VelocityMaximumBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Hardest velocity</value>
+  </data>
+  <data name="FixedVelocityBox.Header" xml:space="preserve">
+    <value>Fixed velocity</value>
+  </data>
+  <data name="FixedVelocityBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Fixed velocity</value>
+  </data>
+  <data name="KeyPressureLabel.Text" xml:space="preserve">
+    <value>Key pressure, by dragging up a key</value>
+  </data>
+  <data name="KeyPressureComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Key pressure</value>
+  </data>
+  <data name="KeyPressureOff" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="KeyPressurePerNote" xml:space="preserve">
+    <value>Per-note controller</value>
+  </data>
+  <data name="KeyPressureChannel" xml:space="preserve">
+    <value>Channel pressure (mono aftertouch)</value>
+  </data>
+  <data name="KeyPressurePoly" xml:space="preserve">
+    <value>Poly pressure (poly aftertouch)</value>
+  </data>
+  <data name="PerNoteControllerBox.Header" xml:space="preserve">
+    <value>Per-note controller number</value>
+  </data>
+  <data name="PerNoteControllerBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Per-note controller number</value>
+  </data>
+
+  <!-- ================================ Appearance ================================== -->
+  <data name="AppearanceButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="AppearanceButtonText.Text" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="SettingsThemeLabel" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="SettingsThemeSystem" xml:space="preserve">
+    <value>Use system setting</value>
+  </data>
+  <data name="SettingsThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="SettingsThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="SettingsBackdropLabel" xml:space="preserve">
+    <value>Window material</value>
+  </data>
+  <data name="SettingsBackdropSolid" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="SettingsBackdropMica" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="SettingsBackdropAcrylic" xml:space="preserve">
+    <value>Acrylic</value>
+  </data>
+  <data name="SettingsCustomColorCheckBox" xml:space="preserve">
+    <value>Use a custom window color</value>
+  </data>
+  <data name="SettingsColorPickerName" xml:space="preserve">
+    <value>Window color</value>
+  </data>
+</root>

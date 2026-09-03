@@ -7,51 +7,55 @@
 // ============================================================================
 
 
-using Windows.Devices.Midi2.Reporting;
 using Windows.Devices.Midi2.Transports.Loopback;
 using System.Management.Automation;
 
 namespace WindowsMidiServices
 {
 
-    [Cmdlet(VerbsCommon.Remove, "MidiLoopback")]
-    public class CommandRemoveMidiLoopback : Cmdlet
+    [Cmdlet(VerbsCommon.Remove, "MidiLoopback", SupportsShouldProcess = true)]
+    [OutputType(typeof(MidiLoopbackRemovalResponse))]
+    public class CommandRemoveMidiLoopback : MidiCmdletBase
     {
-        [Parameter(Mandatory = true, Position = 0)]
-        public required Guid LoopbackEndpointPairAssociationId
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
+        public Guid AssociationId
         {
             get; set;
         }
 
+        [Parameter]
+        public SwitchParameter PassThru { get; set; }
+
         protected override void ProcessRecord()
         {
-            try 
-            {
-                var sdkSessions = MidiReporting.GetActiveSessions();
-            }
-            catch
-            {
-                throw new Exception("No midi session found. Make sure to first run \"Start-MidiSession\"");
-            }
+            RequireMidiServices();
+            RequireTransport(MidiLoopbackManager.IsTransportAvailable, "MIDI 2.0 loopback");
 
-            var removalConfig = new MidiLoopbackRemovalConfig(LoopbackEndpointPairAssociationId);
-
-           
-            try
+            if (!ShouldProcess(AssociationId.ToString(), "Remove MIDI 2.0 loopback endpoint pair"))
             {
-                var result = MidiLoopbackManager.RemoveTransientLoopback(removalConfig);
-
-                WriteObject(result);
-            }
-            catch (Exception e)
-            {
-                ErrorRecord err = new ErrorRecord(
-                    e,
-                    "LoopbackRemovalError",
-                    ErrorCategory.DeviceError,
-                    null);
-                WriteError(err);
                 return;
+            }
+
+            var removalConfig = new MidiLoopbackRemovalConfig(AssociationId);
+
+            var response = MidiLoopbackManager.RemoveTransientLoopback(removalConfig);
+
+            if (response is null || !response.Success)
+            {
+                WriteNonTerminating(
+                    new InvalidOperationException(response is null ? "Unable to remove the loopback." : response.ErrorMessage),
+                    "MidiLoopbackRemovalFailed",
+                    ErrorCategory.InvalidOperation,
+                    AssociationId);
+
+                return;
+            }
+
+            WriteVerbose("The loopback was removed from the running service. An entry saved in the configuration file is not affected.");
+
+            if (PassThru.IsPresent)
+            {
+                WriteObject(response);
             }
         }
     }

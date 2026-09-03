@@ -67,6 +67,7 @@ namespace midi2monitor
 
         size_t m_count{ 0 };
         uint64_t m_generation{ 0 };
+        uint64_t m_visibleEvicted{ 0 };
         bool m_hasGeneration{ false };
 
         TimestampDisplayFormat m_timestampFormat{ TimestampDisplayFormat::Ticks };

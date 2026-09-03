@@ -11,6 +11,8 @@
     </DirectoryRef>
     <DirectoryRef Id="TOOL_SCRATCHPAD_FOLDER">
     </DirectoryRef>
+    <DirectoryRef Id="TOOL_KEYBOARD_FOLDER">
+    </DirectoryRef>
     <DirectoryRef Id="TOOL_SYSEX_FOLDER">
     </DirectoryRef>
     <DirectoryRef Id="TOOL_MONITOR_FOLDER">
@@ -47,14 +49,8 @@
       <Component Id="c7DBA1C1C8CC79C56" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.dll -->
         <File Id="f7DBA1C1C8CC79C56" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Windows.Devices.Midi2.dll" Vital="true" />
       </Component>
-      <Component Id="c257F2E24377A44E6" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.pdb -->
-        <File Id="f257F2E24377A44E6" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Windows.Devices.Midi2.pdb" Vital="true" />
-      </Component>
       <Component Id="c23A29AD676666079" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.pri -->
         <File Id="f23A29AD676666079" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Windows.Devices.Midi2.pri" Vital="true" />
-      </Component>
-      <Component Id="cCFB70967B46D4581" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.winmd -->
-        <File Id="fCFB70967B46D4581" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Windows.Devices.Midi2.winmd" Vital="true" />
       </Component>
 
       <!-- app-sdk\$(var.Platform)\Settings -->
@@ -133,6 +129,32 @@
       </Component>
       <Component Id="c524CB912AD3F957C" Bitness="always64" Directory="TOOL_SCRATCHPAD_FOLDER"> <!-- Windows.Devices.Midi2.pri -->
         <File Id="f524CB912AD3F957C" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\ScratchPad\Windows.Devices.Midi2.pri" Vital="true" />
+      </Component>
+
+      <!-- app-sdk\$(var.Platform)\Keyboard -->
+      <Component Id="c7B50E3D86ECC9B7B" Bitness="always64" Directory="TOOL_KEYBOARD_FOLDER"> <!-- App.xbf -->
+        <File Id="f7B50E3D86ECC9B7B" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Keyboard\App.xbf" Vital="true" />
+      </Component>
+      <Component Id="c82BDD1C987706B54" Bitness="always64" Directory="TOOL_KEYBOARD_FOLDER"> <!-- MainWindow.xbf -->
+        <File Id="f82BDD1C987706B54" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Keyboard\MainWindow.xbf" Vital="true" />
+      </Component>
+      <Component Id="cFF322FB74731B3CC" Bitness="always64" Directory="TOOL_KEYBOARD_FOLDER"> <!-- Microsoft.Web.WebView2.Core.dll -->
+        <File Id="fFF322FB74731B3CC" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Keyboard\Microsoft.Web.WebView2.Core.dll" Vital="true" />
+      </Component>
+      <Component Id="c728FB49FB9719D4A" Bitness="always64" Directory="TOOL_KEYBOARD_FOLDER"> <!-- Microsoft.WindowsAppRuntime.Bootstrap.dll -->
+        <File Id="f728FB49FB9719D4A" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Keyboard\Microsoft.WindowsAppRuntime.Bootstrap.dll" Vital="true" />
+      </Component>
+      <Component Id="c3ABD209592496FA2" Bitness="always64" Directory="TOOL_KEYBOARD_FOLDER"> <!-- midikeyboard.exe -->
+        <File Id="midikeyboardExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Keyboard\midikeyboard.exe" Vital="true" />
+      </Component>
+      <Component Id="c81C76E3E6CEB5500" Bitness="always64" Directory="TOOL_KEYBOARD_FOLDER"> <!-- resources.pri -->
+        <File Id="f81C76E3E6CEB5500" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Keyboard\resources.pri" Vital="true" />
+      </Component>
+      <Component Id="c65FD62BFBE86482C" Bitness="always64" Directory="TOOL_KEYBOARD_FOLDER"> <!-- Windows.Devices.Midi2.dll -->
+        <File Id="f65FD62BFBE86482C" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Keyboard\Windows.Devices.Midi2.dll" Vital="true" />
+      </Component>
+      <Component Id="c70184BEB5F481A88" Bitness="always64" Directory="TOOL_KEYBOARD_FOLDER"> <!-- Windows.Devices.Midi2.pri -->
+        <File Id="f70184BEB5F481A88" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Keyboard\Windows.Devices.Midi2.pri" Vital="true" />
       </Component>
 
       <!-- app-sdk\$(var.Platform)\SysEx -->

@@ -1,11 +1,12 @@
-#Requires -Version 7.4
+#Requires -Version 7.6
 import-module WindowsMidiServices
 
-$sdkinfo = Start-Midi | Write-Output
+# Confirms Windows MIDI Services is available before anything else is attempted.
+Start-Midi
 
 # List all available endpoints. Enumeration functions do not require an active session.
 Write-Host "Available MIDI Endpoints" -ForegroundColor Cyan
-(Get-MidiEndpointDeviceInfoList) | Sort-Object -Property Name | Format-Table -AutoSize
+(Get-MidiEndpointDeviceInfo) | Sort-Object -Property Name | Format-Table -AutoSize
 
 # I'm using the default loopback that is created when you set up MIDI through the MIDI Settings app
 $endpointDeviceId = "\\?\swd#midisrv#midiu_loop_a_default#{e7cce071-3c03-423f-88d3-f1045d02552b}"
@@ -24,7 +25,7 @@ if ($session -ne $null)
 
     # list all the active sessions
     Write-Host "All active MIDI sessions" -ForegroundColor Cyan
-    (Get-MidiSessionList) | Sort-Object -Property Name | Format-Table -AutoSize
+    (Get-MidiSession) | Sort-Object -Property Name | Format-Table -AutoSize
 
     # open a connection to the endpoint
     $connection = Open-MidiEndpointConnection $session $endpointDeviceId
@@ -61,7 +62,3 @@ else
 {
     Write-Host "Unable to create new MIDI Session" -ForegroundColor Red
 }
-
-# Cleanly shut down the SDK, stop WinRT activation redirection, etc.
-Write-Host "Shutting down the SDK" -ForegroundColor Cyan
-Stop-Midi

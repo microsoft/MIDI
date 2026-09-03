@@ -72,7 +72,6 @@
             <File Id="Midi2BluetoothMidiTransportDll"
                   Source="$(TransportStagingFolder)\Midi2.BluetoothMidiTransport.dll"
                   Vital="true" />
-            <File Source="$(TransportStagingFolder)\Midi2.BluetoothMidiTransport.pdb" />
         </Component>
 
         <!-- ==========================================================================
@@ -88,7 +87,6 @@
             <File Id="midibluetoothsetupExe"
                   Source="$(AppStagingFolder)\midibluetoothsetup.exe"
                   Vital="true" />
-            <File Source="$(AppStagingFolder)\midibluetoothsetup.winmd" />
             <File Source="$(AppStagingFolder)\App.xbf" />
             <File Source="$(AppStagingFolder)\MainWindow.xbf" />
             <File Source="$(AppStagingFolder)\resources.pri" />
@@ -97,8 +95,6 @@
             <File Source="$(AppStagingFolder)\Microsoft.WindowsAppRuntime.Bootstrap.dll" />
 
             <File Source="$(AppStagingFolder)\Microsoft.Web.WebView2.Core.dll" />
-            <File Source="$(AppStagingFolder)\Microsoft.Web.WebView2.Core.winmd" />
-            <File Source="$(AppStagingFolder)\MidiAppShared.winmd" />
         </Component>
 
         <Component Id="BluetoothSetupAppLocalApi"
@@ -107,7 +103,6 @@
                    Guid="25988c8c-5e26-4bc1-afd0-cb1848503f4e">
 
             <File Source="$(AppStagingFolder)\Windows.Devices.Midi2.dll" Vital="true" />
-            <File Source="$(AppStagingFolder)\Windows.Devices.Midi2.winmd" />
             <File Source="$(AppStagingFolder)\Windows.Devices.Midi2.pri" />
         </Component>
 

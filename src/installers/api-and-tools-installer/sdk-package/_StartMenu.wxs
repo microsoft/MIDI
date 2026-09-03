@@ -21,6 +21,10 @@
                   Name="MIDI Scratch Pad"
                   Target="[#midiscratchpadExe]"
                   WorkingDirectory="TOOL_SCRATCHPAD_FOLDER" />
+        <Shortcut Id="Shortcut_midikeyboard"
+                  Name="Windows MIDI Keyboard"
+                  Target="[#midikeyboardExe]"
+                  WorkingDirectory="TOOL_KEYBOARD_FOLDER" />
         <Shortcut Id="Shortcut_midisysextool"
                   Name="MIDI SysEx Tool"
                   Target="[#midisysextoolExe]"

@@ -57,7 +57,7 @@ PowerShellVersion = '7.6'
 # TypesToProcess = @()
 
 # Format files (.ps1xml) to be loaded when importing this module
-# FormatsToProcess = @()
+FormatsToProcess = @('WindowsMidiServices.format.ps1xml')
 
 # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
 # NestedModules = @()
@@ -67,18 +67,33 @@ FunctionsToExport = @()
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = @(
-    "Start-Midi", "Stop-Midi", 
-    "Get-MidiSessionList", "Get-MidiEndpointDeviceInfo", "Get-MidiEndpointDeviceInfoList", "Get-MidiEndpointGroups", 
-    "Start-MidiSession", "Stop-MidiSession", 
-    "Open-MidiEndpointConnection", "Close-MidiEndpointConnection", 
-    "Send-MidiMessage", 
-    "Get-MidiMessageInfo",
-    "New-MidiLoopback", "Remove-MidiLoopback",
-    "New-MidiBasicLoopback", "Remove-MidiBasicLoopback"
+    # service and sessions
+    'Start-Midi',
+    'Start-MidiSession', 'Stop-MidiSession', 'Get-MidiSession',
+
+    # enumeration
+    'Get-MidiEndpointDeviceInfo', 'Get-MidiEndpointGroup', 'Get-MidiLegacyPort',
+
+    # connections and messages
+    'Open-MidiEndpointConnection', 'Close-MidiEndpointConnection',
+    'Send-MidiMessage', 'Get-MidiMessageInfo',
+
+    # system exclusive transfers
+    'Send-MidiSystemExclusive', 'Receive-MidiSystemExclusive',
+
+    # MIDI 2.0 loopback endpoint pairs
+    'New-MidiLoopback', 'Remove-MidiLoopback', 'Get-MidiLoopback', 'Set-MidiLoopbackMute',
+
+    # MIDI 1.0 basic loopback endpoints
+    'New-MidiBasicLoopback', 'Remove-MidiBasicLoopback', 'Get-MidiBasicLoopback', 'Set-MidiBasicLoopbackMute',
+
+    # Network MIDI 2.0
+    'Get-MidiNetworkAdvertisedHost', 'Get-MidiNetworkConfiguredHost', 'Get-MidiNetworkConfiguredClient',
+    'Connect-MidiNetworkHost', 'Disconnect-MidiNetworkHost'
 )
 
 # Variables to export from this module
-VariablesToExport = '*'
+VariablesToExport = @()
 
 # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
 AliasesToExport = @()

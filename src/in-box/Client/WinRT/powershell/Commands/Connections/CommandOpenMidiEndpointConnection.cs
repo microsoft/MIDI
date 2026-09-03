@@ -7,66 +7,70 @@
 // ============================================================================
 
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Management.Automation;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WindowsMidiServices
 {
 
 
     [Cmdlet(VerbsCommon.Open, "MidiEndpointConnection")]
-    public class CommandOpenMidiEndpointConnection : Cmdlet
+    [OutputType(typeof(MidiEndpointConnection))]
+    public class CommandOpenMidiEndpointConnection : MidiCmdletBase
     {
-        [Parameter(Mandatory = true, Position = 0)]
+        [Parameter(Mandatory = true, Position = 0, ValueFromPipeline = true)]
         public MidiSession? Session
         {
             get;set;
         }
 
-        [Parameter(Mandatory = true, Position = 1)]
-        public string? EndpointDeviceId
+        [Parameter(Mandatory = true, Position = 1, ValueFromPipelineByPropertyName = true)]
+        [ValidateNotNullOrWhiteSpace]
+        public string EndpointDeviceId
         {
             get; set;
-        }
+        } = string.Empty;
 
 
         protected override void ProcessRecord()
         {
-            if (Session == null || !Session.IsValid)
+            if (Session is null || !Session.IsValid)
             {
-                throw new ArgumentNullException("Invalid session.");
-            }
+                ThrowTerminating(
+                    new ArgumentException("An open MIDI session is required. Use Start-MidiSession first.", nameof(Session)),
+                    "MidiSessionRequired",
+                    ErrorCategory.InvalidArgument);
 
-            if (string.IsNullOrWhiteSpace(EndpointDeviceId))
-            {
-                throw new ArgumentNullException("Endpoint device id is null or empty.");
+                return;
             }
 
             var backingConnection = Session.BackingSession!.CreateEndpointConnection(EndpointDeviceId);
 
-            if (backingConnection == null)
+            if (backingConnection is null)
             {
-                throw new Exception("Unable to create connection.");
+                ThrowTerminating(
+                    new InvalidOperationException($"Unable to create a connection to \"{EndpointDeviceId}\"."),
+                    "MidiConnectionCreationFailed",
+                    ErrorCategory.ResourceUnavailable,
+                    EndpointDeviceId);
+
+                return;
             }
 
-            // do this here to make sure the event handler is wired up before we open
-            var conn = new MidiEndpointConnection(backingConnection);
+            // Wrapped before opening so the message handler is attached before anything arrives.
+            var connection = new MidiEndpointConnection(backingConnection);
 
-            if (backingConnection.Open())
+            if (!backingConnection.Open())
             {
-                WriteObject(conn);
+                ThrowTerminating(
+                    new InvalidOperationException($"Unable to open the connection to \"{EndpointDeviceId}\"."),
+                    "MidiConnectionOpenFailed",
+                    ErrorCategory.OpenError,
+                    EndpointDeviceId);
+
+                return;
             }
-            else
-            {
-                throw new Exception("Unable to open connection.");
-            }
 
-
-
+            WriteObject(connection);
         }
 
 

@@ -4,9 +4,9 @@ PowerShell is the preferred scripting language for Windows. It enables developer
 
 The 
 
-Requirements: PowerShell 7.4+ in Windows, .NET 8+ Desktop Runtime. You must also have PowerShell scripting enabled in Settings > For Developers
+Requirements: PowerShell 7.6+ in Windows, .NET 10+ Desktop Runtime. You must also have PowerShell scripting enabled in Settings > For Developers
 
-Note that there are older versions of PowerShell, typically pre-installed with Windows. We specifically require version 7.4+ of PowerShell (pwsh), not the older Windows PowerShell.
+Note that there are older versions of PowerShell, typically pre-installed with Windows. We specifically require version 7.6+ of PowerShell (pwsh), not the older Windows PowerShell.
 
 ## Samples
 

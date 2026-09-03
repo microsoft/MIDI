@@ -89,9 +89,8 @@ namespace midi2monitor
         while (!m_visibleSequences.empty() && m_visibleSequences.front() < m_firstSequence)
         {
             m_visibleSequences.pop_front();
+            m_visibleEvictedCount++;
         }
-
-        m_generation++;
     }
 
     _Use_decl_annotations_
@@ -202,6 +201,7 @@ namespace midi2monitor
         snapshot.RealTimeMessageCount = m_realTimeMessageCount;
         snapshot.DroppedMessageCount = m_droppedMessageCount;
         snapshot.Generation = m_generation;
+        snapshot.VisibleEvictedCount = m_visibleEvictedCount;
 
         return snapshot;
     }
