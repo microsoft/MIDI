@@ -54,7 +54,7 @@ namespace midi2console
 
         auto withEvents = CatchEvent(renderer, [&](Event event)
         {
-            if (event == Event::Escape)
+            if (IsCancelEvent(event))
             {
                 accepted = false;
                 screen.Exit();

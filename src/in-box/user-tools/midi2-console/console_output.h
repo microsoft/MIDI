@@ -54,11 +54,14 @@ namespace midi2console
     inline const auto fieldLabelTextStyle = fmt::fg(fmt::color::dark_golden_rod);
     inline const auto fieldValueTextStyle = fmt::fg(fmt::color::light_gray);
 
-    inline const auto endpointNameTextStyle = fmt::fg(fmt::color::light_sky_blue);
+    // These four match the shipping console's AnsiMarkupFormatter, which uses the same colors
+    // in its tables and its picker: steelblue1_1, darkgoldenrod, steelblue3 and grey.
+    inline const auto endpointNameTextStyle = fmt::fg(fmt::rgb(0x5F, 0xD7, 0xFF));
+    inline const auto transportCodeTextStyle = fmt::fg(fmt::rgb(0xAF, 0x87, 0x00));
+    inline const auto manufacturerTextStyle = fmt::fg(fmt::rgb(0x5F, 0x87, 0xD7));
+    inline const auto midi2IndicatorTextStyle = fmt::fg(fmt::rgb(0x80, 0x80, 0x80));
+
     inline const auto endpointIdTextStyle = fmt::fg(fmt::color::olive);
-    inline const auto transportCodeTextStyle = fmt::fg(fmt::color::steel_blue);
-    inline const auto manufacturerTextStyle = fmt::fg(fmt::color::slate_gray);
-    inline const auto midi2IndicatorTextStyle = fmt::fg(fmt::color::gray);
 
     inline const auto guidTextStyle = fmt::fg(fmt::color::dark_sea_green);
     inline const auto numberTextStyle = fmt::fg(fmt::color::olive);

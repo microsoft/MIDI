@@ -22,6 +22,8 @@ namespace midi2console
         // Every icon here must be an Emoji_Presentation code point so it occupies two terminal
         // cells. Single-cell pictographs such as U+2699 GEAR and U+1F6E0 HAMMER AND WRENCH break
         // the column alignment of the picker, which is why they are deliberately not used.
+        // Code points newer than FTXUI's width tables have the same effect: U+1F6DC WIRELESS
+        // (Unicode 15.0) measures as one cell but draws as two, shifting the row by one.
         switch (purpose)
         {
         case midi2enum::MidiEndpointDevicePurpose::DiagnosticPing:
@@ -46,7 +48,7 @@ namespace midi2console
         if (transportCode == "loop")     return "\U0001F504";   // counterclockwise arrows
         if (transportCode == "bloop")    return "\U0001F517";   // link
         if (transportCode == "net2udp")  return "\U0001F310";   // globe with meridians
-        if (transportCode == "blemidi")  return "\U0001F4F1";   // mobile phone
+        if (transportCode == "blemidi")  return "\U0001F4F6";   // antenna bars
 
         return GetEndpointIcon(device.EndpointPurpose());
     }

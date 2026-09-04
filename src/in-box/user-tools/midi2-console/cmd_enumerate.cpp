@@ -250,19 +250,14 @@ namespace midi2console
             table.AddCell(fmt::format("{}", port.Number()));
             table.AddCell(ToUtf8(port.Name()));
             table.AddCell(FormatPortFlow(port.Flow()));
+
+            if (options.IncludePortId)
+            {
+                table.AddRowDetail(ToUtf8(port.PortDeviceId()), endpointIdTextStyle);
+            }
         }
 
         table.Render();
-
-        if (options.IncludePortId)
-        {
-            for (auto const& port : ports)
-            {
-                WriteBlankLine();
-                WriteLine(fmt::format("{}", Styled(ToUtf8(port.Name()), endpointNameTextStyle)));
-                WriteField(ResourceString(IDS_LABEL_ID), ToUtf8(port.PortDeviceId()), endpointIdTextStyle);
-            }
-        }
 
         WriteBlankLine();
         WriteLine(fmt::format("{}", Styled(ResourceString(IDS_ENUM_LEGACY_FOOTNOTE), separatorTextStyle)));

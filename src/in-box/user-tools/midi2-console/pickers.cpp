@@ -32,6 +32,10 @@ namespace midi2console
         {
             Elements parts;
 
+            // A decorator on the row cannot override the children, so the selected row has to
+            // pick white per field. Unselected colors match the shipping console's formatter.
+            auto const pick = [focused](Color const& normal) { return focused ? Color::White : normal; };
+
             if (!entry.Icon.empty())
             {
                 parts.push_back(text(entry.Icon + " "));
@@ -39,25 +43,25 @@ namespace midi2console
 
             if (entry.IsCancelEntry)
             {
-                parts.push_back(text(entry.PrimaryText) | color(Color::GrayLight));
+                parts.push_back(text(entry.PrimaryText) | color(pick(Color::GrayLight)));
             }
             else
             {
-                parts.push_back(text(entry.PrimaryText) | color(Color::LightSkyBlue1));
+                parts.push_back(text(entry.PrimaryText) | color(pick(Color::RGB(0x5F, 0xD7, 0xFF))));
 
                 if (!entry.SecondaryText.empty())
                 {
-                    parts.push_back(text(entry.SecondaryText) | color(Color::SteelBlue));
+                    parts.push_back(text(entry.SecondaryText) | color(pick(Color::RGB(0xAF, 0x87, 0x00))));
                 }
 
                 if (!entry.TertiaryText.empty())
                 {
-                    parts.push_back(text(entry.TertiaryText) | color(Color::GrayDark));
+                    parts.push_back(text(entry.TertiaryText) | color(pick(Color::RGB(0x80, 0x80, 0x80))));
                 }
 
                 if (!entry.QuaternaryText.empty())
                 {
-                    parts.push_back(text(entry.QuaternaryText) | color(Color::SlateBlue1));
+                    parts.push_back(text(entry.QuaternaryText) | color(pick(Color::RGB(0x5F, 0x87, 0xD7))));
                 }
             }
 
@@ -65,11 +69,14 @@ namespace midi2console
             // continuous bar rather than a highlight that stops at the end of the text.
             parts.push_back(filler());
 
+            // Keeps the widest row off the scroll indicator.
+            parts.push_back(text(" "));
+
             auto row = hbox(std::move(parts));
 
             if (focused)
             {
-                row = row | color(Color::White) | bgcolor(Color::RGB(0x00, 0x3E, 0x5F)) | focus;
+                row = row | bgcolor(Color::RGB(0x00, 0x3E, 0x5F)) | focus;
             }
 
             return row;
@@ -146,7 +153,9 @@ namespace midi2console
             container->Add(MenuEntry(entries[i].PrimaryText, option));
         }
 
-        auto screen = ScreenInteractive::TerminalOutput();
+        // Sizes the frame to the widest row instead of the terminal. The rows still carry
+        // filler(), so the selection bar spans the menu rather than stopping at the text.
+        auto screen = ScreenInteractive::FitComponent();
 
         auto const visibleRows = static_cast<int>(std::min<size_t>(entries.size(), 15));
 
@@ -163,7 +172,7 @@ namespace midi2console
 
         auto withEvents = CatchEvent(renderer, [&](Event event)
         {
-            if (event == Event::Escape)
+            if (IsCancelEvent(event))
             {
                 accepted = false;
                 screen.Exit();

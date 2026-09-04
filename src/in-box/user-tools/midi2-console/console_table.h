@@ -36,6 +36,10 @@ namespace midi2console
         void AddCell(_In_ std::string text);
         void AddCell(_In_ std::string text, _In_ fmt::text_style const& style);
 
+        // Full-width continuation line drawn under the current row. Any detail line turns on
+        // separators between rows, so each entry reads as one block.
+        void AddRowDetail(_In_ std::string text, _In_ fmt::text_style const& style);
+
         void Render() const;
 
         bool IsEmpty() const noexcept { return m_rows.empty(); }
@@ -57,9 +61,17 @@ namespace midi2console
             bool HasStyle{ false };
         };
 
+        struct Row
+        {
+            std::vector<Cell> Cells;
+            std::string Detail;
+            fmt::text_style DetailStyle;
+            bool HasDetail{ false };
+        };
+
         std::string m_title;
         std::vector<Column> m_columns;
-        std::vector<std::vector<Cell>> m_rows;
+        std::vector<Row> m_rows;
     };
 
     // "Label   value" pair used throughout the properties and status output. The label column is

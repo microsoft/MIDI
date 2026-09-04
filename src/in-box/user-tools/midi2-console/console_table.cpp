@@ -154,7 +154,7 @@ namespace midi2console
             BeginRow();
         }
 
-        m_rows.back().push_back(Cell{ std::move(text), {}, false });
+        m_rows.back().Cells.push_back(Cell{ std::move(text), {}, false });
     }
 
     void ConsoleTable::AddCell(_In_ std::string text, _In_ fmt::text_style const& style)
@@ -164,7 +164,19 @@ namespace midi2console
             BeginRow();
         }
 
-        m_rows.back().push_back(Cell{ std::move(text), style, true });
+        m_rows.back().Cells.push_back(Cell{ std::move(text), style, true });
+    }
+
+    void ConsoleTable::AddRowDetail(_In_ std::string text, _In_ fmt::text_style const& style)
+    {
+        if (m_rows.empty())
+        {
+            BeginRow();
+        }
+
+        m_rows.back().Detail = std::move(text);
+        m_rows.back().DetailStyle = style;
+        m_rows.back().HasDetail = true;
     }
 
     void ConsoleTable::Render() const
@@ -183,9 +195,9 @@ namespace midi2console
 
         for (auto const& row : m_rows)
         {
-            for (size_t i = 0; i < row.size() && i < widths.size(); i++)
+            for (size_t i = 0; i < row.Cells.size() && i < widths.size(); i++)
             {
-                widths[i] = std::max(widths[i], DisplayWidth(row[i].Text));
+                widths[i] = std::max(widths[i], DisplayWidth(row.Cells[i].Text));
             }
         }
 
@@ -197,6 +209,30 @@ namespace midi2console
         for (auto const width : widths)
         {
             total += width;
+        }
+
+        // Detail lines span every column, so the table has to be wide enough to hold the
+        // longest one before the overflow pass below decides what to give back.
+        size_t longestDetail{ 0 };
+
+        for (auto const& row : m_rows)
+        {
+            if (row.HasDetail)
+            {
+                longestDetail = std::max(longestDetail, DisplayWidth(row.Detail));
+            }
+        }
+
+        if (longestDetail > 0)
+        {
+            auto const required = longestDetail + 3;
+
+            if (total < required)
+            {
+                // The slack goes on the end, so the real columns stay tight against their content.
+                widths.back() += required - total;
+                total = required;
+            }
         }
 
         auto const available = ConsoleWidth();
@@ -255,13 +291,28 @@ namespace midi2console
 
         WriteLine(fmt::format("{}", Styled(buildRule(TeeRight, Cross, TeeLeft), separatorTextStyle)));
 
-        for (auto const& row : m_rows)
+        auto const hasAnyDetail = std::any_of(m_rows.begin(), m_rows.end(),
+            [](auto const& row) { return row.HasDetail; });
+
+        // Inner width of the table, excluding the two outer border characters.
+        size_t innerWidth{ 0 };
+
+        for (size_t i = 0; i < widths.size(); i++)
         {
+            innerWidth += widths[i] + 2;
+        }
+
+        innerWidth += widths.size() - 1;
+
+        for (size_t rowIndex = 0; rowIndex < m_rows.size(); rowIndex++)
+        {
+            auto const& row = m_rows[rowIndex];
+
             std::string line{ fmt::format("{}", Styled(Vertical, separatorTextStyle)) };
 
             for (size_t i = 0; i < m_columns.size(); i++)
             {
-                auto const& cell = i < row.size() ? row[i] : Cell{};
+                auto const& cell = i < row.Cells.size() ? row.Cells[i] : Cell{};
                 auto const& style = cell.HasStyle ? cell.Style : m_columns[i].Style;
 
                 line += " ";
@@ -272,6 +323,21 @@ namespace midi2console
             }
 
             WriteLine(line);
+
+            if (row.HasDetail)
+            {
+                auto const detail = Align(TruncateToWidth(row.Detail, innerWidth - 1), innerWidth - 1, ColumnAlignment::Left);
+
+                WriteLine(fmt::format("{} {}{}",
+                    Styled(Vertical, separatorTextStyle),
+                    Styled(detail, row.DetailStyle),
+                    Styled(Vertical, separatorTextStyle)));
+            }
+
+            if (hasAnyDetail && rowIndex + 1 < m_rows.size())
+            {
+                WriteLine(fmt::format("{}", Styled(buildRule(TeeRight, Cross, TeeLeft), separatorTextStyle)));
+            }
         }
 
         WriteLine(fmt::format("{}", Styled(buildRule(CornerBottomLeft, TeeUp, CornerBottomRight), separatorTextStyle)));
