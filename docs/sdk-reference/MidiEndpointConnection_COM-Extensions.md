@@ -40,24 +40,24 @@ The `IMidiEndpointConnectionRaw` interface is as follows:
 interface IMidiEndpointConnectionRaw : IUnknown
 {
 	// transmission limit for a single call
-	UINT32 GetSupportedMaxMidiWordsPerTransmission();
+	UINT32 GetSupportedMaxMidiWordsPerTransmission() const;
 
 	// returns true if the buffer contains only valid UMP lengths
 	// between messages and messages+wordcount. It does not 
 	// validate anything else about the UMPs.
 	BOOL ValidateBufferHasOnlyCompleteUmps(
-		UINT32 wordCount,
-		UINT32* messages
-	);
+		[in, annotation("_In_")] UINT32 const wordCount,
+		[in, annotation("_In_")] UINT32* const messages
+	) const;
 
 	// before sending a buffer of messages, the caller is responsible
 	// for confirming that the buffer has only complete UMPs, and that
 	// the buffer is smaller than or equal to the transmission limit
 	HRESULT SendMidiMessagesRaw(
-		UINT64 timestamp,
-		UINT32 wordCount,
-		UINT32* completeMessages
-		);
+		[in, annotation("_In_")] UINT64 const timestamp,
+		[in, annotation("_In_")] UINT32 const wordCount,
+		[in, annotation("_In_")] UINT32* const completeMessages
+		) const;
 
 	// Wire up your callback handler. When this is in play, the normal
 	// WinRT message received events including those on listeners 
@@ -65,7 +65,7 @@ interface IMidiEndpointConnectionRaw : IUnknown
 	// solely to be a super fast and efficient callback. You can only
 	// have one callback handler for a given connection.
 	HRESULT SetMessagesReceivedCallback(
-		IMidiEndpointConnectionMessagesReceivedCallback* messagesReceivedCallback
+		[in, annotation("_In_")] IMidiEndpointConnectionMessagesReceivedCallback* const messagesReceivedCallback
 	);
 
 	// Remove your callback handler and reinstant normal event routing.
@@ -156,11 +156,11 @@ The type implementing this callback interface must be a COM type.
 interface IMidiEndpointConnectionMessagesReceivedCallback : IUnknown
 {
 	HRESULT MessagesReceived(
-		GUID sessionId,         // MidiSession.SessionId
-		GUID connectionId,		// MidiEndpointConnection.ConnectionId (not the same as the endpoint's id)
-        UINT64 timestamp, 
-		UINT32 wordCount,       // count of 32-bit MIDI words
-		UINT32* messages        // pointer to 32-bit MIDI words
+		GUID const sessionId,         // MidiSession.SessionId
+		GUID const connectionId,		// MidiEndpointConnection.ConnectionId (not the same as the endpoint's id)
+        UINT64 const timestamp, 
+		UINT32 const wordCount,       // count of 32-bit MIDI words
+		UINT32* const messages        // pointer to 32-bit MIDI words
 	);
 };
 ```
@@ -181,7 +181,7 @@ The messages data pointer is valid only for the duration of the call, as it is a
 
 Your handler should return an S_OK HRESULT when it completes. The messages will be invalidated in the cross-process buffer regardless of the return value from this callback.
 
-> IMPORTANT: These interfaces are provided for speed and efficiency. When a `MidiEndpointConnection` has a registered `IMidiEndpointConnectionMessagesReceivedCallback`, it will completely bypass all other message handling code, including any listeners and event handlers. Therefore, this cannot be combined with, for example, implementing a Virtual Device app, which is implemented as a connection listener.
+> IMPORTANT: These interfaces are provided for speed and efficiency. When a `MidiEndpointConnection` has a registered `IMidiEndpointConnectionMessagesReceivedCallback`, it will completely bypass all other message handling code, including any message listeners and message received event handlers. Therefore, this cannot be combined with, for example, implementing a Virtual Device app, which is implemented as a connection message listener. However, a virtual device can still *send* messages through the COM extensions, if desired.
 
 The C++ headers required to use these interfaces are included in the NuGet package and the vcpkg starting in Release Candidate 1, in the `winmidi` subfolder. The IDL is available on GitHub for languages which can process those files directly. No other implementation files are provided for the COM interface.
 
