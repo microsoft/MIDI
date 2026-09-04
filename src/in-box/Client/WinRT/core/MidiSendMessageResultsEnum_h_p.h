@@ -82,8 +82,7 @@ enum __x_ABI_CWindows_CDevices_CMidi2_CMidiSendMessageResults
         MidiSendMessageResults_InvalidMessageOther	= 0x200000,
         MidiSendMessageResults_DataIndexOutOfRange	= 0x400000,
         MidiSendMessageResults_TimestampOutOfRange	= 0x800000,
-        MidiSendMessageResults_TransmissionWordCountExceeded	= 0x1000000,
-        MidiSendMessageResults_MessageListPartiallyProcessed	= 0xf00000
+        MidiSendMessageResults_TransmissionWordCountExceeded	= 0x1000000
     } ;
 
 

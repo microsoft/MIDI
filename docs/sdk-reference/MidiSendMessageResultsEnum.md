@@ -25,7 +25,6 @@ These values are flags, and may be combined
 | `DataIndexOutOfRange` | `0x00400000` | Reading a full message would result in overrunning the provided array, collection, or buffer. |
 | `TimestampOutOfRange` | `0x00800000` | The provided timestamp is too far in the future to be scheduled. |
 | `TransmissionWordCountExceeded` | `0x01000000` | The number of MIDI words in the transmission exceeded the maximum supported count. |
-| `MessageListPartiallyProcessed` | `0x00F00000` | The message list was only partially processed. Not all messages were sent. |
 
 ## Example
 

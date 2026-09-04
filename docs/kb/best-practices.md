@@ -23,13 +23,25 @@ The most flexible, but least performant approach, is to use the `IMidiMessage` i
 
 For C++ and C++-like languages, we've added the COM extensions for fast allocation-free send and receive of messages. All the normal WinRT types are used for Session and Connection. But when you want to send and receive messages, and can ensure the data integrity of the messages being sent (most cross-platform apps already have code to do this), the COM Extensions are the way to go. There is a C++ example in the repo and examples in the documentation.
 
+### Splitting large messages across transmissions
+
+There is a limit to how many MIDI words may be sent in a single call. That limit is available through `GetSupportedMaxMidiWordsPerTransmission`, on both the connection and the COM extension interface. If a single call contains more words than the limit allows, the whole call is rejected and nothing is sent. Because the rejection is all-or-nothing, no data has reached the device, so retrying with a smaller buffer is safe.
+
+System Exclusive is where this comes up. A SysEx7 UMP carries only six data bytes, so a 64 KB bulk dump is around 10,900 UMPs, far beyond what a single transmission can hold. Firmware updaters, patch librarians, and bulk dump tools all need to split their data and send it as a series of transmissions.
+
+Query the limit for each connection rather than hard-coding it, split only on message boundaries so that no UMP ever spans two transmissions, and stop sending as soon as one transmission fails. Any chunks already accepted have reached the device, so decide in advance how your app recovers from a partial transfer. For System Exclusive, that normally means abandoning the transfer and starting it over.
+
+If you are building a cross-platform framework or a language projection on top of this API, handle the splitting inside your own layer. Applications written against your abstraction usually cannot reach `GetSupportedMaxMidiWordsPerTransmission`, so leaving the job to them means they will hard-code a limit which is not guaranteed to remain correct.
+
+For the rules and sample code, see [`MidiEndpointConnection`]({{ site.baseurl }}/sdk-reference/MidiEndpointConnection) and [the COM Extensions]({{ site.baseurl }}/sdk-reference/MidiEndpointConnection_COM-Extensions).
+
 ## Displaying connections to your app users
 
 Most apps need to display device and endpoint connection information to their users. Here are some details related to that.
 
 ### Use the `MidiEndpointDeviceWatcher` to respond to device changes
 
-MIDI devices come and go based on connecting/disconnecting USB cables, or new network endpoints coming online. In addition, properties like Function Blocks and Endpoint Name are subject to change at any time. Use the `Microsoft::Windows::Devices::Midi2::MidiEndpointDeviceWatcher` class on a background thread to monitor these endpoints, and receive notifications when anything changes. This is a much more robust approach vs simply enumerating a snapshot of devices up-front.
+MIDI devices come and go based on connecting/disconnecting USB cables, or new network endpoints coming online. In addition, properties like Function Blocks and Endpoint Name are subject to change at any time. Use the `Windows::Devices::Midi2::Enumeration::MidiEndpointDeviceWatcher` class on a background thread to monitor these endpoints, and receive notifications when anything changes. This is a much more robust approach vs simply enumerating a snapshot of devices up-front.
 
 There's no API or service reason to require a customer to reboot or reload/restart a MIDI DAW or other application to see newly added endpoints when using Windows MIDI Services.
 
