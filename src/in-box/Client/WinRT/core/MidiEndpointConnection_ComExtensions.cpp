@@ -23,7 +23,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     _Use_decl_annotations_
     BOOL MidiEndpointConnection::ValidateBufferHasOnlyCompleteUmps(
-        UINT32 const wordCount,
+        UINT32 wordCount,
         UINT32 const* messages
         )
     {
@@ -46,8 +46,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     HRESULT
     MidiEndpointConnection::SendMidiMessagesRaw(
-        UINT64 const timestamp,
-        UINT32 const wordCount,
+        UINT64 timestamp,
+        UINT32 wordCount,
         UINT32 const* completeMessages
     )
     {
@@ -79,7 +79,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     HRESULT
     MidiEndpointConnection::SetMessagesReceivedCallback(
-        IMidiEndpointConnectionMessagesReceivedCallback* const messagesReceivedCallback
+        IMidiEndpointConnectionMessagesReceivedCallback* messagesReceivedCallback
     )
     {
         std::lock_guard<std::mutex> guard(m_comCallbackLock);

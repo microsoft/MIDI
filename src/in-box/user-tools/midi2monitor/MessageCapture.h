@@ -29,7 +29,7 @@ namespace midi2monitor
             GUID connectionId,
             UINT64 timestamp,
             UINT32 wordCount,
-            UINT32* messages) override;
+            UINT32 const* messages) override;
 
         // group and channel are user-facing numbers (1-16). Zero means "all".
         void SetFilter(uint8_t groupNumber, uint8_t channelNumber) noexcept;

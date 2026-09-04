@@ -145,18 +145,18 @@ namespace winrt::Windows::Devices::Midi2::implementation
         STDMETHOD_(UINT32, GetSupportedMaxMidiWordsPerTransmission)();
 
         STDMETHOD_(BOOL, ValidateBufferHasOnlyCompleteUmps)(
-            _In_ UINT32 const wordCount,
+            _In_ UINT32 wordCount,
             _In_ UINT32 const* messages
             );
 
         STDMETHOD(SendMidiMessagesRaw)(
-            _In_ UINT64 const timestamp,
-            _In_ UINT32 const wordCount,
+            _In_ UINT64 timestamp,
+            _In_ UINT32 wordCount,
             _In_ UINT32 const* completeMessages
         );
 
         STDMETHOD(SetMessagesReceivedCallback)(
-            _In_ IMidiEndpointConnectionMessagesReceivedCallback* const messagesReceivedCallback
+            _In_ IMidiEndpointConnectionMessagesReceivedCallback* messagesReceivedCallback
         );
 
         STDMETHOD(RemoveMessagesReceivedCallback)();

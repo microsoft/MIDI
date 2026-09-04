@@ -46,7 +46,7 @@ interface IMidiEndpointConnectionRaw : IUnknown
 	// between messages and messages+wordcount. It does not 
 	// validate anything else about the UMPs.
 	BOOL ValidateBufferHasOnlyCompleteUmps(
-		[in, annotation("_In_")] UINT32 const wordCount,
+		[in, annotation("_In_")] UINT32 wordCount,
 		[in, annotation("_In_")] UINT32 const* messages
 	);
 
@@ -54,8 +54,8 @@ interface IMidiEndpointConnectionRaw : IUnknown
 	// for confirming that the buffer has only complete UMPs, and that
 	// the buffer is smaller than or equal to the transmission limit
 	HRESULT SendMidiMessagesRaw(
-		[in, annotation("_In_")] UINT64 const timestamp,
-		[in, annotation("_In_")] UINT32 const wordCount,
+		[in, annotation("_In_")] UINT64 timestamp,
+		[in, annotation("_In_")] UINT32 wordCount,
 		[in, annotation("_In_")] UINT32 const* completeMessages
 		);
 
@@ -65,7 +65,7 @@ interface IMidiEndpointConnectionRaw : IUnknown
 	// solely to be a super fast and efficient callback. You can only
 	// have one callback handler for a given connection.
 	HRESULT SetMessagesReceivedCallback(
-		[in, annotation("_In_")] IMidiEndpointConnectionMessagesReceivedCallback* const messagesReceivedCallback
+		[in, annotation("_In_")] IMidiEndpointConnectionMessagesReceivedCallback* messagesReceivedCallback
 	);
 
 	// Remove your callback handler and reinstant normal event routing.
@@ -156,11 +156,11 @@ The type implementing this callback interface must be a COM type.
 interface IMidiEndpointConnectionMessagesReceivedCallback : IUnknown
 {
 	HRESULT MessagesReceived(
-		GUID const sessionId,         // MidiSession.SessionId
-		GUID const connectionId,		// MidiEndpointConnection.ConnectionId (not the same as the endpoint's id)
-        UINT64 const timestamp, 
-		UINT32 const wordCount,       // count of 32-bit MIDI words
-		UINT32* const messages        // pointer to 32-bit MIDI words
+		GUID sessionId,               // MidiSession.SessionId
+		GUID connectionId,            // MidiEndpointConnection.ConnectionId (not the same as the endpoint's id)
+        UINT64 timestamp, 
+		UINT32 wordCount,             // count of 32-bit MIDI words
+		UINT32 const* messages        // read-only pointer to 32-bit MIDI words
 	);
 };
 ```

@@ -44,7 +44,7 @@ public:
 
 
     // COM extensions callback. Forwards to whatever the running benchmark installed.
-    STDMETHOD(MessagesReceived)(GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, UINT32* messages)
+    STDMETHOD(MessagesReceived)(GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, UINT32 const* messages)
     {
         if (m_midiInCallback)
         {

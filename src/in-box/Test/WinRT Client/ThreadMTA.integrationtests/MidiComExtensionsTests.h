@@ -28,7 +28,7 @@ public:
 
     TEST_METHOD(TestSendReceiveMessages);
 
-    STDMETHOD(MessagesReceived)(GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, UINT32* messages)
+    STDMETHOD(MessagesReceived)(GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, UINT32 const* messages)
     {
         // don't have any cout statements in the flow for measurement purposes
             
