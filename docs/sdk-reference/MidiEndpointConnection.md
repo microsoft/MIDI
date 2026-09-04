@@ -97,6 +97,62 @@ This function sends each packet one at a time, because each packet has its own t
 > # Tip 
 > To learn more about how collections are handled in WinRT, and how they may convert to constructs like `std::vector`, see the [Collections with C++/WinRT](https://learn.microsoft.com/windows/uwp/cpp-and-winrt-apis/collections) page in our documentation.
 
+## Sending More Data Than Fits in a Single Transmission
+
+If a call contains more words than `GetSupportedMaxMidiWordsPerTransmission` allows, the entire call is rejected and **nothing is sent**. The result is `MidiSendMessageResults.Failed` combined with `MidiSendMessageResults.TransmissionWordCountExceeded`. Because the rejection is all-or-nothing, no data has reached the device, and it is safe to retry with a smaller buffer.
+
+Some payloads exceed the limit by their very nature. A System Exclusive message carries six data bytes per 64-bit SysEx7 UMP, so a 64 KB bulk dump becomes roughly 10,900 UMPs, or about 21,800 MIDI words. That will never fit in a single transmission, and so must be split by the sending code.
+
+When splitting a large buffer:
+
+1. Call `GetSupportedMaxMidiWordsPerTransmission` on the same connection you are sending to. Do not hard-code the value, and do not assume it is the same for every endpoint or for every release.
+2. Split only on message boundaries. A single UMP shall never span two transmissions.
+3. Stop as soon as a transmission fails. Continuing to send the remaining chunks after a failure only makes the device's state harder to recover.
+4. Decide in advance how to handle a partial transfer. Once an earlier chunk has been accepted, those messages have already reached the device. For System Exclusive in particular, a partially delivered message normally means the transfer has to be abandoned and restarted from the beginning.
+
+```cpp
+// Send a large buffer as a series of transmissions, without splitting any UMP.
+const uint32_t maxWords = connection.GetSupportedMaxMidiWordsPerTransmission();
+
+uint32_t offset{ 0 };
+
+while (offset < totalWords)
+{
+    // Gather whole messages until the next one would not fit
+    uint32_t chunkWords{ 0 };
+
+    while (offset + chunkWords < totalWords)
+    {
+        auto packetType = MidiMessageHelper::GetPacketTypeFromMessageFirstWord(words[offset + chunkWords]);
+
+        if (packetType == MidiPacketType::UnknownOrInvalid) return;
+
+        // the MidiPacketType value is also the message length in MIDI words
+        const uint32_t messageWords = static_cast<uint32_t>(packetType);
+
+        if (chunkWords + messageWords > maxWords) break;
+
+        chunkWords += messageWords;
+    }
+
+    if (chunkWords == 0) return;
+
+    auto sendResult = connection.SendMultipleMessagesWordArray(
+        MidiClock::TimestampConstantSendImmediately(), offset, chunkWords, words);
+
+    if (MidiEndpointConnection::SendMessageFailed(sendResult))
+    {
+        // Any earlier chunks have already reached the device. Do not send the rest.
+        break;
+    }
+
+    offset += chunkWords;
+}
+```
+
+> # Note for framework and language projection authors
+> If you are wrapping this API for another language or app framework, perform this splitting inside your wrapper instead of requiring the applications built on it to do so. Those applications usually have no way to reach `GetSupportedMaxMidiWordsPerTransmission` through your abstraction, so if they must split the data themselves, they will hard-code a limit which is not guaranteed to stay correct.
+
 
 ## Events
 

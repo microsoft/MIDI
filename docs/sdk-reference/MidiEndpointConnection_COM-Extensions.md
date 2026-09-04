@@ -83,6 +83,60 @@ interface IMidiEndpointConnectionRaw : IUnknown
 | `SetMessagesReceivedCallback` | Register a callback handler for receiving a buffer of one or more incoming messages. Currently, this is the only way to receive more than one message in a single function call. When the connection has a callback handler attached, it will not fire any message received events, nor will it process any message listeners. |
 | `RemoveMessagesReceivedCallback` | Unregister the callback. This must be done before closing and destroying the connection. |
 
+### Sending more data than fits in a single transmission
+
+`SendMidiMessagesRaw` does not validate the buffer for you. If `wordCount` is greater than `GetSupportedMaxMidiWordsPerTransmission`, the call fails, returns a failure `HRESULT`, and **nothing is sent**. Because the rejection is all-or-nothing, no data has reached the device, and it is safe to retry with a smaller buffer.
+
+This comes up most often with System Exclusive. A SysEx7 UMP carries six data bytes, so a 64 KB bulk dump is roughly 10,900 UMPs, or about 21,800 MIDI words. That will never fit in a single transmission, and so must be split by the sending code.
+
+When splitting a large buffer:
+
+1. Call `GetSupportedMaxMidiWordsPerTransmission` once per connection and keep it with your connection state. Do not hard-code the value, and do not assume it is the same for every endpoint or for every release.
+2. Split only on message boundaries. A single UMP shall never span two transmissions. The message type in the high four bits of the first word of each UMP determines that message's length, and `ValidateBufferHasOnlyCompleteUmps` will confirm that the range you are about to send contains only whole messages.
+3. Stop as soon as a transmission returns a failure `HRESULT`. Continuing to send the remaining chunks after a failure only makes the device's state harder to recover.
+4. Decide in advance how to handle a partial transfer. Once an earlier chunk has been accepted, those messages have already reached the device. For System Exclusive in particular, a partially delivered message normally means the transfer has to be abandoned and restarted from the beginning.
+
+```cpp
+UINT32 maxWords = connectionRaw->GetSupportedMaxMidiWordsPerTransmission();
+
+uint32_t offset{ 0 };
+
+while (offset < totalWords)
+{
+    // Gather whole messages until the next one would not fit
+    uint32_t chunkWords{ 0 };
+
+    while (offset + chunkWords < totalWords)
+    {
+        auto packetType = MidiMessageHelper::GetPacketTypeFromMessageFirstWord(words[offset + chunkWords]);
+
+        if (packetType == MidiPacketType::UnknownOrInvalid) return;
+
+        // the MidiPacketType value is also the message length in MIDI words
+        const uint32_t messageWords = static_cast<uint32_t>(packetType);
+
+        if (chunkWords + messageWords > maxWords) break;
+
+        chunkWords += messageWords;
+    }
+
+    if (chunkWords == 0) return;
+
+    if (!connectionRaw->ValidateBufferHasOnlyCompleteUmps(chunkWords, words + offset)) return;
+
+    if (FAILED(connectionRaw->SendMidiMessagesRaw(
+        MidiClock::TimestampConstantSendImmediately(), chunkWords, words + offset)))
+    {
+        // Any earlier chunks have already reached the device. Do not send the rest.
+        break;
+    }
+
+    offset += chunkWords;
+}
+```
+
+If you are writing a cross-platform framework or a language projection on top of this API, do this splitting inside your own layer rather than requiring the applications built on it to do so. Those applications generally cannot reach `GetSupportedMaxMidiWordsPerTransmission` through your abstraction, so if they have to split the data themselves, they will hard-code a limit which is not guaranteed to stay correct.
+
 ## IMidiEndpointConnectionMessagesReceivedCallback
 
 A single callback type may optionally handle incoming messages from multiple `MidiEndpointConnection` instances. From an SDK standpoint, there is no inherent advantage or disadvantage to having multiple handlers or a single handler as long as your code is thread-safe.
