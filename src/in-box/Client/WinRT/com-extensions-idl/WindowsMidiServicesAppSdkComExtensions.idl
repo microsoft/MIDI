@@ -44,12 +44,12 @@ library MidiServicesAppSdkComExtensionsLib
 		// processing queue before returning. The data pointer is only valid
 		// for the duration of this call.
 		HRESULT MessagesReceived(
-			[in, annotation("_In_")] GUID sessionId,
-			[in, annotation("_In_")] GUID connectionId,
-			[in, annotation("_In_")] UINT64 timestamp,
-			[in, annotation("_In_")] UINT32 wordCount,
-			[in, annotation("_In_")] UINT32* messages
-		);
+			[in, annotation("_In_")] GUID const sessionId,
+			[in, annotation("_In_")] GUID const connectionId,
+			[in, annotation("_In_")] UINT64 const timestamp,
+			[in, annotation("_In_")] UINT32 const wordCount,
+			[in, annotation("_In_")] UINT32* const messages
+		);	// don't make const. This interface is implemented by third-party code.
 	};
 
 
@@ -62,24 +62,24 @@ library MidiServicesAppSdkComExtensionsLib
 	interface IMidiEndpointConnectionRaw : IUnknown
 	{
 		// transmission limit for a single call
-		UINT32 GetSupportedMaxMidiWordsPerTransmission();
+		UINT32 GetSupportedMaxMidiWordsPerTransmission() const;
 
 		// returns true if the buffer contains only valid UMP lengths
 		// between messages and messages+wordcount. It does not 
 		// validate anything else about the UMPs.
 		BOOL ValidateBufferHasOnlyCompleteUmps(
-			[in, annotation("_In_")] UINT32 wordCount,
-			[in, annotation("_In_")] UINT32* messages
-		);
+			[in, annotation("_In_")] UINT32 const wordCount,
+			[in, annotation("_In_")] UINT32* const messages
+		) const;
 
 		// before sending a buffer of messages, the caller is responsible
 		// for confirming that the buffer has only complete UMPs, and that
 		// the buffer is smaller than or equal to the transmission limit
 		HRESULT SendMidiMessagesRaw(
-			[in, annotation("_In_")] UINT64 timestamp,
-			[in, annotation("_In_")] UINT32 wordCount,
-			[in, annotation("_In_")] UINT32* completeMessages
-			);
+			[in, annotation("_In_")] UINT64 const timestamp,
+			[in, annotation("_In_")] UINT32 const wordCount,
+			[in, annotation("_In_")] UINT32* const completeMessages
+			) const;
 
 		// Wire up your callback handler. When this is in play, the normal
 		// WinRT message received events including those on listeners 
@@ -87,7 +87,7 @@ library MidiServicesAppSdkComExtensionsLib
 		// solely to be a super fast and efficient callback. You can only
 		// have one callback handler for a given connection.
 		HRESULT SetMessagesReceivedCallback(
-			[in, annotation("_In_")] IMidiEndpointConnectionMessagesReceivedCallback* messagesReceivedCallback
+			[in, annotation("_In_")] IMidiEndpointConnectionMessagesReceivedCallback* const messagesReceivedCallback
 		);
 
 		// Remove your callback handler and reinstant normal event routing.
