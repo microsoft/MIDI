@@ -40,15 +40,15 @@ The `IMidiEndpointConnectionRaw` interface is as follows:
 interface IMidiEndpointConnectionRaw : IUnknown
 {
 	// transmission limit for a single call
-	UINT32 GetSupportedMaxMidiWordsPerTransmission() const;
+	UINT32 GetSupportedMaxMidiWordsPerTransmission();
 
 	// returns true if the buffer contains only valid UMP lengths
 	// between messages and messages+wordcount. It does not 
 	// validate anything else about the UMPs.
 	BOOL ValidateBufferHasOnlyCompleteUmps(
 		[in, annotation("_In_")] UINT32 const wordCount,
-		[in, annotation("_In_")] UINT32* const messages
-	) const;
+		[in, annotation("_In_")] UINT32 const* messages
+	);
 
 	// before sending a buffer of messages, the caller is responsible
 	// for confirming that the buffer has only complete UMPs, and that
@@ -56,8 +56,8 @@ interface IMidiEndpointConnectionRaw : IUnknown
 	HRESULT SendMidiMessagesRaw(
 		[in, annotation("_In_")] UINT64 const timestamp,
 		[in, annotation("_In_")] UINT32 const wordCount,
-		[in, annotation("_In_")] UINT32* const completeMessages
-		) const;
+		[in, annotation("_In_")] UINT32 const* completeMessages
+		);
 
 	// Wire up your callback handler. When this is in play, the normal
 	// WinRT message received events including those on listeners 
