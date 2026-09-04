@@ -31,7 +31,7 @@ The MIDI messages defined in the MIDI 2.0 UMP specifications, excluding the MIDI
 
 Windows MIDI Services supports both MIDI 1.0 and MIDI 2.0 devices.
 
-| Device | Driver | Microsoft.Windows.Devices.Midi2 | WinMM/WinRT MIDI 1.0 APIs |
+| Device | Driver | Windows.Devices.Midi2 | WinMM/WinRT MIDI 1.0 APIs |
 | ------------------- | --------------------- | -------------------------- | ------------------------ |
 | USB MIDI 1.0 Device | MIDI 2.0 Class Driver | To/From MIDI 1.0 in UMP by driver | To/from MIDI 1.0 byte data format by service |
 | USB MIDI 1.0 Device | Older MIDI 1.0 Class Driver | To/From MIDI 1.0 in UMP by service | To/from MIDI 1.0 byte data format by service |
@@ -46,7 +46,7 @@ Incoming messages are translated between protocol and data format only when nece
 
 WinMM and WinRT MIDI 1.0 will always receive correct MIDI 1.0 channel voice messages, no matter what the endpoint has.
 
-Microsoft.Windows.Devices.Midi2 will provide the UMP version of what it is provided. It does not upscale MIDI 1.0 channel voice messages to MIDI 2.0 channel voice messages. The client may use open source libraries to handle that if needed.
+Windows.Devices.Midi2 will provide the UMP version of what it is provided. It does not upscale MIDI 1.0 channel voice messages to MIDI 2.0 channel voice messages. The client may use open source libraries to handle that if needed.
 
 ### Translation between Message type 2 (MIDI 1.0 Channel Voice) and Message type 4 (MIDI 2.0 Channel Voice)
 

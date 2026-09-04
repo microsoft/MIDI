@@ -64,12 +64,13 @@ layout: default
                                     {% if iface_name contains "Windows.Foundation" %}
                                     {%   assign iface_url = "https://learn.microsoft.com/uwp/api/" | append: iface_name %}
                                     {%   assign iface_short_name = iface_name | remove: "Windows.Foundation." %}
-                                    {% elsif iface_name contains "Microsoft.Windows.Devices.Midi2" %}
+                                    {% elsif iface_name contains "Windows.Devices.Midi2" %}
                                     {%   assign root_folder = "/sdk-reference/" %}
                                     {%   assign sub_folder = iface_name | remove: "Windows.Devices.Midi2." | replace: ".", "/" %}
                                     {%   assign iface_url = root_folder | append: sub_folder | append: "/" | relative_url %}
                                     {%   assign iface_short_name = iface_name | split: "." | last %}
                                     {% else %}
+                                    {%   assign iface_url = "" %}
                                     {%   assign iface_short_name = iface_name %}
                                     {% endif %}
 
