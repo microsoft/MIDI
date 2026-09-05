@@ -16,12 +16,14 @@
 #include "cmd_endpoint.h"
 #include "cmd_enumerate.h"
 #include "cmd_loopback.h"
+#include "cmd_network.h"
 #include "cmd_sysex.h"
 #include "cmd_system.h"
 #include "console_output.h"
 #include "help_formatter.h"
 #include "midi_formatting.h"
 #include "monitor_command.h"
+#include "return_codes.h"
 #include "strings.h"
 
 using namespace midi2console;
@@ -49,6 +51,35 @@ namespace
         return arguments;
     }
 
+    // SysEx moved out from under "endpoint" into its own branch. The old spelling still works
+    // because scripts and the shipping documentation use it.
+    void RewriteEndpointSysExAlias(_Inout_ std::vector<std::string>& arguments)
+    {
+        if (arguments.size() < 3)
+        {
+            return;
+        }
+
+        if (!EqualsIgnoreCase(arguments[1], "endpoint") && !EqualsIgnoreCase(arguments[1], "ep"))
+        {
+            return;
+        }
+
+        for (size_t index = 2; index < arguments.size(); index++)
+        {
+            if (!EqualsIgnoreCase(arguments[index], "send-sysex-file") &&
+                !EqualsIgnoreCase(arguments[index], "send-sysex"))
+            {
+                continue;
+            }
+
+            arguments[1] = "sysex";
+            arguments[index] = "send-file";
+
+            return;
+        }
+    }
+
     // The shipping console takes the endpoint id between the branch and the sub-command
     // ("midi endpoint <id> monitor"). CLI11 cannot express that, so the id is moved to the end
     // where it is parsed as the sub-command's positional. Existing scripts keep working.
@@ -59,8 +90,12 @@ namespace
             "monitor", "listen",
             "send-message", "send-ump", "send",
             "send-message-file", "send-ump-file", "send-file",
+            "send-sysex-file", "send-sysex",
+            "send-beat-clock", "send-clock", "clock",
             "play-notes", "play",
             "properties", "props", "information", "info",
+            "customize",
+            "short-id", "full-id",
             "request", "req"
         };
 
@@ -110,7 +145,6 @@ int main()
     CLI::App app{ "", "midi2" };
 
     app.require_subcommand(1);
-    app.set_version_flag("--version", std::string{ "1.0.0.0" });
     app.set_help_all_flag("--help-all", "Show help for every command");
     app.footer(ResourceString(IDS_APP_BANNER));
 
@@ -189,6 +223,9 @@ int main()
     monitorCommand->add_flag("-r,--include-real-time-messages", monitorOptions.IncludeRealTimeMessages, ResourceString(IDS_OPT_INCLUDE_REAL_TIME));
     monitorCommand->add_flag("-u,--include-utility-messages,!-U,!--no-include-utility-messages", monitorOptions.IncludeUtilityMessages, ResourceString(IDS_OPT_INCLUDE_UTILITY));
     monitorCommand->add_flag("-a,--auto-reconnect,!-A,!--no-auto-reconnect", monitorOptions.AutoReconnect, ResourceString(IDS_OPT_AUTO_RECONNECT));
+    monitorCommand->add_option("-c,--capture-to-file", monitorOptions.CaptureToFile, ResourceString(IDS_OPT_CAPTURE_TO_FILE));
+    monitorCommand->add_flag("-n,--annotate-capture", monitorOptions.AnnotateCapture, ResourceString(IDS_OPT_ANNOTATE_CAPTURE));
+    monitorCommand->add_option("-l,--capture-field-delimiter", monitorOptions.CaptureFieldDelimiter, ResourceString(IDS_OPT_CAPTURE_FIELD_DELIMITER));
 
     EndpointPropertiesOptions propertiesOptions{};
 
@@ -245,6 +282,42 @@ int main()
     playNotesCommand->add_flag("-m,--midi2", playNotesOptions.Midi2, ResourceString(IDS_OPT_MIDI2));
     playNotesCommand->add_flag("-a,--auto-reconnect,!-A,!--no-auto-reconnect", playNotesOptions.AutoReconnect, ResourceString(IDS_OPT_AUTO_RECONNECT));
 
+    EndpointSendClockOptions sendClockOptions{};
+
+    auto sendClockCommand = endpointCommand->add_subcommand("send-beat-clock", ResourceString(IDS_CMD_EP_SEND_CLOCK));
+    sendClockCommand->alias("send-clock");
+    sendClockCommand->alias("clock");
+    sendClockCommand->add_option("endpoint-id", sendClockOptions.EndpointDeviceId, ResourceString(IDS_OPT_ENDPOINT_DEVICE_ID));
+    sendClockCommand->add_option("-t,--tempo,--bpm,--beats-per-minute", sendClockOptions.Tempo, ResourceString(IDS_OPT_CLOCK_TEMPO));
+    sendClockCommand->add_option("-p,--ppqn,--pulses,--pulses-per-quarter-note", sendClockOptions.PulsesPerQuarterNote, ResourceString(IDS_OPT_CLOCK_PPQN));
+    sendClockCommand->add_option("-g,--group,--group-number", sendClockOptions.GroupNumbers, ResourceString(IDS_OPT_CLOCK_GROUPS))->required();
+    sendClockCommand->add_flag("-s,--send-midi-start-message,--send-start-message,--send-start", sendClockOptions.SendStartMessage, ResourceString(IDS_OPT_CLOCK_SEND_START));
+    sendClockCommand->add_flag("-x,--send-midi-stop-message,--send-stop-message,--send-stop", sendClockOptions.SendStopMessage, ResourceString(IDS_OPT_CLOCK_SEND_STOP));
+
+    EndpointCustomizeOptions customizeOptions{};
+
+    auto customizeCommand = endpointCommand->add_subcommand("customize", ResourceString(IDS_CMD_EP_CUSTOMIZE));
+    customizeCommand->add_option("endpoint-id", customizeOptions.EndpointDeviceId, ResourceString(IDS_OPT_ENDPOINT_DEVICE_ID));
+    auto customizeNameOption = customizeCommand->add_option("-n,--name", customizeOptions.Name, ResourceString(IDS_OPT_BT_NAME));
+    auto customizeDescriptionOption = customizeCommand->add_option("-d,--description", customizeOptions.Description, ResourceString(IDS_OPT_BT_DESCRIPTION));
+    auto customizeImageOption = customizeCommand->add_option("-i,--image", customizeOptions.Image, ResourceString(IDS_OPT_BT_IMAGE));
+    customizeCommand->add_flag("-c,--clear", customizeOptions.Clear, ResourceString(IDS_OPT_BT_CLEAR));
+    auto customizePortNamingOption = customizeCommand->add_option("--port-naming", customizeOptions.PortNaming, ResourceString(IDS_OPT_CUSTOMIZE_PORT_NAMING));
+    auto customizeNoteOffOption = customizeCommand->add_flag("--note-off-translation,!--no-note-off-translation", customizeOptions.NoteOffTranslation, ResourceString(IDS_OPT_CUSTOMIZE_NOTE_OFF_TRANSLATION));
+    auto customizeMpeOption = customizeCommand->add_flag("--mpe,!--no-mpe", customizeOptions.MidiPolyphonicExpression, ResourceString(IDS_OPT_CUSTOMIZE_MPE));
+    auto customizeCcIntervalOption = customizeCommand->add_option("--cc-interval", customizeOptions.ControlChangeIntervalMilliseconds, ResourceString(IDS_OPT_CUSTOMIZE_CC_INTERVAL));
+    auto customizeLatencyOption = customizeCommand->add_option("--output-latency-ticks", customizeOptions.OutgoingLatencyTicks, ResourceString(IDS_OPT_CUSTOMIZE_OUTPUT_LATENCY));
+    customizeCommand->add_flag("-t,--temporary", customizeOptions.Temporary, ResourceString(IDS_OPT_BT_TEMPORARY));
+
+    EndpointIdOptions shortIdOptions{};
+
+    auto shortIdCommand = endpointCommand->add_subcommand("short-id", ResourceString(IDS_CMD_EP_SHORT_ID));
+    shortIdCommand->add_option("endpoint-id", shortIdOptions.Value, ResourceString(IDS_OPT_ID_VALUE_ARGUMENT))->required();
+
+    EndpointIdOptions fullIdOptions{};
+
+    auto fullIdCommand = endpointCommand->add_subcommand("full-id", ResourceString(IDS_CMD_EP_FULL_ID));
+    fullIdCommand->add_option("endpoint-id", fullIdOptions.Value, ResourceString(IDS_OPT_ID_VALUE_ARGUMENT))->required();
     auto requestCommand = endpointCommand->add_subcommand("request", ResourceString(IDS_CMD_EP_REQUEST));
     requestCommand->alias("req");
     requestCommand->require_subcommand(1);
@@ -330,6 +403,16 @@ int main()
     loopbackRemoveCommand->add_option("-i,--association-id", loopbackRemoveOptions.AssociationId, ResourceString(IDS_OPT_ASSOCIATION_ID))->required();
     loopbackRemoveCommand->add_flag("-s,--save-to-config", loopbackRemoveOptions.SaveToConfig, ResourceString(IDS_OPT_SAVE_TO_CONFIG));
 
+    LoopbackMuteOptions loopbackMuteOptions{};
+
+    auto loopbackMuteCommand = loopbackCommand->add_subcommand("mute", ResourceString(IDS_CMD_LOOPBACK_MUTE));
+    loopbackMuteCommand->add_option("-i,--association-id", loopbackMuteOptions.AssociationId, ResourceString(IDS_OPT_ASSOCIATION_ID))->required();
+
+    LoopbackMuteOptions loopbackUnmuteOptions{ {}, false };
+
+    auto loopbackUnmuteCommand = loopbackCommand->add_subcommand("unmute", ResourceString(IDS_CMD_LOOPBACK_UNMUTE));
+    loopbackUnmuteCommand->add_option("-i,--association-id", loopbackUnmuteOptions.AssociationId, ResourceString(IDS_OPT_ASSOCIATION_ID))->required();
+
     auto basicLoopbackCommand = app.add_subcommand("basic-loopback", ResourceString(IDS_CMD_BASIC_LOOPBACK));
     basicLoopbackCommand->alias("midi1-loopback");
     basicLoopbackCommand->alias("simple-loopback");
@@ -350,6 +433,16 @@ int main()
     basicLoopbackRemoveCommand->alias("delete");
     basicLoopbackRemoveCommand->add_option("-i,--association-id", basicLoopbackRemoveOptions.AssociationId, ResourceString(IDS_OPT_ASSOCIATION_ID))->required();
     basicLoopbackRemoveCommand->add_flag("-s,--save-to-config", basicLoopbackRemoveOptions.SaveToConfig, ResourceString(IDS_OPT_SAVE_TO_CONFIG));
+
+    LoopbackMuteOptions basicLoopbackMuteOptions{};
+
+    auto basicLoopbackMuteCommand = basicLoopbackCommand->add_subcommand("mute", ResourceString(IDS_CMD_LOOPBACK_MUTE));
+    basicLoopbackMuteCommand->add_option("-i,--association-id", basicLoopbackMuteOptions.AssociationId, ResourceString(IDS_OPT_ASSOCIATION_ID))->required();
+
+    LoopbackMuteOptions basicLoopbackUnmuteOptions{ {}, false };
+
+    auto basicLoopbackUnmuteCommand = basicLoopbackCommand->add_subcommand("unmute", ResourceString(IDS_CMD_LOOPBACK_UNMUTE));
+    basicLoopbackUnmuteCommand->add_option("-i,--association-id", basicLoopbackUnmuteOptions.AssociationId, ResourceString(IDS_OPT_ASSOCIATION_ID))->required();
 
     // ---------------------------------------------------------------- service, time, watch
 
@@ -385,6 +478,53 @@ int main()
     watchPortsCommand->alias("watch-legacy");
     watchPortsCommand->add_flag("-v,--verbose", watchPortsOptions.Verbose, ResourceString(IDS_OPT_VERBOSE));
 
+    // ---------------------------------------------------------------- api mode
+
+    auto apiModeCommand = app.add_subcommand("api-mode", ResourceString(IDS_CMD_API_MODE));
+    apiModeCommand->alias("mode");
+    apiModeCommand->require_subcommand(1);
+
+    auto apiModeGetCommand = apiModeCommand->add_subcommand("get", ResourceString(IDS_CMD_API_MODE_GET));
+    apiModeGetCommand->alias("status");
+
+    ApiModeSetOptions apiModeSetOptions{};
+
+    auto apiModeSetCommand = apiModeCommand->add_subcommand("set", ResourceString(IDS_CMD_API_MODE_SET));
+    apiModeSetCommand->add_option("mode", apiModeSetOptions.Mode, ResourceString(IDS_OPT_API_MODE_VALUE_ARGUMENT))->required();
+
+    // ---------------------------------------------------------------- network
+
+    auto networkCommand = app.add_subcommand("network", ResourceString(IDS_CMD_NETWORK));
+    networkCommand->alias("net");
+    networkCommand->alias("network-midi");
+    networkCommand->require_subcommand(1);
+
+    NetworkListOptions networkHostsOptions{};
+
+    auto networkHostsCommand = networkCommand->add_subcommand("list-hosts", ResourceString(IDS_CMD_NET_HOSTS));
+    networkHostsCommand->alias("hosts");
+    networkHostsCommand->add_flag("-v,--verbose", networkHostsOptions.Verbose, ResourceString(IDS_OPT_VERBOSE));
+
+    NetworkListOptions networkClientsOptions{};
+
+    auto networkClientsCommand = networkCommand->add_subcommand("list-clients", ResourceString(IDS_CMD_NET_CLIENTS));
+    networkClientsCommand->alias("clients");
+    networkClientsCommand->add_flag("-v,--verbose", networkClientsOptions.Verbose, ResourceString(IDS_OPT_VERBOSE));
+
+    NetworkListOptions networkBrowseOptions{};
+
+    auto networkBrowseCommand = networkCommand->add_subcommand("browse", ResourceString(IDS_CMD_NET_BROWSE));
+    networkBrowseCommand->alias("advertised");
+    networkBrowseCommand->alias("mdns");
+    networkBrowseCommand->add_flag("-v,--verbose", networkBrowseOptions.Verbose, ResourceString(IDS_OPT_VERBOSE));
+
+    auto networkPendingCommand = networkCommand->add_subcommand("pending", ResourceString(IDS_CMD_NET_PENDING));
+
+    NetworkListOptions networkStatusOptions{};
+
+    auto networkStatusCommand = networkCommand->add_subcommand("status", ResourceString(IDS_CMD_NET_STATUS));
+    networkStatusCommand->add_flag("-v,--verbose", networkStatusOptions.Verbose, ResourceString(IDS_OPT_VERBOSE));
+
     // ---------------------------------------------------------------- bluetooth
 
     auto bluetoothCommand = app.add_subcommand("bluetooth", ResourceString(IDS_CMD_BLUETOOTH));
@@ -393,6 +533,9 @@ int main()
 
     auto bluetoothListCommand = bluetoothCommand->add_subcommand("list", ResourceString(IDS_CMD_BT_LIST));
     bluetoothListCommand->alias("list-devices");
+
+    auto bluetoothStatusCommand = bluetoothCommand->add_subcommand("status", ResourceString(IDS_CMD_BT_STATUS));
+    bluetoothStatusCommand->alias("radio");
 
     BluetoothDeviceOptions bluetoothConnectOptions{};
 
@@ -426,7 +569,11 @@ int main()
     peripheralStartCommand->add_option("-p,--protocol", peripheralStartOptions.Protocol, ResourceString(IDS_OPT_BT_PROTOCOL));
     peripheralStartCommand->add_flag("-t,--temporary", peripheralStartOptions.Temporary, ResourceString(IDS_OPT_BT_TEMPORARY));
 
+    BluetoothPeripheralStopOptions peripheralStopOptions{};
+
     auto peripheralStopCommand = peripheralCommand->add_subcommand("stop", ResourceString(IDS_CMD_BT_PERIPHERAL_STOP));
+    peripheralStopCommand->add_flag("-t,--temporary", peripheralStopOptions.Temporary, ResourceString(IDS_OPT_BT_TEMPORARY));
+
     auto peripheralStatusCommand = peripheralCommand->add_subcommand("status", ResourceString(IDS_CMD_BT_PERIPHERAL_STATUS));
 
     BluetoothCustomizeOptions peripheralCustomizeOptions{};
@@ -472,6 +619,7 @@ int main()
 
     auto arguments = GetUtf8CommandLineArguments();
 
+    RewriteEndpointSysExAlias(arguments);
     NormalizeEndpointArgumentOrder(arguments);
 
     std::vector<const char*> argumentPointers;
@@ -491,6 +639,26 @@ int main()
         return app.exit(e);
     }
 
+    // Gating happens after parsing so --help and --help-all still work on a machine where MIDI
+    // Services is switched off, and so api-mode is usable to switch it back on.
+    if (!apiModeCommand->parsed())
+    {
+        if (midi2::MidiApi::GetCurrentlySelectedApiMode() == midi2::MidiApiMode::LegacyMode)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_LEGACY_API_MODE));
+
+            return AsExitCode(ReturnCode::ErrorMidiServicesFeatureNotEnabled);
+        }
+
+        // A service command has to be able to report on a service that is not running.
+        if (!serviceCommand->parsed() && !midi2::MidiApi::EnsureServiceAvailable())
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_SERVICE_NOT_AVAILABLE));
+
+            return AsExitCode(ReturnCode::ErrorServiceNotAvailable);
+        }
+    }
+
     sendMessageOptions.HasTimestamp = timestampOption->count() > 0;
     sendMessageFileOptions.HasNewGroupIndex = newGroupOption->count() > 0;
 
@@ -501,6 +669,24 @@ int main()
     peripheralCustomizeOptions.HasName = pNameOption->count() > 0;
     peripheralCustomizeOptions.HasDescription = pDescriptionOption->count() > 0;
     peripheralCustomizeOptions.HasImage = pImageOption->count() > 0;
+
+    customizeOptions.HasName = customizeNameOption->count() > 0;
+    customizeOptions.HasDescription = customizeDescriptionOption->count() > 0;
+    customizeOptions.HasImage = customizeImageOption->count() > 0;
+    customizeOptions.HasPortNaming = customizePortNamingOption->count() > 0;
+    customizeOptions.HasNoteOffTranslation = customizeNoteOffOption->count() > 0;
+    customizeOptions.HasMidiPolyphonicExpression = customizeMpeOption->count() > 0;
+    customizeOptions.HasControlChangeInterval = customizeCcIntervalOption->count() > 0;
+    customizeOptions.HasOutgoingLatencyTicks = customizeLatencyOption->count() > 0;
+
+    // Raising the timer resolution matters for every command that paces its own output, so it
+    // covers the whole dispatch rather than being turned on and off inside each one.
+    midi2::MidiClock::BeginLowLatencySystemTimerPeriod();
+
+    auto const timerPeriod = wil::scope_exit([]
+        {
+            midi2::MidiClock::EndLowLatencySystemTimerPeriod();
+        });
 
     try
     {
@@ -515,6 +701,10 @@ int main()
         if (sendMessageCommand->parsed())           return RunEndpointSendMessageCommand(sendMessageOptions);
         if (sendMessageFileCommand->parsed())       return RunEndpointSendMessageFileCommand(sendMessageFileOptions);
         if (playNotesCommand->parsed())             return RunEndpointPlayNotesCommand(playNotesOptions);
+        if (sendClockCommand->parsed())             return RunEndpointSendClockCommand(sendClockOptions);
+        if (customizeCommand->parsed())             return RunEndpointCustomizeCommand(customizeOptions);
+        if (shortIdCommand->parsed())               return RunEndpointShortIdCommand(shortIdOptions);
+        if (fullIdCommand->parsed())                return RunEndpointFullIdCommand(fullIdOptions);
         if (requestFunctionBlocksCommand->parsed()) return RunEndpointRequestFunctionBlocksCommand(requestFunctionBlocksOptions);
         if (requestEndpointInfoCommand->parsed())   return RunEndpointRequestEndpointInfoCommand(requestEndpointInfoOptions);
 
@@ -523,9 +713,13 @@ int main()
 
         if (loopbackListCommand->parsed())          return RunLoopbackListCommand();        if (loopbackCreateCommand->parsed())        return RunLoopbackCreateCommand(loopbackCreateOptions);
         if (loopbackRemoveCommand->parsed())        return RunLoopbackRemoveCommand(loopbackRemoveOptions);
+        if (loopbackMuteCommand->parsed())          return RunLoopbackMuteCommand(loopbackMuteOptions);
+        if (loopbackUnmuteCommand->parsed())        return RunLoopbackMuteCommand(loopbackUnmuteOptions);
         if (basicLoopbackListCommand->parsed())     return RunBasicLoopbackListCommand();
         if (basicLoopbackCreateCommand->parsed())   return RunBasicLoopbackCreateCommand(basicLoopbackCreateOptions);
         if (basicLoopbackRemoveCommand->parsed())   return RunBasicLoopbackRemoveCommand(basicLoopbackRemoveOptions);
+        if (basicLoopbackMuteCommand->parsed())     return RunBasicLoopbackMuteCommand(basicLoopbackMuteOptions);
+        if (basicLoopbackUnmuteCommand->parsed())   return RunBasicLoopbackMuteCommand(basicLoopbackUnmuteOptions);
 
         if (serviceStatusCommand->parsed())         return RunServiceStatusCommand(serviceStatusOptions);
         if (servicePingCommand->parsed())           return RunServicePingCommand(servicePingOptions);
@@ -533,12 +727,22 @@ int main()
         if (watchEndpointsCommand->parsed())        return RunWatchEndpointsCommand(watchEndpointsOptions);
         if (watchPortsCommand->parsed())            return RunWatchPortsCommand(watchPortsOptions);
 
+        if (apiModeGetCommand->parsed())            return RunApiModeGetCommand();
+        if (apiModeSetCommand->parsed())            return RunApiModeSetCommand(apiModeSetOptions);
+
+        if (networkHostsCommand->parsed())          return RunNetworkHostsCommand(networkHostsOptions);
+        if (networkClientsCommand->parsed())        return RunNetworkClientsCommand(networkClientsOptions);
+        if (networkBrowseCommand->parsed())         return RunNetworkBrowseCommand(networkBrowseOptions);
+        if (networkPendingCommand->parsed())        return RunNetworkPendingCommand();
+        if (networkStatusCommand->parsed())         return RunNetworkStatusCommand(networkStatusOptions);
+
         if (bluetoothListCommand->parsed())         return RunBluetoothListCommand();
+        if (bluetoothStatusCommand->parsed())       return RunBluetoothStatusCommand();
         if (bluetoothConnectCommand->parsed())      return RunBluetoothConnectCommand(bluetoothConnectOptions);
         if (bluetoothDisconnectCommand->parsed())   return RunBluetoothDisconnectCommand(bluetoothDisconnectOptions);
         if (bluetoothCustomizeCommand->parsed())    return RunBluetoothCustomizeCommand(bluetoothCustomizeOptions);
         if (peripheralStartCommand->parsed())       return RunBluetoothPeripheralStartCommand(peripheralStartOptions);
-        if (peripheralStopCommand->parsed())        return RunBluetoothPeripheralStopCommand();
+        if (peripheralStopCommand->parsed())        return RunBluetoothPeripheralStopCommand(peripheralStopOptions);
         if (peripheralStatusCommand->parsed())      return RunBluetoothPeripheralStatusCommand();
         if (peripheralCustomizeCommand->parsed())   return RunBluetoothPeripheralCustomizeCommand(peripheralCustomizeOptions);
         if (peripheralApproveCommand->parsed())     return RunBluetoothPeripheralApproveCommand(approveOptions);

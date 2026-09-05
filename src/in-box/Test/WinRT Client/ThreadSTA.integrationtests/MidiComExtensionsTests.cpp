@@ -60,7 +60,7 @@ void MidiComExtensionsTests::TestSendReceiveMessagesInternal()
 
     std::cout << "Setting callback" << std::endl;
 
-    m_midiInCallback = [&](GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, UINT32* messages)
+    m_midiInCallback = [&](GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, UINT32 const* messages)
         {
             UNREFERENCED_PARAMETER(sessionId);
             UNREFERENCED_PARAMETER(connectionId);

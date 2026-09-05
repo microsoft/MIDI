@@ -12,6 +12,7 @@
 #include "console_output.h"
 #include "console_table.h"
 #include "midi_formatting.h"
+#include "return_codes.h"
 #include "strings.h"
 
 namespace midi2console
@@ -66,6 +67,97 @@ namespace midi2console
             auto const response = midi2config::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
 
             return response != nullptr && response.Success();
+        }
+
+        // Applying a change and remembering it are separate steps. The transport manager call has
+        // already taken effect by the time this runs; this only decides whether it survives a
+        // service restart.
+        void ReportSave(_In_ midi2config::IMidiServiceTransportPluginConfig const& config)
+        {
+            auto const response = midi2config::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+            if (response != nullptr && response.Success())
+            {
+                WriteSuccessLine(ResourceString(IDS_BT_SAVED_TO_CONFIG));
+
+                auto const backup = ToUtf8(response.BackupFilePath());
+
+                if (!backup.empty())
+                {
+                    WriteInfoLine(FormatResourceString(IDS_CUSTOMIZE_BACKUP_WRITTEN, backup));
+                }
+
+                return;
+            }
+
+            auto const message = response == nullptr ? std::string{} : ToUtf8(response.ErrorMessage());
+
+            WriteWarningLine(FormatResourceString(IDS_BT_SAVE_FAILED, message));
+        }
+
+        bool EnsureTransportAvailable()
+        {
+            if (midi2bt::MidiBluetoothTransportManager::IsTransportAvailable())
+            {
+                return true;
+            }
+
+            WriteErrorLine(ResourceString(IDS_BT_NOT_AVAILABLE));
+
+            return false;
+        }
+
+        // A machine with no radio, or one which cannot act as a central, otherwise looks exactly
+        // like a machine where nothing happens to be switched on.
+        void ReportRadioLimitations()
+        {
+            auto const radio = midi2bt::MidiBluetoothTransportManager::GetRadioInformation();
+
+            if (radio == nullptr)
+            {
+                return;
+            }
+
+            if (!radio.IsPresent())
+            {
+                WriteWarningLine(ResourceString(IDS_BT_RADIO_UNAVAILABLE));
+                WriteBlankLine();
+            }
+            else if (!radio.IsLowEnergySupported() || !radio.IsCentralRoleSupported())
+            {
+                WriteWarningLine(ResourceString(IDS_BT_RADIO_OFF));
+                WriteBlankLine();
+            }
+        }
+
+        std::string FormatOfflineRetention(_In_ int32_t seconds)
+        {
+            if (seconds == OfflineRetentionKeepAlways) return ResourceString(IDS_BT_RETENTION_ALWAYS);
+            if (seconds <= 0)                          return ResourceString(IDS_BT_RETENTION_IMMEDIATE);
+
+            return FormatResourceString(IDS_BT_RETENTION_SECONDS, fmt::format("{}", seconds));
+        }
+
+        // The service holds the whole allow and deny list, so it is read back and written out
+        // together rather than merged entry by entry.
+        void PersistClientLists(_In_ midi2bt::MidiBluetoothApprovalScope scope)
+        {
+            if (scope != midi2bt::MidiBluetoothApprovalScope::Always)
+            {
+                return;
+            }
+
+            auto const status = midi2bt::MidiBluetoothTransportManager::GetPeripheralStatus();
+
+            if (status == nullptr)
+            {
+                WriteWarningLine(FormatResourceString(IDS_BT_SAVE_FAILED, std::string{}));
+                return;
+            }
+
+            midi2bt::MidiBluetoothPeripheralClientListConfig const config{ status };
+
+            ReportSave(config);
         }
 
         std::string FormatBluetoothProtocol(_In_ midi2bt::MidiBluetoothProtocol protocol)
@@ -131,6 +223,13 @@ namespace midi2console
 
     int RunBluetoothListCommand()
     {
+        if (!EnsureTransportAvailable())
+        {
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        ReportRadioLimitations();
+
         auto const devices = midi2bt::MidiBluetoothTransportManager::GetAvailableDevices();
 
         if (devices == nullptr || devices.Size() == 0)
@@ -167,6 +266,11 @@ namespace midi2console
 
     int RunBluetoothConnectCommand(_In_ BluetoothDeviceOptions const& options)
     {
+        if (!EnsureTransportAvailable())
+        {
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
         midi2bt::MidiBluetoothDeviceConnectConfig const config{ winrt::hstring{ FromUtf8(options.BluetoothDeviceId) } };
 
         WriteInfoLine(ResourceString(IDS_BT_CONNECTING));
@@ -182,6 +286,22 @@ namespace midi2console
         }
 
         WriteSuccessLine(ResourceString(IDS_BT_CONNECTED));
+        WriteBlankLine();
+
+        if (options.Temporary)
+        {
+            WriteInfoLine(ResourceString(IDS_BT_TEMPORARY_NOTE));
+
+            return 0;
+        }
+
+        // A bare Bluetooth address in the configuration file says nothing about the device.
+        if (response.Device() != nullptr && !response.Device().Name().empty())
+        {
+            config.Comment(response.Device().Name());
+        }
+
+        ReportSave(config);
 
         return 0;
     }
@@ -289,6 +409,11 @@ namespace midi2console
 
     int RunBluetoothPeripheralStartCommand(_In_ BluetoothPeripheralStartOptions const& options)
     {
+        if (!EnsureTransportAvailable())
+        {
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
         midi2bt::MidiBluetoothPeripheralConfig config;
 
         auto protocol = midi2bt::MidiBluetoothProtocol::BluetoothLowEnergyMidi1;
@@ -321,12 +446,27 @@ namespace midi2console
         }
 
         WriteSuccessLine(ResourceString(IDS_BT_PERIPHERAL_STARTED));
+        WriteBlankLine();
+
+        if (options.Temporary)
+        {
+            WriteInfoLine(ResourceString(IDS_BT_TEMPORARY_NOTE));
+
+            return 0;
+        }
+
+        ReportSave(config);
 
         return 0;
     }
 
-    int RunBluetoothPeripheralStopCommand()
+    int RunBluetoothPeripheralStopCommand(_In_ BluetoothPeripheralStopOptions const& options)
     {
+        if (!EnsureTransportAvailable())
+        {
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
         auto const response = midi2bt::MidiBluetoothTransportManager::StopPeripheralAsync().get();
 
         if (response == nullptr || !response.Success())
@@ -338,6 +478,20 @@ namespace midi2console
         }
 
         WriteSuccessLine(ResourceString(IDS_BT_PERIPHERAL_STOPPED));
+        WriteBlankLine();
+
+        if (options.Temporary)
+        {
+            WriteInfoLine(ResourceString(IDS_BT_TEMPORARY_NOTE));
+
+            return 0;
+        }
+
+        // Stopping only lasts for this session unless the configuration file says so too.
+        midi2bt::MidiBluetoothPeripheralConfig stopped;
+        stopped.IsEnabled(false);
+
+        ReportSave(stopped);
 
         return 0;
     }
@@ -453,6 +607,8 @@ namespace midi2console
 
         WriteSuccessLine(ResourceString(IDS_BT_PERIPHERAL_APPROVED));
 
+        PersistClientLists(scope);
+
         return 0;
     }
 
@@ -478,6 +634,8 @@ namespace midi2console
 
         WriteSuccessLine(ResourceString(IDS_BT_PERIPHERAL_DENIED));
 
+        PersistClientLists(scope);
+
         return 0;
     }
 
@@ -495,6 +653,73 @@ namespace midi2console
         }
 
         WriteSuccessLine(ResourceString(IDS_BT_PERIPHERAL_FORGOTTEN));
+
+        // Forgetting is always a change to the remembered lists, so it always has to be written.
+        PersistClientLists(midi2bt::MidiBluetoothApprovalScope::Always);
+
+        return 0;
+    }
+
+    int RunBluetoothStatusCommand()
+    {
+        if (!EnsureTransportAvailable())
+        {
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        auto const radio = midi2bt::MidiBluetoothTransportManager::GetRadioInformation();
+
+        WriteSectionHeading(ResourceString(IDS_BT_STATUS_TITLE));
+
+        if (radio == nullptr)
+        {
+            WriteWarningLine(ResourceString(IDS_BT_RADIO_UNAVAILABLE));
+            return 0;
+        }
+
+        WriteField(ResourceString(IDS_BT_LABEL_RADIO_PRESENT),
+            FormatBoolean(radio.IsPresent()), BooleanStyle(radio.IsPresent()));
+        WriteField(ResourceString(IDS_BT_LABEL_LOW_ENERGY_SUPPORTED),
+            FormatBoolean(radio.IsLowEnergySupported()), BooleanStyle(radio.IsLowEnergySupported()));
+        WriteField(ResourceString(IDS_BT_LABEL_RADIO_ENABLED),
+            FormatBoolean(radio.IsCentralRoleSupported()), BooleanStyle(radio.IsCentralRoleSupported()));
+        WriteField(ResourceString(IDS_BT_LABEL_PERIPHERAL_SUPPORTED),
+            FormatBoolean(radio.IsPeripheralRoleSupported()), BooleanStyle(radio.IsPeripheralRoleSupported()));
+
+        auto const defaultRetention = midi2bt::MidiBluetoothTransportManager::GetDefaultOfflineRetentionSeconds();
+
+        WriteField(ResourceString(IDS_BT_LABEL_DEFAULT_RETENTION),
+            FormatOfflineRetention(defaultRetention), fieldValueTextStyle);
+
+        WriteBlankLine();
+
+        ReportRadioLimitations();
+
+        auto const pending = midi2bt::MidiBluetoothTransportManager::GetPendingPeripheralClients();
+
+        if (pending == nullptr || pending.Size() == 0)
+        {
+            WriteInfoLine(ResourceString(IDS_BT_NO_PENDING));
+
+            return 0;
+        }
+
+        ConsoleTable table{ ResourceString(IDS_BT_PENDING_TABLE_TITLE) };
+
+        table.AddColumn(ResourceString(IDS_LABEL_ADDRESS), ColumnAlignment::Left, endpointIdTextStyle);
+        table.AddColumn(ResourceString(IDS_LABEL_NAME), ColumnAlignment::Left, endpointNameTextStyle);
+        table.SetLastColumnShrinkable();
+        table.AddColumn(ResourceString(IDS_BT_LABEL_PAIRED));
+
+        for (auto const& client : pending)
+        {
+            table.BeginRow();
+            table.AddCell(FormatBluetoothAddress(client.BluetoothAddress()));
+            table.AddCell(ToUtf8(client.Name()));
+            table.AddCell(FormatBoolean(client.IsPaired()), BooleanStyle(client.IsPaired()));
+        }
+
+        table.Render();
 
         return 0;
     }

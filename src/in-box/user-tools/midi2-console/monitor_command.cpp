@@ -13,6 +13,7 @@
 #include "console_output.h"
 #include "endpoint_picker.h"
 #include "endpoint_utility.h"
+#include "message_capture_writer.h"
 #include "midi_message_table.h"
 #include "monitor_command.h"
 #include "pickers.h"
@@ -130,6 +131,21 @@ namespace midi2console
             options.DecodeMessages,
             options.Verbose };
 
+        MessageCaptureWriter captureWriter;
+
+        if (!options.CaptureToFile.empty())
+        {
+            if (!captureWriter.Open(options.CaptureToFile, options.CaptureFieldDelimiter, options.AnnotateCapture))
+            {
+                WriteErrorLine(ResourceString(IDS_CAPTURE_FAILED));
+                return 1;
+            }
+
+            WriteLine(fmt::format("{} {}",
+                Styled(ResourceString(IDS_CAPTURE_TO), infoTextStyle),
+                Styled(captureWriter.ResolvedFileName(), fileNameTextStyle)));
+        }
+
         MessageQueue queue;
 
         std::atomic<uint32_t> messageIndex{ 0 };
@@ -197,6 +213,11 @@ namespace midi2console
             {
                 displayTable.OutputRow(message);
 
+                if (captureWriter.IsOpen())
+                {
+                    captureWriter.Write(message.MessageTimestamp, message.NumWords, &message.Word0);
+                }
+
                 if (options.SingleMessage)
                 {
                     keepGoing = false;
@@ -209,6 +230,7 @@ namespace midi2console
             if (!drained.empty())
             {
                 std::fflush(stdout);
+                captureWriter.Flush();
             }
 
             if (!keepGoing)
@@ -251,6 +273,14 @@ namespace midi2console
         WriteLine(fmt::format("{} {}",
             Styled(ResourceString(IDS_EP_MONITOR_MESSAGES_RECEIVED), infoTextStyle),
             Styled(messageIndex.load(), successTextStyle)));
+
+        if (captureWriter.IsOpen())
+        {
+            captureWriter.Flush();
+
+            WriteInfoLine(FormatResourceString(IDS_CAPTURE_CLOSED,
+                fmt::format("{}", captureWriter.MessagesWritten())));
+        }
 
         return 0;
     }

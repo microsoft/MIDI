@@ -37,6 +37,11 @@ namespace midi2console
         bool Temporary{ false };
     };
 
+    struct BluetoothPeripheralStopOptions
+    {
+        bool Temporary{ false };
+    };
+
     struct BluetoothPeripheralClientOptions
     {
         std::string BluetoothAddress;
@@ -49,7 +54,8 @@ namespace midi2console
     int RunBluetoothCustomizeCommand(_In_ BluetoothCustomizeOptions const& options);
 
     int RunBluetoothPeripheralStartCommand(_In_ BluetoothPeripheralStartOptions const& options);
-    int RunBluetoothPeripheralStopCommand();
+    int RunBluetoothPeripheralStopCommand(_In_ BluetoothPeripheralStopOptions const& options);
+    int RunBluetoothStatusCommand();
     int RunBluetoothPeripheralStatusCommand();
     int RunBluetoothPeripheralCustomizeCommand(_In_ BluetoothCustomizeOptions const& options);
     int RunBluetoothPeripheralApproveCommand(_In_ BluetoothPeripheralClientOptions const& options);

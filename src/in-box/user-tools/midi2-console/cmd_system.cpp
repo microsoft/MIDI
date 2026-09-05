@@ -16,12 +16,93 @@
 #include "console_table.h"
 #include "endpoint_utility.h"
 #include "midi_formatting.h"
+#include "return_codes.h"
 #include "strings.h"
 
 namespace midi2console
 {
     namespace
     {
+        // The service and the MIDI 1.0 drivers read this from HKLM, so that is what "effective"
+        // means here. The SDK reads its own copy, which is why both are reported.
+        constexpr wchar_t Drivers32Key[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32";
+        constexpr wchar_t UseLegacyMidiValue[] = L"UseLegacyMidi";
+
+        constexpr DWORD ApiModeFull = 0;
+        constexpr DWORD ApiModeLegacy = 1;
+        constexpr DWORD ApiModeHybrid = 2;
+
+        std::string FormatApiMode(_In_ DWORD mode)
+        {
+            switch (mode)
+            {
+            case ApiModeLegacy: return ResourceString(IDS_API_MODE_LEGACY);
+            case ApiModeHybrid: return ResourceString(IDS_API_MODE_HYBRID);
+            default:            return ResourceString(IDS_API_MODE_FULL);
+            }
+        }
+
+        DWORD GetMachineApiMode()
+        {
+            auto const value = wil::reg::try_get_value_dword(HKEY_LOCAL_MACHINE, Drivers32Key, UseLegacyMidiValue);
+
+            if (value.has_value() && value.value() <= ApiModeHybrid)
+            {
+                return value.value();
+            }
+
+            // Absent, out of range or unreadable all mean the default is in effect.
+            return ApiModeFull;
+        }
+
+        DWORD GetSdkReportedApiMode()
+        {
+            switch (midi2::MidiApi::GetCurrentlySelectedApiMode())
+            {
+            case midi2::MidiApiMode::LegacyMode:       return ApiModeLegacy;
+            case midi2::MidiApiMode::HybridLegacyMode: return ApiModeHybrid;
+            default:                                   return ApiModeFull;
+            }
+        }
+
+        bool TryParseApiMode(_In_ std::string const& text, _Out_ DWORD& mode)
+        {
+            mode = ApiModeFull;
+
+            if (EqualsIgnoreCase(text, "full") ||
+                EqualsIgnoreCase(text, "midi2") ||
+                EqualsIgnoreCase(text, "services"))    { mode = ApiModeFull;   return true; }
+
+            if (EqualsIgnoreCase(text, "legacy") ||
+                EqualsIgnoreCase(text, "midi1"))       { mode = ApiModeLegacy; return true; }
+
+            if (EqualsIgnoreCase(text, "hybrid"))      { mode = ApiModeHybrid; return true; }
+
+            WriteErrorLine(FormatResourceString(IDS_ERROR_INVALID_ENUM_VALUE, text, std::string{ "mode" }));
+
+            return false;
+        }
+
+        bool IsProcessElevated()
+        {
+            wil::unique_handle token;
+
+            if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, token.put()))
+            {
+                return false;
+            }
+
+            TOKEN_ELEVATION elevation{};
+            DWORD returnedSize{ 0 };
+
+            if (!GetTokenInformation(token.get(), TokenElevation, &elevation, sizeof(elevation), &returnedSize))
+            {
+                return false;
+            }
+
+            return elevation.TokenIsElevated != 0;
+        }
+
         constexpr int KeyEscape = 27;
 
         // Shared by both watchers: block until escape, letting the WinRT events print as they
@@ -478,6 +559,67 @@ namespace midi2console
         WaitForEscape();
 
         watcher.Stop();
+
+        return 0;
+    }
+
+    int RunApiModeGetCommand()
+    {
+        auto const machineMode = GetMachineApiMode();
+        auto const sdkMode = GetSdkReportedApiMode();
+
+        WriteSectionHeading(ResourceString(IDS_API_MODE_TABLE_TITLE));
+
+        WriteField(ResourceString(IDS_API_MODE_LABEL_EFFECTIVE), FormatApiMode(machineMode),
+            machineMode == ApiModeFull ? successTextStyle : warningTextStyle);
+        WriteField(ResourceString(IDS_API_MODE_LABEL_SDK_REPORTED), FormatApiMode(sdkMode),
+            sdkMode == ApiModeFull ? successTextStyle : warningTextStyle);
+
+        if (machineMode != sdkMode)
+        {
+            WriteBlankLine();
+            WriteWarningLine(ResourceString(IDS_API_MODE_MISMATCH));
+        }
+
+        return 0;
+    }
+
+    int RunApiModeSetCommand(_In_ ApiModeSetOptions const& options)
+    {
+        DWORD requestedMode{ 0 };
+
+        if (!TryParseApiMode(options.Mode, requestedMode))
+        {
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        if (GetMachineApiMode() == requestedMode)
+        {
+            WriteInfoLine(FormatResourceString(IDS_API_MODE_UNCHANGED, FormatApiMode(requestedMode)));
+
+            return 0;
+        }
+
+        if (!IsProcessElevated())
+        {
+            WriteErrorLine(ResourceString(IDS_API_MODE_NEEDS_ELEVATION));
+
+            return AsExitCode(ReturnCode::ErrorInsufficientPermissions);
+        }
+
+        auto const hr = wil::reg::set_value_dword_nothrow(
+            HKEY_LOCAL_MACHINE, Drivers32Key, UseLegacyMidiValue, requestedMode);
+
+        if (FAILED(hr))
+        {
+            WriteErrorLine(ResourceString(IDS_API_MODE_SET_FAILED));
+
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        WriteSuccessLine(FormatResourceString(IDS_API_MODE_SET_SUCCEEDED, FormatApiMode(requestedMode)));
+        WriteBlankLine();
+        WriteInfoLine(ResourceString(IDS_API_MODE_RESTART_REQUIRED));
 
         return 0;
     }

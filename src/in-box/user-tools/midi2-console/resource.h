@@ -441,3 +441,152 @@
 // ---------------------------------------------------------------- raw properties  51600
 #define IDS_EP_RAW_NULL                                 51600
 #define IDS_EP_RAW_BYTE_COUNT                           51601
+
+// ---------------------------------------------------------------- api mode        51700
+#define IDS_CMD_API_MODE                                51700
+#define IDS_CMD_API_MODE_GET                            51701
+#define IDS_CMD_API_MODE_SET                            51702
+#define IDS_OPT_API_MODE_VALUE_ARGUMENT                 51703
+#define IDS_API_MODE_TABLE_TITLE                        51704
+#define IDS_API_MODE_LABEL_EFFECTIVE                    51705
+#define IDS_API_MODE_LABEL_SDK_REPORTED                 51706
+#define IDS_API_MODE_FULL                               51707
+#define IDS_API_MODE_LEGACY                             51708
+#define IDS_API_MODE_HYBRID                             51709
+#define IDS_API_MODE_MISMATCH                           51710
+#define IDS_API_MODE_NEEDS_ELEVATION                    51711
+#define IDS_API_MODE_SET_SUCCEEDED                      51712
+#define IDS_API_MODE_SET_FAILED                         51713
+#define IDS_API_MODE_RESTART_REQUIRED                   51714
+#define IDS_API_MODE_UNCHANGED                          51715
+
+// ---------------------------------------------------------------- endpoint customize 51730
+#define IDS_CMD_EP_CUSTOMIZE                            51730
+#define IDS_OPT_CUSTOMIZE_PORT_NAMING                   51731
+#define IDS_OPT_CUSTOMIZE_NOTE_OFF_TRANSLATION          51732
+#define IDS_OPT_CUSTOMIZE_MPE                           51733
+#define IDS_OPT_CUSTOMIZE_CC_INTERVAL                   51734
+#define IDS_OPT_CUSTOMIZE_OUTPUT_LATENCY                51735
+#define IDS_CUSTOMIZE_NOTHING_TO_DO                     51736
+#define IDS_CUSTOMIZE_APPLIED                           51737
+#define IDS_CUSTOMIZE_SAVED                             51738
+#define IDS_CUSTOMIZE_FAILED                            51739
+#define IDS_CUSTOMIZE_TEMPORARY_NOTE                    51740
+#define IDS_CUSTOMIZE_RECONNECT_NOTE                    51741
+#define IDS_CUSTOMIZE_BACKUP_WRITTEN                    51742
+#define IDS_CUSTOMIZE_SAVE_FAILED                       51743
+#define IDS_ERROR_INVALID_CC_INTERVAL                   51744
+#define IDS_CUSTOMIZE_NOT_SUPPORTED                     51745
+
+// ---------------------------------------------------------------- endpoint ids     51760
+#define IDS_CMD_EP_SHORT_ID                             51760
+#define IDS_CMD_EP_FULL_ID                              51761
+#define IDS_OPT_ID_VALUE_ARGUMENT                       51762
+#define IDS_ERROR_NOT_AN_ENDPOINT_ID                    51763
+#define IDS_EP_SECTION_IN_USE_BY                        51764
+#define IDS_EP_IN_USE_BY_NOBODY                         51765
+
+// ---------------------------------------------------------------- beat clock       51780
+#define IDS_CMD_EP_SEND_CLOCK                           51780
+#define IDS_OPT_CLOCK_TEMPO                             51781
+#define IDS_OPT_CLOCK_PPQN                              51782
+#define IDS_OPT_CLOCK_GROUPS                            51783
+#define IDS_OPT_CLOCK_SEND_START                        51784
+#define IDS_OPT_CLOCK_SEND_STOP                         51785
+#define IDS_ERROR_CLOCK_NO_GROUPS                       51786
+#define IDS_ERROR_CLOCK_TEMPO_RANGE                     51787
+#define IDS_ERROR_CLOCK_PPQN_RANGE                      51788
+#define IDS_CLOCK_LABEL_TEMPO                           51789
+#define IDS_CLOCK_LABEL_PPQN                            51790
+#define IDS_CLOCK_LABEL_INTERVAL                        51791
+#define IDS_CLOCK_PRESS_ESCAPE                          51792
+#define IDS_CLOCK_STOPPED                               51793
+#define IDS_CLOCK_LABEL_PULSES_SENT                     51794
+#define IDS_CLOCK_DRAINING                              51795
+
+// ---------------------------------------------------------------- monitor capture  51810
+#define IDS_CAPTURE_TO                                  51813
+#define IDS_CAPTURE_FAILED                              51814
+#define IDS_CAPTURE_CLOSED                              51815
+
+// ---------------------------------------------------------------- loopback mute    51830
+#define IDS_CMD_LOOPBACK_MUTE                           51830
+#define IDS_CMD_LOOPBACK_UNMUTE                         51831
+#define IDS_LOOPBACK_MUTED                              51832
+#define IDS_LOOPBACK_UNMUTED                            51833
+#define IDS_LOOPBACK_MUTE_FAILED                        51834
+#define IDS_LABEL_MUTED                                 51835
+
+// ---------------------------------------------------------------- network          51850
+#define IDS_CMD_NETWORK                                 51850
+#define IDS_CMD_NET_HOSTS                               51851
+#define IDS_CMD_NET_CLIENTS                             51852
+#define IDS_CMD_NET_BROWSE                              51853
+#define IDS_CMD_NET_PENDING                             51854
+#define IDS_CMD_NET_STATUS                              51855
+#define IDS_NET_NOT_AVAILABLE                           51856
+#define IDS_NET_NO_HOSTS                                51857
+#define IDS_NET_NO_CLIENTS                              51858
+#define IDS_NET_NO_ADVERTISED                           51859
+#define IDS_NET_NO_PENDING                              51860
+#define IDS_NET_HOSTS_TABLE_TITLE                       51861
+#define IDS_NET_CLIENTS_TABLE_TITLE                     51862
+#define IDS_NET_ADVERTISED_TABLE_TITLE                  51863
+#define IDS_NET_PENDING_TABLE_TITLE                     51864
+#define IDS_NET_CONNECTIONS_TABLE_TITLE                 51865
+#define IDS_NET_LABEL_HOST_ID                           51866
+#define IDS_NET_LABEL_CLIENT_ID                         51867
+#define IDS_NET_LABEL_ENABLED                           51868
+#define IDS_NET_LABEL_STARTED                           51869
+#define IDS_NET_LABEL_PORT                              51870
+#define IDS_NET_LABEL_CONFIGURED_PORT                   51871
+#define IDS_NET_LABEL_SERVICE_INSTANCE                  51872
+#define IDS_NET_LABEL_PRODUCT_INSTANCE_ID               51873
+#define IDS_NET_LABEL_REMOTE_POLICY                     51874
+#define IDS_NET_LABEL_CREATE_MIDI1_PORTS                51875
+#define IDS_NET_LABEL_SESSION_ACTIVE                    51876
+#define IDS_NET_LABEL_ENTRY_STATE                       51877
+#define IDS_NET_LABEL_REMOTE                            51878
+#define IDS_NET_LABEL_LOCAL                             51879
+#define IDS_NET_LABEL_LATENCY                           51880
+#define IDS_NET_LABEL_RETRANSMITS                       51881
+#define IDS_NET_LABEL_PACKETS                           51882
+#define IDS_NET_LABEL_MATCH_ID                          51883
+#define IDS_NET_LABEL_DIRECT                            51884
+#define IDS_NET_LABEL_PENDING_APPROVAL                  51885
+#define IDS_NET_LABEL_DNS_SERVICE_TYPE                  51886
+#define IDS_NET_LABEL_DNS_DOMAIN                        51887
+#define IDS_NET_LABEL_FULL_SERVICE_NAME                 51888
+#define IDS_NET_LABEL_USED_PORT_FALLBACK                51889
+#define IDS_NET_SUMMARY                                 51890
+#define IDS_NET_PORT_FALLBACK_NOTE                      51891
+#define IDS_NET_SETTINGS_TITLE                          51892
+#define IDS_NET_LABEL_MAX_FEC                           51893
+#define IDS_NET_LABEL_MAX_RETRANSMIT_BUFFER             51894
+#define IDS_NET_LABEL_PING_INTERVAL                     51895
+#define IDS_NET_LABEL_INVITATION_TIMEOUT                51896
+#define IDS_NET_LABEL_MAX_HOST_CONNECTIONS              51897
+#define IDS_NET_LABEL_SCAN_INTERVAL                     51898
+#define IDS_NET_STATUS_TITLE                            51899
+
+// ---------------------------------------------------------------- bluetooth status 51920
+#define IDS_CMD_BT_STATUS                               51920
+#define IDS_BT_LABEL_RADIO_NAME                         51921
+#define IDS_BT_LABEL_RADIO_PRESENT                      51922
+#define IDS_BT_LABEL_RADIO_ENABLED                      51923
+#define IDS_BT_LABEL_LOW_ENERGY_SUPPORTED               51924
+#define IDS_BT_LABEL_PERIPHERAL_SUPPORTED               51925
+#define IDS_BT_LABEL_DEFAULT_RETENTION                  51926
+#define IDS_BT_RADIO_UNAVAILABLE                        51927
+#define IDS_BT_RADIO_OFF                                51928
+#define IDS_BT_SAVED_TO_CONFIG                          51929
+#define IDS_BT_TEMPORARY_NOTE                           51930
+#define IDS_BT_SAVE_FAILED                              51931
+#define IDS_BT_PENDING_TABLE_TITLE                      51932
+#define IDS_BT_NO_PENDING                               51933
+#define IDS_BT_LABEL_PAIRED                             51934
+#define IDS_BT_RETENTION_ALWAYS                         51935
+#define IDS_BT_RETENTION_IMMEDIATE                      51936
+#define IDS_BT_RETENTION_SECONDS                        51937
+#define IDS_BT_STATUS_TITLE                             51938
+

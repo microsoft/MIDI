@@ -33,9 +33,16 @@ namespace midi2console
         bool Verbose{ false };
     };
 
+    struct ApiModeSetOptions
+    {
+        std::string Mode;
+    };
+
     int RunTimeCommand();
     int RunServiceStatusCommand(_In_ ServiceStatusOptions const& options);
     int RunServicePingCommand(_In_ ServicePingOptions const& options);
     int RunWatchEndpointsCommand(_In_ WatchEndpointsOptions const& options);
     int RunWatchPortsCommand(_In_ WatchPortsOptions const& options);
+    int RunApiModeGetCommand();
+    int RunApiModeSetCommand(_In_ ApiModeSetOptions const& options);
 }

@@ -189,7 +189,7 @@ void MidiLoopbackBenchmarks::BenchmarkComExtensionsSendReceive()
 
         // Each MIDI 1.0 channel voice UMP is a single 32-bit word, so the word count
         // and the message count are the same here.
-        m_midiInCallback = [&](GUID, GUID, UINT64, UINT32 wordCount, UINT32*)
+        m_midiInCallback = [&](GUID, GUID, UINT64, UINT32 wordCount, UINT32 const*)
             {
                 auto total = receivedWordCount.fetch_add(wordCount) + wordCount;
 

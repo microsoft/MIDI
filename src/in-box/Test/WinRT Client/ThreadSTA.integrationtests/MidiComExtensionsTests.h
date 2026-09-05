@@ -66,7 +66,7 @@ public:
     STDMETHODIMP_(ULONG) Release() { return 1; }
 
 private:
-    std::function<void(GUID, GUID, UINT64, UINT32, UINT32*)> m_midiInCallback;
+    std::function<void(GUID, GUID, UINT64, UINT32, UINT32 const*)> m_midiInCallback;
 
     void TestSendReceiveMessagesInternal();
 

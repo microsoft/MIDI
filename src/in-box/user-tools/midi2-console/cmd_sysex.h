@@ -15,7 +15,7 @@ namespace midi2console
         std::string EndpointDeviceId;
         std::string InputFile;
         int GroupNumber{ 1 };
-        int DelayBetweenMessages{ 10 };
+        int DelayBetweenMessages{ 50 };
         int MessageTransferCount{ 64 };
     };
 

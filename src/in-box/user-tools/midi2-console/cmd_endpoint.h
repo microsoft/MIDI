@@ -83,10 +83,52 @@ namespace midi2console
         int UmpVersionMinor{ 1 };
     };
 
+    struct EndpointCustomizeOptions
+    {
+        std::string EndpointDeviceId;
+        std::string Name;
+        std::string Description;
+        std::string Image;
+        std::string PortNaming;
+        bool HasName{ false };
+        bool HasDescription{ false };
+        bool HasImage{ false };
+        bool HasPortNaming{ false };
+        bool Clear{ false };
+        bool NoteOffTranslation{ false };
+        bool HasNoteOffTranslation{ false };
+        bool MidiPolyphonicExpression{ false };
+        bool HasMidiPolyphonicExpression{ false };
+        int ControlChangeIntervalMilliseconds{ 0 };
+        bool HasControlChangeInterval{ false };
+        uint64_t OutgoingLatencyTicks{ 0 };
+        bool HasOutgoingLatencyTicks{ false };
+        bool Temporary{ false };
+    };
+
+    struct EndpointIdOptions
+    {
+        std::string Value;
+    };
+
+    struct EndpointSendClockOptions
+    {
+        std::string EndpointDeviceId;
+        double Tempo{ 120.0 };
+        int PulsesPerQuarterNote{ 24 };
+        std::vector<int> GroupNumbers;
+        bool SendStartMessage{ false };
+        bool SendStopMessage{ false };
+    };
+
     int RunEndpointPropertiesCommand(_In_ EndpointPropertiesOptions const& options);
     int RunEndpointSendMessageCommand(_In_ EndpointSendMessageOptions const& options);
     int RunEndpointSendMessageFileCommand(_In_ EndpointSendMessageFileOptions const& options);
     int RunEndpointPlayNotesCommand(_In_ EndpointPlayNotesOptions const& options);
     int RunEndpointRequestFunctionBlocksCommand(_In_ EndpointRequestFunctionBlocksOptions const& options);
     int RunEndpointRequestEndpointInfoCommand(_In_ EndpointRequestEndpointInfoOptions const& options);
+    int RunEndpointCustomizeCommand(_In_ EndpointCustomizeOptions const& options);
+    int RunEndpointShortIdCommand(_In_ EndpointIdOptions const& options);
+    int RunEndpointFullIdCommand(_In_ EndpointIdOptions const& options);
+    int RunEndpointSendClockCommand(_In_ EndpointSendClockOptions const& options);
 }

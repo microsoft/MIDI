@@ -32,6 +32,12 @@ namespace midi2console
         bool SaveToConfig{ false };
     };
 
+    struct LoopbackMuteOptions
+    {
+        std::string AssociationId;
+        bool Mute{ true };
+    };
+
     int RunLoopbackListCommand();
     int RunLoopbackCreateCommand(_In_ LoopbackCreateOptions const& options);
     int RunLoopbackRemoveCommand(_In_ LoopbackRemoveOptions const& options);
@@ -39,4 +45,6 @@ namespace midi2console
     int RunBasicLoopbackListCommand();
     int RunBasicLoopbackCreateCommand(_In_ BasicLoopbackCreateOptions const& options);
     int RunBasicLoopbackRemoveCommand(_In_ LoopbackRemoveOptions const& options);
+    int RunLoopbackMuteCommand(_In_ LoopbackMuteOptions const& options);
+    int RunBasicLoopbackMuteCommand(_In_ LoopbackMuteOptions const& options);
 }

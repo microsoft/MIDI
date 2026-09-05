@@ -10,20 +10,14 @@
 
 namespace midi2console
 {
-    struct MonitorOptions
+    struct NetworkListOptions
     {
-        std::string EndpointDeviceId;
         bool Verbose{ false };
-        bool IncludeTimestamp{ false };
-        bool DecodeMessages{ true };
-        bool IncludeRealTimeMessages{ false };
-        bool IncludeUtilityMessages{ true };
-        bool AutoReconnect{ true };
-        bool SingleMessage{ false };
-        std::string CaptureToFile;
-        bool AnnotateCapture{ false };
-        std::string CaptureFieldDelimiter{ "Space" };
     };
 
-    int RunMonitorCommand(_In_ MonitorOptions const& options);
+    int RunNetworkHostsCommand(_In_ NetworkListOptions const& options);
+    int RunNetworkClientsCommand(_In_ NetworkListOptions const& options);
+    int RunNetworkBrowseCommand(_In_ NetworkListOptions const& options);
+    int RunNetworkPendingCommand();
+    int RunNetworkStatusCommand(_In_ NetworkListOptions const& options);
 }

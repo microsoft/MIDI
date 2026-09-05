@@ -136,6 +136,19 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
     {
         auto sessionList = winrt::single_threaded_vector<rpt::MidiServiceSessionInfo>();
 
+        // Both sides of the comparison are normalized here so no caller has to remember to do it.
+        auto normalizedFilterIds = winrt::single_threaded_vector<winrt::hstring>();
+
+        if (filterEndpointAndPortIds != nullptr)
+        {
+            for (auto const& filterId : filterEndpointAndPortIds)
+            {
+                normalizedFilterIds.Append(internal::NormalizeEndpointInterfaceIdHStringCopy(filterId));
+            }
+        }
+
+        auto const filterIds = normalizedFilterIds.GetView();
+
         try
         {
             winrt::com_ptr<IMidiTransport> serviceTransport;
@@ -202,7 +215,7 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
                     for (uint32_t i = 0; i < sessionJsonArray.Size(); i++)
                     {
                         // no filter means keep every session, including ones with no connections
-                        bool keepSession{ filterEndpointAndPortIds == nullptr || filterEndpointAndPortIds.Size() == 0 };
+                        bool keepSession{ filterIds.Size() == 0 };
 
                         auto sessionJson = sessionJsonArray.GetObjectAt(i);
 
@@ -230,16 +243,16 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
                             {
                                 auto connectionJson = connectionsJsonArray.GetObjectAt(j);
 
-                                auto endpointOrPortId = internal::NormalizeDeviceInstanceIdHStringCopy(connectionJson.GetNamedString(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY, L""));
+                                // These are endpoint interface ids and MIDI 1.0 port ids, not
+                                // device instance ids, so they normalize to lower case.
+                                auto endpointOrPortId = internal::NormalizeEndpointInterfaceIdHStringCopy(connectionJson.GetNamedString(MIDI_SESSION_TRACKER_JSON_RESULT_CONNECTION_ENDPOINT_ID_PROPERTY_KEY, L""));
 
                                 // Filter by Ids in the list. Don't need to recheck for each connection if we've
                                 // already decided to include this session
                                 uint32_t discardIndex{ 0 };
 
                                 if (keepSession ||
-                                    (filterEndpointAndPortIds == nullptr) ||
-                                    (filterEndpointAndPortIds.Size() == 0) ||
-                                    (filterEndpointAndPortIds.Size() > 0 && filterEndpointAndPortIds.IndexOf(endpointOrPortId, discardIndex)))
+                                    filterIds.IndexOf(endpointOrPortId, discardIndex))
                                 {
                                     keepSession = true;
                                 }
@@ -327,7 +340,7 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
         }
 
         auto allIds = winrt::single_threaded_vector<winrt::hstring>();
-        allIds.Append(endpointDeviceId);
+        allIds.Append(cleanedEndpointDeviceId);
 
         // find all related ids to look for.
         if (includeRelatedMidi1Ports)

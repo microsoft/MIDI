@@ -18,20 +18,24 @@
 #include <atomic>
 #include <array>
 #include <chrono>
+#include <condition_variable>
 #include <conio.h>
 #include <cstdint>
 #include <deque>
+#include <fstream>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <string>
 #include <string_view>
+#include <thread>
 #include <vector>
 
 // wil/cppwinrt.h MUST be the first wil include, or a winrt::hresult_error reaching any
 // WIL catch macro fail-fasts the process instead of being logged.
 #include <wil/cppwinrt.h>
 #include <wil/com.h>
+#include <wil/registry.h>
 #include <wil/resource.h>
 #include <wil/result_macros.h>
 
@@ -52,6 +56,7 @@
 #include <winrt/Windows.Devices.Midi2.Transports.BasicLoopback.h>
 #include <winrt/Windows.Devices.Midi2.Transports.Bluetooth.h>
 #include <winrt/Windows.Devices.Midi2.Transports.Loopback.h>
+#include <winrt/Windows.Devices.Midi2.Transports.Network.h>
 #include <winrt/Windows.Devices.Midi2.Utilities.Messages.h>
 #include <winrt/Windows.Devices.Midi2.Utilities.SysExTransfer.h>
 
@@ -68,6 +73,7 @@ namespace midi2diag = winrt::Windows::Devices::Midi2::Diagnostics;
 namespace midi2loop = winrt::Windows::Devices::Midi2::Transports::Loopback;
 namespace midi2basicloop = winrt::Windows::Devices::Midi2::Transports::BasicLoopback;
 namespace midi2bt = winrt::Windows::Devices::Midi2::Transports::Bluetooth;
+namespace midi2net = winrt::Windows::Devices::Midi2::Transports::Network;
 
 #include <fmt/core.h>
 #include <fmt/format.h>

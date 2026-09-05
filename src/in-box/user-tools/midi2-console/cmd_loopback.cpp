@@ -291,4 +291,56 @@ namespace midi2console
 
         return 0;
     }
+
+    int RunLoopbackMuteCommand(_In_ LoopbackMuteOptions const& options)
+    {
+        winrt::guid associationId{};
+
+        if (!TryGetAssociationId(options.AssociationId, associationId))
+        {
+            return 1;
+        }
+
+        auto const response = options.Mute
+            ? midi2loop::MidiLoopbackManager::MuteLoopback(associationId)
+            : midi2loop::MidiLoopbackManager::UnmuteLoopback(associationId);
+
+        if (response == nullptr || !response.Success())
+        {
+            auto const message = response == nullptr ? std::string{} : ToUtf8(response.ErrorMessage());
+
+            WriteErrorLine(FormatResourceString(IDS_LOOPBACK_MUTE_FAILED, message));
+            return 1;
+        }
+
+        WriteSuccessLine(ResourceString(options.Mute ? IDS_LOOPBACK_MUTED : IDS_LOOPBACK_UNMUTED));
+
+        return 0;
+    }
+
+    int RunBasicLoopbackMuteCommand(_In_ LoopbackMuteOptions const& options)
+    {
+        winrt::guid associationId{};
+
+        if (!TryGetAssociationId(options.AssociationId, associationId))
+        {
+            return 1;
+        }
+
+        auto const response = options.Mute
+            ? midi2basicloop::MidiBasicLoopbackManager::MuteLoopback(associationId)
+            : midi2basicloop::MidiBasicLoopbackManager::UnmuteLoopback(associationId);
+
+        if (response == nullptr || !response.Success())
+        {
+            auto const message = response == nullptr ? std::string{} : ToUtf8(response.ErrorMessage());
+
+            WriteErrorLine(FormatResourceString(IDS_LOOPBACK_MUTE_FAILED, message));
+            return 1;
+        }
+
+        WriteSuccessLine(ResourceString(options.Mute ? IDS_LOOPBACK_MUTED : IDS_LOOPBACK_UNMUTED));
+
+        return 0;
+    }
 }
