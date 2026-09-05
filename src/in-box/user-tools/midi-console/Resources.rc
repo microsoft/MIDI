@@ -19,8 +19,8 @@
 #define VER_FILETYPE                VFT_APP
 #define VER_FILESUBTYPE             VFT2_UNKNOWN
 #define VER_FILEDESCRIPTION_STR     "Windows MIDI Services Console"
-#define VER_INTERNALNAME_STR        "midi2.exe"
-#define VER_ORIGINALFILENAME_STR    "midi2.exe"
+#define VER_INTERNALNAME_STR        "midi.exe"
+#define VER_ORIGINALFILENAME_STR    "midi.exe"
 #define VER_COMPANYNAME_STR         "Microsoft"
 #define VER_FILEVERSION_STR         "1.0.0.0"
 #define VER_LEGALCOPYRIGHT_STR      "Copyright 2026 Microsoft Corporation"
@@ -67,7 +67,7 @@ IDS_ERROR_ENDPOINT_NOT_FOUND                L"Unable to find that endpoint devic
 IDS_ERROR_NO_ENDPOINTS_FOUND                L"No MIDI endpoints were found."
 IDS_ERROR_GENERAL_FAILURE                   L"The command did not complete."
 IDS_ERROR_NO_INTERACTIVE_CONSOLE            L"No endpoint was supplied and this console cannot show the picker. Provide an endpoint device id on the command line."
-IDS_ERROR_LEGACY_API_MODE                   L"Windows MIDI Services is not the active MIDI API mode on this PC, so the console cannot run. Run 'midi2 api-mode set full' from an elevated command prompt to change it."
+IDS_ERROR_LEGACY_API_MODE                   L"Windows MIDI Services is not the active MIDI API mode on this PC, so the console cannot run. Run 'midi api-mode set full' from an elevated command prompt to change it."
 IDS_ERROR_FILE_NOT_FOUND                    L"Unable to open the file {0}"
 IDS_ERROR_TOO_FEW_WORDS                     L"Too few MIDI words supplied for this message type."
 IDS_ERROR_TOO_MANY_WORDS                    L"Too many MIDI words supplied. A message may contain at most four words."

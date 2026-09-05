@@ -103,7 +103,6 @@ $SdkNuGetOutput = Join-Path $ApiRoot 'vsfiles-sdk\PublishedNuGet'
 
 $NuspecFile = Join-Path $ApiRoot 'Client\WinRT\NuGet\Windows.Devices.Midi2.NuGet\nuget\Windows.Devices.Midi2.nuspec'
 
-$ConsoleProject = Join-Path $UserToolsRoot 'midi-console\Midi\Midi.csproj'
 $PowerShellProject = Join-Path $ApiRoot 'Client\WinRT\powershell\WindowsMidiServices.csproj'
 
 $SetupSolutionRoot = Join-Path $SourceRoot 'installers\api-and-tools-installer'
@@ -132,11 +131,8 @@ $env:MIDI_REPO_ROOT = $RepoRoot.TrimEnd('\')
 $ConsoleTools = @(
     'mididiag'
     'midiksinfo'
-    'midimdnsinfo'
     'midi1monitor'
     'midi1enum'
-    'midiapimode'
-    'midifixreg'
 )
 
 # GUI tools each install into their OWN subfolder of Tools. MIDI Settings resolves the others by
@@ -656,11 +652,19 @@ function Invoke-StageTarget {
         Write-Detail "Staged SDK, $($ConsoleTools.Count) console tools, $($GuiTools.Count) GUI tools -> app-sdk\$plat"
 
         # --- MIDI Console -------------------------------------------------------------------
+        # Ships in its own package, and therefore its own folder, so it needs its own copy of
+        # the SDK next to the exe.
         $consoleStaging = Join-Path $StagingRoot "midi-console\$plat"
-        Publish-DotNetApp -Project $ConsoleProject -BuildPlatform $plat -RuntimeIdentifier $rid `
-            -Destination $consoleStaging -Version $Version
+        if (Test-Path $consoleStaging) { Remove-Item $consoleStaging -Recurse -Force }
+        New-Item -ItemType Directory -Force -Path $consoleStaging | Out-Null
 
-        Move-StagedSymbols -Folder $consoleStaging -BuildPlatform $plat
+        Copy-Staged -Source (Join-Path $SdkOutRoot "midi\$plat\$Configuration\midi.exe") -Destination $consoleStaging
+
+        foreach ($ext in @('dll', 'pri')) {
+            Copy-Staged -Source (Join-Path $sdkBinFolder "Windows.Devices.Midi2.$ext") -Destination $consoleStaging
+        }
+
+        Write-Detail "Staged MIDI Console -> midi-console\$plat"
 
         # --- PowerShell module --------------------------------------------------------------
         $psStaging = Join-Path $StagingRoot "midi-powershell\$plat"

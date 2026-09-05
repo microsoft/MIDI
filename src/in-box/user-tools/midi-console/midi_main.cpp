@@ -142,7 +142,7 @@ int main()
     WriteBlankLine();
 
     // The banner above stands in for the description, so help does not repeat it.
-    CLI::App app{ "", "midi2" };
+    CLI::App app{ "", "midi" };
 
     app.require_subcommand(1);
     app.set_help_all_flag("--help-all", "Show help for every command");
@@ -605,16 +605,16 @@ int main()
 
     // ---------------------------------------------------------------- examples
 
-    SetCommandExamples(enumEndpointsCommand, { "midi2 enumerate endpoints", "midi2 enum ep --all --verbose" });
-    SetCommandExamples(monitorCommand, { "midi2 endpoint monitor", "midi2 endpoint monitor --verbose --include-timestamp" });
-    SetCommandExamples(propertiesCommand, { "midi2 endpoint properties", "midi2 endpoint properties --verbose --include-raw" });
-    SetCommandExamples(sendMessageCommand, { "midi2 endpoint send-message 0x21234567", "midi2 endpoint send-message 0x41905000 0x87654321 --count 10" });
-    SetCommandExamples(sendMessageFileCommand, { "midi2 endpoint send-message-file .\\messages.txt" });
-    SetCommandExamples(playNotesCommand, { "midi2 endpoint play-notes 60 62 64 65 67" });
-    SetCommandExamples(sysExSendCommand, { "midi2 sysex send-file .\\patch.syx", "midi2 sysex send-file .\\patch.syx --group 1 --pause 20" });
-    SetCommandExamples(sysExReceiveCommand, { "midi2 sysex receive-file .\\dump.syx", "midi2 sysex receive-file .\\dump.syx --overwrite" });
-    SetCommandExamples(loopbackCreateCommand, { "midi2 loopback create --name-a \"Loop A\" --name-b \"Loop B\"" });
-    SetCommandExamples(servicePingCommand, { "midi2 service ping", "midi2 service ping --count 20" });
+    SetCommandExamples(enumEndpointsCommand, { "midi enumerate endpoints", "midi enum ep --all --verbose" });
+    SetCommandExamples(monitorCommand, { "midi endpoint monitor", "midi endpoint monitor --verbose --include-timestamp" });
+    SetCommandExamples(propertiesCommand, { "midi endpoint properties", "midi endpoint properties --verbose --include-raw" });
+    SetCommandExamples(sendMessageCommand, { "midi endpoint send-message 0x21234567", "midi endpoint send-message 0x41905000 0x87654321 --count 10" });
+    SetCommandExamples(sendMessageFileCommand, { "midi endpoint send-message-file .\\messages.txt" });
+    SetCommandExamples(playNotesCommand, { "midi endpoint play-notes 60 62 64 65 67" });
+    SetCommandExamples(sysExSendCommand, { "midi sysex send-file .\\patch.syx", "midi sysex send-file .\\patch.syx --group 1 --pause 20" });
+    SetCommandExamples(sysExReceiveCommand, { "midi sysex receive-file .\\dump.syx", "midi sysex receive-file .\\dump.syx --overwrite" });
+    SetCommandExamples(loopbackCreateCommand, { "midi loopback create --name-a \"Loop A\" --name-b \"Loop B\"" });
+    SetCommandExamples(servicePingCommand, { "midi service ping", "midi service ping --count 20" });
 
     // ---------------------------------------------------------------- parse and dispatch
 

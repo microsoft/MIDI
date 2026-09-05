@@ -9,10 +9,10 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{3E1C9A55-7F6D-4B2E-9C41-5D0A8F17B3C2}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>midi2console</RootNamespace>
+    <RootNamespace>midi</RootNamespace>
     <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0</WindowsTargetPlatformVersion>
     <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
-    <ProjectName>midi2console</ProjectName>
+    <ProjectName>midi</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <ItemGroup Label="ProjectConfigurations">
@@ -61,7 +61,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <!-- Named midi2.exe for this evaluation so it can live alongside the shipping midi.exe -->
-    <TargetName>midi2</TargetName>
+    <TargetName>midi</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
@@ -176,7 +176,7 @@
     <ClCompile Include="message_capture_writer.cpp" />
     <ClCompile Include="midi_formatting.cpp" />
     <ClCompile Include="midi_message_table.cpp" />
-    <ClCompile Include="midi2console_main.cpp" />
+    <ClCompile Include="midi_main.cpp" />
     <ClCompile Include="monitor_command.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>

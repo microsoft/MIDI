@@ -31,20 +31,11 @@
       <Component Id="cE94EAF7025497000" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midi1monitor.exe -->
         <File Id="fE94EAF7025497000" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midi1monitor.exe" Vital="true" />
       </Component>
-      <Component Id="cF47E3FE03BADB2B5" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midiapimode.exe -->
-        <File Id="fF47E3FE03BADB2B5" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midiapimode.exe" Vital="true" />
-      </Component>
       <Component Id="cF15BF4C02A5085BB" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- mididiag.exe -->
         <File Id="MidiDiagExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\mididiag.exe" Vital="true" />
       </Component>
-      <Component Id="c7621FC5A766570FF" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midifixreg.exe -->
-        <File Id="f7621FC5A766570FF" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midifixreg.exe" Vital="true" />
-      </Component>
       <Component Id="cCB7C9FBE62A6B2BD" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midiksinfo.exe -->
         <File Id="fCB7C9FBE62A6B2BD" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midiksinfo.exe" Vital="true" />
-      </Component>
-      <Component Id="cA0279D216A8B9AEF" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- midimdnsinfo.exe -->
-        <File Id="fA0279D216A8B9AEF" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\midimdnsinfo.exe" Vital="true" />
       </Component>
       <Component Id="c7DBA1C1C8CC79C56" Bitness="always64" Directory="TOOLSROOT_INSTALLFOLDER"> <!-- Windows.Devices.Midi2.dll -->
         <File Id="f7DBA1C1C8CC79C56" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Windows.Devices.Midi2.dll" Vital="true" />
