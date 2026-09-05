@@ -538,10 +538,14 @@ IDS_CUSTOMIZE_NOT_SUPPORTED                 L"The {0} transport does not support
 
 IDS_CMD_EP_SHORT_ID                         L"Print the short form of an endpoint device id"
 IDS_CMD_EP_FULL_ID                          L"Print the full form of an endpoint device id"
-IDS_OPT_ID_VALUE_ARGUMENT                   L"The endpoint device id to convert"
+IDS_OPT_ID_VALUE_ARGUMENT                   L"The endpoint device id to convert. Omit it to pick an endpoint from a list"
 IDS_ERROR_NOT_AN_ENDPOINT_ID                L"'{0}' is not a Windows MIDI Services endpoint device id."
 IDS_EP_SECTION_IN_USE_BY                    L"In Use By"
 IDS_EP_IN_USE_BY_NOBODY                     L"No app currently has this endpoint open."
+IDS_EP_LABEL_SERVICE_NAME                   L"Service Name"
+IDS_EP_LABEL_DRIVER_VERSION                 L"Driver Version"
+IDS_EP_LABEL_DRIVER_INF_PATH                L"Driver INF Path"
+IDS_LABEL_GROUP_INDEX                       L"Group Index"
 
 // ---- beat clock
 

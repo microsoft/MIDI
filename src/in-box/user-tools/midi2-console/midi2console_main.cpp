@@ -95,7 +95,7 @@ namespace
             "play-notes", "play",
             "properties", "props", "information", "info",
             "customize",
-            "short-id", "full-id",
+            "short-id", "full-id", "long-id",
             "request", "req"
         };
 
@@ -236,7 +236,6 @@ int main()
     propertiesCommand->add_option("endpoint-id", propertiesOptions.EndpointDeviceId, ResourceString(IDS_OPT_ENDPOINT_DEVICE_ID));
     propertiesCommand->add_flag("-v,--verbose", propertiesOptions.Verbose, ResourceString(IDS_OPT_VERBOSE));
     propertiesCommand->add_flag("-r,--include-raw-properties,--include-raw", propertiesOptions.IncludeRawProperties, ResourceString(IDS_OPT_INCLUDE_RAW_PROPERTIES));
-    propertiesCommand->add_flag("-n,--include-name-table,--include-names", propertiesOptions.IncludeNameTable, ResourceString(IDS_OPT_INCLUDE_NAME_TABLE));
 
     EndpointSendMessageOptions sendMessageOptions{};
 
@@ -312,12 +311,14 @@ int main()
     EndpointIdOptions shortIdOptions{};
 
     auto shortIdCommand = endpointCommand->add_subcommand("short-id", ResourceString(IDS_CMD_EP_SHORT_ID));
-    shortIdCommand->add_option("endpoint-id", shortIdOptions.Value, ResourceString(IDS_OPT_ID_VALUE_ARGUMENT))->required();
+    shortIdCommand->add_option("endpoint-id", shortIdOptions.Value, ResourceString(IDS_OPT_ID_VALUE_ARGUMENT));
 
     EndpointIdOptions fullIdOptions{};
 
     auto fullIdCommand = endpointCommand->add_subcommand("full-id", ResourceString(IDS_CMD_EP_FULL_ID));
-    fullIdCommand->add_option("endpoint-id", fullIdOptions.Value, ResourceString(IDS_OPT_ID_VALUE_ARGUMENT))->required();
+    fullIdCommand->alias("long-id");
+    fullIdCommand->add_option("endpoint-id", fullIdOptions.Value, ResourceString(IDS_OPT_ID_VALUE_ARGUMENT));
+
     auto requestCommand = endpointCommand->add_subcommand("request", ResourceString(IDS_CMD_EP_REQUEST));
     requestCommand->alias("req");
     requestCommand->require_subcommand(1);

@@ -485,6 +485,10 @@
 #define IDS_ERROR_NOT_AN_ENDPOINT_ID                    51763
 #define IDS_EP_SECTION_IN_USE_BY                        51764
 #define IDS_EP_IN_USE_BY_NOBODY                         51765
+#define IDS_EP_LABEL_SERVICE_NAME                       51766
+#define IDS_EP_LABEL_DRIVER_VERSION                     51767
+#define IDS_EP_LABEL_DRIVER_INF_PATH                    51768
+#define IDS_LABEL_GROUP_INDEX                           51769
 
 // ---------------------------------------------------------------- beat clock       51780
 #define IDS_CMD_EP_SEND_CLOCK                           51780

@@ -57,6 +57,40 @@ namespace midi2console
             return false;
         }
 
+        // Shared by short-id and full-id. An omitted value opens the picker like every other
+        // endpoint command. The endpoint has to actually exist, because GetFullIdFromShortId will
+        // happily wrap any text in the SWD prefix and hand back a plausible-looking id.
+        bool ResolveEndpointIdForConversion(
+            _In_ std::string const& suppliedValue,
+            _Out_ std::string& endpointDeviceId)
+        {
+            endpointDeviceId = TrimCopy(suppliedValue);
+
+            if (!endpointDeviceId.empty() &&
+                !midi2enum::MidiEndpointDeviceHelper::IsPossibleWindowsMidiServicesEndpointDeviceId(
+                    winrt::hstring{ FromUtf8(endpointDeviceId) }))
+            {
+                endpointDeviceId = ToUtf8(midi2enum::MidiEndpointDeviceHelper::GetFullIdFromShortId(
+                    winrt::hstring{ FromUtf8(endpointDeviceId) }));
+            }
+
+            std::string endpointName;
+
+            if (!ResolveEndpointDeviceId(endpointDeviceId, endpointName))
+            {
+                return false;
+            }
+
+            if (midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(
+                winrt::hstring{ FromUtf8(endpointDeviceId) }) == nullptr)
+            {
+                WriteErrorLine(FormatResourceString(IDS_ERROR_NOT_AN_ENDPOINT_ID, TrimCopy(suppliedValue)));
+                return false;
+            }
+
+            return true;
+        }
+
         // Every sending command needs the same session + connection dance, so it lives here once.
         struct EndpointSession
         {
@@ -450,16 +484,23 @@ namespace midi2console
 
         WriteBlankLine();
 
-        for (auto const flow : { midi2enum::Midi1PortFlow::MidiMessageDestination,
-                                 midi2enum::Midi1PortFlow::MidiMessageSource })
+        for (auto const flow : { midi2enum::Midi1PortFlow::MidiMessageSource,
+                                 midi2enum::Midi1PortFlow::MidiMessageDestination })
         {
-            auto const ports = midi2legacy::MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(
+            auto const found = midi2legacy::MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(
                 device.EndpointDeviceId(), flow);
 
-            if (ports == nullptr || ports.Size() == 0)
+            if (found == nullptr || found.Size() == 0)
             {
                 continue;
             }
+
+            // PnP hands these back in whatever order it enumerated them, which is neither creation
+            // order nor port order, so sort by the number an older application actually sees.
+            std::vector<midi2legacy::MidiLegacyPortDeviceInformation> ports{ found.begin(), found.end() };
+
+            std::sort(ports.begin(), ports.end(),
+                [](auto const& left, auto const& right) { return left.Number() < right.Number(); });
 
             for (auto const& port : ports)
             {
@@ -487,78 +528,48 @@ namespace midi2console
 
         // ---- name table
 
-        if (options.IncludeNameTable)
+        auto const nameTable = device.GetNameTable();
+
+        if (nameTable != nullptr && nameTable.Size() > 0)
         {
-            auto const nameTable = device.GetNameTable();
+            WriteSectionHeading(ResourceString(IDS_EP_SECTION_NAME_TABLE));
 
-            if (nameTable != nullptr && nameTable.Size() > 0)
-            {
-                WriteSectionHeading(ResourceString(IDS_EP_SECTION_NAME_TABLE));
+            ConsoleTable table;
 
-                ConsoleTable table;
+            table.AddColumn(ResourceString(IDS_LABEL_GROUP_INDEX), ColumnAlignment::Right, numberTextStyle);
+            table.AddColumn(ResourceString(IDS_LABEL_DIRECTION));
+            table.AddColumn(ResourceString(IDS_EP_NAME_TABLE_LEGACY_COMPATIBLE));
+            table.SetLastColumnShrinkable();
+            table.AddColumn(ResourceString(IDS_EP_NAME_TABLE_NEW_STYLE));
+            table.SetLastColumnShrinkable();
+            table.AddColumn(ResourceString(IDS_EP_NAME_TABLE_CUSTOM));
+            table.SetLastColumnShrinkable();
 
-                table.AddColumn(ResourceString(IDS_LABEL_GROUP), ColumnAlignment::Right, numberTextStyle);
-                table.AddColumn(ResourceString(IDS_LABEL_DIRECTION));
-                table.AddColumn(ResourceString(IDS_EP_NAME_TABLE_CUSTOM));
-                table.SetLastColumnShrinkable();
-                table.AddColumn(ResourceString(IDS_EP_NAME_TABLE_LEGACY_COMPATIBLE));
-                table.SetLastColumnShrinkable();
-                table.AddColumn(ResourceString(IDS_EP_NAME_TABLE_NEW_STYLE));
-                table.SetLastColumnShrinkable();
+            std::vector<midi2enum::Midi1PortNameTableEntry> entries{ nameTable.begin(), nameTable.end() };
 
-                for (auto const& entry : nameTable)
+            // Sources before destinations, matching the enum order and 'enumerate legacy'.
+            std::sort(entries.begin(), entries.end(),
+                [](auto const& left, auto const& right)
                 {
-                    table.BeginRow();
-                    table.AddCell(fmt::format("{}", entry.Group().DisplayValue()));
-                    table.AddCell(FormatPortFlow(entry.Flow()));
-                    table.AddCell(ToUtf8(entry.CustomName()));
-                    table.AddCell(ToUtf8(entry.LegacyCompatibleName()));
-                    table.AddCell(ToUtf8(entry.NewStyleName()));
-                }
-
-                table.Render();
-            }
-        }
-
-        // ---- raw properties
-
-        if (options.IncludeRawProperties)
-        {
-            WriteSectionHeading(ResourceString(IDS_EP_SECTION_RAW_PROPERTIES));
-
-            auto const properties = device.Properties();
-
-            if (properties != nullptr)
-            {
-                std::vector<std::pair<std::string, foundation::IInspectable>> entries;
-
-                for (auto const& property : properties)
-                {
-                    entries.emplace_back(ToUtf8(property.Key()), property.Value());
-                }
-
-                std::sort(entries.begin(), entries.end(),
-                    [](auto const& left, auto const& right) { return left.first < right.first; });
-
-                for (auto const& [key, value] : entries)
-                {
-                    auto const friendlyName = midi2enum::MidiEndpointDevicePropertyHelper::
-                        GetMidiPropertyNameFromPropertyKey(winrt::hstring{ FromUtf8(key) });
-
-                    auto const label = friendlyName.empty() ? key : ToUtf8(friendlyName);
-
-                    WriteLine(fmt::format("  {}", Styled(label, propertyKeyTextStyle)));
-
-                    if (label != key)
+                    if (left.Flow() != right.Flow())
                     {
-                        WriteLine(fmt::format("    {}", Styled(key, separatorTextStyle)));
+                        return static_cast<int>(left.Flow()) < static_cast<int>(right.Flow());
                     }
 
-                    // The value may already carry its own styling, so it is not restyled here.
-                    WriteLine(fmt::format("    {}", FormatPropertyValue(value)));
-                    WriteBlankLine();
-                }
+                    return left.Group().Index() < right.Group().Index();
+                });
+
+            for (auto const& entry : entries)
+            {
+                table.BeginRow();
+                table.AddCell(fmt::format("{}", entry.Group().Index()));
+                table.AddCell(FormatPortFlow(entry.Flow()));
+                table.AddCell(ToUtf8(entry.LegacyCompatibleName()));
+                table.AddCell(ToUtf8(entry.NewStyleName()));
+                table.AddCell(ToUtf8(entry.CustomName()));
             }
+
+            table.Render();
         }
 
         // ---- parent device
@@ -571,6 +582,9 @@ namespace midi2console
 
             WriteField(ResourceString(IDS_LABEL_NAME), ToUtf8(parent.Name()));
             WriteField(ResourceString(IDS_LABEL_ID), ToUtf8(parent.Id()), deviceInstanceIdTextStyle);
+            WriteField(ResourceString(IDS_EP_LABEL_SERVICE_NAME), ToUtf8(parent.ServiceName()));
+            WriteField(ResourceString(IDS_EP_LABEL_DRIVER_VERSION), ToUtf8(parent.DriverVersion()), numberTextStyle);
+            WriteField(ResourceString(IDS_EP_LABEL_DRIVER_INF_PATH), ToUtf8(parent.DriverInfPath()), fileNameTextStyle);
         }
 
         // ---- apps currently holding this endpoint open
@@ -595,6 +609,47 @@ namespace midi2console
                         Styled(fmt::format("[{}]", session.ProcessId()), numberTextStyle)),
                     ToUtf8(session.SessionName()),
                     endpointNameTextStyle);
+            }
+        }
+
+        // ---- raw properties, last because it is long and unstructured
+
+        if (options.IncludeRawProperties)
+        {
+            WriteSectionHeading(ResourceString(IDS_EP_SECTION_RAW_PROPERTIES));
+
+            auto const properties = device.Properties();
+
+            if (properties != nullptr)
+            {
+                std::vector<std::pair<std::string, foundation::IInspectable>> rawEntries;
+
+                for (auto const& property : properties)
+                {
+                    rawEntries.emplace_back(ToUtf8(property.Key()), property.Value());
+                }
+
+                std::sort(rawEntries.begin(), rawEntries.end(),
+                    [](auto const& left, auto const& right) { return left.first < right.first; });
+
+                for (auto const& [key, value] : rawEntries)
+                {
+                    auto const friendlyName = midi2enum::MidiEndpointDevicePropertyHelper::
+                        GetMidiPropertyNameFromPropertyKey(winrt::hstring{ FromUtf8(key) });
+
+                    auto const label = friendlyName.empty() ? key : ToUtf8(friendlyName);
+
+                    WriteLine(fmt::format("  {}", Styled(label, propertyKeyTextStyle)));
+
+                    if (label != key)
+                    {
+                        WriteLine(fmt::format("    {}", Styled(key, separatorTextStyle)));
+                    }
+
+                    // The value may already carry its own styling, so it is not restyled here.
+                    WriteLine(fmt::format("    {}", FormatPropertyValue(value)));
+                    WriteBlankLine();
+                }
             }
         }
 
@@ -1260,15 +1315,15 @@ namespace midi2console
 
     int RunEndpointShortIdCommand(_In_ EndpointIdOptions const& options)
     {
-        if (!midi2enum::MidiEndpointDeviceHelper::IsPossibleWindowsMidiServicesEndpointDeviceId(
-            winrt::hstring{ FromUtf8(options.Value) }))
+        std::string endpointDeviceId;
+
+        if (!ResolveEndpointIdForConversion(options.Value, endpointDeviceId))
         {
-            WriteErrorLine(FormatResourceString(IDS_ERROR_NOT_AN_ENDPOINT_ID, options.Value));
             return AsExitCode(ReturnCode::ErrorGeneralFailure);
         }
 
         auto const shortId = midi2enum::MidiEndpointDeviceHelper::GetShortIdFromFullId(
-            winrt::hstring{ FromUtf8(options.Value) });
+            winrt::hstring{ FromUtf8(endpointDeviceId) });
 
         WriteLine(fmt::format("{}", Styled(ToUtf8(shortId), endpointIdTextStyle)));
 
@@ -1277,16 +1332,14 @@ namespace midi2console
 
     int RunEndpointFullIdCommand(_In_ EndpointIdOptions const& options)
     {
-        auto const fullId = midi2enum::MidiEndpointDeviceHelper::GetFullIdFromShortId(
-            winrt::hstring{ FromUtf8(options.Value) });
+        std::string endpointDeviceId;
 
-        if (fullId.empty())
+        if (!ResolveEndpointIdForConversion(options.Value, endpointDeviceId))
         {
-            WriteErrorLine(FormatResourceString(IDS_ERROR_NOT_AN_ENDPOINT_ID, options.Value));
             return AsExitCode(ReturnCode::ErrorGeneralFailure);
         }
 
-        WriteLine(fmt::format("{}", Styled(ToUtf8(fullId), endpointIdTextStyle)));
+        WriteLine(fmt::format("{}", Styled(endpointDeviceId, endpointIdTextStyle)));
 
         return 0;
     }
