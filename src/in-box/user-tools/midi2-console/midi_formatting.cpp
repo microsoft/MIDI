@@ -229,6 +229,21 @@ namespace midi2console
         }
     }
 
+    std::string FormatRepresentsMidi10Connection(_In_ midi2enum::MidiFunctionBlockRepresentsMidi10Connection value)
+    {
+        switch (value)
+        {
+        case midi2enum::MidiFunctionBlockRepresentsMidi10Connection::Not10:
+            return ResourceString(IDS_FB_MIDI10_NOT_MIDI10);
+        case midi2enum::MidiFunctionBlockRepresentsMidi10Connection::YesBandwidthUnrestricted:
+            return ResourceString(IDS_FB_MIDI10_UNRESTRICTED);
+        case midi2enum::MidiFunctionBlockRepresentsMidi10Connection::YesBandwidthRestricted:
+            return ResourceString(IDS_FB_MIDI10_RESTRICTED);
+        default:
+            return ResourceString(IDS_LABEL_UNKNOWN);
+        }
+    }
+
     std::string FormatGroupSpan(_In_ uint8_t firstGroupIndex, _In_ uint8_t groupCount)
     {
         auto const first = static_cast<int>(firstGroupIndex) + 1;

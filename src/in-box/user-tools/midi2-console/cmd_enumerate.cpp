@@ -239,7 +239,7 @@ namespace midi2console
 
         ConsoleTable table{ ResourceString(IDS_ENUM_LEGACY_TABLE_TITLE) };
 
-        table.AddColumn(ResourceString(IDS_LABEL_PORT_NUMBER), ColumnAlignment::Right, numberTextStyle);
+        table.AddColumn(ResourceString(IDS_LABEL_PORT_NUMBER), ColumnAlignment::Right, portNumberTextStyle);
         table.AddColumn(ResourceString(IDS_LABEL_PORT_NAME), ColumnAlignment::Left, endpointNameTextStyle);
         table.SetLastColumnShrinkable();
         table.AddColumn(ResourceString(IDS_LABEL_DIRECTION));

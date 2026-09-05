@@ -27,8 +27,7 @@ namespace midi2console
     std::string FormatEndpointPurpose(_In_ midi2enum::MidiEndpointDevicePurpose purpose);
     std::string FormatNativeDataFormat(_In_ midi2enum::MidiEndpointNativeDataFormat format);
     std::string FormatProtocol(_In_ midi2enum::MidiProtocol protocol);
-    std::string FormatFunctionBlockDirection(_In_ midi2enum::MidiFunctionBlockDirection direction);
-    std::string FormatFunctionBlockUIHint(_In_ midi2enum::MidiFunctionBlockUIHint hint);
+    std::string FormatFunctionBlockDirection(_In_ midi2enum::MidiFunctionBlockDirection direction);    std::string FormatRepresentsMidi10Connection(_In_ midi2enum::MidiFunctionBlockRepresentsMidi10Connection value);    std::string FormatFunctionBlockUIHint(_In_ midi2enum::MidiFunctionBlockUIHint hint);
     std::string FormatGroupTerminalBlockDirection(_In_ midi2enum::MidiGroupTerminalBlockDirection direction);
     std::string FormatPortFlow(_In_ midi2enum::Midi1PortFlow flow);
     std::string FormatPortNamingApproach(_In_ midi2enum::Midi1PortNamingApproach approach);

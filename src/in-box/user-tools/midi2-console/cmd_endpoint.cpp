@@ -345,21 +345,34 @@ namespace midi2console
 
             for (auto const& block : functionBlocks)
             {
-                WriteBlankLine();
-                WriteLine(fmt::format("  {} {}",
-                    Styled(fmt::format("[{}]", static_cast<int>(block.Number())), numberTextStyle),
-                    Styled(ToUtf8(block.Name()), endpointNameTextStyle)));
+                auto const label = fmt::format("{} {}",
+                    Styled(fmt::format("{:2}", static_cast<int>(block.Number())), portNumberTextStyle),
+                    Styled(ToUtf8(block.Name()), endpointNameTextStyle));
 
-                WriteField(ResourceString(IDS_LABEL_ACTIVE), FormatBoolean(block.IsActive()), BooleanStyle(block.IsActive()));
-                WriteField(ResourceString(IDS_LABEL_DIRECTION), FormatFunctionBlockDirection(block.Direction()));
-                WriteField(ResourceString(IDS_LABEL_GROUPS), FormatGroupSpan(block.FirstGroup().Index(), block.GroupCount()));
-                WriteField(ResourceString(IDS_LABEL_UI_HINT), FormatFunctionBlockUIHint(block.UIHint()));
+                auto value = fmt::format("{} {} ({} {}), {} {}, {} {}, {} {}",
+                    Styled(ResourceString(IDS_LABEL_GROUP), inlineLabelTextStyle),
+                    block.FirstGroup().DisplayValue(),
+                    Styled(ResourceString(IDS_LABEL_INDEX), inlineLabelTextStyle),
+                    block.FirstGroup().Index(),
+                    Styled(ResourceString(IDS_LABEL_MIDI), inlineLabelTextStyle),
+                    FormatRepresentsMidi10Connection(block.RepresentsMidi10Connection()),
+                    Styled(ResourceString(IDS_LABEL_DIRECTION), inlineLabelTextStyle),
+                    FormatFunctionBlockDirection(block.Direction()),
+                    Styled(ResourceString(IDS_LABEL_UI_HINT), inlineLabelTextStyle),
+                    FormatFunctionBlockUIHint(block.UIHint()));
+
+                if (!block.IsActive())
+                {
+                    value += fmt::format(", {}", Styled(ResourceString(IDS_LABEL_INACTIVE), warningTextStyle));
+                }
+
+                WriteField(label, value, {});
 
                 if (options.Verbose)
                 {
-                    WriteField("Max System Exclusive 8 Streams",
+                    WriteField("    Max System Exclusive 8 Streams",
                         fmt::format("{}", block.MaxSystemExclusive8Streams()), numberTextStyle);
-                    WriteField("MIDI CI Message Version Format",
+                    WriteField("    MIDI CI Message Version Format",
                         fmt::format("{}", block.MidiCIMessageVersionFormat()), numberTextStyle);
                 }
             }
@@ -376,19 +389,25 @@ namespace midi2console
 
             for (auto const& block : groupTerminalBlocks)
             {
-                WriteBlankLine();
-                WriteLine(fmt::format("  {} {}",
-                    Styled(fmt::format("[{}]", static_cast<int>(block.Number())), numberTextStyle),
-                    Styled(ToUtf8(block.Name()), endpointNameTextStyle)));
+                auto const label = fmt::format("{} {}",
+                    Styled(fmt::format("{:2}", static_cast<int>(block.Number())), portNumberTextStyle),
+                    Styled(ToUtf8(block.Name()), endpointNameTextStyle));
 
-                WriteField(ResourceString(IDS_LABEL_DIRECTION), FormatGroupTerminalBlockDirection(block.Direction()));
-                WriteField(ResourceString(IDS_LABEL_GROUPS), FormatGroupSpan(block.FirstGroup().Index(), block.GroupCount()));
+                auto const value = fmt::format("{} {} ({} {}), {} {}",
+                    Styled(ResourceString(IDS_LABEL_GROUP), inlineLabelTextStyle),
+                    block.FirstGroup().DisplayValue(),
+                    Styled(ResourceString(IDS_LABEL_INDEX), inlineLabelTextStyle),
+                    block.FirstGroup().Index(),
+                    Styled(ResourceString(IDS_LABEL_DIRECTION), inlineLabelTextStyle),
+                    FormatGroupTerminalBlockDirection(block.Direction()));
+
+                WriteField(label, value, {});
 
                 if (options.Verbose)
                 {
-                    WriteField("Max Input Bandwidth",
+                    WriteField("    Max Input Bandwidth",
                         fmt::format("{}", block.CalculatedMaxDeviceInputBandwidthBitsPerSecond()), numberTextStyle);
-                    WriteField("Max Output Bandwidth",
+                    WriteField("    Max Output Bandwidth",
                         fmt::format("{}", block.CalculatedMaxDeviceOutputBandwidthBitsPerSecond()), numberTextStyle);
                 }
             }
@@ -401,6 +420,8 @@ namespace midi2console
         WriteField(ResourceString(IDS_EP_PROP_PORT_NAMING_APPROACH),
             FormatPortNamingApproach(device.Midi1PortNamingApproach()));
 
+        WriteBlankLine();
+
         for (auto const flow : { midi2enum::Midi1PortFlow::MidiMessageDestination,
                                  midi2enum::Midi1PortFlow::MidiMessageSource })
         {
@@ -412,18 +433,28 @@ namespace midi2console
                 continue;
             }
 
-            WriteBlankLine();
-            WriteLine(fmt::format("  {}", Styled(FormatPortFlow(flow), infoTextStyle)));
-
             for (auto const& port : ports)
             {
-                WriteField(fmt::format("  {} {}", ResourceString(IDS_LABEL_GROUP), port.Group().DisplayValue()),
-                    ToUtf8(port.Name()), endpointNameTextStyle);
+                // The WinMM port number is what an older application actually sees.
+                auto const label = fmt::format("{} {}",
+                    Styled(fmt::format("{:3}", port.Number()), portNumberTextStyle),
+                    Styled(ToUtf8(port.Name()), endpointNameTextStyle));
+
+                auto value = fmt::format("{} {} ({} {}), {} {}",
+                    Styled(ResourceString(IDS_LABEL_GROUP), inlineLabelTextStyle),
+                    port.Group().DisplayValue(),
+                    Styled(ResourceString(IDS_LABEL_INDEX), inlineLabelTextStyle),
+                    port.Group().Index(),
+                    Styled(ResourceString(IDS_LABEL_DIRECTION), inlineLabelTextStyle),
+                    FormatPortFlow(flow));
+
+                WriteField(label, value, {});
 
                 if (options.Verbose)
                 {
                     WriteField("    " + ResourceString(IDS_LABEL_ID), ToUtf8(port.PortDeviceId()), endpointIdTextStyle);
-                }            }
+                }
+            }
         }
 
         // ---- name table
@@ -511,7 +542,7 @@ namespace midi2console
             WriteSectionHeading(ResourceString(IDS_EP_SECTION_PARENT));
 
             WriteField(ResourceString(IDS_LABEL_NAME), ToUtf8(parent.Name()));
-            WriteField(ResourceString(IDS_LABEL_ID), ToUtf8(parent.Id()), endpointIdTextStyle);
+            WriteField(ResourceString(IDS_LABEL_ID), ToUtf8(parent.Id()), deviceInstanceIdTextStyle);
         }
 
         WriteBlankLine();

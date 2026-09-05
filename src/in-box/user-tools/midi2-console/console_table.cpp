@@ -31,7 +31,8 @@ namespace midi2console
         constexpr const char* Ellipsis = "\u2026";
 
         constexpr size_t MinimumShrinkableWidth = 12;
-        constexpr size_t FieldLabelWidth = 34;
+        constexpr size_t FieldLabelWidth = 36;
+        constexpr size_t SectionRuleWidth = 100;
 
         std::string Repeat(_In_ std::string_view unit, _In_ size_t count)
         {
@@ -84,6 +85,43 @@ namespace midi2console
             result.append(Ellipsis);
 
             return result;
+        }
+
+        // A pre-styled label carries CSI escape sequences, which must not count toward the
+        // column width.
+        std::string StripEscapeSequences(_In_ std::string_view text)
+        {
+            std::string plain;
+            plain.reserve(text.size());
+
+            for (size_t i = 0; i < text.size();)
+            {
+                if (text[i] != '\x1B')
+                {
+                    plain.push_back(text[i]);
+                    i++;
+                    continue;
+                }
+
+                i++;
+
+                if (i < text.size() && text[i] == '[')
+                {
+                    i++;
+
+                    while (i < text.size() && !std::isalpha(static_cast<unsigned char>(text[i])))
+                    {
+                        i++;
+                    }
+
+                    if (i < text.size())
+                    {
+                        i++;
+                    }
+                }
+            }
+
+            return plain;
         }
 
         std::string Align(_In_ std::string_view text, _In_ size_t width, _In_ ColumnAlignment alignment)
@@ -352,14 +390,15 @@ namespace midi2console
     {
         auto paddedLabel = std::string{ label };
 
-        auto const width = DisplayWidth(paddedLabel);
+        auto const width = DisplayWidth(StripEscapeSequences(paddedLabel));
 
         if (width < FieldLabelWidth)
         {
             paddedLabel.append(FieldLabelWidth - width, ' ');
         }
 
-        WriteLine(fmt::format("  {} {}",
+        WriteLine(fmt::format("  {} {} {}",
+            Styled(">", fieldLabelMarkerTextStyle),
             Styled(paddedLabel, fieldLabelTextStyle),
             Styled(value, valueStyle)));
     }
@@ -369,6 +408,6 @@ namespace midi2console
         WriteBlankLine();
         WriteLine(fmt::format("{}", Styled(heading, sectionHeadingTextStyle)));
         WriteLine(fmt::format("{}",
-            Styled(Repeat(Horizontal, std::min(ConsoleWidth() - 1, DisplayWidth(heading) + 20)), separatorTextStyle)));
+            Styled(Repeat(Horizontal, std::min<size_t>(ConsoleWidth() - 1, SectionRuleWidth)), separatorTextStyle)));
     }
 }

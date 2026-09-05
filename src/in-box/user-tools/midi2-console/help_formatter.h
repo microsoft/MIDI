@@ -29,6 +29,11 @@ namespace midi2console
         std::string make_footer(const CLI::App* app) const override;
         std::string make_subcommands(const CLI::App* app, CLI::AppFormatMode mode) const override;
         std::string make_expanded(const CLI::App* sub, CLI::AppFormatMode mode) const override;
+
+    private:
+        // Set by make_group / make_subcommands before they render their items, so a group of
+        // short names does not inherit a wide column from a group of long ones.
+        mutable size_t m_nameColumnWidth{ 32 };
     };
 
     // Examples are shown under the command's help. CLI11 has no first-class concept for them,

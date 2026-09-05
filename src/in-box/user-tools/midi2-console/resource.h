@@ -108,6 +108,12 @@
 #define IDS_LABEL_FIRST_GROUP                           50189
 #define IDS_LABEL_GROUP_COUNT                           50190
 #define IDS_LABEL_UI_HINT                               50191
+#define IDS_LABEL_INDEX                                 50192
+#define IDS_LABEL_INACTIVE                              50193
+#define IDS_LABEL_MIDI                                  50194
+#define IDS_FB_MIDI10_NOT_MIDI10                        50195
+#define IDS_FB_MIDI10_UNRESTRICTED                      50196
+#define IDS_FB_MIDI10_RESTRICTED                        50197
 
 // ---------------------------------------------------------------- command help  50300
 #define IDS_CMD_ENUMERATE                               50300

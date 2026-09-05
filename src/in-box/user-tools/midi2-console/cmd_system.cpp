@@ -419,7 +419,7 @@ namespace midi2console
                 Styled(ResourceString(IDS_WATCH_ADDED), successTextStyle),
                 Styled(ToUtf8(port.Name()), endpointNameTextStyle)));
 
-            WriteField(ResourceString(IDS_LABEL_PORT_NUMBER), fmt::format("{}", port.Number()), numberTextStyle);
+            WriteField(ResourceString(IDS_LABEL_PORT_NUMBER), fmt::format("{}", port.Number()), portNumberTextStyle);
             WriteField(ResourceString(IDS_LABEL_DIRECTION), FormatPortFlow(port.Flow()));
 
             if (options.Verbose)

@@ -149,7 +149,7 @@ int main()
     enumLegacyCommand->alias("winrt1");
     enumLegacyCommand->add_option("-d,--direction", enumLegacyOptions.Direction,
         ResourceString(IDS_OPT_LEGACY_DIRECTION));
-    enumLegacyCommand->add_flag("-i,--include-endpoint-id,!--no-include-endpoint-id", enumLegacyOptions.IncludePortId,
+    enumLegacyCommand->add_flag("-i,--include-endpoint-id", enumLegacyOptions.IncludePortId,
         ResourceString(IDS_OPT_INCLUDE_PORT_ID));
 
     EnumSessionsOptions enumSessionsOptions{};

@@ -20,22 +20,46 @@ namespace midi2console
 {
     namespace
     {
-        constexpr size_t NameColumnWidth = 32;
+        constexpr size_t MinimumNameColumnWidth = 24;
+        constexpr size_t MaximumNameColumnWidth = 46;
         constexpr size_t Indent = 2;
 
+        // CLI11 packs option names as "-h,--help". A space after each comma reads better and
+        // matches the shipping console.
+        std::string SpaceAfterCommas(_In_ std::string_view text)
+        {
+            std::string result;
+            result.reserve(text.size() + 4);
+
+            for (size_t i = 0; i < text.size(); i++)
+            {
+                result.push_back(text[i]);
+
+                if (text[i] == ',' && i + 1 < text.size() && text[i + 1] != ' ')
+                {
+                    result.push_back(' ');
+                }
+            }
+
+            return result;
+        }
+
         // Styling has to be applied AFTER measuring, or the escape sequences are counted as width.
-        std::string StyledNameColumn(_In_ std::string_view text, _In_ fmt::text_style const& nameStyle)
+        std::string StyledNameColumn(
+            _In_ std::string_view text,
+            _In_ size_t columnWidth,
+            _In_ fmt::text_style const& nameStyle)
         {
             std::string result = fmt::format("{}", Styled(text, nameStyle));
 
             // A name wider than the column would otherwise run straight into the description.
-            if (DisplayWidth(text) + 1 > NameColumnWidth)
+            if (DisplayWidth(text) + 1 > columnWidth)
             {
-                result += "\n" + std::string(Indent + NameColumnWidth, ' ');
+                result += "\n" + std::string(Indent + columnWidth, ' ');
             }
             else
             {
-                result += std::string(NameColumnWidth - DisplayWidth(text), ' ');
+                result += std::string(columnWidth - DisplayWidth(text), ' ');
             }
 
             return result;
@@ -108,7 +132,7 @@ namespace midi2console
 
     MidiHelpFormatter::MidiHelpFormatter()
     {
-        column_width(NameColumnWidth);
+        column_width(MinimumNameColumnWidth);
         label("OPTIONS", "OPTIONS");
         label("SUBCOMMANDS", "COMMANDS");
         label("POSITIONALS", "ARGUMENTS");
@@ -194,6 +218,17 @@ namespace midi2console
 
         std::string result = fmt::format("{}\n", Styled(heading + ":", tableTitleTextStyle));
 
+        m_nameColumnWidth = MinimumNameColumnWidth;
+
+        for (auto const* opt : opts)
+        {
+            auto const name = SpaceAfterCommas(
+                is_positional ? opt->get_name(true, false) : opt->get_name(false, true));
+
+            m_nameColumnWidth = std::max(m_nameColumnWidth,
+                std::min(MaximumNameColumnWidth, DisplayWidth(name) + 2));
+        }
+
         for (auto const* opt : opts)
         {
             result += make_option(opt, is_positional);
@@ -204,19 +239,19 @@ namespace midi2console
 
     std::string MidiHelpFormatter::make_option(const CLI::Option* opt, bool is_positional) const
     {
-        auto const name = is_positional
+        auto const name = SpaceAfterCommas(is_positional
             ? opt->get_name(true, false)
-            : opt->get_name(false, true);
+            : opt->get_name(false, true));
 
         std::string result = std::string(Indent, ' ');
 
-        result += StyledNameColumn(name, warningTextStyle);
+        result += StyledNameColumn(name, m_nameColumnWidth, helpNameTextStyle);
 
         auto description = opt->get_description();
 
         // CLI11 appends "[Required]" and default values to the description text.
         result += fmt::format("{}\n",
-            Styled(WrapDescription(description, Indent + NameColumnWidth), normalTextStyle));
+            Styled(WrapDescription(description, Indent + m_nameColumnWidth), normalTextStyle));
 
         return result;
     }
@@ -225,10 +260,10 @@ namespace midi2console
     {
         std::string result = std::string(Indent, ' ');
 
-        result += StyledNameColumn(sub->get_name(), successTextStyle);
+        result += StyledNameColumn(sub->get_name(), m_nameColumnWidth, helpNameTextStyle);
 
         result += fmt::format("{}\n",
-            Styled(WrapDescription(sub->get_description(), Indent + NameColumnWidth), normalTextStyle));
+            Styled(WrapDescription(sub->get_description(), Indent + m_nameColumnWidth), normalTextStyle));
 
         auto const aliases = sub->get_aliases();
 
@@ -265,6 +300,14 @@ namespace midi2console
         }
 
         std::string result = fmt::format("{}\n", Styled(get_label("SUBCOMMANDS") + ":", tableTitleTextStyle));
+
+        m_nameColumnWidth = MinimumNameColumnWidth;
+
+        for (auto const* sub : subcommands)
+        {
+            m_nameColumnWidth = std::max(m_nameColumnWidth,
+                std::min(MaximumNameColumnWidth, DisplayWidth(sub->get_name()) + 2));
+        }
 
         for (auto const* sub : subcommands)
         {

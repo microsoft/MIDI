@@ -21,7 +21,7 @@ namespace midi2console
     struct EnumLegacyOptions
     {
         std::string Direction{ "All" };
-        bool IncludePortId{ true };
+        bool IncludePortId{ false };
     };
 
     struct EnumSessionsOptions

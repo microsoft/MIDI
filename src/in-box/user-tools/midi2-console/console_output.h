@@ -51,8 +51,19 @@ namespace midi2console
     inline const auto tableTitleTextStyle = fmt::fg(fmt::color::deep_sky_blue);
     inline const auto tableHeaderTextStyle = fmt::fg(fmt::color::sky_blue);
     inline const auto sectionHeadingTextStyle = fmt::fg(fmt::color::deep_sky_blue);
-    inline const auto fieldLabelTextStyle = fmt::fg(fmt::color::dark_golden_rod);
+
+    // The shipping console prefixes each field with a dim '>' and leaves the label itself
+    // uncolored, so the value is what draws the eye.
+    inline const auto fieldLabelMarkerTextStyle = fmt::fg(fmt::rgb(0x3A, 0x3A, 0x3A));
+    inline const auto fieldLabelTextStyle = fmt::fg(fmt::color::light_gray);
     inline const auto fieldValueTextStyle = fmt::fg(fmt::color::light_gray);
+
+    // Sub-labels used inside a value, such as "Group" and "Direction".
+    inline const auto inlineLabelTextStyle = fmt::fg(fmt::color::gray);
+
+    // Group, function block and WinMM port numbers. Use this everywhere one of those is shown so
+    // the same number reads the same way in a table, a field and a picker.
+    inline const auto portNumberTextStyle = fmt::fg(fmt::rgb(0xD7, 0x87, 0x00));
 
     // These four match the shipping console's AnsiMarkupFormatter, which uses the same colors
     // in its tables and its picker: steelblue1_1, darkgoldenrod, steelblue3 and grey.
@@ -61,7 +72,16 @@ namespace midi2console
     inline const auto manufacturerTextStyle = fmt::fg(fmt::rgb(0x5F, 0x87, 0xD7));
     inline const auto midi2IndicatorTextStyle = fmt::fg(fmt::rgb(0x80, 0x80, 0x80));
 
-    inline const auto endpointIdTextStyle = fmt::fg(fmt::color::olive);
+    // Endpoint and port INTERFACE ids. This is the palette yellow, which is what the shipping
+    // console's [olive] markup resolves to - not the duller #808000 RGB olive.
+    inline const auto endpointIdTextStyle = fmt::fg(fmt::terminal_color::yellow);
+
+    // Device instance ids are a different kind of identifier, so they keep their own tone.
+    inline const auto deviceInstanceIdTextStyle = fmt::fg(fmt::rgb(0xAF, 0xD7, 0x5F));
+
+    // Commands and options in help. Deliberately distinct from the success green and warning
+    // yellow, which are reserved for status messages.
+    inline const auto helpNameTextStyle = fmt::fg(fmt::rgb(0xC3, 0xB0, 0x91));
 
     inline const auto guidTextStyle = fmt::fg(fmt::color::dark_sea_green);
     inline const auto numberTextStyle = fmt::fg(fmt::color::olive);
