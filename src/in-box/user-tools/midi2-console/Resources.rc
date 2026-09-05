@@ -633,6 +633,8 @@ IDS_NET_LABEL_INVITATION_TIMEOUT            L"Invitation Pending Timeout"
 IDS_NET_LABEL_MAX_HOST_CONNECTIONS          L"Max Host Connections"
 IDS_NET_LABEL_SCAN_INTERVAL                 L"Direct Connection Scan Interval"
 IDS_NET_STATUS_TITLE                        L"Network MIDI 2.0"
+IDS_NET_LABEL_HOST_NAME                     L"Host Name"
+IDS_NET_LABEL_DEVICE_NAME                   L"Advertised Device Name"
 
 // ---- bluetooth status
 

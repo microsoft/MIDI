@@ -90,6 +90,20 @@ namespace midi2console
             return fmt::format("{}:{}", addressText, portText);
         }
 
+        // An advertised host address already comes back bare, so this only has to bracket the
+        // IPv6 form to keep the port readable.
+        std::string FormatHostAddress(_In_ winrt::hstring const& address, _In_ uint16_t port)
+        {
+            auto const addressText = ToUtf8(address);
+
+            if (addressText.find(':') != std::string::npos)
+            {
+                return fmt::format("[{}]:{}", addressText, port);
+            }
+
+            return fmt::format("{}:{}", addressText, port);
+        }
+
         void WriteHostConnections(_In_ midi2net::MidiNetworkConfiguredHost const& host)
         {
             auto const connections = host.Connections();
@@ -292,36 +306,83 @@ namespace midi2console
         table.SetLastColumnShrinkable();
         table.AddColumn(ResourceString(IDS_NET_LABEL_SERVICE_INSTANCE), ColumnAlignment::Left, fieldValueTextStyle);
         table.SetLastColumnShrinkable();
+
+        if (options.Verbose)
+        {
+            table.AddColumn(ResourceString(IDS_NET_LABEL_HOST_NAME), ColumnAlignment::Left, fieldValueTextStyle);
+            table.SetLastColumnShrinkable();
+        }
+
         table.AddColumn(ResourceString(IDS_LABEL_ADDRESS), ColumnAlignment::Left, fieldValueTextStyle);
 
         for (auto const& host : hosts)
         {
             auto const addresses = host.IPAddresses();
 
-            std::string address;
-
-            if (addresses != nullptr && addresses.Size() > 0)
-            {
-                address = fmt::format("{}:{}", ToUtf8(addresses.GetAt(0)), host.Port());
-            }
-            else
-            {
-                address = fmt::format("{}:{}", ToUtf8(host.HostName()), host.Port());
-            }
-
             table.BeginRow();
             table.AddCell(ToUtf8(host.UmpEndpointName().empty() ? host.DeviceName() : host.UmpEndpointName()));
             table.AddCell(ToUtf8(host.ServiceInstanceName()));
-            table.AddCell(address);
 
-            if (options.Verbose && addresses != nullptr)
+            if (options.Verbose)
             {
-                for (uint32_t index = 1; index < addresses.Size(); index++)
+                table.AddCell(ToUtf8(host.HostName()));
+            }
+
+            if (addresses != nullptr && addresses.Size() > 0)
+            {
+                table.AddCell(FormatHostAddress(addresses.GetAt(0), host.Port()));
+
+                // Only the first address goes in the cell proper; the rest stack under it so the
+                // IPv6 form lines up with the IPv4 one instead of spanning the table.
+                if (options.Verbose)
                 {
-                    table.AddRowDetail(fmt::format("{}:{}", ToUtf8(addresses.GetAt(index)), host.Port()),
-                        fieldValueTextStyle);
+                    for (uint32_t index = 1; index < addresses.Size(); index++)
+                    {
+                        table.AddCellLine(FormatHostAddress(addresses.GetAt(index), host.Port()));
+                    }
                 }
             }
+            else
+            {
+                table.AddCell(FormatHostAddress(host.HostName(), host.Port()));
+            }
+
+            if (!options.Verbose)
+            {
+                continue;
+            }
+
+            // Everything else this transport advertises, so the command covers what midimdnsinfo
+            // reports. These are long, so they go under the row rather than in columns. Detail
+            // text has to stay unstyled: the table measures it as plain text.
+            auto detailLine = [](_In_ UINT labelId, _In_ std::string const& value)
+                {
+                    return fmt::format("{}  {}", PadRightToWidth(ResourceString(labelId), 22), value);
+                };
+
+            table.AddRowDetail(detailLine(IDS_LABEL_ID, ToUtf8(host.DeviceId())), endpointIdTextStyle);
+
+            // The advertised device name and the UMP endpoint name are separate fields. Only the
+            // one shown in the Name column is guaranteed, so surface the other when they differ.
+            if (!host.UmpEndpointName().empty() &&
+                !host.DeviceName().empty() &&
+                host.UmpEndpointName() != host.DeviceName())
+            {
+                table.AddRowDetail(detailLine(IDS_NET_LABEL_DEVICE_NAME, ToUtf8(host.DeviceName())),
+                    endpointNameTextStyle);
+            }
+
+            table.AddRowDetail(detailLine(IDS_NET_LABEL_FULL_SERVICE_NAME, ToUtf8(host.FullName())),
+                fieldValueTextStyle);
+
+            table.AddRowDetail(detailLine(IDS_NET_LABEL_DNS_SERVICE_TYPE, ToUtf8(host.ServiceType())),
+                fieldValueTextStyle);
+
+            table.AddRowDetail(detailLine(IDS_NET_LABEL_DNS_DOMAIN, ToUtf8(host.Domain())),
+                fieldValueTextStyle);
+
+            table.AddRowDetail(detailLine(IDS_NET_LABEL_PRODUCT_INSTANCE_ID, ToUtf8(host.ProductInstanceId())),
+                fieldValueTextStyle);
         }
 
         table.Render();

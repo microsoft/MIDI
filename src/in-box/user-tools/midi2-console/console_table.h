@@ -36,8 +36,14 @@ namespace midi2console
         void AddCell(_In_ std::string text);
         void AddCell(_In_ std::string text, _In_ fmt::text_style const& style);
 
+        // Extra line drawn inside the most recent cell's own column, under its first line. The
+        // column widens to fit, so a second address sits under the first rather than sprawling
+        // across the whole table.
+        void AddCellLine(_In_ std::string text);
+
         // Full-width continuation line drawn under the current row. Any detail line turns on
-        // separators between rows, so each entry reads as one block.
+        // separators between rows, so each entry reads as one block. Call it more than once for
+        // several lines.
         void AddRowDetail(_In_ std::string text, _In_ fmt::text_style const& style);
 
         void Render() const;
@@ -57,16 +63,21 @@ namespace midi2console
         struct Cell
         {
             std::string Text;
+            std::vector<std::string> ExtraLines;
             fmt::text_style Style;
             bool HasStyle{ false };
+        };
+
+        struct Detail
+        {
+            std::string Text;
+            fmt::text_style Style;
         };
 
         struct Row
         {
             std::vector<Cell> Cells;
-            std::string Detail;
-            fmt::text_style DetailStyle;
-            bool HasDetail{ false };
+            std::vector<Detail> Details;
         };
 
         std::string m_title;

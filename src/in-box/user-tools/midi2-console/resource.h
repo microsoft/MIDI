@@ -572,6 +572,8 @@
 #define IDS_NET_LABEL_MAX_HOST_CONNECTIONS              51897
 #define IDS_NET_LABEL_SCAN_INTERVAL                     51898
 #define IDS_NET_STATUS_TITLE                            51899
+#define IDS_NET_LABEL_HOST_NAME                         51900
+#define IDS_NET_LABEL_DEVICE_NAME                       51901
 
 // ---------------------------------------------------------------- bluetooth status 51920
 #define IDS_CMD_BT_STATUS                               51920

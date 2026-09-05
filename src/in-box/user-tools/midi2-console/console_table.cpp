@@ -192,7 +192,7 @@ namespace midi2console
             BeginRow();
         }
 
-        m_rows.back().Cells.push_back(Cell{ std::move(text), {}, false });
+        m_rows.back().Cells.push_back(Cell{ std::move(text), {}, {}, false });
     }
 
     void ConsoleTable::AddCell(_In_ std::string text, _In_ fmt::text_style const& style)
@@ -202,7 +202,17 @@ namespace midi2console
             BeginRow();
         }
 
-        m_rows.back().Cells.push_back(Cell{ std::move(text), style, true });
+        m_rows.back().Cells.push_back(Cell{ std::move(text), {}, style, true });
+    }
+
+    void ConsoleTable::AddCellLine(_In_ std::string text)
+    {
+        if (m_rows.empty() || m_rows.back().Cells.empty())
+        {
+            return;
+        }
+
+        m_rows.back().Cells.back().ExtraLines.push_back(std::move(text));
     }
 
     void ConsoleTable::AddRowDetail(_In_ std::string text, _In_ fmt::text_style const& style)
@@ -212,9 +222,7 @@ namespace midi2console
             BeginRow();
         }
 
-        m_rows.back().Detail = std::move(text);
-        m_rows.back().DetailStyle = style;
-        m_rows.back().HasDetail = true;
+        m_rows.back().Details.push_back(Detail{ std::move(text), style });
     }
 
     void ConsoleTable::Render() const
@@ -236,6 +244,11 @@ namespace midi2console
             for (size_t i = 0; i < row.Cells.size() && i < widths.size(); i++)
             {
                 widths[i] = std::max(widths[i], DisplayWidth(row.Cells[i].Text));
+
+                for (auto const& extra : row.Cells[i].ExtraLines)
+                {
+                    widths[i] = std::max(widths[i], DisplayWidth(extra));
+                }
             }
         }
 
@@ -255,9 +268,10 @@ namespace midi2console
 
         for (auto const& row : m_rows)
         {
-            if (row.HasDetail)
+            for (auto const& detail : row.Details)
             {
-                longestDetail = std::max(longestDetail, DisplayWidth(row.Detail));
+                // Stripped, so a caller that styles its detail text cannot inflate the table.
+                longestDetail = std::max(longestDetail, DisplayWidth(StripEscapeSequences(detail.Text)));
             }
         }
 
@@ -330,7 +344,12 @@ namespace midi2console
         WriteLine(fmt::format("{}", Styled(buildRule(TeeRight, Cross, TeeLeft), separatorTextStyle)));
 
         auto const hasAnyDetail = std::any_of(m_rows.begin(), m_rows.end(),
-            [](auto const& row) { return row.HasDetail; });
+            [](auto const& row)
+            {
+                return !row.Details.empty() ||
+                    std::any_of(row.Cells.begin(), row.Cells.end(),
+                        [](auto const& cell) { return !cell.ExtraLines.empty(); });
+            });
 
         // Inner width of the table, excluding the two outer border characters.
         size_t innerWidth{ 0 };
@@ -346,29 +365,50 @@ namespace midi2console
         {
             auto const& row = m_rows[rowIndex];
 
-            std::string line{ fmt::format("{}", Styled(Vertical, separatorTextStyle)) };
+            size_t rowLines{ 1 };
 
-            for (size_t i = 0; i < m_columns.size(); i++)
+            for (auto const& cell : row.Cells)
             {
-                auto const& cell = i < row.Cells.size() ? row.Cells[i] : Cell{};
-                auto const& style = cell.HasStyle ? cell.Style : m_columns[i].Style;
-
-                line += " ";
-                line += fmt::format("{}",
-                    Styled(Align(TruncateToWidth(cell.Text, widths[i]), widths[i], m_columns[i].Alignment), style));
-                line += " ";
-                line += fmt::format("{}", Styled(Vertical, separatorTextStyle));
+                rowLines = std::max(rowLines, cell.ExtraLines.size() + 1);
             }
 
-            WriteLine(line);
-
-            if (row.HasDetail)
+            for (size_t lineIndex = 0; lineIndex < rowLines; lineIndex++)
             {
-                auto const detail = Align(TruncateToWidth(row.Detail, innerWidth - 1), innerWidth - 1, ColumnAlignment::Left);
+                std::string line{ fmt::format("{}", Styled(Vertical, separatorTextStyle)) };
+
+                for (size_t i = 0; i < m_columns.size(); i++)
+                {
+                    auto const& cell = i < row.Cells.size() ? row.Cells[i] : Cell{};
+                    auto const& style = cell.HasStyle ? cell.Style : m_columns[i].Style;
+
+                    std::string text;
+
+                    if (lineIndex == 0)
+                    {
+                        text = cell.Text;
+                    }
+                    else if (lineIndex - 1 < cell.ExtraLines.size())
+                    {
+                        text = cell.ExtraLines[lineIndex - 1];
+                    }
+
+                    line += " ";
+                    line += fmt::format("{}",
+                        Styled(Align(TruncateToWidth(text, widths[i]), widths[i], m_columns[i].Alignment), style));
+                    line += " ";
+                    line += fmt::format("{}", Styled(Vertical, separatorTextStyle));
+                }
+
+                WriteLine(line);
+            }
+
+            for (auto const& detail : row.Details)
+            {
+                auto const text = Align(TruncateToWidth(detail.Text, innerWidth - 1), innerWidth - 1, ColumnAlignment::Left);
 
                 WriteLine(fmt::format("{} {}{}",
                     Styled(Vertical, separatorTextStyle),
-                    Styled(detail, row.DetailStyle),
+                    Styled(text, detail.Style),
                     Styled(Vertical, separatorTextStyle)));
             }
 
