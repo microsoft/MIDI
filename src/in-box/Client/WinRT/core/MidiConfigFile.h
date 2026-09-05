@@ -33,6 +33,11 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         // Empty when no configuration file is registered on this PC.
         static std::wstring ResolvePath() noexcept;
 
+        // Registers the default configuration file name and creates the file when this PC has
+        // none. A machine which has only ever had a transport package installed has no
+        // registration, and without one nothing any tool does can be persisted.
+        static MidiConfigFileSaveOutcome EnsureExists() noexcept;
+
 #ifdef _DEBUG
         // Debug builds only, see MidiServiceTransportPluginConfigManager.idl for why.
         static void SetPathOverride(_In_ std::wstring const& path) noexcept;

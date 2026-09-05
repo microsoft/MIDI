@@ -52,6 +52,11 @@ namespace Windows.Devices.Midi2.ServiceConfig
         // The file SaveUpdate will write. Empty when no configuration file is registered.
         [noexcept] static String ConfigFilePath{ get; };
 
+        // Registers the default configuration file and creates it when this PC has none, so a
+        // machine which has only ever had a transport package installed can still persist
+        // settings. Does nothing when one is already registered.
+        [noexcept] static MidiServiceConfigSaveResponse EnsureConfigurationFile();
+
         [noexcept] static Boolean QueryCapability(
             Guid transportId,
             String capabilityQueryKey);

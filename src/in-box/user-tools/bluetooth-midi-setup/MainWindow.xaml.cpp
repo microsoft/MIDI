@@ -308,6 +308,10 @@ namespace winrt::midibluetoothsetup::implementation
 
             AlwaysOnTopToggle().IsChecked(native::AppSettings::Current().AlwaysOnTop());
 
+            // A PC which has only ever had a transport package installed has no configuration
+            // file registered, and without one nothing done here can be persisted.
+            midi2svc::MidiServiceTransportPluginConfigManager::EnsureConfigurationFile();
+
             DevicesListView().ItemsSource(m_devices);
             PeripheralClientsList().ItemsSource(m_peripheralClients);
             PendingClientsList().ItemsSource(m_pendingClients);
@@ -822,6 +826,7 @@ namespace winrt::midibluetoothsetup::implementation
                     device.HasEndpoint(),
                     remembered,
                     device.HasEndpoint() && EndpointIsMessageSource(device.EndpointDeviceId()),
+                    device.RequiresPairing(),
                     device.OfflineRetentionSeconds(),
                     OfflineRetentionDescription(device.EffectiveOfflineRetentionSeconds()));
             }

@@ -131,6 +131,11 @@ private:
     // False while the name is still being resolved. An endpoint created in that window would be
     // named after the Bluetooth address, which is meaningless to the user.
     bool IsDeviceNameable(_In_ winrt::hstring const& deviceId);
+
+    bool IsDiscoveredDevice(_In_ winrt::hstring const& deviceId);
+
+    bool DeviceRequiresPairing(_In_ winrt::hstring const& deviceId);
+    void ClearRequiresPairing(_In_ winrt::hstring const& deviceId);
     void UpdateDiscoveredDeviceConnectionState(
         _In_ winrt::hstring const& deviceId,
         _In_ bool const isConnected,

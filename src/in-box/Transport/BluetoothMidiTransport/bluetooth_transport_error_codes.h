@@ -39,6 +39,15 @@
 #define BLUETOOTH_MIDI_ERROR_CODE_NOTIFY_FAILED                 0x0000010C
 #define BLUETOOTH_MIDI_ERROR_CODE_ENDPOINT_CREATION_FAILED      0x0000010D
 
+// The device refused an ATT operation until the link is authenticated. Nothing in a BLE
+// advertisement says a device needs pairing, so this is the only way to find out.
+#define BLUETOOTH_MIDI_ERROR_CODE_PAIRING_REQUIRED              0x0000010E
+
+// The device answered nothing at all within the operation timeout. Distinct from UNREACHABLE,
+// which is the radio positively reporting it could not be reached: a device which drops the link
+// partway through, as one demanding encryption does, times out instead.
+#define BLUETOOTH_MIDI_ERROR_CODE_GATT_TIMEOUT                  0x0000010F
+
 #define BLUETOOTH_MIDI_ERROR_CODE_NOT_CONNECTED                 0x00000111
 
 // publishing this PC as a peripheral

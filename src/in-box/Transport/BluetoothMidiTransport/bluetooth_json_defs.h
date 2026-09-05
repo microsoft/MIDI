@@ -28,6 +28,10 @@
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_NATIVE_DATA_FORMAT_KEY                 L"nativeDataFormat"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_CONNECTED_KEY                       L"isConnected"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_PAIRED_KEY                          L"isPaired"
+
+// Set once the device has refused an operation until the link is authenticated. Nothing in an
+// advertisement says a device needs pairing, so this is only ever known after an attempt.
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_REQUIRES_PAIRING_KEY                   L"requiresPairing"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_SIGNAL_STRENGTH_KEY                    L"signalStrengthDbm"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ENDPOINT_DEVICE_ID_KEY                 L"endpointDeviceId"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ENDPOINT_DEVICE_INSTANCE_ID_KEY        L"endpointDeviceInstanceId"

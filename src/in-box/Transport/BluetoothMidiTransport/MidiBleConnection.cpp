@@ -229,14 +229,24 @@ MidiBleConnection::SubscribeToNotifications()
 
     try
     {
-        auto descriptorStatus = MidiBleUtilities::AwaitWithTimeout(
-            m_characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
+        // The WithResult form is used only because the plain one returns a status with no ATT
+        // error, and the ATT error is what distinguishes "pair me first" from "I am asleep".
+        auto descriptorResult = MidiBleUtilities::AwaitWithTimeout(
+            m_characteristic.WriteClientCharacteristicConfigurationDescriptorWithResultAsync(
                 gatt::GattClientCharacteristicConfigurationDescriptorValue::Notify),
             MidiBleUtilities::BleOperationTimeoutMilliseconds,
-            gatt::GattCommunicationStatus::Unreachable);
+            gatt::GattWriteResult{ nullptr });
+
+        auto const descriptorStatus = descriptorResult != nullptr ?
+            descriptorResult.Status() : gatt::GattCommunicationStatus::Unreachable;
 
         if (descriptorStatus != gatt::GattCommunicationStatus::Success)
         {
+            auto const requiresPairing = descriptorResult != nullptr &&
+                MidiBleUtilities::IsPairingRequiredProtocolError(descriptorResult.ProtocolError());
+
+            m_requiresPairing.store(requiresPairing);
+
             TraceLoggingWrite(
                 MidiBluetoothMidiTransportTelemetryProvider::Provider(),
                 MIDI_TRACE_EVENT_ERROR,
@@ -245,7 +255,8 @@ MidiBleConnection::SubscribeToNotifications()
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Unable to subscribe to BLE MIDI characteristic notifications", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(m_deviceId.c_str(), "device id"),
-                TraceLoggingUInt32(static_cast<uint32_t>(descriptorStatus), "gatt communication status")
+                TraceLoggingUInt32(static_cast<uint32_t>(descriptorStatus), "gatt communication status"),
+                TraceLoggingBool(requiresPairing, "requires pairing")
             );
 
             RETURN_IF_FAILED(E_FAIL);
@@ -253,10 +264,30 @@ MidiBleConnection::SubscribeToNotifications()
 
         // the specified handshake: the Central reads the Characteristic after connecting and the
         // Peripheral answers with an empty payload. Some devices will not start notifying without it.
-        MidiBleUtilities::AwaitWithTimeout(
+        auto readResult = MidiBleUtilities::AwaitWithTimeout(
             m_characteristic.ReadValueAsync(bt::BluetoothCacheMode::Uncached),
             MidiBleUtilities::BleOperationTimeoutMilliseconds,
             gatt::GattReadResult{ nullptr });
+
+        // A device can allow the subscription and still demand authentication for the read
+        if (readResult != nullptr &&
+            readResult.Status() != gatt::GattCommunicationStatus::Success &&
+            MidiBleUtilities::IsPairingRequiredProtocolError(readResult.ProtocolError()))
+        {
+            m_requiresPairing.store(true);
+
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"The device requires pairing before its MIDI characteristic can be read", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_deviceId.c_str(), "device id")
+            );
+
+            RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED));
+        }
     }
     CATCH_RETURN();
 

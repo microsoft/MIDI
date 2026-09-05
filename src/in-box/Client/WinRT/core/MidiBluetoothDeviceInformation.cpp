@@ -28,6 +28,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
 
             m_isConnected = deviceJson.GetNamedBoolean(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_CONNECTED_KEY, false);
             m_isPaired = deviceJson.GetNamedBoolean(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_PAIRED_KEY, false);
+            m_requiresPairing = deviceJson.GetNamedBoolean(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_REQUIRES_PAIRING_KEY, false);
             m_isPresent = deviceJson.GetNamedBoolean(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_PRESENT_KEY, false);
 
             m_signalStrengthDecibelMilliwatts = static_cast<int16_t>(

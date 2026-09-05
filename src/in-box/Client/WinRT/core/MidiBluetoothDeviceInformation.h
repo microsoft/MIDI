@@ -23,6 +23,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
 
         bool IsConnected() const noexcept { return m_isConnected; }
         bool IsPaired() const noexcept { return m_isPaired; }
+        bool RequiresPairing() const noexcept { return m_requiresPairing; }
         bool IsPresent() const noexcept { return m_isPresent; }
 
         int16_t SignalStrengthDecibelMilliwatts() const noexcept { return m_signalStrengthDecibelMilliwatts; }
@@ -57,6 +58,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         bluetooth::MidiBluetoothProtocol m_selectedProtocol{ bluetooth::MidiBluetoothProtocol::Unknown };
         bool m_isConnected{ false };
         bool m_isPaired{ false };
+        bool m_requiresPairing{ false };
         bool m_isPresent{ false };
         int16_t m_signalStrengthDecibelMilliwatts{ 0 };
         foundation::TimeSpan m_lastSeenAgo{};

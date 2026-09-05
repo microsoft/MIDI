@@ -191,6 +191,10 @@ namespace winrt::midiloopbacksetup::implementation
 
             AlwaysOnTopToggle().IsChecked(native::AppSettings::Current().AlwaysOnTop());
 
+            // A PC which has only ever had a transport package installed has no configuration
+            // file registered, and without one nothing done here can be persisted.
+            midi2svc::MidiServiceTransportPluginConfigManager::EnsureConfigurationFile();
+
             LoopbacksListView().ItemsSource(m_loopbacks);
             BasicLoopbacksListView().ItemsSource(m_basicLoopbacks);
 

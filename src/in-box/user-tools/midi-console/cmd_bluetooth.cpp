@@ -261,6 +261,20 @@ namespace midi2console
 
         table.Render();
 
+        // Nothing in a Bluetooth advertisement declares this, so it is only ever known after an
+        // attempt has been made, and the transport stops retrying once it is.
+        for (auto const& device : devices)
+        {
+            if (device.RequiresPairing())
+            {
+                auto const name = device.Name().empty() ?
+                    ToUtf8(device.BluetoothDeviceId()) : ToUtf8(device.Name());
+
+                WriteBlankLine();
+                WriteWarningLine(FormatResourceString(IDS_BT_REQUIRES_PAIRING, name));
+            }
+        }
+
         return 0;
     }
 

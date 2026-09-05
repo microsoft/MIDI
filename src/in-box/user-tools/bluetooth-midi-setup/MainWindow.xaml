@@ -360,6 +360,11 @@
                                                             Orientation="Horizontal"
                                                             Spacing="8"
                                                             VerticalAlignment="Center">
+                                                    <Button x:Uid="PairButton"
+                                                            Content="Pair"
+                                                            Style="{ThemeResource AccentButtonStyle}"
+                                                            Visibility="{x:Bind PairVisibility, Mode=OneWay}"
+                                                            Click="OnPairDeviceClick" />
                                                     <Button x:Uid="ConnectButton"
                                                             Content="Connect"
                                                             Style="{ThemeResource AccentButtonStyle}"

@@ -327,6 +327,124 @@ namespace winrt::midibluetoothsetup::implementation
     // ================================= Device actions =================================
 
     _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnPairDeviceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+    {
+        auto strongThis = get_strong();
+
+        auto const item = ItemFromSender<midibluetoothsetup::BluetoothDeviceItem>(sender);
+
+        if (item == nullptr || item.IsBusy())
+        {
+            co_return;
+        }
+
+        auto const deviceId = item.BluetoothDeviceId();
+        auto const displayName = item.DisplayName();
+
+        // the id is the twelve hex digits of the address, which is what the radio wants back
+        auto const address = std::wcstoull(deviceId.c_str(), nullptr, 16);
+
+        if (address == 0)
+        {
+            co_return;
+        }
+
+        item.IsBusy(true);
+
+        auto const dispatcher = DispatcherQueue();
+
+        co_await winrt::resume_background();
+
+        auto status = devenum::DevicePairingResultStatus::Failed;
+
+        try
+        {
+            auto const bleDevice = co_await bt::BluetoothLEDevice::FromBluetoothAddressAsync(address);
+
+            if (bleDevice != nullptr)
+            {
+                auto const pairing = bleDevice.DeviceInformation().Pairing().Custom();
+
+                // Bluetooth MIDI devices almost always use Just Works pairing, which Windows
+                // surfaces as ConfirmOnly. Accepting here is what keeps the ceremony inside this
+                // app instead of throwing the customer out to a system prompt.
+                auto const token = pairing.PairingRequested(
+                    [](devenum::DeviceInformationCustomPairing const&, devenum::DevicePairingRequestedEventArgs const& args)
+                    {
+                        if (args.PairingKind() == devenum::DevicePairingKinds::ConfirmOnly)
+                        {
+                            args.Accept();
+                        }
+                    });
+
+                auto const result = co_await pairing.PairAsync(devenum::DevicePairingKinds::ConfirmOnly);
+
+                pairing.PairingRequested(token);
+
+                if (result != nullptr)
+                {
+                    status = result.Status();
+                }
+            }
+        }
+        catch (...)
+        {
+        }
+
+        auto const paired =
+            status == devenum::DevicePairingResultStatus::Paired ||
+            status == devenum::DevicePairingResultStatus::AlreadyPaired;
+
+        midi2bt::MidiBluetoothDeviceConnectResponse response{ nullptr };
+
+        // Pairing on its own leaves the device sitting there unusable, and the transport has
+        // stopped retrying it, so the connection it was refused is asked for again here.
+        if (paired)
+        {
+            try
+            {
+                midi2bt::MidiBluetoothDeviceConnectConfig config{ deviceId };
+                config.Comment(displayName);
+
+                response = co_await midi2bt::MidiBluetoothTransportManager::ConnectDeviceAsync(config);
+            }
+            catch (...)
+            {
+            }
+        }
+
+        if (dispatcher == nullptr)
+        {
+            co_return;
+        }
+
+        dispatcher.TryEnqueue([this, strongThis, item, paired, status, response, displayName]()
+            {
+                try
+                {
+                    item.IsBusy(false);
+
+                    if (paired)
+                    {
+                        SetDevicesStatus(response != nullptr && response.Success() ?
+                            res::FormatString(L"StatusPairedAndConnectingFormat", displayName) :
+                            res::FormatString(L"StatusPairedFormat", displayName));
+                    }
+                    else
+                    {
+                        SetDevicesStatus(res::FormatString(
+                            L"StatusPairFailedFormat",
+                            displayName,
+                            static_cast<int32_t>(status)));
+                    }
+
+                    RequestRefreshAsync();
+                }
+                MIDI_BTSETUP_CATCH_AND_LOG(L"Unable to report the result of pairing a device.")
+            });
+    }
+
+    _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::OnConnectDeviceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
     {
         auto strongThis = get_strong();

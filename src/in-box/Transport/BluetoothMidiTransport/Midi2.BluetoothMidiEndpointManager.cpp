@@ -238,8 +238,10 @@ CMidi2BluetoothMidiEndpointManager::StartAdvertisementWatcher()
             // the service UUID and the complete local name.
             m_advertisementWatcher.ScanningMode(bt::Advertisement::BluetoothLEScanningMode::Active);
 
-            winrt::guid midiServiceUuid{ MidiBleProtocol::MidiServiceUuid };
-            m_advertisementWatcher.AdvertisementFilter().Advertisement().ServiceUuids().Append(midiServiceUuid);
+            // Deliberately unfiltered. A 128-bit service UUID leaves about eight characters for a
+            // name in the 31 byte advertisement, so devices with longer names put the name in the
+            // scan response, which carries no UUID and which a service UUID filter therefore drops.
+            // The check moves into the handler instead.
 
             m_advertisementReceivedToken = m_advertisementWatcher.Received({ this, &CMidi2BluetoothMidiEndpointManager::OnAdvertisementReceived });
             m_advertisementStoppedToken = m_advertisementWatcher.Stopped({ this, &CMidi2BluetoothMidiEndpointManager::OnAdvertisementWatcherStopped });
@@ -356,10 +358,21 @@ CMidi2BluetoothMidiEndpointManager::OnAdvertisementReceived(
             return;
         }
 
+        auto const deviceId = MidiBleUtilities::FormatBluetoothAddress(address);
+
+        // The watcher is unfiltered, so most of what arrives is not a MIDI device. A packet with
+        // no MIDI service UUID is only interesting when it comes from an address which has already
+        // shown one, which is how the name in a scan response reaches its device.
+        if (!MidiBleUtilities::AdvertisementCarriesMidiService(args.Advertisement()) &&
+            !IsDiscoveredDevice(deviceId))
+        {
+            return;
+        }
+
         MidiBleProtocol::DiscoveredDevice device{};
 
         device.BluetoothAddress = address;
-        device.Id = MidiBleUtilities::FormatBluetoothAddress(address);
+        device.Id = deviceId;
         device.Name = args.Advertisement().LocalName();
         device.LastSignalStrengthDbm = args.RawSignalStrengthInDBm();
         device.LastSeenTimestamp = NowInMilliseconds();
@@ -820,6 +833,43 @@ CMidi2BluetoothMidiEndpointManager::IsDeviceNameable(winrt::hstring const& devic
 
 
 _Use_decl_annotations_
+bool
+CMidi2BluetoothMidiEndpointManager::IsDiscoveredDevice(winrt::hstring const& deviceId)
+{
+    auto lock = std::scoped_lock{ m_discoveredDevicesLock };
+
+    return m_discoveredDevices.find(deviceId) != m_discoveredDevices.end();
+}
+
+
+_Use_decl_annotations_
+bool
+CMidi2BluetoothMidiEndpointManager::DeviceRequiresPairing(winrt::hstring const& deviceId)
+{
+    auto lock = std::scoped_lock{ m_discoveredDevicesLock };
+
+    auto entry = m_discoveredDevices.find(deviceId);
+
+    return entry != m_discoveredDevices.end() && entry->second.RequiresPairing;
+}
+
+
+// An explicit connect is the customer answering the pairing prompt one way or the other, so the
+// device gets another attempt whether or not they actually paired.
+_Use_decl_annotations_
+void
+CMidi2BluetoothMidiEndpointManager::ClearRequiresPairing(winrt::hstring const& deviceId)
+{
+    auto lock = std::scoped_lock{ m_discoveredDevicesLock };
+
+    if (auto entry = m_discoveredDevices.find(deviceId); entry != m_discoveredDevices.end())
+    {
+        entry->second.RequiresPairing = false;
+    }
+}
+
+
+_Use_decl_annotations_
 HRESULT
 CMidi2BluetoothMidiEndpointManager::ConnectDevice(winrt::hstring const& deviceId)
 {
@@ -831,11 +881,16 @@ CMidi2BluetoothMidiEndpointManager::ConnectDevice(winrt::hstring const& deviceId
         return S_OK;
     }
 
+    ClearRequiresPairing(deviceId);
+
     {
         auto lock = std::scoped_lock{ m_pendingRequestsLock };
 
         // remembered, so a device which is asleep now is picked up when it next advertises
         m_desiredConnections.insert(deviceId);
+
+        // the customer asked for this one, so it does not wait out the retry interval
+        m_lastConnectAttemptTimestamp.erase(deviceId);
     }
 
     TraceLoggingWrite(
@@ -1257,6 +1312,15 @@ CMidi2BluetoothMidiEndpointManager::QueueConnectIfWanted(winrt::hstring const& d
     // An endpoint is named after its device, so connecting before the name is known would
     // publish one named after the Bluetooth address.
     if (!IsDeviceNameable(deviceId))
+    {
+        return;
+    }
+
+    // Read before the pending requests lock is taken, because the discovery lock must never be
+    // held while another one is. Retrying cannot succeed until the customer pairs, and each
+    // attempt raises another Windows pairing prompt, so the sweep leaves this device alone until
+    // an explicit connect asks for it again.
+    if (DeviceRequiresPairing(deviceId))
     {
         return;
     }
@@ -1743,8 +1807,39 @@ CMidi2BluetoothMidiEndpointManager::ConnectDeviceCore(
             discoveredDevice.Name = bleDevice.Name();
         }
 
-        auto serviceStatus = gatt::GattCommunicationStatus::Unreachable;
-        service = MidiBleUtilities::GetBleMidiServiceFromDevice(bleDevice, serviceStatus);
+        auto const pairingState = MidiBleUtilities::GetPairingState(bleDevice);
+
+        auto const lookup = MidiBleUtilities::LookupBleMidiService(bleDevice);
+
+        service = lookup.Service;
+
+        // Everything a "it will not connect" report needs, in one event: what the radio said,
+        // what the device said, and whether the two ends are bonded.
+        TraceLoggingWrite(
+            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"BLE MIDI service lookup finished", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(deviceId.c_str(), "device id"),
+            TraceLoggingBool(lookup.Service != nullptr, "service found"),
+            TraceLoggingBool(lookup.StatusKnown, "gatt status known"),
+            TraceLoggingUInt32(static_cast<uint32_t>(lookup.Status), "gatt communication status"),
+            TraceLoggingBool(lookup.TimedOut, "timed out"),
+            TraceLoggingUInt32(MidiBleUtilities::BleOperationTimeoutMilliseconds, "timeout ms"),
+            TraceLoggingBool(lookup.HasProtocolError, "has att error"),
+            TraceLoggingUInt8(lookup.ProtocolError, "att error"),
+            TraceLoggingBool(lookup.RequiresPairing, "requires pairing"),
+            TraceLoggingBool(pairingState.Known, "pairing state known"),
+            TraceLoggingBool(pairingState.IsPaired, "is paired"),
+            TraceLoggingBool(pairingState.CanPair, "can pair"),
+            TraceLoggingUInt32(pairingState.ProtectionLevel, "pairing protection level"),
+
+            // whether the link is still up after the lookup is what separates a device which
+            // dropped us from one which was simply never reachable
+            TraceLoggingUInt32(static_cast<uint32_t>(bleDevice.ConnectionStatus()), "connection status after lookup")
+        );
 
         if (IsStopping())
         {
@@ -1755,7 +1850,27 @@ CMidi2BluetoothMidiEndpointManager::ConnectDeviceCore(
 
         if (service == nullptr)
         {
-            switch (serviceStatus)
+            if (lookup.RequiresPairing)
+            {
+                failureDetail = L"This device requires pairing before Windows can use its MIDI service. Pair it, then connect it again. Automatic reconnection is paused for this device until then.";
+                errorCode = BLUETOOTH_MIDI_ERROR_CODE_PAIRING_REQUIRED;
+                RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED));
+            }
+
+            // A device which stops answering partway through is not the same as one the radio
+            // could not reach, and the difference is what the customer has to act on. Devices
+            // which demand encryption drop the link rather than returning an ATT error.
+            if (lookup.TimedOut || !lookup.StatusKnown)
+            {
+                failureDetail = pairingState.Known && !pairingState.IsPaired && pairingState.CanPair ?
+                    L"The device stopped answering while connecting. Some devices drop the connection until they are paired. Try pairing this device, then connect it again." :
+                    L"The device stopped answering while connecting. Keep it in range and awake, and make sure it is not already connected to another host.";
+
+                errorCode = BLUETOOTH_MIDI_ERROR_CODE_GATT_TIMEOUT;
+                RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_TIMEOUT));
+            }
+
+            switch (lookup.Status)
             {
             case gatt::GattCommunicationStatus::Unreachable:
                 // by far the most common outcome: BLE peripherals sleep aggressively
@@ -1925,6 +2040,12 @@ CMidi2BluetoothMidiEndpointManager::ConnectDeviceCore(
 
     if (FAILED(hr))
     {
+        if (connection->RequiresPairing())
+        {
+            failureDetail = L"This device requires pairing before Windows can use its MIDI service. Pair it, then connect it again. Automatic reconnection is paused for this device until then.";
+            errorCode = BLUETOOTH_MIDI_ERROR_CODE_PAIRING_REQUIRED;
+        }
+
         LOG_IF_FAILED(connection->Shutdown());
         RETURN_IF_FAILED(hr);
     }
@@ -1993,6 +2114,9 @@ CMidi2BluetoothMidiEndpointManager::RecordConnectResult(
             entry->second.LastConnectErrorHresult = SUCCEEDED(hr) ? 0 : static_cast<int32_t>(hr);
             entry->second.LastConnectErrorDetail = SUCCEEDED(hr) ? winrt::hstring{} : detail;
             entry->second.LastConnectErrorCode = SUCCEEDED(hr) ? 0 : errorCode;
+
+            entry->second.RequiresPairing =
+                FAILED(hr) && errorCode == BLUETOOTH_MIDI_ERROR_CODE_PAIRING_REQUIRED;
         }
     }
 
@@ -2007,6 +2131,7 @@ CMidi2BluetoothMidiEndpointManager::RecordConnectResult(
             TraceLoggingWideString(L"BLE MIDI device connection failed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(deviceId.c_str(), "device id"),
             TraceLoggingWideString(detail.c_str(), "detail"),
+            TraceLoggingUInt32(errorCode, "error code"),
             TraceLoggingHResult(hr, MIDI_TRACE_EVENT_HRESULT_FIELD)
         );
     }
@@ -2045,6 +2170,13 @@ CMidi2BluetoothMidiEndpointManager::ResolveDeviceNameInternal(winrt::hstring con
             }
 
             resolvedName = bleDevice.Name();
+
+            // Windows supplies "Bluetooth <address>" when it has no name for the device. Accepting
+            // that would stop the retries which are waiting for a scan response to arrive.
+            if (MidiBleUtilities::IsSynthesizedBluetoothName(resolvedName, discoveredDevice.BluetoothAddress))
+            {
+                resolvedName = winrt::hstring{};
+            }
 
             if (auto deviceInformation = bleDevice.DeviceInformation())
             {

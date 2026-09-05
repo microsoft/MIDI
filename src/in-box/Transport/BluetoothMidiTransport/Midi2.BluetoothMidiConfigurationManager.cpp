@@ -20,6 +20,7 @@ namespace
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_NATIVE_DATA_FORMAT_KEY, json::JsonValue::CreateStringValue(MidiBleUtilities::NativeDataFormatToJsonString(device.NativeDataFormat)));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_CONNECTED_KEY, json::JsonValue::CreateBooleanValue(device.IsConnected));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_PAIRED_KEY, json::JsonValue::CreateBooleanValue(device.IsPaired));
+        deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_REQUIRES_PAIRING_KEY, json::JsonValue::CreateBooleanValue(device.RequiresPairing));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_SIGNAL_STRENGTH_KEY, json::JsonValue::CreateNumberValue(device.LastSignalStrengthDbm));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ENDPOINT_DEVICE_ID_KEY, json::JsonValue::CreateStringValue(device.EndpointDeviceId));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_ENDPOINT_DEVICE_INSTANCE_ID_KEY, json::JsonValue::CreateStringValue(device.EndpointDeviceInstanceId));

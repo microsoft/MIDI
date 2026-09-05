@@ -640,6 +640,7 @@ IDS_NET_LABEL_DEVICE_NAME                   L"Advertised Device Name"
 
 IDS_CMD_BT_STATUS                           L"Report the state of the Bluetooth radio and the MIDI Bluetooth transport"
 IDS_BT_STATUS_TITLE                         L"Bluetooth MIDI Transport"
+IDS_BT_REQUIRES_PAIRING                     L"{} requires pairing before Windows can use it. Use the Pair button in the Bluetooth MIDI Setup app, or pair it in Windows Settings, then connect it again. Automatic reconnection is paused for it until then."
 IDS_BT_LABEL_RADIO_NAME                     L"Radio"
 IDS_BT_LABEL_RADIO_PRESENT                  L"Radio Present"
 IDS_BT_LABEL_RADIO_ENABLED                  L"Central Role Supported"

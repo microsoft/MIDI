@@ -42,6 +42,7 @@ namespace midibluetoothsetup
         Microsoft.UI.Xaml.Visibility ForgetVisibility{ get; };
         Microsoft.UI.Xaml.Visibility CustomizeVisibility{ get; };
         Microsoft.UI.Xaml.Visibility MonitorVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility PairVisibility{ get; };
         Microsoft.UI.Xaml.Visibility ConnectedBadgeVisibility{ get; };
         Microsoft.UI.Xaml.Visibility EndpointDeviceIdVisibility{ get; };
         Microsoft.UI.Xaml.Visibility IntervalVisibility{ get; };

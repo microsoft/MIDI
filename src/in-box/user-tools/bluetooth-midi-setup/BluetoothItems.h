@@ -282,6 +282,15 @@ namespace winrt::midibluetoothsetup::implementation
                 winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
         }
 
+        // Nothing a device advertises says it needs pairing, so this only appears once an attempt
+        // has been refused. The transport stops retrying until it happens.
+        winrt::Microsoft::UI::Xaml::Visibility PairVisibility() const noexcept
+        {
+            return m_requiresPairing ?
+                winrt::Microsoft::UI::Xaml::Visibility::Visible :
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
+        }
+
         // Order must match the ComboBoxItems in MainWindow.xaml.
         static int32_t OfflineRetentionSecondsFromIndex(_In_ int32_t const index) noexcept
         {
@@ -398,6 +407,7 @@ namespace winrt::midibluetoothsetup::implementation
             _In_ bool const hasEndpoint,
             _In_ bool const isRemembered,
             _In_ bool const canMonitor,
+            _In_ bool const requiresPairing,
             _In_ int32_t const offlineRetentionSeconds,
             _In_ winrt::hstring const& offlineRetentionText) noexcept
         {
@@ -443,6 +453,11 @@ namespace winrt::midibluetoothsetup::implementation
             if (UpdateField(m_canMonitor, canMonitor, L"CanMonitor"))
             {
                 RaisePropertyChanged(L"MonitorVisibility");
+            }
+
+            if (UpdateField(m_requiresPairing, requiresPairing, L"RequiresPairing"))
+            {
+                RaisePropertyChanged(L"PairVisibility");
             }
 
             if (connectedChanged)
@@ -492,6 +507,7 @@ namespace winrt::midibluetoothsetup::implementation
         bool m_isPaired{ false };
         bool m_hasEndpoint{ false };
         bool m_canMonitor{ false };
+        bool m_requiresPairing{ false };
 
         int32_t m_offlineRetentionSeconds{ -2 };
         winrt::hstring m_offlineRetentionText{};

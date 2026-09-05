@@ -595,4 +595,5 @@
 #define IDS_BT_RETENTION_IMMEDIATE                      51936
 #define IDS_BT_RETENTION_SECONDS                        51937
 #define IDS_BT_STATUS_TITLE                             51938
+#define IDS_BT_REQUIRES_PAIRING                         51939
 

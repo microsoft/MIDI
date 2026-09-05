@@ -33,6 +33,11 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
         [noexcept] Boolean IsConnected{ get; };
         [noexcept] Boolean IsPaired{ get; };
 
+        // True once the device has refused an operation until the link is authenticated. Nothing
+        // in a Bluetooth advertisement declares this, so it is only known after an attempt has
+        // been made. Automatic reconnection is suspended while it is set.
+        [noexcept] Boolean RequiresPairing{ get; };
+
         // False when the device has stopped advertising. Bluetooth MIDI peripherals sleep
         // aggressively, so a device which is not present is usually asleep rather than gone.
         [noexcept] Boolean IsPresent{ get; };

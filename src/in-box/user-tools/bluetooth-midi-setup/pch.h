@@ -58,6 +58,7 @@
 #include <winrt/Windows.Storage.Pickers.h>
 #include <winrt/Windows.Storage.Streams.h>
 #include <winrt/Windows.Devices.Enumeration.h>
+#include <winrt/Windows.Devices.Bluetooth.h>
 #include <winrt/Windows.Graphics.h>
 #include <winrt/Windows.ApplicationModel.DataTransfer.h>
 #include <winrt/Windows.System.h>
@@ -104,6 +105,8 @@
 
 namespace foundation = ::winrt::Windows::Foundation;
 namespace collections = ::winrt::Windows::Foundation::Collections;
+namespace devenum = ::winrt::Windows::Devices::Enumeration;
+namespace bt = ::winrt::Windows::Devices::Bluetooth;
 namespace xaml = ::winrt::Microsoft::UI::Xaml;
 namespace controls = ::winrt::Microsoft::UI::Xaml::Controls;
 namespace media = ::winrt::Microsoft::UI::Xaml::Media;

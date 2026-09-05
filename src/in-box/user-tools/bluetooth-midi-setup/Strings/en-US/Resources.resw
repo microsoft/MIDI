@@ -410,6 +410,21 @@
   <data name="StatusEndpointIdCopied" xml:space="preserve">
     <value>The endpoint id has been copied to the clipboard.</value>
   </data>
+  <data name="PairButton.Content" xml:space="preserve">
+    <value>Pair</value>
+  </data>
+  <data name="PairButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Pair this device with this PC so Windows can use its MIDI service</value>
+  </data>
+  <data name="StatusPairedAndConnectingFormat" xml:space="preserve">
+    <value>{0} has been paired, and is being connected.</value>
+  </data>
+  <data name="StatusPairedFormat" xml:space="preserve">
+    <value>{0} has been paired, but could not be connected. Try Connect again.</value>
+  </data>
+  <data name="StatusPairFailedFormat" xml:space="preserve">
+    <value>{0} could not be paired (status {1}). Put the device in pairing mode and try again, or pair it in Windows Settings.</value>
+  </data>
   <data name="MonitorEndpointButtonText.Text" xml:space="preserve">
     <value>Monitor</value>
   </data>
