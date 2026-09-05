@@ -72,6 +72,13 @@ namespace midiloopbacksetup
 
         Boolean IsBusy;
 
+        // Messages carried over a rolling window, drawn as a filled sparkline. Only the basic
+        // loopback transport reports a count, so the whole graph is hidden on the MIDI 2.0 page.
+        Microsoft.UI.Xaml.Media.PointCollection TrafficLinePoints{ get; };
+        Microsoft.UI.Xaml.Media.PointCollection TrafficFillPoints{ get; };
+        String TrafficText{ get; };
+        Microsoft.UI.Xaml.Visibility TrafficVisibility{ get; };
+
         // position within the list, persisted in the configuration file so the customer's
         // arrangement survives a restart
         Int32 DisplayOrder;

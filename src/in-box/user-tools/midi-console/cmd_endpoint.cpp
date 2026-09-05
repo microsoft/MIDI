@@ -31,6 +31,27 @@ namespace midi2console
         constexpr int KeyEscape = 27;
         constexpr int SendRetryLimit = 500;
 
+        // Detail lines sit under a table row rather than in columns, so line the values up the way
+        // the other verbose tables do. Detail text has to stay unstyled: the table measures it as
+        // plain text and passes the style separately.
+        std::string FormatRowDetail(_In_ UINT labelId, _In_ std::string const& value)
+        {
+            return fmt::format("{}  {}", PadRightToWidth(ResourceString(labelId), 32), value);
+        }
+
+        // Bare value for a table cell, because the column header already says "Group".
+        std::string FormatGroupNumberOrRange(_In_ midi2::MidiGroup const& firstGroup, _In_ uint8_t groupCount)
+        {
+            auto const first = static_cast<int>(firstGroup.DisplayValue());
+
+            if (groupCount > 1)
+            {
+                return fmt::format("{}-{}", first, first + groupCount - 1);
+            }
+
+            return fmt::format("{}", first);
+        }
+
         bool TryParsePortNamingApproach(
             _In_ std::string const& text,
             _Out_ midi2enum::Midi1PortNamingApproach& approach)
@@ -405,39 +426,41 @@ namespace midi2console
                     fmt::format("{}", declaredInfo.DeclaredFunctionBlockCount()), numberTextStyle);
             }
 
+            ConsoleTable table;
+
+            table.AddColumn(ResourceString(IDS_LABEL_BLOCK), ColumnAlignment::Right, portNumberTextStyle);
+            table.AddColumn(ResourceString(IDS_LABEL_NAME), ColumnAlignment::Left, endpointNameTextStyle);
+            table.SetLastColumnShrinkable();
+            table.AddColumn(ToUtf8(midi2::MidiGroup::LongLabelPlural()), ColumnAlignment::Right, portNumberTextStyle);
+            table.AddColumn(ResourceString(IDS_LABEL_MIDI_1_OR_2));
+            table.AddColumn(ResourceString(IDS_LABEL_DIRECTION));
+            table.AddColumn(ResourceString(IDS_LABEL_UI_HINT));
+
             for (auto const& block : functionBlocks)
             {
-                auto const label = fmt::format("{} {}",
-                    Styled(fmt::format("{:2}", static_cast<int>(block.Number())), portNumberTextStyle),
-                    Styled(ToUtf8(block.Name()), endpointNameTextStyle));
-
-                auto value = fmt::format("{} {} ({} {}), {} {}, {} {}, {} {}",
-                    Styled(ResourceString(IDS_LABEL_GROUP), inlineLabelTextStyle),
-                    block.FirstGroup().DisplayValue(),
-                    Styled(ResourceString(IDS_LABEL_INDEX), inlineLabelTextStyle),
-                    block.FirstGroup().Index(),
-                    Styled(ResourceString(IDS_LABEL_MIDI), inlineLabelTextStyle),
-                    FormatRepresentsMidi10Connection(block.RepresentsMidi10Connection()),
-                    Styled(ResourceString(IDS_LABEL_DIRECTION), inlineLabelTextStyle),
-                    FormatFunctionBlockDirection(block.Direction()),
-                    Styled(ResourceString(IDS_LABEL_UI_HINT), inlineLabelTextStyle),
-                    FormatFunctionBlockUIHint(block.UIHint()));
+                table.BeginRow();
+                table.AddCell(fmt::format("{}", static_cast<int>(block.Number())));
+                table.AddCell(ToUtf8(block.Name()));
+                table.AddCell(FormatGroupNumberOrRange(block.FirstGroup(), block.GroupCount()));
+                table.AddCell(FormatRepresentsMidi10Connection(block.RepresentsMidi10Connection()));
+                table.AddCell(FormatFunctionBlockDirection(block.Direction()));
+                table.AddCell(FormatFunctionBlockUIHint(block.UIHint()));
 
                 if (!block.IsActive())
                 {
-                    value += fmt::format(", {}", Styled(ResourceString(IDS_LABEL_INACTIVE), warningTextStyle));
+                    table.AddRowDetail(ResourceString(IDS_LABEL_INACTIVE), warningTextStyle);
                 }
-
-                WriteField(label, value, {});
 
                 if (options.Verbose)
                 {
-                    WriteField("    Max System Exclusive 8 Streams",
-                        fmt::format("{}", block.MaxSystemExclusive8Streams()), numberTextStyle);
-                    WriteField("    MIDI CI Message Version Format",
-                        fmt::format("{}", block.MidiCIMessageVersionFormat()), numberTextStyle);
+                    table.AddRowDetail(FormatRowDetail(IDS_EP_PROP_MAX_SYSEX8_STREAMS,
+                        fmt::format("{}", block.MaxSystemExclusive8Streams())), fieldValueTextStyle);
+                    table.AddRowDetail(FormatRowDetail(IDS_EP_PROP_MIDI_CI_VERSION,
+                        fmt::format("{}", block.MidiCIMessageVersionFormat())), fieldValueTextStyle);
                 }
             }
+
+            table.Render();
         }
 
         // ---- group terminal blocks
@@ -447,32 +470,38 @@ namespace midi2console
         if (groupTerminalBlocks != nullptr && groupTerminalBlocks.Size() > 0 &&
             (options.Verbose || functionBlocks == nullptr || functionBlocks.Size() == 0))
         {
-            WriteSectionHeading(ResourceString(IDS_EP_SECTION_GROUP_TERMINAL_BLOCKS));
+            WriteSectionHeading(ResourceString(IDS_EP_SECTION_GROUP_TERMINAL_BLOCKS), false);
+
+            ConsoleTable table;
+
+            table.AddColumn(ResourceString(IDS_LABEL_BLOCK), ColumnAlignment::Right, portNumberTextStyle);
+            table.AddColumn(ResourceString(IDS_LABEL_NAME), ColumnAlignment::Left, endpointNameTextStyle);
+            table.SetLastColumnShrinkable();
+            table.AddColumn(ToUtf8(midi2::MidiGroup::LongLabel()), ColumnAlignment::Right, portNumberTextStyle);
+            table.AddColumn(ResourceString(IDS_LABEL_DIRECTION));
 
             for (auto const& block : groupTerminalBlocks)
             {
-                auto const label = fmt::format("{} {}",
-                    Styled(fmt::format("{:2}", static_cast<int>(block.Number())), portNumberTextStyle),
-                    Styled(ToUtf8(block.Name()), endpointNameTextStyle));
-
-                auto const value = fmt::format("{} {} ({} {}), {} {}",
-                    Styled(ResourceString(IDS_LABEL_GROUP), inlineLabelTextStyle),
-                    block.FirstGroup().DisplayValue(),
-                    Styled(ResourceString(IDS_LABEL_INDEX), inlineLabelTextStyle),
-                    block.FirstGroup().Index(),
-                    Styled(ResourceString(IDS_LABEL_DIRECTION), inlineLabelTextStyle),
-                    FormatGroupTerminalBlockDirection(block.Direction()));
-
-                WriteField(label, value, {});
+                table.BeginRow();
+                table.AddCell(fmt::format("{}", static_cast<int>(block.Number())));
+                table.AddCell(ToUtf8(block.Name()));
+                table.AddCell(FormatGroupNumberOrRange(block.FirstGroup(), block.GroupCount()));
+                table.AddCell(FormatGroupTerminalBlockDirection(block.Direction()));
 
                 if (options.Verbose)
                 {
-                    WriteField("    Max Input Bandwidth",
-                        fmt::format("{}", block.CalculatedMaxDeviceInputBandwidthBitsPerSecond()), numberTextStyle);
-                    WriteField("    Max Output Bandwidth",
-                        fmt::format("{}", block.CalculatedMaxDeviceOutputBandwidthBitsPerSecond()), numberTextStyle);
+                    table.AddRowDetail(FormatRowDetail(IDS_EP_PROP_MAX_INPUT_BANDWIDTH,
+                        fmt::format("{} {}", block.CalculatedMaxDeviceInputBandwidthBitsPerSecond(),
+                            ResourceString(IDS_EP_UNITS_BITS_PER_SECOND))),
+                        fieldValueTextStyle);
+                    table.AddRowDetail(FormatRowDetail(IDS_EP_PROP_MAX_OUTPUT_BANDWIDTH,
+                        fmt::format("{} {}", block.CalculatedMaxDeviceOutputBandwidthBitsPerSecond(),
+                            ResourceString(IDS_EP_UNITS_BITS_PER_SECOND))),
+                        fieldValueTextStyle);
                 }
             }
+
+            table.Render();
         }
 
         // ---- MIDI 1.0 ports
@@ -483,6 +512,14 @@ namespace midi2console
             FormatPortNamingApproach(device.Midi1PortNamingApproach()));
 
         WriteBlankLine();
+
+        ConsoleTable portTable;
+
+        portTable.AddColumn(ResourceString(IDS_LABEL_PORT_NUMBER), ColumnAlignment::Right, portNumberTextStyle);
+        portTable.AddColumn(ResourceString(IDS_LABEL_NAME), ColumnAlignment::Left, endpointNameTextStyle);
+        portTable.SetLastColumnShrinkable();
+        portTable.AddColumn(ToUtf8(midi2::MidiGroup::LongLabel()), ColumnAlignment::Right, portNumberTextStyle);
+        portTable.AddColumn(ResourceString(IDS_LABEL_DIRECTION));
 
         for (auto const flow : { midi2enum::Midi1PortFlow::MidiMessageSource,
                                  midi2enum::Midi1PortFlow::MidiMessageDestination })
@@ -505,26 +542,20 @@ namespace midi2console
             for (auto const& port : ports)
             {
                 // The WinMM port number is what an older application actually sees.
-                auto const label = fmt::format("{} {}",
-                    Styled(fmt::format("{:3}", port.Number()), portNumberTextStyle),
-                    Styled(ToUtf8(port.Name()), endpointNameTextStyle));
-
-                auto value = fmt::format("{} {} ({} {}), {} {}",
-                    Styled(ResourceString(IDS_LABEL_GROUP), inlineLabelTextStyle),
-                    port.Group().DisplayValue(),
-                    Styled(ResourceString(IDS_LABEL_INDEX), inlineLabelTextStyle),
-                    port.Group().Index(),
-                    Styled(ResourceString(IDS_LABEL_DIRECTION), inlineLabelTextStyle),
-                    FormatPortFlow(flow));
-
-                WriteField(label, value, {});
+                portTable.BeginRow();
+                portTable.AddCell(fmt::format("{}", port.Number()));
+                portTable.AddCell(ToUtf8(port.Name()));
+                portTable.AddCell(fmt::format("{}", port.Group().DisplayValue()));
+                portTable.AddCell(FormatPortFlow(flow));
 
                 if (options.Verbose)
                 {
-                    WriteField("    " + ResourceString(IDS_LABEL_ID), ToUtf8(port.PortDeviceId()), endpointIdTextStyle);
+                    portTable.AddRowDetail(ToUtf8(port.PortDeviceId()), endpointIdTextStyle);
                 }
             }
         }
+
+        portTable.Render();
 
         // ---- name table
 
@@ -532,11 +563,11 @@ namespace midi2console
 
         if (nameTable != nullptr && nameTable.Size() > 0)
         {
-            WriteSectionHeading(ResourceString(IDS_EP_SECTION_NAME_TABLE));
+            WriteSectionHeading(ResourceString(IDS_EP_SECTION_NAME_TABLE), false);
 
             ConsoleTable table;
 
-            table.AddColumn(ResourceString(IDS_LABEL_GROUP_INDEX), ColumnAlignment::Right, numberTextStyle);
+            table.AddColumn(ToUtf8(midi2::MidiGroup::LongLabel()), ColumnAlignment::Right, portNumberTextStyle);
             table.AddColumn(ResourceString(IDS_LABEL_DIRECTION));
             table.AddColumn(ResourceString(IDS_EP_NAME_TABLE_LEGACY_COMPATIBLE));
             table.SetLastColumnShrinkable();
@@ -562,7 +593,7 @@ namespace midi2console
             for (auto const& entry : entries)
             {
                 table.BeginRow();
-                table.AddCell(fmt::format("{}", entry.Group().Index()));
+                table.AddCell(fmt::format("{}", entry.Group().DisplayValue()));
                 table.AddCell(FormatPortFlow(entry.Flow()));
                 table.AddCell(ToUtf8(entry.LegacyCompatibleName()));
                 table.AddCell(ToUtf8(entry.NewStyleName()));

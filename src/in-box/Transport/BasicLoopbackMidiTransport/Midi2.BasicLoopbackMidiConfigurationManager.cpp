@@ -62,8 +62,10 @@ CMidi2BasicLoopbackMidiConfigurationManager::ExecuteCommandListEntries(
 
     auto entriesArray = json::JsonArray();
 
-    for (auto const& def : definitions)
+    for (auto const& entry : definitions)
     {
+        auto const& def = entry.Definition;
+
         auto obj = json::JsonObject();
 
         obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_ASSOCIATION_ID_KEY, 
@@ -83,6 +85,9 @@ CMidi2BasicLoopbackMidiConfigurationManager::ExecuteCommandListEntries(
 
         obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_MUTED_KEY,
             json::JsonValue::CreateBooleanValue(def.IsMuted));
+
+        obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_MESSAGE_COUNT_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(entry.MessageCount)));
 
         entriesArray.Append(obj);
     }

@@ -26,9 +26,11 @@
 #include <deque>
 #include <format>
 #include <functional>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <set>
 #include <shared_mutex>
 #include <string>
 #include <string_view>
@@ -90,6 +92,7 @@
 
 #include <winrt/Windows.Devices.Midi2.h>
 #include <winrt/Windows.Devices.Midi2.Enumeration.h>
+#include <winrt/Windows.Devices.Midi2.Enumeration.Legacy.h>
 #include <winrt/Windows.Devices.Midi2.ServiceConfig.h>
 #include <winrt/Windows.Devices.Midi2.Transports.Loopback.h>
 #include <winrt/Windows.Devices.Midi2.Transports.BasicLoopback.h>
@@ -111,6 +114,7 @@ namespace controls = ::winrt::Microsoft::UI::Xaml::Controls;
 namespace media = ::winrt::Microsoft::UI::Xaml::Media;
 namespace midi2 = ::winrt::Windows::Devices::Midi2;
 namespace midi2enum = ::winrt::Windows::Devices::Midi2::Enumeration;
+namespace midi2legacy = ::winrt::Windows::Devices::Midi2::Enumeration::Legacy;
 namespace midi2svc = ::winrt::Windows::Devices::Midi2::ServiceConfig;
 namespace midi2loop = ::winrt::Windows::Devices::Midi2::Transports::Loopback;
 namespace midi2bloop = ::winrt::Windows::Devices::Midi2::Transports::BasicLoopback;
@@ -132,3 +136,4 @@ namespace appshared = ::winrt::MidiAppShared;
 
 // same reason: the row types are used from data templates but have no .xaml file of their own
 #include "LoopbackItems.h"
+#include "ImportItems.h"

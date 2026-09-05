@@ -362,7 +362,8 @@ namespace winrt::midiloopbacksetup::implementation
             }
             else if (persist)
             {
-                saved = native::LoopbackConfigFile::Current().MergeSection(creationConfig.ConfigJson());
+                saved = native::LoopbackConfigFile::Current().MergeSection(
+                    native::LoopbackKind::Loopback, creationConfig.ConfigJson());
 
                 if (!saved)
                 {
@@ -536,7 +537,8 @@ namespace winrt::midiloopbacksetup::implementation
             }
             else if (persist)
             {
-                saved = native::LoopbackConfigFile::Current().MergeSection(creationConfig.ConfigJson());
+                saved = native::LoopbackConfigFile::Current().MergeSection(
+                    native::LoopbackKind::BasicLoopback, creationConfig.ConfigJson());
 
                 if (!saved)
                 {
@@ -641,7 +643,8 @@ namespace winrt::midiloopbacksetup::implementation
             }
             else
             {
-                saved = native::LoopbackConfigFile::Current().MergeSection(creationConfig.ConfigJson());
+                saved = native::LoopbackConfigFile::Current().MergeSection(
+                    native::LoopbackKind::Loopback, creationConfig.ConfigJson());
 
                 if (!saved)
                 {
@@ -731,7 +734,8 @@ namespace winrt::midiloopbacksetup::implementation
             }
             else
             {
-                saved = native::LoopbackConfigFile::Current().MergeSection(creationConfig.ConfigJson());
+                saved = native::LoopbackConfigFile::Current().MergeSection(
+                    native::LoopbackKind::BasicLoopback, creationConfig.ConfigJson());
 
                 if (!saved)
                 {

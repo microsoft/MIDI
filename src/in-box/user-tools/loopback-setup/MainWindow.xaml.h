@@ -41,6 +41,9 @@ namespace winrt::midiloopbacksetup::implementation
         winrt::fire_and_forget OnCreateBasicLoopbackClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCreateBasicLoopbackFieldChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args);
 
+        winrt::fire_and_forget OnImportLoopbacksClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnImportSelectionChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
         winrt::fire_and_forget OnChooseLoopbackImageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnClearLoopbackImageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
@@ -171,6 +174,19 @@ namespace winrt::midiloopbacksetup::implementation
         void UpdateCreateLoopbackButtonState() noexcept;
         void UpdateCreateBasicLoopbackButtonState() noexcept;
 
+        // Fills the import dialog from what is on the PC right now, disabling any name which is
+        // already taken. Returns the number of ports offered.
+        size_t BuildImportCandidates() noexcept;
+        void UpdateImportButtonState() noexcept;
+
+        // Creates a basic loopback for every port the customer ticked. Runs off the UI thread:
+        // each one is a separate round trip to the service.
+        winrt::fire_and_forget ImportSelectedAsync(bool const persist);
+
+        // Says what to do about the provider the ports were imported from. Two providers
+        // offering the same name at once is the one thing that will make this look broken.
+        winrt::fire_and_forget ShowImportCompleteAsync(int32_t const created);
+
         void UpdateEditLoopbackButtonState() noexcept;
         void UpdateEditBasicLoopbackButtonState() noexcept;
 
@@ -230,6 +246,9 @@ namespace winrt::midiloopbacksetup::implementation
 
         collections::IObservableVector<midiloopbacksetup::LoopbackItem> m_basicLoopbacks{
             winrt::single_threaded_observable_vector<midiloopbacksetup::LoopbackItem>() };
+
+        collections::IObservableVector<midiloopbacksetup::ImportDeviceItem> m_importDevices{
+            winrt::single_threaded_observable_vector<midiloopbacksetup::ImportDeviceItem>() };
 
         // Positions the customer set during this session. They take precedence over what the
         // file says, because a loopback which was never saved has nowhere in the file to record

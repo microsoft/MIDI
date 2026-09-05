@@ -91,5 +91,8 @@ namespace midi2console
     void WriteField(_In_ std::string_view label, _In_ std::string_view value, _In_ fmt::text_style const& valueStyle);
     void WriteSectionHeading(_In_ std::string_view heading);
 
+    // A table draws its own top border, so a rule under the heading as well reads as a double line.
+    void WriteSectionHeading(_In_ std::string_view heading, _In_ bool includeRule);
+
     size_t ConsoleWidth();
 }

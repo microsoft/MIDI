@@ -9,6 +9,11 @@
 
 #include "LoopbackItem.g.h"
 
+#include "AppSettings.h"
+#include "StringResources.h"
+
+#include <chrono>
+
 // The pages refresh from the service on a timer, so the row raises property changed rather
 // than being replaced. Nothing here throws: a failing notification must never take down a
 // UI callback.
@@ -89,11 +94,178 @@ namespace midiloopbacksetup
         bool HasSecondEndpoint{ false };
         bool IsMuted{ false };
         bool IsPersisted{ false };
+
+        // running total the service reports, and whether it reported one at all: the MIDI 2.0
+        // loopback transport has no counter, so its rows must not draw an empty graph
+        uint64_t MessageCount{ 0 };
+        bool HasMessageCount{ false };
     };
 }
 
 namespace winrt::midiloopbacksetup::implementation
 {
+    // Message traffic over a rolling window, rendered as a filled sparkline.
+    //
+    // The service reports a running total, so what is plotted is the difference between polls
+    // divided by the time between them. A total would climb forever and say nothing about what
+    // is happening now.
+    //
+    // The x axis is real elapsed time rather than one step per sample, because a refresh is also
+    // requested after a create, a delete and a mute, and a tick is skipped while the previous
+    // refresh is still running.
+    struct TrafficHistory
+    {
+        // how many polls' worth of history the window covers
+        static constexpr size_t SampleCapacity = 30;
+
+        // hard ceiling, in case something requests refreshes far faster than the poll interval
+        static constexpr size_t MaxSamples = 400;
+
+        winrt::Microsoft::UI::Xaml::Media::PointCollection LinePoints{ nullptr };
+        winrt::Microsoft::UI::Xaml::Media::PointCollection FillPoints{ nullptr };
+        winrt::hstring TrafficText{};
+
+        void Record(
+            _In_ uint64_t const totalMessages,
+            _In_ double const graphWidth,
+            _In_ double const graphHeight) noexcept
+        {
+            auto const now = Clock::now();
+
+            // A count which went backwards means the endpoint was torn down and rebuilt, so the
+            // old readings describe something which no longer exists.
+            if (totalMessages < m_lastTotal)
+            {
+                m_samples.clear();
+                m_hasLastTotal = false;
+            }
+
+            auto const elapsed = m_hasLastTotal ?
+                std::chrono::duration<double>{ now - m_lastSampleTime }.count() : 0.0;
+
+            // The first reading has nothing to subtract from, so it starts the trace at rest
+            // rather than plotting the whole lifetime of the endpoint as one enormous spike.
+            auto const rate = (m_hasLastTotal && elapsed > 0.0) ?
+                static_cast<double>(totalMessages - m_lastTotal) / elapsed : 0.0;
+
+            m_lastTotal = totalMessages;
+            m_lastSampleTime = now;
+            m_hasLastTotal = true;
+
+            m_samples.push_back({ now, rate });
+
+            auto const window = std::chrono::duration<double>{ WindowSeconds() };
+
+            while (m_samples.size() > 1 && (now - m_samples.front().first) > window)
+            {
+                m_samples.pop_front();
+            }
+
+            while (m_samples.size() > MaxSamples)
+            {
+                m_samples.pop_front();
+            }
+
+            Rebuild(now, totalMessages, graphWidth, graphHeight);
+        }
+
+    private:
+        using Clock = std::chrono::steady_clock;
+
+        static double WindowSeconds() noexcept
+        {
+            auto const interval = ::midiloopbacksetup::AppSettings::Current().RefreshIntervalSeconds();
+
+            return static_cast<double>(SampleCapacity) *
+                static_cast<double>(interval == 0 ? 1 : interval);
+        }
+
+        void Rebuild(
+            _In_ Clock::time_point const now,
+            _In_ uint64_t const totalMessages,
+            _In_ double const graphWidth,
+            _In_ double const graphHeight) noexcept
+        {
+            try
+            {
+                winrt::Microsoft::UI::Xaml::Media::PointCollection line{};
+                winrt::Microsoft::UI::Xaml::Media::PointCollection fill{};
+
+                TrafficText = ::midiloopbacksetup::resources::FormatString(
+                    L"LoopbackTrafficFormat", totalMessages);
+
+                if (m_samples.empty())
+                {
+                    LinePoints = line;
+                    FillPoints = fill;
+
+                    return;
+                }
+
+                auto const peak = std::max_element(
+                    m_samples.begin(),
+                    m_samples.end(),
+                    [](auto const& left, auto const& right) { return left.second < right.second; })->second;
+
+                // A flat trace pinned to the very top would suggest the scale means something
+                // absolute, so the axis keeps a little headroom above the peak.
+                auto const scale = peak > 0.0 ? peak * 1.15 : 1.0;
+
+                // Logarithmic, because one system exclusive dump or a held chord is orders of
+                // magnitude above ordinary playing and would otherwise flatten everything else
+                // onto the baseline. log1p keeps an idle loopback at the baseline.
+                auto const scaleLog = std::log1p(scale);
+
+                auto const window = WindowSeconds();
+
+                // The stroke is centered on the point, so an idle loopback drawn exactly on the
+                // baseline would have half its line clipped by the border it sits in.
+                auto const inset = 1.0;
+                auto const usableHeight = graphHeight - (inset * 2.0);
+
+                for (auto const& sample : m_samples)
+                {
+                    auto const age = std::chrono::duration<double>{ now - sample.first }.count();
+
+                    auto x = graphWidth - ((age / window) * graphWidth);
+
+                    x = std::clamp(x, 0.0, graphWidth);
+
+                    auto const normalized = scaleLog > 0.0 ?
+                        std::clamp(std::log1p(sample.second) / scaleLog, 0.0, 1.0) : 0.0;
+
+                    auto const y = inset + usableHeight - (normalized * usableHeight);
+
+                    line.Append(winrt::Windows::Foundation::Point{
+                        static_cast<float>(x), static_cast<float>(y) });
+                }
+
+                for (auto const& point : line)
+                {
+                    fill.Append(point);
+                }
+
+                // close the area down to the baseline so the polygon fills under the trace
+                fill.Append(winrt::Windows::Foundation::Point{
+                    static_cast<float>(line.GetAt(line.Size() - 1).X), static_cast<float>(graphHeight) });
+
+                fill.Append(winrt::Windows::Foundation::Point{
+                    static_cast<float>(line.GetAt(0).X), static_cast<float>(graphHeight) });
+
+                LinePoints = line;
+                FillPoints = fill;
+            }
+            catch (...)
+            {
+            }
+        }
+
+        std::deque<std::pair<Clock::time_point, double>> m_samples{};
+
+        uint64_t m_lastTotal{ 0 };
+        Clock::time_point m_lastSampleTime{};
+        bool m_hasLastTotal{ false };
+    };
     struct LoopbackItem : LoopbackItemT<LoopbackItem>
     {
         LoopbackItem() = default;
@@ -196,6 +368,17 @@ namespace winrt::midiloopbacksetup::implementation
         bool IsPersisted() const noexcept { return m_isPersisted; }
         void IsPersisted(bool const value) noexcept { UpdateField(m_isPersisted, value, L"IsPersisted"); }
 
+        // Traffic history. The geometry is generated against a fixed box, so the sparkline in
+        // the data template has to be that size.
+        winrt::Microsoft::UI::Xaml::Media::PointCollection TrafficLinePoints() const noexcept { return m_traffic.LinePoints; }
+        winrt::Microsoft::UI::Xaml::Media::PointCollection TrafficFillPoints() const noexcept { return m_traffic.FillPoints; }
+        winrt::hstring TrafficText() const noexcept { return m_traffic.TrafficText; }
+
+        xaml::Visibility TrafficVisibility() const noexcept
+        {
+            return m_hasMessageCount ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;
+        }
+
         winrt::hstring PersistenceText() const noexcept { return m_persistenceText; }
 
         bool IsBusy() const noexcept { return m_isBusy; }
@@ -252,9 +435,32 @@ namespace winrt::midiloopbacksetup::implementation
             UpdateField(m_editButtonAccessibleName, data.EditButtonAccessibleName, L"EditButtonAccessibleName");
             UpdateField(m_persistenceText, data.PersistenceText, L"PersistenceText");
             UpdateField(m_isPersisted, data.IsPersisted, L"IsPersisted");
+
+            if (UpdateField(m_hasMessageCount, data.HasMessageCount, L"HasMessageCount"))
+            {
+                RaisePropertyChanged(L"TrafficVisibility");
+            }
+
+            if (m_hasMessageCount)
+            {
+                RecordTrafficSample(data.MessageCount);
+            }
         }
 
     private:
+        // must match the sparkline's size in the basic loopback item template in MainWindow.xaml
+        static constexpr double TrafficGraphWidth = 140.0;
+        static constexpr double TrafficGraphHeight = 28.0;
+
+        void RecordTrafficSample(_In_ uint64_t const totalMessages) noexcept
+        {
+            m_traffic.Record(totalMessages, TrafficGraphWidth, TrafficGraphHeight);
+
+            RaisePropertyChanged(L"TrafficLinePoints");
+            RaisePropertyChanged(L"TrafficFillPoints");
+            RaisePropertyChanged(L"TrafficText");
+        }
+
         // The picture is loaded once per change rather than per redraw, and a name which no
         // longer resolves to a file simply leaves the glyph in place.
         void RefreshImageSource() noexcept
@@ -319,8 +525,11 @@ namespace winrt::midiloopbacksetup::implementation
         bool m_canCustomize{ false };
         bool m_isPersisted{ false };
         bool m_isBusy{ false };
+        bool m_hasMessageCount{ false };
 
         int32_t m_displayOrder{ 0 };
+
+        TrafficHistory m_traffic{};
 
         MIDI_LOOPSETUP_OBSERVABLE_ITEM()
     };

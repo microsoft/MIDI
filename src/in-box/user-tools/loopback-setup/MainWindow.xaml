@@ -402,6 +402,11 @@
                                     Orientation="Horizontal"
                                     Spacing="8"
                                     VerticalAlignment="Center">
+                            <Button x:Name="ImportLoopbacksButton"
+                                    x:Uid="ImportLoopbacksButton"
+                                    Content="Import from another provider..."
+                                    Click="OnImportLoopbacksClick" />
+
                             <Button x:Name="CreateDefaultBasicLoopbackButton"
                                     x:Uid="CreateDefaultBasicLoopbackButton"
                                     Content="Create default basic loopback"
@@ -470,6 +475,7 @@
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="*" MinWidth="200" />
                                             <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
 
                                         <Grid Grid.Column="0" Width="28" Height="28" VerticalAlignment="Center">
@@ -520,7 +526,40 @@
                                                        Style="{StaticResource EndpointIdTextStyle}" />
                                         </StackPanel>
 
+                                        <!-- Messages carried, over a rolling window. The geometry is
+                                             generated against a fixed 140x28 box in LoopbackItem, so
+                                             this size must match. -->
                                         <StackPanel Grid.Column="2"
+                                                    VerticalAlignment="Center"
+                                                    HorizontalAlignment="Center"
+                                                    Spacing="2"
+                                                    Visibility="{x:Bind TrafficVisibility, Mode=OneWay}">
+                                            <TextBlock Text="{x:Bind TrafficText, Mode=OneWay}"
+                                                       HorizontalAlignment="Right"
+                                                       Margin="0,0,2,0"
+                                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                            <Border Width="140"
+                                                    Height="28"
+                                                    HorizontalAlignment="Center"
+                                                    CornerRadius="4"
+                                                    Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
+                                                    BorderThickness="1"
+                                                    BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                                <Grid>
+                                                    <Polygon Points="{x:Bind TrafficFillPoints, Mode=OneWay}"
+                                                             Fill="{ThemeResource AccentFillColorTertiaryBrush}"
+                                                             Opacity="0.45" />
+                                                    <Polyline Points="{x:Bind TrafficLinePoints, Mode=OneWay}"
+                                                              Stroke="{ThemeResource AccentFillColorDefaultBrush}"
+                                                              StrokeThickness="1.5"
+                                                              StrokeLineJoin="Round" />
+                                                </Grid>
+                                            </Border>
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="3"
                                                     Orientation="Horizontal"
                                                     Spacing="8"
                                                     VerticalAlignment="Center">
@@ -955,6 +994,101 @@
                        CloseButtonText="Cancel"
                        DefaultButton="Close">
             <TextBlock x:Name="ConfirmDialogText" TextWrapping="Wrap" MaxWidth="420" />
+        </ContentDialog>
+
+        <!-- Picks MIDI 1.0 ports provided by drivers which did not come with Windows, so the
+             equivalent basic loopbacks can be created here instead. The list is grouped by
+             device rather than by endpoint: a provider with more than sixteen ports is split
+             across several endpoints, which is not a split the customer made. -->
+        <ContentDialog x:Name="ImportLoopbacksDialog"
+                       x:Uid="ImportLoopbacksDialog"
+                       Title="Import loopbacks from another provider"
+                       PrimaryButtonText="Import"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Primary">
+            <StackPanel Spacing="12" Width="480" Margin="0,4,4,4">
+                <InfoBar x:Uid="ImportCaveatBar"
+                         Severity="Warning"
+                         IsOpen="True"
+                         IsClosable="False"
+                         Message="These may not all be loopback ports. Anything from a driver that did not come with Windows is listed here, including real hardware, so choose carefully." />
+
+                <TextBlock x:Name="NoImportCandidatesText"
+                           x:Uid="NoImportCandidatesText"
+                           Text="No MIDI ports from other providers were found on this PC."
+                           TextWrapping="Wrap"
+                           Visibility="Collapsed"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="360">
+                    <ItemsControl x:Name="ImportDevicesList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="local:ImportDeviceItem">
+                                <StackPanel Margin="0,0,0,12" Spacing="4">
+                                    <TextBlock Text="{x:Bind DeviceName}"
+                                               TextWrapping="Wrap"
+                                               Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                                    <TextBlock Text="{x:Bind ServiceText}"
+                                               TextWrapping="Wrap"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                    <ItemsControl ItemsSource="{x:Bind Ports}" Margin="8,4,0,0">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate x:DataType="local:ImportPortItem">
+                                                <CheckBox IsChecked="{x:Bind IsSelected, Mode=TwoWay}"
+                                                          IsEnabled="{x:Bind IsSelectable}"
+                                                          MinWidth="0"
+                                                          Click="OnImportSelectionChanged"
+                                                          AutomationProperties.Name="{x:Bind PortName}">
+                                                    <StackPanel Margin="0,4,0,4">
+                                                        <TextBlock Text="{x:Bind PortName}" TextWrapping="Wrap" />
+
+                                                        <TextBlock Text="{x:Bind DetailText}"
+                                                                   TextWrapping="Wrap"
+                                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                                        <TextBlock Text="{x:Bind ConflictText}"
+                                                                   Visibility="{x:Bind ConflictVisibility}"
+                                                                   TextWrapping="Wrap"
+                                                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                                                   Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                                                    </StackPanel>
+                                                </CheckBox>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+
+                <CheckBox x:Name="ImportPersistCheckBox"
+                          x:Uid="ImportPersistCheckBox"
+                          Content="Save to the configuration file"
+                          IsChecked="True" />
+            </StackPanel>
+        </ContentDialog>
+
+        <!-- Shown after an import, because two providers offering the same port name at once is
+             the one thing that will make this look broken. -->
+        <ContentDialog x:Name="ImportCompleteDialog"
+                       x:Uid="ImportCompleteDialog"
+                       Title="Imported"
+                       CloseButtonText="Close"
+                       DefaultButton="Close">
+            <StackPanel Spacing="12" MaxWidth="440">
+                <TextBlock x:Name="ImportCompleteText" TextWrapping="Wrap" />
+
+                <InfoBar x:Uid="ImportCompleteWarningBar"
+                         Severity="Warning"
+                         IsOpen="True"
+                         IsClosable="False"
+                         Message="Now remove the matching loopbacks from the other provider, or uninstall it. Until you do, two ports with the same name exist on this PC and apps cannot tell them apart. Some providers need a restart before their ports disappear." />
+            </StackPanel>
         </ContentDialog>
     </Grid>
 </Window>

@@ -108,9 +108,7 @@
 #define IDS_LABEL_FIRST_GROUP                           50189
 #define IDS_LABEL_GROUP_COUNT                           50190
 #define IDS_LABEL_UI_HINT                               50191
-#define IDS_LABEL_INDEX                                 50192
 #define IDS_LABEL_INACTIVE                              50193
-#define IDS_LABEL_MIDI                                  50194
 #define IDS_FB_MIDI10_NOT_MIDI10                        50195
 #define IDS_FB_MIDI10_UNRESTRICTED                      50196
 #define IDS_FB_MIDI10_RESTRICTED                        50197
@@ -488,7 +486,13 @@
 #define IDS_EP_LABEL_SERVICE_NAME                       51766
 #define IDS_EP_LABEL_DRIVER_VERSION                     51767
 #define IDS_EP_LABEL_DRIVER_INF_PATH                    51768
-#define IDS_LABEL_GROUP_INDEX                           51769
+#define IDS_LABEL_BLOCK                                 51770
+#define IDS_EP_PROP_MAX_SYSEX8_STREAMS                  51771
+#define IDS_EP_PROP_MIDI_CI_VERSION                     51772
+#define IDS_EP_PROP_MAX_INPUT_BANDWIDTH                 51773
+#define IDS_EP_PROP_MAX_OUTPUT_BANDWIDTH                51774
+#define IDS_LABEL_MIDI_1_OR_2                           51775
+#define IDS_EP_UNITS_BITS_PER_SECOND                    51776
 
 // ---------------------------------------------------------------- beat clock       51780
 #define IDS_CMD_EP_SEND_CLOCK                           51780

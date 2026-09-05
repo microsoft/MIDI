@@ -40,6 +40,9 @@ public:
     TEST_METHOD(TestUnmuteAfterMute);
     TEST_METHOD(TestListActiveLoopbacks);
 
+    // The reported message count is what the setup tool draws its traffic graph from
+    TEST_METHOD(TestMessageCountCountsMessagesNotBuffers);
+
 
     // Issue GH1070: WinMM ports for a basic loopback must be able to be
     // re-opened after being closed.

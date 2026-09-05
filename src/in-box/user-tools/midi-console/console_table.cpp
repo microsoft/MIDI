@@ -445,8 +445,19 @@ namespace midi2console
 
     void WriteSectionHeading(_In_ std::string_view heading)
     {
+        WriteSectionHeading(heading, true);
+    }
+
+    void WriteSectionHeading(_In_ std::string_view heading, _In_ bool includeRule)
+    {
         WriteBlankLine();
         WriteLine(fmt::format("{}", Styled(heading, sectionHeadingTextStyle)));
+
+        if (!includeRule)
+        {
+            return;
+        }
+
         WriteLine(fmt::format("{}",
             Styled(Repeat(Horizontal, std::min<size_t>(ConsoleWidth() - 1, SectionRuleWidth)), separatorTextStyle)));
     }

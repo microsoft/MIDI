@@ -126,9 +126,9 @@ bool MidiBasicLoopbackDeviceTable::IsUniqueIdentifierInUseForLoopback(
 
 
 
-std::vector<MidiBasicLoopbackDeviceDefinition> MidiBasicLoopbackDeviceTable::GetDeviceListSnapshot()
+std::vector<MidiBasicLoopbackDeviceSnapshot> MidiBasicLoopbackDeviceTable::GetDeviceListSnapshot()
 {
-    std::vector<MidiBasicLoopbackDeviceDefinition> results;
+    std::vector<MidiBasicLoopbackDeviceSnapshot> results;
 
     // lock so no adds/removes happen while building the list
     auto lock = m_devicesLock.lock_shared();
@@ -140,7 +140,7 @@ std::vector<MidiBasicLoopbackDeviceDefinition> MidiBasicLoopbackDeviceTable::Get
         if (device && device->Definition)
         {
             // snapshot so no pointer issues if removed from table after this point
-            results.push_back(*(device->Definition));
+            results.push_back({ *(device->Definition), device->MessageCount() });
         }
     }
 

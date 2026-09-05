@@ -10,6 +10,17 @@
 #pragma once
 
 
+// What listEntries reports about one loopback. The definition is the stored configuration; the
+// message count is live and belongs to the device rather than to its definition, so the two are
+// gathered together here instead of being folded into the definition itself.
+struct MidiBasicLoopbackDeviceSnapshot
+{
+    MidiBasicLoopbackDeviceDefinition Definition{};
+
+    uint64_t MessageCount{ 0 };
+};
+
+
 class MidiBasicLoopbackDeviceTable
 {
 private:
@@ -23,7 +34,7 @@ private:
 
 
 public:
-    std::vector<MidiBasicLoopbackDeviceDefinition> GetDeviceListSnapshot();
+    std::vector<MidiBasicLoopbackDeviceSnapshot> GetDeviceListSnapshot();
 
     std::shared_ptr<MidiBasicLoopbackDevice> GetDevice(_In_ winrt::guid const& associationId);
     std::shared_ptr<MidiBasicLoopbackDevice> GetDeviceById(_In_ std::wstring const& endpointDeviceId);

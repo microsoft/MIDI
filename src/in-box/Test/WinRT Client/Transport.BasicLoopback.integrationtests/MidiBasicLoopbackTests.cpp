@@ -637,6 +637,74 @@ static void RemoveTestLoopback(winrt::guid const& associationId)
 }
 
 
+// The setup tool draws its traffic graph from this, so what matters is that it counts MESSAGES.
+// A count of buffers would make a burst of notes look the same as one long system exclusive.
+void MidiBasicLoopbackTests::TestMessageCountCountsMessagesNotBuffers()
+{
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
+
+    auto response = CreateTestLoopback(L"Test Basic Loopback Message Count");
+
+    auto associationId = response.CreatedLoopbackEntry().AssociationId();
+    auto endpointId = response.CreatedLoopbackEntry().EndpointDeviceId();
+
+    // nothing has passed through a loopback which was created a moment ago
+    VERIFY_ARE_EQUAL(response.CreatedLoopbackEntry().MessageCount(), (uint64_t)0);
+
+    auto cleanupLoopback = wil::scope_exit([&] { RemoveTestLoopback(associationId); });
+
+    auto session = MidiSession::Create(L"TestMessageCountCountsMessagesNotBuffers");
+    VERIFY_IS_NOT_NULL(session);
+
+    auto connection = session.CreateEndpointConnection(endpointId);
+    VERIFY_IS_NOT_NULL(connection);
+
+    wil::unique_event_nothrow allMessagesReceived;
+    allMessagesReceived.create();
+
+    const uint32_t expectedMessageCount{ 3 };
+
+    std::atomic<uint32_t> receivedMessageCount{ 0 };
+
+    auto eventToken = connection.MessageReceived([&](auto&&, MidiMessageReceivedEventArgs const& args)
+        {
+            VERIFY_IS_NOT_NULL(args);
+
+            if (++receivedMessageCount >= expectedMessageCount)
+            {
+                allMessagesReceived.SetEvent();
+            }
+        });
+
+    VERIFY_IS_TRUE(connection.Open());
+
+    // Three 64-bit messages in one send. The count has to be 3, not 1.
+    std::vector<uint32_t> words{ 0x43001627, 0x86753090, 0x43001628, 0x86753091, 0x43001629, 0x86753092 };
+
+    winrt::array_view<uint32_t> wordArray(words);
+
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(
+        connection.SendMultipleMessagesWordArray(
+            MidiClock::TimestampConstantSendImmediately(),
+            0,
+            static_cast<uint32_t>(words.size()),
+            wordArray)));
+
+    VERIFY_IS_TRUE(allMessagesReceived.wait(5000));
+    VERIFY_ARE_EQUAL(receivedMessageCount.load(), expectedMessageCount);
+
+    connection.MessageReceived(eventToken);
+
+    auto const entry = FindActiveLoopbackEntry(associationId);
+    VERIFY_IS_NOT_NULL(entry);
+
+    std::wcout << L"Reported message count: " << entry.MessageCount() << std::endl;
+
+    VERIFY_ARE_EQUAL(entry.MessageCount(), (uint64_t)expectedMessageCount);
+}
+
+
 void MidiBasicLoopbackTests::TestMuteLoopback()
 {
     // Once a loopback is muted, messages sent to it must no longer be looped back.

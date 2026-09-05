@@ -59,6 +59,7 @@
 #include <vector>
 #include <string>
 #include <queue>
+#include <atomic>
 
 #include <mmsystem.h>
 #include "SWDevice.h"
@@ -87,6 +88,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"
 #include "midi_ump_message_defs.h"
+#include "ump_helpers.h"
 #include "WindowsMidiServices.h"
 #include "WindowsMidiServices_i.c"
 
