@@ -38,7 +38,7 @@ using namespace winrt::Windows::Devices::Midi2::Utilities::Messages;    // For m
 class MidiComExtensionsHandler : public IMidiEndpointConnectionMessagesReceivedCallback
 {
 public:
-    STDMETHOD(Initialize)(std::function<void(GUID, GUID, UINT64, UINT32, UINT32*)> midiInCallback)
+    STDMETHOD(Initialize)(std::function<void(GUID, GUID, UINT64, UINT32, const UINT32*)> midiInCallback)
     {
         m_midiInCallback = midiInCallback;
         return S_OK;
@@ -50,7 +50,7 @@ public:
         return S_OK;
     }
 
-    STDMETHOD(MessagesReceived)(GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, UINT32* messages)
+    STDMETHOD(MessagesReceived)(GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, const UINT32* messages)
     {
         if (m_midiInCallback)
         {
@@ -65,7 +65,7 @@ public:
     STDMETHODIMP_(ULONG) Release() { return 1; }
 
 private:
-    std::function<void(GUID, GUID, UINT64, UINT32, UINT32*)> m_midiInCallback;
+    std::function<void(GUID, GUID, UINT64, UINT32, const UINT32*)> m_midiInCallback;
 };
 
 
@@ -105,9 +105,9 @@ int main()
     MidiEndpointConnection connReceive = session.CreateEndpointConnection(endpointBId);
     std::wcout << L"Connected to receiving endpoint: " << endpointBId.c_str() << std::endl;
 
-    std::function<void(GUID, GUID, UINT64, UINT32, UINT32*)> midiInCallback;
+    std::function<void(GUID, GUID, UINT64, UINT32, const UINT32*)> midiInCallback;
 
-    midiInCallback = [&](GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, UINT32* messages)
+    midiInCallback = [&](GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, const UINT32* messages)
         {
             UNREFERENCED_PARAMETER(sessionId);
             UNREFERENCED_PARAMETER(connectionId);
