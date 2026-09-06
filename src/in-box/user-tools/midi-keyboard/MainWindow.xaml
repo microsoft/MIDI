@@ -331,9 +331,19 @@
                                       x:Uid="ConnectionModeRadios"
                                       AutomationProperties.AutomationId="ConnectionModeRadios"
                                       SelectionChanged="OnConnectionModeChanged">
-                            <RadioButton x:Uid="ConnectionModeVirtual" Content="Virtual device (other apps play this keyboard)" />
+                            <RadioButton x:Name="ConnectionModeVirtualRadio" x:Uid="ConnectionModeVirtual" Content="Virtual device (other apps play this keyboard)" />
                             <RadioButton x:Uid="ConnectionModeEndpoint" Content="Existing MIDI endpoint" />
                         </RadioButtons>
+
+                        <!-- TEMPORARY: see TemporaryFlags.h -->
+                        <TextBlock x:Name="VirtualDeviceUnavailableNote"
+                                   x:Uid="VirtualDeviceUnavailableNote"
+                                   AutomationProperties.AutomationId="VirtualDeviceUnavailableNote"
+                                   Text=""
+                                   TextWrapping="Wrap"
+                                   Visibility="Collapsed"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource SystemFillColorCautionBrush}" />
 
                         <StackPanel x:Name="EndpointSettingsPanel" Spacing="10" Visibility="Collapsed">
                             <StackPanel Spacing="4">

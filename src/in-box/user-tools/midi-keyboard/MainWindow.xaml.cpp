@@ -12,6 +12,7 @@
 #include "App.xaml.h"
 #include "BackgroundWork.h"
 #include "StringResources.h"
+#include "TemporaryFlags.h"
 #include "resource.h"
 
 namespace native = ::midikeyboard;
@@ -389,6 +390,14 @@ namespace winrt::midikeyboard::implementation
             auto const& settings = native::AppSettings::Current();
 
             m_suppressSettingHandlers = true;
+
+            // TEMPORARY: see TemporaryFlags.h. Disabled rather than removed so the index to
+            // ConnectionMode mapping stays intact.
+            if (native::TemporarilyDisableVirtualDevice)
+            {
+                ConnectionModeVirtualRadio().IsEnabled(false);
+                VirtualDeviceUnavailableNote().Visibility(xaml::Visibility::Visible);
+            }
 
             ConnectionModeRadios().SelectedIndex(static_cast<int32_t>(settings.Connection()));
             ChannelComboBox().SelectedIndex(static_cast<int32_t>(settings.TransmitChannelNumber()) - 1);
