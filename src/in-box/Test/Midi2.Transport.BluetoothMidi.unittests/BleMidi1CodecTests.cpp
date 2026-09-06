@@ -757,6 +757,27 @@ void BleMidi1CodecTests::TestCorrelatorKeepsUsingASenderClockThatDoesMove()
     VERIFY_IS_TRUE(correlator.HaveSeenSenderClockAdvance());
 }
 
+void BleMidi1CodecTests::TestCorrelatorJudgesASteadilyStreamingDeviceWithoutLongGaps()
+{
+    MidiBleMidi1::TimestampCorrelator correlator;
+
+    // A wind controller on a 15 ms connection interval never leaves a gap long enough to prove a
+    // clock is stopped, but its timestamps do move, and that alone settles the question.
+    uint64_t arrival = 1000 * TestTicksPerMillisecond;
+    uint16_t senderTimestamp{ 500 };
+
+    for (int i = 0; i < 6; i++)
+    {
+        MapPacket(correlator, { senderTimestamp }, arrival);
+
+        arrival += 15 * TestTicksPerMillisecond;
+        senderTimestamp = static_cast<uint16_t>((senderTimestamp + 15) & MidiBleMidi1::TimestampMask);
+    }
+
+    VERIFY_IS_TRUE(correlator.HaveSeenSenderClockAdvance());
+    VERIFY_IS_FALSE(correlator.SenderClockIsStalled());
+}
+
 void BleMidi1CodecTests::TestCorrelatorResumesCorrelatingWhenASenderClockStartsMoving()
 {
     MidiBleMidi1::TimestampCorrelator correlator;

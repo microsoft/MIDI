@@ -149,6 +149,10 @@ CMidi2BluetoothMidiEndpointManager::Initialize(
     m_transportId = TRANSPORT_LAYER_GUID;   // this is needed so MidiSrv can instantiate the correct transport
     m_containerId = m_transportId;          // we use the transport ID as the container ID for convenience
 
+    // The flag outlives a single load, so a transport started again in the same process would
+    // otherwise abandon every wait immediately.
+    MidiBleUtilities::SetShuttingDown(false);
+
     RETURN_IF_FAILED(CreateParentDevice());
 
     m_initialized = true;
@@ -547,6 +551,7 @@ CMidi2BluetoothMidiEndpointManager::MergeDiscoveredDevice(MidiBleProtocol::Disco
 
     bool isNewDevice{ false };
     bool needsName{ false };
+    bool becamePaired{ false };
 
     {
         auto lock = std::scoped_lock{ m_discoveredDevicesLock };
@@ -567,7 +572,13 @@ CMidi2BluetoothMidiEndpointManager::MergeDiscoveredDevice(MidiBleProtocol::Disco
 
             if (device.IsPaired)
             {
+                becamePaired = !existing->second.IsPaired;
+
                 existing->second.IsPaired = true;
+
+                // Whatever made it demand pairing has been satisfied, so it is worth trying again.
+                existing->second.RequiresPairing = false;
+                existing->second.UnpairedEarlyDropCount = 0;
             }
 
             if (device.LastSignalStrengthDbm != 0)
@@ -614,6 +625,27 @@ CMidi2BluetoothMidiEndpointManager::MergeDiscoveredDevice(MidiBleProtocol::Disco
     if (needsName)
     {
         QueueNameResolutionIfNeeded(device.Id);
+    }
+
+    // Bonding discards a subscription made on an unencrypted link, so a connection which is still
+    // up and looks healthy silently stops receiving. Nothing reports that, because the link and
+    // the endpoint are both fine.
+    if (becamePaired)
+    {
+        if (auto connection = TransportState::Current().GetConnectionByDeviceId(device.Id))
+        {
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Device became paired while connected, so its notification subscription is being renewed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(device.Id.c_str(), "device id")
+            );
+
+            LOG_IF_FAILED(connection->RefreshNotificationSubscription());
+        }
     }
 }
 
@@ -786,10 +818,13 @@ CMidi2BluetoothMidiEndpointManager::GetDiscoveredDevices()
         {
             auto lock = std::scoped_lock{ m_pendingRequestsLock };
 
+            // A device which needs pairing is not being waited for: the sweep has deliberately
+            // stopped retrying it, so reporting it as waiting would contradict the advice to pair
+            // it and connect again, and would hide the button for doing so.
             device.ConnectionState =
                 device.IsConnected ? MidiBleProtocol::ConnectionState::Connected :
                 m_connectAttemptsInProgress.count(device.Id) != 0 ? MidiBleProtocol::ConnectionState::Connecting :
-                m_desiredConnections.count(device.Id) != 0 ? MidiBleProtocol::ConnectionState::WaitingForDevice :
+                (!device.RequiresPairing && m_desiredConnections.count(device.Id) != 0) ? MidiBleProtocol::ConnectionState::WaitingForDevice :
                 MidiBleProtocol::ConnectionState::NotConnected;
         }
 
@@ -1434,13 +1469,55 @@ CMidi2BluetoothMidiEndpointManager::OnConnectionDropped(winrt::hstring const& de
 
     // Only the connected flag. UpdateDiscoveredDeviceConnectionState would also clear the protocol
     // and the endpoint id, which are both still true of this device while the link is down.
+    bool assumedPairingRequired{ false };
+
     {
         auto lock = std::scoped_lock{ m_discoveredDevicesLock };
 
         if (auto entry = m_discoveredDevices.find(deviceId); entry != m_discoveredDevices.end())
         {
             entry->second.IsConnected = false;
+
+            // A device which demands security over SMP never fails a GATT call, so the only thing
+            // this transport can see is a link which keeps going away moments after it comes up.
+            auto const now = NowInMilliseconds();
+
+            auto const linkWasBrief =
+                entry->second.ConnectedSinceTimestamp != 0 &&
+                now >= entry->second.ConnectedSinceTimestamp &&
+                now - entry->second.ConnectedSinceTimestamp < MIDI_BLE_UNPAIRED_EARLY_DROP_MS;
+
+            if (!entry->second.IsPaired && linkWasBrief)
+            {
+                entry->second.UnpairedEarlyDropCount++;
+
+                if (entry->second.UnpairedEarlyDropCount >= MIDI_BLE_UNPAIRED_EARLY_DROPS_BEFORE_PAIRING_ASSUMED &&
+                    !entry->second.RequiresPairing)
+                {
+                    entry->second.RequiresPairing = true;
+                    assumedPairingRequired = true;
+                }
+            }
+            else if (!linkWasBrief)
+            {
+                entry->second.UnpairedEarlyDropCount = 0;
+            }
+
+            entry->second.ConnectedSinceTimestamp = 0;
         }
+    }
+
+    if (assumedPairingRequired)
+    {
+        TraceLoggingWrite(
+            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_WARNING,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"An unpaired device keeps dropping its link moments after connecting, which is what a device asking for security over SMP looks like. Treating it as needing pairing.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(deviceId.c_str(), "device id")
+        );
     }
 
     {
@@ -1848,7 +1925,7 @@ CMidi2BluetoothMidiEndpointManager::ConnectDeviceCore(
     {
         bleDevice = MidiBleUtilities::AwaitWithTimeout(
             bt::BluetoothLEDevice::FromBluetoothAddressAsync(discoveredDevice.BluetoothAddress),
-            MidiBleUtilities::BleOperationTimeoutMilliseconds,
+            MidiBleUtilities::BleConnectOperationTimeoutMilliseconds,
             bt::BluetoothLEDevice{ nullptr });
 
         if (bleDevice == nullptr)
@@ -1955,7 +2032,7 @@ CMidi2BluetoothMidiEndpointManager::ConnectDeviceCore(
 
         auto openStatus = MidiBleUtilities::AwaitWithTimeout(
             service.OpenAsync(gatt::GattSharingMode::SharedReadAndWrite),
-            MidiBleUtilities::BleOperationTimeoutMilliseconds,
+            MidiBleUtilities::BleConnectOperationTimeoutMilliseconds,
             gatt::GattOpenStatus::Unspecified);
 
         if (openStatus == gatt::GattOpenStatus::AccessDenied)
@@ -1998,7 +2075,7 @@ CMidi2BluetoothMidiEndpointManager::ConnectDeviceCore(
 
         session = MidiBleUtilities::AwaitWithTimeout(
             gatt::GattSession::FromDeviceIdAsync(bleDevice.BluetoothDeviceId()),
-            MidiBleUtilities::BleOperationTimeoutMilliseconds,
+            MidiBleUtilities::BleConnectOperationTimeoutMilliseconds,
             gatt::GattSession{ nullptr });
 
         if (session == nullptr)
@@ -2173,6 +2250,11 @@ CMidi2BluetoothMidiEndpointManager::RecordConnectResult(
 
             entry->second.RequiresPairing =
                 FAILED(hr) && errorCode == BLUETOOTH_MIDI_ERROR_CODE_PAIRING_REQUIRED;
+
+            if (SUCCEEDED(hr))
+            {
+                entry->second.ConnectedSinceTimestamp = NowInMilliseconds();
+            }
         }
     }
 
@@ -2838,6 +2920,11 @@ CMidi2BluetoothMidiEndpointManager::Shutdown()
     // TransportState destructor, which runs after main returns and drags a thread join and WinRT
     // teardown into process exit.
     LOG_IF_FAILED(TransportState::Current().StopPeripheral());
+
+    // Set only now, so peripheral teardown above keeps its own short budget. A connect attempt in
+    // flight makes several Bluetooth calls back to back, and the join below cannot begin until
+    // they return, so those abandon instead of running to their full timeouts.
+    MidiBleUtilities::SetShuttingDown(true);
 
     m_backgroundEndpointCreatorThread.request_stop();
     m_backgroundEndpointCreatorThreadWakeup.SetEvent();

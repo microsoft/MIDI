@@ -367,6 +367,15 @@ namespace winrt::midibluetoothsetup::implementation
                 winrt::Microsoft::UI::Xaml::Visibility::Visible;
         }
 
+        // Counts only exist once there is an endpoint, so the label is hidden rather than left
+        // standing on its own with nothing beside it.
+        winrt::Microsoft::UI::Xaml::Visibility StatisticsVisibility() const noexcept
+        {
+            return m_statisticsText.empty() ?
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
+                winrt::Microsoft::UI::Xaml::Visibility::Visible;
+        }
+
         winrt::hstring LastErrorText() const noexcept { return m_lastErrorText; }
 
         winrt::Microsoft::UI::Xaml::Visibility LastErrorVisibility() const noexcept
@@ -425,8 +434,12 @@ namespace winrt::midibluetoothsetup::implementation
             UpdateField(m_displayName, displayName, L"DisplayName");
             UpdateField(m_subtitleText, subtitleText, L"SubtitleText");
             UpdateField(m_statusText, statusText, L"StatusText");
-            UpdateField(m_statisticsText, statisticsText, L"StatisticsText");
             UpdateField(m_isPaired, isPaired, L"IsPaired");
+
+            if (UpdateField(m_statisticsText, statisticsText, L"StatisticsText"))
+            {
+                RaisePropertyChanged(L"StatisticsVisibility");
+            }
 
             if (UpdateField(m_intervalText, intervalText, L"IntervalText"))
             {

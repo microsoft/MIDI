@@ -195,18 +195,12 @@ namespace MidiBleMidi1
             // Some devices never advance their timestamp at all. Only real time passing between
             // packets can show that, because messages inside one packet are allowed to share a
             // timestamp and running status leaves them no room to carry one.
-            if (hadSenderClock && haveLocalGap &&
-                localGapTicks > static_cast<uint64_t>(SenderClockStallEvidenceMilliseconds) * ticksPerMillisecond)
+            if (hadSenderClock && haveLocalGap)
             {
-                if (m_lastSenderTimestamp == previousSenderTimestamp)
+                if (m_lastSenderTimestamp != previousSenderTimestamp)
                 {
-                    if (m_senderClockStallObservations < SenderClockStallObservationCount)
-                    {
-                        m_senderClockStallObservations++;
-                    }
-                }
-                else
-                {
+                    // Any movement proves the clock runs, however little time passed. Requiring a
+                    // long gap here would leave a device which streams steadily unclassified.
                     if (SenderClockIsStalled())
                     {
                         // Running again, so nothing learned while it was stopped still applies.
@@ -215,6 +209,15 @@ namespace MidiBleMidi1
 
                     m_haveSeenSenderClockAdvance = true;
                     m_senderClockStallObservations = 0;
+                }
+                else if (localGapTicks > static_cast<uint64_t>(SenderClockStallEvidenceMilliseconds) * ticksPerMillisecond)
+                {
+                    // Only a gap long enough to have moved a millisecond clock is evidence that
+                    // the clock is not running rather than that two packets shared a millisecond.
+                    if (m_senderClockStallObservations < SenderClockStallObservationCount)
+                    {
+                        m_senderClockStallObservations++;
+                    }
                 }
             }
 

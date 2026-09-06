@@ -61,6 +61,14 @@ namespace MidiBleProtocol
         // cannot succeed until the customer pairs, and every attempt raises another prompt.
         bool RequiresPairing{ false };
 
+        // Some devices ask for security over SMP rather than failing a GATT call, which never
+        // reaches this transport as an error. All that is visible is a link which keeps dropping
+        // moments after it comes up, so repeated quick drops while unpaired are counted here.
+        uint32_t UnpairedEarlyDropCount{ 0 };
+
+        // When the current link came up, so a drop can be told from a link which lasted.
+        uint64_t ConnectedSinceTimestamp{ 0 };
+
         // Counted before decoding, so these move even when nothing decodes.
         uint64_t PacketsReceived{ 0 };
         uint64_t PacketsSent{ 0 };
@@ -124,8 +132,25 @@ namespace MidiBleUtilities
     // Bluetooth timeout. Service shutdown joins the threads which make these calls, so an
     // unbounded wait here keeps the whole midisrv process alive long after the service stopped.
     inline constexpr uint32_t BleOperationTimeoutMilliseconds = 5000;
+
+    // Establishing a link is much slower than talking over one which already exists: the radio may
+    // have to wait several advertising intervals, and a device which demands pairing adds a whole
+    // security exchange. Five seconds gave up on devices which were about to succeed.
+    inline constexpr uint32_t BleConnectOperationTimeoutMilliseconds = 12000;
+
     inline constexpr uint32_t BleDataOperationTimeoutMilliseconds = 2000;
     inline constexpr uint32_t BleTeardownOperationTimeoutMilliseconds = 1000;
+
+    // Blocking waits are taken in slices this long so shutdown does not have to sit out a whole
+    // Bluetooth timeout, which for a connect attempt is several of them back to back.
+    inline constexpr uint32_t AwaitPollSliceMilliseconds = 200;
+
+    // Set while the transport is tearing down. Service shutdown joins the threads which make these
+    // calls, so a wait in progress abandons rather than running to its full timeout.
+    inline std::atomic<bool> g_shuttingDown{ false };
+
+    inline bool IsShuttingDown() noexcept { return g_shuttingDown.load(std::memory_order_relaxed); }
+    inline void SetShuttingDown(_In_ bool const value) noexcept { g_shuttingDown.store(value, std::memory_order_relaxed); }
 
     template<typename TResult>
     inline TResult AwaitWithTimeout(
@@ -143,8 +168,39 @@ namespace MidiBleUtilities
 
         try
         {
-            if (operation.wait_for(std::chrono::milliseconds{ timeoutMilliseconds }) ==
-                ::winrt::Windows::Foundation::AsyncStatus::Completed)
+            // Completed may only ever be assigned once on a WinRT async operation, which rules out
+            // calling wait_for in a loop: the second call throws and the wait collapses to a single
+            // slice. Signaling an event from one handler and waiting on that instead is what lets
+            // the wait be given up early without touching the operation again.
+            //
+            // Shared rather than captured by reference, because the handler can still run after
+            // this function has abandoned the operation and returned.
+            auto completed = std::make_shared<wil::slim_event_manual_reset>();
+
+            operation.Completed([completed](auto&&, auto&&) { completed->SetEvent(); });
+
+            uint32_t remaining = timeoutMilliseconds;
+
+            while (remaining > 0)
+            {
+                uint32_t const slice = remaining < AwaitPollSliceMilliseconds ? remaining : AwaitPollSliceMilliseconds;
+
+                if (completed->wait(slice))
+                {
+                    break;
+                }
+
+                remaining -= slice;
+
+                // Service shutdown joins the threads making these calls, so a wait in progress is
+                // abandoned rather than run to its full timeout.
+                if (IsShuttingDown())
+                {
+                    break;
+                }
+            }
+
+            if (operation.Status() == ::winrt::Windows::Foundation::AsyncStatus::Completed)
             {
                 return operation.GetResults();
             }
@@ -420,7 +476,7 @@ namespace MidiBleUtilities
 
         auto gattServicesResult = AwaitWithTimeout(
             bleDevice.GetGattServicesForUuidAsync(bleServiceUuid, BluetoothCacheMode::Uncached),
-            BleOperationTimeoutMilliseconds,
+            BleConnectOperationTimeoutMilliseconds,
             GattDeviceServicesResult{ nullptr },
             lookup.TimedOut);
 

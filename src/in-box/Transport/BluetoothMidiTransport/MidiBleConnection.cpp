@@ -223,18 +223,32 @@ MidiBleConnection::Start()
 
 
 HRESULT
+MidiBleConnection::RefreshNotificationSubscription()
+{
+    RETURN_HR_IF(S_FALSE, m_shutdown.load());
+    RETURN_HR_IF(S_FALSE, m_isPeripheral);
+
+    return SubscribeToNotifications();
+}
+
+
+HRESULT
 MidiBleConnection::SubscribeToNotifications()
 {
-    RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), m_characteristic);
+    // Copied because Shutdown clears the member, and this also runs from the pairing path rather
+    // than only from Start.
+    auto characteristic = m_characteristic;
+
+    RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), characteristic);
 
     try
     {
         // The WithResult form is used only because the plain one returns a status with no ATT
         // error, and the ATT error is what distinguishes "pair me first" from "I am asleep".
         auto descriptorResult = MidiBleUtilities::AwaitWithTimeout(
-            m_characteristic.WriteClientCharacteristicConfigurationDescriptorWithResultAsync(
+            characteristic.WriteClientCharacteristicConfigurationDescriptorWithResultAsync(
                 gatt::GattClientCharacteristicConfigurationDescriptorValue::Notify),
-            MidiBleUtilities::BleOperationTimeoutMilliseconds,
+            MidiBleUtilities::BleConnectOperationTimeoutMilliseconds,
             gatt::GattWriteResult{ nullptr });
 
         auto const descriptorStatus = descriptorResult != nullptr ?
@@ -265,8 +279,8 @@ MidiBleConnection::SubscribeToNotifications()
         // the specified handshake: the Central reads the Characteristic after connecting and the
         // Peripheral answers with an empty payload. Some devices will not start notifying without it.
         auto readResult = MidiBleUtilities::AwaitWithTimeout(
-            m_characteristic.ReadValueAsync(bt::BluetoothCacheMode::Uncached),
-            MidiBleUtilities::BleOperationTimeoutMilliseconds,
+            characteristic.ReadValueAsync(bt::BluetoothCacheMode::Uncached),
+            MidiBleUtilities::BleConnectOperationTimeoutMilliseconds,
             gatt::GattReadResult{ nullptr });
 
         // A device can allow the subscription and still demand authentication for the read

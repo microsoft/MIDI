@@ -482,11 +482,13 @@
                                                     <TextBlock x:Uid="DeviceStatisticsLabel"
                                                                Grid.Row="4" Grid.Column="0"
                                                                Text="Messages"
+                                                               Visibility="{x:Bind StatisticsVisibility, Mode=OneWay}"
                                                                Style="{ThemeResource CaptionTextBlockStyle}"
                                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                                     <TextBlock Grid.Row="4" Grid.Column="1"
                                                                Text="{x:Bind StatisticsText, Mode=OneWay}"
                                                                TextWrapping="Wrap"
+                                                               Visibility="{x:Bind StatisticsVisibility, Mode=OneWay}"
                                                                Style="{ThemeResource CaptionTextBlockStyle}" />
 
                                                     <!-- An app using WinMM or WinRT MIDI 1.0 cannot ask whether a

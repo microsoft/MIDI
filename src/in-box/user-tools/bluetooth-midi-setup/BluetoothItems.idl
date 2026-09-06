@@ -49,6 +49,7 @@ namespace midibluetoothsetup
         Microsoft.UI.Xaml.Visibility EndpointDeviceIdVisibility{ get; };
         Microsoft.UI.Xaml.Visibility IntervalVisibility{ get; };
         Microsoft.UI.Xaml.Visibility TimestampSourceVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility StatisticsVisibility{ get; };
 
         // Position in the retention combo box rather than a duration, because the combo offers a
         // few presets. -1 when the configured value is not one of them, which only happens if it

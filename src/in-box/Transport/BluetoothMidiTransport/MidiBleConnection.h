@@ -95,6 +95,10 @@ public:
     bool IsShutdown() const noexcept { return m_shutdown; }
     bool IsPeripheral() const noexcept { return m_isPeripheral; }
 
+    // Bonding discards a subscription made on an unencrypted link, and the connection stays up
+    // and silent, so it has to be renewed from outside when the device becomes paired.
+    HRESULT RefreshNotificationSubscription();
+
     // The interval the link actually negotiated, in units of 1.25 ms. Zero when unknown.
     uint16_t ConnectionIntervalUnits() const noexcept { return m_connectionIntervalUnits.load(); }
     void RefreshConnectionParameters();
