@@ -106,6 +106,41 @@ namespace Windows::Devices::Midi2::Transports::Bluetooth::Internal
         return bluetooth::MidiBluetoothProtocol::Unknown;
     }
 
+    inline bluetooth::MidiBluetoothTimestampSource TimestampSourceFromJsonString(_In_ winrt::hstring const& value) noexcept
+    {
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_TIMESTAMP_SOURCE_VALUE_DEVICE)
+        {
+            return bluetooth::MidiBluetoothTimestampSource::Device;
+        }
+
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_TIMESTAMP_SOURCE_VALUE_ARRIVAL)
+        {
+            return bluetooth::MidiBluetoothTimestampSource::ArrivalTime;
+        }
+
+        return bluetooth::MidiBluetoothTimestampSource::Unknown;
+    }
+
+    inline bluetooth::MidiBluetoothConnectionState ConnectionStateFromJsonString(_In_ winrt::hstring const& value) noexcept
+    {
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_STATE_VALUE_CONNECTED)
+        {
+            return bluetooth::MidiBluetoothConnectionState::Connected;
+        }
+
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_STATE_VALUE_CONNECTING)
+        {
+            return bluetooth::MidiBluetoothConnectionState::Connecting;
+        }
+
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_STATE_VALUE_WAITING)
+        {
+            return bluetooth::MidiBluetoothConnectionState::WaitingForDevice;
+        }
+
+        return bluetooth::MidiBluetoothConnectionState::NotConnected;
+    }
+
     inline winrt::hstring ProtocolToJsonString(_In_ bluetooth::MidiBluetoothProtocol const protocol) noexcept
     {
         switch (protocol)

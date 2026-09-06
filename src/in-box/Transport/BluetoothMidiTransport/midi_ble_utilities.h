@@ -64,6 +64,14 @@ namespace MidiBleProtocol
         // Counted before decoding, so these move even when nothing decodes.
         uint64_t PacketsReceived{ 0 };
         uint64_t PacketsSent{ 0 };
+
+        // Only knowable from received traffic, so it stays Unknown until the device has sent
+        // enough for the transport to judge its clock.
+        TimestampSource IncomingTimestampSource{ TimestampSource::Unknown };
+
+        // Connecting is asynchronous, so this distinguishes an attempt under way from a device
+        // which is wanted but has not appeared yet.
+        ConnectionState ConnectionState{ ConnectionState::NotConnected };
         int32_t LastSendErrorHresult{ 0 };
 
         // computed when the list is taken, because both are relative to now

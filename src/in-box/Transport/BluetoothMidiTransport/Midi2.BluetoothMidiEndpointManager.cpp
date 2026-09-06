@@ -769,6 +769,7 @@ CMidi2BluetoothMidiEndpointManager::GetDiscoveredDevices()
             device.PacketsReceived = connection->PacketsReceived();
             device.PacketsSent = connection->PacketsSent();
             device.LastSendErrorHresult = connection->LastSendErrorHresult();
+            device.IncomingTimestampSource = connection->IncomingTimestampSource();
 
             // The stored flag only records that a connection object exists. Asking the device
             // is what distinguishes a live link from one that went away without telling us,
@@ -780,6 +781,16 @@ CMidi2BluetoothMidiEndpointManager::GetDiscoveredDevices()
         {
             device.IsConnected = false;
             device.ConnectionIntervalUnits = 0;
+        }
+
+        {
+            auto lock = std::scoped_lock{ m_pendingRequestsLock };
+
+            device.ConnectionState =
+                device.IsConnected ? MidiBleProtocol::ConnectionState::Connected :
+                m_connectAttemptsInProgress.count(device.Id) != 0 ? MidiBleProtocol::ConnectionState::Connecting :
+                m_desiredConnections.count(device.Id) != 0 ? MidiBleProtocol::ConnectionState::WaitingForDevice :
+                MidiBleProtocol::ConnectionState::NotConnected;
         }
 
         // Zero means the radio has never heard this device, which is different from having heard
@@ -887,10 +898,15 @@ CMidi2BluetoothMidiEndpointManager::ConnectDevice(winrt::hstring const& deviceId
         auto lock = std::scoped_lock{ m_pendingRequestsLock };
 
         // remembered, so a device which is asleep now is picked up when it next advertises
-        m_desiredConnections.insert(deviceId);
+        auto const inserted = m_desiredConnections.insert(deviceId).second;
 
-        // the customer asked for this one, so it does not wait out the retry interval
-        m_lastConnectAttemptTimestamp.erase(deviceId);
+        // The customer asked for this one, so a first request does not wait out the retry
+        // interval. Asking again while it is already wanted must not, or repeated clicks would
+        // queue attempt after attempt while one is still in flight.
+        if (inserted)
+        {
+            m_lastConnectAttemptTimestamp.erase(deviceId);
+        }
     }
 
     TraceLoggingWrite(
@@ -1084,14 +1100,21 @@ CMidi2BluetoothMidiEndpointManager::RemovePeripheralEndpoint()
             LOG_IF_FAILED(peripheral->DetachConnection());
         }
 
-        if (!m_peripheralEndpointInstanceId.empty())
+        std::wstring endpointInstanceIdToDelete{ };
+
         {
-            LOG_IF_FAILED(DeleteEndpoint(m_peripheralEndpointInstanceId));
+            auto lock = std::scoped_lock{ m_peripheralClientStateLock };
+
+            endpointInstanceIdToDelete = std::move(m_peripheralEndpointInstanceId);
             m_peripheralEndpointInstanceId.clear();
+            m_peripheralClientDeviceId = L"";
+            m_peripheralEvaluatedClientDeviceId = L"";
         }
 
-        m_peripheralClientDeviceId = L"";
-        m_peripheralEvaluatedClientDeviceId = L"";
+        if (!endpointInstanceIdToDelete.empty())
+        {
+            LOG_IF_FAILED(DeleteEndpoint(endpointInstanceIdToDelete));
+        }
 
         return S_OK;
     }
@@ -1110,13 +1133,23 @@ CMidi2BluetoothMidiEndpointManager::ProcessPeripheralClientChange()
 
         auto const clientDeviceId = peripheral != nullptr ? peripheral->ActiveClientDeviceId() : winrt::hstring{};
 
+        winrt::hstring knownClientDeviceId{ };
+        winrt::hstring evaluatedClientDeviceId{ };
+
+        {
+            auto lock = std::scoped_lock{ m_peripheralClientStateLock };
+
+            knownClientDeviceId = m_peripheralClientDeviceId;
+            evaluatedClientDeviceId = m_peripheralEvaluatedClientDeviceId;
+        }
+
         // The same Central which already has an endpoint means nothing has changed.
-        if (!clientDeviceId.empty() && clientDeviceId == m_peripheralClientDeviceId)
+        if (!clientDeviceId.empty() && clientDeviceId == knownClientDeviceId)
         {
             return S_OK;
         }
 
-        if (clientDeviceId != m_peripheralEvaluatedClientDeviceId)
+        if (clientDeviceId != evaluatedClientDeviceId)
         {
             // A different Central, or none, means the endpoint no longer represents what is connected.
             LOG_IF_FAILED(RemovePeripheralEndpoint());
@@ -1125,6 +1158,8 @@ CMidi2BluetoothMidiEndpointManager::ProcessPeripheralClientChange()
             // their request nor an "allow once" granted to them may carry over.
             TransportState::Current().ClearPendingPeripheralClient();
             TransportState::Current().ClearPeripheralClientLinkDecision();
+
+            auto lock = std::scoped_lock{ m_peripheralClientStateLock };
 
             m_peripheralEvaluatedClientDeviceId = clientDeviceId;
         }
@@ -1291,8 +1326,14 @@ CMidi2BluetoothMidiEndpointManager::ProcessPeripheralClientChange()
             instanceId,
             remoteAddress.empty() ? std::wstring{ MIDI_BLE_PERIPHERAL_DEVICE_ID } : std::wstring{ remoteAddress }));
 
-        m_peripheralEndpointInstanceId = connection->EndpointDeviceInstanceId();
-        m_peripheralClientDeviceId = clientDeviceId;
+        auto const endpointInstanceId = connection->EndpointDeviceInstanceId();
+
+        {
+            auto lock = std::scoped_lock{ m_peripheralClientStateLock };
+
+            m_peripheralEndpointInstanceId = endpointInstanceId;
+            m_peripheralClientDeviceId = clientDeviceId;
+        }
 
         return S_OK;
     }
@@ -1773,6 +1814,21 @@ CMidi2BluetoothMidiEndpointManager::ConnectDeviceCore(
     {
         return S_OK;
     }
+
+    // Opening a GATT session takes seconds, and nothing else can tell a device being worked on
+    // from one merely waiting to be retried.
+    {
+        auto lock = std::scoped_lock{ m_pendingRequestsLock };
+
+        m_connectAttemptsInProgress.insert(deviceId);
+    }
+
+    auto clearAttemptInProgress = wil::scope_exit([&]()
+        {
+            auto lock = std::scoped_lock{ m_pendingRequestsLock };
+
+            m_connectAttemptsInProgress.erase(deviceId);
+        });
 
     MidiBleProtocol::DiscoveredDevice discoveredDevice{};
 

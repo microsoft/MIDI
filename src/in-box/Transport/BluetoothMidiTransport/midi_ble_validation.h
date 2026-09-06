@@ -191,6 +191,26 @@ namespace MidiBleProtocol
         UniversalMidiPacket = 2,
     };
 
+    // Where a received message's timestamp came from. Several inexpensive devices never advance
+    // their own clock, which makes correlating against it meaningless, so arrival time stands in.
+    enum class TimestampSource : uint8_t
+    {
+        Unknown = 0,
+        Device = 1,
+        ArrivalTime = 2,
+    };
+
+    // Connecting happens on a background worker and a wanted device is retried for as long as it
+    // stays wanted, so "not connected" alone cannot tell a device being worked on from one which
+    // is simply switched off.
+    enum class ConnectionState : uint8_t
+    {
+        NotConnected = 0,
+        WaitingForDevice = 1,
+        Connecting = 2,
+        Connected = 3,
+    };
+
     // Both specifications require an interval of 15 ms or less and prefer the lowest both ends
     // support. Windows exposes three presets and no way to name an interval, and the
     // throughput-optimized one asks for 15 ms as both the floor and the ceiling, so which of
@@ -288,6 +308,54 @@ namespace MidiBleUtilities
 
         default:
             return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_NATIVE_DATA_FORMAT_VALUE_UNKNOWN;
+        }
+    }
+
+    inline winrt::hstring TimestampSourceToJsonString(_In_ MidiBleProtocol::TimestampSource const timestampSource)
+    {
+        switch (timestampSource)
+        {
+        case MidiBleProtocol::TimestampSource::Device:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_TIMESTAMP_SOURCE_VALUE_DEVICE;
+
+        case MidiBleProtocol::TimestampSource::ArrivalTime:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_TIMESTAMP_SOURCE_VALUE_ARRIVAL;
+
+        default:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_TIMESTAMP_SOURCE_VALUE_UNKNOWN;
+        }
+    }
+
+    inline MidiBleProtocol::TimestampSource TimestampSourceFromJsonString(_In_ winrt::hstring const& value)
+    {
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_TIMESTAMP_SOURCE_VALUE_DEVICE)
+        {
+            return MidiBleProtocol::TimestampSource::Device;
+        }
+
+        if (value == MIDI_CONFIG_JSON_BLUETOOTH_MIDI_TIMESTAMP_SOURCE_VALUE_ARRIVAL)
+        {
+            return MidiBleProtocol::TimestampSource::ArrivalTime;
+        }
+
+        return MidiBleProtocol::TimestampSource::Unknown;
+    }
+
+    inline winrt::hstring ConnectionStateToJsonString(_In_ MidiBleProtocol::ConnectionState const connectionState)
+    {
+        switch (connectionState)
+        {
+        case MidiBleProtocol::ConnectionState::Connected:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_STATE_VALUE_CONNECTED;
+
+        case MidiBleProtocol::ConnectionState::Connecting:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_STATE_VALUE_CONNECTING;
+
+        case MidiBleProtocol::ConnectionState::WaitingForDevice:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_STATE_VALUE_WAITING;
+
+        default:
+            return MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_STATE_VALUE_NOT_CONNECTED;
         }
     }
 

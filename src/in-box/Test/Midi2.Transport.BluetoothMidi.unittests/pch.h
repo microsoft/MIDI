@@ -17,6 +17,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <deque>
 #include <string>
 #include <vector>
 

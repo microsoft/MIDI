@@ -70,8 +70,12 @@ public:
     TEST_METHOD(TestCorrelatorRecoversAfterALongSilence);
     TEST_METHOD(TestCorrelatorRecoversWhenASilenceHidesUnderTheGapThreshold);
     TEST_METHOD(TestCorrelatorSnapsBackFromALargeDrift);
-    TEST_METHOD(TestCorrelatorSnapsBackFromAModestDrift);
-    TEST_METHOD(TestCorrelatorCreepsRatherThanSnappingForConnectionIntervalJitter);
+    TEST_METHOD(TestCorrelatorForgetsAStaleMinimumAfterTheWindow);
+    TEST_METHOD(TestCorrelatorRejectsJitterFromASlowConnectionInterval);
+    TEST_METHOD(TestCorrelatorFallsBackToArrivalWhenTheSenderClockNeverMoves);
+    TEST_METHOD(TestCorrelatorKeepsUsingASenderClockThatDoesMove);
+    TEST_METHOD(TestCorrelatorResumesCorrelatingWhenASenderClockStartsMoving);
+    TEST_METHOD(TestCorrelatorDoesNotAbandonASenderClockOverOneCoalescedBurst);
     TEST_METHOD(TestCorrelatorResetRebuildsMapping);
     TEST_METHOD(TestDecoderReportsSenderTimestamp);
 };

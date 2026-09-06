@@ -30,6 +30,8 @@ namespace
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_MESSAGES_RECEIVED_KEY, json::JsonValue::CreateNumberValue(static_cast<double>(device.MessagesReceived)));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_MESSAGES_SENT_KEY, json::JsonValue::CreateNumberValue(static_cast<double>(device.MessagesSent)));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PACKETS_RECEIVED_KEY, json::JsonValue::CreateNumberValue(static_cast<double>(device.PacketsReceived)));
+        deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_TIMESTAMP_SOURCE_KEY, json::JsonValue::CreateStringValue(MidiBleUtilities::TimestampSourceToJsonString(device.IncomingTimestampSource)));
+        deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_STATE_KEY, json::JsonValue::CreateStringValue(MidiBleUtilities::ConnectionStateToJsonString(device.ConnectionState)));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PACKETS_SENT_KEY, json::JsonValue::CreateNumberValue(static_cast<double>(device.PacketsSent)));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_SEND_ERROR_HRESULT_KEY, json::JsonValue::CreateNumberValue(device.LastSendErrorHresult));
         deviceJson.SetNamedValue(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_PRESENT_KEY, json::JsonValue::CreateBooleanValue(device.IsPresent));

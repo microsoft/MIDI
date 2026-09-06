@@ -27,11 +27,13 @@ namespace midibluetoothsetup
         String StatusText{ get; };
         String StatisticsText{ get; };
         String IntervalText{ get; };
+        String TimestampSourceText{ get; };
 
         String EndpointDeviceId{ get; };
         String EndpointDeviceInstanceId{ get; };
 
         Boolean IsConnected{ get; };
+        Boolean IsConnectionPending{ get; };
         Boolean IsPresent{ get; };
         Boolean IsPaired{ get; };
         Boolean HasEndpoint{ get; };
@@ -46,6 +48,7 @@ namespace midibluetoothsetup
         Microsoft.UI.Xaml.Visibility ConnectedBadgeVisibility{ get; };
         Microsoft.UI.Xaml.Visibility EndpointDeviceIdVisibility{ get; };
         Microsoft.UI.Xaml.Visibility IntervalVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility TimestampSourceVisibility{ get; };
 
         // Position in the retention combo box rather than a duration, because the combo offers a
         // few presets. -1 when the configured value is not one of them, which only happens if it

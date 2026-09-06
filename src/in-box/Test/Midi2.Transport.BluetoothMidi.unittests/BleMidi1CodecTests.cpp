@@ -676,38 +676,132 @@ void BleMidi1CodecTests::TestCorrelatorSnapsBackFromALargeDrift()
     VERIFY_ARE_EQUAL(arrival, mapped[0]);
 }
 
-void BleMidi1CodecTests::TestCorrelatorSnapsBackFromAModestDrift()
+void BleMidi1CodecTests::TestCorrelatorForgetsAStaleMinimumAfterTheWindow()
 {
     MidiBleMidi1::TimestampCorrelator correlator;
 
-    uint64_t arrival = 1000 * TestTicksPerMillisecond;
+    // one packet arrives with no measurable delay, which is not representative of the link
+    MapPacket(correlator, { 1000 }, 1000 * TestTicksPerMillisecond);
 
-    MapPacket(correlator, { 1000 }, arrival);
+    // every later packet carries a steady 50 ms of transport delay
+    MapPacket(correlator, { 1050 }, 1100 * TestTicksPerMillisecond);
+    MapPacket(correlator, { 3450 }, 3500 * TestTicksPerMillisecond);
 
-    // 300 ms is far beyond any connection interval or retransmission, so it is an outlier to
-    // correct at once rather than bleed off over 300 packets.
-    arrival += 300 * TestTicksPerMillisecond;
+    // Past the window the unrepresentative sample is forgotten. A minimum taken over all history
+    // would still be anchored to it and would stamp this message 50 ms early.
+    uint64_t const arrival = 6200 * TestTicksPerMillisecond;
 
-    auto const mapped = MapPacket(correlator, { 1000 }, arrival);
+    auto const mapped = MapPacket(correlator, { 6150 }, arrival);
 
     VERIFY_ARE_EQUAL(arrival, mapped[0]);
 }
 
-void BleMidi1CodecTests::TestCorrelatorCreepsRatherThanSnappingForConnectionIntervalJitter()
+void BleMidi1CodecTests::TestCorrelatorRejectsJitterFromASlowConnectionInterval()
+{
+    MidiBleMidi1::TimestampCorrelator correlator;
+
+    MapPacket(correlator, { 1000 }, 1000 * TestTicksPerMillisecond);
+
+    // Nothing may assume a connection interval. Some devices negotiate 40 ms, and a
+    // retransmission doubles that, but none of it is a clock change so the offset must not move.
+    auto const mapped = MapPacket(correlator, { 1015 }, 1095 * TestTicksPerMillisecond);
+
+    VERIFY_ARE_EQUAL(1015 * TestTicksPerMillisecond, mapped[0]);
+}
+
+void BleMidi1CodecTests::TestCorrelatorFallsBackToArrivalWhenTheSenderClockNeverMoves()
+{
+    MidiBleMidi1::TimestampCorrelator correlator;
+
+    // An SMC-PAD Pocket behaves like this: every packet carries the same timestamp no matter how
+    // much time really passed, so correlating against it pins everything to one instant.
+    uint64_t arrival = 1000 * TestTicksPerMillisecond;
+
+    for (int i = 0; i < 4; i++)
+    {
+        MapPacket(correlator, { 500 }, arrival);
+        arrival += 200 * TestTicksPerMillisecond;
+    }
+
+    VERIFY_IS_TRUE(correlator.SenderClockIsStalled());
+
+    auto const mapped = MapPacket(correlator, { 500 }, arrival);
+
+    VERIFY_ARE_EQUAL(arrival, mapped[0]);
+
+    // and real spacing has to come back, not collapse onto the previous instant
+    arrival += 200 * TestTicksPerMillisecond;
+
+    auto const next = MapPacket(correlator, { 500 }, arrival);
+
+    VERIFY_ARE_EQUAL(200 * TestTicksPerMillisecond, next[0] - mapped[0]);
+}
+
+void BleMidi1CodecTests::TestCorrelatorKeepsUsingASenderClockThatDoesMove()
+{
+    MidiBleMidi1::TimestampCorrelator correlator;
+
+    // A LUMI Keys advances its clock with real time, so nothing here may be abandoned.
+    uint64_t arrival = 1000 * TestTicksPerMillisecond;
+    uint16_t senderTimestamp{ 500 };
+
+    for (int i = 0; i < 8; i++)
+    {
+        MapPacket(correlator, { senderTimestamp }, arrival);
+
+        arrival += 200 * TestTicksPerMillisecond;
+        senderTimestamp = static_cast<uint16_t>((senderTimestamp + 200) & MidiBleMidi1::TimestampMask);
+    }
+
+    VERIFY_IS_FALSE(correlator.SenderClockIsStalled());
+    VERIFY_IS_TRUE(correlator.HaveSeenSenderClockAdvance());
+}
+
+void BleMidi1CodecTests::TestCorrelatorResumesCorrelatingWhenASenderClockStartsMoving()
 {
     MidiBleMidi1::TimestampCorrelator correlator;
 
     uint64_t arrival = 1000 * TestTicksPerMillisecond;
 
-    MapPacket(correlator, { 1000 }, arrival);
+    for (int i = 0; i < 4; i++)
+    {
+        MapPacket(correlator, { 500 }, arrival);
+        arrival += 200 * TestTicksPerMillisecond;
+    }
 
-    // One late connection interval must not be read as a lost correlation. Absorbing it whole
-    // would put the jitter the correlator exists to remove straight back into the output.
-    arrival += 15 * TestTicksPerMillisecond;
+    VERIFY_IS_TRUE(correlator.SenderClockIsStalled());
 
-    auto const mapped = MapPacket(correlator, { 1000 }, arrival);
+    // A firmware update can fix this, so giving up has to be a runtime judgment rather than a
+    // permanent verdict on the device.
+    uint16_t senderTimestamp{ 500 };
 
-    VERIFY_IS_TRUE(mapped[0] < arrival);
+    for (int i = 0; i < 3; i++)
+    {
+        senderTimestamp = static_cast<uint16_t>((senderTimestamp + 200) & MidiBleMidi1::TimestampMask);
+        arrival += 200 * TestTicksPerMillisecond;
+
+        MapPacket(correlator, { senderTimestamp }, arrival);
+    }
+
+    VERIFY_IS_FALSE(correlator.SenderClockIsStalled());
+}
+
+void BleMidi1CodecTests::TestCorrelatorDoesNotAbandonASenderClockOverOneCoalescedBurst()
+{
+    MidiBleMidi1::TimestampCorrelator correlator;
+
+    uint64_t arrival = 1000 * TestTicksPerMillisecond;
+
+    MapPacket(correlator, { 500 }, arrival);
+
+    // Two packets sharing a timestamp is a device coalescing a burst, not a stopped clock.
+    arrival += 200 * TestTicksPerMillisecond;
+    MapPacket(correlator, { 500 }, arrival);
+
+    arrival += 200 * TestTicksPerMillisecond;
+    MapPacket(correlator, { 500 }, arrival);
+
+    VERIFY_IS_FALSE(correlator.SenderClockIsStalled());
 }
 
 void BleMidi1CodecTests::TestCorrelatorResetRebuildsMapping()

@@ -600,4 +600,10 @@
 #define IDS_BT_RETENTION_SECONDS                        51937
 #define IDS_BT_STATUS_TITLE                             51938
 #define IDS_BT_REQUIRES_PAIRING                         51939
+#define IDS_BT_LABEL_TIMESTAMPS                         51940
+#define IDS_BT_TIMESTAMPS_DEVICE                        51941
+#define IDS_BT_TIMESTAMPS_ESTIMATED                     51942
+#define IDS_BT_TIMESTAMPS_ESTIMATED_NOTE                51943
+#define IDS_BT_STATE_CONNECTING                         51944
+#define IDS_BT_STATE_WAITING                            51945
 

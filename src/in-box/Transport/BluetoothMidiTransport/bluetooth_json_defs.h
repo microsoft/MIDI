@@ -45,6 +45,14 @@
 // only way to tell a device which sends nothing apart from one this transport cannot decode.
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PACKETS_RECEIVED_KEY                   L"packetsReceived"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PACKETS_SENT_KEY                       L"packetsSent"
+
+// Whether the device's own timestamps are usable. Some devices never advance theirs, so the time
+// a message arrived is substituted and the customer is told the timing is only an estimate.
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_TIMESTAMP_SOURCE_KEY                   L"timestampSource"
+
+// Connecting is asynchronous and a wanted device is retried until it appears, so "isConnected"
+// alone leaves a caller unable to tell progress from a device which is switched off.
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_STATE_KEY                   L"connectionState"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_SEND_ERROR_HRESULT_KEY            L"lastSendErrorHresult"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_PRESENT_KEY                         L"isPresent"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_LAST_SEEN_AGO_MS_KEY                   L"lastSeenAgoMilliseconds"
@@ -118,6 +126,15 @@
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_NATIVE_DATA_FORMAT_VALUE_MIDI1         L"timestampedMidi1ByteStream"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_NATIVE_DATA_FORMAT_VALUE_UMP           L"ump"
 #define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_NATIVE_DATA_FORMAT_VALUE_UNKNOWN       L"unknown"
+
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_TIMESTAMP_SOURCE_VALUE_UNKNOWN         L"unknown"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_TIMESTAMP_SOURCE_VALUE_DEVICE          L"device"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_TIMESTAMP_SOURCE_VALUE_ARRIVAL         L"arrivalTime"
+
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_STATE_VALUE_NOT_CONNECTED   L"notConnected"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_STATE_VALUE_WAITING         L"waitingForDevice"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_STATE_VALUE_CONNECTING      L"connecting"
+#define MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_STATE_VALUE_CONNECTED       L"connected"
 
 // Which connection parameters to ask the radio for when connecting out to a device. Windows
 // offers only these presets, so this exists mainly to measure what each one actually does.

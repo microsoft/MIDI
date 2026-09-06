@@ -27,6 +27,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
                 deviceJson.GetNamedString(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_SELECTED_PROTOCOL_KEY, L""));
 
             m_isConnected = deviceJson.GetNamedBoolean(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_CONNECTED_KEY, false);
+
+            m_connectionState = btinternal::ConnectionStateFromJsonString(
+                deviceJson.GetNamedString(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_CONNECTION_STATE_KEY, L""));
             m_isPaired = deviceJson.GetNamedBoolean(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_PAIRED_KEY, false);
             m_requiresPairing = deviceJson.GetNamedBoolean(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_REQUIRES_PAIRING_KEY, false);
             m_isPresent = deviceJson.GetNamedBoolean(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_IS_PRESENT_KEY, false);
@@ -52,6 +55,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
                 deviceJson.GetNamedNumber(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PACKETS_RECEIVED_KEY, 0.0));
             m_packetsSent = static_cast<uint64_t>(
                 deviceJson.GetNamedNumber(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_PACKETS_SENT_KEY, 0.0));
+
+            m_timestampSource = btinternal::TimestampSourceFromJsonString(
+                deviceJson.GetNamedString(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_TIMESTAMP_SOURCE_KEY, L""));
 
             m_connectionInterval = btinternal::TimeSpanFromMilliseconds(
                 deviceJson.GetNamedNumber(MIDI_CONFIG_JSON_BLUETOOTH_MIDI_INTERVAL_MS_KEY, 0.0));

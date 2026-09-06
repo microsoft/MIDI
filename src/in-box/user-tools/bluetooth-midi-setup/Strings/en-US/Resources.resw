@@ -137,6 +137,15 @@
   <data name="ConnectionIntervalLabel.Text" xml:space="preserve">
     <value>Connection interval</value>
   </data>
+  <data name="TimestampSourceLabel.Text" xml:space="preserve">
+    <value>Timestamps</value>
+  </data>
+  <data name="TimestampSourceDevice" xml:space="preserve">
+    <value>From the device</value>
+  </data>
+  <data name="TimestampSourceArrivalTime" xml:space="preserve">
+    <value>Estimated. This device does not timestamp its messages, so the time each one arrived is used instead.</value>
+  </data>
   <data name="DeviceStatisticsLabel.Text" xml:space="preserve">
     <value>Messages</value>
   </data>
@@ -310,6 +319,12 @@
   </data>
   <data name="PresenceConnected" xml:space="preserve">
     <value>Connected</value>
+  </data>
+  <data name="PresenceConnecting" xml:space="preserve">
+    <value>Connecting...</value>
+  </data>
+  <data name="PresenceWaitingForDevice" xml:space="preserve">
+    <value>Waiting for the device...</value>
   </data>
   <data name="PresenceNearby" xml:space="preserve">
     <value>Nearby</value>

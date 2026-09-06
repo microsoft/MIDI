@@ -231,10 +231,12 @@ namespace winrt::midibluetoothsetup::implementation
         winrt::hstring StatusText() const noexcept { return m_statusText; }
         winrt::hstring StatisticsText() const noexcept { return m_statisticsText; }
         winrt::hstring IntervalText() const noexcept { return m_intervalText; }
+        winrt::hstring TimestampSourceText() const noexcept { return m_timestampSourceText; }
         winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
         winrt::hstring EndpointDeviceInstanceId() const noexcept { return m_endpointDeviceInstanceId; }
 
         bool IsConnected() const noexcept { return m_isConnected; }
+        bool IsConnectionPending() const noexcept { return m_isConnectionPending; }
         bool IsPresent() const noexcept { return m_isPresent; }
         bool IsPaired() const noexcept { return m_isPaired; }
         bool HasEndpoint() const noexcept { return m_hasEndpoint; }
@@ -244,14 +246,14 @@ namespace winrt::midibluetoothsetup::implementation
 
         winrt::Microsoft::UI::Xaml::Visibility ConnectVisibility() const noexcept
         {
-            return m_isConnected ?
+            return (m_isConnected || m_isConnectionPending) ?
                 winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
                 winrt::Microsoft::UI::Xaml::Visibility::Visible;
         }
 
         winrt::Microsoft::UI::Xaml::Visibility DisconnectVisibility() const noexcept
         {
-            return m_isConnected ?
+            return (m_isConnected || m_isConnectionPending) ?
                 winrt::Microsoft::UI::Xaml::Visibility::Visible :
                 winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
         }
@@ -260,7 +262,7 @@ namespace winrt::midibluetoothsetup::implementation
         // connected one is disconnected rather than forgotten.
         winrt::Microsoft::UI::Xaml::Visibility ForgetVisibility() const noexcept
         {
-            return (!m_isConnected && m_isRemembered) ?
+            return (!m_isConnected && !m_isConnectionPending && m_isRemembered) ?
                 winrt::Microsoft::UI::Xaml::Visibility::Visible :
                 winrt::Microsoft::UI::Xaml::Visibility::Collapsed;
         }
@@ -358,6 +360,13 @@ namespace winrt::midibluetoothsetup::implementation
                 winrt::Microsoft::UI::Xaml::Visibility::Visible;
         }
 
+        winrt::Microsoft::UI::Xaml::Visibility TimestampSourceVisibility() const noexcept
+        {
+            return m_timestampSourceText.empty() ?
+                winrt::Microsoft::UI::Xaml::Visibility::Collapsed :
+                winrt::Microsoft::UI::Xaml::Visibility::Visible;
+        }
+
         winrt::hstring LastErrorText() const noexcept { return m_lastErrorText; }
 
         winrt::Microsoft::UI::Xaml::Visibility LastErrorVisibility() const noexcept
@@ -397,11 +406,13 @@ namespace winrt::midibluetoothsetup::implementation
             _In_ winrt::hstring const& statusText,
             _In_ winrt::hstring const& statisticsText,
             _In_ winrt::hstring const& intervalText,
+            _In_ winrt::hstring const& timestampSourceText,
             _In_ winrt::hstring const& endpointDeviceId,
             _In_ winrt::hstring const& endpointDeviceInstanceId,
             _In_ winrt::hstring const& lastErrorText,
             _In_ int16_t const signalDecibels,
             _In_ bool const isConnected,
+            _In_ bool const isConnectionPending,
             _In_ bool const isPresent,
             _In_ bool const isPaired,
             _In_ bool const hasEndpoint,
@@ -422,6 +433,11 @@ namespace winrt::midibluetoothsetup::implementation
                 RaisePropertyChanged(L"IntervalVisibility");
             }
 
+            if (UpdateField(m_timestampSourceText, timestampSourceText, L"TimestampSourceText"))
+            {
+                RaisePropertyChanged(L"TimestampSourceVisibility");
+            }
+
             if (UpdateField(m_endpointDeviceId, endpointDeviceId, L"EndpointDeviceId"))
             {
                 RaisePropertyChanged(L"EndpointDeviceIdVisibility");
@@ -438,6 +454,7 @@ namespace winrt::midibluetoothsetup::implementation
             }
 
             auto const connectedChanged = UpdateField(m_isConnected, isConnected, L"IsConnected");
+            auto const pendingChanged = UpdateField(m_isConnectionPending, isConnectionPending, L"IsConnectionPending");
             auto const rememberedChanged = UpdateField(m_isRemembered, isRemembered, L"IsRemembered");
 
             if (UpdateField(m_offlineRetentionSeconds, offlineRetentionSeconds, L"OfflineRetentionSeconds"))
@@ -465,7 +482,7 @@ namespace winrt::midibluetoothsetup::implementation
                 RaisePropertyChanged(L"ConnectedBadgeVisibility");
             }
 
-            if (connectedChanged || rememberedChanged)
+            if (connectedChanged || rememberedChanged || pendingChanged)
             {
                 RaisePropertyChanged(L"ConnectVisibility");
                 RaisePropertyChanged(L"DisconnectVisibility");
@@ -498,8 +515,10 @@ namespace winrt::midibluetoothsetup::implementation
         winrt::hstring m_statusText{};
         winrt::hstring m_statisticsText{};
         winrt::hstring m_intervalText{};
+        winrt::hstring m_timestampSourceText{};
         winrt::hstring m_endpointDeviceId{};
         winrt::hstring m_endpointDeviceInstanceId{};
+        bool m_isConnectionPending{ false };
         winrt::hstring m_lastErrorText{};
 
         bool m_isConnected{ false };

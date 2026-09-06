@@ -1173,6 +1173,8 @@
     <Midl Include="MidiBasicLoopbackEndpointDefinition.idl" />
     <Midl Include="MidiBasicLoopbackManager.idl" />
     <Midl Include="MidiBluetoothProtocolEnum.idl" />
+    <Midl Include="MidiBluetoothConnectionStateEnum.idl" />
+    <Midl Include="MidiBluetoothTimestampSourceEnum.idl" />
     <Midl Include="MidiBluetoothRadioInformation.idl" />
     <Midl Include="MidiServiceEndpointCustomizationRemovalConfig.idl" />
     <Midl Include="MidiBluetoothAddressTypeEnum.idl" />

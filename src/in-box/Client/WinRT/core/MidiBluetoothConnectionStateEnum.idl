@@ -1,0 +1,34 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Bluetooth
+{
+    [contract(MidiTransportsBluetoothApiContract, 1)]
+
+    // How far along a device is in getting connected. Connecting opens a GATT session on a
+    // background worker and takes seconds, and a device the customer has asked for stays wanted
+    // and is retried until it appears, so IsConnected on its own cannot tell an attempt which is
+    // under way from a device which is simply switched off.
+    //
+    // Disconnecting a device in any state other than NotConnected cancels the request.
+    enum MidiBluetoothConnectionState
+    {
+        NotConnected = 0,
+
+        // Wanted, but the device has not been reachable yet. The transport keeps retrying.
+        WaitingForDevice = 1,
+
+        // An attempt is running right now.
+        Connecting = 2,
+
+        Connected = 3,
+    };
+}

@@ -96,6 +96,7 @@ namespace winrt::midibluetoothsetup::implementation
         // A connected device stops advertising, so its presence comes from the link. For the
         // rest, how long ago it was last heard from is the only presence signal Bluetooth offers.
         winrt::hstring PresenceDescription(
+            _In_ midi2bt::MidiBluetoothConnectionState const connectionState,
             _In_ bool const isConnected,
             _In_ bool const isPresent,
             _In_ bool const hasBeenSeen,            _In_ foundation::TimeSpan const lastSeenAgo) noexcept
@@ -105,6 +106,18 @@ namespace winrt::midibluetoothsetup::implementation
                 if (isConnected)
                 {
                     return res::GetString(L"PresenceConnected");
+                }
+
+                // Said before presence, because a device being worked on is more useful to know
+                // about than whether the radio can currently hear it.
+                if (connectionState == midi2bt::MidiBluetoothConnectionState::Connecting)
+                {
+                    return res::GetString(L"PresenceConnecting");
+                }
+
+                if (connectionState == midi2bt::MidiBluetoothConnectionState::WaitingForDevice)
+                {
+                    return res::GetString(L"PresenceWaitingForDevice");
                 }
 
                 if (isPresent)
@@ -159,6 +172,30 @@ namespace winrt::midibluetoothsetup::implementation
                 }
 
                 return res::FormatString(L"ConnectionIntervalFormat", milliseconds);
+            }
+            catch (...)
+            {
+                return {};
+            }
+        }
+
+        // Only knowable from traffic the device has sent, so a device which has sent nothing says
+        // nothing rather than claiming its timestamps are good.
+        winrt::hstring TimestampSourceDescription(_In_ midi2bt::MidiBluetoothTimestampSource const source) noexcept
+        {
+            try
+            {
+                switch (source)
+                {
+                case midi2bt::MidiBluetoothTimestampSource::Device:
+                    return res::GetString(L"TimestampSourceDevice");
+
+                case midi2bt::MidiBluetoothTimestampSource::ArrivalTime:
+                    return res::GetString(L"TimestampSourceArrivalTime");
+
+                default:
+                    return {};
+                }
             }
             catch (...)
             {
@@ -810,17 +847,27 @@ namespace winrt::midibluetoothsetup::implementation
                     id :
                     res::FormatString(L"DeviceSubtitleFormat", id, ProtocolDisplayName(protocol));
 
+                auto const connectionState = device.ConnectionState();
+
+                // Connecting runs on a background worker and a wanted device is retried until it
+                // appears, so both states hide Connect and leave Disconnect as the way to cancel.
+                auto const connectionPending =
+                    connectionState == midi2bt::MidiBluetoothConnectionState::Connecting ||
+                    connectionState == midi2bt::MidiBluetoothConnectionState::WaitingForDevice;
+
                 winrt::get_self<implementation::BluetoothDeviceItem>(item)->InternalUpdate(
                     name,
                     subtitle,
-                    PresenceDescription(device.IsConnected(), device.IsPresent(), device.HasBeenSeen(), device.LastSeenAgo()),
+                    PresenceDescription(connectionState, device.IsConnected(), device.IsPresent(), device.HasBeenSeen(), device.LastSeenAgo()),
                     statistics,
                     device.IsConnected() ? IntervalDescription(device.ConnectionInterval()) : winrt::hstring{},
+                    device.IsConnected() ? TimestampSourceDescription(device.TimestampSource()) : winrt::hstring{},
                     device.EndpointDeviceId(),
                     device.EndpointDeviceInstanceId(),
                     device.LastConnectError(),
                     device.SignalStrengthDecibelMilliwatts(),
                     device.IsConnected(),
+                    connectionPending,
                     device.IsPresent(),
                     device.IsPaired(),
                     device.HasEndpoint(),

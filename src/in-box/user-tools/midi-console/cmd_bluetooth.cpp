@@ -170,6 +170,31 @@ namespace midi2console
             }
         }
 
+        // Only known from traffic the device has actually sent, so a device which has sent nothing
+        // is left blank rather than being reported as either.
+        std::string FormatTimestampSource(_In_ midi2bt::MidiBluetoothTimestampSource source)
+        {
+            switch (source)
+            {
+            case midi2bt::MidiBluetoothTimestampSource::Device:      return ResourceString(IDS_BT_TIMESTAMPS_DEVICE);
+            case midi2bt::MidiBluetoothTimestampSource::ArrivalTime: return ResourceString(IDS_BT_TIMESTAMPS_ESTIMATED);
+            default:                                                 return "";
+            }
+        }
+
+        // Connecting is asynchronous and a wanted device is retried until it appears, so this says
+        // more than yes or no can.
+        std::string FormatConnectionState(_In_ midi2bt::MidiBluetoothConnectionState state)
+        {
+            switch (state)
+            {
+            case midi2bt::MidiBluetoothConnectionState::Connected:        return FormatBoolean(true);
+            case midi2bt::MidiBluetoothConnectionState::Connecting:       return ResourceString(IDS_BT_STATE_CONNECTING);
+            case midi2bt::MidiBluetoothConnectionState::WaitingForDevice: return ResourceString(IDS_BT_STATE_WAITING);
+            default:                                                      return FormatBoolean(false);
+            }
+        }
+
         bool TryParseApprovalScope(_In_ std::string const& text, _Out_ midi2bt::MidiBluetoothApprovalScope& scope)
         {
             scope = midi2bt::MidiBluetoothApprovalScope::Once;
@@ -245,6 +270,7 @@ namespace midi2console
         table.SetLastColumnShrinkable();
         table.AddColumn(ResourceString(IDS_BT_LABEL_CONNECTED));
         table.AddColumn(ResourceString(IDS_LABEL_PROTOCOL));
+        table.AddColumn(ResourceString(IDS_BT_LABEL_TIMESTAMPS));
         table.AddColumn(ResourceString(IDS_BT_LABEL_IN_COUNTS), ColumnAlignment::Right);
         table.AddColumn(ResourceString(IDS_BT_LABEL_OUT_COUNTS), ColumnAlignment::Right);
 
@@ -253,13 +279,34 @@ namespace midi2console
             table.BeginRow();
             table.AddCell(ToUtf8(device.BluetoothDeviceId()));
             table.AddCell(ToUtf8(device.Name()));
-            table.AddCell(FormatBoolean(device.IsConnected()), BooleanStyle(device.IsConnected()));
+            table.AddCell(FormatConnectionState(device.ConnectionState()), BooleanStyle(device.IsConnected()));
             table.AddCell(FormatBluetoothProtocol(device.SelectedProtocol()));
+            table.AddCell(
+                device.IsConnected() ? FormatTimestampSource(device.TimestampSource()) : std::string{},
+                device.TimestampSource() == midi2bt::MidiBluetoothTimestampSource::ArrivalTime ?
+                    warningTextStyle : infoTextStyle);
             table.AddCell(fmt::format("{} / {}", device.MessagesReceived(), device.PacketsReceived()), numberTextStyle);
             table.AddCell(fmt::format("{} / {}", device.MessagesSent(), device.PacketsSent()), numberTextStyle);
         }
 
         table.Render();
+
+        // A column cannot say why the timing is approximate, and this is a property of the device
+        // rather than a fault the customer can do anything about.
+        for (auto const& device : devices)
+        {
+            if (device.IsConnected() &&
+                device.TimestampSource() == midi2bt::MidiBluetoothTimestampSource::ArrivalTime)
+            {
+                auto const name = device.Name().empty() ?
+                    ToUtf8(device.BluetoothDeviceId()) : ToUtf8(device.Name());
+
+                WriteBlankLine();
+                WriteLine(fmt::format("  {} {}",
+                    Styled(name, endpointNameTextStyle),
+                    ResourceString(IDS_BT_TIMESTAMPS_ESTIMATED_NOTE)));
+            }
+        }
 
         // Nothing in a Bluetooth advertisement declares this, so it is only ever known after an
         // attempt has been made, and the transport stops retrying once it is.

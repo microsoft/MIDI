@@ -85,6 +85,12 @@ public:
     bool RequiresPairing() const noexcept { return m_requiresPairing.load(); }
     int32_t LastSendErrorHresult() const noexcept { return m_lastSendErrorHresult.load(); }
 
+    // Published from the receive path because the correlator itself is only touched there.
+    MidiBleProtocol::TimestampSource IncomingTimestampSource() const noexcept
+    {
+        return static_cast<MidiBleProtocol::TimestampSource>(m_incomingTimestampSource.load());
+    }
+
     bool IsDeviceConnected() const;
     bool IsShutdown() const noexcept { return m_shutdown; }
     bool IsPeripheral() const noexcept { return m_isPeripheral; }
@@ -169,6 +175,8 @@ private:
     std::atomic<uint64_t> m_packetsSent{ 0 };
     std::atomic<bool> m_requiresPairing{ false };
     std::atomic<int32_t> m_lastSendErrorHresult{ 0 };
+
+    std::atomic<uint8_t> m_incomingTimestampSource{ static_cast<uint8_t>(MidiBleProtocol::TimestampSource::Unknown) };
 
     // jthread members are declared last so they are destroyed first
     std::jthread m_writerThread;
