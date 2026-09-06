@@ -198,6 +198,10 @@
   <data name="ConnectionModeEndpoint.Content" xml:space="preserve">
     <value>An existing MIDI endpoint</value>
   </data>
+  <data name="VirtualDeviceUnavailableNote.Text" xml:space="preserve">
+    <value>The virtual device option is temporarily unavailable in this preview.</value>
+    <comment>TEMPORARY: shown while the virtual device connection type is withheld. See TemporaryFlags.h.</comment>
+  </data>
   <data name="EndpointPickerLabel.Text" xml:space="preserve">
     <value>MIDI destination</value>
   </data>

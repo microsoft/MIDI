@@ -1,0 +1,1467 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "pch.h"
+
+#include <algorithm>
+#include <fstream>
+#include <thread>
+
+#include "cmd_endpoint.h"
+#include "console_output.h"
+#include "console_table.h"
+#include "endpoint_picker.h"
+#include "endpoint_utility.h"
+#include "midi_formatting.h"
+#include "clock_generator.h"
+#include "pickers.h"
+#include "return_codes.h"
+#include "strings.h"
+#include "word_parsing.h"
+
+namespace midi2console
+{
+    namespace
+    {
+        constexpr int KeyEscape = 27;
+        constexpr int SendRetryLimit = 500;
+
+        // Detail lines sit under a table row rather than in columns, so line the values up the way
+        // the other verbose tables do. Detail text has to stay unstyled: the table measures it as
+        // plain text and passes the style separately.
+        std::string FormatRowDetail(_In_ UINT labelId, _In_ std::string const& value)
+        {
+            return fmt::format("{}  {}", PadRightToWidth(ResourceString(labelId), 32), value);
+        }
+
+        // Bare value for a table cell, because the column header already says "Group".
+        std::string FormatGroupNumberOrRange(_In_ midi2::MidiGroup const& firstGroup, _In_ uint8_t groupCount)
+        {
+            auto const first = static_cast<int>(firstGroup.DisplayValue());
+
+            if (groupCount > 1)
+            {
+                return fmt::format("{}-{}", first, first + groupCount - 1);
+            }
+
+            return fmt::format("{}", first);
+        }
+
+        bool TryParsePortNamingApproach(
+            _In_ std::string const& text,
+            _Out_ midi2enum::Midi1PortNamingApproach& approach)
+        {
+            approach = midi2enum::Midi1PortNamingApproach::Default;
+
+            if (EqualsIgnoreCase(text, "default"))  { return true; }
+
+            if (EqualsIgnoreCase(text, "classic") || EqualsIgnoreCase(text, "compatible"))
+            {
+                approach = midi2enum::Midi1PortNamingApproach::UseClassicCompatible;
+                return true;
+            }
+
+            if (EqualsIgnoreCase(text, "new") || EqualsIgnoreCase(text, "new-style"))
+            {
+                approach = midi2enum::Midi1PortNamingApproach::UseNewStyle;
+                return true;
+            }
+
+            WriteErrorLine(FormatResourceString(IDS_ERROR_INVALID_ENUM_VALUE,
+                text, std::string{ "--port-naming" }));
+
+            return false;
+        }
+
+        // Shared by short-id and full-id. An omitted value opens the picker like every other
+        // endpoint command. The endpoint has to actually exist, because GetFullIdFromShortId will
+        // happily wrap any text in the SWD prefix and hand back a plausible-looking id.
+        bool ResolveEndpointIdForConversion(
+            _In_ std::string const& suppliedValue,
+            _Out_ std::string& endpointDeviceId)
+        {
+            endpointDeviceId = TrimCopy(suppliedValue);
+
+            if (!endpointDeviceId.empty() &&
+                !midi2enum::MidiEndpointDeviceHelper::IsPossibleWindowsMidiServicesEndpointDeviceId(
+                    winrt::hstring{ FromUtf8(endpointDeviceId) }))
+            {
+                endpointDeviceId = ToUtf8(midi2enum::MidiEndpointDeviceHelper::GetFullIdFromShortId(
+                    winrt::hstring{ FromUtf8(endpointDeviceId) }));
+            }
+
+            std::string endpointName;
+
+            if (!ResolveEndpointDeviceId(endpointDeviceId, endpointName))
+            {
+                return false;
+            }
+
+            if (midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(
+                winrt::hstring{ FromUtf8(endpointDeviceId) }) == nullptr)
+            {
+                WriteErrorLine(FormatResourceString(IDS_ERROR_NOT_AN_ENDPOINT_ID, TrimCopy(suppliedValue)));
+                return false;
+            }
+
+            return true;
+        }
+
+        // Every sending command needs the same session + connection dance, so it lives here once.
+        struct EndpointSession
+        {
+            midi2::MidiSession Session{ nullptr };
+            midi2::MidiEndpointConnection Connection{ nullptr };
+            std::string EndpointDeviceId;
+            std::string EndpointName;
+            int FailureCode{ 0 };
+
+            bool IsValid() const noexcept { return Connection != nullptr; }
+        };
+
+        EndpointSession OpenEndpoint(
+            _In_ std::string endpointDeviceId,
+            _In_ std::wstring_view sessionName,
+            _In_ bool autoReconnect = false)
+        {
+            EndpointSession result;
+
+            std::string endpointName;
+
+            if (!ResolveEndpointDeviceId(endpointDeviceId, endpointName))
+            {
+                result.FailureCode = 2;
+                return result;
+            }
+
+            result.EndpointDeviceId = endpointDeviceId;
+            result.EndpointName = endpointName;
+
+            result.Session = midi2::MidiSession::Create(winrt::hstring{ sessionName });
+
+            if (result.Session == nullptr)
+            {
+                WriteErrorLine(ResourceString(IDS_ERROR_CREATING_SESSION));
+                result.FailureCode = 1;
+                return result;
+            }
+
+            midi2::MidiEndpointConnectionSettings const settings{ false, autoReconnect };
+
+            auto connection = result.Session.CreateEndpointConnection(
+                winrt::hstring{ FromUtf8(endpointDeviceId) }, settings);
+
+            if (connection == nullptr)
+            {
+                WriteErrorLine(ResourceString(IDS_ERROR_CREATING_CONNECTION));
+                result.FailureCode = 1;
+                return result;
+            }
+
+            if (!connection.Open())
+            {
+                WriteErrorLine(ResourceString(IDS_ERROR_OPENING_CONNECTION));
+                result.FailureCode = 1;
+                return result;
+            }
+
+            result.Connection = connection;
+
+            WriteLine(fmt::format("{} {}",
+                Styled(ResourceString(IDS_EP_SENDING_TO), infoTextStyle),
+                Styled(endpointName.empty() ? endpointDeviceId : endpointName, endpointNameTextStyle)));
+
+            return result;
+        }
+
+        // Buffer-full is a transient condition; everything else is fatal for that message.
+        bool SendWordsWithRetry(
+            _In_ midi2::MidiEndpointConnection const& connection,
+            _In_ uint64_t timestamp,
+            _In_ std::vector<uint32_t>& words)
+        {
+            for (int attempt = 0; attempt < SendRetryLimit; attempt++)
+            {
+                auto const result = connection.SendSingleMessageWordArray(
+                    timestamp, 0, static_cast<uint8_t>(words.size()), words);
+
+                if (midi2::MidiEndpointConnection::SendMessageSucceeded(result))
+                {
+                    return true;
+                }
+
+                if ((result & midi2::MidiSendMessageResults::BufferFull) != midi2::MidiSendMessageResults::BufferFull)
+                {
+                    return false;
+                }
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(1));
+            }
+
+            return false;
+        }
+
+        void WaitForKeyIfRequested(_In_ bool noWait)
+        {
+            if (noWait || !CanShowInteractiveUI())
+            {
+                return;
+            }
+
+            WriteInfoLine(ResourceString(IDS_PROMPT_PRESS_KEY_TO_CLOSE));
+
+            _getch();
+        }
+
+        bool EscapePressed()
+        {
+            while (_kbhit())
+            {
+                if (_getch() == KeyEscape)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        int SendSingleStreamMessage(
+            _In_ std::string endpointDeviceId,
+            _In_ midi2::IMidiUniversalPacket const& message)
+        {
+            auto session = OpenEndpoint(std::move(endpointDeviceId), L"MIDI Console - Request");
+
+            if (!session.IsValid())
+            {
+                return session.FailureCode;
+            }
+
+            auto const result = session.Connection.SendSingleMessagePacket(message);
+
+            if (!midi2::MidiEndpointConnection::SendMessageSucceeded(result))
+            {
+                WriteErrorLine(ResourceString(IDS_ERROR_SEND_FAILED));
+                return 1;
+            }
+
+            WriteSuccessLine(ResourceString(IDS_EP_REQUEST_SENT));
+
+            return 0;
+        }
+    }
+
+    int RunEndpointPropertiesCommand(_In_ EndpointPropertiesOptions const& options)
+    {
+        auto endpointDeviceId = options.EndpointDeviceId;
+        std::string endpointName;
+
+        if (!ResolveEndpointDeviceId(endpointDeviceId, endpointName))
+        {
+            return 2;
+        }
+
+        auto const device = midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(
+            winrt::hstring{ FromUtf8(endpointDeviceId) });
+
+        if (device == nullptr)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_ENDPOINT_NOT_FOUND));
+            return 1;
+        }
+
+        auto const transportInfo = device.GetTransportSuppliedInfo();
+        auto const declaredInfo = device.GetDeclaredEndpointInfo();
+        auto const userInfo = device.GetUserSuppliedInfo();
+
+        auto const isUmpNative = transportInfo != nullptr &&
+            transportInfo.NativeDataFormat() == midi2enum::MidiEndpointNativeDataFormat::UniversalMidiPacketFormat;
+
+        // ---- identification
+
+        WriteSectionHeading(ResourceString(IDS_EP_SECTION_IDENTIFICATION));
+
+        WriteField(ResourceString(IDS_LABEL_NAME), ToUtf8(device.Name()), endpointNameTextStyle);
+        WriteField(ResourceString(IDS_LABEL_ID), ToUtf8(device.EndpointDeviceId()), endpointIdTextStyle);
+        WriteField(ResourceString(IDS_LABEL_PURPOSE), FormatEndpointPurpose(device.EndpointPurpose()));
+
+        if (transportInfo != nullptr)
+        {
+            WriteField(ResourceString(IDS_LABEL_TRANSPORT), ToUtf8(transportInfo.TransportCode()), transportCodeTextStyle);
+            WriteField(ResourceString(IDS_LABEL_SERIAL_NUMBER), ToUtf8(transportInfo.SerialNumber()));
+            WriteField(ResourceString(IDS_LABEL_MANUFACTURER), ToUtf8(transportInfo.ManufacturerName()));
+
+            if (transportInfo.VendorId() != 0 || transportInfo.ProductId() != 0)
+            {
+                WriteField(ResourceString(IDS_LABEL_VID_PID),
+                    fmt::format("0x{:04X} / 0x{:04X}", transportInfo.VendorId(), transportInfo.ProductId()));
+            }
+
+            auto const description = ToUtf8(transportInfo.Description());
+
+            if (!description.empty())
+            {
+                WriteField(ResourceString(IDS_EP_PROP_TRANSPORT_DESCRIPTION), description);
+            }
+
+            WriteField(ResourceString(IDS_LABEL_MULTICLIENT),
+                FormatBoolean(transportInfo.SupportsMultiClient()), BooleanStyle(transportInfo.SupportsMultiClient()));
+
+            WriteField(ResourceString(IDS_LABEL_NATIVE_DATA_FORMAT),
+                FormatNativeDataFormat(transportInfo.NativeDataFormat()));
+        }
+
+        // ---- endpoint metadata (verbose, UMP only)
+
+        if (options.Verbose && isUmpNative && declaredInfo != nullptr)
+        {
+            WriteSectionHeading(ResourceString(IDS_EP_SECTION_ENDPOINT_METADATA));
+
+            WriteField(ResourceString(IDS_EP_PROP_ENDPOINT_SUPPLIED_NAME), ToUtf8(declaredInfo.Name()));
+            WriteField(ResourceString(IDS_EP_PROP_PRODUCT_INSTANCE_ID), ToUtf8(declaredInfo.ProductInstanceId()));
+            WriteField(ResourceString(IDS_LABEL_UMP_VERSION),
+                fmt::format("{}.{}", declaredInfo.SpecificationVersionMajor(), declaredInfo.SpecificationVersionMinor()));
+
+            auto const identity = device.GetDeclaredDeviceIdentity();
+
+            if (identity != nullptr)
+            {
+                auto const systemExclusiveId = identity.SystemExclusiveId();
+
+                std::string sysExText;
+
+                for (auto const value : systemExclusiveId)
+                {
+                    sysExText += fmt::format("{:02X} ", value);
+                }
+
+                WriteField(ResourceString(IDS_EP_PROP_SYSTEM_EXCLUSIVE_ID), TrimCopy(sysExText));
+
+                WriteField(ResourceString(IDS_EP_PROP_DEVICE_FAMILY),
+                    fmt::format("{:02X} {:02X}", identity.DeviceFamilyLsb(), identity.DeviceFamilyMsb()));
+
+                auto const softwareRevision = identity.SoftwareRevisionLevel();
+
+                std::string revisionText;
+
+                for (auto const value : softwareRevision)
+                {
+                    revisionText += fmt::format("{:02X} ", value);
+                }
+
+                WriteField(ResourceString(IDS_EP_PROP_SOFTWARE_REVISION), TrimCopy(revisionText));
+            }
+        }
+
+        // ---- user data
+
+        WriteSectionHeading(ResourceString(IDS_EP_SECTION_USER_DATA));
+
+        if (userInfo != nullptr)
+        {
+            WriteField(ResourceString(IDS_EP_PROP_USER_SUPPLIED_NAME), ToUtf8(userInfo.Name()));
+            WriteField(ResourceString(IDS_EP_PROP_USER_DESCRIPTION), ToUtf8(userInfo.Description()));
+            WriteField(ResourceString(IDS_LABEL_IMAGE_FILE_NAME), ToUtf8(userInfo.ImageFileName()));
+        }
+
+        // ---- active configuration and declared capabilities (UMP only)
+
+        if (isUmpNative)
+        {
+            auto const streamConfiguration = device.GetDeclaredStreamConfiguration();
+
+            if (streamConfiguration != nullptr)
+            {
+                WriteSectionHeading(ResourceString(IDS_EP_SECTION_ACTIVE_CONFIGURATION));
+
+                WriteField(ResourceString(IDS_LABEL_PROTOCOL), FormatProtocol(streamConfiguration.Protocol()));
+                WriteField(ResourceString(IDS_EP_PROP_SEND_JR_TIMESTAMPS),
+                    FormatBoolean(streamConfiguration.SendJitterReductionTimestamps()),
+                    BooleanStyle(streamConfiguration.SendJitterReductionTimestamps()));
+                WriteField(ResourceString(IDS_EP_PROP_RECEIVE_JR_TIMESTAMPS),
+                    FormatBoolean(streamConfiguration.ReceiveJitterReductionTimestamps()),
+                    BooleanStyle(streamConfiguration.ReceiveJitterReductionTimestamps()));
+            }
+
+            if (declaredInfo != nullptr)
+            {
+                WriteSectionHeading(ResourceString(IDS_EP_SECTION_DECLARED_CAPABILITIES));
+
+                WriteField(ResourceString(IDS_EP_PROP_SUPPORTS_MIDI1_PROTOCOL),
+                    FormatBoolean(declaredInfo.SupportsMidi10Protocol()), BooleanStyle(declaredInfo.SupportsMidi10Protocol()));
+                WriteField(ResourceString(IDS_EP_PROP_SUPPORTS_MIDI2_PROTOCOL),
+                    FormatBoolean(declaredInfo.SupportsMidi20Protocol()), BooleanStyle(declaredInfo.SupportsMidi20Protocol()));
+
+                if (options.Verbose)
+                {
+                    WriteField(ResourceString(IDS_EP_PROP_SUPPORTS_SENDING_JR),
+                        FormatBoolean(declaredInfo.SupportsSendingJitterReductionTimestamps()),
+                        BooleanStyle(declaredInfo.SupportsSendingJitterReductionTimestamps()));
+                    WriteField(ResourceString(IDS_EP_PROP_SUPPORTS_RECEIVING_JR),
+                        FormatBoolean(declaredInfo.SupportsReceivingJitterReductionTimestamps()),
+                        BooleanStyle(declaredInfo.SupportsReceivingJitterReductionTimestamps()));
+                }
+            }
+        }
+
+        // ---- function blocks
+
+        auto const functionBlocks = device.GetDeclaredFunctionBlocks();
+
+        if (isUmpNative && functionBlocks != nullptr && functionBlocks.Size() > 0)
+        {
+            WriteSectionHeading(ResourceString(IDS_EP_SECTION_FUNCTION_BLOCKS));
+
+            if (declaredInfo != nullptr)
+            {
+                WriteField(ResourceString(IDS_EP_PROP_HAS_STATIC_FUNCTION_BLOCKS),
+                    FormatBoolean(declaredInfo.HasStaticFunctionBlocks()),
+                    BooleanStyle(declaredInfo.HasStaticFunctionBlocks()));
+                WriteField(ResourceString(IDS_EP_PROP_FUNCTION_BLOCK_COUNT),
+                    fmt::format("{}", declaredInfo.DeclaredFunctionBlockCount()), numberTextStyle);
+            }
+
+            ConsoleTable table;
+
+            table.AddColumn(ResourceString(IDS_LABEL_BLOCK), ColumnAlignment::Right, portNumberTextStyle);
+            table.AddColumn(ResourceString(IDS_LABEL_NAME), ColumnAlignment::Left, endpointNameTextStyle);
+            table.SetLastColumnShrinkable();
+            table.AddColumn(ToUtf8(midi2::MidiGroup::LongLabelPlural()), ColumnAlignment::Right, portNumberTextStyle);
+            table.AddColumn(ResourceString(IDS_LABEL_MIDI_1_OR_2));
+            table.AddColumn(ResourceString(IDS_LABEL_DIRECTION));
+            table.AddColumn(ResourceString(IDS_LABEL_UI_HINT));
+
+            for (auto const& block : functionBlocks)
+            {
+                table.BeginRow();
+                table.AddCell(fmt::format("{}", static_cast<int>(block.Number())));
+                table.AddCell(ToUtf8(block.Name()));
+                table.AddCell(FormatGroupNumberOrRange(block.FirstGroup(), block.GroupCount()));
+                table.AddCell(FormatRepresentsMidi10Connection(block.RepresentsMidi10Connection()));
+                table.AddCell(FormatFunctionBlockDirection(block.Direction()));
+                table.AddCell(FormatFunctionBlockUIHint(block.UIHint()));
+
+                if (!block.IsActive())
+                {
+                    table.AddRowDetail(ResourceString(IDS_LABEL_INACTIVE), warningTextStyle);
+                }
+
+                if (options.Verbose)
+                {
+                    table.AddRowDetail(FormatRowDetail(IDS_EP_PROP_MAX_SYSEX8_STREAMS,
+                        fmt::format("{}", block.MaxSystemExclusive8Streams())), fieldValueTextStyle);
+                    table.AddRowDetail(FormatRowDetail(IDS_EP_PROP_MIDI_CI_VERSION,
+                        fmt::format("{}", block.MidiCIMessageVersionFormat())), fieldValueTextStyle);
+                }
+            }
+
+            table.Render();
+        }
+
+        // ---- group terminal blocks
+
+        auto const groupTerminalBlocks = device.GetGroupTerminalBlocks();
+
+        if (groupTerminalBlocks != nullptr && groupTerminalBlocks.Size() > 0 &&
+            (options.Verbose || functionBlocks == nullptr || functionBlocks.Size() == 0))
+        {
+            WriteSectionHeading(ResourceString(IDS_EP_SECTION_GROUP_TERMINAL_BLOCKS), false);
+
+            ConsoleTable table;
+
+            table.AddColumn(ResourceString(IDS_LABEL_BLOCK), ColumnAlignment::Right, portNumberTextStyle);
+            table.AddColumn(ResourceString(IDS_LABEL_NAME), ColumnAlignment::Left, endpointNameTextStyle);
+            table.SetLastColumnShrinkable();
+            table.AddColumn(ToUtf8(midi2::MidiGroup::LongLabel()), ColumnAlignment::Right, portNumberTextStyle);
+            table.AddColumn(ResourceString(IDS_LABEL_DIRECTION));
+
+            for (auto const& block : groupTerminalBlocks)
+            {
+                table.BeginRow();
+                table.AddCell(fmt::format("{}", static_cast<int>(block.Number())));
+                table.AddCell(ToUtf8(block.Name()));
+                table.AddCell(FormatGroupNumberOrRange(block.FirstGroup(), block.GroupCount()));
+                table.AddCell(FormatGroupTerminalBlockDirection(block.Direction()));
+
+                if (options.Verbose)
+                {
+                    table.AddRowDetail(FormatRowDetail(IDS_EP_PROP_MAX_INPUT_BANDWIDTH,
+                        fmt::format("{} {}", block.CalculatedMaxDeviceInputBandwidthBitsPerSecond(),
+                            ResourceString(IDS_EP_UNITS_BITS_PER_SECOND))),
+                        fieldValueTextStyle);
+                    table.AddRowDetail(FormatRowDetail(IDS_EP_PROP_MAX_OUTPUT_BANDWIDTH,
+                        fmt::format("{} {}", block.CalculatedMaxDeviceOutputBandwidthBitsPerSecond(),
+                            ResourceString(IDS_EP_UNITS_BITS_PER_SECOND))),
+                        fieldValueTextStyle);
+                }
+            }
+
+            table.Render();
+        }
+
+        // ---- MIDI 1.0 ports
+
+        WriteSectionHeading(ResourceString(IDS_EP_SECTION_MIDI1_PORTS));
+
+        WriteField(ResourceString(IDS_EP_PROP_PORT_NAMING_APPROACH),
+            FormatPortNamingApproach(device.Midi1PortNamingApproach()));
+
+        WriteBlankLine();
+
+        ConsoleTable portTable;
+
+        portTable.AddColumn(ResourceString(IDS_LABEL_PORT_NUMBER), ColumnAlignment::Right, portNumberTextStyle);
+        portTable.AddColumn(ResourceString(IDS_LABEL_NAME), ColumnAlignment::Left, endpointNameTextStyle);
+        portTable.SetLastColumnShrinkable();
+        portTable.AddColumn(ToUtf8(midi2::MidiGroup::LongLabel()), ColumnAlignment::Right, portNumberTextStyle);
+        portTable.AddColumn(ResourceString(IDS_LABEL_DIRECTION));
+
+        for (auto const flow : { midi2enum::Midi1PortFlow::MidiMessageSource,
+                                 midi2enum::Midi1PortFlow::MidiMessageDestination })
+        {
+            auto const found = midi2legacy::MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(
+                device.EndpointDeviceId(), flow);
+
+            if (found == nullptr || found.Size() == 0)
+            {
+                continue;
+            }
+
+            // PnP hands these back in whatever order it enumerated them, which is neither creation
+            // order nor port order, so sort by the number an older application actually sees.
+            std::vector<midi2legacy::MidiLegacyPortDeviceInformation> ports{ found.begin(), found.end() };
+
+            std::sort(ports.begin(), ports.end(),
+                [](auto const& left, auto const& right) { return left.Number() < right.Number(); });
+
+            for (auto const& port : ports)
+            {
+                // The WinMM port number is what an older application actually sees.
+                portTable.BeginRow();
+                portTable.AddCell(fmt::format("{}", port.Number()));
+                portTable.AddCell(ToUtf8(port.Name()));
+                portTable.AddCell(fmt::format("{}", port.Group().DisplayValue()));
+                portTable.AddCell(FormatPortFlow(flow));
+
+                if (options.Verbose)
+                {
+                    portTable.AddRowDetail(ToUtf8(port.PortDeviceId()), endpointIdTextStyle);
+                }
+            }
+        }
+
+        portTable.Render();
+
+        // ---- name table
+
+        auto const nameTable = device.GetNameTable();
+
+        if (nameTable != nullptr && nameTable.Size() > 0)
+        {
+            WriteSectionHeading(ResourceString(IDS_EP_SECTION_NAME_TABLE), false);
+
+            ConsoleTable table;
+
+            table.AddColumn(ToUtf8(midi2::MidiGroup::LongLabel()), ColumnAlignment::Right, portNumberTextStyle);
+            table.AddColumn(ResourceString(IDS_LABEL_DIRECTION));
+            table.AddColumn(ResourceString(IDS_EP_NAME_TABLE_LEGACY_COMPATIBLE));
+            table.SetLastColumnShrinkable();
+            table.AddColumn(ResourceString(IDS_EP_NAME_TABLE_NEW_STYLE));
+            table.SetLastColumnShrinkable();
+            table.AddColumn(ResourceString(IDS_EP_NAME_TABLE_CUSTOM));
+            table.SetLastColumnShrinkable();
+
+            std::vector<midi2enum::Midi1PortNameTableEntry> entries{ nameTable.begin(), nameTable.end() };
+
+            // Sources before destinations, matching the enum order and 'enumerate legacy'.
+            std::sort(entries.begin(), entries.end(),
+                [](auto const& left, auto const& right)
+                {
+                    if (left.Flow() != right.Flow())
+                    {
+                        return static_cast<int>(left.Flow()) < static_cast<int>(right.Flow());
+                    }
+
+                    return left.Group().Index() < right.Group().Index();
+                });
+
+            for (auto const& entry : entries)
+            {
+                table.BeginRow();
+                table.AddCell(fmt::format("{}", entry.Group().DisplayValue()));
+                table.AddCell(FormatPortFlow(entry.Flow()));
+                table.AddCell(ToUtf8(entry.LegacyCompatibleName()));
+                table.AddCell(ToUtf8(entry.NewStyleName()));
+                table.AddCell(ToUtf8(entry.CustomName()));
+            }
+
+            table.Render();
+        }
+
+        // ---- parent device
+
+        auto const parent = device.GetParentDeviceInformation();
+
+        if (parent != nullptr)
+        {
+            WriteSectionHeading(ResourceString(IDS_EP_SECTION_PARENT));
+
+            WriteField(ResourceString(IDS_LABEL_NAME), ToUtf8(parent.Name()));
+            WriteField(ResourceString(IDS_LABEL_ID), ToUtf8(parent.Id()), deviceInstanceIdTextStyle);
+            WriteField(ResourceString(IDS_EP_LABEL_SERVICE_NAME), ToUtf8(parent.ServiceName()));
+            WriteField(ResourceString(IDS_EP_LABEL_DRIVER_VERSION), ToUtf8(parent.DriverVersion()), numberTextStyle);
+            WriteField(ResourceString(IDS_EP_LABEL_DRIVER_INF_PATH), ToUtf8(parent.DriverInfPath()), fileNameTextStyle);
+        }
+
+        // ---- apps currently holding this endpoint open
+
+        // Asking for the related MIDI 1.0 ports too, so an app on WinMM shows up as well.
+        auto const sessions = midi2report::MidiReporting::FindAllSessionsWithMatchingOpenUmpEndpoint(
+            winrt::hstring{ FromUtf8(endpointDeviceId) }, true);
+
+        WriteSectionHeading(ResourceString(IDS_EP_SECTION_IN_USE_BY));
+
+        if (sessions == nullptr || sessions.Size() == 0)
+        {
+            WriteLine(fmt::format("  {}", Styled(ResourceString(IDS_EP_IN_USE_BY_NOBODY), inlineLabelTextStyle)));
+        }
+        else
+        {
+            for (auto const& session : sessions)
+            {
+                WriteField(
+                    fmt::format("{} {}",
+                        Styled(ToUtf8(session.ProcessName()), processNameTextStyle),
+                        Styled(fmt::format("[{}]", session.ProcessId()), numberTextStyle)),
+                    ToUtf8(session.SessionName()),
+                    endpointNameTextStyle);
+            }
+        }
+
+        // ---- raw properties, last because it is long and unstructured
+
+        if (options.IncludeRawProperties)
+        {
+            WriteSectionHeading(ResourceString(IDS_EP_SECTION_RAW_PROPERTIES));
+
+            auto const properties = device.Properties();
+
+            if (properties != nullptr)
+            {
+                std::vector<std::pair<std::string, foundation::IInspectable>> rawEntries;
+
+                for (auto const& property : properties)
+                {
+                    rawEntries.emplace_back(ToUtf8(property.Key()), property.Value());
+                }
+
+                std::sort(rawEntries.begin(), rawEntries.end(),
+                    [](auto const& left, auto const& right) { return left.first < right.first; });
+
+                for (auto const& [key, value] : rawEntries)
+                {
+                    auto const friendlyName = midi2enum::MidiEndpointDevicePropertyHelper::
+                        GetMidiPropertyNameFromPropertyKey(winrt::hstring{ FromUtf8(key) });
+
+                    auto const label = friendlyName.empty() ? key : ToUtf8(friendlyName);
+
+                    WriteLine(fmt::format("  {}", Styled(label, propertyKeyTextStyle)));
+
+                    if (label != key)
+                    {
+                        WriteLine(fmt::format("    {}", Styled(key, separatorTextStyle)));
+                    }
+
+                    // The value may already carry its own styling, so it is not restyled here.
+                    WriteLine(fmt::format("    {}", FormatPropertyValue(value)));
+                    WriteBlankLine();
+                }
+            }
+        }
+
+        WriteBlankLine();
+
+        return 0;
+    }
+
+    int RunEndpointSendMessageCommand(_In_ EndpointSendMessageOptions const& options)
+    {
+        // Both positionals land in one list because CLI11 cannot express "optional single, then
+        // variadic". Anything that is not a valid MIDI word is taken as the endpoint id, which
+        // is unambiguous: endpoint ids are SWD interface ids, never numbers.
+        auto endpointDeviceId = options.EndpointDeviceId;
+        std::vector<std::string> wordText;
+
+        for (auto const& argument : options.Words)
+        {
+            uint32_t parsed{ 0 };
+
+            if (TryParseMidiWord(argument, options.WordDataFormat, parsed))
+            {
+                wordText.push_back(argument);
+            }
+            else if (endpointDeviceId.empty())
+            {
+                endpointDeviceId = argument;
+            }
+            else
+            {
+                WriteErrorLine(FormatResourceString(IDS_ERROR_INVALID_WORD_VALUE, argument));
+                return 1;
+            }
+        }
+
+        if (wordText.empty())
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_TOO_FEW_WORDS));
+            return 1;
+        }
+
+        if (wordText.size() > 4)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_TOO_MANY_WORDS));
+            return 1;
+        }
+
+        if (options.Count < 1)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_COUNT_TOO_LOW));
+            return 1;
+        }
+
+        if (options.HasTimestamp && options.TimestampOffsetMicroseconds != 0)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_TIMESTAMP_AND_OFFSET));
+            return 1;
+        }
+
+        std::vector<uint32_t> words;
+
+        for (auto const& text : wordText)
+        {
+            uint32_t value{ 0 };
+
+            if (!TryParseMidiWord(text, options.WordDataFormat, value))
+            {
+                WriteErrorLine(FormatResourceString(IDS_ERROR_INVALID_WORD_VALUE, text));
+                return 1;
+            }
+
+            words.push_back(value);
+        }
+
+        auto session = OpenEndpoint(endpointDeviceId, L"MIDI Console - Send Message");
+
+        if (!session.IsValid())
+        {
+            return session.FailureCode;
+        }
+
+        uint32_t sent{ 0 };
+        uint32_t failed{ 0 };
+        uint64_t maximumScheduledTimestamp{ 0 };
+
+        for (int i = 0; i < options.Count; i++)
+        {
+            uint64_t timestamp{ 0 };
+
+            if (options.HasTimestamp)
+            {
+                timestamp = options.Timestamp;
+            }
+            else if (options.TimestampOffsetMicroseconds != 0)
+            {
+                timestamp = midi2::MidiClock::OffsetTimestampByMicroseconds(
+                    midi2::MidiClock::Now(), options.TimestampOffsetMicroseconds);
+            }
+            else
+            {
+                timestamp = midi2::MidiClock::Now();
+            }
+
+            maximumScheduledTimestamp = std::max(maximumScheduledTimestamp, timestamp);
+
+            if (SendWordsWithRetry(session.Connection, timestamp, words))
+            {
+                sent++;
+            }
+            else
+            {
+                failed++;
+            }
+
+            if (options.DebugAutoIncrementLastWord && words.size() >= 2)
+            {
+                words.back() = words.back() + 1;
+            }
+
+            if (options.DelayBetweenMessages > 0 && i + 1 < options.Count)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(options.DelayBetweenMessages));
+            }
+
+            if (EscapePressed())
+            {
+                break;
+            }
+        }
+
+        WriteBlankLine();
+        WriteField(ResourceString(IDS_EP_SEND_MESSAGES_SENT), fmt::format("{}", sent), successTextStyle);
+
+        if (failed > 0)
+        {
+            WriteField(ResourceString(IDS_EP_SEND_MESSAGES_FAILED), fmt::format("{}", failed), errorTextStyle);
+        }
+
+        // Scheduled messages have not left the service yet; closing now would discard them.
+        auto const now = midi2::MidiClock::Now();
+
+        if (maximumScheduledTimestamp > now)
+        {
+            auto const remaining = midi2::MidiClock::ConvertTimestampTicksToMilliseconds(
+                maximumScheduledTimestamp - now);
+
+            std::this_thread::sleep_for(
+                std::chrono::milliseconds(static_cast<long long>(remaining) + 1000));
+        }
+
+        WaitForKeyIfRequested(options.NoWait);
+
+        return failed > 0 ? 1 : 0;
+    }
+
+    int RunEndpointSendMessageFileCommand(_In_ EndpointSendMessageFileOptions const& options)
+    {
+        auto const path = ExpandEnvironmentPath(options.InputFile);
+
+        std::ifstream file{ FromUtf8(path) };
+
+        if (!file.is_open())
+        {
+            WriteErrorLine(FormatResourceString(IDS_ERROR_FILE_NOT_FOUND, path));
+            return 1;
+        }
+
+        auto session = OpenEndpoint(options.EndpointDeviceId, L"MIDI Console - Send Message File");
+
+        if (!session.IsValid())
+        {
+            return session.FailureCode;
+        }
+
+        uint32_t sent{ 0 };
+        uint32_t failed{ 0 };
+        uint32_t skipped{ 0 };
+        uint32_t lineNumber{ 0 };
+
+        std::string line;
+
+        while (std::getline(file, line))
+        {
+            lineNumber++;
+
+            auto const trimmed = TrimCopy(line);
+
+            if (trimmed.empty() || trimmed[0] == '#')
+            {
+                continue;
+            }
+
+            auto const fields = SplitDelimitedLine(trimmed, options.FieldDelimiter);
+
+            if (fields.empty() || fields.size() > 4)
+            {
+                skipped++;
+
+                if (options.Verbose)
+                {
+                    WriteWarningLine(fmt::format("{}: {}", lineNumber, ResourceString(IDS_ERROR_INVALID_UMP)));
+                }
+
+                continue;
+            }
+
+            std::vector<uint32_t> words;
+
+            bool parsed{ true };
+
+            for (auto const& field : fields)
+            {
+                uint32_t value{ 0 };
+
+                if (!TryParseMidiWord(field, options.WordDataFormat, value))
+                {
+                    parsed = false;
+                    break;
+                }
+
+                words.push_back(value);
+            }
+
+            if (!parsed)
+            {
+                skipped++;
+
+                if (options.Verbose)
+                {
+                    WriteWarningLine(fmt::format("{}: {}", lineNumber, ResourceString(IDS_ERROR_INVALID_WORD_VALUE)));
+                }
+
+                continue;
+            }
+
+            if (options.HasNewGroupIndex)
+            {
+                auto const messageType = midi2msg::MidiMessageHelper::GetMessageTypeFromMessageFirstWord(words[0]);
+
+                if (midi2msg::MidiMessageHelper::MessageTypeHasGroupField(messageType))
+                {
+                    words[0] = midi2msg::MidiMessageHelper::ReplaceGroupInMessageFirstWord(
+                        words[0], midi2::MidiGroup{ static_cast<uint8_t>(options.NewGroupIndex) });
+                }
+            }
+
+            if (SendWordsWithRetry(session.Connection, midi2::MidiClock::Now(), words))
+            {
+                sent++;
+
+                if (options.Verbose)
+                {
+                    WriteLine(fmt::format("  {}", Styled(trimmed, dataWordTextStyle)));
+                }
+            }
+            else
+            {
+                failed++;
+                WriteWarningLine(fmt::format("{}: {}", lineNumber, ResourceString(IDS_ERROR_SEND_FAILED)));
+            }
+
+            if (options.DelayBetweenMessages > 0)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(options.DelayBetweenMessages));
+            }
+
+            if (EscapePressed())
+            {
+                break;
+            }
+        }
+
+        WriteBlankLine();
+        WriteField(ResourceString(IDS_EP_SEND_MESSAGES_SENT), fmt::format("{}", sent), successTextStyle);
+
+        if (skipped > 0)
+        {
+            WriteField(ResourceString(IDS_EP_SEND_LINES_SKIPPED), fmt::format("{}", skipped), warningTextStyle);
+        }
+
+        if (failed > 0)
+        {
+            WriteField(ResourceString(IDS_EP_SEND_MESSAGES_FAILED), fmt::format("{}", failed), errorTextStyle);
+        }
+
+        WaitForKeyIfRequested(options.NoWait);
+
+        return failed > 0 ? 1 : 0;
+    }
+
+    int RunEndpointPlayNotesCommand(_In_ EndpointPlayNotesOptions const& options)
+    {
+        if (options.NoteIndexes.empty())
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_NO_NOTES_SUPPLIED));
+            return 1;
+        }
+
+        if (options.GroupNumber < 1 || options.GroupNumber > 16)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_INVALID_GROUP));
+            return 1;
+        }
+
+        if (options.ChannelNumber < 1 || options.ChannelNumber > 16)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_INVALID_CHANNEL));
+            return 1;
+        }
+
+        if (options.Velocity < 1.0 || options.Velocity > 100.0)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_INVALID_VELOCITY));
+            return 1;
+        }
+
+        std::vector<uint8_t> notes;
+
+        for (auto const& text : options.NoteIndexes)
+        {
+            auto const trimmed = TrimCopy(text);
+
+            uint32_t parsed{ 0 };
+
+            if (!TryParseMidiWord(trimmed, "Decimal", parsed) || parsed > 127)
+            {
+                WriteErrorLine(FormatResourceString(IDS_ERROR_INVALID_NOTE, trimmed));
+                return 1;
+            }
+
+            notes.push_back(static_cast<uint8_t>(parsed));
+        }
+
+        auto session = OpenEndpoint(options.EndpointDeviceId, L"MIDI Console - Play Notes", options.AutoReconnect);
+
+        if (!session.IsValid())
+        {
+            return session.FailureCode;
+        }
+
+        auto const group = midi2::MidiGroup{ static_cast<uint8_t>(options.GroupNumber - 1) };
+        auto const channel = midi2::MidiChannel{ static_cast<uint8_t>(options.ChannelNumber - 1) };
+
+        auto const midi1Velocity = static_cast<uint8_t>(options.Velocity / 100.0 * 127.0);
+        auto const midi2Velocity = static_cast<uint32_t>(options.Velocity / 100.0 * 65535.0) << 16;
+
+        WriteInfoLine(ResourceString(IDS_EP_PLAY_PLAYING));
+
+        bool keepGoing{ true };
+
+        do
+        {
+            for (auto const note : notes)
+            {
+                auto const sendNote = [&](bool noteOn)
+                {
+                    if (options.Midi2)
+                    {
+                        auto const message = midi2msg::MidiMessageBuilder::BuildMidi2ChannelVoiceMessage(
+                            midi2::MidiClock::TimestampConstantSendImmediately(),
+                            group,
+                            noteOn ? midi2msg::Midi2ChannelVoiceMessageStatus::NoteOn
+                                   : midi2msg::Midi2ChannelVoiceMessageStatus::NoteOff,
+                            channel,
+                            static_cast<uint16_t>(note << 8),
+                            noteOn ? midi2Velocity : 0u);
+
+                        session.Connection.SendSingleMessagePacket(message);
+                    }
+                    else
+                    {
+                        auto const message = midi2msg::MidiMessageBuilder::BuildMidi1ChannelVoiceMessage(
+                            midi2::MidiClock::TimestampConstantSendImmediately(),
+                            group,
+                            noteOn ? midi2msg::Midi1ChannelVoiceMessageStatus::NoteOn
+                                   : midi2msg::Midi1ChannelVoiceMessageStatus::NoteOff,
+                            channel,
+                            note,
+                            noteOn ? midi1Velocity : static_cast<uint8_t>(0));
+
+                        session.Connection.SendSingleMessagePacket(message);
+                    }
+                };
+
+                WriteLine(fmt::format("  {} {}",
+                    Styled(ResourceString(IDS_EP_DECODE_NOTE), fieldLabelTextStyle),
+                    Styled(fmt::format("{:>3}", static_cast<int>(note)), numberTextStyle)));
+
+                sendNote(true);
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(std::max(30, options.Length)));
+
+                sendNote(false);
+
+                if (options.Rest > 0)
+                {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(options.Rest));
+                }
+
+                if (EscapePressed())
+                {
+                    keepGoing = false;
+                    break;
+                }
+            }
+        } while (options.Forever && keepGoing);
+
+        return 0;
+    }
+
+    int RunEndpointRequestFunctionBlocksCommand(_In_ EndpointRequestFunctionBlocksOptions const& options)
+    {
+        if (!options.RequestInfo && !options.RequestName)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_NO_REQUEST_FLAGS));
+            return 1;
+        }
+
+        if (!options.RequestAll && (options.FunctionBlockNumber < 0 || options.FunctionBlockNumber > 31))
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_FUNCTION_BLOCK_NUMBER));
+            return 1;
+        }
+
+        auto requests = midi2msg::MidiFunctionBlockDiscoveryRequests::None;
+
+        if (options.RequestInfo)
+        {
+            requests |= midi2msg::MidiFunctionBlockDiscoveryRequests::RequestFunctionBlockInfo;
+        }
+
+        if (options.RequestName)
+        {
+            requests |= midi2msg::MidiFunctionBlockDiscoveryRequests::RequestFunctionBlockName;
+        }
+
+        auto const blockNumber = static_cast<uint8_t>(options.RequestAll ? 0xFF : options.FunctionBlockNumber);
+
+        auto const message = midi2msg::MidiStreamMessageBuilder::BuildFunctionBlockDiscoveryMessage(
+            midi2::MidiClock::TimestampConstantSendImmediately(), blockNumber, requests);
+
+        return SendSingleStreamMessage(options.EndpointDeviceId, message);
+    }
+
+    int RunEndpointRequestEndpointInfoCommand(_In_ EndpointRequestEndpointInfoOptions const& options)
+    {
+        auto requests = midi2msg::MidiEndpointDiscoveryRequests::None;
+
+        if (options.RequestAll)
+        {
+            requests =
+                midi2msg::MidiEndpointDiscoveryRequests::RequestEndpointInfo |
+                midi2msg::MidiEndpointDiscoveryRequests::RequestDeviceIdentity |
+                midi2msg::MidiEndpointDiscoveryRequests::RequestEndpointName |
+                midi2msg::MidiEndpointDiscoveryRequests::RequestProductInstanceId |
+                midi2msg::MidiEndpointDiscoveryRequests::RequestStreamConfiguration;
+        }
+        else
+        {
+            if (options.RequestEndpointInfo)
+            {
+                requests |= midi2msg::MidiEndpointDiscoveryRequests::RequestEndpointInfo;
+            }
+
+            if (options.RequestDeviceIdentity)
+            {
+                requests |= midi2msg::MidiEndpointDiscoveryRequests::RequestDeviceIdentity;
+            }
+
+            if (options.RequestEndpointName)
+            {
+                requests |= midi2msg::MidiEndpointDiscoveryRequests::RequestEndpointName;
+            }
+
+            if (options.RequestProductInstanceId)
+            {
+                requests |= midi2msg::MidiEndpointDiscoveryRequests::RequestProductInstanceId;
+            }
+
+            if (options.RequestStreamConfiguration)
+            {
+                requests |= midi2msg::MidiEndpointDiscoveryRequests::RequestStreamConfiguration;
+            }
+        }
+
+        if (requests == midi2msg::MidiEndpointDiscoveryRequests::None)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_NO_REQUEST_FLAGS));
+            return 1;
+        }
+
+        auto const message = midi2msg::MidiStreamMessageBuilder::BuildEndpointDiscoveryMessage(
+            midi2::MidiClock::TimestampConstantSendImmediately(),
+            static_cast<uint8_t>(options.UmpVersionMajor),
+            static_cast<uint8_t>(options.UmpVersionMinor),
+            requests);
+
+        return SendSingleStreamMessage(options.EndpointDeviceId, message);
+    }
+
+    int RunEndpointCustomizeCommand(_In_ EndpointCustomizeOptions const& options)
+    {
+        auto const hasAnyChange = options.Clear ||
+            options.HasName || options.HasDescription || options.HasImage || options.HasPortNaming ||
+            options.HasNoteOffTranslation || options.HasMidiPolyphonicExpression ||
+            options.HasControlChangeInterval || options.HasOutgoingLatencyTicks;
+
+        if (!hasAnyChange)
+        {
+            WriteWarningLine(ResourceString(IDS_CUSTOMIZE_NOTHING_TO_DO));
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        if (options.HasControlChangeInterval &&
+            (options.ControlChangeIntervalMilliseconds < 0 || options.ControlChangeIntervalMilliseconds > 0xFFFF))
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_INVALID_CC_INTERVAL));
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        midi2enum::Midi1PortNamingApproach portNaming{ midi2enum::Midi1PortNamingApproach::Default };
+
+        if (options.HasPortNaming && !TryParsePortNamingApproach(options.PortNaming, portNaming))
+        {
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        auto endpointDeviceId = options.EndpointDeviceId;
+        std::string endpointName;
+
+        if (!ResolveEndpointDeviceId(endpointDeviceId, endpointName))
+        {
+            return 2;
+        }
+
+        auto const device = midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(
+            winrt::hstring{ FromUtf8(endpointDeviceId) });
+
+        if (device == nullptr)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_ENDPOINT_NOT_FOUND));
+            return AsExitCode(ReturnCode::ErrorNoEndpointsFound);
+        }
+
+        auto const transportInfo = device.GetTransportSuppliedInfo();
+
+        if (transportInfo == nullptr)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_ENDPOINT_NOT_FOUND));
+            return AsExitCode(ReturnCode::ErrorNoEndpointsFound);
+        }
+
+        // Not every transport can customize an endpoint, and the service just refuses the update
+        // with no explanation when it cannot.
+        auto const transportSupportsCustomization =
+            midi2config::MidiServiceTransportPluginConfigManager::QueryCapability(
+                transportInfo.TransportId(), L"customizeEndpoint");
+
+        if (!transportSupportsCustomization)
+        {
+            WriteErrorLine(FormatResourceString(IDS_CUSTOMIZE_NOT_SUPPORTED,
+                ToUtf8(transportInfo.TransportCode())));
+
+            return AsExitCode(ReturnCode::ErrorNotImplemented);
+        }
+
+        midi2config::MidiServiceEndpointCustomizationConfig config{ transportInfo.TransportId() };
+
+        // Both ids are supplied, as the Settings app does: the interface id identifies the live
+        // endpoint and the device instance id survives the endpoint being recreated.
+        config.MatchCriteria().EndpointDeviceId(winrt::hstring{ FromUtf8(endpointDeviceId) });
+        config.MatchCriteria().DeviceInstanceId(device.DeviceInstanceId());
+
+        if (options.Clear)
+        {
+            // The service rejects a blank endpoint name, so clearing means "put the name the
+            // transport supplied back" rather than "leave it empty".
+            config.Name(options.HasName
+                ? winrt::hstring{ FromUtf8(TrimCopy(options.Name)) }
+                : transportInfo.Name());
+
+            config.Description(L"");
+            config.ImageFileName(L"");
+            config.ClearDisplayProperties(true);
+        }
+        else
+        {
+            // A property left alone keeps its stored value, because the save merges.
+            if (options.HasName)        config.Name(winrt::hstring{ FromUtf8(TrimCopy(options.Name)) });
+            if (options.HasDescription) config.Description(winrt::hstring{ FromUtf8(TrimCopy(options.Description)) });
+            if (options.HasImage)       config.ImageFileName(winrt::hstring{ FromUtf8(TrimCopy(options.Image)) });
+        }
+
+        if (options.HasPortNaming)                 config.Midi1PortNamingApproach(portNaming);
+        if (options.HasNoteOffTranslation)         config.RequiresNoteOffTranslation(options.NoteOffTranslation);
+        if (options.HasMidiPolyphonicExpression)   config.SupportsMidiPolyphonicExpression(options.MidiPolyphonicExpression);
+        if (options.HasOutgoingLatencyTicks)       config.OutgoingLatencyTicks(options.OutgoingLatencyTicks);
+
+        if (options.HasControlChangeInterval)
+        {
+            config.RecommendedControlChangeIntervalMilliseconds(
+                static_cast<uint16_t>(options.ControlChangeIntervalMilliseconds));
+        }
+
+        auto const response = midi2config::MidiServiceTransportPluginConfigManager::SendUpdate(config);
+
+        if (response == nullptr ||
+            response.Status() != midi2config::MidiServiceConfigResponseStatus::Success)
+        {
+            std::string message;
+
+            if (response != nullptr)
+            {
+                message = ToUtf8(response.ServiceErrorMessage());
+
+                // The service often returns a status with no message, so the code is the only clue.
+                if (message.empty())
+                {
+                    message = fmt::format("Status {}, service code {}.",
+                        static_cast<int>(response.Status()), response.ServiceErrorCode());
+                }
+            }
+
+            WriteErrorLine(FormatResourceString(IDS_CUSTOMIZE_FAILED, message));
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        WriteSuccessLine(ResourceString(IDS_CUSTOMIZE_APPLIED));
+        WriteBlankLine();
+
+        if (options.Temporary)
+        {
+            WriteInfoLine(ResourceString(IDS_CUSTOMIZE_TEMPORARY_NOTE));
+        }
+        else
+        {
+            auto const saveResponse = midi2config::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+            if (saveResponse != nullptr && saveResponse.Success())
+            {
+                WriteSuccessLine(ResourceString(IDS_CUSTOMIZE_SAVED));
+
+                auto const backup = ToUtf8(saveResponse.BackupFilePath());
+
+                if (!backup.empty())
+                {
+                    WriteInfoLine(FormatResourceString(IDS_CUSTOMIZE_BACKUP_WRITTEN, backup));
+                }
+            }
+            else
+            {
+                auto const message = saveResponse == nullptr ? std::string{} : ToUtf8(saveResponse.ErrorMessage());
+
+                WriteWarningLine(FormatResourceString(IDS_CUSTOMIZE_SAVE_FAILED, message));
+            }
+        }
+
+        WriteBlankLine();
+        WriteInfoLine(ResourceString(IDS_CUSTOMIZE_RECONNECT_NOTE));
+
+        return 0;
+    }
+
+    int RunEndpointShortIdCommand(_In_ EndpointIdOptions const& options)
+    {
+        std::string endpointDeviceId;
+
+        if (!ResolveEndpointIdForConversion(options.Value, endpointDeviceId))
+        {
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        auto const shortId = midi2enum::MidiEndpointDeviceHelper::GetShortIdFromFullId(
+            winrt::hstring{ FromUtf8(endpointDeviceId) });
+
+        WriteLine(fmt::format("{}", Styled(ToUtf8(shortId), endpointIdTextStyle)));
+
+        return 0;
+    }
+
+    int RunEndpointFullIdCommand(_In_ EndpointIdOptions const& options)
+    {
+        std::string endpointDeviceId;
+
+        if (!ResolveEndpointIdForConversion(options.Value, endpointDeviceId))
+        {
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        WriteLine(fmt::format("{}", Styled(endpointDeviceId, endpointIdTextStyle)));
+
+        return 0;
+    }
+
+    int RunEndpointSendClockCommand(_In_ EndpointSendClockOptions const& options)
+    {
+        if (options.GroupNumbers.empty())
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_CLOCK_NO_GROUPS));
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        if (options.Tempo < 10.0 || options.Tempo > 400.0)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_CLOCK_TEMPO_RANGE));
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        if (options.PulsesPerQuarterNote < 1 || options.PulsesPerQuarterNote > 96)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_CLOCK_PPQN_RANGE));
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        ClockGeneratorOptions generatorOptions{};
+
+        for (auto const groupNumber : options.GroupNumbers)
+        {
+            if (groupNumber < 1 || groupNumber > 16)
+            {
+                WriteErrorLine(FormatResourceString(IDS_ERROR_INVALID_GROUP, fmt::format("{}", groupNumber)));
+                return AsExitCode(ReturnCode::ErrorGeneralFailure);
+            }
+
+            generatorOptions.GroupIndexes.push_back(static_cast<uint8_t>(groupNumber - 1));
+        }
+
+        generatorOptions.BeatsPerMinute = options.Tempo;
+        generatorOptions.PulsesPerQuarterNote = options.PulsesPerQuarterNote;
+        generatorOptions.SendStartMessage = options.SendStartMessage;
+        generatorOptions.SendStopMessage = options.SendStopMessage;
+
+        auto session = OpenEndpoint(options.EndpointDeviceId, L"MIDI Console - Beat Clock", true);
+
+        if (!session.IsValid())
+        {
+            return session.FailureCode;
+        }
+
+        ClockGenerator generator{ session.Connection, generatorOptions };
+
+        WriteField(ResourceString(IDS_CLOCK_LABEL_TEMPO),
+            fmt::format("{:.2f} BPM", options.Tempo), numberTextStyle);
+        WriteField(ResourceString(IDS_CLOCK_LABEL_PPQN),
+            fmt::format("{}", options.PulsesPerQuarterNote), numberTextStyle);
+        WriteField(ResourceString(IDS_CLOCK_LABEL_INTERVAL),
+            fmt::format("{:.3f} ms",
+                midi2::MidiClock::ConvertTimestampTicksToMilliseconds(generator.TicksPerPulse())),
+            numberTextStyle);
+
+        WriteBlankLine();
+        WriteInfoLine(ResourceString(IDS_CLOCK_PRESS_ESCAPE));
+        WriteBlankLine();
+
+        generator.Start();
+
+        for (;;)
+        {
+            if (_kbhit() && _getch() == KeyEscape)
+            {
+                break;
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+
+        WriteInfoLine(ResourceString(IDS_CLOCK_DRAINING));
+
+        auto const lastTimestamp = generator.Stop();
+
+        // Pulses are already in the service queue, so exiting now would cut them off.
+        while (midi2::MidiClock::Now() < lastTimestamp)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+
+        WriteBlankLine();
+        WriteSuccessLine(ResourceString(IDS_CLOCK_STOPPED));
+        WriteField(ResourceString(IDS_CLOCK_LABEL_PULSES_SENT),
+            fmt::format("{}", generator.PulsesScheduled()), numberTextStyle);
+
+        return 0;
+    }
+}

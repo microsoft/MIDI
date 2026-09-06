@@ -938,6 +938,130 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
     }
 
 
+    MidiConfigFileSaveOutcome MidiConfigFile::EnsureExists() noexcept
+    {
+        MidiConfigFileSaveOutcome outcome{};
+
+        try
+        {
+            if (auto const existing = ResolvePath(); !existing.empty())
+            {
+                outcome.Result = svc::MidiServiceConfigSaveResult::Success;
+                outcome.ConfigFilePath = winrt::hstring{ existing };
+
+                return outcome;
+            }
+
+            // Writing here needs no elevation on a normally installed machine: the setup grants
+            // Authenticated Users SetValue on this key. Creating the key itself does need it, so
+            // a machine which has never had any Windows MIDI Services component installed is
+            // reported as a failure rather than silently doing nothing.
+            wil::unique_hkey key{};
+
+            auto const openResult = ::RegCreateKeyExW(
+                HKEY_LOCAL_MACHINE,
+                MIDI_ROOT_REG_KEY,
+                0,
+                nullptr,
+                0,
+                KEY_SET_VALUE,
+                nullptr,
+                key.put(),
+                nullptr);
+
+            if (openResult != ERROR_SUCCESS)
+            {
+                outcome.Result = openResult == ERROR_ACCESS_DENIED ?
+                    svc::MidiServiceConfigSaveResult::ErrorAccessDenied :
+                    svc::MidiServiceConfigSaveResult::ErrorNoConfigFileRegistered;
+
+                return outcome;
+            }
+
+            std::wstring const fileName{ MIDI_CONFIG_FILE_DEFAULT_NAME };
+
+            auto const setResult = ::RegSetValueExW(
+                key.get(),
+                MIDI_CONFIG_FILE_REG_VALUE,
+                0,
+                REG_SZ,
+                reinterpret_cast<BYTE const*>(fileName.c_str()),
+                static_cast<DWORD>((fileName.size() + 1) * sizeof(wchar_t)));
+
+            if (setResult != ERROR_SUCCESS)
+            {
+                outcome.Result = setResult == ERROR_ACCESS_DENIED ?
+                    svc::MidiServiceConfigSaveResult::ErrorAccessDenied :
+                    svc::MidiServiceConfigSaveResult::ErrorNoConfigFileRegistered;
+
+                return outcome;
+            }
+
+            auto const path = ResolvePath();
+
+            if (path.empty())
+            {
+                outcome.Result = svc::MidiServiceConfigSaveResult::ErrorNoConfigFileRegistered;
+                return outcome;
+            }
+
+            outcome.ConfigFilePath = winrt::hstring{ path };
+
+            // An empty file parses as nothing, so the skeleton is written to give the service and
+            // anyone opening it in an editor something valid to read.
+            wil::unique_hfile file{ ::CreateFileW(
+                path.c_str(),
+                GENERIC_READ | GENERIC_WRITE,
+                FILE_SHARE_READ,
+                nullptr,
+                OPEN_ALWAYS,
+                FILE_ATTRIBUTE_NORMAL,
+                nullptr) };
+
+            if (!file)
+            {
+                outcome.Result = ::GetLastError() == ERROR_ACCESS_DENIED ?
+                    svc::MidiServiceConfigSaveResult::ErrorAccessDenied :
+                    svc::MidiServiceConfigSaveResult::ErrorWritingConfigFile;
+
+                return outcome;
+            }
+
+            std::string existingBytes{};
+
+            if (ReadWholeFile(file.get(), existingBytes) && !existingBytes.empty())
+            {
+                // something is already there, so it is left exactly as it is
+                outcome.Result = svc::MidiServiceConfigSaveResult::Success;
+                return outcome;
+            }
+
+            json::JsonObject skeleton{};
+
+            skeleton.SetNamedValue(
+                MIDI_CONFIG_JSON_COMMON_COMMENT_KEY,
+                json::JsonValue::CreateStringValue(L"Windows MIDI Services configuration"));
+
+            skeleton.SetNamedValue(MIDI_CONFIG_JSON_TRANSPORT_PLUGIN_SETTINGS_OBJECT, json::JsonObject{});
+
+            std::wstring text{};
+            AppendPretty(text, skeleton, 0);
+            text += L"\n";
+
+            outcome.Result = WriteWholeFile(file.get(), ToUtf8(text)) ?
+                svc::MidiServiceConfigSaveResult::Success :
+                svc::MidiServiceConfigSaveResult::ErrorWritingConfigFile;
+
+            return outcome;
+        }
+        catch (...)
+        {
+            outcome.Result = svc::MidiServiceConfigSaveResult::ErrorUnexpected;
+            return outcome;
+        }
+    }
+
+
     _Use_decl_annotations_
     MidiConfigFileSaveOutcome MidiConfigFile::SaveTransportSection(
         winrt::guid const& transportId,

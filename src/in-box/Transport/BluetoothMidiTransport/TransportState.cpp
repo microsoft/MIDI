@@ -71,16 +71,41 @@ TransportState::StartPeripheral(MidiBleProtocol::Protocol const protocol)
     // escaping WinRT exception would unwind past them into a worker thread.
     try
     {
-        auto lock = std::scoped_lock{ m_peripheralLock };
+        {
+            auto lock = std::scoped_lock{ m_peripheralLock };
 
-        RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED), m_peripheral != nullptr && m_peripheral->IsRunning());
+            RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED), m_peripheral != nullptr && m_peripheral->IsRunning());
+        }
 
         auto peripheral = std::make_shared<MidiBlePeripheral>();
         RETURN_IF_NULL_ALLOC(peripheral);
 
+        // starting blocks on Bluetooth for as long as the GATT timeouts allow, so like Stop it
+        // never runs under the lock: GetPeripheral is on the data path and would stall with it
         RETURN_IF_FAILED(peripheral->Start(protocol));
 
-        m_peripheral = peripheral;
+        std::shared_ptr<MidiBlePeripheral> alreadyRunning{ nullptr };
+
+        {
+            auto lock = std::scoped_lock{ m_peripheralLock };
+
+            if (m_peripheral != nullptr && m_peripheral->IsRunning())
+            {
+                alreadyRunning = std::move(peripheral);
+            }
+            else
+            {
+                m_peripheral = peripheral;
+            }
+        }
+
+        if (alreadyRunning != nullptr)
+        {
+            // another caller won the race while this one was starting
+            LOG_IF_FAILED(alreadyRunning->Stop());
+
+            return HRESULT_FROM_WIN32(ERROR_ALREADY_INITIALIZED);
+        }
 
         return S_OK;
     }

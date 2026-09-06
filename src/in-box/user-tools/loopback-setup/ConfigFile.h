@@ -46,8 +46,11 @@ namespace midiloopbacksetup
         winrt::hstring LastErrorMessage() const noexcept { return m_lastError; }
 
         // The json comes straight from the SDK creation config's ConfigJson, which is already
-        // wrapped from the root of the file.
-        bool MergeSection(_In_ winrt::Windows::Data::Json::JsonObject const& wrappedSection) noexcept;
+        // wrapped from the root of the file. The kind says which transport section to pull out
+        // of it: the SDK matches on the transport id, and the wrong one finds nothing.
+        bool MergeSection(
+            _In_ LoopbackKind const kind,
+            _In_ winrt::Windows::Data::Json::JsonObject const& wrappedSection) noexcept;
 
         bool RemoveEntry(_In_ LoopbackKind const kind, _In_ winrt::hstring const& associationKey) noexcept;
 

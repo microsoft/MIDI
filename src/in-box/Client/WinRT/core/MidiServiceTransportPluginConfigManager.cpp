@@ -243,6 +243,46 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
     {
         return winrt::hstring{ MidiConfigFile::ResolvePath() };
     }
+
+    svc::MidiServiceConfigSaveResponse MidiServiceTransportPluginConfigManager::EnsureConfigurationFile() noexcept
+    {
+        auto response = winrt::make_self<MidiServiceConfigSaveResponse>();
+
+        if (response == nullptr)
+        {
+            return nullptr;
+        }
+
+        try
+        {
+            auto const outcome = MidiConfigFile::EnsureExists();
+
+            response->InternalSetResult(outcome.Result);
+            response->InternalSetConfigFilePath(outcome.ConfigFilePath);
+
+            if (outcome.Result != svc::MidiServiceConfigSaveResult::Success)
+            {
+                TraceLoggingWrite(
+                    Midi2SdkTelemetryProvider::Provider(),
+                    MIDI_SDK_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingWideString(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                    TraceLoggingWideString(L"Could not register a configuration file for this PC", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                    TraceLoggingUInt32(static_cast<uint32_t>(outcome.Result), "save result")
+                );
+            }
+
+            return *response;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception ensuring the configuration file.");
+
+            response->InternalSetResult(svc::MidiServiceConfigSaveResult::ErrorUnexpected);
+            return *response;
+        }
+    }
 }
 
 

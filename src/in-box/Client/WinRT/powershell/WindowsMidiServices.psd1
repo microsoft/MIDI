@@ -73,6 +73,7 @@ CmdletsToExport = @(
 
     # enumeration
     'Get-MidiEndpointDeviceInfo', 'Get-MidiEndpointGroup', 'Get-MidiLegacyPort',
+    'Convert-MidiEndpointDeviceId',
 
     # connections and messages
     'Open-MidiEndpointConnection', 'Close-MidiEndpointConnection',

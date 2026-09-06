@@ -143,6 +143,9 @@
 #define MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_IMAGE_KEY                       MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY
 #define MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_MUTED_KEY                       MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY
 
+// running total of UMP messages the loopback has carried from its destination back to its source
+#define MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_MESSAGE_COUNT_KEY               L"messageCount"
+
 
 
 // Virtual patch bay transport configuration

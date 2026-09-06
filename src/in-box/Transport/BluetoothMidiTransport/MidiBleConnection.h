@@ -80,11 +80,24 @@ public:
     uint64_t MessagesSent() const noexcept { return m_messagesSent.load(); }
     uint64_t PacketsReceived() const noexcept { return m_packetsReceived.load(); }
     uint64_t PacketsSent() const noexcept { return m_packetsSent.load(); }
+
+    // Set when the device refused an operation until the link is authenticated.
+    bool RequiresPairing() const noexcept { return m_requiresPairing.load(); }
     int32_t LastSendErrorHresult() const noexcept { return m_lastSendErrorHresult.load(); }
+
+    // Published from the receive path because the correlator itself is only touched there.
+    MidiBleProtocol::TimestampSource IncomingTimestampSource() const noexcept
+    {
+        return static_cast<MidiBleProtocol::TimestampSource>(m_incomingTimestampSource.load());
+    }
 
     bool IsDeviceConnected() const;
     bool IsShutdown() const noexcept { return m_shutdown; }
     bool IsPeripheral() const noexcept { return m_isPeripheral; }
+
+    // Bonding discards a subscription made on an unencrypted link, and the connection stays up
+    // and silent, so it has to be renewed from outside when the device becomes paired.
+    HRESULT RefreshNotificationSubscription();
 
     // The interval the link actually negotiated, in units of 1.25 ms. Zero when unknown.
     uint16_t ConnectionIntervalUnits() const noexcept { return m_connectionIntervalUnits.load(); }
@@ -141,6 +154,9 @@ private:
     wil::com_ptr_nothrow<IMidiCallback> m_callback{ nullptr };
     LONGLONG m_callbackContext{ 0 };
 
+    // so the "nothing is listening" warning is written once per gap rather than per message
+    std::atomic<bool> m_reportedMissingCallback{ false };
+
     // inbound and outbound translation state is per-direction and never shared
     MidiBleMidi1::PacketDecoder m_incomingPacketDecoder{ };
     MidiBleMidi1::TimestampCorrelator m_incomingTimestampCorrelator{ };
@@ -161,7 +177,10 @@ private:
     std::atomic<uint64_t> m_messagesSent{ 0 };
     std::atomic<uint64_t> m_packetsReceived{ 0 };
     std::atomic<uint64_t> m_packetsSent{ 0 };
+    std::atomic<bool> m_requiresPairing{ false };
     std::atomic<int32_t> m_lastSendErrorHresult{ 0 };
+
+    std::atomic<uint8_t> m_incomingTimestampSource{ static_cast<uint8_t>(MidiBleProtocol::TimestampSource::Unknown) };
 
     // jthread members are declared last so they are destroyed first
     std::jthread m_writerThread;

@@ -534,7 +534,9 @@ namespace midiloopbacksetup
     }
 
     _Use_decl_annotations_
-    bool LoopbackConfigFile::MergeSection(json::JsonObject const& wrappedSection) noexcept
+    bool LoopbackConfigFile::MergeSection(
+        LoopbackKind const kind,
+        json::JsonObject const& wrappedSection) noexcept
     {
         if (wrappedSection == nullptr)
         {
@@ -544,7 +546,7 @@ namespace midiloopbacksetup
         // wrappedSection comes from the SDK creation config already wrapped from the root, and
         // SaveUpdate takes it in that form or as a bare section
         auto const response = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(
-            TransportIdFor(LoopbackKind::Loopback),
+            TransportIdFor(kind),
             wrappedSection);
 
         if (response == nullptr || !response.Success())

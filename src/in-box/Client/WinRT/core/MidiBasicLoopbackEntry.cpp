@@ -11,13 +11,15 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
         winrt::hstring const& name,
         winrt::hstring const& description,
         winrt::hstring const& imageFileName,
-        bool const isMuted) noexcept
+        bool const isMuted,
+        uint64_t const messageCount) noexcept
     {
         m_associationId = associationId;
         m_endpointDeviceId = endpointDeviceId;
         m_name = name;
         m_description = description;
         m_isMuted = isMuted;
+        m_messageCount = messageCount;
 
         // the service reports what the configuration file said, and that file is editable by any
         // standard user, so it is cleaned again on the way in

@@ -135,6 +135,9 @@ static_assert(    MAXIMUM_LOOPED_BUFFER_SIZE < ULONG_MAX/2, "The maximum looped 
 // can read/write there.
 #define MIDI_CONFIG_FILE_FOLDER L"%ALLUSERSPROFILE%\\Microsoft\\MIDI\\"
 
+// what a tool registers when this PC has no configuration file at all
+#define MIDI_CONFIG_FILE_DEFAULT_NAME L"WindowsMidiServices.midiconfig.json"
+
 //
 // SendMidiMessage HRESULT codes (these are not exposed through the API, and are just internal)
 //

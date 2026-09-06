@@ -15,11 +15,13 @@
     One or more of:
       Version  Compute versions; write BundleInfo.wxi and stamp the NuGet nuspec.
       Sdk      Build Midi2-AppSDK.sln (Arm64, Arm64EC for Arm64X, x64) and the .NET apps.
+      Samples  Point samples/cpp-winrt and samples/csharp-net at the new NuGet package, compile
+               them against it, and drop source-only zips into build/release/<version>.
       Stage    Publish/copy all binaries and assets into build/staging.
       Setup    Generate the WiX file lists and build the installer bundle.
       Release  Collect the nupkg and installers into build/release/<version>.
       Clean    Delete staging, release and solution output folders.
-      All      Version, Sdk, Stage, Setup, Release.
+      All      Version, Sdk, Samples, Stage, Setup, Release.
 
 .PARAMETER BuildNumber
     Overrides the 'build' field in version.json without modifying the file. Intended for CI
@@ -82,7 +84,7 @@ function Expand-Argument {
     , @($resolved)
 }
 
-$Target = Expand-Argument -Value $Target -Allowed @('All', 'Version', 'Sdk', 'Stage', 'Setup', 'Release', 'Clean') -Name 'Target'
+$Target = Expand-Argument -Value $Target -Allowed @('All', 'Version', 'Sdk', 'Samples', 'Stage', 'Setup', 'Release', 'Clean') -Name 'Target'
 $Platform = Expand-Argument -Value $Platform -Allowed @('x64', 'Arm64') -Name 'Platform'
 
 # ----------------------------------------------------------------------------------------------
@@ -103,7 +105,6 @@ $SdkNuGetOutput = Join-Path $ApiRoot 'vsfiles-sdk\PublishedNuGet'
 
 $NuspecFile = Join-Path $ApiRoot 'Client\WinRT\NuGet\Windows.Devices.Midi2.NuGet\nuget\Windows.Devices.Midi2.nuspec'
 
-$ConsoleProject = Join-Path $UserToolsRoot 'midi-console\Midi\Midi.csproj'
 $PowerShellProject = Join-Path $ApiRoot 'Client\WinRT\powershell\WindowsMidiServices.csproj'
 
 $SetupSolutionRoot = Join-Path $SourceRoot 'installers\api-and-tools-installer'
@@ -111,6 +112,8 @@ $SetupSolution = Join-Path $SetupSolutionRoot 'midi-services-app-sdk-runtime-set
 
 $DesignRoot = Join-Path $RepoRoot 'design'
 $CollectMidiLogsRoot = Join-Path $ApiRoot 'CollectMidiLogs'
+
+$SamplesRoot = Join-Path $RepoRoot 'samples'
 
 $StagingRoot = Join-Path $BuildRoot 'staging'
 $ReleaseRoot = Join-Path $BuildRoot 'release'
@@ -132,11 +135,8 @@ $env:MIDI_REPO_ROOT = $RepoRoot.TrimEnd('\')
 $ConsoleTools = @(
     'mididiag'
     'midiksinfo'
-    'midimdnsinfo'
     'midi1monitor'
     'midi1enum'
-    'midiapimode'
-    'midifixreg'
 )
 
 # GUI tools each install into their OWN subfolder of Tools. MIDI Settings resolves the others by
@@ -161,6 +161,18 @@ $StartMenuFolderName = 'Windows MIDI (Preview)'
 
 # Linker/metadata leftovers in a native project's output folder. Not shipped.
 $BuildOnlyExtensions = @('.exp', '.lib', '.winmd', '.ipdb', '.iobj', '.pdb')
+
+# Sample sets shipped as zips alongside the release. Each is rewritten to reference the NuGet
+# package this build produced, then compiled - a sample that no longer builds against the SDK is
+# a release blocker, not a documentation nit.
+$SampleSets = @(
+    [pscustomobject]@{ Name = 'C++/WinRT'; Folder = Join-Path $SamplesRoot 'cpp-winrt';  Solution = 'cpp-winrt-samples.sln';  ZipPrefix = 'cpp-winrt-samples' }
+    [pscustomobject]@{ Name = 'C#';        Folder = Join-Path $SamplesRoot 'csharp-net'; Solution = 'csharp-net-samples.sln'; ZipPrefix = 'csharp-samples' }
+)
+
+# Build output and per-user state. The zips carry source, project files, config and readmes only.
+$SampleExcludedFolders = @('bin', 'obj', 'intermediate', 'packages', '.vs', 'Generated Files', 'AppPackages', 'BundleArtifacts', 'TestResults')
+$SampleExcludedExtensions = @('.user', '.log', '.zip', '.pfx', '.suo', '.cache', '.binlog', '.nupkg', '.opendb', '.db')
 
 # Surfaced in the generated version headers and shown in midi2monitor's settings dialog.
 $SdkBuildSource = 'GitHub Preview'
@@ -235,6 +247,11 @@ function Get-BuildVersion {
     # Four-part numeric, for assemblies, file versions, MSI and the bundle.
     $numericVersion = '{0}.{1}' -f $majorMinorPatch, $effectiveBuild
 
+    # Sample zips are named after the release rather than the version, matching the ones already
+    # published: "SDK Dev Preview 7" -> "dev-preview-7". The leading "sdk" is dropped because the
+    # zip names already say what they contain.
+    $releaseName = (([string]$json.versionName).ToLowerInvariant() -replace '[^a-z0-9]+', '-').Trim('-') -replace '^sdk-', ''
+
     [pscustomobject]@{
         Major           = [int]$json.major
         Minor           = [int]$json.minor
@@ -243,6 +260,7 @@ function Get-BuildVersion {
         Channel         = [string]$json.channel
         ChannelNumber   = [int]$json.channelNumber
         VersionName     = [string]$json.versionName
+        ReleaseName     = $releaseName
         NuGetPackageId  = [string]$json.nuGetPackageId
         MajorMinorPatch = $majorMinorPatch
         SemVer          = $semVer
@@ -474,6 +492,236 @@ function Invoke-SdkTarget {
 }
 
 # ----------------------------------------------------------------------------------------------
+# Samples
+# ----------------------------------------------------------------------------------------------
+
+function Set-FileTextPreservingBom {
+    param(
+        [Parameter(Mandatory)] [string] $Path,
+        [Parameter(Mandatory)] [string] $Text
+    )
+
+    # Every release rewrites these files, so keeping the byte-for-byte encoding avoids a diff
+    # that touches whole files instead of the version strings that actually changed.
+    $head = [System.IO.File]::ReadAllBytes($Path) | Select-Object -First 3
+    $hasBom = $head.Count -eq 3 -and $head[0] -eq 0xEF -and $head[1] -eq 0xBB -and $head[2] -eq 0xBF
+
+    [System.IO.File]::WriteAllText($Path, $Text, [System.Text.UTF8Encoding]::new($hasBom))
+}
+
+function Get-SolutionProjectPath {
+    param([Parameter(Mandatory)] [string] $SolutionPath)
+
+    $folder = Split-Path -Parent $SolutionPath
+    $declarations = [regex]::Matches(
+        (Get-Content $SolutionPath -Raw),
+        '^Project\("\{[^}]+\}"\)\s*=\s*"[^"]*",\s*"([^"]+)"',
+        [System.Text.RegularExpressions.RegexOptions]::Multiline)
+
+    $paths = foreach ($declaration in $declarations) {
+        $relative = $declaration.Groups[1].Value
+
+        # Solution folders are declared the same way but carry a name rather than a file path.
+        if ($relative -notmatch '\.[a-z]*proj$') { continue }
+
+        $full = Join-Path $folder $relative
+        if (-not (Test-Path $full)) {
+            throw "$(Split-Path -Leaf $SolutionPath) references a project that does not exist: $relative"
+        }
+
+        (Resolve-Path $full).Path
+    }
+
+    if (@($paths).Count -eq 0) {
+        throw "No projects found in $SolutionPath"
+    }
+
+    , @($paths)
+}
+
+function Get-SolutionPlatform {
+    param(
+        [Parameter(Mandatory)] [string] $SolutionPath,
+        [Parameter(Mandatory)] [string] $RequestedPlatform
+    )
+
+    # Solution platform names are spelled inconsistently across the samples (ARM64 vs Arm64), and
+    # MSBuild will happily "succeed" while building nothing when the name does not resolve.
+    $declared = [regex]::Matches(
+        (Get-Content $SolutionPath -Raw),
+        '^\s*' + [regex]::Escape($Configuration) + '\|(\S+) = ',
+        [System.Text.RegularExpressions.RegexOptions]::Multiline)
+
+    foreach ($match in $declared) {
+        if ($match.Groups[1].Value -eq $RequestedPlatform) { return $match.Groups[1].Value }
+    }
+
+    return $null
+}
+
+function Update-SampleReference {
+    param(
+        [Parameter(Mandatory)] [string[]] $Projects,
+        [Parameter(Mandatory)] $Version
+    )
+
+    $packageId = $Version.NuGetPackageId
+    $updatedFiles = 0
+
+    foreach ($project in $Projects) {
+        $text = Get-Content $project -Raw
+        $original = $text
+
+        if ($project -like '*.vcxproj') {
+            # packages.config projects hard-code the extracted package folder in four places: the
+            # props import, the targets import and both EnsureNuGetPackageBuildImports checks.
+            $text = [regex]::Replace($text,
+                'packages\\' + [regex]::Escape($packageId) + '\.[^\\]+\\',
+                'packages\' + $packageId + '.' + $Version.SemVer + '\')
+        }
+        else {
+            $text = [regex]::Replace($text,
+                '(<PackageReference\s+Include="' + [regex]::Escape($packageId) + '"\s+Version=")[^"]*(")',
+                '${1}' + $Version.SemVer + '${2}')
+        }
+
+        if ($text -ne $original) {
+            Set-FileTextPreservingBom -Path $project -Text $text
+            $updatedFiles++
+        }
+
+        $packagesConfig = Join-Path (Split-Path -Parent $project) 'packages.config'
+        if (Test-Path $packagesConfig) {
+            $text = Get-Content $packagesConfig -Raw
+            $original = $text
+
+            $text = [regex]::Replace($text,
+                '(<package\s+id="' + [regex]::Escape($packageId) + '"\s+version=")[^"]*(")',
+                '${1}' + $Version.SemVer + '${2}')
+
+            if ($text -ne $original) {
+                Set-FileTextPreservingBom -Path $packagesConfig -Text $text
+                $updatedFiles++
+            }
+        }
+    }
+
+    return $updatedFiles
+}
+
+function Test-SampleFileIncluded {
+    param([Parameter(Mandatory)] [System.IO.FileInfo] $File)
+
+    return -not ($SampleExcludedExtensions -contains $File.Extension)
+}
+
+function Copy-SampleTree {
+    param(
+        [Parameter(Mandatory)] [string] $Source,
+        [Parameter(Mandatory)] [string] $Destination
+    )
+
+    New-Item -ItemType Directory -Force -Path $Destination | Out-Null
+
+    foreach ($file in @(Get-ChildItem $Source -File)) {
+        if (Test-SampleFileIncluded -File $file) {
+            Copy-Item $file.FullName -Destination (Join-Path $Destination $file.Name) -Force
+        }
+    }
+
+    foreach ($folder in @(Get-ChildItem $Source -Directory)) {
+        if ($SampleExcludedFolders -contains $folder.Name) { continue }
+        Copy-SampleTree -Source $folder.FullName -Destination (Join-Path $Destination $folder.Name)
+    }
+}
+
+function New-SampleArchive {
+    param(
+        [Parameter(Mandatory)] $Set,
+        [Parameter(Mandatory)] [string[]] $Projects,
+        [Parameter(Mandatory)] [string] $ArchivePath
+    )
+
+    $stagingFolder = Join-Path $StagingRoot "samples\$($Set.ZipPrefix)"
+    if (Test-Path $stagingFolder) { Remove-Item $stagingFolder -Recurse -Force }
+    New-Item -ItemType Directory -Force -Path $stagingFolder | Out-Null
+
+    # Solution, nuget.config and readme sit at the root; everything else comes from the folders
+    # of the projects the solution actually declares, so retired samples left on disk stay out.
+    foreach ($file in @(Get-ChildItem $Set.Folder -File)) {
+        if (Test-SampleFileIncluded -File $file) {
+            Copy-Item $file.FullName -Destination (Join-Path $stagingFolder $file.Name) -Force
+        }
+    }
+
+    $projectFolders = $Projects | ForEach-Object { Split-Path -Parent $_ } | Sort-Object -Unique
+
+    foreach ($source in $projectFolders) {
+        $relative = $source.Substring($Set.Folder.Length).TrimStart('\')
+        Copy-SampleTree -Source $source -Destination (Join-Path $stagingFolder $relative)
+    }
+
+    if (Test-Path $ArchivePath) { Remove-Item $ArchivePath -Force }
+
+    # Not Compress-Archive: it writes backslash separators, which several extractors treat as
+    # part of the file name rather than as a folder.
+    [System.IO.Compression.ZipFile]::CreateFromDirectory(
+        $stagingFolder, $ArchivePath, [System.IO.Compression.CompressionLevel]::Optimal, $false)
+
+    return @(Get-ChildItem $stagingFolder -File -Recurse).Count
+}
+
+function Invoke-SamplesTarget {
+    param($Version)
+
+    Write-Step 'Samples'
+
+    $package = Join-Path $SdkNuGetOutput "$($Version.NuGetPackageId).$($Version.SemVer).nupkg"
+    if (-not (Test-Path $package)) {
+        throw "Cannot update the samples: the NuGet package has not been built. Run the Sdk target first. ($package)"
+    }
+
+    # The samples reference the package by version from nuget.org, where this build has not been
+    # published yet. RestoreAdditionalProjectSources adds the local output folder; RestoreSources
+    # cannot be used because it replaces the configured feeds and MSBuild splits /p: values on ';'.
+    $releaseFolder = Join-Path $ReleaseRoot $Version.ReleaseLabel
+    New-Item -ItemType Directory -Force -Path $releaseFolder | Out-Null
+
+    foreach ($set in $SampleSets) {
+        $solution = Join-Path $set.Folder $set.Solution
+        if (-not (Test-Path $solution)) { throw "Sample solution not found: $solution" }
+
+        Write-Detail "$($set.Name) samples"
+
+        $projects = Get-SolutionProjectPath -SolutionPath $solution
+        Write-Detail "  $($projects.Count) projects in $($set.Solution)"
+
+        $updated = Update-SampleReference -Projects $projects -Version $Version
+        Write-Detail "  $updated files repointed at $($Version.NuGetPackageId) $($Version.SemVer)"
+
+        foreach ($plat in $Platform) {
+            $solutionPlatform = Get-SolutionPlatform -SolutionPath $solution -RequestedPlatform $plat
+            if (-not $solutionPlatform) {
+                Write-Note "  $($set.Solution) has no $Configuration|$plat configuration - skipped"
+                continue
+            }
+
+            # RestorePackagesConfig covers the C++/WinRT samples, which are still packages.config.
+            Invoke-MSBuild -ProjectOrSolution $solution -BuildPlatform $solutionPlatform `
+                -Targets @('Restore') `
+                -Properties @{ 'RestoreAdditionalProjectSources' = $SdkNuGetOutput; 'RestorePackagesConfig' = 'true' }
+
+            Invoke-MSBuild -ProjectOrSolution $solution -BuildPlatform $solutionPlatform -Targets @('Build')
+        }
+
+        $archive = Join-Path $releaseFolder "$($set.ZipPrefix)-$($Version.ReleaseName).zip"
+        $fileCount = New-SampleArchive -Set $set -Projects $projects -ArchivePath $archive
+
+        Write-Detail "  $fileCount files -> $(Split-Path -Leaf $archive)"
+    }
+}
+
+# ----------------------------------------------------------------------------------------------
 # Staging
 # ----------------------------------------------------------------------------------------------
 
@@ -656,11 +904,19 @@ function Invoke-StageTarget {
         Write-Detail "Staged SDK, $($ConsoleTools.Count) console tools, $($GuiTools.Count) GUI tools -> app-sdk\$plat"
 
         # --- MIDI Console -------------------------------------------------------------------
+        # Ships in its own package, and therefore its own folder, so it needs its own copy of
+        # the SDK next to the exe.
         $consoleStaging = Join-Path $StagingRoot "midi-console\$plat"
-        Publish-DotNetApp -Project $ConsoleProject -BuildPlatform $plat -RuntimeIdentifier $rid `
-            -Destination $consoleStaging -Version $Version
+        if (Test-Path $consoleStaging) { Remove-Item $consoleStaging -Recurse -Force }
+        New-Item -ItemType Directory -Force -Path $consoleStaging | Out-Null
 
-        Move-StagedSymbols -Folder $consoleStaging -BuildPlatform $plat
+        Copy-Staged -Source (Join-Path $SdkOutRoot "midi\$plat\$Configuration\midi.exe") -Destination $consoleStaging
+
+        foreach ($ext in @('dll', 'pri')) {
+            Copy-Staged -Source (Join-Path $sdkBinFolder "Windows.Devices.Midi2.$ext") -Destination $consoleStaging
+        }
+
+        Write-Detail "Staged MIDI Console -> midi-console\$plat"
 
         # --- PowerShell module --------------------------------------------------------------
         $psStaging = Join-Path $StagingRoot "midi-powershell\$plat"
@@ -1060,7 +1316,7 @@ function Invoke-CleanTarget {
 
 $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
-$targets = if ($Target -contains 'All') { @('Version', 'Sdk', 'Stage', 'Setup', 'Release') } else { $Target }
+$targets = if ($Target -contains 'All') { @('Version', 'Sdk', 'Samples', 'Stage', 'Setup', 'Release') } else { $Target }
 
 Write-Host ''
 Write-Host 'Windows MIDI Services - App SDK build' -ForegroundColor White
@@ -1081,13 +1337,14 @@ if ($targets -notcontains 'Version') {
     Write-Detail "Version       $($version.SemVer)"
 }
 
-if ($targets -contains 'Sdk' -or $targets -contains 'Setup' -or $targets -contains 'Stage') {
+if ($targets -contains 'Sdk' -or $targets -contains 'Setup' -or $targets -contains 'Stage' -or $targets -contains 'Samples') {
     $script:MSBuild = Resolve-MSBuild
     Write-Detail "MSBuild       $script:MSBuild"
 }
 
 if ($targets -contains 'Version') { Invoke-VersionTarget $version }
 if ($targets -contains 'Sdk') { Invoke-SdkTarget $version }
+if ($targets -contains 'Samples') { Invoke-SamplesTarget $version }
 if ($targets -contains 'Stage') { Invoke-StageTarget $version }
 if ($targets -contains 'Setup') { Invoke-SetupTarget $version }
 if ($targets -contains 'Release') { Invoke-ReleaseTarget $version }

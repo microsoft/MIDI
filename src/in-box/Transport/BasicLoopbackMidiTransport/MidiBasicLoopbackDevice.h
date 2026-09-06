@@ -66,8 +66,17 @@ public:
         if (!definition || definition->IsMuted) return S_OK;
         if (callback == nullptr) return S_OK;
 
-        return callback->Callback(optionFlags, message, size, position, context);
+        RETURN_IF_FAILED(callback->Callback(optionFlags, message, size, position, context));
+
+        m_messageCount.fetch_add(CountUmpMessages(message, size), std::memory_order_relaxed);
+
+        return S_OK;
     }
+
+    // Running total of UMP messages carried from the destination back to the source. Only
+    // messages which were actually delivered are counted, so a muted or unopened loopback
+    // reads zero rather than pretending to pass traffic.
+    uint64_t MessageCount() const noexcept { return m_messageCount.load(std::memory_order_relaxed); }
 
     // Full teardown of the device. Only the endpoint table (RemoveDevice /
     // table Shutdown) should call this, when the endpoint itself is being
@@ -88,8 +97,38 @@ public:
     }
 
 private:
+    // A single send can carry several messages, and a count of buffers would make a burst of
+    // notes look identical to one long system exclusive.
+    static uint64_t CountUmpMessages(_In_ PVOID const message, _In_ UINT const size) noexcept
+    {
+        auto const words = reinterpret_cast<uint32_t const*>(message);
+        auto const wordCount = size / sizeof(uint32_t);
+
+        uint64_t count{ 0 };
+
+        for (size_t index = 0; index < wordCount; )
+        {
+            auto const length = internal::GetUmpLengthInMidiWordsFromFirstWord(words[index]);
+
+            count++;
+
+            // A length which does not fit means the buffer is not what it claims to be. Stop
+            // rather than walking off the end or spinning on a zero length.
+            if (length == 0 || index + length > wordCount)
+            {
+                break;
+            }
+
+            index += length;
+        }
+
+        return count;
+    }
+
     wil::srwlock m_lock;
     wil::com_ptr_nothrow<IMidiCallback> m_callback{ nullptr };
+
+    std::atomic<uint64_t> m_messageCount{ 0 };
 
 };
 

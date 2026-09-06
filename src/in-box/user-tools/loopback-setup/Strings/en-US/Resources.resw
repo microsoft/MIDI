@@ -273,6 +273,10 @@
   <data name="LoopbackIsTransientText" xml:space="preserve">
     <value>Not saved. This loopback disappears when the MIDI service restarts.</value>
   </data>
+  <data name="LoopbackTrafficFormat" xml:space="preserve">
+    <value>{0} messages</value>
+    <comment>{0} is the running total of MIDI messages the loopback has carried. Shown above the traffic graph.</comment>
+  </data>
 
   <!-- the well known defaults. The names and descriptions match what earlier releases created,
        so an existing setup and a rebuilt one look the same. -->
@@ -439,6 +443,75 @@
   <data name="ConfirmDeleteMessageFormat" xml:space="preserve">
     <value>"{0}" will be removed from this PC. Apps which are using it will lose the connection.</value>
     <comment>{0} is the name of the loopback</comment>
+  </data>
+
+  <!-- importing loopbacks provided by a third-party driver -->
+  <data name="ImportLoopbacksButton.Content" xml:space="preserve">
+    <value>Import from another provider...</value>
+  </data>
+  <data name="ImportLoopbacksDialog.Title" xml:space="preserve">
+    <value>Import loopbacks from another provider</value>
+  </data>
+  <data name="ImportLoopbacksDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Import</value>
+  </data>
+  <data name="ImportLoopbacksDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ImportCaveatBar.Message" xml:space="preserve">
+    <value>These may not all be loopback ports. Anything from a driver that did not come with Windows is listed here, including real hardware, so choose carefully.</value>
+  </data>
+  <data name="NoImportCandidatesText.Text" xml:space="preserve">
+    <value>No MIDI ports from other providers were found on this PC.</value>
+  </data>
+  <data name="ImportPersistCheckBox.Content" xml:space="preserve">
+    <value>Keep these loopbacks after a restart</value>
+  </data>
+  <data name="ImportDeviceServiceFormat" xml:space="preserve">
+    <value>Driver service: {0}</value>
+    <comment>{0} is the name of the driver service behind the device, which is what identifies it as third-party</comment>
+  </data>
+  <data name="ImportPortDetailFormat" xml:space="preserve">
+    <value>Group {0}</value>
+    <comment>{0} is the group number the port uses on its endpoint</comment>
+  </data>
+  <data name="ImportPortDetailMismatchFormat" xml:space="preserve">
+    <value>Group {0}. The output side is named "{1}", so this is probably not a loopback.</value>
+    <comment>{0} is the group number, {1} is the name of the MIDI output port</comment>
+  </data>
+  <data name="ImportConflictNoName" xml:space="preserve">
+    <value>This port has no name, so it cannot be imported.</value>
+  </data>
+  <data name="ImportConflictAlreadyExists" xml:space="preserve">
+    <value>A basic loopback with this name already exists on this PC.</value>
+  </data>
+  <data name="ImportConflictDuplicateName" xml:space="preserve">
+    <value>More than one port here has this name. Names have to be unique, so rename one at the provider first.</value>
+  </data>
+  <data name="ImportCompleteDialog.Title" xml:space="preserve">
+    <value>Imported</value>
+  </data>
+  <data name="ImportCompleteDialog.CloseButtonText" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="ImportCompleteFormat" xml:space="preserve">
+    <value>{0} basic loopback(s) were created.</value>
+    <comment>{0} is how many loopbacks were created</comment>
+  </data>
+  <data name="ImportCompleteWarningBar.Message" xml:space="preserve">
+    <value>Now remove the matching loopbacks from the other provider, or uninstall it. Until you do, two ports with the same name exist on this PC and apps cannot tell them apart. Some providers need a restart before their ports disappear.</value>
+  </data>
+  <data name="ImportedLoopbackDescriptionFormat" xml:space="preserve">
+    <value>Imported from {0}.</value>
+    <comment>{0} is the name of the device the port was imported from</comment>
+  </data>
+  <data name="ImportPartlyFailedFormat" xml:space="preserve">
+    <value>{0} imported. Windows MIDI Services could not create {1} of them.</value>
+    <comment>{0} is how many succeeded, {1} is how many failed</comment>
+  </data>
+  <data name="ImportNotSavedFormat" xml:space="preserve">
+    <value>{0} of the imported loopbacks could not be saved, so they will disappear when the MIDI service restarts.</value>
+    <comment>{0} is how many could not be written to the configuration file</comment>
   </data>
 
   <!-- validation -->

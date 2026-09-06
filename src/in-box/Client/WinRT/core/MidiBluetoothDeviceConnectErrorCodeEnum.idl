@@ -56,6 +56,15 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
         NotifyFailed =                  BLUETOOTH_MIDI_ERROR_CODE_NOTIFY_FAILED,
         EndpointCreationFailed =        BLUETOOTH_MIDI_ERROR_CODE_ENDPOINT_CREATION_FAILED,
 
+        // the device will not talk until the link is authenticated. Automatic reconnection is
+        // suspended for it, because every attempt raises another Windows pairing prompt.
+        PairingRequired =               BLUETOOTH_MIDI_ERROR_CODE_PAIRING_REQUIRED,
+
+        // nothing came back at all before the operation timed out. Distinct from DeviceUnreachable,
+        // which is the radio positively reporting it could not reach the device: a device which
+        // drops the link partway through, as one demanding encryption does, times out instead.
+        GattTimeout =                   BLUETOOTH_MIDI_ERROR_CODE_GATT_TIMEOUT,
+
         RadioNotAvailable =             BLUETOOTH_MIDI_ERROR_CODE_RADIO_NOT_AVAILABLE,
 
         Unexpected =                    0x11002011,

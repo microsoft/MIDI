@@ -134,6 +134,7 @@
     <ClInclude Include="MidiOutput.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
+    <ClInclude Include="TemporaryFlags.h" />
     <ClInclude Include="App.xaml.h">
       <DependentUpon>App.xaml</DependentUpon>
     </ClInclude>

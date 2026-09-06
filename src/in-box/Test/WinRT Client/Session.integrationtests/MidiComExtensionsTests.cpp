@@ -57,7 +57,7 @@ void MidiComExtensionsTests::TestComExtensionsSendReceiveMessages()
         uint32_t m_countWordsReceived { 0 };
 
 
-        m_midiInCallback = [&](GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, UINT32* messages)
+        m_midiInCallback = [&](GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, UINT32 const* messages)
             {
                 UNREFERENCED_PARAMETER(sessionId);
                 UNREFERENCED_PARAMETER(connectionId);

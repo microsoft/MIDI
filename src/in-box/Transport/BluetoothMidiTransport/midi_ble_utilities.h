@@ -57,9 +57,29 @@ namespace MidiBleProtocol
         uint64_t MessagesReceived{ 0 };
         uint64_t MessagesSent{ 0 };
 
+        // Set when the device has refused an operation until the link is authenticated. Retrying
+        // cannot succeed until the customer pairs, and every attempt raises another prompt.
+        bool RequiresPairing{ false };
+
+        // Some devices ask for security over SMP rather than failing a GATT call, which never
+        // reaches this transport as an error. All that is visible is a link which keeps dropping
+        // moments after it comes up, so repeated quick drops while unpaired are counted here.
+        uint32_t UnpairedEarlyDropCount{ 0 };
+
+        // When the current link came up, so a drop can be told from a link which lasted.
+        uint64_t ConnectedSinceTimestamp{ 0 };
+
         // Counted before decoding, so these move even when nothing decodes.
         uint64_t PacketsReceived{ 0 };
         uint64_t PacketsSent{ 0 };
+
+        // Only knowable from received traffic, so it stays Unknown until the device has sent
+        // enough for the transport to judge its clock.
+        TimestampSource IncomingTimestampSource{ TimestampSource::Unknown };
+
+        // Connecting is asynchronous, so this distinguishes an attempt under way from a device
+        // which is wanted but has not appeared yet.
+        ConnectionState ConnectionState{ ConnectionState::NotConnected };
         int32_t LastSendErrorHresult{ 0 };
 
         // computed when the list is taken, because both are relative to now
@@ -112,15 +132,35 @@ namespace MidiBleUtilities
     // Bluetooth timeout. Service shutdown joins the threads which make these calls, so an
     // unbounded wait here keeps the whole midisrv process alive long after the service stopped.
     inline constexpr uint32_t BleOperationTimeoutMilliseconds = 5000;
+
+    // Establishing a link is much slower than talking over one which already exists: the radio may
+    // have to wait several advertising intervals, and a device which demands pairing adds a whole
+    // security exchange. Five seconds gave up on devices which were about to succeed.
+    inline constexpr uint32_t BleConnectOperationTimeoutMilliseconds = 12000;
+
     inline constexpr uint32_t BleDataOperationTimeoutMilliseconds = 2000;
     inline constexpr uint32_t BleTeardownOperationTimeoutMilliseconds = 1000;
+
+    // Blocking waits are taken in slices this long so shutdown does not have to sit out a whole
+    // Bluetooth timeout, which for a connect attempt is several of them back to back.
+    inline constexpr uint32_t AwaitPollSliceMilliseconds = 200;
+
+    // Set while the transport is tearing down. Service shutdown joins the threads which make these
+    // calls, so a wait in progress abandons rather than running to its full timeout.
+    inline std::atomic<bool> g_shuttingDown{ false };
+
+    inline bool IsShuttingDown() noexcept { return g_shuttingDown.load(std::memory_order_relaxed); }
+    inline void SetShuttingDown(_In_ bool const value) noexcept { g_shuttingDown.store(value, std::memory_order_relaxed); }
 
     template<typename TResult>
     inline TResult AwaitWithTimeout(
         _In_ ::winrt::Windows::Foundation::IAsyncOperation<TResult> const& operation,
         _In_ uint32_t const timeoutMilliseconds,
-        _In_ TResult const onTimeout)
+        _In_ TResult const onTimeout,
+        _Out_ bool& timedOut)
     {
+        timedOut = false;
+
         if (operation == nullptr)
         {
             return onTimeout;
@@ -128,11 +168,44 @@ namespace MidiBleUtilities
 
         try
         {
-            if (operation.wait_for(std::chrono::milliseconds{ timeoutMilliseconds }) ==
-                ::winrt::Windows::Foundation::AsyncStatus::Completed)
+            // Completed may only ever be assigned once on a WinRT async operation, which rules out
+            // calling wait_for in a loop: the second call throws and the wait collapses to a single
+            // slice. Signaling an event from one handler and waiting on that instead is what lets
+            // the wait be given up early without touching the operation again.
+            //
+            // Shared rather than captured by reference, because the handler can still run after
+            // this function has abandoned the operation and returned.
+            auto completed = std::make_shared<wil::slim_event_manual_reset>();
+
+            operation.Completed([completed](auto&&, auto&&) { completed->SetEvent(); });
+
+            uint32_t remaining = timeoutMilliseconds;
+
+            while (remaining > 0)
+            {
+                uint32_t const slice = remaining < AwaitPollSliceMilliseconds ? remaining : AwaitPollSliceMilliseconds;
+
+                if (completed->wait(slice))
+                {
+                    break;
+                }
+
+                remaining -= slice;
+
+                // Service shutdown joins the threads making these calls, so a wait in progress is
+                // abandoned rather than run to its full timeout.
+                if (IsShuttingDown())
+                {
+                    break;
+                }
+            }
+
+            if (operation.Status() == ::winrt::Windows::Foundation::AsyncStatus::Completed)
             {
                 return operation.GetResults();
             }
+
+            timedOut = true;
 
             // Best effort. The operation keeps its own references and unwinds on its own, so
             // abandoning it is safe even when the cancel is ignored.
@@ -141,6 +214,17 @@ namespace MidiBleUtilities
         CATCH_LOG();
 
         return onTimeout;
+    }
+
+    template<typename TResult>
+    inline TResult AwaitWithTimeout(
+        _In_ ::winrt::Windows::Foundation::IAsyncOperation<TResult> const& operation,
+        _In_ uint32_t const timeoutMilliseconds,
+        _In_ TResult const onTimeout)
+    {
+        bool ignored{ false };
+
+        return AwaitWithTimeout(operation, timeoutMilliseconds, onTimeout, ignored);
     }
 
     inline winrt::hstring BluetoothAddressTypeToString(_In_ BluetoothAddressType const addressType)
@@ -170,6 +254,64 @@ namespace MidiBleUtilities
 
         default:
             return nullptr;
+        }
+    }
+
+    // Windows names an unnamed BLE device "Bluetooth <address with colons>". That is not a name
+    // the device supplied, and treating it as one hides the fact that it advertised none.
+    inline bool IsSynthesizedBluetoothName(
+        _In_ winrt::hstring const& name,
+        _In_ uint64_t const address) noexcept
+    {
+        try
+        {
+            if (name.empty() || address == 0)
+            {
+                return false;
+            }
+
+            auto const bytes = std::format(
+                L"Bluetooth {:02x}:{:02x}:{:02x}:{:02x}:{:02x}:{:02x}",
+                static_cast<uint8_t>((address >> 40) & 0xFF),
+                static_cast<uint8_t>((address >> 32) & 0xFF),
+                static_cast<uint8_t>((address >> 24) & 0xFF),
+                static_cast<uint8_t>((address >> 16) & 0xFF),
+                static_cast<uint8_t>((address >> 8) & 0xFF),
+                static_cast<uint8_t>(address & 0xFF));
+
+            return ::_wcsicmp(std::wstring{ name }.c_str(), bytes.c_str()) == 0;
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+    inline bool AdvertisementCarriesMidiService(
+        _In_ ::winrt::Windows::Devices::Bluetooth::Advertisement::BluetoothLEAdvertisement const& advertisement) noexcept
+    {
+        try
+        {
+            if (advertisement == nullptr)
+            {
+                return false;
+            }
+
+            winrt::guid const midiServiceUuid{ MidiBleProtocol::MidiServiceUuid };
+
+            for (auto const& uuid : advertisement.ServiceUuids())
+            {
+                if (uuid == midiServiceUuid)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        catch (...)
+        {
+            return false;
         }
     }
 
@@ -230,37 +372,138 @@ namespace MidiBleUtilities
     }
 
 
-    inline GattDeviceService GetBleMidiServiceFromDevice(
-        _In_ BluetoothLEDevice bleDevice,
-        _Out_ GattCommunicationStatus& status)
+    // The ATT errors which all mean "authenticate the link first". A BLE advertisement carries no
+    // pairing requirement, so a rejected operation is the only signal a device needs one.
+    inline bool IsPairingRequiredProtocolError(
+        _In_ ::winrt::Windows::Foundation::IReference<uint8_t> const& protocolError) noexcept
     {
-        status = GattCommunicationStatus::Unreachable;
+        try
+        {
+            if (protocolError == nullptr)
+            {
+                return false;
+            }
+
+            auto const value = protocolError.Value();
+
+            return value == GattProtocolError::InsufficientAuthentication() ||
+                value == GattProtocolError::InsufficientEncryption() ||
+                value == GattProtocolError::InsufficientAuthorization() ||
+                value == GattProtocolError::InsufficientEncryptionKeySize();
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+    // What a GATT service lookup actually did, rather than only what it returned. The distinction
+    // matters because a null result and a positively unreachable device used to be reported the
+    // same way, and a device dropping the link partway through looks like the former.
+    struct BleMidiServiceLookup
+    {
+        GattDeviceService Service{ nullptr };
+
+        GattCommunicationStatus Status{ GattCommunicationStatus::Unreachable };
+
+        // False when nothing came back at all, so Status is a placeholder rather than an answer
+        bool StatusKnown{ false };
+
+        bool TimedOut{ false };
+        bool RequiresPairing{ false };
+
+        bool HasProtocolError{ false };
+        uint8_t ProtocolError{ 0 };
+    };
+
+    // Pairing state at the moment of a connection attempt. Read for the log, because whether a
+    // device is bonded is the first question any "it will not connect" report raises.
+    struct BlePairingState
+    {
+        bool Known{ false };
+        bool IsPaired{ false };
+        bool CanPair{ false };
+        uint32_t ProtectionLevel{ 0 };
+    };
+
+    inline BlePairingState GetPairingState(_In_ BluetoothLEDevice const& bleDevice) noexcept
+    {
+        BlePairingState state{};
+
+        try
+        {
+            if (bleDevice == nullptr)
+            {
+                return state;
+            }
+
+            auto const deviceInformation = bleDevice.DeviceInformation();
+
+            if (deviceInformation == nullptr)
+            {
+                return state;
+            }
+
+            auto const pairing = deviceInformation.Pairing();
+
+            if (pairing == nullptr)
+            {
+                return state;
+            }
+
+            state.Known = true;
+            state.IsPaired = pairing.IsPaired();
+            state.CanPair = pairing.CanPair();
+            state.ProtectionLevel = static_cast<uint32_t>(pairing.ProtectionLevel());
+        }
+        catch (...)
+        {
+        }
+
+        return state;
+    }
+
+    inline BleMidiServiceLookup LookupBleMidiService(_In_ BluetoothLEDevice const& bleDevice)
+    {
+        BleMidiServiceLookup lookup{};
 
         if (bleDevice == nullptr)
         {
-            return nullptr;
+            return lookup;
         }
 
         winrt::guid bleServiceUuid{ MidiBleProtocol::MidiServiceUuid };
 
         auto gattServicesResult = AwaitWithTimeout(
             bleDevice.GetGattServicesForUuidAsync(bleServiceUuid, BluetoothCacheMode::Uncached),
-            BleOperationTimeoutMilliseconds,
-            GattDeviceServicesResult{ nullptr });
+            BleConnectOperationTimeoutMilliseconds,
+            GattDeviceServicesResult{ nullptr },
+            lookup.TimedOut);
 
         if (gattServicesResult == nullptr)
         {
-            return nullptr;
+            return lookup;
         }
 
-        status = gattServicesResult.Status();
+        lookup.Status = gattServicesResult.Status();
+        lookup.StatusKnown = true;
 
-        if (gattServicesResult.Status() == GattCommunicationStatus::Success && gattServicesResult.Services().Size() > 0)
+        auto const protocolError = gattServicesResult.ProtocolError();
+
+        if (protocolError != nullptr)
         {
-            return gattServicesResult.Services().GetAt(0);
+            lookup.HasProtocolError = true;
+            lookup.ProtocolError = protocolError.Value();
         }
 
-        return nullptr;
+        lookup.RequiresPairing = IsPairingRequiredProtocolError(protocolError);
+
+        if (lookup.Status == GattCommunicationStatus::Success && gattServicesResult.Services().Size() > 0)
+        {
+            lookup.Service = gattServicesResult.Services().GetAt(0);
+        }
+
+        return lookup;
     }
 
     // BLE MIDI 1.0 carries a single MIDI 1.0 byte stream with no notion of groups, so the

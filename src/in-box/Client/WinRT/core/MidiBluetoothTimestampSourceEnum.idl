@@ -1,0 +1,31 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Bluetooth
+{
+    [contract(MidiTransportsBluetoothApiContract, 1)]
+
+    // Where the timestamps on messages from a device come from. BLE MIDI carries a 13 bit
+    // millisecond timestamp which the transport correlates with this PC's clock, but several
+    // inexpensive devices never advance theirs. Correlating against a clock which does not run
+    // would place every message at one instant, so the time the message arrived is substituted
+    // instead and reported here as an estimate.
+    //
+    // This is observed from received traffic rather than declared by the device, so it stays
+    // Unknown until enough has been received to judge, and it is re-evaluated for the life of the
+    // connection. A device whose firmware is updated to keep time is picked up automatically.
+    enum MidiBluetoothTimestampSource
+    {
+        Unknown = 0,
+        Device = 1,
+        ArrivalTime = 2,
+    };
+}

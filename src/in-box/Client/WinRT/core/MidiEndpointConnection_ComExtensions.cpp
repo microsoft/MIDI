@@ -24,7 +24,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     _Use_decl_annotations_
     BOOL MidiEndpointConnection::ValidateBufferHasOnlyCompleteUmps(
         UINT32 wordCount,
-        UINT32* messages
+        UINT32 const* messages
         )
     {
         if (messages == nullptr)
@@ -37,7 +37,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return FALSE;
         }
 
-        return internal::ValidateBufferHasCompleteUmps(messages, wordCount);
+        // The iterator wants a mutable pointer but only reads, so the caller's buffer is safe.
+        return internal::ValidateBufferHasCompleteUmps(const_cast<UINT32*>(messages), wordCount);
     }
 
     // this just assumes that messages have been validated in some way
@@ -47,7 +48,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
     MidiEndpointConnection::SendMidiMessagesRaw(
         UINT64 timestamp,
         UINT32 wordCount,
-        UINT32* completeMessages
+        UINT32 const* completeMessages
     )
     {
         RETURN_HR_IF_NULL(E_FAIL, m_endpointTransport);
@@ -66,9 +67,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         // send it
 
+        // The transport takes PVOID but copies the buffer out, so it does not write to it.
         return m_endpointTransport->SendMidiMessage(
             flags,
-            static_cast<PVOID>(completeMessages),
+            static_cast<PVOID>(const_cast<UINT32*>(completeMessages)),
             wordCount * sizeof(UINT32),
             timestamp);
 

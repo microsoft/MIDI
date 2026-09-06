@@ -10,6 +10,8 @@
 import "MidiApiContracts.idl";
 
 import "MidiBluetoothProtocolEnum.idl";
+import "MidiBluetoothConnectionStateEnum.idl";
+import "MidiBluetoothTimestampSourceEnum.idl";
 import "MidiBluetoothDeviceConnectErrorCodeEnum.idl";
 
 namespace Windows.Devices.Midi2.Transports.Bluetooth
@@ -31,7 +33,17 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
         [noexcept] MidiBluetoothProtocol SelectedProtocol{ get; };
 
         [noexcept] Boolean IsConnected{ get; };
+
+        // How far along getting connected this device is. Connecting is asynchronous and a wanted
+        // device is retried until it appears, so IsConnected cannot distinguish an attempt under
+        // way from a device which is switched off. Disconnecting cancels a request in progress.
+        [noexcept] MidiBluetoothConnectionState ConnectionState{ get; };
         [noexcept] Boolean IsPaired{ get; };
+
+        // True once the device has refused an operation until the link is authenticated. Nothing
+        // in a Bluetooth advertisement declares this, so it is only known after an attempt has
+        // been made. Automatic reconnection is suspended while it is set.
+        [noexcept] Boolean RequiresPairing{ get; };
 
         // False when the device has stopped advertising. Bluetooth MIDI peripherals sleep
         // aggressively, so a device which is not present is usually asleep rather than gone.
@@ -57,6 +69,11 @@ namespace Windows.Devices.Midi2.Transports.Bluetooth
         // both at zero means the device is sending nothing at all.
         [noexcept] UInt64 PacketsReceived{ get; };
         [noexcept] UInt64 PacketsSent{ get; };
+
+        // Whether this device's own timestamps are being used, or arrival time is standing in for
+        // them because the device never advances its clock. Observed from received traffic, so it
+        // is Unknown until the device has sent enough to judge.
+        [noexcept] MidiBluetoothTimestampSource TimestampSource{ get; };
 
         // What the link actually negotiated. Zero when not connected.
         [noexcept] Windows.Foundation.TimeSpan ConnectionInterval{ get; };

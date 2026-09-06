@@ -159,7 +159,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
                         creationConfig.EndpointDefinition().Name(),
                         creationConfig.EndpointDefinition().Description(),
                         creationConfig.EndpointDefinition().ImageFileName(),
-                        creationConfig.IsMuted());
+                        creationConfig.IsMuted(),
+                        // nothing has passed through a loopback which was created a moment ago
+                        0);
 
                     result->InternalSetSuccess(creationConfig.AssociationId(), *entry);
 
@@ -628,6 +630,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
                                 continue;
                             }
 
+                            auto const messageCount = entryObject.GetNamedNumber(
+                                MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_MESSAGE_COUNT_KEY, 0.0);
+
                             entry->InternalInitialize(
                                 associationId,
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_ENDPOINT_DEVICE_ID_KEY, L""),
@@ -636,7 +641,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
                                 entryObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_IMAGE_KEY, L""),
                                 // the default was L"", which is a pointer and so converted to
                                 // true: an entry with no muted key reported itself muted
-                                entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_MUTED_KEY, false)
+                                entryObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_LIST_ENTRY_MUTED_KEY, false),
+                                // json carries only doubles, so a negative count means the
+                                // response did not come from a transport we understand
+                                messageCount > 0.0 ? static_cast<uint64_t>(messageCount) : 0
                             );
 
                             results.Append(*entry);

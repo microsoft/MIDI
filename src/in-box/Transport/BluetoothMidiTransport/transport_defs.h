@@ -27,6 +27,13 @@
 // sleeping device costs a GATT timeout, so retries are deliberately unhurried.
 #define MIDI_BLE_CONNECT_RETRY_INTERVAL_MS                              10000
 
+// A link which comes up and goes away again this quickly did not fail for range or power reasons.
+// Devices which demand security over SMP rather than through a GATT error look exactly like this.
+#define MIDI_BLE_UNPAIRED_EARLY_DROP_MS                                 10000
+
+// More than one, so a single unlucky drop is not read as a demand for pairing.
+#define MIDI_BLE_UNPAIRED_EARLY_DROPS_BEFORE_PAIRING_ASSUMED            2
+
 // How often the worker re-examines the remembered devices which are not connected. Advertisements
 // are the usual trigger, but a bonded device which is not advertising produces none, so without
 // this a device that failed once is never tried again. Deliberately shorter than the retry

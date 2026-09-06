@@ -396,7 +396,6 @@ stages:
           $toolsDirs = @(
             "tools\mididiag",
             "tools\midiusbinfo",
-            "tools\midimdnsinfo",
             "tests\InitializationExe",
             "tests\Benchmarks",
             "tests\Offline.unittests",
@@ -451,7 +450,7 @@ stages:
           $srcDir = "$(Build.SourcesDirectory)\src\app-sdk\vsfiles\out"
           $destDir = "$(Build.SourcesDirectory)\build\staging\app-sdk\$stagingPlatform"
 
-          $tools = @("mididiag", "midiksinfo", "midimdnsinfo", "midi1monitor", "midi1enum", "midifixreg", "midicheckservice")
+          $tools = @("mididiag", "midiksinfo", "midi1monitor", "midi1enum")
 
           foreach ($tool in $tools) {
             $toolPath = "$srcDir\$tool\$stagingPlatform\$(BuildConfiguration)\$tool.exe"
@@ -486,70 +485,8 @@ stages:
   displayName: 'Build User Applications'
   dependsOn: BuildAppSDK
   jobs:
-  - job: BuildConsoleApp
-    displayName: 'Build MIDI Console'
-    strategy:
-      matrix:
-        x64:
-          BuildPlatform: 'x64'
-          RuntimeIdentifier: 'win-x64'
-        Arm64:
-          BuildPlatform: 'Arm64'
-          RuntimeIdentifier: 'win-arm64'
-    steps:
-    - checkout: self
-
-    - task: DownloadPipelineArtifact@2
-      displayName: 'Download NuGet Package'
-      inputs:
-        artifact: 'NuGetPackage'
-        targetPath: '$(Build.SourcesDirectory)\build\release\nuget'
-
-    - task: NuGetCommand@2
-      displayName: 'Restore Console NuGet Packages'
-      inputs:
-        command: 'restore'
-        restoreSolution: '$(Build.SourcesDirectory)\src\in-box\user-tools\midi-console\Midi\Midi.csproj'
-        feedsToUse: 'config'
-        nugetConfigPath: '$(Build.SourcesDirectory)\NuGet.config'
-
-    - task: DotNetCoreCLI@2
-      displayName: 'Build MIDI Console ($(BuildPlatform))'
-      inputs:
-        command: 'build'
-        projects: '$(Build.SourcesDirectory)\src\in-box\user-tools\midi-console\Midi\Midi.csproj'
-        arguments: >
-          --configuration $(BuildConfiguration)
-          --runtime $(RuntimeIdentifier)
-          /p:Platform=$(BuildPlatform)
-          /p:SolutionDir=$(Build.SourcesDirectory)\src\in-box\
-          /p:Version=$(BuildVersionFullString)
-          /p:FileVersion=$(BuildVersionFileFullString)
-          /p:AssemblyVersion=$(BuildVersionAssemblyFullString)
-          /p:PublishSingleFile=false
-          /p:PublishTrimmed=false
-          /p:SelfContained=false
-
-    # TODO: Configure code signing for Console application
-    # Uncomment and configure the following task to sign the console executable
-    # - task: AzureSignTool@3
-    #   displayName: 'Sign MIDI Console Executable ($(BuildPlatform))'
-    #   inputs:
-    #     ConnectedServiceName: 'YourAzureServiceConnection'
-    #     KeyVaultUrl: 'https://yourkeyvault.vault.azure.net/'
-    #     CertificateName: '$(SigningCertificateName)'
-    #     SignedFilePath: |
-    #       $(Build.SourcesDirectory)\src\in-box\vsfiles-sdk\out\midi-console\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)\midi.exe
-    #     TimeStampServer: '$(SigningTimeStampServer)'
-    #     FileDigest: 'SHA256'
-    #     TimeStampDigest: 'SHA256'
-    #     Description: '$(SigningDescription) - Console Application'
-
-    - task: PublishPipelineArtifact@1
-      displayName: 'Publish Console Binaries'
-      inputs:
-        targetPath: '$(Build.SourcesDirectory)\src\in-box\vsfiles-sdk\out\midi-console\$(BuildPlatform)\$(BuildConfiguration)\net10.0-windows$(TargetWindowsSdkVersion)\$(RuntimeIdentifier)'
-        artifact: 'ConsoleApp-$(BuildPlatform)'
+  # The MIDI Console is a native project in the SDK solution now, so it is built and staged by
+  # the tools job rather than published separately.
 
   - job: BuildPowerShellModule
     displayName: 'Build PowerShell Module'

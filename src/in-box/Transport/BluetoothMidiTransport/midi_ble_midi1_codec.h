@@ -81,6 +81,24 @@ namespace MidiBleMidi1
     // milliseconds out.
     inline constexpr uint32_t MaximumPlausibleGapMilliseconds = 4096;
 
+    // How far back the offset estimate looks for the smallest arrival delay. Long enough that an
+    // ordinary run of unlucky packets cannot dominate it, short enough that a bad sample cannot
+    // hold the mapping in the past for long.
+    inline constexpr uint32_t OffsetWindowMilliseconds = 5000;
+
+    // A single step larger than this is the sender's clock having moved, not transport latency.
+    // Deliberately far above any connection interval: 7.5 ms, 15 ms and the 40 ms some devices
+    // negotiate all stay well clear of it even with retransmissions.
+    inline constexpr uint32_t MaximumOffsetDriftMilliseconds = 1000;
+
+    // Real time which must pass between two packets before a sender timestamp that did not move
+    // counts as evidence of a stopped clock rather than of two packets in the same millisecond.
+    inline constexpr uint32_t SenderClockStallEvidenceMilliseconds = 50;
+
+    // Consecutive observations before the sender's clock is abandoned. More than one so a device
+    // which merely coalesced one burst is not mistaken for one whose clock never runs.
+    inline constexpr uint32_t SenderClockStallObservationCount = 3;
+
     // Maps the sender's 13-bit millisecond clock onto the local timestamp clock.
     //
     // RP-052 leaves this to the implementation, saying only that correlation "must be performed".
@@ -89,20 +107,40 @@ namespace MidiBleMidi1
     // late message in the packet before it, and the stream arrives out of order.
     //
     // Instead the sender's clock is unwrapped into a continuous millisecond count and mapped to
-    // the local clock through a single offset. The offset is the smallest arrival delay seen so
-    // far, because that is the sample with the least transport latency in it, and it creeps
-    // forward slowly to follow clock drift.
+    // the local clock through a single offset. Arrival delay is never negative, so the smallest
+    // observed value of (arrival - sender) is the sample carrying the least transport latency and
+    // therefore the best estimate of the true offset. That minimum is taken over a sliding window
+    // rather than over all history: an all-time minimum never forgets an outlier, and following
+    // clock drift by creeping a fixed step per packet would make the correction rate depend on how
+    // fast the device happens to be sending rather than on how much time has passed.
     class TimestampCorrelator
     {
     public:
         void Reset() noexcept
         {
             m_haveClock = false;
-            m_haveOffset = false;
             m_senderContinuousMilliseconds = 0;
             m_lastSenderTimestamp = 0;
             m_offsetTicks = 0;
             m_lastEmittedTimestamp = 0;
+            m_resynchronize = false;
+            m_lastArrivalTimestamp = 0;
+            m_haveArrival = false;
+            m_offsetSamples.clear();
+            m_senderClockStallObservations = 0;
+            m_haveSeenSenderClockAdvance = false;
+        }
+
+        // True once the device has proved its timestamps never move, so arrival time is being
+        // substituted for them.
+        bool SenderClockIsStalled() const noexcept
+        {
+            return m_senderClockStallObservations >= SenderClockStallObservationCount;
+        }
+
+        bool HaveSeenSenderClockAdvance() const noexcept
+        {
+            return m_haveSeenSenderClockAdvance;
         }
 
         // Maps every segment of one packet onto the local clock. Whole packets rather than single
@@ -124,9 +162,87 @@ namespace MidiBleMidi1
 
             localTimestamps.reserve(segments.size());
 
+            uint64_t localGapTicks{ 0 };
+            bool haveLocalGap{ false };
+
+            // The sender clock is 13 bits of milliseconds, so it cannot express anything longer
+            // than one wrap and a long gap is reported as gap % 8192. Roughly half of those land
+            // below the implausible-gap threshold and read as an ordinary short delta, which is
+            // why the local arrival clock rather than the sender decides whether too much time
+            // passed for the correlation to still mean anything.
+            if (m_haveArrival && localArrivalTimestamp > m_lastArrivalTimestamp)
+            {
+                localGapTicks = localArrivalTimestamp - m_lastArrivalTimestamp;
+                haveLocalGap = true;
+
+                if (localGapTicks > static_cast<uint64_t>(TimestampWrapMilliseconds) * ticksPerMillisecond)
+                {
+                    m_resynchronize = true;
+                }
+            }
+
+            m_lastArrivalTimestamp = localArrivalTimestamp;
+            m_haveArrival = true;
+
+            uint16_t const previousSenderTimestamp = m_lastSenderTimestamp;
+            bool const hadSenderClock = m_haveClock;
+
             for (auto const& segment : segments)
             {
                 localTimestamps.push_back(AdvanceSenderClock(segment.SenderTimestamp));
+            }
+
+            // Some devices never advance their timestamp at all. Only real time passing between
+            // packets can show that, because messages inside one packet are allowed to share a
+            // timestamp and running status leaves them no room to carry one.
+            if (hadSenderClock && haveLocalGap)
+            {
+                if (m_lastSenderTimestamp != previousSenderTimestamp)
+                {
+                    // Any movement proves the clock runs, however little time passed. Requiring a
+                    // long gap here would leave a device which streams steadily unclassified.
+                    if (SenderClockIsStalled())
+                    {
+                        // Running again, so nothing learned while it was stopped still applies.
+                        m_offsetSamples.clear();
+                    }
+
+                    m_haveSeenSenderClockAdvance = true;
+                    m_senderClockStallObservations = 0;
+                }
+                else if (localGapTicks > static_cast<uint64_t>(SenderClockStallEvidenceMilliseconds) * ticksPerMillisecond)
+                {
+                    // Only a gap long enough to have moved a millisecond clock is evidence that
+                    // the clock is not running rather than that two packets shared a millisecond.
+                    if (m_senderClockStallObservations < SenderClockStallObservationCount)
+                    {
+                        m_senderClockStallObservations++;
+                    }
+                }
+            }
+
+            if (SenderClockIsStalled())
+            {
+                // Nothing in the packet carries usable timing, so when it arrived is the only
+                // honest answer. Correlating against a stopped clock would instead pin every
+                // message to one instant and drag it further into the past as time passed.
+                for (auto& value : localTimestamps)
+                {
+                    value = localArrivalTimestamp < m_lastEmittedTimestamp ?
+                        m_lastEmittedTimestamp : localArrivalTimestamp;
+
+                    m_lastEmittedTimestamp = value;
+                }
+
+                return;
+            }
+
+            // The sender clock restarted, so the old samples describe a correlation that no longer
+            // exists and cannot be compared against new ones.
+            if (m_resynchronize)
+            {
+                m_offsetSamples.clear();
+                m_resynchronize = false;
             }
 
             // The newest segment is the one whose arrival was actually observed.
@@ -135,23 +251,24 @@ namespace MidiBleMidi1
 
             int64_t const candidateOffset = static_cast<int64_t>(localArrivalTimestamp) - newestSenderTicks;
 
-            if (!m_haveOffset)
-            {
-                m_offsetTicks = candidateOffset;
-                m_haveOffset = true;
-            }
-            else if (candidateOffset < m_offsetTicks)
-            {
-                // Less delay than anything seen before, so a better estimate of the true offset.
-                m_offsetTicks = candidateOffset;
-            }
-            else
-            {
-                int64_t const creepLimit = static_cast<int64_t>(ticksPerMillisecond);
-                int64_t const drift = candidateOffset - m_offsetTicks;
+            ExpireOffsetSamples(localArrivalTimestamp, static_cast<uint64_t>(OffsetWindowMilliseconds) * ticksPerMillisecond);
 
-                m_offsetTicks += drift > creepLimit ? creepLimit : drift;
+            if (!m_offsetSamples.empty())
+            {
+                int64_t const snapLimit =
+                    static_cast<int64_t>(MaximumOffsetDriftMilliseconds) * static_cast<int64_t>(ticksPerMillisecond);
+
+                if (candidateOffset - m_offsetSamples.front().Offset > snapLimit)
+                {
+                    // Waiting for the window to age out would strand every message in the past
+                    // until it did.
+                    m_offsetSamples.clear();
+                }
             }
+
+            PushOffsetSample(localArrivalTimestamp, candidateOffset);
+
+            m_offsetTicks = m_offsetSamples.front().Offset;
 
             for (auto& value : localTimestamps)
             {
@@ -176,6 +293,35 @@ namespace MidiBleMidi1
         }
 
     private:
+        struct OffsetSample
+        {
+            uint64_t ArrivalTicks{ 0 };
+            int64_t Offset{ 0 };
+        };
+
+        void ExpireOffsetSamples(_In_ uint64_t const nowTicks, _In_ uint64_t const windowTicks) noexcept
+        {
+            // One sample is always kept so there is always an offset to map with.
+            while (m_offsetSamples.size() > 1 &&
+                   nowTicks - m_offsetSamples.front().ArrivalTicks > windowTicks)
+            {
+                m_offsetSamples.pop_front();
+            }
+        }
+
+        void PushOffsetSample(_In_ uint64_t const arrivalTicks, _In_ int64_t const offset)
+        {
+            // Samples at the back with an offset no smaller than this one can never be the minimum
+            // again, because this one is both smaller and younger, so the front stays the minimum
+            // without rescanning.
+            while (!m_offsetSamples.empty() && m_offsetSamples.back().Offset >= offset)
+            {
+                m_offsetSamples.pop_back();
+            }
+
+            m_offsetSamples.push_back({ arrivalTicks, offset });
+        }
+
         // Advances the sender clock by one segment and returns its continuous millisecond value.
         uint64_t AdvanceSenderClock(_In_ uint16_t const senderTimestamp) noexcept
         {
@@ -194,18 +340,41 @@ namespace MidiBleMidi1
             uint32_t const forwardDelta =
                 (static_cast<uint32_t>(masked) + TimestampWrapMilliseconds - m_lastSenderTimestamp) % TimestampWrapMilliseconds;
 
-            m_senderContinuousMilliseconds += forwardDelta > MaximumPlausibleGapMilliseconds ? 0 : forwardDelta;
+            if (forwardDelta > MaximumPlausibleGapMilliseconds)
+            {
+                // A gap this long cannot be told apart from one or more wraps, so how much time
+                // really passed is unknowable. Re-seeding lets the next packet establish a fresh
+                // offset instead.
+                m_senderContinuousMilliseconds = masked;
+                m_lastSenderTimestamp = masked;
+                m_resynchronize = true;
+
+                return m_senderContinuousMilliseconds;
+            }
+
+            m_senderContinuousMilliseconds += forwardDelta;
             m_lastSenderTimestamp = masked;
 
             return m_senderContinuousMilliseconds;
         }
 
         bool m_haveClock{ false };
-        bool m_haveOffset{ false };
         uint64_t m_senderContinuousMilliseconds{ 0 };
         uint16_t m_lastSenderTimestamp{ 0 };
         int64_t m_offsetTicks{ 0 };
         uint64_t m_lastEmittedTimestamp{ 0 };
+
+        // set when the sender clock was re-seeded, so the next packet rebuilds the offset
+        bool m_resynchronize{ false };
+
+        uint64_t m_lastArrivalTimestamp{ 0 };
+        bool m_haveArrival{ false };
+
+        // ascending by arrival and by offset, so the front is the smallest delay in the window
+        std::deque<OffsetSample> m_offsetSamples{ };
+
+        uint32_t m_senderClockStallObservations{ 0 };
+        bool m_haveSeenSenderClockAdvance{ false };
     };
 
 

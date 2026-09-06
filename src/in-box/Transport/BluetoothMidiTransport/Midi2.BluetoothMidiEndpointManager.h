@@ -131,6 +131,11 @@ private:
     // False while the name is still being resolved. An endpoint created in that window would be
     // named after the Bluetooth address, which is meaningless to the user.
     bool IsDeviceNameable(_In_ winrt::hstring const& deviceId);
+
+    bool IsDiscoveredDevice(_In_ winrt::hstring const& deviceId);
+
+    bool DeviceRequiresPairing(_In_ winrt::hstring const& deviceId);
+    void ClearRequiresPairing(_In_ winrt::hstring const& deviceId);
     void UpdateDiscoveredDeviceConnectionState(
         _In_ winrt::hstring const& deviceId,
         _In_ bool const isConnected,
@@ -166,8 +171,8 @@ private:
     std::map<winrt::hstring, bt::BluetoothLEPreferredConnectionParametersRequest> m_connectionParameterRequests{ };
     std::mutex m_connectionParameterRequestsLock;
 
-    // Only ever touched on the background worker, which is the one thread allowed to create or
-    // remove endpoints.
+    // Written by the background worker through ProcessPeripheralClientChange and by whichever
+    // thread a configuration update arrives on through StopPeripheral, so it is not worker-only.
     winrt::hstring m_peripheralClientDeviceId{ };
 
     // The Central the approval decision was last made about. Separate from the one above because
@@ -175,6 +180,10 @@ private:
     // answers must not look like a different device arriving.
     winrt::hstring m_peripheralEvaluatedClientDeviceId{ };
     std::wstring m_peripheralEndpointInstanceId{ };
+
+    // Never held across a callout, so it cannot take part in a lock cycle.
+    std::mutex m_peripheralClientStateLock;
+
     bool m_peripheralClientChangePending{ false };
     // Connecting opens a GATT session and creates a device node, so it never runs on a caller's
     // thread or on a watcher callback. The worker drains these instead.
@@ -204,6 +213,10 @@ private:
     // kept and retried every time the device advertises.
     std::set<winrt::hstring> m_desiredConnections;
     std::map<winrt::hstring, uint64_t> m_lastConnectAttemptTimestamp;
+
+    // Devices the worker is inside a connect attempt for right now, which is the only way to tell
+    // one being worked on from one merely waiting for its next retry.
+    std::set<winrt::hstring> m_connectAttemptsInProgress;
 
     // When each connected device's link went down, so retention can be measured from it. An entry
     // exists only while a connection is present but offline.

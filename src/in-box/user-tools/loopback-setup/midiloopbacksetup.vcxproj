@@ -129,6 +129,10 @@
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="ConfigFile.h" />
+    <ClInclude Include="ImportCandidates.h" />
+    <ClInclude Include="ImportItems.h">
+      <DependentUpon>ImportItems.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="LoopbackItems.h">
       <DependentUpon>LoopbackItems.idl</DependentUpon>
     </ClInclude>
@@ -158,6 +162,10 @@
     <ClCompile Include="AppSettings.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
     <ClCompile Include="ConfigFile.cpp" />
+    <ClCompile Include="ImportCandidates.cpp" />
+    <ClCompile Include="ImportItems.cpp">
+      <DependentUpon>ImportItems.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="LoopbackItems.cpp">
       <DependentUpon>LoopbackItems.idl</DependentUpon>
     </ClCompile>
@@ -169,6 +177,9 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="MainWindowActions.cpp">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MainWindowImport.cpp">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
@@ -183,6 +194,7 @@
   </ItemGroup>
   <ItemGroup>
     <Midl Include="..\midi-app-shared\MidiAppShared.idl" />
+    <Midl Include="ImportItems.idl" />
     <Midl Include="LoopbackItems.idl" />
     <Midl Include="MainWindow.idl">
       <DependentUpon>MainWindow.xaml</DependentUpon>

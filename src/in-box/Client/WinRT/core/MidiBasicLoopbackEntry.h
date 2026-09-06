@@ -13,6 +13,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
         winrt::hstring Description() const noexcept { return m_description; }
         winrt::hstring ImageFileName() const noexcept { return m_imageFileName; }
         bool IsMuted() const noexcept { return m_isMuted; }
+        uint64_t MessageCount() const noexcept { return m_messageCount; }
 
         void InternalInitialize(
             _In_ winrt::guid const& associationId, 
@@ -20,7 +21,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
             _In_ winrt::hstring const& name, 
             _In_ winrt::hstring const& description, 
             _In_ winrt::hstring const& imageFileName,
-            _In_ bool const isMuted) noexcept;
+            _In_ bool const isMuted,
+            _In_ uint64_t const messageCount) noexcept;
 
     private:
         winrt::guid m_associationId{};
@@ -29,6 +31,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
         winrt::hstring m_description{};
         winrt::hstring m_imageFileName{};
         bool m_isMuted{ false };
+        uint64_t m_messageCount{ 0 };
 
     };
 }

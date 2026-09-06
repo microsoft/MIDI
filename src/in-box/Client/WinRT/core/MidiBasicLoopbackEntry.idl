@@ -28,5 +28,10 @@ namespace Windows.Devices.Midi2.Transports.BasicLoopback
 
         [noexcept] Boolean IsMuted{ get;};
 
+        // Running total of UMP messages this loopback has carried from its destination back to
+        // its source since it was created. Reset when the endpoint is recreated, and not
+        // incremented while the loopback is muted.
+        [noexcept] UInt64 MessageCount{ get; };
+
     }
 }

@@ -17,7 +17,9 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         DWORD midiMode = MIDI_USE_MIDISRV;
 
-        auto hr = wil::reg::get_value_nothrow<DWORD>(HKEY_CURRENT_USER, MIDI_DRIVERS32_REG_KEY, MIDI_USE_LEGACY_REG_KEY, &midiMode);
+        // Machine-wide, not per-user: this is the same value the service and the MIDI 1.0 drivers
+        // read, so reading anywhere else can report a mode nothing else is honoring.
+        auto hr = wil::reg::get_value_nothrow<DWORD>(HKEY_LOCAL_MACHINE, MIDI_DRIVERS32_REG_KEY, MIDI_USE_LEGACY_REG_KEY, &midiMode);
 
         if (FAILED(hr))
         {

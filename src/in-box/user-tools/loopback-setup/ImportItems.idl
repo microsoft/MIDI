@@ -1,0 +1,53 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+// Row types for the third-party loopback import picker. They are built once when the dialog
+// opens and thrown away when it closes, so unlike the loopback rows they do not need to raise
+// change notifications.
+namespace midiloopbacksetup
+{
+    // One MIDI 1.0 port pair offered for import. A name which is already in use somewhere else
+    // cannot be selected, because two endpoints with the same name would be indistinguishable
+    // to an application.
+    [default_interface]
+    runtimeclass ImportPortItem
+    {
+        ImportPortItem();
+
+        // the name the imported basic loopback would be given
+        String PortName{ get; };
+
+        // group number, and the other side's name when it does not match
+        String DetailText{ get; };
+
+        Boolean IsSelected;
+
+        // false when the name collides with another candidate or an existing loopback
+        Boolean IsSelectable{ get; };
+        String ConflictText{ get; };
+        Microsoft.UI.Xaml.Visibility ConflictVisibility{ get; };
+
+        // name of the device the port came from, used in the description of what is created
+        String SourceDeviceName{ get; };
+    }
+
+    // One device offering ports. Grouped this way because a provider with more than sixteen
+    // ports is split across several endpoints, and that split is not something the customer
+    // asked for or would recognize.
+    [default_interface]
+    runtimeclass ImportDeviceItem
+    {
+        ImportDeviceItem();
+
+        String DeviceName{ get; };
+
+        // the driver service behind the device, which is what identifies it as third-party
+        String ServiceText{ get; };
+
+        Windows.Foundation.Collections.IObservableVector<ImportPortItem> Ports{ get; };
+    }
+}

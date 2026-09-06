@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "AppSettings.h"
+#include "TemporaryFlags.h"
 
 namespace midikeyboard
 {
@@ -61,6 +62,12 @@ namespace midikeyboard
         m_connection = ReadEnum(
             ReadDword(ValueConnection, static_cast<uint32_t>(ConnectionMode::VirtualDevice)),
             ConnectionMode::ExistingEndpoint, ConnectionMode::VirtualDevice);
+
+        // TEMPORARY: see TemporaryFlags.h. In memory only, so the saved preference survives.
+        if (TemporarilyDisableVirtualDevice && m_connection == ConnectionMode::VirtualDevice)
+        {
+            m_connection = ConnectionMode::ExistingEndpoint;
+        }
 
         m_endpointDeviceId = ReadString(ValueEndpointDeviceId, L"");
 

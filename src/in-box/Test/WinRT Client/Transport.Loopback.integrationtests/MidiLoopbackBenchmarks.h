@@ -44,7 +44,7 @@ public:
 
 
     // COM extensions callback. Forwards to whatever the running benchmark installed.
-    STDMETHOD(MessagesReceived)(GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, UINT32* messages)
+    STDMETHOD(MessagesReceived)(GUID sessionId, GUID connectionId, UINT64 timestamp, UINT32 wordCount, UINT32 const* messages)
     {
         if (m_midiInCallback)
         {
@@ -78,7 +78,7 @@ public:
     STDMETHODIMP_(ULONG) Release() { return 1; }
 
 private:
-    std::function<void(GUID, GUID, UINT64, UINT32, UINT32*)> m_midiInCallback;
+    std::function<void(GUID, GUID, UINT64, UINT32, UINT32 const*)> m_midiInCallback;
 
     MidiTest::DeviceNodeTracker m_deviceNodeTracker{};
 

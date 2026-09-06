@@ -48,8 +48,8 @@ library MidiServicesAppSdkComExtensionsLib
 			[in, annotation("_In_")] GUID connectionId,
 			[in, annotation("_In_")] UINT64 timestamp,
 			[in, annotation("_In_")] UINT32 wordCount,
-			[in, annotation("_In_")] UINT32* messages
-		);
+			[in, annotation("_In_")] UINT32 const* messages
+		);	// the buffer belongs to the caller and must not be modified by the implementor.
 	};
 
 
@@ -62,6 +62,9 @@ library MidiServicesAppSdkComExtensionsLib
 	interface IMidiEndpointConnectionRaw : IUnknown
 	{
 		// transmission limit for a single call
+		// A trailing const on a method is silently discarded by MIDL, and a top-level const on a
+		// parameter is not part of the function type, so neither may be used here. Only a
+		// pointee const constrains the callee.
 		UINT32 GetSupportedMaxMidiWordsPerTransmission();
 
 		// returns true if the buffer contains only valid UMP lengths
@@ -69,7 +72,7 @@ library MidiServicesAppSdkComExtensionsLib
 		// validate anything else about the UMPs.
 		BOOL ValidateBufferHasOnlyCompleteUmps(
 			[in, annotation("_In_")] UINT32 wordCount,
-			[in, annotation("_In_")] UINT32* messages
+			[in, annotation("_In_")] UINT32 const* messages
 		);
 
 		// before sending a buffer of messages, the caller is responsible
@@ -78,7 +81,7 @@ library MidiServicesAppSdkComExtensionsLib
 		HRESULT SendMidiMessagesRaw(
 			[in, annotation("_In_")] UINT64 timestamp,
 			[in, annotation("_In_")] UINT32 wordCount,
-			[in, annotation("_In_")] UINT32* completeMessages
+			[in, annotation("_In_")] UINT32 const* completeMessages
 			);
 
 		// Wire up your callback handler. When this is in play, the normal

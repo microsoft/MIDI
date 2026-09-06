@@ -22,7 +22,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         bluetooth::MidiBluetoothProtocol SelectedProtocol() const noexcept { return m_selectedProtocol; }
 
         bool IsConnected() const noexcept { return m_isConnected; }
+        bluetooth::MidiBluetoothConnectionState ConnectionState() const noexcept { return m_connectionState; }
         bool IsPaired() const noexcept { return m_isPaired; }
+        bool RequiresPairing() const noexcept { return m_requiresPairing; }
         bool IsPresent() const noexcept { return m_isPresent; }
 
         int16_t SignalStrengthDecibelMilliwatts() const noexcept { return m_signalStrengthDecibelMilliwatts; }
@@ -37,6 +39,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         uint64_t MessagesSent() const noexcept { return m_messagesSent; }
         uint64_t PacketsReceived() const noexcept { return m_packetsReceived; }
         uint64_t PacketsSent() const noexcept { return m_packetsSent; }
+
+        bluetooth::MidiBluetoothTimestampSource TimestampSource() const noexcept { return m_timestampSource; }
 
         foundation::TimeSpan ConnectionInterval() const noexcept { return m_connectionInterval; }
 
@@ -56,7 +60,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         winrt::hstring m_name{};
         bluetooth::MidiBluetoothProtocol m_selectedProtocol{ bluetooth::MidiBluetoothProtocol::Unknown };
         bool m_isConnected{ false };
+        bluetooth::MidiBluetoothConnectionState m_connectionState{ bluetooth::MidiBluetoothConnectionState::NotConnected };
         bool m_isPaired{ false };
+        bool m_requiresPairing{ false };
         bool m_isPresent{ false };
         int16_t m_signalStrengthDecibelMilliwatts{ 0 };
         foundation::TimeSpan m_lastSeenAgo{};
@@ -68,6 +74,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth::implementation
         uint64_t m_messagesSent{ 0 };
         uint64_t m_packetsReceived{ 0 };
         uint64_t m_packetsSent{ 0 };
+        bluetooth::MidiBluetoothTimestampSource m_timestampSource{ bluetooth::MidiBluetoothTimestampSource::Unknown };
         foundation::TimeSpan m_connectionInterval{};
         winrt::hstring m_lastConnectError{};
         bluetooth::MidiBluetoothDeviceConnectErrorCode m_lastConnectErrorCode{ bluetooth::MidiBluetoothDeviceConnectErrorCode::Success };

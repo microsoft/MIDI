@@ -219,6 +219,10 @@ namespace winrt::midinetworksetup::implementation
 
             AlwaysOnTopToggle().IsChecked(native::AppSettings::Current().AlwaysOnTop());
 
+            // A PC which has only ever had a transport package installed has no configuration
+            // file registered, and without one nothing done here can be persisted.
+            midi2svc::MidiServiceTransportPluginConfigManager::EnsureConfigurationFile();
+
             PendingInvitationsList().ItemsSource(m_pendingInvitations);
             RemoteHostsListView().ItemsSource(m_remoteHosts);
             LocalHostsListView().ItemsSource(m_localHosts);

@@ -191,8 +191,13 @@ namespace winrt::midiloopbacksetup::implementation
 
             AlwaysOnTopToggle().IsChecked(native::AppSettings::Current().AlwaysOnTop());
 
+            // A PC which has only ever had a transport package installed has no configuration
+            // file registered, and without one nothing done here can be persisted.
+            midi2svc::MidiServiceTransportPluginConfigManager::EnsureConfigurationFile();
+
             LoopbacksListView().ItemsSource(m_loopbacks);
             BasicLoopbacksListView().ItemsSource(m_basicLoopbacks);
+            ImportDevicesList().ItemsSource(m_importDevices);
 
             // the startup options were parsed before the window existed
             auto const& options = App::StartupOptions();
@@ -834,6 +839,7 @@ namespace winrt::midiloopbacksetup::implementation
             BasicLoopbackUnavailableBar().IsOpen(!usable);
             BasicLoopbacksListView().Visibility(usable ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             CreateBasicLoopbackButton().IsEnabled(usable);
+            ImportLoopbacksButton().IsEnabled(usable);
 
             BasicLoopbackImagePanel().Visibility(
                 transport.CanSetImage ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
@@ -888,6 +894,9 @@ namespace winrt::midiloopbacksetup::implementation
                     row.IsPersisted = Contains(transport.ConfiguredIds, row.AssociationId);
                     row.PersistenceText = res::GetString(
                         row.IsPersisted ? L"LoopbackIsPersistedText" : L"LoopbackIsTransientText");
+
+                    row.MessageCount = entry.MessageCount();
+                    row.HasMessageCount = true;
 
                     incoming.push_back(row);
                 }

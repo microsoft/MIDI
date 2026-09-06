@@ -606,6 +606,12 @@
     <Midl Include="MidiBluetoothProtocolEnum.idl">
       <Filter>SDK\Transports\Bluetooth</Filter>
     </Midl>
+    <Midl Include="MidiBluetoothTimestampSourceEnum.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
+    <Midl Include="MidiBluetoothConnectionStateEnum.idl">
+      <Filter>SDK\Transports\Bluetooth</Filter>
+    </Midl>
     <Midl Include="MidiBluetoothRadioInformation.idl">
       <Filter>SDK\Transports\Bluetooth</Filter>
     </Midl>

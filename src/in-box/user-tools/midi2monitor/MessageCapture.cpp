@@ -24,7 +24,7 @@ namespace midi2monitor
         GUID connectionId,
         UINT64 timestamp,
         UINT32 wordCount,
-        UINT32* messages)
+        UINT32 const* messages)
     {
         UNREFERENCED_PARAMETER(sessionId);
         UNREFERENCED_PARAMETER(connectionId);

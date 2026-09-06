@@ -146,13 +146,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         STDMETHOD_(BOOL, ValidateBufferHasOnlyCompleteUmps)(
             _In_ UINT32 wordCount,
-            _In_ UINT32* messages
+            _In_ UINT32 const* messages
             );
 
         STDMETHOD(SendMidiMessagesRaw)(
             _In_ UINT64 timestamp,
             _In_ UINT32 wordCount,
-            _In_ UINT32* completeMessages
+            _In_ UINT32 const* completeMessages
         );
 
         STDMETHOD(SetMessagesReceivedCallback)(

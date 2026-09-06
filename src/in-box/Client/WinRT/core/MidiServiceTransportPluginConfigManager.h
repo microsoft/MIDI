@@ -40,6 +40,8 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
 
         static winrt::hstring ConfigFilePath() noexcept;
 
+        static svc::MidiServiceConfigSaveResponse EnsureConfigurationFile() noexcept;
+
         static bool QueryCapability(
             _In_ winrt::guid const& transportId,
             _In_ winrt::hstring const& capabilityQueryKey) noexcept;

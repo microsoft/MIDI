@@ -223,20 +223,44 @@ MidiBleConnection::Start()
 
 
 HRESULT
+MidiBleConnection::RefreshNotificationSubscription()
+{
+    RETURN_HR_IF(S_FALSE, m_shutdown.load());
+    RETURN_HR_IF(S_FALSE, m_isPeripheral);
+
+    return SubscribeToNotifications();
+}
+
+
+HRESULT
 MidiBleConnection::SubscribeToNotifications()
 {
-    RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), m_characteristic);
+    // Copied because Shutdown clears the member, and this also runs from the pairing path rather
+    // than only from Start.
+    auto characteristic = m_characteristic;
+
+    RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_CONNECTED), characteristic);
 
     try
     {
-        auto descriptorStatus = MidiBleUtilities::AwaitWithTimeout(
-            m_characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(
+        // The WithResult form is used only because the plain one returns a status with no ATT
+        // error, and the ATT error is what distinguishes "pair me first" from "I am asleep".
+        auto descriptorResult = MidiBleUtilities::AwaitWithTimeout(
+            characteristic.WriteClientCharacteristicConfigurationDescriptorWithResultAsync(
                 gatt::GattClientCharacteristicConfigurationDescriptorValue::Notify),
-            MidiBleUtilities::BleOperationTimeoutMilliseconds,
-            gatt::GattCommunicationStatus::Unreachable);
+            MidiBleUtilities::BleConnectOperationTimeoutMilliseconds,
+            gatt::GattWriteResult{ nullptr });
+
+        auto const descriptorStatus = descriptorResult != nullptr ?
+            descriptorResult.Status() : gatt::GattCommunicationStatus::Unreachable;
 
         if (descriptorStatus != gatt::GattCommunicationStatus::Success)
         {
+            auto const requiresPairing = descriptorResult != nullptr &&
+                MidiBleUtilities::IsPairingRequiredProtocolError(descriptorResult.ProtocolError());
+
+            m_requiresPairing.store(requiresPairing);
+
             TraceLoggingWrite(
                 MidiBluetoothMidiTransportTelemetryProvider::Provider(),
                 MIDI_TRACE_EVENT_ERROR,
@@ -245,7 +269,8 @@ MidiBleConnection::SubscribeToNotifications()
                 TraceLoggingPointer(this, "this"),
                 TraceLoggingWideString(L"Unable to subscribe to BLE MIDI characteristic notifications", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                 TraceLoggingWideString(m_deviceId.c_str(), "device id"),
-                TraceLoggingUInt32(static_cast<uint32_t>(descriptorStatus), "gatt communication status")
+                TraceLoggingUInt32(static_cast<uint32_t>(descriptorStatus), "gatt communication status"),
+                TraceLoggingBool(requiresPairing, "requires pairing")
             );
 
             RETURN_IF_FAILED(E_FAIL);
@@ -253,10 +278,30 @@ MidiBleConnection::SubscribeToNotifications()
 
         // the specified handshake: the Central reads the Characteristic after connecting and the
         // Peripheral answers with an empty payload. Some devices will not start notifying without it.
-        MidiBleUtilities::AwaitWithTimeout(
-            m_characteristic.ReadValueAsync(bt::BluetoothCacheMode::Uncached),
-            MidiBleUtilities::BleOperationTimeoutMilliseconds,
+        auto readResult = MidiBleUtilities::AwaitWithTimeout(
+            characteristic.ReadValueAsync(bt::BluetoothCacheMode::Uncached),
+            MidiBleUtilities::BleConnectOperationTimeoutMilliseconds,
             gatt::GattReadResult{ nullptr });
+
+        // A device can allow the subscription and still demand authentication for the read
+        if (readResult != nullptr &&
+            readResult.Status() != gatt::GattCommunicationStatus::Success &&
+            MidiBleUtilities::IsPairingRequiredProtocolError(readResult.ProtocolError()))
+        {
+            m_requiresPairing.store(true);
+
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"The device requires pairing before its MIDI characteristic can be read", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_deviceId.c_str(), "device id")
+            );
+
+            RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED));
+        }
     }
     CATCH_RETURN();
 
@@ -463,10 +508,28 @@ MidiBleConnection::ConnectMidiCallback(
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, callback);
 
-    auto lock = std::scoped_lock{ m_callbackLock };
+    {
+        auto lock = std::scoped_lock{ m_callbackLock };
 
-    m_callback = callback;
-    m_callbackContext = context;
+        // Logged with both pointers because a client reconnecting is supposed to replace the
+        // previous one, and a missing replacement is invisible from outside.
+        TraceLoggingWrite(
+            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Connecting a MIDI callback to this BLE connection", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_deviceId.c_str(), "device id"),
+            TraceLoggingPointer(m_callback.get(), "previous callback"),
+            TraceLoggingPointer(callback, "new callback")
+        );
+
+        m_callback = callback;
+        m_callbackContext = context;
+    }
+
+    m_reportedMissingCallback.store(false);
 
     return S_OK;
 }
@@ -476,6 +539,17 @@ HRESULT
 MidiBleConnection::DisconnectMidiCallback()
 {
     auto lock = std::scoped_lock{ m_callbackLock };
+
+    TraceLoggingWrite(
+        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Disconnecting the MIDI callback from this BLE connection", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_deviceId.c_str(), "device id"),
+        TraceLoggingPointer(m_callback.get(), "callback being cleared")
+    );
 
     m_callback = nullptr;
     m_callbackContext = 0;
@@ -723,6 +797,11 @@ MidiBleConnection::ProcessIncomingMidi1Packet(
     std::vector<uint64_t> segmentTimestamps;
     m_incomingTimestampCorrelator.MapPacket(segments, receiveTimestamp, ticksPerMillisecond, segmentTimestamps);
 
+    m_incomingTimestampSource.store(static_cast<uint8_t>(
+        m_incomingTimestampCorrelator.SenderClockIsStalled() ? MidiBleProtocol::TimestampSource::ArrivalTime :
+        m_incomingTimestampCorrelator.HaveSeenSenderClockAdvance() ? MidiBleProtocol::TimestampSource::Device :
+        MidiBleProtocol::TimestampSource::Unknown));
+
     for (size_t segmentIndex = 0; segmentIndex < segments.size(); segmentIndex++)
     {
         auto const& segment = segments[segmentIndex];
@@ -855,19 +934,46 @@ MidiBleConnection::SendUmpWordsToCallback(
         i += messageWordCount;
     }
 
-    auto lock = std::scoped_lock{ m_callbackLock };
+    wil::com_ptr_nothrow<IMidiCallback> callback{ nullptr };
+    LONGLONG callbackContext{ 0 };
 
-    if (m_callback == nullptr)
     {
-        return S_FALSE;
+        auto lock = std::scoped_lock{ m_callbackLock };
+
+        if (m_callback == nullptr)
+        {
+            // The message counters increment above this point, so without this a device which is
+            // clearly sending looks identical to one whose messages are being lost further down.
+            if (!m_reportedMissingCallback.exchange(true))
+            {
+                TraceLoggingWrite(
+                    MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Discarding incoming messages because no MIDI callback is connected to this BLE connection", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(m_deviceId.c_str(), "device id"),
+                    TraceLoggingUInt64(m_messagesReceived.load(), "messages received")
+                );
+            }
+
+            return S_FALSE;
+        }
+
+        // Kept alive by this reference so the lock can be dropped before calling out. Removing an
+        // endpoint re-enters synchronously through the bidi's Shutdown, which disconnects the
+        // callback and would deadlock on this same non-recursive lock.
+        callback = m_callback;
+        callbackContext = m_callbackContext;
     }
 
-    RETURN_IF_FAILED(m_callback->Callback(
+    RETURN_IF_FAILED(callback->Callback(
         MessageOptionFlags_None,
         const_cast<uint32_t*>(words),
         static_cast<UINT>(wordCount * sizeof(uint32_t)),
         static_cast<LONGLONG>(timestamp),
-        m_callbackContext));
+        callbackContext));
 
     return S_OK;
 }
