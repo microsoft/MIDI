@@ -67,6 +67,11 @@ public:
     TEST_METHOD(TestCorrelatorHandlesSenderClockWrap);
     TEST_METHOD(TestCorrelatorNeverReturnsAFutureTimestamp);
     TEST_METHOD(TestCorrelatorIgnoresImplausibleBackwardsJump);
+    TEST_METHOD(TestCorrelatorRecoversAfterALongSilence);
+    TEST_METHOD(TestCorrelatorRecoversWhenASilenceHidesUnderTheGapThreshold);
+    TEST_METHOD(TestCorrelatorSnapsBackFromALargeDrift);
+    TEST_METHOD(TestCorrelatorSnapsBackFromAModestDrift);
+    TEST_METHOD(TestCorrelatorCreepsRatherThanSnappingForConnectionIntervalJitter);
     TEST_METHOD(TestCorrelatorResetRebuildsMapping);
     TEST_METHOD(TestDecoderReportsSenderTimestamp);
 };

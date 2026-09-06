@@ -144,6 +144,9 @@ private:
     wil::com_ptr_nothrow<IMidiCallback> m_callback{ nullptr };
     LONGLONG m_callbackContext{ 0 };
 
+    // so the "nothing is listening" warning is written once per gap rather than per message
+    std::atomic<bool> m_reportedMissingCallback{ false };
+
     // inbound and outbound translation state is per-direction and never shared
     MidiBleMidi1::PacketDecoder m_incomingPacketDecoder{ };
     MidiBleMidi1::TimestampCorrelator m_incomingTimestampCorrelator{ };

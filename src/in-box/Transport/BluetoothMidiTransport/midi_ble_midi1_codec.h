@@ -81,6 +81,11 @@ namespace MidiBleMidi1
     // milliseconds out.
     inline constexpr uint32_t MaximumPlausibleGapMilliseconds = 4096;
 
+    // Beyond this much error the offset is corrected in one step instead of creeping back, which
+    // would otherwise take one packet per millisecond. Well above a connection interval plus a
+    // retransmission, so ordinary jitter still creeps and only outliers snap.
+    inline constexpr uint32_t MaximumOffsetDriftMilliseconds = 100;
+
     // Maps the sender's 13-bit millisecond clock onto the local timestamp clock.
     //
     // RP-052 leaves this to the implementation, saying only that correlation "must be performed".
@@ -103,6 +108,9 @@ namespace MidiBleMidi1
             m_lastSenderTimestamp = 0;
             m_offsetTicks = 0;
             m_lastEmittedTimestamp = 0;
+            m_resynchronize = false;
+            m_lastArrivalTimestamp = 0;
+            m_haveArrival = false;
         }
 
         // Maps every segment of one packet onto the local clock. Whole packets rather than single
@@ -124,9 +132,35 @@ namespace MidiBleMidi1
 
             localTimestamps.reserve(segments.size());
 
+            // The sender clock is 13 bits of milliseconds, so it cannot express anything longer
+            // than one wrap and a long gap is reported as gap % 8192. Roughly half of those land
+            // below the implausible-gap threshold and read as an ordinary short delta, which is
+            // why the local arrival clock rather than the sender decides whether too much time
+            // passed for the correlation to still mean anything.
+            if (m_haveArrival && localArrivalTimestamp > m_lastArrivalTimestamp)
+            {
+                uint64_t const localGapTicks = localArrivalTimestamp - m_lastArrivalTimestamp;
+
+                if (localGapTicks > static_cast<uint64_t>(TimestampWrapMilliseconds) * ticksPerMillisecond)
+                {
+                    m_resynchronize = true;
+                }
+            }
+
+            m_lastArrivalTimestamp = localArrivalTimestamp;
+            m_haveArrival = true;
+
             for (auto const& segment : segments)
             {
                 localTimestamps.push_back(AdvanceSenderClock(segment.SenderTimestamp));
+            }
+
+            // The sender clock restarted, so the old offset describes a correlation that no longer
+            // exists and has to be thrown away rather than crept back towards.
+            if (m_resynchronize)
+            {
+                m_haveOffset = false;
+                m_resynchronize = false;
             }
 
             // The newest segment is the one whose arrival was actually observed.
@@ -147,10 +181,23 @@ namespace MidiBleMidi1
             }
             else
             {
-                int64_t const creepLimit = static_cast<int64_t>(ticksPerMillisecond);
                 int64_t const drift = candidateOffset - m_offsetTicks;
+                int64_t const snapLimit =
+                    static_cast<int64_t>(MaximumOffsetDriftMilliseconds) * static_cast<int64_t>(ticksPerMillisecond);
 
-                m_offsetTicks += drift > creepLimit ? creepLimit : drift;
+                if (drift > snapLimit)
+                {
+                    // Creeping back a millisecond per packet costs one packet per millisecond of
+                    // error, so a large drift would strand every message in the past for tens of
+                    // thousands of messages. Past this much it is corrected in one step.
+                    m_offsetTicks = candidateOffset;
+                }
+                else
+                {
+                    int64_t const creepLimit = static_cast<int64_t>(ticksPerMillisecond);
+
+                    m_offsetTicks += drift > creepLimit ? creepLimit : drift;
+                }
             }
 
             for (auto& value : localTimestamps)
@@ -194,7 +241,21 @@ namespace MidiBleMidi1
             uint32_t const forwardDelta =
                 (static_cast<uint32_t>(masked) + TimestampWrapMilliseconds - m_lastSenderTimestamp) % TimestampWrapMilliseconds;
 
-            m_senderContinuousMilliseconds += forwardDelta > MaximumPlausibleGapMilliseconds ? 0 : forwardDelta;
+            if (forwardDelta > MaximumPlausibleGapMilliseconds)
+            {
+                // A gap this long cannot be told apart from one or more wraps, so how much time
+                // really passed is unknowable. Absorbing it as zero froze the sender clock while
+                // the local one kept running, and the offset can only creep back a millisecond per
+                // packet, which left every later message stamped far in the past. Re-seeding lets
+                // the next packet establish a fresh offset instead.
+                m_senderContinuousMilliseconds = masked;
+                m_lastSenderTimestamp = masked;
+                m_resynchronize = true;
+
+                return m_senderContinuousMilliseconds;
+            }
+
+            m_senderContinuousMilliseconds += forwardDelta;
             m_lastSenderTimestamp = masked;
 
             return m_senderContinuousMilliseconds;
@@ -206,6 +267,12 @@ namespace MidiBleMidi1
         uint16_t m_lastSenderTimestamp{ 0 };
         int64_t m_offsetTicks{ 0 };
         uint64_t m_lastEmittedTimestamp{ 0 };
+
+        // set when the sender clock was re-seeded, so the next packet rebuilds the offset
+        bool m_resynchronize{ false };
+
+        uint64_t m_lastArrivalTimestamp{ 0 };
+        bool m_haveArrival{ false };
     };
 
 

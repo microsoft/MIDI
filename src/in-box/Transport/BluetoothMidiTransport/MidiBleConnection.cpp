@@ -494,10 +494,28 @@ MidiBleConnection::ConnectMidiCallback(
 {
     RETURN_HR_IF_NULL(E_INVALIDARG, callback);
 
-    auto lock = std::scoped_lock{ m_callbackLock };
+    {
+        auto lock = std::scoped_lock{ m_callbackLock };
 
-    m_callback = callback;
-    m_callbackContext = context;
+        // Logged with both pointers because a client reconnecting is supposed to replace the
+        // previous one, and a missing replacement is invisible from outside.
+        TraceLoggingWrite(
+            MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Connecting a MIDI callback to this BLE connection", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(m_deviceId.c_str(), "device id"),
+            TraceLoggingPointer(m_callback.get(), "previous callback"),
+            TraceLoggingPointer(callback, "new callback")
+        );
+
+        m_callback = callback;
+        m_callbackContext = context;
+    }
+
+    m_reportedMissingCallback.store(false);
 
     return S_OK;
 }
@@ -507,6 +525,17 @@ HRESULT
 MidiBleConnection::DisconnectMidiCallback()
 {
     auto lock = std::scoped_lock{ m_callbackLock };
+
+    TraceLoggingWrite(
+        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Disconnecting the MIDI callback from this BLE connection", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(m_deviceId.c_str(), "device id"),
+        TraceLoggingPointer(m_callback.get(), "callback being cleared")
+    );
 
     m_callback = nullptr;
     m_callbackContext = 0;
@@ -890,6 +919,22 @@ MidiBleConnection::SendUmpWordsToCallback(
 
     if (m_callback == nullptr)
     {
+        // The message counters increment above this point, so without this a device which is
+        // clearly sending looks identical to one whose messages are being lost further down.
+        if (!m_reportedMissingCallback.exchange(true))
+        {
+            TraceLoggingWrite(
+                MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_WARNING,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Discarding incoming messages because no MIDI callback is connected to this BLE connection", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(m_deviceId.c_str(), "device id"),
+                TraceLoggingUInt64(m_messagesReceived.load(), "messages received")
+            );
+        }
+
         return S_FALSE;
     }
 

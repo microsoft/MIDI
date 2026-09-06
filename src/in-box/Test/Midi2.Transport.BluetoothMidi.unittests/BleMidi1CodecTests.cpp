@@ -610,12 +610,104 @@ void BleMidi1CodecTests::TestCorrelatorIgnoresImplausibleBackwardsJump()
 
     auto const first = MapPacket(correlator, { 4000 }, arrival);
 
-    // 4000 -> 3000 is a 7,192 ms forward wrap, which is not credible between two
-    // packets, so it is treated as no elapsed time rather than a huge jump
+    // 4000 -> 3000 is a 7,192 ms forward wrap, which is not credible between two packets, so the
+    // correlation is rebuilt against the arrival time rather than believed
     auto const second = MapPacket(correlator, { 3000 }, arrival);
 
     VERIFY_IS_TRUE(second[0] >= first[0]);
     VERIFY_IS_TRUE(second[0] - first[0] < TestTicksPerMillisecond);
+}
+
+void BleMidi1CodecTests::TestCorrelatorRecoversAfterALongSilence()
+{
+    MidiBleMidi1::TimestampCorrelator correlator;
+
+    uint64_t const arrival = 1000 * TestTicksPerMillisecond;
+
+    MapPacket(correlator, { 4000 }, arrival);
+
+    // A device that is idle while an app is closed and reopened comes back with a gap that cannot
+    // be told apart from a wrap. Treating that as no elapsed time froze the sender clock and left
+    // every later message stamped tens of seconds in the past.
+    uint64_t const laterArrival = arrival + (30000 * TestTicksPerMillisecond);
+    auto const afterSilence = MapPacket(correlator, { 100 }, laterArrival);
+
+    VERIFY_ARE_EQUAL(laterArrival, afterSilence[0]);
+
+    // and normal spacing has to work again straight away
+    auto const next = MapPacket(correlator, { 140 }, laterArrival + (40 * TestTicksPerMillisecond));
+
+    VERIFY_ARE_EQUAL(40 * TestTicksPerMillisecond, next[0] - afterSilence[0]);
+}
+
+void BleMidi1CodecTests::TestCorrelatorRecoversWhenASilenceHidesUnderTheGapThreshold()
+{
+    MidiBleMidi1::TimestampCorrelator correlator;
+
+    uint64_t const arrival = 1000 * TestTicksPerMillisecond;
+
+    MapPacket(correlator, { 1000 }, arrival);
+
+    // 20 s of real silence reaches a 13-bit millisecond clock as 20000 % 8192 = 3616 ms, which is
+    // below the implausible-gap threshold and reads as an ordinary short delta. Only the local
+    // arrival clock can tell that 20 s really passed.
+    uint16_t const senderTimestamp = static_cast<uint16_t>((1000 + 3616) & MidiBleMidi1::TimestampMask);
+    uint64_t const laterArrival = arrival + (20000 * TestTicksPerMillisecond);
+
+    auto const afterSilence = MapPacket(correlator, { senderTimestamp }, laterArrival);
+
+    VERIFY_ARE_EQUAL(laterArrival, afterSilence[0]);
+}
+
+void BleMidi1CodecTests::TestCorrelatorSnapsBackFromALargeDrift()
+{
+    MidiBleMidi1::TimestampCorrelator correlator;
+
+    uint64_t arrival = 1000 * TestTicksPerMillisecond;
+
+    MapPacket(correlator, { 1000 }, arrival);
+
+    // A sender whose clock barely advances while real time runs on leaves the offset seconds
+    // behind, and creeping back a millisecond per packet would take one packet per millisecond.
+    arrival += 5000 * TestTicksPerMillisecond;
+
+    auto const mapped = MapPacket(correlator, { 1010 }, arrival);
+
+    VERIFY_ARE_EQUAL(arrival, mapped[0]);
+}
+
+void BleMidi1CodecTests::TestCorrelatorSnapsBackFromAModestDrift()
+{
+    MidiBleMidi1::TimestampCorrelator correlator;
+
+    uint64_t arrival = 1000 * TestTicksPerMillisecond;
+
+    MapPacket(correlator, { 1000 }, arrival);
+
+    // 300 ms is far beyond any connection interval or retransmission, so it is an outlier to
+    // correct at once rather than bleed off over 300 packets.
+    arrival += 300 * TestTicksPerMillisecond;
+
+    auto const mapped = MapPacket(correlator, { 1000 }, arrival);
+
+    VERIFY_ARE_EQUAL(arrival, mapped[0]);
+}
+
+void BleMidi1CodecTests::TestCorrelatorCreepsRatherThanSnappingForConnectionIntervalJitter()
+{
+    MidiBleMidi1::TimestampCorrelator correlator;
+
+    uint64_t arrival = 1000 * TestTicksPerMillisecond;
+
+    MapPacket(correlator, { 1000 }, arrival);
+
+    // One late connection interval must not be read as a lost correlation. Absorbing it whole
+    // would put the jitter the correlator exists to remove straight back into the output.
+    arrival += 15 * TestTicksPerMillisecond;
+
+    auto const mapped = MapPacket(correlator, { 1000 }, arrival);
+
+    VERIFY_IS_TRUE(mapped[0] < arrival);
 }
 
 void BleMidi1CodecTests::TestCorrelatorResetRebuildsMapping()
