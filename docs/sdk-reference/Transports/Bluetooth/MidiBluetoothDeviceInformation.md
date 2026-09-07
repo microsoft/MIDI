@@ -17,7 +17,9 @@ Returned by `MidiBluetoothTransportManager.GetAvailableDevices` and `MidiBluetoo
 | `Name` | The name the device reports. Empty until the device has been heard from for long enough to resolve it. |
 | `SelectedProtocol` | The `MidiBluetoothProtocol` in use. Unknown until the device is connected, because reading it means reading the device's characteristics. |
 | `IsConnected` | True when the device is connected to this PC. |
+| `ConnectionState` | A `MidiBluetoothConnectionState` saying how far along the device is. Connecting happens in the background, and a device the customer asked for is retried until it appears, so this says more than `IsConnected` can. |
 | `IsPaired` | True when the device is paired with this PC. Pairing is not required for Bluetooth MIDI. |
+| `RequiresPairing` | True when the device will not provide its MIDI service until the link is authenticated. Nothing a device advertises says this, so it is only ever known after an attempt. While it is set, the service stops retrying the device, because every attempt raises another Windows pairing prompt. |
 | `IsPresent` | True while the device is advertising. Bluetooth MIDI peripherals sleep aggressively, so a device which is not present is usually asleep rather than gone. |
 | `SignalStrengthDecibelMilliwatts` | The signal strength of the most recent advertisement. A connected device has stopped advertising, so this stops being meaningful. |
 | `LastSeenAgo` | How long ago the device was last heard from. Means nothing when `HasBeenSeen` is false. |
@@ -27,6 +29,9 @@ Returned by `MidiBluetoothTransportManager.GetAvailableDevices` and `MidiBluetoo
 | `EndpointDeviceInstanceId` | The endpoint's instance id, which is what an endpoint customization matches on. |
 | `MessagesReceived` | Count of messages received from the device. |
 | `MessagesSent` | Count of messages sent to the device. |
+| `PacketsReceived` | Count of Bluetooth packets received, counted before any decoding. Packets climbing while `MessagesReceived` stays at zero means the device is transmitting something this transport cannot decode. Both at zero means it is sending nothing at all. |
+| `PacketsSent` | Count of Bluetooth packets sent. |
+| `TimestampSource` | A `MidiBluetoothTimestampSource` saying whether the device's own timestamps are being used, or the time each message arrived is standing in for them. |
 | `ConnectionInterval` | What the link actually negotiated. Zero when not connected. |
 | `LastConnectError` | The transport's own wording for the most recent connection failure. This is more specific than the error code can be. |
 | `LastConnectErrorCode` | A `MidiBluetoothDeviceConnectErrorCode` saying why the last connection attempt failed. |

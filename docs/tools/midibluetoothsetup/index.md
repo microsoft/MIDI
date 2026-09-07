@@ -58,6 +58,50 @@ this for a device you have sold or no longer use.
 
 In the majority of cases, you do not necessarily have to pair a Bluetooth MIDI device in Windows Settings first. If the device is advertising, this app can usually connect to it directly.
 
+### What the app is telling you
+
+The line under a device's name says where Windows has got to with it:
+
+- **Connecting...** - an attempt is running right now. This is not instant. Opening a Bluetooth
+  connection takes a few seconds, and longer if the device has to be woken first.
+- **Waiting for the device...** - you have asked for this device, but it is not reachable at the
+  moment. Windows keeps retrying for as long as it stays remembered, so this is what a remembered
+  device which is switched off or out of range looks like.
+- **Connected** - connected, with a MIDI endpoint.
+- **Nearby**, **Last heard from *n* minutes ago**, or **Not heard from yet** - not connected, and
+  not currently being tried.
+
+While a device is connecting or being waited for, **Connect** is replaced by **Disconnect**. That is
+deliberate. Pressing Connect repeatedly queues up further attempts and can disturb one already in
+progress, which tends to make a difficult device worse rather than better. **Disconnect** cancels
+the request and stops Windows retrying, so it is also how you give up on a device which is never
+going to answer.
+
+### Pairing
+
+Most Bluetooth MIDI devices do not need pairing, but some insist on it, and there are two quite
+different ways you find that out.
+
+Sometimes **Windows prompts you**, either by itself when the service starts or shortly after you
+press **Connect**. Accept the prompt and the device pairs.
+
+Sometimes **nothing happens at all**. A device is allowed to ask for security in a way which never
+reaches Windows MIDI Services as an error: it accepts the connection and then quietly drops it a
+moment later. When a device does that twice in quick succession while unpaired, the app concludes
+that pairing is what it is asking for and tells you so:
+
+> This device requires pairing before Windows can use its MIDI service. Pair it, then connect it
+> again. Automatic reconnection is paused for this device until then.
+
+A **Pair** button appears beside the device. Automatic reconnection stops at that point on purpose,
+because retrying a device which wants pairing simply raises one prompt after another. Once it is
+paired, press **Connect** again.
+
+Because this is worked out from how the device behaves rather than from anything it says, it is a
+judgment rather than a certainty. A device with a weak signal which keeps dropping its connection
+can look the same way. If you are confident a device does not need pairing, **Connect** is still
+there and still works.
+
 ## Device details
 
 **Details** on any device opens what Windows knows about it.
@@ -70,7 +114,36 @@ In the majority of cases, you do not necessarily have to pair a Bluetooth MIDI d
   often messages can be delivered
 - how many messages and how many Bluetooth packets have gone in and out since the connection was
   made, which is the quickest way to tell whether a device is actually sending anything
+- where the timestamps on incoming messages come from, described below
 - **Rename** gives the endpoint a name of your own, the same customization the MIDI Settings app offers
+
+## Timestamps
+
+Bluetooth LE MIDI 1.0 carries a timestamp with every message: thirteen bits of milliseconds, which
+wraps every 8.192 seconds. Windows MIDI Services matches that against this PC's clock so the spacing
+between your notes survives the journey, instead of everything arriving in clumps whenever the
+Bluetooth connection interval comes around.
+
+**Details** reports which of two things is happening, under **Timestamps**:
+
+- **From the device** - the device keeps time, and its own timestamps are being used.
+- **Estimated** - the device does not timestamp its messages, so the time each one arrived is used
+  instead.
+
+A number of inexpensive controllers never advance their timestamp at all. Every packet carries the
+same value no matter how much time has really passed. Matching that against this PC's clock would
+put an entire gesture at a single instant, so a note on, all of its aftertouch, and the note off
+would share one timestamp and any timing in what you played would be lost.
+
+When Windows MIDI Services sees a device do this, it stops trusting the device's clock and stamps
+each message with the moment it arrived instead. That is a real improvement on a single frozen
+instant, and on a device sending one message per packet it can even resolve finer than the
+millisecond the specification allows. It is still an estimate, though, because it is measured at
+this end and therefore includes however long the message took to get here.
+
+Nothing about this is stored. It is worked out afresh from the traffic on each connection, so a
+device whose firmware is later fixed to keep time is picked up automatically with nothing to reset.
+The row shows nothing at all until the device has sent enough for Windows to judge.
 
 ## Keeping an endpoint when a device goes offline
 
@@ -129,7 +202,8 @@ time, so you have to disconnect it there first.
 
 **It needs to be paired.** Most Bluetooth MIDI devices can be connected to without pairing, but some
 require it. Windows will usually prompt you when that is the case, so watch for a notification after
-pressing **Connect**.
+pressing **Connect**. If no prompt appears and the device keeps connecting and dropping, the app
+works that out for itself and offers a **Pair** button. See [Pairing](#pairing) above.
 
 **Its batteries are low.** A device low on power may advertise but fail to hold a connection.
 

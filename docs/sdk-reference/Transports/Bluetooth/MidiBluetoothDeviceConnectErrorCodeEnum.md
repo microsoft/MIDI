@@ -35,6 +35,8 @@ The values are grouped by the stage a connection fails at, which is why they are
 | `OperationAborted` | `0x0000010B` | The transport was shutting down, or the operation was canceled part way through |
 | `NotifyFailed` | `0x0000010C` | The device would not accept the subscription which delivers incoming MIDI |
 | `EndpointCreationFailed` | `0x0000010D` | The connection succeeded but the MIDI endpoint could not be created |
+| `PairingRequired` | `0x0000010E` | The device refused an operation until the link is authenticated. Retrying cannot succeed until the customer pairs, so the service stops retrying this device until it is asked again. |
+| `GattTimeout` | `0x0000010F` | The device stopped answering part way through connecting. Some devices drop the link until they are paired, so this and `PairingRequired` can describe the same device. |
 | `RadioNotAvailable` | `0x00000301` | This PC has no usable Bluetooth radio. See `MidiBluetoothRadioInformation`. |
 | `Unexpected` | `0x11002011` | An unexpected error occurred |
 
