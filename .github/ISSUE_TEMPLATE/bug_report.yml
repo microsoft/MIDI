@@ -114,8 +114,8 @@ body:
   id: mididiag-output
   attributes:
     label: Output from the MIDI Diagnostics Tool
-    description: Use the installer from https://aka.ms/midi, open the MIDI Settings app, and go to the troubleshooting page. Capture the resulting MIDI system information and paste the entire text here.
-    placeholder: mididiag output
+    description: Use the installer from https://aka.ms/midi, open the MIDI Settings app, and go to the troubleshooting page. Capture the resulting MIDI system information and paste the entire text here. It is formatted as a code block automatically, so you do not need to add backticks.
+    render: text
   validations:
     required: true
 
@@ -129,6 +129,59 @@ body:
       required: false
     - label: I tried but was unable to reproduce this issue using a simple application
       required: false
+
+- type: textarea
+  id: devices-tested
+  attributes:
+    label: Devices tested, and which ones fail
+    description: One device failing usually means a device-specific or driver-specific problem, not a problem with all MIDI. Please list what you tried, including anything that worked, so we can scope the bug correctly. If you only have one device, say so.
+    value: |
+      | Device (make and model) | Driver in use | Result |
+      |---|---|---|
+      |  |  | fails |
+      |  |  | works |
+  validations:
+    required: false
+
+- type: textarea
+  id: api-paths-tested
+  attributes:
+    label: Which MIDI API paths did you test?
+    description: This is the single most useful thing you can tell us. A problem that happens on the classic WinMM path but not on the Windows MIDI Services path is a completely different bug, with a different fix, than one that happens on both. Leave a row blank if you did not test it.
+    value: |
+      | Path | Suggested tool | Result (works / fails / not tested) |
+      |---|---|---|
+      | Windows MIDI Services (MIDI 2.0 / UMP) | MIDI Monitor, or `midi endpoint monitor` |  |
+      | WinRT MIDI 1.0 (Windows 10 MIDI) | any WinRT MIDI 1.0 app |  |
+      | WinMM (classic MIDI 1.0) | `midi1monitor.exe` |  |
+  validations:
+    required: false
+
+- type: dropdown
+  id: api-mode
+  attributes:
+    label: API mode used when you saw the problem
+    description: "Run `midi api-mode get`, or check `UseLegacyMidi` under HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Drivers32. Almost everyone is on the default. More information: https://microsoft.github.io/MIDI/kb/how-to-change-api-mode/"
+    options:
+      - Full Windows MIDI Services (0, the default)
+      - Legacy API mode (1)
+      - Hybrid API mode (2)
+      - Not sure
+  validations:
+    required: true
+
+- type: dropdown
+  id: legacy-mode-result
+  attributes:
+    label: Does the problem also happen in Legacy API mode?
+    description: "Worth trying for anything involving an older MIDI 1.0 app, because Legacy API mode takes the MIDI service out of the path entirely. If the problem happens there too, it is not caused by Windows MIDI Services. Legacy API mode is also a supported way to keep working while we investigate, but you give up multi-client sharing, built-in loopbacks, Network MIDI 2.0, Bluetooth LE MIDI, and USB MIDI 2.0 devices. Instructions: https://microsoft.github.io/MIDI/kb/how-to-change-api-mode/"
+    options:
+      - Yes, it still happens in Legacy API mode
+      - No, Legacy API mode works correctly
+      - I have not tried Legacy API mode
+      - Not applicable to this issue
+  validations:
+    required: false
 
 - type: textarea
   id: observations
