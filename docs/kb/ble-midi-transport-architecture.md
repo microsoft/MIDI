@@ -100,6 +100,20 @@ The worker resolves the address to a `BluetoothLEDevice`, opens the MIDI Service
 Characteristic, takes a `GattSession` with `MaintainConnection(true)`, subscribes to
 notifications, then activates the endpoint.
 
+Each of those steps is a blocking Bluetooth call with its own timeout, and establishing a link is
+much slower than talking over one which already exists: the radio may wait several advertising
+intervals, and a device which demands pairing adds a whole security exchange. The connect path
+therefore allows considerably longer than the data path. Because service shutdown joins the worker,
+and a connect attempt makes six of these calls back to back, the waits are abandoned early once
+shutdown begins rather than each running to its full timeout.
+
+Because a connect attempt takes seconds and a wanted device is retried until it appears,
+"not connected" alone cannot distinguish an attempt under way from a device which is switched off.
+`connectionState` reports `notConnected`, `waitingForDevice`, `connecting` or `connected` so a
+caller can say which, and can stop a user queueing attempt after attempt while one is in flight.
+A device marked as requiring pairing reports `notConnected` rather than `waitingForDevice`, because
+the sweep has deliberately stopped retrying it.
+
 By far the most common failure is a GATT status of `Unreachable`, which simply means the
 peripheral is asleep. BLE MIDI devices sleep aggressively, and a device that Windows lists as
 paired is very often not currently connectable.
@@ -180,10 +194,38 @@ byte followed immediately by data with no timestamp byte, which is the only sign
 distinguishes it from the start of a message.
 
 **Timestamps** arrive in the sender's clock domain, and correlating the two clocks is explicitly
-out of scope for the specification. Since a timestamp may never be scheduled in the future, the
-decoder anchors the newest message in a packet to the moment the packet arrived and backdates
-the rest by their spacing. That preserves the intra-packet timing the timestamps exist to convey
-without needing any clock correlation.
+out of scope for the specification. The sender's 13 bit value is unwrapped into a continuous
+millisecond count and mapped onto the local clock through a single offset, which preserves spacing
+both within a packet and across packet boundaries. Anchoring each packet to its own arrival time
+instead does not work: consecutive packets are anchored independently, so an early message in one
+packet can be given a timestamp before a late message in the packet before it, and the stream
+arrives out of order.
+
+The offset is the smallest arrival delay observed, because arrival delay is never negative and the
+minimum is therefore the sample carrying the least transport latency. That minimum is taken over a
+sliding five second window rather than over all history. An all-time minimum never forgets an
+outlier, and following clock drift by creeping a fixed step per packet would make the correction
+rate depend on how fast the device happens to be sending rather than on how much time has passed.
+
+Deciding that too much time has passed to trust the correlation cannot be left to the sender's
+clock. Thirteen bits wraps every 8.192 seconds, so a long gap is reported as `gap % 8192`, and
+roughly half of those land below any plausible-gap threshold and read as an ordinary short delta:
+a twenty second silence arrives as 3,616 ms. The local arrival clock decides instead, and a gap
+longer than one wrap discards the correlation and re-anchors on the next packet.
+
+**Devices which do not keep time.** Several inexpensive controllers never advance their timestamp
+at all. Every packet carries the same value however much time has really passed, including across
+a press and hold lasting a second, which is provable because a Note On and a Note Off have
+different status bytes, break Running Status, and must therefore each carry their own timestamp
+byte. Correlating against a stopped clock collapses an entire gesture onto a single instant.
+
+Real time passing between packets while the sender's timestamp stands still is the only way to
+detect this, because messages inside one packet are allowed to share a timestamp and Running Status
+leaves them no room to carry one. After three such observations the sender's clock is abandoned and
+arrival time is used instead. Any subsequent movement of the timestamp restores correlation, so
+nothing is stored and a firmware fix takes effect on its own. Which of the two is in use is
+reported per device as `MidiBluetoothTimestampSource` and shown by `midi bluetooth list` and the
+setup app.
 
 **Encoding** never generates Running Status: transmitting it is optional and every receiver is
 required to accept full messages. A complete message other than SysEx is never split across two
@@ -363,6 +405,34 @@ the same reason.
 When this transport ships in-box, the BLE portion of the WinRT MIDI 1.0 stack needs a flag to
 disable it, so that only one component claims a BLE MIDI device.
 
+### Detecting that a device wants pairing
+
+A device can demand authentication in two ways, and only one of them reaches this transport as an
+error.
+
+The visible route is a GATT operation failing with an insufficient-authentication protocol error,
+which the CCCD write and the Characteristic read both check for.
+
+The invisible route is an SMP Security Request. The device accepts the connection, asks the Central
+to start encryption out of band, and drops the link when that does not happen. Nothing in the GATT
+path fails, so no error is ever raised: all this transport sees is a link which keeps going away
+moments after it comes up. Windows may raise its own pairing notification in this case, and may
+not; both have been observed on devices from the same vendor.
+
+Repeated brief drops while unpaired are therefore treated as evidence. Two links which each lasted
+under ten seconds mark the device as requiring pairing, which stops the sweep retrying it, because
+each retry can raise another pairing prompt and can disturb a pairing already in progress. This is
+inference rather than a report from the device, so a device with a marginal link can be flagged the
+same way, and an explicit connect request always clears the flag and tries again.
+
+### Bonding discards the notification subscription
+
+CCCD state is per-bond. A subscription taken on an unencrypted link is discarded when the device
+subsequently bonds, and neither the link nor the endpoint shows anything wrong: the connection
+stays up, the endpoint remains, and no data arrives. The transport therefore watches for a device
+becoming paired while connected and renews the subscription. Without that, pairing a device part
+way through a session silently stops its MIDI.
+
 ### Generic device names
 
 Apple deliberately withholds the user-assigned device name. Since iOS 16, `UIDevice.name` returns
@@ -422,12 +492,16 @@ value read back from `BluetoothLEDevice.GetConnectionParameters`:
 | `balanced` | min 30 ms, max 60 ms | 60 ms |
 | `powerOptimized` | min 90 ms, max 180 ms | 15 ms |
 
-Nothing below 15 ms has been observed. Making no request produces the same 15 ms as the
-throughput preset, so requesting it neither helps nor harms; it is kept because it states the
-intent and guarantees the mandatory ceiling rather than relying on the default staying there. The
-balanced preset makes matters worse, which shows requests do influence the link. The power preset
-landing on 15 ms despite asking for far more suggests the device's own Connection Parameter Update
-Request wins in that case.
+Nothing below 15 ms has been observed **in the Central role**. Making no request produces the same
+15 ms as the throughput preset, so requesting it neither helps nor harms; it is kept because it
+states the intent and guarantees the mandatory ceiling rather than relying on the default staying
+there. The balanced preset makes matters worse, which shows requests do influence the link. The
+power preset landing on 15 ms despite asking for far more suggests the device's own Connection
+Parameter Update Request wins in that case.
+
+The Peripheral role does better, because the remote Central chooses. An iPhone connecting to this
+PC negotiated **7.5 ms**, which is the rate both specifications recommend for live performance and
+which Windows has not been observed to reach as Central.
 
 The preference is settable with `midi bluetooth connection-parameters`, and the negotiated value
 is shown per device by `midi bluetooth list` and, for the peripheral role, by
@@ -437,6 +511,4 @@ requests.
 
 ## Not yet implemented
 
-- A WinRT projection (`Windows.Devices.Midi2.Transports.Bluetooth`) and a setup app for
-  approving and configuring connections.
 - Jitter Reduction Timestamps.
