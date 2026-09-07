@@ -38,7 +38,8 @@ the list:
   advertising. Bluetooth LE MIDI peripherals talk to one central at a time, so you have to
   disconnect it there first.
 - Some devices only advertise for a short window after being switched on, and then go quiet.
-- Some devices requiring pairing in Windows Settings before they become available.
+- Some devices require pairing before they will provide their MIDI service. See
+  [Pairing](#pairing) below, because the app usually works this out for you.
 
 Each device shows its name and what Windows currently knows about it:
 
@@ -102,6 +103,11 @@ judgment rather than a certainty. A device with a weak signal which keeps droppi
 can look the same way. If you are confident a device does not need pairing, **Connect** is still
 there and still works.
 
+Whether pairing an instrument is a good idea at all is a longer story, because a paired device is
+also visible to the older Bluetooth MIDI support built into Windows, which can claim it first. See
+[How Bluetooth MIDI works in Windows]({{ site.baseurl }}/kb/ble-midi-transport-architecture/) for
+that, and for why the answer is different when a phone connects to this PC.
+
 ## Device details
 
 **Details** on any device opens what Windows knows about it.
@@ -145,6 +151,10 @@ Nothing about this is stored. It is worked out afresh from the traffic on each c
 device whose firmware is later fixed to keep time is picked up automatically with nothing to reset.
 The row shows nothing at all until the device has sent enough for Windows to judge.
 
+For how the two clocks are actually matched up, and why a stopped clock has to be detected from the
+traffic rather than asked about, see
+[How Bluetooth MIDI works in Windows]({{ site.baseurl }}/kb/ble-midi-transport-architecture/).
+
 ## Keeping an endpoint when a device goes offline
 
 **Keep endpoint when offline** is the setting most worth understanding, and it is here because
@@ -185,8 +195,25 @@ something is connected. Until then the page says nothing is connected, and that 
 **Protocol** chooses which Bluetooth MIDI protocol to advertise. Only one is published at a time:
 
 - **Bluetooth LE MIDI 1.0** is what to use. Every Bluetooth MIDI device and app in the world speaks it.
-- **Bluetooth LE MIDI 2.0** implements the draft standard for testing and development.
-  Almost nothing supports it yet, and while it is selected a MIDI 1.0 device cannot connect. This feature is not yet available in Windows MIDI Services, but will be after the specification is finalized.
+- **Bluetooth LE MIDI 2.0** implements the draft standard, and is here for testing and development.
+  Almost nothing supports it yet, and while it is selected a MIDI 1.0 device cannot connect. The
+  specification has not been published, so expect it to change.
+
+### Approving a device which connects
+
+By default a device which connects to this PC does not get a MIDI endpoint until you say so. It
+appears under **Connected device** with **Allow once** and **Always allow**.
+
+**Allow once** lets this connection through and asks again next time. **Always allow** remembers the
+device, so it connects without asking in future.
+
+This is why a phone can connect, show up in the app, and still not appear as a MIDI device to your
+software: it is waiting on you. Windows cannot refuse a Bluetooth subscription outright, so the
+approval gates the MIDI endpoint rather than the Bluetooth connection.
+
+A device which rotates its Bluetooth address for privacy, which phones and computers do, can only
+be remembered reliably once it is paired with this PC. Pairing is the direction where it helps, and
+it is best done from the phone's own Bluetooth settings.
 
 ## Troubleshooting
 
@@ -236,3 +263,16 @@ stack can claim the device first. In Device Manager, under **Software devices**,
 > Claiming by the older stack applies only during the preview period, while the previous Bluetooth
 > MIDI support is still enabled. It will not be a concern when Bluetooth MIDI ships in a regular
 > Windows release.
+
+## Going deeper
+
+This page covers what the app shows you and what to do about it. For how any of it actually works
+underneath, see [How Bluetooth MIDI works in Windows]({{ site.baseurl }}/kb/ble-midi-transport-architecture/),
+which covers discovery and why a device has to advertise before it can be found, how the two clocks
+are matched up and what happens when a device does not keep time, device identity and rotating
+Bluetooth addresses, the conflict with the older in-box Bluetooth MIDI support, connection interval
+measurements, and where this transport currently deviates from the specifications.
+
+Application developers reading device state programmatically want the
+[Bluetooth SDK reference]({{ site.baseurl }}/sdk-reference/Transports/Bluetooth/), which documents
+the same information as API properties.
