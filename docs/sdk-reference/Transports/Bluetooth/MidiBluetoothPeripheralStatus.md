@@ -22,6 +22,8 @@ Returned by `MidiBluetoothTransportManager.GetPeripheralStatus`, and carried on 
 | `EndpointDeviceInstanceId` | The endpoint's instance id, which is what an endpoint customization matches on. |
 | `MessagesReceived` | Count of messages received from the connected device. |
 | `MessagesSent` | Count of messages sent to the connected device. |
+| `PacketsReceived` | Count of Bluetooth packets received, counted before any decoding. Packets climbing while `MessagesReceived` stays at zero means the connected device is transmitting something this transport cannot decode. |
+| `PacketsSent` | Count of Bluetooth packets sent to the connected device. |
 | `ConnectedClient` | The `MidiBluetoothPeripheralClient` which is connected, or null when nothing is. |
 | `AllowedClients` | The remembered allow decisions the service is currently honoring, as `MidiBluetoothRememberedClient` entries. |
 | `DeniedClients` | The remembered deny decisions. |
