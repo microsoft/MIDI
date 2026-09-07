@@ -29,16 +29,48 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         if (messages == nullptr)
         {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Buffer was null", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
             return FALSE;
         }
 
         if (wordCount == 0)
         {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Buffer was empty", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
             return FALSE;
         }
 
         // The iterator wants a mutable pointer but only reads, so the caller's buffer is safe.
-        return internal::ValidateBufferHasCompleteUmps(const_cast<UINT32*>(messages), wordCount);
+        auto result = internal::ValidateBufferHasCompleteUmps(const_cast<UINT32*>(messages), wordCount);
+
+        if (!result)
+        {
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Buffer did not contain complete UMPs", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+        }
+
+        return result;
     }
 
     // this just assumes that messages have been validated in some way
@@ -68,12 +100,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
         // send it
 
         // The transport takes PVOID but copies the buffer out, so it does not write to it.
-        return m_endpointTransport->SendMidiMessage(
+        RETURN_IF_FAILED(m_endpointTransport->SendMidiMessage(
             flags,
             static_cast<PVOID>(const_cast<UINT32*>(completeMessages)),
             wordCount * sizeof(UINT32),
-            timestamp);
+            timestamp));
 
+        return S_OK;
     }
 
     _Use_decl_annotations_
@@ -88,7 +121,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             Midi2SdkTelemetryProvider::Provider(),
             MIDI_SDK_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
             TraceLoggingPointer(messagesReceivedCallback, "Callback")
         );
@@ -112,7 +145,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             Midi2SdkTelemetryProvider::Provider(),
             MIDI_SDK_TRACE_EVENT_INFO,
             TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD)
         );
 
@@ -123,7 +156,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
             m_comCallback.detach();
             m_comCallback = nullptr;
         }
-
 
         return S_OK;
     }
