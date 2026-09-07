@@ -218,8 +218,14 @@ int main()
         // the returned token is used to deregister the event later.
         auto eventRevokeToken = deviceEndpoint.MessageReceived(MessageReceivedHandler);
 
-        // this is what associates the virtual device client object with this connection
-        deviceEndpoint.AddMessageProcessingPlugin(m_virtualDevice);
+        // this is what associates the virtual device client object with this connection.
+        // a virtual device is a message processing plugin, so if this is not checked, a failure
+        // here gives you a device which sends correctly and never receives anything.
+        if (deviceEndpoint.AddMessageProcessingPlugin(m_virtualDevice) != MidiMessageProcessingPluginAddResult::Succeeded)
+        {
+            std::wcout << std::endl << L"Unable to add the virtual device to the connection." << std::endl;
+            return 1;
+        }
 
         std::wcout << std::endl << L"Opening device endpoint connection. This will create the client-visible endpoint" << std::endl;
         deviceEndpoint.Open();

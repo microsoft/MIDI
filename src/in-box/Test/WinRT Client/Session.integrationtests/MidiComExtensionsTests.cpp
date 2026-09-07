@@ -51,9 +51,6 @@ void MidiComExtensionsTests::TestComExtensionsSendReceiveMessages()
             sendBuffer.push_back(0x20801500 + i);
         }
 
-        VERIFY_IS_TRUE(connSend.Open());
-        VERIFY_IS_TRUE(connReceive.Open());
-
         uint32_t m_countWordsReceived { 0 };
 
 
@@ -77,11 +74,15 @@ void MidiComExtensionsTests::TestComExtensionsSendReceiveMessages()
         auto receiveConnectionExtension = connReceive.as<IMidiEndpointConnectionRaw>();
         VERIFY_IS_NOT_NULL(receiveConnectionExtension);
 
-        receiveConnectionExtension->SetMessagesReceivedCallback(this);
+        // the callback bypasses the event path entirely, so it has to be registered before Open()
+        VERIFY_SUCCEEDED(receiveConnectionExtension->SetMessagesReceivedCallback(this));
 
         // shortcut for the equivalent to QueryInterface
         auto sendConnectionExtension = connSend.as<IMidiEndpointConnectionRaw>();
         VERIFY_IS_NOT_NULL(sendConnectionExtension);
+
+        VERIFY_IS_TRUE(connSend.Open());
+        VERIFY_IS_TRUE(connReceive.Open());
 
 
         auto cleanupComExtensions = wil::scope_exit([&]

@@ -58,7 +58,11 @@ groupsListener.PreventFiringMainMessageReceivedEvent(true);
 
 auto groupsMessagesReceivedEventToken = groupsListener.MessageReceived(MyMessageReceivedHandler);
 
-myConnection.AddMessageProcessingPlugin(groupsListener);
+// a plugin which was not added is never called, so check the result
+if (myConnection.AddMessageProcessingPlugin(groupsListener) != midi2::MidiMessageProcessingPluginAddResult::Succeeded)
+{
+    return;
+}
 
 // open after setting up the plugin so you don't miss any messages
 myConnection.Open();

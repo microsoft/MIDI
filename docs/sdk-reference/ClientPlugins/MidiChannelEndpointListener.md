@@ -66,7 +66,11 @@ channelsListener.PreventFiringMainMessageReceivedEvent(true);
 
 auto channelMessagesReceivedEventToken = channelsListener.MessageReceived(MyMessageReceivedHandler);
 
-myConnection.AddMessageProcessingPlugin(channelsListener);
+// a plugin which was not added is never called, so check the result
+if (myConnection.AddMessageProcessingPlugin(channelsListener) != midi2::MidiMessageProcessingPluginAddResult::Succeeded)
+{
+    return;
+}
 
 // open after setting up the plugin so you don't miss any messages
 myConnection.Open();
@@ -97,7 +101,11 @@ channelsListener.PreventFiringMainMessageReceivedEvent = true;
 
 channelsListener.MessageReceived += MyMessageReceivedHandler;
 
-myConnection.AddMessageProcessingPlugin(channelsListener);
+// a plugin which was not added is never called, so check the result
+if (myConnection.AddMessageProcessingPlugin(channelsListener) != MidiMessageProcessingPluginAddResult.Succeeded)
+{
+    return;
+}
 
 // open after setting up the plugin so you don't miss any messages
 myConnection.Open();

@@ -1098,6 +1098,7 @@
     <Midl Include="MidiNetworkRemoteClientDisconnectResponse.idl" />
     <Midl Include="MidiNetworkRemoteClientDisconnectConfig.idl" />
     <Midl Include="MidiSendMessageResultsEnum.idl" />
+    <Midl Include="MidiMessageProcessingPluginAddResultEnum.idl" />
     <Midl Include="MidiApi.idl" />
     <Midl Include="MidiApiModeEnum.idl" />
     <Midl Include="MidiSession.idl" />

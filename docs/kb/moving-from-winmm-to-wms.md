@@ -9,6 +9,8 @@ description: Concepts and mapping from the primary MIDI 1 API to Windows MIDI Se
 
 This article is targeted to developers looking to move from WinMM to Windows MIDI Services APIs.
 
+> If you maintain a cross-platform MIDI library, a language binding, or an application framework rather than an application, read this article first and then see [Porting a MIDI Library or Framework to Windows MIDI Services](porting-midi-libraries). That article covers what is different when you have a port-based public API you cannot change, and the WinMM habits which are now defects.
+
 ## Free your mind from MIDI 1.0 constraints
 
 In WinMM, ports are a free-floating entity which have no obvious association with a device. In reality, for USB, they each represent a virtual cable in one of two directions within a MIDI stream from that device. The missing context of the actual device makes WinMM ports slightly more confusing to customers, as they do not always know what the port actually represents. As a result, manufacturers try to stuff as much information as possible within the 31 characters available, but it's still a compromise, and leads to confusion. Many DAWs even include name customization / mapping inside the DAW to get around this.

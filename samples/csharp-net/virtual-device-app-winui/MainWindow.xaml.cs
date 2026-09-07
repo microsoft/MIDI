@@ -130,8 +130,14 @@ namespace MidiSample.AppToAppMidi
                     return false;
                 }
 
-                // necessary for the virtual device to participate in MIDI communication
-                _connection.AddMessageProcessingPlugin(_virtualDevice);
+                // necessary for the virtual device to participate in MIDI communication.
+                // a virtual device is a message processing plugin, so if this is not checked, a
+                // failure here gives you a device which sends correctly and never receives anything.
+                if (_connection.AddMessageProcessingPlugin(_virtualDevice) != MidiMessageProcessingPluginAddResult.Succeeded)
+                {
+                    System.Diagnostics.Debug.WriteLine("StartVirtualDevice failed to add the virtual device to the connection");
+                    return false;
+                }
 
                 // wire up the stream configuration request received handler
                 _virtualDevice.StreamConfigRequestReceived += OnStreamConfigurationRequestReceived;

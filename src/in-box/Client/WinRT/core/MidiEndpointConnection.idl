@@ -14,6 +14,7 @@ import "MidiApiContracts.idl";
 import "IMidiMessageReceivedEventSource.idl";
 import "IMidiEndpointMessageProcessingPlugin.idl";
 import "MidiSendMessageResultsEnum.idl";
+import "MidiMessageProcessingPluginAddResultEnum.idl";
 import "MidiEndpointConnectionSettings.idl";
 import "IMidiEndpointConnectionSource.idl";
 
@@ -42,7 +43,7 @@ namespace Windows.Devices.Midi2
         [noexcept] Boolean Open();
 
         [noexcept] IVectorView<IMidiEndpointMessageProcessingPlugin> MessageProcessingPlugins{ get; };
-        [noexcept] void AddMessageProcessingPlugin(IMidiEndpointMessageProcessingPlugin plugin);
+        [noexcept] MidiMessageProcessingPluginAddResult AddMessageProcessingPlugin(IMidiEndpointMessageProcessingPlugin plugin);
         [noexcept] void RemoveMessageProcessingPlugin(Guid id);
 
         [noexcept] MidiSendMessageResults SendSingleMessagePacket(IMidiUniversalPacket message);

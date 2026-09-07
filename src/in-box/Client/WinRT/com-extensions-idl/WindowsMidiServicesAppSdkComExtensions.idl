@@ -89,6 +89,13 @@ library MidiServicesAppSdkComExtensionsLib
 		// associated with the connection, will not fire. This is designed
 		// solely to be a super fast and efficient callback. You can only
 		// have one callback handler for a given connection.
+		//
+		// Call this before Open() on the connection, and only on a connection
+		// which has no message processing plugins attached. Returns:
+		//   E_INVALIDARG          the callback is null
+		//   E_ILLEGAL_METHOD_CALL the connection has already been opened
+		//   E_ILLEGAL_STATE_CHANGE the connection has message processing
+		//                          plugins attached, which this would bypass
 		HRESULT SetMessagesReceivedCallback(
 			[in, annotation("_In_")] IMidiEndpointConnectionMessagesReceivedCallback* messagesReceivedCallback
 		);

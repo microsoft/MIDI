@@ -31,7 +31,7 @@ System Exclusive is where this comes up. A SysEx7 UMP carries only six data byte
 
 Query the limit for each connection rather than hard-coding it, split only on message boundaries so that no UMP ever spans two transmissions, and stop sending as soon as one transmission fails. Any chunks already accepted have reached the device, so decide in advance how your app recovers from a partial transfer. For System Exclusive, that normally means abandoning the transfer and starting it over.
 
-If you are building a cross-platform framework or a language projection on top of this API, handle the splitting inside your own layer. Applications written against your abstraction usually cannot reach `GetSupportedMaxMidiWordsPerTransmission`, so leaving the job to them means they will hard-code a limit which is not guaranteed to remain correct.
+If you are building a cross-platform framework or a language projection on top of this API, handle the splitting inside your own layer. Applications written against your abstraction usually cannot reach `GetSupportedMaxMidiWordsPerTransmission`, so leaving the job to them means they will hard-code a limit which is not guaranteed to remain correct. More guidance for library and framework authors is in [Porting a MIDI Library or Framework to Windows MIDI Services](porting-midi-libraries).
 
 For the rules and sample code, see [`MidiEndpointConnection`]({{ site.baseurl }}/sdk-reference/MidiEndpointConnection) and [the COM Extensions]({{ site.baseurl }}/sdk-reference/MidiEndpointConnection_COM-Extensions).
 
