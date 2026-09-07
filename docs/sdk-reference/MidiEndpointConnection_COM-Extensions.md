@@ -80,8 +80,23 @@ interface IMidiEndpointConnectionRaw : IUnknown
 | `GetSupportedMaxMidiWordsPerTransmission` | Returns the maximum number of MIDI words which can be sent in a single transmission. This is an alias for the same function on the `MidiEndpointConnection` type, and will return the same value.  |
 | `ValidateBufferHasOnlyCompleteUmps` | Helper function you may optionally use to validate that the buffer you're providing contains only whole UMPs. |
 | `SendMidiMessagesRaw` | Takes a buffer of whole UMPs (UMPs shall not be split across multiple buffers/transmissions) and sends them to the MIDI service. This is done without any addition validation of UMP completeness, and without any additional allocations. It is up to the caller to ensure the data in the buffer is valid and complete. |
-| `SetMessagesReceivedCallback` | Register a callback handler for receiving a buffer of one or more incoming messages. Currently, this is the only way to receive more than one message in a single function call. When the connection has a callback handler attached, it will not fire any message received events, nor will it process any message listeners. |
-| `RemoveMessagesReceivedCallback` | Unregister the callback. This must be done before closing and destroying the connection. |
+| `SetMessagesReceivedCallback` | Register a callback handler for receiving a buffer of one or more incoming messages. Currently, this is the only way to receive more than one message in a single function call. When the connection has a callback handler attached, it will not fire any message received events, nor will it process any message listeners. Must be called before `Open()`, and only on a connection with no message processing plugins attached. See below. |
+| `RemoveMessagesReceivedCallback` | Unregister the callback. This must be done before closing and destroying the connection. Unlike registration, this may be called at any time. |
+
+### When SetMessagesReceivedCallback fails
+
+Registering the callback changes how the whole connection receives messages, so it is only accepted when it can be honored. It returns:
+
+| HRESULT | Meaning |
+| ------- | ------- |
+| `S_OK` | The callback is registered. |
+| `E_INVALIDARG` | The supplied callback pointer was null. |
+| `E_ILLEGAL_METHOD_CALL` | The connection has already been opened. Register the callback first, then call `Open()`. Registering afterwards would mean any messages which arrived in between went down the event path instead, and were dropped. |
+| `E_ILLEGAL_STATE_CHANGE` | The connection has message processing plugins attached. The callback bypasses all of them, so registering it would silently disable work the application has already set up. Remove the plugins first, or use the plugin approach instead. |
+
+The same rule is enforced from the other direction: `MidiEndpointConnection.AddMessageProcessingPlugin` returns `FailedRawCallbackRegistered` when a callback is registered on that connection. See [`MidiMessageProcessingPluginAddResult`]({{ site.baseurl }}/sdk-reference/MidiMessageProcessingPluginAddResultEnum).
+
+Because `MidiVirtualDevice` is implemented as a message processing plugin, this is what stops a virtual device application from accidentally registering a callback and then never receiving anything. A virtual device can still *send* through the COM extensions.
 
 ### Sending more data than fits in a single transmission
 

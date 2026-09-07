@@ -1,0 +1,36 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+
+
+import "MidiApiContracts.idl";
+
+
+namespace Windows.Devices.Midi2
+{
+    [contract(MidiCoreApiContract,1)]
+    enum MidiMessageProcessingPluginAddResult
+    {
+        Succeeded = 0,
+
+        FailedPluginIsNull = 1,
+
+        // The connection has a COM extensions messages received callback registered.
+        // That callback bypasses all message processing plugins, so the plugin would
+        // never be called. Remove the callback first, or use one approach or the other.
+        FailedRawCallbackRegistered = 2,
+
+        // A plugin with this same PluginId has already been added to this connection.
+        FailedPluginAlreadyAdded = 3,
+
+        // The plugin was added, but threw when being initialized, so it may not be
+        // functional. Remove it with RemoveMessageProcessingPlugin if that matters.
+        FailedPluginInitializationError = 4,
+    };
+}

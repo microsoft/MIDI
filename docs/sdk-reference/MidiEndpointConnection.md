@@ -39,7 +39,7 @@ To ensure an application is able to wire up processing plugins and event handler
 | Function | Description |
 | -------- | ----------- |
 | `Open()` | Open the connection and start receiving messages. Wire up the message event handler before calling this method. |
-| `AddMessageProcessingPlugin (plugin)` | Add a message processing plugin to this connection |
+| `AddMessageProcessingPlugin (plugin)` | Add a message processing plugin to this connection. Returns a [`MidiMessageProcessingPluginAddResult`]({{ site.baseurl }}/sdk-reference/MidiMessageProcessingPluginAddResultEnum), which you should check: a plugin which was not added is never called, and that is indistinguishable from an endpoint which is not sending. Add plugins before calling `Open()`. |
 | `RemoveMessageProcessingPlugin (id)` | Remove a message processing plugin from this connection |
 | `GetSupportedMaxMidiWordsPerTransmission` | Returns the maximum number of MIDI words which can be sent in a single call |
 

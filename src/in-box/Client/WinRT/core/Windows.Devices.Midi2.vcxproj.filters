@@ -144,6 +144,9 @@
     <Midl Include="MidiSendMessageResultsEnum.idl">
       <Filter>SDK\Session</Filter>
     </Midl>
+    <Midl Include="MidiMessageProcessingPluginAddResultEnum.idl">
+      <Filter>SDK\Session</Filter>
+    </Midl>
     <Midl Include="MidiEndpointConnectionSettings.idl">
       <Filter>SDK\Session</Filter>
     </Midl>

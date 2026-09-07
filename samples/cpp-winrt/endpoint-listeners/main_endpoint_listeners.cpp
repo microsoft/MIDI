@@ -123,15 +123,23 @@ int main()
     revokeTokens[groupListener2.PluginId()] = groupListener2.MessageReceived(MessageReceivedHandler);
     revokeTokens[groupListenerAllOthers.PluginId()] = groupListenerAllOthers.MessageReceived(MessageReceivedHandler);
 
-    // add the message processing plugins before opening the connection, so the event handlers are ready
-    receiveEndpoint.AddMessageProcessingPlugin(groupListener0);
-    receiveEndpoint.AddMessageProcessingPlugin(groupListener1);
-    receiveEndpoint.AddMessageProcessingPlugin(groupListener2);
-    receiveEndpoint.AddMessageProcessingPlugin(groupListenerAllOthers);
+    // add the message processing plugins before opening the connection, so the event handlers are ready.
+    // a plugin which was not added is never called, and that looks exactly like an endpoint which is
+    // not sending anything, so check the result rather than assuming it worked.
+    bool allListenersAdded{ true };
+
+    for (auto const& listener : { groupListener0, groupListener1, groupListener2, groupListenerAllOthers })
+    {
+        if (receiveEndpoint.AddMessageProcessingPlugin(listener) != MidiMessageProcessingPluginAddResult::Succeeded)
+        {
+            std::wcout << L"Unable to add listener: " << listener.PluginName().c_str() << std::endl;
+            allListenersAdded = false;
+        }
+    }
 
     std::wcout << std::endl << L"Opening endpoint connection..." << std::endl;
 
-    if (receiveEndpoint.Open())
+    if (allListenersAdded && receiveEndpoint.Open())
     {
         std::wcout << std::endl << L"Connection opened." << std::endl;
         std::wcout << std::endl << L"Send messages to this endpoint from an external program or device and hit enter when done." << std::endl;

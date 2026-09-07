@@ -124,12 +124,6 @@ int main()
     std::wcout << std::endl << L"Opening endpoint connection" << std::endl;
 
 
-    if (!connSend.Open() || !connReceive.Open())
-    {
-        std::wcout << L"Unable to open one or both endpoints" << std::endl;
-        return 1;
-    }
-
     // "as" is a C++/WinRT shortcut for QueryInterface
     auto receiveConnectionExtension = connReceive.as<IMidiEndpointConnectionRaw>();
     if (receiveConnectionExtension == nullptr)
@@ -153,8 +147,22 @@ int main()
 
     // when you use the Callback, no message listeners or receive events will fire.
     // That means you cannot use this with, for example, a Virtual Device, or a 
-    // MidiChannelEndpointListener, or with the normal messages received event
-    receiveConnectionExtension->SetMessagesReceivedCallback(comExtensionsHandler.get());
+    // MidiChannelEndpointListener, or with the normal messages received event.
+    // For that same reason, this has to be set up before the connection is opened,
+    // and the call fails if the connection is already open or already has any
+    // message processing plugins attached.
+    if (FAILED(receiveConnectionExtension->SetMessagesReceivedCallback(comExtensionsHandler.get())))
+    {
+        std::wcout << L"Unable to set the messages received callback" << std::endl;
+        return 1;
+    }
+
+
+    if (!connSend.Open() || !connReceive.Open())
+    {
+        std::wcout << L"Unable to open one or both endpoints" << std::endl;
+        return 1;
+    }
 
 
     std::wcout << std::endl << L"Creating messages" << std::endl;

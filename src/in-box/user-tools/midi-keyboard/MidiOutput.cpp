@@ -136,7 +136,10 @@ namespace midikeyboard
 
             // this is what associates the virtual device with the connection; the client
             // endpoint other applications see is created when the connection opens
-            connection.AddMessageProcessingPlugin(virtualDevice);
+            if (connection.AddMessageProcessingPlugin(virtualDevice) != midi2::MidiMessageProcessingPluginAddResult::Succeeded)
+            {
+                return ConnectResult::VirtualDeviceFailed;
+            }
 
             if (!connection.Open())
             {

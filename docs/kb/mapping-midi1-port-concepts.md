@@ -46,6 +46,8 @@ MIDI 2.0 devices typically support Function Blocks, which are named entities whi
 
 > The enumeration support in `MidiEndpointDeviceInformation` also supports projecting a Group Terminal Block (a USB concept) to its equivalent Function Block. So if Function Blocks are not available natively from the MIDI 2.0 device, you can still work with the same entity as projected from the Group Terminal Block.
 
+When an endpoint reports both kinds of block, use the Function Blocks and ignore the Group Terminal Blocks. They are two descriptions of the same endpoint at different levels of authority, not two sets of ports, so merging them produces a doubled list. The precedence rule and the code to implement it are in [Porting a MIDI Library or Framework to Windows MIDI Services](porting-midi-libraries).
+
 Group Terminal Blocks are only for USB devices, but they are also static. They do not change at runtime, but a device could potentially create different ones the next time it is created (most do not).
 
 So when presenting the information to your users, one possible format would be

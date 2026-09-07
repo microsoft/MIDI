@@ -202,7 +202,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
             return m_messageProcessingPlugins.GetView();
         }
 
-        void AddMessageProcessingPlugin(_In_ midi2::IMidiEndpointMessageProcessingPlugin const& plugin);
+        midi2::MidiMessageProcessingPluginAddResult AddMessageProcessingPlugin(_In_ midi2::IMidiEndpointMessageProcessingPlugin const& plugin);
         void RemoveMessageProcessingPlugin(_In_ winrt::guid id);
 
         // public open method
