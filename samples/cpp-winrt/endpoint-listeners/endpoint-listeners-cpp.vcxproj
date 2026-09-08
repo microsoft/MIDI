@@ -3,7 +3,6 @@
   <Import Project="..\packages\Windows.Devices.Midi2.0.99.67-devpreview.7\build\native\Windows.Devices.Midi2.props" Condition="Exists('..\packages\Windows.Devices.Midi2.0.99.67-devpreview.7\build\native\Windows.Devices.Midi2.props')" />
   <Import Project="..\packages\Microsoft.Windows.CppWinRT.3.0.260520.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\packages\Microsoft.Windows.CppWinRT.3.0.260520.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <PropertyGroup Label="Globals">
-    <WindowsMidiServicesSdkPackage>Microsoft.Windows.Devices.Midi2.1.0.23-rc.5.17</WindowsMidiServicesSdkPackage>
     <CppWinRTOptimized>true</CppWinRTOptimized>
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
     <CppWinRTGenerateWindowsMetadata>false</CppWinRTGenerateWindowsMetadata>

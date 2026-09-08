@@ -5,7 +5,7 @@ audience: developers
 description: Guidance for maintainers of cross-platform MIDI libraries, language bindings, and application frameworks which wrap the operating system MIDI API
 ---
 
-<!-- Short link for this page: aka.ms/MidiLibraryPorting (to be created) -->
+<!-- Short link for this page: aka.ms/MidiLibraryPorting -->
 
 # Porting a MIDI Library or Framework to Windows MIDI Services
 
@@ -222,6 +222,8 @@ Everything in [the threading section of the WinMM article](moving-from-winmm-to-
 
 **Do your MIDI work on a thread you own, initialized MTA, rather than on whichever thread the host happened to call you on.** A user interface thread is usually STA, and service startup can take several seconds, which is long enough for the host's window to be reported as unresponsive. Owning the thread also means the apartment model is yours to decide.
 
+If you still have a WinMM backend, there is a second reason the thread should be yours: a `midiOutLongMsg` carrying a large System Exclusive message can block until the transfer has essentially finished. Over a MIDI DIN connection at 31250 baud that is a long time, and it scales with the size of the dump. Firmware updaters and patch librarians are where this shows up.
+
 When shutting down, fully release and reset every COM reference before you uninitialize the apartment. Releasing them in the wrong order, or leaving one alive, can crash at process exit, and that crash will be reported against the host application rather than against you. Uninitializing the apartment is optional, especially when shutting down.
 
 ## Habits from WinMM that are now defects
@@ -240,7 +242,11 @@ The same is true on the new API: add your listeners or register your COM callbac
 
 ### Freeing a `MIDIHDR` buffer without unpreparing it
 
-**Call `midiOutUnprepareHeader` and wait for the completion notification before freeing the buffer.** Freeing on the success return of `midiOutLongMsg` was tolerable when the driver consumed the buffer synchronously. It is not something the API ever guaranteed, and it is not something you should rely on across an RPC boundary. The failure mode is a use-after-free that depends on timing, so it will not show up in your tests and will show up in a customer's crash dump.
+**Unprepare the header before you free the buffer, and act on what unprepare tells you.** The usual shortcut is to free on the success return of `midiOutLongMsg` and never unprepare at all. Some libraries unprepare only when the send *fails*, which is backwards: the failing path is the one where the driver never took the buffer in the first place.
+
+The contract is that the driver may still own the buffer after `midiOutLongMsg` returns. That is what `MHDR_INQUEUE`, the `MOM_DONE` callback and the `MIDIERR_STILLPLAYING` return value exist to express. **If `midiOutUnprepareHeader` returns `MIDIERR_STILLPLAYING`, the driver has not finished with the buffer and you must not free it**, so discarding that return value throws away the one signal that would have told you.
+
+This matters more for a library than for an application, because you do not control which driver is underneath you. WinMM still supports third-party `.drv` drivers, and how eagerly any particular one consumes a buffer is not something you can probe for or rely on. Write to the contract and you are correct everywhere. Write to the behavior of whichever driver you happened to test against and you are correct until your user installs something else.
 
 ### Closing a handle that was never opened
 
@@ -348,6 +354,7 @@ If you still have a WinMM backend:
 
 ## Getting help
 
+- The short link for this page is [aka.ms/MidiLibraryPorting](https://aka.ms/MidiLibraryPorting). Use it when citing this article, as it will keep working if the page moves.
 - Issues, questions and corrections to this page: [github.com/microsoft/MIDI/issues](https://github.com/microsoft/MIDI/issues)
 - Samples in several languages: [aka.ms/midisamples](https://aka.ms/midisamples)
 - The Windows MIDI Services Discord is the fastest way to reach the team and other implementers; the invitation link is on the [repository home page](https://aka.ms/midirepo)
