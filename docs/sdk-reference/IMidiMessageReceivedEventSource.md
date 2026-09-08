@@ -24,5 +24,5 @@ If you need to do long-running processing of incoming messages, add them to your
 
 | Method | Description |
 | -------- | ----------- |
-| `GetEndpointConnectionSource()` | Returns the [`IMidiEndpointConnectionSource`](./IMidiEndpointConnectionSource.md) that owns this message source. |
+| `GetEndpointConnectionSource()` | Returns the [`IMidiEndpointConnectionSource`]({{ site.baseurl }}/sdk-reference/IMidiEndpointConnectionSource/) that owns this message source. |
 

@@ -64,7 +64,7 @@ There's a Plug & Play bug in Windows right now which **may cause your choice to 
 
 This does mean you will likely have to repeat these steps in the future.
 
-It that becomes a problem, and you don't need the new MIDI features, you can switch to the old API mode by [following the instructions here](how-to-change-api-mode.md). In that case, the device will only be allowed to use the older driver.
+It that becomes a problem, and you don't need the new MIDI features, you can switch to the old API mode by [following the instructions here]({{ site.baseurl }}/kb/how-to-change-api-mode/). In that case, the device will only be allowed to use the older driver.
 
 # Important Note on Hubs and unplugging/replugging devices without iSerialNumber
 

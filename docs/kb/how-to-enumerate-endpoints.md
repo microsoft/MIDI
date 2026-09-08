@@ -7,7 +7,7 @@ description: How to list the Windows MIDI Services endpoints in your application
 
 Sometimes, an application wants to get a snapshot of active endpoints. For example, the MIDI console application does this when it presents a list of devices to pick from. This process is called enumeration.
 
-> Enumerating endpoints one time is good only for a brief snapshot listing. If you want to have a list of devices that is always up to date when devices are plugged/unplugged, come into range, have property updates, etc., see the [how to watch endpoints](how-to-watch-endpoints.html) topic.
+> Enumerating endpoints one time is good only for a brief snapshot listing. If you want to have a list of devices that is always up to date when devices are plugged/unplugged, come into range, have property updates, etc., see the [how to watch endpoints]({{ site.baseurl }}/kb/how-to-watch-endpoints/) topic.
 
 ```cpp
 auto endpointList = MidiEndpointDeviceInformation::FindAll();

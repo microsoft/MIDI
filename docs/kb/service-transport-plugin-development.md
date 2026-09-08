@@ -229,7 +229,7 @@ Recommendations:
 
 Reference:
 
-- [Why a Service Plugin may not load correctly](service-plugin-not-loaded)
+- [Why a Service Plugin may not load correctly]({{ site.baseurl }}/kb/service-plugin-not-loaded/)
 
 ## Recommended installation location
 
@@ -269,7 +269,7 @@ For signing policy and development-mode bypass guidance, see the Code signing an
 
 Reference:
 
-- [Why a Service Plugin may not load correctly](service-plugin-not-loaded)
+- [Why a Service Plugin may not load correctly]({{ site.baseurl }}/kb/service-plugin-not-loaded/)
 
 ## Threading model and reentrancy
 

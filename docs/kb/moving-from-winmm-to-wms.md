@@ -126,7 +126,7 @@ In WinMM, the only persistent identifier we gave you was the port name. That mea
 
 In Windows MIDI Services, you have other ways to identify endpoints, using parent device information, unique identifiers, and more. While there is no one solution which will fit every scenario, we recommend, at a minimum, using these as a backup to ensure users are not punished for choosing more meaningful names for their devices.
 
-More [information about some of the identifiers here](.\identifiers.md) and more [information on names here](.\midi1-name-mapping.md). 
+More [information about some of the identifiers here]({{ site.baseurl }}/kb/identifiers/) and more [information on names here]({{ site.baseurl }}/kb/midi1-name-mapping/). 
 
 ## Connecting to a source or destination
 

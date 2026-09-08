@@ -45,7 +45,7 @@ MIDI devices come and go based on connecting/disconnecting USB cables, or new ne
 
 There's no API or service reason to require a customer to reboot or reload/restart a MIDI DAW or other application to see newly added endpoints when using Windows MIDI Services.
 
-For more information, see the [How to Watch Endpoints](how-to-watch-endpoints) page.
+For more information, see the [How to Watch Endpoints]({{ site.baseurl }}/kb/how-to-watch-endpoints/) page.
 
 ### Don't include diagnostics endpoints for most apps
 

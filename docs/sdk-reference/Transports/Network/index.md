@@ -7,7 +7,7 @@ description: Namespace for creating and managing Network MIDI 2.0 (UDP) hosts an
 
 Types for creating, removing, and monitoring Network MIDI 2.0 hosts and client connections at runtime, and for discovering Network MIDI 2.0 hosts advertised on the local network.
 
-Everything here is reached through the static [MidiNetworkTransportManager](MidiNetworkTransportManager) class.
+Everything here is reached through the static [MidiNetworkTransportManager]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkTransportManager/) class.
 
 ## Definitions
 
@@ -29,16 +29,16 @@ A single PC can be both at the same time.
 
 **Creating a host so other devices can connect to this PC**
 
-1. Fill in a [MidiNetworkHostCreationConfig](MidiNetworkHostCreationConfig)
+1. Fill in a [MidiNetworkHostCreationConfig]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkHostCreationConfig/)
 2. `await MidiNetworkTransportManager.CreateNetworkHostAsync(config)`
-3. Check `Success` on the returned [MidiNetworkHostCreationResponse](MidiNetworkHostCreationResponse)
+3. Check `Success` on the returned [MidiNetworkHostCreationResponse]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkHostCreationResponse/)
 
 `CreateNetworkHostAsync` does not return until the host is actually running, so a successful result means the host is live and, if requested, advertising.
 
 **Connecting to a remote host**
 
-1. Discover hosts with a [MidiNetworkAdvertisedHostWatcher](MidiNetworkAdvertisedHostWatcher), or address one directly
-2. Fill in a [MidiNetworkClientConnectConfig](MidiNetworkClientConnectConfig) with a [MidiNetworkClientMatchCriteria](MidiNetworkClientMatchCriteria)
+1. Discover hosts with a [MidiNetworkAdvertisedHostWatcher]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkAdvertisedHostWatcher/), or address one directly
+2. Fill in a [MidiNetworkClientConnectConfig]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkClientConnectConfig/) with a [MidiNetworkClientMatchCriteria]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkClientMatchCriteria/)
 3. `await MidiNetworkTransportManager.ConnectNetworkClientAsync(config)`
 
 **Approving remote clients**
@@ -57,7 +57,7 @@ Once a client has been configured, the service manages the connection for you. W
 
 A direct address is never retried on a timer. Nothing announces that a fixed IP address has come back, so polling it would put invitations on the wire indefinitely for every unreachable address in a user's configuration. To retry one, call `ConnectNetworkClientAsync` again with the same `ClientId` — for an entry which already exists, this acts as an "it is reachable now, try again" signal.
 
-Use [MidiNetworkConfiguredClient](MidiNetworkConfiguredClient).`EntryState` to surface this in a UI. See [MidiNetworkClientEntryState](MidiNetworkClientEntryStateEnum).
+Use [MidiNetworkConfiguredClient]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkConfiguredClient/).`EntryState` to surface this in a UI. See [MidiNetworkClientEntryState]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkClientEntryStateEnum/).
 
 ## Persistence
 

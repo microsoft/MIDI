@@ -31,7 +31,7 @@ The two static functions are factory-pattern methods for creating a new session.
 | Method | Description |
 | ------ | ----------- |
 | `CreateEndpointConnection(endpointDeviceId)` | Create a new connection to the specified endpoint device Id |
-| `CreateEndpointConnection(endpointDeviceId, settings)` | Create a new connection to the specified endpoint device Id, with the provided [`MidiEndpointConnectionSettings`](./MidiEndpointConnectionSettings.md) |
+| `CreateEndpointConnection(endpointDeviceId, settings)` | Create a new connection to the specified endpoint device Id, with the provided [`MidiEndpointConnectionSettings`]({{ site.baseurl }}/sdk-reference/MidiEndpointConnectionSettings/) |
 | `DisconnectEndpointConnection(endpointConnectionId)` | Cleanly disconnect an endpoint connection and remove it from the connection map |
 | `UpdateName(newName)` | Update the name of this session locally and in the MIDI Service |
 

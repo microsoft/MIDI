@@ -173,6 +173,6 @@ If you need to do long-running processing of incoming messages, add them to your
 
 ## Sample
 
-Here's an excerpt from the full "API client basics" sample. It shows sending and receiving messages using the two built-in loopback endpoints. For more information on the loopback endpoints, see [diagnostics endpoints](../../endpoints/diagnostic-endpoints.md).
+Here's an excerpt from the full "API client basics" sample. It shows sending and receiving messages using the two built-in loopback endpoints. For more information on the loopback endpoints, see [diagnostics endpoints]({{ site.baseurl }}/kb/diagnostic-endpoints/).
 
 Complete examples [available on Github](https://aka.ms/midirepo)

@@ -34,7 +34,7 @@ The best experience for Windows MIDI Services will be with applications using th
 
 Endpoints for this transport are not created through the configuration file, but certain properties, such as the name and description, are updatable through it.
 
-[Please read the article about the config file for rules about using or editing the config file](config-json.md)
+[Please read the article about the config file for rules about using or editing the config file]({{ site.baseurl }}/kb/config-json/)
 
 ```json
 "endpointTransportPluginSettings":

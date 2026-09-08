@@ -6,7 +6,7 @@ type: runtimeclass
 description: The settings which apply to the Network MIDI 2.0 transport as a whole, rather than to any one host or client
 ---
 
-Read the current values with [MidiNetworkTransportManager](MidiNetworkTransportManager).`GetTransportSettings()`, change what you need, then send the object back to apply it.
+Read the current values with [MidiNetworkTransportManager]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkTransportManager/).`GetTransportSettings()`, change what you need, then send the object back to apply it.
 
 This class implements [IMidiServiceTransportPluginConfig]({{ site.baseurl }}/sdk-reference/ServiceConfig/IMidiServiceTransportPluginConfig), so the same object is passed to `MidiServiceTransportPluginConfigManager.SendUpdate` to apply it now, or `SaveUpdate` to also keep it across a service restart.
 
@@ -46,6 +46,6 @@ Lowering `MaxHostConnections` does not disconnect clients which are already conn
 
 ## See also
 
-- [MidiNetworkTransportManager](MidiNetworkTransportManager)
+- [MidiNetworkTransportManager]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkTransportManager/)
 - [MidiServiceTransportPluginConfigManager]({{ site.baseurl }}/sdk-reference/ServiceConfig/MidiServiceTransportPluginConfigManager)
 - [How Network MIDI 2.0 works in Windows]({{ site.baseurl }}/kb/network-midi2-transport/)

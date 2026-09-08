@@ -166,8 +166,8 @@ The two pages are checked separately, so it's normal for one to work while the o
 ## Learn more
 
 For the technical detail of how each kind of loopback is implemented, and how they appear in the
-configuration file, see [About the MIDI 2.0 Loopback Transport](../../kb/virtual-loopback.md) and
-[About the MIDI 1.0 Basic Loopback Transport](../../kb/virtual-basic-midi1-loopback.md).
+configuration file, see [About the MIDI 2.0 Loopback Transport]({{ site.baseurl }}/kb/virtual-loopback/) and
+[About the MIDI 1.0 Basic Loopback Transport]({{ site.baseurl }}/kb/virtual-basic-midi1-loopback/).
 
 To watch what's actually traveling through a loopback, point
 [MIDI Monitor]({{ site.baseurl }}/tools/midi2monitor/) at one end of it. To send something through

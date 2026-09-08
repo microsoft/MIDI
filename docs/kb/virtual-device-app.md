@@ -45,4 +45,4 @@ The best experience for Windows MIDI Services will be with applications using th
 
 Virtual Devices cannot be specified in the configuration file. Instead, applications must create them through code.
 
-For developer information on how to set up a Virtual Device, see the [developer how-to](how-to-create-virtual-ump-device).
+For developer information on how to set up a Virtual Device, see the [MIDI code samples](https://aka.ms/midisamples).

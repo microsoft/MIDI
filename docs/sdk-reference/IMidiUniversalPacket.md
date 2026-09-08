@@ -13,8 +13,8 @@ This interface is implemented by the `MidiMessageXX` runtime class types. It may
 | Property | Description |
 | -------- | ----------- |
 | `Timestamp` | 64 bit timestamp set by the receiving transport in the case of incoming messages, or by the sender in the case of outgoing messages |
-| `MessageType` | A [MidiMessageType enumeration value](./MidiMessageTypeEnum.md) which represents the 4 bit MIDI Message type 0x0 - 0xF as defined by the MIDI UMP standard. |
-| `PacketType` | A [MidiPacketType enumeration value](./MidiPacketTypeEnum.md) which can be cast to an int to get the number of 32-bit words in the message packet |
+| `MessageType` | A [MidiMessageType enumeration value]({{ site.baseurl }}/sdk-reference/MidiMessageTypeEnum/) which represents the 4 bit MIDI Message type 0x0 - 0xF as defined by the MIDI UMP standard. |
+| `PacketType` | A [MidiPacketType enumeration value]({{ site.baseurl }}/sdk-reference/MidiPacketTypeEnum/) which can be cast to an int to get the number of 32-bit words in the message packet |
 
 ## Functions
 
