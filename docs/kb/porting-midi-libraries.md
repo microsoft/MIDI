@@ -9,7 +9,7 @@ description: Guidance for maintainers of cross-platform MIDI libraries, language
 
 # Porting a MIDI Library or Framework to Windows MIDI Services
 
-This article is for you if you maintain something that other people build applications on top of: a cross-platform MIDI library, a language binding, a game engine subsystem, or an application framework. It assumes you already read [Moving from WinMM to Windows MIDI Services](moving-from-winmm-to-wms), and it covers only the parts that are different when you are the layer in the middle rather than the application.
+This article is for you if you maintain something that other people build applications on top of: a cross-platform MIDI library, a language binding, a game engine subsystem, or an application framework. It assumes you already read [Moving from WinMM to Windows MIDI Services]({{ site.baseurl }}/kb/moving-from-winmm-to-wms/), and it covers only the parts that are different when you are the layer in the middle rather than the application.
 
 The difference is not academic. That article opens by telling you to stop thinking in terms of ports. You cannot do that. Your public API almost certainly has a type called `MidiIn` or `MidiOutputPort` or `open_port(index)`, and there are applications in the world pinned to it. Breaking that to model UMP endpoints faithfully is usually not an option, and we are not going to pretend otherwise. What follows is how to sit honestly on top of endpoints while continuing to present ports to your callers, and which of your existing habits will now cause defects.
 
@@ -23,7 +23,7 @@ You will find sample code, blog posts, and existing library backends which refer
 
 The type names in the two namespaces are largely identical, which makes this more dangerous than it sounds. **Do not copy sample code from one to the other without changing the namespace, and never mix the two in a single build.** A mixed build reports type mismatches which point at the wrong line, and the mistake survives review because every individual line looks correct.
 
-Note also that Windows 11 24H2 leaves support in October 2026, and so will not receive the in-box API or any further updates and fixes to the in-box transports. That boundary is what your library's documented version floor needs to reflect. See [minimum requirements](minimum-requirements).
+Note also that Windows 11 24H2 leaves support in October 2026, and so will not receive the in-box API or any further updates and fixes to the in-box transports. That boundary is what your library's documented version floor needs to reflect. See [minimum requirements]({{ site.baseurl }}/kb/minimum-requirements/).
 
 ## The decision to make before you write any code: COM Extensions or the WinRT connection API
 
@@ -151,7 +151,7 @@ If your library is used by an application which has genuinely separate logical u
 
 Wire your handlers up first, then call `Start()`. `EnumerationCompleted` tells you when the initial list is complete, which is the right moment to hand a first list to the application. `Added`, `Removed` and `Updated` keep it correct after that, and `Updated` matters far more than it did with the older APIs because in-protocol endpoint information and user configuration both cause it to fire.
 
-There is also a `MidiEndpointDeviceWatcher` sibling for legacy ports if you continue to support a WinMM backend: see [Moving from WinMM to Windows MIDI Services](moving-from-winmm-to-wms).
+There is also a `MidiEndpointDeviceWatcher` sibling for legacy ports if you continue to support a WinMM backend: see [Moving from WinMM to Windows MIDI Services]({{ site.baseurl }}/kb/moving-from-winmm-to-wms/).
 
 ### Function blocks and group terminal blocks: precedence, not union
 
@@ -216,7 +216,7 @@ Worked examples for both paths are in [`MidiEndpointConnection`]({{ site.baseurl
 
 ## Threading and apartments
 
-Everything in [the threading section of the WinMM article](moving-from-winmm-to-wms) applies, with one addition that is specific to being a library.
+Everything in [the threading section of the WinMM article]({{ site.baseurl }}/kb/moving-from-winmm-to-wms/) applies, with one addition that is specific to being a library.
 
 **Initializing the WinRT and COM apartment is per thread, not per process.** You cannot assume the host application has done it, and you cannot assume it has not. If the host already initialized that thread with a different apartment model, your initialization call will fail, and if you treat that as fatal you will break on exactly the hosts that were most careful.
 
@@ -307,7 +307,7 @@ You can get real coverage in CI on a machine with no MIDI devices attached.
 - Call `MidiApi::EnsureServiceAvailable()` first and skip rather than fail if it returns false, so that a machine with the service disabled or in legacy API mode produces a clear skip instead of a confusing failure.
 - The two cross-wired diagnostic loopback endpoints are always present when the service is running, and give you a genuine round trip through the service, including the cross-process buffer. That is enough to test your send path, your receive path, your splitting logic and your shutdown ordering. (Send to A, receive on B. Send to B, receive on A)
 - Loopback endpoints and virtual devices let you construct multi-group endpoints on demand, which is how you test the group filtering and port emulation described above without owning a device that has eight cables.
-- The `midi` console tool that ships with Windows MIDI Services can enumerate endpoints and show properties, which is useful for asserting from a test script what your library should be seeing. `midi endpoint properties <id> --verbose --verbose` shows both function blocks and group terminal blocks; without `--verbose` the group terminal blocks are deliberately hidden when function blocks are present, which will mislead you if you are using the console to check your precedence logic.
+- The `midi` console tool that ships with Windows MIDI Services can enumerate endpoints and show properties, which is useful for asserting from a test script what your library should be seeing. `midi endpoint properties <id> --verbose` shows both function blocks and group terminal blocks; without `--verbose` the group terminal blocks are deliberately hidden when function blocks are present, which will mislead you if you are using the console to check your precedence logic.
 - Windows MIDI Services runs on Arm64, and Arm64 is a first-class citizen with Windows 11. If your library ships Arm64 binaries, run at least the enumeration and loopback tests there too.
 
 ## Checklist

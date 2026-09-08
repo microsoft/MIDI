@@ -9,7 +9,7 @@ description: Concepts and mapping from the primary MIDI 1 API to Windows MIDI Se
 
 This article is targeted to developers looking to move from WinMM to Windows MIDI Services APIs.
 
-> If you maintain a cross-platform MIDI library, a language binding, or an application framework rather than an application, read this article first and then see [Porting a MIDI Library or Framework to Windows MIDI Services](porting-midi-libraries). That article covers what is different when you have a port-based public API you cannot change, and the WinMM habits which are now defects.
+> If you maintain a cross-platform MIDI library, a language binding, or an application framework rather than an application, read this article first and then see [Porting a MIDI Library or Framework to Windows MIDI Services]({{ site.baseurl }}/kb/porting-midi-libraries/). That article covers what is different when you have a port-based public API you cannot change, and the WinMM habits which are now defects.
 
 ## Free your mind from MIDI 1.0 constraints
 
