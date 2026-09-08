@@ -17,8 +17,8 @@
 // it means exactly what it means everywhere else in this API: an absolute value
 // on the MidiClock::Now() timeline, not a delay.
 //
-// Pass MidiClock::TimestampConstantSendImmediately(), or simply zero, when you
-// want a message to go out as soon as possible.
+// Use MidiClock::TimestampConstantSendImmediately() when you want a message to go
+// out as soon as possible, rather than passing a literal zero.
 
 #include <iostream>
 #include <thread>

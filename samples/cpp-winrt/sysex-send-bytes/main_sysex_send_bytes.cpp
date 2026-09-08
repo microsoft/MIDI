@@ -113,9 +113,10 @@ int main()
     }
 
     // All of these words belong to one logical transfer, so they go out together
-    // with a single timestamp. Zero means "send immediately".
+    // with a single timestamp. Use the constant rather than a literal zero, so the
+    // intent is obvious and you are not depending on the value staying what it is.
     MidiSendMessageResults result =
-        connection.SendMultipleMessagesWordList(0, words);
+        connection.SendMultipleMessagesWordList(MidiClock::TimestampConstantSendImmediately(), words);
 
     if (MidiEndpointConnection::SendMessageSucceeded(result))
     {
