@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <WindowsSDKPackageVersion>10.0.26100.57</WindowsSDKPackageVersion>
+    <RootNamespace>sysex_file_receiver_cs</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <Platforms>x64;ARM64</Platforms>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <CSWinRTInputs>Windows.Devices.Midi2</CSWinRTInputs>
+    <CsWinRTIncludes>Windows.Devices.Midi2</CsWinRTIncludes>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
+    <PackageReference Include="Windows.Devices.Midi2" Version="0.99.67-devpreview.7" />
+  </ItemGroup>
+
+    <!-- For versioning info: https://learn.microsoft.com/en-us/nuget/concepts/dependency-resolution#floating-versions -->
+
+</Project>
