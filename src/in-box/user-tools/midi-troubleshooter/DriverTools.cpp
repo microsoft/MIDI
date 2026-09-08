@@ -8,6 +8,7 @@
 #include "pch.h"
 #include "DriverTools.h"
 #include "ProcessRunner.h"
+#include "ServiceControl.h"
 #include "StringResources.h"
 #include "ToolPaths.h"
 
@@ -370,6 +371,62 @@ namespace miditroubleshooter
                 deviceInfoSet.Handle, instanceId.c_str(), nullptr, 0, &deviceInfoData) != FALSE;
         }
 
+        // DiInstallDevice's NeedReboot is a reliable yes and an unreliable no: it is set when the
+        // install could not complete in place, and says nothing about whether the device stack
+        // actually rebuilt or about what the MIDI service is still holding. So the devnode is
+        // asked as well, and anything that cannot be read is treated as the worst case.
+        DriverChangeFollowUp EvaluateDriverChangeFollowUp(
+            _In_ HDEVINFO const deviceInfoSet,
+            _In_ SP_DEVINFO_DATA& deviceInfoData,
+            _In_ DeviceDriverKind const requestedKind,
+            _In_ bool const installerAskedForReboot) noexcept
+        {
+            if (installerAskedForReboot)
+            {
+                return DriverChangeFollowUp::RestartWindows;
+            }
+
+            SP_DEVINSTALL_PARAMS_W installParams{};
+            installParams.cbSize = sizeof(installParams);
+
+            if (::SetupDiGetDeviceInstallParamsW(deviceInfoSet, &deviceInfoData, &installParams) &&
+                (installParams.Flags & (DI_NEEDREBOOT | DI_NEEDRESTART)) != 0)
+            {
+                return DriverChangeFollowUp::RestartWindows;
+            }
+
+            ULONG status{ 0 };
+            ULONG problem{ 0 };
+
+            if (::CM_Get_DevNode_Status(&status, &problem, deviceInfoData.DevInst, 0) != CR_SUCCESS)
+            {
+                return DriverChangeFollowUp::RestartWindows;
+            }
+
+            if ((status & DN_NEED_RESTART) != 0 || problem == CM_PROB_NEED_RESTART)
+            {
+                return DriverChangeFollowUp::RestartWindows;
+            }
+
+            if ((status & DN_STARTED) == 0 || (status & DN_HAS_PROBLEM) != 0)
+            {
+                return DriverChangeFollowUp::ReplugDevice;
+            }
+
+            auto const boundTo = KindFromInfName(GetDeviceStringProperty(
+                deviceInfoSet, deviceInfoData, DEVPKEY_Device_DriverInfPath));
+
+            if (boundTo != requestedKind)
+            {
+                return DriverChangeFollowUp::ReplugDevice;
+            }
+
+            // The device is live on the new driver. A running service is still using the endpoints
+            // it built for the old one; a stopped service builds fresh the next time it starts.
+            return QueryMidiServiceStatus().State == ServiceState::Running ?
+                DriverChangeFollowUp::RestartMidiService : DriverChangeFollowUp::None;
+        }
+
         // The INF's own text, used to tell one vendor package from another by the driver file
         // it installs. The published oemNN.inf name is assigned in install order and says
         // nothing about which driver it is.
@@ -678,7 +735,10 @@ namespace miditroubleshooter
             }
 
             result.Succeeded = true;
-            result.RebootRequired = rebootRequired != FALSE;
+
+            result.FollowUp = EvaluateDriverChangeFollowUp(
+                deviceInfoSet.Handle, deviceInfoData, kind, rebootRequired != FALSE);
+
             result.Message = res::GetString(L"DriversDriverChanged");
         }
         catch (winrt::hresult_error const& ex)
@@ -820,7 +880,7 @@ namespace miditroubleshooter
                 else if (run.Started && run.ExitCode == 3010)
                 {
                     // ERROR_SUCCESS_REBOOT_REQUIRED
-                    result.RebootRequired = true;
+                    result.FollowUp = DriverChangeFollowUp::RestartWindows;
 
                     result.Details.push_back(res::FormatString(
                         L"DriversRemovedPackageFormat", winrt::hstring{ package.PublishedName }));

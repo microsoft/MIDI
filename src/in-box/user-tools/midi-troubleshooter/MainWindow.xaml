@@ -1010,6 +1010,7 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
                         <!-- text first, so it lines up with the cards above whether or not the
@@ -1025,6 +1026,11 @@
                                    TextWrapping="Wrap"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                    Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                        <!-- outcome of the last driver change. Kept out of the status text, which
+                             the next refresh overwrites. -->
+                        <InfoBar x:Name="DriverFollowUpInfoBar" Grid.Row="2" Grid.Column="0"
+                                 Grid.ColumnSpan="2" Margin="0,8,0,0" IsOpen="False" />
                     </Grid>
 
                     <ListView x:Name="DriversListView" Grid.Row="3"
@@ -1102,6 +1108,25 @@
                                CloseButtonText="Later"
                                DefaultButton="Close">
                     <TextBlock x:Name="RestartComputerDialogText" TextWrapping="Wrap" />
+                </ContentDialog>
+
+                <ContentDialog x:Name="RestartServiceDialog"
+                               x:Uid="RestartServiceDialog"
+                               Title="Restart the MIDI service?"
+                               PrimaryButtonText="Restart the service"
+                               CloseButtonText="Later"
+                               DefaultButton="Close">
+                    <ScrollViewer MaxHeight="360">
+                        <TextBlock x:Name="RestartServiceDialogText" TextWrapping="Wrap" IsTextSelectionEnabled="True" />
+                    </ScrollViewer>
+                </ContentDialog>
+
+                <ContentDialog x:Name="ReplugDeviceDialog"
+                               x:Uid="ReplugDeviceDialog"
+                               Title="Unplug the device"
+                               CloseButtonText="OK"
+                               DefaultButton="Close">
+                    <TextBlock x:Name="ReplugDeviceDialogText" TextWrapping="Wrap" />
                 </ContentDialog>
             </Grid>
         </NavigationView>
