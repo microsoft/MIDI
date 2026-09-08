@@ -159,7 +159,7 @@ This is the rule:
 
 > **When an endpoint declares function blocks, use them and ignore the group terminal blocks. When it declares none, fall back to group terminal blocks. Never merge the two.**
 
-They are two descriptions of the same endpoint at different levels of authority, not two sets of ports. Merging them produces a doubled port list in which the user cannot tell which of two identical-looking entries is the real one.
+They are two views of the same endpoint at different levels of authority, not two sets of ports. Merging them produces a doubled port list in which the user cannot tell which of two identical-looking entries is the real one.
 
 - **Group terminal blocks** come from USB descriptors, and exist for USB devices only. Windows MIDI Services synthesizes them for USB and Bluetooth LE MIDI 1.0 devices so there is always something to enumerate. They do not currently change at runtime.
 - **Function blocks** are discovered in-protocol from the device itself, and are only present on MIDI 2.0 endpoints. They are optional per the specification, but when present they are authoritative and supersede the group terminal blocks. They can be moved and renamed at runtime by design.
@@ -184,15 +184,19 @@ inline auto blocks_for(MidiEndpointDeviceInformation const& ep)
 
 ### The first snapshot is not final
 
-An endpoint appears before it is fully described. For a MIDI 2.0 device, the service exchanges discovery messages with the device and then updates the properties, which takes a few seconds. During that window the endpoint is enumerable and has group terminal blocks but no function blocks yet, and then it changes underneath you.
+An endpoint appears before its properties are complete. For a MIDI 2.0 device, the service exchanges discovery messages with the device and then updates the properties. Until that happens the endpoint is enumerable and has group terminal blocks but no function blocks yet, and then it changes underneath you.
+
+This is the part of the platform library authors tell us is the most frustrating to build on, so it is worth saying plainly why it is not something we can simply fix for you. A device is under no obligation to answer discovery within any particular time, or to send everything it was asked for at all. How long it takes depends on the device, on the transport, and on whatever else the machine happens to be doing. And once discovery is over, function blocks can still be renamed and moved, because the person at the keyboard changed something on the instrument. Those late updates are not a race we lost. They are the user reconfiguring their device, and the service reporting it. An API which handed you a single frozen snapshot would be far easier to consume, and it would be telling your users something untrue about the hardware in front of them.
+
+**Do not try to wait it out.** How long this takes is not something you can predict or bound. It depends on the device, the transport, how busy the machine is, and on a service-side discovery timeout which is configurable and not exposed to you. More importantly, that timeout does not end discovery. It only stops the service waiting for a device which never sends everything it was asked for, and a device is free to send the rest of its discovery responses afterwards. **There is no point at which an endpoint's properties become final**, so a settle timer is wrong in principle, not merely badly tuned.
 
 This means two things for a library with an index-based public API.
 
-**Rebuild your port list on `Updated` when `AreFunctionBlocksUpdated` is set, rather than treating the list you built on `Added` as final.** Otherwise a MIDI 2.0 device enumerated during that window is permanently described by its fallback metadata, with names and groupings that do not match what the device actually reports.
+**Rebuild your port list on `Updated` when `AreFunctionBlocksUpdated` is set, and keep doing so for as long as you hold the watcher.** Not just during a window after startup. Otherwise a MIDI 2.0 device enumerated before discovery finished keeps its fallback metadata permanently, with names and groupings that do not match what the device actually reports.
 
-**Do not assume a port index is stable across enumerations**, and do not persist one. Indexes were already fragile under WinMM; here the list can legitimately change shape seconds after a device arrives, without anything being plugged or unplugged. Keep offering the index in your public API if your callers need it, but resolve it against the endpoint device id and group you stored, so that a stale index fails cleanly rather than silently opening the wrong device.
+**Do not assume a port index is stable across enumerations**, and do not persist one. Indexes were already fragile under WinMM; here the list can legitimately change shape after a device arrives, without anything being plugged or unplugged. Keep offering the index in your public API if your callers need it, but resolve it against the endpoint device id and group you stored, so that a stale index fails cleanly rather than silently opening the wrong device.
 
-If you want to know whether all declared blocks have arrived, compare `GetDeclaredEndpointInfo().DeclaredFunctionBlockCount()` against `GetDeclaredFunctionBlocks().Size()`. `DeclaredFunctionBlocksLastUpdateTime` on `MidiEndpointDeviceInformation` is also available.
+If you want to know whether all declared blocks have arrived so far, compare `GetDeclaredEndpointInfo().DeclaredFunctionBlockCount()` against `GetDeclaredFunctionBlocks().Size()`. `DeclaredFunctionBlocksLastUpdateTime` on `MidiEndpointDeviceInformation` is also available. Treat both as a progress indication rather than as a completion signal.
 
 ### Filter out what your users should not see
 
@@ -260,7 +264,7 @@ This is easy to miss because it depends on arithmetic. A transfer only trips ove
 
 ### Acting on a device arrival before its ports exist
 
-**A WinMM port is usable as soon as it is enumerated. What takes time is the port appearing at all.** Endpoint creation, and MIDI 1.0 port creation for that endpoint, take a few seconds after Windows first sees the device. A device which re-enumerates, as one does when it reboots into a bootloader for a firmware update, goes away and comes back on that same schedule. So the thing to wait for is the port showing up in the list, not for an enumerated port to become ready.
+**A WinMM port is usable as soon as it is enumerated. What takes time is the port appearing at all.** Endpoint creation, and MIDI 1.0 port creation for that endpoint, do not complete the moment Windows first sees the device. A device which re-enumerates, as one does when it reboots into a bootloader for a firmware update, goes away and comes back on that same schedule. So the thing to wait for is the port showing up in the list, not for an enumerated port to become ready.
 
 That distinction decides where the retry belongs:
 
@@ -285,7 +289,7 @@ If you are porting from a CoreMIDI or ALSA backend, or if you are using an AI co
 | Sending takes a destination | Sending takes a connection; the group is a field in the UMP |
 | Timestamps are relative to when the port opened | Timestamps are absolute, from system boot, in 100 ns units, and do not wrap |
 | SysEx is a byte buffer you hand to the API | SysEx is a sequence of SysEx7 UMPs, six data bytes each |
-| Enumeration is synchronous and its result is stable | Enumeration is asynchronous, and a MIDI 2.0 endpoint's description changes seconds after it appears |
+| Enumeration is synchronous and its result is stable | Enumeration is asynchronous, and a MIDI 2.0 endpoint's properties can change after it appears, with no point at which they are final |
 | The device name identifies the device | Names are user-editable display metadata; the endpoint device id identifies the device |
 | Opening a device is exclusive | Multi-client is supported and expected |
 | One device equals one or two ports | One device is one endpoint with up to 16 groups in each direction |
@@ -308,7 +312,8 @@ Enumeration and identity:
 - [ ] No polling thread starts unless the application asked to observe device changes
 - [ ] Function blocks take precedence over group terminal blocks; the two are never merged
 - [ ] The same helper feeds both the enumeration path and the open path
-- [ ] The list is rebuilt on `Updated` when `AreFunctionBlocksUpdated` is set
+- [ ] The list is rebuilt on `Updated` when `AreFunctionBlocksUpdated` is set, for as long as the watcher is held, not only during a window after startup
+- [ ] Nothing waits a fixed amount of time for an endpoint's properties to settle
 - [ ] Ports are identified by endpoint device id plus group index, never by name and never by block number
 - [ ] Diagnostic endpoints are filtered out
 
