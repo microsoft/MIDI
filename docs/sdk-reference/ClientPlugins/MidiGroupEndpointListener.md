@@ -71,3 +71,13 @@ myConnection.Open();
 ```
 
 More complete examples [available on Github](https://aka.ms/midirepo)
+
+## Samples
+
+This is how you emulate a WinMM port. One connection carries up to 16 groups in each direction, so
+an application which presents ports to its users has to filter. Note `PreventFiringMainMessageReceivedEvent`
+in these samples: set it when you also handle the connection's own `MessageReceived`, or every
+message arrives twice.
+
+* [C++/WinRT endpoint-listeners](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/endpoint-listeners)
+* [C# endpoint-listeners](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/endpoint-listeners)

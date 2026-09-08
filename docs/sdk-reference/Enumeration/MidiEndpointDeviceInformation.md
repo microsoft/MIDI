@@ -81,3 +81,11 @@ For more information about the Endpoint Discovery and Protocol Negotiation aspec
 | `FindAllForContainer(containerId)` | Returns all endpoint devices in the specified device container. |
 | `DeviceMatchesFilter(deviceInformation, endpointFilter)` | A helper function to compare a device against the filter. |
 | `GetAdditionalPropertiesList()` | Returns the list of properties which must be requested during enumeration. Typically not needed for applications, as the watcher calls this function |
+
+## Samples
+
+* [C++/WinRT static-enum-endpoints](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/static-enum-endpoints) and [C# static-enum-endpoints](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/static-enum-endpoints) for a one-time list with function blocks and group terminal blocks
+* [C++/WinRT get-vid-pid](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/get-vid-pid) and [C# get-vid-pid](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/get-vid-pid) for the parent device and transport-supplied metadata
+* [C++/WinRT identify-endpoint-type](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/identify-endpoint-type) and [C# identify-endpoint-type](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/identify-endpoint-type) for working out what kind of device an endpoint is
+
+For anything with a device picker, prefer the [`MidiEndpointDeviceWatcher`]({{ site.baseurl }}/sdk-reference/Enumeration/MidiEndpointDeviceWatcher/) over these static methods.

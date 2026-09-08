@@ -43,6 +43,12 @@ That this map is dynamic, and changes when devices are added or removed. For tha
 
 ## Samples
 
-* [C++/WinRT Endpoint Device Watcher Sample](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/watch-endpoints)
+* [C++/WinRT watch-endpoints](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/watch-endpoints)
+* [C# watch-endpoints](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/watch-endpoints)
+
+If you are porting an application which thinks in WinMM ports and are not ready to restructure
+around endpoints and groups yet, there is an equivalent watcher for the MIDI 1.0 port list:
+[C++/WinRT watch-midi1-ports](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/watch-midi1-ports)
+and [C# watch-midi1-ports](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/watch-midi1-ports).
 
 

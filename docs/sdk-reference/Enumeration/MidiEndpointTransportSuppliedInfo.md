@@ -22,3 +22,14 @@ description: Metadata for an endpoint supplied by the transport in the MIDI Serv
 | `TransportId` | GUID identifying the transport in use |
 | `TransportCode` | Short identifier for the transport, such as `KS` or `BLE` |
 | `DriverDeviceInterfaceId` | The driver device interface id for this endpoint, if applicable |
+
+## Samples
+
+`TransportId` and `TransportCode` are how you tell what kind of thing an endpoint actually is,
+which WinMM never really answered. `VendorId` and `ProductId` here come from the transport, and are
+not the same as the parent device's identifiers.
+
+* [C++/WinRT identify-endpoint-type](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/identify-endpoint-type)
+* [C# identify-endpoint-type](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/identify-endpoint-type)
+* [C++/WinRT get-vid-pid](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/get-vid-pid)
+* [C# get-vid-pid](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/get-vid-pid)
