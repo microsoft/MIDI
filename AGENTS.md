@@ -10,6 +10,24 @@ and documentation. en-GB spellings are defects, not style preferences. Full rule
 [.github/instructions/en-us-spelling.instructions.md](.github/instructions/en-us-spelling.instructions.md).
 Check your work with `build/check_en_us_spelling.ps1 -Path <file or folder>`.
 
+## Writing or reviewing code
+
+Read [.github/skills/midi-contributing/SKILL.md](.github/skills/midi-contributing/SKILL.md) before
+you edit any source file. The rules that get broken most often:
+
+1. **Changes to code that ships in Windows must be wrapped in a servicing gate (KIR)**, with the
+   original behavior preserved exactly when the gate is disabled. The trigger is where the file
+   lives, not how small the diff is. Where the branch goes — call site, a net-new function, in
+   place, or a net-new class chosen at the factory — depends on the shape of the change.
+2. **SAL-annotate every function parameter**, and use `_Use_decl_annotations_` with bare parameters
+   in the `.cpp` when the declaration is in a header.
+3. **User-facing strings go in resource files** (`.resw` or `.rc`), never inline in code.
+4. **Review your own diff for use after free, TOCTOU, escaping exceptions, lock inversions and
+   untrusted input** before submitting. An exception escaping a thread body or an `HRESULT`
+   function in `midisrv` takes MIDI down for the whole machine.
+5. **Do not change public WinRT API surface without asking.** It ships in box and applications
+   depend on it.
+
 ## Filing bug reports and designing test plans
 
 Full guidance, including a write-up template, is in
