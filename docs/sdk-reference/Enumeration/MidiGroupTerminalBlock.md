@@ -7,7 +7,7 @@ implements: Windows.Foundation.IStringable
 description: An optional and static definition of the use of groups for an endpoint
 ---
 
-A Group Terminal Block is a USB-only feature used to describe the groups on a device. When available, Function Blocks are the preferred mechanism for finding active groups, names, and more, meaning that the Group Terminal Block can typically be ignored in those cases. For more context, please see the documentation for the [MidiFunctionBlock](./MidiFunctionBlock.md) type.
+A Group Terminal Block is a USB-only feature used to describe the groups on a device. When available, Function Blocks are the preferred mechanism for finding active groups, names, and more, meaning that the Group Terminal Block can typically be ignored in those cases. For more context, please see the documentation for the [MidiFunctionBlock]({{ site.baseurl }}/sdk-reference/Enumeration/MidiFunctionBlock/) type.
 
 > Note: In Windows MIDI Services, we translate MIDI 1.0 device "ports" into individual Group Terminal Blocks. Each virtual cable number in the stream, which used to become a separate input or output port, now maps to a group number. For example, a 5 port MIDI 1.0 device will now show up as a single endpoint with 5 Group Terminal Blocks each spanning a single group. 
 

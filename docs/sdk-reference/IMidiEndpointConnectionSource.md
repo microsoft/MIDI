@@ -14,7 +14,7 @@ Interface which is used to prevent circular references in the SDK, specifically 
 | -------- | ----------- |
 | `ConnectionId` | The generated GUID which uniquely identifies this connection instance. |
 | `ConnectedEndpointDeviceId` | The system-wide identifier for the endpoint device. |
-| `Settings` | The [`MidiEndpointConnectionSettings`](./MidiEndpointConnectionSettings.md) used to create this connection. |
+| `Settings` | The [`MidiEndpointConnectionSettings`]({{ site.baseurl }}/sdk-reference/MidiEndpointConnectionSettings/) used to create this connection. |
 | `IsOpen` | True if this connection is currently open. |
 | `Tag` | Optional application-supplied object associated with this connection. |
 

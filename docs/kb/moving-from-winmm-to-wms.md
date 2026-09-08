@@ -23,7 +23,7 @@ Here's the hierarchy in order from broad to specific
 | ---- | ----------- |
 | Parent Device | The device presented by the driver or transport. For USB hardware, this is usually the USB device itself. |
 | Endpoint | The stream on the device. For a MIDI 1.0 device, we create a UMP endpoint to aggregate all the directions in this single stream. |
-| Group Terminal Block | For MIDI 1.0 devices, we create these to be 1:1 with the group. For MIDI 2.0 devices, these have been superceded by Function Blocks, but in both cases, can contain multiple groups. For MIDI 1.0 devices, you can think of these as your Port |
+| Group Terminal Block | For USB and Bluetooth LE MIDI 1.0 devices, we create these to be 1:1 with the group. For MIDI 2.0 devices, these have been superseded by Function Blocks, but in both cases, can contain multiple groups. For MIDI 1.0 devices, you can think of these as your Port |
 | Group | For a MIDI 1.0 device, this is your port's address. It's logically equivalent to the virtual cable number on the device. |
 | Channel | The address within the message. |
 
@@ -84,7 +84,7 @@ WinMM is a simple API, but part of that simplicity is because it provides very l
 
 Many WinMM apps do all the MIDI work on the UI thread. Although this was never explicitly a forbidden approach, it was never a best practice. We're not judging here, though, just informing.
 
-In Windows MIDI Services, the service startup can take multiple seconds. For the SDK, we were explicitely asked by partner developers to **not** have Async calls, as those can be a pain when you are already managing your own threading. Therefore, **please ensure that your MIDI work, especially initialization and message sending, is not running on the UI thread** in your app. Otherwise, calls which take more than a five seconds can cause your app to "ghost" or "fade" and be reported as unresponsive.
+In Windows MIDI Services, the service startup can take multiple seconds. For the SDK, we were explicitly asked by partner developers to **not** have Async calls, as those can be a pain when you are already managing your own threading. Therefore, **please ensure that your MIDI work, especially initialization and message sending, is not running on the UI thread** in your app. Otherwise, calls which take more than a five seconds can cause your app to "ghost" or "fade" and be reported as unresponsive.
 
 In modern apps, the UI thread should handle UI, and not MIDI. We recommend you initialize WinRT/COM in an MTA (Multi-threaded apartment)-enabled thread to ensure there are no blocking calls.
 
@@ -126,7 +126,7 @@ In WinMM, the only persistent identifier we gave you was the port name. That mea
 
 In Windows MIDI Services, you have other ways to identify endpoints, using parent device information, unique identifiers, and more. While there is no one solution which will fit every scenario, we recommend, at a minimum, using these as a backup to ensure users are not punished for choosing more meaningful names for their devices.
 
-More [information about some of the identifiers here](.\identifiers.md) and more [information on names here](.\midi1-name-mapping.md). 
+More [information about some of the identifiers here]({{ site.baseurl }}/kb/identifiers/) and more [information on names here]({{ site.baseurl }}/kb/midi1-name-mapping/). 
 
 ## Connecting to a source or destination
 
@@ -146,7 +146,7 @@ The group index is included in the UMP messages sent out, so sending to the corr
 
 For convenience, the Windows MIDI Services client API includes message listeners. These are provided to make apps which are used to listening to a single MIDI 1 port have an equivalent without opening up multiple (expensive) connections to the same endpoint.
 
-> Note: Connections are somewhat expensive. Each time a connection is opened, a cross-process buffer is allocated for communication between the app and the service. In addition, the service has one more client to service when it is processing data. There's no need to be overly conservative with connections, but you wouldn't want to open 32 connections to the same endpoint just for the convenience of mapping 1:1 with the legacy ports. Instead, use the MidiGroupEndpointListener for incoming message processing. You can add any number of listeners to a single connection, and then wire up separate event handlers to each listener. Note that listners (including the one which implements Virtual Devices) cannot be used with the COM Extensions.
+> Note: Connections are somewhat expensive. Each time a connection is opened, a cross-process buffer is allocated for communication between the app and the service. In addition, the service has one more client to service when it is processing data. There's no need to be overly conservative with connections, but you wouldn't want to open 32 connections to the same endpoint just for the convenience of mapping 1:1 with the legacy ports. Instead, use the MidiGroupEndpointListener for incoming message processing. You can add any number of listeners to a single connection, and then wire up separate event handlers to each listener. Note that listeners (including the one which implements Virtual Devices) cannot be used with the COM Extensions. The API enforces this rather than letting one silently disable the other: `AddMessageProcessingPlugin` returns a failure result if a COM Extensions callback is already registered, and `SetMessagesReceivedCallback` fails if listeners are already attached, or if the connection has already been opened.
 
 There are three types of listeners included in the SDK in the `Windows.Devices.Midi2.ClientPlugins` namespace. You can also create your own listeners by implmenting the `Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin` and `Windows.Devices.Midi2.IMidiMessageReceivedEventSource` interfaces.
 

@@ -96,7 +96,25 @@ Registering the callback changes how the whole connection receives messages, so 
 
 The same rule is enforced from the other direction: `MidiEndpointConnection.AddMessageProcessingPlugin` returns `FailedRawCallbackRegistered` when a callback is registered on that connection. See [`MidiMessageProcessingPluginAddResult`]({{ site.baseurl }}/sdk-reference/MidiMessageProcessingPluginAddResultEnum).
 
-Because `MidiVirtualDevice` is implemented as a message processing plugin, this is what stops a virtual device application from accidentally registering a callback and then never receiving anything. A virtual device can still *send* through the COM extensions.
+### Why a Virtual Device cannot use the messages received callback
+
+This is the question we are asked most often about the COM Extensions, so it is worth explaining rather than just stating.
+
+The two receive paths do fundamentally different amounts of work.
+
+**The COM Extensions callback does nothing to your data.** A block of incoming messages arrives from the service in one cross-process buffer. If it is within the transmission limits it stays together, and you are handed a pointer to it. Nothing is allocated, nothing is copied, nothing is parsed, and no decision is made about any individual message. That is the entire value of the fast path, and it is why it is the right choice for a DAW or a cross-platform framework which already has its own UMP parsing code.
+
+**The WinRT event path is per message.** It walks the incoming buffer, identifies each message in it, allocates a `MidiMessageReceivedEventArgs` for that message, copies the message data into it, and raises the event, blocking until your handler returns. Then it does the same for the next message. In practice this is quick, but it is not the ceiling for languages which understand COM and pointers.
+
+**A Virtual Device needs the per-message path**, because it is not a passive observer. It has to find endpoint discovery and stream configuration requests inside the incoming stream, build and send the correct notification messages in response, and then, by default, remove those messages so your application does not have to filter protocol traffic it never asked for. That behavior is controlled by [`SuppressHandledMessages`]({{ site.baseurl }}/sdk-reference/Transports/Virtual/MidiVirtualDevice), which is `true` unless you change it.
+
+So the conflict is not arbitrary. The callback's contract is *we will not look at your messages*, and a virtual device's requirement is *something must look at every message, and may remove some of them*. Both cannot be true on one connection, which is why the API refuses the combination rather than silently producing a virtual device which sends correctly and never responds to discovery.
+
+**A virtual device can still send through the COM Extensions.** Only the receive path is constrained, so `SendMidiMessagesRaw` remains available to you.
+
+**The restriction applies only to the device-side connection.** A virtual device has exactly one device-side connection, owned by the application which created the device, and that connection must use the WinRT receive path. It cannot be split across two connections, and no other application can open the device side.
+
+The client-visible endpoint your virtual device publishes carries no such restriction. It is a normal endpoint, and any application which connects to it is free to use the COM Extensions callback, the WinRT events, message listeners, or any other send and receive method the API supports. The constraint is on the side which has to answer discovery, not on the side which consumes the device.
 
 ### Sending more data than fits in a single transmission
 

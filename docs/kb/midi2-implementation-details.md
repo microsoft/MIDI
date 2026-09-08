@@ -23,7 +23,7 @@ When (if) it is needed, we will implement JR clock generation, incoming JR times
 
 Internally in Windows MIDI Services, all messages are UMP messages, whether they come from a MIDI 1.0 byte data format device, a UMP-native device or API, or a MIDI 1.0 classic API. This requires Windows to perform message data format translation in some cases.
 
-Translation happens as described in [the translation page](data-translation.md)
+Translation happens as described in [the translation page]({{ site.baseurl }}/kb/data-translation/)
 
 ## UMP Endpoint Names for native MIDI 2.0 UMP format devices
 

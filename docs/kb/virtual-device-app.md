@@ -45,4 +45,8 @@ The best experience for Windows MIDI Services will be with applications using th
 
 Virtual Devices cannot be specified in the configuration file. Instead, applications must create them through code.
 
-For developer information on how to set up a Virtual Device, see the [developer how-to](how-to-create-virtual-ump-device).
+A Virtual Device is implemented as a message processing plugin on the connection, because it has to inspect the incoming stream for endpoint discovery and stream configuration requests, respond to them, and by default remove them before your application sees them. That is why the device-side connection cannot also use the COM Extensions messages received callback, which exists precisely to hand you the incoming buffer without inspecting it. The full reasoning is in [the COM Extensions reference]({{ site.baseurl }}/sdk-reference/MidiEndpointConnection_COM-Extensions). A Virtual Device can still *send* through the COM Extensions.
+
+This affects only the device side. The client-visible endpoint your Virtual Device publishes is a normal endpoint, and the applications which connect to it may use whichever send and receive approach they prefer.
+
+For developer information on how to set up a Virtual Device, see the [MIDI code samples](https://aka.ms/midisamples).

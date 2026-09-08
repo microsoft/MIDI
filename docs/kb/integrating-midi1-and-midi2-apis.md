@@ -7,7 +7,7 @@ description: This document explains how to associate MIDI 1.0 ports and Windows 
 
 # Background
 
-Before reviewing this, [please see "Mapping MIDI 1.0 Port Concepts" here](/mapping-midi1-port-concepts.md)
+Before reviewing this, [please see "Mapping MIDI 1.0 Port Concepts" here]({{ site.baseurl }}/kb/mapping-midi1-port-concepts/)
 
 Although the modern UMP-based MIDI 1.0 and MIDI 2.0 Windows.Devices.Midi2 API works with both MIDI 1.0 and MIDI 2.0 devices, there are times when you may want to partially transition to the new API while retaining existing legacy MIDI 1 API functionality, or you may need to map between artifacts from the two APIs.
 
@@ -21,7 +21,7 @@ In addition, the presence of the UMP endpoint for a device does not mean that th
 
 `Windows.Devices.Midi2.Enumeration` includes a `Legacy` sub-namespace specifically focused on integration with older APIs. This includes a class for WinMM/WinRT MIDI 1.0 port device information, as well as a Device Watcher implementation just for MIDI 1.0 ports.
 
-Documentation for this namespace is here: [SDK Reference: Legacy Enumeration](/sdk-reference/Enumeration/Legacy/)
+Documentation for this namespace is here: [SDK Reference: Legacy Enumeration]({{ site.baseurl }}/sdk-reference/Enumeration/Legacy/)
 
 # Scenarios using both legacy and the modern API.
 

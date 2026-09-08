@@ -102,6 +102,212 @@ namespace winrt::miditroubleshooter::implementation
             }
             MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to show a driver package card.")
         }
+
+        // Both Windows MIDI Services SDK applications and WinMM applications register a session:
+        // wdmaud2.drv runs in the application's own process, so the service records the real
+        // process. The session name is what tells the two apart. Blocking, so it runs on a
+        // background thread.
+        std::vector<std::wstring> ActiveMidiClientDescriptions() noexcept
+        {
+            std::vector<std::wstring> clients{};
+
+            try
+            {
+                auto const sessions = midi2rept::MidiReporting::GetActiveSessions();
+
+                if (sessions == nullptr)
+                {
+                    return clients;
+                }
+
+                for (auto const& session : sessions)
+                {
+                    auto const sessionName = session.SessionName();
+
+                    std::wstring description{ sessionName.empty() ?
+                        res::FormatString(
+                            L"SessionProcessFormat",
+                            session.ProcessName(),
+                            static_cast<uint64_t>(session.ProcessId())) :
+                        res::FormatString(
+                            L"DriverChangeServiceRestartClientFormat",
+                            session.ProcessName(),
+                            static_cast<uint64_t>(session.ProcessId()),
+                            sessionName) };
+
+                    if (std::find(clients.begin(), clients.end(), description) == clients.end())
+                    {
+                        clients.push_back(std::move(description));
+                    }
+                }
+            }
+            MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to list the active MIDI sessions.")
+
+            return clients;
+        }
+    }
+
+    _Use_decl_annotations_
+    foundation::IAsyncAction MainWindow::OfferDriverChangeFollowUpAsync(
+        native::DriverChangeFollowUp const followUp)
+    {
+        auto lifetime = get_strong();
+
+        try
+        {
+            switch (followUp)
+            {
+            case native::DriverChangeFollowUp::RestartWindows:
+                ShowDriverFollowUp(
+                    controls::InfoBarSeverity::Warning,
+                    L"DriverFollowUpRestartWindowsTitle",
+                    L"DriverChangeRestartMessage");
+
+                co_await OfferRestartAsync(res::GetString(L"DriverChangeRestartMessage"));
+                break;
+
+            case native::DriverChangeFollowUp::RestartMidiService:
+                ShowDriverFollowUp(
+                    controls::InfoBarSeverity::Warning,
+                    L"DriverFollowUpRestartServiceTitle",
+                    L"DriverChangeServiceRestartMessage");
+
+                co_await OfferServiceRestartAsync();
+                break;
+
+            case native::DriverChangeFollowUp::ReplugDevice:
+                ShowDriverFollowUp(
+                    controls::InfoBarSeverity::Warning,
+                    L"DriverFollowUpReplugTitle",
+                    L"DriverChangeReplugMessage");
+
+                if (m_openDialog == nullptr)
+                {
+                    ReplugDeviceDialogText().Text(res::GetString(L"DriverChangeReplugMessage"));
+                    ReplugDeviceDialog().XamlRoot(Content().XamlRoot());
+
+                    m_openDialog = ReplugDeviceDialog();
+
+                    co_await ReplugDeviceDialog().ShowAsync();
+
+                    m_openDialog = nullptr;
+                }
+                break;
+
+            default:
+                ShowDriverFollowUp(
+                    controls::InfoBarSeverity::Success,
+                    L"DriverFollowUpNoneTitle",
+                    L"DriverChangeNothingNeeded");
+                break;
+            }
+        }
+        catch (...)
+        {
+            m_openDialog = nullptr;
+
+            MIDI_TSHOOT_LOG_GENERAL_EXCEPTION(L"Unable to offer the follow-up for a driver change.");
+        }
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::ShowDriverFollowUp(
+        controls::InfoBarSeverity const severity,
+        std::wstring_view const titleKey,
+        std::wstring_view const messageKey) noexcept
+    {
+        try
+        {
+            DriverFollowUpInfoBar().Severity(severity);
+            DriverFollowUpInfoBar().Title(res::GetString(titleKey));
+            DriverFollowUpInfoBar().Message(res::GetString(messageKey));
+            DriverFollowUpInfoBar().IsOpen(true);
+        }
+        MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to show the driver change outcome.")
+    }
+
+    foundation::IAsyncAction MainWindow::OfferServiceRestartAsync()
+    {
+        auto lifetime = get_strong();
+
+        if (m_openDialog != nullptr)
+        {
+            co_return;
+        }
+
+        try
+        {
+            std::vector<std::wstring> clients{};
+
+            co_await native::RunOnBackgroundAsync([&clients]()
+                {
+                    clients = ActiveMidiClientDescriptions();
+                });
+
+            if (m_closing)
+            {
+                co_return;
+            }
+
+            std::wstring message{ res::GetString(L"DriverChangeServiceRestartMessage") };
+
+            if (!clients.empty())
+            {
+                message += L"\r\n\r\n";
+                message += res::GetString(L"DriverChangeServiceRestartClientsIntro");
+
+                for (auto const& client : clients)
+                {
+                    message += L"\r\n\x2022 ";
+                    message += client;
+                }
+
+                message += L"\r\n\r\n";
+                message += res::GetString(L"DriverChangeServiceRestartClientsOutro");
+            }
+
+            RestartServiceDialogText().Text(winrt::hstring{ message });
+            RestartServiceDialog().XamlRoot(Content().XamlRoot());
+
+            m_openDialog = RestartServiceDialog();
+
+            auto const answer = co_await RestartServiceDialog().ShowAsync();
+
+            m_openDialog = nullptr;
+
+            // Later is a real answer. The driver is already in place either way.
+            if (answer != controls::ContentDialogResult::Primary || m_closing)
+            {
+                co_return;
+            }
+
+            DriversProgressRing().IsActive(true);
+            DriversStatusText().Text(res::GetString(L"ServiceRestarting"));
+
+            native::ServiceOperationResult restart{};
+
+            co_await native::RunOnBackgroundAsync([&restart]()
+                {
+                    restart = native::RestartMidiService();
+                });
+
+            if (m_closing)
+            {
+                co_return;
+            }
+
+            DriversProgressRing().IsActive(false);
+
+            DriversStatusText().Text(restart.Succeeded ?
+                res::GetString(L"ServiceRestarted") :
+                res::FormatString(L"ServiceRestartFailedFormat", winrt::hstring{ restart.ErrorMessage }));
+        }
+        catch (...)
+        {
+            m_openDialog = nullptr;
+
+            MIDI_TSHOOT_LOG_GENERAL_EXCEPTION(L"Unable to restart the service after a driver change.");
+        }
     }
 
     _Use_decl_annotations_
@@ -225,6 +431,7 @@ namespace winrt::miditroubleshooter::implementation
 
             item.IsBusy(true);
             DriversProgressRing().IsActive(true);
+            DriverFollowUpInfoBar().IsOpen(false);
             DriversStatusText().Text(res::GetString(L"DriverChanging"));
 
             native::DriverOperationResult result{};
@@ -246,7 +453,7 @@ namespace winrt::miditroubleshooter::implementation
 
             if (result.Succeeded)
             {
-                co_await OfferRestartAsync(res::GetString(L"DriverChangeRestartMessage"));
+                co_await OfferDriverChangeFollowUpAsync(result.FollowUp);
             }
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to switch the device to the new class driver.")
@@ -284,6 +491,7 @@ namespace winrt::miditroubleshooter::implementation
 
             item.IsBusy(true);
             DriversProgressRing().IsActive(true);
+            DriverFollowUpInfoBar().IsOpen(false);
             DriversStatusText().Text(res::GetString(L"DriverChanging"));
 
             native::DriverOperationResult result{};
@@ -305,7 +513,7 @@ namespace winrt::miditroubleshooter::implementation
 
             if (result.Succeeded)
             {
-                co_await OfferRestartAsync(res::GetString(L"DriverChangeRestartMessage"));
+                co_await OfferDriverChangeFollowUpAsync(result.FollowUp);
             }
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to switch the device to the classic class driver.")
@@ -403,7 +611,7 @@ namespace winrt::miditroubleshooter::implementation
 
             OnRefreshDriversClick(nullptr, nullptr);
 
-            if (result.RebootRequired)
+            if (result.FollowUp == native::DriverChangeFollowUp::RestartWindows)
             {
                 co_await OfferRestartAsync(res::GetString(L"KorgRemoveRestartMessage"));
             }

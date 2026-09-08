@@ -24,7 +24,7 @@ Apps sometimes need to load specialized templates based upon the make/model of t
 
 ## A note about USB and uniquely identifying a device
 
-Many USB devices lack a unique serial number. Some indicate they have a unique serial number, but instead contain a placeholder which is identical from device to device. As a result, when a customer unplugs a USB device and then plugs it into a different USB port, or into a hub, operating systems (including Windows) often see the device as a new device. All operating systems use heuristics to try to identify the device and keep the properties, but without unique serial numbers, this problem is compounded when a customer has two or more of hte same device attached to the computer.
+Many USB devices lack a unique serial number. Some indicate they have a unique serial number, but instead contain a placeholder which is identical from device to device. As a result, when a customer unplugs a USB device and then plugs it into a different USB port, or into a hub, operating systems (including Windows) often see the device as a new device. All operating systems use heuristics to try to identify the device and keep the properties, but without unique serial numbers, this problem is compounded when a customer has two or more of the same device attached to the computer.
 
 I wrote an article about `iSerialNumber` here, and have evangelized its use with developers creating MIDI 2.0 devices so that this problem will be less of a concern there.
 

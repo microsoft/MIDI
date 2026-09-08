@@ -126,6 +126,18 @@ namespace winrt::miditroubleshooter::implementation
         // Offers a restart rather than taking one. Nothing here reboots without an answer.
         foundation::IAsyncAction OfferRestartAsync(winrt::hstring const& message);
 
+        // The cheapest step that the driver change actually needs, from nothing at all through to
+        // a reboot. Only the reboot and the service restart are worth a dialog with an action.
+        foundation::IAsyncAction OfferDriverChangeFollowUpAsync(
+            ::miditroubleshooter::DriverChangeFollowUp const followUp);
+
+        void ShowDriverFollowUp(
+            controls::InfoBarSeverity const severity,
+            std::wstring_view const titleKey,
+            std::wstring_view const messageKey) noexcept;
+
+        foundation::IAsyncAction OfferServiceRestartAsync();
+
         // False when the action needs administrator rights the app does not have. It has
         // already told the customer by the time it returns.
         bool RequireElevation() noexcept;

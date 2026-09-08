@@ -918,18 +918,50 @@
     <value>Change the driver?</value>
   </data>
   <data name="DriverChangeToUmpConfirmFormat" xml:space="preserve">
-    <value>{0} will be switched to the new combined MIDI 1.0 and MIDI 2.0 class driver. Close your MIDI applications first. Some devices need to be unplugged and plugged back in, and a restart is usually needed.
+    <value>{0} will be switched to the new combined MIDI 1.0 and MIDI 2.0 class driver. Close your MIDI applications first. This tool checks the device afterwards and tells you whether anything else is needed.
 
 Only do this for a MIDI device. Windows offers this driver for any USB audio device, and forcing it onto one that is not class compliant can stop the device working or make the PC stop responding until it is restarted.</value>
   </data>
   <data name="DriverChangeToClassicConfirmFormat" xml:space="preserve">
-    <value>{0} will be switched to the classic USB audio class driver. MIDI 2.0 will not be available on this device. Close your MIDI applications first. Some devices need to be unplugged and plugged back in, and a restart is usually needed.</value>
+    <value>{0} will be switched to the classic USB audio class driver. MIDI 2.0 will not be available on this device. Close your MIDI applications first. This tool checks the device afterwards and tells you whether anything else is needed.</value>
   </data>
   <data name="DriverChanging" xml:space="preserve">
     <value>Changing the driver...</value>
   </data>
   <data name="DriverChangeRestartMessage" xml:space="preserve">
-    <value>The driver was changed. Unplug the device, restart Windows, then plug it back in. Save your work in other applications first.</value>
+    <value>The driver was changed, but Windows could not finish the change while it is running. Unplug the device, restart Windows, then plug it back in. Save your work in other applications first.</value>
+  </data>
+  <data name="DriverChangeReplugMessage" xml:space="preserve">
+    <value>The driver was changed, but the device has not restarted on it yet. Unplug the device and plug it back in, then use Refresh to check it again. A restart of Windows is only needed if that does not work.</value>
+  </data>
+  <data name="DriverChangeServiceRestartMessage" xml:space="preserve">
+    <value>The device is running on the new driver. The MIDI service is still using the endpoints it built for the old one, so it needs to be restarted before applications see the change. No restart of Windows is needed.
+
+Every application using MIDI loses its connections when the service restarts, so close them and save your work first.</value>
+  </data>
+  <data name="DriverChangeServiceRestartClientsIntro" xml:space="preserve">
+    <value>These applications have a MIDI session open right now:</value>
+  </data>
+  <data name="DriverChangeServiceRestartClientFormat" xml:space="preserve">
+    <value>{0}, process {1} ({2})</value>
+  </data>
+  <data name="DriverChangeServiceRestartClientsOutro" xml:space="preserve">
+    <value>Applications using the older WinMM MIDI API are listed here as "WinMM client".</value>
+  </data>
+  <data name="DriverChangeNothingNeeded" xml:space="preserve">
+    <value>The driver was changed and the device is running on it. Nothing else is needed.</value>
+  </data>
+  <data name="DriverFollowUpNoneTitle" xml:space="preserve">
+    <value>Ready to use</value>
+  </data>
+  <data name="DriverFollowUpReplugTitle" xml:space="preserve">
+    <value>Unplug the device and plug it back in</value>
+  </data>
+  <data name="DriverFollowUpRestartServiceTitle" xml:space="preserve">
+    <value>Restart the MIDI service</value>
+  </data>
+  <data name="DriverFollowUpRestartWindowsTitle" xml:space="preserve">
+    <value>Restart Windows</value>
   </data>
   <data name="DriversDriverChanged" xml:space="preserve">
     <value>The driver was changed.</value>
@@ -1007,5 +1039,20 @@ Only do this for a MIDI device. Windows offers this driver for any USB audio dev
   </data>
   <data name="RestartComputerDialog.CloseButtonText" xml:space="preserve">
     <value>Later</value>
+  </data>
+  <data name="RestartServiceDialog.Title" xml:space="preserve">
+    <value>Restart the MIDI service?</value>
+  </data>
+  <data name="RestartServiceDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Restart the service</value>
+  </data>
+  <data name="RestartServiceDialog.CloseButtonText" xml:space="preserve">
+    <value>Later</value>
+  </data>
+  <data name="ReplugDeviceDialog.Title" xml:space="preserve">
+    <value>Unplug the device</value>
+  </data>
+  <data name="ReplugDeviceDialog.CloseButtonText" xml:space="preserve">
+    <value>OK</value>
   </data>
 </root>

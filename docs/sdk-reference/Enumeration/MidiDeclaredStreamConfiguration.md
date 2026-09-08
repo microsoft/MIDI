@@ -13,6 +13,6 @@ This information is populated by the Windows Service during the MIDI 2.0 endpoin
 | Property | Description |
 | --------------- | ----------- |
 | `IsReadOnly` | True if this object should be treated as read-only |
-| `Protocol` | The agreed upon [MIDI protocol](MidiProtocolEnum.md) |
+| `Protocol` | The agreed upon [MIDI protocol]({{ site.baseurl }}/sdk-reference/Enumeration/MidiProtocolEnum/) |
 | `ReceiveJitterReductionTimestamps` | True if the endpoint is configured to receive JR timestamps |
 | `SendJitterReductionTimestamps` | True if the endpoint is configured to send JR timestamps |

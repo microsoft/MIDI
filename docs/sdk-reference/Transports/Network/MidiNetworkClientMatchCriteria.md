@@ -34,4 +34,4 @@ Supplying `ProductInstanceId` and `UmpEndpointName` as well as `DeviceId` is wor
 
 ## Remarks
 
-Set `DeviceId` for a discovered host, or `DirectHostNameOrIPAddress` and `DirectPort` for a direct one. The choice determines how the service behaves when the host is unreachable: a discovered host is retried whenever it advertises again, whereas a direct address is tried once and then marked unavailable. See the [namespace overview](index) for the full table.
+Set `DeviceId` for a discovered host, or `DirectHostNameOrIPAddress` and `DirectPort` for a direct one. The choice determines how the service behaves when the host is unreachable: a discovered host is retried whenever it advertises again, whereas a direct address is tried once and then marked unavailable. See the [namespace overview]({{ site.baseurl }}/sdk-reference/Transports/Network/) for the full table.

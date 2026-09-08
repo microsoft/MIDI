@@ -9,7 +9,7 @@ In WinRT, a device watcher is a type class which raises events when specific dev
 
 In Windows MIDI Services, we've provided a specialized version of the device watcher called the `Windows::Devices::Midi2::Enumeration::MidiEndpointDeviceWatcher`. This class takes the research and guesswork out of watching a device, and supports the additional information we capture in custom device properties.
 
-> Using a device watcher is a best practice for most MIDI applications. However, if you want to retrieve a one-time snapshot of active devices, see the [How to Enumerate Endpoints](how-to-enumerate-endpoints) document.
+> Using a device watcher is a best practice for most MIDI applications. However, if you want to retrieve a one-time snapshot of active devices, see the [How to Enumerate Endpoints]({{ site.baseurl }}/kb/how-to-enumerate-endpoints/) document.
 
 ## Events
 

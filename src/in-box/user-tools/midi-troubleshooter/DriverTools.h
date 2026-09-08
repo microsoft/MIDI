@@ -68,6 +68,23 @@ namespace miditroubleshooter
         BleMidi
     };
 
+    // What still has to happen before the new driver is really in use, cheapest first. Only the
+    // least disruptive step that the evidence supports is offered.
+    enum class DriverChangeFollowUp
+    {
+        // the device restarted on the new driver and is running
+        None = 0,
+
+        // the device did not restart on the new driver, which re-enumeration fixes
+        ReplugDevice,
+
+        // the device is running, but the service still holds what it built for the old driver
+        RestartMidiService,
+
+        // PnP could not finish the change in place
+        RestartWindows
+    };
+
     struct DriverPackageInfo
     {
         // oemNN.inf as published in %windir%\INF, which is what pnputil takes
@@ -83,7 +100,7 @@ namespace miditroubleshooter
     struct DriverOperationResult
     {
         bool Succeeded{ false };
-        bool RebootRequired{ false };
+        DriverChangeFollowUp FollowUp{ DriverChangeFollowUp::None };
         std::wstring Message{};
         std::vector<std::wstring> Details{};
     };
