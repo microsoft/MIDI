@@ -73,7 +73,7 @@ Everything else about a port, including the name you show, is display metadata t
 
 ### Open one connection per endpoint, and share it
 
-**Open exactly one `MidiEndpointConnection` per endpoint, no matter how many of your port objects refer to it, and refcount it.** Each open connection allocates a cross-process memory-mapped buffer between your process and the service, and adds one more client that the service walks on every message for that endpoint. A MIDI 1.0 device with eight inputs and eight outputs is one endpoint with sixteen groups, so a library that opens a connection per port turns that device into sixteen buffers and sixteen clients where one would do.
+**Open exactly one `MidiEndpointConnection` per endpoint, no matter how many of your port objects refer to it, and refcount it.** Each open connection allocates a cross-process memory-mapped buffer between your process and the service, and adds one more client that the service walks on every message for that endpoint. A MIDI 1.0 device with eight inputs and eight outputs is one endpoint with sixteen group/direction combinations, so a library that opens a connection per port turns that device into sixteen buffers and sixteen clients where one would do.
 
 This is the single most common mistake we see in libraries, and it is easy to make, because the natural translation of "the application constructed a `MidiIn`" is "open something." Resist it. Construct your port object cheaply, and open or reuse the shared connection when the application actually opens the port.
 
@@ -92,7 +92,7 @@ Close the connection when the last port referring to it closes. Do not close it 
 
 ### Filtering input down to one port
 
-On the **WinRT path**, add a `MidiGroupEndpointListener` per open input port, set `IncludedGroups` to the single group that port represents, and wire that listener's `MessageReceived` to the callback your application registered. Set `PreventFiringMainMessageReceivedEvent(true)` if you do not also handle the connection's own event, so that a message is not delivered twice.
+On the **WinRT path**, add a `MidiGroupEndpointListener` per open input port, set `IncludedGroups` to the single group that port represents, and wire that listener's `MessageReceived` to the callback your application registered. Set `PreventFiringMainMessageReceivedEvent(true)` if you also handle the connection's own event, so that a message is not delivered twice. Messages without a Group are not delivered to a `MidiGroupEndpointListener`, so stream messages will be silently discarded if you do not have another listener specifically for them, or handle the main `MessageReceived` event.
 
 ```cpp
 midi2::MidiGroupEndpointListener listener;
@@ -112,6 +112,8 @@ On the **COM path**, filter in your callback. The group index is the second nibb
 const uint8_t messageType = static_cast<uint8_t>((word0 & 0xF0000000) >> 28);
 const uint8_t group       = static_cast<uint8_t>((word0 & 0x0F000000) >> 24);
 ```
+
+> If you prefer, the `Windows.Devices.Midi2.Utilities.MidiMessageHelper` type includes helper functions for getting the Group from a message, and identifying if a message even has a Group field.
 
 **Do not open a second connection to the same endpoint just to get a second filtered stream.** That is what listeners and your own filtering are for, and the cost is the buffer and service client described above.
 
@@ -138,6 +140,8 @@ Also note that group and channel values are indexed from 0 but are displayed as 
 **Name the session after the host application, not after your library.** If every application built on your library reports its session as `libfoomidi`, then a user looking at the tools to find out what is holding their synth open learns nothing, and neither do we when we are helping them. Add a parameter or a settable property so the application can supply its own name, and fall back to the process name rather than to your library name.
 
 If your library is used by an application which has genuinely separate logical units, such as a DAW with several open projects or a browser with several pages, offer a way to create more than one session, one per unit. That is what sessions are for.
+
+`midi enum sessions` shows the currently active sessions on the PC. Use this when testing to verify the user is presented with what you expect to see. Add `--all` to see sessions with no active connections.
 
 ## Enumeration that survives asynchronous arrival
 
@@ -198,7 +202,7 @@ Use `MidiEndpointDeviceInformationFilters::AllStandardEndpoints` unless you have
 
 There is a limit to how many MIDI words may be sent in a single call, and it is available from `GetSupportedMaxMidiWordsPerTransmission` on both the connection and the COM extension interface.
 
-**Query it per connection and keep it with your connection state. Do not hard-code a constant.** The value is not guaranteed to be the same for every endpoint or for every release, and a hard-coded number silently stops being correct the moment it changes, in a build you shipped years earlier.
+**Query it per connection and keep it with your connection state. Do not hard-code a constant.** The value is not guaranteed to be the same for every endpoint or for every release, and a hard-coded number silently stops being correct the moment it changes, in a build you shipped years earlier. How this number is generated is an internal Windows implementation detail and is one of the ones most likely to change as we optimize service throughput.
 
 If a call exceeds the limit, the entire call is rejected and nothing is sent, so retrying with a smaller buffer is safe. Split only on message boundaries, so that no UMP ever spans two transmissions, and stop as soon as a transmission fails, because anything already accepted has reached the device and continuing only makes the device's state harder to recover.
 
@@ -212,13 +216,13 @@ Everything in [the threading section of the WinMM article](moving-from-winmm-to-
 
 **Initializing the WinRT and COM apartment is per thread, not per process.** You cannot assume the host application has done it, and you cannot assume it has not. If the host already initialized that thread with a different apartment model, your initialization call will fail, and if you treat that as fatal you will break on exactly the hosts that were most careful.
 
-**Do your MIDI work on a thread you own, initialized MTA, rather than on whichever thread the host happened to call you on.** A user interface thread is usually STA, performance on STA is worse, and service startup can take several seconds, which is long enough for the host's window to be reported as unresponsive. Owning the thread also means the apartment model is yours to decide.
+**Do your MIDI work on a thread you own, initialized MTA, rather than on whichever thread the host happened to call you on.** A user interface thread is usually STA, and service startup can take several seconds, which is long enough for the host's window to be reported as unresponsive. Owning the thread also means the apartment model is yours to decide.
 
-When shutting down, fully release and reset every COM reference before you uninitialize the apartment. Releasing them in the wrong order, or leaving one alive, can crash at process exit, and that crash will be reported against the host application rather than against you.
+When shutting down, fully release and reset every COM reference before you uninitialize the apartment. Releasing them in the wrong order, or leaving one alive, can crash at process exit, and that crash will be reported against the host application rather than against you. Uninitializing the apartment is optional, especially when shutting down.
 
 ## Habits from WinMM that are now defects
 
-These are patterns we have found in real, shipping libraries. Most of them were survivable under the old stack and are not survivable now, usually because the new stack is faster or because the call crosses a process boundary that used not to exist.
+These are patterns we have found in real, shipping libraries. Most of them were survivable under the old stack and are not survivable now, usually because the new stack is faster or because the call crosses a process boundary that previously did not exist.
 
 ### Polling the device count
 
@@ -254,11 +258,18 @@ This matters more than it sounds, because libraries frequently construct a backe
 
 This is easy to miss because it depends on arithmetic. A transfer only trips over it when the total payload size modulo the chunk size happens to land at three or fewer, so the same code can move a hundred firmware images correctly and fail on the next one.
 
-### Opening a port the instant you see it appear
+### Acting on a device arrival before its ports exist
 
-**Retry with a short backoff instead of treating the first failure as fatal.** Endpoint and MIDI 1.0 port creation takes a few seconds, and a device which re-enumerates, as one does when it reboots into a bootloader for a firmware update, will be visible before it is usable. WinMM has a second asynchronous step of its own which assigns port numbers, so a port observed in an `Added` handler may not yet be recognized by the WinMM APIs.
+**A WinMM port is usable as soon as it is enumerated. What takes time is the port appearing at all.** Endpoint creation, and MIDI 1.0 port creation for that endpoint, take a few seconds after Windows first sees the device. A device which re-enumerates, as one does when it reboots into a bootloader for a firmware update, goes away and comes back on that same schedule. So the thing to wait for is the port showing up in the list, not for an enumerated port to become ready.
 
-We are working on shortening that window. Until then, an application which opens on first sight and reports a hard error is the one that will look broken.
+That distinction decides where the retry belongs:
+
+- **Do not treat a device's arrival as port availability.** If you trigger your enumeration from hardware or PnP arrival, you will run it before the ports exist and conclude the device has none. Use `MidiEndpointDeviceWatcher`, or the legacy port watcher, which fire when the endpoint is actually published, and be prepared for the port list to grow again shortly after.
+- **Do not observe in one API and act in another.** WinMM has a second asynchronous step of its own which assigns port numbers. If you observe through a Windows MIDI Services Endpoint Device watcher and then immediately call a WinMM API, the port number may not be recognized yet. Opening a WinMM port from inside an Endpoint Device watcher's `Added` handler is the specific case that bites. The `MidiLegacyPortDeviceWatcher` is the better watcher to use in this case, but there is still an asynchronous, but fast, caching step in `wdmaud2.drv` for updating the valid values, including port numbers, used by WinMM APIs.
+
+We are working on shortening the endpoint and port creation window. Until then, anything which drives a device through a reboot, such as a firmware updater, should expect a gap where the device exists and its ports do not, and should say it is waiting for the device/ports rather than reporting a hard error. 
+
+The expected delay will be the amount of time the device takes to reboot and become ready + Windows PnP delay (which can be several seconds if the PC has a lot of "dead" PnP entries to wade through) + the service Endpoint creation delay + the service MIDI 1 Port creation delay. All-up, this could be several seconds.
 
 ### Assuming exclusive access
 
@@ -284,10 +295,10 @@ If you are porting from a CoreMIDI or ALSA backend, or if you are using an AI co
 You can get real coverage in CI on a machine with no MIDI devices attached.
 
 - Call `MidiApi::EnsureServiceAvailable()` first and skip rather than fail if it returns false, so that a machine with the service disabled or in legacy API mode produces a clear skip instead of a confusing failure.
-- The two diagnostic loopback endpoints are always present when the service is running, and give you a genuine round trip through the service, including the cross-process buffer. That is enough to test your send path, your receive path, your splitting logic and your shutdown ordering.
+- The two cross-wired diagnostic loopback endpoints are always present when the service is running, and give you a genuine round trip through the service, including the cross-process buffer. That is enough to test your send path, your receive path, your splitting logic and your shutdown ordering. (Send to A, receive on B. Send to B, receive on A)
 - Loopback endpoints and virtual devices let you construct multi-group endpoints on demand, which is how you test the group filtering and port emulation described above without owning a device that has eight cables.
-- The `midi` console tool that ships with Windows MIDI Services can enumerate endpoints and show properties, which is useful for asserting from a test script what your library should be seeing. `midi endpoint properties <id> --verbose --include-raw` shows both function blocks and group terminal blocks; without `--include-raw` the group terminal blocks are deliberately hidden when function blocks are present, which will mislead you if you are using the console to check your precedence logic.
-- Windows MIDI Services runs on Arm64. If your library ships Arm64 binaries, run at least the enumeration and loopback tests there too.
+- The `midi` console tool that ships with Windows MIDI Services can enumerate endpoints and show properties, which is useful for asserting from a test script what your library should be seeing. `midi endpoint properties <id> --verbose --verbose` shows both function blocks and group terminal blocks; without `--verbose` the group terminal blocks are deliberately hidden when function blocks are present, which will mislead you if you are using the console to check your precedence logic.
+- Windows MIDI Services runs on Arm64, and Arm64 is a first-class citizen with Windows 11. If your library ships Arm64 binaries, run at least the enumeration and loopback tests there too.
 
 ## Checklist
 
@@ -303,7 +314,7 @@ Enumeration and identity:
 
 Connections and sessions:
 
-- [ ] One session for the library, named after the host application
+- [ ] One session for the library, named after the host application or an app-supplied string
 - [ ] One connection per endpoint, refcounted across all ports that use it
 - [ ] Listeners added, or COM callback registered, before `Open()`
 - [ ] Closing one port does not close a connection another port is using
@@ -336,4 +347,4 @@ If you still have a WinMM backend:
 - Samples in several languages: [aka.ms/midisamples](https://aka.ms/midisamples)
 - The Windows MIDI Services Discord is the fastest way to reach the team and other implementers; the invitation link is on the [repository home page](https://aka.ms/midirepo)
 
-If you are partway through a port and something in the API is making your library's shape awkward, tell us before you work around it. We have changed the API for library authors before, and the workaround you ship will outlive the problem.
+If you are partway through a port and something in the API is making your library's shape awkward, tell us before you work around it and we'll see if we can work together on a better solution than a workaround.
