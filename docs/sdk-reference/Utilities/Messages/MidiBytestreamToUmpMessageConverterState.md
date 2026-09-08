@@ -21,3 +21,13 @@ Create an instance of this class and pass it to the `MidiMessageConverter.Conver
 | Property | Description |
 | --------------- | ----------- |
 | `Tag` | An optional application-defined string you may use to identify or annotate this state instance (for example, the source endpoint or group it is tracking). |
+
+## Samples
+
+This state object is what remembers you are mid-System-Exclusive between calls. Without it, a
+continuation buffer is parsed as though it were the start of a new message.
+
+* [C++/WinRT sysex-send-bytes](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/sysex-send-bytes)
+* [C# sysex-send-bytes](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/sysex-send-bytes)
+* [C++/WinRT sysex-file-sender](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/sysex-file-sender)
+* [C# sysex-file-sender](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/sysex-file-sender)

@@ -32,4 +32,8 @@ For more details, see the [`MidiEndpointDeviceInformation`]({{ site.baseurl }}/s
 
 ## Sample Code
 
-* [C++ Sample to Statically Enumerate Endpoints](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/static-enum-endpoints)
+* [C++/WinRT static-enum-endpoints](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/static-enum-endpoints)
+* [C# static-enum-endpoints](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/static-enum-endpoints)
+
+If your application has a device picker, or does anything else which needs to stay correct while
+devices come and go, use the watcher instead. See [how to watch endpoints]({{ site.baseurl }}/kb/how-to-watch-endpoints/).

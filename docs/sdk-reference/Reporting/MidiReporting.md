@@ -20,3 +20,11 @@ The MidiReporting class contains functions to report on data from the MIDI Servi
 ## Remarks
 
 The two `FindAllSessions...` methods answer "who is using this device?", which is what you need before warning a user that changing or removing an endpoint will affect a running application.
+
+## Samples
+
+`GetInstalledTransportPlugins` matched against an endpoint's `TransportId` is how you show a user
+what kind of device they are looking at.
+
+* [C++/WinRT identify-endpoint-type](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/identify-endpoint-type)
+* [C# identify-endpoint-type](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/identify-endpoint-type)

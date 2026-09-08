@@ -51,3 +51,11 @@ This class provides support for representing MIDI 1.0 messages in the Universal 
 | `ConvertMidi1CompleteMessageBytesToUmpWords(group, midi1Bytes, allowRunningStatus, converterState)` | Converts a sequence of raw MIDI 1.0 bytes to UMP words, using the supplied [`MidiBytestreamToUmpMessageConverterState`]({{ site.baseurl }}/sdk-reference/Utilities/Messages/MidiBytestreamToUmpMessageConverterState/) to preserve conversion state (partial messages, running status) across calls for a continuous stream. |
 | `ConvertSingleGroupCompleteMessageUmpWordsToMidi1Bytes(umpWords)` | Converts a sequence of UMP words (all from one group) back to MIDI 1.0 bytes. |
 | `ConvertHexByteStringToByteArray(hexByteString)` | Converts a space-separated or plain hex byte string (e.g., `"F0 41 10 F7"`) to a byte array. Useful for parsing SysEx strings from user input. |
+
+## Samples
+
+This is the path to use when your application already holds MIDI 1.0 bytestream data, which is the
+usual situation when porting from WinMM.
+
+* [C++/WinRT sysex-send-bytes](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/sysex-send-bytes)
+* [C# sysex-send-bytes](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/sysex-send-bytes)

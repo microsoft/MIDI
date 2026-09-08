@@ -54,3 +54,13 @@ Windows supports putting the system timer into a low-latency / high-frequency mo
 | `GetCurrentSystemTimerInfo` | Returns a `MidiSystemTimerSettings` struct containing the current timer characteristics |
 | `BeginLowLatencySystemTimerPeriod` | Signal that this application is putting the system into a low-latency timer period. Internally calls `timeBeginPeriod` |
 | `EndLowLatencySystemTimerPeriod` | End the started low-latency timer period. You must call this before the application closes if you previously called the Begin function. Internally calls `timeEndPeriod` |
+
+## Samples
+
+The `OffsetTimestampBy...` functions are how you schedule a message for the future. Read `Now` once
+and offset that single value, rather than reading the clock again for each message. There was no
+WinMM equivalent for scheduled sending.
+
+* [C++/WinRT scheduled-send-messages](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/scheduled-send-messages)
+* [C# scheduled-send-messages](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/scheduled-send-messages)
+* [C++/WinRT scheduled-messages-com-extensions](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/scheduled-messages-com-extensions)

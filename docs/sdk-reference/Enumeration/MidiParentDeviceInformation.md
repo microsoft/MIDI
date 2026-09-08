@@ -28,3 +28,12 @@ This class provides detailed information about the parent device of a MIDI endpo
 | `UsbProductId` | USB product id (PID), if applicable |
 | `UsbSerialNumber` | USB serial number string, if applicable |
 | `ReportedDeviceIdsHash` | Hash of reported device ids for quick comparison |
+
+## Samples
+
+These show where to find the USB vendor and product ids, and how this type differs from the
+identifiers reported by the transport. Under WinMM you would have used `DRV_QUERYDEVICEINTERFACE`
+and parsed the interface string yourself.
+
+* [C++/WinRT get-vid-pid](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/get-vid-pid)
+* [C# get-vid-pid](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/get-vid-pid)

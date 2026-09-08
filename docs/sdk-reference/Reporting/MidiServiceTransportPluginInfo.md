@@ -23,3 +23,10 @@ When creating a new transport, these properties are specified in the service plu
 | `IsRuntimeCreatableBySettings` | True if endpoints can be created by the settings app, which will also create appropriate config file entries |
 | `IsSystemManaged` | True if this is a system-managed transport, like the diagnostics transport |
 | `CanConfigure` | True if this can be configured in the settings app |
+
+## Samples
+
+Branch on `TransportCode` rather than on `Name` or `Description`, which are display strings.
+
+* [C++/WinRT identify-endpoint-type](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/identify-endpoint-type)
+* [C# identify-endpoint-type](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/identify-endpoint-type)
