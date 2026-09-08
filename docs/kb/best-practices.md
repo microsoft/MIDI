@@ -23,6 +23,8 @@ The most flexible, but least performant approach, is to use the `IMidiMessage` i
 
 For C++ and C++-like languages, we've added the COM extensions for fast allocation-free send and receive of messages. All the normal WinRT types are used for Session and Connection. But when you want to send and receive messages, and can ensure the data integrity of the messages being sent (most cross-platform apps already have code to do this), the COM Extensions are the way to go. There is a C++ example in the repo and examples in the documentation.
 
+A connection uses either the COM Extensions or the WinRT message processing plugins, never both, because a registered messages received callback bypasses every listener and the connection's own `MessageReceived` event. Decide which one a given connection uses before you write the receive path, and register the callback, or add the plugins, before calling `Open()`. The API reports the conflict rather than letting one silently disable the other, so check the result of `AddMessageProcessingPlugin` and the `HRESULT` from `SetMessagesReceivedCallback`. This matters most for virtual devices, which are themselves implemented as a message processing plugin.
+
 ### Splitting large messages across transmissions
 
 There is a limit to how many MIDI words may be sent in a single call. That limit is available through `GetSupportedMaxMidiWordsPerTransmission`, on both the connection and the COM extension interface. If a single call contains more words than the limit allows, the whole call is rejected and nothing is sent. Because the rejection is all-or-nothing, no data has reached the device, so retrying with a smaller buffer is safe.
@@ -87,6 +89,8 @@ Note that a flat list, like what many apps used for MIDI 1.0 ports, is not as re
 ### Use `.AsEquivalentFunctionBlock()` for Group Terminal Blocks
 
 USB MIDI 1.0 devices and some USB MIDI 2.0 devices will not have Function Blocks. Per-spec, Function Blocks are optional. However, those USB devices will have Group Terminal Blocks. The preference is to use the Function Block when available. However, to keep your data model uniform, we project Function Blocks from Group Terminal Blocks using the `.AsEquivalentFunctionBlock()` function of the `MidiGroupTerminalBlock` type. Not all properties map cleanly, but we make a best-effort attempt here to provide the application with usable data that can be presented to the user.
+
+When an endpoint has both kinds of block, use the Function Blocks and ignore the Group Terminal Blocks. They are two views of the same endpoint at different levels of authority, not two sets of ports, so listing both produces a doubled list in which the customer cannot tell which entry is real. Note also that Function Blocks are discovered in-protocol and arrive after the endpoint does, so an endpoint can legitimately have none yet. Rebuild your list when the `Updated` event reports that function blocks have changed, and keep doing so for as long as you hold the watcher.
 
 ### Use the Function Block UI Hint to help you decide how to show functions
 

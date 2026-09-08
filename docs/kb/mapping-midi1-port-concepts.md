@@ -48,7 +48,7 @@ MIDI 2.0 devices typically support Function Blocks, which are named entities whi
 
 When an endpoint reports both kinds of block, use the Function Blocks and ignore the Group Terminal Blocks. They are two descriptions of the same endpoint at different levels of authority, not two sets of ports, so merging them produces a doubled list. The precedence rule and the code to implement it are in [Porting a MIDI Library or Framework to Windows MIDI Services]({{ site.baseurl }}/kb/porting-midi-libraries/).
 
-Group Terminal Blocks are only for USB devices, but they are also static. They do not change at runtime, but a device could potentially create different ones the next time it is created (most do not).
+Group Terminal Blocks come from USB descriptors. Windows MIDI Services also synthesizes them for Bluetooth LE MIDI 1.0 devices so there is always something to enumerate, but MIDI 2.0 endpoints which are not USB, such as Network MIDI 2.0, Bluetooth LE MIDI 2.0 and virtual devices, have Function Blocks and no Group Terminal Blocks at all. They do not currently change at runtime, and are not currently renameable, although a device could create different ones the next time it is enumerated (most do not).
 
 So when presenting the information to your users, one possible format would be
 
