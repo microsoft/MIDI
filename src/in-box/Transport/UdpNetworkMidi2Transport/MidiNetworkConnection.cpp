@@ -24,7 +24,8 @@ MidiNetworkConnection::Initialize(
     std::wstring const& thisProductInstanceId,
     uint16_t const retransmitBufferMaxCommandPacketCount,
     uint8_t const maxForwardErrorCorrectionCommandPacketCount,
-    bool createUmpEndpointsOnly
+    bool createUmpEndpointsOnly,
+    uint8_t const fallbackMidi1PortCount
 )
 {
     TraceLoggingWrite(
@@ -47,6 +48,7 @@ MidiNetworkConnection::Initialize(
     m_remotePort = port;
 
     m_createUmpEndpointsOnly = createUmpEndpointsOnly;
+    m_fallbackMidi1PortCount = fallbackMidi1PortCount;
 
     m_thisEndpointName = thisEndpointName;
     m_thisProductInstanceId = thisProductInstanceId;

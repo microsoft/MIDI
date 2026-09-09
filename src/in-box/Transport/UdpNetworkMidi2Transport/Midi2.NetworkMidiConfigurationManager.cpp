@@ -121,6 +121,45 @@ namespace
         }
     }
 
+    // A number outside the permitted range is treated as absent. Config files are hand-edited,
+    // and clamping silently would hide the mistake from whoever wrote it.
+    uint8_t SafeGetNamedByte(
+        _In_ json::JsonObject const& parent,
+        _In_ winrt::hstring const& name,
+        _In_ uint8_t const defaultValue,
+        _In_ uint8_t const minimumValue,
+        _In_ uint8_t const maximumValue) noexcept
+    {
+        try
+        {
+            if (parent == nullptr || !parent.HasKey(name))
+            {
+                return defaultValue;
+            }
+
+            auto value = parent.Lookup(name);
+
+            if (value == nullptr || value.ValueType() != json::JsonValueType::Number)
+            {
+                TraceWrongJsonType(name, L"number");
+                return defaultValue;
+            }
+
+            auto const number = value.GetNumber();
+
+            if (number < minimumValue || number > maximumValue)
+            {
+                return defaultValue;
+            }
+
+            return static_cast<uint8_t>(number);
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
+    }
+
     json::JsonArray SafeGetNamedArray(_In_ json::JsonObject const& parent, _In_ winrt::hstring const& name) noexcept
     {
         try
@@ -661,6 +700,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectDirect(
     winrt::hstring const& umpEndpointName,
     winrt::hstring const& customEndpointName,
     bool const createMidi1Ports,
+    uint8_t const fallbackMidi1PortCount,
     json::JsonObject& responseObject) noexcept
 try
 {
@@ -710,6 +750,7 @@ try
     auto clientDefinition = std::make_shared<MidiNetworkClientDefinition>();
 
     clientDefinition->CreateMidi1Ports = createMidi1Ports;
+    clientDefinition->FallbackMidi1PortCount = fallbackMidi1PortCount;
     clientDefinition->EntryIdentifier = configEntryId;
     clientDefinition->MatchDirectHostNameOrIPAddress = remoteAddress;
     clientDefinition->MatchDirectPort = remotePort;
@@ -754,6 +795,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectMdns(
     winrt::hstring const& umpEndpointName,
     winrt::hstring const& customEndpointName,
     bool const createMidi1Ports,
+    uint8_t const fallbackMidi1PortCount,
     json::JsonObject& responseObject) noexcept
 try
 {
@@ -781,6 +823,7 @@ try
     auto clientDefinition = std::make_shared<MidiNetworkClientDefinition>();
 
     clientDefinition->CreateMidi1Ports = createMidi1Ports;
+    clientDefinition->FallbackMidi1PortCount = fallbackMidi1PortCount;
     clientDefinition->EntryIdentifier = configEntryId;
     clientDefinition->MatchId = matchId;
     clientDefinition->LocalEndpointName = umpEndpointName;
@@ -1201,7 +1244,8 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
 //       "remotePort" : "port number",
 //       "localPort" : "port number",
 //       "endpointDeviceId" : "id of associated ump endpoint",
-//       "createMidi1Ports" : true
+//       "createMidi1Ports" : true,
+//       "fallbackMidi1PortCount" : 1
 //      },
 //     ...
 //   ]
@@ -1257,6 +1301,10 @@ try
         clientObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CREATE_MIDI1_PORTS_KEY,
             json::JsonValue::CreateBooleanValue(def->CreateMidi1Ports));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_FALLBACK_MIDI1_PORT_COUNT_KEY,
+            json::JsonValue::CreateNumberValue(def->FallbackMidi1PortCount));
 
         if (client == nullptr)
         {
@@ -1358,6 +1406,7 @@ catch (...)
 //       "name" : "Advertised Endpoint Name",
 //       "productInstanceId" : "instance id",
 //       "createMidi1Ports" : true,
+//       "fallbackMidi1PortCount" : 1,
 //       "serviceInstanceName" : "foobarbaz"
 //      },
 //     ...
@@ -1481,6 +1530,10 @@ try
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CREATE_MIDI1_PORTS_KEY,
             json::JsonValue::CreateBooleanValue(def.CreateMidi1Ports));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_FALLBACK_MIDI1_PORT_COUNT_KEY,
+            json::JsonValue::CreateNumberValue(def.FallbackMidi1PortCount));
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SERVICE_INSTANCE_NAME_KEY,
@@ -1641,6 +1694,39 @@ namespace
         auto const value = internal::ToLowerTrimmedWStringCopy(arg->second);
 
         return value == L"true" || value == L"1";
+    }
+
+    // Same idea for a numeric argument. Anything the caller cannot have meant, including text
+    // which is not a number at all, falls back to the default rather than to zero.
+    uint8_t OptionalCommandArgumentByte(
+        _In_ internal::MidiTransportCommandHelper& commandHelper,
+        _In_ std::wstring const& key,
+        _In_ uint8_t const defaultValue,
+        _In_ uint8_t const minimumValue,
+        _In_ uint8_t const maximumValue)
+    {
+        auto arg = commandHelper.Arguments()->find(key);
+
+        if (arg == commandHelper.Arguments()->end())
+        {
+            return defaultValue;
+        }
+
+        try
+        {
+            auto const value = std::stoi(internal::TrimmedWStringCopy(arg->second));
+
+            if (value < minimumValue || value > maximumValue)
+            {
+                return defaultValue;
+            }
+
+            return static_cast<uint8_t>(value);
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
     }
 
     // FILETIME to ISO 8601 UTC, with the full 100ns resolution so the value round-trips. An
@@ -1942,6 +2028,7 @@ try
                 name->second.c_str(),
                 OptionalCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY),
                 OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT),
+                OptionalCommandArgumentByte(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM),
                 responseObject));
         }
         else
@@ -1973,6 +2060,7 @@ try
                 name->second.c_str(),
                 OptionalCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY),
                 OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT),
+                OptionalCommandArgumentByte(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM),
                 responseObject));
         }
         else
@@ -2416,6 +2504,13 @@ try
 
                 definition->CreateMidi1Ports = SafeGetNamedBoolean(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT);
 
+                definition->FallbackMidi1PortCount = SafeGetNamedByte(
+                    hostEntry,
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
+                    MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT,
+                    MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
+                    MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
+
                 definition->UmpEndpointName = internal::TrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L""));
                 definition->ProductInstanceId = internal::TrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY, L""));
 
@@ -2613,6 +2708,13 @@ try
                         clientEntry,
                         MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY,
                         MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT);
+
+                    definition->FallbackMidi1PortCount = SafeGetNamedByte(
+                        clientEntry,
+                        MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
+                        MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT,
+                        MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
+                        MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
 
                     winrt::hstring localEndpointName{ };
                     winrt::hstring localProductInstanceId{ };

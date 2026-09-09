@@ -23,7 +23,8 @@ public:
         _In_ std::wstring const& thisProductInstanceId,
         _In_ uint16_t const retransmitBufferMaxCommandPacketCount,
         _In_ uint8_t const maxForwardErrorCorrectionCommandPacketCount,
-        _In_ bool createUmpEndpointsOnly
+        _In_ bool createUmpEndpointsOnly,
+        _In_ uint8_t const fallbackMidi1PortCount
     );
 
     HRESULT SendInvitation();

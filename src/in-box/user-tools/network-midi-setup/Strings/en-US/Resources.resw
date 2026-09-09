@@ -264,6 +264,14 @@
     <value>MIDI 1.0 ports are built with the endpoint, so changing this takes effect the next time this device connects.</value>
     <comment>Explains why this one setting, unlike the others in the same dialog, does not apply immediately.</comment>
   </data>
+  <data name="CustomizeFallbackMidi1PortCountBox.Header" xml:space="preserve">
+    <value>MIDI 1.0 ports to create if this device does not describe itself</value>
+    <comment>Label for a spin box holding a number from 1 to 16.</comment>
+  </data>
+  <data name="CustomizeFallbackMidi1PortCountHint.Text" xml:space="preserve">
+    <value>Most devices say how many ports they have, and this is not used for them. It is only for a device that never tells us.</value>
+    <comment>Explains that the number above is a fallback, so the customer does not expect it to change a device that works.</comment>
+  </data>
   <data name="CustomizeTransportNameFormat" xml:space="preserve">
     <value>This device reports itself as {0}.</value>
     <comment>{0} is the name the device supplies. Shown so the customer can tell what they are replacing.</comment>
@@ -577,6 +585,14 @@
   </data>
   <data name="HostCreateMidi1PortsCheckBox.Content" xml:space="preserve">
     <value>Also create MIDI 1.0 ports for connected devices</value>
+  </data>
+  <data name="HostFallbackMidi1PortCountBox.Header" xml:space="preserve">
+    <value>MIDI 1.0 ports to create for a device that does not describe itself</value>
+    <comment>Label for a spin box holding a number from 1 to 16.</comment>
+  </data>
+  <data name="HostFallbackMidi1PortCountHint.Text" xml:space="preserve">
+    <value>Most devices say how many ports they have, and this is not used for them. It is only for a device that never tells us.</value>
+    <comment>Explains that the number above is a fallback, so the customer does not expect it to change a device that works.</comment>
   </data>
   <data name="HostAdvancedExpander.Header" xml:space="preserve">
     <value>Advanced</value>

@@ -43,6 +43,7 @@ public:
         _In_ winrt::Windows::Networking::HostName const& hostName,
         _In_ std::wstring const& networkPort,
         _In_ bool umpOnly,
+        _In_ uint8_t const fallbackMidi1PortCount,
         _Out_ std::wstring& createdNewDeviceInstanceId,
         _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
     ));
@@ -55,6 +56,7 @@ public:
         _In_ winrt::Windows::Networking::HostName const& hostName,
         _In_ std::wstring const& networkPort,
         _In_ bool umpOnly,
+        _In_ uint8_t const fallbackMidi1PortCount,
         _Out_ std::wstring& createdNewDeviceInstanceId,
         _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
     ));
@@ -112,6 +114,7 @@ private:
         _In_ winrt::Windows::Networking::HostName const& hostName,
         _In_ std::wstring const& networkPort,
         _In_ bool umpOnly,
+        _In_ uint8_t const fallbackMidi1PortCount,
         _Out_ std::wstring& createdNewDeviceInstanceId,
         _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
     ));

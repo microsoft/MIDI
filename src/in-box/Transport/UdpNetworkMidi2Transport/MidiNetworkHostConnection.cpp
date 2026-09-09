@@ -22,6 +22,7 @@ MidiNetworkHostConnection::Initialize(
     uint16_t const retransmitBufferMaxCommandPacketCount,
     uint8_t const maxForwardErrorCorrectionCommandPacketCount,
     bool createUmpEndpointsOnly,
+    uint8_t const fallbackMidi1PortCount,
     MidiNetworkAuthenticationKind const authenticationKind,
     MidiNetworkCredentialIdentifier const& credentialIdentifier
 )
@@ -40,7 +41,8 @@ MidiNetworkHostConnection::Initialize(
         thisProductInstanceId,
         retransmitBufferMaxCommandPacketCount,
         maxForwardErrorCorrectionCommandPacketCount,
-        createUmpEndpointsOnly
+        createUmpEndpointsOnly,
+        fallbackMidi1PortCount
     );
 }
 
@@ -65,6 +67,7 @@ MidiNetworkHostConnection::CreateHostEndpointForPendingInvitation(
         m_remoteHostName,
         m_remotePort,
         m_createUmpEndpointsOnly,
+        m_fallbackMidi1PortCount,
         newDeviceInstanceId,
         newEndpointDeviceInterfaceId));
 

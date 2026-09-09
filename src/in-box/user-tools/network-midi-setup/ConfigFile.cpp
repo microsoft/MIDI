@@ -793,9 +793,49 @@ namespace midinetworksetup
     }
 
     _Use_decl_annotations_
-    bool NetworkConfigFile::SetClientCreateMidi1Ports(
+    uint8_t NetworkConfigFile::GetClientFallbackMidi1PortCount(winrt::hstring const& clientIdKey) noexcept
+    {
+        json::JsonObject config{ nullptr };
+
+        if (!LoadCached(config))
+        {
+            return MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT;
+        }
+
+        auto clients = GetEntriesObject(config, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY, false);
+
+        auto client = FindObject(clients, ResolveKey(clients, clientIdKey));
+
+        if (client == nullptr)
+        {
+            return MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT;
+        }
+
+        try
+        {
+            auto const value = client.GetNamedNumber(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
+                MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT);
+
+            if (value < MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM ||
+                value > MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM)
+            {
+                return MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT;
+            }
+
+            return static_cast<uint8_t>(value);
+        }
+        catch (...)
+        {
+            return MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT;
+        }
+    }
+
+    _Use_decl_annotations_
+    bool NetworkConfigFile::SetClientMidi1PortSettings(
         winrt::hstring const& clientIdKey,
-        bool const createMidi1Ports) noexcept
+        bool const createMidi1Ports,
+        uint8_t const fallbackMidi1PortCount) noexcept
     {
         json::JsonObject config{ nullptr };
 
@@ -820,6 +860,9 @@ namespace midinetworksetup
             clientChange.SetNamedValue(
                 MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY,
                 json::JsonValue::CreateBooleanValue(createMidi1Ports));
+            clientChange.SetNamedValue(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
+                json::JsonValue::CreateNumberValue(fallbackMidi1PortCount));
 
             return SaveSection(BuildClientSection(ResolveKey(clients, clientIdKey), clientChange));
         }

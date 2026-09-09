@@ -10,6 +10,7 @@
 #include "Transports.Network.MidiNetworkClientConnectConfig.g.h"
 
 #include "..\..\..\Transport\UdpNetworkMidi2Transport\net2udp_transport_defs.h"
+#include "..\..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
 
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
@@ -35,6 +36,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool CreateOnlyUmpEndpoints() const noexcept { return m_umpOnly; }
         void CreateOnlyUmpEndpoints(_In_ bool const value) noexcept { m_umpOnly = value; }
 
+        uint8_t FallbackMidi1PortCount() const noexcept { return m_fallbackMidi1PortCount; }
+        void FallbackMidi1PortCount(_In_ uint8_t const value) noexcept { m_fallbackMidi1PortCount = value; }
+
         bool AutoReconnect() const noexcept{ return m_autoReconnect; }
         void AutoReconnect(_In_ bool const value) noexcept { m_autoReconnect = value; }
 
@@ -46,6 +50,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring m_customEndpointName{};
         winrt::guid m_id{};
         bool m_umpOnly{ false };
+        uint8_t m_fallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
         bool m_autoReconnect{ true };
         winrt::hstring m_comment{};
 

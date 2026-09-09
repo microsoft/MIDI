@@ -1455,6 +1455,7 @@ CMidi2NetworkMidiEndpointManager::CreateNewHostEndpointToRemoteClient(
     _In_ winrt::Windows::Networking::HostName const& hostName,
     _In_ std::wstring const& networkPort,
     _In_ bool umpOnly,
+    _In_ uint8_t const fallbackMidi1PortCount,
     _Out_ std::wstring& createdNewDeviceInstanceId,
     _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
 )
@@ -1470,6 +1471,7 @@ CMidi2NetworkMidiEndpointManager::CreateNewHostEndpointToRemoteClient(
         hostName,
         networkPort,
         umpOnly,
+        fallbackMidi1PortCount,
         createdNewDeviceInstanceId,
         createdNewEndpointDeviceInterfaceId
     );
@@ -1486,6 +1488,7 @@ CMidi2NetworkMidiEndpointManager::CreateNewClientEndpointToRemoteHost(
     _In_ winrt::Windows::Networking::HostName const& hostName,
     _In_ std::wstring const& networkPort,
     _In_ bool umpOnly,
+    _In_ uint8_t const fallbackMidi1PortCount,
     _Out_ std::wstring& createdNewDeviceInstanceId,
     _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
 )
@@ -1501,6 +1504,7 @@ CMidi2NetworkMidiEndpointManager::CreateNewClientEndpointToRemoteHost(
         hostName,
         networkPort,
         umpOnly,
+        fallbackMidi1PortCount,
         createdNewDeviceInstanceId,
         createdNewEndpointDeviceInterfaceId
     );
@@ -1579,6 +1583,7 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     winrt::Windows::Networking::HostName const& hostName,
     std::wstring const& networkPort,
     bool umpOnly,
+    uint8_t const fallbackMidi1PortCount,
     std::wstring& createdNewDeviceInstanceId,
     std::wstring& createdNewEndpointDeviceInterfaceId
 )
@@ -1764,6 +1769,57 @@ try
 
     interfaceDevProperties.push_back({ {PKEY_MIDI_NetworkMidiConnectionRole, DEVPROP_STORE_SYSTEM, nullptr},
         DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(uint32_t)), (PVOID)&connectionRole });
+
+
+    // A Network MIDI 2.0 endpoint declares function blocks, never group terminal blocks, and the
+    // service builds MIDI 1.0 ports from whichever it finds. A remote which never completes
+    // endpoint discovery declares neither, so the service has nothing to work from and the
+    // endpoint ends up with no MIDI 1.0 ports at all. Publishing a group terminal block up front
+    // gives it something. Function blocks take precedence over this the moment they arrive, so a
+    // remote which does describe itself is unaffected.
+    //
+    // This has to outlive ActivateEndpoint, because the property below points into it.
+    std::vector<std::byte> groupTerminalBlockData{};
+
+    if (!umpOnly)
+    {
+        internal::GroupTerminalBlockInternal block{};
+
+        block.Number = 1;
+        block.Direction = MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL;
+        block.FirstGroupIndex = 0;
+        block.GroupCount = std::clamp(
+            fallbackMidi1PortCount,
+            (uint8_t)MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
+            (uint8_t)MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
+        block.Protocol = 0x11;      // 0x11 = MIDI 2.0
+
+        // Left empty on purpose. The service names the ports from the endpoint when a block has
+        // no name of its own, so a later rename is picked up without rewriting this property.
+        block.Name = L"";
+
+        std::vector<internal::GroupTerminalBlockInternal> blocks{ block };
+
+        if (internal::WriteGroupTerminalBlocksToPropertyDataPointer(blocks, groupTerminalBlockData))
+        {
+            interfaceDevProperties.push_back({ {PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_BINARY, static_cast<ULONG>(groupTerminalBlockData.size()), (PVOID)groupTerminalBlockData.data() });
+        }
+        else
+        {
+            // Not fatal. The endpoint still works for UMP clients, it just has no MIDI 1.0 ports
+            // until the remote declares function blocks.
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Unable to build the fallback group terminal block", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(instanceId.c_str(), "instance id")
+            );
+        }
+    }
 
 
     std::wstring endpointDescription{ L"Network MIDI 2.0 endpoint "};

@@ -30,6 +30,7 @@ MidiNetworkClient::Initialize(
 
 
     m_createUmpEndpointsOnly = !clientDefinition.CreateMidi1Ports;
+    m_fallbackMidi1PortCount = clientDefinition.FallbackMidi1PortCount;
 
     m_thisEndpointName = clientDefinition.LocalEndpointName;
     m_thisProductInstanceId = clientDefinition.LocalProductInstanceId;
@@ -244,7 +245,8 @@ MidiNetworkClient::Start(
         m_thisProductInstanceId,
         TransportState::Current().TransportSettings.RetransmitBufferMaxCommandPacketCount,
         TransportState::Current().TransportSettings.ForwardErrorCorrectionMaxCommandPacketCount,
-        m_createUmpEndpointsOnly
+        m_createUmpEndpointsOnly,
+        m_fallbackMidi1PortCount
     ));
 
     TransportState::Current().AddNetworkConnection(remoteHostName, remotePort, conn);

@@ -1165,6 +1165,22 @@
                               Content="Also create MIDI 1.0 ports for connected devices"
                               IsChecked="True" />
 
+                    <StackPanel Spacing="4" Margin="28,0,0,0">
+                        <NumberBox x:Name="HostFallbackMidi1PortCountBox"
+                                   x:Uid="HostFallbackMidi1PortCountBox"
+                                   Header="MIDI 1.0 ports to create for a device that does not describe itself"
+                                   Minimum="1"
+                                   Maximum="16"
+                                   MinWidth="160"
+                                   HorizontalAlignment="Left"
+                                   SpinButtonPlacementMode="Compact" />
+                        <TextBlock x:Uid="HostFallbackMidi1PortCountHint"
+                                   Text="Most devices say how many ports they have, and this is not used for them. It is only for a device that never tells us."
+                                   TextWrapping="Wrap"
+                                   Style="{ThemeResource CaptionTextBlockStyle}"
+                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                    </StackPanel>
+
                     <Expander x:Uid="HostAdvancedExpander"
                               Header="Advanced"
                               HorizontalAlignment="Stretch"
@@ -1351,6 +1367,22 @@
                            TextWrapping="Wrap"
                            Style="{ThemeResource CaptionTextBlockStyle}"
                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                <StackPanel Spacing="4" Margin="28,0,0,0">
+                    <NumberBox x:Name="CustomizeFallbackMidi1PortCountBox"
+                               x:Uid="CustomizeFallbackMidi1PortCountBox"
+                               Header="MIDI 1.0 ports to create if this device does not describe itself"
+                               Minimum="1"
+                               Maximum="16"
+                               MinWidth="160"
+                               HorizontalAlignment="Left"
+                               SpinButtonPlacementMode="Compact" />
+                    <TextBlock x:Uid="CustomizeFallbackMidi1PortCountHint"
+                               Text="Most devices say how many ports they have, and this is not used for them. It is only for a device that never tells us."
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                </StackPanel>
             </StackPanel>
         </ContentDialog>
     </Grid>

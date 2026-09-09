@@ -171,7 +171,8 @@ protected:
         _In_ std::wstring const& thisProductInstanceId,
         _In_ uint16_t const retransmitBufferMaxCommandPacketCount,
         _In_ uint8_t const maxForwardErrorCorrectionCommandPacketCount,
-        _In_ bool createUmpEndpointsOnly
+        _In_ bool createUmpEndpointsOnly,
+        _In_ uint8_t const fallbackMidi1PortCount
     );
 
     // Role hooks. The defaults are what happens when a command arrives for the role this
@@ -303,6 +304,7 @@ protected:
     HRESULT OutboundProcessingThreadWorker(_In_ std::stop_token stopToken);
 
     bool m_createUmpEndpointsOnly{ true };
+    uint8_t m_fallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
 
     MidiNetworkConnectionRole m_role{};
 

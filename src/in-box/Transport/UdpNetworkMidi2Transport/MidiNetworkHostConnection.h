@@ -25,6 +25,7 @@ public:
         _In_ uint16_t const retransmitBufferMaxCommandPacketCount,
         _In_ uint8_t const maxForwardErrorCorrectionCommandPacketCount,
         _In_ bool createUmpEndpointsOnly,
+        _In_ uint8_t const fallbackMidi1PortCount,
         _In_ MidiNetworkAuthenticationKind const authenticationKind,
         _In_ MidiNetworkCredentialIdentifier const& credentialIdentifier
     );
