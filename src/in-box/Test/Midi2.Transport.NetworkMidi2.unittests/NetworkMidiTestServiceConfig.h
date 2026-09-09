@@ -110,7 +110,8 @@ namespace NetworkMidiTest
         _In_ bool const requireApproval,
         _In_ std::wstring const& port = L"auto",
         _In_ bool const advertise = false,
-        _In_ bool const allowPortFallback = true);
+        _In_ bool const allowPortFallback = true,
+        _In_ bool const createMidi1Ports = false);
 
     // The body of a "create" object, verbatim, so a test can put the wrong type in any field.
     ServiceConfigResult SendRawCreateSection(_In_ std::wstring const& createBodyJson);

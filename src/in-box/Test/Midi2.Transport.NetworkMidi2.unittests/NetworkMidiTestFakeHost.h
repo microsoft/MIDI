@@ -149,6 +149,20 @@ namespace NetworkMidiTest
         // is what makes the reflection and wrong-source-port tests meaningful.
         void SetRelatchOnInvitation(_In_ bool const enabled) { m_relatchOnInvitation = enabled; }
 
+        // Endpoint discovery -----------------------------------------------------------
+
+        // Describes this host the way a real MIDI 2.0 device does. Once blocks are declared the
+        // host answers an Endpoint Discovery request with Endpoint Info, Endpoint Name, Product
+        // Instance Id, and one Function Block Info and Name per block. With no blocks declared
+        // the host stays silent, which is what an endpoint that never completes discovery does.
+        void DeclareFunctionBlocks(_In_ std::vector<FunctionBlockDescription> const& blocks);
+
+        // One bidirectional block spanning the given groups, named after the endpoint. The
+        // common case, and the one that produces groupCount MIDI 1.0 ports in each direction.
+        void DeclareBidirectionalFunctionBlock(_In_ uint8_t const groupCount);
+
+        size_t EndpointDiscoveryRequestCount() const { return m_endpointDiscoveryRequests; }
+
         // Sending ----------------------------------------------------------------------
 
         bool Send(_In_ std::vector<uint8_t> const& bytes);
@@ -164,6 +178,8 @@ namespace NetworkMidiTest
         void ReceiverLoop(_In_ std::stop_token const stopToken);
         void HandlePacket(_In_ ParsedPacket const& packet);
         void HandleInvitation();
+        void HandleUmpData(_In_ ReceivedCommand const& command);
+        void SendDiscoveryResponse();
 
         bool SendToRemote(_In_ std::vector<uint8_t> const& bytes);
 
@@ -191,6 +207,14 @@ namespace NetworkMidiTest
         // restart the timer.
         std::atomic<bool> m_pendingReplySent{ false };
         std::atomic<bool> m_sessionAccepted{ false };
+
+        std::mutex m_functionBlockLock;
+        std::vector<FunctionBlockDescription> m_functionBlocks{ };
+        std::atomic<size_t> m_endpointDiscoveryRequests{ 0 };
+
+        // UMP data commands carry a sequence number the client tracks, so the responses have to
+        // continue it rather than restart at zero.
+        std::atomic<uint16_t> m_outboundUmpSequenceNumber{ 0 };
 
         std::mutex m_historyLock;
         std::condition_variable m_historySignal;

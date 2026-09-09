@@ -353,7 +353,8 @@ namespace NetworkMidiTest
         bool const requireApproval,
         std::wstring const& port,
         bool const advertise,
-        bool const allowPortFallback)
+        bool const allowPortFallback,
+        bool const createMidi1Ports)
     {
         // advertise defaults off so these short-lived test hosts do not appear over mDNS and get
         // picked up by anything else on the network. Only the tests which are specifically about
@@ -371,6 +372,7 @@ namespace NetworkMidiTest
             L"\"enabled\":true,"
             L"\"advertise\":" + std::wstring(advertise ? L"true" : L"false") + L","
             L"\"allowPortFallback\":" + std::wstring(allowPortFallback ? L"true" : L"false") + L","
+            L"\"createMidi1Ports\":" + std::wstring(createMidi1Ports ? L"true" : L"false") + L","
             L"\"remoteClientPolicy\":\"" +
                 std::wstring(requireApproval ? L"requireApproval" : L"allowAny") + L"\""
             L"}}}}";
