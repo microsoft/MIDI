@@ -1778,8 +1778,10 @@ try
     // gives it something. Function blocks take precedence over this the moment they arrive, so a
     // remote which does describe itself is unaffected.
     //
-    // This has to outlive ActivateEndpoint, because the property below points into it.
+    // This has to outlive ActivateEndpoint, because the property below points into it. The name
+    // table holds its own buffer for the same reason.
     std::vector<std::byte> groupTerminalBlockData{};
+    WindowsMidiServicesNamingLib::MidiEndpointNameTable nameTable{};
 
     if (!umpOnly)
     {
@@ -1793,10 +1795,7 @@ try
             (uint8_t)MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
             (uint8_t)MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
         block.Protocol = 0x11;      // 0x11 = MIDI 2.0
-
-        // Left empty on purpose. The service names the ports from the endpoint when a block has
-        // no name of its own, so a later rename is picked up without rewriting this property.
-        block.Name = L"";
+        block.Name = friendlyName;
 
         std::vector<internal::GroupTerminalBlockInternal> blocks{ block };
 
@@ -1804,6 +1803,19 @@ try
         {
             interfaceDevProperties.push_back({ {PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_BINARY, static_cast<ULONG>(groupTerminalBlockData.size()), (PVOID)groupTerminalBlockData.data() });
+
+            // The names the service gives the ports come from this table, not from the block.
+            //
+            // Every group is named, not just the ones the block above spans. When function blocks
+            // arrive the service rebuilds the table from them, but it reads the table back from a
+            // device snapshot taken before that rebuild, so the names it applies on that pass are
+            // the ones written here. A function block may land on any group, and a group with no
+            // entry yields an empty port name.
+            auto namingBlocks = blocks;
+            namingBlocks.front().GroupCount = MIDI_NETWORK_MIDI_GROUP_COUNT;
+
+            LOG_IF_FAILED(nameTable.PopulateAllEntriesForNativeUmpDevice(L"", namingBlocks));
+            LOG_IF_FAILED(nameTable.WriteProperties(interfaceDevProperties));
         }
         else
         {

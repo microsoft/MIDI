@@ -191,6 +191,9 @@ enum class MidiNetworkEntryState
 
 #define MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT                    true
 
+// A UMP endpoint addresses sixteen groups.
+#define MIDI_NETWORK_MIDI_GROUP_COUNT                                   16
+
 // header sized plus a command packet header
 #define MINIMUM_VALID_UDP_PACKET_SIZE (sizeof(uint32_t) * 2)
 
