@@ -48,6 +48,10 @@
 // partway through, as one demanding encryption does, times out instead.
 #define BLUETOOTH_MIDI_ERROR_CODE_GATT_TIMEOUT                  0x0000010F
 
+// The GATT call completed with a failure rather than running out of time. The device was there and
+// answered, so the accompanying HRESULT, not the connection state, is what identifies the fault.
+#define BLUETOOTH_MIDI_ERROR_CODE_GATT_CALL_FAILED              0x00000110
+
 #define BLUETOOTH_MIDI_ERROR_CODE_NOT_CONNECTED                 0x00000111
 
 // publishing this PC as a peripheral
