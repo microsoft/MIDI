@@ -98,6 +98,13 @@
 #define MIDIDIAG_FIELD_LABEL_GTB_GROUP_COUNT                             L"gtb_group_count"
 #define MIDIDIAG_FIELD_LABEL_GTB_DIRECTION                               L"gtb_direction"
 
+#define MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK_NUMBER                       L"fb_number"
+#define MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK_NAME                         L"fb_name"
+#define MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK_FIRST_GROUP                  L"fb_first_group_number"
+#define MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK_GROUP_COUNT                  L"fb_group_count"
+#define MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK_DIRECTION                    L"fb_direction"
+#define MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK_ACTIVE                       L"fb_active"
+
 #define MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI1_NAME_TABLE_SELECTION      L"reg_default_midi1_winmm_naming"
 #define MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI2_UMP_NAME_TABLE_SELECTION  L"reg_default_midi2_ump_winmm_naming"
 #define MIDIDIAG_FIELD_LABEL_REG_DEFAULT_MIDI1_UMP_NAME_TABLE_SELECTION  L"reg_default_midi1_ump_winmm_naming"
@@ -108,10 +115,7 @@
 #define MIDIDIAG_FIELD_LABEL_NAME_TABLE_DATA_FLOW                        L"name_table_data_flow"
 #define MIDIDIAG_FIELD_LABEL_NAME_TABLE_CUSTOM_NAME                      L"name_table_custom_name"
 #define MIDIDIAG_FIELD_LABEL_NAME_TABLE_LEGACY_WINMM_NAME                L"name_table_legacy_winmm_name"
-#define MIDIDIAG_FIELD_LABEL_NAME_TABLE_GTB_NAME                         L"name_table_gtb_name"
-#define MIDIDIAG_FIELD_LABEL_NAME_TABLE_FILTER_PLUS_GTB_NAME             L"name_table_filter_plus_gtb_name"
-#define MIDIDIAG_FIELD_LABEL_NAME_TABLE_PIN_NAME                         L"name_table_pin_name"
-#define MIDIDIAG_FIELD_LABEL_NAME_TABLE_FILTER_PLUS_PIN_NAME             L"name_table_filter_plus_pin_name"
+#define MIDIDIAG_FIELD_LABEL_NAME_TABLE_NEW_STYLE_NAME                   L"name_table_new_style_name"
 
 #define MIDIDIAG_FIELD_LABEL_MIDI1_PORT_IN                               L"midi_in_port"
 #define MIDIDIAG_FIELD_LABEL_MIDI1_PORT_OUT                              L"midi_out_port"

@@ -786,6 +786,42 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
             }
 
 
+            // Show function blocks. Necessary especially for MIDI 2.0 devices which have no GTBs. Also helps decide if a port should be created
+
+            for (auto const& fb : device.GetDeclaredFunctionBlocks())
+            {
+                WriteBlankLine();
+
+                OutputPortNumberField(MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK_NUMBER, fb.Number());
+                OutputEntityNameField(MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK_NAME, fb.Name());
+                OutputNumericField(MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK_FIRST_GROUP, fb.FirstGroup().DisplayValue());
+                OutputNumericField(MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK_GROUP_COUNT, fb.GroupCount());
+                OutputBooleanField(MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK_ACTIVE, fb.IsActive());
+
+                std::wstring gtbDirection{};
+
+                if (fb.Direction() == midi2enum::MidiFunctionBlockDirection::Bidirectional)
+                {
+                    gtbDirection = L"Bidirectional";
+                }
+                else if (fb.Direction() == midi2enum::MidiFunctionBlockDirection::BlockInput)
+                {
+                    gtbDirection = L"Message Destination";
+                }
+                else if (fb.Direction() == midi2enum::MidiFunctionBlockDirection::BlockOutput)
+                {
+                    gtbDirection = L"Message Source";
+                }
+
+                OutputStringField(MIDIDIAG_FIELD_LABEL_FUNCTION_BLOCK_DIRECTION, gtbDirection);
+            }
+
+            if (device.GetDeclaredFunctionBlocks().Size() > 0)
+            {
+                WriteBlankLine();
+            }
+
+
             // Show associated MIDI 1.0 endpoints
 
 
@@ -803,54 +839,37 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
             }
 
 
-
-
-
-
-
             // TODO: Get the reg keys that set the global defaults (move this up to the registry section)
 
 
-            // get the base device so we can use some of the service-based helpers, which
-            // don't know anything about the SDK types. These properties aren't normally
-            // used at the SDK-level
-            auto additionalProps = winrt::single_threaded_vector<winrt::hstring>();
 
-            additionalProps.Append(STRING_PKEY_MIDI_Midi1PortNamingSelection);
-            additionalProps.Append(STRING_PKEY_MIDI_Midi1PortNameTable);
-            auto basicDevice = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
-                device.EndpointDeviceId(),
-                additionalProps,
-                winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface
-                ).get();
+            std::wstring namingApproach {};
+            
+            switch (device.Midi1PortNamingApproach())
+            {
+            case midi2enum::Midi1PortNamingApproach::Default:
+                namingApproach = L"Use global default from registry";
+                break;
+            case midi2enum::Midi1PortNamingApproach::UseClassicCompatible:
+                namingApproach = L"Use WinMM Compatible";
+                break;
+            case midi2enum::Midi1PortNamingApproach::UseNewStyle:
+                namingApproach = L"Use New Style";
+                break;
+            default:
+                namingApproach = L"UNKNOWN";
+            }
 
-
-
-
-
-
-
-#if false
-
-
-
-            // show which name property this endpoint has selected for MIDI 1 ports
-            auto namingSelection = (midi2::Midi1PortNameSelectionProperty)internal::SafeGetSwdPropertyFromDeviceInformation<uint32_t>(STRING_PKEY_MIDI_Midi1PortNamingSelection, basicDevice, Midi1PortNameSelectionProperty::PortName_UseGlobalDefault);
-
-            OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_SELECTION, GetDisplayValueFromNamingSelection(namingSelection));
-            OutputBlankLine();
+            OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_SELECTION, namingApproach);
+            WriteBlankLine();
 
             // Show the full MIDI 1 port name table
 
-            auto nameTableRefArray = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::Windows::Foundation::IReferenceArray<uint8_t>>(STRING_PKEY_MIDI_Midi1PortNameTable, basicDevice, nullptr);
+            auto nameEntries = device.GetNameTable();
 
-            if (nameTableRefArray != nullptr)
+            if (nameEntries != nullptr)
             {
-                auto refData = nameTableRefArray.Value();
-
-                auto nameEntries = internal::Midi1PortNaming::ReadMidi1PortNameTableFromPropertyData(refData.data(), refData.size());
-
-                if (nameEntries.size() == 0)
+                if (nameEntries.Size() == 0)
                 {
                     OutputError(internal::ResourceGetWString(IDS_ERROR_NO_NAMING_TABLE));
                 }
@@ -858,44 +877,34 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
                 {
                     for (auto const& nameEntry : nameEntries)
                     {
-                        OutputNumericField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_GROUP_NUMBER, nameEntry.GroupIndex + 1);
+                        OutputNumericField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_GROUP_NUMBER, nameEntry.Group().DisplayValue());
 
-                        switch (nameEntry.DataFlowFromUserPerspective)
+                        switch (nameEntry.Flow())
                         {
-                        case MidiFlow::MidiFlowIn:
+                        case midi2::Enumeration::Midi1PortFlow::MidiMessageSource:
                             OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_DATA_FLOW, std::wstring(L"MIDI In Port (Message Source)"));
                             break;
-                        case MidiFlow::MidiFlowOut:
+                        case midi2::Enumeration::Midi1PortFlow::MidiMessageDestination:
                             OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_DATA_FLOW, std::wstring(L"MIDI Out Port (Message Destination)"));
-                            break;
-                        case MidiFlow::MidiFlowBidirectional:
-                            OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_DATA_FLOW, std::wstring(L"Bidirectional (This is unexpected)"));
                             break;
                         default:
                             OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_DATA_FLOW, std::wstring(L"INVALID VALUE"));
                             break;
                         }
 
-                        auto customName = std::wstring{ nameEntry.CustomName };
-                        auto legacyWinMMName = std::wstring{ nameEntry.LegacyWinMMName };
-                        auto groupTerminalBlockName = std::wstring{ nameEntry.BlockName };
-                        auto filterPlusGroupTerminalBlockName = std::wstring{ nameEntry.FilterPlusBlockName };
-                        auto pinName = std::wstring{ nameEntry.PinName };
-                        auto filterPlusPinName = std::wstring{ nameEntry.FilterPlusPinName };
+                        auto customName = std::wstring{ nameEntry.CustomName() };
+                        auto legacyWinMMName = std::wstring{ nameEntry.LegacyCompatibleName() };
+                        auto newStyleName = std::wstring{ nameEntry.NewStyleName() };
 
                         OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_CUSTOM_NAME, customName);
                         OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_LEGACY_WINMM_NAME, legacyWinMMName);
-                        OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_GTB_NAME, groupTerminalBlockName);
-                        OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_FILTER_PLUS_GTB_NAME, filterPlusGroupTerminalBlockName);
-                        OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_PIN_NAME, pinName);
-                        OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_FILTER_PLUS_PIN_NAME, filterPlusPinName);
-                        OutputBlankLine();
+                        OutputStringField(MIDIDIAG_FIELD_LABEL_NAME_TABLE_NEW_STYLE_NAME, newStyleName);
+                        WriteBlankLine();
                     }
                 }
-
             }
 
-#endif
+
             // Parent device
 
             auto parent = device.GetParentDeviceInformation();
