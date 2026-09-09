@@ -244,9 +244,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             // yes, we advertise over mDNS
             config->m_advertise = true;
 
-            // UMP endpoints only by default. A caller which wants the compatibility MIDI 1.0
-            // ports for connected clients sets CreateOnlyUmpEndpoints to false.
-            config->m_umpOnly = true;
+            // MIDI 1.0 ports for connected clients by default, which is what a client entry
+            // already does. A caller which wants UMP only sets CreateOnlyUmpEndpoints to true.
+            config->m_umpOnly = false;
 
             // default to no authentication.
             config->m_authenticationType = network::MidiNetworkAuthenticationType::NoAuthentication;

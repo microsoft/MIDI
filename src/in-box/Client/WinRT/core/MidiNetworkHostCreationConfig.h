@@ -70,7 +70,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring m_name{};
         winrt::hstring m_serviceInstanceName{};
         winrt::hstring m_productInstanceId{};
-        bool m_umpOnly{ true };
+        bool m_umpOnly{ false };
         bool m_useAutomaticPortAllocation{ true };
         bool m_allowPortFallback{ true };
         winrt::hstring m_manuallyAssignedPort{};
