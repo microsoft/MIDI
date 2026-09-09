@@ -152,17 +152,29 @@ namespace MidiBleUtilities
     inline bool IsShuttingDown() noexcept { return g_shuttingDown.load(std::memory_order_relaxed); }
     inline void SetShuttingDown(_In_ bool const value) noexcept { g_shuttingDown.store(value, std::memory_order_relaxed); }
 
+    struct AwaitOutcome
+    {
+        // A wait which ran out of time and a call the system failed outright both come back empty,
+        // but only one of them means the device stopped answering.
+        bool TimedOut{ false };
+        bool Failed{ false };
+        HRESULT ErrorCode{ S_OK };
+    };
+
     template<typename TResult>
     inline TResult AwaitWithTimeout(
         _In_ ::winrt::Windows::Foundation::IAsyncOperation<TResult> const& operation,
         _In_ uint32_t const timeoutMilliseconds,
         _In_ TResult const onTimeout,
-        _Out_ bool& timedOut)
+        _Out_ AwaitOutcome& outcome)
     {
-        timedOut = false;
+        outcome = AwaitOutcome{ };
 
         if (operation == nullptr)
         {
+            outcome.Failed = true;
+            outcome.ErrorCode = E_POINTER;
+
             return onTimeout;
         }
 
@@ -200,18 +212,35 @@ namespace MidiBleUtilities
                 }
             }
 
-            if (operation.Status() == ::winrt::Windows::Foundation::AsyncStatus::Completed)
+            auto const status = operation.Status();
+
+            if (status == ::winrt::Windows::Foundation::AsyncStatus::Completed)
             {
                 return operation.GetResults();
             }
 
-            timedOut = true;
+            if (status == ::winrt::Windows::Foundation::AsyncStatus::Started)
+            {
+                outcome.TimedOut = true;
+            }
+            else
+            {
+                // Error and Canceled carry the HRESULT which names the real fault. Reporting these
+                // as a timeout discards the only field a "it will not connect" report can act on.
+                outcome.Failed = true;
+                outcome.ErrorCode = operation.ErrorCode();
+            }
 
             // Best effort. The operation keeps its own references and unwinds on its own, so
             // abandoning it is safe even when the cancel is ignored.
             operation.Cancel();
         }
         CATCH_LOG();
+
+        if (!outcome.TimedOut && !outcome.Failed)
+        {
+            outcome.Failed = true;
+        }
 
         return onTimeout;
     }
@@ -220,9 +249,26 @@ namespace MidiBleUtilities
     inline TResult AwaitWithTimeout(
         _In_ ::winrt::Windows::Foundation::IAsyncOperation<TResult> const& operation,
         _In_ uint32_t const timeoutMilliseconds,
+        _In_ TResult const onTimeout,
+        _Out_ bool& timedOut)
+    {
+        AwaitOutcome outcome{ };
+
+        auto result = AwaitWithTimeout(operation, timeoutMilliseconds, onTimeout, outcome);
+
+        // Existing callers use this flag to mean "did not succeed"
+        timedOut = outcome.TimedOut || outcome.Failed;
+
+        return result;
+    }
+
+    template<typename TResult>
+    inline TResult AwaitWithTimeout(
+        _In_ ::winrt::Windows::Foundation::IAsyncOperation<TResult> const& operation,
+        _In_ uint32_t const timeoutMilliseconds,
         _In_ TResult const onTimeout)
     {
-        bool ignored{ false };
+        AwaitOutcome ignored{ };
 
         return AwaitWithTimeout(operation, timeoutMilliseconds, onTimeout, ignored);
     }
@@ -412,6 +458,13 @@ namespace MidiBleUtilities
         bool TimedOut{ false };
         bool RequiresPairing{ false };
 
+        // The lookup call itself failed rather than running out of time
+        bool Failed{ false };
+        HRESULT ErrorCode{ S_OK };
+
+        // Recovered by opening the enumerated service node instead of querying by address
+        bool OpenedFromServiceNode{ false };
+
         bool HasProtocolError{ false };
         uint8_t ProtocolError{ 0 };
     };
@@ -463,7 +516,45 @@ namespace MidiBleUtilities
         return state;
     }
 
-    inline BleMidiServiceLookup LookupBleMidiService(_In_ BluetoothLEDevice const& bleDevice)
+    // Windows enumerates the MIDI service as its own PnP node once it has discovered it. Opening
+    // that node does not go through the address-based device object, so it still works on devices
+    // where querying services by address fails.
+    inline BleMidiServiceLookup& OpenServiceNodeIfNeeded(
+        _Inout_ BleMidiServiceLookup& lookup,
+        _In_ winrt::hstring const& gattServiceDeviceId)
+    {
+        if (lookup.Service != nullptr || gattServiceDeviceId.empty())
+        {
+            return lookup;
+        }
+
+        AwaitOutcome outcome{ };
+
+        auto service = AwaitWithTimeout(
+            GattDeviceService::FromIdAsync(gattServiceDeviceId),
+            BleConnectOperationTimeoutMilliseconds,
+            GattDeviceService{ nullptr },
+            outcome);
+
+        if (service == nullptr)
+        {
+            return lookup;
+        }
+
+        lookup.Service = service;
+        lookup.Status = GattCommunicationStatus::Success;
+        lookup.StatusKnown = true;
+        lookup.TimedOut = false;
+        lookup.Failed = false;
+        lookup.ErrorCode = S_OK;
+        lookup.OpenedFromServiceNode = true;
+
+        return lookup;
+    }
+
+    inline BleMidiServiceLookup LookupBleMidiService(
+        _In_ BluetoothLEDevice const& bleDevice,
+        _In_ winrt::hstring const& gattServiceDeviceId)
     {
         BleMidiServiceLookup lookup{};
 
@@ -474,15 +565,21 @@ namespace MidiBleUtilities
 
         winrt::guid bleServiceUuid{ MidiBleProtocol::MidiServiceUuid };
 
+        AwaitOutcome outcome{ };
+
         auto gattServicesResult = AwaitWithTimeout(
             bleDevice.GetGattServicesForUuidAsync(bleServiceUuid, BluetoothCacheMode::Uncached),
             BleConnectOperationTimeoutMilliseconds,
             GattDeviceServicesResult{ nullptr },
-            lookup.TimedOut);
+            outcome);
+
+        lookup.TimedOut = outcome.TimedOut;
+        lookup.Failed = outcome.Failed;
+        lookup.ErrorCode = outcome.ErrorCode;
 
         if (gattServicesResult == nullptr)
         {
-            return lookup;
+            return OpenServiceNodeIfNeeded(lookup, gattServiceDeviceId);
         }
 
         lookup.Status = gattServicesResult.Status();
@@ -498,12 +595,25 @@ namespace MidiBleUtilities
 
         lookup.RequiresPairing = IsPairingRequiredProtocolError(protocolError);
 
-        if (lookup.Status == GattCommunicationStatus::Success && gattServicesResult.Services().Size() > 0)
+        if (lookup.Status == GattCommunicationStatus::Success)
         {
-            lookup.Service = gattServicesResult.Services().GetAt(0);
+            auto const services = gattServicesResult.Services();
+
+            for (uint32_t serviceIndex = 0; serviceIndex < services.Size(); serviceIndex++)
+            {
+                if (serviceIndex == 0)
+                {
+                    lookup.Service = services.GetAt(serviceIndex);
+                }
+                else
+                {
+                    // Each service handed back holds the device open until it is closed
+                    services.GetAt(serviceIndex).Close();
+                }
+            }
         }
 
-        return lookup;
+        return OpenServiceNodeIfNeeded(lookup, gattServiceDeviceId);
     }
 
     // BLE MIDI 1.0 carries a single MIDI 1.0 byte stream with no notion of groups, so the

@@ -1921,6 +1921,28 @@ CMidi2BluetoothMidiEndpointManager::ConnectDeviceCore(
     gatt::GattSession session{ nullptr };
     BleMidiCharacteristicSelection selection{};
 
+    bool connectionOwnsResources{ false };
+
+    // Windows hands back a cached BluetoothLEDevice for an address, so one left open here is the
+    // object a later attempt is given, stale DeviceInformation snapshot and all.
+    auto closeResources = wil::scope_exit([&]() noexcept
+    {
+        if (connectionOwnsResources)
+        {
+            return;
+        }
+
+        try
+        {
+            if (service != nullptr) { service.Close(); }
+            if (session != nullptr) { session.Close(); }
+            if (bleDevice != nullptr) { bleDevice.Close(); }
+        }
+        catch (...)
+        {
+        }
+    });
+
     try
     {
         bleDevice = MidiBleUtilities::AwaitWithTimeout(
@@ -1942,7 +1964,7 @@ CMidi2BluetoothMidiEndpointManager::ConnectDeviceCore(
 
         auto const pairingState = MidiBleUtilities::GetPairingState(bleDevice);
 
-        auto const lookup = MidiBleUtilities::LookupBleMidiService(bleDevice);
+        auto const lookup = MidiBleUtilities::LookupBleMidiService(bleDevice, discoveredDevice.GattServiceDeviceId);
 
         service = lookup.Service;
 
@@ -1960,7 +1982,10 @@ CMidi2BluetoothMidiEndpointManager::ConnectDeviceCore(
             TraceLoggingBool(lookup.StatusKnown, "gatt status known"),
             TraceLoggingUInt32(static_cast<uint32_t>(lookup.Status), "gatt communication status"),
             TraceLoggingBool(lookup.TimedOut, "timed out"),
-            TraceLoggingUInt32(MidiBleUtilities::BleOperationTimeoutMilliseconds, "timeout ms"),
+            TraceLoggingBool(lookup.Failed, "call failed"),
+            TraceLoggingBool(lookup.OpenedFromServiceNode, "opened from service node"),
+            TraceLoggingHResult(lookup.ErrorCode, "error code"),
+            TraceLoggingUInt32(MidiBleUtilities::BleConnectOperationTimeoutMilliseconds, "timeout ms"),
             TraceLoggingBool(lookup.HasProtocolError, "has att error"),
             TraceLoggingUInt8(lookup.ProtocolError, "att error"),
             TraceLoggingBool(lookup.RequiresPairing, "requires pairing"),
@@ -1988,6 +2013,35 @@ CMidi2BluetoothMidiEndpointManager::ConnectDeviceCore(
                 failureDetail = L"This device requires pairing before Windows can use its MIDI service. Pair it, then connect it again. Automatic reconnection is paused for this device until then.";
                 errorCode = BLUETOOTH_MIDI_ERROR_CODE_PAIRING_REQUIRED;
                 RETURN_IF_FAILED(HRESULT_FROM_WIN32(ERROR_ACCESS_DENIED));
+            }
+
+            // A call the system failed outright is not a timeout, and the two need different
+            // advice. The HRESULT is the only field which names the real fault, so it goes in
+            // front of the customer rather than staying in a trace nobody captures.
+            if (lookup.Failed)
+            {
+                // Windows only enumerates the MIDI service as its own node once it has bonded, and
+                // that node is the one remaining way in when a device refuses the query by address.
+                // No node and no answer means pairing is the only route left, not a guess.
+                if (discoveredDevice.GattServiceDeviceId.empty())
+                {
+                    failureDetail = L"This device will not report its MIDI service to Windows until it is paired. Pair it in Windows Settings, then connect it again.";
+                    errorCode = BLUETOOTH_MIDI_ERROR_CODE_PAIRING_REQUIRED;
+                    RETURN_IF_FAILED(FAILED(lookup.ErrorCode) ? lookup.ErrorCode : E_FAIL);
+                }
+
+                wchar_t detail[320]{ };
+
+                swprintf_s(
+                    detail,
+                    L"Windows could not read this device's MIDI service. The call failed with error 0x%08X. "
+                    L"The device accepted the connection and then refused or dropped it, which often means it "
+                    L"expects different pairing or encryption than Windows offered.",
+                    static_cast<uint32_t>(lookup.ErrorCode));
+
+                failureDetail = detail;
+                errorCode = BLUETOOTH_MIDI_ERROR_CODE_GATT_CALL_FAILED;
+                RETURN_IF_FAILED(FAILED(lookup.ErrorCode) ? lookup.ErrorCode : E_FAIL);
             }
 
             // A device which stops answering partway through is not the same as one the radio
@@ -2169,6 +2223,8 @@ CMidi2BluetoothMidiEndpointManager::ConnectDeviceCore(
         selection.Characteristic,
         session));
 
+    connectionOwnsResources = true;
+
     auto hr = connection->Start();
 
     if (FAILED(hr))
@@ -2306,6 +2362,19 @@ CMidi2BluetoothMidiEndpointManager::ResolveDeviceNameInternal(winrt::hstring con
             {
                 return S_FALSE;
             }
+
+            // Discovery runs this for every advertisement, so leaving it open is what puts a stale
+            // cached device object in the way of the connect path later.
+            auto closeDevice = wil::scope_exit([&]() noexcept
+            {
+                try
+                {
+                    bleDevice.Close();
+                }
+                catch (...)
+                {
+                }
+            });
 
             resolvedName = bleDevice.Name();
 
