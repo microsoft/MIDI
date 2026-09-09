@@ -300,7 +300,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
         AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_IsMuted));
         
-
+        AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_MIDI_EndpointDiscoveryProcessComplete));
+        
         //AddSingleMapEntry(PROPERTY_PAIR(STRING_PKEY_KsAgg));
 
         m_initialized = true;
