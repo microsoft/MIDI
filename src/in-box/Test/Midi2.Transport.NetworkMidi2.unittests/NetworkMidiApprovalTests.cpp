@@ -58,9 +58,12 @@ namespace
     }
 
 
+    // These names come back from the service as UTF-8. Copying byte by byte would turn each
+    // non-ASCII character into several garbage ones, and a test comparing one mangled string to
+    // another would still pass.
     std::wstring Widen(_In_ std::string const& value)
     {
-        return std::wstring(value.begin(), value.end());
+        return std::wstring{ winrt::to_hstring(value) };
     }
 
 

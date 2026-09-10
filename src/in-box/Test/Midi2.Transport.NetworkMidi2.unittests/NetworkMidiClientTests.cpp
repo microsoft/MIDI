@@ -378,7 +378,8 @@ namespace NetworkMidiTest
 
         size_t CountLiveEndpointsNamed(_In_ std::string const& endpointName)
         {
-            return CountLiveEndpointsNamedWide(std::wstring(endpointName.begin(), endpointName.end()));
+            // UTF-8 in, so a byte-per-character copy would look for a name no endpoint has
+            return CountLiveEndpointsNamedWide(std::wstring{ winrt::to_hstring(endpointName) });
         }
     }
 
@@ -1396,7 +1397,7 @@ namespace NetworkMidiTest
                 FakeNetworkHost::Address(),
                 host.Port(),
                 L"Test Client",
-                std::wstring(customName.begin(), customName.end())).IsSuccess());
+                std::wstring{ winrt::to_hstring(customName) }).IsSuccess());
 
         // Wait for the session, which is what triggers endpoint creation.
         VERIFY_IS_TRUE(host.WaitForCommand(CommandCode::Invitation, InvitationTimeout).has_value());
@@ -1492,7 +1493,7 @@ namespace NetworkMidiTest
                 FakeNetworkHost::Address(),
                 host.Port(),
                 false,
-                std::wstring(customName.begin(), customName.end())).CallSucceeded);
+                std::wstring{ winrt::to_hstring(customName) }).CallSucceeded);
 
         VERIFY_IS_TRUE(host.WaitForCommand(CommandCode::Invitation, InvitationTimeout).has_value());
         VERIFY_IS_TRUE(host.WaitForCommand(CommandCode::UmpData, SessionTimeout).has_value());

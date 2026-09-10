@@ -160,6 +160,21 @@ Device-supplied names, network packets and configuration values are all hostile 
 
 ## 5. Strings, buffers and identifiers
 
+- **Never convert between narrow and wide with an iterator range or a per-element copy.**
+  `std::wstring(s.begin(), s.end())` on UTF-8 produces one `wchar_t` per *byte*, so `’` (`E2 80 99`)
+  becomes three garbage characters. `std::string(ws.begin(), ws.end())` truncates each `wchar_t`
+  to a byte and loses data with no error. Use `winrt::to_hstring` / `winrt::to_string`, which are
+  a lossless CP_UTF8 pair, or `MultiByteToWideChar(CP_UTF8, …)`. This shipped in the legacy WinMM
+  port names: only ports after the first were affected, because only those took the narrow
+  round trip, so the giveaway is **the first port correct and the rest mangled**.
+  - Grep loosely, because a tight pattern misses sites:
+    `std::wstring\s*[\(\{]\s*\w+\.begin\(\)` and the `std::string` equivalent. Wide-to-wide
+    substrings match too and are fine.
+  - `to_hstring(std::format(… to_string(x) …))` looks like the same bug and is not — that pair
+    round-trips correctly.
+  - **Check the test helpers, not just the product.** A helper that mangles a name on the way in
+    makes the product store it mangled and the assertion compare mangled to mangled, so the test
+    passes and hides exactly the defect it should catch.
 - **UMP name and identifier limits are UTF-8 byte counts, not UTF-16 code units.** Never measure
   them with `wstring::length()` or `hstring::size()`. Use the helpers in
   `src/in-box/Inc/wstring_util.h`: `Utf8ByteCount`, `ExceedsUtf8ByteCount`,
