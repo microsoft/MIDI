@@ -74,6 +74,11 @@ namespace NetworkMidiTest
         _In_ std::wstring const& endpointDeviceId,
         _In_ std::wstring const& newName);
 
+    // The "remove" section, which withdraws a customization so the endpoint and its MIDI 1.0
+    // ports go back to what the remote calls itself.
+    ServiceConfigResult RemoveEndpointCustomization(
+        _In_ std::wstring const& endpointDeviceId);
+
     // The connectDirect command. For an entry which already exists this is the app saying the
     // remote is reachable now, and is the only thing which revives a parked direct connection.
     ServiceConfigResult ConnectDirectClient(

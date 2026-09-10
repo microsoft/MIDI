@@ -284,8 +284,56 @@ namespace NetworkMidiTest
             return counts;
         }
 
-        json::JsonObject ParseResponse(_In_ std::wstring const& responseJson)
+        // Polls until no port carries the text any more. The name it reverts to is truncated to
+        // the WinMM limit, so absence of the withdrawn one is the assertion that holds.
+        std::vector<std::wstring> WaitForMidi1PortNamesWithout(
+            _In_ std::wstring const& endpointDeviceId,
+            _In_ std::wstring const& unwanted,
+            _In_ std::chrono::milliseconds const timeout)
         {
+            auto const deadline = std::chrono::steady_clock::now() + timeout;
+
+            std::vector<std::wstring> names{ };
+
+            while (std::chrono::steady_clock::now() < deadline)
+            {
+                names = CollectPortNamesWithSelector(Midi1SourceSelector, endpointDeviceId);
+
+                if (!names.empty() && !AllNamesContain(names, unwanted))
+                {
+                    return names;
+                }
+
+                std::this_thread::sleep_for(PollInterval);
+            }
+
+            return names;
+        }
+
+        size_t WaitForEndpointDiscoveryRequest(
+            _In_ FakeNetworkHost& host,
+            _In_ std::chrono::milliseconds const timeout)
+        {
+            auto const deadline = std::chrono::steady_clock::now() + timeout;
+
+            size_t count{ 0 };
+
+            while (std::chrono::steady_clock::now() < deadline)
+            {
+                count = host.EndpointDiscoveryRequestCount();
+
+                if (count > 0)
+                {
+                    return count;
+                }
+
+                std::this_thread::sleep_for(PollInterval);
+            }
+
+            return count;
+        }
+
+        json::JsonObject ParseResponse(_In_ std::wstring const& responseJson)        {
             json::JsonObject parsed{ nullptr };
 
             if (!json::JsonObject::TryParse(winrt::hstring{ responseJson }, parsed))
@@ -676,8 +724,10 @@ namespace NetworkMidiTest
 
         Log::Comment(String().Format(L"Endpoint: %s", endpointDeviceId.c_str()));
 
+        // The endpoint appears as soon as the session is up. Discovery is a separate exchange on
+        // a background thread, so this has to be waited for rather than sampled.
         VERIFY_IS_GREATER_THAN(
-            remote.Host().EndpointDiscoveryRequestCount(), static_cast<size_t>(0),
+            WaitForEndpointDiscoveryRequest(remote.Host(), PortCreationTimeout), static_cast<size_t>(0),
             L"The service never asked the remote host to describe itself.");
 
         auto const counts = WaitForMidi1Ports(endpointDeviceId, GroupCount, PortCreationTimeout);
@@ -909,6 +959,66 @@ namespace NetworkMidiTest
         VERIFY_IS_TRUE(
             AllNamesContain(namesAfter, customName),
             L"Changing the port count reverted the ports to the name the remote supplied.");
+    }
+
+
+    void PortCreationTests::RemovingACustomizationRevertsTheMidi1PortNames()
+    {
+        if (!RequireService()) return;
+
+        RemoteHostUnderTest remote;
+
+        auto const hostName = ProtocolTestContext::Current().MakeUniqueEndpointName("Revert");
+
+        VERIFY_IS_TRUE(remote.Start(0, true, hostName));
+
+        VERIFY_IS_TRUE(
+            remote.Host().WaitForCommand(CommandCode::Invitation, SessionTimeout).has_value(),
+            L"The service never invited the remote host.");
+
+        auto endpointDeviceId = WaitForClientEndpointDeviceId(remote.EntryIdentifier());
+
+        VERIFY_IS_FALSE(endpointDeviceId.empty(), L"The service never reported an endpoint for this client.");
+
+        if (endpointDeviceId.empty()) return;
+
+        VERIFY_ARE_EQUAL(
+            static_cast<uint32_t>(1),
+            WaitForMidi1Ports(endpointDeviceId, 1, PortCreationTimeout).Sources,
+            L"One source to start with.");
+
+        std::wstring const customName{ L"Name To Be Withdrawn" };
+
+        VERIFY_IS_TRUE(
+            RenameEndpoint(endpointDeviceId, customName).IsSuccess(),
+            L"The rename was refused.");
+
+        VERIFY_IS_TRUE(
+            AllNamesContain(WaitForMidi1PortNames(endpointDeviceId, customName, PortCreationTimeout), customName),
+            L"The rename did not reach the ports, so this test cannot say anything about removing it.");
+
+        VERIFY_IS_TRUE(
+            RemoveEndpointCustomization(endpointDeviceId).IsSuccess(),
+            L"The removal was refused.");
+
+        // The remote's own name, which the endpoint manager still has on record
+        auto const reverted = WaitForMidi1PortNamesWithout(endpointDeviceId, customName, PortCreationTimeout);
+
+        for (auto const& name : reverted)
+        {
+            Log::Comment(String().Format(L"After removal: %s", name.c_str()));
+        }
+
+        Log::Comment(String().Format(
+            L"Custom name property after removal: '%s'", ReadCustomEndpointName(endpointDeviceId).c_str()));
+
+        VERIFY_IS_TRUE(
+            ReadCustomEndpointName(endpointDeviceId).empty(),
+            L"The custom name property was not cleared.");
+
+        VERIFY_IS_FALSE(
+            AllNamesContain(reverted, customName),
+            L"The ports kept the withdrawn name.");
     }
 
 

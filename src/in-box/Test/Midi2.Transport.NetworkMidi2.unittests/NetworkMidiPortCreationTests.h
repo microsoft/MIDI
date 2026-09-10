@@ -58,6 +58,9 @@ namespace NetworkMidiTest
         // custom one.
         TEST_METHOD(ChangingThePortCountKeepsACustomName);
 
+        // Removing a customization puts the endpoint and its ports back to the remote's name.
+        TEST_METHOD(RemovingACustomizationRevertsTheMidi1PortNames);
+
     private:
 
         MidiTest::DeviceNodeTracker m_deviceNodeTracker{ };

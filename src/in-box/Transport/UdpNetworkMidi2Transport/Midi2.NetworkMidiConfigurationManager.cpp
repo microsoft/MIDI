@@ -1241,6 +1241,132 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
 }
 
 
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizationRemovals(
+    json::JsonObject const& removeSection,
+    json::JsonObject& responseObject) noexcept
+{
+    try
+    {
+        // Same array shape as a customization, carrying only the match
+        auto removeArray = SafeGetNamedArray(removeSection, MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY);
+
+        if (removeArray == nullptr || removeArray.Size() == 0)
+        {
+            return S_OK;
+        }
+
+        bool anyRemovalAccepted{ false };
+
+        // Indexed for the same reason as the customization loop: windows.h renames
+        // IJsonValue::GetObject, and JsonArray::GetObjectAt is unaffected.
+        for (uint32_t i = 0; i < removeArray.Size(); i++)
+        {
+            auto element = removeArray.GetAt(i);
+
+            // one malformed element should cost its own removal, not every one after it
+            if (element == nullptr || element.ValueType() != json::JsonValueType::Object)
+            {
+                continue;
+            }
+
+            auto entryObject = removeArray.GetObjectAt(i);
+
+            if (entryObject == nullptr)
+            {
+                continue;
+            }
+
+            auto matchObject = SafeGetNamedObject(
+                entryObject, WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey);
+
+            if (matchObject == nullptr)
+            {
+                // nothing to tie this removal to
+                continue;
+            }
+
+            auto matchCriteria = WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::FromJson(matchObject);
+
+            if (matchCriteria == nullptr)
+            {
+                continue;
+            }
+
+            // Every member defaults to the uncustomized value, and writing them sends
+            // DEVPROP_TYPE_EMPTY for each string, which deletes it. Add replaces the entry that
+            // matches, so this both withdraws the cached customization and undoes the applied one.
+            auto clearedProperties =
+                std::make_shared<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties>();
+
+            if (clearedProperties == nullptr)
+            {
+                continue;
+            }
+
+            LOG_HR_IF(E_FAIL, !m_customPropertiesCache->Add(matchCriteria, clearedProperties));
+
+            anyRemovalAccepted = true;
+
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Removed endpoint customization", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(matchCriteria->TransportSuppliedEndpointName.c_str(), "transport supplied name"),
+                TraceLoggingWideString(matchCriteria->DeviceProductInstanceId.c_str(), "product instance id")
+            );
+
+            auto endpointManager = TransportState::Current().GetEndpointManager();
+
+            if (endpointManager == nullptr)
+            {
+                continue;
+            }
+
+            auto existingEndpointDeviceId = endpointManager->FindMatchingInstantiatedEndpoint(*matchCriteria);
+
+            if (existingEndpointDeviceId.empty())
+            {
+                // nothing live to revert, but the cache no longer carries it
+                continue;
+            }
+
+            std::vector<DEVPROPERTY> endpointDevProperties{};
+
+            if (clearedProperties->WriteAllProperties(endpointDevProperties) && endpointDevProperties.size() > 0)
+            {
+                LOG_IF_FAILED(m_midiDeviceManager->UpdateEndpointProperties(
+                    existingEndpointDeviceId.c_str(),
+                    static_cast<ULONG>(endpointDevProperties.size()),
+                    endpointDevProperties.data()));
+
+                // An empty name here means the ports go back to the one the remote supplied,
+                // which the endpoint manager still has on record.
+                LOG_IF_FAILED(endpointManager->RefreshMidi1PortsForEndpoint(
+                    std::wstring{ existingEndpointDeviceId },
+                    0,
+                    std::wstring{ }));
+            }
+        }
+
+        if (anyRemovalAccepted)
+        {
+            internal::SetConfigurationResponseObjectSuccess(responseObject);
+        }
+    }
+    catch (...)
+    {
+        RETURN_IF_FAILED(E_FAIL);
+    }
+
+    return S_OK;
+}
+
+
 //
 // Response Object Payload
 // {
@@ -2967,6 +3093,8 @@ try
     // "remove" entries
     if (removeSection != nullptr && removeSection.Size() > 0)
     {
+        LOG_IF_FAILED(ProcessEndpointCustomizationRemovals(removeSection, responseObject));
+
         // remove a host 
 
 

@@ -39,6 +39,13 @@ private:
         _In_ json::JsonObject const& jsonObject,
         _Inout_ json::JsonObject& responseObject) noexcept;
 
+    // Withdraws a customization, so the endpoint goes back to what the remote calls itself. No
+    // other transport does this yet, and the shared cache has no remove, so a customization with
+    // nothing in it is what replaces the cached one.
+    HRESULT ProcessEndpointCustomizationRemovals(
+        _In_ json::JsonObject const& removeSection,
+        _Inout_ json::JsonObject& responseObject) noexcept;
+
     // Changes to this transport's own host and client entries, keyed by entry identifier. Kept
     // separate from the array-shaped endpoint customization every transport shares.
     HRESULT ProcessEntryUpdates(

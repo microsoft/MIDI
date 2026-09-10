@@ -285,6 +285,19 @@ namespace NetworkMidiTest
     }
 
 
+    _Use_decl_annotations_
+    ServiceConfigResult RemoveEndpointCustomization(
+        std::wstring const& endpointDeviceId)
+    {
+        std::wstring json =
+            L"{\"remove\":{\"update\":[{"
+            L"\"match\":{\"endpointDeviceId\":\"" + EscapeJsonString(endpointDeviceId) + L"\"}"
+            L"}]}}";
+
+        return SendNetworkTransportConfig(json);
+    }
+
+
     ServiceConfigResult ConnectDirectClient(
         std::wstring const& entryIdentifier,
         std::wstring const& hostNameOrAddress,

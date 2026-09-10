@@ -165,6 +165,11 @@ private:
         winrt::hstring DeviceInstanceId;
         winrt::hstring TransportSuppliedEndpointName;
         winrt::hstring ProductInstanceId;
+
+        // Groups the fallback block spans, so a refresh can keep the width without reading the
+        // block back out of the device store. Zero means the endpoint was built UMP-only and has
+        // no MIDI 1.0 ports to rebuild.
+        uint8_t FallbackMidi1PortCount{ 0 };
     };
 
     wil::critical_section m_createdEndpointsLock;
