@@ -25,6 +25,7 @@ namespace midi2console
         std::string EndpointDeviceId;
         bool Verbose{ false };
         bool IncludeRawProperties{ false };
+        bool IncludeNameTable{ false };
     };
 
     struct EndpointSendMessageOptions : EndpointCommonOptions

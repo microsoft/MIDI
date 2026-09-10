@@ -559,7 +559,7 @@ namespace midi2console
 
         // ---- name table
 
-        auto const nameTable = device.GetNameTable();
+        auto const nameTable = options.IncludeNameTable ? device.GetNameTable() : nullptr;
 
         if (nameTable != nullptr && nameTable.Size() > 0)
         {
