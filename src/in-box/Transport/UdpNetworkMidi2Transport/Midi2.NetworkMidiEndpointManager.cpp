@@ -17,6 +17,39 @@ using namespace Microsoft::WRL::Wrappers;
 #define MAX_DEVICE_ID_LEN 200 // size in chars
 
 
+namespace
+{
+    uint8_t ClampFallbackMidi1PortCount(_In_ uint8_t const value) noexcept
+    {
+        return std::clamp(
+            value,
+            (uint8_t)MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
+            (uint8_t)MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
+    }
+
+    // A group terminal block descriptor cannot hold a longer string, and the name originates with
+    // the remote. Truncating keeps the ports, where refusing the write would leave the endpoint
+    // with none at all.
+    std::wstring BoundBlockName(_In_ std::wstring const& name) noexcept
+    {
+        if (name.length() <= MAX_DESCRIPTOR_STRING_LENGTH)
+        {
+            return name;
+        }
+
+        auto bounded = name.substr(0, MAX_DESCRIPTOR_STRING_LENGTH);
+
+        // never leave a lead surrogate without its trail
+        if (!bounded.empty() && IS_HIGH_SURROGATE(bounded.back()))
+        {
+            bounded.pop_back();
+        }
+
+        return bounded;
+    }
+}
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiEndpointManager::Initialize(
@@ -1455,6 +1488,7 @@ CMidi2NetworkMidiEndpointManager::CreateNewHostEndpointToRemoteClient(
     _In_ winrt::Windows::Networking::HostName const& hostName,
     _In_ std::wstring const& networkPort,
     _In_ bool umpOnly,
+    _In_ uint8_t const fallbackMidi1PortCount,
     _Out_ std::wstring& createdNewDeviceInstanceId,
     _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
 )
@@ -1470,6 +1504,7 @@ CMidi2NetworkMidiEndpointManager::CreateNewHostEndpointToRemoteClient(
         hostName,
         networkPort,
         umpOnly,
+        fallbackMidi1PortCount,
         createdNewDeviceInstanceId,
         createdNewEndpointDeviceInterfaceId
     );
@@ -1486,6 +1521,7 @@ CMidi2NetworkMidiEndpointManager::CreateNewClientEndpointToRemoteHost(
     _In_ winrt::Windows::Networking::HostName const& hostName,
     _In_ std::wstring const& networkPort,
     _In_ bool umpOnly,
+    _In_ uint8_t const fallbackMidi1PortCount,
     _Out_ std::wstring& createdNewDeviceInstanceId,
     _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
 )
@@ -1501,6 +1537,7 @@ CMidi2NetworkMidiEndpointManager::CreateNewClientEndpointToRemoteHost(
         hostName,
         networkPort,
         umpOnly,
+        fallbackMidi1PortCount,
         createdNewDeviceInstanceId,
         createdNewEndpointDeviceInterfaceId
     );
@@ -1579,6 +1616,7 @@ CMidi2NetworkMidiEndpointManager::CreateNewEndpoint(
     winrt::Windows::Networking::HostName const& hostName,
     std::wstring const& networkPort,
     bool umpOnly,
+    uint8_t const fallbackMidi1PortCount,
     std::wstring& createdNewDeviceInstanceId,
     std::wstring& createdNewEndpointDeviceInterfaceId
 )
@@ -1766,6 +1804,29 @@ try
         DEVPROP_TYPE_UINT32, static_cast<ULONG>(sizeof(uint32_t)), (PVOID)&connectionRole });
 
 
+    // A Network MIDI 2.0 endpoint declares function blocks, never group terminal blocks, and the
+    // service builds MIDI 1.0 ports from whichever it finds. A remote which never completes
+    // endpoint discovery declares neither, so the service has nothing to work from and the
+    // endpoint ends up with no MIDI 1.0 ports at all. Publishing a group terminal block up front
+    // gives it something. Function blocks take precedence over this the moment they arrive, so a
+    // remote which does describe itself is unaffected.
+    //
+    // This has to outlive ActivateEndpoint, because the property below points into it. The name
+    // table holds its own buffer for the same reason.
+    std::vector<std::byte> groupTerminalBlockData{};
+    WindowsMidiServicesNamingLib::MidiEndpointNameTable nameTable{};
+
+    if (!umpOnly)
+    {
+        LOG_IF_FAILED(BuildFallbackMidi1PortProperties(
+            friendlyName,
+            fallbackMidi1PortCount,
+            groupTerminalBlockData,
+            nameTable,
+            interfaceDevProperties));
+    }
+
+
     std::wstring endpointDescription{ L"Network MIDI 2.0 endpoint "};
 
     switch (thisServiceRole)
@@ -1867,7 +1928,8 @@ try
             winrt::hstring{ createdNewEndpointDeviceInterfaceId },
             winrt::hstring{ createdNewDeviceInstanceId },
             winrt::hstring{ endpointName },
-            winrt::hstring{ remoteEndpointProductInstanceId } });
+            winrt::hstring{ remoteEndpointProductInstanceId },
+            umpOnly ? (uint8_t)0 : ClampFallbackMidi1PortCount(fallbackMidi1PortCount) });
     }
 
     // Everything the node could not be created with. A network endpoint is never live when its
@@ -1898,6 +1960,195 @@ try
     return S_OK;
 }
 CATCH_RETURN()
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiEndpointManager::BuildFallbackMidi1PortProperties(
+    std::wstring const& portName,
+    uint8_t const fallbackMidi1PortCount,
+    std::vector<std::byte>& groupTerminalBlockData,
+    WindowsMidiServicesNamingLib::MidiEndpointNameTable& nameTable,
+    std::vector<DEVPROPERTY>& properties)
+try
+{
+    // A Network MIDI 2.0 endpoint declares function blocks, never group terminal blocks, and the
+    // service builds MIDI 1.0 ports from whichever it finds. A remote which never completes
+    // endpoint discovery declares neither, so the service has nothing to work from and the
+    // endpoint ends up with no MIDI 1.0 ports at all. Publishing a group terminal block gives it
+    // something. Function blocks take precedence the moment they arrive, so a remote which does
+    // describe itself is unaffected.
+    internal::GroupTerminalBlockInternal block{};
+
+    block.Number = 1;
+    block.Direction = MIDI_GROUP_TERMINAL_BLOCK_BIDIRECTIONAL;
+    block.FirstGroupIndex = 0;
+    block.GroupCount = ClampFallbackMidi1PortCount(fallbackMidi1PortCount);
+    block.Protocol = 0x11;      // 0x11 = MIDI 2.0
+
+    // The remote chooses this name, and a name too long for a block descriptor would otherwise
+    // make the write fail and leave the endpoint with no MIDI 1.0 ports at all.
+    block.Name = BoundBlockName(portName);
+
+    std::vector<internal::GroupTerminalBlockInternal> blocks{ block };
+
+    groupTerminalBlockData.clear();
+
+    RETURN_HR_IF(E_FAIL, !internal::WriteGroupTerminalBlocksToPropertyDataPointer(blocks, groupTerminalBlockData));
+
+    properties.push_back({ {PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr},
+        DEVPROP_TYPE_BINARY, static_cast<ULONG>(groupTerminalBlockData.size()), (PVOID)groupTerminalBlockData.data() });
+
+    // The names the service gives the ports come from this table, not from the block.
+    //
+    // Every group is named, not just the ones the block above spans. When function blocks arrive
+    // the service rebuilds the table from them, but it reads the table back from a device snapshot
+    // taken before that rebuild, so the names it applies on that pass are the ones written here. A
+    // function block may land on any group, and a group with no entry yields an empty port name.
+    auto namingBlocks = blocks;
+    namingBlocks.front().GroupCount = MIDI_NETWORK_MIDI_GROUP_COUNT;
+
+    // The endpoint name is passed as the parent as well as being the block name. It is what the
+    // legacy WinMM form puts in its parentheses, and leaving it out gives "MIDIIN2 ()" for every
+    // group past the first. The naming library strips the block name when it repeats the parent,
+    // so the new style name does not end up doubled.
+    RETURN_IF_FAILED(nameTable.PopulateAllEntriesForNativeUmpDevice(block.Name, namingBlocks));
+    RETURN_IF_FAILED(nameTable.WriteProperties(properties));
+
+    return S_OK;
+}
+catch (...)
+{
+    RETURN_CAUGHT_EXCEPTION();
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiEndpointManager::RefreshMidi1PortsForEndpoint(
+    std::wstring const& endpointDeviceInterfaceId,
+    uint8_t const fallbackMidi1PortCount,
+    std::optional<std::wstring> const& portNameOverride)
+try
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+
+    RETURN_HR_IF(E_INVALIDARG, endpointDeviceInterfaceId.empty());
+    RETURN_HR_IF_NULL(E_UNEXPECTED, m_midiDeviceManager);
+
+    // What this transport built the endpoint from. Taken from the record rather than read back
+    // out of the group terminal block property, because that means trusting a length-prefixed
+    // blob to walk correctly. A count of zero means the endpoint was built UMP-only and has no
+    // MIDI 1.0 ports to rebuild.
+    std::wstring recordName{ };
+    uint8_t recordCount{ 0 };
+
+    {
+        auto lock = m_createdEndpointsLock.lock();
+
+        auto const record = std::find_if(
+            m_createdEndpoints.begin(),
+            m_createdEndpoints.end(),
+            [&endpointDeviceInterfaceId](CreatedEndpointRecord const& entry)
+            {
+                return internal::NormalizeEndpointInterfaceIdWStringCopy(std::wstring{ entry.EndpointDeviceId }) ==
+                    internal::NormalizeEndpointInterfaceIdWStringCopy(endpointDeviceInterfaceId);
+            });
+
+        RETURN_HR_IF(S_FALSE, record == m_createdEndpoints.end());
+
+        recordName = record->TransportSuppliedEndpointName;
+        recordCount = record->FallbackMidi1PortCount;
+    }
+
+    RETURN_HR_IF(S_FALSE, recordCount == 0);
+
+    // Without an override the current effective name has to be resolved. With one, the caller has
+    // just written a name the device does not report back yet, and an empty one means the
+    // customization was withdrawn, so the remote's own name applies again.
+    std::wstring portName{ portNameOverride.value_or(std::wstring{ }) };
+
+    if (!portNameOverride.has_value())
+    {
+        try
+        {
+            auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+            additionalProperties.Append(STRING_PKEY_MIDI_CustomEndpointName);
+
+            auto deviceInfo = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
+                winrt::hstring{ endpointDeviceInterfaceId },
+                additionalProperties,
+                winrt::Windows::Devices::Enumeration::DeviceInformationKind::DeviceInterface).get();
+
+            if (deviceInfo != nullptr)
+            {
+                // A custom name is applied at enumeration and never reaches the device interface
+                // name, which keeps reporting whatever the remote supplied. Reading the name here
+                // instead of the property would quietly undo a rename.
+                auto customName = deviceInfo.Properties().TryLookup(STRING_PKEY_MIDI_CustomEndpointName);
+
+                if (customName != nullptr)
+                {
+                    portName = winrt::unbox_value_or<winrt::hstring>(customName, L"");
+                }
+            }
+        }
+        CATCH_LOG();
+    }
+
+    if (portName.empty())
+    {
+        portName = recordName;
+    }
+
+    RETURN_HR_IF(S_FALSE, portName.empty());
+
+    // Zero is a rename asking to keep the width it already has
+    auto const effectiveCount = fallbackMidi1PortCount == 0
+        ? recordCount
+        : ClampFallbackMidi1PortCount(fallbackMidi1PortCount);
+
+    std::vector<std::byte> groupTerminalBlockData{ };
+    WindowsMidiServicesNamingLib::MidiEndpointNameTable nameTable{ };
+    std::vector<DEVPROPERTY> properties{ };
+
+    RETURN_IF_FAILED(BuildFallbackMidi1PortProperties(
+        portName,
+        effectiveCount,
+        groupTerminalBlockData,
+        nameTable,
+        properties));
+
+    RETURN_IF_FAILED(m_midiDeviceManager->UpdateEndpointProperties(
+        endpointDeviceInterfaceId.c_str(),
+        static_cast<ULONG>(properties.size()),
+        properties.data()));
+
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Rebuilt the fallback MIDI 1.0 port properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingUInt8(effectiveCount, "fallback port count")
+    );
+
+    return S_OK;
+}
+catch (...)
+{
+    RETURN_CAUGHT_EXCEPTION();
+}
 
 
 _Use_decl_annotations_

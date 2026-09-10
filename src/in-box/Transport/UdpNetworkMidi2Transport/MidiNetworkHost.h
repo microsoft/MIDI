@@ -52,6 +52,9 @@ struct MidiNetworkHostDefinition
 
     bool CreateMidi1Ports{ MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT };
 
+    // Only used when the remote client declares no function blocks. See the constant for why.
+    uint8_t FallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
+
     // connection rules
     MidiNetworkRemoteClientPolicy RemoteClientPolicy{ MidiNetworkRemoteClientPolicy::PolicyAllowAny };
 
@@ -108,6 +111,10 @@ public:
 
     MidiNetworkHostDefinition GetDefinition() { return m_hostDefinition; }
 
+    // Used for the next remote client which connects to this host. The ones already connected are
+    // updated in place by the configuration manager.
+    void SetFallbackMidi1PortCount(_In_ uint8_t const value) noexcept { m_fallbackMidi1PortCount = value; }
+
     winrt::hstring ActualPort() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().LocalPort() : L""; }
     winrt::hstring ActualAddress() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().LocalAddress().DisplayName() : L""; }
 
@@ -128,6 +135,7 @@ private:
     bool m_portFallbackUsed{ false };
     std::atomic<bool> m_started{ false };
     bool m_createUmpEndpointsOnly{ true };
+    uint8_t m_fallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
 
     std::wstring m_hostEndpointName{ };
     std::wstring m_hostProductInstanceId{ };

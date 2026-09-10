@@ -79,6 +79,8 @@ namespace foundation = ::winrt::Windows::Foundation;
 #include "ump_helpers.h"
 #include "midi_ump_message_defs.h"
 #include "midi_timestamp.h"
+#include "midi_group_terminal_blocks.h"
+#include "MidiEndpointNameTable.h"
 
 #undef GetObject
 #include <winrt/Windows.Data.Json.h>

@@ -83,11 +83,15 @@ namespace midinetworksetup
         // endpoint following the device's own name instead of pinning what it happened to be.
         winrt::hstring GetClientCustomEndpointName(_In_ winrt::hstring const& clientIdKey) noexcept;
 
-        // MIDI 1.0 ports are decided when the endpoint is built, so this only changes what the
-        // next connection creates. Nothing about the running endpoint changes.
-        bool SetClientCreateMidi1Ports(
-            _In_ winrt::hstring const& clientIdKey,
-            _In_ bool const createMidi1Ports) noexcept;
+        // The fallback port count saved for this entry, or the default when the entry does not
+        // say. There is no endpoint property for this one, because it only matters for a device
+        // which never described itself, so the file is the only place it is recorded.
+        uint8_t GetClientFallbackMidi1PortCount(_In_ winrt::hstring const& clientIdKey) noexcept;
+
+        // Companion to the above. Nothing writes this to the endpoint's properties, so the file
+        // is the only record of what was asked for.
+        bool GetClientCreateMidi1Ports(_In_ winrt::hstring const& clientIdKey) noexcept;
+
 
     private:
         NetworkConfigFile() noexcept;

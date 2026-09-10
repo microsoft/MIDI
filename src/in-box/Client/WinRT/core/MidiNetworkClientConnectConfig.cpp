@@ -57,6 +57,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             json::JsonValue::CreateBooleanValue(!CreateOnlyUmpEndpoints()));
 
         clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
+            json::JsonValue::CreateNumberValue(FallbackMidi1PortCount()));
+
+        clientObject.SetNamedValue(
             WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey,
             matchObject);
 

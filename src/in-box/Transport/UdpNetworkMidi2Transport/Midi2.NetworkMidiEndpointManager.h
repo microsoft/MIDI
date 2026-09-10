@@ -43,6 +43,7 @@ public:
         _In_ winrt::Windows::Networking::HostName const& hostName,
         _In_ std::wstring const& networkPort,
         _In_ bool umpOnly,
+        _In_ uint8_t const fallbackMidi1PortCount,
         _Out_ std::wstring& createdNewDeviceInstanceId,
         _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
     ));
@@ -55,6 +56,7 @@ public:
         _In_ winrt::Windows::Networking::HostName const& hostName,
         _In_ std::wstring const& networkPort,
         _In_ bool umpOnly,
+        _In_ uint8_t const fallbackMidi1PortCount,
         _Out_ std::wstring& createdNewDeviceInstanceId,
         _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
     ));
@@ -66,6 +68,23 @@ public:
     // connection to be torn down and rebuilt.
     winrt::hstring FindMatchingInstantiatedEndpoint(
         _In_ WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria);
+
+    // Rewrites the fallback group terminal block and the MIDI 1.0 port name table for an endpoint
+    // which is already up. Both properties are ones the service watches, so writing them is what
+    // makes it re-sync the MIDI 1.0 ports: a changed port count takes effect, and a renamed
+    // endpoint carries its new name down to its ports, without the connection being torn down.
+    //
+    // Pass zero for the count to keep whatever the endpoint already spans, which is what a rename
+    // wants. Does nothing for an endpoint with no block, which is how a UMP-only one is told
+    // apart without having to find the entry it came from.
+    //
+    // A caller which is applying a customization has to pass the name, because the endpoint's own
+    // name does not reflect a custom name that was only just written. An empty string means the
+    // custom name was cleared, so the device's own name is used again.
+    HRESULT RefreshMidi1PortsForEndpoint(
+        _In_ std::wstring const& endpointDeviceInterfaceId,
+        _In_ uint8_t const fallbackMidi1PortCount,
+        _In_ std::optional<std::wstring> const& portNameOverride = std::nullopt);
 
     STDMETHOD(StartRemoteHostWatcher)();
     STDMETHOD(StartBackgroundEndpointCreator)();
@@ -112,9 +131,20 @@ private:
         _In_ winrt::Windows::Networking::HostName const& hostName,
         _In_ std::wstring const& networkPort,
         _In_ bool umpOnly,
+        _In_ uint8_t const fallbackMidi1PortCount,
         _Out_ std::wstring& createdNewDeviceInstanceId,
         _Out_ std::wstring& createdNewEndpointDeviceInterfaceId
     ));
+
+    // Shared by endpoint creation and the live refresh, so both produce the same blocks. The two
+    // buffers are owned by the caller because the property entries point into them and must stay
+    // valid until the device manager call returns.
+    HRESULT BuildFallbackMidi1PortProperties(
+        _In_ std::wstring const& portName,
+        _In_ uint8_t const fallbackMidi1PortCount,
+        _Inout_ std::vector<std::byte>& groupTerminalBlockData,
+        _Inout_ WindowsMidiServicesNamingLib::MidiEndpointNameTable& nameTable,
+        _Inout_ std::vector<DEVPROPERTY>& properties);
 
     ::WindowsMidiServicesInternal::MidiDnssdBrowser m_browser;
 
@@ -135,6 +165,11 @@ private:
         winrt::hstring DeviceInstanceId;
         winrt::hstring TransportSuppliedEndpointName;
         winrt::hstring ProductInstanceId;
+
+        // Groups the fallback block spans, so a refresh can keep the width without reading the
+        // block back out of the device store. Zero means the endpoint was built UMP-only and has
+        // no MIDI 1.0 ports to rebuild.
+        uint8_t FallbackMidi1PortCount{ 0 };
     };
 
     wil::critical_section m_createdEndpointsLock;

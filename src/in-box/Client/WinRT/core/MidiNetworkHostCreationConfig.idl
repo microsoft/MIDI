@@ -47,6 +47,13 @@ namespace Windows.Devices.Midi2.Transports.Network
 
         [noexcept] Boolean CreateOnlyUmpEndpoints;
 
+        // A remote client is described by the function blocks it declares, and the MIDI 1.0 ports
+        // for it are built from those. A client which never completes discovery declares none, and
+        // would otherwise get no ports at all, so this many source and destination ports are
+        // created for it instead. Ignored when the client does describe itself, and when
+        // CreateOnlyUmpEndpoints is true. Valid values are 1 through 16.
+        [noexcept] UInt8 FallbackMidi1PortCount;
+
         [noexcept] Boolean UseAutomaticPortAllocation;
         [noexcept] String ManuallyAssignedPort;
 

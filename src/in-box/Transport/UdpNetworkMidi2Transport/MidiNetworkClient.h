@@ -28,6 +28,9 @@ struct MidiNetworkClientDefinition
 
     bool CreateMidi1Ports{ MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT };
 
+    // Only used when the remote declares no function blocks. See the constant for why.
+    uint8_t FallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
+
 
     // protocol
 //    MidiNetworkHostProtocol NetworkProtocol{ MidiNetworkHostProtocol::ProtocolDefault };
@@ -80,6 +83,10 @@ public:
 
     MidiNetworkClientDefinition GetDefinition() { return m_clientDefinition; }
 
+    // Used the next time this client builds a connection. An endpoint already up is updated in
+    // place by the configuration manager.
+    void SetFallbackMidi1PortCount(_In_ uint8_t const value) noexcept { m_fallbackMidi1PortCount = value; }
+
     winrt::hstring RemoteAddress() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().RemoteAddress().DisplayName() : L""; }
     winrt::hstring RemotePort() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().RemotePort() : L""; }
 
@@ -115,6 +122,7 @@ private:
     winrt::guid m_configIdentifier{};
 
     bool m_createUmpEndpointsOnly{ true };
+    uint8_t m_fallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
 
     wil::critical_section m_connectionLock;
     std::shared_ptr<MidiNetworkClientConnection> m_networkConnection{ nullptr };

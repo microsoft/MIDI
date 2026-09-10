@@ -174,7 +174,7 @@ public:
 
     // The default host configuration says what it does. The flag and the comment used to
     // disagree, which is the kind of thing that gets copied into a caller's code.
-    TEST_METHOD(TestDefaultHostConfigCreatesUmpEndpointsOnly);
+    TEST_METHOD(TestDefaultHostConfigCreatesMidi1Ports);
 
     // Config surface which had no coverage at all. These are pure client-side round trips, so
     // they run without the service.

@@ -10,6 +10,7 @@
 #include "Transports.Network.MidiNetworkHostCreationConfig.g.h"
 
 #include "..\..\..\Transport\UdpNetworkMidi2Transport\net2udp_transport_defs.h"
+#include "..\..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
 
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 {
@@ -44,6 +45,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         bool CreateOnlyUmpEndpoints() const noexcept { return m_umpOnly; }
         void CreateOnlyUmpEndpoints(_In_ bool const value) noexcept { m_umpOnly = value; }
 
+        uint8_t FallbackMidi1PortCount() const noexcept { return m_fallbackMidi1PortCount; }
+        void FallbackMidi1PortCount(_In_ uint8_t const value) noexcept { m_fallbackMidi1PortCount = value; }
+
         bool UseAutomaticPortAllocation() const noexcept { return m_useAutomaticPortAllocation; }
         void UseAutomaticPortAllocation(_In_ bool const value) noexcept { m_useAutomaticPortAllocation = value; }
 
@@ -70,7 +74,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
         winrt::hstring m_name{};
         winrt::hstring m_serviceInstanceName{};
         winrt::hstring m_productInstanceId{};
-        bool m_umpOnly{ true };
+        bool m_umpOnly{ false };
+        uint8_t m_fallbackMidi1PortCount{ MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT };
         bool m_useAutomaticPortAllocation{ true };
         bool m_allowPortFallback{ true };
         winrt::hstring m_manuallyAssignedPort{};

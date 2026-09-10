@@ -175,6 +175,7 @@
     <ClInclude Include="NetworkMidiApprovalTests.h" />
     <ClInclude Include="NetworkMidiTransportSettingsTests.h" />
     <ClInclude Include="NetworkMidiClientTests.h" />
+    <ClInclude Include="NetworkMidiPortCreationTests.h" />
     <ClInclude Include="NetworkMidiErrorTests.h" />
     <ClInclude Include="NetworkMidiMalformedTests.h" />
     <ClInclude Include="NetworkMidiSessionTests.h" />
@@ -194,6 +195,7 @@
     <ClCompile Include="NetworkMidiApprovalTests.cpp" />
     <ClCompile Include="NetworkMidiTransportSettingsTests.cpp" />
     <ClCompile Include="NetworkMidiClientTests.cpp" />
+    <ClCompile Include="NetworkMidiPortCreationTests.cpp" />
     <ClCompile Include="NetworkMidiErrorTests.cpp" />
     <ClCompile Include="NetworkMidiMalformedTests.cpp" />
     <ClCompile Include="NetworkMidiSessionTests.cpp" />

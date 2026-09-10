@@ -793,15 +793,13 @@ namespace midinetworksetup
     }
 
     _Use_decl_annotations_
-    bool NetworkConfigFile::SetClientCreateMidi1Ports(
-        winrt::hstring const& clientIdKey,
-        bool const createMidi1Ports) noexcept
+    uint8_t NetworkConfigFile::GetClientFallbackMidi1PortCount(winrt::hstring const& clientIdKey) noexcept
     {
         json::JsonObject config{ nullptr };
 
-        if (!Load(config))
+        if (!LoadCached(config))
         {
-            return false;
+            return MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT;
         }
 
         auto clients = GetEntriesObject(config, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY, false);
@@ -810,23 +808,55 @@ namespace midinetworksetup
 
         if (client == nullptr)
         {
-            m_lastError = resources::GetString(L"ConfigFileClientEntryMissingError");
-            return false;
+            return MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT;
         }
 
         try
         {
-            json::JsonObject clientChange{};
-            clientChange.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY,
-                json::JsonValue::CreateBooleanValue(createMidi1Ports));
+            auto const value = client.GetNamedNumber(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
+                MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT);
 
-            return SaveSection(BuildClientSection(ResolveKey(clients, clientIdKey), clientChange));
+            if (value < MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM ||
+                value > MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM)
+            {
+                return MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT;
+            }
+
+            return static_cast<uint8_t>(value);
         }
         catch (...)
         {
-            m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path);
-            return false;
+            return MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT;
+        }
+    }
+
+    _Use_decl_annotations_
+    bool NetworkConfigFile::GetClientCreateMidi1Ports(winrt::hstring const& clientIdKey) noexcept
+    {
+        json::JsonObject config{ nullptr };
+
+        if (!LoadCached(config))
+        {
+            return true;
+        }
+
+        auto clients = GetEntriesObject(config, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY, false);
+
+        auto client = FindObject(clients, ResolveKey(clients, clientIdKey));
+
+        if (client == nullptr)
+        {
+            return true;
+        }
+
+        try
+        {
+            return client.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, true);
+        }
+        catch (...)
+        {
+            return true;
         }
     }
 

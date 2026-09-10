@@ -121,6 +121,45 @@ namespace
         }
     }
 
+    // A number outside the permitted range is treated as absent. Config files are hand-edited,
+    // and clamping silently would hide the mistake from whoever wrote it.
+    uint8_t SafeGetNamedByte(
+        _In_ json::JsonObject const& parent,
+        _In_ winrt::hstring const& name,
+        _In_ uint8_t const defaultValue,
+        _In_ uint8_t const minimumValue,
+        _In_ uint8_t const maximumValue) noexcept
+    {
+        try
+        {
+            if (parent == nullptr || !parent.HasKey(name))
+            {
+                return defaultValue;
+            }
+
+            auto value = parent.Lookup(name);
+
+            if (value == nullptr || value.ValueType() != json::JsonValueType::Number)
+            {
+                TraceWrongJsonType(name, L"number");
+                return defaultValue;
+            }
+
+            auto const number = value.GetNumber();
+
+            if (number < minimumValue || number > maximumValue)
+            {
+                return defaultValue;
+            }
+
+            return static_cast<uint8_t>(number);
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
+    }
+
     json::JsonArray SafeGetNamedArray(_In_ json::JsonObject const& parent, _In_ winrt::hstring const& name) noexcept
     {
         try
@@ -661,6 +700,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectDirect(
     winrt::hstring const& umpEndpointName,
     winrt::hstring const& customEndpointName,
     bool const createMidi1Ports,
+    uint8_t const fallbackMidi1PortCount,
     json::JsonObject& responseObject) noexcept
 try
 {
@@ -710,6 +750,7 @@ try
     auto clientDefinition = std::make_shared<MidiNetworkClientDefinition>();
 
     clientDefinition->CreateMidi1Ports = createMidi1Ports;
+    clientDefinition->FallbackMidi1PortCount = fallbackMidi1PortCount;
     clientDefinition->EntryIdentifier = configEntryId;
     clientDefinition->MatchDirectHostNameOrIPAddress = remoteAddress;
     clientDefinition->MatchDirectPort = remotePort;
@@ -754,6 +795,7 @@ CMidi2NetworkMidiConfigurationManager::RunCommandConnectMdns(
     winrt::hstring const& umpEndpointName,
     winrt::hstring const& customEndpointName,
     bool const createMidi1Ports,
+    uint8_t const fallbackMidi1PortCount,
     json::JsonObject& responseObject) noexcept
 try
 {
@@ -781,6 +823,7 @@ try
     auto clientDefinition = std::make_shared<MidiNetworkClientDefinition>();
 
     clientDefinition->CreateMidi1Ports = createMidi1Ports;
+    clientDefinition->FallbackMidi1PortCount = fallbackMidi1PortCount;
     clientDefinition->EntryIdentifier = configEntryId;
     clientDefinition->MatchId = matchId;
     clientDefinition->LocalEndpointName = umpEndpointName;
@@ -1171,10 +1214,146 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
                     existingEndpointDeviceId.c_str(),
                     static_cast<ULONG>(endpointDevProperties.size()),
                     endpointDevProperties.data()));
+
+                // The name above is the endpoint's. The MIDI 1.0 ports take their names from a
+                // separate table, which nothing here has rewritten, so without this a renamed
+                // device keeps its old port names. The name has to be handed over rather than
+                // read back, because the endpoint does not report it yet. Zero keeps the port
+                // count as it is, because a rename is not a reason to change it.
+                LOG_IF_FAILED(endpointManager->RefreshMidi1PortsForEndpoint(
+                    std::wstring{ existingEndpointDeviceId },
+                    0,
+                    std::wstring{ customProperties->Name }));
             }
         }
 
         if (anyCustomizationAccepted)
+        {
+            internal::SetConfigurationResponseObjectSuccess(responseObject);
+        }
+    }
+    catch (...)
+    {
+        RETURN_IF_FAILED(E_FAIL);
+    }
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizationRemovals(
+    json::JsonObject const& removeSection,
+    json::JsonObject& responseObject) noexcept
+{
+    try
+    {
+        // Same array shape as a customization, carrying only the match
+        auto removeArray = SafeGetNamedArray(removeSection, MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY);
+
+        if (removeArray == nullptr || removeArray.Size() == 0)
+        {
+            return S_OK;
+        }
+
+        bool anyRemovalAccepted{ false };
+
+        // Indexed for the same reason as the customization loop: windows.h renames
+        // IJsonValue::GetObject, and JsonArray::GetObjectAt is unaffected.
+        for (uint32_t i = 0; i < removeArray.Size(); i++)
+        {
+            auto element = removeArray.GetAt(i);
+
+            // one malformed element should cost its own removal, not every one after it
+            if (element == nullptr || element.ValueType() != json::JsonValueType::Object)
+            {
+                continue;
+            }
+
+            auto entryObject = removeArray.GetObjectAt(i);
+
+            if (entryObject == nullptr)
+            {
+                continue;
+            }
+
+            auto matchObject = SafeGetNamedObject(
+                entryObject, WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey);
+
+            if (matchObject == nullptr)
+            {
+                // nothing to tie this removal to
+                continue;
+            }
+
+            auto matchCriteria = WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::FromJson(matchObject);
+
+            if (matchCriteria == nullptr)
+            {
+                continue;
+            }
+
+            // Every member defaults to the uncustomized value, and writing them sends
+            // DEVPROP_TYPE_EMPTY for each string, which deletes it. Add replaces the entry that
+            // matches, so this both withdraws the cached customization and undoes the applied one.
+            auto clearedProperties =
+                std::make_shared<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties>();
+
+            if (clearedProperties == nullptr)
+            {
+                continue;
+            }
+
+            LOG_HR_IF(E_FAIL, !m_customPropertiesCache->Add(matchCriteria, clearedProperties));
+
+            anyRemovalAccepted = true;
+
+            TraceLoggingWrite(
+                MidiNetworkMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Removed endpoint customization", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(matchCriteria->TransportSuppliedEndpointName.c_str(), "transport supplied name"),
+                TraceLoggingWideString(matchCriteria->DeviceProductInstanceId.c_str(), "product instance id")
+            );
+
+            auto endpointManager = TransportState::Current().GetEndpointManager();
+
+            if (endpointManager == nullptr)
+            {
+                continue;
+            }
+
+            auto existingEndpointDeviceId = endpointManager->FindMatchingInstantiatedEndpoint(*matchCriteria);
+
+            if (existingEndpointDeviceId.empty())
+            {
+                // nothing live to revert, but the cache no longer carries it
+                continue;
+            }
+
+            std::vector<DEVPROPERTY> endpointDevProperties{};
+
+            if (clearedProperties->WriteAllProperties(endpointDevProperties) && endpointDevProperties.size() > 0)
+            {
+                LOG_IF_FAILED(m_midiDeviceManager->UpdateEndpointProperties(
+                    existingEndpointDeviceId.c_str(),
+                    static_cast<ULONG>(endpointDevProperties.size()),
+                    endpointDevProperties.data()));
+
+                // An empty name here means the ports go back to the one the remote supplied,
+                // which the endpoint manager still has on record.
+                LOG_IF_FAILED(endpointManager->RefreshMidi1PortsForEndpoint(
+                    std::wstring{ existingEndpointDeviceId },
+                    0,
+                    std::wstring{ }));
+            }
+        }
+
+        if (anyRemovalAccepted)
         {
             internal::SetConfigurationResponseObjectSuccess(responseObject);
         }
@@ -1201,7 +1380,8 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
 //       "remotePort" : "port number",
 //       "localPort" : "port number",
 //       "endpointDeviceId" : "id of associated ump endpoint",
-//       "createMidi1Ports" : true
+//       "createMidi1Ports" : true,
+//       "fallbackMidi1PortCount" : 1
 //      },
 //     ...
 //   ]
@@ -1257,6 +1437,10 @@ try
         clientObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CREATE_MIDI1_PORTS_KEY,
             json::JsonValue::CreateBooleanValue(def->CreateMidi1Ports));
+
+        clientObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_FALLBACK_MIDI1_PORT_COUNT_KEY,
+            json::JsonValue::CreateNumberValue(def->FallbackMidi1PortCount));
 
         if (client == nullptr)
         {
@@ -1358,6 +1542,7 @@ catch (...)
 //       "name" : "Advertised Endpoint Name",
 //       "productInstanceId" : "instance id",
 //       "createMidi1Ports" : true,
+//       "fallbackMidi1PortCount" : 1,
 //       "serviceInstanceName" : "foobarbaz"
 //      },
 //     ...
@@ -1481,6 +1666,10 @@ try
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CREATE_MIDI1_PORTS_KEY,
             json::JsonValue::CreateBooleanValue(def.CreateMidi1Ports));
+
+        hostObject.SetNamedValue(
+            MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_FALLBACK_MIDI1_PORT_COUNT_KEY,
+            json::JsonValue::CreateNumberValue(def.FallbackMidi1PortCount));
 
         hostObject.SetNamedValue(
             MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SERVICE_INSTANCE_NAME_KEY,
@@ -1641,6 +1830,39 @@ namespace
         auto const value = internal::ToLowerTrimmedWStringCopy(arg->second);
 
         return value == L"true" || value == L"1";
+    }
+
+    // Same idea for a numeric argument. Anything the caller cannot have meant, including text
+    // which is not a number at all, falls back to the default rather than to zero.
+    uint8_t OptionalCommandArgumentByte(
+        _In_ internal::MidiTransportCommandHelper& commandHelper,
+        _In_ std::wstring const& key,
+        _In_ uint8_t const defaultValue,
+        _In_ uint8_t const minimumValue,
+        _In_ uint8_t const maximumValue)
+    {
+        auto arg = commandHelper.Arguments()->find(key);
+
+        if (arg == commandHelper.Arguments()->end())
+        {
+            return defaultValue;
+        }
+
+        try
+        {
+            auto const value = std::stoi(internal::TrimmedWStringCopy(arg->second));
+
+            if (value < minimumValue || value > maximumValue)
+            {
+                return defaultValue;
+            }
+
+            return static_cast<uint8_t>(value);
+        }
+        catch (...)
+        {
+            return defaultValue;
+        }
     }
 
     // FILETIME to ISO 8601 UTC, with the full 100ns resolution so the value round-trips. An
@@ -1942,6 +2164,7 @@ try
                 name->second.c_str(),
                 OptionalCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY),
                 OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT),
+                OptionalCommandArgumentByte(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM),
                 responseObject));
         }
         else
@@ -1973,6 +2196,7 @@ try
                 name->second.c_str(),
                 OptionalCommandArgument(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY),
                 OptionalCommandArgumentBool(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT),
+                OptionalCommandArgumentByte(commandHelper, MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM, MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM),
                 responseObject));
         }
         else
@@ -2180,6 +2404,156 @@ catch (...)
 
 _Use_decl_annotations_
 HRESULT
+CMidi2NetworkMidiConfigurationManager::ProcessEntryUpdates(
+    json::JsonObject const& updateSection,
+    json::JsonObject& responseObject) noexcept
+try
+{
+    UNREFERENCED_PARAMETER(responseObject);
+
+    auto endpointManager = TransportState::Current().GetEndpointManager();
+
+    // Applies one entry's worth of changes. The count is the only thing which can take effect
+    // without rebuilding the endpoint, so it is the only thing pushed to a live one. Whether an
+    // endpoint has MIDI 1.0 ports at all is fixed when the endpoint is created, so the flag is
+    // recorded for the next connection and nothing is torn down to act on it.
+    auto applyToDefinition = [&endpointManager](
+        json::JsonObject const& entry,
+        bool& createMidi1Ports,
+        uint8_t& fallbackMidi1PortCount,
+        std::vector<std::wstring> const& liveEndpointDeviceIds)
+    {
+        createMidi1Ports = SafeGetNamedBoolean(
+            entry,
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY,
+            createMidi1Ports);
+
+        auto const newCount = SafeGetNamedByte(
+            entry,
+            MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
+            fallbackMidi1PortCount,
+            MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
+            MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
+
+        if (newCount == fallbackMidi1PortCount)
+        {
+            return;
+        }
+
+        fallbackMidi1PortCount = newCount;
+
+        if (endpointManager == nullptr)
+        {
+            return;
+        }
+
+        for (auto const& endpointDeviceId : liveEndpointDeviceIds)
+        {
+            if (endpointDeviceId.empty()) continue;
+
+            LOG_IF_FAILED(endpointManager->RefreshMidi1PortsForEndpoint(endpointDeviceId, newCount));
+        }
+    };
+
+    auto hostsObject = SafeGetNamedObject(updateSection, MIDI_CONFIG_JSON_NETWORK_MIDI_HOSTS_KEY);
+
+    if (hostsObject != nullptr && hostsObject.Size() > 0)
+    {
+        for (auto const& it = hostsObject.First(); it.HasCurrent(); it.MoveNext())
+        {
+            winrt::guid entryIdentifier{};
+
+            if (!TryParseEntryIdentifier(it.Current().Key(), entryIdentifier)) continue;
+
+            auto entry = SafeGetNamedObject(hostsObject, it.Current().Key());
+
+            if (entry == nullptr) continue;
+
+            // A host's endpoints belong to the remote clients connected to it, so every one of
+            // them follows the host's setting.
+            std::vector<std::wstring> endpointDeviceIds{};
+
+            for (auto const& connection : TransportState::Current().GetHostConnectionsForHost(entryIdentifier))
+            {
+                if (connection != nullptr)
+                {
+                    endpointDeviceIds.push_back(connection->GetEndpointDeviceId());
+                }
+            }
+
+            for (auto const& definition : TransportState::Current().GetPendingHostDefinitions())
+            {
+                if (definition == nullptr || definition->EntryIdentifier != entryIdentifier) continue;
+
+                applyToDefinition(entry, definition->CreateMidi1Ports, definition->FallbackMidi1PortCount, endpointDeviceIds);
+
+                if (auto host = TransportState::Current().GetHost(entryIdentifier); host != nullptr)
+                {
+                    host->SetFallbackMidi1PortCount(definition->FallbackMidi1PortCount);
+                }
+            }
+        }
+    }
+
+    auto clientsObject = SafeGetNamedObject(updateSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY);
+
+    if (clientsObject != nullptr && clientsObject.Size() > 0)
+    {
+        for (auto const& it = clientsObject.First(); it.HasCurrent(); it.MoveNext())
+        {
+            winrt::guid entryIdentifier{};
+
+            if (!TryParseEntryIdentifier(it.Current().Key(), entryIdentifier)) continue;
+
+            auto entry = SafeGetNamedObject(clientsObject, it.Current().Key());
+
+            if (entry == nullptr) continue;
+
+            std::vector<std::wstring> endpointDeviceIds{};
+
+            for (auto const& connection : TransportState::Current().GetAllNetworkConnectionsForClient(entryIdentifier))
+            {
+                if (connection != nullptr)
+                {
+                    endpointDeviceIds.push_back(connection->GetEndpointDeviceId());
+                }
+            }
+
+            // The pending definitions are what the endpoint creator builds from, and what survives
+            // a reconnect, so they are updated whether or not a connection is up right now.
+            for (auto const& definition : TransportState::Current().GetPendingClientDefinitions())
+            {
+                if (definition == nullptr || definition->EntryIdentifier != entryIdentifier) continue;
+
+                applyToDefinition(entry, definition->CreateMidi1Ports, definition->FallbackMidi1PortCount, endpointDeviceIds);
+
+                if (auto client = TransportState::Current().GetClient(entryIdentifier); client != nullptr)
+                {
+                    client->SetFallbackMidi1PortCount(definition->FallbackMidi1PortCount);
+                }
+            }
+        }
+    }
+
+    return S_OK;
+}
+catch (...)
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exception processing entry updates", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return E_FAIL;
+}
+
+
+_Use_decl_annotations_
+HRESULT
 CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     LPCWSTR configurationJsonSection,
     LPWSTR* response
@@ -2250,7 +2624,7 @@ try
     auto transportSettingsSection = SafeGetNamedObject(jsonObject, MIDI_CONFIG_JSON_NETWORK_MIDI_TRANSPORT_SETTINGS_KEY);
 
     auto createSection = SafeGetNamedObject(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY);
-    auto updateSection = SafeGetNamedObject(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY);
+    auto updateSection = SafeGetNamedObject(jsonObject, MIDI_CONFIG_JSON_NETWORK_MIDI_UPDATE_ENTRIES_KEY);
     auto removeSection = SafeGetNamedObject(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY);
 
     // Endpoint customization, in the array form every other transport uses. Kept separate from
@@ -2415,6 +2789,13 @@ try
                     SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY, L""));
 
                 definition->CreateMidi1Ports = SafeGetNamedBoolean(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT);
+
+                definition->FallbackMidi1PortCount = SafeGetNamedByte(
+                    hostEntry,
+                    MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
+                    MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT,
+                    MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
+                    MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
 
                 definition->UmpEndpointName = internal::TrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L""));
                 definition->ProductInstanceId = internal::TrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY, L""));
@@ -2614,6 +2995,13 @@ try
                         MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY,
                         MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT);
 
+                    definition->FallbackMidi1PortCount = SafeGetNamedByte(
+                        clientEntry,
+                        MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
+                        MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT,
+                        MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
+                        MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
+
                     winrt::hstring localEndpointName{ };
                     winrt::hstring localProductInstanceId{ };
 
@@ -2696,13 +3084,17 @@ try
     // "update" entries
     if (updateSection != nullptr && updateSection.Size() > 0)
     {
-        // this needs to allow for activating and deactivating existing entries, as well as setting the endpoint names and
-
+        if (SUCCEEDED(ProcessEntryUpdates(updateSection, responseObject)))
+        {
+            internal::SetConfigurationResponseObjectSuccess(responseObject);
+        }
     }
 
     // "remove" entries
     if (removeSection != nullptr && removeSection.Size() > 0)
     {
+        LOG_IF_FAILED(ProcessEndpointCustomizationRemovals(removeSection, responseObject));
+
         // remove a host 
 
 

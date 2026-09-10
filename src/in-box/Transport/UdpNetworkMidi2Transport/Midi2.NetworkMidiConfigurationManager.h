@@ -39,6 +39,19 @@ private:
         _In_ json::JsonObject const& jsonObject,
         _Inout_ json::JsonObject& responseObject) noexcept;
 
+    // Withdraws a customization, so the endpoint goes back to what the remote calls itself. No
+    // other transport does this yet, and the shared cache has no remove, so a customization with
+    // nothing in it is what replaces the cached one.
+    HRESULT ProcessEndpointCustomizationRemovals(
+        _In_ json::JsonObject const& removeSection,
+        _Inout_ json::JsonObject& responseObject) noexcept;
+
+    // Changes to this transport's own host and client entries, keyed by entry identifier. Kept
+    // separate from the array-shaped endpoint customization every transport shares.
+    HRESULT ProcessEntryUpdates(
+        _In_ json::JsonObject const& updateSection,
+        _Inout_ json::JsonObject& responseObject) noexcept;
+
     std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomPropertiesCache> m_customPropertiesCache{ std::make_shared<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomPropertiesCache>() };
 
     HRESULT ProcessCommand(
@@ -69,6 +82,7 @@ private:
         _In_ winrt::hstring const& umpEndpointName,
         _In_ winrt::hstring const& customEndpointName,
         _In_ bool const createMidi1Ports,
+        _In_ uint8_t const fallbackMidi1PortCount,
         _Inout_ json::JsonObject& responseObject) noexcept;
 
     // Connects to an mDNS-discovered host by its Windows device id. The address and port are
@@ -80,6 +94,7 @@ private:
         _In_ winrt::hstring const& umpEndpointName,
         _In_ winrt::hstring const& customEndpointName,
         _In_ bool const createMidi1Ports,
+        _In_ uint8_t const fallbackMidi1PortCount,
         _Inout_ json::JsonObject& responseObject) noexcept;
 
     HRESULT RunCommandDisconnectClient(

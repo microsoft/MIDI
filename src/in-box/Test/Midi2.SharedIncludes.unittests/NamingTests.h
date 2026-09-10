@@ -56,6 +56,8 @@ public:
 
     TEST_METHOD(TestValidateMidi1DriverAndMidi2DriverCreateCompatibleLegacyNames);
 
+    TEST_METHOD(TestLegacyNameKeepsNonAsciiCharacters);
+
     TEST_METHOD(TestGitHubIssue652);
     TEST_METHOD(TestGitHubIssue616);
 

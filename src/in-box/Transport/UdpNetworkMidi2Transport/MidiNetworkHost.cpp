@@ -54,6 +54,7 @@ MidiNetworkHost::Initialize(
     m_started = false;
 
     m_createUmpEndpointsOnly = !hostDefinition.CreateMidi1Ports;
+    m_fallbackMidi1PortCount = hostDefinition.FallbackMidi1PortCount;
 
     m_hostEndpointName = hostDefinition.UmpEndpointName;
     m_hostProductInstanceId = hostDefinition.ProductInstanceId;
@@ -283,6 +284,7 @@ MidiNetworkHost::CreateNetworkConnection(
             TransportState::Current().TransportSettings.RetransmitBufferMaxCommandPacketCount,
             TransportState::Current().TransportSettings.ForwardErrorCorrectionMaxCommandPacketCount,
             m_createUmpEndpointsOnly,
+            m_fallbackMidi1PortCount,
             AuthenticationKindFromHostAuthentication(m_hostDefinition.Authentication),
             MidiNetworkCredentialIdentifier{ std::wstring{ m_hostDefinition.AuthenticationCredentialIdentifier } }
         ));

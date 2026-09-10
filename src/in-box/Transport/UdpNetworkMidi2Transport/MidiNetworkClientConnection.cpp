@@ -20,7 +20,8 @@ MidiNetworkClientConnection::Initialize(
     std::wstring const& thisProductInstanceId,
     uint16_t const retransmitBufferMaxCommandPacketCount,
     uint8_t const maxForwardErrorCorrectionCommandPacketCount,
-    bool createUmpEndpointsOnly
+    bool createUmpEndpointsOnly,
+    uint8_t const fallbackMidi1PortCount
 )
 {
     return MidiNetworkConnection::Initialize(
@@ -34,7 +35,8 @@ MidiNetworkClientConnection::Initialize(
         thisProductInstanceId,
         retransmitBufferMaxCommandPacketCount,
         maxForwardErrorCorrectionCommandPacketCount,
-        createUmpEndpointsOnly
+        createUmpEndpointsOnly,
+        fallbackMidi1PortCount
     );
 }
 
@@ -286,6 +288,7 @@ MidiNetworkClientConnection::HandleIncomingInvitationReplyAccepted(
             m_remoteHostName,
             m_remotePort,
             m_createUmpEndpointsOnly,
+            m_fallbackMidi1PortCount,
             newDeviceInstanceId,
             newEndpointDeviceInterfaceId
         );

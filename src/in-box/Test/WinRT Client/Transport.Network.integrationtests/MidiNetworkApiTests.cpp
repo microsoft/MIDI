@@ -2163,7 +2163,7 @@ void MidiNetworkApiTests::TestDisconnectRemoteClientWithNullConfigFailsCleanly()
     VERIFY_ARE_EQUAL(MidiNetworkRemoteClientDisconnectErrorCode::InvalidArgument, response.ErrorCode());
 }
 
-void MidiNetworkApiTests::TestDefaultHostConfigCreatesUmpEndpointsOnly()
+void MidiNetworkApiTests::TestDefaultHostConfigCreatesMidi1Ports()
 {
     auto config = MidiNetworkHostCreationConfig::CreateDefault();
 
@@ -2171,11 +2171,17 @@ void MidiNetworkApiTests::TestDefaultHostConfigCreatesUmpEndpointsOnly()
 
     if (config == nullptr) return;
 
-    // UMP endpoints only. The comment above this line in the implementation used to claim the
-    // opposite, which is exactly the sort of thing a caller copies.
-    VERIFY_IS_TRUE(
+    // A default host creates MIDI 1.0 ports for the devices which connect to it, matching what a
+    // client entry already does. Pinned here because it is the difference between a connected
+    // device being usable from an older application and not appearing to it at all.
+    VERIFY_IS_FALSE(
         config.CreateOnlyUmpEndpoints(),
-        L"The default host creates UMP endpoints only; a caller wanting MIDI 1.0 ports clears this.");
+        L"The default host also creates MIDI 1.0 ports; a caller wanting UMP only sets this.");
+
+    VERIFY_ARE_EQUAL(
+        (uint8_t)1,
+        config.FallbackMidi1PortCount(),
+        L"One source and destination pair for a device which never describes itself.");
 }
 
 void MidiNetworkApiTests::TestConnectConfigCustomEndpointNameRoundTrip()

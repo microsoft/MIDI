@@ -670,6 +670,12 @@
     <ClInclude Include="MidiNetworkHostCreationConfig.h">
       <DependentUpon>MidiNetworkHostCreationConfig.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiNetworkHostUpdateConfig.h">
+      <DependentUpon>MidiNetworkHostUpdateConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkClientUpdateConfig.h">
+      <DependentUpon>MidiNetworkClientUpdateConfig.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiNetworkHostRemovalConfig.h">
       <DependentUpon>MidiNetworkHostRemovalConfig.idl</DependentUpon>
     </ClInclude>
@@ -1045,6 +1051,12 @@
     <ClCompile Include="MidiNetworkHostCreationConfig.cpp">
       <DependentUpon>MidiNetworkHostCreationConfig.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiNetworkHostUpdateConfig.cpp">
+      <DependentUpon>MidiNetworkHostUpdateConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkClientUpdateConfig.cpp">
+      <DependentUpon>MidiNetworkClientUpdateConfig.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiNetworkHostRemovalConfig.cpp">
       <DependentUpon>MidiNetworkHostRemovalConfig.idl</DependentUpon>
     </ClCompile>
@@ -1256,6 +1268,8 @@
     <Midl Include="MidiNetworkHostCreationConfig.idl" />
     <Midl Include="MidiNetworkHostCreationResponse.idl" />
     <Midl Include="MidiNetworkHostRemovalConfig.idl" />
+    <Midl Include="MidiNetworkHostUpdateConfig.idl" />
+    <Midl Include="MidiNetworkClientUpdateConfig.idl" />
     <Midl Include="MidiNetworkHostRemovalResponse.idl" />
   </ItemGroup>
   <ItemGroup>

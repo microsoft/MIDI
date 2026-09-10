@@ -167,6 +167,14 @@ customer-visible defect in this project.
   to your own worker and return in microseconds.
 - **Untrusted input** — the configuration file is writable by a standard user and the service runs
   as `LOCAL SERVICE`. Treat config JSON, device-supplied names and network packets as hostile.
+- **Narrow/wide string conversion by iterator range** — `std::wstring(s.begin(), s.end())` on a
+  UTF-8 string makes one `wchar_t` per *byte*, so every character outside ASCII becomes several
+  garbage ones; `std::string(ws.begin(), ws.end())` truncates each `wchar_t` to a byte and loses
+  data silently. Names reach us from devices, from the network and from users, so ASCII is not a
+  safe assumption. Use `winrt::to_hstring` / `winrt::to_string`, `MultiByteToWideChar(CP_UTF8, …)`
+  or the helpers in `Inc/wstring_util.h`. This shipped in the WinMM port names and reached
+  customers. Beware that it hides in test helpers too: a helper that mangles the string on the way
+  in makes the assertion compare mangled to mangled and pass.
 - **Silent failure** — a `catch` that returns a default, a fallback that logs nothing, a wrong-type
   JSON value that quietly disappears. A defect you cannot see in a trace is worse than a crash.
 

@@ -103,6 +103,33 @@ is on the network. **MIDI Endpoint** is the Windows device id, which is what oth
 when they ask you to identify a device. The small copy button on the right puts it on the
 clipboard.
 
+### Customizing a device
+
+Select **Customize** under a connected device to change how it appears in Windows.
+
+**Name**, **Description** and **Image** are yours to set. Leave a box empty and Windows uses what
+the device reports about itself, which is usually what you want until two devices of the same
+model turn up and you need to tell them apart. Browsing for an image copies it into the shared
+endpoint images folder, so it keeps working from other machines' tools and after the original file
+moves. **Remove** clears the image from the device without deleting the file.
+
+The name you set here is the one your DAW sees, and it's carried down to the MIDI 1.0 ports too.
+
+Two settings control the MIDI 1.0 ports:
+
+- **Create MIDI 1.0 ports for this device** turns them on or off. Because the ports are built
+  along with the endpoint, this one takes effect the next time the device connects, not straight
+  away.
+- **MIDI 1.0 ports to create if this device does not describe itself** applies immediately. Most
+  devices tell Windows how many ports they have and this number isn't used for them; it's only for
+  a device that never answers. See
+  [How Network MIDI 2.0 works in Windows]({{ site.baseurl }}/kb/network-midi2-transport/#midi-10-ports)
+  for the detail.
+
+**Reset** clears the name, description and image and goes back to what the device reports. It
+deliberately leaves the MIDI 1.0 port settings alone, so pressing it to clear a name doesn't take
+your ports away as a side effect.
+
 ### Connecting to a device that doesn't advertise itself
 
 Some devices don't announce themselves on the network, or are on a part of the network where those
@@ -159,6 +186,13 @@ Switch it off and devices can still connect, but they'll need the address typed 
 
 **Also create MIDI 1.0 ports for connected devices** makes connected devices usable from older
 software that doesn't understand the new combined MIDI 1.0/MIDI 2.0 API. Most apps today will fall under that category.
+It's on by default, and you'd normally leave it that way.
+
+Underneath it is **MIDI 1.0 ports to create for a device that does not describe itself**. Most
+devices say how many ports they have when Windows asks, and this number isn't used for them. It
+only applies to a device that never answers, which would otherwise get no ports at all. One pair
+is the right answer for almost everything; raise it only if you know a particular device carries
+more than one cable's worth of MIDI and doesn't say so.
 
 ### When a device asks to connect
 

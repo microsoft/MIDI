@@ -414,4 +414,178 @@ namespace NetworkMidiTest
 
         return ss.str();
     }
+
+
+    namespace
+    {
+        // Word 0 of every Stream message: type 0xF, then the form, then a 10 bit status.
+        uint32_t StreamWord0(_In_ uint8_t const form, _In_ uint16_t const status, _In_ uint16_t const remainder)
+        {
+            return
+                (static_cast<uint32_t>(UmpMessageTypeStream) << 28) |
+                (static_cast<uint32_t>(form & 0x3) << 26) |
+                (static_cast<uint32_t>(status & 0x3FF) << 16) |
+                static_cast<uint32_t>(remainder);
+        }
+
+        uint16_t StreamStatusOf(_In_ uint32_t const word0)
+        {
+            return static_cast<uint16_t>((word0 >> 16) & 0x3FF);
+        }
+
+        bool IsStreamWord0(_In_ uint32_t const word0)
+        {
+            return ((word0 >> 28) & 0xF) == UmpMessageTypeStream;
+        }
+
+        // Text notifications pack their characters after the fixed fields. How many land in
+        // word 0 follows from the per-packet character count, and the rest fill words 1 to 3.
+        std::vector<uint32_t> BuildTextNotification(
+            _In_ uint16_t const status,
+            _In_ uint16_t const word0Remainder,
+            _In_ size_t const maxBytes,
+            _In_ size_t const bytesPerPacket,
+            _In_ std::string const& text)
+        {
+            std::vector<uint32_t> words{ };
+
+            auto const truncated = text.substr(0, maxBytes);
+
+            size_t packetCount = truncated.size() / bytesPerPacket;
+            if (truncated.size() % bytesPerPacket != 0 || packetCount == 0) packetCount++;
+
+            size_t offset = 0;
+
+            for (size_t packet = 0; packet < packetCount; packet++)
+            {
+                uint8_t form;
+
+                if (packetCount == 1)               form = StreamFormComplete;
+                else if (packet == 0)               form = StreamFormStart;
+                else if (packet == packetCount - 1) form = StreamFormEnd;
+                else                                form = StreamFormContinue;
+
+                uint8_t payload[14]{ 0 };
+
+                for (size_t i = 0; i < bytesPerPacket && offset < truncated.size(); i++)
+                {
+                    payload[i] = static_cast<uint8_t>(truncated[offset++]);
+                }
+
+                uint32_t word0 = StreamWord0(form, status, word0Remainder);
+
+                size_t index = 0;
+
+                // 14 characters per packet leaves two in word 0, 13 leaves one
+                if (bytesPerPacket % 4 == 2)
+                {
+                    word0 |= static_cast<uint32_t>(payload[index++]) << 8;
+                }
+
+                if (bytesPerPacket % 4 >= 1)
+                {
+                    word0 |= static_cast<uint32_t>(payload[index++]);
+                }
+
+                words.push_back(word0);
+
+                for (size_t word = 0; word < 3; word++)
+                {
+                    words.push_back(
+                        static_cast<uint32_t>(payload[index]) << 24 |
+                        static_cast<uint32_t>(payload[index + 1]) << 16 |
+                        static_cast<uint32_t>(payload[index + 2]) << 8 |
+                        static_cast<uint32_t>(payload[index + 3]));
+
+                    index += 4;
+                }
+            }
+
+            return words;
+        }
+    }
+
+    _Use_decl_annotations_
+    bool IsStreamMessageWithStatus(std::vector<uint32_t> const& words, uint16_t const status)
+    {
+        return
+            words.size() >= 4 &&
+            IsStreamWord0(words[0]) &&
+            StreamStatusOf(words[0]) == status;
+    }
+
+    _Use_decl_annotations_
+    bool ContainsStreamMessageWithStatus(std::vector<uint32_t> const& words, uint16_t const status)
+    {
+        // A Stream message is always four words, so anything in the run which is not one cannot
+        // be stepped over reliably. Discovery requests arrive on their own, so scanning on a four
+        // word stride is enough and avoids decoding every message type.
+        for (size_t i = 0; i + 3 < words.size(); i += 4)
+        {
+            if (IsStreamWord0(words[i]) && StreamStatusOf(words[i]) == status)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    _Use_decl_annotations_
+    std::vector<uint32_t> BuildEndpointInfoNotification(uint8_t const functionBlockCount, bool const staticFunctionBlocks)
+    {
+        // UMP version 1.1
+        uint16_t const word0Remainder = (static_cast<uint16_t>(1) << 8) | 1;
+
+        uint32_t word1 = static_cast<uint32_t>(functionBlockCount & 0x7F) << 24;
+
+        if (staticFunctionBlocks) word1 |= 0x80000000;
+
+        word1 |= 0x0100;    // supports MIDI 1.0 protocol
+        word1 |= 0x0200;    // supports MIDI 2.0 protocol
+
+        return { StreamWord0(StreamFormComplete, StreamStatusEndpointInfoNotification, word0Remainder), word1, 0, 0 };
+    }
+
+    _Use_decl_annotations_
+    std::vector<uint32_t> BuildFunctionBlockInfoNotification(FunctionBlockDescription const& block)
+    {
+        uint16_t word0Remainder{ 0 };
+
+        word0Remainder |= static_cast<uint16_t>(block.Number & 0x7F) << 8;
+        word0Remainder |= static_cast<uint16_t>(block.Direction);
+
+        // the active flag is the high bit of the function block number byte
+        if (block.IsActive) word0Remainder |= 0x8000;
+
+        uint32_t const word1 =
+            static_cast<uint32_t>(block.FirstGroup) << 24 |
+            static_cast<uint32_t>(block.GroupCount) << 16;
+
+        return { StreamWord0(StreamFormComplete, StreamStatusFunctionBlockInfoNotification, word0Remainder), word1, 0, 0 };
+    }
+
+    _Use_decl_annotations_
+    std::vector<uint32_t> BuildEndpointNameNotification(std::string const& name)
+    {
+        return BuildTextNotification(StreamStatusEndpointNameNotification, 0, 98, 14, name);
+    }
+
+    _Use_decl_annotations_
+    std::vector<uint32_t> BuildProductInstanceIdNotification(std::string const& productInstanceId)
+    {
+        return BuildTextNotification(StreamStatusProductInstanceIdNotification, 0, 42, 14, productInstanceId);
+    }
+
+    _Use_decl_annotations_
+    std::vector<uint32_t> BuildFunctionBlockNameNotification(uint8_t const functionBlockNumber, std::string const& name)
+    {
+        // the block number sits where the second character would otherwise go
+        return BuildTextNotification(
+            StreamStatusFunctionBlockNameNotification,
+            static_cast<uint16_t>(functionBlockNumber) << 8,
+            91,
+            13,
+            name);
+    }
 }

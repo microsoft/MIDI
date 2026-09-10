@@ -706,8 +706,9 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NetworkMidiConnectionRole, 923);        // DEVPR
 // MIDI 1.0 Port Naming Properties  ==========================================================
 // Starts at 950
 
-#define STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"950"
-DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CreateMidi1PortsForEndpoint, 950);     // DEVPROP_TYPE_BOOLEAN
+// Removed because this was never actually written to, but was being read by clients getting incorrect data
+//#define STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"950"
+//DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CreateMidi1PortsForEndpoint, 950);     // DEVPROP_TYPE_BOOLEAN
 
 // this is set at the parent endpoint level, and applies to all WinMM and WinRT MIDI 1.0 ports created from this endpoint
 #define STRING_PKEY_MIDI_Midi1PortNamingSelection MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"955"

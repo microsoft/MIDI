@@ -82,9 +82,11 @@ efficient, because Windows waits for an announcement rather than repeatedly prob
 **Naming.** Leave the name empty and Windows uses whatever the device calls itself. Give a name
 and that is what appears everywhere in Windows, including your DAW's device list.
 
-**MIDI 1.0 ports are optional.** A host can create classic MIDI 1.0 ports for connected devices
-so that older software, which does not understand the newer combined API, can use them. Most
-apps today fall into that category.
+**MIDI 1.0 ports are created by default.** Alongside the modern UMP endpoint, Windows creates
+classic MIDI 1.0 ports so that older software, which does not understand the newer combined API,
+can use the device. Most apps today fall into that category. This applies in both directions: to
+devices this PC connects out to, and to devices that connect in to a host here. You can turn it
+off per entry if you only want the UMP endpoint.
 
 ---
 
@@ -167,7 +169,8 @@ A few rules apply to the whole file:
             "advertise": true,
             "authentication": "none",
             "remoteClientPolicy": "requireApproval",
-            "createMidi1Ports": false,
+            "createMidi1Ports": true,
+            "fallbackMidi1PortCount": 1,
             "allowedClients": [
               { "umpEndpointName": "Bome BomeBox", "productInstanceId": "kb7C5D0A_1" }
             ],
@@ -177,6 +180,8 @@ A few rules apply to the whole file:
         "clients": {
           "{971DA520-4559-4A2F-A72E-F9BEA17521CC}": {
             "networkProtocol": "udp",
+            "createMidi1Ports": true,
+            "fallbackMidi1PortCount": 1,
             "match": {
               "directHostNameOrIP": "192.168.1.253",
               "directPort": "5004"
@@ -228,7 +233,8 @@ Lowering `maxHostConnections` does not disconnect clients that are already conne
 | `advertise` | boolean | Announce over mDNS. With this off, devices must be given the address |
 | `authentication` | string | `"none"` only. `"password"` and `"user"` are refused in this release |
 | `remoteClientPolicy` | string | `"allowAny"` or `"requireApproval"` |
-| `createMidi1Ports` | boolean | Create classic MIDI 1.0 ports for connected devices |
+| `createMidi1Ports` | boolean | Default true. Create classic MIDI 1.0 ports for connected devices |
+| `fallbackMidi1PortCount` | number | Default 1, range 1 – 16. Source and destination ports to create for a device that declares no function blocks. See [MIDI 1.0 ports](#midi-10-ports) |
 | `allowedClients` | array | Identity objects that may connect without asking |
 | `deniedClients` | array | Identity objects that are refused without asking |
 
@@ -240,6 +246,8 @@ rather than IP address, because a device's address moves and its identity does n
 | Key | Type | Notes |
 |---|---|---|
 | `networkProtocol` | string | Only `"udp"` |
+| `createMidi1Ports` | boolean | Default true. Create classic MIDI 1.0 ports for this device |
+| `fallbackMidi1PortCount` | number | Default 1, range 1 – 16. Source and destination ports to create when the device declares no function blocks. See [MIDI 1.0 ports](#midi-10-ports) |
 | `match` | object | How to find the device |
 
 `match` carries either an advertised identity or a direct address:
@@ -261,6 +269,34 @@ A configured client is in one of four states:
 | `live` | Connected, endpoint created |
 | `failed` | The entry itself is not valid, so retrying cannot help |
 | `unavailable` | A direct connection stopped answering. Nothing will announce its return, so it is retried only when an app asks again |
+
+## MIDI 1.0 ports
+
+A Network MIDI 2.0 device describes itself with **function blocks**, which it sends when Windows
+asks it to during endpoint discovery. Those say how many groups the device uses and in which
+direction, and Windows creates one MIDI 1.0 source and one destination per group from them. A
+device that describes itself properly needs nothing configured here.
+
+Not every device answers. Some never complete discovery, and unlike USB there are no group
+terminal blocks to fall back on, so Windows would have nothing to build ports from. For that case
+the transport supplies a block of its own, and `fallbackMidi1PortCount` says how wide it is: the
+value is the number of source ports and also the number of destination ports. It defaults to
+**1**, because a device which does not describe itself is usually a bridge with a single cable,
+and 16 would mean 32 ports of clutter in every MIDI 1.0 application.
+
+**The fallback is ignored the moment the device does describe itself.** Function blocks take
+precedence, so raising the count for a device that declares three groups changes nothing.
+
+Two things behave differently when you change them:
+
+| Setting | When it takes effect |
+|---|---|
+| `fallbackMidi1PortCount` | Straight away, on connections that are already up. Ports are added or removed without the session being interrupted |
+| `createMidi1Ports` | The next time the endpoint is created, so disconnect and reconnect, or restart the service |
+
+The difference is not arbitrary. Whether an endpoint has MIDI 1.0 ports at all is settled when the
+endpoint is built and cannot be changed underneath a running one; how many ports it has is driven
+by properties the service watches, so that can be rewritten live.
 
 ## Approval
 

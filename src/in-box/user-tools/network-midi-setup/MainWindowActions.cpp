@@ -14,6 +14,8 @@
 
 #include "StringResources.h"
 
+#include "..\..\Transport\UdpNetworkMidi2Transport\network_json_defs.h"
+
 namespace native = ::midinetworksetup;
 namespace res = ::midinetworksetup::resources;
 
@@ -159,6 +161,44 @@ namespace winrt::midinetworksetup::implementation
             catch (...)
             {
                 return 0;
+            }
+        }
+
+        // Same focus problem as PortFrom, so Text is preferred here too. Anything unreadable or
+        // out of range becomes the default rather than zero, which would mean no ports at all.
+        uint8_t FallbackMidi1PortCountFrom(_In_ controls::NumberBox const& box) noexcept
+        {
+            try
+            {
+                std::wstring const text{ box.Text() };
+
+                if (!text.empty() &&
+                    std::all_of(text.begin(), text.end(), [](wchar_t const c) { return c >= L'0' && c <= L'9'; }))
+                {
+                    auto const parsed = std::stoul(text);
+
+                    if (parsed >= MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM &&
+                        parsed <= MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM)
+                    {
+                        return static_cast<uint8_t>(parsed);
+                    }
+                }
+
+                auto const value = box.Value();
+
+                // NaN when the box is empty
+                if (value == value &&
+                    value >= MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM &&
+                    value <= MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM)
+                {
+                    return static_cast<uint8_t>(value);
+                }
+
+                return MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT;
+            }
+            catch (...)
+            {
+                return MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT;
             }
         }
 
@@ -659,7 +699,14 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring currentName{};
         winrt::hstring currentDescription{};
         winrt::hstring currentImage{};
-        bool currentCreateMidi1Ports{ true };
+
+        // Only the configuration file records these two, so they are read before the endpoint
+        // lookup rather than from the endpoint's properties.
+        bool const currentCreateMidi1Ports =
+            native::NetworkConfigFile::Current().GetClientCreateMidi1Ports(item.ClientId());
+
+        auto const currentFallbackMidi1PortCount =
+            native::NetworkConfigFile::Current().GetClientFallbackMidi1PortCount(item.ClientId());
 
         try
         {
@@ -672,7 +719,6 @@ namespace winrt::midinetworksetup::implementation
             }
 
             deviceInstanceId = info.DeviceInstanceId();
-            currentCreateMidi1Ports = info.IsMidi1PortCreationEnabled();
 
             auto const transportInfo = info.GetTransportSuppliedInfo();
             transportSuppliedName = transportInfo.Name();
@@ -708,6 +754,7 @@ namespace winrt::midinetworksetup::implementation
             CustomizeDescriptionBox().Text(currentDescription);
             CustomizeImageBox().Text(currentImage);
             CustomizeCreateMidi1PortsCheckBox().IsChecked(currentCreateMidi1Ports);
+            CustomizeFallbackMidi1PortCountBox().Value(static_cast<double>(currentFallbackMidi1PortCount));
 
             CustomizeDialog().XamlRoot(Content().XamlRoot());
 
@@ -750,6 +797,10 @@ namespace winrt::midinetworksetup::implementation
         auto const createMidi1Ports = reset ?
             currentCreateMidi1Ports :
             (checkBoxState != nullptr && checkBoxState.Value());
+
+        auto const fallbackMidi1PortCount = reset ?
+            currentFallbackMidi1PortCount :
+            FallbackMidi1PortCountFrom(CustomizeFallbackMidi1PortCountBox());
 
         auto const clientKey = item.ClientId();
 
@@ -813,14 +864,46 @@ namespace winrt::midinetworksetup::implementation
                 failure = sendResponse.ServiceErrorMessage();
             }
 
-            // Kept out of the customization above on purpose: this one is read when the endpoint
-            // is built, so it belongs to the entry which creates it and cannot be pushed live.
-            if (succeeded && !clientKey.empty() && createMidi1Ports != currentCreateMidi1Ports)
+            // The port count reaches the running endpoint; the create flag is recorded for the
+            // next connection, because whether an endpoint has MIDI 1.0 ports at all is settled
+            // when the endpoint is built.
+            if (succeeded && !clientKey.empty() &&
+                (createMidi1Ports != currentCreateMidi1Ports ||
+                 fallbackMidi1PortCount != currentFallbackMidi1PortCount))
             {
-                if (!native::NetworkConfigFile::Current().SetClientCreateMidi1Ports(clientKey, createMidi1Ports))
+                winrt::guid clientEntryId{};
+
+                if (TryParseKey(clientKey, clientEntryId))
                 {
-                    failure = native::NetworkConfigFile::Current().LastErrorMessage();
-                    succeeded = false;
+                    midi2net::MidiNetworkClientUpdateConfig update{};
+
+                    update.ClientId(clientEntryId);
+                    update.CreateMidi1Ports(createMidi1Ports);
+                    update.FallbackMidi1PortCount(fallbackMidi1PortCount);
+
+                    auto const updateResponse = midi2svc::MidiServiceTransportPluginConfigManager::SendUpdate(update);
+
+                    if (updateResponse != nullptr &&
+                        updateResponse.Status() == midi2svc::MidiServiceConfigResponseStatus::Success)
+                    {
+                        auto const saveResponse = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(update);
+
+                        succeeded = saveResponse != nullptr && saveResponse.Success();
+
+                        if (!succeeded && saveResponse != nullptr)
+                        {
+                            failure = saveResponse.ErrorMessage();
+                        }
+                    }
+                    else
+                    {
+                        succeeded = false;
+
+                        if (updateResponse != nullptr)
+                        {
+                            failure = updateResponse.ServiceErrorMessage();
+                        }
+                    }
                 }
             }
         }
@@ -1743,6 +1826,7 @@ namespace winrt::midinetworksetup::implementation
         HostProductInstanceIdTextBox().Text(config.ProductInstanceId());
         HostAdvertiseCheckBox().IsChecked(config.Advertise());
         HostCreateMidi1PortsCheckBox().IsChecked(!config.CreateOnlyUmpEndpoints());
+        HostFallbackMidi1PortCountBox().Value(static_cast<double>(config.FallbackMidi1PortCount()));
         HostAutomaticPortCheckBox().IsChecked(config.UseAutomaticPortAllocation());
         HostPortNumberBox().IsEnabled(!config.UseAutomaticPortAllocation());
         HostAllowPortFallbackCheckBox().IsChecked(config.AllowPortFallback());
@@ -1784,6 +1868,7 @@ namespace winrt::midinetworksetup::implementation
             config.ProductInstanceId(TextOf(HostProductInstanceIdTextBox()));
             config.Advertise(IsCheckBoxChecked(HostAdvertiseCheckBox()));
             config.CreateOnlyUmpEndpoints(!IsCheckBoxChecked(HostCreateMidi1PortsCheckBox()));
+            config.FallbackMidi1PortCount(FallbackMidi1PortCountFrom(HostFallbackMidi1PortCountBox()));
 
             auto const automaticPort = IsCheckBoxChecked(HostAutomaticPortCheckBox());
 

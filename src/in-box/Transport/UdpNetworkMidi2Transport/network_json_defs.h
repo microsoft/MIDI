@@ -16,6 +16,10 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY                               L"clients"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_TRANSPORT_SETTINGS_KEY                    L"transportSettings"
 
+// Changes to existing host and client entries. Deliberately not the common "update" key, which
+// holds an array of endpoint customizations in this same object and would collide in a saved file.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_UPDATE_ENTRIES_KEY                        L"updateEntries"
+
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_FEC_PACKETS_KEY                       L"maxForwardErrorCorrectionCommandPackets"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_RETRANSMIT_BUFFER_SIZE_KEY                L"maxRetransmitBufferCommandPackets"
@@ -33,6 +37,16 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY                               L"enabled"                  // boolean
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY                    L"createMidi1Ports"         // boolean - set to true to enable creating WinMM/WinRT 1.0 ports
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY            L"fallbackMidi1PortCount"   // number 1-16 - source/destination pairs to create when the device declares no function blocks
+
+// A remote which never completes MIDI 2.0 discovery declares no function blocks, and the service
+// has nothing to build MIDI 1.0 ports from. The transport supplies a group terminal block for
+// that case, spanning this many groups bidirectionally, so the count is also the number of
+// source and destination ports. One pair, because a device which does not describe itself is
+// usually a bridge with a single cable, and sixteen pairs is thirty two ports of clutter.
+#define MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT                     1
+#define MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM                     1
+#define MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM                     16
 
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_SERVICE_INSTANCE_NAME_KEY                 L"serviceInstanceName"      // just the first part (before the . ) of the host instance name. Defaults to machine name
@@ -148,6 +162,7 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_LOCAL_PORT_KEY          L"localPort"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_UMP_ENDPOINT_ID_KEY     L"endpointDeviceId"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_CREATE_MIDI1_PORTS_KEY  MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_CLIENTS_RESPONSE_FALLBACK_MIDI1_PORT_COUNT_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY
 
 // A configured client is reported whether or not it is connected, so the app can show an entry
 // which is not currently reachable.
@@ -195,6 +210,7 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_NAME_KEY                  MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_PRODUCT_INSTANCE_ID_KEY   MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_CREATE_MIDI1_PORTS_KEY    MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_FALLBACK_MIDI1_PORT_COUNT_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_ENUM_HOSTS_RESPONSE_SERVICE_INSTANCE_NAME_KEY MIDI_CONFIG_JSON_NETWORK_MIDI_SERVICE_INSTANCE_NAME_KEY
 
 // Per-host list of remote clients, so a polling app can show what is connected and what is

@@ -197,4 +197,66 @@ namespace NetworkMidiTest
 
     std::wstring CommandCodeToString(_In_ CommandCode const code);
     std::wstring DescribePacket(_In_ ParsedPacket const& packet);
+
+
+    // UMP Stream messages (message type 0xF), from M2-104-UM v1.1.
+    //
+    // These are what a device says about itself when Windows asks. Written from the
+    // specification for the same reason as everything else in this file: a fake device built
+    // from the service's own reader would agree with the service even when both are wrong.
+
+    constexpr uint8_t UmpMessageTypeStream{ 0xF };
+
+    constexpr uint16_t StreamStatusEndpointDiscovery{ 0x000 };
+    constexpr uint16_t StreamStatusEndpointInfoNotification{ 0x001 };
+    constexpr uint16_t StreamStatusEndpointNameNotification{ 0x003 };
+    constexpr uint16_t StreamStatusProductInstanceIdNotification{ 0x004 };
+    constexpr uint16_t StreamStatusFunctionBlockDiscovery{ 0x010 };
+    constexpr uint16_t StreamStatusFunctionBlockInfoNotification{ 0x011 };
+    constexpr uint16_t StreamStatusFunctionBlockNameNotification{ 0x012 };
+
+    constexpr uint8_t StreamFormComplete{ 0x0 };
+    constexpr uint8_t StreamFormStart{ 0x1 };
+    constexpr uint8_t StreamFormContinue{ 0x2 };
+    constexpr uint8_t StreamFormEnd{ 0x3 };
+
+    // Direction is from the function block's own point of view, so Output is a message source
+    // and a MIDI In port to the user.
+    enum class FunctionBlockDirection : uint8_t
+    {
+        Undefined = 0x0,
+        Input = 0x1,        // message destination. A MIDI Out port to the user.
+        Output = 0x2,       // message source. A MIDI In port to the user.
+        Bidirectional = 0x3,
+    };
+
+    struct FunctionBlockDescription
+    {
+        uint8_t Number{ 0 };
+        FunctionBlockDirection Direction{ FunctionBlockDirection::Bidirectional };
+        uint8_t FirstGroup{ 0 };
+        uint8_t GroupCount{ 1 };
+        bool IsActive{ true };
+        std::string Name{ };
+    };
+
+    // True when this UMP is a Stream message with the given status.
+    bool IsStreamMessageWithStatus(_In_ std::vector<uint32_t> const& words, _In_ uint16_t const status);
+
+    // Every Stream message in a run of UMP words, matched on status. UMP data commands carry
+    // several messages, and a discovery request can arrive alongside others.
+    bool ContainsStreamMessageWithStatus(_In_ std::vector<uint32_t> const& words, _In_ uint16_t const status);
+
+    std::vector<uint32_t> BuildEndpointInfoNotification(
+        _In_ uint8_t const functionBlockCount,
+        _In_ bool const staticFunctionBlocks = true);
+
+    std::vector<uint32_t> BuildFunctionBlockInfoNotification(_In_ FunctionBlockDescription const& block);
+
+    // One or more UMPs, split across packets when the text does not fit in one.
+    std::vector<uint32_t> BuildEndpointNameNotification(_In_ std::string const& name);
+    std::vector<uint32_t> BuildProductInstanceIdNotification(_In_ std::string const& productInstanceId);
+    std::vector<uint32_t> BuildFunctionBlockNameNotification(
+        _In_ uint8_t const functionBlockNumber,
+        _In_ std::string const& name);
 }

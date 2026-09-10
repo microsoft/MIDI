@@ -273,10 +273,100 @@ namespace NetworkMidiTest
                 }
                 break;
 
+            case CommandCode::UmpData:
+                HandleUmpData(command);
+                break;
+
             default:
                 break;
             }
         }
+    }
+
+
+    _Use_decl_annotations_
+    void FakeNetworkHost::HandleUmpData(ReceivedCommand const& command)
+    {
+        std::vector<uint32_t> words{ };
+
+        for (size_t word = 0; word < command.PayloadLengthWords; word++)
+        {
+            words.push_back(command.GetPayloadUInt32(word));
+        }
+
+        if (!ContainsStreamMessageWithStatus(words, StreamStatusEndpointDiscovery))
+        {
+            return;
+        }
+
+        m_endpointDiscoveryRequests++;
+
+        SendDiscoveryResponse();
+    }
+
+
+    void FakeNetworkHost::SendDiscoveryResponse()
+    {
+        std::vector<FunctionBlockDescription> blocks{ };
+
+        {
+            std::lock_guard<std::mutex> guard{ m_functionBlockLock };
+            blocks = m_functionBlocks;
+        }
+
+        // A host with nothing declared says nothing, which is how a device that never completes
+        // discovery behaves. The service times out and moves on.
+        if (blocks.empty())
+        {
+            return;
+        }
+
+        // Each message goes in its own UDP packet with its own sequence number. A real device is
+        // free to batch them, but one per packet keeps the retransmit bookkeeping simple and the
+        // service does not care either way.
+        auto sendWords = [this](std::vector<uint32_t> const& words)
+        {
+            if (words.empty()) return;
+
+            PacketBuilder builder;
+            builder.StartPacket().AddUmpData(m_outboundUmpSequenceNumber++, words);
+            SendToRemote(builder.Bytes());
+        };
+
+        sendWords(BuildEndpointInfoNotification(static_cast<uint8_t>(blocks.size())));
+        sendWords(BuildEndpointNameNotification(m_endpointName));
+        sendWords(BuildProductInstanceIdNotification(m_productInstanceId));
+
+        for (auto const& block : blocks)
+        {
+            sendWords(BuildFunctionBlockInfoNotification(block));
+            sendWords(BuildFunctionBlockNameNotification(block.Number, block.Name));
+        }
+    }
+
+
+    _Use_decl_annotations_
+    void FakeNetworkHost::DeclareFunctionBlocks(std::vector<FunctionBlockDescription> const& blocks)
+    {
+        std::lock_guard<std::mutex> guard{ m_functionBlockLock };
+
+        m_functionBlocks = blocks;
+    }
+
+
+    _Use_decl_annotations_
+    void FakeNetworkHost::DeclareBidirectionalFunctionBlock(uint8_t const groupCount)
+    {
+        FunctionBlockDescription block{ };
+
+        block.Number = 0;
+        block.Direction = FunctionBlockDirection::Bidirectional;
+        block.FirstGroup = 0;
+        block.GroupCount = groupCount;
+        block.IsActive = true;
+        block.Name = m_endpointName;
+
+        DeclareFunctionBlocks({ block });
     }
 
 
