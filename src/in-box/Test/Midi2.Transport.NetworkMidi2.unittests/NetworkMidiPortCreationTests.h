@@ -45,6 +45,19 @@ namespace NetworkMidiTest
         // directions.
         TEST_METHOD(RemoteHostCreatesNoPortsWhenUmpOnly);
 
+        // Changing the fallback count reaches an endpoint which is already up, with no
+        // disconnect and no reconnect. https://github.com/microsoft/MIDI/issues/1190
+        TEST_METHOD(ChangingTheFallbackPortCountAppliesWithoutReconnecting);
+
+        // Renaming an endpoint renames its MIDI 1.0 ports too. The endpoint name and the port
+        // name table are separate properties, and only the first was being written.
+        TEST_METHOD(RenamingAnEndpointRenamesItsMidi1Ports);
+
+        // A custom name survives a later port count change. The device interface keeps reporting
+        // the name the remote supplied, so anything which rebuilds the ports from it loses the
+        // custom one.
+        TEST_METHOD(ChangingThePortCountKeepsACustomName);
+
     private:
 
         MidiTest::DeviceNodeTracker m_deviceNodeTracker{ };

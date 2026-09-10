@@ -1,0 +1,41 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+import "IMidiServiceTransportPluginConfig.idl";
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    // Changes to an existing client entry, applied without disconnecting it. Send it through
+    // MidiServiceTransportPluginConfigManager.SendUpdate to apply it to the running service, and
+    // SaveUpdate to keep it across restarts.
+    [contract(MidiTransportsNetworkApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientUpdateConfig", UUID_IMidiNetworkClientUpdateConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkClientUpdateConfigFactory", UUID_IMidiNetworkClientUpdateConfigFactory)]
+    runtimeclass MidiNetworkClientUpdateConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiNetworkClientUpdateConfig();
+        MidiNetworkClientUpdateConfig(Guid clientId);
+
+        [noexcept] Guid ClientId { get; set; };
+
+        // Whether this connection gets MIDI 1.0 ports. Whether an endpoint has MIDI 1.0 ports at
+        // all is decided when the endpoint is created, so this is recorded for the next connection
+        // rather than applied to one already up. Disconnect and reconnect to act on it now.
+        [noexcept] Boolean CreateMidi1Ports;
+
+        // How many MIDI 1.0 source and destination ports to create for a remote host which
+        // declares no function blocks. Applied to an endpoint which is already up. Ignored for a
+        // device which does describe itself, because its function blocks say how many to create.
+        [noexcept] UInt8 FallbackMidi1PortCount;
+    }
+}

@@ -254,6 +254,37 @@ namespace NetworkMidiTest
     }
 
 
+    _Use_decl_annotations_
+    ServiceConfigResult UpdateClient(
+        std::wstring const& entryIdentifier,
+        bool const createMidi1Ports,
+        uint8_t const fallbackMidi1PortCount)
+    {
+        std::wstring json =
+            L"{\"updateEntries\":{\"clients\":{\"" + EscapeJsonString(entryIdentifier) + L"\":{"
+            L"\"createMidi1Ports\":" + std::wstring(createMidi1Ports ? L"true" : L"false") + L","
+            L"\"fallbackMidi1PortCount\":" + std::to_wstring(fallbackMidi1PortCount) +
+            L"}}}}";
+
+        return SendNetworkTransportConfig(json);
+    }
+
+
+    _Use_decl_annotations_
+    ServiceConfigResult RenameEndpoint(
+        std::wstring const& endpointDeviceId,
+        std::wstring const& newName)
+    {
+        std::wstring json =
+            L"{\"update\":[{"
+            L"\"match\":{\"endpointDeviceId\":\"" + EscapeJsonString(endpointDeviceId) + L"\"},"
+            L"\"customProperties\":{\"name\":\"" + EscapeJsonString(newName) + L"\"}"
+            L"}]}";
+
+        return SendNetworkTransportConfig(json);
+    }
+
+
     ServiceConfigResult ConnectDirectClient(
         std::wstring const& entryIdentifier,
         std::wstring const& hostNameOrAddress,

@@ -88,12 +88,6 @@ namespace midinetworksetup
         // which never described itself, so the file is the only place it is recorded.
         uint8_t GetClientFallbackMidi1PortCount(_In_ winrt::hstring const& clientIdKey) noexcept;
 
-        // MIDI 1.0 ports are decided when the endpoint is built, so this only changes what the
-        // next connection creates. Nothing about the running endpoint changes.
-        bool SetClientMidi1PortSettings(
-            _In_ winrt::hstring const& clientIdKey,
-            _In_ bool const createMidi1Ports,
-            _In_ uint8_t const fallbackMidi1PortCount) noexcept;
 
     private:
         NetworkConfigFile() noexcept;

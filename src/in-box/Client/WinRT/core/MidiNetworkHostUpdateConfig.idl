@@ -1,0 +1,41 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+import "IMidiServiceTransportPluginConfig.idl";
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    // Changes to an existing host entry, applied without taking the host down. Send it through
+    // MidiServiceTransportPluginConfigManager.SendUpdate to apply it to the running service, and
+    // SaveUpdate to keep it across restarts.
+    [contract(MidiTransportsNetworkApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostUpdateConfig", UUID_IMidiNetworkHostUpdateConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostUpdateConfigFactory", UUID_IMidiNetworkHostUpdateConfigFactory)]
+    runtimeclass MidiNetworkHostUpdateConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiNetworkHostUpdateConfig();
+        MidiNetworkHostUpdateConfig(Guid hostId);
+
+        [noexcept] Guid HostId { get; set; };
+
+        // Whether a remote client connecting to this host gets MIDI 1.0 ports. Whether an endpoint
+        // has MIDI 1.0 ports at all is decided when the endpoint is created, so this is recorded
+        // for the next connection rather than applied to the ones already up.
+        [noexcept] Boolean CreateMidi1Ports;
+
+        // How many MIDI 1.0 source and destination ports to create for a remote client which
+        // declares no function blocks. Applied to endpoints which are already up. Ignored for a
+        // client which does describe itself, because its function blocks say how many to create.
+        [noexcept] UInt8 FallbackMidi1PortCount;
+    }
+}

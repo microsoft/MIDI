@@ -832,48 +832,6 @@ namespace midinetworksetup
     }
 
     _Use_decl_annotations_
-    bool NetworkConfigFile::SetClientMidi1PortSettings(
-        winrt::hstring const& clientIdKey,
-        bool const createMidi1Ports,
-        uint8_t const fallbackMidi1PortCount) noexcept
-    {
-        json::JsonObject config{ nullptr };
-
-        if (!Load(config))
-        {
-            return false;
-        }
-
-        auto clients = GetEntriesObject(config, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY, false);
-
-        auto client = FindObject(clients, ResolveKey(clients, clientIdKey));
-
-        if (client == nullptr)
-        {
-            m_lastError = resources::GetString(L"ConfigFileClientEntryMissingError");
-            return false;
-        }
-
-        try
-        {
-            json::JsonObject clientChange{};
-            clientChange.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY,
-                json::JsonValue::CreateBooleanValue(createMidi1Ports));
-            clientChange.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
-                json::JsonValue::CreateNumberValue(fallbackMidi1PortCount));
-
-            return SaveSection(BuildClientSection(ResolveKey(clients, clientIdKey), clientChange));
-        }
-        catch (...)
-        {
-            m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path);
-            return false;
-        }
-    }
-
-    _Use_decl_annotations_
     bool NetworkConfigFile::SetRemoteClientDecision(
         winrt::hstring const& hostIdKey,
         winrt::hstring const& umpEndpointName,

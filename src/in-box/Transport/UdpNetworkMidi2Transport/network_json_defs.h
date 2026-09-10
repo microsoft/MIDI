@@ -16,6 +16,10 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY                               L"clients"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_TRANSPORT_SETTINGS_KEY                    L"transportSettings"
 
+// Changes to existing host and client entries. Deliberately not the common "update" key, which
+// holds an array of endpoint customizations in this same object and would collide in a saved file.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_UPDATE_ENTRIES_KEY                        L"updateEntries"
+
 
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_MAX_FEC_PACKETS_KEY                       L"maxForwardErrorCorrectionCommandPackets"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_RETRANSMIT_BUFFER_SIZE_KEY                L"maxRetransmitBufferCommandPackets"

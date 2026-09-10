@@ -1363,7 +1363,7 @@
                           Content="Create MIDI 1.0 ports for this device" />
 
                 <TextBlock x:Uid="CustomizeCreateMidi1PortsHint"
-                           Text="MIDI 1.0 ports are built with the endpoint, so changing this takes effect the next time this device connects."
+                           Text="Turning this on or off takes effect the next time this device connects. The number of ports below applies right away."
                            TextWrapping="Wrap"
                            Style="{ThemeResource CaptionTextBlockStyle}"
                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />

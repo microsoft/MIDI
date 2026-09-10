@@ -83,6 +83,10 @@ public:
 
     MidiNetworkClientDefinition GetDefinition() { return m_clientDefinition; }
 
+    // Used the next time this client builds a connection. An endpoint already up is updated in
+    // place by the configuration manager.
+    void SetFallbackMidi1PortCount(_In_ uint8_t const value) noexcept { m_fallbackMidi1PortCount = value; }
+
     winrt::hstring RemoteAddress() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().RemoteAddress().DisplayName() : L""; }
     winrt::hstring RemotePort() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().RemotePort() : L""; }
 

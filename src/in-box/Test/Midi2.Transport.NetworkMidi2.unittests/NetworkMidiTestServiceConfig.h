@@ -61,6 +61,19 @@ namespace NetworkMidiTest
     // no longer present.
     ServiceConfigResult DisconnectClient(_In_ std::wstring const& entryIdentifier);
 
+    // The "updateEntries" section for an existing client entry. The port count reaches an endpoint
+    // which is already up; the create flag is recorded for the next connection.
+    ServiceConfigResult UpdateClient(
+        _In_ std::wstring const& entryIdentifier,
+        _In_ bool const createMidi1Ports,
+        _In_ uint8_t const fallbackMidi1PortCount);
+
+    // The common "update" array, which renames an endpoint by matching it. Matched on the device
+    // id rather than the name, which is the strongest criterion and the one Matches tries first.
+    ServiceConfigResult RenameEndpoint(
+        _In_ std::wstring const& endpointDeviceId,
+        _In_ std::wstring const& newName);
+
     // The connectDirect command. For an entry which already exists this is the app saying the
     // remote is reachable now, and is the only thing which revives a parked direct connection.
     ServiceConfigResult ConnectDirectClient(

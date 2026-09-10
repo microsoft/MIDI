@@ -327,6 +327,12 @@
 #define UUID_IMidiNetworkTransportSettingsStatics               8087b303-0519-c0de-31d1-ee00F0319000
 //#define UUID_IMidiNetworkTransportSettingsFactory               8087b303-0519-c0de-31d1-ff00F0319000
 
+#define UUID_IMidiNetworkHostUpdateConfig                       8087b303-0519-c0de-31d1-dd00F031A000
+#define UUID_IMidiNetworkHostUpdateConfigFactory                8087b303-0519-c0de-31d1-ff00F031A000
+
+#define UUID_IMidiNetworkClientUpdateConfig                     8087b303-0519-c0de-31d1-dd00F031B000
+#define UUID_IMidiNetworkClientUpdateConfigFactory              8087b303-0519-c0de-31d1-ff00F031B000
+
 // ============================================================================
 // Windows.Devices.Midi2.Transports.Virtual : Interface number 00F04
 

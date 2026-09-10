@@ -1214,6 +1214,16 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
                     existingEndpointDeviceId.c_str(),
                     static_cast<ULONG>(endpointDevProperties.size()),
                     endpointDevProperties.data()));
+
+                // The name above is the endpoint's. The MIDI 1.0 ports take their names from a
+                // separate table, which nothing here has rewritten, so without this a renamed
+                // device keeps its old port names. The name has to be handed over rather than
+                // read back, because the endpoint does not report it yet. Zero keeps the port
+                // count as it is, because a rename is not a reason to change it.
+                LOG_IF_FAILED(endpointManager->RefreshMidi1PortsForEndpoint(
+                    std::wstring{ existingEndpointDeviceId },
+                    0,
+                    std::wstring{ customProperties->Name }));
             }
         }
 
@@ -2268,6 +2278,156 @@ catch (...)
 
 _Use_decl_annotations_
 HRESULT
+CMidi2NetworkMidiConfigurationManager::ProcessEntryUpdates(
+    json::JsonObject const& updateSection,
+    json::JsonObject& responseObject) noexcept
+try
+{
+    UNREFERENCED_PARAMETER(responseObject);
+
+    auto endpointManager = TransportState::Current().GetEndpointManager();
+
+    // Applies one entry's worth of changes. The count is the only thing which can take effect
+    // without rebuilding the endpoint, so it is the only thing pushed to a live one. Whether an
+    // endpoint has MIDI 1.0 ports at all is fixed when the endpoint is created, so the flag is
+    // recorded for the next connection and nothing is torn down to act on it.
+    auto applyToDefinition = [&endpointManager](
+        json::JsonObject const& entry,
+        bool& createMidi1Ports,
+        uint8_t& fallbackMidi1PortCount,
+        std::vector<std::wstring> const& liveEndpointDeviceIds)
+    {
+        createMidi1Ports = SafeGetNamedBoolean(
+            entry,
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY,
+            createMidi1Ports);
+
+        auto const newCount = SafeGetNamedByte(
+            entry,
+            MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
+            fallbackMidi1PortCount,
+            MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
+            MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
+
+        if (newCount == fallbackMidi1PortCount)
+        {
+            return;
+        }
+
+        fallbackMidi1PortCount = newCount;
+
+        if (endpointManager == nullptr)
+        {
+            return;
+        }
+
+        for (auto const& endpointDeviceId : liveEndpointDeviceIds)
+        {
+            if (endpointDeviceId.empty()) continue;
+
+            LOG_IF_FAILED(endpointManager->RefreshMidi1PortsForEndpoint(endpointDeviceId, newCount));
+        }
+    };
+
+    auto hostsObject = SafeGetNamedObject(updateSection, MIDI_CONFIG_JSON_NETWORK_MIDI_HOSTS_KEY);
+
+    if (hostsObject != nullptr && hostsObject.Size() > 0)
+    {
+        for (auto const& it = hostsObject.First(); it.HasCurrent(); it.MoveNext())
+        {
+            winrt::guid entryIdentifier{};
+
+            if (!TryParseEntryIdentifier(it.Current().Key(), entryIdentifier)) continue;
+
+            auto entry = SafeGetNamedObject(hostsObject, it.Current().Key());
+
+            if (entry == nullptr) continue;
+
+            // A host's endpoints belong to the remote clients connected to it, so every one of
+            // them follows the host's setting.
+            std::vector<std::wstring> endpointDeviceIds{};
+
+            for (auto const& connection : TransportState::Current().GetHostConnectionsForHost(entryIdentifier))
+            {
+                if (connection != nullptr)
+                {
+                    endpointDeviceIds.push_back(connection->GetEndpointDeviceId());
+                }
+            }
+
+            for (auto const& definition : TransportState::Current().GetPendingHostDefinitions())
+            {
+                if (definition == nullptr || definition->EntryIdentifier != entryIdentifier) continue;
+
+                applyToDefinition(entry, definition->CreateMidi1Ports, definition->FallbackMidi1PortCount, endpointDeviceIds);
+
+                if (auto host = TransportState::Current().GetHost(entryIdentifier); host != nullptr)
+                {
+                    host->SetFallbackMidi1PortCount(definition->FallbackMidi1PortCount);
+                }
+            }
+        }
+    }
+
+    auto clientsObject = SafeGetNamedObject(updateSection, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY);
+
+    if (clientsObject != nullptr && clientsObject.Size() > 0)
+    {
+        for (auto const& it = clientsObject.First(); it.HasCurrent(); it.MoveNext())
+        {
+            winrt::guid entryIdentifier{};
+
+            if (!TryParseEntryIdentifier(it.Current().Key(), entryIdentifier)) continue;
+
+            auto entry = SafeGetNamedObject(clientsObject, it.Current().Key());
+
+            if (entry == nullptr) continue;
+
+            std::vector<std::wstring> endpointDeviceIds{};
+
+            for (auto const& connection : TransportState::Current().GetAllNetworkConnectionsForClient(entryIdentifier))
+            {
+                if (connection != nullptr)
+                {
+                    endpointDeviceIds.push_back(connection->GetEndpointDeviceId());
+                }
+            }
+
+            // The pending definitions are what the endpoint creator builds from, and what survives
+            // a reconnect, so they are updated whether or not a connection is up right now.
+            for (auto const& definition : TransportState::Current().GetPendingClientDefinitions())
+            {
+                if (definition == nullptr || definition->EntryIdentifier != entryIdentifier) continue;
+
+                applyToDefinition(entry, definition->CreateMidi1Ports, definition->FallbackMidi1PortCount, endpointDeviceIds);
+
+                if (auto client = TransportState::Current().GetClient(entryIdentifier); client != nullptr)
+                {
+                    client->SetFallbackMidi1PortCount(definition->FallbackMidi1PortCount);
+                }
+            }
+        }
+    }
+
+    return S_OK;
+}
+catch (...)
+{
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exception processing entry updates", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return E_FAIL;
+}
+
+
+_Use_decl_annotations_
+HRESULT
 CMidi2NetworkMidiConfigurationManager::UpdateConfiguration(
     LPCWSTR configurationJsonSection,
     LPWSTR* response
@@ -2338,7 +2498,7 @@ try
     auto transportSettingsSection = SafeGetNamedObject(jsonObject, MIDI_CONFIG_JSON_NETWORK_MIDI_TRANSPORT_SETTINGS_KEY);
 
     auto createSection = SafeGetNamedObject(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY);
-    auto updateSection = SafeGetNamedObject(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY);
+    auto updateSection = SafeGetNamedObject(jsonObject, MIDI_CONFIG_JSON_NETWORK_MIDI_UPDATE_ENTRIES_KEY);
     auto removeSection = SafeGetNamedObject(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY);
 
     // Endpoint customization, in the array form every other transport uses. Kept separate from
@@ -2798,8 +2958,10 @@ try
     // "update" entries
     if (updateSection != nullptr && updateSection.Size() > 0)
     {
-        // this needs to allow for activating and deactivating existing entries, as well as setting the endpoint names and
-
+        if (SUCCEEDED(ProcessEntryUpdates(updateSection, responseObject)))
+        {
+            internal::SetConfigurationResponseObjectSuccess(responseObject);
+        }
     }
 
     // "remove" entries

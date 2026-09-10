@@ -863,16 +863,46 @@ namespace winrt::midinetworksetup::implementation
                 failure = sendResponse.ServiceErrorMessage();
             }
 
-            // Kept out of the customization above on purpose: this one is read when the endpoint
-            // is built, so it belongs to the entry which creates it and cannot be pushed live.
+            // The port count reaches the running endpoint; the create flag is recorded for the
+            // next connection, because whether an endpoint has MIDI 1.0 ports at all is settled
+            // when the endpoint is built.
             if (succeeded && !clientKey.empty() &&
                 (createMidi1Ports != currentCreateMidi1Ports ||
                  fallbackMidi1PortCount != currentFallbackMidi1PortCount))
             {
-                if (!native::NetworkConfigFile::Current().SetClientMidi1PortSettings(clientKey, createMidi1Ports, fallbackMidi1PortCount))
+                winrt::guid clientEntryId{};
+
+                if (TryParseKey(clientKey, clientEntryId))
                 {
-                    failure = native::NetworkConfigFile::Current().LastErrorMessage();
-                    succeeded = false;
+                    midi2net::MidiNetworkClientUpdateConfig update{};
+
+                    update.ClientId(clientEntryId);
+                    update.CreateMidi1Ports(createMidi1Ports);
+                    update.FallbackMidi1PortCount(fallbackMidi1PortCount);
+
+                    auto const updateResponse = midi2svc::MidiServiceTransportPluginConfigManager::SendUpdate(update);
+
+                    if (updateResponse != nullptr &&
+                        updateResponse.Status() == midi2svc::MidiServiceConfigResponseStatus::Success)
+                    {
+                        auto const saveResponse = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(update);
+
+                        succeeded = saveResponse != nullptr && saveResponse.Success();
+
+                        if (!succeeded && saveResponse != nullptr)
+                        {
+                            failure = saveResponse.ErrorMessage();
+                        }
+                    }
+                    else
+                    {
+                        succeeded = false;
+
+                        if (updateResponse != nullptr)
+                        {
+                            failure = updateResponse.ServiceErrorMessage();
+                        }
+                    }
                 }
             }
         }

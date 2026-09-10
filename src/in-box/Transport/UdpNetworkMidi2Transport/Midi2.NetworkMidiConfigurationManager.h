@@ -39,6 +39,12 @@ private:
         _In_ json::JsonObject const& jsonObject,
         _Inout_ json::JsonObject& responseObject) noexcept;
 
+    // Changes to this transport's own host and client entries, keyed by entry identifier. Kept
+    // separate from the array-shaped endpoint customization every transport shares.
+    HRESULT ProcessEntryUpdates(
+        _In_ json::JsonObject const& updateSection,
+        _Inout_ json::JsonObject& responseObject) noexcept;
+
     std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomPropertiesCache> m_customPropertiesCache{ std::make_shared<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomPropertiesCache>() };
 
     HRESULT ProcessCommand(

@@ -49,6 +49,9 @@ namespace NetworkMidiTest
         // PKEY_MIDI_AssociatedUMP, property 52. Restated for the same reason.
         constexpr wchar_t AssociatedUmpProperty[] = L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD} 52";
 
+        // PKEY_MIDI_CustomEndpointName, property 500.
+        constexpr wchar_t CustomEndpointNameProperty[] = L"{3F114A6A-11FA-4BD0-9D2C-6B7780CD80AD} 500";
+
         std::wstring NormalizeEndpointId(_In_ std::wstring const& value)
         {
             std::wstring result{ value };
@@ -120,6 +123,139 @@ namespace NetworkMidiTest
             counts.Destinations = CountPortsWithSelector(Midi1DestinationSelector, endpointDeviceId);
 
             return counts;
+        }
+
+        std::vector<std::wstring> CollectPortNamesWithSelector(
+            _In_ std::wstring const& selector,
+            _In_ std::wstring const& endpointDeviceId)
+        {
+            std::vector<std::wstring> names{ };
+
+            try
+            {
+                auto properties = winrt::single_threaded_vector<winrt::hstring>();
+                properties.Append(winrt::hstring{ AssociatedUmpProperty });
+
+                auto devices = enumeration::DeviceInformation::FindAllAsync(
+                    winrt::hstring{ selector },
+                    properties,
+                    enumeration::DeviceInformationKind::DeviceInterface).get();
+
+                auto const wanted = NormalizeEndpointId(endpointDeviceId);
+
+                for (auto const& device : devices)
+                {
+                    auto value = device.Properties().TryLookup(winrt::hstring{ AssociatedUmpProperty });
+
+                    if (value == nullptr) continue;
+
+                    auto const associated = NormalizeEndpointId(
+                        std::wstring{ winrt::unbox_value_or<winrt::hstring>(value, L"") });
+
+                    if (!associated.empty() && associated == wanted)
+                    {
+                        names.push_back(std::wstring{ device.Name() });
+                    }
+                }
+            }
+            CATCH_LOG();
+
+            return names;
+        }
+
+        bool AllNamesContain(
+            _In_ std::vector<std::wstring> const& names,
+            _In_ std::wstring const& expected)
+        {
+            if (names.empty())
+            {
+                return false;
+            }
+
+            for (auto const& name : names)
+            {
+                if (name.find(expected) == std::wstring::npos)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // Separates "the rename never landed" from "it landed but the ports did not follow"
+        std::wstring ReadEndpointName(_In_ std::wstring const& endpointDeviceId)
+        {
+            try
+            {
+                auto device = enumeration::DeviceInformation::CreateFromIdAsync(
+                    winrt::hstring{ endpointDeviceId },
+                    nullptr,
+                    enumeration::DeviceInformationKind::DeviceInterface).get();
+
+                if (device != nullptr)
+                {
+                    return std::wstring{ device.Name() };
+                }
+            }
+            CATCH_LOG();
+
+            return L"";
+        }
+
+        // The display name can lag the customization, so this is what actually says whether the
+        // customization reached the endpoint.
+        std::wstring ReadCustomEndpointName(_In_ std::wstring const& endpointDeviceId)
+        {
+            try
+            {
+                auto properties = winrt::single_threaded_vector<winrt::hstring>();
+                properties.Append(winrt::hstring{ CustomEndpointNameProperty });
+
+                auto device = enumeration::DeviceInformation::CreateFromIdAsync(
+                    winrt::hstring{ endpointDeviceId },
+                    properties,
+                    enumeration::DeviceInformationKind::DeviceInterface).get();
+
+                if (device != nullptr)
+                {
+                    auto value = device.Properties().TryLookup(winrt::hstring{ CustomEndpointNameProperty });
+
+                    if (value != nullptr)
+                    {
+                        return std::wstring{ winrt::unbox_value_or<winrt::hstring>(value, L"") };
+                    }
+                }
+            }
+            CATCH_LOG();
+
+            return L"";
+        }
+
+        // Polls until every port for the endpoint carries the expected text. Returns what it last
+        // saw so a failure can print the names rather than just the fact that it gave up.
+        std::vector<std::wstring> WaitForMidi1PortNames(
+            _In_ std::wstring const& endpointDeviceId,
+            _In_ std::wstring const& expected,
+            _In_ std::chrono::milliseconds const timeout)
+        {
+            auto const deadline = std::chrono::steady_clock::now() + timeout;
+
+            std::vector<std::wstring> names{ };
+
+            while (std::chrono::steady_clock::now() < deadline)
+            {
+                names = CollectPortNamesWithSelector(Midi1SourceSelector, endpointDeviceId);
+
+                if (AllNamesContain(names, expected))
+                {
+                    return names;
+                }
+
+                std::this_thread::sleep_for(PollInterval);
+            }
+
+            return names;
         }
 
         // Polls until both directions reach the expected count. Returns whatever it last saw, so
@@ -346,10 +482,18 @@ namespace NetworkMidiTest
             FakeNetworkHost& Host() { return m_host; }
             std::wstring const& EntryIdentifier() const { return m_entryIdentifier; }
 
-            bool Start(_In_ uint8_t const groupCount, _In_ bool const createMidi1Ports)
+            // What a customization matches on, so a test which renames has to know it
+            std::wstring const& EndpointName() const { return m_endpointName; }
+
+            bool Start(
+                _In_ uint8_t const groupCount,
+                _In_ bool const createMidi1Ports,
+                _In_ std::string const& endpointName = "Port Creation Test Host")
             {
+                m_endpointName = winrt::to_hstring(endpointName);
+
                 m_host.SetInvitationBehavior(FakeHostInvitationBehavior::Accept);
-                m_host.SetEndpointName("Port Creation Test Host");
+                m_host.SetEndpointName(endpointName);
 
                 if (groupCount > 0)
                 {
@@ -396,6 +540,7 @@ namespace NetworkMidiTest
         private:
             FakeNetworkHost m_host{ };
             std::wstring m_entryIdentifier{ };
+            std::wstring m_endpointName{ };
             bool m_created{ false };
         };
 
@@ -573,6 +718,197 @@ namespace NetworkMidiTest
 
         VERIFY_ARE_EQUAL(static_cast<uint32_t>(0), counts.Total(),
             L"A UMP-only endpoint gets no MIDI 1.0 ports, however well the remote describes itself.");
+    }
+
+
+    void PortCreationTests::ChangingTheFallbackPortCountAppliesWithoutReconnecting()
+    {
+        if (!RequireService()) return;
+
+        // No function blocks declared, so the transport's own block decides the port count and a
+        // change to it is observable. A remote which describes itself would override this.
+        RemoteHostUnderTest remote;
+
+        VERIFY_IS_TRUE(remote.Start(0, true));
+
+        VERIFY_IS_TRUE(
+            remote.Host().WaitForCommand(CommandCode::Invitation, SessionTimeout).has_value(),
+            L"The service never invited the remote host.");
+
+        auto endpointDeviceId = WaitForClientEndpointDeviceId(remote.EntryIdentifier());
+
+        VERIFY_IS_FALSE(endpointDeviceId.empty(), L"The service never reported an endpoint for this client.");
+
+        if (endpointDeviceId.empty()) return;
+
+        Log::Comment(String().Format(L"Endpoint: %s", endpointDeviceId.c_str()));
+
+        auto const before = WaitForMidi1Ports(endpointDeviceId, 1, PortCreationTimeout);
+
+        Log::Comment(String().Format(L"Before: %u sources, %u destinations", before.Sources, before.Destinations));
+
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(1), before.Sources, L"One source to start with.");
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(1), before.Destinations, L"One destination to start with.");
+
+        constexpr uint8_t NewCount = 3;
+
+        auto const update = UpdateClient(remote.EntryIdentifier(), true, NewCount);
+
+        VERIFY_IS_TRUE(update.IsSuccess(), L"The update was refused.");
+
+        // The transport rewrites the block and the name table, and the service re-syncs the ports
+        // off the property change, so this is not instant.
+        auto const after = WaitForMidi1Ports(endpointDeviceId, NewCount, PortCreationTimeout);
+
+        Log::Comment(String().Format(L"After: %u sources, %u destinations", after.Sources, after.Destinations));
+
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(NewCount), after.Sources,
+            L"The new port count reached the running endpoint.");
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(NewCount), after.Destinations,
+            L"The new port count reached the running endpoint.");
+
+        // The session was never taken down to do it.
+        VERIFY_IS_TRUE(
+            remote.Host().CountReceived(CommandCode::Bye) == 0,
+            L"The connection must not be torn down to change the port count.");
+    }
+
+
+    void PortCreationTests::RenamingAnEndpointRenamesItsMidi1Ports()
+    {
+        if (!RequireService()) return;
+
+        // Again no function blocks, so the ports are named from the transport's own block. A
+        // remote which describes itself has its name table rebuilt from the blocks instead, which
+        // is a different path and already worked.
+        //
+        // The name is unique per process because a customization cannot be withdrawn: the remove
+        // section is a stub, so the one this test sends outlives it in the service's cache. With
+        // a fixed name the next run would find its endpoint already renamed and pass without
+        // testing anything.
+        RemoteHostUnderTest remote;
+
+        auto const hostName = ProtocolTestContext::Current().MakeUniqueEndpointName("Rename");
+
+        VERIFY_IS_TRUE(remote.Start(0, true, hostName));
+
+        VERIFY_IS_TRUE(
+            remote.Host().WaitForCommand(CommandCode::Invitation, SessionTimeout).has_value(),
+            L"The service never invited the remote host.");
+
+        auto endpointDeviceId = WaitForClientEndpointDeviceId(remote.EntryIdentifier());
+
+        VERIFY_IS_FALSE(endpointDeviceId.empty(), L"The service never reported an endpoint for this client.");
+
+        if (endpointDeviceId.empty()) return;
+
+        Log::Comment(String().Format(L"Endpoint: %s", endpointDeviceId.c_str()));
+
+        auto const before = WaitForMidi1Ports(endpointDeviceId, 1, PortCreationTimeout);
+
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(1), before.Sources, L"One source to start with.");
+
+        auto const namesBefore = CollectPortNamesWithSelector(Midi1SourceSelector, endpointDeviceId);
+
+        for (auto const& name : namesBefore)
+        {
+            Log::Comment(String().Format(L"Before: %s", name.c_str()));
+        }
+
+        std::wstring const newName{ L"Renamed Port Creation Test" };
+
+        // Otherwise a leftover customization could rename the endpoint before the test does, and
+        // the assertion below would pass without the rename path running at all.
+        VERIFY_IS_FALSE(
+            AllNamesContain(namesBefore, newName),
+            L"The ports already carried the new name before the rename.");
+
+        auto const renamed = RenameEndpoint(endpointDeviceId, newName);
+
+        VERIFY_IS_TRUE(renamed.IsSuccess(), L"The rename was refused.");
+
+        auto const names = WaitForMidi1PortNames(endpointDeviceId, newName, PortCreationTimeout);
+
+        Log::Comment(String().Format(L"Endpoint name after rename: '%s'", ReadEndpointName(endpointDeviceId).c_str()));
+        Log::Comment(String().Format(L"Custom name property after rename: '%s'", ReadCustomEndpointName(endpointDeviceId).c_str()));
+
+        for (auto const& name : names)
+        {
+            Log::Comment(String().Format(L"After: %s", name.c_str()));
+        }
+
+        VERIFY_IS_FALSE(names.empty(), L"The endpoint lost its MIDI 1.0 ports during the rename.");
+
+        VERIFY_IS_TRUE(
+            AllNamesContain(names, newName),
+            L"The new endpoint name never reached the MIDI 1.0 port names.");
+
+        VERIFY_IS_TRUE(
+            remote.Host().CountReceived(CommandCode::Bye) == 0,
+            L"The connection must not be torn down to rename an endpoint.");
+    }
+
+
+    void PortCreationTests::ChangingThePortCountKeepsACustomName()
+    {
+        if (!RequireService()) return;
+
+        RemoteHostUnderTest remote;
+
+        auto const hostName = ProtocolTestContext::Current().MakeUniqueEndpointName("KeepName");
+
+        VERIFY_IS_TRUE(remote.Start(0, true, hostName));
+
+        VERIFY_IS_TRUE(
+            remote.Host().WaitForCommand(CommandCode::Invitation, SessionTimeout).has_value(),
+            L"The service never invited the remote host.");
+
+        auto endpointDeviceId = WaitForClientEndpointDeviceId(remote.EntryIdentifier());
+
+        VERIFY_IS_FALSE(endpointDeviceId.empty(), L"The service never reported an endpoint for this client.");
+
+        if (endpointDeviceId.empty()) return;
+
+        VERIFY_ARE_EQUAL(
+            static_cast<uint32_t>(1),
+            WaitForMidi1Ports(endpointDeviceId, 1, PortCreationTimeout).Sources,
+            L"One source to start with.");
+
+        std::wstring const customName{ L"Kept Custom Name" };
+
+        VERIFY_IS_TRUE(
+            RenameEndpoint(endpointDeviceId, customName).IsSuccess(),
+            L"The rename was refused.");
+
+        auto const renamedPorts = WaitForMidi1PortNames(endpointDeviceId, customName, PortCreationTimeout);
+
+        VERIFY_IS_TRUE(
+            AllNamesContain(renamedPorts, customName),
+            L"The rename did not reach the ports, so this test cannot say anything about the count change.");
+
+        // The count change resolves the port name for itself rather than being handed one. The
+        // endpoint reports its original name however it was renamed, so this is where a custom
+        // name gets thrown away.
+        constexpr uint8_t NewCount = 3;
+
+        VERIFY_IS_TRUE(
+            UpdateClient(remote.EntryIdentifier(), true, NewCount).IsSuccess(),
+            L"The update was refused.");
+
+        auto const after = WaitForMidi1Ports(endpointDeviceId, NewCount, PortCreationTimeout);
+
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(NewCount), after.Sources, L"The new port count was applied.");
+
+        auto const namesAfter = WaitForMidi1PortNames(endpointDeviceId, customName, PortCreationTimeout);
+
+        for (auto const& name : namesAfter)
+        {
+            Log::Comment(String().Format(L"After count change: %s", name.c_str()));
+        }
+
+        VERIFY_IS_TRUE(
+            AllNamesContain(namesAfter, customName),
+            L"Changing the port count reverted the ports to the name the remote supplied.");
     }
 
 

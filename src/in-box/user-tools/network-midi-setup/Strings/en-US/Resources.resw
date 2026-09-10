@@ -261,8 +261,8 @@
     <comment>MIDI 1.0 ports are what older applications use. They are built along with the endpoint.</comment>
   </data>
   <data name="CustomizeCreateMidi1PortsHint.Text" xml:space="preserve">
-    <value>MIDI 1.0 ports are built with the endpoint, so changing this takes effect the next time this device connects.</value>
-    <comment>Explains why this one setting, unlike the others in the same dialog, does not apply immediately.</comment>
+    <value>Turning this on or off takes effect the next time this device connects. The number of ports below applies right away.</value>
+    <comment>Explains which of the two MIDI 1.0 settings is immediate and which needs a reconnect.</comment>
   </data>
   <data name="CustomizeFallbackMidi1PortCountBox.Header" xml:space="preserve">
     <value>MIDI 1.0 ports to create if this device does not describe itself</value>

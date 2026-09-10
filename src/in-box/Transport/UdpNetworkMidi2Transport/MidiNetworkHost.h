@@ -111,6 +111,10 @@ public:
 
     MidiNetworkHostDefinition GetDefinition() { return m_hostDefinition; }
 
+    // Used for the next remote client which connects to this host. The ones already connected are
+    // updated in place by the configuration manager.
+    void SetFallbackMidi1PortCount(_In_ uint8_t const value) noexcept { m_fallbackMidi1PortCount = value; }
+
     winrt::hstring ActualPort() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().LocalPort() : L""; }
     winrt::hstring ActualAddress() { auto socket = GetSocket(); return socket != nullptr ? socket.Information().LocalAddress().DisplayName() : L""; }
 
