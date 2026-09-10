@@ -96,7 +96,8 @@ namespace Windows.Devices.Midi2.Enumeration
         [noexcept] Midi1PortNamingApproach Midi1PortNamingApproach{ get; };
 
 
-        [noexcept] Boolean IsMidi1PortCreationEnabled{ get; };
+        //[noexcept] Boolean IsMidi1PortCreationEnabled{ get; };    // removed because this is never actually populated anywhere. Breaking change before production.
+
         [noexcept] Boolean IsMuted{ get; };
 
 
