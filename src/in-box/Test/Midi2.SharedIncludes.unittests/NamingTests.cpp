@@ -188,7 +188,6 @@ void NamingTests::TestPopulateEntryForNativeUmpDevice()
 void NamingTests::TestPopulateEntryForMidi1DeviceUsingUmpDriver()
 {
     MidiEndpointNameTable table;
-
     uint8_t portIndexSource{ 0 };
     uint8_t portIndexDestination{ 0 };
 
@@ -295,6 +294,42 @@ void NamingTests::TestPopulateEntryForMidi1DeviceUsingUmpDriver()
 
 
 
+}
+
+
+// A name with a character outside ASCII used to be formatted through a narrow string and widened
+// one byte at a time, so "Pete\u2019s MacBook Pro" reached WinMM as its UTF-8 bytes. Only the
+// ports after the first were affected, because only those get the MIDIIN/MIDIOUT prefix.
+void NamingTests::TestLegacyNameKeepsNonAsciiCharacters()
+{
+    MidiEndpointNameTable table;
+
+    std::wstring const deviceName{ L"Pete\u2019s Mac" };
+
+    for (uint8_t groupIndex = 0; groupIndex < 3; groupIndex++)
+    {
+        VERIFY_SUCCEEDED(table.PopulateEntryForNativeUmpDevice(
+            groupIndex, MidiFlow::MidiFlowIn, L"", deviceName, deviceName, L"MIDI", groupIndex));
+
+        VERIFY_SUCCEEDED(table.PopulateEntryForNativeUmpDevice(
+            groupIndex, MidiFlow::MidiFlowOut, L"", deviceName, deviceName, L"MIDI", groupIndex));
+    }
+
+    // the first port carries the name alone, and never went through the conversion
+    VERIFY_ARE_EQUAL(table.GetSourceEntry(0)->LegacyWinMMName, deviceName);
+    VERIFY_ARE_EQUAL(table.GetDestinationEntry(0)->LegacyWinMMName, deviceName);
+
+    VERIFY_ARE_EQUAL(table.GetSourceEntry(1)->LegacyWinMMName, L"MIDIIN2 (" + deviceName + L")");
+    VERIFY_ARE_EQUAL(table.GetSourceEntry(2)->LegacyWinMMName, L"MIDIIN3 (" + deviceName + L")");
+
+    VERIFY_ARE_EQUAL(table.GetDestinationEntry(1)->LegacyWinMMName, L"MIDIOUT2 (" + deviceName + L")");
+    VERIFY_ARE_EQUAL(table.GetDestinationEntry(2)->LegacyWinMMName, L"MIDIOUT3 (" + deviceName + L")");
+
+    // the byte-at-a-time widening turned one character into three, so the length catches the
+    // regression even somewhere the difference cannot be seen
+    size_t const expectedLength = deviceName.length() + wcslen(L"MIDIIN2 ()");
+
+    VERIFY_ARE_EQUAL(wcslen(table.GetSourceEntry(1)->LegacyWinMMName), expectedLength);
 }
 
 void NamingTests::TestPopulateEntryForMidi1DeviceUsingMidi1Driver()

@@ -31,6 +31,7 @@
 #include "MidiEndpointNameTable.h"
 
 #include "Feature_Servicing_MIDIPortDisambiguators.h"
+#include "Feature_Servicing_MIDI2UnicodeConversion.h"
 
 namespace WindowsMidiServicesNamingLib
 {
@@ -302,6 +303,42 @@ std::wstring GenerateLegacyMidi1PortName(
 
     if (portIndexWithinThisFilterAndDirection > 0)
     {
+        if (Feature_Servicing_MIDI2UnicodeConversion::IsEnabled())
+        {
+            // Formatting narrow and then widening a byte at a time turned each non-ASCII
+            // character into its separate UTF-8 bytes, so a name like "Pete\u2019s MacBook Pro"
+            // came out with three garbage characters. Staying wide has no conversion to get
+            // wrong. Truncation is by character for the same reason.
+            std::wstring formatted{ };
+
+            if (flowFromUserPerspective == MidiFlow::MidiFlowIn)
+            {
+                formatted = std::format(L"MIDIIN{} ({})", portIndexWithinThisFilterAndDirection + 1, generatedName);
+            }
+            else if (flowFromUserPerspective == MidiFlow::MidiFlowOut)
+            {
+                formatted = std::format(L"MIDIOUT{} ({})", portIndexWithinThisFilterAndDirection + 1, generatedName);
+            }
+            else
+            {
+                // unexpected
+                return generatedName;
+            }
+
+            if (formatted.length() > MAXPNAMELEN - 1)
+            {
+                formatted.resize(MAXPNAMELEN - 1);
+
+                // never leave a lead surrogate without its trail
+                if (!formatted.empty() && IS_HIGH_SURROGATE(formatted.back()))
+                {
+                    formatted.pop_back();
+                }
+            }
+
+            return WindowsMidiServicesInternal::TrimmedWStringCopy(formatted);
+        }
+
         // switching back and forth between wstring and string here is probably not a great idea, but the original
         // values from USB should all be narrow standard strings anyway.
         if (flowFromUserPerspective == MidiFlow::MidiFlowIn)
