@@ -1,0 +1,99 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="midi2monitor.exe.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="AppSettings.cpp" />
+    <ClCompile Include="CommandLineOptions.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="MessageCapture.cpp" />
+    <ClCompile Include="MessagePipeline.cpp" />
+    <ClCompile Include="MessageStore.cpp" />
+    <ClCompile Include="MessageListSource.cpp" />
+    <ClCompile Include="MidiMessageDecoder.cpp" />
+    <ClCompile Include="MonitorPalette.cpp" />
+    <ClCompile Include="StringResources.cpp" />
+    <ClCompile Include="TimestampFormatter.cpp" />
+    <ClCompile Include="MainWindow.Monitoring.cpp" />
+    <ClCompile Include="MainWindow.Clipboard.cpp" />
+    <ClCompile Include="MainWindow.Export.cpp" />
+    <ClCompile Include="MessageRowPanel.cpp" />
+    <ClCompile Include="MidiMessageViewModel.cpp" />
+    <ClCompile Include="MonitorColumn.cpp" />
+    <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
+    <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
+    <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="AppSettings.h" />
+    <ClInclude Include="CommandLineOptions.h" />
+    <ClInclude Include="MessageCapture.h" />
+    <ClInclude Include="MessagePipeline.h" />
+    <ClInclude Include="MessageStore.h" />
+    <ClInclude Include="MessageListSource.h" />
+    <ClInclude Include="MidiMessageDecoder.h" />
+    <ClInclude Include="MonitorPalette.h" />
+    <ClInclude Include="StringResources.h" />
+    <ClInclude Include="Telemetry.h" />
+    <ClInclude Include="TimestampFormatter.h" />
+    <ClInclude Include="MessageRowPanel.h" />
+    <ClInclude Include="MidiMessageViewModel.h" />
+    <ClInclude Include="MonitorColumn.h" />
+    <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
+    <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
+    <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
+    <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
+    <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="..\midi-app-shared\MidiAppShared.idl" />
+    <Midl Include="MonitorTypes.idl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="MainWindow.xaml">
+      <Filter>Views</Filter>
+    </Page>
+    <Page Include="Styles\MonitorStyles.xaml">
+      <Filter>Views</Filter>
+    </Page>
+    <Page Include="SettingsDialog.xaml">
+      <Filter>Views</Filter>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{6a54a45b-999f-49d3-9bc2-7ac6c667c28e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Views">
+      <UniqueIdentifier>{429150e3-6adb-4db8-a324-ef336a5bbee3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <PRIResource Include="Strings\en-US\Resources.resw">
+      <Filter>Resources</Filter>
+    </PRIResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Filter>Views</Filter>
+    </ApplicationDefinition>
+  </ItemGroup>
+</Project>

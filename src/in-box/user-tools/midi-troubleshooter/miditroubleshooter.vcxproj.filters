@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="miditroubleshooter.exe.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="AppSettings.cpp" />
+    <ClCompile Include="BackgroundWork.cpp" />
+    <ClCompile Include="CommandLineOptions.cpp" />
+    <ClCompile Include="DriverTools.cpp" />
+    <ClCompile Include="Elevation.cpp" />
+    <ClCompile Include="ProcessRunner.cpp" />
+    <ClCompile Include="RegistryRepair.cpp" />
+    <ClCompile Include="ReproLog.cpp" />
+    <ClCompile Include="ServiceControl.cpp" />
+    <ClCompile Include="StringResources.cpp" />
+    <ClCompile Include="SystemInfo.cpp" />
+    <ClCompile Include="ToolPaths.cpp" />
+    <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
+    <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
+    <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
+    <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="AppSettings.h" />
+    <ClInclude Include="BackgroundWork.h" />
+    <ClInclude Include="CommandLineOptions.h" />
+    <ClInclude Include="DriverTools.h" />
+    <ClInclude Include="Elevation.h" />
+    <ClInclude Include="ProcessRunner.h" />
+    <ClInclude Include="RegistryRepair.h" />
+    <ClInclude Include="ReproLog.h" />
+    <ClInclude Include="ServiceControl.h" />
+    <ClInclude Include="StringResources.h" />
+    <ClInclude Include="SystemInfo.h" />
+    <ClInclude Include="Telemetry.h" />
+    <ClInclude Include="ToolPaths.h" />
+    <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
+    <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
+    <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
+    <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
+    <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
+    <ClInclude Include="resource.h">
+      <Filter>Resources</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="..\midi-app-shared\MidiAppShared.idl" />
+    <Midl Include="TroubleshooterItems.idl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="MainWindow.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Resources">
+      <UniqueIdentifier>{f28fe00e-30f5-4f0f-8e83-5c46e64d0dcf}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc">
+      <Filter>Resources</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <PRIResource Include="Strings\en-US\Resources.resw">
+      <Filter>Resources</Filter>
+    </PRIResource>
+  </ItemGroup>
+</Project>
