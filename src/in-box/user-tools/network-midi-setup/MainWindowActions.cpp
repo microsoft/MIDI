@@ -699,10 +699,12 @@ namespace winrt::midinetworksetup::implementation
         winrt::hstring currentName{};
         winrt::hstring currentDescription{};
         winrt::hstring currentImage{};
-        bool currentCreateMidi1Ports{ true };
 
-        // Only the configuration file records this, so it is read before the endpoint lookup
-        // rather than from the endpoint's properties.
+        // Only the configuration file records these two, so they are read before the endpoint
+        // lookup rather than from the endpoint's properties.
+        bool const currentCreateMidi1Ports =
+            native::NetworkConfigFile::Current().GetClientCreateMidi1Ports(item.ClientId());
+
         auto const currentFallbackMidi1PortCount =
             native::NetworkConfigFile::Current().GetClientFallbackMidi1PortCount(item.ClientId());
 
@@ -717,7 +719,6 @@ namespace winrt::midinetworksetup::implementation
             }
 
             deviceInstanceId = info.DeviceInstanceId();
-            currentCreateMidi1Ports = info.IsMidi1PortCreationEnabled();
 
             auto const transportInfo = info.GetTransportSuppliedInfo();
             transportSuppliedName = transportInfo.Name();

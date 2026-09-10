@@ -528,7 +528,7 @@ namespace winrt::midisettings::implementation
             }
 
             CustomizePortNamingPanel().Visibility(
-                (transportCode == L"KS" || transportCode == L"KSA") && endpoint.IsMidi1PortCreationEnabled() ?
+                (transportCode == L"KS" || transportCode == L"KSA") ?
                     xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
             m_portNamesRequested = false;

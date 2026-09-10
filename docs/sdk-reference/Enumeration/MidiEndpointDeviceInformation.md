@@ -39,7 +39,6 @@ For more information about the Endpoint Discovery and Protocol Negotiation aspec
 | `DeclaredStreamConfigurationLastUpdateTime` | Protocol Negotiation | The time of the last update from protocol negotiation |
 | `DeclaredFunctionBlocksLastUpdateTime` | Discovery | The time of the last update of function blocks |
 | `Midi1PortNamingApproach` | User/Config | The naming approach used when generating MIDI 1.0 port names for this endpoint. |
-| `IsMidi1PortCreationEnabled` | Config | True if MIDI 1.0 API port creation is enabled for this endpoint. |
 | `IsMuted` | Config | True if this endpoint is muted (all MIDI communication suppressed). |
 | `Properties` | Windows | Returns the raw device properties for this endpoint. The property values and their ids are not something an application should rely upon -- they are an implementation detail subject to change, and are not part of the contract with apps. Instead, all of the interesting/useful properties have been broken out in other ways with strong types. |
 

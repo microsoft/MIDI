@@ -832,6 +832,35 @@ namespace midinetworksetup
     }
 
     _Use_decl_annotations_
+    bool NetworkConfigFile::GetClientCreateMidi1Ports(winrt::hstring const& clientIdKey) noexcept
+    {
+        json::JsonObject config{ nullptr };
+
+        if (!LoadCached(config))
+        {
+            return true;
+        }
+
+        auto clients = GetEntriesObject(config, MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY, false);
+
+        auto client = FindObject(clients, ResolveKey(clients, clientIdKey));
+
+        if (client == nullptr)
+        {
+            return true;
+        }
+
+        try
+        {
+            return client.GetNamedBoolean(MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, true);
+        }
+        catch (...)
+        {
+            return true;
+        }
+    }
+
+    _Use_decl_annotations_
     bool NetworkConfigFile::SetRemoteClientDecision(
         winrt::hstring const& hostIdKey,
         winrt::hstring const& umpEndpointName,

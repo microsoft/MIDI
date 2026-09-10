@@ -88,6 +88,10 @@ namespace midinetworksetup
         // which never described itself, so the file is the only place it is recorded.
         uint8_t GetClientFallbackMidi1PortCount(_In_ winrt::hstring const& clientIdKey) noexcept;
 
+        // Companion to the above. Nothing writes this to the endpoint's properties, so the file
+        // is the only record of what was asked for.
+        bool GetClientCreateMidi1Ports(_In_ winrt::hstring const& clientIdKey) noexcept;
+
 
     private:
         NetworkConfigFile() noexcept;
