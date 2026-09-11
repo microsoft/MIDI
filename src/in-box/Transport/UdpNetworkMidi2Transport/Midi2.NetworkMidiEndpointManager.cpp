@@ -1248,6 +1248,23 @@ CMidi2NetworkMidiEndpointManager::CreateParentDeviceForHost(
 
         RETURN_HR_IF_NULL(E_UNEXPECTED, m_midiDeviceManager);
 
+        auto const parentKey = internal::NormalizeDeviceInstanceIdWStringCopy(std::wstring{ serviceInstanceId.c_str() });
+
+        // Already made one for this name, so hand back what activation gave us then. Asking again
+        // cannot succeed while the device is still there, and the id has to be the one activation
+        // returned: an endpoint activated against any other form of it waits for a completion
+        // which never arrives.
+        {
+            auto lock = m_hostParentDeviceIdsLock.lock_shared();
+
+            if (auto const existing = m_hostParentDeviceIds.find(parentKey); existing != m_hostParentDeviceIds.end())
+            {
+                createdNewDeviceInstanceId = existing->second;
+
+                return S_FALSE;
+            }
+        }
+
         // the parent device parameters are set by the transport (this)
         std::wstring parentDeviceId{ internal::NormalizeDeviceInstanceIdWStringCopy(TRANSPORT_HOST_PARENT_ID_PREFIX + std::wstring{ serviceInstanceId.c_str() }) };
         std::wstring parentName{ TRANSPORT_HOST_PARENT_NAME_PREFIX + name };
@@ -1261,39 +1278,20 @@ CMidi2NetworkMidiEndpointManager::CreateParentDeviceForHost(
         createInfo.pszDeviceDescription = parentName.c_str();
         createInfo.pContainerId = &m_containerId;
 
-        // NOTE: This will fail if the parent device already exists. Since there's no function to
-        // remove the virtual parent currently in the MIDI Device Manager, this will fail the second
-        // time it is called (so after a Stop and then start)
-        auto activateHr = m_midiDeviceManager->ActivateVirtualParentDevice(
+        RETURN_IF_FAILED(m_midiDeviceManager->ActivateVirtualParentDevice(
             0,
             nullptr,
             &createInfo,
             &newParentDeviceId
-        );
+        ));
 
-        if (FAILED(activateHr))
+        createdNewDeviceInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(newParentDeviceId.get());
+
         {
-            // The instance id is derived from the service instance name, so it is known whether or
-            // not activation just created it. Returning it anyway is what lets a host restart:
-            // the caller gets a usable parent instead of an empty string it would silently build
-            // every one of its endpoints on.
-            createdNewDeviceInstanceId = parentDeviceId;
+            auto lock = m_hostParentDeviceIdsLock.lock_exclusive();
 
-            TraceLoggingWrite(
-                MidiNetworkMidiTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_WARNING,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"Parent device could not be activated. Reusing the existing instance id, which is the expected result of restarting a host.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingWideString(parentDeviceId.c_str(), "parent device instance id"),
-                TraceLoggingHResult(activateHr, MIDI_TRACE_EVENT_HRESULT_FIELD)
-            );
-
-            return S_FALSE;
+            m_hostParentDeviceIds[parentKey] = createdNewDeviceInstanceId;
         }
-
-        createdNewDeviceInstanceId = newParentDeviceId.get();
 
         TraceLoggingWrite(
             MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -1301,7 +1299,7 @@ CMidi2NetworkMidiEndpointManager::CreateParentDeviceForHost(
             TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(parentDeviceId.c_str(), "New parent device instance id")
+            TraceLoggingWideString(createdNewDeviceInstanceId.c_str(), "New parent device instance id")
         );
 
         return S_OK;
@@ -2013,6 +2011,7 @@ try
     // group past the first. The naming library strips the block name when it repeats the parent,
     // so the new style name does not end up doubled.
     RETURN_IF_FAILED(nameTable.PopulateAllEntriesForNativeUmpDevice(block.Name, namingBlocks));
+
     RETURN_IF_FAILED(nameTable.WriteProperties(properties));
 
     return S_OK;

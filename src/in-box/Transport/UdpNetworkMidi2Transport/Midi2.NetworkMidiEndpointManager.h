@@ -157,6 +157,13 @@ private:
     mutable wil::srwlock m_advertisedHostsLock;
     std::map<std::wstring, ::WindowsMidiServicesInternal::MidiDnssdService> m_foundAdvertisedHosts;
 
+    // A host's virtual parent is created once and lives for the lifetime of the transport, so the
+    // id activation handed back is remembered here rather than rebuilt. It is keyed on service
+    // instance name because that is what the parent is named after, and a host which is stopped,
+    // or removed and created again under the same name, has to be given the same parent back.
+    mutable wil::srwlock m_hostParentDeviceIdsLock;
+    std::map<std::wstring, std::wstring> m_hostParentDeviceIds;
+
     // What each live endpoint was created from, so a customization arriving later can be matched
     // back to it. The remote's identity is not otherwise recoverable from an endpoint id.
     struct CreatedEndpointRecord
