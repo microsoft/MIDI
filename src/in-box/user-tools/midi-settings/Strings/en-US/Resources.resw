@@ -429,6 +429,9 @@
   <data name="Midi1PortNamesDefaultIsNewStyle" xml:space="preserve">
     <value>The global default is currently new style names.</value>
   </data>
+  <data name="Midi1PortNamesDefaultIsAutomatic" xml:space="preserve">
+    <value>The global default lets Windows choose for each device, so this endpoint uses whichever of the two styles below suits it. Pick a style here to decide for yourself.</value>
+  </data>
   <data name="Midi1PortNamesSourcesHeader.Text" xml:space="preserve">
     <value>Inputs, which send to this PC</value>
   </data>
@@ -572,8 +575,11 @@
   <data name="GlobalPortNamingHelp.Text" xml:space="preserve">
     <value>How ports are named for older apps which use WinMM or WinRT MIDI 1.0. Changing this renames ports, so apps may need to be pointed at them again.</value>
   </data>
+  <data name="PortNamingAutomaticRadio.Content" xml:space="preserve">
+    <value>Let Windows choose for each device (recommended)</value>
+  </data>
   <data name="PortNamingClassicRadio.Content" xml:space="preserve">
-    <value>Compatible with older Windows (recommended)</value>
+    <value>Compatible with older Windows</value>
   </data>
   <data name="PortNamingNewStyleRadio.Content" xml:space="preserve">
     <value>New style, based on the endpoint and block names</value>

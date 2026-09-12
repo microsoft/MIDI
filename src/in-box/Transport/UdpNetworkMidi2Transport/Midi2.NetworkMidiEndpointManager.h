@@ -88,6 +88,8 @@ public:
 
     STDMETHOD(StartRemoteHostWatcher)();
     STDMETHOD(StartBackgroundEndpointCreator)();
+
+    void RefreshCalculatedLatencyProperties();
     STDMETHOD(StartBackgroundConnectionShutdown)();
     STDMETHOD(StartBackgroundNegotiation)();
     STDMETHOD(StartBackgroundHostEndpointCreation)();
@@ -106,13 +108,13 @@ public:
         _In_ std::wstring const& clientUmpEndpointName,
         _In_ std::wstring const& clientProductInstanceId);
 
+    // Created once per host and kept for the lifetime of the transport. There is deliberately no
+    // matching delete: deactivating it leaves the instance id behind, which blocks activation and
+    // leaves the host unable to build endpoints.
     HRESULT CreateParentDeviceForHost(
         _In_ winrt::hstring const& name,
         _In_ winrt::hstring const& id,
         _Inout_ std::wstring& createdNewDeviceInstanceId);
-
-    HRESULT DeleteParentHostDevice(
-        _In_ std::wstring const& deviceInstanceId);
 
 
     HRESULT StartNewClient(
@@ -191,6 +193,11 @@ private:
     HRESULT CreateParentDeviceForClients();
 
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
+
+    // Last calculated latency written per endpoint, so the timer-driven refresh only writes on a
+    // meaningful change. One millisecond at the 10 MHz clock the platform reports.
+    std::map<std::wstring, uint64_t> m_lastWrittenLatencyTicks;
+    uint64_t m_latencyWriteThresholdTicks{ ::WindowsMidiServicesInternal::GetMidiTimestampFrequency() / 1000 };
     wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;
 
 

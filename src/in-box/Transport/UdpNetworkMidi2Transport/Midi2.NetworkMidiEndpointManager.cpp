@@ -9,6 +9,8 @@
 
 #include "pch.h"
 #include "midi2.NetworkMidiTransport.h"
+#include "Feature_Servicing_MIDI2PortNamingRework.h"
+#include "Feature_Servicing_MIDI2SchedulerV2.h"
 
 using namespace wil;
 using namespace Microsoft::WRL;
@@ -693,6 +695,77 @@ CMidi2NetworkMidiEndpointManager::ConnectionShutdownWorker(std::stop_token stopT
     return S_OK;
 }
 
+// Ping round trip is the only measured latency figure the transport has. Half of it is the mean
+// one-way delay to the remote, which is what the outbound scheduler needs to compensate for. The
+// scheduler reads this at connection time, so refreshing it periodically is enough.
+void
+CMidi2NetworkMidiEndpointManager::RefreshCalculatedLatencyProperties()
+{
+    if (!Feature_Servicing_MIDI2SchedulerV2::IsEnabled())
+    {
+        return;
+    }
+
+    auto const writeLatency = [&](std::wstring const& endpointDeviceId, uint64_t const roundTripTicks)
+        {
+            if (endpointDeviceId.empty() || roundTripTicks == 0)
+            {
+                return;
+            }
+
+            uint64_t oneWayTicks = roundTripTicks / 2;
+
+            auto const existing = m_lastWrittenLatencyTicks.find(endpointDeviceId);
+
+            // Device property writes are not free and this runs on a timer, so only write on a
+            // change big enough to matter to a musician.
+            if (existing != m_lastWrittenLatencyTicks.end())
+            {
+                auto const previous = existing->second;
+                auto const difference = (oneWayTicks > previous) ? (oneWayTicks - previous) : (previous - oneWayTicks);
+
+                if (difference < m_latencyWriteThresholdTicks)
+                {
+                    return;
+                }
+            }
+
+            DEVPROPERTY props[] =
+            {
+                { { PKEY_MIDI_MidiOutCalculatedLatencyTicks, DEVPROP_STORE_SYSTEM, nullptr },
+                  DEVPROP_TYPE_UINT64, static_cast<ULONG>(sizeof(uint64_t)), (PVOID)&oneWayTicks },
+            };
+
+            if (SUCCEEDED(m_midiDeviceManager->UpdateEndpointProperties(endpointDeviceId.c_str(), ARRAYSIZE(props), props)))
+            {
+                m_lastWrittenLatencyTicks[endpointDeviceId] = oneWayTicks;
+            }
+        };
+
+    try
+    {
+        for (auto const& client : TransportState::Current().GetClients())
+        {
+            if (client == nullptr) continue;
+
+            writeLatency(client->GetEndpointDeviceId(), client->PeekAverageLatencyTicks());
+        }
+
+        for (auto const& host : TransportState::Current().GetHosts())
+        {
+            if (host == nullptr) continue;
+
+            for (auto const& connection : TransportState::Current().GetHostConnectionsForHost(host->GetDefinition().EntryIdentifier))
+            {
+                if (connection == nullptr) continue;
+
+                writeLatency(connection->GetEndpointDeviceId(), connection->PeekAverageLatencyTicks());
+            }
+        }
+    }
+    CATCH_LOG();
+}
+
 HRESULT
 CMidi2NetworkMidiEndpointManager::StartBackgroundEndpointCreator()
 {
@@ -1138,6 +1211,8 @@ CMidi2NetworkMidiEndpointManager::EndpointCreatorWorker(std::stop_token stopToke
 
             // wait for notification of new hosts online or new entries added via config
             // the most time we wait is the DirectConnectionScanInterval
+            RefreshCalculatedLatencyProperties();
+
             m_backgroundEndpointCreatorThreadWakeup.wait(TransportState::Current().TransportSettings.DirectConnectionScanInterval);
         }
         // One bad entry must not end the worker. An exception leaving this thread would
@@ -1305,47 +1380,6 @@ CMidi2NetworkMidiEndpointManager::CreateParentDeviceForHost(
         return S_OK;
     }
     CATCH_RETURN()
-}
-
-_Use_decl_annotations_
-HRESULT
-CMidi2NetworkMidiEndpointManager::DeleteParentHostDevice(
-    std::wstring const& deviceInstanceId)
-{
-    TraceLoggingWrite(
-        MidiNetworkMidiTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(deviceInstanceId.c_str(), "deviceShortInstanceId")
-    );
-
-    RETURN_HR_IF_NULL(E_UNEXPECTED, m_midiDeviceManager);
-
-    auto instanceId = deviceInstanceId;
-
-    if (!instanceId.empty())
-    {
-        // this will remove all child endpoints
-        // NOTE: There's no device manager function to remove the parent, yet.
-        RETURN_IF_FAILED(m_midiDeviceManager->RemoveEndpoint(instanceId.c_str()));
-    }
-    else
-    {
-        TraceLoggingWrite(
-            MidiNetworkMidiTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_ERROR,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Empty instanceId property for endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-        );
-
-        RETURN_IF_FAILED(E_INVALIDARG);
-    }
-
-    return S_OK;
 }
 
 
@@ -2011,6 +2045,14 @@ try
     // group past the first. The naming library strips the block name when it repeats the parent,
     // so the new style name does not end up doubled.
     RETURN_IF_FAILED(nameTable.PopulateAllEntriesForNativeUmpDevice(block.Name, namingBlocks));
+
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        nameTable.SetPortNamesHaveLegacyEquivalent(false);
+
+        // these ports are new style, so they need the same numbering as everything else
+        LOG_IF_FAILED(nameTable.RebuildNewStyleNames(std::wstring{ block.Name }, false));
+    }
 
     RETURN_IF_FAILED(nameTable.WriteProperties(properties));
 

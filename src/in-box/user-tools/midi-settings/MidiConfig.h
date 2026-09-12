@@ -15,7 +15,8 @@ namespace midisettings
     {
         UseGlobalDefault = 0,
         ClassicCompatible = 1,
-        NewStyle = 2
+        NewStyle = 2,
+        Automatic = 3
     };
 
     struct ConfigFileInfo

@@ -69,10 +69,26 @@ private:
     HRESULT OnDeviceStopped(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
     HRESULT OnEnumerationCompleted(_In_ DeviceWatcher, _In_ winrt::Windows::Foundation::IInspectable);
 
+    std::wstring ResolveUniqueHardwareParentDeviceName(
+        _In_ std::wstring const& hardwareParentName,
+        _In_ std::wstring const& hardwareParentInstanceId
+    ) noexcept;
+
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
     wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;
 
     std::vector<std::unique_ptr<MIDI_PIN_INFO>> m_AvailableMidiPins;
+
+    struct KsHardwareParentDeviceName
+    {
+        std::wstring BaseName;              // the name before any duplicate marker
+        std::wstring ResolvedName;          // what this device is actually called
+        uint32_t IndexOfDevicesWithThisSameName{ 0 };
+    };
+
+    // keyed on the hardware parent instance id, so a device with several filters is named once
+    std::map<std::wstring, KsHardwareParentDeviceName> m_hardwareParentDeviceNames;
+    wil::critical_section m_hardwareParentDeviceNamesLock;
     
     DeviceWatcher m_Watcher{0};
     winrt::impl::consume_Windows_Devices_Enumeration_IDeviceWatcher<IDeviceWatcher>::Added_revoker m_DeviceAdded;

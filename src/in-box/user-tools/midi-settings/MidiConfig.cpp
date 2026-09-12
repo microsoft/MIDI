@@ -9,6 +9,7 @@
 #include "MidiConfig.h"
 
 #include "MidiDefs.h"
+#include "Feature_Servicing_MIDI2PortNamingRework.h"
 
 namespace midisettings::config
 {
@@ -485,9 +486,23 @@ namespace midisettings::config
                 {
                     return stored;
                 }
+
+                if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+                {
+                    if (stored == Midi1PortNaming::Automatic)
+                    {
+                        return stored;
+                    }
+                }
             }
         }
         MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to read the default MIDI 1.0 port naming.")
+
+        // an absent value is what selects the service's own default, so this has to track it
+        if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+        {
+            return Midi1PortNaming::Automatic;
+        }
 
         // matches MIDI_MIDI1_PORT_NAMING_DEFAULT_VALUE in the naming library
         return Midi1PortNaming::ClassicCompatible;

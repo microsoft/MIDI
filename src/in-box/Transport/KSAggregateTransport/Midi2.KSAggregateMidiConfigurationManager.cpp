@@ -10,6 +10,7 @@
 #include "pch.h"
 #include "Feature_Servicing_MIDI2KSAWatcherHardening.h"
 #include "Feature_Servicing_MIDI2EndpointImageFileNameValidation.h"
+#include "Feature_Servicing_MIDI2PortNamingRework.h"
 
 #include "MidiEndpointCustomProperties.h"
 #include "json_transport_command_helper.h"
@@ -143,6 +144,12 @@ CMidi2KSAggregateMidiConfigurationManager::ProcessCustomProperties(
                         // write out the dev props. This does require that the name table is kept around
                         // until the props are written, which is why it was passed in as a param
                         nameTable->WriteProperties(endpointDevProperties);
+
+                        if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+                        {
+                            LOG_IF_FAILED(nameTable->WriteGroupTerminalBlockProperties(
+                                resolvedEndpointDeviceId, endpointDevProperties));
+                        }
                     }
                 }
                 else

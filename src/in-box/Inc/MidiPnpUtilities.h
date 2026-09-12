@@ -44,4 +44,11 @@ namespace WindowsMidiServicesInternal
         _Inout_ std::wstring& actualParentInstanceId,                                   // returned parent
         _Inout_ std::wstring& relatedMediaDriverDeviceParentInstanceId) noexcept;       // the &MI_00 device found when walking up the tree
 
+    // Name of the physical device a MIDI filter belongs to. The filter's own node is named by the
+    // driver ("USB Audio Device"); the name on the product is on the hardware parent.
+    bool GetHardwareParentDeviceName(
+        _In_ std::wstring const& startingInstanceId,
+        _Inout_ std::wstring& parentDeviceName,
+        _Inout_ std::wstring& parentDeviceInstanceId) noexcept;
+
 }

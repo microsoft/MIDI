@@ -517,6 +517,9 @@ std::wstring GetDisplayValueFromNamingSelection(midi2enum::Midi1PortNamingApproa
     case midi2enum::Midi1PortNamingApproach::UseNewStyle:
         namingSelectionDisplayString = L"Use new-style names";
         break;
+    case midi2enum::Midi1PortNamingApproach::UseAutomatic:
+        namingSelectionDisplayString = L"Let Windows choose per device";
+        break;
     default:
         namingSelectionDisplayString = L"INVALID VALUE";
         break;

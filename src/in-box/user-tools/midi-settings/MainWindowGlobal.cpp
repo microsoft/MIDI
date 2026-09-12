@@ -12,6 +12,7 @@
 #include "BackgroundWork.h"
 #include "Elevation.h"
 #include "StringResources.h"
+#include "Feature_Servicing_MIDI2PortNamingRework.h"
 
 namespace native = ::midisettings;
 namespace res = ::midisettings::resources;
@@ -156,8 +157,16 @@ namespace winrt::midisettings::implementation
 
             auto const naming = native::config::DefaultMidi1PortNaming();
 
+            // A service without the naming rework would ignore the automatic choice, so do not
+            // offer it there.
+            PortNamingAutomaticRadio().Visibility(
+                Feature_Servicing_MIDI2PortNamingRework::IsEnabled() ?
+                    winrt::Microsoft::UI::Xaml::Visibility::Visible :
+                    winrt::Microsoft::UI::Xaml::Visibility::Collapsed);
+
+            PortNamingAutomaticRadio().IsChecked(naming == native::Midi1PortNaming::Automatic);
             PortNamingNewStyleRadio().IsChecked(naming == native::Midi1PortNaming::NewStyle);
-            PortNamingClassicRadio().IsChecked(naming != native::Midi1PortNaming::NewStyle);
+            PortNamingClassicRadio().IsChecked(naming == native::Midi1PortNaming::ClassicCompatible);
 
             m_suppressPortNamingHandling = false;
 
@@ -329,9 +338,18 @@ namespace winrt::midisettings::implementation
             }
 
             auto const newStyle = PortNamingNewStyleRadio().IsChecked();
+            auto const automatic = PortNamingAutomaticRadio().IsChecked();
 
-            auto const value = newStyle && newStyle.Value() ?
-                native::Midi1PortNaming::NewStyle : native::Midi1PortNaming::ClassicCompatible;
+            auto value = native::Midi1PortNaming::ClassicCompatible;
+
+            if (newStyle && newStyle.Value())
+            {
+                value = native::Midi1PortNaming::NewStyle;
+            }
+            else if (automatic && automatic.Value())
+            {
+                value = native::Midi1PortNaming::Automatic;
+            }
 
             std::wstring errorMessage{};
 

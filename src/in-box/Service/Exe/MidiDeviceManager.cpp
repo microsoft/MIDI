@@ -22,6 +22,7 @@
 #include "Feature_Servicing_MIDI2SynchronizedStart.h"
 #include "Feature_Servicing_MIDI2PortNumberCache.h"
 #include "Feature_Servicing_MIDI2ComponentSignatureCache.h"
+#include "Feature_Servicing_MIDI2PortNamingRework.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -2125,6 +2126,22 @@ CMidiDeviceManager::UpdateEndpointProperties
                 }
             }
 
+            if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+            {
+                // an endpoint renaming itself in-protocol has to re-derive its MIDI 1 port names
+                if (!found)
+                {
+                    for (UINT i = 0; i < intPropertyCount && !found; i++)
+                    {
+                        if (interfaceDevProperties[i].CompKey.Key.fmtid == PKEY_MIDI_EndpointProvidedName.fmtid &&
+                            interfaceDevProperties[i].CompKey.Key.pid == PKEY_MIDI_EndpointProvidedName.pid)
+                        {
+                            found = true;
+                        }
+                    }
+                }
+            }
+
             if (found)
             {
                 // log rather than return because MIDI 1 port sync is more a side effect
@@ -3071,6 +3088,37 @@ CMidiDeviceManager::UseFallbackMidi1PortDefinition(
 }
 
 
+namespace
+{
+    // The SWD friendly name is fixed at enumeration, so for a MIDI 2.0 device it still holds the
+    // USB product string after the endpoint names itself in-protocol. Port names follow the same
+    // priority the endpoint itself displays: user's custom name, then in-protocol, then product.
+    std::wstring GetEndpointNameForPortNaming(
+        _In_ winrt::Windows::Devices::Enumeration::DeviceInformation const& deviceInfo) noexcept
+    {
+        try
+        {
+            auto customName = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(
+                STRING_PKEY_MIDI_CustomEndpointName, deviceInfo, L"");
+
+            auto trimmedCustomName = internal::TrimmedWStringCopy(customName.c_str());
+            if (!trimmedCustomName.empty()) return trimmedCustomName;
+
+            auto providedName = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(
+                STRING_PKEY_MIDI_EndpointProvidedName, deviceInfo, L"");
+
+            auto trimmedProvidedName = internal::TrimmedWStringCopy(providedName.c_str());
+            if (!trimmedProvidedName.empty()) return trimmedProvidedName;
+
+            return std::wstring{ deviceInfo.Name().c_str() };
+        }
+        CATCH_LOG();
+
+        return std::wstring{ };
+    }
+}
+
+
 _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::RebuildAndUpdateNameTableForMidi2EndpointWithFunctionBlocks(
@@ -3107,6 +3155,16 @@ CMidiDeviceManager::RebuildAndUpdateNameTableForMidi2EndpointWithFunctionBlocks(
 
     auto deviceName = deviceInfo.Name();
 
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        auto namingName = GetEndpointNameForPortNaming(deviceInfo);
+
+        if (!namingName.empty())
+        {
+            deviceName = winrt::hstring{ namingName };
+        }
+    }
+
     uint8_t outIndex{ 0 };
     uint8_t inIndex{ 0 };
 
@@ -3129,7 +3187,14 @@ CMidiDeviceManager::RebuildAndUpdateNameTableForMidi2EndpointWithFunctionBlocks(
         functionBlockName = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(functionBlockNameString.c_str(), deviceInfo, L"");
         if (functionBlockName.empty())
         {
-            functionBlockName = deviceInfo.Name();
+            if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+            {
+                functionBlockName = deviceName;
+            }
+            else
+            {
+                functionBlockName = deviceInfo.Name();
+            }
         }
         functionBlockName = functionBlockName.substr(0, MAXPNAMELEN - 1);
 
@@ -3201,6 +3266,12 @@ CMidiDeviceManager::RebuildAndUpdateNameTableForMidi2EndpointWithFunctionBlocks(
 
     std::vector<DEVPROPERTY> interfaceDevProperties{ };
 
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        // A block spanning several groups would otherwise name every one of them identically.
+        LOG_IF_FAILED(newNameTable.RebuildNewStyleNames(deviceName.c_str(), false));
+    }
+
     if (!newNameTable.IsEqualTo(currentNameTable.get()))
     {
         newNameTable.WriteProperties(interfaceDevProperties);
@@ -3217,6 +3288,210 @@ CMidiDeviceManager::RebuildAndUpdateNameTableForMidi2EndpointWithFunctionBlocks(
 
         RETURN_IF_FAILED(propSetHR);
     }
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::RebuildAndUpdateNameTableForMidi2EndpointWithGroupTerminalBlocks(
+    LPCWSTR umpDeviceInterfaceId,
+    winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
+    PMIDIPORT umpMidiPort
+)
+{
+    // A MIDI 2.0 endpoint may rename itself in-protocol at any time, so the names the transport
+    // derived at enumeration have to be re-derived against the name the endpoint now reports.
+    // Only native UMP endpoints take this path: a bytestream device named through the UMP driver
+    // gets its port names from pin and registry names that are not carried in the GTB property.
+
+    if (!Feature_Servicing_MIDI2PortNamingRework::IsEnabled()) return S_OK;
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(umpDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+
+    auto nativeDataFormat = (MidiDataFormats)internal::SafeGetSwdPropertyFromDeviceInformation<uint8_t>(
+        STRING_PKEY_MIDI_NativeDataFormat, deviceInfo, MidiDataFormats::MidiDataFormats_Invalid);
+
+    RETURN_HR_IF_EXPECTED(E_NOTFOUND, nativeDataFormat != MidiDataFormats::MidiDataFormats_UMP);
+
+    auto endpointName = GetEndpointNameForPortNaming(deviceInfo);
+    RETURN_HR_IF_EXPECTED(E_NOTFOUND, endpointName.empty());
+
+    auto groupTerminalBlockProperty = internal::SafeGetSwdBinaryPropertyFromDeviceInformation(
+        STRING_PKEY_MIDI_GroupTerminalBlocks, deviceInfo);
+
+    RETURN_HR_IF_EXPECTED(E_NOTFOUND, groupTerminalBlockProperty == nullptr);
+
+    auto groupTerminalBlockData = groupTerminalBlockProperty.Value();
+
+    auto blocks = internal::ReadGroupTerminalBlocksFromPropertyData(
+        groupTerminalBlockData.data(), static_cast<uint32_t>(groupTerminalBlockData.size()));
+
+    RETURN_HR_IF_EXPECTED(E_NOTFOUND, blocks.empty());
+
+    auto currentNameTable = WindowsMidiServicesNamingLib::MidiEndpointNameTable::FromDeviceInfo(deviceInfo);
+    RETURN_HR_IF_EXPECTED(E_NOTFOUND, currentNameTable == nullptr);
+
+    WindowsMidiServicesNamingLib::MidiEndpointNameTable newNameTable{ };
+
+    RETURN_IF_FAILED(newNameTable.PopulateAllEntriesForNativeUmpDevice(endpointName, blocks));
+
+    // the user's per-port custom names are not derived, so they have to be carried across
+    for (uint8_t groupIndex = 0; groupIndex < 16; groupIndex++)
+    {
+        auto sourceCustomName = currentNameTable->GetSourceEntryCustomName(groupIndex);
+        if (!sourceCustomName.empty())
+        {
+            newNameTable.UpdateSourceEntryCustomName(groupIndex, winrt::hstring{ sourceCustomName });
+        }
+
+        auto destinationCustomName = currentNameTable->GetDestinationEntryCustomName(groupIndex);
+        if (!destinationCustomName.empty())
+        {
+            newNameTable.UpdateDestinationEntryCustomName(groupIndex, winrt::hstring{ destinationCustomName });
+        }
+    }
+
+    // A transport may name groups its blocks do not span, so a table derived from the blocks alone
+    // can cover less than the one already published. Dropping those entries would leave the ports
+    // unnamed, so leave a table we cannot fully reproduce alone.
+    for (uint8_t groupIndex = 0; groupIndex < 16; groupIndex++)
+    {
+        if (currentNameTable->GetSourceEntry(groupIndex) != nullptr &&
+            newNameTable.GetSourceEntry(groupIndex) == nullptr)
+        {
+            return E_NOTFOUND;
+        }
+
+        if (currentNameTable->GetDestinationEntry(groupIndex) != nullptr &&
+            newNameTable.GetDestinationEntry(groupIndex) == nullptr)
+        {
+            return E_NOTFOUND;
+        }
+    }
+
+    LOG_IF_FAILED(newNameTable.RebuildNewStyleNames(endpointName, false));
+
+    if (newNameTable.IsEqualTo(currentNameTable.get())) return S_OK;
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Re-deriving MIDI 1 port names for renamed endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(umpDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingWideString(endpointName.c_str(), "endpoint name")
+    );
+
+    std::vector<DEVPROPERTY> interfaceDevProperties{ };
+    newNameTable.WriteProperties(interfaceDevProperties);
+
+    RETURN_IF_FAILED(SwDeviceInterfacePropertySet(
+        umpMidiPort->SwDevice.get(),
+        umpMidiPort->DeviceInterfaceId.get(),
+        static_cast<ULONG>(interfaceDevProperties.size()),
+        static_cast<const DEVPROPERTY*>(interfaceDevProperties.data())
+    ));
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::SyncGroupTerminalBlockNamesToMidi1PortNames(
+    LPCWSTR umpDeviceInterfaceId,
+    winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
+    PMIDIPORT umpMidiPort,
+    std::map<UINT32, PORT_INFO> portInfo[2]
+)
+{
+    // A MIDI 1.0 device has no blocks of its own: we synthesize them, so they must say the same
+    // thing as the ports. A MIDI 2.0-aware app showing block names and a MIDI 1.0 app showing port
+    // names are describing the same group, and disagreeing is just confusing. This runs after the
+    // port names are resolved, so it also follows a naming style the customer changes later.
+
+    if (!Feature_Servicing_MIDI2PortNamingRework::IsEnabled()) return S_OK;
+
+    auto nativeDataFormat = (MidiDataFormats)internal::SafeGetSwdPropertyFromDeviceInformation<uint8_t>(
+        STRING_PKEY_MIDI_NativeDataFormat, deviceInfo, MidiDataFormats::MidiDataFormats_Invalid);
+
+    // a native UMP device supplies its own block names, and those are the device's to set
+    RETURN_HR_IF_EXPECTED(E_NOTFOUND, nativeDataFormat != MidiDataFormats::MidiDataFormats_ByteStream);
+
+    auto declaredFunctionBlockCount = internal::SafeGetSwdPropertyFromDeviceInformation<uint8_t>(
+        STRING_PKEY_MIDI_FunctionBlockDeclaredCount, deviceInfo, 0);
+
+    RETURN_HR_IF_EXPECTED(E_NOTFOUND, declaredFunctionBlockCount > 0);
+
+    auto groupTerminalBlockProperty = internal::SafeGetSwdBinaryPropertyFromDeviceInformation(
+        STRING_PKEY_MIDI_GroupTerminalBlocks, deviceInfo);
+
+    RETURN_HR_IF_EXPECTED(E_NOTFOUND, groupTerminalBlockProperty == nullptr);
+
+    auto groupTerminalBlockData = groupTerminalBlockProperty.Value();
+
+    auto blocks = internal::ReadGroupTerminalBlocksFromPropertyData(
+        groupTerminalBlockData.data(), static_cast<uint32_t>(groupTerminalBlockData.size()));
+
+    RETURN_HR_IF_EXPECTED(E_NOTFOUND, blocks.empty());
+
+    bool changed{ false };
+
+    for (auto& block : blocks)
+    {
+        // a block output is a MIDI source, a block input is a MIDI destination
+        auto const flow = block.Direction == MIDI_GROUP_TERMINAL_BLOCK_INPUT ? MidiFlowOut : MidiFlowIn;
+
+        auto port = portInfo[flow].find(block.FirstGroupIndex);
+        if (port == portInfo[flow].end() || !port->second.InUse) continue;
+
+        auto publishedName = internal::TrimmedWStringCopy(port->second.Name);
+
+        if (publishedName.empty() || publishedName == block.Name) continue;
+
+        block.Name = publishedName;
+        changed = true;
+    }
+
+    if (!changed) return S_OK;
+
+    std::vector<std::byte> updatedPropertyData{ };
+    RETURN_HR_IF(E_FAIL, !internal::WriteGroupTerminalBlocksToPropertyDataPointer(blocks, updatedPropertyData));
+
+    TraceLoggingWrite(
+        MidiSrvTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Group terminal block names brought in line with the MIDI 1.0 port names", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(umpDeviceInterfaceId, MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+    );
+
+    DEVPROPERTY props[] =
+    {
+        { { PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_BINARY, (ULONG)updatedPropertyData.size(), (PVOID)updatedPropertyData.data() },
+    };
+
+    RETURN_IF_FAILED(SwDeviceInterfacePropertySet(
+        umpMidiPort->SwDevice.get(),
+        umpMidiPort->DeviceInterfaceId.get(),
+        ARRAYSIZE(props),
+        (const DEVPROPERTY*)props
+    ));
 
     return S_OK;
 }
@@ -3254,11 +3529,49 @@ CMidiDeviceManager::GetMidi1PortNames(
         deviceInfo,
         WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault));
 
-    // this handles garbage data values
-    if (namingSelection != WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseLegacyWinMM &&
-        namingSelection != WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseNewStyleName)
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
     {
-        namingSelection = defaultNamingSelection;
+        // this handles garbage data values
+        if (namingSelection != WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseLegacyWinMM &&
+            namingSelection != WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseNewStyleName &&
+            namingSelection != WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseAutomatic)
+        {
+            namingSelection = defaultNamingSelection;
+        }
+
+        if (namingSelection == WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseAutomatic)
+        {
+            // A transport that does not set this has ports that already existed under WinMM names.
+            auto hasLegacyEquivalent = internal::SafeGetSwdPropertyFromDeviceInformation<bool>(
+                STRING_PKEY_MIDI_Midi1PortNamesHaveLegacyEquivalent, deviceInfo, true);
+
+            auto nameSourceFlags = internal::SafeGetSwdPropertyFromDeviceInformation<uint32_t>(
+                STRING_PKEY_MIDI_Midi1PortNameSourceFlags, deviceInfo, (uint32_t)MIDI_MIDI1_PORT_NAME_SOURCE_NONE);
+
+            namingSelection = WindowsMidiServicesNamingLib::ResolveAutomaticPortNameSelection(hasLegacyEquivalent, nameSourceFlags);
+
+            TraceLoggingWrite(
+                MidiSrvTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Resolved automatic port naming", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(deviceInfo.Name().c_str(), "parent device"),
+                TraceLoggingBool(hasLegacyEquivalent, "has legacy equivalent"),
+                TraceLoggingUInt32(nameSourceFlags, "name source flags"),
+                TraceLoggingUInt32(static_cast<uint32_t>(namingSelection), "resolved selection")
+            );
+        }
+    }
+    else
+    {
+        // this handles garbage data values
+        if (namingSelection != WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseLegacyWinMM &&
+            namingSelection != WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseNewStyleName)
+        {
+            namingSelection = defaultNamingSelection;
+        }
     }
 
     TraceLoggingWrite(
@@ -3461,6 +3774,16 @@ CMidiDeviceManager::SyncMidi1Ports(
     
     additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNamingSelection);
     additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNameTable);
+
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        // A property which is not asked for here reads back as absent, so the automatic style would
+        // see every device as having said nothing and keep the legacy names.
+        additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNamesHaveLegacyEquivalent);
+        additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNameSourceFlags);
+
+        additionalProperties.Append(STRING_PKEY_MIDI_EndpointProvidedName);
+    }
     
     additionalProperties.Append(STRING_DEVPKEY_KsAggMidiGroupPinMap);       // need this pin map to find filter id
     additionalProperties.Append(STRING_PKEY_MIDI_DriverDeviceInterface);    // when no pin map is used, this has the filter id
@@ -3504,6 +3827,15 @@ CMidiDeviceManager::SyncMidi1Ports(
             hrTemp = UseFallbackMidi1PortDefinition(thisUmpMidiPortDeviceInterfaceId.c_str(), deviceInfo, portInfo);
             RETURN_IF_FAILED(hrTemp);
         }
+        else
+        {
+            if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+            {
+                // no function blocks, so the group terminal blocks are what the names derive from
+                hrTemp = RebuildAndUpdateNameTableForMidi2EndpointWithGroupTerminalBlocks(thisUmpMidiPortDeviceInterfaceId.c_str(), deviceInfo, umpMidiPort);
+                RETURN_HR_IF(hrTemp, FAILED(hrTemp) && E_NOTFOUND != hrTemp);
+            }
+        }
     }
     else
     {
@@ -3535,6 +3867,12 @@ CMidiDeviceManager::SyncMidi1Ports(
 
     // we know which groups are active, so now we get the names for these groups
     LOG_IF_FAILED(GetMidi1PortNames(deviceInfo, portInfo));
+
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        hrTemp = SyncGroupTerminalBlockNamesToMidi1PortNames(thisUmpMidiPortDeviceInterfaceId.c_str(), deviceInfo, umpMidiPort, portInfo);
+        LOG_HR_IF(hrTemp, FAILED(hrTemp) && E_NOTFOUND != hrTemp);
+    }
 
     // First walk the midi ports list, identifying ports that have already been
     // created, updating the assigned custom number, deactivating any
