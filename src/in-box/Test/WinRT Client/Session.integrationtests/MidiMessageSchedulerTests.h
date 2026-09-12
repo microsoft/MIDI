@@ -28,8 +28,20 @@ public:
     TEST_METHOD(TestScheduledMessagesOrder);
     TEST_METHOD(TestScheduledMessagesTimingSmall);
     TEST_METHOD(TestScheduledMessagesTimingLarge);
+    TEST_METHOD(TestScheduledMessagesTimingShortLead);
 
-    void TestScheduledMessagesTiming(_In_ uint16_t const messageCount);
+    // Reports which input group each output group comes back on, for a multi-port device wired
+    // OUT to IN where the sockets are unlabelled. Same endpoint variable as the measurement below,
+    // optionally bounded by MIDI_RTT_TEST_MAX_GROUP.
+    TEST_METHOD(DiscoverLoopbackGroupMapping);
+
+    // Measures the real round trip to a device wired OUT to IN. Only runs when
+    // MIDI_RTT_TEST_ENDPOINT_ID names an endpoint, so it is inert in a normal test pass.
+    TEST_METHOD(MeasureDeviceRoundTripLatency);
+
+    void TestScheduledMessagesTiming(
+        _In_ uint16_t const messageCount,
+        _In_ uint32_t const scheduledTimeStampOffsetMS);
 
 private:
 

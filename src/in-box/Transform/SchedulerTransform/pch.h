@@ -57,6 +57,10 @@
 #include <thread>
 #include <chrono>
 #include <utility>
+#include <vector>
+#include <mutex>
+#include <atomic>
+#include <algorithm>
 
 using namespace std::literals;
 
@@ -66,11 +70,16 @@ using namespace std::literals;
 namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiDefs.h"
+#include "Feature_Servicing_MIDI2SchedulerV2.h"
+#include "winrt_enumeration_prop_util.h"
 #include "plugin_defs.h"
 #include "ScheduledUmpMessage.h"
 
 #include "WindowsMidiServices.h"
 #include "WindowsMidiServices_i.c"
+
+// After WindowsMidiServices.h, which is where MessageOptionFlags comes from.
+#include "ScheduledUmpMessage2.h"
 
 #include "Midi2SchedulerTransform_i.c"
 #include "Midi2SchedulerTransform.h"
@@ -79,4 +88,5 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 #include "Midi2.SchedulerTransform.h"
 #include "Midi2.SchedulerMidiTransform.h"
+#include "Midi2.SchedulerMidiTransform2.h"
 

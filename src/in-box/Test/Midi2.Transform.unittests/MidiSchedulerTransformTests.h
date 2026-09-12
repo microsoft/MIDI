@@ -35,6 +35,26 @@ public:
     //TEST_METHOD_SETUP(TestSetup);
     //TEST_METHOD_CLEANUP(TestCleanup);
 
+    // Baseline measurements of the shipping scheduler. These report numbers rather than
+    // asserting thresholds, so they do not fail when the machine is busy.
+    TEST_METHOD(BaselineTimingByLeadTime);
+    TEST_METHOD(BaselineTimingByQueueDepth);
+    TEST_METHOD(BaselineIdenticalTimestampBurst);
+    TEST_METHOD(BaselineShuffledEnqueueOrder);
+
+    // Measures how late each wait primitive actually wakes, which is what sizes any residual spin.
+    TEST_METHOD(ProbeWakeupAccuracy);
+
+    // The regression guard for the whole scheduler effort. KIR gated, because the original
+    // scheduler legitimately fails it.
+    TEST_METHOD(SchedulerDoesNotBusyWait);
+
+    void RunBaselineScenario(
+        _In_z_ wchar_t const* label,
+        _In_ uint32_t messageCount,
+        _In_ uint32_t leadMilliseconds,
+        _In_ uint32_t spacingMicroseconds,
+        _In_ bool shuffleEnqueueOrder);
 
     STDMETHOD(Callback)(_In_ MessageOptionFlags, _In_ PVOID Data, _In_ UINT Size, _In_ LONGLONG Position, LONGLONG Context)
     {
@@ -51,7 +71,8 @@ public:
     STDMETHODIMP_(ULONG) Release() { return 1; }
 
 private:
-
+    // Set by RunBaselineScenario so a test can assert on the last run.
+    double m_lastWorkerCpuPercent{ 0.0 };
     std::function<void(PVOID, UINT32, LONGLONG, LONGLONG)> m_MidiInCallback;
 };
 

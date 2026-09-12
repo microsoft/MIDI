@@ -30,7 +30,16 @@ CMidi2SchedulerTransform::Activate(
             );
 
         wil::com_ptr_nothrow<IMidiDataTransform> midiTransform;
-        RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2SchedulerMidiTransform>(&midiTransform));
+
+        if (Feature_Servicing_MIDI2SchedulerV2::IsEnabled())
+        {
+            RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2SchedulerMidiTransform2>(&midiTransform));
+        }
+        else
+        {
+            RETURN_IF_FAILED(Microsoft::WRL::MakeAndInitialize<CMidi2SchedulerMidiTransform>(&midiTransform));
+        }
+
         *activatedInterface = midiTransform.detach();
     }
 
