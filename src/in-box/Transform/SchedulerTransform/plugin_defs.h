@@ -25,3 +25,29 @@
 #define MIDI_OUTBOUND_EMPTY_QUEUE_SLEEP_DURATION_MS 60000
 
 
+// ---------------------------------------------------------------------------------------------
+// Scheduler V2 only. Values in microseconds; converted to clock ticks at run time because
+// QueryPerformanceFrequency is not guaranteed to be any particular value.
+
+// Largest busy wait we will ever do, immediately before a message is due. Chosen from measured
+// high-resolution timer behavior: it wakes a consistent ~500us late, so a 1ms budget leaves a
+// spin of roughly half a millisecond.
+#define MIDI_SCHEDULER_V2_MAX_SPIN_MICROSECONDS                 1000
+
+// The spin is also capped at this fraction of the gap between consecutive due messages, so a
+// dense stream cannot turn the guard band into a continuous spin.
+#define MIDI_SCHEDULER_V2_SPIN_GAP_DIVISOR                      8
+
+// Measured overshoot of CREATE_WAITABLE_TIMER_HIGH_RESOLUTION on current hardware. Only used to
+// aim the timer; the loop re-checks the clock afterwards, so an inaccurate value here costs at
+// most one extra short wait and never correctness.
+#define MIDI_SCHEDULER_V2_TIMER_OVERSHOOT_MICROSECONDS          500
+
+// Below this, arming a timer is not worth the round trip, so the remaining time is spun instead.
+#define MIDI_SCHEDULER_V2_MINIMUM_TIMER_WAIT_MICROSECONDS       250
+
+// Ceiling on the per-device compensation read from the endpoint properties. A value beyond this is
+// not a plausible device latency and would start eating into the forward scheduling window.
+#define MIDI_SCHEDULER_V2_MAX_DEVICE_LATENCY_MICROSECONDS       1000000
+
+

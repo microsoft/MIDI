@@ -18,7 +18,7 @@
 #include "endpoint_picker.h"
 #include "endpoint_utility.h"
 #include "midi_formatting.h"
-#include "clock_generator.h"
+#include "BeatClockGenerator.h"
 #include "pickers.h"
 #include "return_codes.h"
 #include "strings.h"
@@ -69,6 +69,12 @@ namespace midi2console
             if (EqualsIgnoreCase(text, "new") || EqualsIgnoreCase(text, "new-style"))
             {
                 approach = midi2enum::Midi1PortNamingApproach::UseNewStyle;
+                return true;
+            }
+
+            if (EqualsIgnoreCase(text, "auto") || EqualsIgnoreCase(text, "automatic"))
+            {
+                approach = midi2enum::Midi1PortNamingApproach::UseAutomatic;
                 return true;
             }
 
@@ -559,7 +565,7 @@ namespace midi2console
 
         // ---- name table
 
-        auto const nameTable = device.GetNameTable();
+        auto const nameTable = options.IncludeNameTable ? device.GetNameTable() : nullptr;
 
         if (nameTable != nullptr && nameTable.Size() > 0)
         {
@@ -1285,10 +1291,30 @@ namespace midi2console
                 static_cast<uint16_t>(options.ControlChangeIntervalMilliseconds));
         }
 
-        auto const response = midi2config::MidiServiceTransportPluginConfigManager::SendUpdate(config);
+        auto const updateSucceeded = [](_In_ midi2config::MidiServiceConfigResponse const& value)
+            {
+                return value != nullptr &&
+                    value.Status() == midi2config::MidiServiceConfigResponseStatus::Success;
+            };
 
-        if (response == nullptr ||
-            response.Status() != midi2config::MidiServiceConfigResponseStatus::Success)
+        auto response = midi2config::MidiServiceTransportPluginConfigManager::SendUpdate(config);
+
+        // A behavior-only change sends no display properties, and the config object leaves a blank
+        // name out of the JSON. Some transports refuse an update with no name even then, so resend
+        // once with the name already in effect rather than making --name mandatory everywhere.
+        // Transports that do not need it never see a name, so this cannot pin one that was unset.
+        if (!updateSucceeded(response) && config.Name().empty())
+        {
+            auto const userSuppliedInfo = device.GetUserSuppliedInfo();
+
+            config.Name(userSuppliedInfo != nullptr && !userSuppliedInfo.Name().empty()
+                ? userSuppliedInfo.Name()
+                : transportInfo.Name());
+
+            response = midi2config::MidiServiceTransportPluginConfigManager::SendUpdate(config);
+        }
+
+        if (!updateSucceeded(response))
         {
             std::string message;
 
@@ -1395,7 +1421,7 @@ namespace midi2console
             return AsExitCode(ReturnCode::ErrorGeneralFailure);
         }
 
-        ClockGeneratorOptions generatorOptions{};
+        midiapp::BeatClockGeneratorOptions generatorOptions{};
 
         for (auto const groupNumber : options.GroupNumbers)
         {
@@ -1420,7 +1446,7 @@ namespace midi2console
             return session.FailureCode;
         }
 
-        ClockGenerator generator{ session.Connection, generatorOptions };
+        midiapp::BeatClockGenerator generator{ session.Connection, generatorOptions };
 
         WriteField(ResourceString(IDS_CLOCK_LABEL_TEMPO),
             fmt::format("{:.2f} BPM", options.Tempo), numberTextStyle);

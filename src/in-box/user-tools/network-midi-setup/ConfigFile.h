@@ -43,19 +43,19 @@ namespace midinetworksetup
         // ConfigJson, which is already wrapped from the root of the file
         bool MergeSection(_In_ winrt::Windows::Data::Json::JsonObject const& wrappedSection) noexcept;
 
-        bool RemoveHost(_In_ winrt::hstring const& hostIdKey) noexcept;
+        bool RemoveHost(_In_ winrt::guid const& hostId) noexcept;
         bool RemoveClient(_In_ winrt::hstring const& clientIdKey) noexcept;
 
         // Moves the client between the host's allowedClients and deniedClients arrays. The
         // two lists are mutually exclusive, so the opposite list is always cleaned up.
         bool SetRemoteClientDecision(
-            _In_ winrt::hstring const& hostIdKey,
+            _In_ winrt::guid const& hostId,
             _In_ winrt::hstring const& umpEndpointName,
             _In_ winrt::hstring const& productInstanceId,
             _In_ bool const allowed) noexcept;
 
         bool ForgetRemoteClient(
-            _In_ winrt::hstring const& hostIdKey,
+            _In_ winrt::guid const& hostId,
             _In_ winrt::hstring const& umpEndpointName,
             _In_ winrt::hstring const& productInstanceId) noexcept;
 
@@ -107,6 +107,16 @@ namespace midinetworksetup
         // Hands one transport section to the SDK, which re-reads, merges and writes the file
         // under its own lock. This tool no longer writes the file itself.
         bool SaveSection(_In_ winrt::Windows::Data::Json::JsonObject const& transportSection) noexcept;
+
+        // Preferred over SaveSection: the config object builds its own json, so the shape of a
+        // section is defined once in the SDK rather than again here.
+        bool SaveConfig(
+            _In_ winrt::Windows::Devices::Midi2::ServiceConfig::IMidiServiceTransportPluginConfig const& config) noexcept;
+
+        // Shared by SaveSection and SaveConfig, so a failure is reported the same way whichever
+        // of them was used.
+        bool ApplySaveResponse(
+            _In_ winrt::Windows::Devices::Midi2::ServiceConfig::MidiServiceConfigSaveResponse const& response) noexcept;
 
         bool RemoveEntry(
             _In_ std::wstring_view const entriesKey,

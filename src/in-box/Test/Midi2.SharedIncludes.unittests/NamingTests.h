@@ -50,6 +50,21 @@ public:
 
     TEST_METHOD(TestStringEndsWithSpecifiedNumber);
 
+    // New-style naming. TestDeviceFixtures walks a table of real devices; add a row from a
+    // midiksinfo dump rather than acquiring the hardware.
+    TEST_METHOD(TestDeviceFixtures);
+    TEST_METHOD(TestDeviceFixturesProduceUsableNames);
+    TEST_METHOD(TestPlaceholderPortNameDetection);
+    TEST_METHOD(TestPortNameCarriesDeviceName);
+    TEST_METHOD(TestShortenDeviceNameToFit);
+    TEST_METHOD(TestResolveDeviceSuppliedPortNamePrecedence);
+    TEST_METHOD(TestPortNameSourceFlags);
+        TEST_METHOD(TestResolveAutomaticPortNameSelection);
+        TEST_METHOD(TestNameTableRebuild);
+        TEST_METHOD(TestSecondDeviceOfSameModel);
+        TEST_METHOD(TestFunctionBlockSpanningSeveralGroups);
+        TEST_METHOD(TestModelNameRecovery);
+        TEST_METHOD(TestRederiveAgainstInProtocolEndpointName);
     TEST_METHOD(TestPopulateEntryForNativeUmpDevice);
     TEST_METHOD(TestPopulateEntryForMidi1DeviceUsingUmpDriver);
     TEST_METHOD(TestPopulateEntryForMidi1DeviceUsingMidi1Driver);

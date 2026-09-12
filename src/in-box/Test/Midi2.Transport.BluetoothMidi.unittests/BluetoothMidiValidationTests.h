@@ -81,4 +81,17 @@ public:
 
     // the whole point of giving the transport its own codes
     TEST_METHOD(TestEveryTransportErrorCodeIsDistinct);
+
+    // telling a device which refuses an unpaired connection apart from one which is merely flaky.
+    // Getting this wrong tells the customer to pair something that did not need it, and stops the
+    // retries which would have worked.
+    TEST_METHOD(TestPairedDeviceNeverInfersPairing);
+    TEST_METHOD(TestLongLivedLinkNeverInfersPairing);
+    TEST_METHOD(TestLinkWhichDeliveredMessagesNeverInfersPairing);
+    TEST_METHOD(TestEarlyDropsAccumulateUntilTheThreshold);
+    TEST_METHOD(TestCountResetsWhenADropIsNotEarly);
+    TEST_METHOD(TestZeroThresholdNeverInfersPairing);
+
+    // tuning knobs may move, but not past each other
+    TEST_METHOD(TestTimeoutBudgetsKeepTheirOrdering);
 };

@@ -346,6 +346,41 @@ namespace WindowsMidiServicesInternal
     }
 
 
+    _Use_decl_annotations_
+    bool GetHardwareParentDeviceName(
+        std::wstring const& startingInstanceId,
+        std::wstring& parentDeviceName,
+        std::wstring& parentDeviceInstanceId) noexcept
+    {
+        try
+        {
+            std::wstring actualParent{ };
+            std::wstring mediaDriverParent{ };
+
+            if (!FindActualParentDeviceInstanceId(startingInstanceId, actualParent, mediaDriverParent)) return false;
+            if (actualParent.empty()) return false;
+
+            auto pnpInfo = internal::MidiPnpDeviceInfo::CreateFromInstanceId(actualParent);
+            if (!pnpInfo) return false;
+
+            // On PCI the bus-reported string is a class description, not the product name.
+            auto name = internal::ParseBusEnumeratorFromInstanceId(actualParent) == BUS_ENUMERATOR_PCI ?
+                pnpInfo->Name() :
+                pnpInfo->NamePreferringBusDescription();
+
+            auto trimmedName = internal::TrimmedWStringCopy(std::wstring{ name.c_str() });
+
+            if (trimmedName.empty()) return false;
+
+            parentDeviceName = trimmedName;
+            parentDeviceInstanceId = actualParent;
+
+            return true;
+        }
+        CATCH_LOG();
+
+        return false;
+    }
 
 
 }

@@ -395,6 +395,7 @@
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Midi2.SchedulerTransform.cpp" />
     <ClCompile Include="Midi2.SchedulerMidiTransform.cpp" />
+    <ClCompile Include="Midi2.SchedulerMidiTransform2.cpp" />
     <ClCompile Include="pch.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -409,9 +410,11 @@
     <ClInclude Include="dllmain.h" />
     <ClInclude Include="Midi2.SchedulerTransform.h" />
     <ClInclude Include="Midi2.SchedulerMidiTransform.h" />
+    <ClInclude Include="Midi2.SchedulerMidiTransform2.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="ScheduledUmpMessage.h" />
+    <ClInclude Include="ScheduledUmpMessage2.h" />
     <ClInclude Include="plugin_defs.h" />
   </ItemGroup>
   <ItemGroup>

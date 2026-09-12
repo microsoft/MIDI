@@ -13,10 +13,14 @@
 #include <sstream>      // for the string stream in parsing of VID/PID/Serial from parent id
 #include <iostream>     // for getline for string parsing of VID/PID/Serial from parent id
 
+#include "MidiPnpUtilities.h"
+#include "midi_ksa_usb_strings.h"
+
 #include "Feature_Servicing_MIDI2KSATVSFix.h"
 #include "Feature_Servicing_MIDI2DevCaps2.h"
 #include "Feature_Servicing_MIDI2FailFast.h"
 #include "Feature_Servicing_MIDI2CustomOutgoingLatency.h"
+#include "Feature_Servicing_MIDI2PortNamingRework.h"
 
 using namespace wil;
 using namespace winrt::Windows::Devices::Enumeration;
@@ -24,6 +28,33 @@ using namespace winrt::Windows::Foundation;
 using namespace winrt::Windows::Foundation::Collections;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
+
+namespace
+{
+    // Read from the device before the parent definition lock is taken, because this touches the USB
+    // hub and that must never happen with the map held.
+    KsaUsbStrings::UsbDeviceStrings ResolveUsbDeviceStrings(_In_ DeviceInformation const& parentDevice) noexcept
+    {
+        try
+        {
+            if (parentDevice == nullptr) { return { }; }
+
+            std::wstring hardwareParentName{ };
+            std::wstring hardwareParentInstanceId{ };
+
+            if (!internal::GetHardwareParentDeviceName(
+                std::wstring{ parentDevice.Id().c_str() }, hardwareParentName, hardwareParentInstanceId))
+            {
+                return { };
+            }
+
+            return KsaUsbStrings::GetUsbDeviceStrings(hardwareParentInstanceId);
+        }
+        CATCH_LOG();
+
+        return { };
+    }
+}
 
 namespace
 {
@@ -1439,6 +1470,15 @@ CMidi2KSAggregateMidiEndpointManager3::FindOrCreateParentDeviceDefinitionForFilt
         additionalProperties, 
         winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device).get();
 
+    // Resolved before the lock below, because it can touch the USB hub and that must never happen
+    // with the parent definition map held.
+    KsaUsbStrings::UsbDeviceStrings usbStrings{ };
+
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        usbStrings = ResolveUsbDeviceStrings(parentDevice);
+    }
+
    
     auto lock = m_allParentDeviceDefinitionsLock.lock();    // we lock to avoid having one inserted while we're processing
 
@@ -1481,6 +1521,22 @@ CMidi2KSAggregateMidiEndpointManager3::FindOrCreateParentDeviceDefinitionForFilt
     newParentDeviceDefinition->DeviceName = parentDevice.Name();
     newParentDeviceDefinition->DeviceInstanceId = cleanParentDeviceInstanceId;
 
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        // The node above is the driver's, so it is named for the driver. Walk up to the physical
+        // device, where the USB iProduct string lands, and use the name the customer sees.
+        std::wstring hardwareParentName{ };
+        std::wstring hardwareParentInstanceId{ };
+
+        if (internal::GetHardwareParentDeviceName(cleanParentDeviceInstanceId, hardwareParentName, hardwareParentInstanceId))
+        {
+            newParentDeviceDefinition->DeviceName = hardwareParentName;
+            newParentDeviceDefinition->HardwareParentInstanceId = internal::NormalizeDeviceInstanceIdWStringCopy(hardwareParentInstanceId);
+        }
+
+        newParentDeviceDefinition->BaseDeviceName = newParentDeviceDefinition->DeviceName;
+    }
+
     LOG_IF_FAILED(ParseParentIdIntoVidPidSerial(newParentDeviceDefinition->DeviceInstanceId, newParentDeviceDefinition));
 
     // only some vendor drivers provide an actual manufacturer
@@ -1495,6 +1551,37 @@ CMidi2KSAggregateMidiEndpointManager3::FindOrCreateParentDeviceDefinitionForFilt
     else if (!manufacturer2.empty() && manufacturer2 != L"(Generic USB Audio)" && manufacturer2 != L"Microsoft")
     {
         newParentDeviceDefinition->ManufacturerName = manufacturer2;
+    }
+
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        // Only when the driver gave us nothing usable. The device's own iManufacturer is the
+        // last resort, and an empty result here just leaves things as they were.
+        if (newParentDeviceDefinition->ManufacturerName.empty() && !usbStrings.Manufacturer.empty())
+        {
+            newParentDeviceDefinition->ManufacturerName = usbStrings.Manufacturer;
+        }
+
+        // The parsed value is a guess: Windows synthesizes an id for a device which supplies no
+        // serial, uppercases the real ones, and turns spaces into underscores. The device's own
+        // string has none of those problems, so it wins whenever we managed to read one.
+        if (!usbStrings.SerialNumber.empty())
+        {
+            newParentDeviceDefinition->SerialNumber = usbStrings.SerialNumber;
+        }
+
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"USB device strings resolved", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(newParentDeviceDefinition->ManufacturerName.c_str(), "manufacturer"),
+            TraceLoggingWideString(newParentDeviceDefinition->SerialNumber.c_str(), "serial number"),
+            TraceLoggingBool(!usbStrings.Manufacturer.empty(), "manufacturer came from the device"),
+            TraceLoggingBool(!usbStrings.SerialNumber.empty(), "serial number came from the device")
+        );
     }
 
     // Do we need to disambiguate this parent because another of the same device already exists?
@@ -1514,8 +1601,32 @@ CMidi2KSAggregateMidiEndpointManager3::FindOrCreateParentDeviceDefinitionForFilt
 
     for (auto const& existingParent : m_allParentDeviceDefinitions)
     {
-        if (existingParent.second->DeviceName == newParentDeviceDefinition->DeviceName)
+        bool sameName{ false };
+
+        if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
         {
+            // Compare the undisambiguated names. Comparing the published ones would let a third
+            // device miss the second and be numbered "(2)" as well.
+            sameName = existingParent.second->BaseDeviceName == newParentDeviceDefinition->BaseDeviceName;
+        }
+        else
+        {
+            sameName = existingParent.second->DeviceName == newParentDeviceDefinition->DeviceName;
+        }
+
+        if (sameName)
+        {
+            // Now that the name comes from the physical device, every filter on a multi-interface
+            // device matches by name. Those are one device, so numbering them apart would be wrong.
+            if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+            {
+                if (!newParentDeviceDefinition->HardwareParentInstanceId.empty() &&
+                    existingParent.second->HardwareParentInstanceId == newParentDeviceDefinition->HardwareParentInstanceId)
+                {
+                    continue;
+                }
+            }
+
             currentMaxIndex = max(currentMaxIndex, existingParent.second->IndexOfDevicesWithThisSameName);
             otherParentsWithSameNameExist = true;
         }
@@ -1534,6 +1645,15 @@ CMidi2KSAggregateMidiEndpointManager3::FindOrCreateParentDeviceDefinitionForFilt
         );
 
         newParentDeviceDefinition->IndexOfDevicesWithThisSameName = currentMaxIndex + 1;
+
+        if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+        {
+            // Mark the endpoint name rather than the individual ports, so a port reads as belonging
+            // to the second device instead of carrying an unexplained suffix.
+            newParentDeviceDefinition->DeviceName = std::format(L"{0} ({1})",
+                newParentDeviceDefinition->BaseDeviceName,
+                newParentDeviceDefinition->IndexOfDevicesWithThisSameName + 1);
+        }
     }
 
     TraceLoggingWrite(
@@ -2167,6 +2287,11 @@ CMidi2KSAggregateMidiEndpointManager3::UpdateNewPinDefinitions(
     }
 
     // At this point, we need to have *all* the pins for the endpoint, not just this filter
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        endpointDefinition->EndpointNameTable.ResetPortInputs();
+    }
+
     for (auto& pinDefinition : endpointDefinition->GetAllPins())
     {
         if (pinDefinition->NeedsGroupIndexAssigned)
@@ -2283,6 +2408,18 @@ CMidi2KSAggregateMidiEndpointManager3::UpdateNewPinDefinitions(
             pinDefinition->PortIndexWithinThisFilterAndDirection
         );
 
+        if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+        {
+            // The names above may carry the legacy "2 - " duplicate marker, which the new style
+            // puts on the endpoint name instead, so record what the device actually reported.
+            endpointDefinition->EndpointNameTable.RecordPortInput(
+                pinDefinition->GroupIndex,
+                pinDefinition->DataFlowFromUserPerspective,
+                pinDefinition->PinName,
+                pinDefinition->DriverSuppliedName,
+                pinDefinition->FilterName);
+        }
+
         TraceLoggingWrite(
             MidiKSAggregateTransportTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_VERBOSE,
@@ -2290,6 +2427,90 @@ CMidi2KSAggregateMidiEndpointManager3::UpdateNewPinDefinitions(
             TraceLoggingLevel(WINEVENT_LEVEL_INFO),
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Name table updated", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+    }
+
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        // MediaCategories is a per-model registry location, so its value only identifies a port
+        // when the device gave its filters separate entries.
+        std::vector<std::wstring> seenFilterIds{ };
+        std::vector<std::wstring> registryNamesPerFilter{ };
+
+        for (auto const& pinDefinition : endpointDefinition->GetAllPins())
+        {
+            if (pinDefinition == nullptr) continue;
+
+            if (std::find(seenFilterIds.begin(), seenFilterIds.end(), pinDefinition->FilterDeviceId) == seenFilterIds.end())
+            {
+                seenFilterIds.push_back(pinDefinition->FilterDeviceId);
+                registryNamesPerFilter.push_back(pinDefinition->DriverSuppliedName);
+            }
+        }
+
+        bool const registryNamesVaryByFilter =
+            !registryNamesPerFilter.empty() &&
+            std::any_of(
+                registryNamesPerFilter.begin(),
+                registryNamesPerFilter.end(),
+                [&registryNamesPerFilter](std::wstring const& name) { return name != registryNamesPerFilter.front(); });
+
+        bool const driverRegistryNamesArePerFilter = seenFilterIds.size() > 1 && registryNamesVaryByFilter;
+
+        // A driver which describes every one of its devices identically leaves the model name only
+        // in the port names. Done before the rebuild, because the ports compose from this name.
+        std::vector<WindowsMidiServicesNamingLib::Midi1PortNameInput> portInputs{ };
+
+        for (auto const& pinDefinition : endpointDefinition->GetAllPins())
+        {
+            if (pinDefinition == nullptr) continue;
+
+            WindowsMidiServicesNamingLib::Midi1PortNameInput input{ };
+            input.GroupIndex = pinDefinition->GroupIndex;
+            input.DataFlowFromUserPerspective = pinDefinition->DataFlowFromUserPerspective;
+            input.PinName = pinDefinition->PinName;
+            input.DriverRegistryName = pinDefinition->DriverSuppliedName;
+            input.FilterName = pinDefinition->FilterName;
+
+            portInputs.push_back(input);
+        }
+
+        auto const recoveredName = WindowsMidiServicesNamingLib::RecoverModelNameFromPortNames(
+            endpointDefinition->EndpointName,
+            driverRegistryNamesArePerFilter,
+            portInputs);
+
+        if (recoveredName != endpointDefinition->EndpointName)
+        {
+            TraceLoggingWrite(
+                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Recovered a model name from the port names", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(endpointDefinition->EndpointName.c_str(), "previous endpoint name"),
+                TraceLoggingWideString(recoveredName.c_str(), "recovered endpoint name")
+            );
+
+            endpointDefinition->EndpointName = recoveredName;
+        }
+
+        LOG_IF_FAILED(endpointDefinition->EndpointNameTable.RebuildNewStyleNames(
+            endpointDefinition->EndpointName,
+            driverRegistryNamesArePerFilter));
+
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Rebuilt new style port names", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(endpointDefinition->EndpointName.c_str(), "endpoint name"),
+            TraceLoggingUInt32(static_cast<uint32_t>(seenFilterIds.size()), "filter count"),
+            TraceLoggingBool(driverRegistryNamesArePerFilter, "registry names are per filter"),
+            TraceLoggingUInt32(endpointDefinition->EndpointNameTable.NameSourceFlags(), "name source flags")
         );
     }
 

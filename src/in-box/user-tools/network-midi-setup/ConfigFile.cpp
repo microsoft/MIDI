@@ -263,114 +263,18 @@ namespace midinetworksetup
             return bytesWritten == contents.size();
         }
 
-        bool IdentityMatches(
-            _In_ json::JsonObject const& entry,
+        // The service keys a remote client on the name and product instance id pair, compared
+        // without case, so the file has to agree with it.
+        bool IsSameIdentity(
+            _In_ KnownClientEntry const& entry,
             _In_ winrt::hstring const& umpEndpointName,
             _In_ winrt::hstring const& productInstanceId) noexcept
         {
-            try
-            {
-                auto const entryName = entry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY, L"");
-                auto const entryProductInstanceId = entry.GetNamedString(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY, L"");
-
-                // the service keys a remote client on the name and product instance id pair,
-                // compared without case, so the file has to agree with it
-                return
-                    LoweredTrimmed(entryName) == LoweredTrimmed(umpEndpointName) &&
-                    LoweredTrimmed(entryProductInstanceId) == LoweredTrimmed(productInstanceId);
-            }
-            catch (...)
-            {
-                return false;
-            }
+            return
+                LoweredTrimmed(entry.UmpEndpointName) == LoweredTrimmed(umpEndpointName) &&
+                LoweredTrimmed(entry.ProductInstanceId) == LoweredTrimmed(productInstanceId);
         }
 
-        // Returns a new array with any entry matching the identity left out.
-        json::JsonArray WithoutIdentity(
-            _In_ json::JsonArray const& source,
-            _In_ winrt::hstring const& umpEndpointName,
-            _In_ winrt::hstring const& productInstanceId,
-            _Out_ bool& removedAny) noexcept
-        {
-            removedAny = false;
-
-            json::JsonArray result{};
-
-            try
-            {
-                if (source == nullptr)
-                {
-                    return result;
-                }
-
-                for (auto const& value : source)
-                {
-                    if (value != nullptr && value.ValueType() == json::JsonValueType::Object &&
-                        IdentityMatches(value.GetObject(), umpEndpointName, productInstanceId))
-                    {
-                        removedAny = true;
-                        continue;
-                    }
-
-                    result.Append(value);
-                }
-            }
-            catch (...)
-            {
-            }
-
-            return result;
-        }
-
-        // A change to one host is expressed as the smallest section which identifies it, so the
-        // SDK merges it into whatever the file currently holds rather than replacing the lot.
-        json::JsonObject BuildHostSection(
-            _In_ winrt::hstring const& hostKey,
-            _In_ json::JsonObject const& hostChange) noexcept
-        {
-            try
-            {
-                json::JsonObject hosts{};
-                hosts.SetNamedValue(hostKey, hostChange);
-
-                json::JsonObject createObject{};
-                createObject.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_HOSTS_KEY, hosts);
-
-                json::JsonObject section{};
-                section.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY, createObject);
-
-                return section;
-            }
-            catch (...)
-            {
-                return nullptr;
-            }
-        }
-
-        // Same shape for a client entry. The merge cannot delete a key, so a partial entry only
-        // adds or replaces what it names and the match criteria are left alone.
-        json::JsonObject BuildClientSection(
-            _In_ winrt::hstring const& clientKey,
-            _In_ json::JsonObject const& clientChange) noexcept
-        {
-            try
-            {
-                json::JsonObject clients{};
-                clients.SetNamedValue(clientKey, clientChange);
-
-                json::JsonObject createObject{};
-                createObject.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY, clients);
-
-                json::JsonObject section{};
-                section.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY, createObject);
-
-                return section;
-            }
-            catch (...)
-            {
-                return nullptr;
-            }
-        }
     }
 
 
@@ -629,10 +533,27 @@ namespace midinetworksetup
 
         // The SDK re-reads and merges under its own write lock, so nothing this tool read
         // earlier can be written back over a change another program made in the meantime.
-        auto const response = midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(
-            midi2net::MidiNetworkTransportManager::TransportId(),
-            transportSection);
+        return ApplySaveResponse(
+            midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(
+                midi2net::MidiNetworkTransportManager::TransportId(),
+                transportSection));
+    }
 
+    _Use_decl_annotations_
+    bool NetworkConfigFile::SaveConfig(midi2svc::IMidiServiceTransportPluginConfig const& config) noexcept
+    {
+        if (config == nullptr)
+        {
+            return false;
+        }
+
+        return ApplySaveResponse(
+            midi2svc::MidiServiceTransportPluginConfigManager::SaveUpdate(config));
+    }
+
+    _Use_decl_annotations_
+    bool NetworkConfigFile::ApplySaveResponse(midi2svc::MidiServiceConfigSaveResponse const& response) noexcept
+    {
         if (response == nullptr || !response.Success())
         {
             m_lastError = response == nullptr ? resources::GetString(L"ConfigFileNoPathError") : response.ErrorMessage();
@@ -655,14 +576,23 @@ namespace midinetworksetup
     }
 
     _Use_decl_annotations_
-    bool NetworkConfigFile::RemoveHost(winrt::hstring const& hostIdKey) noexcept
+    bool NetworkConfigFile::RemoveHost(winrt::guid const& hostId) noexcept
     {
-        return RemoveEntry(MIDI_CONFIG_JSON_NETWORK_MIDI_HOSTS_KEY, hostIdKey);
+        // The config object knows the shape of a host removal, so it is not spelled out again
+        // here. The SDK's merge matches the entry without case, and dropping a host which is
+        // already gone is not an error, so there is no need to read the file first.
+        midi2net::MidiNetworkHostRemovalConfig config{};
+        config.HostId(hostId);
+
+        return SaveConfig(config);
     }
 
     _Use_decl_annotations_
     bool NetworkConfigFile::RemoveClient(winrt::hstring const& clientIdKey) noexcept
     {
+        // Deliberately not a config object. MidiNetworkClientDisconnectConfig is a command which
+        // tears down a live session and is refused by SaveUpdate, and there is no client equivalent
+        // of MidiNetworkHostRemovalConfig, so the removal is spelled out here.
         return RemoveEntry(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENTS_KEY, clientIdKey);
     }
 
@@ -862,23 +792,14 @@ namespace midinetworksetup
 
     _Use_decl_annotations_
     bool NetworkConfigFile::SetRemoteClientDecision(
-        winrt::hstring const& hostIdKey,
+        winrt::guid const& hostId,
         winrt::hstring const& umpEndpointName,
         winrt::hstring const& productInstanceId,
         bool const allowed) noexcept
     {
-        json::JsonObject config{ nullptr };
+        auto const hostIdKey = winrt::to_hstring(hostId);
 
-        if (!Load(config))
-        {
-            return false;
-        }
-
-        auto hosts = GetEntriesObject(config, MIDI_CONFIG_JSON_NETWORK_MIDI_HOSTS_KEY, false);
-
-        auto host = FindObject(hosts, ResolveKey(hosts, hostIdKey));
-
-        if (host == nullptr)
+        if (!HasHostEntry(hostIdKey))
         {
             // the decision was still applied live; there is simply no entry to persist it in
             m_lastError = resources::GetString(L"ConfigFileHostEntryMissingError");
@@ -887,44 +808,27 @@ namespace midinetworksetup
 
         try
         {
-            bool ignored{ false };
+            // The saved lists are replaced whole rather than added to, so the config carries every
+            // client the host knows about and not only the one being decided.
+            midi2net::MidiNetworkHostKnownClientsConfig config{ hostId };
 
-            auto const allowedList = host.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOWED_CLIENTS_KEY) ?
-                host.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOWED_CLIENTS_KEY, json::JsonArray{}) : json::JsonArray{};
-
-            auto const deniedList = host.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_DENIED_CLIENTS_KEY) ?
-                host.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_DENIED_CLIENTS_KEY, json::JsonArray{}) : json::JsonArray{};
-
-            // a client belongs to exactly one of the two lists, so it is removed from both and
-            // then added back to the one which now applies
-            auto newAllowed = WithoutIdentity(allowedList, umpEndpointName, productInstanceId, ignored);
-            auto newDenied = WithoutIdentity(deniedList, umpEndpointName, productInstanceId, ignored);
-
-            json::JsonObject identity{};
-            identity.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY,
-                json::JsonValue::CreateStringValue(umpEndpointName));
-            identity.SetNamedValue(
-                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY,
-                json::JsonValue::CreateStringValue(productInstanceId));
-
-            if (allowed)
+            // a client belongs to exactly one of the two lists, so the existing entry for it is
+            // dropped and replaced by one carrying the decision just made
+            for (auto const& known : GetKnownClients(hostIdKey))
             {
-                newAllowed.Append(identity);
-            }
-            else
-            {
-                newDenied.Append(identity);
+                if (IsSameIdentity(known, umpEndpointName, productInstanceId))
+                {
+                    continue;
+                }
+
+                config.KnownClients().Append(
+                    midi2net::MidiNetworkKnownRemoteClient{ known.UmpEndpointName, known.ProductInstanceId, known.Allowed });
             }
 
-            // Both lists are written whole. An empty one is written as an empty array rather
-            // than removed, because a merge cannot delete a key, and the service reads the two
-            // the same way either way.
-            json::JsonObject hostChange{};
-            hostChange.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOWED_CLIENTS_KEY, newAllowed);
-            hostChange.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_DENIED_CLIENTS_KEY, newDenied);
+            config.KnownClients().Append(
+                midi2net::MidiNetworkKnownRemoteClient{ umpEndpointName, productInstanceId, allowed });
 
-            return SaveSection(BuildHostSection(ResolveKey(hosts, hostIdKey), hostChange));
+            return SaveConfig(config);
         }
         catch (...)
         {
@@ -935,67 +839,43 @@ namespace midinetworksetup
 
     _Use_decl_annotations_
     bool NetworkConfigFile::ForgetRemoteClient(
-        winrt::hstring const& hostIdKey,
+        winrt::guid const& hostId,
         winrt::hstring const& umpEndpointName,
         winrt::hstring const& productInstanceId) noexcept
     {
-        json::JsonObject config{ nullptr };
+        auto const hostIdKey = winrt::to_hstring(hostId);
 
-        if (!Load(config))
-        {
-            return false;
-        }
-
-        auto hosts = GetEntriesObject(config, MIDI_CONFIG_JSON_NETWORK_MIDI_HOSTS_KEY, false);
-
-        auto host = FindObject(hosts, ResolveKey(hosts, hostIdKey));
-
-        if (host == nullptr)
+        if (!HasHostEntry(hostIdKey))
         {
             return true;
         }
 
         try
         {
-            bool removedFromAllowed{ false };
-            bool removedFromDenied{ false };
+            midi2net::MidiNetworkHostKnownClientsConfig config{ hostId };
 
-            json::JsonObject hostChange{};
+            bool removed{ false };
 
-            if (host.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOWED_CLIENTS_KEY))
+            // forgetting is leaving the client out of the saved set, which puts it back to being
+            // one the host has never been told about
+            for (auto const& known : GetKnownClients(hostIdKey))
             {
-                auto updated = WithoutIdentity(
-                    host.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOWED_CLIENTS_KEY, json::JsonArray{}),
-                    umpEndpointName,
-                    productInstanceId,
-                    removedFromAllowed);
-
-                if (removedFromAllowed)
+                if (IsSameIdentity(known, umpEndpointName, productInstanceId))
                 {
-                    hostChange.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_ALLOWED_CLIENTS_KEY, updated);
+                    removed = true;
+                    continue;
                 }
+
+                config.KnownClients().Append(
+                    midi2net::MidiNetworkKnownRemoteClient{ known.UmpEndpointName, known.ProductInstanceId, known.Allowed });
             }
 
-            if (host.HasKey(MIDI_CONFIG_JSON_NETWORK_MIDI_DENIED_CLIENTS_KEY))
-            {
-                auto updated = WithoutIdentity(
-                    host.GetNamedArray(MIDI_CONFIG_JSON_NETWORK_MIDI_DENIED_CLIENTS_KEY, json::JsonArray{}),
-                    umpEndpointName,
-                    productInstanceId,
-                    removedFromDenied);
-
-                if (removedFromDenied)
-                {
-                    hostChange.SetNamedValue(MIDI_CONFIG_JSON_NETWORK_MIDI_DENIED_CLIENTS_KEY, updated);
-                }
-            }
-
-            if (!removedFromAllowed && !removedFromDenied)
+            if (!removed)
             {
                 return true;
             }
 
-            return SaveSection(BuildHostSection(ResolveKey(hosts, hostIdKey), hostChange));
+            return SaveConfig(config);
         }
         catch (...)
         {

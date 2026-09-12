@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="midiclock.exe.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="AppSettings.cpp" />
+    <ClCompile Include="BackgroundWork.cpp" />
+    <ClCompile Include="ClockEngine.cpp" />
+    <ClCompile Include="ClockItems.cpp" />
+    <ClCompile Include="ClockStore.cpp" />
+    <ClCompile Include="CommandLineOptions.cpp" />
+    <ClCompile Include="MainWindowEditor.cpp" />
+    <ClCompile Include="StringResources.cpp" />
+    <ClCompile Include="TapTempo.cpp" />
+    <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
+    <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
+    <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
+    <ClCompile Include="..\midi-app-shared\BeatClockGenerator.cpp" />
+    <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="AppSettings.h" />
+    <ClInclude Include="BackgroundWork.h" />
+    <ClInclude Include="ClockEngine.h" />
+    <ClInclude Include="ClockItems.h" />
+    <ClInclude Include="ClockStore.h" />
+    <ClInclude Include="CommandLineOptions.h" />
+    <ClInclude Include="StringResources.h" />
+    <ClInclude Include="TapTempo.h" />
+    <ClInclude Include="Telemetry.h" />
+    <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
+    <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
+    <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
+    <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
+    <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
+    <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
+    <ClInclude Include="..\midi-app-shared\BeatClockGenerator.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="..\midi-app-shared\MidiAppShared.idl" />
+    <Midl Include="ClockItems.idl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="MainWindow.xaml" />
+  </ItemGroup>
+  <ItemGroup>
+    <PRIResource Include="Strings\en-US\Resources.resw" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc" />
+  </ItemGroup>
+</Project>

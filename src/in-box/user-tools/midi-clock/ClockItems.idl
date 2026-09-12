@@ -1,0 +1,55 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+// The tile shown for each saved clock. It implements INotifyPropertyChanged because a clock
+// starting, stopping or having its tempo nudged has to redraw one tile, not rebuild the whole
+// wall of them and lose the customer's selection.
+namespace midiclock
+{
+    [default_interface]
+    runtimeclass ClockItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        ClockItem();
+
+        String Id{ get; };
+
+        // what the customer called it, or the endpoint name when they did not name it
+        String DisplayName{ get; };
+
+        // the headline number on the tile
+        String TempoText{ get; };
+
+        // "<endpoint>  ·  Group 3", or the endpoint alone when it sends to every group
+        String DestinationText{ get; };
+
+        String StatusText{ get; };
+
+        Boolean IsRunning{ get; };
+        Boolean IsBusy{ get; };
+
+        // false only while the clock is being started or stopped
+        Boolean IsStartStopEnabled{ get; };
+
+        // true while the endpoint this clock points at is not present
+        Boolean IsEndpointMissing{ get; };
+
+        Microsoft.UI.Xaml.Visibility RunningVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility WarningVisibility{ get; };
+
+        String StartStopLabel{ get; };
+        String StartStopGlyph{ get; };
+
+        // Every tile carries the same three buttons, so the visible label alone would give a
+        // screen reader the same name over and over. These name the clock as well.
+        String StartStopAccessibleName{ get; };
+        String EditAccessibleName{ get; };
+        String SelectAccessibleName{ get; };
+
+        // included in "start selected"; two way, driven by the tile's check box
+        Boolean IsSelected;
+    }
+}

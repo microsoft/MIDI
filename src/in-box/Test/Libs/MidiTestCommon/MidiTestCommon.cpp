@@ -19,6 +19,7 @@
 #include <wil\registry.h>
 
 #include "MidiDefs.h"
+#include "Feature_Servicing_MIDI2PortNamingRework.h"
 #include "WindowsMidiServices.h"
 #include "Midi2MidiSrvTransport.h"
 
@@ -108,6 +109,7 @@ void PrintMidiMessage(PVOID payload, UINT32 payloadSize, UINT32 expectedPayloadS
 
 void PrintStagingStates()
 {
+    LOG_FEATURE_STATE(Feature_Servicing_MIDI2PortNamingRework);
 }
 
 HRESULT StartMIDIService()

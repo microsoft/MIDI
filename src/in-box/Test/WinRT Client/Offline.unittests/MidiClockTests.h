@@ -23,6 +23,8 @@ public:
         //TEST_METHOD_CLEANUP(TestCleanup);
 
     TEST_METHOD(TestMidiClockBasics);
+    TEST_METHOD(TestTimestampOffsets);
+    TEST_METHOD(TestLowLatencyPeriodRefCounting);
 
 
 private:

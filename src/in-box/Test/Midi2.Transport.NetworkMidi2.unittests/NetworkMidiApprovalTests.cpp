@@ -1697,6 +1697,154 @@ namespace
 }
 
 
+// A stopped and restarted host used to accept nothing ever again. Stopping deactivated its
+// virtual parent device, starting could not activate the same instance id a second time, and
+// every endpoint the host then tried to create was parented to a device which no longer existed.
+// The client saw the invitation go pending and then get a Bye, because that is what the host is
+// required to send when it cannot follow a pending reply with an acceptance.
+// https://github.com/microsoft/MIDI/issues/1190
+void NetworkMidiApprovalTests::RestartedHostStillAcceptsInvitations()
+{
+    auto entryIdentifier = MakeEntryIdentifier();
+
+    auto serviceInstanceName = std::wstring{ L"midi2-approval-test-restart-" } + std::to_wstring(GetTickCount64());
+
+    VERIFY_IS_TRUE(
+        CreateHost(entryIdentifier, L"Restart Host", L"RESTARTHOST", serviceInstanceName, false).IsSuccess(),
+        L"Host created");
+
+    auto removeHost = wil::scope_exit([&entryIdentifier]() { RemoveHost(entryIdentifier); });
+
+    VERIFY_IS_TRUE(WaitForHostPresent(entryIdentifier), L"Host was instantiated");
+
+    // The invitation has to be accepted, not merely answered. A host which cannot build an
+    // endpoint still replies, so waiting for any reply would pass either way.
+    auto inviteAndExpectAcceptance = [&entryIdentifier](_In_ std::string const& suffix) -> bool
+    {
+        auto const port = ReadActualPort(entryIdentifier);
+
+        if (!port.has_value())
+        {
+            Log::Comment(L"The host did not report a port");
+            return false;
+        }
+
+        HostEndpointAddress address{};
+        address.HostNameOrAddress = L"127.0.0.1";
+        address.Port = port.value();
+
+        UdpTestClient client;
+
+        if (!client.Open(address))
+        {
+            Log::Comment(L"Could not open the test client");
+            return false;
+        }
+
+        auto& context = ProtocolTestContext::Current();
+
+        PacketBuilder builder;
+        builder.StartPacket().AddInvitation(
+            context.MakeUniqueEndpointName(suffix),
+            context.MakeUniqueProductInstanceId(suffix));
+
+        if (!client.Send(builder))
+        {
+            Log::Comment(L"Could not send the invitation");
+            return false;
+        }
+
+        auto const reply = client.WaitForCommand(CommandCode::InvitationReplyAccepted, PendingPollTimeout);
+
+        if (!reply.has_value())
+        {
+            // Separates "the host said nothing" from "the host replied and then refused", which
+            // are different faults.
+            for (auto const& packet : client.ReceivedPackets())
+            {
+                for (auto const& command : packet.Commands)
+                {
+                    Log::Comment(String().Format(
+                        L"  received command 0x%02X", static_cast<unsigned>(command.Code)));
+                }
+            }
+
+            Log::Comment(L"The host never accepted the invitation");
+            return false;
+        }
+
+        return true;
+    };
+
+    VERIFY_IS_TRUE(inviteAndExpectAcceptance("BeforeRestart"), L"The host accepts before being restarted");
+
+    VERIFY_IS_TRUE(StopHost(entryIdentifier).IsSuccess(), L"Host stopped");
+    VERIFY_IS_TRUE(StartHost(entryIdentifier).IsSuccess(), L"Host started again");
+
+    VERIFY_IS_TRUE(WaitForHostPresent(entryIdentifier), L"Host was instantiated again");
+
+    VERIFY_IS_TRUE(
+        inviteAndExpectAcceptance("AfterRestart"),
+        L"A restarted host must still be able to create an endpoint and accept an invitation");
+}
+
+
+// The other way to reach a service instance name which already has a parent device. Removing a
+// host does not take the parent away, so the replacement cannot activate one and has to work out
+// the existing id for itself. Getting the form of that id wrong fails the same way a restart used
+// to. https://github.com/microsoft/MIDI/issues/1190
+void NetworkMidiApprovalTests::HostRecreatedUnderTheSameServiceInstanceNameAcceptsInvitations()
+{
+    auto serviceInstanceName = std::wstring{ L"midi2-approval-test-recreate-" } + std::to_wstring(GetTickCount64());
+
+    auto firstEntryIdentifier = MakeEntryIdentifier();
+
+    VERIFY_IS_TRUE(
+        CreateHost(firstEntryIdentifier, L"Recreate Host One", L"RECREATEONE", serviceInstanceName, false).IsSuccess(),
+        L"First host created");
+
+    VERIFY_IS_TRUE(WaitForHostPresent(firstEntryIdentifier), L"First host was instantiated");
+
+    VERIFY_IS_TRUE(RemoveHost(firstEntryIdentifier).IsSuccess(), L"First host removed");
+
+    auto secondEntryIdentifier = MakeEntryIdentifier();
+
+    VERIFY_IS_TRUE(
+        CreateHost(secondEntryIdentifier, L"Recreate Host Two", L"RECREATETWO", serviceInstanceName, false).IsSuccess(),
+        L"Second host created under the same service instance name");
+
+    auto removeHost = wil::scope_exit([&secondEntryIdentifier]() { RemoveHost(secondEntryIdentifier); });
+
+    VERIFY_IS_TRUE(WaitForHostPresent(secondEntryIdentifier), L"Second host was instantiated");
+
+    auto const port = ReadActualPort(secondEntryIdentifier);
+
+    VERIFY_IS_TRUE(port.has_value(), L"The second host reported a port");
+
+    if (!port.has_value()) return;
+
+    HostEndpointAddress address{};
+    address.HostNameOrAddress = L"127.0.0.1";
+    address.Port = port.value();
+
+    UdpTestClient client;
+    VERIFY_IS_TRUE(client.Open(address), L"Test client opened");
+
+    auto& context = ProtocolTestContext::Current();
+
+    PacketBuilder builder;
+    builder.StartPacket().AddInvitation(
+        context.MakeUniqueEndpointName("Recreated"),
+        context.MakeUniqueProductInstanceId("R"));
+
+    VERIFY_IS_TRUE(client.Send(builder), L"Invitation sent");
+
+    VERIFY_IS_TRUE(
+        client.WaitForCommand(CommandCode::InvitationReplyAccepted, PendingPollTimeout).has_value(),
+        L"A host built on an existing parent device must still be able to create an endpoint");
+}
+
+
 void NetworkMidiApprovalTests::HostFallsBackWhenTheConfiguredPortIsTakenByAnotherProcess()
 {
     auto const blockedPort = PickLikelyFreePort();

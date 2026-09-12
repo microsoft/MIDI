@@ -79,6 +79,14 @@ public:
     TEST_METHOD(RemovedHostReleasesItsServiceInstanceName);
     TEST_METHOD(RemovingAnUnknownHostReportsFailure);
 
+    // A host which is stopped and started again must still be able to create endpoints for the
+    // clients that invite it. https://github.com/microsoft/MIDI/issues/1190
+    TEST_METHOD(RestartedHostStillAcceptsInvitations);
+
+    // The same, for a host created again under a service instance name whose parent device is
+    // still there from the host it replaces.
+    TEST_METHOD(HostRecreatedUnderTheSameServiceInstanceNameAcceptsInvitations);
+
     // https://github.com/microsoft/MIDI/issues/1149. Releasing the name inside the service is
     // not the same as taking the advertisement off the network. These ask mDNS directly, so a
     // pass means the record is really gone from the wire rather than just out of a local cache.

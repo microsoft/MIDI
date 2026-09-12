@@ -3,6 +3,11 @@
 Source shared by the Windows MIDI Services user tools (`midi2monitor`, `midiscratchpad`, and
 future ones). It is **not** a library or a component, and **nothing is copied at build time**.
 
+`BeatClockGenerator` is the exception to the "GUI tools" part: it is plain C++ with no XAML
+dependency, and `midi-console` compiles it too so `midi endpoint send-beat-clock` and the
+MIDI Clock app keep identical timing behavior. A console tool taking one file from here only
+needs step 1, 2 and the `$(ProjectDir)` part of step 4 below.
+
 ## What a consuming project has to do
 
 There is no `.props` file and no MSBuild import. Each app's `.vcxproj` lists these files with

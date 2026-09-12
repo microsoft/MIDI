@@ -385,14 +385,12 @@ MidiNetworkHost::Stop()
         CATCH_LOG();
     }
 
-    // NOTE: This doesn't currently work properly because no function in device manager for this.
-    // It doesn't remove the parent device, just the children / UMP endpoints. 
-    auto endpointManager = TransportState::Current().GetEndpointManager();
-
-    if (endpointManager != nullptr && !m_parentDeviceInstanceId.empty())
-    {
-        LOG_IF_FAILED(endpointManager->DeleteParentHostDevice(m_parentDeviceInstanceId));
-    }
+    // The parent device is deliberately left alone. It is created once per host and lives for the
+    // lifetime of the transport, the same as the one shared by client endpoints. Deactivating it
+    // here made a restarted host unusable: the instance id survives deactivation, so Start could
+    // not activate it again, and every endpoint the host went on to create was parented to a
+    // device which no longer existed. The child endpoints are already gone by this point, removed
+    // one at a time by the connection shutdown above.
 
     m_started = false;
 
@@ -430,19 +428,25 @@ MidiNetworkHost::Start()
     auto endpointManager = TransportState::Current().GetEndpointManager();
     RETURN_HR_IF_NULL(E_UNEXPECTED, endpointManager);
 
-    std::wstring parentDeviceInstanceId{};
-    auto createParentHR = endpointManager->CreateParentDeviceForHost(
-        m_hostDefinition.UmpEndpointName,
-        m_hostDefinition.ServiceInstanceName,
-        parentDeviceInstanceId
-    );
+    // Created once and kept for the lifetime of the transport, so a restart reuses it rather than
+    // asking for it again. Asking again cannot succeed, and the id handed back when it fails is
+    // the one that was requested rather than the one PnP assigned, which is prefixed. Endpoints
+    // built on the unprefixed id name a parent that does not exist, and their activation waits
+    // for a completion that never comes.
+    if (m_parentDeviceInstanceId.empty())
+    {
+        std::wstring parentDeviceInstanceId{};
 
-    // Every endpoint this host creates is parented to this id. Continuing without one used to be
-    // tolerated, and produced a host which looked healthy but failed to create any endpoint.
-    RETURN_IF_FAILED(createParentHR);
-    RETURN_HR_IF(E_UNEXPECTED, parentDeviceInstanceId.empty());
+        RETURN_IF_FAILED(endpointManager->CreateParentDeviceForHost(
+            m_hostDefinition.UmpEndpointName,
+            m_hostDefinition.ServiceInstanceName,
+            parentDeviceInstanceId
+        ));
 
-    m_parentDeviceInstanceId = parentDeviceInstanceId;
+        RETURN_HR_IF(E_UNEXPECTED, parentDeviceInstanceId.empty());
+
+        m_parentDeviceInstanceId = parentDeviceInstanceId;
+    }
    
     // HostName's constructor throws on an empty string, which would escape this HRESULT
     // function. A null HostName is valid for DNS-SD registration.

@@ -11,6 +11,9 @@
     <ClCompile Include="Midi2.SchedulerMidiTransform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Midi2.SchedulerMidiTransform2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Midi2.SchedulerTransform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -25,6 +28,9 @@
     <ClInclude Include="Midi2.SchedulerMidiTransform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Midi2.SchedulerMidiTransform2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Midi2.SchedulerTransform.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -35,6 +41,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ScheduledUmpMessage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ScheduledUmpMessage2.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="plugin_defs.h">

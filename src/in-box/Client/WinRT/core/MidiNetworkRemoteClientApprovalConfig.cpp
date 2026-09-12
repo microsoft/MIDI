@@ -31,10 +31,13 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
     json::JsonObject MidiNetworkRemoteClientApprovalConfig::ConfigJson() noexcept
     {
-        // An approval or denial is a command, not a configuration file update. The service is what
-        // writes an approved client into the host's authorized client list, and only when the scope
-        // is not restricted to the single pending request. There is therefore nothing for a client
-        // to send here. ApproveOrDenyRemoteClientConnectRequestAsync is the supported path.
+        // An approval or denial is a command, not a configuration file update, so there is nothing
+        // for a client to send here. ApproveOrDenyRemoteClientConnectRequestAsync is the supported
+        // path.
+        //
+        // The service acts on the decision and remembers it for as long as it is running, but it
+        // never writes the configuration file. Making a decision outlive a service restart is the
+        // calling application's job, by saving a MidiNetworkHostKnownClientsConfig.
         //
         // An empty object is returned rather than null so that anything which round-trips this
         // through the generic IMidiServiceTransportPluginConfig surface does not fault.

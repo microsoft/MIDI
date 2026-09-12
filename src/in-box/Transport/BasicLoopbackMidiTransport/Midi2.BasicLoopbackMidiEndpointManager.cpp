@@ -11,6 +11,7 @@
 #include "midi2.BasicLoopbackMidiTransport.h"
 
 #include "MidiEndpointNameTable.h"
+#include "Feature_Servicing_MIDI2PortNamingRework.h"
 
 using namespace wil;
 using namespace Microsoft::WRL;
@@ -406,6 +407,14 @@ CMidi2BasicLoopbackMidiEndpointManager::CreateEndpoint(
     WindowsMidiServicesNamingLib::MidiEndpointNameTable nameTable{};
 
     LOG_IF_FAILED(nameTable.PopulateAllEntriesForNativeUmpDevice(L"", blocks));
+
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        nameTable.SetPortNamesHaveLegacyEquivalent(false);
+
+        LOG_IF_FAILED(nameTable.RebuildNewStyleNames(friendlyName, false));
+    }
+
     LOG_IF_FAILED(nameTable.WriteProperties(interfaceDevProperties));
 
     

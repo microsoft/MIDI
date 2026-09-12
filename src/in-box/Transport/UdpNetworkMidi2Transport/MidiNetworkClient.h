@@ -111,6 +111,13 @@ public:
         }
     }
 
+    uint64_t PeekAverageLatencyTicks()
+    {
+        auto conn = GetConnection();
+
+        return conn != nullptr ? conn->PeekAverageLatencyTicks() : 0;
+    }
+
     uint64_t GetTotalNetworkPacketsSent() { auto conn = GetConnection(); return conn ? conn->GetTotalNetworkPacketsSent() : 0; }
     uint64_t GetTotalNetworkPacketsReceived() { auto conn = GetConnection(); return conn ? conn->GetTotalNetworkPacketsReceived() : 0; }
 

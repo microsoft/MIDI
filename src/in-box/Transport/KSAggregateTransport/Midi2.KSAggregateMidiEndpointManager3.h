@@ -107,6 +107,9 @@ public:
     std::wstring DeviceName{};
     std::wstring DeviceInstanceId{};
 
+    std::wstring BaseDeviceName{};              // DeviceName before any " (2)" disambiguator
+    std::wstring HardwareParentInstanceId{};    // the physical device; several filters can share one
+
     uint32_t IndexOfDevicesWithThisSameName{ 0 };   // for when there are multiple of the same device
 
 

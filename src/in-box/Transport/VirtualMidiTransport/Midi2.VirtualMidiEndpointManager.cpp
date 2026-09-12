@@ -11,6 +11,7 @@
 #include "midi2.VirtualMidiTransport.h"
 
 #include "MidiEndpointNameTable.h"
+#include "Feature_Servicing_MIDI2PortNamingRework.h"
 using namespace wil;
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
@@ -274,6 +275,12 @@ CMidi2VirtualMidiEndpointManager::CreateClientVisibleEndpoint(
     // the function blocks go through
     WindowsMidiServicesNamingLib::MidiEndpointNameTable nameTable{};
     //nameTable.EndpointLocalPortNameSelectionOverride = Midi1PortNameSelection::UseNewStyleName;
+
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        nameTable.SetPortNamesHaveLegacyEquivalent(false);
+    }
+
     LOG_IF_FAILED(nameTable.WriteProperties(interfaceDeviceProperties));
 
 

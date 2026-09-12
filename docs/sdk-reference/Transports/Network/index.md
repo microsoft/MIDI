@@ -45,6 +45,14 @@ A single PC can be both at the same time.
 
 A host configured to require approval answers an unknown remote with "pending" rather than accepting it. Poll `GetPendingRemoteClients()` and resolve each one with `ApproveOrDenyRemoteClientConnectRequestAsync`. There is no notification from the service, so polling every few seconds is the expected pattern.
 
+**Changing a host or a connection which is already up**
+
+1. Fill in a [MidiNetworkHostUpdateConfig]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkHostUpdateConfig/) or a [MidiNetworkClientUpdateConfig]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkClientUpdateConfig/), identifying the entry by its `HostId` or `ClientId`
+2. `await MidiNetworkTransportManager.UpdateNetworkHostAsync(config)` or `UpdateNetworkClientAsync(config)`
+3. Check `Success` on the returned [MidiNetworkHostUpdateResponse]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkHostUpdateResponse/) or [MidiNetworkClientUpdateResponse]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkClientUpdateResponse/)
+
+Neither takes the host down or disconnects the client. A setting which can be applied to a session which is already up, such as `FallbackMidi1PortCount`, takes effect immediately; one which is settled when an endpoint is built, such as `CreateMidi1Ports`, is recorded for the next connection. `Success` means the service accepted the settings, not that each one changed something observable.
+
 ## Reconnection behavior
 
 Once a client has been configured, the service manages the connection for you. What it does when a remote host goes away depends on how the client was configured, because the two cases give the service different information to work with.

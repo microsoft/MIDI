@@ -710,6 +710,23 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NetworkMidiConnectionRole, 923);        // DEVPR
 //#define STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"950"
 //DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_CreateMidi1PortsForEndpoint, 950);     // DEVPROP_TYPE_BOOLEAN
 
+// Set by the transport. False when the MIDI 1.0 ports for this endpoint did not exist in Windows
+// before Windows MIDI Services, so there is no older name to stay compatible with. Absent is
+// treated as true, which keeps an un-updated transport behaving as it does today.
+#define STRING_PKEY_MIDI_Midi1PortNamesHaveLegacyEquivalent MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"950"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Midi1PortNamesHaveLegacyEquivalent, 950);   // DEVPROP_TYPE_BOOLEAN
+
+// Set by the transport. What the device told us about its individual ports, which is what the
+// Automatic naming style uses to decide whether renaming them earns its cost.
+#define STRING_PKEY_MIDI_Midi1PortNameSourceFlags MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"951"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Midi1PortNameSourceFlags, 951);            // DEVPROP_TYPE_UINT32
+
+#define MIDI_MIDI1_PORT_NAME_SOURCE_NONE                    ((uint32_t)0x00000000)
+#define MIDI_MIDI1_PORT_NAME_SOURCE_DEVICE_SUPPLIED         ((uint32_t)0x00000001)  // at least one port was named by the device
+#define MIDI_MIDI1_PORT_NAME_SOURCE_ALL_PORTS_NAMED         ((uint32_t)0x00000002)
+#define MIDI_MIDI1_PORT_NAME_SOURCE_NAMES_ARE_DISTINCT      ((uint32_t)0x00000004)
+#define MIDI_MIDI1_PORT_NAME_SOURCE_NAMES_CONTAIN_DEVICE    ((uint32_t)0x00000008)
+
 // this is set at the parent endpoint level, and applies to all WinMM and WinRT MIDI 1.0 ports created from this endpoint
 #define STRING_PKEY_MIDI_Midi1PortNamingSelection MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"955"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Midi1PortNamingSelection, 955);        // DEVPROP_TYPE_UINT32 :  WindowsMidiServicesNamingLib::Midi1PortNameSelection enum

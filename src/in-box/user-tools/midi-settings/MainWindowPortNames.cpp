@@ -20,31 +20,27 @@ namespace winrt::midisettings::implementation
 {
     namespace
     {
-        // What the port is called right now, which is what the customer recognizes in their DAW.
-        // Mirrors MidiEndpointNameTable::GetPreferredName on the service side: a name of the
-        // customer's own always wins, and otherwise the selected style decides.
-        winrt::hstring ResolveCurrentName(
-            _In_ midi2enum::Midi1PortNameTableEntry const& entry,
-            _In_ midi2enum::Midi1PortNamingApproach const effectiveApproach) noexcept
+        // The name the service actually published for a group, which is what the customer sees in
+        // their DAW right now. Empty when the port is not currently present.
+        winrt::hstring PublishedNameForGroup(
+            _In_ collections::IVectorView<midi2legacy::MidiLegacyPortDeviceInformation> const& ports,
+            _In_ uint8_t const groupIndex) noexcept
         {
             try
             {
-                if (!entry.CustomName().empty())
-                {
-                    return entry.CustomName();
-                }
+                if (ports == nullptr) return {};
 
-                if (effectiveApproach == midi2enum::Midi1PortNamingApproach::UseNewStyle)
+                for (auto const& port : ports)
                 {
-                    return entry.NewStyleName();
+                    if (port.Group() == nullptr) continue;
+                    if (port.Group().Index() == groupIndex) return port.Name();
                 }
-
-                return entry.LegacyCompatibleName();
             }
             catch (...)
             {
-                return {};
             }
+
+            return {};
         }
 
         midi2enum::Midi1PortNamingApproach ApproachFromComboIndex(_In_ int32_t const index) noexcept
@@ -98,53 +94,36 @@ namespace winrt::midisettings::implementation
         UpdateMidi1PortNamesApproachCaption();
     }
 
-    // The "current name" column and the caption both depend on the selected style, so they are
-    // recalculated as the customer changes it rather than only when the dialog opens.
+    // Only the caption depends on the selected style. The current name column shows what the
+    // service published, which does not move until the service restarts.
     void MainWindow::UpdateMidi1PortNamesApproachCaption() noexcept
     {
         try
         {
             auto const selected = ApproachFromComboIndex(Midi1PortNamesApproachCombo().SelectedIndex());
 
-            auto effective = selected;
-
-            if (effective == midi2enum::Midi1PortNamingApproach::Default)
-            {
-                auto const globalDefault = native::config::DefaultMidi1PortNaming();
-
-                effective = globalDefault == native::Midi1PortNaming::NewStyle ?
-                    midi2enum::Midi1PortNamingApproach::UseNewStyle :
-                    midi2enum::Midi1PortNamingApproach::UseClassicCompatible;
-
-                Midi1PortNamesApproachCaption().Text(
-                    effective == midi2enum::Midi1PortNamingApproach::UseNewStyle ?
-                        res::GetString(L"Midi1PortNamesDefaultIsNewStyle") :
-                        res::GetString(L"Midi1PortNamesDefaultIsClassic"));
-            }
-            else
+            if (selected != midi2enum::Midi1PortNamingApproach::Default)
             {
                 Midi1PortNamesApproachCaption().Text({});
+                return;
             }
 
-            auto const refresh = [effective](collections::IObservableVector<midisettings::Midi1PortNameItem> const& rows,
-                std::vector<midi2enum::Midi1PortNameTableEntry> const& entries)
-                {
-                    for (uint32_t i = 0; i < rows.Size() && i < entries.size(); i++)
-                    {
-                        auto const item = rows.GetAt(i).as<implementation::Midi1PortNameItem>();
+            auto const globalDefault = native::config::DefaultMidi1PortNaming();
 
-                        // keep whatever the customer has typed; only the resolved name moves
-                        item->Update(
-                            item->GroupIndex(),
-                            ResolveCurrentName(entries[i], effective),
-                            entries[i].LegacyCompatibleName(),
-                            entries[i].NewStyleName(),
-                            item->CustomName());
-                    }
-                };
+            switch (globalDefault)
+            {
+            case native::Midi1PortNaming::Automatic:
+                Midi1PortNamesApproachCaption().Text(res::GetString(L"Midi1PortNamesDefaultIsAutomatic"));
+                break;
 
-            refresh(m_midi1PortNameSources, m_midi1PortNameSourceEntries);
-            refresh(m_midi1PortNameDestinations, m_midi1PortNameDestinationEntries);
+            case native::Midi1PortNaming::NewStyle:
+                Midi1PortNamesApproachCaption().Text(res::GetString(L"Midi1PortNamesDefaultIsNewStyle"));
+                break;
+
+            default:
+                Midi1PortNamesApproachCaption().Text(res::GetString(L"Midi1PortNamesDefaultIsClassic"));
+                break;
+            }
         }
         MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to update the port naming caption.")
     }
@@ -188,16 +167,31 @@ namespace winrt::midisettings::implementation
             std::sort(m_midi1PortNameSourceEntries.begin(), m_midi1PortNameSourceEntries.end(), byGroup);
             std::sort(m_midi1PortNameDestinationEntries.begin(), m_midi1PortNameDestinationEntries.end(), byGroup);
 
+            collections::IVectorView<midi2legacy::MidiLegacyPortDeviceInformation> publishedSources{ nullptr };
+            collections::IVectorView<midi2legacy::MidiLegacyPortDeviceInformation> publishedDestinations{ nullptr };
+
+            if (m_portWatcher != nullptr)
+            {
+                publishedSources = m_portWatcher.GetEnumeratedPortsForAssociatedEndpoint(
+                    endpoint.EndpointDeviceId(), midi2enum::Midi1PortFlow::MidiMessageSource);
+
+                publishedDestinations = m_portWatcher.GetEnumeratedPortsForAssociatedEndpoint(
+                    endpoint.EndpointDeviceId(), midi2enum::Midi1PortFlow::MidiMessageDestination);
+            }
+
             auto const fill = [](collections::IObservableVector<midisettings::Midi1PortNameItem> const& target,
-                std::vector<midi2enum::Midi1PortNameTableEntry> const& entries)
+                std::vector<midi2enum::Midi1PortNameTableEntry> const& entries,
+                collections::IVectorView<midi2legacy::MidiLegacyPortDeviceInformation> const& publishedPorts)
                 {
                     for (auto const& entry : entries)
                     {
                         auto item = winrt::make<implementation::Midi1PortNameItem>();
 
+                        auto const published = PublishedNameForGroup(publishedPorts, entry.Group().Index());
+
                         item.as<implementation::Midi1PortNameItem>()->Update(
                             entry.Group().Index(),
-                            entry.LegacyCompatibleName(),
+                            published.empty() ? entry.LegacyCompatibleName() : published,
                             entry.LegacyCompatibleName(),
                             entry.NewStyleName(),
                             entry.CustomName());
@@ -206,8 +200,8 @@ namespace winrt::midisettings::implementation
                     }
                 };
 
-            fill(m_midi1PortNameSources, m_midi1PortNameSourceEntries);
-            fill(m_midi1PortNameDestinations, m_midi1PortNameDestinationEntries);
+            fill(m_midi1PortNameSources, m_midi1PortNameSourceEntries, publishedSources);
+            fill(m_midi1PortNameDestinations, m_midi1PortNameDestinationEntries, publishedDestinations);
 
             Midi1PortNamesNoSourcesText().Visibility(
                 m_midi1PortNameSources.Size() == 0 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);

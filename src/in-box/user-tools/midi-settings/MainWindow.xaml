@@ -1064,10 +1064,15 @@
 
                         <Border Style="{StaticResource SettingsCardStyle}">
                             <StackPanel Spacing="12">
+                                <RadioButton x:Name="PortNamingAutomaticRadio"
+                                             x:Uid="PortNamingAutomaticRadio"
+                                             GroupName="PortNaming"
+                                             Content="Let Windows choose for each device (recommended)"
+                                             Click="OnPortNamingChanged" />
                                 <RadioButton x:Name="PortNamingClassicRadio"
                                              x:Uid="PortNamingClassicRadio"
                                              GroupName="PortNaming"
-                                             Content="Compatible with older Windows (recommended)"
+                                             Content="Compatible with older Windows"
                                              Click="OnPortNamingChanged" />
                                 <RadioButton x:Name="PortNamingNewStyleRadio"
                                              x:Uid="PortNamingNewStyleRadio"

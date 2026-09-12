@@ -236,6 +236,7 @@ int main()
     propertiesCommand->add_option("endpoint-id", propertiesOptions.EndpointDeviceId, ResourceString(IDS_OPT_ENDPOINT_DEVICE_ID));
     propertiesCommand->add_flag("-v,--verbose", propertiesOptions.Verbose, ResourceString(IDS_OPT_VERBOSE));
     propertiesCommand->add_flag("-r,--include-raw-properties,--include-raw", propertiesOptions.IncludeRawProperties, ResourceString(IDS_OPT_INCLUDE_RAW_PROPERTIES));
+    propertiesCommand->add_flag("--include-name-table", propertiesOptions.IncludeNameTable, ResourceString(IDS_OPT_INCLUDE_NAME_TABLE));
 
     EndpointSendMessageOptions sendMessageOptions{};
 

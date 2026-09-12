@@ -1598,7 +1598,7 @@ namespace winrt::midinetworksetup::implementation
                         res::FormatString(L"InvitationAllowedOnceFormat", name) :
                         res::FormatString(L"InvitationDeniedOnceFormat", name);
                 }
-                else if (!native::NetworkConfigFile::Current().SetRemoteClientDecision(hostKey, name, productInstanceId, approve))
+                else if (!native::NetworkConfigFile::Current().SetRemoteClientDecision(hostId, name, productInstanceId, approve))
                 {
                     message = native::NetworkConfigFile::Current().LastErrorMessage();
                 }
@@ -2060,7 +2060,7 @@ namespace winrt::midinetworksetup::implementation
 
             if (response != nullptr && response.Success())
             {
-                if (!native::NetworkConfigFile::Current().RemoveHost(hostKey))
+                if (!native::NetworkConfigFile::Current().RemoveHost(hostId))
                 {
                     message = native::NetworkConfigFile::Current().LastErrorMessage();
                 }
@@ -2147,7 +2147,7 @@ namespace winrt::midinetworksetup::implementation
                 {
                     message = res::FormatString(L"RemoteClientDisconnectedFormat", name);
                 }
-                else if (!native::NetworkConfigFile::Current().SetRemoteClientDecision(hostKey, name, productInstanceId, approve))
+                else if (!native::NetworkConfigFile::Current().SetRemoteClientDecision(hostId, name, productInstanceId, approve))
                 {
                     message = native::NetworkConfigFile::Current().LastErrorMessage();
                 }
@@ -2309,13 +2309,20 @@ namespace winrt::midinetworksetup::implementation
         auto const name = item.DisplayName();
         auto const productInstanceId = item.ProductInstanceId();
 
+        winrt::guid hostId{};
+
+        if (!TryParseKey(hostKey, hostId))
+        {
+            co_return;
+        }
+
         co_await winrt::resume_background();
 
         winrt::hstring message{};
 
         try
         {
-            if (native::NetworkConfigFile::Current().ForgetRemoteClient(hostKey, name, productInstanceId))
+            if (native::NetworkConfigFile::Current().ForgetRemoteClient(hostId, name, productInstanceId))
             {
                 message = res::FormatString(L"KnownClientForgottenFormat", name);
             }

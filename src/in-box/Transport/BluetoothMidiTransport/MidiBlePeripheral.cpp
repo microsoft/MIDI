@@ -166,6 +166,7 @@ HRESULT
 MidiBlePeripheral::DetachConnection()
 {
     std::shared_ptr<MidiBleConnection> connection{ nullptr };
+    bt::BluetoothLEDevice device{ nullptr };
 
     {
         auto lock = std::scoped_lock{ m_connectionLock };
@@ -173,6 +174,7 @@ MidiBlePeripheral::DetachConnection()
         connection = std::move(m_connection);
         m_connection = nullptr;
         m_remoteClientInfo = {};
+        device = std::move(m_remoteDevice);
         m_remoteDevice = nullptr;
     }
 
@@ -180,6 +182,8 @@ MidiBlePeripheral::DetachConnection()
     {
         LOG_IF_FAILED(connection->Shutdown());
     }
+
+    MidiBleUtilities::CloseIfOpen(device);
 
     return S_OK;
 }
@@ -208,9 +212,17 @@ _Use_decl_annotations_
 void
 MidiBlePeripheral::SetRemoteDevice(bt::BluetoothLEDevice const& device)
 {
-    auto lock = std::scoped_lock{ m_connectionLock };
+    bt::BluetoothLEDevice previous{ nullptr };
 
-    m_remoteDevice = device;
+    {
+        auto lock = std::scoped_lock{ m_connectionLock };
+
+        previous = std::move(m_remoteDevice);
+        m_remoteDevice = device;
+    }
+
+    // Closing happens outside the lock: a replaced client leaves an object behind and Close can block
+    MidiBleUtilities::CloseIfOpen(previous);
 }
 
 

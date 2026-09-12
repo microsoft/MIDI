@@ -10,8 +10,11 @@
 #include "pch.h"
 #include "midi2.kstransport.h"
 
+#include "MidiPnpUtilities.h"
+
 #include "Feature_Servicing_MIDI2SWDAbortCrash.h"
 #include "Feature_Servicing_MIDI2FailFast.h"
+#include "Feature_Servicing_MIDI2PortNamingRework.h"
 
 using namespace wil;
 using namespace winrt::Windows::Devices::Enumeration;
@@ -86,6 +89,70 @@ CMidi2KSMidiEndpointManager::Initialize(
 }
 
 _Use_decl_annotations_
+std::wstring
+CMidi2KSMidiEndpointManager::ResolveUniqueHardwareParentDeviceName(
+    std::wstring const& hardwareParentName,
+    std::wstring const& hardwareParentInstanceId
+) noexcept
+{
+    if (hardwareParentInstanceId.empty()) return hardwareParentName;
+
+    try
+    {
+        auto key = internal::NormalizeDeviceInstanceIdWStringCopy(hardwareParentInstanceId);
+
+        auto lock = m_hardwareParentDeviceNamesLock.lock();
+
+        // a device with more than one filter arrives here repeatedly, and is not its own duplicate
+        auto existing = m_hardwareParentDeviceNames.find(key);
+        if (existing != m_hardwareParentDeviceNames.end())
+        {
+            return existing->second.ResolvedName;
+        }
+
+        KsHardwareParentDeviceName entry{ };
+        entry.BaseName = hardwareParentName;
+        entry.ResolvedName = hardwareParentName;
+
+        bool sameNameExists{ false };
+        uint32_t currentMaxIndex{ 0 };
+
+        for (auto const& other : m_hardwareParentDeviceNames)
+        {
+            if (other.second.BaseName == entry.BaseName)
+            {
+                currentMaxIndex = max(currentMaxIndex, other.second.IndexOfDevicesWithThisSameName);
+                sameNameExists = true;
+            }
+        }
+
+        if (sameNameExists)
+        {
+            entry.IndexOfDevicesWithThisSameName = currentMaxIndex + 1;
+            entry.ResolvedName = std::format(L"{0} ({1})", entry.BaseName, entry.IndexOfDevicesWithThisSameName + 1);
+
+            TraceLoggingWrite(
+                MidiKSTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_INFO,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Another device of this model is present, so this one is numbered.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(entry.ResolvedName.c_str(), "resolved name"),
+                TraceLoggingWideString(key.c_str(), "hardware parent instance id")
+            );
+        }
+
+        m_hardwareParentDeviceNames.emplace(key, entry);
+
+        return entry.ResolvedName;
+    }
+    CATCH_LOG();
+
+    return hardwareParentName;
+}
+
+_Use_decl_annotations_
 HRESULT 
 CMidi2KSMidiEndpointManager::OnDeviceAdded(
     DeviceWatcher , 
@@ -149,6 +216,19 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
     auto parentDeviceInfo = DeviceInformation::CreateFromIdAsync(deviceInstanceId,
         additionalProperties,winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device).get();
     deviceName = parentDeviceInfo.Name();
+
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        // The node above is the driver's, so it is named for the driver. Walk up to the physical
+        // device, where the USB iProduct string lands, and use the name the customer sees.
+        std::wstring hardwareParentName{ };
+        std::wstring hardwareParentInstanceId{ };
+
+        if (internal::GetHardwareParentDeviceName(deviceInstanceId, hardwareParentName, hardwareParentInstanceId))
+        {
+            deviceName = ResolveUniqueHardwareParentDeviceName(hardwareParentName, hardwareParentInstanceId);
+        }
+    }
 
     hash = std::to_wstring(hasher(deviceId));
 
@@ -630,12 +710,28 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
             if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_UNIVERSALMIDIPACKET)
             {
                 // MIDI 2 device using the UMP driver
-                LOG_IF_FAILED(nameTable.PopulateAllEntriesForNativeUmpDevice(parentDeviceInfo.Name().c_str(), MidiPin->Blocks));
+                if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+                {
+                    LOG_IF_FAILED(nameTable.PopulateAllEntriesForNativeUmpDevice(deviceName.c_str(), MidiPin->Blocks));
+                    LOG_IF_FAILED(nameTable.RebuildNewStyleNames(deviceName, false));
+                }
+                else
+                {
+                    LOG_IF_FAILED(nameTable.PopulateAllEntriesForNativeUmpDevice(parentDeviceInfo.Name().c_str(), MidiPin->Blocks));
+                }
             }
             else if (MidiPin->NativeDataFormat == KSDATAFORMAT_SUBTYPE_MIDI)
             {
                 // MIDI 1 device using the UMP driver
-                LOG_IF_FAILED(nameTable.PopulateAllEntriesForMidi1DeviceUsingUmpDriver(parentDeviceInfo.Name().c_str(), MidiPin->Blocks));
+                if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+                {
+                    LOG_IF_FAILED(nameTable.PopulateAllEntriesForMidi1DeviceUsingUmpDriver(deviceName.c_str(), MidiPin->Blocks));
+                    LOG_IF_FAILED(nameTable.RebuildNewStyleNames(deviceName, false));
+                }
+                else
+                {
+                    LOG_IF_FAILED(nameTable.PopulateAllEntriesForMidi1DeviceUsingUmpDriver(parentDeviceInfo.Name().c_str(), MidiPin->Blocks));
+                }
 
                 // first, update the names as needed. We do this only for MIDI 1.0 devices attached to the new driver
                 for (auto& gtb : MidiPin->Blocks)
@@ -664,7 +760,16 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
                         if (gtb.FirstGroupIndex > 0)
                         {
-                            gtb.Name += L" " + std::wstring{ gtb.FirstGroupIndex };
+                            if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+                            {
+                                // std::wstring{ index } picks the initializer_list constructor and
+                                // yields a control character rather than a digit.
+                                gtb.Name += L" " + std::to_wstring(gtb.FirstGroupIndex + 1);
+                            }
+                            else
+                            {
+                                gtb.Name += L" " + std::wstring{ gtb.FirstGroupIndex };
+                            }
                         }
                     }
                 }
@@ -999,6 +1104,12 @@ CMidi2KSMidiEndpointManager::Shutdown()
     // to prevent it from being cleared while in use by the
     // watcher.
     m_AvailableMidiPins.clear();
+
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        auto lock = m_hardwareParentDeviceNamesLock.lock();
+        m_hardwareParentDeviceNames.clear();
+    }
 
     return S_OK;
 }

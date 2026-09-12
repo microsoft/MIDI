@@ -18,5 +18,6 @@ namespace Windows.Devices.Midi2.Enumeration
         Default = 0,
         UseClassicCompatible = 1,
         UseNewStyle = 2,
+        UseAutomatic = 3,
     };
 }

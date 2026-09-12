@@ -202,13 +202,13 @@
     <value>Make the table text larger</value>
   </data>
   <data name="AddCommentButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Add a note to this message</value>
+    <value>Add a comment to this message</value>
   </data>
   <data name="CommentFlyoutHeader.Text" xml:space="preserve">
-    <value>Add a note to this message</value>
+    <value>Add a comment to this message</value>
   </data>
   <data name="CommentTextBox.PlaceholderText" xml:space="preserve">
-    <value>Type a note</value>
+    <value>Type a comment</value>
   </data>
   <data name="EmptyStateTitle.Text" xml:space="preserve">
     <value>Nothing to show yet</value>
@@ -307,7 +307,7 @@
     <value>Clear the captured messages?</value>
   </data>
   <data name="ClearConfirmBody" xml:space="preserve">
-    <value>Every message captured so far will be removed, including any notes you have added. This cannot be undone.</value>
+    <value>Every message captured so far will be removed, including any comments you have added. This cannot be undone.</value>
   </data>
   <data name="ClearConfirmPrimary" xml:space="preserve">
     <value>Clear</value>

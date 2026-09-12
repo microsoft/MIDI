@@ -33,6 +33,7 @@
 // Same again for the validation helpers: everything here is decided from a string, a number or
 // a json value, so none of it needs a radio or a running service.
 #include "midi_ble_validation.h"
+#include "transport_defs.h"
 #include "bluetooth_transport_error_codes.h"
 
 #endif //PCH_H

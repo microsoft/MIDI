@@ -39,26 +39,6 @@ namespace winrt::midibluetoothsetup::implementation
             return res::FormatString(L"OfflineRetentionSecondsFormat", winrt::to_hstring(seconds));
         }
 
-        template <typename TItem>
-        TItem ItemFromSender(_In_ foundation::IInspectable const& sender) noexcept
-        {
-            try
-            {
-                auto const element = sender.try_as<xaml::FrameworkElement>();
-
-                if (element == nullptr)
-                {
-                    return nullptr;
-                }
-
-                return element.DataContext().try_as<TItem>();
-            }
-            catch (...)
-            {
-                return nullptr;
-            }
-        }
-
         void CopyToClipboard(_In_ winrt::hstring const& text) noexcept
         {
             try

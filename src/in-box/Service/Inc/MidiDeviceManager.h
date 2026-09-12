@@ -217,6 +217,19 @@ private:
         _In_ PMIDIPORT umpMidiPort
     );
 
+    HRESULT RebuildAndUpdateNameTableForMidi2EndpointWithGroupTerminalBlocks(
+        _In_ LPCWSTR umpDeviceInterfaceId,
+        _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
+        _In_ PMIDIPORT umpMidiPort
+    );
+
+    HRESULT SyncGroupTerminalBlockNamesToMidi1PortNames(
+        _In_ LPCWSTR umpDeviceInterfaceId,
+        _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
+        _In_ PMIDIPORT umpMidiPort,
+        _In_ std::map<UINT32, PORT_INFO> portInfo[2]
+    );
+
     HRESULT GetMidi1PortNames(
         _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
         _Inout_ std::map<UINT32, PORT_INFO> portInfo[2]

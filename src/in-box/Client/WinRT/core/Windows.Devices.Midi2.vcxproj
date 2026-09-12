@@ -631,6 +631,9 @@
     <ClInclude Include="MidiNetworkClientDisconnectResponse.h">
       <DependentUpon>MidiNetworkClientDisconnectResponse.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiNetworkClientUpdateResponse.h">
+      <DependentUpon>MidiNetworkClientUpdateResponse.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiNetworkHostCreationResponse.h">
       <DependentUpon>MidiNetworkHostCreationResponse.idl</DependentUpon>
     </ClInclude>
@@ -675,6 +678,12 @@
     </ClInclude>
     <ClInclude Include="MidiNetworkClientUpdateConfig.h">
       <DependentUpon>MidiNetworkClientUpdateConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkHostKnownClientsConfig.h">
+      <DependentUpon>MidiNetworkHostKnownClientsConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkKnownRemoteClient.h">
+      <DependentUpon>MidiNetworkKnownRemoteClient.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiNetworkHostRemovalConfig.h">
       <DependentUpon>MidiNetworkHostRemovalConfig.idl</DependentUpon>
@@ -1009,6 +1018,9 @@
     <ClCompile Include="MidiNetworkClientDisconnectResponse.cpp">
       <DependentUpon>MidiNetworkClientDisconnectResponse.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiNetworkClientUpdateResponse.cpp">
+      <DependentUpon>MidiNetworkClientUpdateResponse.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiNetworkHostCreationResponse.cpp">
       <DependentUpon>MidiNetworkHostCreationResponse.idl</DependentUpon>
     </ClCompile>
@@ -1056,6 +1068,12 @@
     </ClCompile>
     <ClCompile Include="MidiNetworkClientUpdateConfig.cpp">
       <DependentUpon>MidiNetworkClientUpdateConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkHostKnownClientsConfig.cpp">
+      <DependentUpon>MidiNetworkHostKnownClientsConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkKnownRemoteClient.cpp">
+      <DependentUpon>MidiNetworkKnownRemoteClient.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiNetworkHostRemovalConfig.cpp">
       <DependentUpon>MidiNetworkHostRemovalConfig.idl</DependentUpon>
@@ -1253,6 +1271,8 @@
     <Midl Include="MidiNetworkClientDisconnectConfig.idl" />
     <Midl Include="MidiNetworkClientDisconnectResponse.idl" />
     <Midl Include="MidiNetworkClientDisconnectErrorCodeEnum.idl" />
+    <Midl Include="MidiNetworkClientUpdateResponse.idl" />
+    <Midl Include="MidiNetworkClientUpdateErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkClientMatchCriteria.idl" />
     <Midl Include="MidiNetworkClientEntryStateEnum.idl" />
     <Midl Include="MidiNetworkConfiguredClient.idl" />
@@ -1267,6 +1287,8 @@
     <Midl Include="MidiNetworkTransportManager.idl" />
     <Midl Include="MidiNetworkHostCreationConfig.idl" />
     <Midl Include="MidiNetworkHostCreationResponse.idl" />
+    <Midl Include="MidiNetworkHostKnownClientsConfig.idl" />
+    <Midl Include="MidiNetworkKnownRemoteClient.idl" />
     <Midl Include="MidiNetworkHostRemovalConfig.idl" />
     <Midl Include="MidiNetworkHostUpdateConfig.idl" />
     <Midl Include="MidiNetworkClientUpdateConfig.idl" />

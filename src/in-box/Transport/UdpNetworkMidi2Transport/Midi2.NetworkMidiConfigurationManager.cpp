@@ -2402,6 +2402,67 @@ catch (...)
 //
 
 
+namespace
+{
+    // The settings which mean the same thing whether an entry is being made or changed. Create
+    // calls these on a freshly built definition, so a key the entry does not mention takes the
+    // definition's own default; update calls them on the definition already held, so the same
+    // absent key leaves the current value alone. Both paths going through one function is what
+    // stops a setting being creatable but not updatable.
+    //
+    // Anything not here is deliberately fixed once the entry exists. The match criteria, the
+    // identity, the port, the advertisement and the authentication settings all decide how the
+    // connection is built in the first place, and honoring them in an update would record a
+    // change which nothing acts on until the entry is rebuilt. Changing one of those means
+    // removing the entry and adding it back.
+    void ApplyEntrySettings(
+        _In_ json::JsonObject const& entry,
+        _Inout_ MidiNetworkClientDefinition& definition) noexcept
+    {
+        definition.CustomEndpointName = internal::TrimmedHStringCopy(
+            SafeGetNamedString(
+                entry,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY,
+                definition.CustomEndpointName));
+
+        definition.CreateMidi1Ports = SafeGetNamedBoolean(
+            entry,
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY,
+            definition.CreateMidi1Ports);
+
+        definition.FallbackMidi1PortCount = SafeGetNamedByte(
+            entry,
+            MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
+            definition.FallbackMidi1PortCount,
+            MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
+            MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
+    }
+
+    void ApplyEntrySettings(
+        _In_ json::JsonObject const& entry,
+        _Inout_ MidiNetworkHostDefinition& definition) noexcept
+    {
+        definition.CustomEndpointName = internal::TrimmedHStringCopy(
+            SafeGetNamedString(
+                entry,
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY,
+                definition.CustomEndpointName));
+
+        definition.CreateMidi1Ports = SafeGetNamedBoolean(
+            entry,
+            MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY,
+            definition.CreateMidi1Ports);
+
+        definition.FallbackMidi1PortCount = SafeGetNamedByte(
+            entry,
+            MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
+            definition.FallbackMidi1PortCount,
+            MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
+            MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
+    }
+}
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiConfigurationManager::ProcessEntryUpdates(
@@ -2419,28 +2480,17 @@ try
     // recorded for the next connection and nothing is torn down to act on it.
     auto applyToDefinition = [&endpointManager](
         json::JsonObject const& entry,
-        bool& createMidi1Ports,
-        uint8_t& fallbackMidi1PortCount,
+        auto& definition,
         std::vector<std::wstring> const& liveEndpointDeviceIds)
     {
-        createMidi1Ports = SafeGetNamedBoolean(
-            entry,
-            MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY,
-            createMidi1Ports);
+        auto const previousCount = definition.FallbackMidi1PortCount;
 
-        auto const newCount = SafeGetNamedByte(
-            entry,
-            MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
-            fallbackMidi1PortCount,
-            MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
-            MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
+        ApplyEntrySettings(entry, definition);
 
-        if (newCount == fallbackMidi1PortCount)
+        if (definition.FallbackMidi1PortCount == previousCount)
         {
             return;
         }
-
-        fallbackMidi1PortCount = newCount;
 
         if (endpointManager == nullptr)
         {
@@ -2451,7 +2501,7 @@ try
         {
             if (endpointDeviceId.empty()) continue;
 
-            LOG_IF_FAILED(endpointManager->RefreshMidi1PortsForEndpoint(endpointDeviceId, newCount));
+            LOG_IF_FAILED(endpointManager->RefreshMidi1PortsForEndpoint(endpointDeviceId, definition.FallbackMidi1PortCount));
         }
     };
 
@@ -2485,7 +2535,7 @@ try
             {
                 if (definition == nullptr || definition->EntryIdentifier != entryIdentifier) continue;
 
-                applyToDefinition(entry, definition->CreateMidi1Ports, definition->FallbackMidi1PortCount, endpointDeviceIds);
+                applyToDefinition(entry, *definition, endpointDeviceIds);
 
                 if (auto host = TransportState::Current().GetHost(entryIdentifier); host != nullptr)
                 {
@@ -2525,7 +2575,7 @@ try
             {
                 if (definition == nullptr || definition->EntryIdentifier != entryIdentifier) continue;
 
-                applyToDefinition(entry, definition->CreateMidi1Ports, definition->FallbackMidi1PortCount, endpointDeviceIds);
+                applyToDefinition(entry, *definition, endpointDeviceIds);
 
                 if (auto client = TransportState::Current().GetClient(entryIdentifier); client != nullptr)
                 {
@@ -2785,17 +2835,9 @@ try
                 definition->IsEnabled = SafeGetNamedBoolean(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY, true);
                 definition->Advertise = SafeGetNamedBoolean(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_MDNS_ADVERTISE_KEY, true);
 
-                definition->CustomEndpointName = internal::TrimmedHStringCopy(
-                    SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY, L""));
-
-                definition->CreateMidi1Ports = SafeGetNamedBoolean(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY, MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT);
-
-                definition->FallbackMidi1PortCount = SafeGetNamedByte(
-                    hostEntry,
-                    MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
-                    MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT,
-                    MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
-                    MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
+                // The settings which can also be changed later are read the one way both paths
+                // read them. The definition is new, so an absent key takes its default.
+                ApplyEntrySettings(hostEntry, *definition);
 
                 definition->UmpEndpointName = internal::TrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAME_PROPERTY, L""));
                 definition->ProductInstanceId = internal::TrimmedHStringCopy(SafeGetNamedString(hostEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_PRODUCT_INSTANCE_ID_PROPERTY, L""));
@@ -2987,20 +3029,9 @@ try
 
                     definition->Enabled = SafeGetNamedBoolean(clientEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_ENABLED_KEY, true);
 
-                    definition->CustomEndpointName = internal::TrimmedHStringCopy(
-                        SafeGetNamedString(clientEntry, MIDI_CONFIG_JSON_NETWORK_MIDI_CUSTOM_ENDPOINT_NAME_KEY, L""));
-
-                    definition->CreateMidi1Ports = SafeGetNamedBoolean(
-                        clientEntry,
-                        MIDI_CONFIG_JSON_NETWORK_MIDI_CREATE_MIDI1_PORTS_KEY,
-                        MIDI_NETWORK_MIDI_CREATE_MIDI1_PORTS_DEFAULT);
-
-                    definition->FallbackMidi1PortCount = SafeGetNamedByte(
-                        clientEntry,
-                        MIDI_CONFIG_JSON_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_KEY,
-                        MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_DEFAULT,
-                        MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MINIMUM,
-                        MIDI_NETWORK_MIDI_FALLBACK_MIDI1_PORT_COUNT_MAXIMUM);
+                    // The settings which can also be changed later are read the one way both
+                    // paths read them. The definition is new, so an absent key takes its default.
+                    ApplyEntrySettings(clientEntry, *definition);
 
                     winrt::hstring localEndpointName{ };
                     winrt::hstring localProductInstanceId{ };
@@ -3093,19 +3124,13 @@ try
     // "remove" entries
     if (removeSection != nullptr && removeSection.Size() > 0)
     {
+        // Endpoint customizations are the only thing removed this way. Taking a host or a client
+        // away has to stop what is running as well as forget the entry, so each is a command of
+        // its own: removeHost and disconnectClient. A "remove" section naming a host or a client
+        // is the configuration file's record of the entry being gone, and the SDK applies that to
+        // the file when it saves, which is why nothing is expected here for them.
         LOG_IF_FAILED(ProcessEndpointCustomizationRemovals(removeSection, responseObject));
-
-        // remove a host 
-
-
-
-
-
-        // remove a connection to a remote host
-
     }
-
-
 
 
 

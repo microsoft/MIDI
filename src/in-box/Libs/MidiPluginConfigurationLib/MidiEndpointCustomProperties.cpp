@@ -33,6 +33,7 @@
 #include <winrt/Windows.Foundation.Collections.h>
 
 #include <Feature_Servicing_MIDI2CustomOutgoingLatency.h>
+#include <Feature_Servicing_MIDI2SchedulerV2.h>
 #include <Feature_Servicing_MIDI2RecommendedCCIntervalProp.h>
 
 namespace WindowsMidiServicesPluginConfigurationLib
@@ -501,6 +502,21 @@ bool MidiEndpointCustomProperties::WriteNonCommonProperties(_In_ std::vector<DEV
         // custom latency
         destination.push_back({ {PKEY_MIDI_MidiOutCustomLatencyTicks, DEVPROP_STORE_SYSTEM, nullptr},
                 DEVPROP_TYPE_UINT64, sizeof(uint64_t), (PVOID)&OutgoingLatencyTicks });
+
+        if (Feature_Servicing_MIDI2SchedulerV2::IsEnabled())
+        {
+            // Supplying a value is itself the signal to prefer it over the calculated latency.
+            if (OutgoingLatencyTicks != 0)
+            {
+                destination.push_back({ {PKEY_MIDI_MidiOutLatencyTicksUserOverride, DEVPROP_STORE_SYSTEM, nullptr},
+                        DEVPROP_TYPE_BOOLEAN, sizeof(DEVPROP_BOOLEAN), (PVOID)&m_devPropTrue });
+            }
+            else
+            {
+                destination.push_back({ {PKEY_MIDI_MidiOutLatencyTicksUserOverride, DEVPROP_STORE_SYSTEM, nullptr},
+                        DEVPROP_TYPE_BOOLEAN, sizeof(DEVPROP_BOOLEAN), (PVOID)&m_devPropFalse });
+            }
+        }
     }
 
     // naming approach

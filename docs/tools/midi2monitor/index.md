@@ -89,11 +89,11 @@ asked a synth to dump a patch and want only that, this saves a lot of scrolling.
 
 **Clear All Entries** empties the list so you can start a fresh observation.
 
-### Adding notes to a message
+### Adding comments to a message
 
-Every row has a small speech-bubble button on the left. Select it to attach a note to that
-message, such as "this is the one the pedal sends". Rows with a note show a marker on the
-button, and hovering over it shows what you wrote. Notes are included when you save the capture
+Every row has a small speech-bubble button on the left. Select it to attach a comment to that
+message, such as "this is the one the pedal sends". Rows with a comment show a marker on the
+button, and hovering over it shows what you wrote. Comments are included when you save the capture
 to a file, which makes them useful for handing findings to someone else.
 
 ## Setting up the view
@@ -125,7 +125,7 @@ so it stays visible while you work in your DAW.
 ## Saving a capture
 
 **Save to File** writes everything currently in the list to a plain text file, including any
-notes you added. It's a good way to keep a record of what an instrument sent, or to send the
+comments you added. It's a good way to keep a record of what an instrument sent, or to send the
 details to someone who's helping you troubleshoot.
 
 ## Settings

@@ -32,6 +32,7 @@
 
 #include "Feature_Servicing_MIDIPortDisambiguators.h"
 #include "Feature_Servicing_MIDI2UnicodeConversion.h"
+#include "Feature_Servicing_MIDI2PortNamingRework.h"
 
 namespace WindowsMidiServicesNamingLib
 {
@@ -43,6 +44,16 @@ namespace WindowsMidiServicesNamingLib
 // max of 32 total inputs/outputs
 #define MAX_PORT_NAME_TABLE_SIZE    (sizeof(Midi1PortNameEntry) * 32 + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE)
 #define MIN_PORT_NAME_TABLE_SIZE    (sizeof(Midi1PortNameEntry) + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE)
+
+// Entries are memcpy'd straight in and out of the stored property, and a table written by one
+// build is read by another, so this layout is a binary contract. Changing it needs a versioned
+// format, not an edit.
+static_assert(sizeof(Midi1PortNameEntry) == 200, "Midi1PortNameEntry is a persisted binary layout");
+static_assert(offsetof(Midi1PortNameEntry, GroupIndex) == 0, "Midi1PortNameEntry is a persisted binary layout");
+static_assert(offsetof(Midi1PortNameEntry, DataFlowFromUserPerspective) == 4, "Midi1PortNameEntry is a persisted binary layout");
+static_assert(offsetof(Midi1PortNameEntry, CustomName) == 8, "Midi1PortNameEntry is a persisted binary layout");
+static_assert(offsetof(Midi1PortNameEntry, LegacyWinMMName) == 72, "Midi1PortNameEntry is a persisted binary layout");
+static_assert(offsetof(Midi1PortNameEntry, NewStyleName) == 136, "Midi1PortNameEntry is a persisted binary layout");
 
 // Default WinMM naming for MIDI 1 device using a MIDI 1 driver
 #define MIDI_MIDI1_PORT_NAMING_DEFAULT_REG_VALUE_NAME    L"DefaultMidi1PortNaming"
@@ -698,6 +709,23 @@ MidiEndpointNameTable::WriteProperties(
     std::transform(m_sourceEntries.begin(), m_sourceEntries.end(), std::back_inserter(entries), [](auto& p){ return *p.second; });
     std::transform(m_destinationEntries.begin(), m_destinationEntries.end(), std::back_inserter(entries), [](auto& p) { return *p.second; });
 
+    // Only a table that was rebuilt has anything to say here. Everything else leaves the property
+    // alone rather than overwriting it with a zero it did not calculate.
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        if (m_nameSourceFlagsValid)
+        {
+            destination.push_back({ { PKEY_MIDI_Midi1PortNameSourceFlags, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_UINT32, (ULONG)sizeof(uint32_t), (PVOID)&m_nameSourceFlags });
+        }
+
+        if (m_hasLegacyEquivalentSet)
+        {
+            destination.push_back({ { PKEY_MIDI_Midi1PortNamesHaveLegacyEquivalent, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_BOOLEAN, (ULONG)sizeof(DEVPROP_BOOLEAN), (PVOID)&m_hasLegacyEquivalent });
+        }
+    }
+
     m_nameTablePropertyData.clear();
 
     if (WriteMidi1PortNameTableToPropertyDataPointer(entries, m_nameTablePropertyData))
@@ -756,6 +784,11 @@ MidiEndpointNameTable::PopulateEntryForNativeUmpDevice(
 
     entry->GroupIndex = groupIndex;
     entry->DataFlowFromUserPerspective = flowFromUserPerspective;
+
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        RecordPortInput(groupIndex, flowFromUserPerspective, blockName, L"", filterName);
+    }
 
     if (flowFromUserPerspective == MidiFlow::MidiFlowIn)
     {
@@ -912,6 +945,11 @@ MidiEndpointNameTable::PopulateEntryForMidi1DeviceUsingUmpDriver(
     entry->GroupIndex = groupIndex;
     entry->DataFlowFromUserPerspective = flowFromUserPerspective;
 
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        RecordPortInput(groupIndex, flowFromUserPerspective, blockName, L"", parentDeviceName);
+    }
+
     if (flowFromUserPerspective == MidiFlow::MidiFlowIn)
     {
         m_sourceEntries[groupIndex] = entry;
@@ -978,15 +1016,91 @@ MidiEndpointNameTable::PopulateEntryForMidi1DeviceUsingMidi1Driver(
 }
 
 
+_Use_decl_annotations_
+void
+MidiEndpointNameTable::RecordPortInput(
+    uint8_t const groupIndex,
+    MidiFlow const flowFromUserPerspective,
+    std::wstring const& pinName,
+    std::wstring const& driverRegistryName,
+    std::wstring const& filterName) noexcept
+{
+    try
+    {
+        Midi1PortNameInput input{ };
+        input.GroupIndex = groupIndex;
+        input.DataFlowFromUserPerspective = flowFromUserPerspective;
+        input.PinName = pinName;
+        input.DriverRegistryName = driverRegistryName;
+        input.FilterName = filterName;
+
+        if (flowFromUserPerspective == MidiFlow::MidiFlowIn)
+        {
+            m_sourcePortInputs[groupIndex] = input;
+        }
+        else if (flowFromUserPerspective == MidiFlow::MidiFlowOut)
+        {
+            m_destinationPortInputs[groupIndex] = input;
+        }
+    }
+    CATCH_LOG();
+}
 
 
+void MidiEndpointNameTable::ResetPortInputs() noexcept
+{
+    m_sourcePortInputs.clear();
+    m_destinationPortInputs.clear();
+}
 
 
+_Use_decl_annotations_
+void MidiEndpointNameTable::SetPortNamesHaveLegacyEquivalent(bool const hasLegacyEquivalent) noexcept
+{
+    m_hasLegacyEquivalent = hasLegacyEquivalent ? DEVPROP_TRUE : DEVPROP_FALSE;
+    m_hasLegacyEquivalentSet = true;
+}
 
 
+_Use_decl_annotations_
+HRESULT
+MidiEndpointNameTable::RebuildNewStyleNames(
+    std::wstring const& endpointName,
+    bool const driverRegistryNamesArePerFilter) noexcept
+{
+    if (!Feature_Servicing_MIDI2PortNamingRework::IsEnabled()) return S_OK;
 
+    try
+    {
+        std::vector<Midi1PortNameInput> inputs{ };
 
+        for (auto const& input : m_sourcePortInputs) { inputs.push_back(input.second); }
+        for (auto const& input : m_destinationPortInputs) { inputs.push_back(input.second); }
 
+        if (inputs.empty()) return S_OK;
+
+        auto results = BuildMidi1PortNamesForEndpoint(endpointName, driverRegistryNamesArePerFilter, inputs);
+
+        for (auto const& result : results)
+        {
+            auto const& entries = result.DataFlowFromUserPerspective == MidiFlow::MidiFlowIn ?
+                m_sourceEntries : m_destinationEntries;
+
+            auto entry = entries.find(result.GroupIndex);
+            if (entry == entries.end() || entry->second == nullptr) continue;
+
+            internal::SafeCopyWStringToFixedArray(entry->second->NewStyleName, MAXPNAMELEN, result.Name);
+        }
+
+        m_nameSourceFlags = CalculateMidi1PortNameSourceFlags(endpointName, results);
+        m_nameSourceFlagsValid = true;
+
+        return S_OK;
+    }
+    CATCH_LOG();
+
+    return E_FAIL;
+}
 
 
 _Use_decl_annotations_
@@ -1024,7 +1138,13 @@ std::shared_ptr<Midi1PortNameEntry> MidiEndpointNameTable::GetDestinationEntry(
 
 Midi1PortNameSelection MidiEndpointNameTable::GetSystemDefaultPortNameSelection() noexcept
 {
-    DWORD defaultPortNamingForMidi1Drivers{ MIDI_MIDI1_PORT_NAMING_DEFAULT_VALUE };
+    // Absence of the registry value is what selects Automatic, so a rollback lands exactly on the
+    // legacy default that shipped.
+    uint32_t const valueWhenUnset = Feature_Servicing_MIDI2PortNamingRework::IsEnabled() ?
+        static_cast<uint32_t>(Midi1PortNameSelection::UseAutomatic) :
+        MIDI_MIDI1_PORT_NAMING_DEFAULT_VALUE;
+
+    DWORD defaultPortNamingForMidi1Drivers{ valueWhenUnset };
 
     if (SUCCEEDED(wil::reg::get_value_dword_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_REG_KEY, MIDI_MIDI1_PORT_NAMING_DEFAULT_REG_VALUE_NAME, &defaultPortNamingForMidi1Drivers)))
     {
@@ -1037,7 +1157,7 @@ Midi1PortNameSelection MidiEndpointNameTable::GetSystemDefaultPortNameSelection(
         }
     }
 
-    return static_cast<Midi1PortNameSelection>(MIDI_MIDI1_PORT_NAMING_DEFAULT_VALUE);
+    return static_cast<Midi1PortNameSelection>(valueWhenUnset);
 }
 
 
@@ -1171,6 +1291,913 @@ std::vector<Midi1PortNameEntry> MidiEndpointNameTable::GetAllDestinationEntries(
 }
 
 
+// ========================================================================================================
+// New-style name construction.
+//
+// These are net-new alongside the Generate* functions above, which are left exactly as they shipped
+// so that turning Feature_Servicing_MIDI2PortNamingRework off restores the original behavior.
+// ========================================================================================================
+
+namespace
+{
+    constexpr size_t MidiMaxPortNameCharacters = MAXPNAMELEN - 1;
+
+    // Words that mean nothing on their own, so a name made only of them is not a port name. Also
+    // stripped from the end of a name before comparing two names for sameness.
+    bool IsUninformativeWord(_In_ std::wstring const& lowercaseWord) noexcept
+    {
+        return
+            lowercaseWord == L"midi" ||
+            lowercaseWord == L"port" ||
+            lowercaseWord == L"in" ||
+            lowercaseWord == L"out" ||
+            lowercaseWord == L"io" ||
+            lowercaseWord == L"device";
+    }
+
+    std::vector<std::wstring> SplitIntoWords(_In_ std::wstring const& value) noexcept
+    {
+        std::vector<std::wstring> words{ };
+
+        try
+        {
+            std::wstring current{ };
+
+            for (auto const& ch : value)
+            {
+                if (iswspace(ch))
+                {
+                    if (!current.empty()) { words.push_back(current); current.clear(); }
+                }
+                else
+                {
+                    current += ch;
+                }
+            }
+
+            if (!current.empty()) { words.push_back(current); }
+        }
+        CATCH_LOG();
+
+        return words;
+    }
+
+    // Words for comparison. Punctuation that vendors use as a separator is treated as whitespace,
+    // so "Yamaha USB-MIDI-1" compares as three words rather than one.
+    std::vector<std::wstring> SplitIntoComparisonWords(_In_ std::wstring const& value) noexcept
+    {
+        std::vector<std::wstring> words{ };
+
+        try
+        {
+            std::wstring current{ };
+
+            for (auto const& ch : value)
+            {
+                if (iswspace(ch) || ch == L':' || ch == L',' || ch == L';' || ch == L'/' || ch == L'_' || ch == L'-')
+                {
+                    if (!current.empty()) { words.push_back(current); current.clear(); }
+                }
+                else
+                {
+                    current += ch;
+                }
+            }
+
+            if (!current.empty()) { words.push_back(current); }
+        }
+        CATCH_LOG();
+
+        return words;
+    }
+
+    // Lowercase, separator-insensitive, with trailing uninformative words removed. Two names with
+    // the same comparison form say the same thing, so one of them is not worth showing.
+    std::wstring ComparisonForm(_In_ std::wstring const& value) noexcept
+    {
+        std::wstring result{ };
+
+        try
+        {
+            auto words = SplitIntoComparisonWords(WindowsMidiServicesInternal::ToLowerTrimmedWStringCopy(value));
+
+            while (words.size() > 1 && IsUninformativeWord(words.back()))
+            {
+                words.pop_back();
+            }
+
+            for (auto const& word : words)
+            {
+                if (!result.empty()) { result += L" "; }
+                result += word;
+            }
+        }
+        CATCH_LOG();
+
+        return result;
+    }
+
+    // The substring of value covering its first wordCount whitespace-delimited words, keeping the
+    // original spacing rather than rebuilding it.
+    std::wstring PrefixCoveringWords(_In_ std::wstring const& value, _In_ size_t const wordCount) noexcept
+    {
+        if (wordCount == 0) { return L""; }
+
+        size_t words{ 0 };
+        size_t position{ 0 };
+
+        while (position < value.length())
+        {
+            while (position < value.length() && iswspace(value[position])) { position++; }
+
+            size_t const start = position;
+
+            while (position < value.length() && !iswspace(value[position])) { position++; }
+
+            if (position > start)
+            {
+                words++;
+                if (words == wordCount) { return value.substr(0, position); }
+            }
+        }
+
+        return value;
+    }
+
+    // Cutting a name at a word boundary can leave the punctuation a vendor used as a separator
+    // dangling on the end, as in "teVirtualMIDI -".
+    std::wstring TrimSeparators(_In_ std::wstring const& value) noexcept
+    {
+        std::wstring result{ };
+
+        try
+        {
+            result = WindowsMidiServicesInternal::TrimmedWStringCopy(value);
+
+            auto isSeparator = [](wchar_t const ch)
+                {
+                    return iswspace(ch) || ch == L':' || ch == L',' || ch == L';' || ch == L'/' || ch == L'_' || ch == L'-';
+                };
+
+            while (!result.empty() && isSeparator(result.back())) { result.pop_back(); }
+            while (!result.empty() && isSeparator(result.front())) { result.erase(result.begin()); }
+        }
+        CATCH_LOG();
+
+        return result;
+    }
+
+    // The " (2)" a second unit of the same model carries. It belongs to the endpoint name, not to
+    // anything the device said, so comparisons against what the device reported must ignore it.
+    std::wstring RemoveDuplicateDeviceMarker(_In_ std::wstring const& deviceName) noexcept
+    {
+        std::wstring result{ };
+
+        try
+        {
+            result = WindowsMidiServicesInternal::TrimmedWStringCopy(deviceName);
+
+            if (result.length() < 4) { return result; }
+            if (result.back() != L')') { return result; }
+
+            auto open = result.find_last_of(L'(');
+            if (open == std::wstring::npos || open == 0) { return result; }
+
+            auto digits = result.substr(open + 1, result.length() - open - 2);
+            if (digits.empty()) { return result; }
+
+            for (auto const ch : digits)
+            {
+                if (!iswdigit(ch)) { return result; }
+            }
+
+            return WindowsMidiServicesInternal::TrimmedWStringCopy(result.substr(0, open));
+        }
+        CATCH_LOG();
+
+        return result;
+    }
+}
+
+_Use_decl_annotations_
+std::wstring RemoveGeneratedPinNameSuffix(std::wstring const& pinName) noexcept
+{
+    // Our USB and KS stack appends a bracketed index when it has to invent a pin name from the
+    // filter name. The leading space matters: some devices really are named "[0]".
+    return RemoveJustKSPinGeneratedSuffix(pinName);
+}
+
+_Use_decl_annotations_
+bool IsPlaceholderPortName(std::wstring const& name) noexcept
+{
+    auto compare = ComparisonForm(name);
+
+    if (compare.empty()) { return true; }
+
+    auto words = SplitIntoComparisonWords(compare);
+    if (words.empty()) { return true; }
+
+    // a name made only of uninformative words, with or without a trailing number, says nothing
+    for (auto const& word : words)
+    {
+        if (IsUninformativeWord(word)) { continue; }
+
+        bool allDigits{ !word.empty() };
+        for (auto const& ch : word)
+        {
+            if (!iswdigit(ch)) { allDigits = false; break; }
+        }
+
+        if (!allDigits) { return false; }
+    }
+
+    return true;
+}
+
+_Use_decl_annotations_
+bool PortNameCarriesDeviceName(std::wstring const& portName, std::wstring const& deviceName) noexcept
+{
+    auto portWords = SplitIntoComparisonWords(ComparisonForm(portName));
+    auto deviceWords = SplitIntoComparisonWords(ComparisonForm(deviceName));
+
+    if (deviceWords.empty()) { return false; }
+
+    // the device name at the front, which is what most devices that include it actually do
+    if (portWords.size() >= deviceWords.size())
+    {
+        bool leads{ true };
+
+        for (size_t i = 0; i < deviceWords.size(); i++)
+        {
+            if (portWords[i] != deviceWords[i]) { leads = false; break; }
+        }
+
+        if (leads) { return true; }
+    }
+
+    // or most of the device name present in some other arrangement, which is what RME does
+    size_t matches{ 0 };
+
+    for (auto const& deviceWord : deviceWords)
+    {
+        if (std::find(portWords.begin(), portWords.end(), deviceWord) != portWords.end()) { matches++; }
+    }
+
+    return (matches * 2 >= deviceWords.size());
+}
+
+_Use_decl_annotations_
+std::wstring RemoveDeviceNamePrefixFromPortName(std::wstring const& portName, std::wstring const& deviceName) noexcept
+{
+    std::wstring result{ portName };
+
+    try
+    {
+        auto portWords = SplitIntoComparisonWords(WindowsMidiServicesInternal::ToLowerTrimmedWStringCopy(portName));
+        auto deviceWords = SplitIntoComparisonWords(WindowsMidiServicesInternal::ToLowerTrimmedWStringCopy(deviceName));
+
+        size_t matched{ 0 };
+
+        while (matched < deviceWords.size() && matched < portWords.size() && portWords[matched] == deviceWords[matched])
+        {
+            matched++;
+        }
+
+        // removing every word would leave nothing to distinguish the port
+        if (matched == 0 || matched >= portWords.size()) { return result; }
+
+        // find where the first word we are keeping starts in the original string, so punctuation
+        // and spacing inside the kept part survive untouched
+        size_t position{ 0 };
+        size_t wordIndex{ 0 };
+        bool inWord{ false };
+
+        for (size_t i = 0; i < portName.length(); i++)
+        {
+            auto ch = portName[i];
+            bool isSeparator = iswspace(ch) || ch == L':' || ch == L',' || ch == L';' || ch == L'/' || ch == L'_' || ch == L'-';
+
+            if (!isSeparator && !inWord)
+            {
+                if (wordIndex == matched) { position = i; break; }
+                inWord = true;
+                wordIndex++;
+            }
+            else if (isSeparator)
+            {
+                inWord = false;
+            }
+        }
+
+        if (position > 0)
+        {
+            result = WindowsMidiServicesInternal::TrimmedWStringCopy(portName.substr(position));
+        }
+    }
+    CATCH_LOG();
+
+    return result;
+}
+
+_Use_decl_annotations_
+std::wstring ShortenDeviceNameToFit(std::wstring const& deviceName, size_t const maxCharacters) noexcept
+{
+    std::wstring result{ };
+
+    try
+    {
+        if (maxCharacters == 0) { return result; }
+
+        auto trimmed = WindowsMidiServicesInternal::TrimmedWStringCopy(deviceName);
+        if (trimmed.length() <= maxCharacters) { return trimmed; }
+
+        auto words = SplitIntoWords(trimmed);
+        if (words.empty()) { return result; }
+
+        // as many whole words from the front as fit
+        std::wstring candidate{ };
+
+        for (auto const& word : words)
+        {
+            auto next = candidate.empty() ? word : candidate + L" " + word;
+            if (next.length() > maxCharacters) { break; }
+            candidate = next;
+        }
+
+        candidate = TrimSeparators(candidate);
+        if (!candidate.empty()) { return candidate; }
+
+        // nothing from the front fits, so keep the end instead. For "Montage M8x" that is the
+        // model, which identifies the device better than the family name would.
+        for (size_t start = 1; start < words.size(); start++)
+        {
+            std::wstring tail{ };
+
+            for (size_t i = start; i < words.size(); i++)
+            {
+                tail = tail.empty() ? words[i] : tail + L" " + words[i];
+            }
+
+            tail = TrimSeparators(tail);
+
+            if (!tail.empty() && tail.length() <= maxCharacters) { return tail; }
+        }
+    }
+    CATCH_LOG();
+
+    return result;
+}
+
+_Use_decl_annotations_
+std::wstring TruncateWithoutSplittingCharacters(std::wstring const& value, size_t const maxCharacters) noexcept
+{
+    std::wstring result{ value };
+
+    try
+    {
+        if (result.length() > maxCharacters)
+        {
+            result.resize(maxCharacters);
+
+            // never leave a lead surrogate without its trail
+            if (!result.empty() && IS_HIGH_SURROGATE(result.back()))
+            {
+                result.pop_back();
+            }
+        }
+
+        result = WindowsMidiServicesInternal::TrimmedWStringCopy(result);
+    }
+    CATCH_LOG();
+
+    return result;
+}
+
+_Use_decl_annotations_
+Midi1ResolvedPortName ResolveDeviceSuppliedPortName(
+    std::wstring const& pinName,
+    std::wstring const& driverRegistryName,
+    bool const driverRegistryNameIsPerFilter,
+    std::wstring const& filterName,
+    std::wstring const& deviceName) noexcept
+{
+    Midi1ResolvedPortName resolved{ };
+
+    try
+    {
+        // The device name arrives here with any duplicate marker already removed, so the
+        // candidates have to have theirs removed too. Otherwise a second unit of the same model
+        // sees its own name back as if the device had supplied a port name.
+        auto isJustTheDeviceName = [](std::wstring const& candidate, std::wstring const& device) noexcept
+            {
+                return ComparisonForm(RemoveDuplicateDeviceMarker(candidate)) ==
+                    ComparisonForm(RemoveDuplicateDeviceMarker(device));
+            };
+
+        // 1. the jack name, unless it is empty, a placeholder, or our own stack's "<filter> [n]"
+        auto pin = RemoveGeneratedPinNameSuffix(pinName);
+
+        if (!IsPlaceholderPortName(pin) && !isJustTheDeviceName(pin, filterName))
+        {
+            resolved.Name = pin;
+            resolved.Source = Midi1PortNameSource::Pin;
+            return resolved;
+        }
+
+        // 2. the driver's MediaCategories name, but only when the driver gives each filter its own
+        //    entry. A single device-wide entry is shared by every unit of that model, so its value
+        //    is whichever unit wrote it last.
+        auto registryName = WindowsMidiServicesInternal::TrimmedWStringCopy(driverRegistryName);
+
+        if (driverRegistryNameIsPerFilter &&
+            !IsPlaceholderPortName(registryName) &&
+            !isJustTheDeviceName(registryName, deviceName))
+        {
+            resolved.Name = registryName;
+            resolved.Source = Midi1PortNameSource::DriverRegistry;
+            return resolved;
+        }
+
+        // 3. the filter name, when it is not simply the device name again
+        auto filter = WindowsMidiServicesInternal::TrimmedWStringCopy(filterName);
+
+        if (!IsPlaceholderPortName(filter) && !isJustTheDeviceName(filter, deviceName))
+        {
+            resolved.Name = filter;
+            resolved.Source = Midi1PortNameSource::Filter;
+            return resolved;
+        }
+    }
+    CATCH_LOG();
+
+    return resolved;
+}
+
+namespace
+{
+    // The device name and port name combined, cut down to fit, with the group suffix already
+    // accounted for by the caller's budget.
+    std::wstring ComposeAndFit(
+        _In_ std::wstring const& deviceName,
+        _In_ std::wstring const& portName,
+        _In_ bool const dropDeviceName,
+        _In_ size_t const budget,
+        _In_ std::wstring const& duplicateMarker) noexcept
+    {
+        std::wstring result{ };
+
+        try
+        {
+            if (portName.empty())
+            {
+                return TruncateWithoutSplittingCharacters(deviceName, budget);
+            }
+
+            auto carries = PortNameCarriesDeviceName(portName, deviceName);
+
+            if (carries)
+            {
+                // The device name is about to be dropped, and on a second unit of the same model
+                // it is the only thing carrying the marker, so the marker moves onto the port name.
+                auto const innerBudget = budget > duplicateMarker.length() ? budget - duplicateMarker.length() : 0;
+
+                if (portName.length() <= innerBudget) { return portName + duplicateMarker; }
+
+                // the device name is in there twice over once we add our own, so take the repeated
+                // part out and put back as much of the device name as still fits
+                auto remainder = RemoveDeviceNamePrefixFromPortName(portName, deviceName);
+
+                if (remainder.length() < innerBudget)
+                {
+                    auto shortened = ShortenDeviceNameToFit(deviceName, innerBudget - remainder.length() - 1);
+                    if (!shortened.empty()) { return shortened + L" " + remainder + duplicateMarker; }
+                }
+
+                return TruncateWithoutSplittingCharacters(remainder, innerBudget) + duplicateMarker;
+            }
+
+            if (!dropDeviceName)
+            {
+                auto composed = WindowsMidiServicesInternal::TrimmedWStringCopy(deviceName + L" " + portName);
+                if (composed.length() <= budget) { return composed; }
+            }
+
+            // the port name on its own still identifies the port
+            if (portName.length() <= budget) { return portName; }
+
+            auto shortened = ShortenDeviceNameToFit(deviceName, budget > portName.length() ? budget - portName.length() - 1 : 0);
+            if (!shortened.empty() && portName.length() < budget) { return shortened + L" " + portName; }
+
+            return TruncateWithoutSplittingCharacters(portName, budget);
+        }
+        CATCH_LOG();
+
+        return result;
+    }
+}
+
+_Use_decl_annotations_
+std::vector<Midi1PortNameResult> BuildMidi1PortNamesForEndpoint(
+    std::wstring const& endpointName,
+    bool const driverRegistryNamesArePerFilter,
+    std::vector<Midi1PortNameInput> const& ports) noexcept
+{
+    std::vector<Midi1PortNameResult> results{ };
+
+    try
+    {
+        auto device = WindowsMidiServicesInternal::TrimmedWStringCopy(endpointName);
+
+        // A port name that already carries the model is the one case where the endpoint name, and
+        // so the marker a second unit of the same model was given, gets dropped during composition.
+        auto deviceForComparison = RemoveDuplicateDeviceMarker(device);
+
+        std::wstring duplicateMarker{ };
+
+        if (deviceForComparison.length() < device.length())
+        {
+            duplicateMarker = device.substr(deviceForComparison.length());
+        }
+
+        for (auto const& flow : { MidiFlow::MidiFlowIn, MidiFlow::MidiFlowOut })
+        {
+            std::vector<Midi1PortNameInput> inDirection{ };
+
+            for (auto const& port : ports)
+            {
+                if (port.DataFlowFromUserPerspective == flow) { inDirection.push_back(port); }
+            }
+
+            if (inDirection.empty()) { continue; }
+
+            // resolve every port first, because the decisions below need the whole set
+            std::vector<Midi1ResolvedPortName> resolved{ };
+
+            for (auto const& port : inDirection)
+            {
+                resolved.push_back(ResolveDeviceSuppliedPortName(
+                    port.PinName,
+                    port.DriverRegistryName,
+                    driverRegistryNamesArePerFilter,
+                    port.FilterName,
+                    deviceForComparison));
+            }
+
+            // A name that repeats across the whole direction tells the ports apart from other
+            // devices but not from each other, so it is treated as if the device said nothing.
+            bool namesDiffer{ false };
+
+            for (size_t i = 1; i < resolved.size(); i++)
+            {
+                if (ComparisonForm(resolved[i].Name) != ComparisonForm(resolved[0].Name)) { namesDiffer = true; break; }
+            }
+
+            if (!namesDiffer)
+            {
+                for (auto& item : resolved)
+                {
+                    if (ComparisonForm(item.Name) == ComparisonForm(deviceForComparison))
+                    {
+                        item.Name.clear();
+                        item.Source = Midi1PortNameSource::None;
+                    }
+                }
+            }
+
+            // Decide once for the whole direction whether the device name is affordable, so one
+            // long port name cannot leave some ports carrying it and others not.
+            bool dropDeviceName{ false };
+
+            for (auto const& item : resolved)
+            {
+                if (item.Name.empty()) { continue; }
+                if (PortNameCarriesDeviceName(item.Name, device)) { continue; }
+
+                if ((device.length() + 1 + item.Name.length()) > MidiMaxPortNameCharacters)
+                {
+                    dropDeviceName = true;
+                    break;
+                }
+            }
+
+            // Numbering is needed when two ports would otherwise end up with the same name.
+            std::vector<std::wstring> unnumbered{ };
+
+            for (size_t i = 0; i < resolved.size(); i++)
+            {
+                unnumbered.push_back(ComposeAndFit(device, resolved[i].Name, dropDeviceName, MidiMaxPortNameCharacters, duplicateMarker));
+            }
+
+            bool numberingNeeded{ false };
+
+            for (size_t i = 0; i < unnumbered.size() && !numberingNeeded; i++)
+            {
+                for (size_t j = i + 1; j < unnumbered.size(); j++)
+                {
+                    if (WindowsMidiServicesInternal::ToUpperWStringCopy(unnumbered[i]) ==
+                        WindowsMidiServicesInternal::ToUpperWStringCopy(unnumbered[j]))
+                    {
+                        numberingNeeded = true;
+                        break;
+                    }
+                }
+            }
+
+            for (size_t i = 0; i < inDirection.size(); i++)
+            {
+                Midi1PortNameResult result{ };
+
+                result.GroupIndex = inDirection[i].GroupIndex;
+                result.DataFlowFromUserPerspective = flow;
+                result.Resolved = resolved[i];
+
+                if (numberingNeeded)
+                {
+                    // "group" is never localized. Applications match on these strings, so a name
+                    // that changed with the system language would break them.
+                    std::wstring suffix{ L" group " + std::to_wstring(static_cast<int>(inDirection[i].GroupIndex) + 1) };
+
+                    result.Name = ComposeAndFit(
+                        device,
+                        resolved[i].Name,
+                        dropDeviceName,
+                        MidiMaxPortNameCharacters - suffix.length(),
+                        duplicateMarker) + suffix;
+                }
+                else
+                {
+                    result.Name = unnumbered[i];
+                }
+
+                if (result.Name.empty())
+                {
+                    result.Name = TruncateWithoutSplittingCharacters(device, MidiMaxPortNameCharacters);
+                }
+
+                results.push_back(result);
+            }
+        }
+    }
+    CATCH_LOG();
+
+    return results;
+}
+
+_Use_decl_annotations_
+uint32_t CalculateMidi1PortNameSourceFlags(
+    std::wstring const& endpointName,
+    std::vector<Midi1PortNameResult> const& results) noexcept
+{
+    uint32_t flags{ MIDI_MIDI1_PORT_NAME_SOURCE_NONE };
+
+    try
+    {
+        if (results.empty()) { return flags; }
+
+        size_t named{ 0 };
+        size_t carryingDeviceName{ 0 };
+        std::vector<std::wstring> seen{ };
+        bool distinct{ true };
+
+        for (auto const& result : results)
+        {
+            if (result.Resolved.Source == Midi1PortNameSource::None) { continue; }
+
+            named++;
+
+            if (PortNameCarriesDeviceName(result.Resolved.Name, endpointName)) { carryingDeviceName++; }
+
+            auto compare = ComparisonForm(result.Resolved.Name);
+
+            if (std::find(seen.begin(), seen.end(), compare) != seen.end()) { distinct = false; }
+            else { seen.push_back(compare); }
+        }
+
+        if (named > 0)
+        {
+            flags |= MIDI_MIDI1_PORT_NAME_SOURCE_DEVICE_SUPPLIED;
+
+            if (named == results.size()) { flags |= MIDI_MIDI1_PORT_NAME_SOURCE_ALL_PORTS_NAMED; }
+            if (distinct) { flags |= MIDI_MIDI1_PORT_NAME_SOURCE_NAMES_ARE_DISTINCT; }
+            if (carryingDeviceName == named) { flags |= MIDI_MIDI1_PORT_NAME_SOURCE_NAMES_CONTAIN_DEVICE; }
+        }
+    }
+    CATCH_LOG();
+
+    return flags;
+}
+
+
+_Use_decl_annotations_
+std::wstring RecoverModelNameFromPortNames(
+    std::wstring const& deviceName,
+    bool const driverRegistryNamesArePerFilter,
+    std::vector<Midi1PortNameInput> const& ports) noexcept
+{
+    try
+    {
+        if (ports.size() < 2) { return deviceName; }
+
+        // A second unit of the same model arrives here already marked. Recovery replaces the part
+        // before the marker, so the marker has to be put back or both units get the same name.
+        auto const trimmedDeviceName = WindowsMidiServicesInternal::TrimmedWStringCopy(deviceName);
+        auto const baseDeviceName = RemoveDuplicateDeviceMarker(trimmedDeviceName);
+
+        std::wstring duplicateMarker{ };
+
+        if (baseDeviceName.length() < trimmedDeviceName.length())
+        {
+            duplicateMarker = trimmedDeviceName.substr(baseDeviceName.length());
+        }
+
+        std::vector<std::wstring> portNames{ };
+
+        for (auto const& port : ports)
+        {
+            auto resolved = ResolveDeviceSuppliedPortName(
+                port.PinName,
+                port.DriverRegistryName,
+                driverRegistryNamesArePerFilter,
+                port.FilterName,
+                baseDeviceName);
+
+            // one port with nothing to say means there is no run to find
+            if (resolved.Source == Midi1PortNameSource::None) { return deviceName; }
+
+            portNames.push_back(resolved.Name);
+        }
+
+        auto runWords = SplitIntoWords(portNames.front());
+
+        for (size_t i = 1; i < portNames.size() && !runWords.empty(); i++)
+        {
+            auto words = SplitIntoWords(portNames[i]);
+
+            size_t common{ 0 };
+
+            while (common < runWords.size() && common < words.size() &&
+                WindowsMidiServicesInternal::ToLowerWStringCopy(runWords[common]) ==
+                WindowsMidiServicesInternal::ToLowerWStringCopy(words[common]))
+            {
+                common++;
+            }
+
+            runWords.resize(common);
+        }
+
+        // "Express  128: Port 1".."Port 8" share "Express  128: Port"; the part that identifies the
+        // model is what is left once the words common to any port name are dropped.
+        while (!runWords.empty() &&
+            IsUninformativeWord(WindowsMidiServicesInternal::ToLowerTrimmedWStringCopy(runWords.back())))
+        {
+            runWords.pop_back();
+        }
+
+        if (runWords.empty()) { return deviceName; }
+
+        // a run that is the whole of a port name leaves nothing to tell the ports apart, so it is
+        // the device saying one thing many times rather than a model name
+        if (runWords.size() >= SplitIntoWords(portNames.front()).size()) { return deviceName; }
+
+        auto candidate = TrimSeparators(PrefixCoveringWords(portNames.front(), runWords.size()));
+
+        if (candidate.empty()) { return deviceName; }
+
+        // If the run repeats something the device name already says, it is the same model stated
+        // twice rather than information the description is missing. RME is the case for this.
+        auto deviceWords = SplitIntoComparisonWords(WindowsMidiServicesInternal::ToLowerTrimmedWStringCopy(baseDeviceName));
+        auto candidateWords = SplitIntoComparisonWords(WindowsMidiServicesInternal::ToLowerTrimmedWStringCopy(candidate));
+
+        for (auto const& candidateWord : candidateWords)
+        {
+            if (IsUninformativeWord(candidateWord)) { continue; }
+
+            for (auto const& deviceWord : deviceWords)
+            {
+                if (candidateWord == deviceWord) { return deviceName; }
+            }
+        }
+
+        return candidate + duplicateMarker;
+    }
+    CATCH_LOG();
+
+    return deviceName;
+}
+
+
+_Use_decl_annotations_
+Midi1PortNameSelection ResolveAutomaticPortNameSelection(
+    bool const hasLegacyEquivalent,
+    uint32_t const nameSourceFlags) noexcept
+{
+    // Nothing existed under these names before, so there is no compatibility to preserve.
+    if (!hasLegacyEquivalent) { return Midi1PortNameSelection::UseNewStyleName; }
+
+    // Only rename a port when the device said something about it the old name did not carry.
+    if ((nameSourceFlags & MIDI_MIDI1_PORT_NAME_SOURCE_DEVICE_SUPPLIED) != 0)
+    {
+        return Midi1PortNameSelection::UseNewStyleName;
+    }
+
+    return Midi1PortNameSelection::UseLegacyWinMM;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+MidiEndpointNameTable::WriteGroupTerminalBlockProperties(
+    winrt::hstring const& endpointDeviceId,
+    std::vector<DEVPROPERTY>& destination) noexcept
+{
+    if (!Feature_Servicing_MIDI2PortNamingRework::IsEnabled()) return S_OK;
+
+    try
+    {
+        auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
+        additionalProperties.Append(STRING_PKEY_MIDI_GroupTerminalBlocks);
+
+        winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo{ nullptr };
+
+        try
+        {
+            deviceInfo = winrt::Windows::Devices::Enumeration::DeviceInformation::CreateFromIdAsync(
+                endpointDeviceId, additionalProperties).get();
+        }
+        catch (winrt::hresult_error const&)
+        {
+            return S_OK;
+        }
+
+        if (deviceInfo == nullptr) return S_OK;
+
+        auto refArray = internal::SafeGetSwdBinaryPropertyFromDeviceInformation(
+            STRING_PKEY_MIDI_GroupTerminalBlocks, deviceInfo);
+
+        if (refArray == nullptr) return S_OK;
+
+        auto refData = refArray.Value();
+        if (refData.data() == nullptr || refData.size() == 0) return S_OK;
+
+        auto blocks = internal::ReadGroupTerminalBlocksFromPropertyData(refData.data(), (uint32_t)refData.size());
+        if (blocks.empty()) return S_OK;
+
+        bool changed{ false };
+
+        for (auto& block : blocks)
+        {
+            // The stored block name is never read back in here. The replacement comes from the name
+            // table, which is derived from the device, so repeated edits cannot compound.
+            std::shared_ptr<Midi1PortNameEntry> entry{ nullptr };
+
+            if (block.Direction == MIDI_GROUP_TERMINAL_BLOCK_OUTPUT)         // block output is a MIDI source
+            {
+                entry = GetSourceEntry(block.FirstGroupIndex);
+            }
+            else if (block.Direction == MIDI_GROUP_TERMINAL_BLOCK_INPUT)     // block input is a MIDI destination
+            {
+                entry = GetDestinationEntry(block.FirstGroupIndex);
+            }
+            else
+            {
+                entry = GetSourceEntry(block.FirstGroupIndex);
+
+                if (entry == nullptr)
+                {
+                    entry = GetDestinationEntry(block.FirstGroupIndex);
+                }
+            }
+
+            if (entry == nullptr) continue;
+
+            std::wstring updated{ entry->CustomName[0] != 0 ? entry->CustomName : entry->NewStyleName };
+
+            updated = internal::TrimmedWStringCopy(updated);
+
+            if (updated.empty() || updated == block.Name) continue;
+
+            block.Name = updated;
+            changed = true;
+        }
+
+        if (!changed) return S_OK;
+
+        m_groupTerminalBlockPropertyData.clear();
+
+        if (internal::WriteGroupTerminalBlocksToPropertyDataPointer(blocks, m_groupTerminalBlockPropertyData))
+        {
+            destination.push_back({ { PKEY_MIDI_GroupTerminalBlocks, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_BINARY,
+                (ULONG)m_groupTerminalBlockPropertyData.size(),
+                (PVOID)m_groupTerminalBlockPropertyData.data() });
+        }
+
+        return S_OK;
+    }
+    CATCH_LOG();
+
+    return S_OK;
+}
 
 
 }

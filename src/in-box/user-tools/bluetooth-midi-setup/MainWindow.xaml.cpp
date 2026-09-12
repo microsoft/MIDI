@@ -40,27 +40,6 @@ namespace winrt::midibluetoothsetup::implementation
             }
         }
 
-        // The data context of a control inside a DataTemplate is the row it was realized for.
-        template <typename TItem>
-        TItem ItemFromSender(_In_ foundation::IInspectable const& sender) noexcept
-        {
-            try
-            {
-                auto const element = sender.try_as<xaml::FrameworkElement>();
-
-                if (element == nullptr)
-                {
-                    return nullptr;
-                }
-
-                return element.DataContext().try_as<TItem>();
-            }
-            catch (...)
-            {
-                return nullptr;
-            }
-        }
-
         winrt::hstring ProtocolDisplayName(_In_ midi2bt::MidiBluetoothProtocol const protocol) noexcept
         {
             switch (protocol)

@@ -37,7 +37,7 @@ namespace
         winrt::guid umpCharacteristicUuid{ MidiBleProtocol::Midi2UmpCharacteristicUuid };
         auto umpCharacteristics = MidiBleUtilities::AwaitWithTimeout(
             service.GetCharacteristicsForUuidAsync(umpCharacteristicUuid, bt::BluetoothCacheMode::Uncached),
-            MidiBleUtilities::BleOperationTimeoutMilliseconds,
+            MidiBleUtilities::BleConnectOperationTimeoutMilliseconds,
             gatt::GattCharacteristicsResult{ nullptr });
 
         if (umpCharacteristics != nullptr &&
@@ -53,7 +53,7 @@ namespace
         winrt::guid midi1CharacteristicUuid{ MidiBleProtocol::Midi1DataIoCharacteristicUuid };
         auto midi1Characteristics = MidiBleUtilities::AwaitWithTimeout(
             service.GetCharacteristicsForUuidAsync(midi1CharacteristicUuid, bt::BluetoothCacheMode::Uncached),
-            MidiBleUtilities::BleOperationTimeoutMilliseconds,
+            MidiBleUtilities::BleConnectOperationTimeoutMilliseconds,
             gatt::GattCharacteristicsResult{ nullptr });
 
         if (midi1Characteristics != nullptr &&
@@ -315,9 +315,9 @@ CMidi2BluetoothMidiEndpointManager::StartGattServiceWatcher()
 
             auto props = winrt::single_threaded_vector<winrt::hstring>();
 
-            props.Append(L"System.DeviceInterface.Bluetooth.DeviceAddress");
-            props.Append(L"System.Devices.Aep.IsPaired");
-            props.Append(L"System.Devices.Connected");
+            props.Append(winrt::hstring{ MidiBleUtilities::BluetoothDeviceAddressPropertyKey });
+            props.Append(winrt::hstring{ MidiBleUtilities::BluetoothIsPairedPropertyKey });
+            props.Append(winrt::hstring{ MidiBleUtilities::BluetoothIsConnectedPropertyKey });
 
             m_deviceWatcher = enumeration::DeviceInformation::CreateWatcher(query, props);
 
@@ -376,6 +376,7 @@ CMidi2BluetoothMidiEndpointManager::OnAdvertisementReceived(
         MidiBleProtocol::DiscoveredDevice device{};
 
         device.BluetoothAddress = address;
+        device.AddressType = args.BluetoothAddressType();
         device.Id = deviceId;
         device.Name = args.Advertisement().LocalName();
         device.LastSignalStrengthDbm = args.RawSignalStrengthInDBm();
@@ -406,7 +407,7 @@ CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherAdded(
         {
             uint64_t address{ 0 };
 
-            auto const addressPropertyKey = winrt::hstring{ L"System.DeviceInterface.Bluetooth.DeviceAddress" };
+            auto const addressPropertyKey = winrt::hstring{ MidiBleUtilities::BluetoothDeviceAddressPropertyKey };
 
             if (args.Properties().HasKey(addressPropertyKey))
             {
@@ -449,7 +450,18 @@ CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherAdded(
             device.Id = MidiBleUtilities::FormatBluetoothAddress(address);
             device.Name = args.Name();
             device.GattServiceDeviceId = args.Id();
-            device.IsPaired = true;
+
+            // Windows enumerates this interface for devices it has bonded with, but it is the
+            // property, not the enumeration, which actually says so. Assuming paired here is what
+            // once reported a device Pete had unpaired as still paired.
+            bool isPaired{ false };
+
+            device.PairingStateKnown = MidiBleUtilities::TryReadBooleanProperty(
+                args.Properties(),
+                winrt::hstring{ MidiBleUtilities::BluetoothIsPairedPropertyKey },
+                isPaired);
+
+            device.IsPaired = isPaired;
 
             // Deliberately no LastSeenTimestamp. This watcher reports what the system already knows
             // about a paired device, which is not evidence the radio has heard it. Stamping it here
@@ -485,12 +497,57 @@ _Use_decl_annotations_
 HRESULT
 CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherUpdated(
     enumeration::DeviceWatcher const&,
-    enumeration::DeviceInformationUpdate const& /*args*/
+    enumeration::DeviceInformationUpdate const& args
 )
 {
-    // deliberately quiet. Connection state is tracked through the GATT session, not here, and
-    // these updates are extremely noisy.
-    return S_OK;
+    try
+    {
+        // Mostly deliberately quiet: connection state is tracked through the GATT session, not
+        // here, and these updates are extremely noisy. Pairing is the exception, because this is
+        // the only place the system reports a device being unpaired while the service is running.
+        bool isPaired{ false };
+
+        if (!MidiBleUtilities::TryReadBooleanProperty(
+            args.Properties(),
+            winrt::hstring{ MidiBleUtilities::BluetoothIsPairedPropertyKey },
+            isPaired))
+        {
+            return S_OK;
+        }
+
+        winrt::hstring deviceId{ };
+
+        {
+            auto lock = std::scoped_lock{ m_discoveredDevicesLock };
+
+            for (auto const& entry : m_discoveredDevices)
+            {
+                if (entry.second.GattServiceDeviceId == args.Id())
+                {
+                    deviceId = entry.second.Id;
+                    break;
+                }
+            }
+        }
+
+        if (deviceId.empty())
+        {
+            return S_OK;
+        }
+
+        // Fed through the merge path rather than written here, so a device which bonds mid-session
+        // still picks up the notification re-subscription that a bond discards.
+        MidiBleProtocol::DiscoveredDevice update{};
+
+        update.Id = deviceId;
+        update.IsPaired = isPaired;
+        update.PairingStateKnown = true;
+
+        MergeDiscoveredDevice(update);
+
+        return S_OK;
+    }
+    CATCH_RETURN()
 }
 
 
@@ -521,6 +578,10 @@ CMidi2BluetoothMidiEndpointManager::OnDeviceWatcherRemoved(
         if (entry.second.GattServiceDeviceId == args.Id())
         {
             entry.second.GattServiceDeviceId = L"";
+
+            // The node is how we knew it was bonded, so with it gone we no longer know.
+            entry.second.IsPaired = false;
+            entry.second.PairingStateKnown = false;
             break;
         }
     }
@@ -570,15 +631,26 @@ CMidi2BluetoothMidiEndpointManager::MergeDiscoveredDevice(MidiBleProtocol::Disco
                 existing->second.GattServiceDeviceId = device.GattServiceDeviceId;
             }
 
-            if (device.IsPaired)
+            if (device.AddressType != bt::BluetoothAddressType::Unspecified)
             {
-                becamePaired = !existing->second.IsPaired;
+                existing->second.AddressType = device.AddressType;
+            }
 
-                existing->second.IsPaired = true;
+            // Only an update which actually knows may move this, and it may move it either way:
+            // a device unpaired while the service is running has to stop looking paired.
+            if (device.PairingStateKnown)
+            {
+                becamePaired = device.IsPaired && !existing->second.IsPaired;
 
-                // Whatever made it demand pairing has been satisfied, so it is worth trying again.
-                existing->second.RequiresPairing = false;
-                existing->second.UnpairedEarlyDropCount = 0;
+                existing->second.IsPaired = device.IsPaired;
+                existing->second.PairingStateKnown = true;
+
+                if (device.IsPaired)
+                {
+                    // Whatever made it demand pairing has been satisfied, so it is worth trying again.
+                    existing->second.RequiresPairing = false;
+                    existing->second.UnpairedEarlyDropCount = 0;
+                }
             }
 
             if (device.LastSignalStrengthDbm != 0)
@@ -1471,6 +1543,14 @@ CMidi2BluetoothMidiEndpointManager::OnConnectionDropped(winrt::hstring const& de
     // and the endpoint id, which are both still true of this device while the link is down.
     bool assumedPairingRequired{ false };
 
+    // Read before the lock is taken, because the connection table has its own.
+    bool receivedAnyMessages{ false };
+
+    if (auto const connection = TransportState::Current().GetConnectionByDeviceId(deviceId))
+    {
+        receivedAnyMessages = connection->MessagesReceived() > 0;
+    }
+
     {
         auto lock = std::scoped_lock{ m_discoveredDevicesLock };
 
@@ -1478,8 +1558,6 @@ CMidi2BluetoothMidiEndpointManager::OnConnectionDropped(winrt::hstring const& de
         {
             entry->second.IsConnected = false;
 
-            // A device which demands security over SMP never fails a GATT call, so the only thing
-            // this transport can see is a link which keeps going away moments after it comes up.
             auto const now = NowInMilliseconds();
 
             auto const linkWasBrief =
@@ -1487,20 +1565,19 @@ CMidi2BluetoothMidiEndpointManager::OnConnectionDropped(winrt::hstring const& de
                 now >= entry->second.ConnectedSinceTimestamp &&
                 now - entry->second.ConnectedSinceTimestamp < MIDI_BLE_UNPAIRED_EARLY_DROP_MS;
 
-            if (!entry->second.IsPaired && linkWasBrief)
-            {
-                entry->second.UnpairedEarlyDropCount++;
+            auto const evaluation = MidiBleUtilities::EvaluateUnpairedDrop(
+                entry->second.UnpairedEarlyDropCount,
+                entry->second.IsPaired,
+                linkWasBrief,
+                receivedAnyMessages,
+                MIDI_BLE_UNPAIRED_EARLY_DROPS_BEFORE_PAIRING_ASSUMED);
 
-                if (entry->second.UnpairedEarlyDropCount >= MIDI_BLE_UNPAIRED_EARLY_DROPS_BEFORE_PAIRING_ASSUMED &&
-                    !entry->second.RequiresPairing)
-                {
-                    entry->second.RequiresPairing = true;
-                    assumedPairingRequired = true;
-                }
-            }
-            else if (!linkWasBrief)
+            entry->second.UnpairedEarlyDropCount = evaluation.EarlyDropCount;
+
+            if (evaluation.AssumePairingRequired && !entry->second.RequiresPairing)
             {
-                entry->second.UnpairedEarlyDropCount = 0;
+                entry->second.RequiresPairing = true;
+                assumedPairingRequired = true;
             }
 
             entry->second.ConnectedSinceTimestamp = 0;
@@ -1932,21 +2009,15 @@ CMidi2BluetoothMidiEndpointManager::ConnectDeviceCore(
             return;
         }
 
-        try
-        {
-            if (service != nullptr) { service.Close(); }
-            if (session != nullptr) { session.Close(); }
-            if (bleDevice != nullptr) { bleDevice.Close(); }
-        }
-        catch (...)
-        {
-        }
+        MidiBleUtilities::CloseIfOpen(service);
+        MidiBleUtilities::CloseIfOpen(session);
+        MidiBleUtilities::CloseIfOpen(bleDevice);
     });
 
     try
     {
         bleDevice = MidiBleUtilities::AwaitWithTimeout(
-            bt::BluetoothLEDevice::FromBluetoothAddressAsync(discoveredDevice.BluetoothAddress),
+            MidiBleUtilities::OpenBluetoothDeviceAsync(discoveredDevice.BluetoothAddress, discoveredDevice.AddressType),
             MidiBleUtilities::BleConnectOperationTimeoutMilliseconds,
             bt::BluetoothLEDevice{ nullptr });
 
@@ -2354,7 +2425,7 @@ CMidi2BluetoothMidiEndpointManager::ResolveDeviceNameInternal(winrt::hstring con
             // Works for unpaired devices too: this reads what the Bluetooth stack already knows
             // about the device rather than connecting to it.
             auto bleDevice = MidiBleUtilities::AwaitWithTimeout(
-                bt::BluetoothLEDevice::FromBluetoothAddressAsync(discoveredDevice.BluetoothAddress),
+                MidiBleUtilities::OpenBluetoothDeviceAsync(discoveredDevice.BluetoothAddress, discoveredDevice.AddressType),
                 MidiBleUtilities::BleOperationTimeoutMilliseconds,
                 bt::BluetoothLEDevice{ nullptr });
 
@@ -2367,13 +2438,7 @@ CMidi2BluetoothMidiEndpointManager::ResolveDeviceNameInternal(winrt::hstring con
             // cached device object in the way of the connect path later.
             auto closeDevice = wil::scope_exit([&]() noexcept
             {
-                try
-                {
-                    bleDevice.Close();
-                }
-                catch (...)
-                {
-                }
+                MidiBleUtilities::CloseIfOpen(bleDevice);
             });
 
             resolvedName = bleDevice.Name();
