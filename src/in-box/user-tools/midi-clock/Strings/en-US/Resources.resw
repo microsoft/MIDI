@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- ==================================== App ==================================== -->
+  <data name="AppDisplayName" xml:space="preserve">
+    <value>Windows MIDI Clock</value>
+  </data>
+
+  <!-- ================================= Title bar ================================= -->
+  <data name="SettingsToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Always on top</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keep this window above other windows</value>
+  </data>
+
+  <!-- ============================== Appearance flyout ============================= -->
+  <data name="AppearanceTitle" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="AppearanceTheme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="AppearanceThemeSystem" xml:space="preserve">
+    <value>Use system setting</value>
+  </data>
+  <data name="AppearanceThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="AppearanceThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="AppearanceBackdrop" xml:space="preserve">
+    <value>Window background</value>
+  </data>
+  <data name="AppearanceBackdropSolid" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="AppearanceBackdropMica" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="AppearanceBackdropAcrylic" xml:space="preserve">
+    <value>Acrylic</value>
+  </data>
+  <data name="AppearanceCustomColor" xml:space="preserve">
+    <value>Use a custom window color</value>
+  </data>
+  <data name="AppearanceColorPickerName" xml:space="preserve">
+    <value>Window color</value>
+  </data>
+
+  <!-- ================================ Empty state ================================ -->
+  <data name="EmptyStateTitle.Text" xml:space="preserve">
+    <value>No clocks yet</value>
+  </data>
+  <data name="EmptyStateDescription.Text" xml:space="preserve">
+    <value>Add a clock to send MIDI beat clock to an endpoint at a tempo you choose. Each clock remembers its tempo, its endpoint and its group.</value>
+  </data>
+
+  <!-- =================================== Tiles =================================== -->
+  <data name="TileBpmCaption.Text" xml:space="preserve">
+    <value>BPM</value>
+  </data>
+  <data name="TileUnnamedClock" xml:space="preserve">
+    <value>Clock</value>
+  </data>
+  <data name="TileNoEndpoint" xml:space="preserve">
+    <value>No endpoint chosen</value>
+  </data>
+  <data name="TileDestinationFormat" xml:space="preserve">
+    <value>{0}  ·  Group {1}</value>
+    <comment>{0} is the endpoint name, {1} is the group number from 1 to 16</comment>
+  </data>
+  <data name="TileDestinationAllGroupsFormat" xml:space="preserve">
+    <value>{0}  ·  All groups</value>
+    <comment>{0} is the endpoint name</comment>
+  </data>
+  <data name="TileStatusRunning" xml:space="preserve">
+    <value>Running</value>
+  </data>
+  <data name="TileStatusStopped" xml:space="preserve">
+    <value>Stopped</value>
+  </data>
+  <data name="TileStatusWorking" xml:space="preserve">
+    <value>Working...</value>
+  </data>
+  <data name="TileStatusEndpointMissing" xml:space="preserve">
+    <value>This endpoint is not available right now</value>
+  </data>
+  <data name="TileStartLabel" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="TileStopLabel" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="TileStartAccessibleNameFormat" xml:space="preserve">
+    <value>Start {0}</value>
+    <comment>{0} is the name of the clock</comment>
+  </data>
+  <data name="TileStopAccessibleNameFormat" xml:space="preserve">
+    <value>Stop {0}</value>
+    <comment>{0} is the name of the clock</comment>
+  </data>
+  <data name="TileEditAccessibleNameFormat" xml:space="preserve">
+    <value>Edit {0}</value>
+    <comment>{0} is the name of the clock</comment>
+  </data>
+  <data name="TileSelectAccessibleNameFormat" xml:space="preserve">
+    <value>Include {0} when starting the selected clocks</value>
+    <comment>{0} is the name of the clock</comment>
+  </data>
+
+  <!-- ================================ Command bar ================================ -->
+  <data name="AddClockButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Add clock</value>
+  </data>
+  <data name="AddClockButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Add a new clock</value>
+  </data>
+  <data name="AddClockButtonText.Text" xml:space="preserve">
+    <value>Add clock</value>
+  </data>
+  <data name="StartSelectedButton.Content" xml:space="preserve">
+    <value>Start selected</value>
+  </data>
+  <data name="StartSelectedButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Start every checked clock on the same instant</value>
+  </data>
+  <data name="StartAllButton.Content" xml:space="preserve">
+    <value>Start all</value>
+  </data>
+  <data name="StartAllButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Start every clock on the same instant</value>
+  </data>
+  <data name="StopAllButton.Content" xml:space="preserve">
+    <value>Stop all</value>
+  </data>
+  <data name="StopAllButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Stop every running clock</value>
+  </data>
+
+  <!-- ================================== Status =================================== -->
+  <data name="StatusStarting" xml:space="preserve">
+    <value>Starting...</value>
+  </data>
+  <data name="StatusStopping" xml:space="preserve">
+    <value>Stopping...</value>
+  </data>
+  <data name="StatusStopped" xml:space="preserve">
+    <value>Stopped.</value>
+  </data>
+  <data name="StatusStartedFormat" xml:space="preserve">
+    <value>{0} clock(s) running.</value>
+    <comment>{0} is how many clocks were started</comment>
+  </data>
+  <data name="StatusNothingSelected" xml:space="preserve">
+    <value>Check the clocks you want to start first.</value>
+  </data>
+  <data name="StatusClockRemoved" xml:space="preserve">
+    <value>Clock removed.</value>
+  </data>
+  <data name="StatusServiceUnavailable" xml:space="preserve">
+    <value>Windows MIDI Services is not available. Check that the MIDI service is running.</value>
+  </data>
+  <data name="StatusSessionFailed" xml:space="preserve">
+    <value>Unable to create a MIDI session.</value>
+  </data>
+  <data name="StatusNoEndpointChosen" xml:space="preserve">
+    <value>One or more clocks have no endpoint or no group to send to.</value>
+  </data>
+  <data name="StatusConnectionFailed" xml:space="preserve">
+    <value>Unable to connect to one or more endpoints.</value>
+  </data>
+
+  <!-- ================================== Editor =================================== -->
+  <data name="EditDialogTitleNew" xml:space="preserve">
+    <value>Add clock</value>
+  </data>
+  <data name="EditDialogTitleEdit" xml:space="preserve">
+    <value>Clock settings</value>
+  </data>
+  <data name="EditDialogSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="EditDialogDelete" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="EditDialogCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="EditNameTextBox.Header" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="EditNameTextBox.PlaceholderText" xml:space="preserve">
+    <value>Optional. The endpoint name is used when this is empty.</value>
+  </data>
+  <data name="EditTempoNumberBox.Header" xml:space="preserve">
+    <value>Tempo in beats per minute</value>
+  </data>
+  <data name="EditTempoSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Tempo in beats per minute</value>
+  </data>
+  <data name="TapTempoButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Tap tempo</value>
+  </data>
+  <data name="TapTempoButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Tap along with the beat to set the tempo</value>
+  </data>
+  <data name="TapTempoButtonText.Text" xml:space="preserve">
+    <value>Tap</value>
+  </data>
+  <data name="TapTempoHint" xml:space="preserve">
+    <value>Tap along with the beat</value>
+  </data>
+  <data name="TapTempoKeepTapping" xml:space="preserve">
+    <value>Keep tapping...</value>
+  </data>
+  <data name="TapTempoCountFormat" xml:space="preserve">
+    <value>From {0} taps</value>
+    <comment>{0} is how many taps the tempo was worked out from</comment>
+  </data>
+  <data name="EditEndpointComboBox.Header" xml:space="preserve">
+    <value>Send to endpoint</value>
+  </data>
+  <data name="EditEndpointComboBox.PlaceholderText" xml:space="preserve">
+    <value>Choose an endpoint</value>
+  </data>
+  <data name="EditGroupComboBox.Header" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="EditSendStartStopToggle.Header" xml:space="preserve">
+    <value>Send Start and Stop messages</value>
+  </data>
+  <data name="EditSendStartStopToggle.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="EditSendStartStopToggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="EditNoEndpointTitle" xml:space="preserve">
+    <value>Choose an endpoint</value>
+  </data>
+  <data name="EditNoEndpointMessage" xml:space="preserve">
+    <value>A clock needs an endpoint to send its beat clock to.</value>
+  </data>
+  <data name="GroupAllDeclared" xml:space="preserve">
+    <value>All groups this endpoint declares</value>
+  </data>
+  <data name="GroupChoiceFormat" xml:space="preserve">
+    <value>Group {0}</value>
+    <comment>{0} is the group number from 1 to 16</comment>
+  </data>
+  <data name="GroupChoiceWithNameFormat" xml:space="preserve">
+    <value>Group {0} - {1}</value>
+    <comment>{0} is the group number from 1 to 16, {1} is the name the device gave that group</comment>
+  </data>
+
+  <!-- ================================ Saved clocks =============================== -->
+  <data name="ClockStoreNoPathError" xml:space="preserve">
+    <value>Unable to work out where to keep the saved clocks.</value>
+  </data>
+  <data name="ClockStoreFolderError" xml:space="preserve">
+    <value>Unable to create the MIDI Clock folder in the Windows MIDI Services configuration folder.</value>
+  </data>
+  <data name="ClockStoreReadError" xml:space="preserve">
+    <value>Unable to read the saved clocks.</value>
+  </data>
+  <data name="ClockStoreWriteError" xml:space="preserve">
+    <value>Unable to save the clocks.</value>
+  </data>
+  <data name="ClockStoreParseError" xml:space="preserve">
+    <value>The saved clocks file could not be understood. Nothing has been changed.</value>
+  </data>
+  <data name="ClockStoreFullError" xml:space="preserve">
+    <value>There is no room for another clock.</value>
+  </data>
+
+  <!-- ================================ Command line =============================== -->
+  <data name="CommandLineErrorTooManyEndpoints" xml:space="preserve">
+    <value>Only one endpoint can be given on the command line. Ignoring "{0}".</value>
+    <comment>{0} is the extra argument that was given</comment>
+  </data>
+  <data name="CommandLineErrorMissingValue" xml:space="preserve">
+    <value>"{0}" needs a value after it.</value>
+    <comment>{0} is the option that was given</comment>
+  </data>
+  <data name="CommandLineErrorInvalidGroup" xml:space="preserve">
+    <value>"{0}" is not a group number from 1 to 16.</value>
+    <comment>{0} is the value that was given</comment>
+  </data>
+  <data name="CommandLineErrorInvalidTempo" xml:space="preserve">
+    <value>"{0}" is not a tempo in beats per minute.</value>
+    <comment>{0} is the value that was given</comment>
+  </data>
+  <data name="CommandLineErrorUnknownOption" xml:space="preserve">
+    <value>"{0}" is not an option this app understands.</value>
+    <comment>{0} is the option that was given</comment>
+  </data>
+  <data name="CommandLineErrorOptionWithoutEndpoint" xml:space="preserve">
+    <value>A group or tempo on the command line also needs an endpoint.{0}</value>
+    <comment>{0} is always empty here and is only present so every command line message takes one argument</comment>
+  </data>
+  <data name="CommandLineErrorGeneral" xml:space="preserve">
+    <value>The command line could not be read.{0}</value>
+    <comment>{0} is always empty here and is only present so every command line message takes one argument</comment>
+  </data>
+</root>
