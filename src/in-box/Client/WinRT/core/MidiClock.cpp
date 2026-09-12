@@ -21,7 +21,8 @@ using namespace std::chrono_literals;
 namespace winrt::Windows::Devices::Midi2::implementation
 {
     UINT MidiClock::m_lastTimeBeginPeriodValue{};
-    bool MidiClock::m_inLowLatencyPeriod{ false };
+    uint32_t MidiClock::m_lowLatencyPeriodRefCount{ 0 };
+    std::mutex MidiClock::m_lowLatencyPeriodLock{};
     uint64_t MidiClock::m_timestampFrequency{ 0 };
 
     internal::MidiTimestamp MidiClock::Now() 
@@ -44,7 +45,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::MidiTimestamp timestampValue, 
         int64_t offsetTicks)
     {
-        return timestampValue + offsetTicks < 0 ? 0 : timestampValue + offsetTicks;
+        if (offsetTicks >= 0)
+        {
+            return timestampValue + static_cast<uint64_t>(offsetTicks);
+        }
+
+        // Magnitude taken in unsigned arithmetic so INT64_MIN stays defined.
+        auto const magnitude = 0ull - static_cast<uint64_t>(offsetTicks);
+
+        return timestampValue > magnitude ? timestampValue - magnitude : 0;
     }
 
 
@@ -53,9 +62,10 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::MidiTimestamp timestampValue, 
         int64_t offsetMicroseconds)
     {
-        uint64_t offsetTicks;
-
-        offsetTicks = (uint64_t)(offsetMicroseconds * TimestampFrequency() / (double)MICROSECONDS_PER_SECOND);
+        // Signed integer arithmetic throughout. Multiplying by the unsigned frequency first, as this
+        // used to, converts a negative offset into a huge positive one.
+        auto const offsetTicks =
+            (offsetMicroseconds * static_cast<int64_t>(TimestampFrequency())) / MICROSECONDS_PER_SECOND;
 
         return OffsetTimestampByTicks(timestampValue, offsetTicks);
     }
@@ -66,9 +76,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::MidiTimestamp timestampValue, 
         int64_t offsetMilliseconds)
     {
-        uint64_t offsetTicks;
-
-        offsetTicks = (uint64_t)(offsetMilliseconds * TimestampFrequency() / (double)MILLISECONDS_PER_SECOND);
+        auto const offsetTicks =
+            (offsetMilliseconds * static_cast<int64_t>(TimestampFrequency())) / MILLISECONDS_PER_SECOND;
 
         return OffsetTimestampByTicks(timestampValue, offsetTicks);
     }
@@ -78,9 +87,7 @@ namespace winrt::Windows::Devices::Midi2::implementation
         internal::MidiTimestamp timestampValue,
         int64_t offsetSeconds)
     {
-        uint64_t offsetTicks;
-
-        offsetTicks = (uint64_t)(offsetSeconds * TimestampFrequency());
+        auto const offsetTicks = offsetSeconds * static_cast<int64_t>(TimestampFrequency());
 
         return OffsetTimestampByTicks(timestampValue, offsetTicks);
     }
@@ -133,10 +140,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         if (queryResult == STATUS_SUCCESS)
         {
             // we convert everything to ticks to make it more usable with the rest of MIDI
-
-            auto minResolutionTicks = (uint64_t)(((uint64_t)minResolution * m_timerResolutionFrequency) / TimestampFrequency());
-            auto maxResolutionTicks = (uint64_t)(((uint64_t)maxResolution * m_timerResolutionFrequency) / TimestampFrequency());
-            auto curResolutionTicks = (uint64_t)(((uint64_t)curResolution * m_timerResolutionFrequency) / TimestampFrequency());
+            // The values arrive in fixed 100ns units, so scaling to clock ticks multiplies by the
+            // clock frequency. Doing it the other way round only happens to work at 10 MHz.
+            auto minResolutionTicks = (uint64_t)(((uint64_t)minResolution * TimestampFrequency()) / m_timerResolutionFrequency);
+            auto maxResolutionTicks = (uint64_t)(((uint64_t)maxResolution * TimestampFrequency()) / m_timerResolutionFrequency);
+            auto curResolutionTicks = (uint64_t)(((uint64_t)curResolution * TimestampFrequency()) / m_timerResolutionFrequency);
 
             timerSettings.MinimumIntervalTicks = minResolutionTicks;
             timerSettings.MaximumIntervalTicks = maxResolutionTicks;
@@ -156,7 +164,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
     bool MidiClock::BeginLowLatencySystemTimerPeriod()
     {
-        if (m_inLowLatencyPeriod) return false;
+        std::scoped_lock<std::mutex> lock(m_lowLatencyPeriodLock);
+
+        // Already held by someone else in this process, so the caller is covered either way.
+        if (m_lowLatencyPeriodRefCount > 0)
+        {
+            m_lowLatencyPeriodRefCount++;
+            return true;
+        }
 
         TIMECAPS caps{};
 
@@ -168,24 +183,28 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         if (result != MMSYSERR_NOERROR) return false;
 
-        m_inLowLatencyPeriod = true;
         m_lastTimeBeginPeriodValue = caps.wPeriodMin;
+        m_lowLatencyPeriodRefCount = 1;
 
         return true;
     }
 
     bool MidiClock::EndLowLatencySystemTimerPeriod()
     {
-        if (!m_inLowLatencyPeriod) return false;
+        std::scoped_lock<std::mutex> lock(m_lowLatencyPeriodLock);
+
+        if (m_lowLatencyPeriodRefCount == 0) return false;
+
+        m_lowLatencyPeriodRefCount--;
+
+        // Someone else in this process still wants it.
+        if (m_lowLatencyPeriodRefCount > 0) return true;
 
         auto result = timeEndPeriod(m_lastTimeBeginPeriodValue);
 
-        if (result != MMSYSERR_NOERROR) return false;
-
-        m_inLowLatencyPeriod = false;
         m_lastTimeBeginPeriodValue = 0;
 
-        return true;
+        return result == MMSYSERR_NOERROR;
     }
 
 

@@ -56,7 +56,11 @@ namespace winrt::Windows::Devices::Midi2::implementation
         static uint64_t m_timestampFrequency;
 
         static UINT m_lastTimeBeginPeriodValue;
-        static bool m_inLowLatencyPeriod;
+
+        // Refcounted because timeBeginPeriod/timeEndPeriod are, and this SDK loads into hosts which
+        // run plugins that may ask for a low latency period independently.
+        static uint32_t m_lowLatencyPeriodRefCount;
+        static std::mutex m_lowLatencyPeriodLock;
 
         static const uint64_t m_timerResolutionFrequency{ 10'000'000 };    // 100ns fixed units for timer API calls we use
 
