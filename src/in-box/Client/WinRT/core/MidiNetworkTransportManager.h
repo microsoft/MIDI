@@ -37,9 +37,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         static foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> StartNetworkHostAsync(_In_ winrt::guid const& hostId) noexcept;
         static foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> StopNetworkHostAsync(_In_ winrt::guid const& hostId) noexcept;
+        static foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> UpdateNetworkHostAsync(_In_ network::MidiNetworkHostUpdateConfig const& updateConfig) noexcept;
 
         static foundation::IAsyncOperation<network::MidiNetworkClientConnectResponse> ConnectNetworkClientAsync(_In_ network::MidiNetworkClientConnectConfig const& creationConfig) noexcept;
         static foundation::IAsyncOperation<network::MidiNetworkClientDisconnectResponse> DisconnectNetworkClientAsync(_In_ network::MidiNetworkClientDisconnectConfig const& removalConfig) noexcept;
+        static foundation::IAsyncOperation<network::MidiNetworkClientUpdateResponse> UpdateNetworkClientAsync(_In_ network::MidiNetworkClientUpdateConfig const& updateConfig) noexcept;
 
         static foundation::IAsyncOperation<network::MidiNetworkRemoteClientApprovalResponse> ApproveOrDenyRemoteClientConnectRequestAsync(_In_ network::MidiNetworkRemoteClientApprovalConfig const& approvalConfig) noexcept;
         static foundation::IAsyncOperation<network::MidiNetworkRemoteClientDisconnectResponse> DisconnectRemoteClientAsync(_In_ network::MidiNetworkRemoteClientDisconnectConfig const& disconnectConfig) noexcept;

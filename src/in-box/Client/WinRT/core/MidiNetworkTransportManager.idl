@@ -24,6 +24,10 @@ import "MidiNetworkClientConnectConfig.idl";
 import "MidiNetworkClientDisconnectResponse.idl";
 import "MidiNetworkClientDisconnectConfig.idl";
 
+import "MidiNetworkClientUpdateResponse.idl";
+import "MidiNetworkClientUpdateConfig.idl";
+import "MidiNetworkHostUpdateConfig.idl";
+
 import "MidiNetworkAdvertisedHost.idl";
 
 import "MidiNetworkConfiguredHost.idl";
@@ -57,6 +61,12 @@ namespace Windows.Devices.Midi2.Transports.Network
         [noexcept] static Windows.Foundation.IAsyncOperation<MidiNetworkHostUpdateResponse> StopNetworkHostAsync(Guid hostId);
         [noexcept] static Windows.Foundation.IAsyncOperation<MidiNetworkHostUpdateResponse> StartNetworkHostAsync(Guid hostId);
 
+        // Changes settings on a host entry which already exists. The entry keeps running: only
+        // the settings which can take effect on a live host do so, and the rest apply the next
+        // time a remote connects.
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiNetworkHostUpdateResponse> UpdateNetworkHostAsync(
+            MidiNetworkHostUpdateConfig updateConfig);
+
 
         // Sends new client info to the service
         [noexcept] static Windows.Foundation.IAsyncOperation<MidiNetworkClientConnectResponse> ConnectNetworkClientAsync(
@@ -65,6 +75,11 @@ namespace Windows.Devices.Midi2.Transports.Network
         // Closes the connection and removes the entry in the service
         [noexcept] static Windows.Foundation.IAsyncOperation<MidiNetworkClientDisconnectResponse> DisconnectNetworkClientAsync(
             MidiNetworkClientDisconnectConfig disconnectConfig);
+
+        // Changes settings on a client entry which already exists, without disturbing a
+        // connection which is already up.
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiNetworkClientUpdateResponse> UpdateNetworkClientAsync(
+            MidiNetworkClientUpdateConfig updateConfig);
 
         // Approves or denies a pending client connection request. 
         [noexcept] static Windows.Foundation.IAsyncOperation<MidiNetworkRemoteClientApprovalResponse> ApproveOrDenyRemoteClientConnectRequestAsync(

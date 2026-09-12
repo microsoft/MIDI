@@ -1,0 +1,36 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+import "IMidiServiceTransportPluginConfig.idl";
+import "MidiNetworkKnownRemoteClient.idl";
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    // The set of remote clients a host has already been told to allow or deny. Save it through
+    // MidiServiceTransportPluginConfigManager.SaveUpdate to make the decisions outlive a service
+    // restart. There is nothing to send: the service is told about a single decision through
+    // ApproveOrDenyRemoteClientConnectRequestAsync, and this is the configuration file record of
+    // every decision made so far.
+    [contract(MidiTransportsNetworkApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostKnownClientsConfig", UUID_IMidiNetworkHostKnownClientsConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkHostKnownClientsConfigFactory", UUID_IMidiNetworkHostKnownClientsConfigFactory)]
+    runtimeclass MidiNetworkHostKnownClientsConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiNetworkHostKnownClientsConfig();
+        MidiNetworkHostKnownClientsConfig(Guid hostId);
+
+        [noexcept] Guid HostId { get; set; };
+
+        // Both saved lists are replaced by what this holds, so it must be the complete set for
+        // the host and not only what changed. A client left out of it is forgotten, which is how
+        // a decision is withdrawn.
+        [noexcept] Windows.Foundation.Collections.IVector<MidiNetworkKnownRemoteClient> KnownClients { get; };
+    }
+}

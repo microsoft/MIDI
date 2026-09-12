@@ -29,6 +29,7 @@
 #include "MidiNetworkClientConnectResponse.h"
 #include "MidiNetworkClientDisconnectConfig.h"
 #include "MidiNetworkClientDisconnectResponse.h"
+#include "MidiNetworkClientUpdateResponse.h"
 
 #include "MidiReporting.h"
 
@@ -217,7 +218,163 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             co_return *result;
         }
     }
-    
+
+
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> MidiNetworkTransportManager::UpdateNetworkHostAsync(
+        network::MidiNetworkHostUpdateConfig const& updateConfig) noexcept
+    {
+        auto result = winrt::make_self<MidiNetworkHostUpdateResponse>();
+
+        try
+        {
+            if (updateConfig == nullptr)
+            {
+                result->InternalSetError(
+                    network::MidiNetworkHostUpdateErrorCode::InvalidArgument,
+                    internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
+
+                co_return *result;
+            }
+
+            // Strong copy, because a reference parameter is not stored in the coroutine frame
+            // and does not survive the suspension below.
+            auto config = updateConfig;
+
+            result->InternalSetHostId(config.HostId());
+
+            co_await winrt::resume_background();
+
+            auto response = svc::MidiServiceTransportPluginConfigManager::SendUpdate(config);
+
+            if (response.Status() == svc::MidiServiceConfigResponseStatus::Success)
+            {
+                result->InternalSetSuccess();
+            }
+            else
+            {
+                result->InternalSetError(
+                    static_cast<network::MidiNetworkHostUpdateErrorCode>(response.ServiceErrorCode()),
+                    response.ServiceErrorMessage());
+            }
+
+            co_return *result;
+        }
+        catch (winrt::hresult_error ex)
+        {
+            LOG_IF_FAILED(ex.code());
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to update network host. HRESULT exception.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
+
+            result->InternalSetError(network::MidiNetworkHostUpdateErrorCode::ClientApiException, ex.message());
+
+            co_return *result;
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to update network host. General exception.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
+            result->InternalSetError(network::MidiNetworkHostUpdateErrorCode::ClientApiException, internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
+
+            co_return *result;
+        }
+    }
+
+
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<network::MidiNetworkClientUpdateResponse> MidiNetworkTransportManager::UpdateNetworkClientAsync(
+        network::MidiNetworkClientUpdateConfig const& updateConfig) noexcept
+    {
+        auto result = winrt::make_self<MidiNetworkClientUpdateResponse>();
+
+        try
+        {
+            if (updateConfig == nullptr)
+            {
+                result->InternalSetError(
+                    network::MidiNetworkClientUpdateErrorCode::InvalidArgument,
+                    internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
+
+                co_return *result;
+            }
+
+            auto config = updateConfig;
+
+            result->InternalSetClientId(config.ClientId());
+
+            co_await winrt::resume_background();
+
+            auto response = svc::MidiServiceTransportPluginConfigManager::SendUpdate(config);
+
+            if (response.Status() == svc::MidiServiceConfigResponseStatus::Success)
+            {
+                result->InternalSetSuccess();
+            }
+            else
+            {
+                result->InternalSetError(
+                    static_cast<network::MidiNetworkClientUpdateErrorCode>(response.ServiceErrorCode()),
+                    response.ServiceErrorMessage());
+            }
+
+            co_return *result;
+        }
+        catch (winrt::hresult_error ex)
+        {
+            LOG_IF_FAILED(ex.code());
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to update network client. HRESULT exception.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
+
+            result->InternalSetError(network::MidiNetworkClientUpdateErrorCode::ClientApiException, ex.message());
+
+            co_return *result;
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to update network client. General exception.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
+            result->InternalSetError(network::MidiNetworkClientUpdateErrorCode::ClientApiException, internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
+
+            co_return *result;
+        }
+    }
+
     _Use_decl_annotations_ 
     foundation::IAsyncOperation<network::MidiNetworkHostUpdateResponse> MidiNetworkTransportManager::StopNetworkHostAsync(winrt::guid const& hostId) noexcept
     {

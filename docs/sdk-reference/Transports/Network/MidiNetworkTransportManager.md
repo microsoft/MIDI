@@ -26,8 +26,10 @@ The entry point for all Network MIDI 2.0 management. All members are static.
 | `RemoveNetworkHostAsync(removalConfig)` | Remove a host and disconnect anything connected to it. Returns a `MidiNetworkHostRemovalResponse`. |
 | `StartNetworkHostAsync(hostId)` | Start a host which is configured but stopped. Returns a `MidiNetworkHostUpdateResponse`. |
 | `StopNetworkHostAsync(hostId)` | Stop a running host without removing its configuration. Returns a `MidiNetworkHostUpdateResponse`. |
+| `UpdateNetworkHostAsync(updateConfig)` | Change settings on an existing host without taking it down. Returns a `MidiNetworkHostUpdateResponse`. |
 | `ConnectNetworkClientAsync(connectConfig)` | Connect to a remote host, by discovery or by direct address. Returns a `MidiNetworkClientConnectResponse`. For a `ClientId` which already exists, this retries an entry which was previously marked unavailable. |
 | `DisconnectNetworkClientAsync(disconnectConfig)` | Disconnect a client connection. Returns a `MidiNetworkClientDisconnectResponse`. A client disconnected this way is not reconnected automatically. |
+| `UpdateNetworkClientAsync(updateConfig)` | Change settings on an existing client connection without disconnecting it. Returns a `MidiNetworkClientUpdateResponse`. |
 | `ApproveOrDenyRemoteClientConnectRequestAsync(approvalConfig)` | Approve or deny a remote client which is waiting on a host that requires approval. Returns a `MidiNetworkRemoteClientApprovalResponse`. |
 | `DisconnectRemoteClientAsync(disconnectConfig)` | Ends one remote client's active session with one of this PC's hosts. Returns a `MidiNetworkRemoteClientDisconnectResponse`. This does not record an allow/deny decision for future reconnects. |
 | `GetConfiguredHosts()` | Returns a collection of `MidiNetworkConfiguredHost` for every host configured in this service instance. |
