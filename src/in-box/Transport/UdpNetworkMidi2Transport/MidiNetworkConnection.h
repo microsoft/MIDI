@@ -142,8 +142,21 @@ public:
         return m_lastAverageLatencyTicks;
     }
 
-    void AddLatencyToAverageLatencyTicks(_In_ uint64_t latencyTicks)
+    // Same value without consuming it. Only the client poll may reset the accumulator, so anything
+    // inside the transport that wants the current latency uses this instead.
+    uint64_t PeekAverageLatencyTicks()
     {
+        auto lock = m_latencyLock.lock();
+
+        if (m_latencyCountEntries > 0)
+        {
+            return m_latencyTotalTicks / m_latencyCountEntries;
+        }
+
+        return m_lastAverageLatencyTicks;
+    }
+
+    void AddLatencyToAverageLatencyTicks(_In_ uint64_t latencyTicks)    {
         auto lock = m_latencyLock.lock();
 
         m_latencyTotalTicks += latencyTicks;
