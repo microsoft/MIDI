@@ -14,6 +14,8 @@
 // The parts which are decided purely from a string, a number or a json value live here, so they
 // can be unit tested without the radio, the service or COM.
 #include "midi_ble_validation.h"
+#include "transport_defs.h"
+#include "Feature_Servicing_MIDI2PortNamingRework.h"
 
 namespace MidiBleProtocol
 {
@@ -27,12 +29,23 @@ namespace MidiBleProtocol
     struct DiscoveredDevice
     {
         uint64_t BluetoothAddress{ 0 };
+
+        // Taken from the advertisement. A lookup by address has to be told which kind it is, and
+        // nothing else in the system will say.
+        ::winrt::Windows::Devices::Bluetooth::BluetoothAddressType AddressType{
+            ::winrt::Windows::Devices::Bluetooth::BluetoothAddressType::Unspecified };
+
         winrt::hstring Id{ };                       // the 12 hex digit address, and the key for every command
         winrt::hstring Name{ };
         winrt::hstring GattServiceDeviceId{ };      // known only once the system has enumerated the GATT service
         Protocol SelectedProtocol{ Protocol::Unknown };
         NativeDataFormat NativeDataFormat{ NativeDataFormat::Unknown };
         bool IsPaired{ false };
+
+        // True only on an update which actually knows, so an advertisement (which carries no
+        // pairing information at all) cannot be mistaken for a device reporting itself unpaired.
+        bool PairingStateKnown{ false };
+
         bool IsConnected{ false };
         int16_t LastSignalStrengthDbm{ 0 };
         uint64_t LastSeenTimestamp{ 0 };
@@ -128,22 +141,13 @@ namespace MidiBleUtilities
     using namespace ::winrt::Windows::Devices::Bluetooth;
     using namespace ::winrt::Windows::Devices::Bluetooth::GenericAttributeProfile;
 
-    // A GATT call against a device which has gone to sleep or out of range blocks for the full
-    // Bluetooth timeout. Service shutdown joins the threads which make these calls, so an
-    // unbounded wait here keeps the whole midisrv process alive long after the service stopped.
-    inline constexpr uint32_t BleOperationTimeoutMilliseconds = 5000;
-
-    // Establishing a link is much slower than talking over one which already exists: the radio may
-    // have to wait several advertising intervals, and a device which demands pairing adds a whole
-    // security exchange. Five seconds gave up on devices which were about to succeed.
-    inline constexpr uint32_t BleConnectOperationTimeoutMilliseconds = 12000;
-
-    inline constexpr uint32_t BleDataOperationTimeoutMilliseconds = 2000;
-    inline constexpr uint32_t BleTeardownOperationTimeoutMilliseconds = 1000;
-
-    // Blocking waits are taken in slices this long so shutdown does not have to sit out a whole
-    // Bluetooth timeout, which for a connect attempt is several of them back to back.
-    inline constexpr uint32_t AwaitPollSliceMilliseconds = 200;
+    // The values live in transport_defs.h with the rest of the transport's timing knobs, so they
+    // can be adjusted in one place. What each one is for is documented there.
+    inline constexpr uint32_t BleOperationTimeoutMilliseconds = MIDI_BLE_GENERAL_OPERATION_TIMEOUT_MS;
+    inline constexpr uint32_t BleConnectOperationTimeoutMilliseconds = MIDI_BLE_CONNECT_OPERATION_TIMEOUT_MS;
+    inline constexpr uint32_t BleDataOperationTimeoutMilliseconds = MIDI_BLE_DATA_OPERATION_TIMEOUT_MS;
+    inline constexpr uint32_t BleTeardownOperationTimeoutMilliseconds = MIDI_BLE_TEARDOWN_OPERATION_TIMEOUT_MS;
+    inline constexpr uint32_t AwaitPollSliceMilliseconds = MIDI_BLE_AWAIT_POLL_SLICE_MS;
 
     // Set while the transport is tearing down. Service shutdown joins the threads which make these
     // calls, so a wait in progress abandons rather than running to its full timeout.
@@ -271,6 +275,71 @@ namespace MidiBleUtilities
         AwaitOutcome ignored{ };
 
         return AwaitWithTimeout(operation, timeoutMilliseconds, onTimeout, ignored);
+    }
+
+    // Windows hands back a cached BluetoothLEDevice per address, and its DeviceInformation is a
+    // snapshot taken when that object was created. One left open is handed to the next caller with
+    // stale pairing state, so abandoned objects are closed rather than merely released.
+    template<typename TClosable>
+    inline void CloseIfOpen(_In_ TClosable const& closable) noexcept
+    {
+        if (closable == nullptr)
+        {
+            return;
+        }
+
+        try
+        {
+            closable.Close();
+        }
+        CATCH_LOG();
+    }
+
+    // Property keys the device watcher is asked for and the handlers read back. Declared once so a
+    // typo cannot silently ask for one key and read another.
+    inline constexpr wchar_t const* BluetoothDeviceAddressPropertyKey = L"System.DeviceInterface.Bluetooth.DeviceAddress";
+    inline constexpr wchar_t const* BluetoothIsPairedPropertyKey = L"System.Devices.Aep.IsPaired";
+    inline constexpr wchar_t const* BluetoothIsConnectedPropertyKey = L"System.Devices.Connected";
+
+    inline bool TryReadBooleanProperty(
+        _In_ ::winrt::Windows::Foundation::Collections::IMapView<::winrt::hstring, ::winrt::Windows::Foundation::IInspectable> const& properties,
+        _In_ ::winrt::hstring const& key,
+        _Out_ bool& value) noexcept
+    {
+        value = false;
+
+        try
+        {
+            if (properties == nullptr || !properties.HasKey(key))
+            {
+                return false;
+            }
+
+            auto const property = properties.Lookup(key);
+
+            if (auto const boolValue = property.try_as<::winrt::Windows::Foundation::IReference<bool>>())
+            {
+                value = boolValue.Value();
+                return true;
+            }
+        }
+        CATCH_LOG();
+
+        return false;
+    }
+
+    // The single argument overload does not say which address kind it assumes, so an observed type
+    // is passed explicitly whenever discovery has seen one.
+    inline ::winrt::Windows::Foundation::IAsyncOperation<BluetoothLEDevice> OpenBluetoothDeviceAsync(
+        _In_ uint64_t const address,
+        _In_ BluetoothAddressType const addressType)
+    {
+        if (addressType == BluetoothAddressType::Unspecified)
+        {
+            return BluetoothLEDevice::FromBluetoothAddressAsync(address);
+        }
+
+        return BluetoothLEDevice::FromBluetoothAddressAsync(address, addressType);
     }
 
     inline winrt::hstring BluetoothAddressTypeToString(_In_ BluetoothAddressType const addressType)
@@ -608,7 +677,7 @@ namespace MidiBleUtilities
                 else
                 {
                     // Each service handed back holds the device open until it is closed
-                    services.GetAt(serviceIndex).Close();
+                    CloseIfOpen(services.GetAt(serviceIndex));
                 }
             }
         }
@@ -673,6 +742,13 @@ namespace MidiBleUtilities
             {
                 nameTable.UpdateDestinationEntryCustomName(destination.second.GroupIndex, destination.second.Name);
             }
+        }
+
+        if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+        {
+            nameTable.SetPortNamesHaveLegacyEquivalent(false);
+
+            LOG_IF_FAILED(nameTable.RebuildNewStyleNames(std::wstring{ portName }, false));
         }
 
         RETURN_IF_FAILED(nameTable.WriteProperties(properties));

@@ -613,6 +613,10 @@ void BluetoothMidiValidationTests::TestEveryTransportErrorCodeIsDistinct()
         { L"OPERATION_ABORTED",             BLUETOOTH_MIDI_ERROR_CODE_OPERATION_ABORTED },
         { L"NOTIFY_FAILED",                 BLUETOOTH_MIDI_ERROR_CODE_NOTIFY_FAILED },
         { L"ENDPOINT_CREATION_FAILED",      BLUETOOTH_MIDI_ERROR_CODE_ENDPOINT_CREATION_FAILED },
+        { L"INVALID_OFFLINE_RETENTION",     BLUETOOTH_MIDI_ERROR_CODE_INVALID_OFFLINE_RETENTION },
+        { L"PAIRING_REQUIRED",              BLUETOOTH_MIDI_ERROR_CODE_PAIRING_REQUIRED },
+        { L"GATT_TIMEOUT",                  BLUETOOTH_MIDI_ERROR_CODE_GATT_TIMEOUT },
+        { L"GATT_CALL_FAILED",              BLUETOOTH_MIDI_ERROR_CODE_GATT_CALL_FAILED },
         { L"NOT_CONNECTED",                 BLUETOOTH_MIDI_ERROR_CODE_NOT_CONNECTED },
         { L"PERIPHERAL_ALREADY_RUNNING",    BLUETOOTH_MIDI_ERROR_CODE_PERIPHERAL_ALREADY_RUNNING },
         { L"PERIPHERAL_NOT_RUNNING",        BLUETOOTH_MIDI_ERROR_CODE_PERIPHERAL_NOT_RUNNING },
@@ -644,4 +648,95 @@ void BluetoothMidiValidationTests::TestEveryTransportErrorCodeIsDistinct()
     }
 
     VERIFY_ARE_EQUAL(ARRAYSIZE(codes), seen.size());
+}
+
+
+void BluetoothMidiValidationTests::TestPairedDeviceNeverInfersPairing()
+{
+    // A bonded device dropping the link says nothing about pairing, whatever else is true
+    auto const evaluation = MidiBleUtilities::EvaluateUnpairedDrop(5, true, true, false, 3);
+
+    VERIFY_ARE_EQUAL(0u, evaluation.EarlyDropCount);
+    VERIFY_IS_FALSE(evaluation.AssumePairingRequired);
+}
+
+void BluetoothMidiValidationTests::TestLongLivedLinkNeverInfersPairing()
+{
+    // A link which stayed up was not refused, so any accumulated count is wrong and is dropped
+    auto const evaluation = MidiBleUtilities::EvaluateUnpairedDrop(2, false, false, false, 3);
+
+    VERIFY_ARE_EQUAL(0u, evaluation.EarlyDropCount);
+    VERIFY_IS_FALSE(evaluation.AssumePairingRequired);
+}
+
+void BluetoothMidiValidationTests::TestLinkWhichDeliveredMessagesNeverInfersPairing()
+{
+    // The discriminator which separates a flaky device from one refusing an unpaired connection:
+    // a device asking for security over SMP drops before it has sent anything at all.
+    auto const evaluation = MidiBleUtilities::EvaluateUnpairedDrop(2, false, true, true, 3);
+
+    VERIFY_ARE_EQUAL(0u, evaluation.EarlyDropCount);
+    VERIFY_IS_FALSE(evaluation.AssumePairingRequired);
+}
+
+void BluetoothMidiValidationTests::TestEarlyDropsAccumulateUntilTheThreshold()
+{
+    uint32_t count{ 0 };
+
+    for (uint32_t attempt = 1; attempt < 3; attempt++)
+    {
+        auto const evaluation = MidiBleUtilities::EvaluateUnpairedDrop(count, false, true, false, 3);
+
+        count = evaluation.EarlyDropCount;
+
+        VERIFY_ARE_EQUAL(attempt, count);
+
+        // a device needing two retries must not be told to pair
+        VERIFY_IS_FALSE(evaluation.AssumePairingRequired,
+            String().Format(L"drop %u is below the threshold", attempt));
+    }
+
+    auto const final = MidiBleUtilities::EvaluateUnpairedDrop(count, false, true, false, 3);
+
+    VERIFY_ARE_EQUAL(3u, final.EarlyDropCount);
+    VERIFY_IS_TRUE(final.AssumePairingRequired);
+}
+
+void BluetoothMidiValidationTests::TestCountResetsWhenADropIsNotEarly()
+{
+    auto const first = MidiBleUtilities::EvaluateUnpairedDrop(0, false, true, false, 3);
+    VERIFY_ARE_EQUAL(1u, first.EarlyDropCount);
+
+    auto const reset = MidiBleUtilities::EvaluateUnpairedDrop(first.EarlyDropCount, false, false, false, 3);
+    VERIFY_ARE_EQUAL(0u, reset.EarlyDropCount);
+
+    // and the next early drop starts over rather than resuming where it left off
+    auto const restarted = MidiBleUtilities::EvaluateUnpairedDrop(reset.EarlyDropCount, false, true, false, 3);
+    VERIFY_ARE_EQUAL(1u, restarted.EarlyDropCount);
+    VERIFY_IS_FALSE(restarted.AssumePairingRequired);
+}
+
+void BluetoothMidiValidationTests::TestZeroThresholdNeverInfersPairing()
+{
+    // a misconfigured threshold must not turn every drop into a pairing demand
+    auto const evaluation = MidiBleUtilities::EvaluateUnpairedDrop(99, false, true, false, 0);
+
+    VERIFY_IS_FALSE(evaluation.AssumePairingRequired);
+}
+
+
+void BluetoothMidiValidationTests::TestTimeoutBudgetsKeepTheirOrdering()
+{
+    // These are tuning knobs, so the values themselves are not asserted. What must hold is the
+    // relationship: teardown is the cheapest because shutdown joins those threads, data is next
+    // because a late write has already missed its moment, and bringing a link up is the most
+    // patient because the radio may wait several advertising intervals.
+    VERIFY_IS_TRUE(MIDI_BLE_TEARDOWN_OPERATION_TIMEOUT_MS < MIDI_BLE_DATA_OPERATION_TIMEOUT_MS);
+    VERIFY_IS_TRUE(MIDI_BLE_DATA_OPERATION_TIMEOUT_MS < MIDI_BLE_GENERAL_OPERATION_TIMEOUT_MS);
+    VERIFY_IS_TRUE(MIDI_BLE_GENERAL_OPERATION_TIMEOUT_MS < MIDI_BLE_CONNECT_OPERATION_TIMEOUT_MS);
+
+    // A slice longer than the shortest timeout would make that timeout meaningless, and a slice of
+    // zero would spin.
+    VERIFY_IS_TRUE(MIDI_BLE_AWAIT_POLL_SLICE_MS > 0);
+    VERIFY_IS_TRUE(MIDI_BLE_AWAIT_POLL_SLICE_MS <= MIDI_BLE_TEARDOWN_OPERATION_TIMEOUT_MS);
 }

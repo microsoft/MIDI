@@ -737,6 +737,42 @@ namespace MidiBleUtilities
         // permanent decision that quietly stops working.
         return false;
     }
+
+    // What a dropped link says about whether a device is demanding pairing.
+    //
+    // A device asking for security over SMP never fails a GATT call. All this transport can see is
+    // a link which goes away moments after it comes up, having delivered nothing. Anything which
+    // delivered a message, or which stayed up, has already shown it is not doing that: it is merely
+    // unreliable, and telling the customer to pair it would be wrong and would stop the retries
+    // that might have worked.
+    struct UnpairedDropEvaluation
+    {
+        uint32_t EarlyDropCount{ 0 };
+        bool AssumePairingRequired{ false };
+    };
+
+    inline UnpairedDropEvaluation EvaluateUnpairedDrop(
+        _In_ uint32_t const currentEarlyDropCount,
+        _In_ bool const isPaired,
+        _In_ bool const linkWasBrief,
+        _In_ bool const receivedAnyMessages,
+        _In_ uint32_t const dropsBeforePairingAssumed) noexcept
+    {
+        UnpairedDropEvaluation evaluation{ };
+
+        if (isPaired || !linkWasBrief || receivedAnyMessages)
+        {
+            return evaluation;
+        }
+
+        evaluation.EarlyDropCount = currentEarlyDropCount + 1;
+
+        evaluation.AssumePairingRequired =
+            dropsBeforePairingAssumed != 0 &&
+            evaluation.EarlyDropCount >= dropsBeforePairingAssumed;
+
+        return evaluation;
+    }
 }
 
 #endif // MIDI_BLE_VALIDATION_H

@@ -8,6 +8,40 @@
 
 #pragma once
 
+// ---------------------------------------------------------------------------------------------
+// Timeouts for the WinRT Bluetooth calls this transport makes.
+//
+// These are grouped by what the call is FOR, not by which API it happens to be, because the right
+// budget for bringing a link up is nothing like the right budget for sending a packet on one which
+// is already up. A GATT call against a device which has gone to sleep or out of range blocks for
+// the full Bluetooth timeout, and service shutdown joins the threads making these calls, so every
+// one of them is bounded. Waits are taken in slices (see the poll slice below) so that shutdown
+// does not have to sit out a whole timeout.
+// ---------------------------------------------------------------------------------------------
+
+// Bringing a link up: opening the device object, discovering and opening the GATT service,
+// selecting the characteristic, creating the session, and the descriptor write which turns
+// notifications on. The radio may have to wait several advertising intervals, and a device which
+// demands pairing adds an entire security exchange. Five seconds gave up on devices which were
+// about to succeed.
+#define MIDI_BLE_CONNECT_OPERATION_TIMEOUT_MS                           12000
+
+// Everything off the data path which is not bringing a link up: reading properties, resolving a
+// name, enumerating the radio.
+#define MIDI_BLE_GENERAL_OPERATION_TIMEOUT_MS                           5000
+
+// Sending on a link which is already up. A write which takes longer than this has already missed
+// its moment musically, so waiting further only queues more behind it.
+#define MIDI_BLE_DATA_OPERATION_TIMEOUT_MS                              2000
+
+// Tearing a link down. Shutdown joins these threads and the link is going away regardless, so
+// courtesy calls get the shortest wait of anything here.
+#define MIDI_BLE_TEARDOWN_OPERATION_TIMEOUT_MS                          1000
+
+// How often a wait in progress re-checks whether the transport is shutting down. This is not a
+// timeout: it is the granularity at which any of the timeouts above can be abandoned early.
+#define MIDI_BLE_AWAIT_POLL_SLICE_MS                                    200
+
 // the IDs here aren't the full Ids, just the values we start with
 // The full Id comes back from the swdevicecreate callback
 
@@ -31,8 +65,11 @@
 // Devices which demand security over SMP rather than through a GATT error look exactly like this.
 #define MIDI_BLE_UNPAIRED_EARLY_DROP_MS                                 10000
 
-// More than one, so a single unlucky drop is not read as a demand for pairing.
-#define MIDI_BLE_UNPAIRED_EARLY_DROPS_BEFORE_PAIRING_ASSUMED            2
+// More than one, so a single unlucky drop is not read as a demand for pairing. A device which
+// merely connects unreliably produces the same signal, so this sits above the one or two retries
+// such a device typically needs. A link which delivered any message never counts at all, because a
+// device refusing an unpaired connection drops before it sends anything.
+#define MIDI_BLE_UNPAIRED_EARLY_DROPS_BEFORE_PAIRING_ASSUMED            3
 
 // How often the worker re-examines the remembered devices which are not connected. Advertisements
 // are the usual trigger, but a bonded device which is not advertising produces none, so without

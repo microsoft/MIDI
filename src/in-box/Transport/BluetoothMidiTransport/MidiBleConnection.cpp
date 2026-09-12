@@ -469,19 +469,16 @@ MidiBleConnection::Shutdown()
         if (m_session != nullptr)
         {
             m_session.MaintainConnection(false);
-            m_session.Close();
         }
     }
     CATCH_LOG();
 
-    try
-    {
-        if (m_service != nullptr)
-        {
-            m_service.Close();
-        }
-    }
-    CATCH_LOG();
+    MidiBleUtilities::CloseIfOpen(m_session);
+    MidiBleUtilities::CloseIfOpen(m_service);
+
+    // The device object outlives the service and session it produced, and Windows caches one per
+    // address, so releasing it without closing leaves it to be handed to the next connection.
+    MidiBleUtilities::CloseIfOpen(m_device);
 
     m_characteristic = nullptr;
     m_session = nullptr;
