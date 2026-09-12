@@ -482,11 +482,11 @@
                                             <Flyout>
                                                 <StackPanel Spacing="8" Width="320">
                                                     <TextBlock x:Uid="CommentFlyoutHeader"
-                                                               Text="Add a note to this message"
+                                                               Text="Add a comment to this message"
                                                                Style="{ThemeResource BodyStrongTextBlockStyle}" />
                                                     <TextBox x:Uid="CommentTextBox"
                                                              AcceptsReturn="False"
-                                                             PlaceholderText="Type a note"
+                                                             PlaceholderText="Type a comment"
                                                              Text="{x:Bind Comment, Mode=OneTime}"
                                                              TextChanged="OnCommentTextChanged" />
                                                 </StackPanel>
