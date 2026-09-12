@@ -17,6 +17,28 @@
 
 namespace winrt::midibluetoothsetup::implementation
 {
+    // The data context of a control inside a DataTemplate is the row it was realized for.
+    // Shared because both the snapshot code and the action handlers resolve rows this way.
+    template <typename TItem>
+    TItem ItemFromSender(_In_ foundation::IInspectable const& sender) noexcept
+    {
+        try
+        {
+            auto const element = sender.try_as<xaml::FrameworkElement>();
+
+            if (element == nullptr)
+            {
+                return nullptr;
+            }
+
+            return element.DataContext().try_as<TItem>();
+        }
+        catch (...)
+        {
+            return nullptr;
+        }
+    }
+
     struct MainWindow : MainWindowT<MainWindow>
     {
         MainWindow();
