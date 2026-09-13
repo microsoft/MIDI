@@ -13,6 +13,8 @@
     </DirectoryRef>
     <DirectoryRef Id="TOOL_KEYBOARD_FOLDER">
     </DirectoryRef>
+    <DirectoryRef Id="TOOL_CLOCK_FOLDER">
+    </DirectoryRef>
     <DirectoryRef Id="TOOL_SYSEX_FOLDER">
     </DirectoryRef>
     <DirectoryRef Id="TOOL_MONITOR_FOLDER">
@@ -146,6 +148,32 @@
       </Component>
       <Component Id="c70184BEB5F481A88" Bitness="always64" Directory="TOOL_KEYBOARD_FOLDER"> <!-- Windows.Devices.Midi2.pri -->
         <File Id="f70184BEB5F481A88" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Keyboard\Windows.Devices.Midi2.pri" Vital="true" />
+      </Component>
+
+      <!-- app-sdk\$(var.Platform)\Clock -->
+      <Component Id="c26EBD1D04AE809AB" Bitness="always64" Directory="TOOL_CLOCK_FOLDER"> <!-- App.xbf -->
+        <File Id="f26EBD1D04AE809AB" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Clock\App.xbf" Vital="true" />
+      </Component>
+      <Component Id="c740281EB3CA8554E" Bitness="always64" Directory="TOOL_CLOCK_FOLDER"> <!-- MainWindow.xbf -->
+        <File Id="f740281EB3CA8554E" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Clock\MainWindow.xbf" Vital="true" />
+      </Component>
+      <Component Id="c0963ACBB7159809A" Bitness="always64" Directory="TOOL_CLOCK_FOLDER"> <!-- Microsoft.Web.WebView2.Core.dll -->
+        <File Id="f0963ACBB7159809A" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Clock\Microsoft.Web.WebView2.Core.dll" Vital="true" />
+      </Component>
+      <Component Id="c7CA564315D2D19BD" Bitness="always64" Directory="TOOL_CLOCK_FOLDER"> <!-- Microsoft.WindowsAppRuntime.Bootstrap.dll -->
+        <File Id="f7CA564315D2D19BD" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Clock\Microsoft.WindowsAppRuntime.Bootstrap.dll" Vital="true" />
+      </Component>
+      <Component Id="cA8223231535AAD3A" Bitness="always64" Directory="TOOL_CLOCK_FOLDER"> <!-- midiclock.exe -->
+        <File Id="midiclockExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Clock\midiclock.exe" Vital="true" />
+      </Component>
+      <Component Id="c218C7D1B9C0C8457" Bitness="always64" Directory="TOOL_CLOCK_FOLDER"> <!-- resources.pri -->
+        <File Id="f218C7D1B9C0C8457" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Clock\resources.pri" Vital="true" />
+      </Component>
+      <Component Id="cD0531F4D2DFD6C7E" Bitness="always64" Directory="TOOL_CLOCK_FOLDER"> <!-- Windows.Devices.Midi2.dll -->
+        <File Id="fD0531F4D2DFD6C7E" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Clock\Windows.Devices.Midi2.dll" Vital="true" />
+      </Component>
+      <Component Id="cFE9296825931926A" Bitness="always64" Directory="TOOL_CLOCK_FOLDER"> <!-- Windows.Devices.Midi2.pri -->
+        <File Id="fFE9296825931926A" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Clock\Windows.Devices.Midi2.pri" Vital="true" />
       </Component>
 
       <!-- app-sdk\$(var.Platform)\SysEx -->

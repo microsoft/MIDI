@@ -64,6 +64,25 @@ MIDIOUT3 (SoftStep)
 These names carry no information about what each port is for, but applications have been matching
 on them for decades.
 
+When more than one unit of the same model is connected, the second and later units carry a leading
+marker on the device name, exactly as Windows did before Windows MIDI Services:
+
+```
+Some Device                 MIDIOUT6 (Some Device)
+2- Some Device              MIDIOUT6 (2- Some Device)
+3- Some Device              MIDIOUT6 (3- Some Device)
+```
+
+The marker is `N- ` — a digit, a hyphen and a single space, with no space before the hyphen. The
+first unit is never marked. Nothing else about a legacy name changes, so an application matching a
+stored name still finds it.
+
+Whether an application ever saw this marker before depended on the device. Windows built the name
+with the marker, then discarded it if the device had a name registered under
+`MediaCategories`, which is shared by every unit of a model. So devices with a registered name
+collided under the same name, and devices without one got the marker. Windows MIDI Services applies
+the marker consistently, which means some devices that used to collide are now distinguishable.
+
 ### Automatic
 
 Automatic picks **new style** when either of these is true, and **legacy** otherwise:
@@ -208,6 +227,11 @@ ESI M8U eX (2) group 1   ESI M8U eX (2) group 2   ESI M8U eX (2) group 3   ...
 When the port name comes from the device and cannot be edited without corrupting it, the marker is
 appended instead: `MPK mini IV Software Port (2)`.
 
+The two styles mark the device differently, and deliberately so. New style appends ` (2)`, which
+reads naturally in front of a group number. Legacy prepends `2- `, because that is the form Windows
+used and the form applications have stored. The same second unit is therefore
+`ESI M8U eX (2) group 1` in new style and `2- ESI M8U eX` in legacy.
+
 Two rules govern this:
 
 - A name is assigned when the device is enumerated and is **not recalculated because of anything
@@ -317,7 +341,7 @@ own. New style names are shown for every device so the two can be compared.
 | MIDI 2.0 synthesizer, blocks `Piano` and `Drums`, one group each | Two single-group blocks | `Acme Synth` | `Acme Synth Piano`, `Acme Synth Drums` | new style |
 | Roland UM-ONE | Jack names are the filter name plus an index, so nothing usable | `UM-ONE` | `UM-ONE` | **legacy** — `UM-ONE`, `MIDIOUT2 (UM-ONE)` |
 | NI KOMPLETE KONTROL M32 | Nothing usable; `iProduct` = `KOMPLETE KONTROL M32` | `KOMPLETE KONTROL M32` | `KOMPLETE KONTROL M32` | **legacy** — `KOMPLETE KONTROL M32 MIDI` |
-| ESI M8U eX, two units | Nothing usable; 16 ports each way | `ESI M8U eX` and `ESI M8U eX (2)` | `ESI M8U eX group 1..16` and `ESI M8U eX (2) group 1..16` | **legacy** — `ESI M8U eX`, `MIDIIN2 (ESI M8U eX)` … |
+| ESI M8U eX, two units | Nothing usable; 16 ports each way | `ESI M8U eX` and `ESI M8U eX (2)` | `ESI M8U eX group 1..16` and `ESI M8U eX (2) group 1..16` | **legacy** — `ESI M8U eX`, `MIDIIN2 (ESI M8U eX)` …, and for the second unit `2- ESI M8U eX`, `MIDIIN2 (2- ESI M8U eX)` … |
 | Network MIDI 2.0 host, no function blocks | Endpoint name only | `My Bome Box` | `My Bome Box group 1` … `group 16` | new style — no legacy equivalent |
 
 ## Advice for device makers

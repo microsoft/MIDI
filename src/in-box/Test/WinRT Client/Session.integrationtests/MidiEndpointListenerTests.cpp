@@ -864,3 +864,145 @@ void MidiEndpointListenerTests::TestPreventCallingFurtherListeners()
     session = nullptr;
 }
 
+
+void MidiEndpointListenerTests::TestSkipFlagsAreIndependentAndAccumulate()
+{
+    // The two skip flags control different things. Listener 1 suppresses only the connection's
+    // own MessageReceived event, so listener 2 must still be called. Listener 2 does not ask for
+    // that suppression, and must not be able to undo what listener 1 asked for.
+
+    wil::critical_section receivedLock;
+    wil::unique_event_nothrow allMessagesReceived;
+    allMessagesReceived.create();
+
+    std::vector<uint32_t> receivedByListener1;
+    std::vector<uint32_t> receivedByListener2;
+    std::vector<uint32_t> receivedByMainEvent;
+
+    const uint32_t expectedMessageCount = 2;
+
+    auto session = MidiSession::Create(L"TestSkipFlagsAreIndependentAndAccumulate");
+    VERIFY_IS_NOT_NULL(session);
+    VERIFY_IS_TRUE(session.IsOpen());
+
+    LOG_OUTPUT(L"Connecting to both Loopback A and Loopback B");
+
+    auto connSend = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackAEndpointDeviceId());
+    auto connReceive = session.CreateEndpointConnection(MidiDiagnostics::DiagnosticsLoopbackBEndpointDeviceId());
+
+    VERIFY_IS_NOT_NULL(connSend);
+    VERIFY_IS_NOT_NULL(connReceive);
+
+    // listener 1: suppresses the main event only. The plugin chain must continue.
+    MidiChannelEndpointListener listener1;
+    listener1.IncludedGroup(MidiGroup(5));
+    listener1.IncludedChannels().Append(MidiChannel{ 0x3 });
+    listener1.PreventFiringMainMessageReceivedEvent(true);
+    listener1.PreventCallingFurtherListeners(false);
+
+    // listener 2: asks for neither. It must not clear listener 1's request.
+    MidiChannelEndpointListener listener2;
+    listener2.IncludedGroup(MidiGroup(5));
+    listener2.IncludedChannels().Append(MidiChannel{ 0x3 });
+    listener2.PreventFiringMainMessageReceivedEvent(false);
+    listener2.PreventCallingFurtherListeners(false);
+
+    // order of addition is the order in which the plugins are called
+    connReceive.AddMessageProcessingPlugin(listener1);
+    connReceive.AddMessageProcessingPlugin(listener2);
+
+    auto token1 = listener1.MessageReceived([&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
+        {
+            VERIFY_IS_NOT_NULL(sender);
+            VERIFY_IS_NOT_NULL(args);
+
+            auto lock = receivedLock.lock();
+
+            auto word0 = args.PeekFirstWord();
+            std::cout << "Listener 1 received: 0x" << std::hex << word0 << std::dec << std::endl;
+
+            receivedByListener1.push_back(word0);
+        });
+
+    auto token2 = listener2.MessageReceived([&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
+        {
+            VERIFY_IS_NOT_NULL(sender);
+            VERIFY_IS_NOT_NULL(args);
+
+            auto lock = receivedLock.lock();
+
+            auto word0 = args.PeekFirstWord();
+            std::cout << "Listener 2 received: 0x" << std::hex << word0 << std::dec << std::endl;
+
+            receivedByListener2.push_back(word0);
+
+            if (receivedByListener2.size() >= expectedMessageCount)
+            {
+                allMessagesReceived.SetEvent();
+            }
+        });
+
+    auto mainToken = connReceive.MessageReceived([&](IMidiMessageReceivedEventSource const& sender, MidiMessageReceivedEventArgs const& args)
+        {
+            VERIFY_IS_NOT_NULL(sender);
+            VERIFY_IS_NOT_NULL(args);
+
+            auto lock = receivedLock.lock();
+
+            auto word0 = args.PeekFirstWord();
+            std::cout << "Main MessageReceived fired (UNEXPECTED): 0x" << std::hex << word0 << std::dec << std::endl;
+
+            receivedByMainEvent.push_back(word0);
+        });
+
+    VERIFY_IS_TRUE(connSend.Open());
+    VERIFY_IS_TRUE(connReceive.Open());
+
+    std::cout << "Sending messages" << std::endl;
+
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), TEST_MSG_GROUP5_CHANNEL3_A)));
+    VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(connSend.SendSingleMessageWords(MidiClock::Now(), TEST_MSG_GROUP5_CHANNEL3_B)));
+
+    if (!allMessagesReceived.wait(10000))
+    {
+        std::cout << "Failure waiting for messages, timed out." << std::endl;
+    }
+
+    // give the main event a chance to (incorrectly) fire so we can catch it
+    Sleep(500);
+
+    {
+        auto lock = receivedLock.lock();
+
+        VERIFY_ARE_EQUAL(receivedByListener1.size(), (size_t)expectedMessageCount);
+        VERIFY_ARE_EQUAL(receivedByListener1[0], (uint32_t)TEST_MSG_GROUP5_CHANNEL3_A);
+        VERIFY_ARE_EQUAL(receivedByListener1[1], (uint32_t)TEST_MSG_GROUP5_CHANNEL3_B);
+
+        // listener 1 suppressed only the main event, so the chain reached listener 2
+        VERIFY_ARE_EQUAL(receivedByListener2.size(), (size_t)expectedMessageCount);
+        VERIFY_ARE_EQUAL(receivedByListener2[0], (uint32_t)TEST_MSG_GROUP5_CHANNEL3_A);
+        VERIFY_ARE_EQUAL(receivedByListener2[1], (uint32_t)TEST_MSG_GROUP5_CHANNEL3_B);
+
+        // listener 2 ran after listener 1 and asked for nothing, so listener 1's request stands
+        VERIFY_ARE_EQUAL(receivedByMainEvent.size(), (size_t)0);
+    }
+
+    listener1.MessageReceived(token1);
+    listener2.MessageReceived(token2);
+    connReceive.MessageReceived(mainToken);
+
+    connReceive.RemoveMessageProcessingPlugin(listener1.PluginId());
+    connReceive.RemoveMessageProcessingPlugin(listener2.PluginId());
+
+    session.DisconnectEndpointConnection(connSend.ConnectionId());
+    session.DisconnectEndpointConnection(connReceive.ConnectionId());
+
+    session.Close();
+
+    listener1 = nullptr;
+    listener2 = nullptr;
+    connSend = nullptr;
+    connReceive = nullptr;
+    session = nullptr;
+}
+

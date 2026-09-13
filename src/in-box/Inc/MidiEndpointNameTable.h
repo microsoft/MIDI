@@ -129,6 +129,13 @@ namespace WindowsMidiServicesNamingLib
         _In_ bool const driverRegistryNamesArePerFilter,
         _In_ std::vector<Midi1PortNameInput> const& ports) noexcept;
 
+    // WinMM marked the Nth unit of a model with a leading "2- ", so a legacy name has to do the
+    // same to stay recognizable. New style marks the endpoint name with a trailing " (2)" instead.
+    // oneBasedIndex is 1 for the first unit, which is never marked.
+    std::wstring ApplyLegacyDuplicateDeviceMarker(
+        _In_ std::wstring const& baseDeviceName,
+        _In_ uint32_t const oneBasedIndex) noexcept;
+
     class MidiEndpointNameTable
     {
     public:
@@ -245,6 +252,7 @@ namespace WindowsMidiServicesNamingLib
         void SetPortNamesHaveLegacyEquivalent(_In_ bool const hasLegacyEquivalent) noexcept;
 
         uint32_t NameSourceFlags() const noexcept { return m_nameSourceFlags; }
+        bool NameSourceFlagsValid() const noexcept { return m_nameSourceFlagsValid; }
 
 
         bool IsEqualTo(MidiEndpointNameTable* nameTable);

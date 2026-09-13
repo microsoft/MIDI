@@ -92,9 +92,12 @@ _Use_decl_annotations_
 std::wstring
 CMidi2KSMidiEndpointManager::ResolveUniqueHardwareParentDeviceName(
     std::wstring const& hardwareParentName,
-    std::wstring const& hardwareParentInstanceId
+    std::wstring const& hardwareParentInstanceId,
+    uint32_t& indexOfDevicesWithThisSameName
 ) noexcept
 {
+    indexOfDevicesWithThisSameName = 0;
+
     if (hardwareParentInstanceId.empty()) return hardwareParentName;
 
     try
@@ -107,6 +110,7 @@ CMidi2KSMidiEndpointManager::ResolveUniqueHardwareParentDeviceName(
         auto existing = m_hardwareParentDeviceNames.find(key);
         if (existing != m_hardwareParentDeviceNames.end())
         {
+            indexOfDevicesWithThisSameName = existing->second.IndexOfDevicesWithThisSameName;
             return existing->second.ResolvedName;
         }
 
@@ -144,6 +148,8 @@ CMidi2KSMidiEndpointManager::ResolveUniqueHardwareParentDeviceName(
         }
 
         m_hardwareParentDeviceNames.emplace(key, entry);
+
+        indexOfDevicesWithThisSameName = entry.IndexOfDevicesWithThisSameName;
 
         return entry.ResolvedName;
     }
@@ -217,6 +223,10 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         additionalProperties,winrt::Windows::Devices::Enumeration::DeviceInformationKind::Device).get();
     deviceName = parentDeviceInfo.Name();
 
+    // WinMM marked the Nth unit of a model with a leading "2- " rather than a trailing " (2)",
+    // so the legacy names are composed from their own form of the device name.
+    std::wstring legacyDeviceName{ deviceName };
+
     if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
     {
         // The node above is the driver's, so it is named for the driver. Walk up to the physical
@@ -226,7 +236,10 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
 
         if (internal::GetHardwareParentDeviceName(deviceInstanceId, hardwareParentName, hardwareParentInstanceId))
         {
-            deviceName = ResolveUniqueHardwareParentDeviceName(hardwareParentName, hardwareParentInstanceId);
+            uint32_t indexOfDevicesWithThisSameName{ 0 };
+
+            deviceName = ResolveUniqueHardwareParentDeviceName(hardwareParentName, hardwareParentInstanceId, indexOfDevicesWithThisSameName);
+            legacyDeviceName = WindowsMidiServicesNamingLib::ApplyLegacyDuplicateDeviceMarker(hardwareParentName, indexOfDevicesWithThisSameName + 1);
         }
     }
 
@@ -712,7 +725,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                 // MIDI 2 device using the UMP driver
                 if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
                 {
-                    LOG_IF_FAILED(nameTable.PopulateAllEntriesForNativeUmpDevice(deviceName.c_str(), MidiPin->Blocks));
+                    LOG_IF_FAILED(nameTable.PopulateAllEntriesForNativeUmpDevice(legacyDeviceName.c_str(), MidiPin->Blocks));
                     LOG_IF_FAILED(nameTable.RebuildNewStyleNames(deviceName, false));
                 }
                 else
@@ -725,7 +738,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                 // MIDI 1 device using the UMP driver
                 if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
                 {
-                    LOG_IF_FAILED(nameTable.PopulateAllEntriesForMidi1DeviceUsingUmpDriver(deviceName.c_str(), MidiPin->Blocks));
+                    LOG_IF_FAILED(nameTable.PopulateAllEntriesForMidi1DeviceUsingUmpDriver(legacyDeviceName.c_str(), MidiPin->Blocks));
                     LOG_IF_FAILED(nameTable.RebuildNewStyleNames(deviceName, false));
                 }
                 else

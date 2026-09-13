@@ -15,6 +15,11 @@
 #define MAX_UINT32     ((UINT32) 0xFFFFFFFF)
 #define IS_VALID_PORT_NUMBER(Context) (Context != MAX_UINT32)
 
+namespace WindowsMidiServicesNamingLib
+{
+    class MidiEndpointNameTable;
+}
+
 // ----------------------------------------------------------------------
 //
 //  MIDIPORT
@@ -214,13 +219,15 @@ private:
     HRESULT RebuildAndUpdateNameTableForMidi2EndpointWithFunctionBlocks(
         _In_ LPCWSTR umpDeviceInterfaceId,
         _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
-        _In_ PMIDIPORT umpMidiPort
+        _In_ PMIDIPORT umpMidiPort,
+        _Inout_ std::shared_ptr<WindowsMidiServicesNamingLib::MidiEndpointNameTable>& rebuiltNameTable
     );
 
     HRESULT RebuildAndUpdateNameTableForMidi2EndpointWithGroupTerminalBlocks(
         _In_ LPCWSTR umpDeviceInterfaceId,
         _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
-        _In_ PMIDIPORT umpMidiPort
+        _In_ PMIDIPORT umpMidiPort,
+        _Inout_ std::shared_ptr<WindowsMidiServicesNamingLib::MidiEndpointNameTable>& rebuiltNameTable
     );
 
     HRESULT SyncGroupTerminalBlockNamesToMidi1PortNames(
@@ -232,6 +239,7 @@ private:
 
     HRESULT GetMidi1PortNames(
         _In_ winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
+        _In_opt_ std::shared_ptr<WindowsMidiServicesNamingLib::MidiEndpointNameTable> const& rebuiltNameTable,
         _Inout_ std::map<UINT32, PORT_INFO> portInfo[2]
     );
 

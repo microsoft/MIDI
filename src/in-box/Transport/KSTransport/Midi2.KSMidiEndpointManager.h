@@ -71,7 +71,8 @@ private:
 
     std::wstring ResolveUniqueHardwareParentDeviceName(
         _In_ std::wstring const& hardwareParentName,
-        _In_ std::wstring const& hardwareParentInstanceId
+        _In_ std::wstring const& hardwareParentInstanceId,
+        _Out_ uint32_t& indexOfDevicesWithThisSameName
     ) noexcept;
 
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
