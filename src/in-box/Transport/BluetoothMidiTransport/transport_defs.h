@@ -71,6 +71,10 @@
 // device refusing an unpaired connection drops before it sends anything.
 #define MIDI_BLE_UNPAIRED_EARLY_DROPS_BEFORE_PAIRING_ASSUMED            3
 
+// Bluetooth LE expresses a connection interval in units of 1.25 ms. This is the unit itself, not
+// an interval: multiply by the negotiated unit count to get the interval.
+#define MIDI_BLE_CONNECTION_INTERVAL_UNIT_MICROSECONDS                  1250
+
 // How often the worker re-examines the remembered devices which are not connected. Advertisements
 // are the usual trigger, but a bonded device which is not advertising produces none, so without
 // this a device that failed once is never tried again. Deliberately shorter than the retry
