@@ -3,6 +3,15 @@
 Windows MIDI Services. See [README.md](README.md) for what the project is, and
 [CONTRIBUTING.md](CONTRIBUTING.md) for contribution process.
 
+## This repository is public
+
+You may be given access to non-public source or documents to investigate a problem. Treat them as
+input to your decisions only. **Nothing from them may appear in this repository, or in issues,
+pull requests or commit messages** — not file or symbol names, not internal interfaces or keys, and
+not the mechanism behind a behavior. Describing externally observable behavior is fine; explaining
+how it is implemented internally is not. If a document seems to need the internal mechanism to make
+sense, rewrite it in terms of what a customer can observe.
+
 ## Writing
 
 Everything in this repository is authored in **en-US**, including identifiers, comments, UI strings

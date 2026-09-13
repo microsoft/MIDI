@@ -77,11 +77,9 @@ The marker is `N- ` — a digit, a hyphen and a single space, with no space befo
 first unit is never marked. Nothing else about a legacy name changes, so an application matching a
 stored name still finds it.
 
-Whether an application ever saw this marker before depended on the device. Windows built the name
-with the marker, then discarded it if the device had a name registered under
-`MediaCategories`, which is shared by every unit of a model. So devices with a registered name
-collided under the same name, and devices without one got the marker. Windows MIDI Services applies
-the marker consistently, which means some devices that used to collide are now distinguishable.
+Not every device produced this marker on earlier versions of Windows: some models gave both units
+the same name instead, leaving applications no way to tell them apart. Windows MIDI Services applies
+the marker consistently, so a pair of devices that used to collide can now be distinguished.
 
 ### Automatic
 
@@ -238,6 +236,17 @@ Two rules govern this:
   another device does**. Plugging in a second device never renames the first.
 - Uniqueness is enforced on the name that is actually published, not on the device name it was
   derived from.
+
+### Network MIDI 2.0 ports always carry their group number
+
+A network port is named `<endpoint> group N` even when the endpoint currently has only one port,
+which is the one place a group number appears without another port to distinguish it from.
+
+This is deliberate. A network endpoint is addressed by group, its port count can change while it is
+connected, and its ports did not exist before Windows MIDI Services, so there is no older name to
+stay compatible with. Keeping the number means a port does not get renamed the moment a second one
+appears. A manufacturer who wants something more meaningful than a group number should supply names
+for the ports, the same as for any other device.
 
 ## 6. When a name is allowed to change
 
