@@ -35,6 +35,10 @@ namespace winrt::Windows::Devices::Midi2::ClientPlugins::implementation
         bool& skipFurtherListeners, 
         bool& skipMainMessageReceivedEvent)
     {
+        // this listener reports only its own decision. The connection accumulates across plugins
+        skipFurtherListeners = false;
+        skipMainMessageReceivedEvent = false;
+
         try
         {
             auto messageMessageType = args.MessageType();
@@ -46,7 +50,7 @@ namespace winrt::Windows::Devices::Midi2::ClientPlugins::implementation
                     // only skip if we actually processed the message
 
                     skipFurtherListeners = m_preventCallingFurtherListeners;
-                    skipMainMessageReceivedEvent = skipMainMessageReceivedEvent || m_preventFiringMainMessageReceivedEvent;
+                    skipMainMessageReceivedEvent = m_preventFiringMainMessageReceivedEvent;
 
                     if (m_messageReceivedEvent)
                     {

@@ -181,37 +181,46 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
-            if (m_connections.HasKey(endpointConnectionId))
+            winrt::com_ptr<implementation::MidiEndpointConnection> connectionToClose{ nullptr };
+
             {
+                // one acquisition covers the lookup, the removal and the auto-reconnect list, so
+                // a second caller with the same id cannot pass the test and then find it gone.
                 std::lock_guard<std::mutex> guard(m_connectionsLock);
 
-                // disconnect the endpoint from the service, call Close() etc.
+                if (m_connections.HasKey(endpointConnectionId))
+                {
+                    auto conn = m_connections.Lookup(endpointConnectionId);
+                    connectionToClose.copy_from(winrt::get_self<implementation::MidiEndpointConnection>(conn));
 
-                auto conn = m_connections.Lookup(endpointConnectionId);
-                auto connSelf = winrt::get_self<implementation::MidiEndpointConnection>(conn);
+                    m_connections.Remove(endpointConnectionId);
+                }
+                else
+                {
+                    // endpoint already disconnected. No need to throw an exception or anything, just exit.
+                }
 
-                connSelf->InternalClose();
+                // remove our auto-reconnect endpoint pointer, if we have one
+                auto it = std::find_if(
+                    m_connectionsForAutoReconnect.begin(),
+                    m_connectionsForAutoReconnect.end(),
+                    [&endpointConnectionId](const auto& x) { return x->ConnectionId() == endpointConnectionId; });
 
-                m_connections.Remove(endpointConnectionId);
+                if (it != m_connectionsForAutoReconnect.end())
+                {
+                    m_connectionsForAutoReconnect.erase(it);
+                }
+                else
+                {
+                    // may not have auto reconnect set for the connection, which is fine.
+                }
             }
-            else
-            {
-                // endpoint already disconnected. No need to throw an exception or anything, just exit.
-            }
 
-            // remove our auto-reconnect endpoint pointer, if we have one
-            auto it = std::find_if(
-                m_connectionsForAutoReconnect.begin(),
-                m_connectionsForAutoReconnect.end(),
-                [&endpointConnectionId](const auto& x) { return x->ConnectionId() == endpointConnectionId; });
-
-            if (it != m_connectionsForAutoReconnect.end())
+            // closing talks to the service and tears down the endpoint, so it is done with no
+            // lock held
+            if (connectionToClose != nullptr)
             {
-                m_connectionsForAutoReconnect.erase(it);
-            }
-            else
-            {
-                // may not have auto reconnect set for the connection, which is fine.
+                connectionToClose->InternalClose();
             }
 
         }

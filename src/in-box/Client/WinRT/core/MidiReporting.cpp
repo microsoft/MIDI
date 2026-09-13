@@ -41,6 +41,10 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
                 LPWSTR rpcCallJson{ nullptr };
                 auto callStatus = metadataReporter->GetTransportList(&rpcCallJson);
 
+                // the service allocated this with CoTaskMemAlloc, and the parsing below can
+                // throw, so ownership is taken before anything else happens
+                wil::unique_cotaskmem_string const ownedRpcCallJson{ rpcCallJson };
+
                 if (SUCCEEDED(callStatus) && rpcCallJson != nullptr && wcslen(rpcCallJson) > 0)
                 {
                     winrt::hstring metadataListJsonString(rpcCallJson);
@@ -79,8 +83,6 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
                             }
                         }
                     }
-
-                    SAFE_COTASKMEMFREE(rpcCallJson);
                 }
                 else
                 {
@@ -195,6 +197,10 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
             LPWSTR rpcSessionListJson{ nullptr };
             auto callStatus = sessionTracker->GetSessionList(&rpcSessionListJson);
 
+            // the service allocated this with CoTaskMemAlloc, and the parsing below can throw,
+            // so ownership is taken before anything else happens
+            wil::unique_cotaskmem_string const ownedRpcSessionListJson{ rpcSessionListJson };
+
             // parse it into json objects
 
             if (SUCCEEDED(callStatus) && rpcSessionListJson != nullptr && wcslen(rpcSessionListJson) > 0)
@@ -278,8 +284,6 @@ namespace winrt::Windows::Devices::Midi2::Reporting::implementation
                         }
                     }
                 }
-
-                SAFE_COTASKMEMFREE(rpcSessionListJson);
             }
         }
         catch (winrt::hresult_error ex)

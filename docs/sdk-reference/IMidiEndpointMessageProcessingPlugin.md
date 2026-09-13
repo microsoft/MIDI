@@ -33,5 +33,11 @@ If you need to do long-running processing of incoming messages, add them to your
 | ---- | ---- |
 | `Initialize (endpointConnection)` | Called by the endpoint connection. Perform any setup code which requires the endpoint connection pointer here. |
 | `OnEndpointConnectionOpened()` | Callback when the endpoint connection is opened. If the plugin is added after the endpoint connection has already been opened, this is called immediately. |
-| `ProcessIncomingMessage (args, skipFurtherListeners, skipMainMessageReceivedEvent)` | Callback for processing an incoming message. If the code sets `skipFurtherListeners` to true, any plugins after this one will not be called. If the code sets `skipMainMessageReceivedEvent` to true, the endpoint's MessageReceived event will not be called for this message. |
+| `ProcessIncomingMessage (args, skipFurtherListeners, skipMainMessageReceivedEvent)` | Callback for processing an incoming message. Set `skipFurtherListeners` to true to stop the message being passed to any plugin after this one. Set `skipMainMessageReceivedEvent` to true to stop the endpoint connection raising its own `MessageReceived` event for this message. |
 | `Cleanup()` | Called when the endpoint is tearing down |
+
+## The two skip flags
+
+They suppress different things and are independent of each other. `skipFurtherListeners` ends the plugin chain for this message; `skipMainMessageReceivedEvent` suppresses the connection's own event. Setting either one has no effect on the other, so a plugin which wants both must set both.
+
+Both are output parameters, and each plugin reports only its own decision. Do not read the value passed in and do not try to carry forward what an earlier plugin asked for — the endpoint connection combines the answers from every plugin itself, and a value set by one plugin cannot be cleared by a later one. Write both on every path through your implementation, including the paths where the message is not one you handle.

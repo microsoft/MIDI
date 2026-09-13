@@ -184,7 +184,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             // get the computer name
 
             wchar_t computerName[MAX_COMPUTERNAME_LENGTH + 1]; // Buffer for name
-            DWORD size = sizeof(computerName);              // Size in bytes
+            DWORD size = ARRAYSIZE(computerName);           // lpnSize is a character count, not bytes
 
             // Attempt to get the computer name
             if (GetComputerNameW(computerName, &size)) 

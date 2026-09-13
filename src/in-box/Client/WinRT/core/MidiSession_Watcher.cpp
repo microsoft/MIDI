@@ -176,7 +176,15 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             auto id = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
 
-            for (auto const& conn : m_connectionsForAutoReconnect)
+            // snapshot under the lock. DisconnectEndpointConnection can erase from this vector
+            // on another thread, which would invalidate an iterator held across the calls below.
+            std::vector<winrt::com_ptr<midi2::implementation::MidiEndpointConnection>> connections{};
+            {
+                std::lock_guard<std::mutex> guard(m_connectionsLock);
+                connections = m_connectionsForAutoReconnect;
+            }
+
+            for (auto const& conn : connections)
             {
                 if (id == conn->ConnectedEndpointDeviceId())
                 {
@@ -238,7 +246,14 @@ namespace winrt::Windows::Devices::Midi2::implementation
         {
             auto id = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
 
-            for (auto const& conn : m_connectionsForAutoReconnect)
+            // snapshot under the lock, for the same reason as DeviceAddedHandler
+            std::vector<winrt::com_ptr<midi2::implementation::MidiEndpointConnection>> connections{};
+            {
+                std::lock_guard<std::mutex> guard(m_connectionsLock);
+                connections = m_connectionsForAutoReconnect;
+            }
+
+            for (auto const& conn : connections)
             {
                 // there can be more than one match, so we don't
                 // break after the first one is found

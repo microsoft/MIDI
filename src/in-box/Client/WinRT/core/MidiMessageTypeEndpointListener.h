@@ -57,8 +57,8 @@ namespace winrt::Windows::Devices::Midi2::ClientPlugins::implementation
 
         void ProcessIncomingMessage(
             _In_ midi2::MidiMessageReceivedEventArgs const& args,
-            _Inout_ bool& skipFurtherListeners,
-            _Inout_ bool& skipMainMessageReceivedEvent);
+            _Out_ bool& skipFurtherListeners,
+            _Out_ bool& skipMainMessageReceivedEvent);
 
 
     private:

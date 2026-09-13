@@ -138,9 +138,18 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                         if (plugin.IsEnabled())
                         {
+                            // A plugin reports only its own decision. The two flags suppress
+                            // different things and accumulate independently here, so one plugin
+                            // cannot undo what another asked for.
+                            bool pluginSkipFurtherListeners{ false };
+                            bool pluginSkipMainMessageReceivedEvent{ false };
+
                             try
                             {
-                                plugin.ProcessIncomingMessage(*args, skipFurtherListeners, skipMainMessageReceivedEvent);
+                                plugin.ProcessIncomingMessage(*args, pluginSkipFurtherListeners, pluginSkipMainMessageReceivedEvent);
+
+                                skipFurtherListeners = skipFurtherListeners || pluginSkipFurtherListeners;
+                                skipMainMessageReceivedEvent = skipMainMessageReceivedEvent || pluginSkipMainMessageReceivedEvent;
                             }
                             catch (winrt::hresult_error const& ex)
                             {
