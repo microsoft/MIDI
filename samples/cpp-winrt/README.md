@@ -15,6 +15,7 @@ For C++, Windows MIDI Services is only being tested with C++/WinRT, not CX or WR
 | -------| ----------- |
 | [Basics](basics/) | Shows how to open a MidiSession, and connect to a MidiEndpoint to send and receive messages |
 | [COM Extensions](com-extensions/) | Shows how to use the COM extensions for super fast allocation-free MIDI Message send/receive |
+| [Detect Windows MIDI Services](detect-midi-services/) | Works out at runtime whether to drive Windows MIDI Services or fall back to WinMM / WinRT MIDI 1.0, with and without a reference to the SDK. Start here if you ship a library or a plug-in |
 | [Endpoint Listeners](endpoint-listeners/) | Demonstrates filtering incoming messages by group, channel, or message type |
 | [Get VID and PID](get-vid-pid/) | Shows where to find the USB vendor and product ids for an endpoint. Replaces the WinMM `DRV_QUERYDEVICEINTERFACE` approach |
 | [Identify Endpoint Type](identify-endpoint-type/) | Correlates each endpoint with the transport which created it, so you can tell USB from network from virtual |

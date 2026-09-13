@@ -17,6 +17,7 @@ If you have a working WinMM codebase, start here. Each row links to the referenc
 
 | Task | WinMM | Windows MIDI Services | Reference | Sample |
 | ---- | ----- | --------------------- | --------- | ------ |
+| Work out whether the new API is available at all | Nothing to check. WinMM has always been there | Resolve `Windows.Devices.Midi2.MidiApi`, then call `MidiApi.EnsureServiceAvailable` | [MidiApi]({{ site.baseurl }}/sdk-reference/MidiApi/) | [detect-midi-services](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/detect-midi-services) |
 | Get a one-time list of devices | `midiInGetNumDevs` / `midiOutGetNumDevs`, then `midiInGetDevCaps` for each | `MidiEndpointDeviceInformation.FindAll` | [MidiEndpointDeviceInformation]({{ site.baseurl }}/sdk-reference/Enumeration/MidiEndpointDeviceInformation/) | [static-enum-endpoints](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/static-enum-endpoints) |
 | React to devices arriving and leaving | Nothing. Applications polled the device count | `MidiEndpointDeviceWatcher`, with `Added`, `Removed` and `Updated` events | [MidiEndpointDeviceWatcher]({{ site.baseurl }}/sdk-reference/Enumeration/MidiEndpointDeviceWatcher/) | [watch-endpoints](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/watch-endpoints) |
 | See the MIDI 1.0 port list your users still see | The port list was the whole API | `MidiEndpointDeviceWatcher` for UMP endpoints, or `MidiLegacyPortDeviceWatcher` for the MIDI 1.0 port view | [Legacy port enumeration]({{ site.baseurl }}/sdk-reference/Enumeration/Legacy/) | [watch-midi1-ports](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/watch-midi1-ports) |
@@ -121,6 +122,8 @@ There are three things you want to do before opening a connection to a MIDI Endp
 3. Create a `MidiSession`. An app can have multiple MIDI Sessions if there's logical separation between them (think different open projects). I recommend giving your session a meaningful name that the customer will recognize if they look at active sessions using any of the tools we make available.
 
 Once you have done those three things, you can start working with MIDI Endpoints
+
+If your application has to run on PCs which may not have Windows MIDI Services at all, step 2 is only half the check: the type itself has to resolve first. The [detect-midi-services](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/detect-midi-services) sample shows both halves as a decision tree, with the fall back to WinMM or WinRT MIDI 1.0.
 
 ## Discovering and identifying MIDI Sources and Destinations
 
