@@ -25,6 +25,18 @@ The type names in the two namespaces are largely identical, which makes this mor
 
 Note also that Windows 11 24H2 leaves support in October 2026, and so will not receive the in-box API or any further updates and fixes to the in-box transports. That boundary is what your library's documented version floor needs to reflect. See [minimum requirements]({{ site.baseurl }}/kb/minimum-requirements/).
 
+### Detect the API at runtime, in two steps
+
+You ship one binary and it has to run on machines which do not have Windows MIDI Services, so decide which backend to use at startup rather than assuming one. There are two separate questions, and the answer to the first tells you nothing about the second.
+
+1. **Is the API present?** Resolve `Windows.Devices.Midi2.MidiApi`. With the SDK referenced, any call on the type does this for you, but it throws when the class is not registered, so it has to be inside a `try`/`catch`. If you would rather not take a build-time dependency on the SDK at all, call `RoGetActivationFactory` with the class name and the published IID instead. Note that `MidiApi` is a *static* class, so there is no instance and `RoActivateInstance` will not work on it.
+
+2. **Is it usable on this machine?** Call [`MidiApi.EnsureServiceAvailable()`]({{ site.baseurl }}/sdk-reference/MidiApi/). A PC can have the API and still be configured to use the old MIDI stack, because the customer chose Legacy API mode. `GetCurrentlySelectedApiMode()` tells you which mode you are in, so you can say which of the two it was. See [How to change the API mode]({{ site.baseurl }}/kb/how-to-change-api-mode/).
+
+Legacy API mode is a supported customer choice, not a failure. Fall back to WinMM or WinRT MIDI 1.0 and carry on, rather than reporting an error your caller cannot act on. Hybrid Legacy mode needs care in the other direction: devices on MIDI 1.0 drivers are reachable only from the older APIs there, and devices on the new class driver only from Windows MIDI Services.
+
+Both steps, and both ways of asking the first one, are in the [detect-midi-services](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/detect-midi-services) sample.
+
 ## The decision to make before you write any code: COM Extensions or the WinRT connection API
 
 This one is genuinely a fork rather than a preference, and making it late is expensive, because it changes the shape of your receive path and your object model. The COM Extensions and the WinRT message-processing plugins are mutually exclusive on a given connection: when a connection has a registered `IMidiEndpointConnectionMessagesReceivedCallback`, it bypasses all other message handling, including every message listener and the connection's own `MessageReceived` event.
