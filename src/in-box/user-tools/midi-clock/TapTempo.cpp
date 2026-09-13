@@ -11,6 +11,16 @@
 
 namespace midiclock
 {
+    namespace
+    {
+        double SecondsBetween(
+            _In_ std::chrono::steady_clock::time_point const& from,
+            _In_ std::chrono::steady_clock::time_point const& to) noexcept
+        {
+            return std::chrono::duration_cast<std::chrono::duration<double>>(to - from).count();
+        }
+    }
+
     void TapTempo::Reset() noexcept
     {
         try
@@ -22,14 +32,46 @@ namespace midiclock
         }
     }
 
+    _Use_decl_annotations_
+    bool TapTempo::IsNewSequence(std::chrono::steady_clock::time_point const& now) const noexcept
+    {
+        if (m_taps.empty())
+        {
+            return false;
+        }
+
+        auto const sinceLastTap = SecondsBetween(m_taps.back(), now);
+
+        if (m_taps.size() < 2)
+        {
+            // nothing to compare against yet, so only an outright pause counts
+            return sinceLastTap > std::chrono::duration_cast<std::chrono::duration<double>>(RestartAfter).count();
+        }
+
+        auto const meanInterval =
+            SecondsBetween(m_taps.front(), m_taps.back()) / static_cast<double>(m_taps.size() - 1);
+
+        if (meanInterval <= 0.0)
+        {
+            return false;
+        }
+
+        // Judged against the tempo in hand, so hesitating at 40 BPM is not mistaken for a new
+        // sequence while the same gap at 200 BPM is.
+        return sinceLastTap < meanInterval * OutlierLowFactor ||
+            sinceLastTap > meanInterval * OutlierHighFactor;
+    }
+
     std::optional<double> TapTempo::Tap() noexcept
     {
         try
         {
             auto const now = std::chrono::steady_clock::now();
 
-            if (!m_taps.empty() && (now - m_taps.back()) > RestartAfter)
+            if (!m_taps.empty() && IsNewSequence(now))
             {
+                // Only the new tap survives, so the display holds its last value until there
+                // is a fresh interval to report rather than lurching to a half-measured one.
                 m_taps.clear();
             }
 
@@ -55,7 +97,7 @@ namespace midiclock
                 return std::nullopt;
             }
 
-            auto const beatsPerMinute = 60.0 * intervals / span;
+            auto const beatsPerMinute = std::round(60.0 * intervals / span / Resolution) * Resolution;
 
             return std::clamp(beatsPerMinute, MinimumBeatsPerMinute, MaximumBeatsPerMinute);
         }
