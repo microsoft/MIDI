@@ -1128,7 +1128,9 @@ function New-StartMenuFragment {
         [void]$sb.AppendLine("                  Name=`"$($tool.Display)`"")
         [void]$sb.AppendLine("                  Target=`"[#$($tool.Name)Exe]`"")
 
-        if ($tool.Aumid) {
+        # Most tools declare neither of the optional fields below, and Set-StrictMode makes a
+        # missing property an error rather than $null, so presence is tested before value.
+        if ($tool.PSObject.Properties.Name -contains 'Aumid' -and $tool.Aumid) {
             [void]$sb.AppendLine("                  WorkingDirectory=`"$($tool.DirectoryId)`">")
             [void]$sb.AppendLine("          <ShortcutProperty Key=`"System.AppUserModel.ID`" Value=`"$($tool.Aumid)`" />")
             [void]$sb.AppendLine('        </Shortcut>')
@@ -1144,7 +1146,7 @@ function New-StartMenuFragment {
     [void]$sb.AppendLine('        </RegistryKey>')
     [void]$sb.AppendLine('      </Component>')
 
-    foreach ($tool in $GuiTools | Where-Object { $_.RunAtLogon }) {
+    foreach ($tool in $GuiTools | Where-Object { $_.PSObject.Properties.Name -contains 'RunAtLogon' -and $_.RunAtLogon }) {
         # Separate component, and the Run value is deliberately not the key path. MIDI Settings
         # lets a customer turn this off by deleting the value, and an MSI repair would put back
         # anything it holds the key path for.

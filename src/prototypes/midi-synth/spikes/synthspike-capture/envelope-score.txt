@@ -1,0 +1,29 @@
+# Envelope shape test.
+#
+# One note per instrument, held then released, with enough silence after to capture the release
+# tail. Instruments chosen because a fixed window measurement showed them disagreeing with the
+# in-box synth by up to 2.7 dB while a sustained organ agreed to 0.05 dB, which points at the
+# envelope generators rather than at level.
+#
+# Uniform 4 second interval so one onset detection plus a known spacing locates every note.
+# Note held for 1.5 s, so the release begins at 1500 ms into each measurement window.
+#
+# Velocity and channel volume are both at maximum and identical throughout, so the only thing
+# varying between notes is the instrument.
+
+cc       0.0  0 7 127
+
+program  0.0  0 0 0 56     # trumpet, the worst outlier
+note     0.5  0 60 127 1.5
+
+program  4.4  0 0 0 0      # acoustic grand piano, decays
+note     4.5  0 60 127 1.5
+
+program  8.4  0 0 0 48     # string ensemble, slow attack
+note     8.5  0 60 127 1.5
+
+program 12.4  0 0 0 73     # flute
+note    12.5  0 60 127 1.5
+
+program 16.4  0 0 0 19     # church organ, the control that already matches
+note    16.5  0 60 127 1.5

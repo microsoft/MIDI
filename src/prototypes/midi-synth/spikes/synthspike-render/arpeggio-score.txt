@@ -1,0 +1,43 @@
+# Dense arpeggio, approximating a hardware arpeggiator run at a high rate.
+#
+# Short overlapping notes across several octaves. Release tails stack up, so the number of
+# sounding voices climbs well past what the note count suggests. This is the case that made the
+# output clip during a live test.
+
+program  0.0  0 0 0 0
+cc       0.0  0 7 127
+
+note  0.00 0 48 110 0.40
+note  0.06 0 52 110 0.40
+note  0.12 0 55 110 0.40
+note  0.18 0 60 110 0.40
+note  0.24 0 64 110 0.40
+note  0.30 0 67 110 0.40
+note  0.36 0 72 110 0.40
+note  0.42 0 76 110 0.40
+note  0.48 0 79 110 0.40
+note  0.54 0 84 110 0.40
+note  0.60 0 48 110 0.40
+note  0.66 0 52 110 0.40
+note  0.72 0 55 110 0.40
+note  0.78 0 60 110 0.40
+note  0.84 0 64 110 0.40
+note  0.90 0 67 110 0.40
+note  0.96 0 72 110 0.40
+note  1.02 0 76 110 0.40
+note  1.08 0 79 110 0.40
+note  1.14 0 84 110 0.40
+note  1.20 0 48 110 0.40
+note  1.26 0 52 110 0.40
+note  1.32 0 55 110 0.40
+note  1.38 0 60 110 0.40
+note  1.44 0 64 110 0.40
+note  1.50 0 67 110 0.40
+note  1.56 0 72 110 0.40
+note  1.62 0 76 110 0.40
+note  1.68 0 79 110 0.40
+note  1.74 0 84 110 0.40
+
+# Held chord underneath, which is what a player's left hand would be doing.
+note  0.00 0 36 100 2.20
+note  0.00 0 43 100 2.20
