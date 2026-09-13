@@ -951,6 +951,9 @@ Every application using MIDI loses its connections when the service restarts, so
   <data name="DriverChangeNothingNeeded" xml:space="preserve">
     <value>The driver was changed and the device is running on it. Nothing else is needed.</value>
   </data>
+  <data name="DriverChangeServiceRestartedMessage" xml:space="preserve">
+    <value>The MIDI service was restarted, so it is now using the new driver. Nothing else is needed. Applications that were connected when it restarted have to reconnect.</value>
+  </data>
   <data name="DriverFollowUpNoneTitle" xml:space="preserve">
     <value>Ready to use</value>
   </data>

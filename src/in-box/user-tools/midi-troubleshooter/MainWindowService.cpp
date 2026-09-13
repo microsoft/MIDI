@@ -579,6 +579,11 @@ namespace winrt::miditroubleshooter::implementation
                 res::GetString(L"ServiceRestarted") :
                 res::FormatString(L"ServiceRestartFailedFormat", winrt::hstring{ result.ErrorMessage }));
 
+            if (result.Succeeded)
+            {
+                OnMidiServiceRestarted();
+            }
+
             RequestServiceRefreshAsync();
         }
         catch (...)
