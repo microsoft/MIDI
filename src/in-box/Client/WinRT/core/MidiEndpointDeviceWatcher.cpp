@@ -165,39 +165,48 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
             if (midi2enum::MidiEndpointDeviceInformation::DeviceMatchesFilter(*midiEndpointDeviceInformation, m_endpointFilter))
             {
-                std::lock_guard<std::mutex> guard(m_enumeratedDevicesLock);
+                winrt::com_ptr<MidiEndpointDeviceInformationAddedEventArgs> newArgs{ nullptr };
 
-                // add to our map
-
-                auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(midiEndpointDeviceInformation->EndpointDeviceId());
-
-                if (!m_enumeratedEndpointDevices.HasKey(mapKey))
                 {
-                    m_enumeratedEndpointDevices.Insert(mapKey, *midiEndpointDeviceInformation);
+                    std::lock_guard<std::mutex> guard(m_enumeratedDevicesLock);
 
-                    if (m_deviceAddedEvent)
+                    // add to our map
+
+                    auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(midiEndpointDeviceInformation->EndpointDeviceId());
+
+                    if (!m_enumeratedEndpointDevices.HasKey(mapKey))
                     {
-                        auto newArgs = winrt::make_self<MidiEndpointDeviceInformationAddedEventArgs>();
-                        newArgs->InternalInitialize(*midiEndpointDeviceInformation);
+                        m_enumeratedEndpointDevices.Insert(mapKey, *midiEndpointDeviceInformation);
 
-                        m_deviceAddedEvent(*this, *newArgs);
+                        if (m_deviceAddedEvent)
+                        {
+                            newArgs = winrt::make_self<MidiEndpointDeviceInformationAddedEventArgs>();
+                            newArgs->InternalInitialize(*midiEndpointDeviceInformation);
+                        }
+                    }
+                    else
+                    {
+                        // duplicate key. This should never happen, but just in case ...
+
+                        LOG_IF_FAILED(E_UNEXPECTED);   // this also generates a fallback error with file and line number info
+
+                        TraceLoggingWrite(
+                            Midi2SdkTelemetryProvider::Provider(),
+                            MIDI_SDK_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                            TraceLoggingWideString(L"Duplicate endpoint device id. This is unexpected", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                        );
                     }
                 }
-                else
+
+                // Raised with no lock held: Start() and the other watcher callbacks take
+                // m_enumeratedDevicesLock, and std::mutex is not recursive, so an application
+                // handler that calls back into this watcher would otherwise deadlock its own thread.
+                if (newArgs != nullptr && m_deviceAddedEvent)
                 {
-                    // duplicate key. This should never happen, but just in case ...
-
-                    LOG_IF_FAILED(E_UNEXPECTED);   // this also generates a fallback error with file and line number info
-
-                    TraceLoggingWrite(
-                        Midi2SdkTelemetryProvider::Provider(),
-                        MIDI_SDK_TRACE_EVENT_ERROR,
-                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                        TraceLoggingWideString(L"Duplicate endpoint device id. This is unexpected", MIDI_SDK_TRACE_MESSAGE_FIELD)
-                    );
-
+                    m_deviceAddedEvent(*this, *newArgs);
                 }
             }
         }
@@ -227,17 +236,20 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         {
             auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
 
-            std::lock_guard<std::mutex> guard(m_enumeratedDevicesLock);
+            winrt::com_ptr<MidiEndpointDeviceInformationUpdatedEventArgs> newArgs{ nullptr };
 
-            if (m_enumeratedEndpointDevices.HasKey(mapKey))
             {
-                auto ep = winrt::get_self<MidiEndpointDeviceInformation>(m_enumeratedEndpointDevices.Lookup(mapKey));
+                std::lock_guard<std::mutex> guard(m_enumeratedDevicesLock);
 
-                ep->UpdateFromDeviceInformationUpdate(args);
-
-                if (m_deviceUpdatedEvent)
+                if (m_enumeratedEndpointDevices.HasKey(mapKey))
                 {
-                    auto newArgs = winrt::make_self<MidiEndpointDeviceInformationUpdatedEventArgs>();
+                    auto ep = winrt::get_self<MidiEndpointDeviceInformation>(m_enumeratedEndpointDevices.Lookup(mapKey));
+
+                    ep->UpdateFromDeviceInformationUpdate(args);
+
+                    if (m_deviceUpdatedEvent)
+                    {
+                        newArgs = winrt::make_self<MidiEndpointDeviceInformationUpdatedEventArgs>();
 
                     bool updatedName{ false };
                     bool updatedInProtocolEndpointInformation{ false };
@@ -353,9 +365,14 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
                         updatedGroupTerminalBlocks,
                         updatedMutedState
                         );
-
-                    m_deviceUpdatedEvent(*this, *newArgs);
+                    }
                 }
+            }
+
+            // raised with no lock held. See the note in OnDeviceAdded
+            if (newArgs != nullptr && m_deviceUpdatedEvent)
+            {
+                m_deviceUpdatedEvent(*this, *newArgs);
             }
         }
         catch (...)
@@ -383,20 +400,25 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         try
         {
             auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
-            auto newArgs = winrt::make_self<MidiEndpointDeviceInformationRemovedEventArgs>();
 
-            std::lock_guard<std::mutex> guard(m_enumeratedDevicesLock);
+            winrt::com_ptr<MidiEndpointDeviceInformationRemovedEventArgs> newArgs{ nullptr };
 
-            if (m_enumeratedEndpointDevices.HasKey(mapKey))
             {
-                newArgs->InternalInitialize(m_enumeratedEndpointDevices.Lookup(mapKey), args);
+                std::lock_guard<std::mutex> guard(m_enumeratedDevicesLock);
 
-                m_enumeratedEndpointDevices.Remove(mapKey);
-
-                if (m_deviceRemovedEvent)
+                if (m_enumeratedEndpointDevices.HasKey(mapKey))
                 {
-                    m_deviceRemovedEvent(*this, *newArgs);
+                    newArgs = winrt::make_self<MidiEndpointDeviceInformationRemovedEventArgs>();
+                    newArgs->InternalInitialize(m_enumeratedEndpointDevices.Lookup(mapKey), args);
+
+                    m_enumeratedEndpointDevices.Remove(mapKey);
                 }
+            }
+
+            // raised with no lock held. See the note in OnDeviceAdded
+            if (newArgs != nullptr && m_deviceRemovedEvent)
+            {
+                m_deviceRemovedEvent(*this, *newArgs);
             }
         }
         catch (...)

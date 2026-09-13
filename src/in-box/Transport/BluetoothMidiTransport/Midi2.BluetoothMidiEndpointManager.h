@@ -68,6 +68,11 @@ public:
     // only records it and wakes the worker; the endpoint is deliberately left in place.
     void OnConnectionDropped(_In_ winrt::hstring const& deviceId);
 
+    // Publishes the mean outbound wait for this link so the scheduler can send that much earlier.
+    void UpdateCalculatedLatency(
+        _In_ std::wstring const& endpointDeviceInterfaceId,
+        _In_ uint16_t const connectionIntervalUnits);
+
 private:
     HRESULT CreateParentDevice();
 

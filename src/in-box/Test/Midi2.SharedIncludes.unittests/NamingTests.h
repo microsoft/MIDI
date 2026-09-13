@@ -65,6 +65,7 @@ public:
         TEST_METHOD(TestFunctionBlockSpanningSeveralGroups);
         TEST_METHOD(TestModelNameRecovery);
         TEST_METHOD(TestRederiveAgainstInProtocolEndpointName);
+        TEST_METHOD(TestLegacyDuplicateDeviceMarker);
     TEST_METHOD(TestPopulateEntryForNativeUmpDevice);
     TEST_METHOD(TestPopulateEntryForMidi1DeviceUsingUmpDriver);
     TEST_METHOD(TestPopulateEntryForMidi1DeviceUsingMidi1Driver);

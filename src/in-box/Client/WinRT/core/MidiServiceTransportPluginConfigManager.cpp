@@ -356,12 +356,14 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
                     &rpcResponseString
                 );
 
+                // the service allocated this with CoTaskMemAlloc. Owning it here covers every
+                // exit path, including the one where the string is present but empty.
+                wil::unique_cotaskmem_string const ownedRpcResponseString{ rpcResponseString };
+
 
                 if (SUCCEEDED(callStatus) && rpcResponseString != nullptr && wcslen(rpcResponseString) > 0)
                 {
                     winrt::hstring hstr{ rpcResponseString };
-
-                    SAFE_COTASKMEMFREE(rpcResponseString);
 
                     json::JsonObject responseObject = json::JsonObject::Parse(hstr);
 
@@ -395,7 +397,6 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
                     // in production,so need to handle it here
 
                     winrt::hstring hstr{ rpcResponseString };
-                    SAFE_COTASKMEMFREE(rpcResponseString);
 
                     TraceLoggingWrite(
                         Midi2SdkTelemetryProvider::Provider(),

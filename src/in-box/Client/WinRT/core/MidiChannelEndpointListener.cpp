@@ -37,6 +37,10 @@ namespace winrt::Windows::Devices::Midi2::ClientPlugins::implementation
         bool& skipFurtherListeners, 
         bool& skipMainMessageReceivedEvent)
     {
+        // this listener reports only its own decision. The connection accumulates across plugins
+        skipFurtherListeners = false;
+        skipMainMessageReceivedEvent = false;
+
         try
         {
             uint32_t word0 = args.PeekFirstWord();
@@ -49,7 +53,7 @@ namespace winrt::Windows::Devices::Midi2::ClientPlugins::implementation
                 if (args.MessageType() == MidiMessageType::SystemCommon32 && m_includeSystemCommonAndRealTimeMessages)
                 {
                     skipFurtherListeners = m_preventCallingFurtherListeners;
-                    skipMainMessageReceivedEvent = skipMainMessageReceivedEvent || m_preventFiringMainMessageReceivedEvent;
+                    skipMainMessageReceivedEvent = m_preventFiringMainMessageReceivedEvent;
 
                     // Fire off the event and leave
                     // events are synchronous, so the chain of calls here needs to be short
@@ -71,7 +75,7 @@ namespace winrt::Windows::Devices::Midi2::ClientPlugins::implementation
                             // only skip if we actually processed the message
 
                             skipFurtherListeners = m_preventCallingFurtherListeners;
-                            skipMainMessageReceivedEvent = skipMainMessageReceivedEvent || m_preventFiringMainMessageReceivedEvent;
+                            skipMainMessageReceivedEvent = m_preventFiringMainMessageReceivedEvent;
 
                             // found it. Fire off the event and leave
                             // events are synchronous, so the chain of calls here needs to be short

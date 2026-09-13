@@ -275,15 +275,34 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
         try
         {
+            // no new reconnect callbacks while the session is being torn down
+            StopEndpointWatcher();
+
             if (m_serviceTransport != nullptr)
             {
+                // snapshot under the lock so a concurrent DisconnectEndpointConnection cannot
+                // remove an entry while this is walking the map
+                std::vector<winrt::com_ptr<implementation::MidiEndpointConnection>> connections{};
+
+                {
+                    std::lock_guard<std::mutex> guard(m_connectionsLock);
+
+                    for (auto connection : m_connections)
+                    {
+                        winrt::com_ptr<implementation::MidiEndpointConnection> c{ nullptr };
+                        c.copy_from(winrt::get_self<implementation::MidiEndpointConnection>(connection.Value()));
+
+                        connections.push_back(c);
+                    }
+
+                    m_connections.Clear();
+                    m_connectionsForAutoReconnect.clear();
+                }
+
                 // TODO: Call any cleanup method on the service
-                for (auto connection : m_connections)
+                for (auto const& c : connections)
                 {
                     // close the one connection
-                    //connection.Value().as<foundation::IClosable>().Close();
-
-                    auto c = winrt::get_self<implementation::MidiEndpointConnection>(connection.Value());
                     c->InternalClose();
                 }
 
@@ -296,8 +315,6 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
                 m_sessionTracker = nullptr;
             }
-
-            m_connections.Clear();
 
             // Id is no longer valid, and session is not open. Clear these in case the client tries to use the held reference
             //m_id.clear();

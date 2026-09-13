@@ -2033,10 +2033,12 @@ try
 
     // The names the service gives the ports come from this table, not from the block.
     //
-    // Every group is named, not just the ones the block above spans. When function blocks arrive
-    // the service rebuilds the table from them, but it reads the table back from a device snapshot
-    // taken before that rebuild, so the names it applies on that pass are the ones written here. A
-    // function block may land on any group, and a group with no entry yields an empty port name.
+    // Every group is named, not just the ones the block above spans. A function block may later
+    // land on any group, and naming all sixteen is also what puts the group number into the port
+    // name: the names only differ by group, so the naming library numbers them. A network port is
+    // addressed by its group and there is no older name to stay compatible with, so that number
+    // belongs there even when the endpoint currently has a single port. Narrowing this to the
+    // spanned groups would silently drop the number from that case.
     auto namingBlocks = blocks;
     namingBlocks.front().GroupCount = MIDI_NETWORK_MIDI_GROUP_COUNT;
 

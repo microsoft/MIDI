@@ -102,6 +102,7 @@ public:
     // The interval the link actually negotiated, in units of 1.25 ms. Zero when unknown.
     uint16_t ConnectionIntervalUnits() const noexcept { return m_connectionIntervalUnits.load(); }
     void RefreshConnectionParameters();
+    void WriteCalculatedLatencyProperty();
 
 private:
     void OnCharacteristicValueChanged(_In_ gatt::GattCharacteristic const& sender, _In_ gatt::GattValueChangedEventArgs const& args);

@@ -3124,7 +3124,8 @@ HRESULT
 CMidiDeviceManager::RebuildAndUpdateNameTableForMidi2EndpointWithFunctionBlocks(
     LPCWSTR umpDeviceInterfaceId,
     winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
-    PMIDIPORT umpMidiPort
+    PMIDIPORT umpMidiPort,
+    std::shared_ptr<WindowsMidiServicesNamingLib::MidiEndpointNameTable>& rebuiltNameTable
 
 )
 {
@@ -3289,6 +3290,9 @@ CMidiDeviceManager::RebuildAndUpdateNameTableForMidi2EndpointWithFunctionBlocks(
         RETURN_IF_FAILED(propSetHR);
     }
 
+    // hand the caller what was just built, so it does not read the pre-write snapshot back
+    rebuiltNameTable = std::make_shared<WindowsMidiServicesNamingLib::MidiEndpointNameTable>(newNameTable);
+
     return S_OK;
 }
 
@@ -3298,7 +3302,8 @@ HRESULT
 CMidiDeviceManager::RebuildAndUpdateNameTableForMidi2EndpointWithGroupTerminalBlocks(
     LPCWSTR umpDeviceInterfaceId,
     winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
-    PMIDIPORT umpMidiPort
+    PMIDIPORT umpMidiPort,
+    std::shared_ptr<WindowsMidiServicesNamingLib::MidiEndpointNameTable>& rebuiltNameTable
 )
 {
     // A MIDI 2.0 endpoint may rename itself in-protocol at any time, so the names the transport
@@ -3380,6 +3385,8 @@ CMidiDeviceManager::RebuildAndUpdateNameTableForMidi2EndpointWithGroupTerminalBl
     }
 
     LOG_IF_FAILED(newNameTable.RebuildNewStyleNames(endpointName, false));
+
+    rebuiltNameTable = std::make_shared<WindowsMidiServicesNamingLib::MidiEndpointNameTable>(newNameTable);
 
     if (newNameTable.IsEqualTo(currentNameTable.get())) return S_OK;
 
@@ -3505,6 +3512,7 @@ _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::GetMidi1PortNames(
     winrt::Windows::Devices::Enumeration::DeviceInformation deviceInfo,
+    std::shared_ptr<WindowsMidiServicesNamingLib::MidiEndpointNameTable> const& rebuiltNameTable,
     std::map<UINT32, PORT_INFO> portInfo[2]
 )
 {
@@ -3548,6 +3556,12 @@ CMidiDeviceManager::GetMidi1PortNames(
             auto nameSourceFlags = internal::SafeGetSwdPropertyFromDeviceInformation<uint32_t>(
                 STRING_PKEY_MIDI_Midi1PortNameSourceFlags, deviceInfo, (uint32_t)MIDI_MIDI1_PORT_NAME_SOURCE_NONE);
 
+            // a rebuild earlier in this sync recalculated these; the snapshot predates that write
+            if (rebuiltNameTable != nullptr && rebuiltNameTable->NameSourceFlagsValid())
+            {
+                nameSourceFlags = rebuiltNameTable->NameSourceFlags();
+            }
+
             namingSelection = WindowsMidiServicesNamingLib::ResolveAutomaticPortNameSelection(hasLegacyEquivalent, nameSourceFlags);
 
             TraceLoggingWrite(
@@ -3587,7 +3601,18 @@ CMidiDeviceManager::GetMidi1PortNames(
 
     // get the existing name table. If the endpoint has no name table, this can result
     // in an empty name.
-    auto nameTable = WindowsMidiServicesNamingLib::MidiEndpointNameTable::FromDeviceInfo(deviceInfo);
+    std::shared_ptr<WindowsMidiServicesNamingLib::MidiEndpointNameTable> nameTable{ nullptr };
+
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        // a rebuild earlier in this sync already produced the current table in memory
+        nameTable = rebuiltNameTable;
+    }
+
+    if (nameTable == nullptr)
+    {
+        nameTable = WindowsMidiServicesNamingLib::MidiEndpointNameTable::FromDeviceInfo(deviceInfo);
+    }
 
     for (auto const& flow : { MidiFlow::MidiFlowIn, MidiFlow::MidiFlowOut })
     {
@@ -3598,6 +3623,26 @@ CMidiDeviceManager::GetMidi1PortNames(
                 flow,
                 namingSelection
             );
+
+            if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+            {
+                // GetPreferredName returns empty only when the table has no entry for the group,
+                // which its own comment says should not happen. Do not let that pass silently.
+                if (portInfoEntry.second.Name.empty())
+                {
+                    TraceLoggingWrite(
+                        MidiSrvTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Name table has no entry for this group, so the port will be unnamed", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingWideString(deviceInfo.Name().c_str(), "parent device"),
+                        TraceLoggingUInt32(portInfoEntry.first, "group index"),
+                        TraceLoggingUInt32(static_cast<uint32_t>(flow), "flow")
+                    );
+                }
+            }
         }
     }
 
@@ -3815,6 +3860,10 @@ CMidiDeviceManager::SyncMidi1Ports(
     // get the current function block information from the UMP SWD, if present, else fall back to
     // GTB if that is present. If neither, then there's nothing more to do.
 
+    // A rebuild below writes the name table property, but deviceInfo is a snapshot taken before
+    // that, so the rebuilt table is carried in memory rather than read back.
+    std::shared_ptr<WindowsMidiServicesNamingLib::MidiEndpointNameTable> rebuiltNameTable{ nullptr };
+
     // GetFunctionBlockPortInfo will return E_NOTFOUND if it's a bytestream device, if discovery hasn't completed, or if no function blocks
     hrTemp = GetFunctionBlockPortInfo(thisUmpMidiPortDeviceInterfaceId.c_str(), deviceInfo, portInfo);
     RETURN_HR_IF(hrTemp, FAILED(hrTemp) && E_NOTFOUND != hrTemp);
@@ -3832,7 +3881,7 @@ CMidiDeviceManager::SyncMidi1Ports(
             if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
             {
                 // no function blocks, so the group terminal blocks are what the names derive from
-                hrTemp = RebuildAndUpdateNameTableForMidi2EndpointWithGroupTerminalBlocks(thisUmpMidiPortDeviceInterfaceId.c_str(), deviceInfo, umpMidiPort);
+                hrTemp = RebuildAndUpdateNameTableForMidi2EndpointWithGroupTerminalBlocks(thisUmpMidiPortDeviceInterfaceId.c_str(), deviceInfo, umpMidiPort, rebuiltNameTable);
                 RETURN_HR_IF(hrTemp, FAILED(hrTemp) && E_NOTFOUND != hrTemp);
             }
         }
@@ -3843,7 +3892,7 @@ CMidiDeviceManager::SyncMidi1Ports(
         // optimize this a bit more by only triggering if FB-specific properties have changed
 
         // update name table, and write it out to the property if it has changed
-        hrTemp = RebuildAndUpdateNameTableForMidi2EndpointWithFunctionBlocks(thisUmpMidiPortDeviceInterfaceId.c_str(), deviceInfo, umpMidiPort);
+        hrTemp = RebuildAndUpdateNameTableForMidi2EndpointWithFunctionBlocks(thisUmpMidiPortDeviceInterfaceId.c_str(), deviceInfo, umpMidiPort, rebuiltNameTable);
         RETURN_HR_IF(hrTemp, FAILED(hrTemp) && E_NOTFOUND != hrTemp);
     }
 
@@ -3866,7 +3915,14 @@ CMidiDeviceManager::SyncMidi1Ports(
     // having a dependency in here on the GUID for the KSA transport
 
     // we know which groups are active, so now we get the names for these groups
-    LOG_IF_FAILED(GetMidi1PortNames(deviceInfo, portInfo));
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        LOG_IF_FAILED(GetMidi1PortNames(deviceInfo, rebuiltNameTable, portInfo));
+    }
+    else
+    {
+        LOG_IF_FAILED(GetMidi1PortNames(deviceInfo, nullptr, portInfo));
+    }
 
     if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
     {

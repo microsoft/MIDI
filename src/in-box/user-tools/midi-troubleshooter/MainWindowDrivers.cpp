@@ -153,6 +153,8 @@ namespace winrt::miditroubleshooter::implementation
     {
         auto lifetime = get_strong();
 
+        m_driverFollowUp = followUp;
+
         try
         {
             switch (followUp)
@@ -224,6 +226,31 @@ namespace winrt::miditroubleshooter::implementation
             DriverFollowUpInfoBar().IsOpen(true);
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to show the driver change outcome.")
+    }
+
+    void MainWindow::OnMidiServiceRestarted() noexcept
+    {
+        try
+        {
+            if (m_driverFollowUp != native::DriverChangeFollowUp::RestartMidiService)
+            {
+                return;
+            }
+
+            m_driverFollowUp = native::DriverChangeFollowUp::None;
+
+            // A banner the customer already dismissed does not come back just to say it is done.
+            if (!DriverFollowUpInfoBar().IsOpen())
+            {
+                return;
+            }
+
+            ShowDriverFollowUp(
+                controls::InfoBarSeverity::Success,
+                L"DriverFollowUpNoneTitle",
+                L"DriverChangeServiceRestartedMessage");
+        }
+        MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to retire the driver change outcome.")
     }
 
     foundation::IAsyncAction MainWindow::OfferServiceRestartAsync()
@@ -301,6 +328,11 @@ namespace winrt::miditroubleshooter::implementation
             DriversStatusText().Text(restart.Succeeded ?
                 res::GetString(L"ServiceRestarted") :
                 res::FormatString(L"ServiceRestartFailedFormat", winrt::hstring{ restart.ErrorMessage }));
+
+            if (restart.Succeeded)
+            {
+                OnMidiServiceRestarted();
+            }
         }
         catch (...)
         {
@@ -432,6 +464,7 @@ namespace winrt::miditroubleshooter::implementation
             item.IsBusy(true);
             DriversProgressRing().IsActive(true);
             DriverFollowUpInfoBar().IsOpen(false);
+            m_driverFollowUp = native::DriverChangeFollowUp::None;
             DriversStatusText().Text(res::GetString(L"DriverChanging"));
 
             native::DriverOperationResult result{};
@@ -492,6 +525,7 @@ namespace winrt::miditroubleshooter::implementation
             item.IsBusy(true);
             DriversProgressRing().IsActive(true);
             DriverFollowUpInfoBar().IsOpen(false);
+            m_driverFollowUp = native::DriverChangeFollowUp::None;
             DriversStatusText().Text(res::GetString(L"DriverChanging"));
 
             native::DriverOperationResult result{};

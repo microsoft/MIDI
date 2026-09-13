@@ -1525,6 +1525,52 @@ CMidi2BluetoothMidiEndpointManager::QueueWantedConnections()
 }
 
 
+// A message handed to a BLE link is not sent immediately: it waits for the next connection event,
+// so on average it waits half a connection interval. That mean wait is what the outbound scheduler
+// compensates for. The interval is negotiated by the link rather than chosen by us and can change
+// during a connection, so this is written whenever it does, not only at endpoint creation.
+_Use_decl_annotations_
+void
+CMidi2BluetoothMidiEndpointManager::UpdateCalculatedLatency(
+    std::wstring const& endpointDeviceInterfaceId,
+    uint16_t const connectionIntervalUnits)
+{
+    if (endpointDeviceInterfaceId.empty() || connectionIntervalUnits == 0 || m_midiDeviceManager == nullptr)
+    {
+        return;
+    }
+
+    uint64_t const halfIntervalMicroseconds =
+        (static_cast<uint64_t>(connectionIntervalUnits) * MIDI_BLE_CONNECTION_INTERVAL_UNIT_MICROSECONDS) / 2;
+
+    uint64_t latencyTicks =
+        (halfIntervalMicroseconds * internal::GetMidiTimestampFrequency()) / MICROSECONDS_PER_SECOND;
+
+    DEVPROPERTY props[] =
+    {
+        { { PKEY_MIDI_MidiOutCalculatedLatencyTicks, DEVPROP_STORE_SYSTEM, nullptr },
+          DEVPROP_TYPE_UINT64, static_cast<ULONG>(sizeof(uint64_t)), (PVOID)&latencyTicks },
+    };
+
+    LOG_IF_FAILED(m_midiDeviceManager->UpdateEndpointProperties(
+        endpointDeviceInterfaceId.c_str(),
+        ARRAYSIZE(props),
+        props));
+
+    TraceLoggingWrite(
+        MidiBluetoothMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_INFO,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Wrote calculated outgoing latency for BLE endpoint", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+        TraceLoggingWideString(endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
+        TraceLoggingUInt16(connectionIntervalUnits, "connection interval units"),
+        TraceLoggingUInt64(halfIntervalMicroseconds, "calculated latency microseconds")
+    );
+}
+
+
 _Use_decl_annotations_
 void
 CMidi2BluetoothMidiEndpointManager::OnConnectionDropped(winrt::hstring const& deviceId)

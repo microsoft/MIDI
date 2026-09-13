@@ -99,6 +99,9 @@ namespace winrt::Windows::Devices::Midi2::Utilities::SysExTransfer::implementati
         {
             Stop();
 
+            // under the lock, because a handler already in flight reads both
+            std::lock_guard<std::mutex> guard{ m_lock };
+
             m_connection = nullptr;
             m_group = nullptr;
         }
@@ -138,11 +141,6 @@ namespace winrt::Windows::Devices::Midi2::Utilities::SysExTransfer::implementati
                 return;
             }
 
-            if (((word0 >> 24) & 0x0F) != m_group.Index())
-            {
-                return;
-            }
-
             auto const status = (word0 >> 20) & 0x0F;
             auto const count = std::min<uint32_t>((word0 >> 16) & 0x0F, 6);
 
@@ -156,8 +154,23 @@ namespace winrt::Windows::Devices::Midi2::Utilities::SysExTransfer::implementati
                 static_cast<uint8_t>(word1 & 0x7F)
             };
 
+            bool raisePending{ false };
+
             {
                 std::lock_guard<std::mutex> guard{ m_lock };
+
+                // Close() can null this out while this handler is in flight, and revoking the
+                // token does not drain what is already running
+                if (m_group == nullptr)
+                {
+                    return;
+                }
+
+                // only for the group this receiver was created for
+                if (((word0 >> 24) & 0x0F) != m_group.Index())
+                {
+                    return;
+                }
 
                 // the UMP form carries no F0/F7, so the framing is restored here and callers can
                 // write the bytes straight to a .syx file
@@ -180,10 +193,12 @@ namespace winrt::Windows::Devices::Midi2::Utilities::SysExTransfer::implementati
                     m_pendingSawEnd = true;
                     m_countMessagesReceived++;
                 }
+
+                // a completed message, or enough bytes to be worth handing over
+                raisePending = m_pendingSawEnd || m_pending.size() >= m_maximumBytesPerEvent;
             }
 
-            // a completed message, or enough bytes to be worth handing over
-            if (m_pendingSawEnd || m_pending.size() >= m_maximumBytesPerEvent)
+            if (raisePending)
             {
                 RaisePending(false);
             }

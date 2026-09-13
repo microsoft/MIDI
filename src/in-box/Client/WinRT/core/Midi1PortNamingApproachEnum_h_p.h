@@ -75,7 +75,8 @@ enum __x_ABI_CWindows_CDevices_CMidi2_CEnumeration_CMidi1PortNamingApproach
     {
         Midi1PortNamingApproach_Default	= 0,
         Midi1PortNamingApproach_UseClassicCompatible	= 1,
-        Midi1PortNamingApproach_UseNewStyle	= 2
+        Midi1PortNamingApproach_UseNewStyle	= 2,
+        Midi1PortNamingApproach_UseAutomatic	= 3
     } ;
 
 

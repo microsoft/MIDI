@@ -33,6 +33,7 @@ public:
     TEST_METHOD(TestChannelListenerIncludingSystemCommonAndRealTime);
     TEST_METHOD(TestChannelListenerExcludingSystemCommonAndRealTime);
     TEST_METHOD(TestPreventCallingFurtherListeners);
+    TEST_METHOD(TestSkipFlagsAreIndependentAndAccumulate);
 
 
 private:

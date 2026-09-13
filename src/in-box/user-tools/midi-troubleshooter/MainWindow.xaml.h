@@ -136,6 +136,10 @@ namespace winrt::miditroubleshooter::implementation
             std::wstring_view const titleKey,
             std::wstring_view const messageKey) noexcept;
 
+        // Retires a "restart the MIDI service" banner once the service has actually restarted,
+        // from wherever the customer did it.
+        void OnMidiServiceRestarted() noexcept;
+
         foundation::IAsyncAction OfferServiceRestartAsync();
 
         // False when the action needs administrator rights the app does not have. It has
@@ -180,6 +184,10 @@ namespace winrt::miditroubleshooter::implementation
         winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_refreshTimer{ nullptr };
 
         ::miditroubleshooter::SystemInformation m_systemInformation{};
+
+        // what the Drivers page banner is currently asking for, so it can be retired when done
+        ::miditroubleshooter::DriverChangeFollowUp m_driverFollowUp{
+            ::miditroubleshooter::DriverChangeFollowUp::None };
 
         // the repair the last scan proposed, so the button applies exactly what was shown
         ::miditroubleshooter::RegistryScan m_registryScan{};

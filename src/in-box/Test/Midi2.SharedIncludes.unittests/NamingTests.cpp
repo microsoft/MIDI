@@ -1898,3 +1898,53 @@ void NamingTests::TestRederiveAgainstInProtocolEndpointName()
 }
 
 
+void NamingTests::TestLegacyDuplicateDeviceMarker()
+{
+    if (SkipUnlessPortNamingReworkEnabled()) { return; }
+
+    // WinMM's own format string was L"%d- %s", applied only from the second unit on. An app
+    // matching a stored name will not recognize any other spacing.
+    VERIFY_ARE_EQUAL(std::wstring{ L"Some Device" }, ApplyLegacyDuplicateDeviceMarker(L"Some Device", 1));
+    VERIFY_ARE_EQUAL(std::wstring{ L"2- Some Device" }, ApplyLegacyDuplicateDeviceMarker(L"Some Device", 2));
+    VERIFY_ARE_EQUAL(std::wstring{ L"3- Some Device" }, ApplyLegacyDuplicateDeviceMarker(L"Some Device", 3));
+    VERIFY_ARE_EQUAL(std::wstring{ L"10- Some Device" }, ApplyLegacyDuplicateDeviceMarker(L"Some Device", 10));
+
+    // index 0 is not a thing, and an empty name cannot be marked
+    VERIFY_ARE_EQUAL(std::wstring{ L"Some Device" }, ApplyLegacyDuplicateDeviceMarker(L"Some Device", 0));
+    VERIFY_ARE_EQUAL(std::wstring{ L"" }, ApplyLegacyDuplicateDeviceMarker(L"", 2));
+
+    // The marker has to reach the published legacy name, wrapped by the port decoration, so the
+    // second unit's sixth output reads exactly the way WinMM wrote it.
+    MidiEndpointNameTable table{ };
+
+    for (uint8_t group = 0; group < 8; group++)
+    {
+        VERIFY_SUCCEEDED(table.PopulateEntryForMidi1DeviceUsingUmpDriver(
+            group, MidiFlow::MidiFlowOut, L"", L"2- Some Device", L"", group));
+    }
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"2- Some Device" },
+        std::wstring{ table.GetDestinationEntry(0)->LegacyWinMMName });
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"MIDIOUT6 (2- Some Device)" },
+        std::wstring{ table.GetDestinationEntry(5)->LegacyWinMMName });
+
+    // Whichever form the marker takes, it is ours and not something the device said, so it must
+    // never count as a device-supplied port name.
+    std::vector<Midi1PortNameInput> prefixed{
+        { 0, MidiFlow::MidiFlowIn, L"", L"", L"2- Some Device" },
+        { 1, MidiFlow::MidiFlowIn, L"", L"", L"2- Some Device" },
+    };
+
+    auto results = BuildMidi1PortNamesForEndpoint(L"Some Device (2)", false, prefixed);
+
+    VERIFY_ARE_EQUAL((size_t)2, results.size());
+
+    for (auto const& result : results)
+    {
+        VERIFY_ARE_EQUAL(Midi1PortNameSource::None, result.Resolved.Source);
+    }
+}
+
+
+

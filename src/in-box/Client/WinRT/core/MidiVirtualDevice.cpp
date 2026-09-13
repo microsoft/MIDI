@@ -532,6 +532,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
         bool& skipFurtherListeners,
         bool& skipMainMessageReceivedEvent)  noexcept
     {
+        // this device reports only its own decision. The connection accumulates across plugins
+        skipFurtherListeners = false;
+        skipMainMessageReceivedEvent = false;
+
         try
         {
             bool handled = false;
@@ -862,11 +866,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
             {
                 skipFurtherListeners = true;
                 skipMainMessageReceivedEvent = true;
-            }
-            else
-            {
-                skipFurtherListeners = false;
-                //skipMainMessageReceivedEvent = false; // don't need to set this. It may have already been set to true by a previous listener.
             }
 
         }

@@ -2349,14 +2349,27 @@ CMidi2KSAggregateMidiEndpointManager3::UpdateNewPinDefinitions(
         // we need to ensure we supply unique names for the MIDI 1.0 ports
         if (parentDevice->IndexOfDevicesWithThisSameName > 0)
         {
+            // WinMM used "2- Name". The form with spaces around the hyphen was never what it
+            // produced, so an app matching on a stored name did not recognize it.
+            auto markName = [&](std::wstring const& name) -> std::wstring
+                {
+                    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+                    {
+                        return WindowsMidiServicesNamingLib::ApplyLegacyDuplicateDeviceMarker(
+                            name, parentDevice->IndexOfDevicesWithThisSameName + 1);
+                    }
+
+                    return std::format(L"{1} - {0}", name, parentDevice->IndexOfDevicesWithThisSameName + 1);
+                };
+
             if (!pinDefinition->DriverSuppliedName.empty())
             {
-                driverSuppliedName = std::format(L"{1} - {0}", pinDefinition->DriverSuppliedName, parentDevice->IndexOfDevicesWithThisSameName + 1);
+                driverSuppliedName = markName(pinDefinition->DriverSuppliedName);
             }
 
             if (!pinDefinition->FilterName.empty())
             {
-                filterName = std::format(L"{1} - {0}", pinDefinition->FilterName, parentDevice->IndexOfDevicesWithThisSameName + 1);
+                filterName = markName(pinDefinition->FilterName);
             }
 
             // feels dirty putting this logic in here, but have to be able to
@@ -2364,7 +2377,7 @@ CMidi2KSAggregateMidiEndpointManager3::UpdateNewPinDefinitions(
             // right now would require a huge amount of work to comply with CFR
             if (!pinDefinition->PinName.empty() && pinDefinition->PinName != L"MIDI")
             {
-                pinName = std::format(L"{1} - {0}", pinDefinition->PinName, parentDevice->IndexOfDevicesWithThisSameName + 1);
+                pinName = markName(pinDefinition->PinName);
             }
         }
         else

@@ -568,9 +568,15 @@ _Use_decl_annotations_
 void
 MidiBleConnection::SetEndpointDeviceInterfaceId(std::wstring const& endpointDeviceInterfaceId)
 {
-    auto lock = std::scoped_lock{ m_identityLock };
+    {
+        auto lock = std::scoped_lock{ m_identityLock };
 
-    m_endpointDeviceInterfaceId = endpointDeviceInterfaceId;
+        m_endpointDeviceInterfaceId = endpointDeviceInterfaceId;
+    }
+
+    // The interval is normally negotiated before the endpoint exists, so the parameter refresh had
+    // nowhere to write it. Called outside the lock because it reaches the endpoint manager.
+    WriteCalculatedLatencyProperty();
 }
 
 _Use_decl_annotations_
@@ -589,6 +595,41 @@ MidiBleConnection::SetEndpointDeviceInstanceId(std::wstring const& endpointDevic
     auto lock = std::scoped_lock{ m_identityLock };
 
     m_endpointDeviceInstanceId = endpointDeviceInstanceId;
+}
+
+
+void
+MidiBleConnection::WriteCalculatedLatencyProperty()
+{
+    if (m_shutdown.load())
+    {
+        return;
+    }
+
+    auto const intervalUnits = m_connectionIntervalUnits.load();
+
+    if (intervalUnits == 0)
+    {
+        return;
+    }
+
+    std::wstring endpointDeviceInterfaceId{ };
+
+    {
+        auto lock = std::scoped_lock{ m_identityLock };
+
+        endpointDeviceInterfaceId = m_endpointDeviceInterfaceId;
+    }
+
+    if (endpointDeviceInterfaceId.empty())
+    {
+        return;
+    }
+
+    if (auto endpointManager = TransportState::Current().GetEndpointManager())
+    {
+        endpointManager->UpdateCalculatedLatency(endpointDeviceInterfaceId, intervalUnits);
+    }
 }
 
 
@@ -631,6 +672,8 @@ MidiBleConnection::RefreshConnectionParameters()
             TraceLoggingUInt16(parameters.ConnectionLatency(), "connection latency"),
             TraceLoggingUInt16(parameters.LinkTimeout(), "link timeout")
         );
+
+        WriteCalculatedLatencyProperty();
     }
     CATCH_LOG();
 }

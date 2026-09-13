@@ -1457,6 +1457,23 @@ namespace
         {
             result = WindowsMidiServicesInternal::TrimmedWStringCopy(deviceName);
 
+            // The legacy form is a leading "2- ", the new style form a trailing " (2)". Either way
+            // it is something we added, so it is never information the device supplied.
+            size_t hyphen{ 0 };
+            while (hyphen < result.length() && iswdigit(result[hyphen])) { hyphen++; }
+
+            if (hyphen > 0 && hyphen < result.length())
+            {
+                auto rest = result.substr(hyphen);
+                auto trimmedRest = WindowsMidiServicesInternal::TrimmedWStringCopy(rest);
+
+                if (trimmedRest.length() > 1 && trimmedRest.front() == L'-')
+                {
+                    auto remainder = WindowsMidiServicesInternal::TrimmedWStringCopy(trimmedRest.substr(1));
+                    if (!remainder.empty()) { return remainder; }
+                }
+            }
+
             if (result.length() < 4) { return result; }
             if (result.back() != L')') { return result; }
 
@@ -1477,6 +1494,24 @@ namespace
 
         return result;
     }
+}
+
+_Use_decl_annotations_
+std::wstring ApplyLegacyDuplicateDeviceMarker(
+    std::wstring const& baseDeviceName,
+    uint32_t const oneBasedIndex) noexcept
+{
+    try
+    {
+        auto trimmed = WindowsMidiServicesInternal::TrimmedWStringCopy(baseDeviceName);
+
+        if (oneBasedIndex < 2 || trimmed.empty()) { return trimmed; }
+
+        return std::format(L"{0}- {1}", oneBasedIndex, trimmed);
+    }
+    CATCH_LOG();
+
+    return baseDeviceName;
 }
 
 _Use_decl_annotations_

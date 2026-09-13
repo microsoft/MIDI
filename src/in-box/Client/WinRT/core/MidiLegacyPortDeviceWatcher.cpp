@@ -147,8 +147,6 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
-            std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
-
             auto legacyPortDeviceInformation = winrt::make_self<MidiLegacyPortDeviceInformation>();
             if (legacyPortDeviceInformation == nullptr)
             {
@@ -169,43 +167,51 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
             auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(legacyPortDeviceInformation->PortDeviceId());
 
-            if (!m_enumeratedPorts.HasKey(mapKey))
+            winrt::com_ptr<MidiLegacyPortDeviceInformationAddedEventArgs> newArgs{ nullptr };
+
             {
-                m_enumeratedPorts.Insert(mapKey, *legacyPortDeviceInformation);
+                std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
 
-                auto newArgs = winrt::make_self<MidiLegacyPortDeviceInformationAddedEventArgs>();
-                newArgs->InternalInitialize(*legacyPortDeviceInformation);
-
-                if (newArgs->AddedDevice().Flow() == Midi1PortFlow::MidiMessageSource)
+                if (!m_enumeratedPorts.HasKey(mapKey))
                 {
-                    m_countSourcePorts++;
+                    m_enumeratedPorts.Insert(mapKey, *legacyPortDeviceInformation);
+
+                    newArgs = winrt::make_self<MidiLegacyPortDeviceInformationAddedEventArgs>();
+                    newArgs->InternalInitialize(*legacyPortDeviceInformation);
+
+                    if (newArgs->AddedDevice().Flow() == Midi1PortFlow::MidiMessageSource)
+                    {
+                        m_countSourcePorts++;
+                    }
+                    else
+                    {
+                        m_countDestinationPorts++;
+                    }
                 }
                 else
                 {
-                    m_countDestinationPorts++;
-                }
+                    // duplicate key. This should never happen, but just in case ...
 
-                // raise the event
-                if (m_deviceAddedEvent)
-                {
-                    m_deviceAddedEvent(*this, *newArgs);
+                    LOG_IF_FAILED(E_UNEXPECTED);   // this also generates a fallback error with file and line number info
+
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Duplicate port id. This is unexpected", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                    );
+
                 }
             }
-            else
+
+            // Raised with no lock held: every GetEnumeratedPorts* accessor takes
+            // m_enumeratedPortsLock, and std::mutex is not recursive, so an application handler
+            // that asks this watcher for the port list would otherwise deadlock its own thread.
+            if (newArgs != nullptr && m_deviceAddedEvent)
             {
-                // duplicate key. This should never happen, but just in case ...
-
-                LOG_IF_FAILED(E_UNEXPECTED);   // this also generates a fallback error with file and line number info
-
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Duplicate port id. This is unexpected", MIDI_SDK_TRACE_MESSAGE_FIELD)
-                );
-
+                m_deviceAddedEvent(*this, *newArgs);
             }
         }
         catch (winrt::hresult_error const& ex)
@@ -248,62 +254,70 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
-            std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
-
             auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
 
-            if (m_enumeratedPorts.HasKey(mapKey))
+            winrt::com_ptr<MidiLegacyPortDeviceInformationUpdatedEventArgs> newArgs{ nullptr };
+
             {
-                auto port = winrt::get_self<MidiLegacyPortDeviceInformation>(m_enumeratedPorts.Lookup(mapKey));
+                std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
 
-                if (!port)
+                if (m_enumeratedPorts.HasKey(mapKey))
                 {
-                    // this is unexpected
+                    auto port = winrt::get_self<MidiLegacyPortDeviceInformation>(m_enumeratedPorts.Lookup(mapKey));
 
-                    LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
-
-                    TraceLoggingWrite(
-                        Midi2SdkTelemetryProvider::Provider(),
-                        MIDI_SDK_TRACE_EVENT_ERROR,
-                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                        TraceLoggingWideString(L"Received an update for a MIDI 1 port that is no longer in our list", MIDI_SDK_TRACE_MESSAGE_FIELD)
-                    );
-
-                    return;
-                }
-
-                // Update the port properties based on what changed
-                port->InternalUpdateFromDeviceInformationUpdate(args);
-
-                // raise an event if the app has subscribed to it
-                if (m_deviceUpdatedEvent)
-                {
-                    auto newArgs = winrt::make_self<MidiLegacyPortDeviceInformationUpdatedEventArgs>();
-
-                    bool updatedName{ false };
-                    bool updatedPortNumber{ false };
-
-                    if (args.Properties().HasKey(L"System.Devices.FriendlyName"))
+                    if (!port)
                     {
-                        updatedName = true;
+                        // this is unexpected
+
+                        LOG_IF_FAILED(E_FAIL);   // this also generates a fallback error with file and line number info
+
+                        TraceLoggingWrite(
+                            Midi2SdkTelemetryProvider::Provider(),
+                            MIDI_SDK_TRACE_EVENT_ERROR,
+                            TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                            TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                            TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                            TraceLoggingWideString(L"Received an update for a MIDI 1 port that is no longer in our list", MIDI_SDK_TRACE_MESSAGE_FIELD)
+                        );
+
+                        return;
                     }
 
-                    if (args.Properties().HasKey(STRING_PKEY_MIDI_ServiceAssignedPortNumber))
+                    // Update the port properties based on what changed
+                    port->InternalUpdateFromDeviceInformationUpdate(args);
+
+                    // build the args if the app has subscribed to the event
+                    if (m_deviceUpdatedEvent)
                     {
-                        updatedPortNumber = true;
+                        newArgs = winrt::make_self<MidiLegacyPortDeviceInformationUpdatedEventArgs>();
+
+                        bool updatedName{ false };
+                        bool updatedPortNumber{ false };
+
+                        if (args.Properties().HasKey(L"System.Devices.FriendlyName"))
+                        {
+                            updatedName = true;
+                        }
+
+                        if (args.Properties().HasKey(STRING_PKEY_MIDI_ServiceAssignedPortNumber))
+                        {
+                            updatedPortNumber = true;
+                        }
+
+                        newArgs->InternalInitialize(
+                            *port,
+                            args,
+                            updatedName,
+                            updatedPortNumber
+                        );
                     }
-
-                    newArgs->InternalInitialize(
-                        *port,
-                        args,
-                        updatedName,
-                        updatedPortNumber
-                    );
-
-                    m_deviceUpdatedEvent(*this, *newArgs);
                 }
+            }
+
+            // raised with no lock held. See the note in OnDeviceAdded
+            if (newArgs != nullptr && m_deviceUpdatedEvent)
+            {
+                m_deviceUpdatedEvent(*this, *newArgs);
             }
         }
         catch (winrt::hresult_error const& ex)
@@ -345,50 +359,57 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
 
         try
         {
-            std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
-
             auto mapKey = internal::NormalizeEndpointInterfaceIdHStringCopy(args.Id());
 
-            if (m_enumeratedPorts.HasKey(mapKey))
+            winrt::com_ptr<MidiLegacyPortDeviceInformationRemovedEventArgs> newArgs{ nullptr };
+
             {
-                auto port = m_enumeratedPorts.Lookup(mapKey);
+                std::lock_guard<std::mutex> guard(m_enumeratedPortsLock);
 
-                if (port != nullptr)
+                if (m_enumeratedPorts.HasKey(mapKey))
                 {
-                    if (port.Flow() == Midi1PortFlow::MidiMessageSource)
-                    {
-                        if (m_countSourcePorts > 0) m_countSourcePorts--;
-                    }
-                    else
-                    {
-                        if (m_countDestinationPorts > 0) m_countDestinationPorts--;
-                    }
+                    auto port = m_enumeratedPorts.Lookup(mapKey);
 
-                    m_enumeratedPorts.Remove(mapKey);
-
-                    // raise the event
-                    if (m_deviceRemovedEvent)
+                    if (port != nullptr)
                     {
-                        auto newArgs = winrt::make_self<MidiLegacyPortDeviceInformationRemovedEventArgs>();
-                        newArgs->InternalInitialize(port);
+                        if (port.Flow() == Midi1PortFlow::MidiMessageSource)
+                        {
+                            if (m_countSourcePorts > 0) m_countSourcePorts--;
+                        }
+                        else
+                        {
+                            if (m_countDestinationPorts > 0) m_countDestinationPorts--;
+                        }
 
-                        m_deviceRemovedEvent(*this, *newArgs);
+                        m_enumeratedPorts.Remove(mapKey);
+
+                        if (m_deviceRemovedEvent)
+                        {
+                            newArgs = winrt::make_self<MidiLegacyPortDeviceInformationRemovedEventArgs>();
+                            newArgs->InternalInitialize(port);
+                        }
                     }
                 }
-            }
-            else
-            {
-                LOG_IF_FAILED(E_NOTFOUND);   // this also generates a fallback error with file and line number info
+                else
+                {
+                    LOG_IF_FAILED(E_NOTFOUND);   // this also generates a fallback error with file and line number info
 
-                TraceLoggingWrite(
-                    Midi2SdkTelemetryProvider::Provider(),
-                    MIDI_SDK_TRACE_EVENT_ERROR,
-                    TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
-                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                    TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
-                    TraceLoggingWideString(L"Unexpected. Port removed event, but port was not in map", MIDI_SDK_TRACE_MESSAGE_FIELD),
-                    TraceLoggingWideString(mapKey.c_str(), "port id")
-                );
+                    TraceLoggingWrite(
+                        Midi2SdkTelemetryProvider::Provider(),
+                        MIDI_SDK_TRACE_EVENT_ERROR,
+                        TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                        TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                        TraceLoggingWideString(L"Unexpected. Port removed event, but port was not in map", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                        TraceLoggingWideString(mapKey.c_str(), "port id")
+                    );
+                }
+            }
+
+            // raised with no lock held. See the note in OnDeviceAdded
+            if (newArgs != nullptr && m_deviceRemovedEvent)
+            {
+                m_deviceRemovedEvent(*this, *newArgs);
             }
         }
         catch (...)
