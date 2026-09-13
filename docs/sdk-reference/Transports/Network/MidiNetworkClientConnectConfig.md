@@ -22,6 +22,7 @@ Pass to `MidiNetworkTransportManager.ConnectNetworkClientAsync`.
 | `ClientId` | The GUID which identifies this client entry, used for later disconnect and to match the entry in the configuration file |
 | `Comment` | Optional comment written to the configuration file. Not used by the service |
 | `CreateOnlyUmpEndpoints` | When true, only UMP endpoints are created. When false, MIDI 1.0 ports are created alongside them |
+| `FallbackMidi1PortCount` | Source and destination ports to create when the remote host declares no function blocks. 1 to 16, defaults to 1. Ignored when the host does describe itself, and when `CreateOnlyUmpEndpoints` is true |
 | `UmpEndpointName` | The UMP Endpoint Name to use for the local end of this connection |
 | `CustomEndpointName` | What the customer chose to call the MIDI endpoint this connection creates. It is applied before the endpoint is activated, so the endpoint and its MIDI 1.0 ports are never created under the remote's own name and renamed afterwards. Leave it empty to use the name the remote announces |
 | `MatchCriteria` | A `MidiNetworkClientMatchCriteria` identifying the remote host |

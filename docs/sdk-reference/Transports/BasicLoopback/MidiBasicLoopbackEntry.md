@@ -18,3 +18,4 @@ This class represents an active transient basic loopback endpoint. Instances are
 | `Description` | The description of the loopback endpoint |
 | `ImageFileName` | The bare file name of the endpoint's picture within the shared endpoint assets folder, empty when there is none |
 | `IsMuted` | True if this loopback is currently muted |
+| `MessageCount` | Running total of UMP messages this loopback has carried from its destination back to its source since it was created. Reset when the endpoint is recreated, and not incremented while the loopback is muted |

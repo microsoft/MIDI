@@ -161,7 +161,7 @@ References:
 A MIDI 1.0 port name is limited to 31 characters plus a terminator, and Windows keeps more than one
 candidate name per port so that a customer can choose between compatibility with older Windows
 naming and names built from what the device reports. How those names are composed is described in
-[How Windows MIDI Services generates MIDI 1.0 port names](how-midi1-port-names-are-generated.md).
+[How Windows MIDI Services generates MIDI 1.0 port names]({{ site.baseurl }}/kb/how-midi1-port-names-are-generated/).
 
 Your transport is responsible for three things.
 

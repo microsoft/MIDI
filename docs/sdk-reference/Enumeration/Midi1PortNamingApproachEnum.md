@@ -15,3 +15,4 @@ Controls how MIDI 1.0 API port names are generated when Windows MIDI Services cr
 | `Default` | `0x00000000` | Use the default naming approach as determined by the system. |
 | `UseClassicCompatible` | `0x00000001` | Use names compatible with the classic WinMM MIDI port naming scheme. |
 | `UseNewStyle` | `0x00000002` | Use the new Windows MIDI Services style port names. |
+| `UseAutomatic` | `0x00000003` | Let Windows decide for this endpoint, from what the device reported. An endpoint whose ports already existed under WinMM names keeps them; one which has no classic equivalent gets new-style names. |
