@@ -184,8 +184,9 @@ namespace midi2console
     {
         switch (direction)
         {
-        case midi2enum::MidiFunctionBlockDirection::BlockInput:    return ResourceString(IDS_LABEL_MESSAGE_SOURCE);
-        case midi2enum::MidiFunctionBlockDirection::BlockOutput:   return ResourceString(IDS_LABEL_MESSAGE_DESTINATION);
+        // a block input receives from the host, so it is a message destination
+        case midi2enum::MidiFunctionBlockDirection::BlockInput:    return ResourceString(IDS_LABEL_MESSAGE_DESTINATION);
+        case midi2enum::MidiFunctionBlockDirection::BlockOutput:   return ResourceString(IDS_LABEL_MESSAGE_SOURCE);
         case midi2enum::MidiFunctionBlockDirection::Bidirectional: return ResourceString(IDS_LABEL_BIDIRECTIONAL);
         default:                                                   return ResourceString(IDS_LABEL_UNKNOWN);
         }
@@ -206,8 +207,9 @@ namespace midi2console
     {
         switch (direction)
         {
-        case midi2enum::MidiGroupTerminalBlockDirection::BlockInput:    return ResourceString(IDS_LABEL_MESSAGE_SOURCE);
-        case midi2enum::MidiGroupTerminalBlockDirection::BlockOutput:   return ResourceString(IDS_LABEL_MESSAGE_DESTINATION);
+        // a block input receives from the host, so it is a message destination
+        case midi2enum::MidiGroupTerminalBlockDirection::BlockInput:    return ResourceString(IDS_LABEL_MESSAGE_DESTINATION);
+        case midi2enum::MidiGroupTerminalBlockDirection::BlockOutput:   return ResourceString(IDS_LABEL_MESSAGE_SOURCE);
         default:                                                        return ResourceString(IDS_LABEL_BIDIRECTIONAL);
         }
     }
