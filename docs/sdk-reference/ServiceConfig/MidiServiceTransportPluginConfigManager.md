@@ -23,6 +23,7 @@ Unless you are authoring a new transport, it is not recommended that you use thi
 | `SaveUpdate(transportId, fullConfigObject)` | Writes a raw JSON configuration object into the configuration file for the specified transport. Returns a `MidiServiceConfigSaveResponse`. |
 | `QueryCapability(transportId, capabilityQueryKey)` | Returns true when the named transport reports that capability. Use it before offering a feature which not every transport implements. |
 | `QueryAllCapabilities(transportId)` | Returns every capability the named transport reports, as a map of key to boolean. |
+| `EnsureConfigurationFile()` | Registers the default configuration file and creates it when this PC has none, so a machine which has only ever had a transport package installed can still persist settings. Does nothing when one is already registered. Returns a `MidiServiceConfigSaveResponse`. |
 
 ## Static Properties
 

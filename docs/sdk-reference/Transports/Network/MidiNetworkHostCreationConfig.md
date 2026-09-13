@@ -33,6 +33,7 @@ Describes a host for remote clients to connect to. Pass to `MidiNetworkTransport
 | `ServiceInstanceName` | The mDNS service instance name. Must be unique on the network, and is also used to name the parent device. Creation fails with `ServiceInstanceNameInUse` if another host already has it. |
 | `ProductInstanceId` | The Product Instance Id advertised for this host. Capped at 42 bytes by the specification. |
 | `CreateOnlyUmpEndpoints` | When true, only UMP endpoints are created. When false, MIDI 1.0 ports are created alongside them. |
+| `FallbackMidi1PortCount` | Source and destination ports to create for a remote client which declares no function blocks. 1 to 16, defaults to 1. Ignored when the client does describe itself, and when `CreateOnlyUmpEndpoints` is true. |
 | `UseAutomaticPortAllocation` | When true, the service picks a UDP port. When false, `ManuallyAssignedPort` is used. |
 | `ManuallyAssignedPort` | The UDP port to bind, as a string. Ignored when `UseAutomaticPortAllocation` is true. |
 | `AllowPortFallback` | Only meaningful with a specific port. When that port cannot be bound the host starts on an automatically allocated one instead of refusing to start, and reports that it did through `MidiNetworkConfiguredHost.UsedPortFallback`. |
