@@ -174,6 +174,13 @@ namespace winrt::midiloopbacksetup::implementation
         void UpdateCreateLoopbackButtonState() noexcept;
         void UpdateCreateBasicLoopbackButtonState() noexcept;
 
+        // Every name in use across both kinds of loopback, lowered for comparison. A name only
+        // has to be unique among loopbacks: colliding with a USB device or any other transport
+        // has always been allowed and stays allowed. Rows belonging to excludedAssociationId are
+        // left out, so an edit does not collide with the name it already has.
+        std::set<std::wstring> LoopbackNamesInUse(
+            _In_ winrt::hstring const& excludedAssociationId) const noexcept;
+
         // Fills the import dialog from what is on the PC right now, disabling any name which is
         // already taken. Returns the number of ports offered.
         size_t BuildImportCandidates() noexcept;
@@ -268,6 +275,9 @@ namespace winrt::midiloopbacksetup::implementation
         winrt::hstring m_pendingLoopbackImage{};
         winrt::hstring m_pendingBasicLoopbackImage{};
         winrt::hstring m_pendingEditImage{};
+
+        // which row the open edit dialog belongs to, so its own names are not treated as taken
+        winrt::hstring m_editingAssociationId{};
 
         // a drag reorders the collection the list is bound to, so a refresh landing mid drag
         // would fight the customer for it

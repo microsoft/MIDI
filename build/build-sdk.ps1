@@ -155,6 +155,10 @@ $GuiTools = @(
     [pscustomobject]@{ Name = 'midisysextool';     Folder = 'SysEx';        Display = 'MIDI SysEx Tool';        DirectoryId = 'TOOL_SYSEX_FOLDER' }
     [pscustomobject]@{ Name = 'midi2monitor';      Folder = 'Monitor';      Display = 'MIDI Monitor';           DirectoryId = 'TOOL_MONITOR_FOLDER' }
     [pscustomobject]@{ Name = 'miditroubleshooter'; Folder = 'Troubleshooter'; Display = 'MIDI Troubleshooting and Repair'; DirectoryId = 'TOOL_TROUBLESHOOTER_FOLDER' }
+    # Aumid: the notification platform will not accept a toast from an unpackaged app unless the
+    # identity it publishes under is on a Start Menu shortcut. RunAtLogon starts it for every
+    # user; whether it then does anything is that user's own setting, which MIDI Settings owns.
+    [pscustomobject]@{ Name = 'midinotifications'; Folder = 'Notifications'; Display = 'MIDI Notifications'; DirectoryId = 'TOOL_NOTIFICATIONS_FOLDER'; Aumid = 'Microsoft.WindowsMidiServices.Notifications'; RunAtLogon = $true }
 )
 
 # Start Menu group shared by every MIDI GUI app, including MIDI Settings.
@@ -1123,7 +1127,15 @@ function New-StartMenuFragment {
         [void]$sb.AppendLine("        <Shortcut Id=`"Shortcut_$($tool.Name)`"")
         [void]$sb.AppendLine("                  Name=`"$($tool.Display)`"")
         [void]$sb.AppendLine("                  Target=`"[#$($tool.Name)Exe]`"")
-        [void]$sb.AppendLine("                  WorkingDirectory=`"$($tool.DirectoryId)`" />")
+
+        if ($tool.Aumid) {
+            [void]$sb.AppendLine("                  WorkingDirectory=`"$($tool.DirectoryId)`">")
+            [void]$sb.AppendLine("          <ShortcutProperty Key=`"System.AppUserModel.ID`" Value=`"$($tool.Aumid)`" />")
+            [void]$sb.AppendLine('        </Shortcut>')
+        }
+        else {
+            [void]$sb.AppendLine("                  WorkingDirectory=`"$($tool.DirectoryId)`" />")
+        }
     }
 
     [void]$sb.AppendLine('        <RemoveFolder Id="RemoveMidiProgramsFolder_Tools" Directory="MIDI_PROGRAMS_FOLDER" On="uninstall" />')
@@ -1131,6 +1143,21 @@ function New-StartMenuFragment {
     [void]$sb.AppendLine('          <RegistryValue Type="string" Name="ToolAppShortcuts" Value="installed" KeyPath="yes" />')
     [void]$sb.AppendLine('        </RegistryKey>')
     [void]$sb.AppendLine('      </Component>')
+
+    foreach ($tool in $GuiTools | Where-Object { $_.RunAtLogon }) {
+        # Separate component, and the Run value is deliberately not the key path. MIDI Settings
+        # lets a customer turn this off by deleting the value, and an MSI repair would put back
+        # anything it holds the key path for.
+        [void]$sb.AppendLine("      <Component Id=`"$($tool.Name)Autostart`" Bitness=`"always64`" Directory=`"MIDI_PROGRAMS_FOLDER`" Guid=`"6f3a9c21-58d4-4b7e-b1a6-0c9d3e7f2a48`">")
+        [void]$sb.AppendLine('        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run">')
+        # Quoted: the install path contains a space, and Run splits an unquoted value on it.
+        [void]$sb.AppendLine("          <RegistryValue Type=`"string`" Name=`"WindowsMidiServicesNotifications`" Value=`"&quot;[#$($tool.Name)Exe]&quot;`" />")
+        [void]$sb.AppendLine('        </RegistryKey>')
+        [void]$sb.AppendLine('        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">')
+        [void]$sb.AppendLine("          <RegistryValue Type=`"string`" Name=`"$($tool.Name)Autostart`" Value=`"installed`" KeyPath=`"yes`" />")
+        [void]$sb.AppendLine('        </RegistryKey>')
+        [void]$sb.AppendLine('      </Component>')
+    }
     [void]$sb.AppendLine('    </ComponentGroup>')
     [void]$sb.AppendLine('  </Fragment>')
     [void]$sb.AppendLine('</Wix>')

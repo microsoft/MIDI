@@ -16,10 +16,19 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 {
     winrt::init_apartment(winrt::apartment_type::single_threaded);
 
+    // A second copy would show the customer two views of one machine-wide configuration, which
+    // can disagree.
+    if (!::midiapp::SingleInstance::AcquireOrActivateExisting(L"Settings"))
+    {
+        return 0;
+    }
+
     ::winrt::Microsoft::UI::Xaml::Application::Start([](auto&&)
         {
             ::winrt::make<::winrt::midisettings::implementation::App>();
         });
+
+    ::midiapp::SingleInstance::Release();
 
     return 0;
 }

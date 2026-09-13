@@ -114,6 +114,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 #include "net2udp_transport_defs.h"
 #include "network_json_defs.h"
+#include "network_notification_defs.h"
 #include "network_transport_error_codes.h"
 #include "MidiSequenceNumber.h"
 
@@ -128,6 +129,9 @@ struct MidiNetworkHostDefinition;
 
 
 #include "MidiNetworkMessages.h"
+
+#include "ThreadpoolWork.h"
+#include "MidiNetworkNotificationSignal.h"
 
 #include "MidiNetworkCredentials.h"
 #include "MidiNetworkRateLimiter.h"

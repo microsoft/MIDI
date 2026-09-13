@@ -48,6 +48,19 @@ private:
         _In_ json::JsonObject const& jsonObject,
         _Inout_ json::JsonObject& responseObject);
 
+    // Net-new for Feature_Servicing_MIDI2LoopbackUniqueEndpointNames. A name has to be unique
+    // across every loopback this transport owns, not only within the pair it belongs to.
+    HRESULT ValidateNewEndpointNamesAreUnused(
+        _In_ MidiLoopbackDeviceDefinition const& definitionA,
+        _In_ MidiLoopbackDeviceDefinition const& definitionB,
+        _Inout_ std::map<std::wstring, bool>& allocatedNames,
+        _Inout_ json::JsonObject& responseObject);
+
+    HRESULT ValidateUpdatedEndpointNamesAreUnused(
+        _In_ std::vector<PendingEndpointUpdate> const& pending,
+        _In_ std::vector<std::shared_ptr<MidiLoopbackDevice>> const& devices,
+        _Inout_ json::JsonObject& responseObject);
+
     wil::com_ptr_nothrow<IMidiDeviceManager> m_MidiDeviceManager;
 
     GUID m_TransportId;   // kept for convenience

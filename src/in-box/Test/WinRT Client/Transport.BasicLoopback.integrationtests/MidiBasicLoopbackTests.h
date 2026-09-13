@@ -35,6 +35,9 @@ public:
     TEST_METHOD(TestCreateLoopbackWithGarbageUniqueId);
     TEST_METHOD(TestCreateLoopbackWithoutUniqueIdGeneratesOne);
 
+    // A name is what an application sees, so no two loopbacks may share one
+    TEST_METHOD(TestCreateLoopbackWithANameAlreadyInUseIsRejected);
+
     // Muting, unmuting, and enumerating active loopbacks
     TEST_METHOD(TestMuteLoopback);
     TEST_METHOD(TestUnmuteAfterMute);

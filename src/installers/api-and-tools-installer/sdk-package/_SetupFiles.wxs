@@ -23,6 +23,8 @@
     </DirectoryRef>
     <DirectoryRef Id="TOOL_TROUBLESHOOTER_FOLDER">
     </DirectoryRef>
+    <DirectoryRef Id="TOOL_NOTIFICATIONS_FOLDER">
+    </DirectoryRef>
 
     <ComponentGroup Id="SdkRedistFiles">
 
@@ -260,6 +262,17 @@
       </Component>
       <Component Id="cDC11B3DD4DF2BAF2" Bitness="always64" Directory="TOOL_TROUBLESHOOTER_FOLDER"> <!-- Windows.Devices.Midi2.pri -->
         <File Id="fDC11B3DD4DF2BAF2" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Troubleshooter\Windows.Devices.Midi2.pri" Vital="true" />
+      </Component>
+
+      <!-- app-sdk\$(var.Platform)\Notifications -->
+      <Component Id="c4404376CD23807AA" Bitness="always64" Directory="TOOL_NOTIFICATIONS_FOLDER"> <!-- midinotifications.exe -->
+        <File Id="midinotificationsExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Notifications\midinotifications.exe" Vital="true" />
+      </Component>
+      <Component Id="c9ADF6CBA5F3AA3A1" Bitness="always64" Directory="TOOL_NOTIFICATIONS_FOLDER"> <!-- Windows.Devices.Midi2.dll -->
+        <File Id="f9ADF6CBA5F3AA3A1" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Notifications\Windows.Devices.Midi2.dll" Vital="true" />
+      </Component>
+      <Component Id="c9643F8F0AF446966" Bitness="always64" Directory="TOOL_NOTIFICATIONS_FOLDER"> <!-- Windows.Devices.Midi2.pri -->
+        <File Id="f9643F8F0AF446966" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Notifications\Windows.Devices.Midi2.pri" Vital="true" />
       </Component>
 
       <!-- CollectMidiLogs -->

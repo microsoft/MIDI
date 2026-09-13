@@ -84,6 +84,7 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "Feature_Servicing_MIDI2LoopbackErrorStringResources.h"
 #include "Feature_Servicing_MIDI2LoopbackEndpointCustomization.h"
 #include "Feature_Servicing_MIDI2EndpointImageFileNameValidation.h"
+#include "Feature_Servicing_MIDI2LoopbackUniqueEndpointNames.h"
 
 // TransportUtilities
 #include "wstring_util.h"

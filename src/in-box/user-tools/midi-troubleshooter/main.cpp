@@ -17,10 +17,18 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 {
     winrt::init_apartment(winrt::apartment_type::single_threaded);
 
+    // One copy only. Two would run the same checks against the same machine at the same time.
+    if (!::midiapp::SingleInstance::AcquireOrActivateExisting(L"Troubleshooter"))
+    {
+        return 0;
+    }
+
     ::winrt::Microsoft::UI::Xaml::Application::Start([](auto&&)
         {
             ::winrt::make<::winrt::miditroubleshooter::implementation::App>();
         });
+
+    ::midiapp::SingleInstance::Release();
 
     return 0;
 }

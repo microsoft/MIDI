@@ -212,6 +212,9 @@ namespace winrt::midinetworksetup::implementation
             elements.RightInset = TitleBarRightInsetColumn();
 
             m_chrome.Initialize(elements, native::AppSettings::Current());
+
+            // Now that there is a window, a later launch has something to bring forward.
+            ::midiapp::SingleInstance::PublishMainWindow(m_chrome.WindowHandle());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
 
             // 32px source for a 16px slot, so it stays crisp on a high DPI display
@@ -235,9 +238,16 @@ namespace winrt::midinetworksetup::implementation
                 native::NetworkConfigFile::Current().OverridePath(options.ConfigFilePath);
             }
 
-            ShowPage(native::AppSettings::Current().SelectedPageIndex());
+            // The pending invitations bar sits above both pages, so a notification does not need
+            // to navigate anywhere to show it. Landing on this PC is context: it is this PC's
+            // hosts the remote is asking to join.
+            auto const startupPage = options.ShowPendingApprovals ?
+                native::AppSettings::PageIndexLocalHosts :
+                native::AppSettings::Current().SelectedPageIndex();
 
-            MainNavigation().SelectedItem(NavigationItemForPage(native::AppSettings::Current().SelectedPageIndex()));
+            ShowPage(startupPage);
+
+            MainNavigation().SelectedItem(NavigationItemForPage(startupPage));
 
             Closed([weak = get_weak()](auto&&, auto&&)
                 {

@@ -60,6 +60,9 @@ public:
     HRESULT ConstructEndpointManager();
     HRESULT ConstructConfigurationManager();
 
+    // Lives as long as the transport, because the threadpool work it owns has to outlive any
+    // connection which asks it to signal.
+    MidiNetworkNotificationSignal& NotificationSignal() { return m_notificationSignal; }
     HRESULT AddHost(
         _In_ std::shared_ptr<MidiNetworkHost>);
     std::vector<std::shared_ptr<MidiNetworkHost>> GetHosts();
@@ -234,6 +237,8 @@ private:
 
     wil::com_ptr<CMidi2NetworkMidiEndpointManager> m_endpointManager;
     wil::com_ptr<CMidi2NetworkMidiConfigurationManager> m_configurationManager;
+
+    MidiNetworkNotificationSignal m_notificationSignal{ };
 
     std::vector<std::shared_ptr<MidiNetworkHost>> m_hosts{ };
     std::vector<std::shared_ptr<MidiNetworkClient>> m_clients{ };

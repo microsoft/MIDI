@@ -120,6 +120,7 @@ namespace appshared = ::winrt::MidiAppShared;
 
 #include "Telemetry.h"
 
+#include "SingleInstance.h"
 #include "WindowChrome.h"
 #include "AppearanceFlyout.h"
 #include "EndpointImageAssets.h"
@@ -132,3 +133,8 @@ namespace appshared = ::winrt::MidiAppShared;
 
 // same reason: the row types are used from data templates but have no .xaml file of their own
 #include "SettingsItems.h"
+
+// Settings for the notifications app, which is a separate process. The defs header is the
+// contract shared with it.
+#include "..\midi-notifications\notification_settings_defs.h"
+#include "NotificationSettings.h"

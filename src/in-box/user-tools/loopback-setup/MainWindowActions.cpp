@@ -193,6 +193,47 @@ namespace winrt::midiloopbacksetup::implementation
     }
 
 
+    _Use_decl_annotations_
+    std::set<std::wstring> MainWindow::LoopbackNamesInUse(
+        winrt::hstring const& excludedAssociationId) const noexcept
+    {
+        std::set<std::wstring> names{};
+
+        try
+        {
+            auto const excluded = Lowered(excludedAssociationId);
+
+            auto collect = [&names, &excluded](auto const& rows)
+                {
+                    for (auto const& row : rows)
+                    {
+                        if (row == nullptr) continue;
+
+                        if (!excluded.empty() && Lowered(row.AssociationId()) == excluded) continue;
+
+                        if (!row.NameA().empty())
+                        {
+                            names.insert(std::wstring{ Lowered(row.NameA()) });
+                        }
+
+                        if (row.HasSecondEndpoint() && !row.NameB().empty())
+                        {
+                            names.insert(std::wstring{ Lowered(row.NameB()) });
+                        }
+                    }
+                };
+
+            collect(m_loopbacks);
+            collect(m_basicLoopbacks);
+        }
+        catch (...)
+        {
+        }
+
+        return names;
+    }
+
+
     // ------------------------------------------------------------------------------------
     // creating a MIDI 2.0 style loopback pair
     // ------------------------------------------------------------------------------------
@@ -222,6 +263,31 @@ namespace winrt::midiloopbacksetup::implementation
                      midi2loop::MidiLoopbackManager::DoesLoopbackBExist(uniqueId))
             {
                 problem = res::GetString(L"ValidationUniqueIdInUse");
+            }
+            else
+            {
+                // The two sides derived from a single name already differ, so only the names
+                // the customer typed themselves can collide with each other.
+                auto const sideA = nameA.empty() ?
+                    res::FormatString(L"LoopbackSideANameFormat", name) : nameA;
+
+                auto const sideB = nameB.empty() ?
+                    res::FormatString(L"LoopbackSideBNameFormat", name) : nameB;
+
+                auto const taken = LoopbackNamesInUse({});
+
+                if (Lowered(sideA) == Lowered(sideB))
+                {
+                    problem = res::GetString(L"EditLoopbackDuplicateNameMessage");
+                }
+                else if (taken.find(std::wstring{ Lowered(sideA) }) != taken.end())
+                {
+                    problem = res::FormatString(L"ValidationNameInUseFormat", sideA);
+                }
+                else if (taken.find(std::wstring{ Lowered(sideB) }) != taken.end())
+                {
+                    problem = res::FormatString(L"ValidationNameInUseFormat", sideB);
+                }
             }
 
             CreateLoopbackStatusText().Text(problem);
@@ -431,6 +497,15 @@ namespace winrt::midiloopbacksetup::implementation
             else if (midi2bloop::MidiBasicLoopbackManager::DoesLoopbackExist(uniqueId))
             {
                 problem = res::GetString(L"ValidationUniqueIdInUse");
+            }
+            else
+            {
+                auto const taken = LoopbackNamesInUse({});
+
+                if (taken.find(std::wstring{ Lowered(name) }) != taken.end())
+                {
+                    problem = res::FormatString(L"ValidationNameInUseFormat", name);
+                }
             }
 
             CreateBasicLoopbackStatusText().Text(problem);
@@ -1359,12 +1434,32 @@ namespace winrt::midiloopbacksetup::implementation
 
             bool const duplicate = !nameA.empty() && SameNameIgnoringCase(nameA, nameB);
 
-            // The transport refuses both of these as well. Checking here means the customer
-            // finds out while the dialog is still open rather than after pressing Save.
-            EditLoopbackDialog().IsPrimaryButtonEnabled(!nameA.empty() && !nameB.empty() && !duplicate);
+            winrt::hstring problem{};
 
-            EditLoopbackStatusText().Text(
-                duplicate ? res::GetString(L"EditLoopbackDuplicateNameMessage") : winrt::hstring{});
+            if (duplicate)
+            {
+                problem = res::GetString(L"EditLoopbackDuplicateNameMessage");
+            }
+            else
+            {
+                auto const taken = LoopbackNamesInUse(m_editingAssociationId);
+
+                if (taken.find(std::wstring{ Lowered(nameA) }) != taken.end())
+                {
+                    problem = res::FormatString(L"ValidationNameInUseFormat", nameA);
+                }
+                else if (taken.find(std::wstring{ Lowered(nameB) }) != taken.end())
+                {
+                    problem = res::FormatString(L"ValidationNameInUseFormat", nameB);
+                }
+            }
+
+            // The transport refuses all of these as well. Checking here means the customer
+            // finds out while the dialog is still open rather than after pressing Save.
+            EditLoopbackDialog().IsPrimaryButtonEnabled(
+                !nameA.empty() && !nameB.empty() && problem.empty());
+
+            EditLoopbackStatusText().Text(problem);
         }
         MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to validate the loopback edit.")
     }
@@ -1373,7 +1468,23 @@ namespace winrt::midiloopbacksetup::implementation
     {
         try
         {
-            EditBasicLoopbackDialog().IsPrimaryButtonEnabled(!TextOf(EditBasicLoopbackNameTextBox()).empty());
+            auto const name = TextOf(EditBasicLoopbackNameTextBox());
+
+            winrt::hstring problem{};
+
+            if (!name.empty())
+            {
+                auto const taken = LoopbackNamesInUse(m_editingAssociationId);
+
+                if (taken.find(std::wstring{ Lowered(name) }) != taken.end())
+                {
+                    problem = res::FormatString(L"ValidationNameInUseFormat", name);
+                }
+            }
+
+            EditBasicLoopbackDialog().IsPrimaryButtonEnabled(!name.empty() && problem.empty());
+
+            EditBasicLoopbackStatusText().Text(problem);
         }
         MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to validate the basic loopback edit.")
     }
@@ -1523,6 +1634,8 @@ namespace winrt::midiloopbacksetup::implementation
 
         try
         {
+            m_editingAssociationId = item.AssociationId();
+
             EditLoopbackNameATextBox().Text(item.NameA());
             EditLoopbackDescriptionATextBox().Text(item.DescriptionA());
             EditLoopbackNameBTextBox().Text(item.NameB());
@@ -1579,6 +1692,8 @@ namespace winrt::midiloopbacksetup::implementation
 
         try
         {
+            m_editingAssociationId = item.AssociationId();
+
             EditBasicLoopbackNameTextBox().Text(item.NameA());
             EditBasicLoopbackDescriptionTextBox().Text(item.DescriptionA());
 

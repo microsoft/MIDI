@@ -287,6 +287,7 @@
     <ClCompile Include="MidiNetworkHostConnection.cpp" />
     <ClCompile Include="MidiNetworkClientConnection.cpp" />
     <ClCompile Include="MidiNetworkDataWriter.cpp" />
+    <ClCompile Include="MidiNetworkNotificationSignal.cpp" />
     <ClCompile Include="TransportState.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="Midi2.NetworkMidiTransport.cpp" />

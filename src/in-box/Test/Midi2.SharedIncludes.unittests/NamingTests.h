@@ -66,6 +66,8 @@ public:
         TEST_METHOD(TestModelNameRecovery);
         TEST_METHOD(TestRederiveAgainstInProtocolEndpointName);
         TEST_METHOD(TestLegacyDuplicateDeviceMarker);
+        TEST_METHOD(TestGroupWordGivesWayToTheName);
+        TEST_METHOD(TestCustomPortNamesArePublishedVerbatim);
     TEST_METHOD(TestPopulateEntryForNativeUmpDevice);
     TEST_METHOD(TestPopulateEntryForMidi1DeviceUsingUmpDriver);
     TEST_METHOD(TestPopulateEntryForMidi1DeviceUsingMidi1Driver);

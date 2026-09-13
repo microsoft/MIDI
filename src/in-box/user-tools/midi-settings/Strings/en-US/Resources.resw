@@ -188,6 +188,75 @@
   <data name="GlobalSettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Global MIDI Settings</value>
   </data>
+  <data name="NotificationsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="NotificationsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choose when Windows MIDI Services notifies you</value>
+  </data>
+  <data name="NotificationsButtonText.Text" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="NotificationsDialog.Title" xml:space="preserve">
+    <value>Notifications</value>
+  </data>
+  <data name="NotificationsDialog.CloseButtonText" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="NotificationsIntro.Text" xml:space="preserve">
+    <value>Windows MIDI Services can tell you when something needs your attention, such as a device on the network asking to connect to this PC. These choices are yours alone and do not affect anyone else who uses this PC.</value>
+  </data>
+  <data name="NotificationsShowHeader.Text" xml:space="preserve">
+    <value>Show notifications</value>
+  </data>
+  <data name="NotificationsEnabledToggle.Header" xml:space="preserve">
+    <value>Show MIDI notifications</value>
+  </data>
+  <data name="NotificationsEnabledToggle.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="NotificationsEnabledToggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="NotificationsEnabledHelp.Text" xml:space="preserve">
+    <value>Turning this off closes the notifications app. Nothing will interrupt you, and you can still see everything in the setup apps.</value>
+  </data>
+  <data name="NotificationsNetworkToggle.Header" xml:space="preserve">
+    <value>Network MIDI 2.0 connection requests</value>
+  </data>
+  <data name="NotificationsNetworkToggle.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="NotificationsNetworkToggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="NotificationsNetworkHelp.Text" xml:space="preserve">
+    <value>Tells you when a device on your network is waiting for you to allow or block it. Choosing is still done in Network MIDI Setup.</value>
+  </data>
+  <data name="NotificationsStartupHeader.Text" xml:space="preserve">
+    <value>Start with Windows</value>
+  </data>
+  <data name="NotificationsStartupToggle.Header" xml:space="preserve">
+    <value>Start the notifications app when I sign in</value>
+  </data>
+  <data name="NotificationsStartupToggle.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="NotificationsStartupToggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="NotificationsMachineStartupBar.Title" xml:space="preserve">
+    <value>This PC is set up to start it for everyone</value>
+  </data>
+  <data name="NotificationsMachineStartupBar.Message" xml:space="preserve">
+    <value>An administrator chose to start the notifications app for every person who uses this PC, and that cannot be changed from here. Turning off Show MIDI notifications above still stops it for you.</value>
+  </data>
+  <data name="NotificationsAppMissing" xml:space="preserve">
+    <value>The notifications app is not installed on this PC.</value>
+  </data>
+  <data name="NotificationsStartupChangeFailed" xml:space="preserve">
+    <value>That setting could not be changed. The notifications app may not be installed.</value>
+  </data>
   <data name="GlobalSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Global MIDI Settings</value>
   </data>

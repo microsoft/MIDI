@@ -105,6 +105,26 @@ public:
         return false;
     }
 
+    // Either side of any pair, because the name is what an application sees and it has no way
+    // to tell two endpoints called the same thing apart.
+    bool IsEndpointNameInUse(_In_ std::wstring const& endpointName)
+    {
+        std::lock_guard<std::mutex> lock{ m_devicesLock };
+
+        auto cleanName = internal::ToLowerTrimmedWStringCopy(endpointName);
+
+        for (auto const& [key, device] : m_devices)
+        {
+            if (cleanName == internal::ToLowerTrimmedWStringCopy(device->DefinitionA.EndpointName) ||
+                cleanName == internal::ToLowerTrimmedWStringCopy(device->DefinitionB.EndpointName))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
 
 
     std::vector< std::shared_ptr<MidiLoopbackDevice>> GetDeviceListSnapshot()

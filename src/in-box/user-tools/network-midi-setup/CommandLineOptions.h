@@ -22,6 +22,10 @@ namespace midinetworksetup
         // working against a copy rather than the machine's live configuration.
         std::wstring ConfigFilePath{};
 
+        // Set when the app was started through its protocol, which asks for a page and nothing
+        // more. See network_setup_protocol_defs.h for why a URI never carries an action.
+        bool ShowPendingApprovals{ false };
+
         static CommandLineOptions Parse(std::vector<std::wstring> const& arguments) noexcept;
         static CommandLineOptions ParseProcessCommandLine() noexcept;
     };

@@ -265,6 +265,9 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
     // use this to track any ids in use from this one config file update
     std::map<std::wstring, bool> allocatedUniqueIds{};
 
+    // and the names taken by this same update
+    std::map<std::wstring, bool> allocatedNames{};
+
     // default to failure
     auto responseObject = internal::BuildConfigurationResponseObject(false);
 
@@ -549,8 +552,56 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
 
                         allocatedUniqueIds.emplace(definition->EndpointUniqueIdentifier, true);
 
-                        if (TransportState::Current().GetEndpointManager() != nullptr && 
-                            TransportState::Current().GetEndpointManager()->IsInitialized())
+                        // An uninitialized endpoint manager means this is the configuration file
+                        // being loaded at startup rather than a create arriving from a caller.
+                        bool const runtimeCreate =
+                            TransportState::Current().GetEndpointManager() != nullptr &&
+                            TransportState::Current().GetEndpointManager()->IsInitialized();
+
+                        // Names are only enforced for a create which arrives at runtime. A
+                        // configuration file written before this rule existed may legally hold
+                        // two loopbacks with the same name, and refusing it at startup would
+                        // take away loopbacks the customer already had.
+                        if (runtimeCreate)
+                        {
+                            auto const cleanName = internal::ToLowerTrimmedWStringCopy(definition->EndpointName);
+
+                            if (allocatedNames.find(cleanName) != allocatedNames.end() ||
+                                TransportState::Current().GetEndpointTable()->IsEndpointNameInUse(definition->EndpointName, {}))
+                            {
+                                TraceLoggingWrite(
+                                    MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
+                                    MIDI_TRACE_EVENT_ERROR,
+                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                    TraceLoggingPointer(this, "this"),
+                                    TraceLoggingWideString(L"Endpoint name already in use by another basic loopback", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                    TraceLoggingWideString(definition->EndpointName.c_str(), "name")
+                                );
+
+                                if (!processingMultipleCreates)
+                                {
+                                    internal::SetConfigurationResponseObjectFailWithErrorCode(
+                                        responseObject,
+                                        BASIC_LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME,
+                                        internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NAME_IN_USE));
+
+                                    internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+                                    return S_FALSE;
+                                }
+                                else
+                                {
+                                    // skip this one and keep going. Don't return an error for the whole batch just because of one bad entry.
+                                    o.MoveNext();
+                                    continue;
+                                }
+                            }
+
+                            allocatedNames.emplace(cleanName, true);
+                        }
+
+                        if (runtimeCreate)
                         {
                             // endpoint manager is initialized, so do the full creation so we can return the result
                             // This happens when the SDK is used to create the endpoints
@@ -962,6 +1013,29 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessEndpointUpdates(
         if (Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit::IsEnabled())
         {
             newName = internal::TruncateToUtf8ByteCount(newName, MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH);
+        }
+
+        // The endpoint being renamed is left out, so re-saving a description without touching
+        // the name does not collide with the name the endpoint already has.
+        if (TransportState::Current().GetEndpointTable()->IsEndpointNameInUse(
+            newName, device->Definition->CreatedEndpointInterfaceId))
+        {
+            TraceLoggingWrite(
+                MidiBasicLoopbackMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Endpoint name already in use by another basic loopback", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(newName.c_str(), "name")
+            );
+
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                BASIC_LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME,
+                internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NAME_IN_USE));
+
+            continue;
         }
 
         // These strings have to outlive UpdateEndpointProperties below, because DEVPROPERTY

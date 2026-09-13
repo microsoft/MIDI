@@ -118,6 +118,7 @@ namespace appshared = ::winrt::MidiAppShared;
 
 #include "Telemetry.h"
 
+#include "SingleInstance.h"
 #include "WindowChrome.h"
 #include "MidiEndpointHelpers.h"
 #include "MonitorLauncher.h"
@@ -127,6 +128,7 @@ namespace appshared = ::winrt::MidiAppShared;
 // be reachable from every translation unit.
 #include "EndpointChoice.h"
 #include "NamedChoice.h"
-
 // same reason: the row types are used from data templates but have no .xaml file of their own
 #include "NetworkItems.h"
+
+#include "network_setup_protocol_defs.h"

@@ -417,6 +417,57 @@ void MidiBasicLoopbackTests::TestCreateLoopbackWithoutUniqueIdGeneratesOne()
 }
 
 
+void MidiBasicLoopbackTests::TestCreateLoopbackWithANameAlreadyInUseIsRejected()
+{
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+
+    VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
+
+    MidiBasicLoopbackEndpointDefinition firstDefinition(
+        L"Test Basic Loopback Name Domain",
+        L"ID" + winrt::to_hstring(MidiClock::Now()),
+        L"The loopback which takes the name.");
+
+    MidiBasicLoopbackCreationConfig firstConfig(firstDefinition);
+
+    auto firstResponse = MidiBasicLoopbackManager::CreateTransientLoopback(firstConfig);
+
+    VERIFY_IS_NOT_NULL(firstResponse);
+    VERIFY_IS_TRUE(firstResponse.Success());
+
+    auto cleanupLoopback = wil::scope_exit([&]
+        {
+            MidiBasicLoopbackRemovalConfig removalConfig(firstResponse.CreatedLoopbackEntry().AssociationId());
+            MidiBasicLoopbackManager::RemoveTransientLoopback(removalConfig);
+        });
+
+    // a completely separate loopback, with its own unique id, differing only by case
+    MidiBasicLoopbackEndpointDefinition secondDefinition(
+        L"TEST BASIC LOOPBACK NAME DOMAIN",
+        L"ID" + winrt::to_hstring(MidiClock::Now()),
+        L"The loopback which should be refused.");
+
+    MidiBasicLoopbackCreationConfig secondConfig(secondDefinition);
+
+    auto secondResponse = MidiBasicLoopbackManager::CreateTransientLoopback(secondConfig);
+
+    VERIFY_IS_NOT_NULL(secondResponse);
+
+    auto cleanupSecond = wil::scope_exit([&]
+        {
+            if (secondResponse.Success())
+            {
+                MidiBasicLoopbackRemovalConfig removalConfig(secondResponse.CreatedLoopbackEntry().AssociationId());
+                MidiBasicLoopbackManager::RemoveTransientLoopback(removalConfig);
+            }
+        });
+
+    std::wcout << L"Error Message: " << secondResponse.ErrorMessage().c_str() << std::endl;
+
+    VERIFY_IS_FALSE(secondResponse.Success());
+}
+
+
 void MidiBasicLoopbackTests::TestCreateLoopback()
 {
     VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
@@ -428,7 +479,7 @@ void MidiBasicLoopbackTests::TestCreateLoopback()
     auto uniqueId = L"ID" + winrt::to_hstring(MidiClock::Now());
 
     MidiBasicLoopbackEndpointDefinition definition(
-        L"Test Basic Loopback", // name
+        L"Test Basic Loopback Create", // name
         uniqueId, // unique Id that identifies the loopback
         L"The first description is optional, but is displayed to users. This becomes the transport-defined description." // description
     );
@@ -505,7 +556,7 @@ void MidiBasicLoopbackTests::TestCreateLegacyPorts()
     auto uniqueId = L"ID" + winrt::to_hstring(MidiClock::Now());
 
     MidiBasicLoopbackEndpointDefinition definition(
-        L"Test Basic Loopback", // name
+        L"Test Basic Loopback Legacy Ports", // name
         uniqueId, // unique Id that identifies the loopback
         L"The description is optional, but is displayed to users. This becomes the transport-defined description." // description
     );
@@ -959,7 +1010,7 @@ void MidiBasicLoopbackTests::TestUmpSendReceive()
     auto uniqueId = L"ID" + winrt::to_hstring(MidiClock::Now());
 
     MidiBasicLoopbackEndpointDefinition definition(
-        L"Test Basic Loopback", // name
+        L"Test Basic Loopback Send Receive", // name
         uniqueId, // unique Id that identifies the loopback
         L"The description is optional, but is displayed to users. This becomes the transport-defined description." // description
     );
