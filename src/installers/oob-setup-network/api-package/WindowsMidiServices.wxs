@@ -150,6 +150,30 @@
         </RegistryKey>
       </Component>
 
+      <!-- Lets a notification send the customer here. Registered by this package rather than the
+           tools package because this is where the executable lives, and one scheme per app so a
+           request naming this one cannot be answered by another.
+
+           A protocol handler can be invoked by anything on the machine, a web page included, so
+           the app treats a URI as a request to show a page and nothing more. See
+           network_setup_protocol_defs.h. -->
+      <Component Id="NetworkSetupProtocol"
+                 Bitness="always64"
+                 Directory="TOOL_NETWORKSETUP_FOLDER"
+                 Guid="2d9f6b48-7c31-4e05-a9d2-83b1e5f47c60">
+
+        <RegistryKey Root="HKCR" Key="ms-midi-network-setup">
+          <RegistryValue Type="string" Value="URL:Windows MIDI Services Network Setup" KeyPath="yes" />
+          <RegistryValue Type="string" Name="URL Protocol" Value="" />
+          <RegistryKey Key="DefaultIcon">
+            <RegistryValue Type="string" Value="[#midinetworksetupExe],0" />
+          </RegistryKey>
+          <RegistryKey Key="shell\open\command">
+            <RegistryValue Type="string" Value="&quot;[#midinetworksetupExe]&quot; &quot;%1&quot;" />
+          </RegistryKey>
+        </RegistryKey>
+      </Component>
+
       <!-- midisrv only picks the transport up when it restarts -->
       <Component Id="RestartService"
                  Bitness="always64"
@@ -168,8 +192,7 @@
         <ComponentRef Id="ConfigurationRegistryEntries"/>
         <ComponentRef Id="NetworkSetupApp"/>
         <ComponentRef Id="NetworkSetupAppLocalApi"/>
-        <ComponentRef Id="NetworkSetupAppShortcut"/>
-        <ComponentRef Id="RestartService"/>
+        <ComponentRef Id="NetworkSetupAppShortcut"/>      <ComponentRef Id="NetworkSetupProtocol"/>        <ComponentRef Id="RestartService"/>
       </Feature>
 
 

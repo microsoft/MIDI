@@ -1,0 +1,32 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include <windows.h>
+#include "resource.h"
+
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+IDI_APPICON ICON "Assets\\AppIcon.ico"
+
+STRINGTABLE
+BEGIN
+    IDS_APP_TITLE                           "Windows MIDI Services Notifications"
+    IDS_TRAY_TOOLTIP                        "Windows MIDI Services"
+    IDS_MENU_OPEN_NETWORK_SETUP             "Open Network MIDI Setup"
+    IDS_MENU_EXIT                           "Exit"
+
+    IDS_NOTIFICATION_TITLE                  "Windows MIDI Services"
+
+    // %s is the name the remote device announced. It is sanitized before it gets here.
+    IDS_NOTIFICATION_NETWORK_APPROVAL_ONE   "%s wants to connect to this PC."
+
+    // %s is a count of devices.
+    IDS_NOTIFICATION_NETWORK_APPROVAL_MANY  "%s devices want to connect to this PC."
+
+    IDS_NOTIFICATION_NETWORK_ATTRIBUTION    "Network MIDI 2.0"
+    IDS_NOTIFICATION_REVIEW_BUTTON          "Review"
+END

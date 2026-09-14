@@ -30,6 +30,15 @@
 .PARAMETER BumpBuildNumber
     Increments and persists the 'build' field in version.json before computing versions.
 
+.PARAMETER MaxCpuCount
+    How many projects MSBuild builds at once. Defaults to three quarters of the logical
+    processors so the machine stays usable while a build runs. 0 uses every logical processor,
+    which is a little faster and makes the desktop stutter.
+
+.PARAMETER Priority
+    Process priority for MSBuild and the compilers, which inherit it from this script.
+    BelowNormal (the default) keeps the UI responsive. Use Normal on a build machine.
+
 .EXAMPLE
     .\build-sdk.ps1
     Full release build for x64 and Arm64.
@@ -59,6 +68,13 @@ param(
 
     # Explicit MSBuild.exe. Leave empty to let vswhere find the newest install.
     [string] $MSBuildPath,
+
+    # Parallel MSBuild nodes. 0 means one per logical processor.
+    [ValidateRange(0, 256)]
+    [int] $MaxCpuCount = [Math]::Max(1, [int][Math]::Floor([Environment]::ProcessorCount * 0.75)),
+
+    [ValidateSet('Normal', 'BelowNormal', 'Idle')]
+    [string] $Priority = 'BelowNormal',
 
     [ValidateSet('quiet', 'minimal', 'normal', 'detailed', 'diagnostic')]
     [string] $Verbosity = 'minimal'
@@ -155,6 +171,10 @@ $GuiTools = @(
     [pscustomobject]@{ Name = 'midisysextool';     Folder = 'SysEx';        Display = 'MIDI SysEx Tool';        DirectoryId = 'TOOL_SYSEX_FOLDER' }
     [pscustomobject]@{ Name = 'midi2monitor';      Folder = 'Monitor';      Display = 'MIDI Monitor';           DirectoryId = 'TOOL_MONITOR_FOLDER' }
     [pscustomobject]@{ Name = 'miditroubleshooter'; Folder = 'Troubleshooter'; Display = 'MIDI Troubleshooting and Repair'; DirectoryId = 'TOOL_TROUBLESHOOTER_FOLDER' }
+    # Aumid: the notification platform will not accept a toast from an unpackaged app unless the
+    # identity it publishes under is on a Start Menu shortcut. RunAtLogon starts it for every
+    # user; whether it then does anything is that user's own setting, which MIDI Settings owns.
+    [pscustomobject]@{ Name = 'midinotifications'; Folder = 'Notifications'; Display = 'MIDI Notifications'; DirectoryId = 'TOOL_NOTIFICATIONS_FOLDER'; Aumid = 'Microsoft.WindowsMidiServices.Notifications'; RunAtLogon = $true }
 )
 
 # Start Menu group shared by every MIDI GUI app, including MIDI Settings.
@@ -404,7 +424,7 @@ function Invoke-MSBuild {
     # The app projects reach Windows.Devices.Midi2.vcxproj through more than one global-property
     # set, so MSBuild builds it twice in a single invocation. Both writes target the same
     # OutDir/IntDir, and in parallel they collide on the FileTracker logs (FTK1011).
-    $msbuildArgs += if ($Serial) { '/m:1' } else { '/m' }
+    $msbuildArgs += if ($Serial) { '/m:1' } elseif ($MaxCpuCount -gt 0) { "/m:$MaxCpuCount" } else { '/m' }
 
     if ($Targets.Count -gt 0) { $msbuildArgs += "/t:$($Targets -join ';')" }
 
@@ -1123,7 +1143,17 @@ function New-StartMenuFragment {
         [void]$sb.AppendLine("        <Shortcut Id=`"Shortcut_$($tool.Name)`"")
         [void]$sb.AppendLine("                  Name=`"$($tool.Display)`"")
         [void]$sb.AppendLine("                  Target=`"[#$($tool.Name)Exe]`"")
-        [void]$sb.AppendLine("                  WorkingDirectory=`"$($tool.DirectoryId)`" />")
+
+        # Most tools declare neither of the optional fields below, and Set-StrictMode makes a
+        # missing property an error rather than $null, so presence is tested before value.
+        if ($tool.PSObject.Properties.Name -contains 'Aumid' -and $tool.Aumid) {
+            [void]$sb.AppendLine("                  WorkingDirectory=`"$($tool.DirectoryId)`">")
+            [void]$sb.AppendLine("          <ShortcutProperty Key=`"System.AppUserModel.ID`" Value=`"$($tool.Aumid)`" />")
+            [void]$sb.AppendLine('        </Shortcut>')
+        }
+        else {
+            [void]$sb.AppendLine("                  WorkingDirectory=`"$($tool.DirectoryId)`" />")
+        }
     }
 
     [void]$sb.AppendLine('        <RemoveFolder Id="RemoveMidiProgramsFolder_Tools" Directory="MIDI_PROGRAMS_FOLDER" On="uninstall" />')
@@ -1131,6 +1161,21 @@ function New-StartMenuFragment {
     [void]$sb.AppendLine('          <RegistryValue Type="string" Name="ToolAppShortcuts" Value="installed" KeyPath="yes" />')
     [void]$sb.AppendLine('        </RegistryKey>')
     [void]$sb.AppendLine('      </Component>')
+
+    foreach ($tool in $GuiTools | Where-Object { $_.PSObject.Properties.Name -contains 'RunAtLogon' -and $_.RunAtLogon }) {
+        # Separate component, and the Run value is deliberately not the key path. MIDI Settings
+        # lets a customer turn this off by deleting the value, and an MSI repair would put back
+        # anything it holds the key path for.
+        [void]$sb.AppendLine("      <Component Id=`"$($tool.Name)Autostart`" Bitness=`"always64`" Directory=`"MIDI_PROGRAMS_FOLDER`" Guid=`"6f3a9c21-58d4-4b7e-b1a6-0c9d3e7f2a48`">")
+        [void]$sb.AppendLine('        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run">')
+        # Quoted: the install path contains a space, and Run splits an unquoted value on it.
+        [void]$sb.AppendLine("          <RegistryValue Type=`"string`" Name=`"WindowsMidiServicesNotifications`" Value=`"&quot;[#$($tool.Name)Exe]&quot;`" />")
+        [void]$sb.AppendLine('        </RegistryKey>')
+        [void]$sb.AppendLine('        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">')
+        [void]$sb.AppendLine("          <RegistryValue Type=`"string`" Name=`"$($tool.Name)Autostart`" Value=`"installed`" KeyPath=`"yes`" />")
+        [void]$sb.AppendLine('        </RegistryKey>')
+        [void]$sb.AppendLine('      </Component>')
+    }
     [void]$sb.AppendLine('    </ComponentGroup>')
     [void]$sb.AppendLine('  </Fragment>')
     [void]$sb.AppendLine('</Wix>')
@@ -1319,36 +1364,49 @@ $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
 $targets = if ($Target -contains 'All') { @('Version', 'Sdk', 'Samples', 'Stage', 'Setup', 'Release') } else { $Target }
 
+$parallelism = if ($MaxCpuCount -gt 0) { "$MaxCpuCount of $([Environment]::ProcessorCount)" } else { "all $([Environment]::ProcessorCount)" }
+
 Write-Host ''
 Write-Host 'Windows MIDI Services - App SDK build' -ForegroundColor White
 Write-Detail "Repo          $RepoRoot"
 Write-Detail "Targets       $($targets -join ', ')"
 Write-Detail "Platforms     $($Platform -join ', ')"
 Write-Detail "Configuration $Configuration"
+Write-Detail "Parallelism   $parallelism logical processors, $Priority priority"
 
 if ($targets -contains 'Clean') {
     Invoke-CleanTarget
     if ($targets.Count -eq 1) { return }
 }
 
-$version = Get-BuildVersion
+# MSBuild and the compilers inherit this process's priority class, so setting it here is what
+# keeps a build off the desktop's back. Restored below so an interactive shell is not left low.
+$previousPriority = [System.Diagnostics.Process]::GetCurrentProcess().PriorityClass
+[System.Diagnostics.Process]::GetCurrentProcess().PriorityClass = [System.Diagnostics.ProcessPriorityClass]$Priority
 
-if ($targets -notcontains 'Version') {
-    # Later targets still need version strings even when not regenerating the version files.
-    Write-Detail "Version       $($version.SemVer)"
+try {
+    $version = Get-BuildVersion
+
+    if ($targets -notcontains 'Version') {
+        # Later targets still need version strings even when not regenerating the version files.
+        Write-Detail "Version       $($version.SemVer)"
+    }
+
+    if ($targets -contains 'Sdk' -or $targets -contains 'Setup' -or $targets -contains 'Stage' -or $targets -contains 'Samples') {
+        $script:MSBuild = Resolve-MSBuild
+        Write-Detail "MSBuild       $script:MSBuild"
+    }
+
+    if ($targets -contains 'Version') { Invoke-VersionTarget $version }
+    if ($targets -contains 'Sdk') { Invoke-SdkTarget $version }
+    if ($targets -contains 'Samples') { Invoke-SamplesTarget $version }
+    if ($targets -contains 'Stage') { Invoke-StageTarget $version }
+    if ($targets -contains 'Setup') { Invoke-SetupTarget $version }
+    if ($targets -contains 'Release') { Invoke-ReleaseTarget $version }
 }
-
-if ($targets -contains 'Sdk' -or $targets -contains 'Setup' -or $targets -contains 'Stage' -or $targets -contains 'Samples') {
-    $script:MSBuild = Resolve-MSBuild
-    Write-Detail "MSBuild       $script:MSBuild"
+finally {
+    [System.Diagnostics.Process]::GetCurrentProcess().PriorityClass = $previousPriority
 }
-
-if ($targets -contains 'Version') { Invoke-VersionTarget $version }
-if ($targets -contains 'Sdk') { Invoke-SdkTarget $version }
-if ($targets -contains 'Samples') { Invoke-SamplesTarget $version }
-if ($targets -contains 'Stage') { Invoke-StageTarget $version }
-if ($targets -contains 'Setup') { Invoke-SetupTarget $version }
-if ($targets -contains 'Release') { Invoke-ReleaseTarget $version }
 
 $stopwatch.Stop()
 Write-Host ''

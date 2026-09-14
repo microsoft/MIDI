@@ -17,10 +17,20 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 {
     winrt::init_apartment(winrt::apartment_type::single_threaded);
 
+    // A second copy of a setup tool would show the customer two views of one machine-wide
+    // configuration, which can disagree. This is also what makes a notification's Review button
+    // raise the window they already have open instead of opening another.
+    if (!::midiapp::SingleInstance::AcquireOrActivateExisting(L"NetworkSetup"))
+    {
+        return 0;
+    }
+
     ::winrt::Microsoft::UI::Xaml::Application::Start([](auto&&)
         {
             ::winrt::make<::winrt::midinetworksetup::implementation::App>();
         });
+
+    ::midiapp::SingleInstance::Release();
 
     return 0;
 }

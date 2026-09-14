@@ -125,6 +125,39 @@ bool MidiBasicLoopbackDeviceTable::IsUniqueIdentifierInUseForLoopback(
 }
 
 
+_Use_decl_annotations_
+bool MidiBasicLoopbackDeviceTable::IsEndpointNameInUse(
+    std::wstring const& endpointName,
+    std::wstring const& ignoredEndpointDeviceId)
+{
+    auto cleanName = internal::ToLowerTrimmedWStringCopy(endpointName);
+    auto cleanIgnoredId = internal::NormalizeEndpointInterfaceIdWStringCopy(ignoredEndpointDeviceId);
+
+    auto lock = m_devicesLock.lock_shared();
+
+    for (auto const& [key, device] : m_devices)
+    {
+        if (!device) continue;
+
+        auto definition = device->Definition;
+        if (!definition) continue;
+
+        if (!cleanIgnoredId.empty() &&
+            cleanIgnoredId == internal::NormalizeEndpointInterfaceIdWStringCopy(definition->CreatedEndpointInterfaceId))
+        {
+            continue;
+        }
+
+        if (cleanName == internal::ToLowerTrimmedWStringCopy(definition->EndpointName))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 
 std::vector<MidiBasicLoopbackDeviceSnapshot> MidiBasicLoopbackDeviceTable::GetDeviceListSnapshot()
 {

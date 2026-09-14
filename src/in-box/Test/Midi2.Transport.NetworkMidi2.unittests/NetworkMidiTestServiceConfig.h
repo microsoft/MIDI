@@ -172,6 +172,13 @@ namespace NetworkMidiTest
         _In_ std::wstring const& umpEndpointName,
         _In_ std::wstring const& productInstanceId);
 
+    // Drops whichever decision the host holds for a remote client, so the next invitation from
+    // it is judged on the host policy alone.
+    ServiceConfigResult ForgetRemoteClient(
+        _In_ std::wstring const& hostEntryIdentifier,
+        _In_ std::wstring const& umpEndpointName,
+        _In_ std::wstring const& productInstanceId);
+
     // A fresh GUID string in the "{...}" form the configuration uses.
     std::wstring MakeEntryIdentifier();
 }

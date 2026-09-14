@@ -1898,6 +1898,115 @@ void NamingTests::TestRederiveAgainstInProtocolEndpointName()
 }
 
 
+void NamingTests::TestCustomPortNamesArePublishedVerbatim()
+{
+    if (SkipUnlessPortNamingReworkEnabled()) { return; }
+
+    // A name the customer typed is used exactly as typed. It is not numbered, not marked as a
+    // duplicate, and not shortened to make room for anything, because the customer is assumed to
+    // have meant it. Two ports may end up with the same name, and that is their choice to make.
+    MidiEndpointNameTable table{ };
+
+    std::vector<internal::GroupTerminalBlockInternal> blocks{ };
+
+    internal::GroupTerminalBlockInternal block{ };
+    block.Number = 1;
+    block.Direction = MIDI_GROUP_TERMINAL_BLOCK_OUTPUT;
+    block.FirstGroupIndex = 0;
+    block.GroupCount = 4;
+    block.Name = L"Some Device";
+    blocks.push_back(block);
+
+    VERIFY_SUCCEEDED(table.PopulateAllEntriesForNativeUmpDevice(L"Some Device", blocks));
+    VERIFY_SUCCEEDED(table.RebuildNewStyleNames(L"Some Device", false));
+
+    // without a custom name the ports are numbered, which is what makes the contrast meaningful
+    VERIFY_ARE_EQUAL(std::wstring{ L"Some Device group 1" },
+        table.GetPreferredName(0, MidiFlow::MidiFlowIn, Midi1PortNameSelection::UseNewStyleName));
+
+    // the same name on two ports, deliberately duplicated
+    VERIFY_IS_TRUE(table.UpdateSourceEntryCustomName(0, winrt::hstring{ L"Keyboard" }));
+    VERIFY_IS_TRUE(table.UpdateSourceEntryCustomName(1, winrt::hstring{ L"Keyboard" }));
+
+    for (auto const selection : { Midi1PortNameSelection::UseNewStyleName,
+                                  Midi1PortNameSelection::UseLegacyWinMM,
+                                  Midi1PortNameSelection::UseAutomatic })
+    {
+        VERIFY_ARE_EQUAL(std::wstring{ L"Keyboard" }, table.GetPreferredName(0, MidiFlow::MidiFlowIn, selection));
+        VERIFY_ARE_EQUAL(std::wstring{ L"Keyboard" }, table.GetPreferredName(1, MidiFlow::MidiFlowIn, selection));
+    }
+
+    // a rebuild must not disturb a name the customer set
+    VERIFY_SUCCEEDED(table.RebuildNewStyleNames(L"Some Device", false));
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"Keyboard" },
+        table.GetPreferredName(0, MidiFlow::MidiFlowIn, Midi1PortNameSelection::UseNewStyleName));
+
+    // a custom name long enough that a group suffix could not have fitted is still left alone
+    std::wstring const longCustomName{ L"Twenty Nine Character Name Ok" };
+
+    VERIFY_IS_TRUE(table.UpdateSourceEntryCustomName(2, winrt::hstring{ longCustomName }));
+
+    VERIFY_ARE_EQUAL(longCustomName,
+        table.GetPreferredName(2, MidiFlow::MidiFlowIn, Midi1PortNameSelection::UseNewStyleName));
+}
+
+
+void NamingTests::TestGroupWordGivesWayToTheName()
+{
+    if (SkipUnlessPortNamingReworkEnabled()) { return; }
+
+    // Sixteen ports that differ only by group, which is the shape a network endpoint produces.
+    auto build = [](std::wstring const& endpointName)
+        {
+            std::vector<Midi1PortNameInput> ports{ };
+
+            for (uint8_t group = 0; group < 16; group++)
+            {
+                ports.push_back({ group, MidiFlow::MidiFlowIn, endpointName, L"", endpointName });
+            }
+
+            return BuildMidi1PortNamesForEndpoint(endpointName, false, ports);
+        };
+
+    auto nameFor = [](std::vector<Midi1PortNameResult> const& results, uint8_t const groupIndex)
+        {
+            for (auto const& result : results)
+            {
+                if (result.GroupIndex == groupIndex) { return result.Name; }
+            }
+
+            return std::wstring{ };
+        };
+
+    // A short name leaves room for the word, so nothing changes.
+    auto shortName = build(L"My Bome Box");
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"My Bome Box group 1" }, nameFor(shortName, 0));
+    VERIFY_ARE_EQUAL(std::wstring{ L"My Bome Box group 16" }, nameFor(shortName, 15));
+
+    // A long one does not. Keeping "group" would cost the end of the name, so the bare number is
+    // used instead and the name survives intact.
+    auto longName = build(L"Renamed Port Creation Test");
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"Renamed Port Creation Test 1" }, nameFor(longName, 0));
+    VERIFY_ARE_EQUAL(std::wstring{ L"Renamed Port Creation Test 16" }, nameFor(longName, 15));
+
+    // Every port of a device uses the same form, and none exceeds the WinMM limit.
+    for (auto const& result : longName)
+    {
+        VERIFY_IS_TRUE(result.Name.length() <= MAXPNAMELEN - 1);
+        VERIFY_IS_TRUE(result.Name.find(L" group ") == std::wstring::npos);
+    }
+
+    for (auto const& result : shortName)
+    {
+        VERIFY_IS_TRUE(result.Name.length() <= MAXPNAMELEN - 1);
+        VERIFY_IS_TRUE(result.Name.find(L" group ") != std::wstring::npos);
+    }
+}
+
+
 void NamingTests::TestLegacyDuplicateDeviceMarker()
 {
     if (SkipUnlessPortNamingReworkEnabled()) { return; }

@@ -127,6 +127,11 @@
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DENY_REMOTE_CLIENT               L"denyRemoteClient"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_GET_PENDING_REMOTE_CLIENTS       L"getPendingRemoteClients"
 
+// Drops a remembered allow or deny. The caller removes the entry from the configuration file as
+// well; this is what makes the running service stop applying the old decision, which otherwise
+// would stand until the service was restarted.
+#define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_FORGET_REMOTE_CLIENT             L"forgetRemoteClient"
+
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_APPROVAL_SCOPE              L"scope"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_APPROVAL_SCOPE_ONCE                   L"once"
 #define MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_APPROVAL_SCOPE_ALWAYS                 L"always"

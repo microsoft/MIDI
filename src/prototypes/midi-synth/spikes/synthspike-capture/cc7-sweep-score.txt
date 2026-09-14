@@ -1,0 +1,40 @@
+# Channel volume (CC7) response test.
+#
+# Same instrument, same note, same velocity throughout. Only CC7 changes, so this isolates the
+# channel volume curve. Church organ because it sustains without decaying, which makes the RMS of
+# each note a stable measure of level.
+#
+# CC7 is set 0.1 s before each note on, so this measures how the value is applied at note start
+# and does not depend on whether the synth applies a volume change to an already sounding note.
+#
+# Velocity is fixed at 127 so the velocity curve, which is already known to match, contributes
+# nothing to the difference.
+
+program  0.0  0 0 0 19
+
+cc       0.4  0 7 127
+note     0.5  0 60 127 1.0
+
+cc       2.4  0 7 112
+note     2.5  0 60 127 1.0
+
+cc       4.4  0 7 96
+note     4.5  0 60 127 1.0
+
+cc       6.4  0 7 80
+note     6.5  0 60 127 1.0
+
+cc       8.4  0 7 64
+note     8.5  0 60 127 1.0
+
+cc      10.4  0 7 48
+note    10.5  0 60 127 1.0
+
+cc      12.4  0 7 32
+note    12.5  0 60 127 1.0
+
+cc      14.4  0 7 16
+note    14.5  0 60 127 1.0
+
+cc      16.4  0 7 8
+note    16.5  0 60 127 1.0

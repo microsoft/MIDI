@@ -371,6 +371,22 @@ namespace
 
         return result;
     }
+
+
+    // The transport names the reason it refused, so a test can assert the rejection it meant to
+    // provoke rather than any rejection at all.
+    uint32_t ReportedErrorCode(ServiceConfigResult const& result)
+    {
+        winrt::Windows::Data::Json::JsonObject response{ nullptr };
+
+        if (!winrt::Windows::Data::Json::JsonObject::TryParse(winrt::hstring{ result.ResponseJson }, response) ||
+            response == nullptr)
+        {
+            return 0;
+        }
+
+        return static_cast<uint32_t>(response.GetNamedNumber(L"errorCode", 0));
+    }
 }
 
 
@@ -770,10 +786,12 @@ void LoopbackConfigTests::TestOverlongUnicodeNameIsAccepted()
 
     // 40 three-byte characters is 120 UTF-8 bytes, over the 98 byte limit. Unlike the unique id,
     // an over-length name is truncated rather than refused, because a name is not an identity.
-    auto longName = RepeatedString(L"\u8A2D", 40);
+    // The two sides use different characters, because no two loopback endpoints may share a name.
+    auto longNameA = RepeatedString(L"\u8A2D", 40);
+    auto longNameB = RepeatedString(L"\u8A2E", 40);
 
     auto result = SendLoopbackConfig(
-        BuildCreateJson(associationId, longName, uniqueId, longName, uniqueId));
+        BuildCreateJson(associationId, longNameA, uniqueId, longNameB, uniqueId));
 
     auto cleanup = wil::scope_exit([&] { RemoveLoopback(associationId); });
 
@@ -1092,4 +1110,238 @@ void LoopbackConfigTests::TestUpdateWithBlankNameIsRejected()
     VERIFY_IS_TRUE(after.Found);
     VERIFY_ARE_EQUAL(pair.A.Name, after.A.Name);
     VERIFY_ARE_EQUAL(pair.B.Name, after.B.Name);
+}
+
+
+// Creation used to check only that the unique identifiers were free, so a second loopback could
+// be created under a name an application was already using for a different one.
+void LoopbackConfigTests::TestCreateWithTheSameNameOnBothSidesIsRejected()
+{
+    if (!Feature_Servicing_MIDI2LoopbackUniqueEndpointNames::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackUniqueEndpointNames is disabled.");
+        return;
+    }
+
+    if (!LoopbackAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Loopback transport is not available.");
+        return;
+    }
+
+    auto const associationId = MakeGuidString();
+    auto const uniqueId = MakeUniqueIdString();
+
+    auto cleanup = wil::scope_exit([&] { RemoveLoopback(associationId); });
+
+    // differing only by case, because the comparison has to be case-insensitive
+    auto const result = SendLoopbackConfig(
+        BuildCreateJson(associationId, L"Name Domain Both Sides", uniqueId, L"NAME DOMAIN BOTH SIDES", uniqueId));
+
+    VERIFY_IS_FALSE(result.IsSuccess());
+    VERIFY_ARE_EQUAL(static_cast<uint32_t>(LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_B), ReportedErrorCode(result));
+}
+
+
+void LoopbackConfigTests::TestCreateWithANameAnotherLoopbackUsesIsRejected()
+{
+    if (!Feature_Servicing_MIDI2LoopbackUniqueEndpointNames::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackUniqueEndpointNames is disabled.");
+        return;
+    }
+
+    if (!LoopbackAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Loopback transport is not available.");
+        return;
+    }
+
+    auto const firstAssociationId = MakeGuidString();
+
+    auto const first = SendLoopbackConfig(
+        BuildCreateJson(
+            firstAssociationId,
+            L"Name Domain First A", MakeUniqueIdString(),
+            L"Name Domain First B", MakeUniqueIdString()));
+
+    VERIFY_IS_TRUE(first.IsSuccess());
+
+    auto firstCleanup = wil::scope_exit([&] { RemoveLoopback(firstAssociationId); });
+
+    auto const secondAssociationId = MakeGuidString();
+
+    auto secondCleanup = wil::scope_exit([&] { RemoveLoopback(secondAssociationId); });
+
+    // A different pair entirely, with its own unique identifiers, but the B side lands on a name
+    // the first pair already holds.
+    auto const second = SendLoopbackConfig(
+        BuildCreateJson(
+            secondAssociationId,
+            L"Name Domain Second A", MakeUniqueIdString(),
+            L"name domain first a", MakeUniqueIdString()));
+
+    VERIFY_IS_FALSE(second.IsSuccess());
+    VERIFY_ARE_EQUAL(static_cast<uint32_t>(LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_B), ReportedErrorCode(second));
+}
+
+
+void LoopbackConfigTests::TestUpdateToANameAnotherLoopbackUsesIsRejected()
+{
+    if (!Feature_Servicing_MIDI2LoopbackUniqueEndpointNames::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackUniqueEndpointNames is disabled.");
+        return;
+    }
+
+    if (!Feature_Servicing_MIDI2LoopbackEndpointCustomization::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackEndpointCustomization is disabled.");
+        return;
+    }
+
+    if (!Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackMuteAndList is disabled.");
+        return;
+    }
+
+    if (!LoopbackAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Loopback transport is not available.");
+        return;
+    }
+
+    auto const neighborAssociationId = MakeGuidString();
+
+    auto const neighbor = SendLoopbackConfig(
+        BuildCreateJson(
+            neighborAssociationId,
+            L"Name Domain Neighbor A", MakeUniqueIdString(),
+            L"Name Domain Neighbor B", MakeUniqueIdString()));
+
+    VERIFY_IS_TRUE(neighbor.IsSuccess());
+
+    auto neighborCleanup = wil::scope_exit([&] { RemoveLoopback(neighborAssociationId); });
+
+    std::wstring associationId{};
+    ReportedPair pair{};
+
+    VERIFY_IS_TRUE(SetUpPairForUpdate(associationId, pair));
+
+    auto cleanup = wil::scope_exit([&] { RemoveLoopback(associationId); });
+
+    auto const result = SendPairUpdate(
+        pair,
+        L"Name Domain Neighbor A", L"first",
+        L"Renamed Fine B", L"second");
+
+    VERIFY_IS_FALSE(result.IsSuccess());
+
+    // and nothing may have been written, including the sibling that was fine
+    auto const after = GetReportedPair(associationId);
+
+    VERIFY_IS_TRUE(after.Found);
+    VERIFY_ARE_EQUAL(pair.A.Name, after.A.Name);
+    VERIFY_ARE_EQUAL(pair.B.Name, after.B.Name);
+}
+
+
+// The endpoints a batch is changing are left out of the comparison, so an edit which only
+// changes a description does not collide with the name the endpoint already has.
+void LoopbackConfigTests::TestUpdateKeepingTheSameNamesIsAllowed()
+{
+    if (!Feature_Servicing_MIDI2LoopbackUniqueEndpointNames::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackUniqueEndpointNames is disabled.");
+        return;
+    }
+
+    if (!Feature_Servicing_MIDI2LoopbackEndpointCustomization::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackEndpointCustomization is disabled.");
+        return;
+    }
+
+    if (!Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackMuteAndList is disabled.");
+        return;
+    }
+
+    if (!LoopbackAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Loopback transport is not available.");
+        return;
+    }
+
+    std::wstring associationId{};
+    ReportedPair pair{};
+
+    VERIFY_IS_TRUE(SetUpPairForUpdate(associationId, pair));
+
+    auto cleanup = wil::scope_exit([&] { RemoveLoopback(associationId); });
+
+    auto const result = SendPairUpdate(
+        pair,
+        pair.A.Name, L"only the description changed on A",
+        pair.B.Name, L"only the description changed on B");
+
+    VERIFY_IS_TRUE(result.IsSuccess());
+
+    auto const after = GetReportedPair(associationId);
+
+    VERIFY_IS_TRUE(after.Found);
+    VERIFY_ARE_EQUAL(pair.A.Name, after.A.Name);
+    VERIFY_ARE_EQUAL(std::wstring{ L"only the description changed on A" }, after.A.Description);
+    VERIFY_ARE_EQUAL(std::wstring{ L"only the description changed on B" }, after.B.Description);
+}
+
+
+// Both sides travel in one payload, so a swap is a legitimate rename rather than two collisions.
+void LoopbackConfigTests::TestUpdateSwappingNamesWithinAPairIsAllowed()
+{
+    if (!Feature_Servicing_MIDI2LoopbackUniqueEndpointNames::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackUniqueEndpointNames is disabled.");
+        return;
+    }
+
+    if (!Feature_Servicing_MIDI2LoopbackEndpointCustomization::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackEndpointCustomization is disabled.");
+        return;
+    }
+
+    if (!Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
+    {
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackMuteAndList is disabled.");
+        return;
+    }
+
+    if (!LoopbackAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Loopback transport is not available.");
+        return;
+    }
+
+    std::wstring associationId{};
+    ReportedPair pair{};
+
+    VERIFY_IS_TRUE(SetUpPairForUpdate(associationId, pair));
+
+    auto cleanup = wil::scope_exit([&] { RemoveLoopback(associationId); });
+
+    auto const result = SendPairUpdate(
+        pair,
+        pair.B.Name, L"was the B name",
+        pair.A.Name, L"was the A name");
+
+    VERIFY_IS_TRUE(result.IsSuccess());
+
+    auto const after = GetReportedPair(associationId);
+
+    VERIFY_IS_TRUE(after.Found);
+    VERIFY_ARE_EQUAL(pair.B.Name, after.A.Name);
+    VERIFY_ARE_EQUAL(pair.A.Name, after.B.Name);
 }

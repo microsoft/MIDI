@@ -31,3 +31,5 @@ Pass to `MidiNetworkTransportManager.ApproveOrDenyRemoteClientConnectRequestAsyn
 A remote client is identified by the `RemoteClientName` and `RemoteClientProductInstanceId` pair, never by address. A client may use a new source port for every session and its address can change, so an address is the wrong thing to approve.
 
 When `ScopeIsThisRequestOnly` is false the service remembers the decision for as long as it runs, and the same client is allowed or refused without asking again. To make it survive a service restart, the calling application also writes the identity into the `allowedClients` or `deniedClients` list for that host in the configuration file. The service reads those lists at startup but never writes them.
+
+Withdrawing such a decision takes both steps in reverse: rewrite the saved lists without it, and call `MidiNetworkTransportManager.ForgetRemoteClientAsync` so the running service drops it too.

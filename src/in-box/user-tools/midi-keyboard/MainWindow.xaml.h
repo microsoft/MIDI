@@ -12,6 +12,7 @@
 #include "AppSettings.h"
 #include "Arpeggiator.h"
 #include "KeyboardLayout.h"
+#include "MidiCiProgramList.h"
 #include "MidiOutput.h"
 
 namespace winrt::midikeyboard::implementation
@@ -62,6 +63,14 @@ namespace winrt::midikeyboard::implementation
         void OnOctaveDownClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnOctaveUpClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnPanicClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        void OnPatchFlyoutOpened(foundation::IInspectable const& sender, foundation::IInspectable const& args);
+        void OnProgramNumberChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnBankMsbChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnBankLsbChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnSendPatchOnStartupChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnSendPatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnProgramListSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
         void OnArpModeChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnArpRateChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
@@ -123,6 +132,22 @@ namespace winrt::midikeyboard::implementation
         void UpdateConnectionModeLayout() noexcept;
         void UpdateVelocityLayout() noexcept;
         void UpdateOctaveDisplay() noexcept;
+
+        void UpdatePatchDisplay() noexcept;
+        void SendPatchNow() noexcept;
+
+        // Asks the connected device for its programs over MIDI-CI. Quietly does nothing when
+        // there is no connection; the numeric controls stay usable either way.
+        void StartProgramListQuery() noexcept;
+        void ApplyProgramList(
+            _In_ ::midikeyboard::ProgramListResult result,
+            _In_ std::vector<::midikeyboard::ProgramListEntry> entries) noexcept;
+
+        // moves the combo to whichever program matches the current bank and program numbers
+        void SyncProgramListSelection() noexcept;
+
+        // once per app run, after the first connection to the saved endpoint succeeds
+        void SendStartupPatchIfRequested() noexcept;
         void UpdateRibbonLayout() noexcept;
 
         // ------------------------------------------------------------------ keyboard
@@ -223,6 +248,17 @@ namespace winrt::midikeyboard::implementation
 
         // the arpeggiator controls live in the always visible strip, so they have their own
         bool m_suppressArpHandlers{ true };
+
+        // the bank and program controls live in a flyout, which builds its content on first
+        // open, so they raise their change events late in exactly the same way
+        bool m_suppressPatchHandlers{ true };
+        bool m_patchControlsInitialized{ false };
+        bool m_startupPatchSendPending{ true };
+
+        std::shared_ptr<::midikeyboard::MidiCiProgramListQuery> m_programListQuery{};
+        std::vector<::midikeyboard::ProgramListEntry> m_programList{};
+        ::midikeyboard::ProgramListResult m_programListResult{ ::midikeyboard::ProgramListResult::NoResponse };
+        bool m_programListQueryRan{ false };
 
         bool m_startupOptionsApplied{ false };
         bool m_reconnectInProgress{ false };

@@ -789,7 +789,10 @@
     <value>{0} is now blocked.</value>
   </data>
   <data name="KnownClientForgottenFormat" xml:space="preserve">
-    <value>{0} was forgotten. The MIDI service keeps the old decision until it restarts.</value>
+    <value>{0} was forgotten.</value>
+  </data>
+  <data name="KnownClientForgottenUntilRestartFormat" xml:space="preserve">
+    <value>{0} was forgotten, but the MIDI service keeps the old decision until it restarts.</value>
   </data>
   <data name="KnownClientForgetFailedGeneral" xml:space="preserve">
     <value>Windows could not forget that device.</value>

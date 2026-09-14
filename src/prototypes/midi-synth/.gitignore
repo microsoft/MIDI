@@ -1,0 +1,5 @@
+out/
+*.obj
+*.exe
+*.log
+*.wav

@@ -472,6 +472,17 @@
                                        Style="{StaticResource ToolButtonTextStyle}" />
                         </StackPanel>
                     </Button>
+                    <Button x:Name="NotificationsButton"
+                            x:Uid="NotificationsButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnNotificationsClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <FontIcon Glyph="&#xEA8F;" FontSize="20" HorizontalAlignment="Center" Height="24" />
+                            <TextBlock x:Uid="NotificationsButtonText"
+                                       Text="Notifications"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </ScrollViewer>
         </Border>
@@ -1101,6 +1112,92 @@
                     </StackPanel>
 
                     <TextBlock x:Name="GlobalStatusText"
+                               TextWrapping="Wrap"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </StackPanel>
+            </ScrollViewer>
+        </ContentDialog>
+
+        <ContentDialog x:Name="NotificationsDialog"
+                       x:Uid="NotificationsDialog"
+                       Title="Notifications"
+                       CloseButtonText="Close">
+            <ContentDialog.Resources>
+                <x:Double x:Key="ContentDialogMaxWidth">760</x:Double>
+            </ContentDialog.Resources>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="600">
+                <StackPanel Width="640" Spacing="24" Margin="0,4,12,8">
+
+                    <TextBlock x:Uid="NotificationsIntro"
+                               Text="Windows MIDI Services can tell you when something needs your attention, such as a device on the network asking to connect to this PC. These choices are yours alone and do not affect anyone else who uses this PC."
+                               TextWrapping="Wrap"
+                               Style="{StaticResource PropertyLabelStyle}" />
+
+                    <StackPanel Spacing="8">
+                        <TextBlock x:Uid="NotificationsShowHeader"
+                                   Text="Show notifications"
+                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                        <Border Style="{StaticResource SettingsCardStyle}">
+                            <StackPanel Spacing="20">
+
+                                <ToggleSwitch x:Name="NotificationsEnabledToggle"
+                                              x:Uid="NotificationsEnabledToggle"
+                                              Header="Show MIDI notifications"
+                                              OnContent="On"
+                                              OffContent="Off"
+                                              Toggled="OnNotificationsEnabledToggled" />
+
+                                <TextBlock x:Uid="NotificationsEnabledHelp"
+                                           Text="Turning this off closes the notifications app. Nothing will interrupt you, and you can still see everything in the setup apps."
+                                           TextWrapping="Wrap"
+                                           Style="{StaticResource PropertyLabelStyle}" />
+
+                                <ToggleSwitch x:Name="NotificationsNetworkToggle"
+                                              x:Uid="NotificationsNetworkToggle"
+                                              Header="Network MIDI 2.0 connection requests"
+                                              OnContent="On"
+                                              OffContent="Off"
+                                              Toggled="OnNotificationsNetworkToggled" />
+
+                                <TextBlock x:Uid="NotificationsNetworkHelp"
+                                           Text="Tells you when a device on your network is waiting for you to allow or block it. Choosing is still done in Network MIDI Setup."
+                                           TextWrapping="Wrap"
+                                           Style="{StaticResource PropertyLabelStyle}" />
+
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Spacing="8">
+                        <TextBlock x:Uid="NotificationsStartupHeader"
+                                   Text="Start with Windows"
+                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                        <Border Style="{StaticResource SettingsCardStyle}">
+                            <StackPanel Spacing="20">
+
+                                <ToggleSwitch x:Name="NotificationsStartupToggle"
+                                              x:Uid="NotificationsStartupToggle"
+                                              Header="Start the notifications app when I sign in"
+                                              OnContent="On"
+                                              OffContent="Off"
+                                              Toggled="OnNotificationsStartupToggled" />
+
+                                <InfoBar x:Name="NotificationsMachineStartupBar"
+                                         x:Uid="NotificationsMachineStartupBar"
+                                         IsOpen="False"
+                                         IsClosable="False"
+                                         Severity="Informational"
+                                         Title="This PC is set up to start it for everyone"
+                                         Message="An administrator chose to start the notifications app for every person who uses this PC, and that cannot be changed from here. Turning off Show MIDI notifications above still stops it for you." />
+
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <TextBlock x:Name="NotificationsStatusText"
                                TextWrapping="Wrap"
                                Style="{ThemeResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />

@@ -193,8 +193,17 @@ number the device uses, counted from 1. A device that supplies no port names has
 after the endpoint, so every port gets a number. A device whose ports are already named
 differently gets none.
 
+The word `group` costs six characters more than the number alone, which a long name cannot always
+spare. When keeping it would mean cutting the name, the number is used on its own instead:
+
+```
+My Bome Box group 1              short enough for the word
+Renamed Port Creation Test 1     not, so the name is kept and the word dropped
+```
+
 The choice is made once per endpoint and direction, so a single long port name never leaves some
-ports on a device carrying the device name and others not.
+ports on a device carrying the device name and others not, and never leaves one port numbered
+`group 1` while another on the same device is numbered `2`.
 
 ## 4. Fitting 31 characters
 
@@ -207,8 +216,9 @@ cut. When a group number is needed, it is reserved first and always survives:
    `Montage M8x DAW Remote Control Port 1` becomes `M8x DAW Remote Control Port 1` — when only part
    of the device name fits, the model is kept in preference to the family.
 3. The port name on its own, when the port names on that endpoint and direction are all different.
-4. A shortened device name, cut at a word boundary, with the port name intact.
-5. Only as a last resort, truncation — never leaving a partial character.
+4. The group number without the word `group`, when that is what it takes to keep the name whole.
+5. A shortened device name, cut at a word boundary, with the port name intact.
+6. Only as a last resort, truncation — never leaving a partial character.
 
 A port never ends up with an empty name.
 
@@ -316,6 +326,19 @@ Two cases fall back to `<endpoint name> group N` with no block name:
 A custom name set by the user always wins, for both endpoints and individual ports, and is never
 overridden by any rule above.
 
+A custom **port** name is published exactly as it was typed. It is not numbered by group, not given
+a duplicate marker, and not shortened to make room for anything — the only limit is the 31
+characters WinMM allows. Two ports may end up with the same custom name, and Windows will not
+intervene: the customer is assumed to have meant it.
+
+Applications generally expect port names to be unique, and some behave unpredictably when they are
+not, so a tool that offers custom naming should say so at the point the name is entered. That is a
+matter for the tool, not for the naming rules.
+
+A custom **endpoint** name is different. It replaces the device name and then goes through the
+composition rules like any other, so it can be shortened, and it can cost a port its `group` word
+if it is long.
+
 When a MIDI 1.0 port is given a custom name, the corresponding group terminal block is renamed to
 match, so that applications reading either one see the same thing.
 
@@ -352,6 +375,7 @@ own. New style names are shown for every device so the two can be compared.
 | NI KOMPLETE KONTROL M32 | Nothing usable; `iProduct` = `KOMPLETE KONTROL M32` | `KOMPLETE KONTROL M32` | `KOMPLETE KONTROL M32` | **legacy** — `KOMPLETE KONTROL M32 MIDI` |
 | ESI M8U eX, two units | Nothing usable; 16 ports each way | `ESI M8U eX` and `ESI M8U eX (2)` | `ESI M8U eX group 1..16` and `ESI M8U eX (2) group 1..16` | **legacy** — `ESI M8U eX`, `MIDIIN2 (ESI M8U eX)` …, and for the second unit `2- ESI M8U eX`, `MIDIIN2 (2- ESI M8U eX)` … |
 | Network MIDI 2.0 host, no function blocks | Endpoint name only | `My Bome Box` | `My Bome Box group 1` … `group 16` | new style — no legacy equivalent |
+| Network MIDI 2.0 host with a long name | Endpoint name only | `Renamed Port Creation Test` | `Renamed Port Creation Test 1` … `Test 16` | new style — the word `group` would not fit |
 
 ## Advice for device makers
 
@@ -372,4 +396,6 @@ first, so they stayed hidden. They are used now.
 - **Avoid embedding a serial number in the product name** unless you also give each unit distinct
   jack names. It makes every name longer and harder for customers to recognize.
 - **Name your function blocks.** A block's name becomes part of the port name for every group it
-  covers, so keep it short enough to leave room for the product name and a group number.
+  covers, so keep it short enough to leave room for the product name and a group number. Budget
+  eight characters for ` group N`: if the rest does not fit, the ports are numbered ` N` instead,
+  which still reads correctly but tells the customer less.

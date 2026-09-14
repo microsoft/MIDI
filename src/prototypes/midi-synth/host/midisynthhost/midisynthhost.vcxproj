@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <!-- The SDK packages restored for the C++ samples are reused rather than copied; the MIDI 2
+       package alone is over 400 MB. These names are deliberately prefixed: CppWinRTPackage is a
+       boolean the CppWinRT package owns, and setting it to a path breaks that package. -->
+  <PropertyGroup>
+    <SynthPackagesDir>$(MSBuildThisFileDirectory)..\..\..\..\..\samples\cpp-winrt\packages\</SynthPackagesDir>
+    <SynthMidiSdkDir>$(SynthPackagesDir)Windows.Devices.Midi2.0.99.75-devpreview.8</SynthMidiSdkDir>
+    <SynthCppWinRTDir>$(SynthPackagesDir)Microsoft.Windows.CppWinRT.3.0.260520.1</SynthCppWinRTDir>
+  </PropertyGroup>
+
+  <Import Project="$(SynthMidiSdkDir)\build\native\Windows.Devices.Midi2.props" Condition="Exists('$(SynthMidiSdkDir)\build\native\Windows.Devices.Midi2.props')" />
+  <Import Project="$(SynthCppWinRTDir)\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('$(SynthCppWinRTDir)\build\native\Microsoft.Windows.CppWinRT.props')" />
+
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup Label="Globals">
+    <CppWinRTOptimized>true</CppWinRTOptimized>
+    <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
+    <CppWinRTGenerateWindowsMetadata>true</CppWinRTGenerateWindowsMetadata>
+    <MinimalCoreWin>true</MinimalCoreWin>
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{2C0F6A41-9B3D-4E57-8A12-7F4D6B2E9C31}</ProjectGuid>
+    <RootNamespace>midisynthhost</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.20348.0</WindowsTargetPlatformMinVersion>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Debug'">true</UseDebugLibraries>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Release'">false</UseDebugLibraries>
+    <WholeProgramOptimization Condition="'$(Configuration)'=='Release'">true</WholeProgramOptimization>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <PropertyGroup>
+    <OutDir>$(MSBuildThisFileDirectory)..\..\out\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(MSBuildThisFileDirectory)..\..\out\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..\..\lib\MidiSynthLib\inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>_CONSOLE;WIN32_LEAN_AND_MEAN;WINRT_LEAN_AND_MEAN;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalOptions>%(AdditionalOptions) /permissive- /bigobj</AdditionalOptions>
+      <Optimization Condition="'$(Configuration)'=='Debug'">Disabled</Optimization>
+      <Optimization Condition="'$(Configuration)'=='Release'">MaxSpeed</Optimization>
+      <FunctionLevelLinking Condition="'$(Configuration)'=='Release'">true</FunctionLevelLinking>
+      <IntrinsicFunctions Condition="'$(Configuration)'=='Release'">true</IntrinsicFunctions>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+      <AdditionalDependencies>ole32.lib;avrt.lib;windowsapp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\lib\MidiSynthLib\MidiSynthLib.vcxproj">
+      <Project>{6F1B1B93-6C5B-4A2E-9A8D-3E1E0B9C4A11}</Project>
+    </ProjectReference>
+  </ItemGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(SynthCppWinRTDir)\build\native\Microsoft.Windows.CppWinRT.targets" Condition="Exists('$(SynthCppWinRTDir)\build\native\Microsoft.Windows.CppWinRT.targets')" />
+    <Import Project="$(SynthMidiSdkDir)\build\native\Windows.Devices.Midi2.targets" Condition="Exists('$(SynthMidiSdkDir)\build\native\Windows.Devices.Midi2.targets')" />
+  </ImportGroup>
+
+  <Target Name="EnsureMidiSdkPackages" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('$(SynthMidiSdkDir)\build\native\Windows.Devices.Midi2.props')"
+           Text="Missing $(SynthMidiSdkDir). Restore the NuGet packages for samples\cpp-winrt first; this project reuses them." />
+    <Error Condition="!Exists('$(SynthCppWinRTDir)\build\native\Microsoft.Windows.CppWinRT.props')"
+           Text="Missing $(SynthCppWinRTDir). Restore the NuGet packages for samples\cpp-winrt first; this project reuses them." />
+  </Target>
+
+</Project>

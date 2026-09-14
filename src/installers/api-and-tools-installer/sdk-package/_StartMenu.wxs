@@ -41,9 +41,23 @@
                   Name="MIDI Troubleshooting and Repair"
                   Target="[#miditroubleshooterExe]"
                   WorkingDirectory="TOOL_TROUBLESHOOTER_FOLDER" />
+        <Shortcut Id="Shortcut_midinotifications"
+                  Name="MIDI Notifications"
+                  Target="[#midinotificationsExe]"
+                  WorkingDirectory="TOOL_NOTIFICATIONS_FOLDER">
+          <ShortcutProperty Key="System.AppUserModel.ID" Value="Microsoft.WindowsMidiServices.Notifications" />
+        </Shortcut>
         <RemoveFolder Id="RemoveMidiProgramsFolder_Tools" Directory="MIDI_PROGRAMS_FOLDER" On="uninstall" />
         <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
           <RegistryValue Type="string" Name="ToolAppShortcuts" Value="installed" KeyPath="yes" />
+        </RegistryKey>
+      </Component>
+      <Component Id="midinotificationsAutostart" Bitness="always64" Directory="MIDI_PROGRAMS_FOLDER" Guid="6f3a9c21-58d4-4b7e-b1a6-0c9d3e7f2a48">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run">
+          <RegistryValue Type="string" Name="WindowsMidiServicesNotifications" Value="&quot;[#midinotificationsExe]&quot;" />
+        </RegistryKey>
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
+          <RegistryValue Type="string" Name="midinotificationsAutostart" Value="installed" KeyPath="yes" />
         </RegistryKey>
       </Component>
     </ComponentGroup>

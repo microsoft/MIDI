@@ -857,6 +857,134 @@ void NetworkMidiApprovalTests::DenyUntilRestartRefusesTheWaitingClient()
 }
 
 
+void NetworkMidiApprovalTests::DenyingAClientWithALiveSessionDisconnectsIt()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto name = UniqueName("DenyLiveSession");
+    auto productInstanceId = UniqueProductInstanceId("DenyLiveSession");
+
+    UdpTestClient client;
+    VERIFY_IS_TRUE(client.Open(LocalHostAddress()));
+
+    auto reply = Invite(client, name, productInstanceId);
+    VERIFY_IS_TRUE(reply.has_value() && reply->Contains(CommandCode::InvitationReplyPending));
+
+    VERIFY_IS_TRUE(WaitForPending(name, productInstanceId), L"Client is pending before approval");
+
+    // "once" records nothing, so the client reaches a session without leaving a saved decision
+    // for the next test to trip over.
+    auto approved = ApproveRemoteClient(
+        g_hostEntryIdentifier, Widen(name), Widen(productInstanceId), L"once");
+
+    VERIFY_IS_TRUE(approved.IsSuccess(), L"approveRemoteClient reported success");
+
+    VERIFY_IS_TRUE(
+        WaitForCommand(client, CommandCode::InvitationReplyAccepted, PendingPollTimeout),
+        L"Host accepted the invitation after the user approved it");
+
+    VERIFY_IS_TRUE(
+        WaitForSessionActive(name, productInstanceId),
+        L"The client holds an active session before it is denied");
+
+    // Nothing is awaiting approval now, which is the case a deny used to skip over entirely.
+    auto denied = DenyRemoteClient(
+        g_hostEntryIdentifier, Widen(name), Widen(productInstanceId), L"untilRestart");
+
+    VERIFY_IS_TRUE(denied.IsSuccess(), L"denyRemoteClient reported success");
+
+    VERIFY_IS_TRUE(
+        WaitForCommand(client, CommandCode::Bye, PendingPollTimeout),
+        L"Host sent Bye to a client it was told to block mid-session");
+
+    VERIFY_IS_TRUE(
+        WaitForConnectionReleased(name, productInstanceId),
+        L"The blocked client's session was ended rather than left running");
+
+    client.Close();
+}
+
+
+void NetworkMidiApprovalTests::ForgettingADecisionAppliesWithoutAServiceRestart()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto name = UniqueName("ForgetApplies");
+    auto productInstanceId = UniqueProductInstanceId("ForgetApplies");
+
+    {
+        UdpTestClient client;
+        VERIFY_IS_TRUE(client.Open(LocalHostAddress()));
+
+        auto reply = Invite(client, name, productInstanceId);
+        VERIFY_IS_TRUE(reply.has_value() && reply->Contains(CommandCode::InvitationReplyPending));
+
+        VERIFY_IS_TRUE(WaitForPending(name, productInstanceId), L"Client is pending before denial");
+
+        // "untilRestart" is held in memory and never written to the configuration file, so this
+        // tests the service's own copy of the lists without leaving anything on disk.
+        auto denied = DenyRemoteClient(
+            g_hostEntryIdentifier, Widen(name), Widen(productInstanceId), L"untilRestart");
+
+        VERIFY_IS_TRUE(denied.IsSuccess(), L"denyRemoteClient reported success");
+
+        VERIFY_IS_TRUE(
+            WaitForCommand(client, CommandCode::Bye, PendingPollTimeout),
+            L"Host sent Bye after the user denied the invitation");
+
+        client.Close();
+    }
+
+    // The denial is in force, which is what makes the forget below meaningful. This is the same
+    // wire check the returning client makes later, so the two readings are comparable.
+    {
+        UdpTestClient stillDenied;
+        VERIFY_IS_TRUE(stillDenied.Open(LocalHostAddress()));
+
+        auto reply = Invite(stillDenied, name, productInstanceId);
+
+        VERIFY_IS_TRUE(reply.has_value(), L"Host replied to the denied client");
+
+        VERIFY_IS_TRUE(
+            reply->Contains(CommandCode::Bye),
+            L"A denied client is refused outright while the decision stands");
+
+        stillDenied.Close();
+    }
+
+    auto forgotten = ForgetRemoteClient(
+        g_hostEntryIdentifier, Widen(name), Widen(productInstanceId));
+
+    VERIFY_IS_TRUE(forgotten.IsSuccess(), L"forgetRemoteClient reported success");
+
+    // No restart has happened, so being held for a decision again is the proof that the running
+    // service dropped it rather than only the configuration file losing it.
+    UdpTestClient returning;
+    VERIFY_IS_TRUE(returning.Open(LocalHostAddress()));
+
+    auto reply = Invite(returning, name, productInstanceId);
+    VERIFY_IS_TRUE(reply.has_value(), L"Host replied to the returning client");
+
+    Log::Comment(String().Format(
+        L"Reply to the forgotten client: %s", DescribePacket(reply.value()).c_str()));
+
+    // The wire reply is what this rests on. One identity can hold several connections here, from
+    // the earlier refused attempts, and the enumeration feed reports whichever it finds first.
+    VERIFY_IS_FALSE(
+        reply->Contains(CommandCode::Bye),
+        L"A forgotten client is no longer refused outright");
+
+    VERIFY_IS_TRUE(
+        reply->Contains(CommandCode::InvitationReplyPending),
+        L"A forgotten client is held for a decision again");
+
+    // Leaves nothing waiting in the pending feed for the tests which follow.
+    DenyRemoteClient(g_hostEntryIdentifier, Widen(name), Widen(productInstanceId), L"untilRestart");
+
+    returning.Close();
+}
+
+
 void NetworkMidiApprovalTests::DenyAlwaysIsRememberedForTheNextConnection()
 {
     VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");

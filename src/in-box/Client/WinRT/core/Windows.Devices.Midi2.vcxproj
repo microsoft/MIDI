@@ -624,6 +624,12 @@
     <ClInclude Include="MidiNetworkRemoteClientDisconnectResponse.h">
       <DependentUpon>MidiNetworkRemoteClientDisconnectResponse.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiNetworkRemoteClientForgetConfig.h">
+      <DependentUpon>MidiNetworkRemoteClientForgetConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiNetworkRemoteClientForgetResponse.h">
+      <DependentUpon>MidiNetworkRemoteClientForgetResponse.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="winrt_devpkey_util.h" />
     <ClInclude Include="MidiNetworkClientConnectResponse.h">
       <DependentUpon>MidiNetworkClientConnectResponse.idl</DependentUpon>
@@ -1105,6 +1111,12 @@
     <ClCompile Include="MidiNetworkRemoteClientDisconnectResponse.cpp">
       <DependentUpon>MidiNetworkRemoteClientDisconnectResponse.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiNetworkRemoteClientForgetConfig.cpp">
+      <DependentUpon>MidiNetworkRemoteClientForgetConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiNetworkRemoteClientForgetResponse.cpp">
+      <DependentUpon>MidiNetworkRemoteClientForgetResponse.idl</DependentUpon>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Midl Include="MidiApiContracts.idl" />
@@ -1127,6 +1139,9 @@
     <Midl Include="MidiNetworkRemoteClientDisconnectErrorCodeEnum.idl" />
     <Midl Include="MidiNetworkRemoteClientDisconnectResponse.idl" />
     <Midl Include="MidiNetworkRemoteClientDisconnectConfig.idl" />
+    <Midl Include="MidiNetworkRemoteClientForgetErrorCodeEnum.idl" />
+    <Midl Include="MidiNetworkRemoteClientForgetResponse.idl" />
+    <Midl Include="MidiNetworkRemoteClientForgetConfig.idl" />
     <Midl Include="MidiSendMessageResultsEnum.idl" />
     <Midl Include="MidiMessageProcessingPluginAddResultEnum.idl" />
     <Midl Include="MidiApi.idl" />

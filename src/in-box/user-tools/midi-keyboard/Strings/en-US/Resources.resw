@@ -123,8 +123,63 @@
   <data name="PanicButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Stop every sounding note and reset the ribbons</value>
   </data>
-  <data name="PanicButtonText.Text" xml:space="preserve">
-    <value>All notes off</value>
+  <data name="PatchButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Bank and program</value>
+  </data>
+  <data name="PatchButtonFormat" xml:space="preserve">
+    <value>Prog {0}</value>
+    <comment>Compact patch display in the performance strip. {0} is the program number, 1 to 128.</comment>
+  </data>
+  <data name="PatchButtonToolTipFormat" xml:space="preserve">
+    <value>Program {0}, bank MSB {1}, bank LSB {2}</value>
+  </data>
+  <data name="PatchFlyoutTitle.Text" xml:space="preserve">
+    <value>Bank and program</value>
+  </data>
+  <data name="ProgramListComboBox.Header" xml:space="preserve">
+    <value>Programs on this device</value>
+  </data>
+  <data name="ProgramListComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Programs on this device</value>
+  </data>
+  <data name="ProgramListSearching" xml:space="preserve">
+    <value>Asking the device for its programs...</value>
+  </data>
+  <data name="ProgramListCountFormat" xml:space="preserve">
+    <value>{0} programs reported by the device.</value>
+  </data>
+  <data name="ProgramListNoResponse" xml:space="preserve">
+    <value>This device did not answer a MIDI-CI request, so enter the bank and program by number.</value>
+  </data>
+  <data name="ProgramListUnsupported" xml:space="preserve">
+    <value>This device does not publish a program list, so enter the bank and program by number.</value>
+  </data>
+  <data name="ProgramNumberBox.Header" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="ProgramNumberBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Program number</value>
+  </data>
+  <data name="BankMsbBox.Header" xml:space="preserve">
+    <value>Bank MSB</value>
+  </data>
+  <data name="BankMsbBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Bank most significant byte</value>
+  </data>
+  <data name="BankLsbBox.Header" xml:space="preserve">
+    <value>Bank LSB</value>
+  </data>
+  <data name="BankLsbBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Bank least significant byte</value>
+  </data>
+  <data name="SendPatchOnStartupCheckBox.Content" xml:space="preserve">
+    <value>Send these when reconnecting to this device</value>
+  </data>
+  <data name="SendPatchButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Send bank and program now</value>
+  </data>
+  <data name="SendPatchButtonText.Text" xml:space="preserve">
+    <value>Send now</value>
   </data>
 
   <!-- =============================== Arpeggiator ================================== -->

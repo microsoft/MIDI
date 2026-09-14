@@ -588,4 +588,27 @@ namespace NetworkMidiTest
 
         return SendNetworkTransportConfig(json);
     }
+
+
+    ServiceConfigResult ForgetRemoteClient(
+        std::wstring const& hostEntryIdentifier,
+        std::wstring const& umpEndpointName,
+        std::wstring const& productInstanceId)
+    {
+        std::wstring json =
+            L"{\"transportCommand\":{"
+            L"\"commandName\":\"forgetRemoteClient\","
+            L"\"commandArguments\":{"
+            L"\"entryIdentifier\":\"" + EscapeJsonString(hostEntryIdentifier) + L"\","
+            L"\"umpEndpointName\":\"" + EscapeJsonString(umpEndpointName) + L"\","
+            L"\"productInstanceId\":\"" + EscapeJsonString(productInstanceId) + L"\""
+            L"}}}";
+
+        Log::Comment(String().Format(
+            L"forgetRemoteClient %s (%s)",
+            umpEndpointName.c_str(),
+            productInstanceId.c_str()));
+
+        return SendNetworkTransportConfig(json);
+    }
 }

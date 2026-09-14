@@ -331,6 +331,150 @@ CMidi2LoopbackMidiConfigurationManager::ProcessCommand(
 
 _Use_decl_annotations_
 HRESULT
+CMidi2LoopbackMidiConfigurationManager::ValidateNewEndpointNamesAreUnused(
+    MidiLoopbackDeviceDefinition const& definitionA,
+    MidiLoopbackDeviceDefinition const& definitionB,
+    std::map<std::wstring, bool>& allocatedNames,
+    json::JsonObject& responseObject)
+{
+    RETURN_HR_IF_NULL(E_UNEXPECTED, TransportState::Current().GetEndpointTable());
+
+    struct
+    {
+        std::wstring const& Name;
+        bool IsSideA;
+    } const sides[]
+    {
+        { definitionA.EndpointName, true },
+        { definitionB.EndpointName, false },
+    };
+
+    for (auto const& side : sides)
+    {
+        auto const cleanName = internal::ToLowerTrimmedWStringCopy(side.Name);
+
+        if (allocatedNames.find(cleanName) != allocatedNames.end() ||
+            TransportState::Current().GetEndpointTable()->IsEndpointNameInUse(side.Name))
+        {
+            TraceLoggingWrite(
+                MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Endpoint name already in use by another loopback", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(side.Name.c_str(), "name")
+            );
+
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                side.IsSideA ? LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_A : LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_B,
+                internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NAME_IN_USE));
+
+            return E_FAIL;
+        }
+
+        allocatedNames.emplace(cleanName, true);
+    }
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2LoopbackMidiConfigurationManager::ValidateUpdatedEndpointNamesAreUnused(
+    std::vector<PendingEndpointUpdate> const& pending,
+    std::vector<std::shared_ptr<MidiLoopbackDevice>> const& devices,
+    json::JsonObject& responseObject)
+{
+    for (auto const& entry : pending)
+    {
+        auto const cleanName = internal::ToLowerTrimmedWStringCopy(entry.Name);
+
+        bool inUse{ false };
+
+        // Anything else being renamed in the same batch is compared against its new name.
+        for (auto const& other : pending)
+        {
+            if (other.Device == entry.Device && other.IsSideA == entry.IsSideA) continue;
+
+            if (cleanName == internal::ToLowerTrimmedWStringCopy(other.Name))
+            {
+                inUse = true;
+                break;
+            }
+        }
+
+        // Everything else keeps the name it has, except the endpoints this batch is about to
+        // change. Leaving those out is what lets two names be swapped, and what lets a
+        // description be edited without the endpoint colliding with itself.
+        for (auto const& device : devices)
+        {
+            if (inUse) break;
+
+            if (device == nullptr) continue;
+
+            struct
+            {
+                std::wstring const& Name;
+                bool IsSideA;
+            } const sides[]
+            {
+                { device->DefinitionA.EndpointName, true },
+                { device->DefinitionB.EndpointName, false },
+            };
+
+            for (auto const& side : sides)
+            {
+                bool beingChanged{ false };
+
+                for (auto const& other : pending)
+                {
+                    if (other.Device == device && other.IsSideA == side.IsSideA)
+                    {
+                        beingChanged = true;
+                        break;
+                    }
+                }
+
+                if (beingChanged) continue;
+
+                if (cleanName == internal::ToLowerTrimmedWStringCopy(side.Name))
+                {
+                    inUse = true;
+                    break;
+                }
+            }
+        }
+
+        if (inUse)
+        {
+            TraceLoggingWrite(
+                MidiLoopbackMidiTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Endpoint name already in use by another loopback", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(entry.Name.c_str(), "name")
+            );
+
+            internal::SetConfigurationResponseObjectFailWithErrorCode(
+                responseObject,
+                entry.IsSideA ? LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_A : LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_B,
+                internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NAME_IN_USE));
+
+            return S_FALSE;
+        }
+    }
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
 CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
     LPCWSTR configurationJsonSection,
     LPWSTR* response
@@ -353,6 +497,9 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
     // use this to track any ids in use from this one config file update
     std::map<std::wstring, bool> allocatedUniqueIdsA{};
     std::map<std::wstring, bool> allocatedUniqueIdsB{};
+
+    // and the names taken by this same update, whichever side they were on
+    std::map<std::wstring, bool> allocatedNames{};
 
 
     // default to failure
@@ -627,6 +774,28 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                         }
                          
                         allocatedUniqueIdsB.emplace(definitionB->EndpointUniqueIdentifier, true);
+
+
+                        if (Feature_Servicing_MIDI2LoopbackUniqueEndpointNames::IsEnabled())
+                        {
+                            // Only for a create which arrives at runtime. A configuration file
+                            // written before this rule existed may legally hold two loopbacks
+                            // with the same name, and refusing it at startup would take away
+                            // loopbacks the customer already had.
+                            if (TransportState::Current().GetEndpointManager() != nullptr &&
+                                TransportState::Current().GetEndpointManager()->IsInitialized())
+                            {
+                                auto const nameCheckHR = ValidateNewEndpointNamesAreUnused(
+                                    *definitionA, *definitionB, allocatedNames, responseObject);
+
+                                if (FAILED(nameCheckHR))
+                                {
+                                    internal::JsonStringifyObjectToOutParam(responseObject, response);
+
+                                    return nameCheckHR;
+                                }
+                            }
+                        }
 
 
 
@@ -1029,31 +1198,44 @@ CMidi2LoopbackMidiConfigurationManager::ProcessEndpointUpdates(
         return S_FALSE;
     }
 
-    // Phase two: the two sides of a pair have to stay tellable apart. Compare against the other
-    // side's pending name when both are being changed at once, and its current name otherwise.
-    for (auto const& entry : pending)
+    // Phase two: names.
+    if (Feature_Servicing_MIDI2LoopbackUniqueEndpointNames::IsEnabled())
     {
-        std::wstring otherName{ entry.IsSideA
-            ? entry.Device->DefinitionB.EndpointName
-            : entry.Device->DefinitionA.EndpointName };
+        auto const nameCheckHR = ValidateUpdatedEndpointNamesAreUnused(pending, devices, responseObject);
 
-        for (auto const& other : pending)
+        if (nameCheckHR != S_OK)
         {
-            if (other.Device == entry.Device && other.IsSideA != entry.IsSideA)
-            {
-                otherName = other.Name;
-                break;
-            }
+            return nameCheckHR;
         }
-
-        if (internal::ToLowerTrimmedWStringCopy(entry.Name) == internal::ToLowerTrimmedWStringCopy(otherName))
+    }
+    else
+    {
+        // Phase two: the two sides of a pair have to stay tellable apart. Compare against the other
+        // side's pending name when both are being changed at once, and its current name otherwise.
+        for (auto const& entry : pending)
         {
-            internal::SetConfigurationResponseObjectFailWithErrorCode(
-                responseObject,
-                entry.IsSideA ? LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_A : LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_B,
-                internal::ResourceGetWString(IDS_ERROR_DUPLICATE_ENDPOINT_NAME));
+            std::wstring otherName{ entry.IsSideA
+                ? entry.Device->DefinitionB.EndpointName
+                : entry.Device->DefinitionA.EndpointName };
 
-            return S_FALSE;
+            for (auto const& other : pending)
+            {
+                if (other.Device == entry.Device && other.IsSideA != entry.IsSideA)
+                {
+                    otherName = other.Name;
+                    break;
+                }
+            }
+
+            if (internal::ToLowerTrimmedWStringCopy(entry.Name) == internal::ToLowerTrimmedWStringCopy(otherName))
+            {
+                internal::SetConfigurationResponseObjectFailWithErrorCode(
+                    responseObject,
+                    entry.IsSideA ? LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_A : LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_B,
+                    internal::ResourceGetWString(IDS_ERROR_DUPLICATE_ENDPOINT_NAME));
+
+                return S_FALSE;
+            }
         }
     }
 

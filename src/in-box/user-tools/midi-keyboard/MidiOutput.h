@@ -39,6 +39,10 @@ namespace midikeyboard
         // What other applications will see this app as. Empty unless a virtual device is up.
         winrt::hstring ClientEndpointDeviceId() const noexcept;
 
+        // For the MIDI-CI program list query, which needs to both send and receive on the same
+        // connection. Null when nothing is connected.
+        winrt::Windows::Devices::Midi2::MidiEndpointConnection Connection() const noexcept;
+
         void SendNoteOn(uint8_t group, uint8_t channel, uint8_t note, uint16_t velocity) noexcept;
         void SendNoteOff(uint8_t group, uint8_t channel, uint8_t note) noexcept;
         void SendPolyPressure(uint8_t group, uint8_t channel, uint8_t note, uint32_t pressure) noexcept;
@@ -46,6 +50,10 @@ namespace midikeyboard
         void SendPerNoteController(uint8_t group, uint8_t channel, uint8_t note, uint8_t controllerIndex, uint32_t value) noexcept;
         void SendControlChange(uint8_t group, uint8_t channel, uint8_t controllerIndex, uint32_t value) noexcept;
         void SendPitchBend(uint8_t group, uint8_t channel, uint32_t value) noexcept;
+
+        // programNumber is 1-128 as players count them. Bank and program travel together in a
+        // single MIDI 2.0 message, so there is no separate CC 0 and CC 32 pair to get out of step.
+        void SendProgramChange(uint8_t group, uint8_t channel, uint8_t programNumber, uint8_t bankMsb, uint8_t bankLsb) noexcept;
 
         // CC 123, plus a pitch bend reset, for panic and for tearing down
         void SendAllNotesOff(uint8_t group, uint8_t channel) noexcept;

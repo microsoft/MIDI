@@ -114,6 +114,7 @@ BEGIN
     IDS_ERROR_UNRECOGNIZED_COMMAND      "Unrecognized command."
     IDS_ERROR_ENDPOINT_REMOVAL_FAILED   "Endpoint removal failed for an unknown reason."
     IDS_ERROR_DUPLICATE_ENDPOINT_NAME   "The two endpoints in a loopback pair cannot have the same name."
+    IDS_ERROR_ENDPOINT_NAME_IN_USE      "Another loopback endpoint is already using this name."
 
 END
 

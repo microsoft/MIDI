@@ -82,6 +82,11 @@ does rather than after the tool, because in six months "Sequencer to Synth" will
 and "Loopback 1" will not. For a MIDI 2.0 loopback the two endpoints are named after this with
 `(A)` and `(B)` on the end.
 
+No two loopbacks may share a name, because a name is all an app has to tell them apart. That
+applies across both kinds, so a basic loopback and one side of a MIDI 2.0 pair cannot both be
+called the same thing. Sharing a name with a USB device or anything else on the PC is fine and
+always has been.
+
 **Description** is optional, and shows under the name in apps that display one.
 
 **Picture** lets you attach an image, which is then used as the icon for the endpoint. This is

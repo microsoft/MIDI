@@ -45,6 +45,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
 
         static foundation::IAsyncOperation<network::MidiNetworkRemoteClientApprovalResponse> ApproveOrDenyRemoteClientConnectRequestAsync(_In_ network::MidiNetworkRemoteClientApprovalConfig const& approvalConfig) noexcept;
         static foundation::IAsyncOperation<network::MidiNetworkRemoteClientDisconnectResponse> DisconnectRemoteClientAsync(_In_ network::MidiNetworkRemoteClientDisconnectConfig const& disconnectConfig) noexcept;
+        static foundation::IAsyncOperation<network::MidiNetworkRemoteClientForgetResponse> ForgetRemoteClientAsync(_In_ network::MidiNetworkRemoteClientForgetConfig const& forgetConfig) noexcept;
 
         static collections::IVectorView<network::MidiNetworkConfiguredHost> GetConfiguredHosts() noexcept;
         static collections::IVectorView<network::MidiNetworkConfiguredClient> GetConfiguredClients() noexcept;

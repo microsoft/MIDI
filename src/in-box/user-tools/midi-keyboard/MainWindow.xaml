@@ -108,6 +108,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <!-- where the notes are going -->
@@ -193,16 +194,108 @@
                               SelectionChanged="OnArpRateChanged" />
                 </StackPanel>
 
+                <!-- bank and program. The values live behind a flyout because the strip has no
+                     room for three spinners at the default window size. -->
+                <Button x:Name="PatchButton"
+                        x:Uid="PatchButton"
+                        AutomationProperties.AutomationId="PatchButton"
+                        Grid.Column="3"
+                        VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE90B;" FontSize="12" />
+                        <TextBlock x:Name="PatchButtonText"
+                                   AutomationProperties.AutomationId="PatchButtonText"
+                                   Text="" />
+                    </StackPanel>
+                    <Button.Flyout>
+                        <Flyout Opened="OnPatchFlyoutOpened">
+                            <StackPanel Spacing="12" MinWidth="260">
+                                <TextBlock x:Uid="PatchFlyoutTitle"
+                                           Text="Bank and program"
+                                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                                <!-- shown only when the device answered a MIDI-CI ProgramList
+                                     query; otherwise the numbers below are the only way in -->
+                                <ComboBox x:Name="ProgramListComboBox"
+                                          x:Uid="ProgramListComboBox"
+                                          AutomationProperties.AutomationId="ProgramListComboBox"
+                                          Header="Programs on this device"
+                                          HorizontalAlignment="Stretch"
+                                          Visibility="Collapsed"
+                                          SelectionChanged="OnProgramListSelectionChanged" />
+
+                                <TextBlock x:Name="ProgramListStatusText"
+                                           AutomationProperties.AutomationId="ProgramListStatusText"
+                                           Text=""
+                                           TextWrapping="Wrap"
+                                           Opacity="0.8"
+                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                                <NumberBox x:Name="ProgramNumberBox"
+                                           x:Uid="ProgramNumberBox"
+                                           AutomationProperties.AutomationId="ProgramNumberBox"
+                                           Header="Program"
+                                           Minimum="1"
+                                           Maximum="128"
+                                           SmallChange="1"
+                                           LargeChange="10"
+                                           SpinButtonPlacementMode="Compact"
+                                           ValueChanged="OnProgramNumberChanged" />
+
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <NumberBox x:Name="BankMsbBox"
+                                               x:Uid="BankMsbBox"
+                                               AutomationProperties.AutomationId="BankMsbBox"
+                                               Grid.Column="0"
+                                               Header="Bank MSB"
+                                               Minimum="0"
+                                               Maximum="127"
+                                               SmallChange="1"
+                                               SpinButtonPlacementMode="Compact"
+                                               ValueChanged="OnBankMsbChanged" />
+                                    <NumberBox x:Name="BankLsbBox"
+                                               x:Uid="BankLsbBox"
+                                               AutomationProperties.AutomationId="BankLsbBox"
+                                               Grid.Column="1"
+                                               Header="Bank LSB"
+                                               Minimum="0"
+                                               Maximum="127"
+                                               SmallChange="1"
+                                               SpinButtonPlacementMode="Compact"
+                                               ValueChanged="OnBankLsbChanged" />
+                                </Grid>
+
+                                <CheckBox x:Name="SendPatchOnStartupCheckBox"
+                                          x:Uid="SendPatchOnStartupCheckBox"
+                                          AutomationProperties.AutomationId="SendPatchOnStartupCheckBox"
+                                          Content="Send these when reconnecting to this device"
+                                          Click="OnSendPatchOnStartupChanged" />
+
+                                <Button x:Name="SendPatchButton"
+                                        x:Uid="SendPatchButton"
+                                        AutomationProperties.AutomationId="SendPatchButton"
+                                        HorizontalAlignment="Stretch"
+                                        Click="OnSendPatchClick">
+                                    <TextBlock x:Uid="SendPatchButtonText" Text="Send now" />
+                                </Button>
+                            </StackPanel>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
+
                 <Button x:Name="PanicButton"
                         x:Uid="PanicButton"
                         AutomationProperties.AutomationId="PanicButton"
-                        Grid.Column="3"
+                        Grid.Column="4"
                         VerticalAlignment="Center"
                         Click="OnPanicClick">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <FontIcon Glyph="&#xE711;" FontSize="12" />
-                        <TextBlock x:Uid="PanicButtonText" Text="All notes off" />
-                    </StackPanel>
+                    <!-- icon only: the strip has no room for the caption once bank and program
+                         are here, and the name and tooltip still carry it -->
+                    <FontIcon Glyph="&#xE711;" FontSize="12" />
                 </Button>
             </Grid>
         </Border>

@@ -9,6 +9,18 @@
 #include "pch.h"
 
 
+void MidiNetworkHostConnection::OnSessionEndedBeforeEndpointCreated() noexcept
+{
+    m_hostEndpointCreationAbandoned = true;
+
+    // Out of line only because TransportState is not declared yet where this is overridden.
+    if (m_awaitingUserApproval.exchange(false))
+    {
+        TransportState::Current().NotificationSignal().SignalPendingApprovalChanged();
+    }
+}
+
+
 _Use_decl_annotations_
 HRESULT
 MidiNetworkHostConnection::Initialize(
@@ -164,6 +176,8 @@ MidiNetworkHostConnection::ApproveByUser()
         return S_FALSE;
     }
 
+    TransportState::Current().NotificationSignal().SignalPendingApprovalChanged();
+
     auto identity = GetRemoteClientIdentity();
 
     TraceLoggingWrite(
@@ -208,7 +222,10 @@ MidiNetworkHostConnection::ApproveByUser()
 HRESULT
 MidiNetworkHostConnection::DenyByUser()
 {
-    m_awaitingUserApproval = false;
+    if (m_awaitingUserApproval.exchange(false))
+    {
+        TransportState::Current().NotificationSignal().SignalPendingApprovalChanged();
+    }
 
     TraceLoggingWrite(
         MidiNetworkMidiTransportTelemetryProvider::Provider(),
@@ -416,6 +433,10 @@ MidiNetworkHostConnection::HandleIncomingInvitation(
                 TraceLoggingWideString(clientUmpEndpointName.c_str(), "client endpoint name"),
                 TraceLoggingWideString(clientProductInstanceId.c_str(), "client product instance id")
             );
+
+            // Nothing here waits on a user. This only lets an app in the customer's session know
+            // to ask what is waiting, because the service itself cannot show them anything.
+            TransportState::Current().NotificationSignal().SignalPendingApprovalChanged();
         }
 
         LOG_IF_FAILED(SendToNetwork([this](MidiNetworkDataWriter& writer)

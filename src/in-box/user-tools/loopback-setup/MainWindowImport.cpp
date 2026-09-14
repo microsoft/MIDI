@@ -81,7 +81,7 @@ namespace winrt::midiloopbacksetup::implementation
 
             // A name identifies an endpoint to an application, so the same one twice would be
             // worse than useless. Two ports offered under one name block each other, and a name
-            // an existing basic loopback already has is taken as well.
+            // any existing loopback already has is taken as well.
             std::map<std::wstring, int32_t> nameCounts{};
 
             for (auto const& device : candidates)
@@ -92,15 +92,7 @@ namespace winrt::midiloopbacksetup::implementation
                 }
             }
 
-            std::set<std::wstring> existingNames{};
-
-            for (auto const& row : m_basicLoopbacks)
-            {
-                if (row != nullptr)
-                {
-                    existingNames.insert(LoweredCopy(std::wstring{ row.NameA() }));
-                }
-            }
+            auto const existingNames = LoopbackNamesInUse({});
 
             for (auto const& device : candidates)
             {

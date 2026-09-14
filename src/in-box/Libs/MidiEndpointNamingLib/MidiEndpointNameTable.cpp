@@ -1938,6 +1938,34 @@ std::vector<Midi1PortNameResult> BuildMidi1PortNamesForEndpoint(
                 }
             }
 
+            // "group" is never localized. Applications match on these strings, so a name that
+            // changed with the system language would break them.
+            auto groupSuffix = [](uint8_t const groupIndex, bool const withWord)
+                {
+                    return (withWord ? std::wstring{ L" group " } : std::wstring{ L" " }) +
+                        std::to_wstring(static_cast<int>(groupIndex) + 1);
+                };
+
+            // The word costs six more characters than the bare number, which a long device name
+            // cannot always spare. It is only worth keeping when no port has to give up part of
+            // its name to make room. The decision is made across the whole direction so the ports
+            // of one device are not a mixture of both forms.
+            bool useGroupWord{ true };
+
+            for (size_t i = 0; i < inDirection.size() && useGroupWord; i++)
+            {
+                auto const withWord = groupSuffix(inDirection[i].GroupIndex, true);
+                auto const withoutWord = groupSuffix(inDirection[i].GroupIndex, false);
+
+                auto const composedWithWord = ComposeAndFit(device, resolved[i].Name, dropDeviceName,
+                    MidiMaxPortNameCharacters - withWord.length(), duplicateMarker);
+
+                auto const composedWithoutWord = ComposeAndFit(device, resolved[i].Name, dropDeviceName,
+                    MidiMaxPortNameCharacters - withoutWord.length(), duplicateMarker);
+
+                if (composedWithWord != composedWithoutWord) { useGroupWord = false; }
+            }
+
             for (size_t i = 0; i < inDirection.size(); i++)
             {
                 Midi1PortNameResult result{ };
@@ -1948,9 +1976,7 @@ std::vector<Midi1PortNameResult> BuildMidi1PortNamesForEndpoint(
 
                 if (numberingNeeded)
                 {
-                    // "group" is never localized. Applications match on these strings, so a name
-                    // that changed with the system language would break them.
-                    std::wstring suffix{ L" group " + std::to_wstring(static_cast<int>(inDirection[i].GroupIndex) + 1) };
+                    auto const suffix = groupSuffix(inDirection[i].GroupIndex, useGroupWord);
 
                     result.Name = ComposeAndFit(
                         device,

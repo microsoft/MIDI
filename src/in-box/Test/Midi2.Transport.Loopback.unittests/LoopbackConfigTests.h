@@ -62,6 +62,13 @@ public:
     TEST_METHOD(TestUpdateWithDuplicateNamesChangesNothing);
     TEST_METHOD(TestUpdateWithBlankNameIsRejected);
 
+    // a name has to be unique across every loopback, not only within its own pair
+    TEST_METHOD(TestCreateWithTheSameNameOnBothSidesIsRejected);
+    TEST_METHOD(TestCreateWithANameAnotherLoopbackUsesIsRejected);
+    TEST_METHOD(TestUpdateToANameAnotherLoopbackUsesIsRejected);
+    TEST_METHOD(TestUpdateKeepingTheSameNamesIsAllowed);
+    TEST_METHOD(TestUpdateSwappingNamesWithinAPairIsAllowed);
+
 private:
 
     MidiTest::DeviceNodeTracker m_deviceNodeTracker{};

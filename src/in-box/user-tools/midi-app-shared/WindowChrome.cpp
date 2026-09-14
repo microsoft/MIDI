@@ -19,6 +19,23 @@ extern "C" IMAGE_DOS_HEADER __ImageBase;
 
 namespace midiapp
 {
+    HWND WindowChrome::WindowHandle() const noexcept
+    {
+        if (m_elements.Window == nullptr)
+        {
+            return nullptr;
+        }
+
+        HWND handle{ nullptr };
+
+        if (auto const native = m_elements.Window.try_as<::IWindowNative>())
+        {
+            LOG_IF_FAILED(native->get_WindowHandle(&handle));
+        }
+
+        return handle;
+    }
+
     namespace
     {
         winrt::Windows::UI::Color ColorFromArgb(uint32_t argb) noexcept

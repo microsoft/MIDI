@@ -22,4 +22,18 @@ namespace midi2console
     // Every endpoint command funnels through here: use the supplied id, or show the picker.
     // Returns false when the user canceled or the console cannot prompt.
     bool ResolveEndpointDeviceId(_Inout_ std::string& endpointDeviceId, _Out_ std::string& endpointName);
+
+    struct GroupPickerResult
+    {
+        bool Canceled{ true };
+        uint8_t GroupIndex{ 0 };
+    };
+
+    // Groups the endpoint declares it uses in the given direction, labeled with the function
+    // block or group terminal block that claims each one. An endpoint that declares nothing
+    // usable falls back to all sixteen groups.
+    GroupPickerResult PickGroup(
+        _In_ std::string_view prompt,
+        _In_ std::string const& endpointDeviceId,
+        _In_ bool wantMessageSource);
 }

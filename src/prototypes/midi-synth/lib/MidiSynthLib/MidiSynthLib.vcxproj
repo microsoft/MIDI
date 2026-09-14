@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{6F1B1B93-6C5B-4A2E-9A8D-3E1E0B9C4A11}</ProjectGuid>
+    <RootNamespace>MidiSynthLib</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Debug'">true</UseDebugLibraries>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Release'">false</UseDebugLibraries>
+    <WholeProgramOptimization Condition="'$(Configuration)'=='Release'">true</WholeProgramOptimization>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <PropertyGroup>
+    <OutDir>$(MSBuildThisFileDirectory)..\..\out\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(MSBuildThisFileDirectory)..\..\out\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\</IntDir>
+
+    <!-- libmidi2's M2Utils scaling is header only, so this is an include path and not a link
+         dependency. It is the same arithmetic the service uses, which is the point. -->
+    <SynthLibMidi2Include>$(MSBuildThisFileDirectory)..\..\..\..\in-box\Client\WinRT\core\vcpkg_installed\x64-windows\include</SynthLibMidi2Include>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)inc;$(SynthLibMidi2Include);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Optimization Condition="'$(Configuration)'=='Debug'">Disabled</Optimization>
+      <Optimization Condition="'$(Configuration)'=='Release'">MaxSpeed</Optimization>
+      <FunctionLevelLinking Condition="'$(Configuration)'=='Release'">true</FunctionLevelLinking>
+      <IntrinsicFunctions Condition="'$(Configuration)'=='Release'">true</IntrinsicFunctions>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <ClInclude Include="inc\MidiSynth\Articulation.h" />
+    <ClInclude Include="inc\MidiSynth\AudioSink.h" />
+    <ClInclude Include="inc\MidiSynth\DlsCollection.h" />
+    <ClInclude Include="inc\MidiSynth\DlsTypes.h" />
+    <ClInclude Include="inc\MidiSynth\DlsUnits.h" />
+    <ClInclude Include="inc\MidiSynth\RiffReader.h" />
+    <ClInclude Include="inc\MidiSynth\SpscRingBuffer.h" />
+    <ClInclude Include="inc\MidiSynth\SynthConfig.h" />
+    <ClInclude Include="inc\MidiSynth\SynthEngine.h" />
+    <ClInclude Include="inc\MidiSynth\UmpDispatcher.h" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClCompile Include="src\Articulation.cpp" />
+    <ClCompile Include="src\DlsCollection.cpp" />
+    <ClCompile Include="src\SynthEngine.cpp" />
+    <ClCompile Include="src\UmpDispatcher.cpp" />
+    <ClCompile Include="src\WasapiAudioSink.cpp" />
+  </ItemGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+</Project>

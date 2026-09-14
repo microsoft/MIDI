@@ -40,6 +40,10 @@ namespace winrt::midisettings::implementation
         void OnKeyboardClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnTroubleshooterClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnGlobalSettingsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnNotificationsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnNotificationsEnabledToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnNotificationsNetworkToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnNotificationsStartupToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         // Endpoint list
         void OnTransportFilterChanged(
@@ -117,6 +121,7 @@ namespace winrt::midisettings::implementation
 
         // --- global settings ---
         void RefreshGlobalSettings() noexcept;
+        void RefreshNotificationSettings() noexcept;
         void ShowFirstRunInvitation() noexcept;
 
         midiapp::WindowChrome m_chrome{};
@@ -130,6 +135,7 @@ namespace winrt::midisettings::implementation
         bool m_healthCheckInFlight{ false };
         bool m_suppressFilterHandling{ false };
         bool m_suppressPortNamingHandling{ false };
+        bool m_updatingNotificationToggles{ false };
 
         // The detail dialog asks to be reopened after a customization, and its status line is
         // only safe to touch while it is actually up.

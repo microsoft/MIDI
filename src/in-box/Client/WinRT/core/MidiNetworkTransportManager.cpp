@@ -46,6 +46,9 @@
 #include "MidiNetworkRemoteClientDisconnectConfig.h"
 #include "MidiNetworkRemoteClientDisconnectResponse.h"
 
+#include "MidiNetworkRemoteClientForgetConfig.h"
+#include "MidiNetworkRemoteClientForgetResponse.h"
+
 //#include <pplawait.h>
 
 namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
@@ -1548,6 +1551,113 @@ namespace winrt::Windows::Devices::Midi2::Transports::Network::implementation
             );
 
             response->InternalSetError(network::MidiNetworkRemoteClientDisconnectErrorCode::ClientApiException, internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
+
+            co_return *response;
+        }
+    }
+
+
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<network::MidiNetworkRemoteClientForgetResponse> MidiNetworkTransportManager::ForgetRemoteClientAsync(
+        network::MidiNetworkRemoteClientForgetConfig const& forgetConfig) noexcept
+    {
+        auto response = winrt::make_self<MidiNetworkRemoteClientForgetResponse>();
+
+        try
+        {
+            if (forgetConfig == nullptr)
+            {
+                response->InternalSetError(
+                    network::MidiNetworkRemoteClientForgetErrorCode::InvalidArgument,
+                    internal::ResourceGetHString(IDS_NETWORK_ERROR_NULL_FORGET_CONFIG));
+
+                co_return *response;
+            }
+
+            // Captured before the thread switch because the projected object may be apartment-bound
+            auto const hostId = forgetConfig.HostId();
+            auto const remoteClientName = forgetConfig.RemoteClientName();
+            auto const remoteClientProductInstanceId = forgetConfig.RemoteClientProductInstanceId();
+
+            response->InternalSetHostId(hostId);
+            response->InternalSetRemoteClientName(remoteClientName);
+            response->InternalSetRemoteClientProductInstanceId(remoteClientProductInstanceId);
+
+            if (remoteClientName.empty() || remoteClientProductInstanceId.empty())
+            {
+                response->InternalSetError(
+                    network::MidiNetworkRemoteClientForgetErrorCode::InvalidOrMissingRemoteClientIdentity,
+                    internal::ResourceGetHString(IDS_NETWORK_ERROR_MISSING_REMOTE_CLIENT_IDENTITY));
+
+                co_return *response;
+            }
+
+            svc::MidiServiceTransportCommand cmd(MidiNetworkTransportManager::TransportId());
+
+            cmd.Verb(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_FORGET_REMOTE_CLIENT);
+
+            cmd.Arguments().Insert(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER,
+                winrt::to_hstring(hostId));
+
+            cmd.Arguments().Insert(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY,
+                remoteClientName);
+
+            cmd.Arguments().Insert(
+                MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY,
+                remoteClientProductInstanceId);
+
+            co_await resume_background();
+
+            auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
+
+            if (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
+            {
+                response->InternalSetSuccess();
+            }
+            else
+            {
+                response->InternalSetError(
+                    static_cast<network::MidiNetworkRemoteClientForgetErrorCode>(serviceResponse.ServiceErrorCode()),
+                    serviceResponse.ServiceErrorMessage());
+            }
+
+            co_return *response;
+        }
+        catch (winrt::hresult_error ex)
+        {
+            LOG_IF_FAILED(ex.code());
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to forget remote client. HRESULT exception.", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                TraceLoggingHResult(ex.code(), MIDI_SDK_TRACE_HRESULT_FIELD),
+                TraceLoggingWideString(ex.message().c_str(), MIDI_SDK_TRACE_ERROR_FIELD)
+            );
+
+            response->InternalSetError(network::MidiNetworkRemoteClientForgetErrorCode::ClientApiException, ex.message());
+
+            co_return *response;
+        }
+        catch (...)
+        {
+            LOG_IF_FAILED(E_FAIL);
+
+            TraceLoggingWrite(
+                Midi2SdkTelemetryProvider::Provider(),
+                MIDI_SDK_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(MIDI_SDK_STATIC_THIS_PLACEHOLDER_FIELD_VALUE, MIDI_SDK_TRACE_THIS_FIELD),
+                TraceLoggingWideString(L"Unable to forget remote client. General exception.", MIDI_SDK_TRACE_MESSAGE_FIELD)
+            );
+
+            response->InternalSetError(network::MidiNetworkRemoteClientForgetErrorCode::ClientApiException, internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
 
             co_return *response;
         }

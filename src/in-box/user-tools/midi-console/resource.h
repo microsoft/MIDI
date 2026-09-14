@@ -607,3 +607,25 @@
 #define IDS_BT_STATE_CONNECTING                         51944
 #define IDS_BT_STATE_WAITING                            51945
 
+#define IDS_CMD_FORWARD                                 52000
+#define IDS_OPT_FWD_SOURCE_ENDPOINT                     52001
+#define IDS_OPT_FWD_SOURCE_GROUP                        52002
+#define IDS_OPT_FWD_DESTINATION_ENDPOINT                52003
+#define IDS_OPT_FWD_DESTINATION_GROUP                   52004
+#define IDS_FWD_PROMPT_SELECT_SOURCE_ENDPOINT           52005
+#define IDS_FWD_PROMPT_SELECT_SOURCE_GROUP              52006
+#define IDS_FWD_PROMPT_SELECT_DESTINATION_ENDPOINT      52007
+#define IDS_FWD_PROMPT_SELECT_DESTINATION_GROUP         52008
+#define IDS_FWD_ERROR_INVALID_GROUP                     52009
+#define IDS_FWD_ERROR_SAME_ENDPOINT_AND_GROUP           52010
+#define IDS_FWD_ERROR_NO_COM_EXTENSIONS                 52011
+#define IDS_FWD_ERROR_START_FAILED                      52012
+#define IDS_FWD_LABEL_FROM                              52013
+#define IDS_FWD_LABEL_TO                                52014
+#define IDS_FWD_LABEL_FORWARDED                         52015
+#define IDS_FWD_LABEL_RECEIVED                          52016
+#define IDS_FWD_LABEL_SEND_FAILURES                     52017
+#define IDS_FWD_KEYS                                    52018
+#define IDS_FWD_CONSOLE_TITLE                           52019
+#define IDS_FWD_ERROR_NO_INTERACTIVE                    52020
+

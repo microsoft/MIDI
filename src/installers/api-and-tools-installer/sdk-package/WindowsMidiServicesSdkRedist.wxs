@@ -32,6 +32,7 @@
                     <Directory Id="TOOL_SYSEX_FOLDER" Name="SysEx" />
                     <Directory Id="TOOL_MONITOR_FOLDER" Name="Monitor" />
                     <Directory Id="TOOL_TROUBLESHOOTER_FOLDER" Name="Troubleshooter" />
+                    <Directory Id="TOOL_NOTIFICATIONS_FOLDER" Name="Notifications" />
                 </Directory>
                 <Directory Id="COLLECTMIDILOGS_INSTALLFOLDER" Name="Collect MIDI Logs">
                 </Directory>
@@ -96,6 +97,25 @@
             <ComponentRef Id="WindowsMidiServicesToolsRegistration" />
             <ComponentRef Id="WindowsMidiServicesCollectMidiLogsRegistration"/>
     </Feature>
+
+    <!-- The Run entry only takes effect at the next sign-in, so without this the customer would
+         install, see nothing in the notification area, and have no reason to think it worked.
+         Impersonated because a tray icon belongs to the installing user's session, not to SYSTEM,
+         and asyncNoWait because the app runs until signed out and would otherwise hang setup.
+         Starting a second copy on an upgrade is harmless: the app is single instance and the
+         later one exits. -->
+    <CustomAction Id="Action_StartNotificationsApp"
+                  FileRef="midinotificationsExe"
+                  ExeCommand=""
+                  Execute="immediate"
+                  Impersonate="yes"
+                  Return="asyncNoWait" />
+
+    <InstallExecuteSequence>
+      <Custom Action="Action_StartNotificationsApp"
+              After="InstallFinalize"
+              Condition="NOT Installed" />
+    </InstallExecuteSequence>
 
     </Package>
 </Wix>

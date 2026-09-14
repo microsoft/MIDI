@@ -102,11 +102,10 @@ protected:
         return MidiNetworkCommandByeReason::CommandByeReasonHostToClient_TooManyOpenSessions;
     }
 
-    // A Bye before the endpoint exists means the queued creation is pointless.
-    void OnSessionEndedBeforeEndpointCreated() noexcept override
-    {
-        m_hostEndpointCreationAbandoned = true;
-    }
+    // A Bye before the endpoint exists means the queued creation is pointless. It also ends any
+    // wait for a decision: the remote has stopped asking, so continuing to offer the customer a
+    // choice about it would be offering one that no longer exists.
+    void OnSessionEndedBeforeEndpointCreated() noexcept override;
 
 private:
     // Identity the remote supplied in its invitation. This is what the user approves and what

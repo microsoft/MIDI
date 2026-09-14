@@ -317,6 +317,9 @@ namespace winrt::midibluetoothsetup::implementation
             elements.RightInset = TitleBarRightInsetColumn();
 
             m_chrome.Initialize(elements, native::AppSettings::Current());
+
+            // Now that there is a window, a later launch has something to bring forward.
+            ::midiapp::SingleInstance::PublishMainWindow(m_chrome.WindowHandle());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
 
             // 32px source for a 16px slot, so it stays crisp on a high DPI display

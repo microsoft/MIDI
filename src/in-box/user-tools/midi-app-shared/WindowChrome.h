@@ -46,6 +46,10 @@ namespace midiapp
         // executable. Uses WM_SETICON rather than AppWindow.SetIcon, which has been unreliable.
         void SetWindowIconFromResource(uint16_t resourceId) noexcept;
 
+    // Null until Initialize has run. Used to hand the window to SingleInstance so that a later
+    // launch has something to bring forward.
+    HWND WindowHandle() const noexcept;
+
         // The same embedded icon as an image source, for the icon drawn in a custom title bar.
         // Sourced from the executable's own resource so there is one icon to keep up to date,
         // and so it works without the app being packaged. Returns null on any failure.

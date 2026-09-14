@@ -106,6 +106,20 @@ namespace midikeyboard
         uint32_t TransmitChannelNumber() const noexcept { return m_transmitChannelNumber; }
         void TransmitChannelNumber(uint32_t value) noexcept;
 
+        // 1-128 as players count them; one less goes on the wire
+        uint32_t ProgramNumber() const noexcept { return m_programNumber; }
+        void ProgramNumber(uint32_t value) noexcept;
+
+        uint32_t BankMsb() const noexcept { return m_bankMsb; }
+        void BankMsb(uint32_t value) noexcept;
+
+        uint32_t BankLsb() const noexcept { return m_bankLsb; }
+        void BankLsb(uint32_t value) noexcept;
+
+        // resend the bank and program the next time the app starts on this same endpoint
+        bool SendPatchOnStartup() const noexcept { return m_sendPatchOnStartup; }
+        void SendPatchOnStartup(bool value) noexcept;
+
         // octave of the leftmost C, in the numbering where note 60 is C3
         int32_t BaseOctave() const noexcept { return m_baseOctave; }
         void BaseOctave(int32_t value) noexcept;
@@ -166,6 +180,10 @@ namespace midikeyboard
         static constexpr uint32_t MinimumVelocity = 1;
         static constexpr uint32_t MaximumVelocity = 127;
 
+        static constexpr uint32_t MinimumProgramNumber = 1;
+        static constexpr uint32_t MaximumProgramNumber = 128;
+        static constexpr uint32_t MaximumBankByte = 127;
+
     private:
         AppSettings() noexcept;
 
@@ -173,6 +191,11 @@ namespace midikeyboard
         std::wstring m_endpointDeviceId{};
         uint32_t m_transmitGroupNumber{ 1 };
         uint32_t m_transmitChannelNumber{ 1 };
+
+        uint32_t m_programNumber{ 1 };
+        uint32_t m_bankMsb{ 0 };
+        uint32_t m_bankLsb{ 0 };
+        bool m_sendPatchOnStartup{ false };
 
         int32_t m_baseOctave{ 1 };
 

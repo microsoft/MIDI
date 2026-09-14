@@ -740,6 +740,19 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Midi1PortNameTable, 960);              // DEVPRO
 // Other Structures for properties =================================================================
 
 
+// Identity of endpoints which Windows itself provides ============================================
+
+// Microsoft's registered MMA manufacturer SysEx id. Three bytes, as the first one is zero.
+#define MIDI_MANUFACTURER_SYSEX_ID_MICROSOFT_BYTE1          ((uint8_t)0x00)
+#define MIDI_MANUFACTURER_SYSEX_ID_MICROSOFT_BYTE2          ((uint8_t)0x00)
+#define MIDI_MANUFACTURER_SYSEX_ID_MICROSOFT_BYTE3          ((uint8_t)0x41)
+
+// Device family. 14 bits, reported LSB first.
+#define MIDI_DEVICE_FAMILY_WINDOWS_11                       ((uint16_t)11)
+
+// Device family model numbers. 14 bits, reported LSB first, unique within the family above.
+#define MIDI_DEVICE_FAMILY_MODEL_NUMBER_GM_SYNTH            ((uint16_t)1)
+
 
 // for PKEY_MIDI_DeviceIdentification
 struct MidiDeviceIdentityProperty
