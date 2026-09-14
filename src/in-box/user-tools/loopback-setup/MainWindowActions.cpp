@@ -1830,35 +1830,45 @@ namespace winrt::midiloopbacksetup::implementation
         }
         MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to save the loopback edit.")
 
-        if (queue != nullptr)
+        if (queue == nullptr)
         {
-            queue.TryEnqueue([weak, applied, saved, isBasic]()
-                {
-                    auto strong = weak.get();
-
-                    if (strong == nullptr || strong->m_closing)
-                    {
-                        return;
-                    }
-
-                    auto const text = res::GetString(
-                        !applied ? L"EditLoopbackFailed" :
-                        saved ? L"EditLoopbackSaved" : L"EditLoopbackAppliedNotSaved");
-
-                    if (isBasic)
-                    {
-                        strong->SetBasicLoopbackStatus(text);
-                    }
-                    else
-                    {
-                        strong->SetLoopbackStatus(text);
-                    }
-
-                    strong->RequestRefreshAsync();
-                });
+            co_return;
         }
 
-        item.IsBusy(false);
+        queue.TryEnqueue([weak, item, applied, saved, isBasic]()
+            {
+                auto strong = weak.get();
+
+                if (strong == nullptr)
+                {
+                    return;
+                }
+
+                if (item != nullptr)
+                {
+                    item.IsBusy(false);
+                }
+
+                if (strong->m_closing)
+                {
+                    return;
+                }
+
+                auto const text = res::GetString(
+                    !applied ? L"EditLoopbackFailed" :
+                    saved ? L"EditLoopbackSaved" : L"EditLoopbackAppliedNotSaved");
+
+                if (isBasic)
+                {
+                    strong->SetBasicLoopbackStatus(text);
+                }
+                else
+                {
+                    strong->SetLoopbackStatus(text);
+                }
+
+                strong->RequestRefreshAsync();
+            });
     }
 
 

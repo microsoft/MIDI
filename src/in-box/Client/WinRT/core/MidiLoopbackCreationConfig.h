@@ -53,8 +53,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
     private:
         winrt::guid m_associationId{ foundation::GuidHelper::CreateNewGuid() };
         bool m_isMuted{ false };
-        loop::MidiLoopbackEndpointDefinition m_definitionA{ nullptr };
-        loop::MidiLoopbackEndpointDefinition m_definitionB{ nullptr };   
+        // Created up front, like the basic loopback config, so a default-constructed config can
+        // be filled in through the accessors. Left null, every caller which did that faulted.
+        loop::MidiLoopbackEndpointDefinition m_definitionA{ };
+        loop::MidiLoopbackEndpointDefinition m_definitionB{ };
 
     };
 }

@@ -9,6 +9,8 @@
 
 #include "stdafx.h"
 
+#include <set>
+
 #define MIDI_MUID_BROADCAST         (uint32_t)0x0FFFFFFF
 
 #define MIDI_MUID_RESERVED_START    (uint32_t)0x0FFFFF00
@@ -49,6 +51,34 @@ void MidiUniqueIdTests::TestCreateRandomId()
 
     // check that we're not in the reserved range
     VERIFY_IS_FALSE(combinedValue >= MIDI_MUID_RESERVED_START && combinedValue <= MIDI_MUID_RESERVED_END);
+
+    // An earlier implementation drew from std::rand(), which stops at 32767 here, then shifted
+    // left by 8 to clear the reserved range. That left the low byte always zero and only 32768
+    // reachable values, well short of the 28 bits the collision odds assume. Sample enough to
+    // catch a regression to that, with plenty of slack so this cannot go flaky.
+    constexpr uint32_t sampleCount = 256;
+
+    std::set<uint32_t> distinctValues;
+    bool sawNonZeroLowByte = false;
+
+    for (uint32_t i = 0; i < sampleCount; i++)
+    {
+        auto const sampleValue = MidiUniqueId::CreateRandom().AsCombined28BitValue();
+
+        VERIFY_IS_FALSE(sampleValue >= MIDI_MUID_RESERVED_START && sampleValue <= MIDI_MUID_RESERVED_END);
+
+        distinctValues.insert(sampleValue);
+
+        if ((sampleValue & 0xFF) != 0)
+        {
+            sawNonZeroLowByte = true;
+        }
+    }
+
+    LOG_OUTPUT(L"Distinct values in %u samples: %u", sampleCount, (uint32_t)distinctValues.size());
+
+    VERIFY_IS_TRUE(sawNonZeroLowByte);
+    VERIFY_IS_GREATER_THAN(distinctValues.size(), (size_t)(sampleCount - 8));
 }
 
 void MidiUniqueIdTests::TestCreateBroadcastId()

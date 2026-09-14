@@ -100,9 +100,6 @@
   <data name="CreateLoopbackButtonText.Text" xml:space="preserve">
     <value>New loopback</value>
   </data>
-  <data name="LoopbackUnavailableBar.Title" xml:space="preserve">
-    <value>Loopback MIDI is not available</value>
-  </data>
   <data name="LoopbacksListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Loopbacks on this PC. Drag a row, or press Ctrl+Shift+Up or Ctrl+Shift+Down, to change its position.</value>
   </data>
@@ -115,8 +112,26 @@
   <data name="LoopbackMissingMessage" xml:space="preserve">
     <value>The loopback transport is not installed or not enabled on this PC.</value>
   </data>
-  <data name="LoopbackTooOldMessage" xml:space="preserve">
-    <value>The version of loopback MIDI currently active on this PC is not compatible with this tool. A compatible version is on the way in a Windows update, so there is nothing you need to do.</value>
+  <data name="LoopbackUnavailableTitle" xml:space="preserve">
+    <value>Loopback MIDI is not available</value>
+  </data>
+  <data name="LoopbackLimitedTitle" xml:space="preserve">
+    <value>Some loopback features are not available yet</value>
+  </data>
+  <data name="LoopbackLimitedMessageFormat" xml:space="preserve">
+    <value>The version of loopback MIDI running on this PC right now does not have these features yet: {0}. Everything else on this page works as usual, and the rest arrives with a Windows update, so there is nothing you need to do.</value>
+  </data>
+  <data name="FeatureNameMute" xml:space="preserve">
+    <value>muting</value>
+  </data>
+  <data name="FeatureNameCustomize" xml:space="preserve">
+    <value>changing a loopback after it has been created</value>
+  </data>
+  <data name="FeatureNameImage" xml:space="preserve">
+    <value>pictures</value>
+  </data>
+  <data name="FeatureListSeparator" xml:space="preserve">
+    <value>, </value>
   </data>
 
   <!-- basic loopbacks page -->

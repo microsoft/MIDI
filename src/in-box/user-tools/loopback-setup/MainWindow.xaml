@@ -199,11 +199,11 @@
                            Stretch="Uniform"
                            HorizontalAlignment="Center" />
 
-                    <!-- Shown instead of the list when the transport is missing from this PC.
-                         The message says which of the two reasons applies, so it is set from
-                         code rather than declared here. -->
+                    <!-- Says either that the transport is missing from this PC, or which of the
+                         newer features the transport currently on it does not have yet. Title,
+                         message and severity all depend on which, so all three are set from code
+                         rather than declared here. -->
                     <InfoBar x:Name="LoopbackUnavailableBar"
-                             x:Uid="LoopbackUnavailableBar"
                              Grid.Row="2"
                              Margin="0,0,0,8"
                              Severity="Error"

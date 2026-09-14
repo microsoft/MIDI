@@ -15,6 +15,7 @@
 #include "MidiServiceConfigResponse.h"
 
 #include <algorithm>
+#include <map>
 
 #include "MidiLoopbackCreationConfig.h"
 #include "MidiLoopbackCreationResponse.h"
@@ -283,6 +284,136 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
     }
 
 
+    // A transport which cannot answer the list command still creates the same endpoints, and each
+    // of those carries the association identifier which ties the two sides of a pair together.
+    // Rebuilding the list from enumeration reports only what the endpoints themselves hold, but it
+    // is the only way to show anything on a PC whose in-box loopback transport predates that
+    // command.
+    static collections::IVectorView<loop::MidiLoopbackEntry> BuildActiveLoopbackEntriesFromEnumeration() noexcept
+    {
+        auto results = winrt::single_threaded_vector<loop::MidiLoopbackEntry>();
+
+        struct PairParts
+        {
+            winrt::guid AssociationId{};
+            midi2enum::MidiEndpointDeviceInformation EndpointA{ nullptr };
+            midi2enum::MidiEndpointDeviceInformation EndpointB{ nullptr };
+        };
+
+        try
+        {
+            // keyed by the association identifier in a single textual form, so two spellings of
+            // the same identifier cannot split a pair across two entries
+            std::map<std::wstring, PairParts> pairs{};
+
+            auto const prefixA = internal::ToLowerWStringCopy(MIDI_LOOP_INSTANCE_ID_A_PREFIX);
+            auto const prefixB = internal::ToLowerWStringCopy(MIDI_LOOP_INSTANCE_ID_B_PREFIX);
+
+            for (auto const& endpoint : midi2enum::MidiEndpointDeviceInformation::FindAll())
+            {
+                if (endpoint == nullptr)
+                {
+                    continue;
+                }
+
+                if (endpoint.GetTransportSuppliedInfo().TransportId() != MidiLoopbackManager::TransportId())
+                {
+                    continue;
+                }
+
+                auto const associationId = MidiLoopbackManager::GetAssociationId(endpoint);
+
+                if (associationId == foundation::GuidHelper::Empty())
+                {
+                    continue;
+                }
+
+                auto const deviceId = internal::ToLowerWStringCopy(endpoint.EndpointDeviceId().c_str());
+
+                // the instance identifier prefix is the only thing which says which side this is
+                auto const isSideA = deviceId.find(prefixA) != std::wstring::npos;
+                auto const isSideB = deviceId.find(prefixB) != std::wstring::npos;
+
+                if (!isSideA && !isSideB)
+                {
+                    continue;
+                }
+
+                auto& parts = pairs[internal::ToLowerWStringCopy(internal::GuidToString(associationId))];
+
+                parts.AssociationId = associationId;
+
+                if (isSideA)
+                {
+                    parts.EndpointA = endpoint;
+                }
+                else
+                {
+                    parts.EndpointB = endpoint;
+                }
+            }
+
+            for (auto const& [key, parts] : pairs)
+            {
+                // Half a pair means the other side is still being created, or has just gone away.
+                // Either way there is nothing worth showing until the next refresh.
+                if (parts.EndpointA == nullptr || parts.EndpointB == nullptr)
+                {
+                    continue;
+                }
+
+                auto userInfoA = parts.EndpointA.GetUserSuppliedInfo();
+                auto userInfoB = parts.EndpointB.GetUserSuppliedInfo();
+
+                if (userInfoA == nullptr || userInfoB == nullptr)
+                {
+                    // memory failure
+                    break;
+                }
+
+                auto entry = winrt::make_self<MidiLoopbackEntry>();
+                auto loopbackA = winrt::make_self<MidiLoopbackEndpointEntry>();
+                auto loopbackB = winrt::make_self<MidiLoopbackEndpointEntry>();
+
+                if (entry == nullptr || loopbackA == nullptr || loopbackB == nullptr)
+                {
+                    // memory failure
+                    break;
+                }
+
+                loopbackA->InternalInitialize(
+                    parts.EndpointA.EndpointDeviceId(),
+                    parts.EndpointA.Name(),
+                    userInfoA.Description(),
+                    userInfoA.ImageFileName());
+
+                loopbackB->InternalInitialize(
+                    parts.EndpointB.EndpointDeviceId(),
+                    parts.EndpointB.Name(),
+                    userInfoB.Description(),
+                    userInfoB.ImageFileName());
+
+                entry->InternalSetAssociationId(parts.AssociationId);
+
+                // the muted flag lives on the association, so either side answers for the pair
+                entry->InternalSetMuted(parts.EndpointA.IsMuted());
+                entry->InternalSetEndpointEntries(*loopbackA, *loopbackB);
+
+                results.Append(*entry);
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error building loopback entries from enumeration.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception building loopback entries from enumeration.");
+        }
+
+        return results.GetView();
+    }
+
 
     collections::IVectorView<loop::MidiLoopbackEntry> MidiLoopbackManager::GetActiveLoopbackEntries() noexcept
     {
@@ -375,6 +506,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
                         }
                     }
                 }
+            }
+            else
+            {
+                return BuildActiveLoopbackEntriesFromEnumeration();
             }
         }
         catch (winrt::hresult_error const& ex)
