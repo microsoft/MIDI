@@ -1292,7 +1292,9 @@ namespace
         auto freshEngine = [&](SynthEngine& engine, UmpDispatcher& dispatcher, uint8_t group)
         {
             engine.Initialize(&collection, config);
-            dispatcher.Initialize(&engine, group);
+
+            // A fixed identifier keeps the expected reply bytes deterministic.
+            dispatcher.Initialize(&engine, group, 0x0123456);
         };
 
         // A MIDI 1.0 note on with zero velocity is a note off.
@@ -1565,6 +1567,52 @@ namespace
                     payload[13] == 0 && payload[14] == 0;                               // 1.0.0.0
 
                 check("default identity is Microsoft, Windows 11, model 1, rev 1.0.0.0", ok);
+            }
+
+            // A real Discovery Inquiry captured from the in-box MIDI Keyboard app. Replying is
+            // mandatory even though no MIDI-CI categories are supported yet.
+            {
+                SynthEngine engine;
+                UmpDispatcher dispatcher;
+                freshEngine(engine, dispatcher, 0);
+
+                CaptureOutput output;
+                dispatcher.SetOutput(&output, SynthIdentity{});
+
+                const uint32_t discovery[10]
+                {
+                    0x30167E7F, 0x0D70021F,
+                    0x30263075, 0x4A7F7F7F,
+                    0x30267F7D, 0x00000000,
+                    0x30260000, 0x01000000,
+                    0x30361C00, 0x04000000,
+                };
+
+                dispatcher.ProcessWords(discovery, 10);
+
+                const auto payload = DecodeSysEx7(output.Words);
+                const uint32_t muid = dispatcher.Muid();
+
+                const bool ok =
+                    payload.size() == 31 &&
+                    payload[0] == 0x7E && payload[1] == 0x7F &&
+                    payload[2] == 0x0D && payload[3] == 0x71 &&
+                    payload[4] == 0x02 &&
+                    payload[5] == (muid & 0x7F) &&
+                    payload[6] == ((muid >> 7) & 0x7F) &&
+                    payload[7] == ((muid >> 14) & 0x7F) &&
+                    payload[8] == ((muid >> 21) & 0x7F) &&
+                    payload[9] == 0x1F && payload[10] == 0x30 &&       // initiator muid echoed
+                    payload[11] == 0x75 && payload[12] == 0x4A &&
+                    payload[13] == 0x00 && payload[14] == 0x00 && payload[15] == 0x41 &&
+                    payload[16] == 11 && payload[18] == 1 &&
+                    payload[30] == 0;                                   // our function block
+
+                char detail[64]{};
+                (void)snprintf(detail, sizeof(detail), "%zu bytes, muid 0x%07X",
+                    payload.size(), muid);
+
+                check("MIDI-CI Discovery is answered with a Reply to Discovery", ok, detail);
             }
 
             // A one byte manufacturer identifier produces a thirteen byte reply, a three byte one

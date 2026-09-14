@@ -27,6 +27,7 @@ namespace MidiSynth
         constexpr uint8_t FirstGroupIndex = 0;
         constexpr uint8_t GroupCount = 1;
         constexpr uint8_t FunctionBlockCount = 1;
+        constexpr uint8_t FunctionBlockNumber = 0;
         constexpr bool FunctionBlockIsBidirectional = true;
     }
 
@@ -82,12 +83,16 @@ namespace MidiSynth
         uint64_t Malformed{ 0 };
 
         uint64_t IdentityRepliesSent{ 0 };
+        uint64_t DiscoveryRepliesSent{ 0 };
     };
 
     class UmpDispatcher
     {
     public:
-        void Initialize(_In_ SynthEngine* engine, _In_ uint8_t group) noexcept;
+        // The MUID is supplied rather than generated here, so this library stays free of any SDK
+        // dependency. Applications should pass MidiUniqueId::CreateRandom(), which keeps clear of
+        // the reserved range. Zero disables MIDI-CI.
+        void Initialize(_In_ SynthEngine* engine, _In_ uint8_t group, _In_ uint32_t muid) noexcept;
 
         // Supplying an output lets the dispatcher answer an Identity Request.
         void SetOutput(_In_opt_ IUmpOutput* output, _In_ const SynthIdentity& identity) noexcept;
@@ -102,18 +107,25 @@ namespace MidiSynth
         UmpDispatcherStats Stats() const noexcept { return m_stats; }
         void ResetStats() noexcept { m_stats = {}; }
 
+        // The 28 bit identifier this device uses in MIDI-CI exchanges.
+        uint32_t Muid() const noexcept { return m_muid; }
+
     private:
         void HandleMidi1ChannelVoice(_In_ uint32_t word) noexcept;
         void HandleMidi2ChannelVoice(_In_ uint32_t word0, _In_ uint32_t word1) noexcept;
         void HandleSystem(_In_ uint32_t word) noexcept;
         void HandleSysEx7(_In_ uint32_t word0, _In_ uint32_t word1) noexcept;
         void HandleCompletedSysEx() noexcept;
+        void HandleMidiCi(_In_reads_(size) const uint8_t* message, _In_ size_t size) noexcept;
         void SendIdentityReply(_In_ uint8_t requestedDeviceId) noexcept;
+        void SendDiscoveryReply(_In_ uint32_t initiatorMuid, _In_ uint8_t outputPathId) noexcept;
+        void SendSysEx7(_In_reads_(count) const uint8_t* payload, _In_ size_t count) noexcept;
 
         SynthEngine* m_engine{ nullptr };
         IUmpOutput* m_output{ nullptr };
         SynthIdentity m_identity{};
         uint8_t m_group{ 0 };
+        uint32_t m_muid{ 0 };
 
         std::vector<uint8_t> m_sysex;
         UmpDispatcherStats m_stats{};
