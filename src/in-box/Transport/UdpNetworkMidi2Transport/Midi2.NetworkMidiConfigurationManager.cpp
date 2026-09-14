@@ -967,13 +967,13 @@ try
         LOG_IF_FAILED(host->AddRemoteClientToDenyList(identity));
     }
 
-    // Release, or refuse, whatever is parked for this identity. There can be more than one if the
-    // client retried from a new port while the user was deciding.
+    // Release, or refuse, whatever this identity holds. There can be more than one connection if
+    // the client retried from a new port while the user was deciding.
     auto key = identity.Key();
 
     for (auto const& connection : TransportState::Current().GetHostConnectionsForHost(hostEntryId))
     {
-        if (connection == nullptr || !connection->IsAwaitingUserApproval())
+        if (connection == nullptr)
         {
             continue;
         }
@@ -983,13 +983,23 @@ try
             continue;
         }
 
-        if (approve)
+        if (connection->IsAwaitingUserApproval())
         {
-            LOG_IF_FAILED(connection->ApproveByUser());
+            if (approve)
+            {
+                LOG_IF_FAILED(connection->ApproveByUser());
+            }
+            else
+            {
+                LOG_IF_FAILED(connection->DenyByUser());
+            }
         }
-        else
+        else if (!approve)
         {
-            LOG_IF_FAILED(connection->DenyByUser());
+            // A deny has to reach an established session as well. The lists are only consulted
+            // when an invitation arrives, and a live session is never re-invited, so leaving it
+            // alone would keep a blocked remote streaming until it happened to reconnect.
+            LOG_IF_FAILED(connection->DisconnectByUser());
         }
     }
 

@@ -44,6 +44,11 @@ public:
     // "Deny until restart" - refused now, and still refused on a later attempt.
     TEST_METHOD(DenyUntilRestartRefusesTheWaitingClient);
 
+    // Blocking from the connection list rather than an invitation. The remote is already past
+    // the approval gate, so a deny which only answered pending clients would record the decision
+    // and leave the session streaming.
+    TEST_METHOD(DenyingAClientWithALiveSessionDisconnectsIt);
+
     // "Deny always" - refused now, and a later invitation is refused immediately rather than
     // being held for another decision.
     TEST_METHOD(DenyAlwaysIsRememberedForTheNextConnection);

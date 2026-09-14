@@ -857,6 +857,54 @@ void NetworkMidiApprovalTests::DenyUntilRestartRefusesTheWaitingClient()
 }
 
 
+void NetworkMidiApprovalTests::DenyingAClientWithALiveSessionDisconnectsIt()
+{
+    VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
+
+    auto name = UniqueName("DenyLiveSession");
+    auto productInstanceId = UniqueProductInstanceId("DenyLiveSession");
+
+    UdpTestClient client;
+    VERIFY_IS_TRUE(client.Open(LocalHostAddress()));
+
+    auto reply = Invite(client, name, productInstanceId);
+    VERIFY_IS_TRUE(reply.has_value() && reply->Contains(CommandCode::InvitationReplyPending));
+
+    VERIFY_IS_TRUE(WaitForPending(name, productInstanceId), L"Client is pending before approval");
+
+    // "once" records nothing, so the client reaches a session without leaving a saved decision
+    // for the next test to trip over.
+    auto approved = ApproveRemoteClient(
+        g_hostEntryIdentifier, Widen(name), Widen(productInstanceId), L"once");
+
+    VERIFY_IS_TRUE(approved.IsSuccess(), L"approveRemoteClient reported success");
+
+    VERIFY_IS_TRUE(
+        WaitForCommand(client, CommandCode::InvitationReplyAccepted, PendingPollTimeout),
+        L"Host accepted the invitation after the user approved it");
+
+    VERIFY_IS_TRUE(
+        WaitForSessionActive(name, productInstanceId),
+        L"The client holds an active session before it is denied");
+
+    // Nothing is awaiting approval now, which is the case a deny used to skip over entirely.
+    auto denied = DenyRemoteClient(
+        g_hostEntryIdentifier, Widen(name), Widen(productInstanceId), L"untilRestart");
+
+    VERIFY_IS_TRUE(denied.IsSuccess(), L"denyRemoteClient reported success");
+
+    VERIFY_IS_TRUE(
+        WaitForCommand(client, CommandCode::Bye, PendingPollTimeout),
+        L"Host sent Bye to a client it was told to block mid-session");
+
+    VERIFY_IS_TRUE(
+        WaitForConnectionReleased(name, productInstanceId),
+        L"The blocked client's session was ended rather than left running");
+
+    client.Close();
+}
+
+
 void NetworkMidiApprovalTests::DenyAlwaysIsRememberedForTheNextConnection()
 {
     VERIFY_IS_TRUE(g_hostReady, L"Approval test host is available");
