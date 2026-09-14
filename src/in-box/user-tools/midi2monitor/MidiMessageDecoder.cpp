@@ -255,12 +255,13 @@ namespace midi2monitor
 
             case UtilityStatusJitterReductionClock:
             case UtilityStatusJitterReductionTimestamp:
+            case UtilityStatusDeltaClockstampTicksPerQuarterNote:
                 AppendField(result, Labels().Ticks, std::format(L"{}", data));
                 break;
 
-            case UtilityStatusDeltaClockstampTicksPerQuarterNote:
+            // This one carries a 20 bit value, unlike the 16 bit fields above.
             case UtilityStatusDeltaClockstampTicksSinceLast:
-                AppendField(result, Labels().Ticks, std::format(L"{}", data));
+                AppendField(result, Labels().Ticks, std::format(L"{}", record.Words[0] & 0x000FFFFF));
                 break;
 
             default:
