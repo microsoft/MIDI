@@ -1,5 +1,7 @@
 #include "MidiSynth/UmpDispatcher.h"
 
+#include <libmidi2/utils.h>
+
 #include <algorithm>
 
 namespace MidiSynth
@@ -242,8 +244,10 @@ namespace MidiSynth
             }
             else
             {
+                // The specification's scaling preserves the center value, which a plain bit
+                // repeat does not. Use the library the rest of the stack uses.
                 m_engine->NoteOn(channel, data1,
-                    static_cast<uint16_t>((data2 << 9) | (data2 << 2) | (data2 >> 5)));
+                    static_cast<uint16_t>(M2Utils::scaleUp(data2, 7, 16)));
             }
             break;
 

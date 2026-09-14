@@ -270,6 +270,26 @@ namespace
             return m_outbound.TryPop(message);
         }
 
+        // Sends a MIDI 2.0 program change with the bank flag set, on every channel, so an
+        // instrument can be auditioned without a controller that can send bank or program.
+        void SelectProgram(_In_ uint8_t program, _In_ uint8_t bankMsb, _In_ uint8_t bankLsb) noexcept
+        {
+            for (uint8_t channel = 0; channel < 16; channel++)
+            {
+                const uint32_t words[2]
+                {
+                    (4u << 28) | (static_cast<uint32_t>(SynthEndpoint::FirstGroupIndex) << 24)
+                        | (0xCu << 20) | (static_cast<uint32_t>(channel) << 16) | 0x01u,
+
+                    (static_cast<uint32_t>(program) << 24)
+                        | (static_cast<uint32_t>(bankMsb) << 8)
+                        | static_cast<uint32_t>(bankLsb),
+                };
+
+                QueueInbound(words, 2);
+            }
+        }
+
         void SetClientInUse(_In_ bool inUse)
         {
             if (inUse)
@@ -417,11 +437,29 @@ namespace
         endpointInfo.SpecificationVersionMajor(1);
         endpointInfo.SpecificationVersionMinor(1);
 
+        // Built from the same values the SysEx Identity Reply uses, so endpoint discovery and a
+        // device inquiry cannot disagree.
+        const SynthIdentity identity{};
+
+        MidiDeclaredDeviceIdentity declaredIdentity(
+            identity.ManufacturerSysExId[0],
+            identity.ManufacturerSysExId[1],
+            identity.ManufacturerSysExId[2],
+            static_cast<uint8_t>(identity.FamilyCode & 0x7F),
+            static_cast<uint8_t>((identity.FamilyCode >> 7) & 0x7F),
+            static_cast<uint8_t>(identity.FamilyMemberCode & 0x7F),
+            static_cast<uint8_t>((identity.FamilyMemberCode >> 7) & 0x7F),
+            identity.SoftwareRevision[0],
+            identity.SoftwareRevision[1],
+            identity.SoftwareRevision[2],
+            identity.SoftwareRevision[3]);
+
         MidiVirtualDeviceCreationConfig creationConfig(
             endpointInfo.Name(),
             L"General MIDI synthesizer prototype",
             L"Microsoft",
-            endpointInfo);
+            endpointInfo,
+            declaredIdentity);
 
         // General MIDI is defined over sixteen channels, which is exactly one group, and the UMP
         // specification wants a paired in and out to be one bidirectional block over one group.
@@ -556,21 +594,53 @@ int main()
         });
 
     wprintf(L"\nEndpoint is live. Connect to \"GM Synth Prototype\" from any MIDI application.\n");
-    wprintf(L"Press Enter for status, or type q then Enter to quit.\n\n");
+    wprintf(L"  <enter>      status\n");
+    wprintf(L"  p <0-127>    program on every channel\n");
+    wprintf(L"  b <0-127>    bank MSB, then reselect the program\n");
+    wprintf(L"  q            quit\n\n");
+
+    uint8_t bankMsb = 0;
 
     for (;;)
     {
-        const int input = getchar();
+        char line[64]{};
 
-        if (input == 'q' || input == EOF)
+        if (fgets(line, sizeof(line), stdin) == nullptr)
         {
             break;
         }
 
-        if (input == '\n')
+        if (line[0] == 'q')
         {
-            host.PrintStats();
+            break;
         }
+
+        if (line[0] == 'p' || line[0] == 'b')
+        {
+            int value = 0;
+
+            if (sscanf_s(line + 1, "%d", &value) == 1 && value >= 0 && value <= 127)
+            {
+                if (line[0] == 'b')
+                {
+                    bankMsb = static_cast<uint8_t>(value);
+                    wprintf(L"  bank MSB %d\n", value);
+                }
+                else
+                {
+                    host.SelectProgram(static_cast<uint8_t>(value), bankMsb, 0);
+                    wprintf(L"  program %d, bank MSB %u\n", value, bankMsb);
+                }
+            }
+            else
+            {
+                wprintf(L"  expected a value from 0 to 127\n");
+            }
+
+            continue;
+        }
+
+        host.PrintStats();
     }
 
     running.store(false, std::memory_order_release);

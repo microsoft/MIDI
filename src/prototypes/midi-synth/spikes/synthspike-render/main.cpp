@@ -1619,6 +1619,43 @@ namespace
             checkReply("Identity Reply, three byte manufacturer identifier", true);
         }
 
+        // The specification's upscale preserves the center value. A plain bit repeat puts MIDI 1.0
+        // velocity 64 slightly above the MIDI 2.0 center, which is the defect this pins down.
+        {
+            auto levelFor = [&](bool midi1, uint16_t value)
+            {
+                SynthEngine engine;
+                UmpDispatcher dispatcher;
+                freshEngine(engine, dispatcher, 0);
+
+                if (midi1)
+                {
+                    uint32_t word = MakeMidi1Cv(0, 0x9, 0, 60, static_cast<uint8_t>(value));
+                    dispatcher.ProcessWords(&word, 1);
+                }
+                else
+                {
+                    uint32_t words[2];
+                    MakeMidi2Cv(0, 0x9, 0, 60, 0, static_cast<uint32_t>(value) << 16, words);
+                    dispatcher.ProcessWords(words, 2);
+                }
+
+                return RenderBurstRms(engine, rate, 0.20);
+            };
+
+            const double midi1Level = levelFor(true, 64);
+            const double midi2Level = levelFor(false, 32768);
+
+            const double differenceDb = (midi1Level > 0.0 && midi2Level > 0.0)
+                ? std::abs(20.0 * std::log10(midi2Level / midi1Level)) : 99.0;
+
+            char detail[48]{};
+            (void)snprintf(detail, sizeof(detail), "%.4f dB apart", differenceDb);
+
+            check("MIDI 1.0 velocity 64 scales to the MIDI 2.0 center",
+                differenceDb < 0.001, detail);
+        }
+
         // Shutdown releases the audio device, so it has to drain first or disconnecting clicks.
         // This measures the bound the transport has to allow for.
         {

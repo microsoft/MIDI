@@ -34,6 +34,10 @@
   <PropertyGroup>
     <OutDir>$(MSBuildThisFileDirectory)..\..\out\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(MSBuildThisFileDirectory)..\..\out\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\</IntDir>
+
+    <!-- libmidi2's M2Utils scaling is header only, so this is an include path and not a link
+         dependency. It is the same arithmetic the service uses, which is the point. -->
+    <SynthLibMidi2Include>$(MSBuildThisFileDirectory)..\..\..\..\in-box\Client\WinRT\core\vcpkg_installed\x64-windows\include</SynthLibMidi2Include>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
@@ -44,7 +48,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)inc;$(SynthLibMidi2Include);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization Condition="'$(Configuration)'=='Debug'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)'=='Release'">MaxSpeed</Optimization>
