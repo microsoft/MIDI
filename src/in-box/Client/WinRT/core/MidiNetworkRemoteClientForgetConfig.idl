@@ -1,0 +1,42 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+import "IMidiServiceTransportPluginConfig.idl";
+
+namespace Windows.Devices.Midi2.Transports.Network
+{
+    // Drops whichever decision a host holds for a remote client, so the next invitation from it
+    // is judged on the host policy alone. The running service applies this immediately; the
+    // saved lists are a separate thing, and MidiNetworkHostKnownClientsConfig is what rewrites
+    // those. Forgetting is not blocking: a session which is already up is left running.
+    [contract(MidiTransportsNetworkApiContract, 1)]
+    [interface_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkRemoteClientForgetConfig", UUID_IMidiNetworkRemoteClientForgetConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Network.IMidiNetworkRemoteClientForgetConfigFactory", UUID_IMidiNetworkRemoteClientForgetConfigFactory)]
+    runtimeclass MidiNetworkRemoteClientForgetConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiNetworkRemoteClientForgetConfig();
+
+        MidiNetworkRemoteClientForgetConfig(
+            Guid hostId,
+            String remoteClientName,
+            String remoteClientProductInstanceId);
+
+        // the host on this PC which holds the decision
+        [noexcept] Guid HostId{ get; set; };
+
+        // A remote client is identified by this pair, never by its address: it may use a new
+        // ephemeral port for every session, and its address can move.
+        [noexcept] String RemoteClientName{ get; set; };
+        [noexcept] String RemoteClientProductInstanceId{ get; set; };
+    }
+}

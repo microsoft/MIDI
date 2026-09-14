@@ -230,6 +230,22 @@ MidiNetworkHost::AddRemoteClientToDenyList(MidiNetworkRemoteClientIdentity const
     return S_OK;
 }
 
+_Use_decl_annotations_
+HRESULT
+MidiNetworkHost::ForgetRemoteClient(MidiNetworkRemoteClientIdentity const& identity)
+{
+    RETURN_HR_IF(E_INVALIDARG, !identity.IsValid());
+
+    auto key = identity.Key();
+
+    auto lock = m_remoteClientListsLock.lock();
+
+    std::erase(m_hostDefinition.AllowedClientKeys, key);
+    std::erase(m_hostDefinition.DeniedClientKeys, key);
+
+    return S_OK;
+}
+
 static MidiNetworkAuthenticationKind AuthenticationKindFromHostAuthentication(_In_ MidiNetworkHostAuthentication const authentication)
 {
     switch (authentication)

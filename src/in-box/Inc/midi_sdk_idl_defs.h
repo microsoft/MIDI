@@ -340,6 +340,11 @@
 #define UUID_IMidiNetworkHostKnownClientsConfig                 8087b303-0519-c0de-31d1-dd00F031E000
 #define UUID_IMidiNetworkHostKnownClientsConfigFactory          8087b303-0519-c0de-31d1-ff00F031E000
 
+#define UUID_IMidiNetworkRemoteClientForgetConfig               8087b303-0519-c0de-31d1-dd00F031F000
+#define UUID_IMidiNetworkRemoteClientForgetConfigFactory        8087b303-0519-c0de-31d1-ff00F031F000
+
+#define UUID_IMidiNetworkRemoteClientForgetResponse             8087b303-0519-c0de-31d1-dd00F0320000
+
 // ============================================================================
 // Windows.Devices.Midi2.Transports.Virtual : Interface number 00F04
 

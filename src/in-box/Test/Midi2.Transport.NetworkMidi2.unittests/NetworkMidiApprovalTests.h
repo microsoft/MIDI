@@ -49,6 +49,10 @@ public:
     // and leave the session streaming.
     TEST_METHOD(DenyingAClientWithALiveSessionDisconnectsIt);
 
+    // forgetRemoteClient. Dropping a decision has to reach the running service: the lists are
+    // read when a host is built, so a config-only forget would not apply until a restart.
+    TEST_METHOD(ForgettingADecisionAppliesWithoutAServiceRestart);
+
     // "Deny always" - refused now, and a later invitation is refused immediately rather than
     // being held for another decision.
     TEST_METHOD(DenyAlwaysIsRememberedForTheNextConnection);

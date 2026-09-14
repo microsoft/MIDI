@@ -29,4 +29,6 @@ This is a saved record, not a command. Telling the service about a single decisi
 
 `KnownClients` must hold the complete set for the host, not only what changed. Both saved lists are replaced by what it holds, so read the current set first, change it, and save the whole thing. Leaving a client out is how a decision is withdrawn, which puts the client back to being one the host has never been told about.
 
+Leaving a client out only changes what the next service start reads. The running service keeps its own copy of the lists, so withdraw the decision from it with [ForgetRemoteClientAsync]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkRemoteClientForgetConfig/) as well, or the old decision stays in force until the service restarts.
+
 Saving an empty `KnownClients` clears both lists for the host.

@@ -1107,6 +1107,62 @@ catch (...)
 }
 
 
+// Drops a remembered allow or deny so the running service stops applying it. The caller rewrites
+// the configuration file as well; without this the old decision would stand until the service
+// restarted. Any live session is left alone, because forgetting is not blocking.
+_Use_decl_annotations_
+HRESULT
+CMidi2NetworkMidiConfigurationManager::RunCommandForgetRemoteClient(
+    winrt::guid const& hostEntryId,
+    MidiNetworkRemoteClientIdentity const& identity,
+    json::JsonObject& responseObject) noexcept
+try
+{
+    if (hostEntryId == winrt::guid{})
+    {
+        internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_MISSING_ENTRY_IDENTIFIER, internal::ResourceGetWString(IDS_ERROR_MISSING_ENTRY_IDENTIFIER));
+        return S_OK;
+    }
+
+    if (!identity.IsValid())
+    {
+        internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_MISSING_REMOTE_CLIENT_IDENTITY, internal::ResourceGetWString(IDS_ERROR_MISSING_REMOTE_CLIENT_IDENTITY));
+        return S_OK;
+    }
+
+    auto host = TransportState::Current().GetHost(hostEntryId);
+
+    if (host == nullptr)
+    {
+        internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_HOST_NOT_FOUND, internal::ResourceGetWString(IDS_ERROR_HOST_NOT_FOUND));
+        return S_OK;
+    }
+
+    // An identity the host holds no decision for is not an error. What the caller asked for,
+    // that nothing is remembered about it, is already true.
+    LOG_IF_FAILED(host->ForgetRemoteClient(identity));
+
+    internal::SetConfigurationResponseObjectSuccess(responseObject);
+
+    return S_OK;
+}
+catch (...)
+{
+    // noexcept, so an escaping exception would terminate the service rather than fail the
+    // command. The JSON response builders can all throw on a low memory condition.
+    TraceLoggingWrite(
+        MidiNetworkMidiTransportTelemetryProvider::Provider(),
+        MIDI_TRACE_EVENT_ERROR,
+        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+        TraceLoggingPointer(this, "this"),
+        TraceLoggingWideString(L"Exception running command", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+    );
+
+    return E_FAIL;
+}
+
+
 _Use_decl_annotations_
 HRESULT
 CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
@@ -2059,6 +2115,7 @@ try
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_APPROVE_REMOTE_CLIENT, true);
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DENY_REMOTE_CLIENT, true);
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_DISCONNECT_REMOTE_CLIENT, true);
+        capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_FORGET_REMOTE_CLIENT, true);
 
         capabilities.emplace(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_GET_PENDING_REMOTE_CLIENTS, true);
 
@@ -2307,6 +2364,39 @@ try
             }
 
             RETURN_IF_FAILED(RunCommandDisconnectRemoteClient(
+                hostEntryIdentifier,
+                identity,
+                responseObject));
+        }
+        else
+        {
+            RETURN_IF_FAILED(E_INVALIDARG);
+        }
+    }
+    else if (commandHelper.Command() == MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_VERB_FORGET_REMOTE_CLIENT)
+    {
+        auto hostEntryId = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_COMMAND_PARAMETER_HOST_ENTRY_IDENTIFIER);
+        auto name = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_NAME_KEY);
+        auto productInstanceId = commandHelper.Arguments()->find(MIDI_CONFIG_JSON_NETWORK_MIDI_CLIENT_IDENTITY_PRODUCT_INSTANCE_ID_KEY);
+
+        if (hostEntryId != commandHelper.Arguments()->end() &&
+            name != commandHelper.Arguments()->end() &&
+            productInstanceId != commandHelper.Arguments()->end())
+        {
+            MidiNetworkRemoteClientIdentity identity{};
+
+            identity.UmpEndpointName = internal::TrimmedWStringCopy(name->second);
+            identity.ProductInstanceId = internal::TrimmedWStringCopy(productInstanceId->second);
+
+            winrt::guid hostEntryIdentifier{};
+
+            if (!TryParseEntryIdentifier(winrt::hstring{ hostEntryId->second }, hostEntryIdentifier))
+            {
+                internal::SetConfigurationResponseObjectFailWithErrorCode(responseObject, NETWORK_ERROR_CODE_INVALID_ENTRY_IDENTIFIER, internal::ResourceGetWString(IDS_ERROR_INVALID_ENTRY_IDENTIFIER));
+                return S_OK;
+            }
+
+            RETURN_IF_FAILED(RunCommandForgetRemoteClient(
                 hostEntryIdentifier,
                 identity,
                 responseObject));

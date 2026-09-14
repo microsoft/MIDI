@@ -37,6 +37,8 @@ import "MidiNetworkRemoteClientApprovalConfig.idl";
 import "MidiNetworkRemoteClientApprovalResponse.idl";
 import "MidiNetworkRemoteClientDisconnectConfig.idl";
 import "MidiNetworkRemoteClientDisconnectResponse.idl";
+import "MidiNetworkRemoteClientForgetConfig.idl";
+import "MidiNetworkRemoteClientForgetResponse.idl";
 import "MidiNetworkPendingRemoteClient.idl";
 import "MidiNetworkTransportSettings.idl";
 
@@ -90,6 +92,14 @@ namespace Windows.Devices.Midi2.Transports.Network
         // is what refuses it in future.
         [noexcept] static Windows.Foundation.IAsyncOperation<MidiNetworkRemoteClientDisconnectResponse> DisconnectRemoteClientAsync(
             MidiNetworkRemoteClientDisconnectConfig disconnectConfig);
+
+        // Drops whichever decision a host holds for a remote client, so the next invitation from
+        // it is judged on the host policy alone. The running service applies this immediately.
+        // The saved lists are separate: rewrite those with MidiNetworkHostKnownClientsConfig, or
+        // the decision returns the next time the service starts. Forgetting is not blocking, so
+        // a session which is already up is left running.
+        [noexcept] static Windows.Foundation.IAsyncOperation<MidiNetworkRemoteClientForgetResponse> ForgetRemoteClientAsync(
+            MidiNetworkRemoteClientForgetConfig forgetConfig);
 
 
 

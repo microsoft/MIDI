@@ -128,6 +128,10 @@ public:
     HRESULT AddRemoteClientToAllowList(_In_ MidiNetworkRemoteClientIdentity const& identity);
     HRESULT AddRemoteClientToDenyList(_In_ MidiNetworkRemoteClientIdentity const& identity);
 
+    // Drops whichever decision is held for this identity, so the next invitation from it is
+    // judged on the host policy alone, as though it had never been seen.
+    HRESULT ForgetRemoteClient(_In_ MidiNetworkRemoteClientIdentity const& identity);
+
 private:
 //    winrt::hstring m_configIdentifier{};
 

@@ -117,6 +117,13 @@ private:
         _In_ bool const persist,
         _Inout_ json::JsonObject& responseObject) noexcept;
 
+    // Drops a remembered allow or deny so the running service stops applying it. Any live session
+    // is left alone, because forgetting a decision is not the same as blocking the remote.
+    HRESULT RunCommandForgetRemoteClient(
+        _In_ winrt::guid const& hostEntryId,
+        _In_ MidiNetworkRemoteClientIdentity const& identity,
+        _Inout_ json::JsonObject& responseObject) noexcept;
+
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
 
 };
