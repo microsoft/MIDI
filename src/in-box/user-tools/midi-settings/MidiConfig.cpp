@@ -4,6 +4,18 @@
 // This is part of Windows MIDI Services
 // Further information: https://aka.ms/midi
 // ============================================================================
+// IN-BOX MICROSOFT TOOL ONLY - DO NOT COPY THIS APPROACH
+//
+// This file reads and writes the Windows MIDI Services configuration file, and the registry
+// value that selects it, directly. That is supported only for the MIDI tools that ship in
+// Windows, of which this is one. The file name, the folder it lives in, that registry value and
+// the JSON schema inside the file are all implementation details and can change in any release
+// without notice.
+//
+// Applications and third-party tools must never open, parse, edit, merge, back up or restore
+// that file, for any reason. Use the Windows MIDI Services API
+// (Windows.Devices.Midi2.ServiceConfig) instead.
+// ============================================================================
 
 #include "pch.h"
 #include "MidiConfig.h"

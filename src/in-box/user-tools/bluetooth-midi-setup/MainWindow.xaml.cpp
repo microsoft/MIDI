@@ -23,6 +23,10 @@ namespace winrt::midibluetoothsetup::implementation
         // Long enough to read, short enough that it is gone before it becomes untrue.
         constexpr std::chrono::seconds StatusMessageLifetime{ 8 };
 
+        // A configuration file larger than this is not one this app wrote, and reading it whole
+        // is only worth doing for a file of a sane size.
+        constexpr int64_t MaximumConfigFileBytes = 16 * 1024 * 1024;
+
         winrt::hstring Lowered(_In_ winrt::hstring const& value) noexcept
         {
             try
@@ -37,6 +41,79 @@ namespace winrt::midibluetoothsetup::implementation
             catch (...)
             {
                 return value;
+            }
+        }
+
+        // The configuration file is UTF-8. It is read through the Win32 calls rather than a
+        // wide stream, because a wide stream converts through the CRT locale and turns every
+        // non-ASCII character in a device name into mojibake.
+        std::wstring ReadUtf8TextFile(_In_ std::wstring const& path) noexcept
+        {
+            try
+            {
+                wil::unique_hfile file{ ::CreateFileW(
+                    path.c_str(),
+                    GENERIC_READ,
+                    FILE_SHARE_READ | FILE_SHARE_WRITE,
+                    nullptr,
+                    OPEN_EXISTING,
+                    FILE_ATTRIBUTE_NORMAL,
+                    nullptr) };
+
+                if (!file)
+                {
+                    return {};
+                }
+
+                LARGE_INTEGER size{};
+
+                if (!::GetFileSizeEx(file.get(), &size) || size.QuadPart <= 0 || size.QuadPart > MaximumConfigFileBytes)
+                {
+                    return {};
+                }
+
+                std::string bytes(static_cast<size_t>(size.QuadPart), '\0');
+
+                DWORD read{ 0 };
+
+                if (!::ReadFile(file.get(), bytes.data(), static_cast<DWORD>(bytes.size()), &read, nullptr))
+                {
+                    return {};
+                }
+
+                bytes.resize(read);
+
+                if (bytes.size() >= 3 &&
+                    static_cast<unsigned char>(bytes[0]) == 0xEF &&
+                    static_cast<unsigned char>(bytes[1]) == 0xBB &&
+                    static_cast<unsigned char>(bytes[2]) == 0xBF)
+                {
+                    bytes.erase(0, 3);
+                }
+
+                if (bytes.empty())
+                {
+                    return {};
+                }
+
+                auto const required = ::MultiByteToWideChar(
+                    CP_UTF8, 0, bytes.data(), static_cast<int>(bytes.size()), nullptr, 0);
+
+                if (required <= 0)
+                {
+                    return {};
+                }
+
+                std::wstring text(static_cast<size_t>(required), L'\0');
+
+                ::MultiByteToWideChar(
+                    CP_UTF8, 0, bytes.data(), static_cast<int>(bytes.size()), text.data(), required);
+
+                return text;
+            }
+            catch (...)
+            {
+                return {};
             }
         }
 
@@ -575,6 +652,22 @@ namespace winrt::midibluetoothsetup::implementation
             snapshot.PendingClients = midi2bt::MidiBluetoothTransportManager::GetPendingPeripheralClients();
             snapshot.Radio = midi2bt::MidiBluetoothTransportManager::GetRadioInformation();
 
+            // ================================================================================
+            // IN-BOX MICROSOFT TOOL ONLY - DO NOT COPY THIS APPROACH
+            //
+            // The block below reads the Windows MIDI Services configuration file directly. That
+            // is supported only for the MIDI tools that ship in Windows, of which this is one.
+            // The file name, the folder it lives in, the registry value that selects it and the
+            // JSON schema inside it are all implementation details and can change in any release
+            // without notice.
+            //
+            // Applications and third-party tools must never open, parse, edit, merge, back up or
+            // restore that file, for any reason. Use the Windows MIDI Services API
+            // (Windows.Devices.Midi2.ServiceConfig) instead. Every change this app makes goes
+            // through that API; only this read does not, because the service does not report
+            // which devices are configured to come back on their own.
+            // ================================================================================
+            //
             // The configuration file is this app's record of which devices are meant to come
             // back on their own, and the service does not report that separately.
             try
@@ -583,16 +676,13 @@ namespace winrt::midibluetoothsetup::implementation
 
                 if (!path.empty())
                 {
-                    std::wifstream file{ std::wstring{ path } };
+                    auto const text = ReadUtf8TextFile(std::wstring{ path });
 
-                    if (file)
+                    if (!text.empty())
                     {
-                        std::wstringstream buffer;
-                        buffer << file.rdbuf();
-
                         json::JsonObject root{ nullptr };
 
-                        if (json::JsonObject::TryParse(winrt::hstring{ buffer.str() }, root))
+                        if (json::JsonObject::TryParse(winrt::hstring{ text }, root))
                         {
                             auto const transportKey = winrt::hstring{ std::format(
                                 L"{{{:08X}-{:04X}-{:04X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}}}",

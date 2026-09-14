@@ -18,6 +18,23 @@ namespace midinetworksetup
         bool Allowed{ true };
     };
 
+    // ========================================================================================
+    // IN-BOX MICROSOFT TOOL ONLY - DO NOT COPY THIS APPROACH
+    //
+    // This class reads and writes the Windows MIDI Services configuration file directly. That is
+    // supported only for the MIDI tools that ship in Windows, of which this is one. The file
+    // name, the folder it lives in, the registry value that selects it and the JSON schema
+    // inside it are all implementation details and can change in any release without notice.
+    //
+    // Applications and third-party tools must never open, parse, edit, merge, back up or restore
+    // that file, for any reason, including backup, restore, migration or recovery. Use the
+    // Windows MIDI Services API (Windows.Devices.Midi2.ServiceConfig) instead: it serializes
+    // access with the service, merges entries rather than rewriting the file, makes its own
+    // backups, validates what it writes, and applies the change to the running service as well
+    // as to disk. Careful file handling does not make direct access supported - it still races
+    // the service and the settings apps, and it still breaks when the format changes.
+    // ========================================================================================
+    //
     // Reads and writes the Windows MIDI Services configuration file. The service applies a
     // change immediately when it is asked to; the file is what makes it survive a restart, so
     // everything here runs only after the matching service call has succeeded.
