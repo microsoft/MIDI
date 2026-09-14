@@ -60,31 +60,30 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <!-- Named midi2.exe for this evaluation so it can live alongside the shipping midi.exe -->
     <TargetName>midi</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
+    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)vsfiles-sdk\intermediate\com-extensions-idl\$(Platform)\$(Configuration)</IncludePath>
     <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\in-box\inc;$(SolutionDir)..\shared\api-ref\$(Platform)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">
     <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
+    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)vsfiles-sdk\intermediate\com-extensions-idl\$(Platform)\$(Configuration)</IncludePath>
     <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\in-box\inc;$(SolutionDir)..\shared\api-ref\$(Platform)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
+    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)vsfiles-sdk\intermediate\com-extensions-idl\$(Platform)\$(Configuration)</IncludePath>
     <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\in-box\inc;$(SolutionDir)..\shared\api-ref\$(Platform)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">
     <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
-    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\</IncludePath>
+    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\;$(SolutionDir)vsfiles-sdk\intermediate\com-extensions-idl\$(Platform)\$(Configuration)</IncludePath>
     <ExternalIncludePath>$(ExternalIncludePath);$(SolutionDir)..\in-box\inc;$(SolutionDir)..\shared\api-ref\$(Platform)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg">
@@ -136,6 +135,7 @@
     <ClInclude Include="cmd_bluetooth.h" />
     <ClInclude Include="cmd_endpoint.h" />
     <ClInclude Include="cmd_enumerate.h" />
+    <ClInclude Include="cmd_forward.h" />
     <ClInclude Include="cmd_loopback.h" />
     <ClInclude Include="cmd_network.h" />
     <ClInclude Include="cmd_sysex.h" />
@@ -159,16 +159,19 @@
     <ClInclude Include="word_parsing.h" />
     <!-- shared with the Windows MIDI Services GUI tools; see midi-app-shared\README.md -->
     <ClInclude Include="..\midi-app-shared\BeatClockGenerator.h" />
+    <ClInclude Include="..\midi-app-shared\MidiMessageForwarder.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="cmd_bluetooth.cpp" />
     <ClCompile Include="cmd_endpoint.cpp" />
     <ClCompile Include="cmd_enumerate.cpp" />
+    <ClCompile Include="cmd_forward.cpp" />
     <ClCompile Include="cmd_loopback.cpp" />
     <ClCompile Include="cmd_network.cpp" />
     <ClCompile Include="cmd_sysex.cpp" />
     <ClCompile Include="cmd_system.cpp" />
     <ClCompile Include="..\midi-app-shared\BeatClockGenerator.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiMessageForwarder.cpp" />
     <ClCompile Include="console_output.cpp" />
     <ClCompile Include="console_table.cpp" />
     <ClCompile Include="endpoint_picker.cpp" />
@@ -195,6 +198,9 @@
     <ResourceCompile Include="Resources.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Client\WinRT\com-extensions-idl\com-extensions-idl.vcxproj">
+      <Project>{9a508d6d-08cb-473a-995e-d069f00eb8bb}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\Client\WinRT\core\Windows.Devices.Midi2.vcxproj">
       <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
     </ProjectReference>

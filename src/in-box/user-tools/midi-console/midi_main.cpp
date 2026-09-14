@@ -15,6 +15,7 @@
 #include "cmd_bluetooth.h"
 #include "cmd_endpoint.h"
 #include "cmd_enumerate.h"
+#include "cmd_forward.h"
 #include "cmd_loopback.h"
 #include "cmd_network.h"
 #include "cmd_sysex.h"
@@ -353,6 +354,17 @@ int main()
     requestEndpointInfoCommand->add_flag("-s,--stream-configuration", requestEndpointInfoOptions.RequestStreamConfiguration, ResourceString(IDS_OPT_REQUEST_STREAM_CONFIGURATION));
     requestEndpointInfoCommand->add_option("-j,--ump-version-major", requestEndpointInfoOptions.UmpVersionMajor, ResourceString(IDS_OPT_UMP_VERSION_MAJOR));
     requestEndpointInfoCommand->add_option("-m,--ump-version-minor", requestEndpointInfoOptions.UmpVersionMinor, ResourceString(IDS_OPT_UMP_VERSION_MINOR));
+
+    // ---------------------------------------------------------------- forward
+
+    ForwardOptions forwardOptions{};
+
+    auto forwardCommand = app.add_subcommand("forward", ResourceString(IDS_CMD_FORWARD));
+    forwardCommand->alias("bridge");
+    forwardCommand->add_option("--source-endpoint,--source,-s", forwardOptions.SourceEndpointDeviceId, ResourceString(IDS_OPT_FWD_SOURCE_ENDPOINT));
+    forwardCommand->add_option("--source-group", forwardOptions.SourceGroupNumber, ResourceString(IDS_OPT_FWD_SOURCE_GROUP));
+    forwardCommand->add_option("--destination-endpoint,--destination,-d", forwardOptions.DestinationEndpointDeviceId, ResourceString(IDS_OPT_FWD_DESTINATION_ENDPOINT));
+    forwardCommand->add_option("--destination-group", forwardOptions.DestinationGroupNumber, ResourceString(IDS_OPT_FWD_DESTINATION_GROUP));
 
     // ---------------------------------------------------------------- sysex
 
@@ -709,6 +721,8 @@ int main()
         if (fullIdCommand->parsed())                return RunEndpointFullIdCommand(fullIdOptions);
         if (requestFunctionBlocksCommand->parsed()) return RunEndpointRequestFunctionBlocksCommand(requestFunctionBlocksOptions);
         if (requestEndpointInfoCommand->parsed())   return RunEndpointRequestEndpointInfoCommand(requestEndpointInfoOptions);
+
+        if (forwardCommand->parsed())               return RunForwardCommand(forwardOptions);
 
         if (sysExSendCommand->parsed())             return RunSysExSendFileCommand(sysExSendOptions);
         if (sysExReceiveCommand->parsed())          return RunSysExReceiveFileCommand(sysExReceiveOptions);
