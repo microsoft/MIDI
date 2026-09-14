@@ -1082,6 +1082,9 @@
                                                     Content="Use classic driver"
                                                     IsEnabled="{x:Bind CanUseClassicDriver, Mode=OneWay}"
                                                     Click="OnUseClassicDriverClick" />
+                                            <ProgressRing IsActive="{x:Bind IsBusy, Mode=OneWay}"
+                                                          Width="20"
+                                                          Height="20" />
                                         </StackPanel>
                                     </Grid>
                                 </Border>
