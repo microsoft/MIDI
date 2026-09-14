@@ -8,13 +8,13 @@
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_IS_PREVIEW                         true
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_SOURCE                             L"GitHub Preview"
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_DATE                               L"2026-09-14"
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_NAME                       L"SDK Dev Preview 8"
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL                       L"0.99.75-devpreview.8"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_NAME                       L"SDK Dev Preview 9"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FULL                       L"0.99.76-devpreview.9"
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MAJOR                      0
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_MINOR                      99
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_PATCH                      75
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_PATCH                      76
 #define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_BUILD_NUMBER               0
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_PREVIEW                            L"devpreview.8"
-#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FILE                       L"0.99.75.0"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_PREVIEW                            L"devpreview.9"
+#define WINDOWS_MIDI_SERVICES_NUGET_BUILD_VERSION_FILE                       L"0.99.76.0"
 
 #endif
