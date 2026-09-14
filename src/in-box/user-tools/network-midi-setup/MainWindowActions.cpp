@@ -2322,13 +2322,21 @@ namespace winrt::midinetworksetup::implementation
 
         try
         {
-            if (native::NetworkConfigFile::Current().ForgetRemoteClient(hostId, name, productInstanceId))
+            if (!native::NetworkConfigFile::Current().ForgetRemoteClient(hostId, name, productInstanceId))
             {
-                message = res::FormatString(L"KnownClientForgottenFormat", name);
+                message = native::NetworkConfigFile::Current().LastErrorMessage();
             }
             else
             {
-                message = native::NetworkConfigFile::Current().LastErrorMessage();
+                // Removing it from the file only decides what the next service start reads. The
+                // running service holds its own copy of the lists, so it has to be told as well.
+                midi2net::MidiNetworkRemoteClientForgetConfig config{ hostId, name, productInstanceId };
+
+                auto const response = co_await midi2net::MidiNetworkTransportManager::ForgetRemoteClientAsync(config);
+
+                message = response != nullptr && response.Success() ?
+                    res::FormatString(L"KnownClientForgottenFormat", name) :
+                    res::FormatString(L"KnownClientForgottenUntilRestartFormat", name);
             }
         }
         catch (...)
