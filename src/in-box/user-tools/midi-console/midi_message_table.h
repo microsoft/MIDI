@@ -95,6 +95,19 @@ namespace midi2console
         Cell BuildDecodedDataCell(_In_ ReceivedMidiMessage const& message) const;
         Cell BuildDecodedMidi1ChannelVoiceCell(_In_ ReceivedMidiMessage const& message) const;
         Cell BuildDecodedMidi2ChannelVoiceCell(_In_ ReceivedMidiMessage const& message) const;
+        Cell BuildDecodedUtilityCell(_In_ ReceivedMidiMessage const& message) const;
+        Cell BuildDecodedStreamCell(_In_ ReceivedMidiMessage const& message) const;
+
+        Cell BuildCellFromParts(
+            _In_ std::vector<std::pair<std::string, fmt::text_style>> const& parts) const;
+
+        // Shared by SysEx7 and SysEx8, which differ only in where the payload starts and how
+        // many bytes the message can hold.
+        Cell BuildDecodedDataBytesCell(
+            _In_ ReceivedMidiMessage const& message,
+            _In_ uint8_t payloadByteOffset,
+            _In_ uint8_t declaredByteCount,
+            _In_ uint8_t maximumByteCount) const;
 
         std::vector<Column> m_columns;
         std::string m_headerLine;

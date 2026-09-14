@@ -38,10 +38,11 @@ namespace MidiSynth
     }
 
     _Use_decl_annotations_
-    void UmpDispatcher::Initialize(SynthEngine* engine, uint8_t group) noexcept
+    void UmpDispatcher::Initialize(SynthEngine* engine, uint8_t group, uint32_t muid) noexcept
     {
         m_engine = engine;
         m_group = group & 0xF;
+        m_muid = muid & 0x0FFFFFFF;
         m_sysex.clear();
         m_stats = {};
     }
@@ -94,6 +95,106 @@ namespace MidiSynth
             payload[total++] = revision & 0x7F;
         }
 
+        SendSysEx7(payload, total);
+
+        m_stats.IdentityRepliesSent++;
+    }
+
+    _Use_decl_annotations_
+    void UmpDispatcher::HandleMidiCi(const uint8_t* message, size_t size) noexcept
+    {
+        // 7E <device id> 0D <sub id 2> <version> <source muid x4> <destination muid x4> ...
+        if (size < 13)
+        {
+            m_stats.Malformed++;
+            return;
+        }
+
+        const uint8_t subId2 = message[3];
+
+        const uint32_t initiatorMuid =
+            static_cast<uint32_t>(message[5]) |
+            (static_cast<uint32_t>(message[6]) << 7) |
+            (static_cast<uint32_t>(message[7]) << 14) |
+            (static_cast<uint32_t>(message[8]) << 21);
+
+        // Replying to Discovery is mandatory even for a device that supports no MIDI-CI categories.
+        if (subId2 == 0x70)
+        {
+            // The output path id arrived with message version 2, so older initiators omit it.
+            const uint8_t outputPathId = (size >= 30) ? (message[29] & 0x7F) : 0;
+
+            SendDiscoveryReply(initiatorMuid, outputPathId);
+            return;
+        }
+
+        m_stats.Ignored++;
+    }
+
+    _Use_decl_annotations_
+    void UmpDispatcher::SendDiscoveryReply(uint32_t initiatorMuid, uint8_t outputPathId) noexcept
+    {
+        if (m_output == nullptr || !m_identity.IsConfigured() || m_muid == 0)
+        {
+            m_stats.Ignored++;
+            return;
+        }
+
+        auto appendMuid = [](uint8_t* buffer, size_t& offset, uint32_t muid) noexcept
+        {
+            buffer[offset++] = static_cast<uint8_t>(muid & 0x7F);
+            buffer[offset++] = static_cast<uint8_t>((muid >> 7) & 0x7F);
+            buffer[offset++] = static_cast<uint8_t>((muid >> 14) & 0x7F);
+            buffer[offset++] = static_cast<uint8_t>((muid >> 21) & 0x7F);
+        };
+
+        uint8_t payload[31]{};
+        size_t total = 0;
+
+        payload[total++] = 0x7E;
+        payload[total++] = 0x7F;        // from the function block
+        payload[total++] = 0x0D;
+        payload[total++] = 0x71;        // reply to discovery
+        payload[total++] = 0x02;        // message version
+
+        appendMuid(payload, total, m_muid);
+        appendMuid(payload, total, initiatorMuid);
+
+        // MIDI-CI always carries three manufacturer bytes, unlike an Identity Reply.
+        payload[total++] = m_identity.ManufacturerSysExId[0];
+        payload[total++] = m_identity.ManufacturerSysExId[1];
+        payload[total++] = m_identity.ManufacturerSysExId[2];
+
+        payload[total++] = static_cast<uint8_t>(m_identity.FamilyCode & 0x7F);
+        payload[total++] = static_cast<uint8_t>((m_identity.FamilyCode >> 7) & 0x7F);
+        payload[total++] = static_cast<uint8_t>(m_identity.FamilyMemberCode & 0x7F);
+        payload[total++] = static_cast<uint8_t>((m_identity.FamilyMemberCode >> 7) & 0x7F);
+
+        for (const auto revision : m_identity.SoftwareRevision)
+        {
+            payload[total++] = revision & 0x7F;
+        }
+
+        // No Profile Configuration, Property Exchange or Process Inquiry yet.
+        payload[total++] = 0x00;
+
+        // Receivable maximum SysEx size, seven bits per byte, LSB first.
+        payload[total++] = static_cast<uint8_t>(MaxSysExBytes & 0x7F);
+        payload[total++] = static_cast<uint8_t>((MaxSysExBytes >> 7) & 0x7F);
+        payload[total++] = static_cast<uint8_t>((MaxSysExBytes >> 14) & 0x7F);
+        payload[total++] = static_cast<uint8_t>((MaxSysExBytes >> 21) & 0x7F);
+
+        payload[total++] = outputPathId;
+        payload[total++] = SynthEndpoint::FunctionBlockNumber;
+
+        SendSysEx7(payload, total);
+
+        m_stats.DiscoveryRepliesSent++;
+    }
+
+    _Use_decl_annotations_
+    void UmpDispatcher::SendSysEx7(const uint8_t* payload, size_t total) noexcept
+    {
         constexpr size_t BytesPerPacket = 6;
 
         for (size_t offset = 0; offset < total; offset += BytesPerPacket)
@@ -130,8 +231,6 @@ namespace MidiSynth
 
             m_output->SendUmp(words, 2);
         }
-
-        m_stats.IdentityRepliesSent++;
     }
 
     _Use_decl_annotations_
@@ -440,6 +539,12 @@ namespace MidiSynth
             if (m_sysex[2] == 0x09)
             {
                 m_engine->SystemReset();
+                return;
+            }
+
+            if (m_sysex[2] == 0x0D)
+            {
+                HandleMidiCi(m_sysex.data(), size);
                 return;
             }
         }

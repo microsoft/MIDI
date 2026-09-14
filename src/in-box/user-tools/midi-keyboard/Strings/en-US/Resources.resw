@@ -172,7 +172,10 @@
   <data name="BankLsbBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Bank least significant byte</value>
   </data>
-  <data name="SendPatchOnStartupCheckBox.Content" xml:space="preserve">
+  <data name="SendPatchOnStartupCheckBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Send these when reconnecting to this device</value>
+  </data>
+  <data name="SendPatchOnStartupText.Text" xml:space="preserve">
     <value>Send these when reconnecting to this device</value>
   </data>
   <data name="SendPatchButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">

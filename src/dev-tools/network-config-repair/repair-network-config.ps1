@@ -5,13 +5,36 @@
 # Network MIDI 2.0 (UDP) configuration repair tool
 # https://github.com/microsoft/MIDI/
 # ============================================================================
+#
+# UNSUPPORTED - DO NOT COPY THIS APPROACH. This script reads and writes the
+# Windows MIDI Services configuration file directly. Microsoft does not support
+# direct manipulation of that file by anything other than the in-box MIDI tools.
+# Its format, its name, its location and the registry value that selects it are
+# implementation details and can change in any release without notice, so this
+# script can corrupt a configuration or stop working at any time. It exists for
+# development and diagnostics inside the Windows MIDI Services repository only.
+# Applications and third-party tools must use the Windows MIDI Services API
+# (Windows.Devices.Midi2.ServiceConfig) instead.
+#
+# ============================================================================
 
 <#
 .SYNOPSIS
     Repairs, or removes, the Network MIDI 2.0 (UDP) entries in the Windows MIDI Services
     configuration file.
 
+    UNSUPPORTED - DO NOT COPY THIS APPROACH. See the note in .DESCRIPTION.
+
 .DESCRIPTION
+    UNSUPPORTED - DO NOT COPY THIS APPROACH. This script reads and writes the Windows
+    MIDI Services configuration file directly. Microsoft does not support direct
+    manipulation of that file by anything other than the in-box MIDI tools. Its format,
+    its name, its location and the registry value that selects it are implementation
+    details and can change in any release without notice, so this script can corrupt a
+    configuration or stop working at any time. It exists for development and diagnostics
+    inside the Windows MIDI Services repository only. Applications and third-party tools
+    must use the Windows MIDI Services API (Windows.Devices.Midi2.ServiceConfig) instead.
+
     Hand-edited configuration files, and files written by older previews of the API,
     often contain Network MIDI 2.0 entries the current service will refuse. A refused
     entry is skipped silently, so a host or a client simply never appears.

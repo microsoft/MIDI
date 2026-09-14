@@ -11,6 +11,8 @@
 #include "MidiUniqueId.h"
 #include "CapabilityInquiry.MidiUniqueId.g.cpp"
 
+#include <random>
+
 namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 {
     winrt::hstring MidiUniqueId::ToString()
@@ -41,15 +43,16 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
     {
         try
         {
-            std::srand((int)(midi2::MidiClock::Now() & 0x00000000FFFFFFFF));
+            // Draw from the whole range below MIDI_MUID_RESERVED_START, so the reserved values and
+            // the broadcast value cannot come out. std::rand() cannot do this: it stops at 32767
+            // here, which is a small fraction of the 28 bits the collision odds in the
+            // specification assume.
+            std::random_device generator;
 
-            uint32_t val = ((uint32_t)(std::rand()) % 0xFFFFF);
+            std::uniform_int_distribution<uint32_t> distribution(
+                MIDI_MUID_MIN_VALUE, MIDI_MUID_RESERVED_START - 1);
 
-            // get us out of the reserved area
-            val <<= 8;
-
-            //return winrt::make<MidiUniqueId>(val);
-            return ci::MidiUniqueId(val);
+            return ci::MidiUniqueId(distribution(generator));
         }
         catch (winrt::hresult_error const& ex)
         {

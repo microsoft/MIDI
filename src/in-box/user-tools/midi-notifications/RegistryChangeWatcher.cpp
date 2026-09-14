@@ -82,11 +82,23 @@ CATCH_RETURN()
 
 void RegistryChangeWatcher::Stop() noexcept
 {
-    m_stopping.store(true);
+    {
+        // The cancel shares the lock with arming, so whichever of the two runs second sees the
+        // other's result: either the re-arm is undone here, or it never happens.
+        std::lock_guard<std::mutex> guard{ m_armLock };
 
+        m_stopping = true;
+
+        if (m_wait != nullptr)
+        {
+            ::SetThreadpoolWait(m_wait, nullptr, nullptr);
+        }
+    }
+
+    // Outside the lock, because a callback which is already running has to be able to take it
+    // and finish before this can return.
     if (m_wait != nullptr)
     {
-        ::SetThreadpoolWait(m_wait, nullptr, nullptr);
         ::WaitForThreadpoolWaitCallbacks(m_wait, TRUE);
         ::CloseThreadpoolWait(m_wait);
         m_wait = nullptr;
@@ -98,7 +110,9 @@ void RegistryChangeWatcher::Stop() noexcept
 
 HRESULT RegistryChangeWatcher::ArmNotification() noexcept
 {
-    if (m_stopping.load() || !m_key || !m_changeEvent)
+    std::lock_guard<std::mutex> guard{ m_armLock };
+
+    if (m_stopping || !m_key || !m_changeEvent || m_wait == nullptr)
     {
         return S_FALSE;
     }
@@ -127,14 +141,21 @@ void CALLBACK RegistryChangeWatcher::OnWaitCallback(
 {
     auto self = static_cast<RegistryChangeWatcher*>(context);
 
-    if (self == nullptr || self->m_stopping.load())
+    if (self == nullptr)
     {
         return;
     }
 
     // Re-armed before the callback runs, so a change which happens while the callback is working
-    // is still caught rather than falling into the gap.
-    LOG_IF_FAILED(self->ArmNotification());
+    // is still caught rather than falling into the gap. S_FALSE means Stop won the race.
+    auto const armed = self->ArmNotification();
+
+    LOG_IF_FAILED(armed);
+
+    if (armed != S_OK)
+    {
+        return;
+    }
 
     try
     {

@@ -209,7 +209,7 @@
                     </StackPanel>
                     <Button.Flyout>
                         <Flyout Opened="OnPatchFlyoutOpened">
-                            <StackPanel Spacing="12" MinWidth="260">
+                            <StackPanel Spacing="12" MinWidth="320" MaxWidth="380">
                                 <TextBlock x:Uid="PatchFlyoutTitle"
                                            Text="Bank and program"
                                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
@@ -222,7 +222,17 @@
                                           Header="Programs on this device"
                                           HorizontalAlignment="Stretch"
                                           Visibility="Collapsed"
-                                          SelectionChanged="OnProgramListSelectionChanged" />
+                                          SelectionChanged="OnProgramListSelectionChanged">
+                                    <!-- device program names are arbitrary, so trim rather
+                                         than let a long one run past the edge -->
+                                    <ComboBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       TextWrapping="NoWrap" />
+                                        </DataTemplate>
+                                    </ComboBox.ItemTemplate>
+                                </ComboBox>
 
                                 <TextBlock x:Name="ProgramListStatusText"
                                            AutomationProperties.AutomationId="ProgramListStatusText"
@@ -239,7 +249,7 @@
                                            Maximum="128"
                                            SmallChange="1"
                                            LargeChange="10"
-                                           SpinButtonPlacementMode="Compact"
+                                           SpinButtonPlacementMode="Inline"
                                            ValueChanged="OnProgramNumberChanged" />
 
                                 <Grid ColumnSpacing="10">
@@ -255,7 +265,7 @@
                                                Minimum="0"
                                                Maximum="127"
                                                SmallChange="1"
-                                               SpinButtonPlacementMode="Compact"
+                                               SpinButtonPlacementMode="Inline"
                                                ValueChanged="OnBankMsbChanged" />
                                     <NumberBox x:Name="BankLsbBox"
                                                x:Uid="BankLsbBox"
@@ -265,15 +275,18 @@
                                                Minimum="0"
                                                Maximum="127"
                                                SmallChange="1"
-                                               SpinButtonPlacementMode="Compact"
+                                               SpinButtonPlacementMode="Inline"
                                                ValueChanged="OnBankLsbChanged" />
                                 </Grid>
 
                                 <CheckBox x:Name="SendPatchOnStartupCheckBox"
                                           x:Uid="SendPatchOnStartupCheckBox"
                                           AutomationProperties.AutomationId="SendPatchOnStartupCheckBox"
-                                          Content="Send these when reconnecting to this device"
-                                          Click="OnSendPatchOnStartupChanged" />
+                                          Click="OnSendPatchOnStartupChanged">
+                                    <TextBlock x:Uid="SendPatchOnStartupText"
+                                               Text="Send these when reconnecting to this device"
+                                               TextWrapping="Wrap" />
+                                </CheckBox>
 
                                 <Button x:Name="SendPatchButton"
                                         x:Uid="SendPatchButton"

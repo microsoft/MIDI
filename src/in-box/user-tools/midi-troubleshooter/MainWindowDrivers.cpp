@@ -438,7 +438,7 @@ namespace winrt::miditroubleshooter::implementation
 
         auto const item = ItemFromSender(sender);
 
-        if (item == nullptr)
+        if (item == nullptr || item.IsBusy())
         {
             co_return;
         }
@@ -462,6 +462,20 @@ namespace winrt::miditroubleshooter::implementation
             auto const instanceId = std::wstring{ item.InstanceId() };
 
             item.IsBusy(true);
+
+            // fires on the closing and the exception paths too, so the row cannot be left marked
+            // busy with no way back other than a refresh
+            auto const clearBusy = wil::scope_exit([&item]() noexcept
+                {
+                    try
+                    {
+                        item.IsBusy(false);
+                    }
+                    catch (...)
+                    {
+                    }
+                });
+
             DriversProgressRing().IsActive(true);
             DriverFollowUpInfoBar().IsOpen(false);
             m_driverFollowUp = native::DriverChangeFollowUp::None;
@@ -499,7 +513,7 @@ namespace winrt::miditroubleshooter::implementation
 
         auto const item = ItemFromSender(sender);
 
-        if (item == nullptr)
+        if (item == nullptr || item.IsBusy())
         {
             co_return;
         }
@@ -523,6 +537,20 @@ namespace winrt::miditroubleshooter::implementation
             auto const instanceId = std::wstring{ item.InstanceId() };
 
             item.IsBusy(true);
+
+            // fires on the closing and the exception paths too, so the row cannot be left marked
+            // busy with no way back other than a refresh
+            auto const clearBusy = wil::scope_exit([&item]() noexcept
+                {
+                    try
+                    {
+                        item.IsBusy(false);
+                    }
+                    catch (...)
+                    {
+                    }
+                });
+
             DriversProgressRing().IsActive(true);
             DriverFollowUpInfoBar().IsOpen(false);
             m_driverFollowUp = native::DriverChangeFollowUp::None;

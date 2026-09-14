@@ -168,17 +168,30 @@ namespace midi2console
 
         auto const response = midi2loop::MidiLoopbackManager::RemoveTransientLoopback(config);
 
-        if (response == nullptr || !response.Success())
+        auto const removed = response != nullptr && response.Success();
+
+        if (removed)
+        {
+            WriteSuccessLine(ResourceString(IDS_LOOPBACK_REMOVED));
+        }
+        else
         {
             auto const message = response == nullptr ? std::string{} : ToUtf8(response.ErrorMessage());
 
             WriteErrorLine(FormatResourceString(IDS_LOOPBACK_REMOVE_FAILED, message));
-            return 1;
         }
 
-        WriteSuccessLine(ResourceString(IDS_LOOPBACK_REMOVED));
+        // Attempted whether or not the endpoint was running, so a loopback which is in the file
+        // but not currently started can still be taken out of it.
+        if (options.SaveToConfig)
+        {
+            auto const saved = midi2config::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
 
-        return 0;
+            WriteField(ResourceString(IDS_LOOPBACK_LABEL_SAVED_TO_CONFIG),
+                FormatBoolean(saved != nullptr && saved.Success()), successTextStyle);
+        }
+
+        return removed ? 0 : 1;
     }
 
     int RunBasicLoopbackListCommand()
@@ -279,17 +292,30 @@ namespace midi2console
 
         auto const response = midi2basicloop::MidiBasicLoopbackManager::RemoveTransientLoopback(config);
 
-        if (response == nullptr || !response.Success())
+        auto const removed = response != nullptr && response.Success();
+
+        if (removed)
+        {
+            WriteSuccessLine(ResourceString(IDS_LOOPBACK_REMOVED));
+        }
+        else
         {
             auto const message = response == nullptr ? std::string{} : ToUtf8(response.ErrorMessage());
 
             WriteErrorLine(FormatResourceString(IDS_LOOPBACK_REMOVE_FAILED, message));
-            return 1;
         }
 
-        WriteSuccessLine(ResourceString(IDS_LOOPBACK_REMOVED));
+        // Attempted whether or not the endpoint was running, so a loopback which is in the file
+        // but not currently started can still be taken out of it.
+        if (options.SaveToConfig)
+        {
+            auto const saved = midi2config::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
 
-        return 0;
+            WriteField(ResourceString(IDS_LOOPBACK_LABEL_SAVED_TO_CONFIG),
+                FormatBoolean(saved != nullptr && saved.Success()), successTextStyle);
+        }
+
+        return removed ? 0 : 1;
     }
 
     int RunLoopbackMuteCommand(_In_ LoopbackMuteOptions const& options)

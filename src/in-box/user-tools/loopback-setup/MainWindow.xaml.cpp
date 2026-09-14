@@ -149,6 +149,54 @@ namespace winrt::midiloopbacksetup::implementation
                 return nameA;
             }
         }
+
+        // Names the things this build of the transport cannot do, as a readable list, so the page
+        // can say so once instead of leaving buttons which are simply absent. Empty when it can do
+        // them all. The list command is deliberately not in here: when it is missing the tool
+        // rebuilds the list by enumerating the endpoints, so the customer sees no difference.
+        winrt::hstring MissingFeatureList(
+            _In_ bool const canMute,
+            _In_ bool const canCustomize,
+            _In_ bool const canSetImage) noexcept
+        {
+            try
+            {
+                std::vector<winrt::hstring> missing{};
+
+                if (!canMute)
+                {
+                    missing.push_back(res::GetString(L"FeatureNameMute"));
+                }
+
+                if (!canCustomize)
+                {
+                    missing.push_back(res::GetString(L"FeatureNameCustomize"));
+                }
+
+                if (!canSetImage)
+                {
+                    missing.push_back(res::GetString(L"FeatureNameImage"));
+                }
+
+                std::wstring text{};
+
+                for (auto const& name : missing)
+                {
+                    if (!text.empty())
+                    {
+                        text += res::GetString(L"FeatureListSeparator");
+                    }
+
+                    text += name;
+                }
+
+                return winrt::hstring{ text };
+            }
+            catch (...)
+            {
+                return {};
+            }
+        }
     }
 
     MainWindow::MainWindow()
@@ -568,12 +616,10 @@ namespace winrt::midiloopbacksetup::implementation
             {
                 auto const transportId = midi2loop::MidiLoopbackManager::TransportId();
 
-                // A transport which cannot list its entries cannot be shown, and one which
-                // cannot mute keeps the rest of the page. Asking is cheap and it is the only
-                // way to tell a current transport from an older one.
-                snapshot.Loopback.CanList = midi2svc::MidiServiceTransportPluginConfigManager::QueryCapability(
-                    transportId, MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_LIST_ENTRIES);
-
+                // Asking is cheap and it is the only way to tell a current transport from an
+                // older one. Everything the transport cannot do is left off the page rather than
+                // offered and then failed one operation at a time. The list command is not asked
+                // about: the SDK falls back to enumerating the endpoints when it is missing.
                 snapshot.Loopback.CanMute = midi2svc::MidiServiceTransportPluginConfigManager::QueryCapability(
                     transportId, MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_MUTE_ENDPOINT);
 
@@ -589,10 +635,9 @@ namespace winrt::midiloopbacksetup::implementation
                     midi2loop::MidiLoopbackManager::DoesLoopbackAExist(native::DefaultLoopbackUniqueId) ||
                     midi2loop::MidiLoopbackManager::DoesLoopbackBExist(native::DefaultLoopbackUniqueId);
 
-                if (snapshot.Loopback.CanList)
-                {
-                    snapshot.LoopbackEntries = midi2loop::MidiLoopbackManager::GetActiveLoopbackEntries();
-                }
+                // The SDK falls back to enumerating the endpoints when the transport has no list
+                // command, so this is asked for unconditionally.
+                snapshot.LoopbackEntries = midi2loop::MidiLoopbackManager::GetActiveLoopbackEntries();
 
                 snapshot.Loopback.ConfiguredIds =
                     native::LoopbackConfigFile::Current().GetEntryIds(native::LoopbackKind::Loopback);
@@ -720,7 +765,7 @@ namespace winrt::midiloopbacksetup::implementation
             m_appliedPageFallback = true;
 
             auto const basicUsable = snapshot.BasicLoopback.Available && snapshot.BasicLoopback.CanList;
-            auto const loopbackUsable = snapshot.Loopback.Available && snapshot.Loopback.CanList;
+            auto const loopbackUsable = snapshot.Loopback.Available;
 
             auto const showingBasic =
                 BasicLoopbacksPanel().Visibility() == xaml::Visibility::Visible;
@@ -743,15 +788,32 @@ namespace winrt::midiloopbacksetup::implementation
         {
             auto const& transport = snapshot.Loopback;
 
-            // Nothing on the page works without the transport, and a transport which cannot be
-            // asked what it is running cannot be shown truthfully, so both cases say so once
-            // instead of failing an operation at a time.
-            auto const usable = transport.Available && transport.CanList;
+            // Listing, creating and deleting have been in the in-box transport since it shipped,
+            // so the page works wherever the transport is present at all. Anything added since is
+            // offered only when the transport says it has it, because a machine takes weeks to
+            // pick up a servicing update and must not be left with a dead page in the meantime.
+            auto const usable = transport.Available;
 
-            LoopbackUnavailableBar().Message(res::GetString(
-                transport.Available ? L"LoopbackTooOldMessage" : L"LoopbackMissingMessage"));
+            if (!transport.Available)
+            {
+                LoopbackUnavailableBar().Severity(controls::InfoBarSeverity::Error);
+                LoopbackUnavailableBar().Title(res::GetString(L"LoopbackUnavailableTitle"));
+                LoopbackUnavailableBar().Message(res::GetString(L"LoopbackMissingMessage"));
+                LoopbackUnavailableBar().IsOpen(true);
+            }
+            else if (auto const missing = MissingFeatureList(
+                transport.CanMute, transport.CanCustomize, transport.CanSetImage); !missing.empty())
+            {
+                LoopbackUnavailableBar().Severity(controls::InfoBarSeverity::Informational);
+                LoopbackUnavailableBar().Title(res::GetString(L"LoopbackLimitedTitle"));
+                LoopbackUnavailableBar().Message(res::FormatString(L"LoopbackLimitedMessageFormat", missing));
+                LoopbackUnavailableBar().IsOpen(true);
+            }
+            else
+            {
+                LoopbackUnavailableBar().IsOpen(false);
+            }
 
-            LoopbackUnavailableBar().IsOpen(!usable);
             LoopbacksListView().Visibility(usable ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
             CreateLoopbackButton().IsEnabled(usable);
 

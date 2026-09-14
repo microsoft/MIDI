@@ -108,6 +108,8 @@ namespace winrt::midiloopbacksetup::implementation
         {
             bool Available{ false };
             bool CanMute{ false };
+            // the transport can be asked what it is running. Only the basic loopback page uses
+            // this: for MIDI 2.0 loopbacks the SDK rebuilds the list from the endpoints instead.
             bool CanList{ false };
 
             // the transport honors a picture given at creation, so the option is worth offering

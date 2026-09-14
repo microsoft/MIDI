@@ -32,7 +32,10 @@ This skill is about the change itself.
 3. **New external dependencies must be declared explicitly** and must be available as a vcpkg
    port, because the internal build system that signs and ships this code requires it. For JSON,
    the only supported library is `Windows.Data.Json`.
-4. **Match the surrounding code.** This repository has strong local conventions per project
+4. **The configuration file is written through the API, never by hand.** See
+   [the configuration file is off limits](#the-configuration-file-is-off-limits) below before you
+   write anything that persists a setting.
+5. **Match the surrounding code.** This repository has strong local conventions per project
    (naming, tracing, error codes, resource ids). Copy the neighboring file rather than importing a
    style from elsewhere.
 
@@ -181,6 +184,37 @@ customer-visible defect in this project.
 The concrete patterns, the idioms that look correct and are not, and what to grep for:
 [references/code-safety-review.md](references/code-safety-review.md).
 
+## The configuration file is off limits
+
+The `.midiconfig.json` file in `%ALLUSERSPROFILE%\Microsoft\MIDI`, and the registry value that
+names it, are implementation details. The schema, the file name, the folder and the registry value
+can change in any release, without notice.
+
+Only two things may change that configuration:
+
+- **The Windows MIDI Services API** — `Windows.Devices.Midi2.ServiceConfig` and the per-transport
+  config types. It serializes access with the service, merges entries rather than rewriting the
+  file, makes its own backups, validates the result, and updates the running service as well as
+  disk. `SendUpdate` applies a section live; `SaveUpdate` persists it.
+- **The in-box tools in this repository** — the MIDI Settings app, the `midi` console and the
+  PowerShell module — all of which call that API.
+
+So, when you add a setting: put it in the service and in the API, and let the tools drive it. Do not
+add a code path anywhere else that reads or writes the file.
+
+And when you write, review or recommend a tool:
+
+- **Never ship, publish or suggest a script or tool that opens, parses, edits, merges, backs up or
+  restores the configuration file directly.** Hash checks, exclusive handles, before-images and
+  temp-file swaps do not make it safe — they still race the service and the Settings app, still
+  leave debris in `ProgramData`, and still break when the format changes.
+- **Nothing outside Microsoft may ship a product that manipulates the file directly.** If the API
+  cannot express what is needed, that is an API gap: file an issue. Do not fall back to the file.
+- A developer-only tool in this repository that must touch the file directly has to carry the
+  **UNSUPPORTED — DO NOT COPY THIS APPROACH** disclaimer, in the source and in its documentation, so
+  that no one — and no agent reading the repository later — learns the pattern from it. Exact
+  wording: [AGENTS.md](../../../AGENTS.md#the-configuration-file-is-off-limits).
+
 ## Verify before you hand it back
 
 A change is not done because it compiles. In order:
@@ -212,6 +246,8 @@ Build commands, test runners, the stale-binary traps and how to prove a deployme
 - Do not fix a defect you have not reproduced. Scope it first with the
   **midi-bug-reports** skill.
 - Do not delete or rename shipped API members to fix them. Public surface is additive only.
+- Do not read or write the configuration file outside the service and the API, and do not produce a
+  script or tool that does it — not for setup, not for backup, not for restore.
 - Do not put message payload data in retail tracing. Pointers, byte counts, device ids and names
   are fine; the contents of a MIDI message are a privacy violation outside `_DEBUG`.
 - Do not add tracing to the per-message hot path.

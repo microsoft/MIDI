@@ -12,6 +12,10 @@ namespace miditroubleshooter
 {
     namespace
     {
+        // Short enough that a child which stops producing is noticed quickly, long enough that
+        // a chatty tool is not polled needlessly.
+        constexpr DWORD ReadPollIntervalMilliseconds = 50;
+
         std::wstring FormatSystemError(_In_ DWORD const error) noexcept
         {
             try
@@ -179,38 +183,73 @@ namespace miditroubleshooter
                 // released here so the read below reaches end of file when the child exits
                 writePipe.reset();
 
+                auto const deadline = std::chrono::steady_clock::now() + timeout;
+
                 std::string rawOutput{};
 
                 if (captureOutput)
                 {
                     std::array<char, 8192> buffer{};
 
+                    // An anonymous pipe cannot be read with an overlapped handle, and a blocking
+                    // ReadFile on a child that never exits would never return, so the timeout
+                    // below would never be reached. Peeking first keeps every read short.
                     for (;;)
                     {
-                        DWORD bytesRead{ 0 };
+                        DWORD available{ 0 };
 
-                        if (!::ReadFile(readPipe.get(), buffer.data(), static_cast<DWORD>(buffer.size()), &bytesRead, nullptr))
+                        if (!::PeekNamedPipe(readPipe.get(), nullptr, 0, nullptr, &available, nullptr))
                         {
                             break;
                         }
 
-                        if (bytesRead == 0)
+                        if (available > 0)
+                        {
+                            DWORD bytesRead{ 0 };
+
+                            auto const toRead = std::min(available, static_cast<DWORD>(buffer.size()));
+
+                            if (!::ReadFile(readPipe.get(), buffer.data(), toRead, &bytesRead, nullptr) ||
+                                bytesRead == 0)
+                            {
+                                break;
+                            }
+
+                            rawOutput.append(buffer.data(), bytesRead);
+                            continue;
+                        }
+
+                        // Nothing buffered. The child having exited is not enough on its own,
+                        // because output written just before it exited is still in the pipe, so
+                        // this only stops once an exited child has also stopped producing.
+                        if (::WaitForSingleObject(processHandle.get(), ReadPollIntervalMilliseconds) == WAIT_OBJECT_0)
                         {
                             break;
                         }
 
-                        rawOutput.append(buffer.data(), bytesRead);
+                        if (std::chrono::steady_clock::now() >= deadline)
+                        {
+                            result.TimedOut = true;
+                            break;
+                        }
                     }
                 }
 
-                auto const waitResult = ::WaitForSingleObject(
-                    processHandle.get(),
-                    static_cast<DWORD>(std::chrono::milliseconds{ timeout }.count()));
-
-                if (waitResult == WAIT_TIMEOUT)
+                if (!result.TimedOut)
                 {
-                    result.TimedOut = true;
+                    auto const remaining = deadline - std::chrono::steady_clock::now();
 
+                    auto const remainingMilliseconds = remaining > std::chrono::steady_clock::duration::zero() ?
+                        std::chrono::duration_cast<std::chrono::milliseconds>(remaining).count() : 0;
+
+                    if (::WaitForSingleObject(processHandle.get(), static_cast<DWORD>(remainingMilliseconds)) == WAIT_TIMEOUT)
+                    {
+                        result.TimedOut = true;
+                    }
+                }
+
+                if (result.TimedOut)
+                {
                     // A tool that will not finish is worse than no output at all, and leaving
                     // it running would hold the pipe and the trace session open.
                     ::TerminateProcess(processHandle.get(), 1);

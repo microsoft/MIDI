@@ -10,6 +10,7 @@
 #include <winrt/Windows.Foundation.Collections.h>
 
 #include <winrt/Windows.Devices.Midi2.h>
+#include <winrt/Windows.Devices.Midi2.CapabilityInquiry.h>
 #include <winrt/Windows.Devices.Midi2.Enumeration.h>
 #include <winrt/Windows.Devices.Midi2.Transports.Virtual.h>
 
@@ -30,6 +31,7 @@
 #include <thread>
 
 using namespace winrt::Windows::Devices::Midi2;
+using namespace winrt::Windows::Devices::Midi2::CapabilityInquiry;
 using namespace winrt::Windows::Devices::Midi2::Enumeration;
 using namespace winrt::Windows::Devices::Midi2::Transports::Virtual;
 
@@ -355,7 +357,7 @@ namespace
             const auto config = SynthConfig::ForMode(SynthMode::Modern, sink->SampleRate());
 
             m_engine.Initialize(&m_collection, config);
-            m_dispatcher.Initialize(&m_engine, 0);
+            m_dispatcher.Initialize(&m_engine, 0, m_muid);
             m_dispatcher.SetOutput(&m_output, SynthIdentity{});
 
             auto source = std::make_unique<SynthRenderSource>(
@@ -418,6 +420,9 @@ namespace
 
         std::mutex m_audioLock;
         std::mutex m_producerLock;
+
+        // The API's generator keeps clear of the reserved range, so do not roll our own.
+        uint32_t m_muid{ MidiUniqueId::CreateRandom().AsCombined28BitValue() };
 
         std::atomic<uint64_t> m_droppedCount{ 0 };
 

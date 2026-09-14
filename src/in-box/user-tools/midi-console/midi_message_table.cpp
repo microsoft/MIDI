@@ -10,11 +10,16 @@
 
 #include <map>
 
+#include <midi_ump_message_defs.h>
+#include <ump_helpers.h>
+
 #include "console_output.h"
 #include "endpoint_utility.h"
 #include "midi_formatting.h"
 #include "midi_message_table.h"
 #include "strings.h"
+
+namespace internal = ::WindowsMidiServicesInternal;
 
 namespace midi2console
 {
@@ -88,6 +93,99 @@ namespace midi2console
         std::string FormatByteDecimal(_In_ uint8_t value)
         {
             return fmt::format("{:>3}", static_cast<int>(value));
+        }
+
+        constexpr uint8_t UtilityStatusJitterReductionClock = 0x1;
+        constexpr uint8_t UtilityStatusJitterReductionTimestamp = 0x2;
+        constexpr uint8_t UtilityStatusDeltaClockstampTicksPerQuarterNote = 0x3;
+        constexpr uint8_t UtilityStatusDeltaClockstampTicksSinceLast = 0x4;
+
+        // Two seven bit bytes, least significant first, as the identity fields are carried.
+        uint16_t FormatTwoByteValue(_In_ uint8_t leastSignificant, _In_ uint8_t mostSignificant)
+        {
+            return static_cast<uint16_t>((static_cast<uint16_t>(mostSignificant) << 7) | leastSignificant);
+        }
+
+        std::string FormatStreamProtocol(_In_ uint8_t protocol)
+        {
+            switch (protocol)
+            {
+            case 1:  return "MIDI 1.0";
+            case 2:  return "MIDI 2.0";
+            default: return fmt::format("{}", protocol);
+            }
+        }
+
+        // Compact letters rather than words, because several of these share one narrow column.
+        std::string FormatEndpointDiscoveryFilter(_In_ uint8_t filter)
+        {
+            if (filter == 0)
+            {
+                return "nothing";
+            }
+
+            std::string result;
+
+            auto const append = [&result](_In_ std::string_view value)
+                {
+                    if (!result.empty())
+                    {
+                        result += ",";
+                    }
+
+                    result += value;
+                };
+
+            if (internal::EndpointDiscoveryFilterRequestsEndpointInfoNotification(filter))          append("Info");
+            if (internal::EndpointDiscoveryFilterRequestsDeviceIdentityNotification(filter))        append("Identity");
+            if (internal::EndpointDiscoveryFilterRequestsEndpointNameNotification(filter))          append("Name");
+            if (internal::EndpointDiscoveryFilterRequestsProductInstanceIdNotification(filter))     append("ProductId");
+            if (internal::EndpointDiscoveryFilterRequestsStreamConfigurationNotification(filter))   append("Config");
+
+            return result;
+        }
+
+        std::string FormatFunctionBlockDiscoveryFilter(_In_ uint8_t filter)
+        {
+            bool const wantsInfo = (filter & 0x01) != 0;
+            bool const wantsName = (filter & 0x02) != 0;
+
+            if (wantsInfo && wantsName) return "Info,Name";
+            if (wantsInfo)              return "Info";
+            if (wantsName)              return "Name";
+
+            return "nothing";
+        }
+
+        std::string FormatFunctionBlockRequestNumber(_In_ uint8_t functionBlockNumber)
+        {
+            return functionBlockNumber == MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_REQUEST_ALL_FUNCTION_BLOCKS
+                ? std::string{ "all" }
+                : fmt::format("{}", functionBlockNumber);
+        }
+
+        std::string FormatFunctionBlockInfoDirection(_In_ uint8_t direction)
+        {
+            switch (direction)
+            {
+            case 0x01: return "Input";
+            case 0x02: return "Output";
+            case 0x03: return "Bidi";
+            default:   return "Undefined";
+            }
+        }
+
+        // Group numbers, not indexes, because this is customer-facing.
+        std::string FormatGroupSpanFromFirstGroupIndex(_In_ uint8_t firstGroupIndex, _In_ uint8_t groupCount)
+        {
+            auto const first = static_cast<int>(firstGroupIndex) + 1;
+
+            if (groupCount > 1)
+            {
+                return fmt::format("Gr {}-{}", first, first + groupCount - 1);
+            }
+
+            return fmt::format("Gr {}", first);
         }
     }
 
@@ -394,9 +492,245 @@ namespace midi2console
         case midi2::MidiMessageType::Midi2ChannelVoice64:
             return BuildDecodedMidi2ChannelVoiceCell(message);
 
+        case midi2::MidiMessageType::UtilityMessage32:
+            return BuildDecodedUtilityCell(message);
+
+        case midi2::MidiMessageType::Stream128:
+            return BuildDecodedStreamCell(message);
+
+        // SysEx7 carries six payload bytes after the type/group and status/count bytes.
+        case midi2::MidiMessageType::DataMessage64:
+            return BuildDecodedDataBytesCell(message, 2,
+                midi2msg::MidiMessageHelper::GetNumberOfBytesFromDataMessage64FirstWord(message.Word0), 6);
+
+        // SysEx8 spends a third byte on the stream id, leaving thirteen for the payload.
+        case midi2::MidiMessageType::DataMessage128:
+            return BuildDecodedDataBytesCell(message, 3,
+                midi2msg::MidiMessageHelper::GetNumberOfBytesFromDataMessage128FirstWord(message.Word0), 13);
+
         default:
             return {};
         }
+    }
+
+    MidiMessageTable::Cell MidiMessageTable::BuildCellFromParts(
+        _In_ std::vector<std::pair<std::string, fmt::text_style>> const& parts) const
+    {
+        if (parts.empty())
+        {
+            return {};
+        }
+
+        Cell cell;
+        cell.HasOwnStyling = true;
+
+        for (auto const& [text, style] : parts)
+        {
+            cell.Plain += text;
+            cell.Rendered += fmt::format("{}", Styled(text, style));
+        }
+
+        return cell;
+    }
+
+    MidiMessageTable::Cell MidiMessageTable::BuildDecodedUtilityCell(_In_ ReceivedMidiMessage const& message) const
+    {
+        auto const status = static_cast<uint8_t>((message.Word0 >> 20) & 0x0F);
+
+        std::vector<std::pair<std::string, fmt::text_style>> parts;
+
+        switch (status)
+        {
+        case UtilityStatusJitterReductionClock:
+        case UtilityStatusJitterReductionTimestamp:
+            parts.emplace_back("Ticks ", decodedLabelStyle);
+            parts.emplace_back(fmt::format("{}", static_cast<uint16_t>(message.Word0 & 0xFFFF)), decodedValueStyle);
+            break;
+
+        case UtilityStatusDeltaClockstampTicksPerQuarterNote:
+            parts.emplace_back("Ticks per quarter note ", decodedLabelStyle);
+            parts.emplace_back(fmt::format("{}", static_cast<uint16_t>(message.Word0 & 0xFFFF)), decodedValueStyle);
+            break;
+
+        // This one carries a 20 bit value, unlike the 16 bit fields above.
+        case UtilityStatusDeltaClockstampTicksSinceLast:
+            parts.emplace_back("Ticks since last event ", decodedLabelStyle);
+            parts.emplace_back(fmt::format("{}", message.Word0 & 0x000FFFFF), decodedValueStyle);
+            break;
+
+        default:
+            return {};
+        }
+
+        return BuildCellFromParts(parts);
+    }
+
+    MidiMessageTable::Cell MidiMessageTable::BuildDecodedStreamCell(_In_ ReceivedMidiMessage const& message) const
+    {
+        auto const status = internal::GetStatusFromStreamMessageFirstWord(message.Word0);
+
+        std::vector<std::pair<std::string, fmt::text_style>> parts;
+
+        auto const appendFlag = [&parts](_In_ std::string_view label, _In_ bool value)
+            {
+                parts.emplace_back(std::string{ label }, decodedLabelStyle);
+                parts.emplace_back(value ? "Y" : "n", value ? booleanTrueTextStyle : booleanFalseTextStyle);
+            };
+
+        switch (status)
+        {
+        case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_DISCOVERY:
+            parts.emplace_back("UMP ", decodedLabelStyle);
+            parts.emplace_back(fmt::format("{}.{}",
+                internal::GetEndpointInfoNotificationUmpVersionMajorFirstWord(message.Word0),
+                internal::GetEndpointInfoNotificationUmpVersionMinorFirstWord(message.Word0)), decodedValueStyle);
+            parts.emplace_back(" Asks for ", decodedLabelStyle);
+            parts.emplace_back(FormatEndpointDiscoveryFilter(
+                static_cast<uint8_t>(message.Word1 & 0xFF)), decodedValueStyle);
+            break;
+
+        case MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION:
+            parts.emplace_back("UMP ", decodedLabelStyle);
+            parts.emplace_back(fmt::format("{}.{}",
+                internal::GetEndpointInfoNotificationUmpVersionMajorFirstWord(message.Word0),
+                internal::GetEndpointInfoNotificationUmpVersionMinorFirstWord(message.Word0)), decodedValueStyle);
+            parts.emplace_back(" FBs ", decodedLabelStyle);
+            parts.emplace_back(fmt::format("{}",
+                internal::GetEndpointInfoNotificationNumberOfFunctionBlocksFromSecondWord(message.Word1)), decodedValueStyle);
+
+            if (internal::GetEndpointInfoNotificationStaticFunctionBlocksFlagFromSecondWord(message.Word1))
+            {
+                parts.emplace_back(" static", decodedLabelStyle);
+            }
+
+            appendFlag(" MIDI1 ", internal::GetEndpointInfoNotificationMidi1ProtocolCapabilityFromSecondWord(message.Word1));
+            appendFlag(" MIDI2 ", internal::GetEndpointInfoNotificationMidi2ProtocolCapabilityFromSecondWord(message.Word1));
+            appendFlag(" RxJR ", internal::GetEndpointInfoNotificationReceiveJRTimestampCapabilityFromSecondWord(message.Word1));
+            appendFlag(" TxJR ", internal::GetEndpointInfoNotificationTransmitJRTimestampCapabilityFromSecondWord(message.Word1));
+            break;
+
+        case MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION:
+            parts.emplace_back("Mfg ", decodedLabelStyle);
+            parts.emplace_back(fmt::format("{:02X} {:02X} {:02X}",
+                static_cast<uint8_t>((message.Word1 >> 16) & 0x7F),
+                static_cast<uint8_t>((message.Word1 >> 8) & 0x7F),
+                static_cast<uint8_t>(message.Word1 & 0x7F)), decodedValueStyle);
+            parts.emplace_back(" Family ", decodedLabelStyle);
+            parts.emplace_back(fmt::format("{}", FormatTwoByteValue(
+                static_cast<uint8_t>((message.Word2 >> 24) & 0x7F),
+                static_cast<uint8_t>((message.Word2 >> 16) & 0x7F))), decodedValueStyle);
+            parts.emplace_back(" Model ", decodedLabelStyle);
+            parts.emplace_back(fmt::format("{}", FormatTwoByteValue(
+                static_cast<uint8_t>((message.Word2 >> 8) & 0x7F),
+                static_cast<uint8_t>(message.Word2 & 0x7F))), decodedValueStyle);
+            parts.emplace_back(" Rev ", decodedLabelStyle);
+            parts.emplace_back(fmt::format("{:02X} {:02X} {:02X} {:02X}",
+                static_cast<uint8_t>((message.Word3 >> 24) & 0x7F),
+                static_cast<uint8_t>((message.Word3 >> 16) & 0x7F),
+                static_cast<uint8_t>((message.Word3 >> 8) & 0x7F),
+                static_cast<uint8_t>(message.Word3 & 0x7F)), decodedValueStyle);
+            break;
+
+        case MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_REQUEST:
+        case MIDI_STREAM_MESSAGE_STATUS_STREAM_CONFIGURATION_NOTIFICATION:
+            parts.emplace_back("Protocol ", decodedLabelStyle);
+            parts.emplace_back(FormatStreamProtocol(
+                internal::GetStreamConfigurationNotificationProtocolFromFirstWord(message.Word0)), decodedValueStyle);
+            appendFlag(" RxJR ", internal::GetStreamConfigurationNotificationReceiveJRFromFirstWord(message.Word0));
+            appendFlag(" TxJR ", internal::GetStreamConfigurationNotificationTransmitJRFromFirstWord(message.Word0));
+            break;
+
+        case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_DISCOVERY:
+            parts.emplace_back("FB ", decodedLabelStyle);
+            parts.emplace_back(FormatFunctionBlockRequestNumber(
+                static_cast<uint8_t>((message.Word0 >> 8) & 0xFF)), decodedValueStyle);
+            parts.emplace_back(" Asks for ", decodedLabelStyle);
+            parts.emplace_back(FormatFunctionBlockDiscoveryFilter(
+                static_cast<uint8_t>(message.Word0 & 0xFF)), decodedValueStyle);
+            break;
+
+        case MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION:
+            parts.emplace_back("FB ", decodedLabelStyle);
+            parts.emplace_back(fmt::format("{}",
+                internal::GetFunctionBlockNumberFromInfoNotificationFirstWord(message.Word0)), decodedValueStyle);
+
+            if (!internal::GetFunctionBlockActiveFlagFromInfoNotificationFirstWord(message.Word0))
+            {
+                parts.emplace_back(" inactive", warningTextStyle);
+            }
+
+            parts.emplace_back(" ", decodedLabelStyle);
+            parts.emplace_back(FormatFunctionBlockInfoDirection(
+                internal::GetFunctionBlockDirectionFromInfoNotificationFirstWord(message.Word0)), decodedValueStyle);
+            parts.emplace_back(" ", decodedLabelStyle);
+            parts.emplace_back(FormatGroupSpanFromFirstGroupIndex(
+                internal::GetFunctionBlockFirstGroupFromInfoNotificationSecondWord(message.Word1),
+                internal::GetFunctionBlockNumberOfGroupsFromInfoNotificationSecondWord(message.Word1)), groupTextStyle);
+            parts.emplace_back(" MIDI-CI ", decodedLabelStyle);
+            parts.emplace_back(fmt::format("{}",
+                internal::GetFunctionBlockMidiCIVersionFromInfoNotificationSecondWord(message.Word1)), decodedValueStyle);
+            break;
+
+        // Endpoint name, product instance id and function block name are UTF-8 split across
+        // several messages, so a single message holds a fragment that cannot be read on its own.
+        default:
+            return {};
+        }
+
+        return BuildCellFromParts(parts);
+    }
+
+    _Use_decl_annotations_
+    MidiMessageTable::Cell MidiMessageTable::BuildDecodedDataBytesCell(
+        ReceivedMidiMessage const& message,
+        uint8_t payloadByteOffset,
+        uint8_t declaredByteCount,
+        uint8_t maximumByteCount) const
+    {
+        std::array<uint32_t, 4> const words{ message.Word0, message.Word1, message.Word2, message.Word3 };
+
+        auto const availableBytes = static_cast<uint8_t>(std::min<uint8_t>(message.NumWords, 4) * 4);
+
+        if (payloadByteOffset >= availableBytes)
+        {
+            return {};
+        }
+
+        // A device is free to declare a byte count the message cannot hold, so it is clamped
+        // both to what the message type allows and to what actually arrived.
+        auto const byteCount = std::min<uint8_t>(
+            std::min<uint8_t>(declaredByteCount, maximumByteCount),
+            static_cast<uint8_t>(availableBytes - payloadByteOffset));
+
+        if (byteCount == 0)
+        {
+            return {};
+        }
+
+        std::array<uint8_t, 16> bytes{};
+
+        for (uint8_t i = 0; i < std::min<uint8_t>(message.NumWords, 4); i++)
+        {
+            bytes[(i * 4) + 0] = static_cast<uint8_t>((words[i] >> 24) & 0xFF);
+            bytes[(i * 4) + 1] = static_cast<uint8_t>((words[i] >> 16) & 0xFF);
+            bytes[(i * 4) + 2] = static_cast<uint8_t>((words[i] >> 8) & 0xFF);
+            bytes[(i * 4) + 3] = static_cast<uint8_t>(words[i] & 0xFF);
+        }
+
+        Cell cell;
+        cell.Plain.reserve(static_cast<size_t>(byteCount) * 3);
+
+        for (uint8_t i = 0; i < byteCount; i++)
+        {
+            if (i > 0)
+            {
+                cell.Plain += ' ';
+            }
+
+            cell.Plain += fmt::format("{:02X}", bytes[payloadByteOffset + i]);
+        }
+
+        return cell;
     }
 
     MidiMessageTable::Cell MidiMessageTable::BuildDecodedMidi1ChannelVoiceCell(_In_ ReceivedMidiMessage const& message) const
@@ -505,6 +839,20 @@ namespace midi2console
         case midi2msg::Midi2ChannelVoiceMessageStatus::PitchBend:
             parts.emplace_back("Value ", decodedLabelStyle);
             parts.emplace_back(fmt::format("{:>10}", message.Word1), decodedValueStyle);
+            break;
+
+        // RPN and NRPN. In MIDI 2.0 these are whole messages rather than the multi-message
+        // control change sequence MIDI 1.0 uses, so bank, index and value all read from here.
+        case midi2msg::Midi2ChannelVoiceMessageStatus::RegisteredController:
+        case midi2msg::Midi2ChannelVoiceMessageStatus::AssignableController:
+        case midi2msg::Midi2ChannelVoiceMessageStatus::RelativeRegisteredController:
+        case midi2msg::Midi2ChannelVoiceMessageStatus::RelativeAssignableController:
+            parts.emplace_back("Bank ", decodedLabelStyle);
+            parts.emplace_back(fmt::format("{}", dataByte1 & 0x7F), decodedValueStyle);
+            parts.emplace_back(" Index ", decodedLabelStyle);
+            parts.emplace_back(fmt::format("{}", static_cast<uint8_t>(message.Word0 & 0x7F)), decodedValueStyle);
+            parts.emplace_back(" Value ", decodedLabelStyle);
+            parts.emplace_back(fmt::format("{}", message.Word1), decodedValueStyle);
             break;
 
         default:
