@@ -7,7 +7,9 @@
 
 #pragma once
 
-#define IDI_APPICON                                 101
+// Lowest icon id in the binary, which is the one the shell shows for the executable. The other
+// MIDI tools use 1 for the same reason.
+#define IDI_APPICON                                 1
 
 #define IDS_APP_TITLE                               200
 #define IDS_TRAY_TOOLTIP                            201

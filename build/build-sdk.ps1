@@ -30,6 +30,15 @@
 .PARAMETER BumpBuildNumber
     Increments and persists the 'build' field in version.json before computing versions.
 
+.PARAMETER MaxCpuCount
+    How many projects MSBuild builds at once. Defaults to three quarters of the logical
+    processors so the machine stays usable while a build runs. 0 uses every logical processor,
+    which is a little faster and makes the desktop stutter.
+
+.PARAMETER Priority
+    Process priority for MSBuild and the compilers, which inherit it from this script.
+    BelowNormal (the default) keeps the UI responsive. Use Normal on a build machine.
+
 .EXAMPLE
     .\build-sdk.ps1
     Full release build for x64 and Arm64.
@@ -59,6 +68,13 @@ param(
 
     # Explicit MSBuild.exe. Leave empty to let vswhere find the newest install.
     [string] $MSBuildPath,
+
+    # Parallel MSBuild nodes. 0 means one per logical processor.
+    [ValidateRange(0, 256)]
+    [int] $MaxCpuCount = [Math]::Max(1, [int][Math]::Floor([Environment]::ProcessorCount * 0.75)),
+
+    [ValidateSet('Normal', 'BelowNormal', 'Idle')]
+    [string] $Priority = 'BelowNormal',
 
     [ValidateSet('quiet', 'minimal', 'normal', 'detailed', 'diagnostic')]
     [string] $Verbosity = 'minimal'
@@ -408,7 +424,7 @@ function Invoke-MSBuild {
     # The app projects reach Windows.Devices.Midi2.vcxproj through more than one global-property
     # set, so MSBuild builds it twice in a single invocation. Both writes target the same
     # OutDir/IntDir, and in parallel they collide on the FileTracker logs (FTK1011).
-    $msbuildArgs += if ($Serial) { '/m:1' } else { '/m' }
+    $msbuildArgs += if ($Serial) { '/m:1' } elseif ($MaxCpuCount -gt 0) { "/m:$MaxCpuCount" } else { '/m' }
 
     if ($Targets.Count -gt 0) { $msbuildArgs += "/t:$($Targets -join ';')" }
 
@@ -1348,36 +1364,49 @@ $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
 $targets = if ($Target -contains 'All') { @('Version', 'Sdk', 'Samples', 'Stage', 'Setup', 'Release') } else { $Target }
 
+$parallelism = if ($MaxCpuCount -gt 0) { "$MaxCpuCount of $([Environment]::ProcessorCount)" } else { "all $([Environment]::ProcessorCount)" }
+
 Write-Host ''
 Write-Host 'Windows MIDI Services - App SDK build' -ForegroundColor White
 Write-Detail "Repo          $RepoRoot"
 Write-Detail "Targets       $($targets -join ', ')"
 Write-Detail "Platforms     $($Platform -join ', ')"
 Write-Detail "Configuration $Configuration"
+Write-Detail "Parallelism   $parallelism logical processors, $Priority priority"
 
 if ($targets -contains 'Clean') {
     Invoke-CleanTarget
     if ($targets.Count -eq 1) { return }
 }
 
-$version = Get-BuildVersion
+# MSBuild and the compilers inherit this process's priority class, so setting it here is what
+# keeps a build off the desktop's back. Restored below so an interactive shell is not left low.
+$previousPriority = [System.Diagnostics.Process]::GetCurrentProcess().PriorityClass
+[System.Diagnostics.Process]::GetCurrentProcess().PriorityClass = [System.Diagnostics.ProcessPriorityClass]$Priority
 
-if ($targets -notcontains 'Version') {
-    # Later targets still need version strings even when not regenerating the version files.
-    Write-Detail "Version       $($version.SemVer)"
+try {
+    $version = Get-BuildVersion
+
+    if ($targets -notcontains 'Version') {
+        # Later targets still need version strings even when not regenerating the version files.
+        Write-Detail "Version       $($version.SemVer)"
+    }
+
+    if ($targets -contains 'Sdk' -or $targets -contains 'Setup' -or $targets -contains 'Stage' -or $targets -contains 'Samples') {
+        $script:MSBuild = Resolve-MSBuild
+        Write-Detail "MSBuild       $script:MSBuild"
+    }
+
+    if ($targets -contains 'Version') { Invoke-VersionTarget $version }
+    if ($targets -contains 'Sdk') { Invoke-SdkTarget $version }
+    if ($targets -contains 'Samples') { Invoke-SamplesTarget $version }
+    if ($targets -contains 'Stage') { Invoke-StageTarget $version }
+    if ($targets -contains 'Setup') { Invoke-SetupTarget $version }
+    if ($targets -contains 'Release') { Invoke-ReleaseTarget $version }
 }
-
-if ($targets -contains 'Sdk' -or $targets -contains 'Setup' -or $targets -contains 'Stage' -or $targets -contains 'Samples') {
-    $script:MSBuild = Resolve-MSBuild
-    Write-Detail "MSBuild       $script:MSBuild"
+finally {
+    [System.Diagnostics.Process]::GetCurrentProcess().PriorityClass = $previousPriority
 }
-
-if ($targets -contains 'Version') { Invoke-VersionTarget $version }
-if ($targets -contains 'Sdk') { Invoke-SdkTarget $version }
-if ($targets -contains 'Samples') { Invoke-SamplesTarget $version }
-if ($targets -contains 'Stage') { Invoke-StageTarget $version }
-if ($targets -contains 'Setup') { Invoke-SetupTarget $version }
-if ($targets -contains 'Release') { Invoke-ReleaseTarget $version }
 
 $stopwatch.Stop()
 Write-Host ''

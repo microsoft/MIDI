@@ -200,6 +200,7 @@ namespace winrt::midikeyboard::implementation
 
             RebuildKeyboard();
             UpdateOctaveDisplay();
+            UpdatePatchDisplay();
             UpdateRibbonsFromValues();
 
             StartEndpointWatcher();
@@ -712,6 +713,12 @@ namespace winrt::midikeyboard::implementation
 
             UpdateConnectionDisplay(result);
 
+            if (result == native::ConnectResult::Success)
+            {
+                SendStartupPatchIfRequested();
+                StartProgramListQuery();
+            }
+
             // the virtual device's own client endpoint has to stay out of the destination list
             RefreshEndpointList();
         }
@@ -733,6 +740,13 @@ namespace winrt::midikeyboard::implementation
 
         try
         {
+            // the query holds a callback on the connection, so it has to let go first
+            if (m_programListQuery != nullptr)
+            {
+                m_programListQuery->Cancel();
+                m_programListQuery = nullptr;
+            }
+
             co_await native::RunOnBackgroundAsync([strong]()
                 {
                     strong->m_output.Disconnect();
@@ -2006,6 +2020,433 @@ namespace winrt::midikeyboard::implementation
         ApplyModValue(0.0, true);
     }
 
+    // ------------------------------------------------------------------------------------
+    // Bank and program
+    // ------------------------------------------------------------------------------------
+
+    void MainWindow::UpdatePatchDisplay() noexcept
+    {
+        try
+        {
+            auto const& settings = native::AppSettings::Current();
+
+            PatchButtonText().Text(res::FormatString(L"PatchButtonFormat",
+                static_cast<int32_t>(settings.ProgramNumber())));
+
+            controls::ToolTipService::SetToolTip(PatchButton(), winrt::box_value(
+                res::FormatString(L"PatchButtonToolTipFormat",
+                    static_cast<int32_t>(settings.ProgramNumber()),
+                    static_cast<int32_t>(settings.BankMsb()),
+                    static_cast<int32_t>(settings.BankLsb()))));
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to show the bank and program.")
+    }
+
+    void MainWindow::SendPatchNow() noexcept
+    {
+        try
+        {
+            auto const& settings = native::AppSettings::Current();
+
+            m_output.SendProgramChange(
+                TransmitGroupIndex(),
+                TransmitChannelIndex(),
+                static_cast<uint8_t>(settings.ProgramNumber()),
+                static_cast<uint8_t>(settings.BankMsb()),
+                static_cast<uint8_t>(settings.BankLsb()));
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to send the program change.")
+    }
+
+    void MainWindow::SendStartupPatchIfRequested() noexcept
+    {
+        try
+        {
+            if (!m_startupPatchSendPending)
+            {
+                return;
+            }
+
+            // whatever happens below, this only ever gets one go per app run
+            m_startupPatchSendPending = false;
+
+            auto const& settings = native::AppSettings::Current();
+
+            if (!settings.SendPatchOnStartup())
+            {
+                return;
+            }
+
+            // the values belong to a chosen endpoint, which is the only thing reconnected to
+            // automatically at startup
+            if (settings.Connection() != native::ConnectionMode::ExistingEndpoint ||
+                settings.EndpointDeviceId().empty())
+            {
+                return;
+            }
+
+            SendPatchNow();
+
+            MIDI_KEYBOARD_LOG_INFO(L"Sent the saved bank and program on startup.");
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to send the startup program change.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnPatchFlyoutOpened(foundation::IInspectable const&, foundation::IInspectable const&)
+    {
+        try
+        {
+            if (m_patchControlsInitialized)
+            {
+                return;
+            }
+
+            auto const& settings = native::AppSettings::Current();
+
+            m_suppressPatchHandlers = true;
+
+            ProgramNumberBox().Value(settings.ProgramNumber());
+            BankMsbBox().Value(settings.BankMsb());
+            BankLsbBox().Value(settings.BankLsb());
+            SendPatchOnStartupCheckBox().IsChecked(settings.SendPatchOnStartup());
+
+            m_patchControlsInitialized = true;
+
+            // the device may well have answered before this flyout was ever opened
+            if (m_programListQueryRan)
+            {
+                ApplyProgramList(m_programListResult, m_programList);
+            }
+            else if (m_output.Connection() != nullptr)
+            {
+                SetStripText(ProgramListStatusText(), res::GetString(L"ProgramListSearching"));
+            }
+
+            ReleaseFlagWhenIdle(&MainWindow::m_suppressPatchHandlers);
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to fill in the bank and program controls.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnProgramNumberChanged(
+        controls::NumberBox const&,
+        controls::NumberBoxValueChangedEventArgs const& args)
+    {
+        try
+        {
+            if (m_suppressPatchHandlers || std::isnan(args.NewValue()))
+            {
+                return;
+            }
+
+            auto const program = static_cast<uint32_t>(std::lround(args.NewValue()));
+
+            if (program == native::AppSettings::Current().ProgramNumber())
+            {
+                return;
+            }
+
+            native::AppSettings::Current().ProgramNumber(program);
+
+            UpdatePatchDisplay();
+            SyncProgramListSelection();
+            SendPatchNow();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the program.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnBankMsbChanged(
+        controls::NumberBox const&,
+        controls::NumberBoxValueChangedEventArgs const& args)
+    {
+        try
+        {
+            if (m_suppressPatchHandlers || std::isnan(args.NewValue()))
+            {
+                return;
+            }
+
+            auto const bank = static_cast<uint32_t>(std::lround(args.NewValue()));
+
+            if (bank == native::AppSettings::Current().BankMsb())
+            {
+                return;
+            }
+
+            native::AppSettings::Current().BankMsb(bank);
+
+            UpdatePatchDisplay();
+            SyncProgramListSelection();
+            SendPatchNow();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the bank.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnBankLsbChanged(
+        controls::NumberBox const&,
+        controls::NumberBoxValueChangedEventArgs const& args)
+    {
+        try
+        {
+            if (m_suppressPatchHandlers || std::isnan(args.NewValue()))
+            {
+                return;
+            }
+
+            auto const bank = static_cast<uint32_t>(std::lround(args.NewValue()));
+
+            if (bank == native::AppSettings::Current().BankLsb())
+            {
+                return;
+            }
+
+            native::AppSettings::Current().BankLsb(bank);
+
+            UpdatePatchDisplay();
+            SyncProgramListSelection();
+            SendPatchNow();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the bank.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnSendPatchOnStartupChanged(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            if (m_suppressPatchHandlers)
+            {
+                return;
+            }
+
+            auto const checked = SendPatchOnStartupCheckBox().IsChecked();
+            auto const send = checked != nullptr && checked.Value();
+
+            if (send == native::AppSettings::Current().SendPatchOnStartup())
+            {
+                return;
+            }
+
+            native::AppSettings::Current().SendPatchOnStartup(send);
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the startup program setting.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnSendPatchClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        SendPatchNow();
+    }
+
+    // ------------------------------------------------------------------------------------
+    // MIDI-CI program list
+    // ------------------------------------------------------------------------------------
+
+    void MainWindow::StartProgramListQuery() noexcept
+    {
+        try
+        {
+            if (m_programListQuery != nullptr)
+            {
+                m_programListQuery->Cancel();
+                m_programListQuery = nullptr;
+            }
+
+            m_programList.clear();
+            m_programListQueryRan = false;
+            m_programListResult = native::ProgramListResult::NoResponse;
+
+            auto const connection = m_output.Connection();
+
+            if (connection == nullptr)
+            {
+                if (m_patchControlsInitialized)
+                {
+                    ProgramListComboBox().Visibility(xaml::Visibility::Collapsed);
+                    SetStripText(ProgramListStatusText(), L"");
+                }
+
+                return;
+            }
+
+            if (m_patchControlsInitialized)
+            {
+                ProgramListComboBox().Visibility(xaml::Visibility::Collapsed);
+                SetStripText(ProgramListStatusText(), res::GetString(L"ProgramListSearching"));
+            }
+
+            auto const queue = m_dispatcherQueue;
+            auto const weak = get_weak();
+
+            m_programListQuery = native::MidiCiProgramListQuery::Start(
+                connection,
+                TransmitGroupIndex(),
+                TransmitChannelIndex(),
+                [weak, queue](native::ProgramListResult result, std::vector<native::ProgramListEntry> entries)
+                {
+                    // this arrives on the MIDI callback thread
+                    if (queue == nullptr)
+                    {
+                        return;
+                    }
+
+                    auto shared = std::make_shared<std::vector<native::ProgramListEntry>>(std::move(entries));
+
+                    queue.TryEnqueue([weak, result, shared]()
+                        {
+                            if (auto strong = weak.get())
+                            {
+                                strong->ApplyProgramList(result, std::move(*shared));
+                            }
+                        });
+                });
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to ask the device for its program list.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::ApplyProgramList(
+        native::ProgramListResult result,
+        std::vector<native::ProgramListEntry> entries) noexcept
+    {
+        try
+        {
+            m_programList = std::move(entries);
+            m_programListResult = result;
+            m_programListQueryRan = true;
+            m_programListQuery = nullptr;
+
+            if (!m_patchControlsInitialized)
+            {
+                // the flyout has never been opened, so it will pick this up when it is
+                return;
+            }
+
+            if (m_programList.empty())
+            {
+                ProgramListComboBox().Visibility(xaml::Visibility::Collapsed);
+
+                SetStripText(ProgramListStatusText(),
+                    result == native::ProgramListResult::NoResponse
+                        ? res::GetString(L"ProgramListNoResponse")
+                        : res::GetString(L"ProgramListUnsupported"));
+
+                return;
+            }
+
+            auto const suppress = m_suppressPatchHandlers;
+            m_suppressPatchHandlers = true;
+
+            auto items = ProgramListComboBox().Items();
+            items.Clear();
+
+            for (auto const& entry : m_programList)
+            {
+                // a collection title only appears when the device offered more than one
+                auto const label = entry.CollectionTitle.empty()
+                    ? entry.Title
+                    : entry.CollectionTitle + L" - " + entry.Title;
+
+                items.Append(winrt::box_value(winrt::hstring{ label }));
+            }
+
+            ProgramListComboBox().Visibility(xaml::Visibility::Visible);
+
+            SetStripText(ProgramListStatusText(),
+                res::FormatString(L"ProgramListCountFormat", static_cast<int32_t>(m_programList.size())));
+
+            m_suppressPatchHandlers = suppress;
+
+            SyncProgramListSelection();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to show the device's program list.")
+    }
+
+    void MainWindow::SyncProgramListSelection() noexcept
+    {
+        try
+        {
+            if (!m_patchControlsInitialized || m_programList.empty())
+            {
+                return;
+            }
+
+            auto const& settings = native::AppSettings::Current();
+
+            // the stored program is the 1-128 display value; the list holds wire values
+            auto const program = static_cast<uint8_t>(settings.ProgramNumber() - 1);
+            auto const bankMsb = static_cast<uint8_t>(settings.BankMsb());
+            auto const bankLsb = static_cast<uint8_t>(settings.BankLsb());
+
+            int32_t match{ -1 };
+
+            for (size_t i = 0; i < m_programList.size(); i++)
+            {
+                auto const& entry = m_programList[i];
+
+                if (entry.ProgramChange == program && entry.BankMsb == bankMsb && entry.BankLsb == bankLsb)
+                {
+                    match = static_cast<int32_t>(i);
+                    break;
+                }
+            }
+
+            auto const suppress = m_suppressPatchHandlers;
+            m_suppressPatchHandlers = true;
+
+            ProgramListComboBox().SelectedIndex(match);
+
+            m_suppressPatchHandlers = suppress;
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to match the current program to the list.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnProgramListSelectionChanged(
+        foundation::IInspectable const&,
+        controls::SelectionChangedEventArgs const&)
+    {
+        try
+        {
+            if (m_suppressPatchHandlers)
+            {
+                return;
+            }
+
+            auto const index = ProgramListComboBox().SelectedIndex();
+
+            if (index < 0 || static_cast<size_t>(index) >= m_programList.size())
+            {
+                return;
+            }
+
+            auto const& entry = m_programList[static_cast<size_t>(index)];
+
+            auto& settings = native::AppSettings::Current();
+
+            // the list carries wire values; the stored program is the 1-128 display value
+            settings.ProgramNumber(static_cast<uint32_t>(entry.ProgramChange) + 1);
+            settings.BankMsb(entry.BankMsb);
+            settings.BankLsb(entry.BankLsb);
+
+            auto const suppress = m_suppressPatchHandlers;
+            m_suppressPatchHandlers = true;
+
+            ProgramNumberBox().Value(settings.ProgramNumber());
+            BankMsbBox().Value(settings.BankMsb());
+            BankLsbBox().Value(settings.BankLsb());
+
+            m_suppressPatchHandlers = suppress;
+
+            UpdatePatchDisplay();
+            SendPatchNow();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to select that program.")
+    }
+
     _Use_decl_annotations_
     void MainWindow::OnArpModeChanged(foundation::IInspectable const&, controls::SelectionChangedEventArgs const&)
     {
@@ -2244,6 +2685,10 @@ namespace winrt::midikeyboard::implementation
             EndAllNotes();
             native::AppSettings::Current().TransmitChannelNumber(channelNumber);
             UpdateConnectionDisplay(native::ConnectResult::Success);
+
+            // a ChannelList declares different program collections per channel, so the list
+            // that was fetched for the old channel no longer applies
+            StartProgramListQuery();
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the channel.")
     }

@@ -80,6 +80,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
     <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\;$(GeneratedFilesDir);$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)vsfiles-sdk\intermediate\com-extensions-idl\$(Platform)\$(Configuration)</IncludePath>
@@ -131,6 +132,7 @@
     <ClInclude Include="BackgroundWork.h" />
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="KeyboardLayout.h" />
+    <ClInclude Include="MidiCiProgramList.h" />
     <ClInclude Include="MidiOutput.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
@@ -159,6 +161,7 @@
     <ClCompile Include="BackgroundWork.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
     <ClCompile Include="KeyboardLayout.cpp" />
+    <ClCompile Include="MidiCiProgramList.cpp" />
     <ClCompile Include="MidiOutput.cpp" />
     <ClCompile Include="StringResources.cpp" />
     <ClCompile Include="App.xaml.cpp">

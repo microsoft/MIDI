@@ -98,5 +98,24 @@
             <ComponentRef Id="WindowsMidiServicesCollectMidiLogsRegistration"/>
     </Feature>
 
+    <!-- The Run entry only takes effect at the next sign-in, so without this the customer would
+         install, see nothing in the notification area, and have no reason to think it worked.
+         Impersonated because a tray icon belongs to the installing user's session, not to SYSTEM,
+         and asyncNoWait because the app runs until signed out and would otherwise hang setup.
+         Starting a second copy on an upgrade is harmless: the app is single instance and the
+         later one exits. -->
+    <CustomAction Id="Action_StartNotificationsApp"
+                  FileRef="midinotificationsExe"
+                  ExeCommand=""
+                  Execute="immediate"
+                  Impersonate="yes"
+                  Return="asyncNoWait" />
+
+    <InstallExecuteSequence>
+      <Custom Action="Action_StartNotificationsApp"
+              After="InstallFinalize"
+              Condition="NOT Installed" />
+    </InstallExecuteSequence>
+
     </Package>
 </Wix>

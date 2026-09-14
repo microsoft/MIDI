@@ -19,6 +19,10 @@ namespace midikeyboard
         constexpr wchar_t ValueEndpointDeviceId[] = L"EndpointDeviceId";
         constexpr wchar_t ValueTransmitGroup[] = L"TransmitGroup";
         constexpr wchar_t ValueTransmitChannel[] = L"TransmitChannel";
+        constexpr wchar_t ValueProgramNumber[] = L"ProgramNumber";
+        constexpr wchar_t ValueBankMsb[] = L"BankMsb";
+        constexpr wchar_t ValueBankLsb[] = L"BankLsb";
+        constexpr wchar_t ValueSendPatchOnStartup[] = L"SendPatchOnStartup";
         constexpr wchar_t ValueBaseOctave[] = L"BaseOctave";
         constexpr wchar_t ValueOctaveCount[] = L"OctaveCount";
         constexpr wchar_t ValueTranspose[] = L"Transpose";
@@ -73,6 +77,12 @@ namespace midikeyboard
 
         m_transmitGroupNumber = std::clamp(ReadDword(ValueTransmitGroup, 1u), 1u, 16u);
         m_transmitChannelNumber = std::clamp(ReadDword(ValueTransmitChannel, 1u), 1u, 16u);
+
+        m_programNumber = std::clamp(
+            ReadDword(ValueProgramNumber, 1u), MinimumProgramNumber, MaximumProgramNumber);
+        m_bankMsb = std::clamp(ReadDword(ValueBankMsb, 0u), 0u, MaximumBankByte);
+        m_bankLsb = std::clamp(ReadDword(ValueBankLsb, 0u), 0u, MaximumBankByte);
+        m_sendPatchOnStartup = ReadDword(ValueSendPatchOnStartup, 0u) != 0;
 
         m_baseOctave = std::clamp(
             static_cast<int32_t>(ReadDword(ValueBaseOctave, static_cast<uint32_t>(1))),
@@ -145,8 +155,31 @@ namespace midikeyboard
         WriteDword(ValueTransmitChannel, m_transmitChannelNumber);
     }
 
-    void AppSettings::BaseOctave(int32_t value) noexcept
+    void AppSettings::ProgramNumber(uint32_t value) noexcept
     {
+        m_programNumber = std::clamp(value, MinimumProgramNumber, MaximumProgramNumber);
+        WriteDword(ValueProgramNumber, m_programNumber);
+    }
+
+    void AppSettings::BankMsb(uint32_t value) noexcept
+    {
+        m_bankMsb = std::clamp(value, 0u, MaximumBankByte);
+        WriteDword(ValueBankMsb, m_bankMsb);
+    }
+
+    void AppSettings::BankLsb(uint32_t value) noexcept
+    {
+        m_bankLsb = std::clamp(value, 0u, MaximumBankByte);
+        WriteDword(ValueBankLsb, m_bankLsb);
+    }
+
+    void AppSettings::SendPatchOnStartup(bool value) noexcept
+    {
+        m_sendPatchOnStartup = value;
+        WriteDword(ValueSendPatchOnStartup, value ? 1u : 0u);
+    }
+
+    void AppSettings::BaseOctave(int32_t value) noexcept    {
         m_baseOctave = std::clamp(value, MinimumBaseOctave, MaximumBaseOctave);
         WriteDword(ValueBaseOctave, static_cast<uint32_t>(m_baseOctave));
     }

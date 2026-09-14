@@ -34,6 +34,7 @@ namespace
 
     NOTIFYICONDATAW g_trayIcon{ };
     bool g_trayIconAdded{ false };
+    bool g_trayIconOwnsIcon{ false };
 
     std::wstring LoadAppString(_In_ UINT const id) noexcept
     {
@@ -53,11 +54,25 @@ namespace
         g_trayIcon.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
         g_trayIcon.uCallbackMessage = WM_MIDI_TRAY_ICON;
 
-        g_trayIcon.hIcon = ::LoadIconW(::GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDI_APPICON));
+        // The notification area draws at the small icon metric. LoadIcon would return the 32
+        // pixel entry for the shell to shrink, which is visibly soft; this picks the entry which
+        // matches, so the 16, 20 and 24 pixel art in the .ico is what gets used.
+        g_trayIcon.hIcon = static_cast<HICON>(::LoadImageW(
+            ::GetModuleHandleW(nullptr),
+            MAKEINTRESOURCEW(IDI_APPICON),
+            IMAGE_ICON,
+            ::GetSystemMetrics(SM_CXSMICON),
+            ::GetSystemMetrics(SM_CYSMICON),
+            LR_DEFAULTCOLOR));
 
         if (g_trayIcon.hIcon == nullptr)
         {
             g_trayIcon.hIcon = ::LoadIconW(nullptr, IDI_APPLICATION);
+            g_trayIconOwnsIcon = false;
+        }
+        else
+        {
+            g_trayIconOwnsIcon = true;
         }
 
         auto const tooltip = LoadAppString(IDS_TRAY_TOOLTIP);
@@ -72,6 +87,15 @@ namespace
         {
             ::Shell_NotifyIconW(NIM_DELETE, &g_trayIcon);
             g_trayIconAdded = false;
+        }
+
+        // LoadImage hands back a handle we own, unlike the shared one LoadIcon returns for the
+        // IDI_APPLICATION fallback.
+        if (g_trayIconOwnsIcon && g_trayIcon.hIcon != nullptr)
+        {
+            ::DestroyIcon(g_trayIcon.hIcon);
+            g_trayIcon.hIcon = nullptr;
+            g_trayIconOwnsIcon = false;
         }
     }
 

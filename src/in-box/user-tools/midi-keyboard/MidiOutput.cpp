@@ -22,11 +22,15 @@ namespace midikeyboard
         constexpr uint8_t StatusNoteOn = 0x9;
         constexpr uint8_t StatusPolyPressure = 0xA;
         constexpr uint8_t StatusControlChange = 0xB;
+        constexpr uint8_t StatusProgramChange = 0xC;
         constexpr uint8_t StatusPitchBend = 0xE;
         constexpr uint8_t StatusChannelPressure = 0xD;
         constexpr uint8_t StatusRegisteredPerNoteController = 0x0;
 
         constexpr uint8_t ControllerAllNotesOff = 123;
+
+        // low bit of the program change option flags: the bank in the second word is meaningful
+        constexpr uint16_t ProgramChangeBankValid = 0x0001;
 
         // the MIDI 1.0 convention of 64 for "no release velocity information", scaled up
         constexpr uint16_t DefaultReleaseVelocity = 0x8000;
@@ -62,6 +66,13 @@ namespace midikeyboard
         std::shared_lock lock{ m_lock };
 
         return m_clientEndpointDeviceId;
+    }
+
+    winrt::Windows::Devices::Midi2::MidiEndpointConnection MidiOutput::Connection() const noexcept
+    {
+        std::shared_lock lock{ m_lock };
+
+        return m_connection;
     }
 
     ConnectResult MidiOutput::ConnectVirtualDevice() noexcept
@@ -359,6 +370,23 @@ namespace midikeyboard
     void MidiOutput::SendPitchBend(uint8_t group, uint8_t channel, uint32_t value) noexcept
     {
         SendChannelVoiceMessage(group, StatusPitchBend, channel, 0, value);
+    }
+
+    _Use_decl_annotations_
+    void MidiOutput::SendProgramChange(
+        uint8_t group,
+        uint8_t channel,
+        uint8_t programNumber,
+        uint8_t bankMsb,
+        uint8_t bankLsb) noexcept
+    {
+        auto const program = static_cast<uint32_t>((programNumber > 0 ? programNumber - 1 : 0) & 0x7F);
+
+        SendChannelVoiceMessage(
+            group, StatusProgramChange, channel, ProgramChangeBankValid,
+            (program << 24) |
+            (static_cast<uint32_t>(bankMsb & 0x7F) << 8) |
+            static_cast<uint32_t>(bankLsb & 0x7F));
     }
 
     _Use_decl_annotations_

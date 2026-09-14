@@ -10,6 +10,8 @@
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
+IDI_APPICON ICON "Assets\\AppIcon.ico"
+
 STRINGTABLE
 BEGIN
     IDS_APP_TITLE                           "Windows MIDI Services Notifications"

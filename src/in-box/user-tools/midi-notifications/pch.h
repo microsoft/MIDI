@@ -18,6 +18,10 @@
 #include <string>
 #include <vector>
 
+// Must come before the other WIL headers: it installs the translator that teaches WIL about
+// cppwinrt exceptions. Without it, a winrt::hresult_error reaching CATCH_RETURN is treated as an
+// unknown exception and fail-fasts the process instead of being returned as an HRESULT.
+#include <wil/cppwinrt.h>
 #include <wil/resource.h>
 #include <wil/result_macros.h>
 
