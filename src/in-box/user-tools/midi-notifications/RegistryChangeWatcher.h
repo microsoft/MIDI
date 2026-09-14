@@ -51,7 +51,12 @@ private:
 
     std::function<void()> m_onChanged;
 
+    // Held across the whole of arming and across the cancel in Stop. Checking a flag is not
+    // enough on its own: a callback which passed the check before Stop set it would otherwise
+    // re-arm behind the cancel, leaving a wait armed on a handle Stop is about to close.
+    std::mutex m_armLock;
+
     // Set before the threadpool wait is closed, so a callback which is already running knows not
     // to re-arm into a key that is about to be released.
-    std::atomic<bool> m_stopping{ false };
+    bool m_stopping{ false };
 };

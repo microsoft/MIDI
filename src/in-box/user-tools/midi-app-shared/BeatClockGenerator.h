@@ -65,7 +65,7 @@ namespace midiapp
         static uint64_t SuggestedStartLeadTicks() noexcept;
 
     private:
-        void ThreadWorker();
+        void ThreadWorker() noexcept;
         void SendToAllGroups(_In_ uint64_t timestamp, _In_ uint32_t const* words) noexcept;
 
         double TicksPerPulseForTempo(_In_ double beatsPerMinute) const noexcept;

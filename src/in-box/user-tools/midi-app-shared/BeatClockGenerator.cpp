@@ -190,7 +190,8 @@ namespace midiapp
         }
     }
 
-    void BeatClockGenerator::ThreadWorker()
+    void BeatClockGenerator::ThreadWorker() noexcept
+    try
     {
         auto const frequency = clockmidi::MidiClock::TimestampFrequency();
 
@@ -292,5 +293,10 @@ namespace midiapp
             // connection. Leaving the clock's timestamp here loses the stop message.
             m_lastScheduledTimestamp.store(stopTimestamp);
         }
+    }
+    catch (...)
+    {
+        // This is a thread body, so an escaping exception would terminate the whole app. The
+        // clock stops instead; Stop() still returns the last timestamp that was scheduled.
     }
 }

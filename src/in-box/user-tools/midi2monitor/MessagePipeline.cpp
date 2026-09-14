@@ -51,17 +51,16 @@ namespace midi2monitor
 
             if (m_worker.joinable())
             {
-                // bounded join. The worker only ever waits on our own event, so this returns
-                // promptly, but we never want app shutdown to hang on it.
-                if (::WaitForSingleObject(m_worker.native_handle(), WorkerStopJoinMilliseconds) == WAIT_OBJECT_0)
+                // The worker only ever waits on our own event and on locks this thread is not
+                // holding, so it exits promptly. It is joined unconditionally even so: every
+                // piece of state it touches is a member of this object, so detaching it would
+                // leave it running against a destroyed pipeline.
+                if (::WaitForSingleObject(m_worker.native_handle(), WorkerStopJoinMilliseconds) != WAIT_OBJECT_0)
                 {
-                    m_worker.join();
+                    LOG_HR_MSG(E_UNEXPECTED, "Capture worker is slow to exit. Waiting for it anyway.");
                 }
-                else
-                {
-                    LOG_HR_MSG(E_UNEXPECTED, "Capture worker did not exit in time. Detaching.");
-                    m_worker.detach();
-                }
+
+                m_worker.join();
             }
 
             ContentChangedHandler(nullptr);

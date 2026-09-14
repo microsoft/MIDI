@@ -58,6 +58,10 @@ namespace rept = winrt::Windows::Devices::Midi2::Reporting;
 #include <mmsystem.h>
 #include <timeapi.h>
 
+// Must come before the other WIL headers: it installs the translator that teaches WIL about
+// cppwinrt exceptions. Without it, a winrt::hresult_error reaching a WIL catch macro is treated
+// as an unknown exception and fail-fasts the process instead of being handled.
+#include <wil/cppwinrt.h>
 #include <wil/common.h>
 #include <wil/com.h>
 #include <wil/registry.h>
