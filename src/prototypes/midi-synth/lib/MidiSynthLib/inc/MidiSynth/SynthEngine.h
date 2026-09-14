@@ -89,13 +89,19 @@ namespace MidiSynth
         uint8_t Program{ 0 };
         bool IsDrumChannel{ false };
 
-        uint8_t Volume{ 100 };
-        uint8_t Expression{ 127 };
-        uint8_t Pan{ 64 };
-        uint8_t Modulation{ 0 };
+        // Held normalized rather than as 7 bit values so a 32 bit MIDI 2.0 controller keeps its
+        // resolution. The 7 bit entry points map exactly as before, so MIDI 1.0 is unchanged.
+        double Volume{ 100.0 / 127.0 };
+        double Expression{ 1.0 };
+        double Modulation{ 0.0 };
+
+        // -0.5 is hard left, +0.5 is hard right, 0 is center.
+        double PanOffset{ 0.0 };
+
         bool SustainPedal{ false };
 
-        int32_t PitchBend{ 8192 };
+        // -1 to +1 across the bend range, so a 32 bit bend is not quantized to fourteen bits.
+        double PitchBendNormalized{ 0.0 };
         double PitchBendRangeSemitones{ 2.0 };
         double FineTuneCents{ 0.0 };
         double CoarseTuneSemitones{ 0.0 };
@@ -116,6 +122,18 @@ namespace MidiSynth
         void NoteOff(_In_ uint8_t channel, _In_ uint8_t note);
         void ControlChange(_In_ uint8_t channel, _In_ uint8_t controller, _In_ uint8_t value);
         void ProgramChange(_In_ uint8_t channel, _In_ uint8_t program);
+
+        // MIDI 2.0 entry points. The value keeps its full width rather than being reduced to
+        // 7 bits, which is the whole reason for using them.
+        void ControlChange32(_In_ uint8_t channel, _In_ uint8_t controller, _In_ uint32_t value);
+        void PitchBend32(_In_ uint8_t channel, _In_ uint32_t value);
+
+        // MIDI 2.0 program change carries the bank with it, so it cannot be split across messages.
+        void ProgramChangeWithBank(
+            _In_ uint8_t channel,
+            _In_ uint8_t bankMsb,
+            _In_ uint8_t bankLsb,
+            _In_ uint8_t program);
 
         // Fourteen bit value, 8192 is centered.
         void PitchBend(_In_ uint8_t channel, _In_ int32_t value);

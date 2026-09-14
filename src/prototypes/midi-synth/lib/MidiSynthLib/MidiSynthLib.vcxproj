@@ -64,12 +64,14 @@
     <ClInclude Include="inc\MidiSynth\SpscRingBuffer.h" />
     <ClInclude Include="inc\MidiSynth\SynthConfig.h" />
     <ClInclude Include="inc\MidiSynth\SynthEngine.h" />
+    <ClInclude Include="inc\MidiSynth\UmpDispatcher.h" />
   </ItemGroup>
 
   <ItemGroup>
     <ClCompile Include="src\Articulation.cpp" />
     <ClCompile Include="src\DlsCollection.cpp" />
     <ClCompile Include="src\SynthEngine.cpp" />
+    <ClCompile Include="src\UmpDispatcher.cpp" />
     <ClCompile Include="src\WasapiAudioSink.cpp" />
   </ItemGroup>
 

@@ -348,12 +348,8 @@ namespace MidiSynth
             return;
         }
 
-        if (velocity == 0)
-        {
-            NoteOff(channel, note);
-            return;
-        }
-
+        // Velocity zero is NOT treated as a note off here. That is a MIDI 1.0 convention and
+        // belongs to whatever decodes MIDI 1.0; in MIDI 2.0 zero is simply the lowest velocity.
         auto& state = m_channels[channel];
 
         if (state.Instrument == nullptr)
@@ -489,6 +485,7 @@ namespace MidiSynth
         }
 
         auto& state = m_channels[channel];
+        const double normalized = static_cast<double>(value & 0x7F) / 127.0;
 
         switch (controller)
         {
@@ -501,19 +498,20 @@ namespace MidiSynth
             break;
 
         case ControllerModulation:
-            state.Modulation = value;
+            state.Modulation = normalized;
             break;
 
         case ControllerVolume:
-            state.Volume = value;
+            state.Volume = normalized;
             break;
 
         case ControllerPan:
-            state.Pan = value;
+            // Kept in the original form so that value 64 is exactly centered.
+            state.PanOffset = (static_cast<double>(value & 0x7F) - 64.0) / 127.0;
             break;
 
         case ControllerExpression:
-            state.Expression = value;
+            state.Expression = normalized;
             break;
 
         case ControllerSustainPedal:
@@ -577,6 +575,73 @@ namespace MidiSynth
     }
 
     _Use_decl_annotations_
+    void SynthEngine::ControlChange32(uint8_t channel, uint8_t controller, uint32_t value)
+    {
+        if (channel >= MidiChannelCount)
+        {
+            return;
+        }
+
+        auto& state = m_channels[channel];
+        const double normalized = static_cast<double>(value) / 4294967295.0;
+
+        switch (controller)
+        {
+        case ControllerModulation:
+            state.Modulation = normalized;
+            break;
+
+        case ControllerVolume:
+            state.Volume = normalized;
+            break;
+
+        case ControllerExpression:
+            state.Expression = normalized;
+            break;
+
+        case ControllerPan:
+            state.PanOffset = normalized - 0.5;
+            break;
+
+        default:
+            // Anything without a wider meaning behaves as its 7 bit equivalent.
+            ControlChange(channel, controller, static_cast<uint8_t>(value >> 25));
+            break;
+        }
+    }
+
+    _Use_decl_annotations_
+    void SynthEngine::PitchBend32(uint8_t channel, uint32_t value)
+    {
+        if (channel >= MidiChannelCount)
+        {
+            return;
+        }
+
+        m_channels[channel].PitchBendNormalized = (static_cast<double>(value) / 4294967295.0) * 2.0 - 1.0;
+    }
+
+    _Use_decl_annotations_
+    void SynthEngine::ProgramChangeWithBank(
+        uint8_t channel,
+        uint8_t bankMsb,
+        uint8_t bankLsb,
+        uint8_t program)
+    {
+        if (channel >= MidiChannelCount)
+        {
+            return;
+        }
+
+        auto& state = m_channels[channel];
+        state.BankMsb = bankMsb & 0x7F;
+        state.BankLsb = bankLsb & 0x7F;
+        state.Program = program & 0x7F;
+
+        ResolveInstrument(channel);
+    }
+
+    _Use_decl_annotations_
     void SynthEngine::ProgramChange(uint8_t channel, uint8_t program)
     {
         if (channel >= MidiChannelCount)
@@ -596,7 +661,8 @@ namespace MidiSynth
             return;
         }
 
-        m_channels[channel].PitchBend = (std::clamp)(value, 0, 16383);
+        const int32_t clamped = (std::clamp)(value, 0, 16383);
+        m_channels[channel].PitchBendNormalized = (static_cast<double>(clamped) - 8192.0) / 8192.0;
     }
 
     _Use_decl_annotations_
@@ -646,12 +712,12 @@ namespace MidiSynth
 
         auto& state = m_channels[channel];
 
-        state.Volume = 100;
-        state.Expression = 127;
-        state.Pan = 64;
-        state.Modulation = 0;
+        state.Volume = 100.0 / 127.0;
+        state.Expression = 1.0;
+        state.PanOffset = 0.0;
+        state.Modulation = 0.0;
         state.SustainPedal = false;
-        state.PitchBend = 8192;
+        state.PitchBendNormalized = 0.0;
         state.PitchBendRangeSemitones = 2.0;
         state.RpnMsb = 0x7F;
         state.RpnLsb = 0x7F;
@@ -727,7 +793,7 @@ namespace MidiSynth
             ? voice.AttackProgress
             : DecibelsToLinear(voice.EnvelopeLevelDb);
 
-        const double modulationDepth = static_cast<double>(state.Modulation) / 127.0;
+        const double modulationDepth = state.Modulation;
 
         double lfoValue = 0.0;
 
@@ -746,16 +812,15 @@ namespace MidiSynth
             lfoValue * (articulation.LfoToAttenuationDb + articulation.LfoModWheelToAttenuationDb * modulationDepth);
 
         const double channelGainDb =
-            ConcaveTransformDb(static_cast<double>(state.Volume) / 127.0) +
-            ConcaveTransformDb(static_cast<double>(state.Expression) / 127.0);
+            ConcaveTransformDb(state.Volume) +
+            ConcaveTransformDb(state.Expression);
 
         const double totalGainDb = voice.StaticGainDb + channelGainDb + lfoAttenuationDb + m_config.MasterGainDb;
 
         const double amplitude = envelopeGain * DecibelsToLinear(totalGainDb) / 32768.0;
 
         // Equal power pan, combining the region's placement with the channel's.
-        const double channelPan = (static_cast<double>(state.Pan) - 64.0) / 127.0;
-        const double pan = (std::clamp)(articulation.PanFraction + channelPan, -0.5, 0.5) + 0.5;
+        const double pan = (std::clamp)(articulation.PanFraction + state.PanOffset, -0.5, 0.5) + 0.5;
 
         const double panAngle = pan * (3.14159265358979323846 / 2.0);
 
@@ -774,7 +839,7 @@ namespace MidiSynth
 
         // Pitch for this block.
         const double bendCents =
-            ((static_cast<double>(state.PitchBend) - 8192.0) / 8192.0) * state.PitchBendRangeSemitones * 100.0;
+            state.PitchBendNormalized * state.PitchBendRangeSemitones * 100.0;
 
         const double lfoPitchCents =
             lfoValue * (articulation.LfoToPitchCents + articulation.LfoModWheelToPitchCents * modulationDepth);

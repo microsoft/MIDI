@@ -292,6 +292,63 @@ because no region matched or the voice limit was reached. `MIDI dropped at queue
 that never reached the engine. Latency makes playing feel sluggish; it does not make notes vanish.
 If either counter moves during a listening test, that is a defect rather than a latency complaint.
 
+## UMP
+
+`UmpDispatcher` turns Universal MIDI Packets into engine calls. It has no transport dependency on
+purpose: a service transport receives raw UMP words through `IMidiBidirectional::SendMidiMessage`
+and a client side host gets them from the SDK, and both can feed it directly.
+
+It handles MIDI 1.0 and MIDI 2.0 channel voice messages, system reset, and enough system exclusive
+to recognize GM System On and GS reset. Packets for other groups are ignored, unknown message types
+are skipped by their declared size rather than desynchronizing the stream, and a partial packet at
+the end of a buffer is left unconsumed for the caller to complete.
+
+MIDI 2.0 resolution is carried through rather than reduced to seven bits. Channel controllers are
+held normalized internally, and the 7 bit entry points map exactly as they did before, so the
+MIDI 1.0 path is unchanged - verified by the level and spectral comparisons being identical
+before and after that change.
+
+```powershell
+.\out\x64\Release\synthspike-render.exe --ump-test
+```
+
+Two things that test exists to catch, because both are silent failures:
+
+- **A MIDI 2.0 note on with velocity zero is still a note on.** Only in MIDI 1.0 does velocity zero
+  mean note off. A synthesizer that reuses its MIDI 1.0 path here drops notes.
+- **A MIDI 2.0 program change carries its bank**, rather than depending on control change messages
+  having arrived first.
+
+Resolution is checked by sending two values that would collapse to the same seven bit number and
+confirming the output level still differs: 0.269 dB apart for a 16 bit velocity, 0.135 dB for a
+32 bit control change.
+
+## Endpoint shape
+
+One UMP Group, one bidirectional Function Block.
+
+General MIDI is defined over sixteen channels - GM1 says "All 16 MIDI channels" - and sixteen
+channels is exactly one UMP Group, so a second Group would have nothing to carry. The UMP
+specification, section 6.2.1.1, says an input and output intended to work as a pair should be a
+single Function Block spanning a single Group, and notes that MIDI-CI is more likely to operate
+successfully that way. That is what MIDI-CI profiles and property exchange will need later.
+
+## Identity Request
+
+The in-box synth **cannot** answer one. It is an output only WinMM device with no MIDI input at
+all, so it has no return path: on a machine with 57 MIDI inputs, none of them is the synth.
+Answering is therefore new behavior rather than compatibility.
+
+Ours answers, which is what the bidirectional Function Block is for. A manufacturer identifier is
+one byte, or three bytes when the first is zero, and the reply length changes accordingly - thirteen
+bytes or fifteen. Both shapes are covered by `--ump-test`.
+
+It replies as Microsoft `00 00 41`, device family 11 (Windows 11), family model number 1 (this
+synthesizer), software revision 1.0.0.0. Those constants are defined once in
+`src/in-box/Inc/MidiDefs.h` and repeated in `SynthIdentity` only so the prototype keeps building
+without the rest of the repository. Clearing the manufacturer identifier silences the reply rather
+than sending zeros, because answering as somebody else is worse than not answering.
+
 ## Untrusted input
 
 A user-supplied `.dls` is untrusted. The parser treats every length, count and offset in the file
@@ -324,5 +381,6 @@ and must not be added to it. `tools/specextract` converts a local copy to text f
 - [x] Voice engine and offline render, with tuning and CPU verification
 - [x] Measured against the in-box synth for spectrum, level, velocity, CC7 and envelopes
 - [x] WASAPI sink and live playback
-- [ ] UMP front end
+- [x] UMP front end, MIDI 1.0 and MIDI 2.0 channel voice
+- [ ] Live connection to Windows MIDI Services through the SDK
 - [ ] Per-session render host and service transport
