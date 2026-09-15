@@ -182,7 +182,6 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
     std::wstring filterName{ device.Name() };
     std::wstring deviceId;
     std::wstring deviceInstanceId;
-    std::hash<std::wstring> hasher;
     std::wstring hash;
     ULONG cPins{ 0 };
 
@@ -243,7 +242,15 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         }
     }
 
-    hash = std::to_wstring(hasher(deviceId));
+    if (Feature_Servicing_MIDI2EndpointCustomizationRelink::IsEnabled())
+    {
+        hash = internal::StableWideStringHashString(deviceId);
+    }
+    else
+    {
+        std::hash<std::wstring> hasher;
+        hash = std::to_wstring(hasher(deviceId));
+    }
 
     std::vector<std::unique_ptr<MIDI_PIN_INFO>> newMidiPins;
 

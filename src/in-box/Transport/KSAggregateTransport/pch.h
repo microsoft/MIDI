@@ -69,6 +69,9 @@
 #include "wstring_util.h"
 #include "hstring_util.h"
 #include "midi_group_terminal_blocks.h"
+#include "MidiStableStringHash.h"
+
+#include "Feature_Servicing_MIDI2EndpointCustomizationRelink.h"
 
 
 #include "MidiDefs.h"

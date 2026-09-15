@@ -171,6 +171,7 @@
     <ClInclude Include="ComponentSignatureCacheTests.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="StableStringHashTests.h" />
     <ClInclude Include="UmpIteratorTests.h" />
     <ClInclude Include="Utf8StringTests.h" />
     <ClInclude Include="VersionResourceHelperTests.h" />
@@ -186,6 +187,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="UmpIteratorTests.cpp" />
+    <ClCompile Include="StableStringHashTests.cpp" />
     <ClCompile Include="Utf8StringTests.cpp" />
     <ClCompile Include="VersionResourceHelperTests.cpp" />
   </ItemGroup>
