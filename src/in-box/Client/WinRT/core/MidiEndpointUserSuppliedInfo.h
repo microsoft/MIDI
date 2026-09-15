@@ -22,7 +22,7 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             _In_ bool const requiresNoteOffTranslation,
             _In_ uint16_t const recommendedControlChangeAutomationIntervalMilliseconds,
             _In_ bool const supportsMidiPolyphonicExpression,
-            _In_ uint64_t const customMidiOutgoingLatencyTicks,
+            _In_ int64_t const customMidiOutgoingLatencyTicks,
             _In_ bool const useCustomMidiOutgoingLatencyTicksForScheduling
         )
         {
@@ -79,8 +79,8 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             m_supportsMidiPolyphonicExpression = value;
         }
 
-        uint64_t CustomMidiOutgoingLatencyTicks() const noexcept { return m_customMidiOutgoingLatencyTicks; }
-        void CustomMidiOutgoingLatencyTicks(_In_ uint64_t const value) noexcept
+        int64_t CustomMidiOutgoingLatencyTicks() const noexcept { return m_customMidiOutgoingLatencyTicks; }
+        void CustomMidiOutgoingLatencyTicks(_In_ int64_t const value) noexcept
         {
             if (IsReadOnly()) return;
             m_customMidiOutgoingLatencyTicks = value;
@@ -91,6 +91,13 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         {
             if (IsReadOnly()) return;
             m_useCustomMidiOutgoingLatencyTicksForScheduling = value;
+        }
+
+        int64_t CalculatedMidiOutgoingLatencyTicks() const noexcept { return m_calculatedMidiOutgoingLatencyTicks; }
+        void CalculatedMidiOutgoingLatencyTicks(_In_ int64_t const value) noexcept
+        {
+            if (IsReadOnly()) return;
+            m_calculatedMidiOutgoingLatencyTicks = value;
         }
 
         void InternalSetReadOnly() noexcept { m_isReadOnly = true; }
@@ -104,8 +111,9 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         bool m_requiresNoteOffTranslation{ false };
         uint16_t m_recommendedControlChangeAutomationIntervalMilliseconds{ 0 };
         bool m_supportsMidiPolyphonicExpression{ false };
-        uint64_t m_customMidiOutgoingLatencyTicks{ 0 };
+        int64_t m_customMidiOutgoingLatencyTicks{ 0 };
         bool m_useCustomMidiOutgoingLatencyTicksForScheduling{ false };
+        int64_t m_calculatedMidiOutgoingLatencyTicks{ 0 };
 
     };
 }

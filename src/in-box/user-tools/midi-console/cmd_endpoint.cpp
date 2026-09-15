@@ -1192,7 +1192,8 @@ namespace midi2console
         auto const hasAnyChange = options.Clear ||
             options.HasName || options.HasDescription || options.HasImage || options.HasPortNaming ||
             options.HasNoteOffTranslation || options.HasMidiPolyphonicExpression ||
-            options.HasControlChangeInterval || options.HasOutgoingLatencyTicks;
+            options.HasControlChangeInterval || options.HasOutgoingLatencyTicks ||
+            options.HasUseCustomOutgoingLatency;
 
         if (!hasAnyChange)
         {
@@ -1284,6 +1285,7 @@ namespace midi2console
         if (options.HasNoteOffTranslation)         config.RequiresNoteOffTranslation(options.NoteOffTranslation);
         if (options.HasMidiPolyphonicExpression)   config.SupportsMidiPolyphonicExpression(options.MidiPolyphonicExpression);
         if (options.HasOutgoingLatencyTicks)       config.OutgoingLatencyTicks(options.OutgoingLatencyTicks);
+        if (options.HasUseCustomOutgoingLatency)   config.UseCustomOutgoingLatency(options.UseCustomOutgoingLatency);
 
         if (options.HasControlChangeInterval)
         {

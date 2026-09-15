@@ -436,23 +436,32 @@ CMidi2SchedulerMidiTransform2::ReadDeviceLatency()
 
         auto const properties = deviceInfo.Properties();
 
-        auto const calculatedTicks = internal::GetDeviceInfoProperty<uint64_t>(
-            properties, STRING_PKEY_MIDI_MidiOutCalculatedLatencyTicks, 0);
+        // Stored as UINT64 but read back signed: a device can be EARLY once its peers are
+        // compensated, and a negative value read as unsigned would otherwise resolve to an
+        // enormous compensation. Negative compensation is not applied yet, so it clamps to zero
+        // rather than sending late.
+        auto const calculatedTicks = static_cast<int64_t>(internal::GetDeviceInfoProperty<uint64_t>(
+            properties, STRING_PKEY_MIDI_MidiOutCalculatedLatencyTicks, 0));
 
-        auto const customTicks = internal::GetDeviceInfoProperty<uint64_t>(
-            properties, STRING_PKEY_MIDI_MidiOutCustomLatencyTicks, 0);
+        auto const customTicks = static_cast<int64_t>(internal::GetDeviceInfoProperty<uint64_t>(
+            properties, STRING_PKEY_MIDI_MidiOutCustomLatencyTicks, 0));
 
         auto const useCustom = internal::GetDeviceInfoProperty<bool>(
             properties, STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride, false);
 
         auto latencyTicks = useCustom ? customTicks : calculatedTicks;
 
-        if (latencyTicks > m_maxDeviceLatencyTicks)
+        if (latencyTicks < 0)
         {
-            latencyTicks = m_maxDeviceLatencyTicks;
+            latencyTicks = 0;
         }
 
-        m_deviceLatencyTicks = latencyTicks;
+        if (static_cast<uint64_t>(latencyTicks) > m_maxDeviceLatencyTicks)
+        {
+            latencyTicks = static_cast<int64_t>(m_maxDeviceLatencyTicks);
+        }
+
+        m_deviceLatencyTicks = static_cast<uint64_t>(latencyTicks);
 
         TraceLoggingWrite(
             MidiSchedulerTransformTelemetryProvider::Provider(),
@@ -462,8 +471,8 @@ CMidi2SchedulerMidiTransform2::ReadDeviceLatency()
             TraceLoggingPointer(this, "this"),
             TraceLoggingWideString(L"Outgoing latency compensation resolved", MIDI_TRACE_EVENT_MESSAGE_FIELD),
             TraceLoggingWideString(m_endpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD),
-            TraceLoggingUInt64(calculatedTicks, "calculated ticks"),
-            TraceLoggingUInt64(customTicks, "custom ticks"),
+            TraceLoggingInt64(calculatedTicks, "calculated ticks"),
+            TraceLoggingInt64(customTicks, "custom ticks"),
             TraceLoggingBool(useCustom, "use custom"),
             TraceLoggingUInt64(m_deviceLatencyTicks, "applied ticks")
         );

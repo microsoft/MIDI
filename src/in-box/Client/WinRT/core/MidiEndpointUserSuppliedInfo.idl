@@ -26,7 +26,7 @@ namespace Windows.Devices.Midi2.Enumeration
             Boolean requiresNoteOffTranslation,
             UInt16 recommendedControlChangeAutomationIntervalMilliseconds,
             Boolean supportsMidiPolyphonicExpression,
-            UInt64 customMidiOutgoingLatencyTicks,
+            Int64 customMidiOutgoingLatencyTicks,
             Boolean useCustomMidiOutgoingLatencyTicksForScheduling
         );
 
@@ -41,7 +41,11 @@ namespace Windows.Devices.Midi2.Enumeration
         [noexcept] UInt16 RecommendedControlChangeAutomationIntervalMilliseconds;
         [noexcept] Boolean SupportsMidiPolyphonicExpression;
 
-        [noexcept] UInt64 CustomMidiOutgoingLatencyTicks;
+        [noexcept] Int64 CustomMidiOutgoingLatencyTicks;
         [noexcept] Boolean UseCustomMidiOutgoingLatencyTicksForScheduling;
+
+        // supplied by the transport, not by the user, and reported here so an application can show
+        // what compensation is in effect without having to read device properties itself
+        [noexcept] Int64 CalculatedMidiOutgoingLatencyTicks;
     };
 }

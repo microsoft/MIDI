@@ -101,8 +101,10 @@ namespace midi2console
         bool HasMidiPolyphonicExpression{ false };
         int ControlChangeIntervalMilliseconds{ 0 };
         bool HasControlChangeInterval{ false };
-        uint64_t OutgoingLatencyTicks{ 0 };
+        int64_t OutgoingLatencyTicks{ 0 };
         bool HasOutgoingLatencyTicks{ false };
+        bool UseCustomOutgoingLatency{ false };
+        bool HasUseCustomOutgoingLatency{ false };
         bool Temporary{ false };
     };
 

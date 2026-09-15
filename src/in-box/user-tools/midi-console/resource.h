@@ -465,6 +465,7 @@
 #define IDS_OPT_CUSTOMIZE_MPE                           51733
 #define IDS_OPT_CUSTOMIZE_CC_INTERVAL                   51734
 #define IDS_OPT_CUSTOMIZE_OUTPUT_LATENCY                51735
+#define IDS_OPT_CUSTOMIZE_USE_CUSTOM_LATENCY            52021
 #define IDS_CUSTOMIZE_NOTHING_TO_DO                     51736
 #define IDS_CUSTOMIZE_APPLIED                           51737
 #define IDS_CUSTOMIZE_SAVED                             51738

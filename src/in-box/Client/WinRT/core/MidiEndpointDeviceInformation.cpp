@@ -862,8 +862,10 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
             info->SupportsMidiPolyphonicExpression(internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression, false));
             info->RecommendedControlChangeAutomationIntervalMilliseconds(internal::GetDeviceInfoProperty<uint16_t>(m_properties, STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS, 0));
 
-            info->CustomMidiOutgoingLatencyTicks(internal::GetDeviceInfoProperty<uint64_t>(m_properties, STRING_PKEY_MIDI_MidiOutCustomLatencyTicks, 0));
+            // stored as UINT64, read back signed: a device can be early once its peers are compensated
+            info->CustomMidiOutgoingLatencyTicks(static_cast<int64_t>(internal::GetDeviceInfoProperty<uint64_t>(m_properties, STRING_PKEY_MIDI_MidiOutCustomLatencyTicks, 0)));
             info->UseCustomMidiOutgoingLatencyTicksForScheduling(internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride, false));
+            info->CalculatedMidiOutgoingLatencyTicks(static_cast<int64_t>(internal::GetDeviceInfoProperty<uint64_t>(m_properties, STRING_PKEY_MIDI_MidiOutCalculatedLatencyTicks, 0)));
 
             info->InternalSetReadOnly();
         }

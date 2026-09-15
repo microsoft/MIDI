@@ -130,7 +130,13 @@ namespace WindowsMidiServicesPluginConfigurationLib
         bool RequiresNoteOffTranslation{};
         bool SupportsMidiPolyphonicExpression{};
         uint16_t RecommendedControlChangeIntervalMilliseconds{};
-        uint64_t OutgoingLatencyTicks{};
+        int64_t OutgoingLatencyTicks{};
+
+        // A customer can switch compensation off without discarding a value that took a loopback
+        // cable to obtain, so the choice is stored rather than inferred. Absent from the
+        // configuration, it falls back to meaning "use it if it is non-zero".
+        bool UseCustomOutgoingLatency{ false };
+        bool HasUseCustomOutgoingLatency{ false };
 
      //   bool UmpOnly{ false };
         WindowsMidiServicesNamingLib::Midi1PortNameSelection Midi1NamingApproach{ WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault };
