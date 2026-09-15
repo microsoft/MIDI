@@ -266,11 +266,13 @@
   <ItemGroup>
     <ClInclude Include="$(SolutionDir)Inc\MidiEndpointCustomProperties.h" />
     <ClInclude Include="$(SolutionDir)Inc\MidiEndpointCustomPropertiesCache.h" />
+    <ClInclude Include="$(SolutionDir)Inc\MidiEndpointCustomizationProvenance.h" />
     <ClInclude Include="$(SolutionDir)Inc\MidiEndpointMatchCriteria.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="MidiEndpointCustomPropertiesCache.cpp" />
     <ClCompile Include="MidiEndpointCustomProperties.cpp" />
+    <ClCompile Include="MidiEndpointCustomizationProvenance.cpp" />
     <ClCompile Include="MidiEndpointMatchCriteria.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -98,5 +98,99 @@ bool MidiEndpointCustomPropertiesCache::Add(
 }
 
 
+_Use_decl_annotations_
+bool MidiEndpointCustomPropertiesCache::AddWithProvenance(
+    std::shared_ptr<MidiEndpointMatchCriteria> match,
+    std::shared_ptr<MidiEndpointCustomProperties> properties,
+    std::shared_ptr<MidiEndpointCustomizationProvenance> provenance,
+    winrt::hstring const& resolvedEndpointDeviceId)
+{
+    auto lock = m_entriesMutex.lock_exclusive();
+
+    std::shared_ptr<MidiEndpointCustomizationProvenance> retainedProvenance{ provenance };
+
+    std::vector<std::shared_ptr<MidiEndpointCustomPropertiesCacheEntry>>::iterator it;
+
+    for (it = m_entries.begin(); it != m_entries.end(); it++)
+    {
+        if ((*it)->Match->Matches(*match))
+        {
+            // An update which carries no provenance must not erase what an earlier one recorded.
+            if (retainedProvenance == nullptr)
+            {
+                retainedProvenance = (*it)->Provenance;
+            }
+
+            m_entries.erase(it);
+            break;
+        }
+    }
+
+    auto entry = std::make_shared<MidiEndpointCustomPropertiesCacheEntry>();
+
+    if (entry == nullptr)
+    {
+        return false;
+    }
+
+    entry->Match = match;
+    entry->Properties = properties;
+    entry->Provenance = retainedProvenance;
+    entry->ResolvedEndpointDeviceId = resolvedEndpointDeviceId;
+
+    m_entries.push_back(entry);
+
+    return true;
+}
+
+
+std::vector<std::shared_ptr<MidiEndpointCustomPropertiesCacheEntry>> MidiEndpointCustomPropertiesCache::GetAllEntries()
+{
+    auto lock = m_entriesMutex.lock_shared();
+
+    return m_entries;
+}
+
+
+_Use_decl_annotations_
+bool MidiEndpointCustomPropertiesCache::Remove(MidiEndpointMatchCriteria& match)
+{
+    auto lock = m_entriesMutex.lock_exclusive();
+
+    std::vector<std::shared_ptr<MidiEndpointCustomPropertiesCacheEntry>>::iterator it;
+
+    for (it = m_entries.begin(); it != m_entries.end(); it++)
+    {
+        if ((*it)->Match->Matches(match))
+        {
+            m_entries.erase(it);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+_Use_decl_annotations_
+bool MidiEndpointCustomPropertiesCache::UpdateResolvedEndpointDeviceId(
+    MidiEndpointMatchCriteria& match,
+    winrt::hstring const& resolvedEndpointDeviceId)
+{
+    auto lock = m_entriesMutex.lock_exclusive();
+
+    for (auto const& entry : m_entries)
+    {
+        if (entry->Match->Matches(match))
+        {
+            entry->ResolvedEndpointDeviceId = resolvedEndpointDeviceId;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 
 }
