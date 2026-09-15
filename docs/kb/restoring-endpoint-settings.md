@@ -80,4 +80,4 @@ If you have measured an output latency value for a device, that is the hardest s
 
 Nothing needs avoiding if you unplug devices between sessions. Saved settings waiting for a device to come back are working exactly as intended, and the only thing you might want to do is dismiss the message once.
 
-For the case where an identifier really has changed: a device that reports a serial number keeps its identity between ports, so this will not happen to it. A device that does not report one keeps its identity only while it stays in the same USB port, or the same port on the same hub, so remembering where those devices are normally plugged in can help reduce the chances of this happening.
+For the case where an identifier really has changed: a device that reports a serial number keeps its identity between ports, so this will not happen to it. A device that does not report one keeps its identity only while it stays in the same USB port, or the same port on the same hub, so remembering where those devices are normally plugged in can help reduce the chances of this happening. These tools will help you when that's not a reasonable option.
