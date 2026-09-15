@@ -26,6 +26,11 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         static svc::MidiServiceConfigResponse SendCommand(
             _In_ svc::MidiServiceTransportCommand const& command) noexcept;
 
+        static collections::IVectorView<svc::MidiServiceEndpointCustomization> GetEndpointCustomizations() noexcept;
+
+        static collections::IVectorView<svc::MidiServiceEndpointCustomization> GetEndpointCustomizations(
+            _In_ winrt::guid const& transportId) noexcept;
+
         static svc::MidiServiceConfigSaveResponse SaveUpdate(
             _In_ svc::IMidiServiceTransportPluginConfig const& configUpdate) noexcept;
 

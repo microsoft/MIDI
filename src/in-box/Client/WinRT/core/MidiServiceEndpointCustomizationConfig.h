@@ -64,6 +64,9 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria MatchCriteria() { return m_matchCriteria; }
         void MatchCriteria(_In_ midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria const& value) { m_matchCriteria = value; }
 
+        midi2::ServiceConfig::MidiServiceEndpointCustomizationProvenance Provenance() { return m_provenance; }
+        void Provenance(_In_ midi2::ServiceConfig::MidiServiceEndpointCustomizationProvenance const& value) { m_provenance = value; }
+
         void AddMidi1SourcePortCustomName(_In_ midi2::MidiGroup const& group, _In_ winrt::hstring const& name) noexcept;
         void AddMidi1DestinationPortCustomName(_In_ midi2::MidiGroup const& group, _In_ winrt::hstring const& name) noexcept;
 
@@ -86,6 +89,7 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
     private:
         std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> m_props{ std::make_shared<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties>() };
         midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria m_matchCriteria{};
+        midi2::ServiceConfig::MidiServiceEndpointCustomizationProvenance m_provenance{ nullptr };
 
         winrt::guid m_transportId{};
 

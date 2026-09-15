@@ -15,6 +15,8 @@
 #include "MidiServiceConfigResponse.h"
 
 #include "MidiServiceConfigSaveResponse.h"
+#include "MidiServiceEndpointCustomization.h"
+#include "MidiReporting.h"
 #include "MidiConfigFile.h"
 
 
@@ -665,6 +667,97 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
             MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception sending transport command.");
             return nullptr;
         }
+    }
+
+
+    _Use_decl_annotations_
+    collections::IVectorView<svc::MidiServiceEndpointCustomization> MidiServiceTransportPluginConfigManager::GetEndpointCustomizations(
+        winrt::guid const& transportId) noexcept
+    {
+        auto results = winrt::single_threaded_vector<svc::MidiServiceEndpointCustomization>();
+
+        try
+        {
+            // The verb arrives up to 45 days after the tool which calls it, so the capability is
+            // what decides, never a version check.
+            if (!QueryCapability(transportId, MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_LIST_ENDPOINT_CUSTOMIZATIONS))
+            {
+                return results.GetView();
+            }
+
+            svc::MidiServiceTransportCommand command(transportId);
+            command.Verb(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_LIST_ENDPOINT_CUSTOMIZATIONS);
+
+            auto const response = SendCommand(command);
+
+            if (response == nullptr ||
+                response.Status() != svc::MidiServiceConfigResponseStatus::Success ||
+                response.ResponseJson() == nullptr)
+            {
+                return results.GetView();
+            }
+
+            auto const entries = response.ResponseJson().GetNamedArray(
+                MIDI_CONFIG_JSON_ENDPOINT_CUSTOMIZATIONS_RESPONSE_ARRAY_KEY, nullptr);
+
+            if (entries == nullptr)
+            {
+                return results.GetView();
+            }
+
+            for (uint32_t i = 0; i < entries.Size(); i++)
+            {
+                auto const entry = entries.GetObjectAt(i);
+
+                if (entry == nullptr)
+                {
+                    continue;
+                }
+
+                auto customization = winrt::make_self<implementation::MidiServiceEndpointCustomization>();
+
+                customization->InternalInitializeFromJson(transportId, entry);
+
+                results.Append(*customization);
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error listing endpoint customizations.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception listing endpoint customizations.");
+        }
+
+        return results.GetView();
+    }
+
+
+    collections::IVectorView<svc::MidiServiceEndpointCustomization> MidiServiceTransportPluginConfigManager::GetEndpointCustomizations() noexcept
+    {
+        auto results = winrt::single_threaded_vector<svc::MidiServiceEndpointCustomization>();
+
+        try
+        {
+            for (auto const& transport : rpt::MidiReporting::GetInstalledTransportPlugins())
+            {
+                for (auto const& customization : GetEndpointCustomizations(transport.TransportId()))
+                {
+                    results.Append(customization);
+                }
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error listing endpoint customizations for all transports.");
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception listing endpoint customizations for all transports.");
+        }
+
+        return results.GetView();
     }
 
 

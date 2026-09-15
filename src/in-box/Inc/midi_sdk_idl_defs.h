@@ -184,6 +184,10 @@
 #define UUID_IMidiServiceEndpointCustomizationRemovalConfig                 8087b303-0519-c0de-31d1-dd0060009000
 #define UUID_IMidiServiceEndpointCustomizationRemovalConfigFactory          8087b303-0519-c0de-31d1-ff0060009000
 
+#define UUID_IMidiServiceEndpointCustomizationProvenance                    8087b303-0519-c0de-31d1-dd006000a000
+
+#define UUID_IMidiServiceEndpointCustomization                              8087b303-0519-c0de-31d1-dd006000b000
+
 // ============================================================================
 // Windows.Devices.Midi2.CapabilityInquiry : Interface number 007
 

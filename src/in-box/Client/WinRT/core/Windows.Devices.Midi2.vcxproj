@@ -492,6 +492,12 @@
     <ClInclude Include="MidiServiceEndpointCustomizationRemovalConfig.h">
       <DependentUpon>MidiServiceEndpointCustomizationRemovalConfig.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiServiceEndpointCustomizationProvenance.h">
+      <DependentUpon>MidiServiceEndpointCustomizationProvenance.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiServiceEndpointCustomization.h">
+      <DependentUpon>MidiServiceEndpointCustomization.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiBluetoothDeviceInformation.h">
       <DependentUpon>MidiBluetoothDeviceInformation.idl</DependentUpon>
     </ClInclude>
@@ -919,6 +925,12 @@
     <ClCompile Include="MidiServiceEndpointCustomizationRemovalConfig.cpp">
       <DependentUpon>MidiServiceEndpointCustomizationRemovalConfig.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiServiceEndpointCustomizationProvenance.cpp">
+      <DependentUpon>MidiServiceEndpointCustomizationProvenance.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiServiceEndpointCustomization.cpp">
+      <DependentUpon>MidiServiceEndpointCustomization.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiBluetoothPeripheralClient.cpp">
       <DependentUpon>MidiBluetoothPeripheralClient.idl</DependentUpon>
     </ClCompile>
@@ -1223,6 +1235,8 @@
     <Midl Include="MidiBluetoothTimestampSourceEnum.idl" />
     <Midl Include="MidiBluetoothRadioInformation.idl" />
     <Midl Include="MidiServiceEndpointCustomizationRemovalConfig.idl" />
+    <Midl Include="MidiServiceEndpointCustomizationProvenance.idl" />
+    <Midl Include="MidiServiceEndpointCustomization.idl" />
     <Midl Include="MidiBluetoothAddressTypeEnum.idl" />
     <Midl Include="MidiBluetoothApprovalScopeEnum.idl" />
     <Midl Include="MidiBluetoothPeripheralClientPolicyEnum.idl" />
