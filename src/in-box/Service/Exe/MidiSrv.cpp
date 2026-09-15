@@ -9,7 +9,6 @@
 #include "stdafx.h"
 #include "midisrvrpc.h"
 
-#include "Feature_Servicing_MIDI2LegacyControl.h"
 #include "Feature_Servicing_MIDI2SynchronizedStart.h"
 
 RPC_STATUS RPC_ENTRY MidiSrvRpcIfCallback(
@@ -303,17 +302,14 @@ CMidiSrv::Shutdown()
         TraceLoggingPointer(this, "this")
     );
 
-    if (Feature_Servicing_MIDI2LegacyControl::IsEnabled())
+    // Shut down the protocol manager before the RPC unregister,
+    // as the protocol manager has a client which uses the RPC.
+    if (m_EndpointProtocolManager)
     {
-        // Shut down the protocol manager before the RPC unregister,
-        // as the protocol manager has a client which uses the RPC.
-        if (m_EndpointProtocolManager)
-        {
-            // Shut down the protocol manager, but don't reset/release
-            // the memory yet, as other components may still have references
-            // to it.
-            RETURN_IF_FAILED(m_EndpointProtocolManager->Shutdown());
-        }
+        // Shut down the protocol manager, but don't reset/release
+        // the memory yet, as other components may still have references
+        // to it.
+        RETURN_IF_FAILED(m_EndpointProtocolManager->Shutdown());
     }
 
     if (m_RpcBound)
@@ -382,20 +378,9 @@ CMidiSrv::Shutdown()
         m_ConfigurationManager.reset();
     }
 
-    if (Feature_Servicing_MIDI2LegacyControl::IsEnabled())
-    {
-        // Release the memory now that no other components are using the
-        // protocol manager.
-        m_EndpointProtocolManager.reset();
-    }
-    else
-    {
-        if (m_EndpointProtocolManager)
-        {
-            RETURN_IF_FAILED(m_EndpointProtocolManager->Shutdown());
-            m_EndpointProtocolManager.reset();
-        }
-    }
+    // Release the memory now that no other components are using the
+    // protocol manager.
+    m_EndpointProtocolManager.reset();
 
     if (m_SessionTracker)
     {

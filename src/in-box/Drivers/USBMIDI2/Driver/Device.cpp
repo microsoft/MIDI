@@ -47,7 +47,6 @@ Environment:
 #include "Trace.h"
 #include "Device.tmh"
 
-#include "Feature_Servicing_MIDI2USBSerial.h"
 #include "Feature_Servicing_MIDI2USBSystemRealTimeUmpSize.h"
 
 UNICODE_STRING g_RegistryPath = {0};      // This is used to store the registry settings path for the driver
@@ -625,9 +624,6 @@ Return Value:
     PWDF_USB_INTERFACE_SETTING_PAIR         pSettingPairs = NULL;
     UINT8                                   numSettingPairs = 0;
     WDF_USB_DEVICE_SELECT_CONFIG_PARAMS     configParams;
-// start of remove with Feature_Servicing_MIDI2USBSerial
-    WDF_OBJECT_ATTRIBUTES                   objectAttributes;
-// end of remove with Feature_Servicing_MIDI2USBSerial
     PWCHAR                                  pTempBuffer = NULL;
     WDF_REQUEST_SEND_OPTIONS                reqOptions;
     USHORT                                  numChars = 0;
@@ -764,54 +760,9 @@ Return Value:
             deviceDescriptor.iSerialNumber,
             MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
         );
-        if (Feature_Servicing_MIDI2USBSerial_IsEnabled())
+
+        if (NT_SUCCESS(status) && numChars > 0)
         {
-            if (NT_SUCCESS(status) && numChars > 0)
-            {
-                WDF_OBJECT_ATTRIBUTES_INIT(&deviceConfigAttrib);
-                deviceConfigAttrib.ParentObject = pDeviceContext->UsbDevice;
-                status = WdfMemoryCreate(
-                    &deviceConfigAttrib,
-                    NonPagedPoolNx,
-                    USBMIDI_POOLTAG,
-                    (size_t)((numChars + 1) * sizeof(WCHAR)),
-                    &pDeviceContext->DeviceSNMemory,
-                    (PVOID*)&pTempBuffer
-                );
-                if (!NT_SUCCESS(status))
-                {
-                    TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for Serial Number. %!STATUS!", status);
-                    return(status);
-                }
-                RtlZeroMemory(pTempBuffer, (size_t)((numChars + 1) * sizeof(WCHAR)));
-                status = WdfUsbTargetDeviceQueryString(
-                    pDeviceContext->UsbDevice,
-                    NULL,
-                    &reqOptions,
-                    (PUSHORT)pTempBuffer,
-                    &numChars,
-                    deviceDescriptor.iSerialNumber,
-                    MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
-                );
-            }
-            if (!NT_SUCCESS(status) || numChars == 0)
-            {
-                if (pDeviceContext->DeviceSNMemory != nullptr)
-                {
-                    WdfObjectDelete(pDeviceContext->DeviceSNMemory);
-                    pDeviceContext->DeviceSNMemory = nullptr;
-                }
-                TraceEvents(TRACE_LEVEL_WARNING, TRACE_DEVICE, "Error getting Serial string when index was nonzero, not iSerialNumber. %!STATUS!", status);
-                deviceDescriptor.iSerialNumber = 0;
-            }
-        }
-        else
-        {
-            if (!NT_SUCCESS(status))
-            {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Serial Number string size. %!STATUS!", status);
-                return(status);
-            }
             WDF_OBJECT_ATTRIBUTES_INIT(&deviceConfigAttrib);
             deviceConfigAttrib.ParentObject = pDeviceContext->UsbDevice;
             status = WdfMemoryCreate(
@@ -837,11 +788,16 @@ Return Value:
                 deviceDescriptor.iSerialNumber,
                 MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
             );
-            if (!NT_SUCCESS(status))
+        }
+        if (!NT_SUCCESS(status) || numChars == 0)
+        {
+            if (pDeviceContext->DeviceSNMemory != nullptr)
             {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Serial Number string." );
-                return(status);
+                WdfObjectDelete(pDeviceContext->DeviceSNMemory);
+                pDeviceContext->DeviceSNMemory = nullptr;
             }
+            TraceEvents(TRACE_LEVEL_WARNING, TRACE_DEVICE, "Error getting Serial string when index was nonzero, not iSerialNumber. %!STATUS!", status);
+            deviceDescriptor.iSerialNumber = 0;
         }
     }
 
@@ -865,55 +821,9 @@ Return Value:
             deviceDescriptor.iManufacturer,
             MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
         );
-        if (Feature_Servicing_MIDI2USBSerial_IsEnabled())
-        {
-            if (NT_SUCCESS(status) && numChars > 0)
-            {
-                WDF_OBJECT_ATTRIBUTES_INIT(&deviceConfigAttrib);
-                deviceConfigAttrib.ParentObject = pDeviceContext->UsbDevice;
-                status = WdfMemoryCreate(
-                    &deviceConfigAttrib,
-                    NonPagedPoolNx,
-                    USBMIDI_POOLTAG,
-                    (size_t)((numChars + 1) * sizeof(WCHAR)),
-                    &pDeviceContext->DeviceManfMemory,
-                    (PVOID*)&pTempBuffer
-                );
-                if (!NT_SUCCESS(status))
-                {
-                    TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for Manufacturer. %!STATUS!", status);
-                    return(status);
-                }
-                RtlZeroMemory(pTempBuffer, (size_t)((numChars + 1) * sizeof(WCHAR)));
-                status = WdfUsbTargetDeviceQueryString(
-                    pDeviceContext->UsbDevice,
-                    NULL,
-                    &reqOptions,
-                    (PUSHORT)pTempBuffer,
-                    &numChars,
-                    deviceDescriptor.iManufacturer,
-                    MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
-                );
-            }
-            if (!NT_SUCCESS(status) || numChars == 0)
-            {
-                if (pDeviceContext->DeviceManfMemory != nullptr)
-                {
-                    WdfObjectDelete(pDeviceContext->DeviceManfMemory);
-                    pDeviceContext->DeviceManfMemory = nullptr;
-                }
-                TraceEvents(TRACE_LEVEL_WARNING, TRACE_DEVICE, "Error getting Manufacturer string when index was nonzero, not using iManufacturer. %!STATUS!", status);
-                deviceDescriptor.iManufacturer = 0;
-            }
-        }
-        else
-        {
-            if (!NT_SUCCESS(status))
-            {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Manufacturer string size. %!STATUS!", status);
-                return(status);
-            }
 
+        if (NT_SUCCESS(status) && numChars > 0)
+        {
             WDF_OBJECT_ATTRIBUTES_INIT(&deviceConfigAttrib);
             deviceConfigAttrib.ParentObject = pDeviceContext->UsbDevice;
             status = WdfMemoryCreate(
@@ -939,90 +849,16 @@ Return Value:
                 deviceDescriptor.iManufacturer,
                 MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
             );
-            if (!NT_SUCCESS(status))
-            {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Manufacturer string %!STATUS!", status);
-                return(status);
-            }
         }
-    }
-
-    if (!Feature_Servicing_MIDI2USBSerial_IsEnabled())
-    {
-        // Not used, not necessary to query.
-
-        // Device Product Name
-        if (deviceDescriptor.iProduct)
+        if (!NT_SUCCESS(status) || numChars == 0)
         {
-            WDF_REQUEST_SEND_OPTIONS_INIT(&reqOptions, WDF_REQUEST_SEND_OPTION_SYNCHRONOUS);
-            WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(&reqOptions, WDF_REL_TIMEOUT_IN_SEC(USB_REQ_TIMEOUT_SEC));
-
-            status = WdfUsbTargetDeviceQueryString(
-                pDeviceContext->UsbDevice,
-                NULL,
-                &reqOptions,
-                NULL,
-                &numChars,
-                deviceDescriptor.iProduct,
-                MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
-            );
-            if (!NT_SUCCESS(status))
+            if (pDeviceContext->DeviceManfMemory != nullptr)
             {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Product Name string size.%!STATUS!", status);
-                return(status);
+                WdfObjectDelete(pDeviceContext->DeviceManfMemory);
+                pDeviceContext->DeviceManfMemory = nullptr;
             }
-            WDF_OBJECT_ATTRIBUTES_INIT(&deviceConfigAttrib);
-            deviceConfigAttrib.ParentObject = pDeviceContext->UsbDevice;
-            status = WdfMemoryCreate(
-                &deviceConfigAttrib,
-                NonPagedPoolNx,
-                USBMIDI_POOLTAG,
-                (size_t)((numChars + 1) * sizeof(WCHAR)),
-                &pDeviceContext->DeviceProductNameMemory,
-                (PVOID*)&pTempBuffer
-            );
-            if (!NT_SUCCESS(status))
-            {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error allocating memory for Product Name. %!STATUS!", status);
-                return(status);
-            }
-            RtlZeroMemory(pTempBuffer, (size_t)((numChars + 1) * sizeof(WCHAR)));
-            status = WdfUsbTargetDeviceQueryString(
-                pDeviceContext->UsbDevice,
-                NULL,
-                &reqOptions,
-                (PUSHORT)pTempBuffer,
-                &numChars,
-                deviceDescriptor.iProduct,
-                MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US)
-            );
-            if (!NT_SUCCESS(status))
-            {
-                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Error getting Product Name string. %!STATUS!", status);
-                return(status);
-            }
-        }
-
-        // Device name
-
-        WDF_OBJECT_ATTRIBUTES_INIT(&objectAttributes);
-        objectAttributes.ParentObject = Device;
-        status = WdfDeviceAllocAndQueryProperty(Device,
-            DevicePropertyFriendlyName,
-            NonPagedPoolNx,
-            &objectAttributes,
-            &pDeviceContext->DeviceNameMemory);
-        if (!NT_SUCCESS(status))
-        {
-            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE, "Could not obtain Friendly Name String. %!STATUS!", status);
-        }
-        else
-        {
-            // As we could not get FriendlyName means we should assign a device name for unique descriptor
-            //if (pDeviceContext->DeviceProductNameMemory)
-            //{
-
-            //}
+            TraceEvents(TRACE_LEVEL_WARNING, TRACE_DEVICE, "Error getting Manufacturer string when index was nonzero, not using iManufacturer. %!STATUS!", status);
+            deviceDescriptor.iManufacturer = 0;
         }
     }
 
@@ -1088,17 +924,9 @@ Return Value:
                     && interfaceDescriptor.bInterfaceSubClass == 1 /*AUDIO CONTROL*/)
                 {
                     pDeviceContext->UsbControlInterface = usbInterface;
-                    if (Feature_Servicing_MIDI2USBSerial_IsEnabled())
-                    {
-                        pSettingPairs[numSettingPairs].UsbInterface = pDeviceContext->UsbControlInterface;
-                        pSettingPairs[numSettingPairs].SettingIndex = 1;
-                        numSettingPairs++;
-                    }
-                    else
-                    {
-                        pSettingPairs[interfaceCount].UsbInterface = pDeviceContext->UsbControlInterface;
-                        pSettingPairs[interfaceCount].SettingIndex = 1;
-                    }
+                    pSettingPairs[numSettingPairs].UsbInterface = pDeviceContext->UsbControlInterface;
+                    pSettingPairs[numSettingPairs].SettingIndex = 1;
+                    numSettingPairs++;
                 }
                 else
                 {
@@ -1128,17 +956,9 @@ Return Value:
                     && interfaceDescriptor.bInterfaceSubClass == 1 /*AUDIO CONTROL*/)
                 {
                     pDeviceContext->UsbControlInterface = usbInterface;
-                    if (Feature_Servicing_MIDI2USBSerial_IsEnabled())
-                    {
-                        pSettingPairs[numSettingPairs].UsbInterface = pDeviceContext->UsbControlInterface;
-                        pSettingPairs[numSettingPairs].SettingIndex = 0;
-                        numSettingPairs++;
-                    }
-                    else
-                    {
-                        pSettingPairs[interfaceCount].UsbInterface = pDeviceContext->UsbControlInterface;
-                        pSettingPairs[interfaceCount].SettingIndex = 0;
-                    }
+                    pSettingPairs[numSettingPairs].UsbInterface = pDeviceContext->UsbControlInterface;
+                    pSettingPairs[numSettingPairs].SettingIndex = 0;
+                    numSettingPairs++;
                 }
                 else
                 {
@@ -1155,17 +975,10 @@ Return Value:
         pDeviceContext->UsbMIDIStreamingInterface = usbInterface;
 
         // Setup settings pairs for MIDI streaming interface
-        if (Feature_Servicing_MIDI2USBSerial_IsEnabled())
-        {
-            pSettingPairs[numSettingPairs].UsbInterface = pDeviceContext->UsbMIDIStreamingInterface;
-            pSettingPairs[numSettingPairs].SettingIndex = pDeviceContext->UsbMIDIStreamingAlt;
-            numSettingPairs++;
-        }
-        else
-        {
-            pSettingPairs[interfaceCount].UsbInterface = pDeviceContext->UsbMIDIStreamingInterface;
-            pSettingPairs[interfaceCount].SettingIndex = pDeviceContext->UsbMIDIStreamingAlt;
-        }
+
+        pSettingPairs[numSettingPairs].UsbInterface = pDeviceContext->UsbMIDIStreamingInterface;
+        pSettingPairs[numSettingPairs].SettingIndex = pDeviceContext->UsbMIDIStreamingAlt;
+        numSettingPairs++;
 
         // Determine Version of the selected MIDI Interface
         PUSB_INTERFACE_DESCRIPTOR pInterfaceDescriptor = USBD_ParseConfigurationDescriptorEx(
@@ -1212,32 +1025,20 @@ Return Value:
         goto SelectExit;
     }
 
-    if (Feature_Servicing_MIDI2USBSerial_IsEnabled())
+    if (!numSettingPairs)
     {
-        if (!numSettingPairs)
-        {
-            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
-                "No valid USB interface settings discovered.\n");
-            status = STATUS_NOINTERFACE;
-            goto SelectExit;
-        }
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+            "No valid USB interface settings discovered.\n");
+        status = STATUS_NOINTERFACE;
+        goto SelectExit;
+    }
 
-        // Prepare to select interface
-        WDF_USB_DEVICE_SELECT_CONFIG_PARAMS_INIT_MULTIPLE_INTERFACES(
-            &configParams,
-            numSettingPairs,
-            pSettingPairs
-        );
-    }
-    else
-    {
-        // Prepare to select interface
-        WDF_USB_DEVICE_SELECT_CONFIG_PARAMS_INIT_MULTIPLE_INTERFACES(
-            &configParams,
-            numInterfaces,
-            pSettingPairs
-        );
-    }
+    // Prepare to select interface
+    WDF_USB_DEVICE_SELECT_CONFIG_PARAMS_INIT_MULTIPLE_INTERFACES(
+        &configParams,
+        numSettingPairs,
+        pSettingPairs
+    );
 
     // Select the interfaces
     status = WdfUsbTargetDeviceSelectConfig(
@@ -1335,7 +1136,15 @@ Return Value:
         {
             pDeviceContext->MidiOutPipe = pipe;
             pDeviceContext->MidiOutPipeType = pipeInfo.PipeType;
-            pDeviceContext->MidiOutMaxSize = pipeInfo.MaximumPacketSize;
+            // Round down to a multiple of sizeof(UINT32) so the 4-byte-stride
+            // write loop cannot overshoot the allocation
+            pDeviceContext->MidiOutMaxSize = pipeInfo.MaximumPacketSize & ~(sizeof(UINT32) - 1);
+            if (pDeviceContext->MidiOutMaxSize < sizeof(UINT32))
+            {
+                TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE,
+                    "OUT endpoint MaxPacketSize too small: %lu\n", (ULONG)pipeInfo.MaximumPacketSize);
+                return STATUS_DEVICE_CONFIGURATION_ERROR;
+            }
         }
     }
     // At least one of the endpoints needs to be found
@@ -1715,7 +1524,11 @@ Return Value:
 
         if (pUSBGTBs->aBlock[termBlockCount].iBlockItem)
         {
-            USHORT stringSize = grpTermBlockStringSizes[termBlockCount] - sizeof(WCHAR); //Always leave NULL
+            // NumberOfCharacters is a character count, not a byte count. Use the
+            // allocated slot's character capacity minus the null terminator so the
+            // fill pass cannot overrun the slot even if the device returns a longer
+            // string than it reported during the sizing pass.
+            USHORT stringSize = (USHORT)((grpTermBlockStringSizes[termBlockCount] / sizeof(WCHAR)) - 1);
 
             // Fetch String descriptor from device
             status = WdfUsbTargetDeviceQueryString(
@@ -2043,7 +1856,11 @@ Return Value:
 
         if (grpTermBlockStringIndexes[termBlockCount])
         {
-            USHORT stringSize = grpTermBlockStringSizes[termBlockCount] - sizeof(WCHAR); //Always leave NULL
+            // NumberOfCharacters is a character count, not a byte count. Use the
+            // allocated slot's character capacity minus the null terminator so the
+            // fill pass cannot overrun the slot even if the device returns a longer
+            // string than it reported during the sizing pass.
+            USHORT stringSize = (USHORT)((grpTermBlockStringSizes[termBlockCount] / sizeof(WCHAR)) - 1);
 
             // Fetch String descriptor from device
             status = WdfUsbTargetDeviceQueryString(
@@ -2980,15 +2797,16 @@ Return Value:Amy
                     // Copy in word
                     ((PUINT32)pDeviceContext->DeviceWriteBuffer)[pDeviceContext->DeviceWriteBufferIndex++] = umpWritePacket.umpData.umpWords[count];
 
-                    // Check if buffer full and send to USB if it is
-                    if ((pDeviceContext->DeviceWriteBufferIndex * sizeof(UINT32)) == pDeviceContext->MidiOutMaxSize)
+                    // Check if buffer full, or won't fit another UMP, and send to USB if it is
+                    size_t writeBufferSize = pDeviceContext->DeviceWriteBufferIndex * sizeof(UINT32);
+                    if (writeBufferSize >= pDeviceContext->MidiOutMaxSize)
                     {
                         // Write to buffer
                         if (!USBMIDI2DriverSendToUSB(
                             pDeviceContext->DeviceUSBWriteRequest,
                             pDeviceContext->DeviceWriteMemory,
                             pipe,
-                            pDeviceContext->DeviceWriteBufferIndex * sizeof(UINT32),
+                            writeBufferSize,
                             pDeviceContext,
                             true    // delete this request when complete
                         ))

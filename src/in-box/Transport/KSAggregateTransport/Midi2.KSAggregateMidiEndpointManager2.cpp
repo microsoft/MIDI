@@ -13,7 +13,6 @@
 #include <sstream>      // for the string stream in parsing of VID/PID/Serial from parent id
 #include <iostream>     // for getline for string parsing of VID/PID/Serial from parent id
 
-#include "Feature_Servicing_MIDI2KSATVSFix.h"
 #include "Feature_Servicing_MIDI2DevCaps2.h"
 #include "Feature_Servicing_MIDI2FailFast.h"
 #include "Feature_Servicing_MIDI2CustomOutgoingLatency.h"
@@ -2136,10 +2135,7 @@ CMidi2KSAggregateMidiEndpointManager2::UpdateNewPinDefinitions(
     {
         if (!pin->NeedsGroupIndexAssigned)
         {
-            if (Feature_Servicing_MIDI2KSATVSFix::IsEnabled())
-            {
-                RETURN_HR_IF(E_UNEXPECTED, pin->GroupIndex >= ARRAYSIZE(sourceGroupsUsed));
-            }
+            RETURN_HR_IF(E_UNEXPECTED, pin->GroupIndex >= ARRAYSIZE(sourceGroupsUsed));
             sourceGroupsUsed[pin->GroupIndex] = true;
         }
     }
@@ -2148,10 +2144,7 @@ CMidi2KSAggregateMidiEndpointManager2::UpdateNewPinDefinitions(
     {
         if (!pin->NeedsGroupIndexAssigned)
         {
-            if (Feature_Servicing_MIDI2KSATVSFix::IsEnabled())
-            {
-                RETURN_HR_IF(E_UNEXPECTED, pin->GroupIndex >= ARRAYSIZE(destinationGroupsUsed));
-            }
+            RETURN_HR_IF(E_UNEXPECTED, pin->GroupIndex >= ARRAYSIZE(destinationGroupsUsed));
             destinationGroupsUsed[pin->GroupIndex] = true;
         }
     }

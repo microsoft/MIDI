@@ -12,7 +12,6 @@
 
 #include "MidiPnpUtilities.h"
 
-#include "Feature_Servicing_MIDI2SWDAbortCrash.h"
 #include "Feature_Servicing_MIDI2FailFast.h"
 #include "Feature_Servicing_MIDI2PortNamingRework.h"
 
@@ -182,6 +181,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
     std::wstring filterName{ device.Name() };
     std::wstring deviceId;
     std::wstring deviceInstanceId;
+    std::hash<std::wstring> hasher;
     std::wstring hash;
     ULONG cPins{ 0 };
 
@@ -882,18 +882,9 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
                                                             &createInfo,
                                                             &newDeviceInterfaceId));
 
-        if (Feature_Servicing_MIDI2SWDAbortCrash::IsEnabled())
-        {
-            // If SWD creation is aborted, newDeviceInterfaceId will be NULL,
-            // don't crash and continue to push forward with the available pins.
-            if (SUCCEEDED(MidiPin->SwdCreation))
-            {
-                // keep the created endpoint device interface id because this is used in some lookups later
-                // specifically around matching for customization
-                MidiPin->EndpointDeviceId = static_cast<LPWSTR>(newDeviceInterfaceId.get());
-            }
-        }
-        else
+        // If SWD creation is aborted, newDeviceInterfaceId will be NULL,
+        // don't crash and continue to push forward with the available pins.
+        if (SUCCEEDED(MidiPin->SwdCreation))
         {
             // keep the created endpoint device interface id because this is used in some lookups later
             // specifically around matching for customization

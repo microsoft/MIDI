@@ -187,6 +187,15 @@ StreamEngine::HandleIo()
                     ULONG midiOutReadPosition = (ULONG) InterlockedCompareExchange((LONG *)m_ReadRegister, 0, 0);
                     ULONG midiOutWritePosition = (ULONG) InterlockedCompareExchange((LONG *)m_WriteRegister, 0, 0);
 
+                    if (midiOutReadPosition >= m_BufferSize ||
+                        midiOutWritePosition >= m_BufferSize)
+                    {
+                        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DRIVER, "%!FUNC! Invalid read or write position, aborting.");
+                        status = STATUS_INVALID_DEVICE_REQUEST;
+                        // data is malformed, abort.
+                        goto cleanup;
+                    }
+
                     // first figure out how much data there is to read, taking
                     // into account the looping buffer.
                     if (midiOutReadPosition <= midiOutWritePosition)
@@ -354,6 +363,14 @@ Return Value:
         ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)m_WriteRegister, 0, 0);
         ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)m_ReadRegister, 0, 0);
 
+        if (midiInWritePosition >= m_BufferSize ||
+            midiInReadPosition >= m_BufferSize)
+        {
+            TraceEvents(TRACE_LEVEL_ERROR, TRACE_DRIVER, "%!FUNC! Invalid read or write position, aborting.");
+            // data is malformed, abort.
+            return false;
+        }
+
         // Check enough space to write into
         ULONG bytesAvailable = 0;
 
@@ -447,6 +464,14 @@ StreamEngine::BufferInUse()
     // so we can have as much free space as possible.
     ULONG midiInWritePosition = (ULONG)InterlockedCompareExchange((LONG*)m_WriteRegister, 0, 0);
     ULONG midiInReadPosition = (ULONG)InterlockedCompareExchange((LONG*)m_ReadRegister, 0, 0);
+
+    if (midiInWritePosition >= m_BufferSize ||
+        midiInReadPosition >= m_BufferSize)
+    {
+        TraceEvents(TRACE_LEVEL_ERROR, TRACE_DRIVER, "%!FUNC! Invalid read or write position, aborting.");
+        // data is malformed, abort.
+        return 0;
+    }
 
     // Now we need to calculate the available space, taking into account the looping
     // buffer.
@@ -595,14 +620,11 @@ StreamEngine::Pause()
         ObDereferenceObject(m_WorkerThread);
         m_WorkerThread = nullptr;
 
-        if (Feature_Servicing_MIDI2FillReadCrash_IsEnabled())
+        WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
+        PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
+        if (pDevCtx)
         {
-            WDFDEVICE devCtx = AcxCircuitGetWdfDevice(AcxPinGetCircuit(m_Pin));
-            PDEVICE_CONTEXT pDevCtx = GetDeviceContext(devCtx);
-            if (pDevCtx)
-            {
-                pDevCtx->pStreamEngine = nullptr;
-            }
+            pDevCtx->pStreamEngine = nullptr;
         }
     }
     else

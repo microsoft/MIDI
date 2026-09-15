@@ -109,6 +109,124 @@ void CleanupClient(_In_ PMIDISRV_CLIENT *client)
     }
 }
 
+void Midi2ServiceTests::TestMidiServiceConfigurationJsonSize()
+{
+    if (IsLegacyMode())
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test not applicable for legacy mode.");
+        return;
+    }
+
+    wil::unique_rpc_binding bindingHandle;
+    VERIFY_SUCCEEDED(GetMidiSrvBindingHandle(&bindingHandle));
+
+    constexpr size_t maximumJsonCharacterCount = MAXIMUM_JSON_SIZE / sizeof(wchar_t);
+    std::wstring oversizedJson(maximumJsonCharacterCount + 1, L'A');
+    LPWSTR responseJson{ nullptr };
+
+    const HRESULT result = [&]()
+    {
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateConfiguration(
+            bindingHandle.get(),
+            oversizedJson.c_str(),
+            &responseJson));
+        RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+        RpcEndExcept
+        return S_OK;
+    }();
+
+    VERIFY_ARE_EQUAL(E_INVALIDARG, result);
+    VERIFY_IS_NULL(responseJson);
+}
+
+void Midi2ServiceTests::TestMidiServiceSessionNameCharacterCount()
+{
+    if (IsLegacyMode())
+    {
+        WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"Test not applicable for legacy mode.");
+        return;
+    }
+
+    wil::unique_rpc_binding bindingHandle;
+    VERIFY_SUCCEEDED(GetMidiSrvBindingHandle(&bindingHandle));
+
+    GUID oversizedSessionId{};
+    VERIFY_SUCCEEDED(CoCreateGuid(&oversizedSessionId));
+
+    std::wstring oversizedSessionName(MAXIMUM_SESSION_NAME_CHARACTER_COUNT + 1, L'A');
+    PVOID oversizedContextHandle{ nullptr };
+
+    const HRESULT oversizedRegisterResult = [&]()
+    {
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvRegisterSession(
+            bindingHandle.get(),
+            oversizedSessionId,
+            oversizedSessionName.c_str(),
+            &oversizedContextHandle));
+        RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+        RpcEndExcept
+        return S_OK;
+    }();
+
+    VERIFY_ARE_EQUAL(E_INVALIDARG, oversizedRegisterResult);
+    VERIFY_IS_NULL(oversizedContextHandle);
+
+    GUID validSessionId{};
+    VERIFY_SUCCEEDED(CoCreateGuid(&validSessionId));
+
+    std::wstring maximumSessionName(MAXIMUM_SESSION_NAME_CHARACTER_COUNT, L'A');
+    PVOID validContextHandle{ nullptr };
+
+    VERIFY_SUCCEEDED([&]()
+    {
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvRegisterSession(
+            bindingHandle.get(),
+            validSessionId,
+            maximumSessionName.c_str(),
+            &validContextHandle));
+        RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+        RpcEndExcept
+        return S_OK;
+    }());
+
+    auto cleanupOnExit = wil::scope_exit([&]()
+    {
+        LOG_IF_FAILED([&]()
+        {
+            RpcTryExcept RETURN_IF_FAILED(MidiSrvDeregisterSession(bindingHandle.get(), validContextHandle, validSessionId));
+            RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+            RpcEndExcept
+            return S_OK;
+        }());
+    });
+
+    VERIFY_SUCCEEDED([&]()
+    {
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateSessionName(
+            bindingHandle.get(),
+            validContextHandle,
+            validSessionId,
+            maximumSessionName.c_str()));
+        RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+        RpcEndExcept
+        return S_OK;
+    }());
+
+    const HRESULT oversizedUpdateResult = [&]()
+    {
+        RpcTryExcept RETURN_IF_FAILED(MidiSrvUpdateSessionName(
+            bindingHandle.get(),
+            validContextHandle,
+            validSessionId,
+            oversizedSessionName.c_str()));
+        RpcExcept(I_RpcExceptionFilter(RpcExceptionCode())) RETURN_IF_FAILED(HRESULT_FROM_WIN32(RpcExceptionCode()));
+        RpcEndExcept
+        return S_OK;
+    }();
+
+    VERIFY_ARE_EQUAL(E_INVALIDARG, oversizedUpdateResult);
+}
+
 void Midi2ServiceTests::TestMidiServiceClientRPC()
 {
     WEX::TestExecution::SetVerifyOutput verifySettings(WEX::TestExecution::VerifyOutputSettings::LogOnlyFailures);

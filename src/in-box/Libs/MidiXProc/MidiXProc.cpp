@@ -339,17 +339,18 @@ CMidiXProc::WaitForSendComplete(ULONG startingReadPosition, ULONG BufferWrittenP
             }
         }
 
-        ULONG bufferReceivedWait = MIDI_XPROC_BUFFER_RECEIVED_WAIT;
-
-        if (Feature_Servicing_MIDI2XProcSendWaitTimeouts::IsEnabled())
-        {
-            bufferReceivedWait = MIDI_XPROC_SEND_WAIT_TIMEOUT_EXTENDED;
-        }
-
         do
         {
             // wait for either the other end to read the buffer, termination, or timeout with no messages read
-            DWORD ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, bufferReceivedWait);
+            DWORD ret = 0;
+            if (Feature_Servicing_MIDI2XProcSendWaitTimeouts::IsEnabled())
+            {
+                ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_SEND_WAIT_TIMEOUT_EXTENDED);
+            }
+            else
+            {
+                ret = WaitForMultipleObjects(ARRAYSIZE(handles), handles, FALSE, MIDI_XPROC_BUFFER_RECEIVED_WAIT);
+            }
             if (ret == (WAIT_OBJECT_0 + 1))
             {
                 // this is a manual reset event, so reset the event before reading the updated position so
@@ -661,6 +662,12 @@ CMidiXProc::SendMidiMessageInternal(
             // the read position is the last position the driver (or client) has read from
             ULONG writePosition = InterlockedCompareExchange((LONG*)registers->WritePosition, 0, 0);
             ULONG readPosition = InterlockedCompareExchange((LONG*)registers->ReadPosition, 0, 0);
+
+            // Confirm that the positions in the registers are valid, within the
+            // available buffer space. If they are not, abort.
+            RETURN_HR_IF(E_ABORT, writePosition >= data->BufferSize);
+            RETURN_HR_IF(E_ABORT, readPosition >= data->BufferSize);
+
             ULONG newWritePosition = (writePosition + requiredBufferSize) % data->BufferSize;
             ULONG bytesAvailable{ 0 };
 
@@ -914,6 +921,12 @@ CMidiXProc::ProcessMidiIn()
                     // the write position is the last position written to
                     ULONG readPosition = InterlockedCompareExchange((LONG*)registers->ReadPosition, 0, 0);
                     ULONG writePosition = InterlockedCompareExchange((LONG*)registers->WritePosition, 0, 0);
+
+                    // Confirm that the positions in the registers are valid, within the
+                    // available buffer space. If they are not, abort.
+                    RETURN_HR_IF(E_ABORT, readPosition >= mappedData->BufferSize);
+                    RETURN_HR_IF(E_ABORT, writePosition >= mappedData->BufferSize);
+
                     ULONG bytesAvailable{ 0 };
 
                     if (readPosition <= writePosition)

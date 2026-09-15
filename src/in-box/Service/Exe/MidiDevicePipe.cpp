@@ -43,7 +43,10 @@ CMidiDevicePipe::Initialize(
     auto additionalProperties = winrt::single_threaded_vector<winrt::hstring>();
     additionalProperties.Append(STRING_PKEY_MIDI_TransportLayer);
     additionalProperties.Append(STRING_PKEY_MIDI_SupportsMulticlient);
-    additionalProperties.Append(STRING_PKEY_MIDI_VirtualMidiInUseReportingTarget);
+    if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
+    {
+        additionalProperties.Append(STRING_PKEY_MIDI_VirtualMidiInUseReportingTarget);
+    }
 
     auto deviceInfo = DeviceInformation::CreateFromIdAsync(
         device, 
@@ -62,7 +65,10 @@ CMidiDevicePipe::Initialize(
     }
     else
     {
-        RETURN_IF_FAILED(internal::IsComponentPermitted(m_TransportGuid));
+        // Else, do not use it. componentFileLock must stay in scope until after the
+        // CoCreateInstance calls below so the verified DLL cannot be swapped before load.
+        wil::unique_hfile componentFileLock;
+        RETURN_IF_FAILED(internal::IsComponentPermitted(m_TransportGuid, componentFileLock));
     }
 
     GUID dummySessionId{};

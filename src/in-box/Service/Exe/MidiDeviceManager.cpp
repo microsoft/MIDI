@@ -17,8 +17,6 @@
 #include "midi_ksa_pin_map_property.h"
 
 #include "Feature_Servicing_MIDI2DevCaps2.h"
-#include "Feature_Servicing_MIDI2NumDevsPerf.h"
-#include "Feature_Servicing_MIDI2LegacyControl.h"
 #include "Feature_Servicing_MIDI2SynchronizedStart.h"
 #include "Feature_Servicing_MIDI2PortNumberCache.h"
 #include "Feature_Servicing_MIDI2ComponentSignatureCache.h"
@@ -73,7 +71,6 @@ CMidiDeviceManager::Initialize(
     std::shared_ptr<CMidiConfigurationManager>& configurationManager,
     std::shared_ptr<CMidiClientManager>& clientManager)
 {
-    DWORD transferState = 0;
     DWORD dataSize = sizeof(DWORD);
     DWORD legacyMidi = 0;
 
@@ -87,39 +84,12 @@ CMidiDeviceManager::Initialize(
 
     m_configurationManager = configurationManager;
 
-    if (Feature_Servicing_MIDI2LegacyControl::IsEnabled())
-    {
-        legacyMidi = (ERROR_SUCCESS == RegGetValue(HKEY_LOCAL_MACHINE, driver32Path, MIDI_USE_LEGACY_REG_KEY, RRF_RT_DWORD, NULL, &legacyMidi, &dataSize) && dataSize == sizeof(DWORD))?legacyMidi:MIDI_USE_MIDISRV;
+    legacyMidi = (ERROR_SUCCESS == RegGetValue(HKEY_LOCAL_MACHINE, driver32Path, MIDI_USE_LEGACY_REG_KEY, RRF_RT_DWORD, NULL, &legacyMidi, &dataSize) && dataSize == sizeof(DWORD))?legacyMidi:MIDI_USE_MIDISRV;
 
-        // USE_LEGACY_MIDI should have exited the service immediately, so it wouldn't ever
-        // be seen here. If it's not midisrv or hybrid legacy, then the value provided was
-        // invalid, error
-        RETURN_HR_IF(E_INVALIDARG, legacyMidi != MIDI_USE_MIDISRV && legacyMidi != MIDI_USE_HYBRID_LEGACY);
-    }
-    else
-    {
-        // query for midisrv control keys
-        if (ERROR_SUCCESS == RegGetValue(HKEY_LOCAL_MACHINE, driver32Path, midisrvTransferComplete, RRF_RT_DWORD, NULL, &transferState, &dataSize) && 
-            transferState != 1)
-        {
-            // transferState will be 1 if Midi2 is enabled on the system and endpoint control has been transfered from
-            // AudioEndpointBuilder to midisrv.
-            //
-            // If control has not been transferred, we do not want midisrv to create any midi 1 endpoints as they will
-            // not be usable by the legacy api's.
-            TraceLoggingWrite(
-                MidiSrvTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_ERROR,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(L"AudioEndpointBuilder retains control of Midi port registration, unable to take exclusive control of midi ports.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
-            );
-
-            m_CreateMidi1Ports = false;
-        }
-    }
-
+    // USE_LEGACY_MIDI should have exited the service immediately, so it wouldn't ever
+    // be seen here. If it's not midisrv or hybrid legacy, then the value provided was
+    // invalid, error
+    RETURN_HR_IF(E_INVALIDARG, legacyMidi != MIDI_USE_MIDISRV && legacyMidi != MIDI_USE_HYBRID_LEGACY);
     if (Feature_Servicing_MIDI2ComponentSignatureCache::IsEnabled())
     {
         // Get the enabled transport layers from the registry
@@ -129,16 +99,13 @@ CMidiDeviceManager::Initialize(
             wil::com_ptr_nothrow<IMidiEndpointManager> endpointManager;
             wil::com_ptr_nothrow<IMidiTransportConfigurationManager> transportConfigurationManager;
 
-            if (Feature_Servicing_MIDI2LegacyControl::IsEnabled())
+            // If hybrid legacy midi was requested, we do not use the KSAggreagate transport
+            // because that will conflict with the legacy KS driver publishing done by endpoint builder.
+            // Other transports are permitted, as they will not conflict with legacy KS definitions.
+            if (legacyMidi == MIDI_USE_HYBRID_LEGACY && 
+                TransportLayer == __uuidof(Midi2KSAggregateTransport))
             {
-                // If hybrid legacy midi was requested, we do not use the KSAggreagate transport
-                // because that will conflict with the legacy KS driver publishing done by endpoint builder.
-                // Other transports are permitted, as they will not conflict with legacy KS definitions.
-                if (legacyMidi == MIDI_USE_HYBRID_LEGACY && 
-                    TransportLayer == __uuidof(Midi2KSAggregateTransport))
-                {
-                    continue;
-                }
+                continue;
             }
 
             try
@@ -488,16 +455,13 @@ CMidiDeviceManager::Initialize(
             wil::com_ptr_nothrow<IMidiEndpointManager> endpointManager;
             wil::com_ptr_nothrow<IMidiTransportConfigurationManager> transportConfigurationManager;
 
-            if (Feature_Servicing_MIDI2LegacyControl::IsEnabled())
+            // If hybrid legacy midi was requested, we do not use the KSAggreagate transport
+            // because that will conflict with the legacy KS driver publishing done by endpoint builder.
+            // Other transports are permitted, as they will not conflict with legacy KS definitions.
+            if (legacyMidi == MIDI_USE_HYBRID_LEGACY && 
+                TransportLayer == __uuidof(Midi2KSAggregateTransport))
             {
-                // If hybrid legacy midi was requested, we do not use the KSAggreagate transport
-                // because that will conflict with the legacy KS driver publishing done by endpoint builder.
-                // Other transports are permitted, as they will not conflict with legacy KS definitions.
-                if (legacyMidi == MIDI_USE_HYBRID_LEGACY && 
-                    TransportLayer == __uuidof(Midi2KSAggregateTransport))
-                {
-                    continue;
-                }
+                continue;
             }
 
             try
@@ -525,8 +489,10 @@ CMidiDeviceManager::Initialize(
                     TraceLoggingGuid(TransportLayer, "transport layer")
                 );
 
-                // Do not load any transports which are untrusted, unless in developer mode.
-                if (FAILED(internal::IsComponentPermitted(TransportLayer)))
+                // Keep componentFileLock alive through the CoCreateInstance below so the
+                // verified DLL cannot be swapped between the signature check and the load.
+                wil::unique_hfile componentFileLock;
+                if (FAILED(internal::IsComponentPermitted(TransportLayer, componentFileLock)))
                 {
                     continue;
                 }
@@ -888,28 +854,15 @@ SwMidiPortCreateCallback(__in HSWDEVICE swDevice, __in HRESULT creationResult, _
 
     if (SUCCEEDED(creationContext->MidiPort->hr))
     {
-        if (Feature_Servicing_MIDI2NumDevsPerf::IsEnabled())
-        {
-            creationContext->MidiPort->hr = SwDeviceInterfaceRegister(
-                swDevice,
-                creationContext->MidiPort->InterfaceCategory,
-                nullptr,
-                creationContext->IntPropertyCount,
-                creationContext->InterfaceDevProperties,
-                FALSE, // must register as "disabled" so that we have the opportunity to assign a port number prior to it going active
-                wil::out_param(creationContext->MidiPort->DeviceInterfaceId));
-        }
-        else
-        {
-            creationContext->MidiPort->hr = SwDeviceInterfaceRegister(
-                swDevice,
-                creationContext->MidiPort->InterfaceCategory,
-                nullptr,
-                creationContext->IntPropertyCount,
-                creationContext->InterfaceDevProperties,
-                TRUE,
-                wil::out_param(creationContext->MidiPort->DeviceInterfaceId));
-        }
+        creationContext->MidiPort->hr = SwDeviceInterfaceRegister(
+            swDevice,
+            creationContext->MidiPort->InterfaceCategory,
+            nullptr,
+            creationContext->IntPropertyCount,
+            creationContext->InterfaceDevProperties,
+            FALSE, // must register as "disabled" so that we have the opportunity to assign a port number prior to it going active
+            wil::out_param(creationContext->MidiPort->DeviceInterfaceId));
+
     }
 
     if (SUCCEEDED(creationContext->MidiPort->hr))
@@ -3290,8 +3243,11 @@ CMidiDeviceManager::RebuildAndUpdateNameTableForMidi2EndpointWithFunctionBlocks(
         RETURN_IF_FAILED(propSetHR);
     }
 
-    // hand the caller what was just built, so it does not read the pre-write snapshot back
-    rebuiltNameTable = std::make_shared<WindowsMidiServicesNamingLib::MidiEndpointNameTable>(newNameTable);
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+    {
+        // hand the caller what was just built, so it does not read the pre-write snapshot back
+        rebuiltNameTable = std::make_shared<WindowsMidiServicesNamingLib::MidiEndpointNameTable>(newNameTable);
+    }
 
     return S_OK;
 }
@@ -3310,8 +3266,6 @@ CMidiDeviceManager::RebuildAndUpdateNameTableForMidi2EndpointWithGroupTerminalBl
     // derived at enumeration have to be re-derived against the name the endpoint now reports.
     // Only native UMP endpoints take this path: a bytestream device named through the UMP driver
     // gets its port names from pin and registry names that are not carried in the GTB property.
-
-    if (!Feature_Servicing_MIDI2PortNamingRework::IsEnabled()) return S_OK;
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -3429,8 +3383,6 @@ CMidiDeviceManager::SyncGroupTerminalBlockNamesToMidi1PortNames(
     // names are describing the same group, and disagreeing is just confusing. This runs after the
     // port names are resolved, so it also follows a naming style the customer changes later.
 
-    if (!Feature_Servicing_MIDI2PortNamingRework::IsEnabled()) return S_OK;
-
     auto nativeDataFormat = (MidiDataFormats)internal::SafeGetSwdPropertyFromDeviceInformation<uint8_t>(
         STRING_PKEY_MIDI_NativeDataFormat, deviceInfo, MidiDataFormats::MidiDataFormats_Invalid);
 
@@ -3502,10 +3454,6 @@ CMidiDeviceManager::SyncGroupTerminalBlockNamesToMidi1PortNames(
 
     return S_OK;
 }
-
-
-
-
 
 
 _Use_decl_annotations_
@@ -3607,9 +3555,12 @@ CMidiDeviceManager::GetMidi1PortNames(
     {
         // a rebuild earlier in this sync already produced the current table in memory
         nameTable = rebuiltNameTable;
+        if (nameTable == nullptr)
+        {
+            nameTable = WindowsMidiServicesNamingLib::MidiEndpointNameTable::FromDeviceInfo(deviceInfo);
+        }
     }
-
-    if (nameTable == nullptr)
+    else
     {
         nameTable = WindowsMidiServicesNamingLib::MidiEndpointNameTable::FromDeviceInfo(deviceInfo);
     }
@@ -3918,16 +3869,12 @@ CMidiDeviceManager::SyncMidi1Ports(
     if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
     {
         LOG_IF_FAILED(GetMidi1PortNames(deviceInfo, rebuiltNameTable, portInfo));
+        hrTemp = SyncGroupTerminalBlockNamesToMidi1PortNames(thisUmpMidiPortDeviceInterfaceId.c_str(), deviceInfo, umpMidiPort, portInfo);
+        LOG_HR_IF(hrTemp, FAILED(hrTemp) && E_NOTFOUND != hrTemp);
     }
     else
     {
         LOG_IF_FAILED(GetMidi1PortNames(deviceInfo, nullptr, portInfo));
-    }
-
-    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
-    {
-        hrTemp = SyncGroupTerminalBlockNamesToMidi1PortNames(thisUmpMidiPortDeviceInterfaceId.c_str(), deviceInfo, umpMidiPort, portInfo);
-        LOG_HR_IF(hrTemp, FAILED(hrTemp) && E_NOTFOUND != hrTemp);
     }
 
     // First walk the midi ports list, identifying ports that have already been
@@ -4089,19 +4036,6 @@ CMidiDeviceManager::SyncMidi1Ports(
                     (SW_DEVICE_CREATE_INFO*)&createInfo,
                     nullptr,
                     &createdMidiPort));
-
-                if (!Feature_Servicing_MIDI2NumDevsPerf::IsEnabled())
-                {
-                    // Assign the new port number.
-                    if (Feature_Servicing_MIDI2PortNumberCache::IsEnabled())
-                    {
-                        RETURN_IF_FAILED(AssignPortNumberUsingCache(createdMidiPort->SwDevice.get(), createdMidiPort->DeviceInterfaceId.get(), createdMidiPort->Flow));
-                    }
-                    else
-                    {
-                        RETURN_IF_FAILED(AssignPortNumber(createdMidiPort->SwDevice.get(), createdMidiPort->DeviceInterfaceId.get(), createdMidiPort->Flow));
-                    }
-                }
 
                 // We want to reuse interfaceProperties for the next creation,
                 // so pop the endpoint specific properties off in preparation.

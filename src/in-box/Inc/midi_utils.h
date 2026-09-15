@@ -181,6 +181,66 @@ namespace WindowsMidiServicesInternal
         return HRESULT_FROM_WIN32(status);
     }
 
+    // BEGIN remove with Feature_Servicing_MIDI2ComponentSignatureCache cleanup
+    //
+    // Verifies that the COM component registered under 'guid' is trusted (catalog or
+    // Authenticode signed) before it is loaded.
+    //
+    // To close the signature-check / load TOCTOU window, this opens the component's
+    // on-disk image with a sharing mode that denies write and delete, and hands that
+    // handle back to the caller via 'componentFileLock'. As long as the caller keeps
+    // the handle open, the file cannot be modified, overwritten, renamed, or deleted,
+    // so the bytes verified here are guaranteed to be the same bytes the loader maps.
+    //
+    // The caller MUST keep 'componentFileLock' alive until after the component has
+    // been instantiated (e.g. CoCreateInstance / CoGetClassObject has returned). Once
+    // the DLL is loaded its image is already committed in memory, so the lock can be
+    // released after that point.
+    inline HRESULT IsComponentPermitted(GUID guid, wil::unique_hfile& componentFileLock)
+    {
+        componentFileLock.reset();
+
+        // If we are in developer mode, we allow loading of untrusted components.
+        RETURN_HR_IF(S_OK, IsDeveloperModeEnabled());
+
+        wchar_t guidString[GUID_STRING_LENGTH] {NULL};
+        RETURN_HR_IF(E_INVALIDARG, 0 == StringFromGUID2(guid, guidString, _countof(guidString)));
+
+        // otherwise, confirm the component is trusted. The registry path resolved here
+        // requires admin rights to modify, so the resolved path is trusted; the file it
+        // points at is what we must pin.
+        std::wstring fileName = GetFileNameFromCLSID(std::wstring(guidString));
+        RETURN_HR_IF(E_NOINTERFACE, fileName.empty());
+
+        // Pin the file BEFORE verifying it. FILE_SHARE_READ (with no FILE_SHARE_WRITE
+        // and no FILE_SHARE_DELETE) blocks any attempt to swap or tamper with the DLL
+        // between this check and the caller's load. This handle is compatible with the
+        // loader's own read/execute + share-read/delete open, so CoCreateInstance can
+        // still map the image while the lock is held.
+        wil::unique_hfile fileLock(CreateFileW(
+            fileName.c_str(),
+            GENERIC_READ,
+            FILE_SHARE_READ,
+            nullptr,
+            OPEN_EXISTING,
+            FILE_ATTRIBUTE_NORMAL,
+            nullptr));
+        RETURN_LAST_ERROR_IF(!fileLock);
+
+        // first check to see if it's inbox, catalog signed
+        if(FAILED(IsFileCatalogSigned(fileName.c_str())))
+        {
+            // not catalog signed, check to see if this file is signed.
+            RETURN_IF_FAILED(IsFileDigitallySigned(fileName.c_str()));
+        }
+
+        // Hand the pin to the caller so it can hold the file stable across the load.
+        componentFileLock = std::move(fileLock);
+
+        return S_OK;
+    }
+    // END remove with Feature_Servicing_MIDI2ComponentSignatureCache cleanup
+
     inline HRESULT IsComponentPermitted(GUID guid)
     {
         // If we are in developer mode, we allow loading of untrusted components.

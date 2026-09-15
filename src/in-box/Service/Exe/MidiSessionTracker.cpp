@@ -84,6 +84,10 @@ CMidiSessionTracker::Initialize(std::shared_ptr<CMidiClientManager>& clientManag
 
     m_clientManager = clientManager;
 
+    FILETIME ft{};
+    GetSystemTimeAsFileTime(&ft);
+    m_contextHandleSeed = ft.dwLowDateTime ^ ft.dwHighDateTime ^ GetCurrentProcessId();
+
     return S_OK;
 }
 
@@ -208,15 +212,25 @@ CMidiSessionTracker::AddClientSession(
 
     if (contextHandle != nullptr)
     {
-        // we use the pointer to the session entry as the context handle, so
-        // we need to add it to the vector before we have that value
-
+        // Generate an opaque, unpredictable handle value instead of exposing
+        // the address of the session entry, which would leak the service
+        // address space layout to a lower-privileged client. Regenerate on the
+        // astronomically unlikely chance of a null or colliding value. The
+        // sessions lock is held above, so the collision check is safe.
         auto savedEntryIterator = FindSession(sessionId, clientProcessId);
-        auto contextHandleValue = &(*(savedEntryIterator));
 
-        *contextHandle = (PVOID)contextHandleValue;
+        PVOID newContextHandle{ nullptr };
+        do
+        {
+            const auto randomHandleValue =
+                (static_cast<ULONGLONG>(RtlRandomEx(&m_contextHandleSeed)) << 32) |
+                RtlRandomEx(&m_contextHandleSeed);
+            newContextHandle = reinterpret_cast<PVOID>(static_cast<ULONG_PTR>(randomHandleValue));
+        } while (newContextHandle == nullptr || FindSessionForContextHandle(newContextHandle) != m_sessions.end());
 
-        savedEntryIterator->ContextHandle = contextHandleValue;
+        *contextHandle = newContextHandle;
+
+        savedEntryIterator->ContextHandle = newContextHandle;
     }
 
     TraceLoggingWrite(
@@ -371,7 +385,7 @@ CMidiSessionTracker::RemoveClientSessionInternal(
 
             sessionEntry->ClientHandles.erase(sessionEntry->ClientHandles.begin());
 
-            LOG_IF_FAILED(clientManager->DestroyMidiClient(clientHandle));
+            LOG_IF_FAILED(clientManager->DestroyMidiClient(clientHandle, 0));
         }
 
         // Remove this session entry

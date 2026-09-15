@@ -7,7 +7,6 @@
 // ============================================================================
 
 #include "pch.h"
-#include <Feature_Servicing_MIDI2IsUniqueIdLock.h>
 
 HRESULT MidiEndpointTable::Shutdown()
 {
@@ -99,40 +98,38 @@ MidiEndpointTable::OnClientConnected(
 
         if (!associationId.empty())
         {
+            auto lock = m_entriesLock.lock();
+
+            if (m_endpoints.find(associationId) != m_endpoints.end())
             {
-                auto lock = m_entriesLock.lock();
+                // find this id in the table
+                auto entry = m_endpoints[associationId];
 
-                if (m_endpoints.find(associationId) != m_endpoints.end())
-                {
-                    // find this id in the table
-                    auto entry = m_endpoints[associationId];
+                RETURN_HR_IF_NULL(E_UNEXPECTED, entry.MidiDeviceBidi);
 
-                    RETURN_HR_IF_NULL(E_UNEXPECTED, entry.MidiDeviceBidi);
+                // add the client
+                //entry.MidiClientConnections.push_back(clientBidi);
+                entry.MidiClientBidi = clientBidi;
+                RETURN_IF_FAILED(entry.MidiDeviceBidi->LinkAssociatedCallback(entry.MidiClientBidi));
+                RETURN_IF_FAILED(entry.MidiClientBidi->LinkAssociatedCallback(entry.MidiDeviceBidi));
 
-                    // add the client
-                    //entry.MidiClientConnections.push_back(clientBidi);
-                    entry.MidiClientBidi = clientBidi;
-                    RETURN_IF_FAILED(entry.MidiDeviceBidi->LinkAssociatedCallback(entry.MidiClientBidi));
-                    RETURN_IF_FAILED(entry.MidiClientBidi->LinkAssociatedCallback(entry.MidiDeviceBidi));
+                m_endpoints[associationId] = entry;
+            }
+            else
+            {
+                // couldn't find the entry
 
-                    m_endpoints[associationId] = entry;
-                }
-                else
-                {
-                    // couldn't find the entry
+                LOG_IF_FAILED(E_NOTFOUND);  // cause fallback error to be logged
 
-                    LOG_IF_FAILED(E_NOTFOUND);  // cause fallback error to be logged
-
-                    TraceLoggingWrite(
-                        MidiVirtualMidiTransportTelemetryProvider::Provider(),
-                        MIDI_TRACE_EVENT_ERROR,
-                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                        TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
-                        TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Unable to find device table entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                        TraceLoggingWideString(clientEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
-                    );
-                }
+                TraceLoggingWrite(
+                    MidiVirtualMidiTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_ERROR,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Unable to find device table entry", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingWideString(clientEndpointInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+                );
             }
         }
     }
@@ -715,28 +712,15 @@ HRESULT MidiEndpointTable::OnDeviceDisconnectedAlwaysTeardown(
 
 _Use_decl_annotations_
 bool MidiEndpointTable::IsUniqueIdInUse(std::wstring const uniqueId) noexcept
-{    auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueId);
+{
+    auto cleanId = internal::ToLowerTrimmedWStringCopy(uniqueId);
+    auto lock = m_entriesLock.lock();
 
-    if (Feature_Servicing_MIDI2IsUniqueIdLock::IsEnabled())
+    for (auto const& it : m_endpoints)
     {
-        auto lock = m_entriesLock.lock();
-
-        for (auto const& it : m_endpoints)
+        if (it.second.ShortUniqueId == cleanId)
         {
-            if (it.second.ShortUniqueId == cleanId)
-            {
-                return true;
-            }
-        }
-    }
-    else
-    {
-        for (auto const& it : m_endpoints)
-        {
-            if (it.second.ShortUniqueId == cleanId)
-            {
-                return true;
-            }
+            return true;
         }
     }
 

@@ -16,7 +16,6 @@
 #include "MidiPnpUtilities.h"
 #include "midi_ksa_usb_strings.h"
 
-#include "Feature_Servicing_MIDI2KSATVSFix.h"
 #include "Feature_Servicing_MIDI2DevCaps2.h"
 #include "Feature_Servicing_MIDI2FailFast.h"
 #include "Feature_Servicing_MIDI2CustomOutgoingLatency.h"
@@ -1601,34 +1600,38 @@ CMidi2KSAggregateMidiEndpointManager3::FindOrCreateParentDeviceDefinitionForFilt
 
     for (auto const& existingParent : m_allParentDeviceDefinitions)
     {
-        bool sameName{ false };
-
         if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
         {
+            bool sameName{ false };
+
             // Compare the undisambiguated names. Comparing the published ones would let a third
             // device miss the second and be numbered "(2)" as well.
             sameName = existingParent.second->BaseDeviceName == newParentDeviceDefinition->BaseDeviceName;
+
+            if (sameName)
+            {
+                // Now that the name comes from the physical device, every filter on a multi-interface
+                // device matches by name. Those are one device, so numbering them apart would be wrong.
+                if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+                {
+                    if (!newParentDeviceDefinition->HardwareParentInstanceId.empty() &&
+                        existingParent.second->HardwareParentInstanceId == newParentDeviceDefinition->HardwareParentInstanceId)
+                    {
+                        continue;
+                    }
+                }
+    
+                currentMaxIndex = max(currentMaxIndex, existingParent.second->IndexOfDevicesWithThisSameName);
+                otherParentsWithSameNameExist = true;
+            }
         }
         else
         {
-            sameName = existingParent.second->DeviceName == newParentDeviceDefinition->DeviceName;
-        }
-
-        if (sameName)
-        {
-            // Now that the name comes from the physical device, every filter on a multi-interface
-            // device matches by name. Those are one device, so numbering them apart would be wrong.
-            if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+            if (existingParent.second->DeviceName == newParentDeviceDefinition->DeviceName)
             {
-                if (!newParentDeviceDefinition->HardwareParentInstanceId.empty() &&
-                    existingParent.second->HardwareParentInstanceId == newParentDeviceDefinition->HardwareParentInstanceId)
-                {
-                    continue;
-                }
-            }
-
-            currentMaxIndex = max(currentMaxIndex, existingParent.second->IndexOfDevicesWithThisSameName);
-            otherParentsWithSameNameExist = true;
+                currentMaxIndex = max(currentMaxIndex, existingParent.second->IndexOfDevicesWithThisSameName);
+                otherParentsWithSameNameExist = true;
+			}
         }
     }
 
@@ -2274,10 +2277,7 @@ CMidi2KSAggregateMidiEndpointManager3::UpdateNewPinDefinitions(
     {
         if (!pin->NeedsGroupIndexAssigned)
         {
-            if (Feature_Servicing_MIDI2KSATVSFix::IsEnabled())
-            {
-                RETURN_HR_IF(E_UNEXPECTED, pin->GroupIndex >= ARRAYSIZE(sourceGroupsUsed));
-            }
+            RETURN_HR_IF(E_UNEXPECTED, pin->GroupIndex >= ARRAYSIZE(sourceGroupsUsed));
             sourceGroupsUsed[pin->GroupIndex] = true;
         }
     }
@@ -2286,10 +2286,7 @@ CMidi2KSAggregateMidiEndpointManager3::UpdateNewPinDefinitions(
     {
         if (!pin->NeedsGroupIndexAssigned)
         {
-            if (Feature_Servicing_MIDI2KSATVSFix::IsEnabled())
-            {
-                RETURN_HR_IF(E_UNEXPECTED, pin->GroupIndex >= ARRAYSIZE(destinationGroupsUsed));
-            }
+            RETURN_HR_IF(E_UNEXPECTED, pin->GroupIndex >= ARRAYSIZE(destinationGroupsUsed));
             destinationGroupsUsed[pin->GroupIndex] = true;
         }
     }
@@ -2372,12 +2369,26 @@ CMidi2KSAggregateMidiEndpointManager3::UpdateNewPinDefinitions(
 
             if (!pinDefinition->DriverSuppliedName.empty())
             {
-                driverSuppliedName = markName(pinDefinition->DriverSuppliedName);
+                if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+                {
+                    driverSuppliedName = markName(pinDefinition->DriverSuppliedName);
+                }
+				else
+				{
+                    driverSuppliedName = std::format(L"{1} - {0}", pinDefinition->DriverSuppliedName, parentDevice->IndexOfDevicesWithThisSameName + 1);
+				}
             }
 
             if (!pinDefinition->FilterName.empty())
             {
-                filterName = markName(pinDefinition->FilterName);
+                if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+                {
+				    filterName = markName(pinDefinition->FilterName);
+				}
+				else
+				{
+	                filterName = std::format(L"{1} - {0}", pinDefinition->FilterName, parentDevice->IndexOfDevicesWithThisSameName + 1);
+				}
             }
 
             // feels dirty putting this logic in here, but have to be able to
@@ -2385,7 +2396,14 @@ CMidi2KSAggregateMidiEndpointManager3::UpdateNewPinDefinitions(
             // right now would require a huge amount of work to comply with CFR
             if (!pinDefinition->PinName.empty() && pinDefinition->PinName != L"MIDI")
             {
-                pinName = markName(pinDefinition->PinName);
+                if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+                {
+                    pinName = markName(pinDefinition->PinName);
+		        }
+				else
+				{
+				    pinName = std::format(L"{1} - {0}", pinDefinition->PinName, parentDevice->IndexOfDevicesWithThisSameName + 1);
+				}
             }
         }
         else

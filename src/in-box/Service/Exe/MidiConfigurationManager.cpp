@@ -541,8 +541,9 @@ std::vector<TRANSPORTMETADATA> CMidiConfigurationManager::GetAllEnabledTransport
             wil::com_ptr_nothrow<IMidiTransport> midiTransport;
             wil::com_ptr_nothrow<IMidiServiceTransportPluginMetadataProvider> plugin;
 
-            // Do not load any transports which are untrusted, unless in developer mode.
-            if (SUCCEEDED(internal::IsComponentPermitted(transportId)))
+            // componentFileLock pins the verified DLL across the CoCreateInstance below.
+            wil::unique_hfile componentFileLock;
+            if (SUCCEEDED(internal::IsComponentPermitted(transportId, componentFileLock)))
             {
                 if (SUCCEEDED(CoCreateInstance(transportId, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&midiTransport))))
                 {

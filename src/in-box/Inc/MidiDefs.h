@@ -31,6 +31,9 @@
 #define MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD        "Endpoint Device Interface Id (SWD)"
 #define MIDI_TRACE_EVENT_DEVICE_INSTANCE_ID_FIELD   "Device Instance Id"
 
+#define MAXIMUM_SESSION_NAME_CHARACTER_COUNT        96
+#define MAXIMUM_JSON_SIZE                            (64 * 1024)
+
 
 #define INVALID_GROUP_INDEX 0xFF
 #define IS_VALID_GROUP_INDEX(Context) (Context >= 0 && Context <= 15)

@@ -8,7 +8,6 @@
 
 #include "pch.h"
 #include "MidiSrvTransport.h"
-#include "Feature_Servicing_MIDI2LegacyControl.h"
 
 #include "Feature_Servicing_MIDI2SynchronizedStart.h"
 
@@ -483,17 +482,14 @@ CMidi2MidiSrv::VerifyConnectivity()
         TraceLoggingWideString(L"Verifying connectivity", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
-    if (Feature_Servicing_MIDI2LegacyControl::IsEnabled())
-    {
-        DWORD legacyMidi = 0;
-        DWORD dataSize = sizeof(DWORD);
-        legacyMidi = (ERROR_SUCCESS == RegGetValue(HKEY_LOCAL_MACHINE, MIDI_DRIVERS32_REG_KEY, MIDI_USE_LEGACY_REG_KEY, RRF_RT_DWORD, NULL, &legacyMidi, &dataSize) && dataSize == sizeof(DWORD))?legacyMidi:MIDI_USE_MIDISRV;
+    DWORD legacyMidi = 0;
+    DWORD dataSize = sizeof(DWORD);
+    legacyMidi = (ERROR_SUCCESS == RegGetValue(HKEY_LOCAL_MACHINE, MIDI_DRIVERS32_REG_KEY, MIDI_USE_LEGACY_REG_KEY, RRF_RT_DWORD, NULL, &legacyMidi, &dataSize) && dataSize == sizeof(DWORD))?legacyMidi:MIDI_USE_MIDISRV;
         
-        // If "legacy midi" is enabled, midisrv is not available.
-        if (legacyMidi == MIDI_USE_LEGACY)
-        {
-            return FALSE;
-        }
+    // If "legacy midi" is enabled, midisrv is not available.
+    if (legacyMidi == MIDI_USE_LEGACY)
+    {
+        return FALSE;
     }
 
     wil::unique_rpc_binding bindingHandle;

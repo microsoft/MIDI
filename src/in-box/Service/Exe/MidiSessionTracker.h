@@ -107,6 +107,9 @@ private:
     std::vector<MidiSessionEntry> m_sessions{};
     wil::critical_section m_sessionsLock;
 
+    // seed for RtlRandomEx-based opaque context handle generation
+    ULONG m_contextHandleSeed{};
+
  //   std::map<PVOID, GUID> m_sessionContextHandles{};
 
 };

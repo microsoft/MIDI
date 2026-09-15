@@ -33,6 +33,8 @@ public:
 
     //Generic Tests
     TEST_METHOD(TestMidiServiceClientRPC);
+    TEST_METHOD(TestMidiServiceConfigurationJsonSize);
+    TEST_METHOD(TestMidiServiceSessionNameCharacterCount);
     TEST_METHOD(TestMidiServiceInvalidCreationParams);
     TEST_METHOD(TestMidiServiceFailedCreation);
 

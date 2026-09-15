@@ -31,15 +31,14 @@ public:
         _In_ BOOL);
 
     HRESULT DestroyMidiClient(
-        _In_ MidiClientHandle);
+        _In_ MidiClientHandle,
+        _In_ DWORD callerPid);
 
     void OnDeviceRemoved(const std::vector<std::wstring>& interfaceIds);
 
     HRESULT Shutdown();
 
 private:
-    HRESULT DestroyMidiClientDeferredPipeShutdown(
-        _In_ MidiClientHandle);
 
     HRESULT GetMidiClient(
         _In_ LPCWSTR,
@@ -117,5 +116,8 @@ private:
 
     // mmcss task id that is shared among all midi clients
     DWORD m_MmcssTaskId {0};
+
+    // seed for RtlRandomEx-based opaque handle generation
+    ULONG m_handleSeed{};
 };
 
