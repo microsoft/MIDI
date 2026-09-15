@@ -1187,6 +1187,17 @@ namespace midi2console
         return SendSingleStreamMessage(options.EndpointDeviceId, message);
     }
 
+    namespace
+    {
+        midi2config::MidiServiceEndpointCustomizationProvenance BuildProvenance(
+            _In_ midi2enum::MidiEndpointDeviceInformation const& endpoint,
+            _In_ midi2config::MidiServiceEndpointCustomizationProvenance const& existing);
+
+        midi2config::MidiServiceEndpointCustomization FindCustomizationForEndpoint(
+            _In_ winrt::guid const& transportId,
+            _In_ winrt::hstring const& endpointDeviceId);
+    }
+
     int RunEndpointCustomizeCommand(_In_ EndpointCustomizeOptions const& options)
     {
         auto const hasAnyChange = options.Clear ||
@@ -1286,6 +1297,13 @@ namespace midi2console
         if (options.HasMidiPolyphonicExpression)   config.SupportsMidiPolyphonicExpression(options.MidiPolyphonicExpression);
         if (options.HasOutgoingLatencyTicks)       config.OutgoingLatencyTicks(options.OutgoingLatencyTicks);
         if (options.HasUseCustomOutgoingLatency)   config.UseCustomOutgoingLatency(options.UseCustomOutgoingLatency);
+
+        auto const existingCustomization = FindCustomizationForEndpoint(
+            transportInfo.TransportId(), device.EndpointDeviceId());
+
+        config.Provenance(BuildProvenance(
+            device,
+            existingCustomization == nullptr ? nullptr : existingCustomization.Provenance()));
 
         if (options.HasControlChangeInterval)
         {
@@ -1431,6 +1449,50 @@ namespace midi2console
             return result;
         }
 
+        // Provenance is what makes an entry recognizable once its endpoint id no longer matches
+        // anything, so every write carries it. The device facts are refreshed from whichever
+        // endpoint the entry now belongs to; the creation date and any measurement record are kept.
+        midi2config::MidiServiceEndpointCustomizationProvenance BuildProvenance(
+            _In_ midi2enum::MidiEndpointDeviceInformation const& endpoint,
+            _In_ midi2config::MidiServiceEndpointCustomizationProvenance const& existing)
+        {
+            auto provenance = midi2config::MidiServiceEndpointCustomizationProvenance::CreateForEndpoint(endpoint);
+
+            if (provenance == nullptr || existing == nullptr)
+            {
+                return provenance;
+            }
+
+            if (!existing.Created().empty())
+            {
+                provenance.Created(existing.Created());
+            }
+
+            if (existing.LatencySource() != midi2config::MidiCustomizationLatencySource::Unspecified)
+            {
+                provenance.LatencySource(existing.LatencySource());
+                provenance.LatencyMeasured(existing.LatencyMeasured());
+            }
+
+            return provenance;
+        }
+
+        // The entry the service currently holds for a live endpoint, or null when there is none.
+        midi2config::MidiServiceEndpointCustomization FindCustomizationForEndpoint(
+            _In_ winrt::guid const& transportId,
+            _In_ winrt::hstring const& endpointDeviceId)
+        {
+            for (auto const& customization : midi2config::MidiServiceTransportPluginConfigManager::GetEndpointCustomizations(transportId))
+            {
+                if (EqualsIgnoreCase(ToUtf8(customization.ResolvedEndpointDeviceId()), ToUtf8(endpointDeviceId)))
+                {
+                    return customization;
+                }
+            }
+
+            return nullptr;
+        }
+
         // The stored identity a customer can copy off the list. Either half of the match works,
         // because which one an entry carries depends on what wrote it.
         std::string CustomizationKey(_In_ midi2config::MidiServiceEndpointCustomization const& customization)
@@ -1515,8 +1577,7 @@ namespace midi2console
     }
 
 
-    int RunEndpointCustomizationsListCommand(_In_ EndpointCustomizationsListOptions const& options)
-    {
+    int RunEndpointCustomizationsListCommand(_In_ EndpointCustomizationsListOptions const& options)    {
         auto const customizations = midi2config::MidiServiceTransportPluginConfigManager::GetEndpointCustomizations();
 
         if (customizations == nullptr || customizations.Size() == 0)
@@ -1658,24 +1719,9 @@ namespace midi2console
             config.AddMidi1DestinationPortCustomName(midi2::MidiGroup{ entry.Key() }, entry.Value());
         }
 
-        // Carried across so the entry stays recognizable, then restamped for the device it now
+        // Carried across so the entry keeps its history, then restamped for the device it now
         // belongs to.
-        auto provenance = source.Provenance();
-
-        if (provenance == nullptr)
-        {
-            provenance = midi2config::MidiServiceEndpointCustomizationProvenance::CreateForEndpoint(target);
-        }
-        else
-        {
-            provenance.TransportSuppliedName(targetTransport.Name());
-            provenance.UsbVendorId(targetTransport.VendorId());
-            provenance.UsbProductId(targetTransport.ProductId());
-            provenance.UsbSerialNumber(targetTransport.SerialNumber());
-            provenance.ParentDeviceInstanceId(target.ParentDeviceInstanceId());
-        }
-
-        config.Provenance(provenance);
+        config.Provenance(BuildProvenance(target, source.Provenance()));
 
         auto const response = midi2config::MidiServiceTransportPluginConfigManager::SendUpdate(config);
 
