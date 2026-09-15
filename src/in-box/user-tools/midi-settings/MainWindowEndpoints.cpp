@@ -167,6 +167,10 @@ namespace winrt::midisettings::implementation
 
             RefreshTransportChoices();
             RefreshEndpointList();
+
+            // Asked once the endpoints are known, because a customization is only orphaned
+            // relative to what is actually here.
+            RefreshOrphanedCustomizationsAsync();
         }
         MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to start the device watchers.")
     }

@@ -306,6 +306,7 @@ int main()
     auto customizeMpeOption = customizeCommand->add_flag("--mpe,!--no-mpe", customizeOptions.MidiPolyphonicExpression, ResourceString(IDS_OPT_CUSTOMIZE_MPE));
     auto customizeCcIntervalOption = customizeCommand->add_option("--cc-interval", customizeOptions.ControlChangeIntervalMilliseconds, ResourceString(IDS_OPT_CUSTOMIZE_CC_INTERVAL));
     auto customizeLatencyOption = customizeCommand->add_option("--output-latency-ticks", customizeOptions.OutgoingLatencyTicks, ResourceString(IDS_OPT_CUSTOMIZE_OUTPUT_LATENCY));
+    auto customizeUseCustomLatencyOption = customizeCommand->add_flag("--use-custom-latency,!--no-use-custom-latency", customizeOptions.UseCustomOutgoingLatency, ResourceString(IDS_OPT_CUSTOMIZE_USE_CUSTOM_LATENCY));
     customizeCommand->add_flag("-t,--temporary", customizeOptions.Temporary, ResourceString(IDS_OPT_BT_TEMPORARY));
 
     EndpointIdOptions shortIdOptions{};
@@ -679,6 +680,7 @@ int main()
     customizeOptions.HasMidiPolyphonicExpression = customizeMpeOption->count() > 0;
     customizeOptions.HasControlChangeInterval = customizeCcIntervalOption->count() > 0;
     customizeOptions.HasOutgoingLatencyTicks = customizeLatencyOption->count() > 0;
+    customizeOptions.HasUseCustomOutgoingLatency = customizeUseCustomLatencyOption->count() > 0;
 
     // Raising the timer resolution matters for every command that paces its own output, so it
     // covers the whole dispatch rather than being turned on and off inside each one.

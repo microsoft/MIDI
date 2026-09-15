@@ -64,6 +64,9 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria MatchCriteria() { return m_matchCriteria; }
         void MatchCriteria(_In_ midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria const& value) { m_matchCriteria = value; }
 
+        midi2::ServiceConfig::MidiServiceEndpointCustomizationProvenance Provenance() { return m_provenance; }
+        void Provenance(_In_ midi2::ServiceConfig::MidiServiceEndpointCustomizationProvenance const& value) { m_provenance = value; }
+
         void AddMidi1SourcePortCustomName(_In_ midi2::MidiGroup const& group, _In_ winrt::hstring const& name) noexcept;
         void AddMidi1DestinationPortCustomName(_In_ midi2::MidiGroup const& group, _In_ winrt::hstring const& name) noexcept;
 
@@ -71,14 +74,22 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
         void Midi1PortNamingApproach(_In_ midi2enum::Midi1PortNamingApproach const value) noexcept;
 
 
-        uint64_t OutgoingLatencyTicks() const noexcept { return m_props->OutgoingLatencyTicks; }
-        void OutgoingLatencyTicks(_In_ uint64_t const value) noexcept { m_props->OutgoingLatencyTicks = value; }
+        int64_t OutgoingLatencyTicks() const noexcept { return m_props->OutgoingLatencyTicks; }
+        void OutgoingLatencyTicks(_In_ int64_t const value) noexcept { m_props->OutgoingLatencyTicks = value; }
+
+        bool UseCustomOutgoingLatency() const noexcept { return m_props->UseCustomOutgoingLatency; }
+        void UseCustomOutgoingLatency(_In_ bool const value) noexcept
+        {
+            m_props->UseCustomOutgoingLatency = value;
+            m_props->HasUseCustomOutgoingLatency = true;
+        }
 
         json::JsonObject ConfigJson() const noexcept;
 
     private:
         std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> m_props{ std::make_shared<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties>() };
         midi2::ServiceConfig::MidiServiceConfigEndpointMatchCriteria m_matchCriteria{};
+        midi2::ServiceConfig::MidiServiceEndpointCustomizationProvenance m_provenance{ nullptr };
 
         winrt::guid m_transportId{};
 

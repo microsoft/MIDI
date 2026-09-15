@@ -38,6 +38,112 @@ CMidi2KSAggregateMidiConfigurationManager::Initialize(
 
     RETURN_IF_FAILED(midiServiceConfigurationManagerInterface->QueryInterface(__uuidof(IMidiServiceConfigurationManager), (void**)&m_midiServiceConfigurationManagerInterface));
 
+    m_customizationProcessor.Initialize(m_customPropertiesCache);
+
+    return S_OK;
+}
+
+
+winrt::hstring
+CMidi2KSAggregateMidiConfigurationManager::ResolveEndpoint(
+    _In_ WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria)
+{
+    if (Feature_Servicing_MIDI2KSAWatcherHardening::IsEnabled())
+    {
+        auto em = TransportState::Current().GetEndpointManager3();
+
+        if (em != nullptr)
+        {
+            return em->FindMatchingInstantiatedEndpoint(criteria);
+        }
+    }
+    else
+    {
+        auto em = TransportState::Current().GetEndpointManager2();
+
+        if (em != nullptr)
+        {
+            return em->FindMatchingInstantiatedEndpoint(criteria);
+        }
+    }
+
+    return winrt::hstring{};
+}
+
+
+_Use_decl_annotations_
+void
+CMidi2KSAggregateMidiConfigurationManager::WriteResolvedEndpointProperties(
+    std::vector<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomizationApplyResult>& results)
+{
+    for (auto& result : results)
+    {
+        if (result.ResolvedEndpointDeviceId.empty() || result.EndpointProperties.empty())
+        {
+            continue;
+        }
+
+        auto const updatePropsHR = m_midiDeviceManager->UpdateEndpointProperties(
+            result.ResolvedEndpointDeviceId.c_str(),
+            (ULONG)result.EndpointProperties.size(),
+            result.EndpointProperties.data());
+
+        // E_NOTFOUND means the endpoint went away between resolving it and writing to it. The
+        // customization stays cached, so it is applied when the device comes back.
+        if (FAILED(updatePropsHR) && updatePropsHR != E_NOTFOUND)
+        {
+            TraceLoggingWrite(
+                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_ERROR,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Error updating device properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingHResult(updatePropsHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                TraceLoggingWideString(result.ResolvedEndpointDeviceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
+            );
+        }
+    }
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2KSAggregateMidiConfigurationManager::ProcessEndpointCustomizations(
+    json::JsonObject const& transportObject,
+    json::JsonObject& responseObject)
+{
+    auto const resolver = [this](WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria)
+        {
+            return ResolveEndpoint(criteria);
+        };
+
+    auto const updateArray = transportObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY, nullptr);
+    auto const removeObject = transportObject.GetNamedObject(MIDI_CONFIG_JSON_ENDPOINT_COMMON_REMOVE_KEY, nullptr);
+
+    // Nothing to report success about when the payload carried neither, which is what the
+    // previous code did by only setting success inside the update loop.
+    if ((updateArray == nullptr || updateArray.Size() == 0) && removeObject == nullptr)
+    {
+        return S_OK;
+    }
+
+    std::vector<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomizationApplyResult> results{};
+
+    LOG_IF_FAILED(m_customizationProcessor.ProcessUpdates(
+        transportObject,
+        resolver,
+        Feature_Servicing_MIDI2EndpointImageFileNameValidation::IsEnabled(),
+        results));
+
+    LOG_IF_FAILED(m_customizationProcessor.ProcessRemovals(
+        transportObject,
+        resolver,
+        results));
+
+    WriteResolvedEndpointProperties(results);
+
+    internal::SetConfigurationResponseObjectSuccess(responseObject);
 
     return S_OK;
 }
@@ -71,9 +177,34 @@ CMidi2KSAggregateMidiConfigurationManager::ProcessCommand(
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_DISCONNECT_ENDPOINT, false);
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RECONNECT_ENDPOINT, false);
 
+        if (Feature_Servicing_MIDI2EndpointCustomizationRelink::IsEnabled())
+        {
+            capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_LIST_ENDPOINT_CUSTOMIZATIONS, true);
+        }
+
         internal::SetConfigurationResponseObjectSuccess(responseObject);
         internal::SetConfigurationCommandResponseQueryCapabilities(responseObject, capabilities);
 
+    }
+    else if (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_LIST_ENDPOINT_CUSTOMIZATIONS)
+    {
+        // A verb which used to fall through to "unrecognized", so the choice is gated rather than
+        // the handler.
+        if (Feature_Servicing_MIDI2EndpointCustomizationRelink::IsEnabled())
+        {
+            auto const resolver = [this](WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria)
+                {
+                    return ResolveEndpoint(criteria);
+                };
+
+            LOG_IF_FAILED(m_customizationProcessor.WriteCustomizationsResponse(resolver, responseObject));
+
+            internal::SetConfigurationResponseObjectSuccess(responseObject);
+        }
+        else
+        {
+            internal::SetConfigurationResponseObjectFail(responseObject, L"Unrecognized command.");
+        }
     }
     else
     {
@@ -248,7 +379,11 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
         // get all the updates we need to process
         auto updateArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY, nullptr);
 
-        if (updateArray != nullptr && updateArray.Size() > 0)
+        if (Feature_Servicing_MIDI2EndpointCustomizationRelink::IsEnabled())
+        {
+            LOG_IF_FAILED(ProcessEndpointCustomizations(jsonObject, responseObject));
+        }
+        else if (updateArray != nullptr && updateArray.Size() > 0)
         {
             for (auto const& updateVal : updateArray)
             {

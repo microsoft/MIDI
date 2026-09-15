@@ -101,14 +101,35 @@ namespace midi2console
         bool HasMidiPolyphonicExpression{ false };
         int ControlChangeIntervalMilliseconds{ 0 };
         bool HasControlChangeInterval{ false };
-        uint64_t OutgoingLatencyTicks{ 0 };
+        int64_t OutgoingLatencyTicks{ 0 };
         bool HasOutgoingLatencyTicks{ false };
+        bool UseCustomOutgoingLatency{ false };
+        bool HasUseCustomOutgoingLatency{ false };
         bool Temporary{ false };
     };
 
     struct EndpointIdOptions
     {
         std::string Value;
+    };
+
+    struct EndpointCustomizationsListOptions
+    {
+        bool OrphanedOnly{ false };
+        bool IncludeEmpty{ false };
+    };
+
+    struct EndpointCustomizationsRelinkOptions
+    {
+        std::string From;
+        std::string To;
+        bool Temporary{ false };
+    };
+
+    struct EndpointCustomizationsForgetOptions
+    {
+        std::string From;
+        bool Temporary{ false };
     };
 
     struct EndpointSendClockOptions
@@ -128,6 +149,9 @@ namespace midi2console
     int RunEndpointRequestFunctionBlocksCommand(_In_ EndpointRequestFunctionBlocksOptions const& options);
     int RunEndpointRequestEndpointInfoCommand(_In_ EndpointRequestEndpointInfoOptions const& options);
     int RunEndpointCustomizeCommand(_In_ EndpointCustomizeOptions const& options);
+    int RunEndpointCustomizationsListCommand(_In_ EndpointCustomizationsListOptions const& options);
+    int RunEndpointCustomizationsRelinkCommand(_In_ EndpointCustomizationsRelinkOptions const& options);
+    int RunEndpointCustomizationsForgetCommand(_In_ EndpointCustomizationsForgetOptions const& options);
     int RunEndpointShortIdCommand(_In_ EndpointIdOptions const& options);
     int RunEndpointFullIdCommand(_In_ EndpointIdOptions const& options);
     int RunEndpointSendClockCommand(_In_ EndpointSendClockOptions const& options);

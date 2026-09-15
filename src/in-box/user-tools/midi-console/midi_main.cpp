@@ -96,6 +96,7 @@ namespace
             "play-notes", "play",
             "properties", "props", "information", "info",
             "customize",
+            "customizations",
             "short-id", "full-id", "long-id",
             "request", "req"
         };
@@ -308,9 +309,30 @@ int main()
     auto customizeMpeOption = customizeCommand->add_flag("--mpe,!--no-mpe", customizeOptions.MidiPolyphonicExpression, ResourceString(IDS_OPT_CUSTOMIZE_MPE));
     auto customizeCcIntervalOption = customizeCommand->add_option("--cc-interval", customizeOptions.ControlChangeIntervalMilliseconds, ResourceString(IDS_OPT_CUSTOMIZE_CC_INTERVAL));
     auto customizeLatencyOption = customizeCommand->add_option("--output-latency-ticks", customizeOptions.OutgoingLatencyTicks, ResourceString(IDS_OPT_CUSTOMIZE_OUTPUT_LATENCY));
+    auto customizeUseCustomLatencyOption = customizeCommand->add_flag("--use-custom-latency,!--no-use-custom-latency", customizeOptions.UseCustomOutgoingLatency, ResourceString(IDS_OPT_CUSTOMIZE_USE_CUSTOM_LATENCY));
     customizeCommand->add_flag("-t,--temporary", customizeOptions.Temporary, ResourceString(IDS_OPT_BT_TEMPORARY));
 
     EndpointIdOptions shortIdOptions{};
+
+    EndpointCustomizationsListOptions customizationsListOptions{};
+    EndpointCustomizationsRelinkOptions customizationsRelinkOptions{};
+    EndpointCustomizationsForgetOptions customizationsForgetOptions{};
+
+    auto customizationsCommand = endpointCommand->add_subcommand("customizations", ResourceString(IDS_CMD_EP_CUSTOMIZATIONS));
+    customizationsCommand->require_subcommand(1);
+
+    auto customizationsListCommand = customizationsCommand->add_subcommand("list", ResourceString(IDS_CMD_EP_CUSTOMIZATIONS_LIST));
+    customizationsListCommand->add_flag("--orphaned", customizationsListOptions.OrphanedOnly, ResourceString(IDS_OPT_CUSTOMIZATIONS_ORPHANED));
+    customizationsListCommand->add_flag("--include-empty", customizationsListOptions.IncludeEmpty, ResourceString(IDS_OPT_CUSTOMIZATIONS_INCLUDE_EMPTY));
+
+    auto customizationsRelinkCommand = customizationsCommand->add_subcommand("relink", ResourceString(IDS_CMD_EP_CUSTOMIZATIONS_RELINK));
+    customizationsRelinkCommand->add_option("--from", customizationsRelinkOptions.From, ResourceString(IDS_OPT_CUSTOMIZATIONS_FROM))->required();
+    customizationsRelinkCommand->add_option("--to", customizationsRelinkOptions.To, ResourceString(IDS_OPT_CUSTOMIZATIONS_TO))->required();
+    customizationsRelinkCommand->add_flag("-t,--temporary", customizationsRelinkOptions.Temporary, ResourceString(IDS_OPT_BT_TEMPORARY));
+
+    auto customizationsForgetCommand = customizationsCommand->add_subcommand("forget", ResourceString(IDS_CMD_EP_CUSTOMIZATIONS_FORGET));
+    customizationsForgetCommand->add_option("--from", customizationsForgetOptions.From, ResourceString(IDS_OPT_CUSTOMIZATIONS_FROM))->required();
+    customizationsForgetCommand->add_flag("-t,--temporary", customizationsForgetOptions.Temporary, ResourceString(IDS_OPT_BT_TEMPORARY));
 
     auto shortIdCommand = endpointCommand->add_subcommand("short-id", ResourceString(IDS_CMD_EP_SHORT_ID));
     shortIdCommand->add_option("endpoint-id", shortIdOptions.Value, ResourceString(IDS_OPT_ID_VALUE_ARGUMENT));
@@ -692,6 +714,7 @@ int main()
     customizeOptions.HasMidiPolyphonicExpression = customizeMpeOption->count() > 0;
     customizeOptions.HasControlChangeInterval = customizeCcIntervalOption->count() > 0;
     customizeOptions.HasOutgoingLatencyTicks = customizeLatencyOption->count() > 0;
+    customizeOptions.HasUseCustomOutgoingLatency = customizeUseCustomLatencyOption->count() > 0;
 
     // Raising the timer resolution matters for every command that paces its own output, so it
     // covers the whole dispatch rather than being turned on and off inside each one.
@@ -717,6 +740,9 @@ int main()
         if (playNotesCommand->parsed())             return RunEndpointPlayNotesCommand(playNotesOptions);
         if (sendClockCommand->parsed())             return RunEndpointSendClockCommand(sendClockOptions);
         if (customizeCommand->parsed())             return RunEndpointCustomizeCommand(customizeOptions);
+        if (customizationsListCommand->parsed())    return RunEndpointCustomizationsListCommand(customizationsListOptions);
+        if (customizationsRelinkCommand->parsed())  return RunEndpointCustomizationsRelinkCommand(customizationsRelinkOptions);
+        if (customizationsForgetCommand->parsed())  return RunEndpointCustomizationsForgetCommand(customizationsForgetOptions);
         if (shortIdCommand->parsed())               return RunEndpointShortIdCommand(shortIdOptions);
         if (fullIdCommand->parsed())                return RunEndpointFullIdCommand(fullIdOptions);
         if (requestFunctionBlocksCommand->parsed()) return RunEndpointRequestFunctionBlocksCommand(requestFunctionBlocksOptions);

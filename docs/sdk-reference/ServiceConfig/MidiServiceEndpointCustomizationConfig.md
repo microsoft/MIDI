@@ -30,7 +30,8 @@ This class is used to send endpoint customization settings to the service. It co
 | `RequiresNoteOffTranslation` | True if the endpoint requires Note On velocity 0 to be translated to Note Off |
 | `SupportsMidiPolyphonicExpression` | True if the endpoint supports MIDI Polyphonic Expression (MPE) |
 | `RecommendedControlChangeIntervalMilliseconds` | Recommended interval in milliseconds between control change messages |
-| `OutgoingLatencyTicks` | Outgoing latency in MIDI clock ticks to add to outgoing message scheduling |
+| `OutgoingLatencyTicks` | Outgoing latency in MIDI clock ticks to compensate for when scheduling outgoing messages. May be negative for an endpoint which runs early once the endpoints around it are compensated |
+| `UseCustomOutgoingLatency` | Whether `OutgoingLatencyTicks` should be used in place of the value the transport calculated. Setting this either way makes the choice explicit, so a measured value can be kept while compensation is switched off. Leave it alone and supplying a non-zero latency continues to mean the value should be used |
 | `Midi1PortNamingApproach` | The `Midi1PortNamingApproach` to use when generating MIDI 1.0 port names |
 
 ## Methods

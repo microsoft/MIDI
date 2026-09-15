@@ -35,6 +35,7 @@
 #include <Feature_Servicing_MIDI2CustomOutgoingLatency.h>
 #include <Feature_Servicing_MIDI2SchedulerV2.h>
 #include <Feature_Servicing_MIDI2RecommendedCCIntervalProp.h>
+#include <Feature_Servicing_MIDI2EndpointCustomizationRelink.h>
 
 namespace WindowsMidiServicesPluginConfigurationLib
 {
@@ -53,6 +54,7 @@ namespace WindowsMidiServicesPluginConfigurationLib
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_SUPPORTS_MPE_PROPERTY_KEY                   L"supportsMidiPolyphonicExpression"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_RECOMMENDED_CC_INTERVAL_MS_PROPERTY_KEY     L"recommendedControlChangeIntervalMilliseconds"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_OUTGOING_LATENCY_TICKS_PROPERTY_KEY         L"outgoingLatencyTicks"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_USE_CUSTOM_OUTGOING_LATENCY_PROPERTY_KEY    L"useCustomOutgoingLatency"
 
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MIDI1_PORTS_PROPERTY_KEY                           L"midi1Ports"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_NAMING_APPROACH_PROPERTY_KEY                       L"namingApproach"
@@ -137,22 +139,50 @@ std::shared_ptr<MidiEndpointCustomProperties> MidiEndpointCustomProperties::From
 
         if (Feature_Servicing_MIDI2CustomOutgoingLatency::IsEnabled())
         {
-            // custom latency
-            auto latencyval = customPropertiesObject.GetNamedNumber(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_OUTGOING_LATENCY_TICKS_PROPERTY_KEY, 0);
-            if (latencyval > 0 && latencyval <= std::numeric_limits<uint64_t>::max())
+            if (Feature_Servicing_MIDI2EndpointCustomizationRelink::IsEnabled())
             {
-                // Like all clock fields, the field is 64 bit in case our ticks get faster than 100ns some day. But we clamp this 
-                // to 32 bit for now which itself gives you > 400 seconds of latency at 100ns ticks. Could clamp this even lower.
-                if (latencyval > std::numeric_limits<uint32_t>::max())
+                auto latencyval = customPropertiesObject.GetNamedNumber(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_OUTGOING_LATENCY_TICKS_PROPERTY_KEY, 0);
+
+                // Clamped in both directions. A negative value belongs to a device which runs
+                // early once the devices around it are compensated.
+                constexpr double maximumMagnitude = static_cast<double>(std::numeric_limits<uint32_t>::max());
+
+                if (latencyval > maximumMagnitude)
                 {
-                    latencyval = std::numeric_limits<uint32_t>::max();
+                    latencyval = maximumMagnitude;
+                }
+                else if (latencyval < -maximumMagnitude)
+                {
+                    latencyval = -maximumMagnitude;
                 }
 
-                props->OutgoingLatencyTicks = static_cast<uint64_t>(latencyval);
+                props->OutgoingLatencyTicks = static_cast<int64_t>(latencyval);
+
+                if (customPropertiesObject.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_USE_CUSTOM_OUTGOING_LATENCY_PROPERTY_KEY))
+                {
+                    props->UseCustomOutgoingLatency = customPropertiesObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_USE_CUSTOM_OUTGOING_LATENCY_PROPERTY_KEY, false);
+                    props->HasUseCustomOutgoingLatency = true;
+                }
             }
             else
             {
-                props->OutgoingLatencyTicks = 0;
+                // custom latency
+                auto latencyval = customPropertiesObject.GetNamedNumber(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_OUTGOING_LATENCY_TICKS_PROPERTY_KEY, 0);
+                if (latencyval > 0 && latencyval <= std::numeric_limits<uint64_t>::max())
+                {
+                    // Like all clock fields, the field is 64 bit in case our ticks get faster than 100ns some day. But we clamp this 
+                    // to 32 bit for now which itself gives you > 400 seconds of latency at 100ns ticks. Could clamp this even lower.
+                    if (latencyval > std::numeric_limits<uint32_t>::max())
+                    {
+                        latencyval = std::numeric_limits<uint32_t>::max();
+                    }
+
+                    props->OutgoingLatencyTicks = static_cast<int64_t>(latencyval);
+                }
+                else
+                {
+                    props->OutgoingLatencyTicks = 0;
+                }
             }
         }
 
@@ -321,6 +351,16 @@ bool MidiEndpointCustomProperties::WriteJson(json::JsonObject& customPropertiesO
             customPropertiesObject.SetNamedValue(
                 MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_OUTGOING_LATENCY_TICKS_PROPERTY_KEY,
                 json::JsonValue::CreateNumberValue(static_cast<double>(OutgoingLatencyTicks)));
+
+            if (Feature_Servicing_MIDI2EndpointCustomizationRelink::IsEnabled())
+            {
+                if (HasUseCustomOutgoingLatency)
+                {
+                    customPropertiesObject.SetNamedValue(
+                        MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_USE_CUSTOM_OUTGOING_LATENCY_PROPERTY_KEY,
+                        json::JsonValue::CreateBooleanValue(UseCustomOutgoingLatency));
+                }
+            }
         }
 
 
@@ -417,6 +457,49 @@ bool MidiEndpointCustomProperties::WriteJson(json::JsonObject& customPropertiesO
 }
 
 
+bool MidiEndpointCustomProperties::HasUserContent() const noexcept
+{
+    if (!Name.empty() || !Description.empty() || !Image.empty())
+    {
+        return true;
+    }
+
+    if (RequiresNoteOffTranslation ||
+        SupportsMidiPolyphonicExpression ||
+        RecommendedControlChangeIntervalMilliseconds != 0 ||
+        OutgoingLatencyTicks != 0 ||
+        HasUseCustomOutgoingLatency)
+    {
+        return true;
+    }
+
+    if (Midi1NamingApproach != WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault)
+    {
+        return true;
+    }
+
+    // An entry with a group index but no name is what an editor writes when the customer did not
+    // type one, so the presence of the port list is not by itself content.
+    for (auto const& source : Midi1Sources)
+    {
+        if (!source.second.Name.empty())
+        {
+            return true;
+        }
+    }
+
+    for (auto const& destination : Midi1Destinations)
+    {
+        if (!destination.second.Name.empty())
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 // write only the properties which aren't in the Common Properties structure at endpoint creation time
 // The expectation is that the config contains the entire set of properties the user cares about.
 // If it's missing, we write default values
@@ -505,16 +588,31 @@ bool MidiEndpointCustomProperties::WriteNonCommonProperties(_In_ std::vector<DEV
 
         if (Feature_Servicing_MIDI2SchedulerV2::IsEnabled())
         {
-            // Supplying a value is itself the signal to prefer it over the calculated latency.
-            if (OutgoingLatencyTicks != 0)
+            if (Feature_Servicing_MIDI2EndpointCustomizationRelink::IsEnabled())
             {
+                bool useCustom{ OutgoingLatencyTicks != 0 };
+
+                if (HasUseCustomOutgoingLatency)
+                {
+                    useCustom = UseCustomOutgoingLatency;
+                }
+
                 destination.push_back({ {PKEY_MIDI_MidiOutLatencyTicksUserOverride, DEVPROP_STORE_SYSTEM, nullptr},
-                        DEVPROP_TYPE_BOOLEAN, sizeof(DEVPROP_BOOLEAN), (PVOID)&m_devPropTrue });
+                        DEVPROP_TYPE_BOOLEAN, sizeof(DEVPROP_BOOLEAN), useCustom ? (PVOID)&m_devPropTrue : (PVOID)&m_devPropFalse });
             }
             else
             {
-                destination.push_back({ {PKEY_MIDI_MidiOutLatencyTicksUserOverride, DEVPROP_STORE_SYSTEM, nullptr},
-                        DEVPROP_TYPE_BOOLEAN, sizeof(DEVPROP_BOOLEAN), (PVOID)&m_devPropFalse });
+                // Supplying a value is itself the signal to prefer it over the calculated latency.
+                if (OutgoingLatencyTicks != 0)
+                {
+                    destination.push_back({ {PKEY_MIDI_MidiOutLatencyTicksUserOverride, DEVPROP_STORE_SYSTEM, nullptr},
+                            DEVPROP_TYPE_BOOLEAN, sizeof(DEVPROP_BOOLEAN), (PVOID)&m_devPropTrue });
+                }
+                else
+                {
+                    destination.push_back({ {PKEY_MIDI_MidiOutLatencyTicksUserOverride, DEVPROP_STORE_SYSTEM, nullptr},
+                            DEVPROP_TYPE_BOOLEAN, sizeof(DEVPROP_BOOLEAN), (PVOID)&m_devPropFalse });
+                }
             }
         }
     }

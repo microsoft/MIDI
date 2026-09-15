@@ -520,6 +520,21 @@
                      Title="The MIDI service is not responding"
                      Message="Endpoints will appear here as soon as the service is available again." />
 
+            <InfoBar x:Name="OrphanedCustomizationsBar"
+                     x:Uid="OrphanedCustomizationsBar"
+                     Grid.Row="0"
+                     IsOpen="False"
+                     IsClosable="True"
+                     Closed="OnOrphanedCustomizationsBarClosed"
+                     Severity="Informational"
+                     Title="Some saved settings have no matching device">
+                <InfoBar.ActionButton>
+                    <Button x:Uid="OrphanedCustomizationsActionButton"
+                            Content="Review them"
+                            Click="OnReviewOrphanedCustomizationsClick" />
+                </InfoBar.ActionButton>
+            </InfoBar>
+
             <Grid Grid.Row="1" ColumnSpacing="12">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -846,12 +861,139 @@
                                 Click="OnCustomizePortNamesClick" />
                     </StackPanel>
 
+                    <StackPanel x:Name="CustomizeRelinkPanel" Spacing="4" Visibility="Collapsed">
+                        <TextBlock x:Uid="CustomizeRelinkHelp"
+                                   Style="{StaticResource PropertyLabelStyle}"
+                                   TextWrapping="Wrap"
+                                   Text="Some saved settings on this PC do not match anything connected. Usually that just means the device is not plugged in, but it also happens when a device is here and its identifier has changed." />
+                        <HyperlinkButton x:Name="CustomizeRelinkButton"
+                                         x:Uid="CustomizeRelinkButton"
+                                         Content="Restore a saved customization..."
+                                         HorizontalAlignment="Left"
+                                         Padding="0"
+                                         Click="OnCustomizeRelinkClick" />
+                    </StackPanel>
+
                     <TextBlock x:Name="CustomizeStatusText"
                                TextWrapping="Wrap"
                                Style="{ThemeResource CaptionTextBlockStyle}"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                 </StackPanel>
             </ScrollViewer>
+        </ContentDialog>
+
+        <ContentDialog x:Name="RelinkDialog"
+                       x:Uid="RelinkDialog"
+                       Title="Restore a saved customization"
+                       PrimaryButtonText="Move it here"
+                       SecondaryButtonText="Delete it"
+                       CloseButtonText="Close"
+                       DefaultButton="Primary">
+            <ContentDialog.Resources>
+                <x:Double x:Key="ContentDialogMaxWidth">980</x:Double>
+            </ContentDialog.Resources>
+            <Grid Width="900" Height="460" ColumnSpacing="16" RowSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock Grid.Row="0" Grid.Column="0"
+                           x:Uid="RelinkOrphanHeader"
+                           Text="Saved settings with no matching device"
+                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                <TextBlock Grid.Row="0" Grid.Column="1"
+                           x:Uid="RelinkCandidateHeader"
+                           Text="Move it onto"
+                           Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                <ListView x:Name="RelinkOrphanList"
+                          Grid.Row="1" Grid.Column="0"
+                          SelectionMode="Single"
+                          SelectionChanged="OnRelinkOrphanSelectionChanged"
+                          BorderThickness="1"
+                          BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                          CornerRadius="4">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="local:OrphanedCustomizationItem">
+                            <Grid ColumnSpacing="12" Margin="0,8,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Grid.Column="0"
+                                        Width="44" Height="44"
+                                        CornerRadius="4"
+                                        VerticalAlignment="Top"
+                                        Background="{ThemeResource SubtleFillColorSecondaryBrush}">
+                                    <Image Source="{x:Bind Image}" Stretch="Uniform" Margin="3" />
+                                </Border>
+
+                                <StackPanel Grid.Column="1" Spacing="2">
+                                    <TextBlock Text="{x:Bind DisplayName}"
+                                               Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                               TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{x:Bind Description}"
+                                               Visibility="{x:Bind DescriptionVisibility}"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Text="{x:Bind ContentSummary}"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Text="{x:Bind ProvenanceText}"
+                                               Visibility="{x:Bind ProvenanceVisibility}"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <ListView x:Name="RelinkCandidateList"
+                          Grid.Row="1" Grid.Column="1"
+                          SelectionMode="Single"
+                          SelectionChanged="OnRelinkCandidateSelectionChanged"
+                          BorderThickness="1"
+                          BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                          CornerRadius="4">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="local:RelinkCandidateItem">
+                            <StackPanel Spacing="2" Margin="0,8,0,8">
+                                <TextBlock Text="{x:Bind Name}"
+                                           Style="{ThemeResource BodyStrongTextBlockStyle}"
+                                           TextTrimming="CharacterEllipsis" />
+                                <TextBlock Text="{x:Bind ReasonText}"
+                                           Visibility="{x:Bind ReasonVisibility}"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           TextWrapping="Wrap" />
+                                <TextBlock x:Uid="RelinkCandidateAlreadyCustomized"
+                                           Text="This device already has its own saved settings, which would be replaced."
+                                           Visibility="{x:Bind WarningVisibility}"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <TextBlock x:Name="RelinkStatusText"
+                           Grid.Row="2" Grid.ColumnSpan="2"
+                           TextWrapping="Wrap"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </Grid>
         </ContentDialog>
 
         <ContentDialog x:Name="Midi1PortNamesDialog"

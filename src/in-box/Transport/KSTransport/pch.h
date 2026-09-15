@@ -60,7 +60,10 @@
 #include <mmdeviceapi.h>
 
 #include "wstring_util.h"
+#include "MidiStableStringHash.h"
 namespace internal = ::WindowsMidiServicesInternal;
+
+#include "Feature_Servicing_MIDI2EndpointCustomizationRelink.h"
 
 #include "MidiDefs.h"
 #include "WindowsMidiServices.h"

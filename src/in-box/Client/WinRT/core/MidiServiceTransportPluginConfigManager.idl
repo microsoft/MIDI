@@ -13,6 +13,7 @@ import "IMidiServiceTransportPluginConfig.idl";
 import "MidiServiceConfigResponse.idl";
 import "MidiServiceConfigSaveResponse.idl";
 import "MidiServiceTransportCommand.idl";
+import "MidiServiceEndpointCustomization.idl";
 
 namespace Windows.Devices.Midi2.ServiceConfig
 {
@@ -30,6 +31,14 @@ namespace Windows.Devices.Midi2.ServiceConfig
 
         [noexcept] static MidiServiceConfigResponse SendCommand(
             MidiServiceTransportCommand command);
+
+        // The stored endpoint customizations a transport currently holds, including those which
+        // match no endpoint on this machine. Transports which cannot report them are skipped, so
+        // an empty result is not an error.
+        [noexcept] static Windows.Foundation.Collections.IVectorView<MidiServiceEndpointCustomization> GetEndpointCustomizations();
+
+        [noexcept] static Windows.Foundation.Collections.IVectorView<MidiServiceEndpointCustomization> GetEndpointCustomizations(
+            Guid transportId);
 
         // Writes the configuration into the configuration file so it survives a service restart.
         // This is separate from sending, because sending without saving and saving without

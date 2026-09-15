@@ -267,11 +267,15 @@
   <ItemGroup>
     <ClInclude Include="$(SolutionDir)Inc\MidiEndpointCustomProperties.h" />
     <ClInclude Include="$(SolutionDir)Inc\MidiEndpointCustomPropertiesCache.h" />
+    <ClInclude Include="$(SolutionDir)Inc\MidiEndpointCustomizationProvenance.h" />
+    <ClInclude Include="$(SolutionDir)Inc\MidiEndpointCustomizationProcessor.h" />
     <ClInclude Include="$(SolutionDir)Inc\MidiEndpointMatchCriteria.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\MidiPluginConfigurationLib\MidiEndpointCustomPropertiesCache.cpp" />
     <ClCompile Include="..\MidiPluginConfigurationLib\MidiEndpointCustomProperties.cpp" />
+    <ClCompile Include="..\MidiPluginConfigurationLib\MidiEndpointCustomizationProvenance.cpp" />
+    <ClCompile Include="..\MidiPluginConfigurationLib\MidiEndpointCustomizationProcessor.cpp" />
     <ClCompile Include="..\MidiPluginConfigurationLib\MidiEndpointMatchCriteria.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -124,13 +124,25 @@ namespace WindowsMidiServicesPluginConfigurationLib
         _Success_(return == true)
         bool WriteJson(_In_::winrt::Windows::Data::Json::JsonObject& customPropertiesObject);
 
+        // Whether this holds anything the customer would miss. Everything counts, not just the
+        // visible fields: a measured latency needs a loopback cable to reproduce, where a name
+        // takes ten seconds, so treating a latency-only entry as empty would throw away the more
+        // valuable of the two.
+        bool HasUserContent() const noexcept;
+
         winrt::hstring Name{};
         winrt::hstring Description{};
         winrt::hstring Image{};
         bool RequiresNoteOffTranslation{};
         bool SupportsMidiPolyphonicExpression{};
         uint16_t RecommendedControlChangeIntervalMilliseconds{};
-        uint64_t OutgoingLatencyTicks{};
+        int64_t OutgoingLatencyTicks{};
+
+        // A customer can switch compensation off without discarding a value that took a loopback
+        // cable to obtain, so the choice is stored rather than inferred. Absent from the
+        // configuration, it falls back to meaning "use it if it is non-zero".
+        bool UseCustomOutgoingLatency{ false };
+        bool HasUseCustomOutgoingLatency{ false };
 
      //   bool UmpOnly{ false };
         WindowsMidiServicesNamingLib::Midi1PortNameSelection Midi1NamingApproach{ WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault };

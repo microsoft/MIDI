@@ -11,6 +11,7 @@ import "MidiApiContracts.idl";
 
 import "IMidiServiceTransportPluginConfig.idl";
 import "MidiServiceConfigEndpointMatchCriteria.idl";
+import "MidiServiceEndpointCustomizationProvenance.idl";
 import "Midi1PortNamingApproachEnum.idl";
 import "MidiGroup.idl";
 
@@ -41,11 +42,21 @@ namespace Windows.Devices.Midi2.ServiceConfig
 
         [noexcept] MidiServiceConfigEndpointMatchCriteria MatchCriteria;
 
+        // Describes the device this was created for, so the entry can still be recognized if its
+        // endpoint identifier changes. Takes no part in matching.
+        [noexcept] MidiServiceEndpointCustomizationProvenance Provenance;
+
         [noexcept] Boolean RequiresNoteOffTranslation;
         [noexcept] Boolean SupportsMidiPolyphonicExpression;
         [noexcept] UInt16 RecommendedControlChangeIntervalMilliseconds;
 
-        [noexcept] UInt64 OutgoingLatencyTicks;
+        [noexcept] Int64 OutgoingLatencyTicks;
+
+        // Whether the scheduler should use OutgoingLatencyTicks in place of the value the transport
+        // calculated. Setting this either way makes the choice explicit, so a measured value can be
+        // kept while compensation is switched off. Leave it alone and supplying a non-zero latency
+        // continues to mean the customer wants it used.
+        [noexcept] Boolean UseCustomOutgoingLatency;
 
 
         [noexcept] Windows.Devices.Midi2.Enumeration.Midi1PortNamingApproach Midi1PortNamingApproach;

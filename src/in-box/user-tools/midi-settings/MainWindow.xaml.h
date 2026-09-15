@@ -67,6 +67,13 @@ namespace winrt::midisettings::implementation
         winrt::fire_and_forget OnCustomizePortNamesClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnMidi1PortNamesApproachChanged(foundation::IInspectable const& sender, xaml::Controls::SelectionChangedEventArgs const& args);
 
+        // Re-linking saved settings whose endpoint no longer matches
+        void OnCustomizeRelinkClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnReviewOrphanedCustomizationsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnOrphanedCustomizationsBarClosed(controls::InfoBar const& sender, controls::InfoBarClosedEventArgs const& args);
+        void OnRelinkOrphanSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnRelinkCandidateSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+
         // Global settings
         winrt::fire_and_forget OnApplyConfigFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCreateConfigFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -111,6 +118,14 @@ namespace winrt::midisettings::implementation
         void RefreshDetailPorts() noexcept;
 
         foundation::IAsyncAction ShowCustomizeDialogAsync(winrt::hstring endpointDeviceId);
+
+        winrt::fire_and_forget ShowRelinkDialogAsync();
+        winrt::fire_and_forget RefreshRelinkCandidatesAsync();
+        foundation::IAsyncAction RefreshOrphanedCustomizationsAsync();
+        foundation::IAsyncAction ApplyRelinkAsync();
+        foundation::IAsyncAction ForgetSelectedCustomizationAsync();
+
+        static winrt::hstring StoredIdFor(midi2config::MidiServiceEndpointCustomization const& customization) noexcept;
         void UpdateCustomizeImagePreview() noexcept;
 
         foundation::IAsyncAction ShowMidi1PortNamesDialogAsync(winrt::hstring endpointDeviceId);
@@ -186,6 +201,17 @@ namespace winrt::midisettings::implementation
         // Bare file name of the picture chosen in the customization dialog, already copied into
         // the shared assets folder. Empty means no picture.
         winrt::hstring m_customizeImageFileName{};
+        winrt::hstring m_customizeEndpointDeviceId{};
+
+        winrt::hstring m_relinkPreferredEndpointDeviceId{};
+        std::vector<winrt::hstring> m_currentOrphanStoredIds{};
+        std::vector<midi2config::MidiServiceEndpointCustomization> m_relinkCustomizations{};
+
+        collections::IObservableVector<midisettings::OrphanedCustomizationItem> m_relinkOrphans{
+            winrt::single_threaded_observable_vector<midisettings::OrphanedCustomizationItem>() };
+
+        collections::IObservableVector<midisettings::RelinkCandidateItem> m_relinkCandidates{
+            winrt::single_threaded_observable_vector<midisettings::RelinkCandidateItem>() };
 
         winrt::hstring m_portNamesEndpointDeviceId{};
 

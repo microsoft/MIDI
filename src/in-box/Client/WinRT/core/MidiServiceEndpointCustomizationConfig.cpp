@@ -83,6 +83,18 @@ namespace winrt::Windows::Devices::Midi2::ServiceConfig::implementation
                 endpointUpdateObject.SetNamedValue(MidiServiceConfigEndpointMatchCriteria::MatchObjectKey(), matchObject);
             }
 
+            json::JsonObject provenanceObject;
+
+            if (m_provenance != nullptr && json::JsonObject::TryParse(m_provenance.GetConfigJson(), provenanceObject))
+            {
+                if (provenanceObject.Size() > 0)
+                {
+                    endpointUpdateObject.SetNamedValue(
+                        MidiServiceEndpointCustomizationProvenance::ProvenanceObjectKey(),
+                        provenanceObject);
+                }
+            }
+
             if (m_props->WriteJson(customPropertiesObject))
             {
                 endpointUpdateObject.SetNamedValue(WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey, customPropertiesObject);

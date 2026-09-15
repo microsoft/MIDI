@@ -1,0 +1,63 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiEndpointDeviceInformation.idl";
+
+
+namespace Windows.Devices.Midi2.ServiceConfig
+{
+    [contract(MidiServiceConfigApiContract, 1)]
+    enum MidiCustomizationLatencySource
+    {
+        Unspecified = 0,
+        Entered = 1,
+        Measured = 2,
+    };
+
+    [contract(MidiServiceConfigApiContract, 1)]
+
+    [interface_name("Windows.Devices.Midi2.ServiceConfig.IMidiServiceEndpointCustomizationProvenance", UUID_IMidiServiceEndpointCustomizationProvenance)]
+
+    // Describes the device a customization was created for, so that an entry which no longer
+    // matches anything can still be recognized by the person who made it. None of this takes part
+    // in matching an endpoint, which is decided by the match criteria and nothing else.
+    runtimeclass MidiServiceEndpointCustomizationProvenance
+    {
+        MidiServiceEndpointCustomizationProvenance();
+
+        [noexcept] static String ProvenanceObjectKey{ get; };
+
+        // Populates everything which can be read from a present endpoint, and stamps the creation
+        // time. An application which customizes an endpoint should call this, so that the entry
+        // can be recovered later if the endpoint's identifier changes.
+        [noexcept] static MidiServiceEndpointCustomizationProvenance CreateForEndpoint(
+            Windows.Devices.Midi2.Enumeration.MidiEndpointDeviceInformation endpointDeviceInformation);
+
+        [noexcept] String CreatedFor;
+        [noexcept] String Created;
+
+        [noexcept] UInt16 UsbVendorId;
+        [noexcept] UInt16 UsbProductId;
+        [noexcept] String UsbSerialNumber;
+
+        [noexcept] String ManufacturerName;
+        [noexcept] String TransportSuppliedName;
+        [noexcept] String ParentDeviceInstanceId;
+
+        // Whether a stored outgoing latency was typed in or measured. A measured value needs a
+        // loopback cable to reproduce, so anything offering to discard a customization should say
+        // which kind it is about to throw away.
+        [noexcept] MidiCustomizationLatencySource LatencySource;
+        [noexcept] String LatencyMeasured;
+
+        [noexcept] String GetConfigJson();
+    };
+}

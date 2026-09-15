@@ -1187,12 +1187,24 @@ namespace midi2console
         return SendSingleStreamMessage(options.EndpointDeviceId, message);
     }
 
+    namespace
+    {
+        midi2config::MidiServiceEndpointCustomizationProvenance BuildProvenance(
+            _In_ midi2enum::MidiEndpointDeviceInformation const& endpoint,
+            _In_ midi2config::MidiServiceEndpointCustomizationProvenance const& existing);
+
+        midi2config::MidiServiceEndpointCustomization FindCustomizationForEndpoint(
+            _In_ winrt::guid const& transportId,
+            _In_ winrt::hstring const& endpointDeviceId);
+    }
+
     int RunEndpointCustomizeCommand(_In_ EndpointCustomizeOptions const& options)
     {
         auto const hasAnyChange = options.Clear ||
             options.HasName || options.HasDescription || options.HasImage || options.HasPortNaming ||
             options.HasNoteOffTranslation || options.HasMidiPolyphonicExpression ||
-            options.HasControlChangeInterval || options.HasOutgoingLatencyTicks;
+            options.HasControlChangeInterval || options.HasOutgoingLatencyTicks ||
+            options.HasUseCustomOutgoingLatency;
 
         if (!hasAnyChange)
         {
@@ -1284,6 +1296,14 @@ namespace midi2console
         if (options.HasNoteOffTranslation)         config.RequiresNoteOffTranslation(options.NoteOffTranslation);
         if (options.HasMidiPolyphonicExpression)   config.SupportsMidiPolyphonicExpression(options.MidiPolyphonicExpression);
         if (options.HasOutgoingLatencyTicks)       config.OutgoingLatencyTicks(options.OutgoingLatencyTicks);
+        if (options.HasUseCustomOutgoingLatency)   config.UseCustomOutgoingLatency(options.UseCustomOutgoingLatency);
+
+        auto const existingCustomization = FindCustomizationForEndpoint(
+            transportInfo.TransportId(), device.EndpointDeviceId());
+
+        config.Provenance(BuildProvenance(
+            device,
+            existingCustomization == nullptr ? nullptr : existingCustomization.Provenance()));
 
         if (options.HasControlChangeInterval)
         {
@@ -1369,6 +1389,436 @@ namespace midi2console
 
         return 0;
     }
+
+
+    namespace
+    {
+        std::string DescribeCustomization(_In_ midi2config::MidiServiceEndpointCustomization const& customization)
+        {
+            std::vector<std::string> parts{};
+
+            if (!customization.Name().empty())        parts.push_back(ToUtf8(customization.Name()));
+            if (!customization.Description().empty()) parts.push_back(ToUtf8(customization.Description()));
+            if (!customization.ImageFileName().empty()) parts.push_back(ToUtf8(customization.ImageFileName()));
+
+            if (customization.OutgoingLatencyTicks() != 0)
+            {
+                parts.push_back(fmt::format("latency {} ticks", customization.OutgoingLatencyTicks()));
+            }
+
+            if (customization.RecommendedControlChangeIntervalMilliseconds() != 0)
+            {
+                parts.push_back(fmt::format("cc interval {} ms", customization.RecommendedControlChangeIntervalMilliseconds()));
+            }
+
+            if (customization.RequiresNoteOffTranslation())        parts.push_back("note-off translation");
+            if (customization.SupportsMidiPolyphonicExpression())  parts.push_back("MPE");
+
+            if (customization.Midi1PortNamingApproach() != midi2enum::Midi1PortNamingApproach::Default)
+            {
+                parts.push_back(customization.Midi1PortNamingApproach() == midi2enum::Midi1PortNamingApproach::UseClassicCompatible
+                    ? "classic port naming"
+                    : "new style port naming");
+            }
+
+            auto const namedPorts =
+                customization.Midi1SourcePortCustomNames().Size() + customization.Midi1DestinationPortCustomNames().Size();
+
+            if (namedPorts > 0)
+            {
+                parts.push_back(fmt::format("{} port name(s)", namedPorts));
+            }
+
+            if (parts.empty())
+            {
+                return std::string{ "(nothing stored)" };
+            }
+
+            std::string result{};
+
+            for (auto const& part : parts)
+            {
+                if (!result.empty())
+                {
+                    result += ", ";
+                }
+
+                result += part;
+            }
+
+            return result;
+        }
+
+        // Provenance is what makes an entry recognizable once its endpoint id no longer matches
+        // anything, so every write carries it. The device facts are refreshed from whichever
+        // endpoint the entry now belongs to; the creation date and any measurement record are kept.
+        midi2config::MidiServiceEndpointCustomizationProvenance BuildProvenance(
+            _In_ midi2enum::MidiEndpointDeviceInformation const& endpoint,
+            _In_ midi2config::MidiServiceEndpointCustomizationProvenance const& existing)
+        {
+            auto provenance = midi2config::MidiServiceEndpointCustomizationProvenance::CreateForEndpoint(endpoint);
+
+            if (provenance == nullptr || existing == nullptr)
+            {
+                return provenance;
+            }
+
+            if (!existing.Created().empty())
+            {
+                provenance.Created(existing.Created());
+            }
+
+            if (existing.LatencySource() != midi2config::MidiCustomizationLatencySource::Unspecified)
+            {
+                provenance.LatencySource(existing.LatencySource());
+                provenance.LatencyMeasured(existing.LatencyMeasured());
+            }
+
+            return provenance;
+        }
+
+        // The entry the service currently holds for a live endpoint, or null when there is none.
+        midi2config::MidiServiceEndpointCustomization FindCustomizationForEndpoint(
+            _In_ winrt::guid const& transportId,
+            _In_ winrt::hstring const& endpointDeviceId)
+        {
+            for (auto const& customization : midi2config::MidiServiceTransportPluginConfigManager::GetEndpointCustomizations(transportId))
+            {
+                if (EqualsIgnoreCase(ToUtf8(customization.ResolvedEndpointDeviceId()), ToUtf8(endpointDeviceId)))
+                {
+                    return customization;
+                }
+            }
+
+            return nullptr;
+        }
+
+        // The stored identity a customer can copy off the list. Either half of the match works,
+        // because which one an entry carries depends on what wrote it.
+        std::string CustomizationKey(_In_ midi2config::MidiServiceEndpointCustomization const& customization)
+        {
+            auto const match = customization.MatchCriteria();
+
+            if (match == nullptr)
+            {
+                return {};
+            }
+
+            if (!match.DeviceInstanceId().empty())
+            {
+                return ToUtf8(match.DeviceInstanceId());
+            }
+
+            return ToUtf8(match.EndpointDeviceId());
+        }
+
+        bool CustomizationMatchesKey(
+            _In_ midi2config::MidiServiceEndpointCustomization const& customization,
+            _In_ std::string const& wanted)
+        {
+            if (wanted.empty() || customization.MatchCriteria() == nullptr)
+            {
+                return false;
+            }
+
+            auto const upper = [](std::string value)
+                {
+                    std::transform(value.begin(), value.end(), value.begin(),
+                        [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+                    return value;
+                };
+
+            auto const target = upper(TrimCopy(wanted));
+
+            for (auto const& candidate : {
+                    ToUtf8(customization.MatchCriteria().DeviceInstanceId()),
+                    ToUtf8(customization.MatchCriteria().EndpointDeviceId()) })
+            {
+                if (!candidate.empty() && upper(candidate).find(target) != std::string::npos)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // Exactly one, or nothing. Acting on an ambiguous identifier would change the wrong entry.
+        bool TryFindCustomization(
+            _In_ std::string const& wanted,
+            _Out_ midi2config::MidiServiceEndpointCustomization& found)
+        {
+            found = nullptr;
+
+            uint32_t matchCount{ 0 };
+
+            for (auto const& customization : midi2config::MidiServiceTransportPluginConfigManager::GetEndpointCustomizations())
+            {
+                if (CustomizationMatchesKey(customization, wanted))
+                {
+                    found = customization;
+                    matchCount++;
+                }
+            }
+
+            if (matchCount == 1)
+            {
+                return true;
+            }
+
+            found = nullptr;
+
+            WriteErrorLine(matchCount == 0
+                ? ResourceString(IDS_CUSTOMIZATIONS_NOT_FOUND)
+                : ResourceString(IDS_CUSTOMIZATIONS_AMBIGUOUS));
+
+            return false;
+        }
+    }
+
+
+    int RunEndpointCustomizationsListCommand(_In_ EndpointCustomizationsListOptions const& options)    {
+        auto const customizations = midi2config::MidiServiceTransportPluginConfigManager::GetEndpointCustomizations();
+
+        if (customizations == nullptr || customizations.Size() == 0)
+        {
+            WriteWarningLine(ResourceString(IDS_CUSTOMIZATIONS_NONE));
+            return 0;
+        }
+
+        ConsoleTable table{ ResourceString(IDS_CUSTOMIZATIONS_TABLE_TITLE) };
+
+        table.AddColumn(ResourceString(IDS_CUSTOMIZATIONS_LABEL_STORED_FOR), ColumnAlignment::Left, endpointNameTextStyle);
+        table.SetLastColumnShrinkable();
+        table.AddColumn(ResourceString(IDS_CUSTOMIZATIONS_LABEL_STATE), ColumnAlignment::Left);
+        table.AddColumn(ResourceString(IDS_CUSTOMIZATIONS_LABEL_CONTENT), ColumnAlignment::Left);
+        table.SetLastColumnShrinkable();
+        table.AddColumn(ResourceString(IDS_CUSTOMIZATIONS_LABEL_STORED_ID), ColumnAlignment::Left);
+        table.SetLastColumnShrinkable();
+
+        uint32_t shown{ 0 };
+        uint32_t orphaned{ 0 };
+        uint32_t empty{ 0 };
+
+        for (auto const& customization : customizations)
+        {
+            if (customization.IsOrphaned())
+            {
+                orphaned++;
+            }
+
+            if (!customization.HasUserContent())
+            {
+                empty++;
+            }
+
+            if (options.OrphanedOnly && !customization.IsOrphaned())
+            {
+                continue;
+            }
+
+            if (!options.IncludeEmpty && !customization.HasUserContent())
+            {
+                continue;
+            }
+
+            std::string storedFor{};
+
+            if (auto const provenance = customization.Provenance())
+            {
+                storedFor = ToUtf8(provenance.CreatedFor());
+            }
+
+            if (storedFor.empty())
+            {
+                storedFor = ToUtf8(customization.Name());
+            }
+
+            table.BeginRow();
+            table.AddCell(storedFor);
+            table.AddCell(customization.IsOrphaned()
+                ? ResourceString(IDS_CUSTOMIZATIONS_STATE_ORPHANED)
+                : ResourceString(IDS_CUSTOMIZATIONS_STATE_IN_USE));
+            table.AddCell(DescribeCustomization(customization));
+            table.AddCell(CustomizationKey(customization));
+
+            shown++;
+        }
+
+        if (shown > 0)
+        {
+            table.Render();
+            WriteBlankLine();
+        }
+
+        WriteInfoLine(FormatResourceString(IDS_CUSTOMIZATIONS_SUMMARY,
+            static_cast<int>(customizations.Size()), static_cast<int>(orphaned), static_cast<int>(empty)));
+
+        return 0;
+    }
+
+
+    int RunEndpointCustomizationsRelinkCommand(_In_ EndpointCustomizationsRelinkOptions const& options)
+    {
+        midi2config::MidiServiceEndpointCustomization source{ nullptr };
+
+        if (!TryFindCustomization(options.From, source))
+        {
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        auto targetEndpointDeviceId = options.To;
+        std::string targetEndpointName;
+
+        if (!ResolveEndpointDeviceId(targetEndpointDeviceId, targetEndpointName))
+        {
+            return 2;
+        }
+
+        auto const target = midi2enum::MidiEndpointDeviceInformation::CreateFromEndpointDeviceId(
+            winrt::hstring{ FromUtf8(targetEndpointDeviceId) });
+
+        if (target == nullptr)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_ENDPOINT_NOT_FOUND));
+            return AsExitCode(ReturnCode::ErrorNoEndpointsFound);
+        }
+
+        auto const targetTransport = target.GetTransportSuppliedInfo();
+
+        if (targetTransport == nullptr || targetTransport.TransportId() != source.TransportId())
+        {
+            WriteErrorLine(ResourceString(IDS_CUSTOMIZATIONS_TRANSPORT_MISMATCH));
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        // Written under the new identity first, so a failure partway leaves the original entry
+        // rather than losing the customization altogether.
+        midi2config::MidiServiceEndpointCustomizationConfig config{ source.TransportId() };
+
+        config.MatchCriteria().EndpointDeviceId(winrt::hstring{ FromUtf8(targetEndpointDeviceId) });
+        config.MatchCriteria().DeviceInstanceId(target.DeviceInstanceId());
+
+        config.Name(source.Name());
+        config.Description(source.Description());
+        config.ImageFileName(source.ImageFileName());
+        config.RequiresNoteOffTranslation(source.RequiresNoteOffTranslation());
+        config.SupportsMidiPolyphonicExpression(source.SupportsMidiPolyphonicExpression());
+        config.RecommendedControlChangeIntervalMilliseconds(source.RecommendedControlChangeIntervalMilliseconds());
+        config.OutgoingLatencyTicks(source.OutgoingLatencyTicks());
+        config.UseCustomOutgoingLatency(source.UseCustomOutgoingLatency());
+        config.Midi1PortNamingApproach(source.Midi1PortNamingApproach());
+
+        for (auto const& entry : source.Midi1SourcePortCustomNames())
+        {
+            config.AddMidi1SourcePortCustomName(midi2::MidiGroup{ entry.Key() }, entry.Value());
+        }
+
+        for (auto const& entry : source.Midi1DestinationPortCustomNames())
+        {
+            config.AddMidi1DestinationPortCustomName(midi2::MidiGroup{ entry.Key() }, entry.Value());
+        }
+
+        // Carried across so the entry keeps its history, then restamped for the device it now
+        // belongs to.
+        config.Provenance(BuildProvenance(target, source.Provenance()));
+
+        auto const response = midi2config::MidiServiceTransportPluginConfigManager::SendUpdate(config);
+
+        if (response == nullptr || response.Status() != midi2config::MidiServiceConfigResponseStatus::Success)
+        {
+            auto const message = response == nullptr ? std::string{} : ToUtf8(response.ServiceErrorMessage());
+
+            WriteErrorLine(FormatResourceString(IDS_CUSTOMIZE_FAILED, message));
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        if (!options.Temporary)
+        {
+            auto const saveResponse = midi2config::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+            if (saveResponse == nullptr || !saveResponse.Success())
+            {
+                auto const message = saveResponse == nullptr ? std::string{} : ToUtf8(saveResponse.ErrorMessage());
+
+                WriteWarningLine(FormatResourceString(IDS_CUSTOMIZE_SAVE_FAILED, message));
+                return AsExitCode(ReturnCode::ErrorGeneralFailure);
+            }
+        }
+
+        // Only now is the old entry removed, so a duplicate cannot be left behind: the stored match
+        // is the entry's identity, so a changed match appends rather than replacing.
+        midi2config::MidiServiceEndpointCustomizationRemovalConfig removal{
+            source.TransportId(), source.MatchCriteria() };
+
+        auto const removalResponse = midi2config::MidiServiceTransportPluginConfigManager::SendUpdate(removal);
+
+        if (removalResponse == nullptr ||
+            removalResponse.Status() != midi2config::MidiServiceConfigResponseStatus::Success)
+        {
+            WriteWarningLine(ResourceString(IDS_CUSTOMIZATIONS_OLD_ENTRY_REMAINS));
+        }
+
+        if (!options.Temporary)
+        {
+            auto const removalSave = midi2config::MidiServiceTransportPluginConfigManager::SaveUpdate(removal);
+
+            if (removalSave == nullptr || !removalSave.Success())
+            {
+                WriteWarningLine(ResourceString(IDS_CUSTOMIZATIONS_OLD_ENTRY_REMAINS));
+            }
+        }
+
+        WriteSuccessLine(FormatResourceString(IDS_CUSTOMIZATIONS_RELINKED, targetEndpointName));
+        WriteBlankLine();
+        WriteInfoLine(ResourceString(IDS_CUSTOMIZE_RECONNECT_NOTE));
+
+        return 0;
+    }
+
+
+    int RunEndpointCustomizationsForgetCommand(_In_ EndpointCustomizationsForgetOptions const& options)
+    {
+        midi2config::MidiServiceEndpointCustomization source{ nullptr };
+
+        if (!TryFindCustomization(options.From, source))
+        {
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        midi2config::MidiServiceEndpointCustomizationRemovalConfig removal{
+            source.TransportId(), source.MatchCriteria() };
+
+        auto const response = midi2config::MidiServiceTransportPluginConfigManager::SendUpdate(removal);
+
+        if (response == nullptr || response.Status() != midi2config::MidiServiceConfigResponseStatus::Success)
+        {
+            auto const message = response == nullptr ? std::string{} : ToUtf8(response.ServiceErrorMessage());
+
+            WriteErrorLine(FormatResourceString(IDS_CUSTOMIZE_FAILED, message));
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        if (!options.Temporary)
+        {
+            auto const saveResponse = midi2config::MidiServiceTransportPluginConfigManager::SaveUpdate(removal);
+
+            if (saveResponse == nullptr || !saveResponse.Success())
+            {
+                auto const message = saveResponse == nullptr ? std::string{} : ToUtf8(saveResponse.ErrorMessage());
+
+                WriteWarningLine(FormatResourceString(IDS_CUSTOMIZE_SAVE_FAILED, message));
+                return AsExitCode(ReturnCode::ErrorGeneralFailure);
+            }
+        }
+
+        WriteSuccessLine(ResourceString(IDS_CUSTOMIZATIONS_FORGOTTEN));
+        WriteBlankLine();
+        WriteInfoLine(ResourceString(IDS_CUSTOMIZE_RECONNECT_NOTE));
+
+        return 0;
+    }
+
 
     int RunEndpointShortIdCommand(_In_ EndpointIdOptions const& options)
     {
