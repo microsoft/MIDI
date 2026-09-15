@@ -96,6 +96,7 @@ namespace
             "play-notes", "play",
             "properties", "props", "information", "info",
             "customize",
+            "customizations",
             "short-id", "full-id", "long-id",
             "request", "req"
         };
@@ -312,6 +313,26 @@ int main()
     customizeCommand->add_flag("-t,--temporary", customizeOptions.Temporary, ResourceString(IDS_OPT_BT_TEMPORARY));
 
     EndpointIdOptions shortIdOptions{};
+
+    EndpointCustomizationsListOptions customizationsListOptions{};
+    EndpointCustomizationsRelinkOptions customizationsRelinkOptions{};
+    EndpointCustomizationsForgetOptions customizationsForgetOptions{};
+
+    auto customizationsCommand = endpointCommand->add_subcommand("customizations", ResourceString(IDS_CMD_EP_CUSTOMIZATIONS));
+    customizationsCommand->require_subcommand(1);
+
+    auto customizationsListCommand = customizationsCommand->add_subcommand("list", ResourceString(IDS_CMD_EP_CUSTOMIZATIONS_LIST));
+    customizationsListCommand->add_flag("--orphaned", customizationsListOptions.OrphanedOnly, ResourceString(IDS_OPT_CUSTOMIZATIONS_ORPHANED));
+    customizationsListCommand->add_flag("--include-empty", customizationsListOptions.IncludeEmpty, ResourceString(IDS_OPT_CUSTOMIZATIONS_INCLUDE_EMPTY));
+
+    auto customizationsRelinkCommand = customizationsCommand->add_subcommand("relink", ResourceString(IDS_CMD_EP_CUSTOMIZATIONS_RELINK));
+    customizationsRelinkCommand->add_option("--from", customizationsRelinkOptions.From, ResourceString(IDS_OPT_CUSTOMIZATIONS_FROM))->required();
+    customizationsRelinkCommand->add_option("--to", customizationsRelinkOptions.To, ResourceString(IDS_OPT_CUSTOMIZATIONS_TO))->required();
+    customizationsRelinkCommand->add_flag("-t,--temporary", customizationsRelinkOptions.Temporary, ResourceString(IDS_OPT_BT_TEMPORARY));
+
+    auto customizationsForgetCommand = customizationsCommand->add_subcommand("forget", ResourceString(IDS_CMD_EP_CUSTOMIZATIONS_FORGET));
+    customizationsForgetCommand->add_option("--from", customizationsForgetOptions.From, ResourceString(IDS_OPT_CUSTOMIZATIONS_FROM))->required();
+    customizationsForgetCommand->add_flag("-t,--temporary", customizationsForgetOptions.Temporary, ResourceString(IDS_OPT_BT_TEMPORARY));
 
     auto shortIdCommand = endpointCommand->add_subcommand("short-id", ResourceString(IDS_CMD_EP_SHORT_ID));
     shortIdCommand->add_option("endpoint-id", shortIdOptions.Value, ResourceString(IDS_OPT_ID_VALUE_ARGUMENT));
@@ -719,6 +740,9 @@ int main()
         if (playNotesCommand->parsed())             return RunEndpointPlayNotesCommand(playNotesOptions);
         if (sendClockCommand->parsed())             return RunEndpointSendClockCommand(sendClockOptions);
         if (customizeCommand->parsed())             return RunEndpointCustomizeCommand(customizeOptions);
+        if (customizationsListCommand->parsed())    return RunEndpointCustomizationsListCommand(customizationsListOptions);
+        if (customizationsRelinkCommand->parsed())  return RunEndpointCustomizationsRelinkCommand(customizationsRelinkOptions);
+        if (customizationsForgetCommand->parsed())  return RunEndpointCustomizationsForgetCommand(customizationsForgetOptions);
         if (shortIdCommand->parsed())               return RunEndpointShortIdCommand(shortIdOptions);
         if (fullIdCommand->parsed())                return RunEndpointFullIdCommand(fullIdOptions);
         if (requestFunctionBlocksCommand->parsed()) return RunEndpointRequestFunctionBlocksCommand(requestFunctionBlocksOptions);

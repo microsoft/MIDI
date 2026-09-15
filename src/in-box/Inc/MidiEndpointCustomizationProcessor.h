@@ -76,7 +76,11 @@ namespace WindowsMidiServicesPluginConfigurationLib
             _In_ EndpointResolver const& resolver,
             _Out_ std::vector<MidiEndpointCustomizationApplyResult>& results) noexcept;
 
+        // The resolver runs again here rather than reporting what was recorded when the
+        // configuration was processed: at service start that happens before the transport has
+        // enumerated anything, so every entry would otherwise report as orphaned.
         HRESULT WriteCustomizationsResponse(
+            _In_ EndpointResolver const& resolver,
             _In_ ::winrt::Windows::Data::Json::JsonObject& responseObject) noexcept;
 
     private:

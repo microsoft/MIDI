@@ -315,6 +315,7 @@ namespace WindowsMidiServicesPluginConfigurationLib
 
     _Use_decl_annotations_
     HRESULT MidiEndpointCustomizationProcessor::WriteCustomizationsResponse(
+        EndpointResolver const& resolver,
         json::JsonObject& responseObject) noexcept
     {
         RETURN_HR_IF_NULL(E_POINTER, m_cache);
@@ -328,6 +329,11 @@ namespace WindowsMidiServicesPluginConfigurationLib
                 if (entry == nullptr || entry->Match == nullptr || entry->Properties == nullptr)
                 {
                     continue;
+                }
+
+                if (resolver)
+                {
+                    entry->ResolvedEndpointDeviceId = resolver(*entry->Match);
                 }
 
                 json::JsonObject entryObject{};

@@ -192,7 +192,12 @@ CMidi2KSAggregateMidiConfigurationManager::ProcessCommand(
         // the handler.
         if (Feature_Servicing_MIDI2EndpointCustomizationRelink::IsEnabled())
         {
-            LOG_IF_FAILED(m_customizationProcessor.WriteCustomizationsResponse(responseObject));
+            auto const resolver = [this](WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria)
+                {
+                    return ResolveEndpoint(criteria);
+                };
+
+            LOG_IF_FAILED(m_customizationProcessor.WriteCustomizationsResponse(resolver, responseObject));
 
             internal::SetConfigurationResponseObjectSuccess(responseObject);
         }
