@@ -11,6 +11,7 @@
 #include "MidiEndpointCustomProperties.h"
 #include "MidiEndpointMatchCriteria.h"
 #include "MidiEndpointCustomPropertiesCache.h"
+#include "MidiEndpointCustomizationProcessor.h"
 #include "MidiEndpointNameTable.h"
 
 class CMidi2KSAggregateMidiConfigurationManager :
@@ -47,6 +48,18 @@ private:
         _In_ std::vector<DEVPROPERTY>& endpointDevProperties,
         _In_ std::shared_ptr<WindowsMidiServicesNamingLib::MidiEndpointNameTable>& nameTable,
         _In_ json::JsonObject& responseObject);
+
+    HRESULT ProcessEndpointCustomizations(
+        _In_ json::JsonObject const& transportObject,
+        _In_ json::JsonObject& responseObject);
+
+    winrt::hstring ResolveEndpoint(
+        _In_ WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria);
+
+    void WriteResolvedEndpointProperties(
+        _In_ std::vector<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomizationApplyResult>& results);
+
+    WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomizationProcessor m_customizationProcessor{ };
 
 
     std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomPropertiesCache> m_customPropertiesCache{ std::make_shared<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomPropertiesCache>() };

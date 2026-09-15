@@ -124,6 +124,12 @@ namespace WindowsMidiServicesPluginConfigurationLib
         _Success_(return == true)
         bool WriteJson(_In_::winrt::Windows::Data::Json::JsonObject& customPropertiesObject);
 
+        // Whether this holds anything the customer would miss. Everything counts, not just the
+        // visible fields: a measured latency needs a loopback cable to reproduce, where a name
+        // takes ten seconds, so treating a latency-only entry as empty would throw away the more
+        // valuable of the two.
+        bool HasUserContent() const noexcept;
+
         winrt::hstring Name{};
         winrt::hstring Description{};
         winrt::hstring Image{};

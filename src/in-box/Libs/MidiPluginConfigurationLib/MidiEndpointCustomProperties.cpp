@@ -457,6 +457,49 @@ bool MidiEndpointCustomProperties::WriteJson(json::JsonObject& customPropertiesO
 }
 
 
+bool MidiEndpointCustomProperties::HasUserContent() const noexcept
+{
+    if (!Name.empty() || !Description.empty() || !Image.empty())
+    {
+        return true;
+    }
+
+    if (RequiresNoteOffTranslation ||
+        SupportsMidiPolyphonicExpression ||
+        RecommendedControlChangeIntervalMilliseconds != 0 ||
+        OutgoingLatencyTicks != 0 ||
+        HasUseCustomOutgoingLatency)
+    {
+        return true;
+    }
+
+    if (Midi1NamingApproach != WindowsMidiServicesNamingLib::Midi1PortNameSelection::UseGlobalDefault)
+    {
+        return true;
+    }
+
+    // An entry with a group index but no name is what an editor writes when the customer did not
+    // type one, so the presence of the port list is not by itself content.
+    for (auto const& source : Midi1Sources)
+    {
+        if (!source.second.Name.empty())
+        {
+            return true;
+        }
+    }
+
+    for (auto const& destination : Midi1Destinations)
+    {
+        if (!destination.second.Name.empty())
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 // write only the properties which aren't in the Common Properties structure at endpoint creation time
 // The expectation is that the config contains the entire set of properties the user cares about.
 // If it's missing, we write default values
