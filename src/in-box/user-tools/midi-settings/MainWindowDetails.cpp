@@ -9,11 +9,13 @@
 #include "MainWindow.xaml.h"
 
 #include "BackgroundWork.h"
+#include "CustomizationHelpers.h"
 #include "MidiPanic.h"
 #include "StringResources.h"
 
 namespace native = ::midisettings;
 namespace res = ::midisettings::resources;
+namespace custom = ::midiapp::customizations;
 
 namespace winrt::midisettings::implementation
 {
@@ -490,6 +492,7 @@ namespace winrt::midisettings::implementation
             winrt::hstring description{};
 
             m_customizeImageFileName = {};
+            m_customizeEndpointDeviceId = endpointDeviceId;
 
             if (auto const userInfo = endpoint.GetUserSuppliedInfo())
             {
@@ -572,6 +575,40 @@ namespace winrt::midisettings::implementation
                 [&sent, &saved, &errorMessage, transportId, endpointDeviceId, deviceInstanceId,
                  newName, newDescription, newImage]()
                 {
+                    auto const existing = custom::FindCustomizationForEndpoint(transportId, endpointDeviceId);
+
+                    // Clearing every box used to write an entry holding nothing but default
+                    // values. Deleting the entry is what the customer meant, and it is the only
+                    // way to leave no trace behind.
+                    if (newName.empty() && newDescription.empty() && newImage.empty() &&
+                        existing != nullptr && !custom::HasNonDisplayContent(existing))
+                    {
+                        midi2config::MidiServiceEndpointCustomizationRemovalConfig removal{
+                            transportId, existing.MatchCriteria() };
+
+                        auto const removeResponse = midi2config::MidiServiceTransportPluginConfigManager::SendUpdate(removal);
+
+                        sent = removeResponse != nullptr &&
+                            removeResponse.Status() == midi2config::MidiServiceConfigResponseStatus::Success;
+
+                        if (!sent)
+                        {
+                            errorMessage = removeResponse == nullptr ? winrt::hstring{} : removeResponse.ServiceErrorMessage();
+                            return;
+                        }
+
+                        auto const removeSave = midi2config::MidiServiceTransportPluginConfigManager::SaveUpdate(removal);
+
+                        saved = removeSave != nullptr && removeSave.Success();
+
+                        if (!saved && removeSave != nullptr)
+                        {
+                            errorMessage = removeSave.ErrorMessage();
+                        }
+
+                        return;
+                    }
+
                     midi2config::MidiServiceEndpointCustomizationConfig config{ transportId };
 
                     config.Name(newName);
@@ -584,6 +621,10 @@ namespace winrt::midisettings::implementation
 
                     config.MatchCriteria().EndpointDeviceId(endpointDeviceId);
                     config.MatchCriteria().DeviceInstanceId(deviceInstanceId);
+
+                    config.Provenance(custom::BuildProvenance(
+                        endpointDeviceId,
+                        existing == nullptr ? nullptr : existing.Provenance()));
 
                     auto const response = midi2config::MidiServiceTransportPluginConfigManager::SendUpdate(config);
 

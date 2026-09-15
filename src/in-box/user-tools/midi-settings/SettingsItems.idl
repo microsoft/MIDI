@@ -69,6 +69,42 @@ namespace midisettings
         String TransportCode{ get; };
     }
 
+    // A stored customization which no longer matches any endpoint on this PC. Everything shown
+    // here is there so the customer can recognize their own work: the picture they chose, the
+    // name they gave it, and a summary of what would be lost if they deleted it.
+    [default_interface]
+    runtimeclass OrphanedCustomizationItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        OrphanedCustomizationItem();
+
+        String DisplayName{ get; };
+        String Description{ get; };
+        String ContentSummary{ get; };
+        String ProvenanceText{ get; };
+        String StoredId{ get; };
+        String TransportCode{ get; };
+
+        Microsoft.UI.Xaml.Media.ImageSource Image{ get; };
+        Microsoft.UI.Xaml.Visibility DescriptionVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility ProvenanceVisibility{ get; };
+    }
+
+    // An endpoint a stored customization could be moved onto.
+    [default_interface]
+    runtimeclass RelinkCandidateItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        RelinkCandidateItem();
+
+        String Name{ get; };
+        String EndpointDeviceId{ get; };
+
+        // Why this one is near the top, in the customer's terms. Never a score.
+        String ReasonText{ get; };
+
+        Microsoft.UI.Xaml.Visibility ReasonVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility WarningVisibility{ get; };
+    }
+
     // A configuration file found in the machine configuration folder.
     [default_interface]
     runtimeclass ConfigFileChoice

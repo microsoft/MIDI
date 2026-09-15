@@ -41,11 +41,17 @@ namespace midisettings
         std::wstring LastConfigCopyFolder() const noexcept { return m_lastConfigCopyFolder; }
         void LastConfigCopyFolder(std::wstring const& value) noexcept;
 
+        // Stored ids of orphaned customizations the customer has already been told about. A
+        // customer who chooses to live with an orphan should not be asked again every launch.
+        std::wstring DismissedOrphanedCustomizations() const noexcept { return m_dismissedOrphanedCustomizations; }
+        void DismissedOrphanedCustomizations(std::wstring const& value) noexcept;
+
     private:
         AppSettings() noexcept;
 
         EndpointViewMode m_viewMode{ EndpointViewMode::Cards };
         std::wstring m_transportFilter{};
         std::wstring m_lastConfigCopyFolder{};
+        std::wstring m_dismissedOrphanedCustomizations{};
     };
 }

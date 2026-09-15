@@ -128,6 +128,7 @@
     <ClInclude Include="resource.h" />
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="BackgroundWork.h" />
+    <ClInclude Include="CustomizationHelpers.h" />
     <ClInclude Include="Elevation.h" />
     <ClInclude Include="MidiConfig.h" />
     <ClInclude Include="MidiPanic.h" />
@@ -162,6 +163,7 @@
     <ClCompile Include="AppSettings.cpp" />
     <ClCompile Include="BackgroundWork.cpp" />
     <ClCompile Include="Elevation.cpp" />
+    <ClCompile Include="CustomizationHelpers.cpp" />
     <ClCompile Include="MidiConfig.cpp" />
     <ClCompile Include="MidiPanic.cpp" />
     <ClCompile Include="NotificationSettings.cpp" />
@@ -187,6 +189,9 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="MainWindowPortNames.cpp">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MainWindowRelink.cpp">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />

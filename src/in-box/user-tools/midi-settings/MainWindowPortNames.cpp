@@ -271,8 +271,15 @@ namespace winrt::midisettings::implementation
                     {
                         auto const item = rows.GetAt(i).as<implementation::Midi1PortNameItem>();
 
-                        // An empty box is sent as an empty name, which is how a previously
-                        // customized port gets its generated name back.
+                        // Only what the customer actually changed. An emptied box is still sent,
+                        // because that is how a previously customized port gets its generated name
+                        // back, but a port left alone must not be written at all: doing so filled
+                        // the configuration with entries holding an empty name for every group.
+                        if (item->CustomName() == item->InternalOriginalCustomName())
+                        {
+                            continue;
+                        }
+
                         target.push_back({ item->GroupIndex(), item->CustomName() });
                     }
                 };

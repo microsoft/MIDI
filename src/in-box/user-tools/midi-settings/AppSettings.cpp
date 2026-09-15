@@ -16,6 +16,7 @@ namespace midisettings
 
         constexpr wchar_t ValueViewMode[] = L"EndpointViewMode";
         constexpr wchar_t ValueTransportFilter[] = L"TransportFilter";
+        constexpr wchar_t ValueDismissedOrphanedCustomizations[] = L"DismissedOrphanedCustomizations";
         constexpr wchar_t ValueLastConfigCopyFolder[] = L"LastConfigCopyFolder";
     }
 
@@ -38,6 +39,7 @@ namespace midisettings
             static_cast<uint32_t>(EndpointViewMode::List) ? EndpointViewMode::List : EndpointViewMode::Cards;
 
         m_transportFilter = ReadString(ValueTransportFilter, std::wstring{});
+        m_dismissedOrphanedCustomizations = ReadString(ValueDismissedOrphanedCustomizations, std::wstring{});
         m_lastConfigCopyFolder = ReadString(ValueLastConfigCopyFolder, std::wstring{});
     }
 
@@ -59,5 +61,12 @@ namespace midisettings
     {
         m_lastConfigCopyFolder = value;
         WriteString(ValueLastConfigCopyFolder, m_lastConfigCopyFolder);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::DismissedOrphanedCustomizations(std::wstring const& value) noexcept
+    {
+        m_dismissedOrphanedCustomizations = value;
+        WriteString(ValueDismissedOrphanedCustomizations, m_dismissedOrphanedCustomizations);
     }
 }

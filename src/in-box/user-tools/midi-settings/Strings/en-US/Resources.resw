@@ -432,6 +432,117 @@
   </data>
 
   <!-- Customization -->
+  <data name="OrphanedCustomizationsBar.Title" xml:space="preserve">
+    <value>Some saved settings have no matching device</value>
+  </data>
+  <data name="OrphanedCustomizationsMessageFormat" xml:space="preserve">
+    <value>{0} of your saved endpoint settings do not match anything connected to this PC. This usually means a device was plugged into a different port or hub.</value>
+  </data>
+  <data name="OrphanedCustomizationsActionButton.Content" xml:space="preserve">
+    <value>Review them</value>
+  </data>
+  <data name="RelinkDialog.Title" xml:space="preserve">
+    <value>Restore a saved customization</value>
+  </data>
+  <data name="RelinkDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Move it here</value>
+  </data>
+  <data name="RelinkDialog.SecondaryButtonText" xml:space="preserve">
+    <value>Delete it</value>
+  </data>
+  <data name="RelinkDialog.CloseButtonText" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="RelinkOrphanHeader.Text" xml:space="preserve">
+    <value>Saved settings with no matching device</value>
+  </data>
+  <data name="RelinkCandidateHeader.Text" xml:space="preserve">
+    <value>Move it onto</value>
+  </data>
+  <data name="RelinkCandidateAlreadyCustomized.Text" xml:space="preserve">
+    <value>This device already has its own saved settings, which would be replaced.</value>
+  </data>
+  <data name="RelinkNoOrphans" xml:space="preserve">
+    <value>Every saved setting on this PC matches a device. There is nothing to restore.</value>
+  </data>
+  <data name="RelinkChooseOrphan" xml:space="preserve">
+    <value>Choose the settings you recognize, then choose the device they belong to.</value>
+  </data>
+  <data name="RelinkChooseCandidate" xml:space="preserve">
+    <value>The most likely device is selected. Check that it is the one you mean before moving the settings.</value>
+  </data>
+  <data name="RelinkNoClearMatch" xml:space="preserve">
+    <value>Nothing here stands out as the obvious match, so none is selected. Choose the device you recognize.</value>
+  </data>
+  <data name="RelinkNoCandidates" xml:space="preserve">
+    <value>No connected device uses the same kind of connection as these settings.</value>
+  </data>
+  <data name="RelinkReasonSameModelOnly" xml:space="preserve">
+    <value>Same model, and the only one connected</value>
+  </data>
+  <data name="RelinkReasonSameModel" xml:space="preserve">
+    <value>Same model, but more than one is connected</value>
+  </data>
+  <data name="RelinkReasonSameName" xml:space="preserve">
+    <value>Same name as the device these settings were saved for</value>
+  </data>
+  <data name="RelinkReasonBeingCustomized" xml:space="preserve">
+    <value>The device you were customizing</value>
+  </data>
+  <data name="RelinkSavedOnFormat" xml:space="preserve">
+    <value>Saved {0}</value>
+  </data>
+  <data name="RelinkUnnamedCustomization" xml:space="preserve">
+    <value>Unnamed settings</value>
+  </data>
+  <data name="RelinkSucceededFormat" xml:space="preserve">
+    <value>The saved settings now apply to {0}.</value>
+  </data>
+  <data name="RelinkSucceededOldEntryRemainsFormat" xml:space="preserve">
+    <value>The saved settings now apply to {0}, but the old entry could not be removed.</value>
+  </data>
+  <data name="RelinkFailed" xml:space="preserve">
+    <value>The saved settings could not be moved.</value>
+  </data>
+  <data name="RelinkFailedFormat" xml:space="preserve">
+    <value>The saved settings could not be moved. {0}</value>
+  </data>
+  <data name="RelinkForgotten" xml:space="preserve">
+    <value>The saved settings were deleted.</value>
+  </data>
+  <data name="RelinkForgetFailed" xml:space="preserve">
+    <value>The saved settings could not be deleted.</value>
+  </data>
+  <data name="CustomizeRelinkHelp.Text" xml:space="preserve">
+    <value>Some saved settings on this PC no longer match a connected device. That happens when a device is plugged into a different port or hub.</value>
+  </data>
+  <data name="CustomizeRelinkButton.Content" xml:space="preserve">
+    <value>Restore a saved customization...</value>
+  </data>
+  <data name="CustomizationContentImage" xml:space="preserve">
+    <value>Picture</value>
+  </data>
+  <data name="CustomizationContentLatencyFormat" xml:space="preserve">
+    <value>Latency {0} ms</value>
+  </data>
+  <data name="CustomizationContentLatencyMeasuredFormat" xml:space="preserve">
+    <value>Latency {0} ms, measured</value>
+  </data>
+  <data name="CustomizationContentPortNamesFormat" xml:space="preserve">
+    <value>{0} port name(s)</value>
+  </data>
+  <data name="CustomizationContentPortNaming" xml:space="preserve">
+    <value>Port naming</value>
+  </data>
+  <data name="CustomizationContentNoteOff" xml:space="preserve">
+    <value>Note off translation</value>
+  </data>
+  <data name="CustomizationContentMpe" xml:space="preserve">
+    <value>MPE</value>
+  </data>
+  <data name="CustomizationContentCcIntervalFormat" xml:space="preserve">
+    <value>CC interval {0} ms</value>
+  </data>
   <data name="CustomizeDialog.Title" xml:space="preserve">
     <value>Customize endpoint</value>
   </data>
