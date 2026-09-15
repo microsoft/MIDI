@@ -436,7 +436,7 @@
     <value>Some saved settings have no matching device</value>
   </data>
   <data name="OrphanedCustomizationsMessageFormat" xml:space="preserve">
-    <value>{0} of your saved endpoint settings do not match anything connected to this PC. This usually means a device was plugged into a different port or hub.</value>
+    <value>{0} of your saved endpoint settings do not match anything connected right now. That is normal if those devices are simply not plugged in. It can also mean a device is here but its identifier changed, which happens when it moves to a different port or hub.</value>
   </data>
   <data name="OrphanedCustomizationsActionButton.Content" xml:space="preserve">
     <value>Review them</value>
@@ -463,10 +463,10 @@
     <value>This device already has its own saved settings, which would be replaced.</value>
   </data>
   <data name="RelinkNoOrphans" xml:space="preserve">
-    <value>Every saved setting on this PC matches a device. There is nothing to restore.</value>
+    <value>Every saved setting on this PC matches a connected device. There is nothing to do here.</value>
   </data>
   <data name="RelinkChooseOrphan" xml:space="preserve">
-    <value>Choose the settings you recognize, then choose the device they belong to.</value>
+    <value>Choose the settings you recognize, then choose the device they belong to. If a device is only unplugged, leave its settings alone and they will be applied when it comes back.</value>
   </data>
   <data name="RelinkChooseCandidate" xml:space="preserve">
     <value>The most likely device is selected. Check that it is the one you mean before moving the settings.</value>
@@ -514,7 +514,7 @@
     <value>The saved settings could not be deleted.</value>
   </data>
   <data name="CustomizeRelinkHelp.Text" xml:space="preserve">
-    <value>Some saved settings on this PC no longer match a connected device. That happens when a device is plugged into a different port or hub.</value>
+    <value>Some saved settings on this PC do not match anything connected. Usually that just means the device is not plugged in, but it also happens when a device is here and its identifier has changed.</value>
   </data>
   <data name="CustomizeRelinkButton.Content" xml:space="preserve">
     <value>Restore a saved customization...</value>

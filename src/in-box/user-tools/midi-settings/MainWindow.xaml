@@ -865,7 +865,7 @@
                         <TextBlock x:Uid="CustomizeRelinkHelp"
                                    Style="{StaticResource PropertyLabelStyle}"
                                    TextWrapping="Wrap"
-                                   Text="Some saved settings on this PC no longer match a connected device. That happens when a device is plugged into a different port or hub." />
+                                   Text="Some saved settings on this PC do not match anything connected. Usually that just means the device is not plugged in, but it also happens when a device is here and its identifier has changed." />
                         <HyperlinkButton x:Name="CustomizeRelinkButton"
                                          x:Uid="CustomizeRelinkButton"
                                          Content="Restore a saved customization..."
