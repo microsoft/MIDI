@@ -19,6 +19,8 @@ Unless you are authoring a new transport, it is not recommended that you use thi
 | `SendUpdate(configUpdate)` | Sends an `IMidiServiceTransportPluginConfig` update to the service to be used by a transport plugin. Returns a `MidiServiceConfigResponse`. |
 | `SendUpdate(transportId, fullConfigObject)` | Sends a raw JSON configuration object to the service for the specified transport. Returns a `MidiServiceConfigResponse`. |
 | `SendCommand(command)` | Sends a `MidiServiceTransportCommand` to the service. Returns a `MidiServiceConfigResponse`. |
+| `GetEndpointCustomizations()` | The stored endpoint customizations every transport which can report them currently holds, including entries which match no endpoint on this PC. Returns a view of `MidiServiceEndpointCustomization`. |
+| `GetEndpointCustomizations(transportId)` | The same, for a single transport. |
 | `SaveUpdate(configUpdate)` | Writes an `IMidiServiceTransportPluginConfig` into the configuration file so it survives a service restart. Returns a `MidiServiceConfigSaveResponse`. |
 | `SaveUpdate(transportId, fullConfigObject)` | Writes a raw JSON configuration object into the configuration file for the specified transport. Returns a `MidiServiceConfigSaveResponse`. |
 | `QueryCapability(transportId, capabilityQueryKey)` | Returns true when the named transport reports that capability. Use it before offering a feature which not every transport implements. |
