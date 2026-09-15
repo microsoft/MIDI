@@ -76,14 +76,11 @@ namespace json = ::winrt::Windows::Data::Json;
 //#pragma pop_macro("GetObject")
 
 #include "Feature_Servicing_MIDI2LoopbackMuteAndList.h"
-#include "Feature_Servicing_MIDI2LoopbackCreateMuted.h"
-#include "Feature_Servicing_MIDI2LoopbackCreateWithImage.h"
 #include "Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit.h"
 #include "Feature_Servicing_MIDI2EndpointUniqueIdValidation.h"
 #include "Feature_Servicing_MIDI2TransportAssociationIdGuidValidation.h"
 #include "Feature_Servicing_MIDI2LoopbackErrorStringResources.h"
-#include "Feature_Servicing_MIDI2LoopbackEndpointCustomization.h"
-#include "Feature_Servicing_MIDI2EndpointImageFileNameValidation.h"
+#include "Feature_Servicing_MIDI2EndpointCustomizationEnhancements.h"
 #include "Feature_Servicing_MIDI2LoopbackUniqueEndpointNames.h"
 
 // TransportUtilities

@@ -300,6 +300,14 @@ void MidiLoopbackEndpointTests::TestOverlongUnicodeDeviceNameIsTruncatedOnCharac
     VERIFY_ARE_EQUAL(longName.length(), (size_t)40);
     VERIFY_ARE_EQUAL(utf8ByteCount(longName), (size_t)120);
 
+    // Both sides carry an overlong name, but they have to differ from each other because a
+    // loopback endpoint name has to be unique within the transport.
+    std::wstring longNameB{};
+    for (int i = 0; i < 40; i++)
+    {
+        longNameB += L"定";
+    }
+
     winrt::hstring uniqueId = winrt::to_hstring(winrt::Windows::Foundation::GuidHelper::CreateNewGuid());
 
     MidiLoopbackEndpointDefinition definitionA;
@@ -307,7 +315,7 @@ void MidiLoopbackEndpointTests::TestOverlongUnicodeDeviceNameIsTruncatedOnCharac
     definitionA.UniqueId(uniqueId);
 
     MidiLoopbackEndpointDefinition definitionB;
-    definitionB.Name(longName);
+    definitionB.Name(longNameB);
     definitionB.UniqueId(uniqueId);
 
     MidiLoopbackCreationConfig config(definitionA, definitionB);

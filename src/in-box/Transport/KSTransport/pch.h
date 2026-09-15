@@ -63,7 +63,7 @@
 #include "MidiStableStringHash.h"
 namespace internal = ::WindowsMidiServicesInternal;
 
-#include "Feature_Servicing_MIDI2EndpointCustomizationRelink.h"
+#include "Feature_Servicing_MIDI2EndpointCustomizationEnhancements.h"
 
 #include "MidiDefs.h"
 #include "WindowsMidiServices.h"

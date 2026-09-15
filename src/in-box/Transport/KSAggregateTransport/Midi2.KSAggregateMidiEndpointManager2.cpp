@@ -1669,7 +1669,7 @@ CMidi2KSAggregateMidiEndpointManager2::CreatePendingEndpointDefinitionForFilterD
     // default hash is the device id.
     std::wstring hash;
 
-    if (Feature_Servicing_MIDI2EndpointCustomizationRelink::IsEnabled())
+    if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
     {
         hash = internal::StableWideStringHashString(parentDeviceDefinition->DeviceInstanceId);
     }

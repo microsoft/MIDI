@@ -387,6 +387,18 @@ namespace
 
         return static_cast<uint32_t>(response.GetNamedNumber(L"errorCode", 0));
     }
+
+    // A transport which rejects a create with a failure HRESULT has its whole response discarded by
+    // the service, so before the KIR there is no error code to read.
+    uint32_t ExpectedRejectionErrorCode(uint32_t const errorCode)
+    {
+        if (Feature_Servicing_MIDI2TransportConfigRejectionReasons::IsEnabled())
+        {
+            return errorCode;
+        }
+
+        return 0;
+    }
 }
 
 
@@ -507,9 +519,9 @@ void LoopbackConfigTests::TestCreateMutedLoopbackIsMuted()
 {
     // The behavior under test is KIR-gated, so the test has to no-op when the KIR is off,
     // otherwise a rollback turns this suite red.
-    if (!Feature_Servicing_MIDI2LoopbackCreateMuted::IsEnabled())
+    if (!Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
     {
-        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackCreateMuted is disabled.");
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2EndpointCustomizationEnhancements is disabled.");
         return;
     }
 
@@ -544,9 +556,9 @@ void LoopbackConfigTests::TestCreateMutedLoopbackIsMuted()
 
 void LoopbackConfigTests::TestCreateWithoutMutedKeyIsNotMuted()
 {
-    if (!Feature_Servicing_MIDI2LoopbackCreateMuted::IsEnabled())
+    if (!Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
     {
-        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackCreateMuted is disabled.");
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2EndpointCustomizationEnhancements is disabled.");
         return;
     }
 
@@ -584,9 +596,9 @@ void LoopbackConfigTests::TestCreateWithImageIsReported()
 {
     // The behavior under test is KIR-gated, so the test has to no-op when the KIR is off,
     // otherwise a rollback turns this suite red.
-    if (!Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled())
+    if (!Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
     {
-        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackCreateWithImage is disabled.");
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2EndpointCustomizationEnhancements is disabled.");
         return;
     }
 
@@ -621,9 +633,9 @@ void LoopbackConfigTests::TestCreateWithImageIsReported()
 
 void LoopbackConfigTests::TestCreateWithImagePathKeepsOnlyTheFileName()
 {
-    if (!Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled())
+    if (!Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
     {
-        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackCreateWithImage is disabled.");
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2EndpointCustomizationEnhancements is disabled.");
         return;
     }
 
@@ -677,7 +689,7 @@ void LoopbackConfigTests::TestTransportDeclaresImageCapability()
 
     // A client decides whether to offer the customer a picture based on this, so the declaration
     // has to track the KIR rather than being assumed.
-    auto const expected = Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled() ?
+    auto const expected = Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled() ?
         std::wstring{ L"\"createWithImage\":true" } : std::wstring{ L"\"createWithImage\":false" };
 
     VERIFY_IS_TRUE(result.ResponseJson.find(expected) != std::wstring::npos);
@@ -973,9 +985,9 @@ namespace
 
 void LoopbackConfigTests::TestUpdateRenamesBothSidesOfAPair()
 {
-    if (!Feature_Servicing_MIDI2LoopbackEndpointCustomization::IsEnabled())
+    if (!Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
     {
-        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackEndpointCustomization is disabled.");
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2EndpointCustomizationEnhancements is disabled.");
         return;
     }
 
@@ -1026,9 +1038,9 @@ void LoopbackConfigTests::TestUpdateRenamesBothSidesOfAPair()
 // untouched. Checking only the return value would pass even if one side had already been written.
 void LoopbackConfigTests::TestUpdateWithDuplicateNamesChangesNothing()
 {
-    if (!Feature_Servicing_MIDI2LoopbackEndpointCustomization::IsEnabled())
+    if (!Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
     {
-        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackEndpointCustomization is disabled.");
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2EndpointCustomizationEnhancements is disabled.");
         return;
     }
 
@@ -1072,9 +1084,9 @@ void LoopbackConfigTests::TestUpdateWithDuplicateNamesChangesNothing()
 
 void LoopbackConfigTests::TestUpdateWithBlankNameIsRejected()
 {
-    if (!Feature_Servicing_MIDI2LoopbackEndpointCustomization::IsEnabled())
+    if (!Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
     {
-        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackEndpointCustomization is disabled.");
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2EndpointCustomizationEnhancements is disabled.");
         return;
     }
 
@@ -1139,7 +1151,10 @@ void LoopbackConfigTests::TestCreateWithTheSameNameOnBothSidesIsRejected()
         BuildCreateJson(associationId, L"Name Domain Both Sides", uniqueId, L"NAME DOMAIN BOTH SIDES", uniqueId));
 
     VERIFY_IS_FALSE(result.IsSuccess());
-    VERIFY_ARE_EQUAL(static_cast<uint32_t>(LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_B), ReportedErrorCode(result));
+
+    // The reason only survives the trip back through the service when the rejection travels on a
+    // success code, so the expected value tracks the KIR rather than being assumed.
+    VERIFY_ARE_EQUAL(ExpectedRejectionErrorCode(LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_B), ReportedErrorCode(result));
 }
 
 
@@ -1182,7 +1197,7 @@ void LoopbackConfigTests::TestCreateWithANameAnotherLoopbackUsesIsRejected()
             L"name domain first a", MakeUniqueIdString()));
 
     VERIFY_IS_FALSE(second.IsSuccess());
-    VERIFY_ARE_EQUAL(static_cast<uint32_t>(LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_B), ReportedErrorCode(second));
+    VERIFY_ARE_EQUAL(ExpectedRejectionErrorCode(LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_B), ReportedErrorCode(second));
 }
 
 
@@ -1194,9 +1209,9 @@ void LoopbackConfigTests::TestUpdateToANameAnotherLoopbackUsesIsRejected()
         return;
     }
 
-    if (!Feature_Servicing_MIDI2LoopbackEndpointCustomization::IsEnabled())
+    if (!Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
     {
-        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackEndpointCustomization is disabled.");
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2EndpointCustomizationEnhancements is disabled.");
         return;
     }
 
@@ -1257,9 +1272,9 @@ void LoopbackConfigTests::TestUpdateKeepingTheSameNamesIsAllowed()
         return;
     }
 
-    if (!Feature_Servicing_MIDI2LoopbackEndpointCustomization::IsEnabled())
+    if (!Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
     {
-        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackEndpointCustomization is disabled.");
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2EndpointCustomizationEnhancements is disabled.");
         return;
     }
 
@@ -1307,9 +1322,9 @@ void LoopbackConfigTests::TestUpdateSwappingNamesWithinAPairIsAllowed()
         return;
     }
 
-    if (!Feature_Servicing_MIDI2LoopbackEndpointCustomization::IsEnabled())
+    if (!Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
     {
-        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackEndpointCustomization is disabled.");
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2EndpointCustomizationEnhancements is disabled.");
         return;
     }
 

@@ -188,7 +188,7 @@ CMidi2VirtualMidiConfigurationManager::UpdateConfiguration(
 
                             internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                            return E_INVALIDARG;
+                            return internal::ConfigurationRejectionResult(E_INVALIDARG);
                         }
                     }
 

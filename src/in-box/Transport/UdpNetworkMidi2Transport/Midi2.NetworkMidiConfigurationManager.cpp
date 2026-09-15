@@ -8,7 +8,7 @@
 
 #include "pch.h"
 
-#include "Feature_Servicing_MIDI2EndpointImageFileNameValidation.h"
+#include "Feature_Servicing_MIDI2EndpointCustomizationEnhancements.h"
 
 using namespace winrt::Windows::Networking;
 
@@ -1222,7 +1222,7 @@ CMidi2NetworkMidiConfigurationManager::ProcessEndpointCustomizations(
 
             std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties{ nullptr };
 
-            if (Feature_Servicing_MIDI2EndpointImageFileNameValidation::IsEnabled())
+            if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
             {
                 customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJsonRejectingImagePath(
                     customPropertiesObject);

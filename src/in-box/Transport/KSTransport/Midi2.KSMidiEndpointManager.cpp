@@ -242,7 +242,7 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         }
     }
 
-    if (Feature_Servicing_MIDI2EndpointCustomizationRelink::IsEnabled())
+    if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
     {
         hash = internal::StableWideStringHashString(deviceId);
     }

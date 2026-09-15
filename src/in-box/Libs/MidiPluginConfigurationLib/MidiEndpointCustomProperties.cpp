@@ -35,7 +35,7 @@
 #include <Feature_Servicing_MIDI2CustomOutgoingLatency.h>
 #include <Feature_Servicing_MIDI2SchedulerV2.h>
 #include <Feature_Servicing_MIDI2RecommendedCCIntervalProp.h>
-#include <Feature_Servicing_MIDI2EndpointCustomizationRelink.h>
+#include <Feature_Servicing_MIDI2EndpointCustomizationEnhancements.h>
 
 namespace WindowsMidiServicesPluginConfigurationLib
 {
@@ -139,7 +139,7 @@ std::shared_ptr<MidiEndpointCustomProperties> MidiEndpointCustomProperties::From
 
         if (Feature_Servicing_MIDI2CustomOutgoingLatency::IsEnabled())
         {
-            if (Feature_Servicing_MIDI2EndpointCustomizationRelink::IsEnabled())
+            if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
             {
                 auto latencyval = customPropertiesObject.GetNamedNumber(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_OUTGOING_LATENCY_TICKS_PROPERTY_KEY, 0);
 
@@ -352,7 +352,7 @@ bool MidiEndpointCustomProperties::WriteJson(json::JsonObject& customPropertiesO
                 MIDI_CONFIG_JSON_ENDPOINT_COMMON_CUSTOM_OUTGOING_LATENCY_TICKS_PROPERTY_KEY,
                 json::JsonValue::CreateNumberValue(static_cast<double>(OutgoingLatencyTicks)));
 
-            if (Feature_Servicing_MIDI2EndpointCustomizationRelink::IsEnabled())
+            if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
             {
                 if (HasUseCustomOutgoingLatency)
                 {
@@ -588,7 +588,7 @@ bool MidiEndpointCustomProperties::WriteNonCommonProperties(_In_ std::vector<DEV
 
         if (Feature_Servicing_MIDI2SchedulerV2::IsEnabled())
         {
-            if (Feature_Servicing_MIDI2EndpointCustomizationRelink::IsEnabled())
+            if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
             {
                 bool useCustom{ OutgoingLatencyTicks != 0 };
 
