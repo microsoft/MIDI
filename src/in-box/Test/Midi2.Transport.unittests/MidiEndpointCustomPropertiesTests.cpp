@@ -10,7 +10,7 @@
 
 #include "MidiEndpointCustomPropertiesTests.h"
 
-#include "Feature_Servicing_MIDI2EndpointImageFileNameValidation.h"
+#include "Feature_Servicing_MIDI2EndpointCustomizationEnhancements.h"
 #include "MidiEndpointCustomProperties.h"
 
 using namespace WEX::Common;
@@ -39,9 +39,9 @@ namespace
     {
         // The behavior under test is KIR-gated, so the test has to no-op when the KIR is off,
         // otherwise a rollback turns this suite red.
-        if (!Feature_Servicing_MIDI2EndpointImageFileNameValidation::IsEnabled())
+        if (!Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
         {
-            Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2EndpointImageFileNameValidation is disabled.");
+            Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2EndpointCustomizationEnhancements is disabled.");
             return;
         }
 
@@ -55,9 +55,9 @@ namespace
 
 void MidiEndpointCustomPropertiesTests::TestBareImageFileNameIsAccepted()
 {
-    if (!Feature_Servicing_MIDI2EndpointImageFileNameValidation::IsEnabled())
+    if (!Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
     {
-        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2EndpointImageFileNameValidation is disabled.");
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2EndpointCustomizationEnhancements is disabled.");
         return;
     }
 
@@ -71,9 +71,9 @@ void MidiEndpointCustomPropertiesTests::TestBareImageFileNameIsAccepted()
 
 void MidiEndpointCustomPropertiesTests::TestMissingImageIsAccepted()
 {
-    if (!Feature_Servicing_MIDI2EndpointImageFileNameValidation::IsEnabled())
+    if (!Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
     {
-        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2EndpointImageFileNameValidation is disabled.");
+        Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2EndpointCustomizationEnhancements is disabled.");
         return;
     }
 

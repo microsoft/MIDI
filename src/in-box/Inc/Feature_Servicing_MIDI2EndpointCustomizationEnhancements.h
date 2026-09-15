@@ -8,7 +8,11 @@
 
 #pragma once
 
-class Feature_Servicing_MIDI2LoopbackEndpointCustomization
+// Covers the endpoint customization work as one rollback unit: the shared customization update
+// path and the listEndpointCustomizations verb, image file name validation, and the loopback
+// transport honoring muted, image and post-creation customization.
+
+class Feature_Servicing_MIDI2EndpointCustomizationEnhancements
 {
 public:
     static bool IsEnabled()
@@ -17,9 +21,7 @@ public:
     }
 };
 
-inline bool Feature_Servicing_MIDI2LoopbackEndpointCustomization_IsEnabled()
+inline bool Feature_Servicing_MIDI2EndpointCustomizationEnhancements_IsEnabled()
 {
     return true;
 }
-
-

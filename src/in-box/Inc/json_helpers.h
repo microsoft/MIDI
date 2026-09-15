@@ -22,6 +22,8 @@
 
 #include "atlbase.h"  // for CComBSTR
 
+#include "Feature_Servicing_MIDI2TransportConfigRejectionReasons.h"
+
 
 namespace json = ::winrt::Windows::Data::Json;
 
@@ -67,6 +69,20 @@ namespace WindowsMidiServicesInternal
     {
         auto successVal = json::JsonValue::CreateBooleanValue(true);
         responseObject.SetNamedValue(MIDI_CONFIG_JSON_CONFIGURATION_RESPONSE_SUCCESS_PROPERTY_KEY, successVal);
+    }
+
+
+    // The service discards a transport's response object when the call returns a failure HRESULT,
+    // so a rejection the customer is meant to read has to travel back on a success code. Callers
+    // pass the HRESULT they used to return, which is what a rollback restores.
+    inline HRESULT ConfigurationRejectionResult(_In_ HRESULT const originalResult) noexcept
+    {
+        if (Feature_Servicing_MIDI2TransportConfigRejectionReasons::IsEnabled())
+        {
+            return S_FALSE;
+        }
+
+        return originalResult;
     }
 
 

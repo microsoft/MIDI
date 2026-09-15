@@ -347,7 +347,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
 
     if (Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
     {
-        if (Feature_Servicing_MIDI2LoopbackCreateMuted::IsEnabled())
+        if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
         {
             devPropIsMuted = GetInitialMutedDevPropValue(definition);
         }
@@ -360,7 +360,7 @@ CMidi2LoopbackMidiEndpointManager::CreateSingleEndpoint(
             DEVPROP_TYPE_BOOLEAN, (ULONG)(sizeof(DEVPROP_BOOLEAN)), &devPropIsMuted });
     }
 
-    if (Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled())
+    if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
     {
         if (!definition->ImageFileName.empty())
         {
@@ -554,7 +554,7 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
             device.DefinitionA = *definitionA;
             device.DefinitionB = *definitionB;
 
-            if (Feature_Servicing_MIDI2LoopbackCreateMuted::IsEnabled())
+            if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
             {
                 device.IsMuted = definitionA->IsMuted;
             }

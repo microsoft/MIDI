@@ -8,7 +8,7 @@
 
 #pragma once
 
-class Feature_Servicing_MIDI2LoopbackCreateWithImage
+class Feature_Servicing_MIDI2TransportConfigRejectionReasons
 {
 public:
     static bool IsEnabled()
@@ -17,7 +17,7 @@ public:
     }
 };
 
-inline bool Feature_Servicing_MIDI2LoopbackCreateWithImage_IsEnabled()
+inline bool Feature_Servicing_MIDI2TransportConfigRejectionReasons_IsEnabled()
 {
     return true;
 }

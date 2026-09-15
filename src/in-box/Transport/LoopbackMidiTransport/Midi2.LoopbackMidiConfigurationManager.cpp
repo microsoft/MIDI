@@ -77,7 +77,7 @@ CMidi2LoopbackMidiConfigurationManager::ExecuteCommandListEntries(
         objEndpointA.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY,
             json::JsonValue::CreateStringValue(device->DefinitionA.EndpointDescription.c_str()));
 
-        if (Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled())
+        if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
         {
             objEndpointA.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_IMAGE_KEY,
                 json::JsonValue::CreateStringValue(device->DefinitionA.ImageFileName.c_str()));
@@ -95,7 +95,7 @@ CMidi2LoopbackMidiConfigurationManager::ExecuteCommandListEntries(
         objEndpointB.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_DESCRIPTION_KEY,
             json::JsonValue::CreateStringValue(device->DefinitionB.EndpointDescription.c_str()));
 
-        if (Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled())
+        if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
         {
             objEndpointB.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_IMAGE_KEY,
                 json::JsonValue::CreateStringValue(device->DefinitionB.ImageFileName.c_str()));
@@ -177,7 +177,7 @@ CMidi2LoopbackMidiConfigurationManager::ProcessCommand(
 
         // A rolled back build has no update handler, so it must not claim it can customize an
         // endpoint or the app offers an edit that would silently do nothing.
-        if (Feature_Servicing_MIDI2LoopbackEndpointCustomization::IsEnabled())
+        if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
         {
             capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_ENDPOINT, true);
         }
@@ -199,7 +199,7 @@ CMidi2LoopbackMidiConfigurationManager::ProcessCommand(
 
         // A rolled back build ignores the image, so it must not claim to honor one or a client
         // offers the customer a picture that never appears.
-        if (Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled())
+        if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
         {
             capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CREATE_WITH_IMAGE, true);
         }
@@ -566,7 +566,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                     definitionA->AssociationId = associationKey;
                     definitionB->AssociationId = definitionA->AssociationId;
 
-                    if (Feature_Servicing_MIDI2LoopbackCreateMuted::IsEnabled())
+                    if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
                     {
                         // the flag sits on the association because muting a loopback mutes
                         // both directions at once
@@ -590,7 +590,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                         definitionA->InstanceIdPrefix = instanceIdPrefixA;
                         definitionA->UMPOnly = endpointAObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY, false);
 
-                        if (Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled())
+                        if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
                         {
                             // anyone can hand-edit the configuration file, so a path here is cut
                             // back to a bare file name rather than trusted
@@ -605,7 +605,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                         definitionB->InstanceIdPrefix = instanceIdPrefixB;
                         definitionB->UMPOnly = endpointBObject.GetNamedBoolean(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY, false);
 
-                        if (Feature_Servicing_MIDI2LoopbackCreateWithImage::IsEnabled())
+                        if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
                         {
                             definitionB->ImageFileName = internal::CleanImageFileName(
                                 endpointBObject.GetNamedString(MIDI_CONFIG_JSON_ENDPOINT_COMMON_IMAGE_PROPERTY, L"").c_str());
@@ -638,7 +638,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                             internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                            return E_FAIL;
+                            return internal::ConfigurationRejectionResult(E_FAIL);
                         }
 
                         if (definitionA->EndpointName.empty() || definitionB->EndpointName.empty())
@@ -657,7 +657,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                             internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                            return E_FAIL;
+                            return internal::ConfigurationRejectionResult(E_FAIL);
                         }
 
 
@@ -677,7 +677,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                             internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                            return E_FAIL;
+                            return internal::ConfigurationRejectionResult(E_FAIL);
                         }
 
 
@@ -702,7 +702,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                                 internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                                return E_FAIL;
+                                return internal::ConfigurationRejectionResult(E_FAIL);
                             }
 
                             if (internal::RemoveInvalidSWDUniqueIdCharacters(definitionA->EndpointUniqueIdentifier) != definitionA->EndpointUniqueIdentifier ||
@@ -722,7 +722,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                                 internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                                return E_FAIL;
+                                return internal::ConfigurationRejectionResult(E_FAIL);
                             }
                         }
 
@@ -747,7 +747,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                             internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                            return E_FAIL;
+                            return internal::ConfigurationRejectionResult(E_FAIL);
                         }
 
                         allocatedUniqueIdsA.emplace(definitionA->EndpointUniqueIdentifier, true);
@@ -770,7 +770,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                             internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                            return E_FAIL;
+                            return internal::ConfigurationRejectionResult(E_FAIL);
                         }
                          
                         allocatedUniqueIdsB.emplace(definitionB->EndpointUniqueIdentifier, true);
@@ -792,7 +792,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                                 {
                                     internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                                    return nameCheckHR;
+                                    return internal::ConfigurationRejectionResult(nameCheckHR);
                                 }
                             }
                         }
@@ -852,7 +852,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                                 internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                                return E_FAIL;
+                                return internal::ConfigurationRejectionResult(E_FAIL);
                             }
 
                         }
@@ -882,7 +882,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                         internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                        return E_FAIL;
+                        return internal::ConfigurationRejectionResult(E_FAIL);
 
                     }
                 }
@@ -900,7 +900,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                     internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                    return E_FAIL;
+                    return internal::ConfigurationRejectionResult(E_FAIL);
                 }
 
                 o.MoveNext();
@@ -977,7 +977,7 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
         }
 
         //auto updateArray = internal::JsonGetArrayProperty(jsonObject, MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_DEVICES_UPDATE_KEY);
-        if (Feature_Servicing_MIDI2LoopbackEndpointCustomization::IsEnabled())
+        if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
         {
             LOG_IF_FAILED(ProcessEndpointUpdates(jsonObject, responseObject));
         }
@@ -1144,16 +1144,8 @@ CMidi2LoopbackMidiConfigurationManager::ProcessEndpointUpdates(
             return S_FALSE;
         }
 
-        std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties{ nullptr };
-
-        if (Feature_Servicing_MIDI2EndpointImageFileNameValidation::IsEnabled())
-        {
-            customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJsonRejectingImagePath(customPropsJson);
-        }
-        else
-        {
-            customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJson(customPropsJson);
-        }
+        // This handler only runs when the gate is on, which is also when paths are rejected.
+        auto customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJsonRejectingImagePath(customPropsJson);
 
         if (customProperties == nullptr)
         {

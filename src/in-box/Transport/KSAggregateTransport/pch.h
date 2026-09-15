@@ -71,7 +71,7 @@
 #include "midi_group_terminal_blocks.h"
 #include "MidiStableStringHash.h"
 
-#include "Feature_Servicing_MIDI2EndpointCustomizationRelink.h"
+#include "Feature_Servicing_MIDI2EndpointCustomizationEnhancements.h"
 
 
 #include "MidiDefs.h"

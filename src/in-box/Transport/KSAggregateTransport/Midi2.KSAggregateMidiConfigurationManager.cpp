@@ -9,7 +9,6 @@
 
 #include "pch.h"
 #include "Feature_Servicing_MIDI2KSAWatcherHardening.h"
-#include "Feature_Servicing_MIDI2EndpointImageFileNameValidation.h"
 #include "Feature_Servicing_MIDI2PortNamingRework.h"
 
 #include "MidiEndpointCustomProperties.h"
@@ -133,7 +132,7 @@ CMidi2KSAggregateMidiConfigurationManager::ProcessEndpointCustomizations(
     LOG_IF_FAILED(m_customizationProcessor.ProcessUpdates(
         transportObject,
         resolver,
-        Feature_Servicing_MIDI2EndpointImageFileNameValidation::IsEnabled(),
+        true,           // this path only runs when the gate is on, which is also when paths are rejected
         results));
 
     LOG_IF_FAILED(m_customizationProcessor.ProcessRemovals(
@@ -177,7 +176,7 @@ CMidi2KSAggregateMidiConfigurationManager::ProcessCommand(
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_DISCONNECT_ENDPOINT, false);
         capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_RECONNECT_ENDPOINT, false);
 
-        if (Feature_Servicing_MIDI2EndpointCustomizationRelink::IsEnabled())
+        if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
         {
             capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_LIST_ENDPOINT_CUSTOMIZATIONS, true);
         }
@@ -190,7 +189,7 @@ CMidi2KSAggregateMidiConfigurationManager::ProcessCommand(
     {
         // A verb which used to fall through to "unrecognized", so the choice is gated rather than
         // the handler.
-        if (Feature_Servicing_MIDI2EndpointCustomizationRelink::IsEnabled())
+        if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
         {
             auto const resolver = [this](WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria& criteria)
                 {
@@ -234,14 +233,8 @@ CMidi2KSAggregateMidiConfigurationManager::ProcessCustomProperties(
     {
         auto customPropsJson = updateObject.GetNamedObject(WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::PropertyKey);
 
-        if (Feature_Servicing_MIDI2EndpointImageFileNameValidation::IsEnabled())
-        {
-            customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJsonRejectingImagePath(customPropsJson);
-        }
-        else
-        {
-            customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJson(customPropsJson);
-        }
+        // Only reached when the gate is off, so this reproduces what shipped.
+        customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJson(customPropsJson);
 
         if (customProperties != nullptr)
         {
@@ -379,7 +372,7 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
         // get all the updates we need to process
         auto updateArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY, nullptr);
 
-        if (Feature_Servicing_MIDI2EndpointCustomizationRelink::IsEnabled())
+        if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
         {
             LOG_IF_FAILED(ProcessEndpointCustomizations(jsonObject, responseObject));
         }

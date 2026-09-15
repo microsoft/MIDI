@@ -10,7 +10,7 @@
 
 #include "MidiEndpointCustomProperties.h"
 #include "MidiEndpointMatchCriteria.h"
-#include "Feature_Servicing_MIDI2EndpointImageFileNameValidation.h"
+#include "Feature_Servicing_MIDI2EndpointCustomizationEnhancements.h"
 #include "json_transport_command_helper.h"
 #include <mmdeviceapi.h>    // for E_NOTFOUND
 
@@ -839,6 +839,8 @@ CMidi2BasicLoopbackMidiConfigurationManager::UpdateConfiguration(
                         BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_REMOVAL_FAILED,
                         internal::ResourceGetWString(IDS_ERROR_ENDPOINT_REMOVAL_FAILED));
 
+                    internal::JsonStringifyObjectToOutParam(responseObject, response);
+
                     return S_FALSE;
                 }
 
@@ -975,7 +977,7 @@ CMidi2BasicLoopbackMidiConfigurationManager::ProcessEndpointUpdates(
 
         std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties{ nullptr };
 
-        if (Feature_Servicing_MIDI2EndpointImageFileNameValidation::IsEnabled())
+        if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
         {
             customProperties = WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties::FromJsonRejectingImagePath(customPropsJson);
         }
