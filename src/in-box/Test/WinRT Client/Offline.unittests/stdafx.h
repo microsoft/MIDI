@@ -48,6 +48,11 @@ using namespace winrt::Windows::Devices::Midi2::Utilities::Messages;
 #include "MidiMessage128Tests.h"
 #include "MidiMessagePacketTests.h"
 
+#include "MidiStreamMessageBuilderTests.h"
+#include "MidiCiMessageTests.h"
+#include "MidiCiProgramListTests.h"
+#include "MidiCiResponderTests.h"
+
 //#include "MidiFunctionBlockMessageBuilderTests.h"
 //#include "MidiMessageBuilderTests.h"
 //#include "MidiStreamMessageBuilderTests.h"
