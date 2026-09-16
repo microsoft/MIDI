@@ -262,6 +262,10 @@ namespace winrt::midikeyboard::implementation
 
         bool m_startupOptionsApplied{ false };
         bool m_reconnectInProgress{ false };
+
+        // lets the strip be redrawn once the endpoint list arrives, which is what turns the
+        // raw device id into the device's name
+        ::midikeyboard::ConnectResult m_lastConnectResult{ ::midikeyboard::ConnectResult::NoEndpointChosen };
         bool m_reconnectRequested{ false };
     };
 }

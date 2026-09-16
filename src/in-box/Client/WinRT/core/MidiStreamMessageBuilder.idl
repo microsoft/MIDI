@@ -18,6 +18,8 @@ import "MidiFunctionBlockDirectionEnum.idl";
 import "MidiFunctionBlockRepresentsMidi10ConnectionEnum.idl";
 import "MidiFunctionBlockUIHintEnum.idl";
 
+import "MidiDeclaredDeviceIdentity.idl";
+
 namespace Windows.Devices.Midi2.Utilities.Messages
 {
     [contract(MidiMessageUtilityApiContract,1)]
@@ -123,6 +125,11 @@ namespace Windows.Devices.Midi2.Utilities.Messages
 
         [noexcept] static String ParseFunctionBlockNameNotificationMessages(
             IIterable<Windows.Devices.Midi2.IMidiUniversalPacket> messages
+            );
+
+        // Returns null when the message is not a Device Identity Notification.
+        [noexcept] static Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity ParseDeviceIdentityNotificationMessage(
+            Windows.Devices.Midi2.IMidiUniversalPacket message
             );
 
     };

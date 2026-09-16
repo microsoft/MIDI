@@ -1,0 +1,550 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="midiplayer.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:midiplayer"
+    xmlns:shared="using:MidiAppShared"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid"
+          Loaded="OnRootLoaded"
+          AllowDrop="True"
+          DragOver="OnRootDragOver"
+          Drop="OnRootDrop"
+          Background="Transparent">
+
+        <Grid.Resources>
+            <!-- =============================== One queued file =============================== -->
+            <DataTemplate x:Key="QueueItemTemplate" x:DataType="local:QueueItem">
+                <Grid ColumnSpacing="10" Padding="0,4,0,4" Tag="{x:Bind Id}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <FontIcon Grid.Column="0"
+                              Glyph="&#xE768;"
+                              FontSize="12"
+                              VerticalAlignment="Center"
+                              Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                              Visibility="{x:Bind CurrentVisibility, Mode=OneWay}" />
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
+                                   TextWrapping="NoWrap"
+                                   TextTrimming="CharacterEllipsis" />
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE7BA;"
+                                      FontSize="11"
+                                      VerticalAlignment="Center"
+                                      Foreground="{ThemeResource SystemFillColorCautionBrush}"
+                                      Visibility="{x:Bind WarningVisibility, Mode=OneWay}" />
+                            <TextBlock Text="{x:Bind DetailText, Mode=OneWay}"
+                                       TextWrapping="NoWrap"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       Style="{ThemeResource CaptionTextBlockStyle}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <TextBlock Grid.Column="2"
+                               VerticalAlignment="Center"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}"
+                               Text="{x:Bind DurationText, Mode=OneWay}" />
+
+                    <Button Grid.Column="3"
+                            Width="30"
+                            Height="30"
+                            Padding="0"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Tag="{x:Bind Id}"
+                            AutomationProperties.Name="{x:Bind RemoveAccessibleName, Mode=OneWay}"
+                            Click="OnRemoveQueueItemClick">
+                        <FontIcon Glyph="&#xE711;" FontSize="12" />
+                    </Button>
+                </Grid>
+            </DataTemplate>
+
+            <!-- ================================ One track ================================ -->
+            <Style x:Key="TrackItemContainerStyle" TargetType="ListViewItem">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                <Setter Property="MinHeight" Value="0" />
+                <Setter Property="Padding" Value="8,2,4,2" />
+            </Style>
+
+            <DataTemplate x:Key="TrackItemTemplate" x:DataType="local:TrackItem">
+                <Grid ColumnSpacing="6"
+                      Opacity="{x:Bind ContentOpacity, Mode=OneWay}"
+                      ToolTipService.ToolTip="{x:Bind DetailText, Mode=OneWay}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="4" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- the same color the notes are drawn in, so a row and its notes connect.
+                         The dim strip is always there as identity; the bright one on top lights
+                         up with what the track is playing. -->
+                    <Grid Grid.Column="0">
+                        <Rectangle Width="4"
+                                   RadiusX="2"
+                                   RadiusY="2"
+                                   Opacity="0.25"
+                                   Fill="{x:Bind ColorBrush, Mode=OneWay}" />
+                        <Rectangle Width="4"
+                                   RadiusX="2"
+                                   RadiusY="2"
+                                   Opacity="{x:Bind ActivityLevel, Mode=OneWay}"
+                                   Fill="{x:Bind ColorBrush, Mode=OneWay}" />
+                    </Grid>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
+                                   TextWrapping="NoWrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   Style="{ThemeResource CaptionTextBlockStyle}" />
+                        <TextBlock Text="{x:Bind PatchText, Mode=OneWay}"
+                                   TextWrapping="NoWrap"
+                                   TextTrimming="CharacterEllipsis"
+                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   Style="{ThemeResource CaptionTextBlockStyle}" />
+                    </StackPanel>
+
+                    <ToggleButton Grid.Column="2"
+                                  Width="26"
+                                  Height="26"
+                                  Padding="0"
+                                  MinWidth="0"
+                                  VerticalAlignment="Center"
+                                  Tag="{x:Bind TrackIndex, Mode=OneWay}"
+                                  IsChecked="{x:Bind IsMuted, Mode=OneWay}"
+                                  AutomationProperties.Name="{x:Bind MuteAccessibleName, Mode=OneWay}"
+                                  Click="OnTrackMuteClick">
+                        <TextBlock Text="M" FontSize="11" />
+                    </ToggleButton>
+
+                    <ToggleButton Grid.Column="3"
+                                  Width="26"
+                                  Height="26"
+                                  Padding="0"
+                                  MinWidth="0"
+                                  VerticalAlignment="Center"
+                                  Tag="{x:Bind TrackIndex, Mode=OneWay}"
+                                  IsChecked="{x:Bind IsSolo, Mode=OneWay}"
+                                  AutomationProperties.Name="{x:Bind SoloAccessibleName, Mode=OneWay}"
+                                  Click="OnTrackSoloClick">
+                        <TextBlock Text="S" FontSize="11" />
+                    </ToggleButton>
+                </Grid>
+            </DataTemplate>
+
+            <!-- ============================ Endpoint picker rows ============================ -->
+            <DataTemplate x:Key="EndpointChoiceTemplate" x:DataType="shared:EndpointChoice">
+                <Grid ColumnSpacing="8" Margin="0,2,0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Image Grid.Column="0"
+                           Width="20"
+                           Height="20"
+                           VerticalAlignment="Center"
+                           Source="{x:Bind ImageSource}"
+                           Visibility="{x:Bind ImageVisibility}" />
+
+                    <TextBlock Grid.Column="1"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               Text="{x:Bind DisplayName}" />
+                </Grid>
+            </DataTemplate>
+
+            <DataTemplate x:Key="NamedChoiceTemplate" x:DataType="shared:NamedChoice">
+                <TextBlock Text="{x:Bind DisplayName}" TextTrimming="CharacterEllipsis" />
+            </DataTemplate>
+        </Grid.Resources>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- hidden when a system backdrop is in use, so the material shows through -->
+        <Border x:Name="WindowFill"
+                Grid.Row="0"
+                Grid.RowSpan="4"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
+
+        <!-- a separate layer, so switching back to the default color just hides it and the
+             theme bound fill underneath returns -->
+        <Border x:Name="WindowTint"
+                Grid.Row="0"
+                Grid.RowSpan="4"
+                Visibility="Collapsed" />
+
+        <!-- ============================ Title bar drag region ============================ -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+
+            <Image x:Name="AppTitleBarIcon"
+                   Grid.Column="1"
+                   Width="16"
+                   Height="16"
+                   Margin="12,0,0,0"
+                   VerticalAlignment="Center" />
+
+            <TextBlock x:Name="AppTitleTextBlock"
+                       Grid.Column="2"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       TextTrimming="CharacterEllipsis"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+
+            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top">
+                <StackPanel.Resources>
+                    <SolidColorBrush x:Key="ToggleButtonBackground" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
+                    <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
+                    <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
+                </StackPanel.Resources>
+
+                <ToggleButton x:Name="SettingsToggle"
+                              x:Uid="SettingsToggle"
+                              AutomationProperties.AutomationId="SettingsToggle"
+                              Width="46"
+                              Height="32"
+                              Padding="0"
+                              BorderThickness="0"
+                              Click="OnSettingsToggleClick">
+                    <FontIcon Glyph="&#xE713;" FontSize="14" />
+                </ToggleButton>
+
+                <ToggleButton x:Name="AlwaysOnTopToggle"
+                              x:Uid="AlwaysOnTopToggle"
+                              AutomationProperties.AutomationId="AlwaysOnTopToggle"
+                              Width="46"
+                              Height="32"
+                              Padding="0"
+                              BorderThickness="0"
+                              Click="OnAlwaysOnTopToggled">
+                    <FontIcon Glyph="&#xE718;" FontSize="14" />
+                </ToggleButton>
+            </StackPanel>
+        </Grid>
+
+        <!-- ================================= Now playing ================================= -->
+        <StackPanel Grid.Row="1" Margin="20,4,20,12" Spacing="10">
+
+            <Grid ColumnSpacing="16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Spacing="2">
+                    <TextBlock x:Name="NowPlayingTitleText"
+                               AutomationProperties.AutomationId="NowPlayingTitleText"
+                               FontSize="22"
+                               FontWeight="SemiBold"
+                               LineHeight="28"
+                               TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+
+                    <TextBlock x:Name="NowPlayingDetailText"
+                               AutomationProperties.AutomationId="NowPlayingDetailText"
+                               TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                </StackPanel>
+
+                <!-- Only shown for files which carry chord symbols, which is a small minority. -->
+                <StackPanel x:Name="ChordPanel"
+                            Grid.Column="1"
+                            Spacing="0"
+                            MinWidth="92"
+                            Visibility="Collapsed"
+                            HorizontalAlignment="Right">
+                    <TextBlock x:Uid="ChordCaption"
+                               HorizontalAlignment="Right"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                    <TextBlock x:Name="ChordText"
+                               AutomationProperties.AutomationId="ChordText"
+                               HorizontalAlignment="Right"
+                               FontSize="22"
+                               FontWeight="SemiBold"
+                               LineHeight="28"
+                               TextWrapping="NoWrap" />
+                </StackPanel>
+            </Grid>
+
+            <!-- position -->
+            <Grid ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock x:Name="ElapsedText"
+                           Grid.Column="0"
+                           MinWidth="40"
+                           VerticalAlignment="Center"
+                           TextAlignment="Right"
+                           FontFamily="Consolas"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Text="0:00" />
+
+                <Slider x:Name="PositionSlider"
+                        x:Uid="PositionSlider"
+                        Grid.Column="1"
+                        AutomationProperties.AutomationId="PositionSlider"
+                        Minimum="0"
+                        Maximum="1000"
+                        StepFrequency="1"
+                        IsThumbToolTipEnabled="False"
+                        Margin="0,-6,0,0"
+                        IsEnabled="False"
+                        PointerPressed="OnPositionSliderPointerPressed"
+                        PointerReleased="OnPositionSliderPointerReleased"
+                        PointerCaptureLost="OnPositionSliderPointerReleased"
+                        ValueChanged="OnPositionSliderValueChanged" />
+
+                <TextBlock x:Name="DurationTextBlock"
+                           Grid.Column="2"
+                           MinWidth="40"
+                           VerticalAlignment="Center"
+                           FontFamily="Consolas"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                           Style="{ThemeResource CaptionTextBlockStyle}"
+                           Text="0:00" />
+            </Grid>
+
+            <!-- transport -->
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
+                    <Button x:Name="OpenFilesButton"
+                            x:Uid="OpenFilesButton"
+                            AutomationProperties.AutomationId="OpenFilesButton"
+                            Height="34"
+                            Click="OnOpenFilesClick">
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon Glyph="&#xE8E5;" FontSize="14" />
+                            <TextBlock x:Uid="OpenFilesButtonLabel" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
+                    <Button x:Name="PreviousButton"
+                            x:Uid="PreviousButton"
+                            AutomationProperties.AutomationId="PreviousButton"
+                            Width="40" Height="40" Padding="0"
+                            Click="OnPreviousClick">
+                        <FontIcon Glyph="&#xE892;" FontSize="14" />
+                    </Button>
+
+                    <Button x:Name="PlayPauseButton"
+                            x:Uid="PlayPauseButton"
+                            AutomationProperties.AutomationId="PlayPauseButton"
+                            Width="52" Height="52" Padding="0"
+                            CornerRadius="26"
+                            Style="{ThemeResource AccentButtonStyle}"
+                            Click="OnPlayPauseClick">
+                        <FontIcon x:Name="PlayPauseIcon" Glyph="&#xE768;" FontSize="18" />
+                    </Button>
+
+                    <Button x:Name="StopButton"
+                            x:Uid="StopButton"
+                            AutomationProperties.AutomationId="StopButton"
+                            Width="40" Height="40" Padding="0"
+                            Click="OnStopClick">
+                        <FontIcon Glyph="&#xE71A;" FontSize="14" />
+                    </Button>
+
+                    <Button x:Name="NextButton"
+                            x:Uid="NextButton"
+                            AutomationProperties.AutomationId="NextButton"
+                            Width="40" Height="40" Padding="0"
+                            Click="OnNextClick">
+                        <FontIcon Glyph="&#xE893;" FontSize="14" />
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4"
+                            HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <ToggleButton x:Name="RepeatToggle"
+                                  x:Uid="RepeatToggle"
+                                  AutomationProperties.AutomationId="RepeatToggle"
+                                  Width="40" Height="34" Padding="0"
+                                  Click="OnRepeatToggled">
+                        <FontIcon Glyph="&#xE8EE;" FontSize="14" />
+                    </ToggleButton>
+
+                    <ToggleButton x:Name="QueueToggle"
+                                  x:Uid="QueueToggle"
+                                  AutomationProperties.AutomationId="QueueToggle"
+                                  Width="40" Height="34" Padding="0"
+                                  Click="OnQueueToggled">
+                        <FontIcon Glyph="&#xE90B;" FontSize="14" />
+                    </ToggleButton>
+                </StackPanel>
+            </Grid>
+        </StackPanel>
+
+<!-- ========================= Notes, tracks and the queue ========================= -->
+        <Grid Grid.Row="2" Margin="20,0,20,0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" MinHeight="140" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- the track rail and the scrolling notes -->
+            <Grid x:Name="RollPanel" Grid.Row="0" Margin="0,0,0,10" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <ListView x:Name="TrackList"
+                          Grid.Column="0"
+                          Width="196"
+                          AutomationProperties.AutomationId="TrackList"
+                          SelectionMode="None"
+                          ItemTemplate="{StaticResource TrackItemTemplate}"
+                          ItemContainerStyle="{StaticResource TrackItemContainerStyle}" />
+
+                <Border x:Name="NoteRollHost"
+                        Grid.Column="1"
+                        AutomationProperties.AutomationId="NoteRollHost"
+                        CornerRadius="6"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        SizeChanged="OnNoteRollSizeChanged" />
+            </Grid>
+
+            <Grid x:Name="QueuePanel" Grid.Row="1">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,4">
+                    <TextBlock x:Name="QueueHeaderText"
+                               VerticalAlignment="Center"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                    <Button x:Name="ClearQueueButton"
+                            x:Uid="ClearQueueButton"
+                            AutomationProperties.AutomationId="ClearQueueButton"
+                            HorizontalAlignment="Right"
+                            Height="28"
+                            Padding="10,0,10,0"
+                            Background="Transparent"
+                            BorderThickness="0"
+                            Click="OnClearQueueClick">
+                        <TextBlock x:Uid="ClearQueueButtonLabel" Style="{ThemeResource CaptionTextBlockStyle}" />
+                    </Button>
+                </Grid>
+
+                <ListView x:Name="QueueList"
+                          Grid.Row="1"
+                          AutomationProperties.AutomationId="QueueList"
+                          MaxHeight="216"
+                          SelectionMode="Single"
+                          ItemTemplate="{StaticResource QueueItemTemplate}"
+                          DoubleTapped="OnQueueItemDoubleTapped">
+                    <ListView.ItemContainerStyle>
+                        <Style TargetType="ListViewItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="MinHeight" Value="46" />
+                            <Setter Property="Padding" Value="10,0,6,0" />
+                        </Style>
+                    </ListView.ItemContainerStyle>
+                </ListView>
+
+                <StackPanel x:Name="EmptyQueuePanel"
+                            Grid.Row="1"
+                            Spacing="8"
+                            Padding="0,18,0,18"
+                            HorizontalAlignment="Center"
+                            VerticalAlignment="Center">
+                    <FontIcon Glyph="&#xEC4F;" FontSize="28" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                    <TextBlock x:Uid="EmptyQueueTitle"
+                               HorizontalAlignment="Center"
+                               Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                    <TextBlock x:Uid="EmptyQueueDescription"
+                               HorizontalAlignment="Center"
+                               TextAlignment="Center"
+                               MaxWidth="360"
+                               TextWrapping="Wrap"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                </StackPanel>
+            </Grid>
+        </Grid>
+
+        <!-- ================================ Where it plays ================================ -->
+        <StackPanel Grid.Row="3" Spacing="6" Padding="20,12,20,14">
+            <InfoBar x:Name="StatusInfoBar"
+                     AutomationProperties.AutomationId="StatusInfoBar"
+                     IsOpen="False"
+                     IsClosable="True"
+                     Severity="Informational" />
+
+            <Grid ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <ComboBox x:Name="EndpointComboBox"
+                          x:Uid="EndpointComboBox"
+                          Grid.Column="0"
+                          AutomationProperties.AutomationId="EndpointComboBox"
+                          HorizontalAlignment="Stretch"
+                          ItemTemplate="{StaticResource EndpointChoiceTemplate}"
+                          SelectionChanged="OnEndpointSelectionChanged" />
+
+                <ComboBox x:Name="GroupComboBox"
+                          x:Uid="GroupComboBox"
+                          Grid.Column="1"
+                          AutomationProperties.AutomationId="GroupComboBox"
+                          MinWidth="190"
+                          ItemTemplate="{StaticResource NamedChoiceTemplate}"
+                          SelectionChanged="OnGroupSelectionChanged" />
+            </Grid>
+        </StackPanel>
+    </Grid>
+</Window>

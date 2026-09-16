@@ -1,0 +1,35 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+namespace midiplayer
+{
+    // One track of the file being played, as the track list shows it.
+    [default_interface]
+    runtimeclass TrackItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        TrackItem();
+
+        Int32 TrackIndex{ get; };
+        String DisplayName{ get; };
+        String DetailText{ get; };
+        String PatchText{ get; };
+
+        Microsoft.UI.Xaml.Media.Brush ColorBrush{ get; };
+
+        Boolean IsMuted{ get; };
+        Boolean IsSolo{ get; };
+
+        // 0 when the track is silent, rising with the number of notes it is holding.
+        Double ActivityLevel{ get; };
+
+        // Dimmed when another track is soloed, or this one is muted.
+        Double ContentOpacity{ get; };
+
+        String MuteAccessibleName{ get; };
+        String SoloAccessibleName{ get; };
+    }
+}

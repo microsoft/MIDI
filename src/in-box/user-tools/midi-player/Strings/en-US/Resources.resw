@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- ==================================== App ==================================== -->
+  <data name="AppDisplayName" xml:space="preserve">
+    <value>Windows MIDI Player</value>
+  </data>
+
+  <!-- ================================= Title bar ================================= -->
+  <data name="SettingsToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="SettingsToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Always on top</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keep this window above other windows</value>
+  </data>
+
+  <!-- ================================ Now playing ================================ -->
+  <data name="NowPlayingNothing" xml:space="preserve">
+    <value>Nothing to play</value>
+  </data>
+  <data name="NowPlayingDetailFormat" xml:space="preserve">
+    <value>{0} tracks · {1} notes · {2} BPM</value>
+    <comment>{0} number of tracks, {1} number of notes, {2} tempo in beats per minute</comment>
+  </data>
+  <data name="ChordCaption.Text" xml:space="preserve">
+    <value>CHORD</value>
+    <comment>Small caption above the chord symbol, for files which carry chord names</comment>
+  </data>
+  <data name="ChordText.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Current chord</value>
+  </data>
+
+  <!-- ================================= Transport ================================= -->
+  <data name="PositionSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Position</value>
+  </data>
+  <data name="OpenFilesButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Add MIDI files to the queue</value>
+  </data>
+  <data name="OpenFilesButtonLabel.Text" xml:space="preserve">
+    <value>Add files</value>
+  </data>
+  <data name="PreviousButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Previous</value>
+  </data>
+  <data name="PreviousButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Start this file again, or go back to the one before it</value>
+  </data>
+  <data name="PlayPauseButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="PlayPauseButtonPlay" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="PlayPauseButtonPause" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="StopButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="NextButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Next</value>
+  </data>
+  <data name="RepeatToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Repeat the queue</value>
+  </data>
+  <data name="RepeatToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Start again from the top when the last file finishes</value>
+  </data>
+  <data name="QueueToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show the queue</value>
+  </data>
+  <data name="QueueToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Show or hide the list of queued files</value>
+  </data>
+
+  <!-- =================================== Queue =================================== -->
+  <data name="QueueHeaderFormat" xml:space="preserve">
+    <value>Queue · {0} files</value>
+    <comment>{0} number of files in the queue</comment>
+  </data>
+  <data name="ClearQueueButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Clear the queue</value>
+  </data>
+  <data name="ClearQueueButtonLabel.Text" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="QueueItemDetailFormat" xml:space="preserve">
+    <value>{0} tracks · {1} notes · {2} BPM</value>
+    <comment>{0} number of tracks, {1} number of notes, {2} tempo in beats per minute</comment>
+  </data>
+  <data name="QueueItemNotPlayable" xml:space="preserve">
+    <value>This file does not contain anything that can be played</value>
+  </data>
+  <data name="QueueItemFileNotFound" xml:space="preserve">
+    <value>This file is no longer there</value>
+  </data>
+  <data name="QueueItemAccessDenied" xml:space="preserve">
+    <value>This file could not be opened</value>
+  </data>
+  <data name="QueueItemFileTooLarge" xml:space="preserve">
+    <value>This file is too large to be a MIDI file</value>
+  </data>
+  <data name="QueueRemoveAccessibleNameFormat" xml:space="preserve">
+    <value>Remove {0} from the queue</value>
+    <comment>{0} name of the file</comment>
+  </data>
+  <data name="EmptyQueueTitle.Text" xml:space="preserve">
+    <value>No files yet</value>
+  </data>
+  <data name="EmptyQueueDescription.Text" xml:space="preserve">
+    <value>Add MIDI files, or drag them onto this window, and they play one after another.</value>
+  </data>
+  <data name="DropCaption" xml:space="preserve">
+    <value>Add to the queue</value>
+  </data>
+
+  <!-- =================================== Tracks =================================== -->
+  <data name="TrackUnnamedFormat" xml:space="preserve">
+    <value>Track {0}</value>
+    <comment>{0} track number, counted from 1, used when the file names no track</comment>
+  </data>
+  <data name="TrackChannelFormat" xml:space="preserve">
+    <value>Ch {0}</value>
+    <comment>{0} MIDI channel number, counted from 1</comment>
+  </data>
+  <data name="TrackChannelCountFormat" xml:space="preserve">
+    <value>{0} channels</value>
+    <comment>{0} how many MIDI channels this track plays on</comment>
+  </data>
+  <data name="TrackNoteCountFormat" xml:space="preserve">
+    <value>{0} notes</value>
+    <comment>{0} number of notes on this track</comment>
+  </data>
+  <data name="TrackMuteAccessibleNameFormat" xml:space="preserve">
+    <value>Mute {0}</value>
+    <comment>{0} name of the track</comment>
+  </data>
+  <data name="TrackUnmuteAccessibleNameFormat" xml:space="preserve">
+    <value>Unmute {0}</value>
+    <comment>{0} name of the track</comment>
+  </data>
+  <data name="TrackSoloAccessibleNameFormat" xml:space="preserve">
+    <value>Play only {0}</value>
+    <comment>{0} name of the track</comment>
+  </data>
+  <data name="TrackUnsoloAccessibleNameFormat" xml:space="preserve">
+    <value>Stop playing only {0}</value>
+    <comment>{0} name of the track</comment>
+  </data>
+  <data name="TrackList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Tracks</value>
+  </data>
+  <data name="NoteRollHost.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+
+  <!-- ================================= Endpoints ================================= -->
+  <data name="EndpointComboBox.Header" xml:space="preserve">
+    <value>Play to</value>
+  </data>
+  <data name="EndpointComboBox.PlaceholderText" xml:space="preserve">
+    <value>Choose a MIDI output</value>
+  </data>
+  <data name="EndpointComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Play to</value>
+  </data>
+  <data name="GroupComboBox.Header" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="GroupComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="GroupNumberFormat" xml:space="preserve">
+    <value>Group {0}</value>
+    <comment>{0} group number, counted from 1</comment>
+  </data>
+  <data name="GroupNumberAndNameFormat" xml:space="preserve">
+    <value>Group {0} - {1}</value>
+    <comment>{0} group number counted from 1, {1} the name the device gives that group</comment>
+  </data>
+
+  <!-- ================================== Messages ================================== -->
+  <data name="StatusChooseEndpoint" xml:space="preserve">
+    <value>Choose a MIDI output before playing.</value>
+  </data>
+  <data name="StatusSavedEndpointMissing" xml:space="preserve">
+    <value>The MIDI output you last used is not available. Choose another one before playing.</value>
+  </data>
+  <data name="StatusServiceUnavailable" xml:space="preserve">
+    <value>Windows MIDI Services is not running, so there is nothing to play to.</value>
+  </data>
+  <data name="StatusEndpointConnectFailed" xml:space="preserve">
+    <value>The chosen MIDI output could not be opened.</value>
+  </data>
+  <data name="StatusFileNotPlayable" xml:space="preserve">
+    <value>This file could not be played.</value>
+  </data>
+  <data name="StatusFilesNotPlayableFormat" xml:space="preserve">
+    <value>{0} files in the queue could not be read. They are marked in the list.</value>
+    <comment>{0} number of files</comment>
+  </data>
+  <data name="StatusNothingToPlayDropped" xml:space="preserve">
+    <value>None of those were MIDI files.</value>
+  </data>
+
+  <!-- ================================= Appearance ================================= -->
+  <data name="AppearanceTitle" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="AppearanceTheme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="AppearanceThemeSystem" xml:space="preserve">
+    <value>Use system setting</value>
+  </data>
+  <data name="AppearanceThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="AppearanceThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="AppearanceBackdrop" xml:space="preserve">
+    <value>Window background</value>
+  </data>
+  <data name="AppearanceBackdropSolid" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="AppearanceBackdropMica" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="AppearanceBackdropAcrylic" xml:space="preserve">
+    <value>Acrylic</value>
+  </data>
+  <data name="AppearanceCustomColor" xml:space="preserve">
+    <value>Use a custom color</value>
+  </data>
+  <data name="AppearanceColorPickerName" xml:space="preserve">
+    <value>Window color</value>
+  </data>
+</root>

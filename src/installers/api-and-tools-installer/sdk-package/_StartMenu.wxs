@@ -25,6 +25,10 @@
                   Name="Windows MIDI Keyboard"
                   Target="[#midikeyboardExe]"
                   WorkingDirectory="TOOL_KEYBOARD_FOLDER" />
+        <Shortcut Id="Shortcut_midiplayer"
+                  Name="Windows MIDI Player"
+                  Target="[#midiplayerExe]"
+                  WorkingDirectory="TOOL_PLAYER_FOLDER" />
         <Shortcut Id="Shortcut_midiclock"
                   Name="Windows MIDI Clock"
                   Target="[#midiclockExe]"

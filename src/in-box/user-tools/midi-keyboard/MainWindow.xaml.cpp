@@ -609,6 +609,9 @@ namespace winrt::midikeyboard::implementation
                 RefreshGroupList();
                 ReconnectAsync();
             }
+
+            // the list is what carries the device's name, so the strip can only show it now
+            UpdateConnectionDisplay(m_lastConnectResult);
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to refresh the endpoint list.")
     }
@@ -774,6 +777,8 @@ namespace winrt::midikeyboard::implementation
             auto const& settings = native::AppSettings::Current();
             auto const connected = result == native::ConnectResult::Success;
 
+            m_lastConnectResult = result;
+
             ConnectionStateDot().Fill(LookupBrush(
                 connected ? L"SystemFillColorSuccessBrush" : L"SystemFillColorCriticalBrush"));
 
@@ -803,11 +808,24 @@ namespace winrt::midikeyboard::implementation
                 return;
             }
 
-            winrt::hstring endpointName{ settings.EndpointDeviceId() };
+            winrt::hstring const endpointId{ settings.EndpointDeviceId() };
+            winrt::hstring endpointName{ endpointId };
 
-            if (auto const choice = EndpointComboBox().SelectedItem().try_as<appshared::EndpointChoice>())
+            // The combo lives in the settings panel and is populated later than this runs, so
+            // resolve against the endpoint list itself rather than against its selection.
+            if (m_endpoints != nullptr)
             {
-                endpointName = choice.DisplayName();
+                for (uint32_t i = 0; i < m_endpoints.Size(); i++)
+                {
+                    auto const choice = m_endpoints.GetAt(i);
+
+                    if (choice != nullptr &&
+                        midiapp::EndpointIdsMatch(choice.EndpointDeviceId(), endpointId))
+                    {
+                        endpointName = choice.DisplayName();
+                        break;
+                    }
+                }
             }
 
             SetStripText(ConnectionNameText(), endpointName);

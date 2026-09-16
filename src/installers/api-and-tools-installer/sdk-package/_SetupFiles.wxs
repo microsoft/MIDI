@@ -13,6 +13,8 @@
     </DirectoryRef>
     <DirectoryRef Id="TOOL_KEYBOARD_FOLDER">
     </DirectoryRef>
+    <DirectoryRef Id="TOOL_PLAYER_FOLDER">
+    </DirectoryRef>
     <DirectoryRef Id="TOOL_CLOCK_FOLDER">
     </DirectoryRef>
     <DirectoryRef Id="TOOL_SYSEX_FOLDER">
@@ -150,6 +152,32 @@
       </Component>
       <Component Id="c70184BEB5F481A88" Bitness="always64" Directory="TOOL_KEYBOARD_FOLDER"> <!-- Windows.Devices.Midi2.pri -->
         <File Id="f70184BEB5F481A88" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Keyboard\Windows.Devices.Midi2.pri" Vital="true" />
+      </Component>
+
+      <!-- app-sdk\$(var.Platform)\Player -->
+      <Component Id="c3FB1630E4890311D" Bitness="always64" Directory="TOOL_PLAYER_FOLDER"> <!-- App.xbf -->
+        <File Id="f3FB1630E4890311D" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Player\App.xbf" Vital="true" />
+      </Component>
+      <Component Id="c6BD2CD3A173A9C1E" Bitness="always64" Directory="TOOL_PLAYER_FOLDER"> <!-- MainWindow.xbf -->
+        <File Id="f6BD2CD3A173A9C1E" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Player\MainWindow.xbf" Vital="true" />
+      </Component>
+      <Component Id="c6D085F3E7A077B93" Bitness="always64" Directory="TOOL_PLAYER_FOLDER"> <!-- Microsoft.Web.WebView2.Core.dll -->
+        <File Id="f6D085F3E7A077B93" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Player\Microsoft.Web.WebView2.Core.dll" Vital="true" />
+      </Component>
+      <Component Id="c707FFD27CE083552" Bitness="always64" Directory="TOOL_PLAYER_FOLDER"> <!-- Microsoft.WindowsAppRuntime.Bootstrap.dll -->
+        <File Id="f707FFD27CE083552" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Player\Microsoft.WindowsAppRuntime.Bootstrap.dll" Vital="true" />
+      </Component>
+      <Component Id="cEDBAF0746168CC1A" Bitness="always64" Directory="TOOL_PLAYER_FOLDER"> <!-- midiplayer.exe -->
+        <File Id="midiplayerExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Player\midiplayer.exe" Vital="true" />
+      </Component>
+      <Component Id="c07ADAAE4E0EC5EF0" Bitness="always64" Directory="TOOL_PLAYER_FOLDER"> <!-- resources.pri -->
+        <File Id="f07ADAAE4E0EC5EF0" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Player\resources.pri" Vital="true" />
+      </Component>
+      <Component Id="c6D1890565EB75D7B" Bitness="always64" Directory="TOOL_PLAYER_FOLDER"> <!-- Windows.Devices.Midi2.dll -->
+        <File Id="f6D1890565EB75D7B" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Player\Windows.Devices.Midi2.dll" Vital="true" />
+      </Component>
+      <Component Id="c0CFEC89D6677F53D" Bitness="always64" Directory="TOOL_PLAYER_FOLDER"> <!-- Windows.Devices.Midi2.pri -->
+        <File Id="f0CFEC89D6677F53D" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Player\Windows.Devices.Midi2.pri" Vital="true" />
       </Component>
 
       <!-- app-sdk\$(var.Platform)\Clock -->

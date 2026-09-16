@@ -28,6 +28,7 @@
                     <Directory Id="TOOL_LOOPSETUP_FOLDER" Name="LoopSetup" />
                     <Directory Id="TOOL_SCRATCHPAD_FOLDER" Name="ScratchPad" />
                     <Directory Id="TOOL_KEYBOARD_FOLDER" Name="Keyboard" />
+                    <Directory Id="TOOL_PLAYER_FOLDER" Name="Player" />
                     <Directory Id="TOOL_CLOCK_FOLDER" Name="Clock" />
                     <Directory Id="TOOL_SYSEX_FOLDER" Name="SysEx" />
                     <Directory Id="TOOL_MONITOR_FOLDER" Name="Monitor" />
@@ -91,11 +92,89 @@
         </RegistryKey>
     </Component>
 
+    <!--
+        MIDI file associations for the player.
+
+        !! THIS DELIBERATELY DOES NOT TAKE THE DEFAULT ASSOCIATION. !!
+        Windows does not allow an installer to choose which application opens a file type; that is
+        the customer's decision and only they can make it. So this registers a ProgId, adds it to
+        each extension's OpenWithProgIds list, and publishes the app's capabilities so it appears
+        in Settings under Default apps. The extension's own default value is never written. Do not
+        "fix" this by writing it - the shell detects hijacking and the association would be reset
+        anyway, after showing the customer a warning about our app.
+
+        The file type and application names are indirect string references into the executable, so
+        they are localized along with the rest of the app rather than frozen in English here.
+    -->
+    <Component Id="WindowsMidiServicesMidiFileAssociation"
+               Permanent="no"
+               Bitness="always64"
+               Directory="TOOL_PLAYER_FOLDER"
+               Guid="2c8b4f6a-1d93-4e55-8a70-5b31c9e0d742">
+
+      <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\WindowsMidiServices.MidiFile" ForceDeleteOnUninstall="yes">
+        <RegistryValue Type="string" Value="MIDI File" />
+        <RegistryValue Type="string" Name="FriendlyTypeName" Value="@[#midiplayerExe],-101" />
+        <RegistryKey Key="DefaultIcon">
+          <RegistryValue Type="string" Value="[#midiplayerExe],0" />
+        </RegistryKey>
+        <RegistryKey Key="shell\open\command">
+          <RegistryValue Type="string" Value="&quot;[#midiplayerExe]&quot; &quot;%1&quot;" />
+        </RegistryKey>
+      </RegistryKey>
+
+      <!-- Adding to the list, not replacing the default. -->
+      <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.mid\OpenWithProgIds"  Name="WindowsMidiServices.MidiFile" Type="string" Value="" />
+      <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.midi\OpenWithProgIds" Name="WindowsMidiServices.MidiFile" Type="string" Value="" />
+      <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.kar\OpenWithProgIds"  Name="WindowsMidiServices.MidiFile" Type="string" Value="" />
+      <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.rmi\OpenWithProgIds"  Name="WindowsMidiServices.MidiFile" Type="string" Value="" />
+      <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.smf\OpenWithProgIds"  Name="WindowsMidiServices.MidiFile" Type="string" Value="" />
+
+      <!-- What puts the app in the Open With list, and gives it a name there. -->
+      <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Applications\midiplayer.exe" ForceDeleteOnUninstall="yes">
+        <RegistryValue Type="string" Name="FriendlyAppName" Value="@[#midiplayerExe],-102" />
+        <RegistryKey Key="shell\open\command">
+          <RegistryValue Type="string" Value="&quot;[#midiplayerExe]&quot; &quot;%1&quot;" />
+        </RegistryKey>
+        <RegistryKey Key="SupportedTypes">
+          <RegistryValue Type="string" Name=".mid" Value="" />
+          <RegistryValue Type="string" Name=".midi" Value="" />
+          <RegistryValue Type="string" Name=".kar" Value="" />
+          <RegistryValue Type="string" Name=".rmi" Value="" />
+          <RegistryValue Type="string" Name=".smf" Value="" />
+        </RegistryKey>
+      </RegistryKey>
+
+      <!-- Default apps in Settings reads this. -->
+      <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Player\Capabilities" ForceDeleteOnUninstall="yes">
+        <RegistryValue Type="string" Name="ApplicationName" Value="@[#midiplayerExe],-102" />
+        <RegistryValue Type="string" Name="ApplicationDescription" Value="Plays MIDI files through Windows MIDI Services." />
+        <RegistryKey Key="FileAssociations">
+          <RegistryValue Type="string" Name=".mid" Value="WindowsMidiServices.MidiFile" />
+          <RegistryValue Type="string" Name=".midi" Value="WindowsMidiServices.MidiFile" />
+          <RegistryValue Type="string" Name=".kar" Value="WindowsMidiServices.MidiFile" />
+          <RegistryValue Type="string" Name=".rmi" Value="WindowsMidiServices.MidiFile" />
+          <RegistryValue Type="string" Name=".smf" Value="WindowsMidiServices.MidiFile" />
+        </RegistryKey>
+      </RegistryKey>
+
+      <RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications"
+                     Name="Windows MIDI Player"
+                     Type="string"
+                     Value="SOFTWARE\Microsoft\Windows MIDI Services\Player\Capabilities" />
+
+      <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\Desktop App SDK Runtime">
+        <RegistryValue Type="string" Name="MidiFileAssociation" Value="registered" KeyPath="yes" />
+      </RegistryKey>
+
+    </Component>
+
     <Feature Id="WindowsMIDIServices">
             <ComponentGroupRef Id="SdkRedistFiles" />
             <ComponentGroupRef Id="ToolAppShortcuts" />
             <ComponentRef Id="WindowsMidiServicesToolsRegistration" />
             <ComponentRef Id="WindowsMidiServicesCollectMidiLogsRegistration"/>
+            <ComponentRef Id="WindowsMidiServicesMidiFileAssociation"/>
     </Feature>
 
     <!-- The Run entry only takes effect at the next sign-in, so without this the customer would

@@ -33,6 +33,10 @@ namespace midiapp
         // Doing nothing when this instance did not acquire ownership is deliberate.
         static void PublishMainWindow(_In_ HWND const window) noexcept;
 
+        // The running instance's window, or null. A tool which opens documents needs this so
+        // that a second launch can hand its file over rather than losing it.
+        static HWND FindExistingWindow(_In_ std::wstring const& appKey) noexcept;
+
         static void Release() noexcept;
 
     private:

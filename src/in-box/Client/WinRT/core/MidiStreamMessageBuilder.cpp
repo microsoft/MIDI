@@ -9,6 +9,7 @@
 
 #include "pch.h"
 #include "MidiStreamMessageBuilder.h"
+#include "MidiDeclaredDeviceIdentity.h"
 #include "Utilities.Messages.MidiStreamMessageBuilder.g.cpp"
 
 
@@ -99,20 +100,24 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         uint32_t word2{ 0 };
         uint32_t word3{ 0 };
 
-        word1 |= static_cast<uint32_t>(internal::CleanupByte7(deviceManufacturerSysExIdByte1)) << 16;
-        word1 |= static_cast<uint32_t>(internal::CleanupByte7(deviceManufacturerSysExIdByte2)) << 8;
-        word1 |= static_cast<uint32_t>(internal::CleanupByte7(deviceManufacturerSysExIdByte3));
+        internal::DeviceIdentityFields identity{};
 
-        word2 |= static_cast<uint32_t>(internal::CleanupByte7(deviceFamilyLsb)) << 24;
-        word2 |= static_cast<uint32_t>(internal::CleanupByte7(deviceFamilyMsb)) << 16;
-        word2 |= static_cast<uint32_t>(internal::CleanupByte7(deviceFamilyModelNumberLsb)) << 8;
-        word2 |= static_cast<uint32_t>(internal::CleanupByte7(deviceFamilyModelNumberMsb));
+        identity.ManufacturerSysExIdByte1 = deviceManufacturerSysExIdByte1;
+        identity.ManufacturerSysExIdByte2 = deviceManufacturerSysExIdByte2;
+        identity.ManufacturerSysExIdByte3 = deviceManufacturerSysExIdByte3;
 
-        word3 |= static_cast<uint32_t>(internal::CleanupByte7(softwareRevisionLevelByte1)) << 24;
-        word3 |= static_cast<uint32_t>(internal::CleanupByte7(softwareRevisionLevelByte2)) << 16;
-        word3 |= static_cast<uint32_t>(internal::CleanupByte7(softwareRevisionLevelByte3)) << 8;
-        word3 |= static_cast<uint32_t>(internal::CleanupByte7(softwareRevisionLevelByte4));
+        identity.DeviceFamilyLsb = deviceFamilyLsb;
+        identity.DeviceFamilyMsb = deviceFamilyMsb;
 
+        identity.DeviceFamilyModelNumberLsb = deviceFamilyModelNumberLsb;
+        identity.DeviceFamilyModelNumberMsb = deviceFamilyModelNumberMsb;
+
+        identity.SoftwareRevisionLevelByte1 = softwareRevisionLevelByte1;
+        identity.SoftwareRevisionLevelByte2 = softwareRevisionLevelByte2;
+        identity.SoftwareRevisionLevelByte3 = softwareRevisionLevelByte3;
+        identity.SoftwareRevisionLevelByte4 = softwareRevisionLevelByte4;
+
+        internal::BuildDeviceIdentityNotificationWords(identity, word1, word2, word3);
 
         return MidiMessageBuilder::BuildStreamMessage(
             timestamp,
@@ -658,6 +663,59 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
         {
             MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception parsing product instance id notification messages.");
             return L"";
+        }
+    }
+
+
+    _Use_decl_annotations_
+    midi2enum::MidiDeclaredDeviceIdentity MidiStreamMessageBuilder::ParseDeviceIdentityNotificationMessage(
+        midi2::IMidiUniversalPacket const& message
+        ) noexcept
+    {
+        try
+        {
+            if (message == nullptr || message.MessageType() != midi2::MidiMessageType::Stream128)
+            {
+                return nullptr;
+            }
+
+            auto streamMessage = message.as<midi2::MidiMessage128>();
+
+            if (!internal::MessageIsDeviceIdentityNotification(streamMessage.Word0()))
+            {
+                return nullptr;
+            }
+
+            internal::DeviceIdentityFields identity{};
+
+            internal::ParseDeviceIdentityNotificationWords(
+                streamMessage.Word1(),
+                streamMessage.Word2(),
+                streamMessage.Word3(),
+                identity);
+
+            return winrt::make<midi2enum::implementation::MidiDeclaredDeviceIdentity>(
+                identity.ManufacturerSysExIdByte1,
+                identity.ManufacturerSysExIdByte2,
+                identity.ManufacturerSysExIdByte3,
+                identity.DeviceFamilyLsb,
+                identity.DeviceFamilyMsb,
+                identity.DeviceFamilyModelNumberLsb,
+                identity.DeviceFamilyModelNumberMsb,
+                identity.SoftwareRevisionLevelByte1,
+                identity.SoftwareRevisionLevelByte2,
+                identity.SoftwareRevisionLevelByte3,
+                identity.SoftwareRevisionLevelByte4);
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error parsing device identity notification message.");
+            return nullptr;
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception parsing device identity notification message.");
+            return nullptr;
         }
     }
 
