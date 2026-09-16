@@ -1,6 +1,8 @@
 // Spike: render a score offline to a WAV file, with no audio device and no timing, so the
 // engine can be judged and regression tested deterministically.
 
+#include "MidiSynth/ChorusEffect.h"
+#include "MidiSynth/ReverbEffect.h"
 #include "MidiSynth/SynthEngine.h"
 #include "MidiSynth/UmpDispatcher.h"
 
@@ -1453,6 +1455,58 @@ namespace
                 sounding && engine.ActiveVoiceCount() == 0);
         }
 
+        // Roland GS Reset, split across two sysex7 packets. Files authored for GS open with this
+        // rather than with GM System On, so a file player depends on it. We honor the message
+        // without ever claiming Roland's manufacturer id as our own.
+        {
+            SynthEngine engine;
+            UmpDispatcher dispatcher;
+            freshEngine(engine, dispatcher, 0);
+
+            uint32_t word = MakeMidi1Cv(0, 0x9, 0, 60, 100);
+            dispatcher.ProcessWords(&word, 1);
+            const bool sounding = engine.ActiveVoiceCount() == 1;
+
+            // 41 10 42 12 40 00 7F 00 41
+            uint32_t start[2];
+            start[0] = (3u << 28) | (1u << 20) | (6u << 16) | (0x41u << 8) | 0x10u;
+            start[1] = (0x42u << 24) | (0x12u << 16) | (0x40u << 8) | 0x00u;
+            dispatcher.ProcessWords(start, 2);
+
+            uint32_t end[2];
+            end[0] = (3u << 28) | (3u << 20) | (3u << 16) | (0x7Fu << 8) | 0x00u;
+            end[1] = (0x41u << 24);
+            dispatcher.ProcessWords(end, 2);
+
+            check("Roland GS Reset resets the synthesizer",
+                sounding && engine.ActiveVoiceCount() == 0);
+        }
+
+        // A Roland message that is not the reset must be left alone, or every GS parameter change
+        // in a file would silence it.
+        {
+            SynthEngine engine;
+            UmpDispatcher dispatcher;
+            freshEngine(engine, dispatcher, 0);
+
+            uint32_t word = MakeMidi1Cv(0, 0x9, 0, 60, 100);
+            dispatcher.ProcessWords(&word, 1);
+
+            // Same maker and model, address 40 00 00, which is master tune rather than reset.
+            uint32_t start[2];
+            start[0] = (3u << 28) | (1u << 20) | (6u << 16) | (0x41u << 8) | 0x10u;
+            start[1] = (0x42u << 24) | (0x12u << 16) | (0x40u << 8) | 0x00u;
+            dispatcher.ProcessWords(start, 2);
+
+            uint32_t end[2];
+            end[0] = (3u << 28) | (3u << 20) | (3u << 16) | (0x00u << 8) | 0x00u;
+            end[1] = (0x40u << 24);
+            dispatcher.ProcessWords(end, 2);
+
+            check("a non-reset Roland message leaves voices alone",
+                engine.ActiveVoiceCount() == 1);
+        }
+
         // An unknown message type must not desynchronize the stream.
         {
             SynthEngine engine;
@@ -1667,6 +1721,168 @@ namespace
             checkReply("Identity Reply, three byte manufacturer identifier", true);
         }
 
+        // General MIDI 2 requires master volume and master tuning.
+        {
+            auto sendSysEx = [](UmpDispatcher& dispatcher, const std::vector<uint8_t>& payload)
+            {
+                for (size_t offset = 0; offset < payload.size(); offset += 6)
+                {
+                    const auto count = static_cast<uint8_t>(
+                        (std::min)(size_t{ 6 }, payload.size() - offset));
+
+                    const bool isFirst = (offset == 0);
+                    const bool isLast = (offset + count >= payload.size());
+
+                    const uint8_t status = (isFirst && isLast) ? 0 : isFirst ? 1 : isLast ? 3 : 2;
+
+                    uint8_t bytes[6]{};
+
+                    for (uint8_t i = 0; i < count; i++)
+                    {
+                        bytes[i] = payload[offset + i];
+                    }
+
+                    const uint32_t words[2]
+                    {
+                        (3u << 28) | (static_cast<uint32_t>(status) << 20)
+                            | (static_cast<uint32_t>(count) << 16)
+                            | (static_cast<uint32_t>(bytes[0]) << 8) | bytes[1],
+
+                        (static_cast<uint32_t>(bytes[2]) << 24)
+                            | (static_cast<uint32_t>(bytes[3]) << 16)
+                            | (static_cast<uint32_t>(bytes[4]) << 8) | bytes[5],
+                    };
+
+                    dispatcher.ProcessWords(words, 2);
+                }
+            };
+
+            auto deviceControl = [](uint8_t subId2, uint16_t value)
+            {
+                return std::vector<uint8_t>{ 0x7F, 0x7F, 0x04, subId2,
+                    static_cast<uint8_t>(value & 0x7F), static_cast<uint8_t>((value >> 7) & 0x7F) };
+            };
+
+            // Half scale is a quarter of the power, so twelve dB down on the concave curve.
+            {
+                auto levelAt = [&](uint16_t masterVolume)
+                {
+                    SynthEngine engine;
+                    UmpDispatcher dispatcher;
+                    freshEngine(engine, dispatcher, 0);
+
+                    sendSysEx(dispatcher, deviceControl(0x01, masterVolume));
+
+                    uint32_t word = MakeMidi1Cv(0, 0x9, 0, 60, 100);
+                    dispatcher.ProcessWords(&word, 1);
+
+                    return RenderBurstRms(engine, rate, 0.20);
+                };
+
+                const double full = levelAt(16383);
+                const double half = levelAt(8192);
+
+                const double differenceDb = (full > 0.0 && half > 0.0)
+                    ? 20.0 * std::log10(full / half) : 0.0;
+
+                char detail[48]{};
+                (void)snprintf(detail, sizeof(detail), "%.2f dB down", differenceDb);
+
+                check("master volume follows the concave curve",
+                    std::abs(differenceDb - 12.04) < 0.5, detail);
+            }
+
+            // Coarse tuning must move a melodic channel, and must leave a drum kit alone or a
+            // different drum sound would be selected.
+            {
+                auto renderNote = [&](uint8_t channel, uint8_t coarseMsb, std::vector<float>& out)
+                {
+                    SynthEngine engine;
+                    UmpDispatcher dispatcher;
+                    freshEngine(engine, dispatcher, 0);
+
+                    sendSysEx(dispatcher, deviceControl(0x04, static_cast<uint16_t>(coarseMsb) << 7));
+
+                    uint32_t word = MakeMidi1Cv(0, 0x9, channel, 42, 100);
+                    dispatcher.ProcessWords(&word, 1);
+
+                    out.assign(static_cast<size_t>(rate / 20) * 2, 0.0f);
+                    engine.Render(out.data(), rate / 20);
+                };
+
+                std::vector<float> melodicCentered, melodicShifted;
+                renderNote(0, 64, melodicCentered);
+                renderNote(0, 76, melodicShifted);
+
+                std::vector<float> drumCentered, drumShifted;
+                renderNote(9, 64, drumCentered);
+                renderNote(9, 76, drumShifted);
+
+                const bool melodicMoved = melodicCentered != melodicShifted;
+                const bool drumUntouched = drumCentered == drumShifted;
+
+                check("master coarse tuning shifts a melodic channel", melodicMoved);
+                check("master tuning leaves a drum channel alone", drumUntouched);
+            }
+
+            // An invalidated identifier must not keep answering MIDI-CI.
+            {
+                struct CaptureOutput final : IUmpOutput
+                {
+                    std::vector<uint32_t> Words;
+
+                    void SendUmp(const uint32_t* words, uint32_t wordCount) noexcept override
+                    {
+                        for (uint32_t i = 0; i < wordCount; i++)
+                        {
+                            Words.push_back(words[i]);
+                        }
+                    }
+                };
+
+                SynthEngine engine;
+                UmpDispatcher dispatcher;
+                freshEngine(engine, dispatcher, 0);
+
+                CaptureOutput output;
+                dispatcher.SetOutput(&output, SynthIdentity{});
+
+                const uint32_t discovery[10]
+                {
+                    0x30167E7F, 0x0D70021F,
+                    0x30263075, 0x4A7F7F7F,
+                    0x30267F7D, 0x00000000,
+                    0x30260000, 0x01000000,
+                    0x30361C00, 0x04000000,
+                };
+
+                dispatcher.ProcessWords(discovery, 10);
+                const bool repliedFirst = !output.Words.empty();
+
+                const uint32_t muid = dispatcher.Muid();
+
+                std::vector<uint8_t> invalidate{ 0x7E, 0x7F, 0x0D, 0x7E, 0x02 };
+
+                for (int pass = 0; pass < 3; pass++)
+                {
+                    const uint32_t value = (pass == 0) ? 0x4A75301Fu : muid;
+
+                    invalidate.push_back(static_cast<uint8_t>(value & 0x7F));
+                    invalidate.push_back(static_cast<uint8_t>((value >> 7) & 0x7F));
+                    invalidate.push_back(static_cast<uint8_t>((value >> 14) & 0x7F));
+                    invalidate.push_back(static_cast<uint8_t>((value >> 21) & 0x7F));
+                }
+
+                sendSysEx(dispatcher, invalidate);
+
+                output.Words.clear();
+                dispatcher.ProcessWords(discovery, 10);
+
+                check("an invalidated MUID stops answering MIDI-CI",
+                    repliedFirst && output.Words.empty() && dispatcher.MuidNeedsReplacement());
+            }
+        }
+
         // The specification's upscale preserves the center value. A plain bit repeat puts MIDI 1.0
         // velocity 64 slightly above the MIDI 2.0 center, which is the defect this pins down.
         {
@@ -1702,6 +1918,43 @@ namespace
 
             check("MIDI 1.0 velocity 64 scales to the MIDI 2.0 center",
                 differenceDb < 0.001, detail);
+        }
+
+        // GM2 requires a device to respond to Active Sensing: once a sender uses it, going quiet
+        // means the link died and everything must stop.
+        {
+            SynthEngine engine;
+            UmpDispatcher dispatcher;
+            freshEngine(engine, dispatcher, 0);
+
+            uint32_t sensing = (1u << 28) | (0xFEu << 16);
+            dispatcher.ProcessWords(&sensing, 1);
+
+            uint32_t word = MakeMidi1Cv(0, 0x9, 0, 60, 100);
+            dispatcher.ProcessWords(&word, 1);
+
+            std::vector<float> block(1024 * 2);
+
+            // Well inside the timeout, and refreshed, so the note must survive.
+            engine.Render(block.data(), 1024);
+            dispatcher.ProcessWords(&sensing, 1);
+            engine.Render(block.data(), 1024);
+
+            const bool stillSounding = engine.ActiveVoiceCount() > 0;
+
+            // Now let it lapse past the 300 ms the specification allows.
+            const uint32_t silentFrames = static_cast<uint32_t>(rate * 0.4);
+
+            for (uint32_t done = 0; done < silentFrames; done += 1024)
+            {
+                engine.Render(block.data(), 1024);
+            }
+
+            // The kill fade needs a moment to finish.
+            engine.Render(block.data(), 1024);
+
+            check("active sensing timeout stops everything",
+                stillSounding && engine.ActiveVoiceCount() == 0);
         }
 
         // Shutdown releases the audio device, so it has to drain first or disconnecting clicks.
@@ -1760,6 +2013,72 @@ namespace
         printf("\n  %s\n", (failures == 0) ? "PASS" : "FAIL");
 
         return (failures == 0) ? 0 : 1;
+    }
+
+    // Effects run on the mix bus, so their cost is independent of polyphony and worth knowing
+    // separately from the voice cost.
+    int RunEffectsBenchmark(_In_ uint32_t sampleRate, _In_ double seconds)
+    {
+        constexpr uint32_t blockFrames = 480;
+
+        std::vector<float> input(static_cast<size_t>(blockFrames) * 2, 0.0f);
+        std::vector<float> output(static_cast<size_t>(blockFrames) * 2, 0.0f);
+
+        // Something with content across the spectrum, so no denormal shortcuts flatter the result.
+        for (size_t i = 0; i < input.size(); i++)
+        {
+            input[i] = 0.25f * std::sin(static_cast<float>(i) * 0.07f);
+        }
+
+        ReverbEffect reverb;
+        ChorusEffect chorus;
+
+        if (!reverb.Configure(sampleRate) || !chorus.Configure(sampleRate))
+        {
+            printf("could not configure the effects\n");
+            return 1;
+        }
+
+        reverb.SetParameter(AudioEffectParameter::WetLevel, 0.35);
+        reverb.SetParameter(AudioEffectParameter::Time, 2.0);
+        chorus.SetParameter(AudioEffectParameter::WetLevel, 0.30);
+
+        const auto blocks = static_cast<uint32_t>(seconds * sampleRate / blockFrames);
+
+        LARGE_INTEGER frequency{};
+        QueryPerformanceFrequency(&frequency);
+
+        auto measure = [&](const char* name, IAudioEffect* first, IAudioEffect* second)
+        {
+            LARGE_INTEGER start{};
+            QueryPerformanceCounter(&start);
+
+            for (uint32_t i = 0; i < blocks; i++)
+            {
+                std::fill(output.begin(), output.end(), 0.0f);
+
+                if (first != nullptr) { first->Process(input.data(), output.data(), blockFrames); }
+                if (second != nullptr) { second->Process(input.data(), output.data(), blockFrames); }
+            }
+
+            LARGE_INTEGER end{};
+            QueryPerformanceCounter(&end);
+
+            const double elapsed =
+                static_cast<double>(end.QuadPart - start.QuadPart) / static_cast<double>(frequency.QuadPart);
+
+            const double audioSeconds = static_cast<double>(blocks) * blockFrames / sampleRate;
+
+            printf("  %-22s %6.3f %% of one core\n", name, 100.0 * elapsed / audioSeconds);
+        };
+
+        printf("Effects at %u Hz\n\n", sampleRate);
+
+        measure("reverb", &reverb, nullptr);
+        measure("chorus", nullptr, &chorus);
+        measure("both", &reverb, &chorus);
+
+        return 0;
     }
 
     int RunBenchmark(_In_ SynthEngine& engine, _In_ uint32_t targetVoices, _In_ double seconds)
@@ -1836,6 +2155,7 @@ int wmain(int argc, wchar_t** argv)
     SynthMode mode = SynthMode::Modern;
     uint32_t sampleRate = 48000;
     bool benchmark = false;
+    bool effectsBenchmark = false;
     uint32_t benchmarkVoices = 64;
     bool tuningTest = false;
     uint8_t tuningProgram = 0;
@@ -1870,6 +2190,10 @@ int wmain(int argc, wchar_t** argv)
         else if (argument == L"--rate" && i + 1 < argc)
         {
             sampleRate = static_cast<uint32_t>(_wtoi(argv[++i]));
+        }
+        else if (argument == L"--fxbench")
+        {
+            effectsBenchmark = true;
         }
         else if (argument == L"--bench")
         {
@@ -1947,7 +2271,8 @@ int wmain(int argc, wchar_t** argv)
     }
 
     DlsCollection collection;
-    const auto status = DlsCollection::LoadFromFile(dlsPath, DlsParseLimits{}, collection);
+    const auto status = DlsCollection::LoadFromFile(
+        dlsPath, DlsParseLimits{}, SoundSetOrigin::AnyPath, collection);
 
     if (status != DlsParseStatus::Ok)
     {
@@ -1956,6 +2281,13 @@ int wmain(int argc, wchar_t** argv)
     }
 
     SynthConfig config = SynthConfig::ForMode(mode, sampleRate);
+
+    // Analysis measures the voice engine, so a reverb tail would smear the very thing being
+    // measured. The effects have their own benchmark.
+    if (tuningTest || umpTest)
+    {
+        config.EnableEffects = false;
+    }
 
     if (benchmark)
     {
@@ -1982,6 +2314,12 @@ int wmain(int argc, wchar_t** argv)
     if (articulationDump)
     {
         return RunArticulation(collection, articulationProgram, false);
+    }
+
+    // Effects do not need a sound set, so this runs before any file is touched.
+    if (effectsBenchmark)
+    {
+        return RunEffectsBenchmark(sampleRate, 5.0);
     }
 
     if (umpTest)

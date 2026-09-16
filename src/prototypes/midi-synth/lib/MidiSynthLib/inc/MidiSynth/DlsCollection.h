@@ -13,6 +13,35 @@
 
 namespace MidiSynth
 {
+    // Where a sound set is allowed to come from. The parser is hardened and fuzzed, but it still
+    // runs inside the service, so the shipping default is to accept only what Windows installed.
+    enum class SoundSetOrigin
+    {
+        // Only files under the Windows system directory. Verified on the open file handle rather
+        // than on the caller's string, so symlinks, junctions, short names, relative traversal and
+        // a swap between the check and the read cannot get around it.
+        SystemOnly,
+
+        // Any readable path. Kept working for offline tools and for user supplied sound sets later.
+        AnyPath,
+    };
+
+    // What a settings app needs to show a sound set in a list.
+    struct DlsSoundSetInfo
+    {
+        std::wstring Name;
+        std::wstring Engineer;
+        std::wstring Comments;
+
+        DlsVersion Version{};
+
+        // What the collection header claims, which is cheap to read and does not require parsing
+        // the instrument list.
+        uint32_t InstrumentCount{ 0 };
+
+        uint64_t FileBytes{ 0 };
+    };
+
     class DlsCollection
     {
     public:
@@ -28,7 +57,16 @@ namespace MidiSynth
         static DlsParseStatus LoadFromFile(
             _In_ const std::wstring& path,
             _In_ const DlsParseLimits& limits,
+            _In_ SoundSetOrigin origin,
             _Out_ DlsCollection& collection);
+
+        // Reads only the small header chunks, seeking past the instrument list and wave pool, so a
+        // settings app can list what is installed without pulling megabytes of samples per file.
+        static DlsParseStatus ProbeFile(
+            _In_ const std::wstring& path,
+            _In_ const DlsParseLimits& limits,
+            _In_ SoundSetOrigin origin,
+            _Out_ DlsSoundSetInfo& info);
 
         static DlsParseStatus LoadFromMemory(
             _Inout_ std::vector<std::byte>&& fileBytes,

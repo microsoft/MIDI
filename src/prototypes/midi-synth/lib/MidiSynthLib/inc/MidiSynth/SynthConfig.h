@@ -65,6 +65,11 @@ namespace MidiSynth
         // it allows far more voices. Lowering the master gain instead would break the level match.
         bool EnableLimiter{ true };
 
+        // The in-box synth has no reverb or chorus at all, so Compatible has none either. Also
+        // turned off by the offline analysis modes, where a reverb tail would smear the very thing
+        // being measured.
+        bool EnableEffects{ true };
+
         // Control rate divisor. Envelopes and modulation update every this many frames, with
         // gain ramped across the block so nothing zippers.
         uint32_t ControlRateFrames{ 32 };
@@ -81,6 +86,7 @@ namespace MidiSynth
                 config.Interpolation = InterpolationQuality::Linear;
                 config.StealingPolicy = VoiceStealingPolicy::LowestChannelPriority;
                 config.EnableLimiter = false;
+                config.EnableEffects = false;
             }
 
             return config;

@@ -8,6 +8,8 @@
 
 #include "SynthEngine.h"
 
+#include "MidiCiResponder.h"
+
 #include <sal.h>
 
 #include <cstdint>
@@ -84,6 +86,7 @@ namespace MidiSynth
 
         uint64_t IdentityRepliesSent{ 0 };
         uint64_t DiscoveryRepliesSent{ 0 };
+        uint64_t MuidInvalidations{ 0 };
     };
 
     class UmpDispatcher
@@ -108,7 +111,12 @@ namespace MidiSynth
         void ResetStats() noexcept { m_stats = {}; }
 
         // The 28 bit identifier this device uses in MIDI-CI exchanges.
-        uint32_t Muid() const noexcept { return m_muid; }
+        uint32_t Muid() const noexcept { return m_responder.Muid(); }
+
+        // Set when another device told us our identifier collided. MIDI-CI stays silent until the
+        // host supplies a replacement, because answering with a known duplicate is worse.
+        bool MuidNeedsReplacement() const noexcept { return m_responder.MuidNeedsReplacement(); }
+        void SetMuid(_In_ uint32_t muid) noexcept;
 
     private:
         void HandleMidi1ChannelVoice(_In_ uint32_t word) noexcept;
@@ -117,17 +125,30 @@ namespace MidiSynth
         void HandleSysEx7(_In_ uint32_t word0, _In_ uint32_t word1) noexcept;
         void HandleCompletedSysEx() noexcept;
         void HandleMidiCi(_In_reads_(size) const uint8_t* message, _In_ size_t size) noexcept;
+        void HandleGlobalParameterControl(_In_reads_(size) const uint8_t* message, _In_ size_t size) noexcept;
         void SendIdentityReply(_In_ uint8_t requestedDeviceId) noexcept;
-        void SendDiscoveryReply(_In_ uint32_t initiatorMuid, _In_ uint8_t outputPathId) noexcept;
         void SendSysEx7(_In_reads_(count) const uint8_t* payload, _In_ size_t count) noexcept;
+
+        // Rebuilds the responder configuration from the identity and group we were given.
+        void ConfigureResponder(_In_ uint32_t muid) noexcept;
 
         SynthEngine* m_engine{ nullptr };
         IUmpOutput* m_output{ nullptr };
         SynthIdentity m_identity{};
         uint8_t m_group{ 0 };
-        uint32_t m_muid{ 0 };
 
-        std::vector<uint8_t> m_sysex;
+        // All MIDI-CI behavior lives in the shared responder, which produces replies into a buffer
+        // and never sends. Only this class knows how to put them on the wire.
+        WindowsMidiServicesCapabilityInquiry::Responder m_responder{};
+
+        // Fixed capacity deliberately. This runs on the audio thread, where allocating is a real
+        // time fault, and a throwing allocation inside a noexcept path would terminate the whole
+        // process rather than just failing the message.
+        static constexpr size_t MaxSysExBytes = 1024;
+
+        uint8_t m_sysex[MaxSysExBytes]{};
+        size_t m_sysexLength{ 0 };
+
         UmpDispatcherStats m_stats{};
     };
 }

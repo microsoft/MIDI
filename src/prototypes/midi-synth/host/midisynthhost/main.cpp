@@ -103,6 +103,7 @@ namespace
             _In_ UmpDispatcher& dispatcher,
             _In_ InboundQueue& queue,
             _In_ uint32_t deviceSampleRate,
+            _In_ uint32_t maxFrames,
             _In_ HANDLE drainedEvent) noexcept
             : m_engine(engine)
             , m_dispatcher(dispatcher)
@@ -113,6 +114,14 @@ namespace
             LARGE_INTEGER frequency{};
             QueryPerformanceFrequency(&frequency);
             m_ticksPerSecond = frequency.QuadPart;
+
+            m_ratio = static_cast<double>(engine.Config().RenderSampleRate())
+                / static_cast<double>(deviceSampleRate);
+
+            // Worst case engine frames for one device block, plus slack for interpolation and the
+            // fractional carry. Allocated once so the render thread never does.
+            const auto capacity = static_cast<size_t>(maxFrames * m_ratio) + 8;
+            m_engineFrames.assign(capacity * 2, 0.0f);
         }
 
         void RequestDrain() noexcept { m_draining.store(true, std::memory_order_release); }
@@ -174,7 +183,7 @@ namespace
 
                 const uint32_t frames = limit - rendered;
 
-                m_engine.Render(interleavedStereo + static_cast<size_t>(rendered) * 2, frames);
+                RenderChunk(interleavedStereo + static_cast<size_t>(rendered) * 2, frames);
                 rendered += frames;
             }
 
@@ -185,6 +194,63 @@ namespace
         }
 
     private:
+        // Compatible mode renders at 22050, so it has to be resampled up to the device rate.
+        void RenderChunk(_Out_writes_(frameCount * 2) float* interleavedStereo, _In_ uint32_t frameCount) noexcept
+        {
+            if (std::abs(m_ratio - 1.0) < 1e-9)
+            {
+                m_engine.Render(interleavedStereo, frameCount);
+                return;
+            }
+
+            const double endPosition = m_position + frameCount * m_ratio;
+            const auto needed = static_cast<uint32_t>(std::floor(endPosition)) + 2;
+
+            if (static_cast<size_t>(needed) * 2 > m_engineFrames.size())
+            {
+                std::fill_n(interleavedStereo, static_cast<size_t>(frameCount) * 2, 0.0f);
+                return;
+            }
+
+            if (needed > m_available)
+            {
+                m_engine.Render(m_engineFrames.data() + static_cast<size_t>(m_available) * 2,
+                    needed - m_available);
+
+                m_available = needed;
+            }
+
+            for (uint32_t frame = 0; frame < frameCount; frame++)
+            {
+                const auto index = static_cast<uint32_t>(m_position);
+                const auto fraction = static_cast<float>(m_position - index);
+
+                const size_t a = static_cast<size_t>(index) * 2;
+                const size_t b = a + 2;
+
+                interleavedStereo[frame * 2] =
+                    m_engineFrames[a] + (m_engineFrames[b] - m_engineFrames[a]) * fraction;
+                interleavedStereo[frame * 2 + 1] =
+                    m_engineFrames[a + 1] + (m_engineFrames[b + 1] - m_engineFrames[a + 1]) * fraction;
+
+                m_position += m_ratio;
+            }
+
+            const auto consumed = static_cast<uint32_t>(m_position);
+
+            if (consumed > 0 && consumed <= m_available)
+            {
+                const uint32_t remaining = m_available - consumed;
+
+                std::memmove(m_engineFrames.data(),
+                    m_engineFrames.data() + static_cast<size_t>(consumed) * 2,
+                    static_cast<size_t>(remaining) * 2 * sizeof(float));
+
+                m_available = remaining;
+                m_position -= consumed;
+            }
+        }
+
         SynthEngine& m_engine;
         UmpDispatcher& m_dispatcher;
         InboundQueue& m_queue;
@@ -197,6 +263,11 @@ namespace
 
         QueuedUmp m_pending[MaxPendingPerBlock]{};
         uint32_t m_pendingOffset[MaxPendingPerBlock]{};
+
+        double m_ratio{ 1.0 };
+        double m_position{ 0.0 };
+        uint32_t m_available{ 0 };
+        std::vector<float> m_engineFrames;
     };
 
     class SynthHost final
@@ -224,7 +295,10 @@ namespace
         // goes, so a client connecting pays for stream start rather than re-reading 3.4 MB.
         bool LoadSoundSet(_In_ const std::wstring& path)
         {
-            const auto status = DlsCollection::LoadFromFile(path, DlsParseLimits{}, m_collection);
+            // This engine is destined for the service, so only sound sets Windows installed are
+            // accepted. The library still supports other paths for offline tools.
+            const auto status = DlsCollection::LoadFromFile(
+                path, DlsParseLimits{}, SoundSetOrigin::SystemOnly, m_collection);
 
             if (status != DlsParseStatus::Ok)
             {
@@ -237,6 +311,8 @@ namespace
 
             return true;
         }
+
+        void SetMode(_In_ SynthMode mode) noexcept { m_mode = mode; }
 
         void QueueInbound(_In_reads_(wordCount) const uint32_t* words, _In_ uint8_t wordCount) noexcept
         {
@@ -354,14 +430,15 @@ namespace
             }
 
             // Modern mode renders at the device rate, so nothing resamples.
-            const auto config = SynthConfig::ForMode(SynthMode::Modern, sink->SampleRate());
+            const auto config = SynthConfig::ForMode(m_mode, sink->SampleRate());
 
             m_engine.Initialize(&m_collection, config);
             m_dispatcher.Initialize(&m_engine, 0, m_muid);
             m_dispatcher.SetOutput(&m_output, SynthIdentity{});
 
             auto source = std::make_unique<SynthRenderSource>(
-                m_engine, m_dispatcher, m_inbound, sink->SampleRate(), m_drainedEvent);
+                m_engine, m_dispatcher, m_inbound, sink->SampleRate(),
+                sink->BufferFrames(), m_drainedEvent);
 
             if (!sink->Start(source.get()))
             {
@@ -371,6 +448,12 @@ namespace
 
             wprintf(L"  audio acquired: %s, %u Hz, period %.2f ms\n",
                 sink->DeviceName().c_str(), sink->SampleRate(), sink->PeriodMilliseconds());
+
+            if (config.RenderSampleRate() != sink->SampleRate())
+            {
+                wprintf(L"  compatible mode renders at %u Hz and is resampled\n",
+                    config.RenderSampleRate());
+            }
 
             m_source = std::move(source);
             m_sink = std::move(sink);
@@ -425,6 +508,8 @@ namespace
         uint32_t m_muid{ MidiUniqueId::CreateRandom().AsCombined28BitValue() };
 
         std::atomic<uint64_t> m_droppedCount{ 0 };
+
+        SynthMode m_mode{ SynthMode::Modern };
 
         HANDLE m_drainedEvent{ nullptr };
     };
@@ -481,9 +566,19 @@ namespace
     }
 }
 
-int main()
+int main(int argc, char** argv)
 {
     winrt::init_apartment();
+
+    SynthMode mode = SynthMode::Modern;
+
+    for (int i = 1; i < argc; i++)
+    {
+        if (_stricmp(argv[i], "--compat") == 0)
+        {
+            mode = SynthMode::Compatible;
+        }
+    }
 
     if (!MidiApi::EnsureServiceAvailable())
     {
@@ -492,6 +587,9 @@ int main()
     }
 
     SynthHost host;
+    host.SetMode(mode);
+
+    wprintf(L"Mode: %s\n", (mode == SynthMode::Compatible) ? L"compatible" : L"modern");
 
     if (!host.LoadSoundSet(DefaultDlsPath()))
     {

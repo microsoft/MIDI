@@ -2,6 +2,9 @@
 // the in-box gm.dls before any synthesis work depends on it.
 
 #include "MidiSynth/DlsCollection.h"
+#include "MidiSynth/ProgramList.h"
+
+#include "MidiCiMessage.h"
 
 #include <windows.h>
 
@@ -369,6 +372,7 @@ int wmain(int argc, wchar_t** argv)
     bool listInstruments = false;
     bool showWaves = false;
     bool showCoverage = false;
+    bool showProgramList = false;
     bool haveRegionIndex = false;
     size_t regionIndex = 0;
 
@@ -388,6 +392,10 @@ int wmain(int argc, wchar_t** argv)
         {
             showCoverage = true;
         }
+        else if (argument == L"--programlist")
+        {
+            showProgramList = true;
+        }
         else if (argument == L"--regions" && i + 1 < argc)
         {
             regionIndex = static_cast<size_t>(_wtoi64(argv[++i]));
@@ -396,7 +404,7 @@ int wmain(int argc, wchar_t** argv)
         else if (argument.rfind(L"--", 0) == 0)
         {
             printf("usage: synthspike-dls [path.dls] [--instruments] [--waves] [--coverage]\n");
-            printf("                      [--regions <index>]\n");
+            printf("                      [--regions <index>] [--programlist]\n");
             return 2;
         }
         else if (path.empty())
@@ -410,9 +418,51 @@ int wmain(int argc, wchar_t** argv)
         path = DefaultDlsPath();
     }
 
+    // Proves the shipping policy rejects anything outside the system directory.
+    {
+        DlsSoundSetInfo systemInfo;
+
+        const auto systemStatus =
+            DlsCollection::ProbeFile(path, DlsParseLimits{}, SoundSetOrigin::SystemOnly, systemInfo);
+
+        printf("System only policy: %s\n\n", DlsParseStatusToString(systemStatus));
+    }
+
     printf("Reading %s\n\n", ToUtf8(path).c_str());
 
     const DlsParseLimits limits{};
+
+    // Metadata only, which is what a settings app listing installed sound sets would call.
+    {
+        DlsSoundSetInfo info;
+
+        const LARGE_INTEGER probeFrequency = [] { LARGE_INTEGER f{}; QueryPerformanceFrequency(&f); return f; }();
+        LARGE_INTEGER probeStart{};
+        LARGE_INTEGER probeEnd{};
+
+        QueryPerformanceCounter(&probeStart);
+        const auto probeStatus = DlsCollection::ProbeFile(path, limits, SoundSetOrigin::AnyPath, info);
+        QueryPerformanceCounter(&probeEnd);
+
+        const double probeMilliseconds = 1000.0
+            * static_cast<double>(probeEnd.QuadPart - probeStart.QuadPart)
+            / static_cast<double>(probeFrequency.QuadPart);
+
+        if (probeStatus == DlsParseStatus::Ok)
+        {
+            printf("Probe (header only, %.2f ms)\n", probeMilliseconds);
+            printf("  name          %s\n", ToUtf8(info.Name).c_str());
+            printf("  version       %u.%u.%u.%u\n",
+                info.Version.Major, info.Version.Minor, info.Version.Release, info.Version.Build);
+            printf("  instruments   %u\n", info.InstrumentCount);
+            printf("  file bytes    %llu\n\n", info.FileBytes);
+        }
+        else
+        {
+            printf("Probe failed: %s\n\n", DlsParseStatusToString(probeStatus));
+        }
+    }
+
     DlsCollection collection;
 
     const LARGE_INTEGER frequency = [] { LARGE_INTEGER f{}; QueryPerformanceFrequency(&f); return f; }();
@@ -420,7 +470,7 @@ int wmain(int argc, wchar_t** argv)
     LARGE_INTEGER end{};
 
     QueryPerformanceCounter(&start);
-    const auto status = DlsCollection::LoadFromFile(path, limits, collection);
+    const auto status = DlsCollection::LoadFromFile(path, limits, SoundSetOrigin::AnyPath, collection);
     QueryPerformanceCounter(&end);
 
     if (status != DlsParseStatus::Ok)
@@ -455,6 +505,31 @@ int wmain(int argc, wchar_t** argv)
     if (haveRegionIndex)
     {
         PrintRegions(collection, regionIndex);
+    }
+
+    if (showProgramList)
+    {
+        const auto json = BuildProgramListJson(collection);
+
+        printf("\nProperty Exchange ProgramList\n");
+        printf("  bytes                 %zu\n", json.size());
+
+        // What a responder would have to do to answer a device that declared 512 bytes.
+        const auto perChunk = WindowsMidiServicesCapabilityInquiry::MaximumPropertyDataBytesPerChunk(512, 14);
+        const auto chunks = WindowsMidiServicesCapabilityInquiry::ChunkCountForDataSize(json.size(), perChunk);
+
+        printf("  chunks at 512 bytes   %u  (%u data bytes each)\n", chunks, perChunk);
+
+        size_t nonAscii = 0;
+
+        for (const auto character : json)
+        {
+            if (static_cast<uint8_t>(character) > 0x7F) { nonAscii++; }
+        }
+
+        printf("  bytes over 0x7F       %zu  (any would truncate the system exclusive)\n", nonAscii);
+
+        printf("\n  first 400 bytes\n    %.400s\n", json.data());
     }
 
     return 0;

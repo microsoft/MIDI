@@ -7,7 +7,9 @@
 #pragma once
 
 #include "Articulation.h"
+#include "ChorusEffect.h"
 #include "DlsCollection.h"
+#include "ReverbEffect.h"
 #include "SynthConfig.h"
 
 #include <sal.h>
@@ -89,6 +91,10 @@ namespace MidiSynth
         uint8_t Program{ 0 };
         bool IsDrumChannel{ false };
 
+        // GM2 effect sends, CC91 and CC93. Reverb defaults to 40 of 127 per GM2.
+        double ReverbSend{ 40.0 / 127.0 };
+        double ChorusSend{ 0.0 };
+
         // Held normalized rather than as 7 bit values so a 32 bit MIDI 2.0 controller keeps its
         // resolution. The 7 bit entry points map exactly as before, so MIDI 1.0 is unchanged.
         double Volume{ 100.0 / 127.0 };
@@ -97,7 +103,6 @@ namespace MidiSynth
 
         // -0.5 is hard left, +0.5 is hard right, 0 is center.
         double PanOffset{ 0.0 };
-
         bool SustainPedal{ false };
 
         // -1 to +1 across the bend range, so a 32 bit bend is not quantized to fourteen bits.
@@ -142,6 +147,26 @@ namespace MidiSynth
         void AllNotesOff(_In_ uint8_t channel);
         void ResetAllControllers(_In_ uint8_t channel);
         void SystemReset();
+
+        // GM2 requires a device to respond to Active Sensing. Once a sender has used it, silence
+        // for longer than the specified timeout means the link is gone and everything stops.
+        void ActiveSensing() noexcept;
+
+        // Exposed so system level parameter messages can reach them without the dispatcher
+        // knowing how either effect is built.
+        _Ret_maybenull_ IAudioEffect* Reverb() noexcept { return m_config.EnableEffects ? &m_reverb : nullptr; }
+        _Ret_maybenull_ IAudioEffect* Chorus() noexcept { return m_config.EnableEffects ? &m_chorus : nullptr; }
+
+        // GM2 device controls. Fourteen bit, full scale is 16383, and the square of the value is
+        // proportional to volume, which is the same concave curve CC7 uses.
+        void SetMasterVolume(_In_ uint16_t value) noexcept;
+
+        // Fourteen bit, 8192 is centered, full range is plus or minus 100 cents.
+        void SetMasterFineTuning(_In_ uint16_t value) noexcept;
+
+        // Semitones, 0x40 is centered. Applied as pitch, never as a note offset: shifting notes
+        // would select a different sound on a drum kit.
+        void SetMasterCoarseTuning(_In_ uint8_t msb) noexcept;
 
         void Render(_Out_writes_(frameCount * 2) float* interleavedStereo, _In_ uint32_t frameCount) noexcept;
 
@@ -203,6 +228,24 @@ namespace MidiSynth
         uint64_t m_clippedSampleCount{ 0 };
 
         double m_limiterGain{ 1.0 };
+
+        // GM2 device controls, applied on top of the configured master gain.
+        double m_masterVolumeDb{ 0.0 };
+        double m_masterFineCents{ 0.0 };
+        double m_masterCoarseCents{ 0.0 };
+        double m_masterTuningCents{ 0.0 };
+
+        ReverbEffect m_reverb;
+        ChorusEffect m_chorus;
+
+        std::vector<float> m_reverbSendBuffer;
+        std::vector<float> m_chorusSendBuffer;
+
+        // Where the current Render call is writing, so a voice can find its offset into the sends.
+        float* m_renderCursor{ nullptr };
+
+        bool m_activeSensingSeen{ false };
+        double m_framesSinceActiveSensing{ 0.0 };
         double m_lowestLimiterGain{ 1.0 };
         double m_peakOutput{ 0.0 };
     };

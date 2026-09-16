@@ -516,7 +516,8 @@ int wmain(int argc, wchar_t** argv)
     }
 
     DlsCollection collection;
-    const auto status = DlsCollection::LoadFromFile(dlsPath, DlsParseLimits{}, collection);
+    const auto status = DlsCollection::LoadFromFile(
+        dlsPath, DlsParseLimits{}, SoundSetOrigin::AnyPath, collection);
 
     if (status != DlsParseStatus::Ok)
     {

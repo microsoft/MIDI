@@ -466,31 +466,211 @@ namespace MidiSynth
         case DlsParseStatus::LimitExceeded: return "LimitExceeded";
         case DlsParseStatus::UnsupportedWaveFormat: return "UnsupportedWaveFormat";
         case DlsParseStatus::InvalidWaveReference: return "InvalidWaveReference";
+        case DlsParseStatus::NotPermitted: return "NotPermitted";
         }
 
         return "Unknown";
+    }
+
+    namespace
+    {
+        // INFO strings are single byte and null terminated, from an untrusted file, so the length
+        // is taken from the chunk rather than from any terminator inside it.
+        std::wstring ToWide(_In_reads_(count) const char* text, _In_ size_t count) noexcept
+        {
+            while (count > 0 && text[count - 1] == '\0')
+            {
+                count--;
+            }
+
+            if (count == 0)
+            {
+                return {};
+            }
+
+            const int required = MultiByteToWideChar(
+                CP_ACP, 0, text, static_cast<int>(count), nullptr, 0);
+
+            if (required <= 0)
+            {
+                return {};
+            }
+
+            std::wstring result(static_cast<size_t>(required), L'\0');
+
+            MultiByteToWideChar(CP_ACP, 0, text, static_cast<int>(count), result.data(), required);
+
+            return result;
+        }
+
+        void ReadInfoStrings(_In_ std::span<const std::byte> payload, _Inout_ DlsSoundSetInfo& info) noexcept
+        {
+            RiffChunkReader chunks(payload);
+            RiffChunk chunk;
+
+            while (chunks.TryNext(chunk))
+            {
+                if (chunk.Payload.empty() || chunk.Payload.size() > 4096)
+                {
+                    continue;
+                }
+
+                const auto text = reinterpret_cast<const char*>(chunk.Payload.data());
+
+                if (chunk.Id == MakeFourCC("INAM"))
+                {
+                    info.Name = ToWide(text, chunk.Payload.size());
+                }
+                else if (chunk.Id == MakeFourCC("IENG"))
+                {
+                    info.Engineer = ToWide(text, chunk.Payload.size());
+                }
+                else if (chunk.Id == MakeFourCC("ICMT"))
+                {
+                    info.Comments = ToWide(text, chunk.Payload.size());
+                }
+            }
+        }
+
+        // Resolves symlinks, junctions, short names and relative traversal, none of which a string
+        // comparison on the caller's path would catch. Checked on the handle we then read from, so
+        // the file cannot be swapped between the check and the read.
+        bool HandleIsUnderSystemDirectory(_In_ HANDLE file) noexcept
+        {
+            std::wstring resolved(MAX_PATH, L'\0');
+
+            DWORD length = GetFinalPathNameByHandleW(
+                file, resolved.data(), static_cast<DWORD>(resolved.size()),
+                FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+
+            if (length == 0)
+            {
+                return false;
+            }
+
+            if (length > resolved.size())
+            {
+                resolved.assign(length, L'\0');
+
+                length = GetFinalPathNameByHandleW(
+                    file, resolved.data(), static_cast<DWORD>(resolved.size()),
+                    FILE_NAME_NORMALIZED | VOLUME_NAME_DOS);
+
+                if (length == 0 || length > resolved.size())
+                {
+                    return false;
+                }
+            }
+
+            resolved.resize(length);
+
+            // GetFinalPathNameByHandleW returns an extended length prefix; the system directory
+            // does not have one.
+            constexpr std::wstring_view ExtendedPrefix = L"\\\\?\\";
+
+            if (resolved.starts_with(ExtendedPrefix))
+            {
+                resolved.erase(0, ExtendedPrefix.size());
+            }
+
+            wchar_t systemDirectory[MAX_PATH]{};
+            const UINT systemLength = GetSystemDirectoryW(systemDirectory, ARRAYSIZE(systemDirectory));
+
+            if (systemLength == 0 || systemLength >= ARRAYSIZE(systemDirectory))
+            {
+                return false;
+            }
+
+            const std::wstring_view system(systemDirectory, systemLength);
+
+            if (resolved.size() <= system.size())
+            {
+                return false;
+            }
+
+            if (_wcsnicmp(resolved.c_str(), system.data(), system.size()) != 0)
+            {
+                return false;
+            }
+
+            // The next character must be a separator, otherwise "System32Evil\x.dls" would pass.
+            return resolved[system.size()] == L'\\';
+        }
+
+        DlsParseStatus OpenSoundSetFile(
+            _In_ const std::wstring& path,
+            _In_ const DlsParseLimits& limits,
+            _In_ SoundSetOrigin origin,
+            _Out_ HANDLE& openedHandle,
+            _Out_ uint64_t& fileBytes) noexcept
+        {
+            openedHandle = INVALID_HANDLE_VALUE;
+            fileBytes = 0;
+
+            const HANDLE rawHandle = CreateFileW(
+                path.c_str(),
+                GENERIC_READ,
+                FILE_SHARE_READ,
+                nullptr,
+                OPEN_EXISTING,
+                FILE_ATTRIBUTE_NORMAL,
+                nullptr);
+
+            if (rawHandle == INVALID_HANDLE_VALUE)
+            {
+                return DlsParseStatus::FileNotFound;
+            }
+
+            if (origin == SoundSetOrigin::SystemOnly && !HandleIsUnderSystemDirectory(rawHandle))
+            {
+                CloseHandle(rawHandle);
+                return DlsParseStatus::NotPermitted;
+            }
+
+            LARGE_INTEGER size{};
+
+            if (!GetFileSizeEx(rawHandle, &size))
+            {
+                CloseHandle(rawHandle);
+                return DlsParseStatus::ReadError;
+            }
+
+            if (size.QuadPart <= 0)
+            {
+                CloseHandle(rawHandle);
+                return DlsParseStatus::NotRiffFile;
+            }
+
+            if (static_cast<uint64_t>(size.QuadPart) > limits.MaxFileBytes)
+            {
+                CloseHandle(rawHandle);
+                return DlsParseStatus::FileTooLarge;
+            }
+
+            openedHandle = rawHandle;
+            fileBytes = static_cast<uint64_t>(size.QuadPart);
+
+            return DlsParseStatus::Ok;
+        }
     }
 
     _Use_decl_annotations_
     DlsParseStatus DlsCollection::LoadFromFile(
         const std::wstring& path,
         const DlsParseLimits& limits,
+        SoundSetOrigin origin,
         DlsCollection& collection)
     {
         collection = {};
 
-        const HANDLE rawHandle = CreateFileW(
-            path.c_str(),
-            GENERIC_READ,
-            FILE_SHARE_READ,
-            nullptr,
-            OPEN_EXISTING,
-            FILE_ATTRIBUTE_NORMAL,
-            nullptr);
+        HANDLE rawHandle = INVALID_HANDLE_VALUE;
+        uint64_t fileBytes64 = 0;
 
-        if (rawHandle == INVALID_HANDLE_VALUE)
+        const auto opened = OpenSoundSetFile(path, limits, origin, rawHandle, fileBytes64);
+
+        if (opened != DlsParseStatus::Ok)
         {
-            return DlsParseStatus::FileNotFound;
+            return opened;
         }
 
         struct HandleCloser
@@ -499,26 +679,9 @@ namespace MidiSynth
             ~HandleCloser() { CloseHandle(Value); }
         } handle{ rawHandle };
 
-        LARGE_INTEGER fileSize{};
-
-        if (!GetFileSizeEx(handle.Value, &fileSize))
-        {
-            return DlsParseStatus::ReadError;
-        }
-
-        if (fileSize.QuadPart <= 0)
-        {
-            return DlsParseStatus::NotRiffFile;
-        }
-
-        if (static_cast<uint64_t>(fileSize.QuadPart) > limits.MaxFileBytes)
-        {
-            return DlsParseStatus::FileTooLarge;
-        }
-
         // Read rather than memory map. A mapped view of a file another process truncates
         // faults on access; a heap copy cannot be pulled out from under the parser.
-        std::vector<std::byte> fileBytes(static_cast<size_t>(fileSize.QuadPart));
+        std::vector<std::byte> fileBytes(static_cast<size_t>(fileBytes64));
 
         size_t totalRead = 0;
 
@@ -543,6 +706,137 @@ namespace MidiSynth
         }
 
         return LoadFromMemory(std::move(fileBytes), limits, collection);
+    }
+
+    _Use_decl_annotations_
+    DlsParseStatus DlsCollection::ProbeFile(
+        const std::wstring& path,
+        const DlsParseLimits& limits,
+        SoundSetOrigin origin,
+        DlsSoundSetInfo& info)
+    {
+        info = {};
+
+        HANDLE rawHandle = INVALID_HANDLE_VALUE;
+        uint64_t fileBytes = 0;
+
+        const auto opened = OpenSoundSetFile(path, limits, origin, rawHandle, fileBytes);
+
+        if (opened != DlsParseStatus::Ok)
+        {
+            return opened;
+        }
+
+        struct HandleCloser
+        {
+            HANDLE Value;
+            ~HandleCloser() { CloseHandle(Value); }
+        } handle{ rawHandle };
+
+        info.FileBytes = fileBytes;
+
+        auto readExact = [&](_Out_writes_bytes_(count) void* buffer, uint32_t count) noexcept
+        {
+            DWORD actuallyRead = 0;
+            return ReadFile(handle.Value, buffer, count, &actuallyRead, nullptr) && actuallyRead == count;
+        };
+
+        auto seekTo = [&](uint64_t offset) noexcept
+        {
+            LARGE_INTEGER move{};
+            move.QuadPart = static_cast<LONGLONG>(offset);
+            return SetFilePointerEx(handle.Value, move, nullptr, FILE_BEGIN) != FALSE;
+        };
+
+        // RIFF header: "RIFF" <size> "DLS ".
+        uint32_t header[3]{};
+
+        if (!readExact(header, sizeof(header)))
+        {
+            return DlsParseStatus::ReadError;
+        }
+
+        if (header[0] != MakeFourCC("RIFF") || header[2] != MakeFourCC("DLS "))
+        {
+            return DlsParseStatus::NotRiffFile;
+        }
+
+        // Anything bigger than this in a header chunk is not something worth reading whole.
+        constexpr uint32_t MaxInlineChunkBytes = 64u * 1024u;
+
+        uint64_t position = 12;
+        bool sawCollectionHeader = false;
+
+        while (position + 8 <= fileBytes)
+        {
+            if (!seekTo(position))
+            {
+                return DlsParseStatus::ReadError;
+            }
+
+            uint32_t chunk[2]{};
+
+            if (!readExact(chunk, sizeof(chunk)))
+            {
+                return DlsParseStatus::ReadError;
+            }
+
+            const uint32_t id = chunk[0];
+            const uint32_t payloadSize = chunk[1];
+
+            if (payloadSize > fileBytes - (position + 8))
+            {
+                return DlsParseStatus::MalformedChunk;
+            }
+
+            if (id == MakeFourCC("colh") && payloadSize >= 4)
+            {
+                if (!readExact(&info.InstrumentCount, 4))
+                {
+                    return DlsParseStatus::ReadError;
+                }
+
+                sawCollectionHeader = true;
+            }
+            else if (id == MakeFourCC("vers") && payloadSize >= 8)
+            {
+                uint16_t parts[4]{};
+
+                if (!readExact(parts, sizeof(parts)))
+                {
+                    return DlsParseStatus::ReadError;
+                }
+
+                info.Version.Minor = parts[0];
+                info.Version.Major = parts[1];
+                info.Version.Build = parts[2];
+                info.Version.Release = parts[3];
+            }
+            else if (id == MakeFourCC("LIST") && payloadSize >= 4 &&
+                     payloadSize <= MaxInlineChunkBytes)
+            {
+                std::vector<std::byte> listBytes(payloadSize);
+
+                if (!readExact(listBytes.data(), payloadSize))
+                {
+                    return DlsParseStatus::ReadError;
+                }
+
+                uint32_t listType = 0;
+                std::memcpy(&listType, listBytes.data(), sizeof(listType));
+
+                if (listType == MakeFourCC("INFO"))
+                {
+                    ReadInfoStrings(
+                        std::span<const std::byte>(listBytes).subspan(sizeof(listType)), info);
+                }
+            }
+
+            // Chunks are word aligned, and the pad byte is not counted in the size.
+            position += 8 + payloadSize + (payloadSize & 1);
+        }
+
+        return sawCollectionHeader ? DlsParseStatus::Ok : DlsParseStatus::MissingRequiredChunk;
     }
 
     _Use_decl_annotations_

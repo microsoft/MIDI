@@ -25,6 +25,7 @@ namespace MidiSynth
         constexpr uint8_t StatusRegisteredController = 0x2;
 
         constexpr uint8_t SystemReset = 0xFF;
+        constexpr uint8_t ActiveSensing = 0xFE;
 
         // A malformed or hostile stream must not be able to grow this without bound.
         constexpr size_t MaxSysExBytes = 1024;
@@ -42,9 +43,10 @@ namespace MidiSynth
     {
         m_engine = engine;
         m_group = group & 0xF;
-        m_muid = muid & 0x0FFFFFFF;
-        m_sysex.clear();
+        m_sysexLength = 0;
         m_stats = {};
+
+        ConfigureResponder(muid);
     }
 
     _Use_decl_annotations_
@@ -52,6 +54,15 @@ namespace MidiSynth
     {
         m_output = output;
         m_identity = identity;
+
+        // The responder was configured before the identity arrived, so rebuild it.
+        ConfigureResponder(m_responder.Muid());
+    }
+
+    _Use_decl_annotations_
+    void UmpDispatcher::SetMuid(uint32_t muid) noexcept
+    {
+        m_responder.SetMuid(muid & 0x0FFFFFFF);
     }
 
     _Use_decl_annotations_
@@ -69,7 +80,8 @@ namespace MidiSynth
         // A manufacturer identifier is one byte, or three bytes when the first is zero.
         const bool extendedId = (m_identity.ManufacturerSysExId[0] == 0);
 
-        uint8_t payload[15]{};
+        // Sized well past the fifteen bytes this builds, so adding a field later cannot overflow.
+        uint8_t payload[32]{};
         size_t total = 0;
 
         payload[total++] = 0x7E;
@@ -101,100 +113,158 @@ namespace MidiSynth
     }
 
     _Use_decl_annotations_
-    void UmpDispatcher::HandleMidiCi(const uint8_t* message, size_t size) noexcept
+    void UmpDispatcher::HandleGlobalParameterControl(const uint8_t* message, size_t size) noexcept
     {
-        // 7E <device id> 0D <sub id 2> <version> <source muid x4> <destination muid x4> ...
-        if (size < 13)
-        {
-            m_stats.Malformed++;
-            return;
-        }
+        // 7F <device> 04 05 <slot path length> <parameter id width> <value width> <slot path...>
+        // then parameter and value pairs. Only the widths GM2 defines for reverb and chorus are
+        // handled; anything else is left alone rather than guessed at.
+        constexpr size_t HeaderSize = 7;
 
-        const uint8_t subId2 = message[3];
-
-        const uint32_t initiatorMuid =
-            static_cast<uint32_t>(message[5]) |
-            (static_cast<uint32_t>(message[6]) << 7) |
-            (static_cast<uint32_t>(message[7]) << 14) |
-            (static_cast<uint32_t>(message[8]) << 21);
-
-        // Replying to Discovery is mandatory even for a device that supports no MIDI-CI categories.
-        if (subId2 == 0x70)
-        {
-            // The output path id arrived with message version 2, so older initiators omit it.
-            const uint8_t outputPathId = (size >= 30) ? (message[29] & 0x7F) : 0;
-
-            SendDiscoveryReply(initiatorMuid, outputPathId);
-            return;
-        }
-
-        m_stats.Ignored++;
-    }
-
-    _Use_decl_annotations_
-    void UmpDispatcher::SendDiscoveryReply(uint32_t initiatorMuid, uint8_t outputPathId) noexcept
-    {
-        if (m_output == nullptr || !m_identity.IsConfigured() || m_muid == 0)
+        if (size < HeaderSize + 2)
         {
             m_stats.Ignored++;
             return;
         }
 
-        auto appendMuid = [](uint8_t* buffer, size_t& offset, uint32_t muid) noexcept
+        const size_t slotPathLength = message[4];
+        const size_t parameterWidth = message[5];
+        const size_t valueWidth = message[6];
+
+        if (slotPathLength != 1 || parameterWidth != 1 || valueWidth != 1)
         {
-            buffer[offset++] = static_cast<uint8_t>(muid & 0x7F);
-            buffer[offset++] = static_cast<uint8_t>((muid >> 7) & 0x7F);
-            buffer[offset++] = static_cast<uint8_t>((muid >> 14) & 0x7F);
-            buffer[offset++] = static_cast<uint8_t>((muid >> 21) & 0x7F);
-        };
-
-        uint8_t payload[31]{};
-        size_t total = 0;
-
-        payload[total++] = 0x7E;
-        payload[total++] = 0x7F;        // from the function block
-        payload[total++] = 0x0D;
-        payload[total++] = 0x71;        // reply to discovery
-        payload[total++] = 0x02;        // message version
-
-        appendMuid(payload, total, m_muid);
-        appendMuid(payload, total, initiatorMuid);
-
-        // MIDI-CI always carries three manufacturer bytes, unlike an Identity Reply.
-        payload[total++] = m_identity.ManufacturerSysExId[0];
-        payload[total++] = m_identity.ManufacturerSysExId[1];
-        payload[total++] = m_identity.ManufacturerSysExId[2];
-
-        payload[total++] = static_cast<uint8_t>(m_identity.FamilyCode & 0x7F);
-        payload[total++] = static_cast<uint8_t>((m_identity.FamilyCode >> 7) & 0x7F);
-        payload[total++] = static_cast<uint8_t>(m_identity.FamilyMemberCode & 0x7F);
-        payload[total++] = static_cast<uint8_t>((m_identity.FamilyMemberCode >> 7) & 0x7F);
-
-        for (const auto revision : m_identity.SoftwareRevision)
-        {
-            payload[total++] = revision & 0x7F;
+            m_stats.Ignored++;
+            return;
         }
 
-        // No Profile Configuration, Property Exchange or Process Inquiry yet.
-        payload[total++] = 0x00;
+        const size_t slotPathOffset = HeaderSize;
 
-        // Receivable maximum SysEx size, seven bits per byte, LSB first.
-        payload[total++] = static_cast<uint8_t>(MaxSysExBytes & 0x7F);
-        payload[total++] = static_cast<uint8_t>((MaxSysExBytes >> 7) & 0x7F);
-        payload[total++] = static_cast<uint8_t>((MaxSysExBytes >> 14) & 0x7F);
-        payload[total++] = static_cast<uint8_t>((MaxSysExBytes >> 21) & 0x7F);
+        if (size <= slotPathOffset)
+        {
+            m_stats.Ignored++;
+            return;
+        }
 
-        payload[total++] = outputPathId;
-        payload[total++] = SynthEndpoint::FunctionBlockNumber;
+        // GM2 slot 1 is reverb, slot 2 is chorus.
+        const uint8_t slot = message[slotPathOffset];
 
-        SendSysEx7(payload, total);
+        IAudioEffect* effect = nullptr;
 
-        m_stats.DiscoveryRepliesSent++;
+        if (slot == 0x01)
+        {
+            effect = m_engine->Reverb();
+        }
+        else if (slot == 0x02)
+        {
+            effect = m_engine->Chorus();
+        }
+
+        if (effect == nullptr)
+        {
+            m_stats.Ignored++;
+            return;
+        }
+
+        for (size_t offset = slotPathOffset + 1; offset + 1 < size; offset += 2)
+        {
+            const uint8_t parameter = message[offset] & 0x7F;
+            const double normalized = static_cast<double>(message[offset + 1] & 0x7F) / 127.0;
+
+            switch (parameter)
+            {
+            case 0x00:
+                // Type selects a preset character; mapped onto damping, which is what actually
+                // distinguishes the GM2 reverb types audibly.
+                effect->SetParameter(AudioEffectParameter::Damping, normalized);
+                break;
+
+            case 0x01:
+                // Time, scaled across the useful range rather than the full parameter range.
+                effect->SetParameter(AudioEffectParameter::Time, 0.2 + normalized * 4.0);
+                break;
+
+            default:
+                break;
+            }
+        }
+    }
+
+    _Use_decl_annotations_
+    void UmpDispatcher::HandleMidiCi(const uint8_t* message, size_t size) noexcept
+    {
+        namespace ci = WindowsMidiServicesCapabilityInquiry;
+
+        ci::ParsedMessage parsed{};
+
+        if (ci::Parse(message, size, parsed) != ci::ParseStatus::Ok)
+        {
+            m_stats.Malformed++;
+            return;
+        }
+
+        uint8_t reply[ci::DiscoveryReplyByteCount]{};
+        size_t replyBytes{ 0 };
+
+        const auto action = m_responder.ProcessMessage(parsed, reply, sizeof(reply), &replyBytes);
+
+        switch (action)
+        {
+        case ci::ResponderAction::Replied:
+            // An identity we were never given would go out as a device claiming to be nothing.
+            if (!m_identity.IsConfigured() || m_output == nullptr)
+            {
+                m_stats.Ignored++;
+                return;
+            }
+
+            SendSysEx7(reply, replyBytes);
+            m_stats.DiscoveryRepliesSent++;
+            return;
+
+        case ci::ResponderAction::MuidInvalidated:
+            m_stats.MuidInvalidations++;
+            return;
+
+        default:
+            m_stats.Ignored++;
+            return;
+        }
+    }
+
+    _Use_decl_annotations_
+    void UmpDispatcher::ConfigureResponder(uint32_t muid) noexcept
+    {
+        namespace ci = WindowsMidiServicesCapabilityInquiry;
+
+        ci::ResponderConfig config{};
+
+        config.Muid = muid & 0x0FFFFFFF;
+
+        config.ManufacturerSysExId[0] = m_identity.ManufacturerSysExId[0];
+        config.ManufacturerSysExId[1] = m_identity.ManufacturerSysExId[1];
+        config.ManufacturerSysExId[2] = m_identity.ManufacturerSysExId[2];
+
+        config.DeviceFamily = m_identity.FamilyCode;
+        config.DeviceFamilyModelNumber = m_identity.FamilyMemberCode;
+
+        for (size_t i = 0; i < 4; i++)
+        {
+            config.SoftwareRevisionLevel[i] = m_identity.SoftwareRevision[i];
+        }
+
+        config.ReceivableMaximumSysExSize = MaxSysExBytes;
+        config.FunctionBlockNumber = SynthEndpoint::FunctionBlockNumber;
+
+        m_responder.Initialize(config);
     }
 
     _Use_decl_annotations_
     void UmpDispatcher::SendSysEx7(const uint8_t* payload, size_t total) noexcept
     {
+        if (m_output == nullptr || total == 0)
+        {
+            return;
+        }
+
         constexpr size_t BytesPerPacket = 6;
 
         for (size_t offset = 0; offset < total; offset += BytesPerPacket)
@@ -458,6 +528,10 @@ namespace MidiSynth
         {
             m_engine->SystemReset();
         }
+        else if (status == ActiveSensing)
+        {
+            m_engine->ActiveSensing();
+        }
         else
         {
             m_stats.Ignored++;
@@ -475,14 +549,14 @@ namespace MidiSynth
         if (byteCount > 6)
         {
             m_stats.Malformed++;
-            m_sysex.clear();
+            m_sysexLength = 0;
             return;
         }
 
         // Status 0 is a complete message and 1 is the start of one; both begin a new buffer.
         if (status == 0 || status == 1)
         {
-            m_sysex.clear();
+            m_sysexLength = 0;
         }
 
         const uint8_t bytes[6] =
@@ -497,27 +571,27 @@ namespace MidiSynth
 
         for (uint8_t i = 0; i < byteCount; i++)
         {
-            if (m_sysex.size() >= MaxSysExBytes)
+            if (m_sysexLength >= MaxSysExBytes)
             {
                 m_stats.Malformed++;
-                m_sysex.clear();
+                m_sysexLength = 0;
                 return;
             }
 
-            m_sysex.push_back(bytes[i]);
+            m_sysex[m_sysexLength++] = bytes[i];
         }
 
         if (status == 0 || status == 3)
         {
             HandleCompletedSysEx();
-            m_sysex.clear();
+            m_sysexLength = 0;
         }
     }
 
     void UmpDispatcher::HandleCompletedSysEx() noexcept
     {
         // Byte counts are checked before every access; the payload is untrusted.
-        const size_t size = m_sysex.size();
+        const size_t size = m_sysexLength;
 
         if (size < 3)
         {
@@ -544,8 +618,39 @@ namespace MidiSynth
 
             if (m_sysex[2] == 0x0D)
             {
-                HandleMidiCi(m_sysex.data(), size);
+                HandleMidiCi(m_sysex, size);
                 return;
+            }
+        }
+
+        // Universal real time, Device Control. These three are required by General MIDI 2.
+        if (m_sysex[0] == 0x7F && size >= 6 && m_sysex[2] == 0x04)
+        {
+            const auto lsb = static_cast<uint16_t>(m_sysex[4] & 0x7F);
+            const auto msb = static_cast<uint16_t>(m_sysex[5] & 0x7F);
+            const auto combined = static_cast<uint16_t>((msb << 7) | lsb);
+
+            switch (m_sysex[3])
+            {
+            case 0x01:
+                m_engine->SetMasterVolume(combined);
+                return;
+
+            case 0x03:
+                m_engine->SetMasterFineTuning(combined);
+                return;
+
+            case 0x04:
+                // The least significant byte is defined as always zero here.
+                m_engine->SetMasterCoarseTuning(static_cast<uint8_t>(msb));
+                return;
+
+            case 0x05:
+                HandleGlobalParameterControl(m_sysex, size);
+                return;
+
+            default:
+                break;
             }
         }
 

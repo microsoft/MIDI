@@ -25,6 +25,9 @@ namespace MidiSynth
         LimitExceeded,
         UnsupportedWaveFormat,
         InvalidWaveReference,
+
+        // The file is readable but the configured origin policy does not allow it.
+        NotPermitted,
     };
 
     const char* DlsParseStatusToString(_In_ DlsParseStatus status) noexcept;

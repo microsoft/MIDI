@@ -48,7 +48,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)inc;$(SynthLibMidi2Include);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)inc;$(MSBuildThisFileDirectory)..\..\..\..\in-box\Inc;$(SynthLibMidi2Include);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization Condition="'$(Configuration)'=='Debug'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)'=='Release'">MaxSpeed</Optimization>
@@ -60,10 +60,14 @@
 
   <ItemGroup>
     <ClInclude Include="inc\MidiSynth\Articulation.h" />
+    <ClInclude Include="inc\MidiSynth\AudioEffect.h" />
     <ClInclude Include="inc\MidiSynth\AudioSink.h" />
+    <ClInclude Include="inc\MidiSynth\ChorusEffect.h" />
     <ClInclude Include="inc\MidiSynth\DlsCollection.h" />
+    <ClInclude Include="inc\MidiSynth\ReverbEffect.h" />
     <ClInclude Include="inc\MidiSynth\DlsTypes.h" />
     <ClInclude Include="inc\MidiSynth\DlsUnits.h" />
+    <ClInclude Include="inc\MidiSynth\ProgramList.h" />
     <ClInclude Include="inc\MidiSynth\RiffReader.h" />
     <ClInclude Include="inc\MidiSynth\SpscRingBuffer.h" />
     <ClInclude Include="inc\MidiSynth\SynthConfig.h" />
@@ -73,7 +77,10 @@
 
   <ItemGroup>
     <ClCompile Include="src\Articulation.cpp" />
+    <ClCompile Include="src\ChorusEffect.cpp" />
     <ClCompile Include="src\DlsCollection.cpp" />
+    <ClCompile Include="src\ProgramList.cpp" />
+    <ClCompile Include="src\ReverbEffect.cpp" />
     <ClCompile Include="src\SynthEngine.cpp" />
     <ClCompile Include="src\UmpDispatcher.cpp" />
     <ClCompile Include="src\WasapiAudioSink.cpp" />

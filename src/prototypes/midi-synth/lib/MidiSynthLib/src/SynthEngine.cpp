@@ -16,6 +16,8 @@ namespace MidiSynth
         constexpr uint8_t ControllerVolume = 7;
         constexpr uint8_t ControllerPan = 10;
         constexpr uint8_t ControllerExpression = 11;
+        constexpr uint8_t ControllerReverbSend = 91;
+        constexpr uint8_t ControllerChorusSend = 93;
         constexpr uint8_t ControllerBankSelectLsb = 32;
         constexpr uint8_t ControllerSustainPedal = 64;
         constexpr uint8_t ControllerRpnLsb = 100;
@@ -104,6 +106,36 @@ namespace MidiSynth
 
         m_voices.assign((std::max)(1u, config.MaxVoices), SynthVoice{});
 
+        // Not allocated at all when effects are off, so the per voice send accumulation is skipped
+        // rather than merely discarded.
+        if (config.EnableEffects)
+        {
+            const size_t sendSamples = static_cast<size_t>(config.RenderSampleRate()) / 2 * 2;
+
+            m_reverbSendBuffer.assign(sendSamples, 0.0f);
+            m_chorusSendBuffer.assign(sendSamples, 0.0f);
+
+            if (!m_reverb.Configure(config.RenderSampleRate()) ||
+                !m_chorus.Configure(config.RenderSampleRate()))
+            {
+                return false;
+            }
+
+            // GM2 defaults: a little reverb, no chorus.
+            m_reverb.SetParameter(AudioEffectParameter::WetLevel, 0.9);
+            m_reverb.SetParameter(AudioEffectParameter::Time, 1.8);
+            m_reverb.SetParameter(AudioEffectParameter::Damping, 0.4);
+
+            m_chorus.SetParameter(AudioEffectParameter::WetLevel, 0.9);
+            m_chorus.SetParameter(AudioEffectParameter::Rate, 0.8);
+            m_chorus.SetParameter(AudioEffectParameter::Depth, 0.4);
+        }
+        else
+        {
+            m_reverbSendBuffer.clear();
+            m_chorusSendBuffer.clear();
+        }
+
         SystemReset();
 
         return true;
@@ -123,12 +155,17 @@ namespace MidiSynth
             ResolveInstrument(static_cast<uint8_t>(channel));
         }
 
+        // GM2 defaults: master volume full, tuning centered.
+        m_masterVolumeDb = 0.0;
+        m_masterFineCents = 0.0;
+        m_masterCoarseCents = 0.0;
+        m_masterTuningCents = 0.0;
+
         m_nextStartOrder = 1;
         m_stolenVoiceCount = 0;
         m_droppedNoteCount = 0;
         m_clippedSampleCount = 0;
-        m_limiterGain = 1.0;
-        m_lowestLimiterGain = 1.0;
+        m_limiterGain = 1.0;        m_lowestLimiterGain = 1.0;
         m_peakOutput = 0.0;
     }
 
@@ -514,6 +551,14 @@ namespace MidiSynth
             state.Expression = normalized;
             break;
 
+        case ControllerReverbSend:
+            state.ReverbSend = normalized;
+            break;
+
+        case ControllerChorusSend:
+            state.ChorusSend = normalized;
+            break;
+
         case ControllerSustainPedal:
         {
             const bool down = value >= 64;
@@ -815,7 +860,8 @@ namespace MidiSynth
             ConcaveTransformDb(state.Volume) +
             ConcaveTransformDb(state.Expression);
 
-        const double totalGainDb = voice.StaticGainDb + channelGainDb + lfoAttenuationDb + m_config.MasterGainDb;
+        const double totalGainDb = voice.StaticGainDb + channelGainDb + lfoAttenuationDb
+            + m_config.MasterGainDb + m_masterVolumeDb;
 
         const double amplitude = envelopeGain * DecibelsToLinear(totalGainDb) / 32768.0;
 
@@ -845,9 +891,36 @@ namespace MidiSynth
             lfoValue * (articulation.LfoToPitchCents + articulation.LfoModWheelToPitchCents * modulationDepth);
 
         const double totalCents =
-            bendCents + lfoPitchCents + state.FineTuneCents + state.CoarseTuneSemitones * 100.0;
+            bendCents + lfoPitchCents + state.FineTuneCents + state.CoarseTuneSemitones * 100.0
+            + (state.IsDrumChannel ? 0.0 : m_masterTuningCents);
 
         voice.BlockPitchRatio = voice.BasePitchRatio * CentsToPitchRatio(totalCents);
+    }
+
+    _Use_decl_annotations_
+    void SynthEngine::SetMasterVolume(uint16_t value) noexcept
+    {
+        const auto clamped = (std::min)(value, static_cast<uint16_t>(16383));
+
+        m_masterVolumeDb = (clamped == 0)
+            ? VoiceCutoffDb
+            : ConcaveTransformDb(static_cast<double>(clamped) / 16383.0);
+    }
+
+    _Use_decl_annotations_
+    void SynthEngine::SetMasterFineTuning(uint16_t value) noexcept
+    {
+        const auto clamped = (std::min)(value, static_cast<uint16_t>(16383));
+
+        m_masterFineCents = (static_cast<double>(clamped) - 8192.0) * (100.0 / 8192.0);
+        m_masterTuningCents = m_masterFineCents + m_masterCoarseCents;
+    }
+
+    _Use_decl_annotations_
+    void SynthEngine::SetMasterCoarseTuning(uint8_t msb) noexcept
+    {
+        m_masterCoarseCents = (static_cast<double>(msb & 0x7F) - 64.0) * 100.0;
+        m_masterTuningCents = m_masterFineCents + m_masterCoarseCents;
     }
 
     _Use_decl_annotations_
@@ -857,6 +930,21 @@ namespace MidiSynth
         const double gainStepRight = (voice.TargetGainRight - voice.CurrentGainRight) / frames;
 
         const auto quality = m_config.Interpolation;
+
+        // Send levels are per channel and fixed for the block, so the sends cost nothing at all
+        // when a channel is dry.
+        const auto& state = m_channels[voice.Channel & 0x0F];
+
+        const auto reverbGain = static_cast<float>(state.ReverbSend);
+        const auto chorusGain = static_cast<float>(state.ChorusSend);
+
+        float* reverbSend = (reverbGain > 0.0f && !m_reverbSendBuffer.empty())
+            ? m_reverbSendBuffer.data() : nullptr;
+
+        float* chorusSend = (chorusGain > 0.0f && !m_chorusSendBuffer.empty())
+            ? m_chorusSendBuffer.data() : nullptr;
+
+        const size_t sendOffset = static_cast<size_t>(output - m_renderCursor) ;
 
         for (uint32_t frame = 0; frame < frames; frame++)
         {
@@ -871,8 +959,23 @@ namespace MidiSynth
             voice.CurrentGainLeft += gainStepLeft;
             voice.CurrentGainRight += gainStepRight;
 
-            output[frame * 2] += static_cast<float>(sample * voice.CurrentGainLeft);
-            output[frame * 2 + 1] += static_cast<float>(sample * voice.CurrentGainRight);
+            const auto left = static_cast<float>(sample * voice.CurrentGainLeft);
+            const auto right = static_cast<float>(sample * voice.CurrentGainRight);
+
+            output[frame * 2] += left;
+            output[frame * 2 + 1] += right;
+
+            if (reverbSend != nullptr)
+            {
+                reverbSend[sendOffset + frame * 2] += left * reverbGain;
+                reverbSend[sendOffset + frame * 2 + 1] += right * reverbGain;
+            }
+
+            if (chorusSend != nullptr)
+            {
+                chorusSend[sendOffset + frame * 2] += left * chorusGain;
+                chorusSend[sendOffset + frame * 2 + 1] += right * chorusGain;
+            }
 
             voice.Phase += voice.BlockPitchRatio;
 
@@ -888,6 +991,12 @@ namespace MidiSynth
         }
     }
 
+    void SynthEngine::ActiveSensing() noexcept
+    {
+        m_activeSensingSeen = true;
+        m_framesSinceActiveSensing = 0.0;
+    }
+
     _Use_decl_annotations_
     void SynthEngine::Render(float* interleavedStereo, uint32_t frameCount) noexcept
     {
@@ -896,6 +1005,40 @@ namespace MidiSynth
         if (m_collection == nullptr)
         {
             return;
+        }
+
+        const size_t samples = static_cast<size_t>(frameCount) * 2;
+
+        // Send buses are sized to the largest block seen. Growing here would allocate on the audio
+        // thread, so an oversized block simply runs without effects rather than risking that.
+        const bool sendsAvailable =
+            m_config.EnableEffects &&
+            m_reverbSendBuffer.size() >= samples && m_chorusSendBuffer.size() >= samples;
+
+        if (sendsAvailable)
+        {
+            std::fill_n(m_reverbSendBuffer.data(), samples, 0.0f);
+            std::fill_n(m_chorusSendBuffer.data(), samples, 0.0f);
+        }
+
+        m_renderCursor = interleavedStereo;
+
+        // The specification allows 300 ms; a sender is expected to repeat at least every 300 ms,
+        // so this only fires when the link has genuinely stopped.
+        if (m_activeSensingSeen)
+        {
+            m_framesSinceActiveSensing += frameCount;
+
+            if (m_framesSinceActiveSensing > m_renderSampleRate * 0.3)
+            {
+                for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
+                {
+                    AllSoundOff(channel);
+                }
+
+                m_activeSensingSeen = false;
+                m_framesSinceActiveSensing = 0.0;
+            }
         }
 
         const uint32_t controlBlock = (std::max)(1u, m_config.ControlRateFrames);
@@ -925,6 +1068,13 @@ namespace MidiSynth
             }
 
             rendered += frames;
+        }
+
+        // Effects add into the mix, so a silent send bus costs only the early return inside them.
+        if (sendsAvailable)
+        {
+            m_chorus.Process(m_chorusSendBuffer.data(), interleavedStereo, frameCount);
+            m_reverb.Process(m_reverbSendBuffer.data(), interleavedStereo, frameCount);
         }
 
         // Instant attack so nothing overshoots, which means no lookahead and so no added latency.
