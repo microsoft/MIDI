@@ -1136,6 +1136,7 @@ Return Value:
         {
             pDeviceContext->MidiOutPipe = pipe;
             pDeviceContext->MidiOutPipeType = pipeInfo.PipeType;
+
             // Round down to a multiple of sizeof(UINT32) so the 4-byte-stride
             // write loop cannot overshoot the allocation
             pDeviceContext->MidiOutMaxSize = pipeInfo.MaximumPacketSize & ~(sizeof(UINT32) - 1);

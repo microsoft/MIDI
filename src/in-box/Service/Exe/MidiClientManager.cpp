@@ -433,6 +433,7 @@ CMidiClientManager::GetMidiClient(
     {
         newClientHandle = (MidiClientHandle) (((ULONGLONG)RtlRandomEx(&m_handleSeed) << 32) | RtlRandomEx(&m_handleSeed));
     } while (newClientHandle == 0 || m_ClientPipes.count(newClientHandle) != 0);
+
     client->ClientHandle = newClientHandle;
 
     m_ClientPipes.emplace(client->ClientHandle, std::move(clientPipe));
@@ -1200,6 +1201,7 @@ CMidiClientManager::CreateMidiClient(
         }
 
         RETURN_IF_FAILED(GetMidiDevice(primaryMidiDevice.c_str(), &deviceCreationParams, devicePipe));
+
         devicePipe->AddClient(client->ClientHandle);
 
         // MidiFlowIn on the client flows data from the midi device to the client,
@@ -1223,6 +1225,7 @@ CMidiClientManager::CreateMidiClient(
                     newClientConnectionPipe)); // clientConnectionPipe is the plugin
 
                 newClientConnectionPipe->AddClient(client->ClientHandle);
+
                 clientConnectionPipe = newClientConnectionPipe;
             }
 

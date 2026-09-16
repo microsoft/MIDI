@@ -241,28 +241,6 @@ namespace WindowsMidiServicesInternal
     }
     // END remove with Feature_Servicing_MIDI2ComponentSignatureCache cleanup
 
-    inline HRESULT IsComponentPermitted(GUID guid)
-    {
-        // If we are in developer mode, we allow loading of untrusted components.
-        RETURN_HR_IF(S_OK, IsDeveloperModeEnabled());
-
-        wchar_t guidString[GUID_STRING_LENGTH] {NULL};
-        RETURN_HR_IF(E_INVALIDARG, 0 == StringFromGUID2(guid, guidString, _countof(guidString)));
-
-        // otherwise, confirm the component is trusted.
-        std::wstring fileName = GetFileNameFromCLSID(std::wstring(guidString));
-
-        // first check to see if it's inbox, catalog signed
-        if(FAILED(IsFileCatalogSigned(fileName.c_str())))
-        {
-            // not catalog signed, check to see if this file is signed.
-            RETURN_IF_FAILED(IsFileDigitallySigned(fileName.c_str()));
-        }
-
-        return S_OK;
-    }
-
-
     // Verifying a component means hashing the entire DLL and then walking the catalog store, which
     // costs on the order of a second per file on a machine without developer mode. A single client
     // connection verifies the transport plus every transform it needs, and the KS aggregate proxies

@@ -11,7 +11,6 @@
 
 #include "Feature_Servicing_MIDI2SessionTrackerConnectionTime.h"
 
-
 _Use_decl_annotations_
 std::vector<MidiSessionEntry>::iterator
 CMidiSessionTracker::FindSession(GUID sessionId, DWORD clientProcessId)
