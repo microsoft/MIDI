@@ -181,7 +181,6 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
     std::wstring filterName{ device.Name() };
     std::wstring deviceId;
     std::wstring deviceInstanceId;
-    std::hash<std::wstring> hasher;
     std::wstring hash;
     ULONG cPins{ 0 };
 
