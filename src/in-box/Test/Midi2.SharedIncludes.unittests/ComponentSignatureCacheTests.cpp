@@ -94,7 +94,8 @@ void ComponentSignatureCacheTests::TestCachedResultMatchesUncachedResult()
 
     VERIFY_SUCCEEDED(CoCreateGuid(&unregistered));
 
-    auto uncached = internal::IsComponentPermitted(unregistered);
+    wil::unique_hfile componentFileLock;
+    auto uncached = internal::IsComponentPermitted(unregistered, componentFileLock);
     auto cached = internal::IsComponentPermittedWithCaching(unregistered);
 
     VERIFY_ARE_EQUAL(SUCCEEDED(uncached), SUCCEEDED(cached));
