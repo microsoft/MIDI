@@ -186,6 +186,13 @@ namespace MidiSynth
 
         const SynthConfig& Config() const noexcept { return m_config; }
 
+        // Bank and program currently selected on a channel. Read by a worker thread building a
+        // property exchange channel list, which tolerates a torn read of an in-flight change.
+        SynthChannelState ChannelState(_In_ uint8_t channel) const noexcept
+        {
+            return m_channels[channel & 0x0F];
+        }
+
     private:
         _Ret_maybenull_ const DlsRegion* SelectRegion(
             _In_ const DlsInstrument& instrument,

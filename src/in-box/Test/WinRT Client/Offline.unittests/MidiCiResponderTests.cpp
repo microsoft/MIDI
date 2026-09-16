@@ -271,3 +271,60 @@ void MidiCiResponderTests::TestGetPropertyDataIsHandedToTheCaller()
         (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
         (int)ResponderAction::Ignored);
 }
+
+void MidiCiResponderTests::TestPropertyExchangeCapabilitiesReply()
+{
+    ResponderConfig config{};
+
+    config.Muid = OurMuid;
+    config.ManufacturerSysExId[2] = 0x41;
+    config.SupportsPropertyExchange = true;
+
+    Responder responder;
+    responder.Initialize(config);
+
+    ParsedMessage message{};
+
+    message.Type = MessageType::PropertyExchangeCapabilitiesInquiry;
+    message.SourceMuid = TheirMuid;
+    message.DestinationMuid = OurMuid;
+
+    uint8_t reply[64]{};
+    size_t replyBytes{ 0 };
+
+    VERIFY_ARE_EQUAL(
+        (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Replied);
+
+    VERIFY_ARE_EQUAL(replyBytes, PropertyExchangeCapabilitiesByteCount);
+
+    // Worked out by hand from the message format table, not from the builder.
+    const uint8_t expected[]
+    {
+        0x7E, 0x7F, 0x0D, 0x31, 0x02,
+        0x56, 0x68, 0x48, 0x00,             // source muid 0x0123456
+        0x42, 0x00, 0x00, 0x00,             // destination muid 0x42
+        0x01,                               // one simultaneous request
+        0x00, 0x00                          // property exchange version 0.0
+    };
+
+    VERIFY_ARE_EQUAL(sizeof(expected), PropertyExchangeCapabilitiesByteCount);
+
+    for (size_t i = 0; i < sizeof(expected); i++)
+    {
+        if (reply[i] != expected[i])
+        {
+            LOG_OUTPUT(L"Mismatch at %llu: got %02x expected %02x",
+                (unsigned long long)i, reply[i], expected[i]);
+        }
+
+        VERIFY_ARE_EQUAL(reply[i], expected[i]);
+    }
+
+    // A device that never declared Property Exchange has no capabilities to report.
+    auto plain = MakeResponder();
+
+    VERIFY_ARE_EQUAL(
+        (int)plain.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Ignored);
+}

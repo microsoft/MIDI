@@ -348,6 +348,48 @@ namespace WindowsMidiServicesCapabilityInquiry
     // Common header, request id, and the three two byte length fields.
     inline constexpr size_t PropertyExchangeFixedByteCount{ CommonHeaderByteCount + 1 + 2 + 2 + 2 + 2 };
 
+    // Common header, then simultaneous request count and the two version bytes that arrived with
+    // MIDI-CI message version 2.
+    inline constexpr size_t PropertyExchangeCapabilitiesByteCount{ CommonHeaderByteCount + 3 };
+
+    // Common Rules for Property Exchange 1.0 and 1.1 both report 0.0.
+    inline constexpr uint8_t PropertyExchangeMajorVersion{ 0x00 };
+    inline constexpr uint8_t PropertyExchangeMinorVersion{ 0x00 };
+
+    inline size_t BuildPropertyExchangeCapabilitiesReply(
+        _In_ uint32_t const sourceMuid,
+        _In_ uint32_t const destinationMuid,
+        _In_ uint8_t const simultaneousRequests,
+        _Out_writes_to_opt_(capacity, return) uint8_t* const buffer,
+        _In_ size_t const capacity
+    ) noexcept
+    {
+        if (buffer == nullptr || capacity < PropertyExchangeCapabilitiesByteCount)
+        {
+            return 0;
+        }
+
+        size_t offset{ 0 };
+
+        buffer[offset++] = UniversalSystemExclusiveId;
+        buffer[offset++] = DeviceIdFunctionBlock;
+        buffer[offset++] = SubId1CapabilityInquiry;
+        buffer[offset++] = static_cast<uint8_t>(MessageType::PropertyExchangeCapabilitiesReply);
+        buffer[offset++] = 0x02;
+
+        WriteMuid(buffer + offset, sourceMuid);
+        offset += 4;
+
+        WriteMuid(buffer + offset, destinationMuid);
+        offset += 4;
+
+        buffer[offset++] = simultaneousRequests & 0x7F;
+        buffer[offset++] = PropertyExchangeMajorVersion;
+        buffer[offset++] = PropertyExchangeMinorVersion;
+
+        return offset;
+    }
+
     // The F0 and F7 that bracket what the builder produces come out of the same budget, so a caller
     // that passes the size a device declared in its Discovery message gets a chunk that fits.
     inline uint16_t MaximumPropertyDataBytesPerChunk(

@@ -30,6 +30,11 @@ namespace WindowsMidiServicesCapabilityInquiry
 
         // One of the Appendix A categories, or null to omit.
         char const* Category{ nullptr };
+
+        // A single free form tag, or null to omit. Sound sets routinely give the same name to a
+        // program and its variation, and this is the field that tells them apart without inventing
+        // a title the sound set never had.
+        char const* Tag{ nullptr };
     };
 
     namespace Details
@@ -201,6 +206,13 @@ namespace WindowsMidiServicesCapabilityInquiry
                 ok = ok && Details::AppendCharacter(buffer, limit, length, ']');
             }
 
+            if (entry.Tag != nullptr)
+            {
+                ok = ok && Details::AppendText(buffer, limit, length, ",\"tags\":[");
+                ok = ok && Details::AppendJsonString(buffer, limit, length, entry.Tag);
+                ok = ok && Details::AppendCharacter(buffer, limit, length, ']');
+            }
+
             ok = ok && Details::AppendCharacter(buffer, limit, length, '}');
         }
 
@@ -277,8 +289,7 @@ namespace WindowsMidiServicesCapabilityInquiry
     }
 
     // Advertises which resources this device will answer for.
-    inline size_t BuildResourceListJson(
-        _In_reads_(count) char const* const* const resourceNames,
+    inline size_t BuildResourceListJson(        _In_reads_(count) char const* const* const resourceNames,
         _In_ size_t const count,
         _Out_writes_opt_(capacity) char* const buffer,
         _In_ size_t const capacity
@@ -302,6 +313,95 @@ namespace WindowsMidiServicesCapabilityInquiry
 
             ok = ok && Details::AppendText(buffer, limit, length, "{\"resource\":");
             ok = ok && Details::AppendJsonString(buffer, limit, length, resourceNames[i]);
+            ok = ok && Details::AppendCharacter(buffer, limit, length, '}');
+        }
+
+        ok = ok && Details::AppendCharacter(buffer, limit, length, ']');
+
+        return ok ? length : 0;
+    }
+
+
+    struct ChannelListEntry
+    {
+        char const* Title{ nullptr };
+
+        // One based, 1 to 256, counted across every Group in the Function Block. Note that this is
+        // one based while bankPC in the same object is zero based.
+        uint16_t Channel{ 1 };
+
+        char const* ProgramTitle{ nullptr };
+
+        uint8_t BankMsb{ 0 };
+        uint8_t BankLsb{ 0 };
+        uint8_t Program{ 0 };
+    };
+
+    inline size_t BuildChannelListJson(
+        _In_reads_(entryCount) ChannelListEntry const* const entries,
+        _In_ size_t const entryCount,
+        _Out_writes_opt_(capacity) char* const buffer,
+        _In_ size_t const capacity
+    ) noexcept
+    {
+        if (entries == nullptr && entryCount > 0)
+        {
+            return 0;
+        }
+
+        const size_t limit = (buffer == nullptr) ? SIZE_MAX : capacity;
+
+        size_t length = 0;
+        bool ok = true;
+
+        ok = ok && Details::AppendCharacter(buffer, limit, length, '[');
+
+        for (size_t i = 0; ok && i < entryCount; i++)
+        {
+            const auto& entry = entries[i];
+
+            if (i > 0)
+            {
+                ok = ok && Details::AppendCharacter(buffer, limit, length, ',');
+            }
+
+            ok = ok && Details::AppendText(buffer, limit, length, "{\"title\":");
+            ok = ok && Details::AppendJsonString(buffer, limit, length, entry.Title);
+
+            ok = ok && Details::AppendText(buffer, limit, length, ",\"channel\":");
+
+            // Channel can reach 256, which does not fit the single byte number helper.
+            {
+                char digits[4]{};
+                size_t count = 0;
+                uint16_t remaining = entry.Channel;
+
+                do
+                {
+                    digits[count++] = static_cast<char>('0' + (remaining % 10));
+                    remaining = static_cast<uint16_t>(remaining / 10);
+                } while (remaining != 0 && count < sizeof(digits));
+
+                while (ok && count > 0)
+                {
+                    ok = ok && Details::AppendCharacter(buffer, limit, length, digits[--count]);
+                }
+            }
+
+            if (entry.ProgramTitle != nullptr)
+            {
+                ok = ok && Details::AppendText(buffer, limit, length, ",\"programTitle\":");
+                ok = ok && Details::AppendJsonString(buffer, limit, length, entry.ProgramTitle);
+            }
+
+            ok = ok && Details::AppendText(buffer, limit, length, ",\"bankPC\":[");
+            ok = ok && Details::AppendNumber(buffer, limit, length, entry.BankMsb & 0x7F);
+            ok = ok && Details::AppendCharacter(buffer, limit, length, ',');
+            ok = ok && Details::AppendNumber(buffer, limit, length, entry.BankLsb & 0x7F);
+            ok = ok && Details::AppendCharacter(buffer, limit, length, ',');
+            ok = ok && Details::AppendNumber(buffer, limit, length, entry.Program & 0x7F);
+            ok = ok && Details::AppendCharacter(buffer, limit, length, ']');
+
             ok = ok && Details::AppendCharacter(buffer, limit, length, '}');
         }
 

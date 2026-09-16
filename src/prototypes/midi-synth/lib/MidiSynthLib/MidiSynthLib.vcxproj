@@ -73,6 +73,7 @@
     <ClInclude Include="inc\MidiSynth\SynthConfig.h" />
     <ClInclude Include="inc\MidiSynth\SynthEngine.h" />
     <ClInclude Include="inc\MidiSynth\UmpDispatcher.h" />
+    <ClInclude Include="inc\MidiSynth\UmpRenderSource.h" />
   </ItemGroup>
 
   <ItemGroup>
@@ -83,6 +84,7 @@
     <ClCompile Include="src\ReverbEffect.cpp" />
     <ClCompile Include="src\SynthEngine.cpp" />
     <ClCompile Include="src\UmpDispatcher.cpp" />
+    <ClCompile Include="src\UmpRenderSource.cpp" />
     <ClCompile Include="src\WasapiAudioSink.cpp" />
   </ItemGroup>
 

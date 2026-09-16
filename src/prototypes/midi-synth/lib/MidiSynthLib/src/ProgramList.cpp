@@ -73,6 +73,10 @@ namespace MidiSynth
             entry.BankLsb = static_cast<uint8_t>(instrument.BankLsb & 0x7F);
             entry.Program = static_cast<uint8_t>(instrument.Program & 0x7F);
 
+            // This sound set gives a program and its GS variation the same name, so without a tag
+            // a client shows two identical entries and cannot tell which bank it is choosing.
+            entry.Tag = (instrument.BankMsb == 0) ? "GM" : "GS variation";
+
             entries.push_back(entry);
         }
 

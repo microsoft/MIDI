@@ -28,6 +28,7 @@ public:
     TEST_METHOD(TestDoesNotReplyWithoutAMuid);
     TEST_METHOD(TestPropertyExchangeCapabilityBit);
     TEST_METHOD(TestGetPropertyDataIsHandedToTheCaller);
+    TEST_METHOD(TestPropertyExchangeCapabilitiesReply);
 
 private:
 

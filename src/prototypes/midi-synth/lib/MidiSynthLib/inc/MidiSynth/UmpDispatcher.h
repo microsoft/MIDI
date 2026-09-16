@@ -12,6 +12,7 @@
 
 #include <sal.h>
 
+#include <atomic>
 #include <cstdint>
 #include <vector>
 
@@ -87,6 +88,7 @@ namespace MidiSynth
         uint64_t IdentityRepliesSent{ 0 };
         uint64_t DiscoveryRepliesSent{ 0 };
         uint64_t MuidInvalidations{ 0 };
+        uint64_t PropertyRequests{ 0 };
     };
 
     class UmpDispatcher
@@ -118,6 +120,31 @@ namespace MidiSynth
         bool MuidNeedsReplacement() const noexcept { return m_responder.MuidNeedsReplacement(); }
         void SetMuid(_In_ uint32_t muid) noexcept;
 
+        // Largest property exchange header we will accept. Headers are short JSON objects such as
+        // {"resource":"ProgramList"}; anything larger is refused rather than truncated.
+        static constexpr size_t MaxPropertyHeaderBytes = 256;
+
+        struct PendingPropertyRequest
+        {
+            uint32_t InitiatorMuid{ 0 };
+            uint8_t RequestId{ 0 };
+            uint16_t HeaderByteCount{ 0 };
+            uint8_t Header[MaxPropertyHeaderBytes]{};
+        };
+
+        // Answering a property request means parsing JSON and building many kilobytes of reply,
+        // neither of which belongs on the thread that renders audio. The request is parked here and
+        // a worker thread collects it. Returns false when nothing is waiting.
+        bool TakePendingPropertyRequest(_Out_ PendingPropertyRequest& request) noexcept;
+
+        // Public because a host answering a property request needs exactly this packing and must
+        // not grow a second copy of it.
+        static void PacketizeSysEx7(
+            _In_ IUmpOutput& output,
+            _In_ uint8_t group,
+            _In_reads_(count) const uint8_t* payload,
+            _In_ size_t count) noexcept;
+
     private:
         void HandleMidi1ChannelVoice(_In_ uint32_t word) noexcept;
         void HandleMidi2ChannelVoice(_In_ uint32_t word0, _In_ uint32_t word1) noexcept;
@@ -132,6 +159,10 @@ namespace MidiSynth
         // Rebuilds the responder configuration from the identity and group we were given.
         void ConfigureResponder(_In_ uint32_t muid) noexcept;
 
+        void ParkPropertyRequest(
+            _In_ const WindowsMidiServicesCapabilityInquiry::ParsedMessage& parsed,
+            _In_ const uint8_t* message) noexcept;
+
         SynthEngine* m_engine{ nullptr };
         IUmpOutput* m_output{ nullptr };
         SynthIdentity m_identity{};
@@ -140,6 +171,11 @@ namespace MidiSynth
         // All MIDI-CI behavior lives in the shared responder, which produces replies into a buffer
         // and never sends. Only this class knows how to put them on the wire.
         WindowsMidiServicesCapabilityInquiry::Responder m_responder{};
+
+        // Written only by the dispatch thread and only while the flag is clear, read and cleared
+        // only by the worker, so neither can see a half written request.
+        PendingPropertyRequest m_propertyRequest{};
+        std::atomic<bool> m_propertyRequestPending{ false };
 
         // Fixed capacity deliberately. This runs on the audio thread, where allocating is a real
         // time fault, and a throwing allocation inside a noexcept path would terminate the whole

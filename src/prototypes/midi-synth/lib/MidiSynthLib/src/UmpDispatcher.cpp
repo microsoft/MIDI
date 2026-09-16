@@ -224,10 +224,64 @@ namespace MidiSynth
             m_stats.MuidInvalidations++;
             return;
 
+        case ci::ResponderAction::PropertyDataRequested:
+            ParkPropertyRequest(parsed, message);
+            return;
+
         default:
             m_stats.Ignored++;
             return;
         }
+    }
+
+    _Use_decl_annotations_
+    void UmpDispatcher::ParkPropertyRequest(
+        const WindowsMidiServicesCapabilityInquiry::ParsedMessage& parsed,
+        const uint8_t* message) noexcept
+    {
+        const auto headerBytes = parsed.PropertyExchange.HeaderByteCount;
+
+        if (headerBytes > MaxPropertyHeaderBytes)
+        {
+            m_stats.Ignored++;
+            return;
+        }
+
+        // Still holding the previous request. Dropping this one is correct: an initiator retries,
+        // and overwriting would corrupt what the worker is already reading.
+        if (m_propertyRequestPending.load(std::memory_order_acquire))
+        {
+            m_stats.Ignored++;
+            return;
+        }
+
+        m_propertyRequest.InitiatorMuid = parsed.SourceMuid;
+        m_propertyRequest.RequestId = parsed.PropertyExchange.RequestId;
+        m_propertyRequest.HeaderByteCount = headerBytes;
+
+        for (uint16_t i = 0; i < headerBytes; i++)
+        {
+            m_propertyRequest.Header[i] = message[parsed.PropertyExchange.HeaderOffset + i];
+        }
+
+        m_propertyRequestPending.store(true, std::memory_order_release);
+
+        m_stats.PropertyRequests++;
+    }
+
+    _Use_decl_annotations_
+    bool UmpDispatcher::TakePendingPropertyRequest(PendingPropertyRequest& request) noexcept
+    {
+        if (!m_propertyRequestPending.load(std::memory_order_acquire))
+        {
+            return false;
+        }
+
+        request = m_propertyRequest;
+
+        m_propertyRequestPending.store(false, std::memory_order_release);
+
+        return true;
     }
 
     _Use_decl_annotations_
@@ -253,6 +307,7 @@ namespace MidiSynth
 
         config.ReceivableMaximumSysExSize = MaxSysExBytes;
         config.FunctionBlockNumber = SynthEndpoint::FunctionBlockNumber;
+        config.SupportsPropertyExchange = true;
 
         m_responder.Initialize(config);
     }
@@ -261,6 +316,18 @@ namespace MidiSynth
     void UmpDispatcher::SendSysEx7(const uint8_t* payload, size_t total) noexcept
     {
         if (m_output == nullptr || total == 0)
+        {
+            return;
+        }
+
+        PacketizeSysEx7(*m_output, m_group, payload, total);
+    }
+
+    _Use_decl_annotations_
+    void UmpDispatcher::PacketizeSysEx7(
+        IUmpOutput& output, uint8_t group, const uint8_t* payload, size_t total) noexcept
+    {
+        if (total == 0)
         {
             return;
         }
@@ -287,7 +354,7 @@ namespace MidiSynth
             const uint32_t words[2] =
             {
                 (3u << 28) |
-                (static_cast<uint32_t>(m_group) << 24) |
+                (static_cast<uint32_t>(group) << 24) |
                 (static_cast<uint32_t>(status) << 20) |
                 (static_cast<uint32_t>(count) << 16) |
                 (static_cast<uint32_t>(bytes[0]) << 8) |
@@ -299,7 +366,7 @@ namespace MidiSynth
                 bytes[5],
             };
 
-            m_output->SendUmp(words, 2);
+            output.SendUmp(words, 2);
         }
     }
 

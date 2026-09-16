@@ -31,6 +31,10 @@ namespace WindowsMidiServicesCapabilityInquiry
         // Sets capability bit D3 in the Discovery reply. Without it no initiator will ever ask us
         // for a property.
         bool SupportsPropertyExchange{ false };
+
+        // One at a time. A responder that parks a single request and drops the rest must say so,
+        // or initiators will pipeline requests it silently discards.
+        uint8_t SimultaneousPropertyRequests{ 1 };
     };
 
     inline constexpr uint8_t CapabilityBitPropertyExchange{ 0x08 };
@@ -158,8 +162,7 @@ namespace WindowsMidiServicesCapabilityInquiry
             }
 
             if (message.Type == MessageType::PropertyGetDataInquiry)
-            {
-                if (!m_config.SupportsPropertyExchange || m_config.Muid == 0)
+            {                if (!m_config.SupportsPropertyExchange || m_config.Muid == 0)
                 {
                     return ResponderAction::Ignored;
                 }
@@ -170,6 +173,38 @@ namespace WindowsMidiServicesCapabilityInquiry
                 }
 
                 return ResponderAction::PropertyDataRequested;
+            }
+
+            if (message.Type == MessageType::PropertyExchangeCapabilitiesInquiry)
+            {
+                if (!m_config.SupportsPropertyExchange || m_config.Muid == 0)
+                {
+                    return ResponderAction::Ignored;
+                }
+
+                if (replyBuffer == nullptr || replyCapacity < PropertyExchangeCapabilitiesByteCount)
+                {
+                    return ResponderAction::ReplyBufferTooSmall;
+                }
+
+                const auto written = BuildPropertyExchangeCapabilitiesReply(
+                    m_config.Muid,
+                    message.SourceMuid,
+                    m_config.SimultaneousPropertyRequests,
+                    replyBuffer,
+                    replyCapacity);
+
+                if (written == 0)
+                {
+                    return ResponderAction::ReplyBufferTooSmall;
+                }
+
+                if (replyByteCount != nullptr)
+                {
+                    *replyByteCount = written;
+                }
+
+                return ResponderAction::Replied;
             }
 
             return ResponderAction::Ignored;

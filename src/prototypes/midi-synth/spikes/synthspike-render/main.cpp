@@ -1507,6 +1507,87 @@ namespace
                 engine.ActiveVoiceCount() == 1);
         }
 
+        // A property exchange request must be parked for a worker thread, never answered here.
+        {
+            SynthEngine engine;
+            UmpDispatcher dispatcher;
+            freshEngine(engine, dispatcher, 0);
+
+            dispatcher.SetMuid(0x0123456);
+
+            const char header[]{ "{\"resource\":\"ProgramList\"}" };
+            const uint16_t headerLength = static_cast<uint16_t>(sizeof(header) - 1);
+
+            std::vector<uint8_t> payload{ 0x7E, 0x7F, 0x0D, 0x34, 0x02 };
+
+            const auto appendMuid = [&payload](uint32_t muid)
+            {
+                payload.push_back(static_cast<uint8_t>(muid & 0x7F));
+                payload.push_back(static_cast<uint8_t>((muid >> 7) & 0x7F));
+                payload.push_back(static_cast<uint8_t>((muid >> 14) & 0x7F));
+                payload.push_back(static_cast<uint8_t>((muid >> 21) & 0x7F));
+            };
+
+            appendMuid(0x0000001);
+            appendMuid(0x0123456);
+
+            payload.push_back(0x07);                                    // request id
+            payload.push_back(static_cast<uint8_t>(headerLength & 0x7F));
+            payload.push_back(static_cast<uint8_t>((headerLength >> 7) & 0x7F));
+
+            for (uint16_t i = 0; i < headerLength; i++)
+            {
+                payload.push_back(static_cast<uint8_t>(header[i]));
+            }
+
+            payload.push_back(0x01); payload.push_back(0x00);           // chunk count
+            payload.push_back(0x01); payload.push_back(0x00);           // this chunk
+            payload.push_back(0x00); payload.push_back(0x00);           // no property data
+
+            // Arrives split across several packets, the way a real one would.
+            for (size_t offset = 0; offset < payload.size(); offset += 6)
+            {
+                const auto count = static_cast<uint8_t>((std::min)(size_t{ 6 }, payload.size() - offset));
+                const bool isFirst = (offset == 0);
+                const bool isLast = (offset + count >= payload.size());
+                const uint8_t status = (isFirst && isLast) ? 0 : isFirst ? 1 : isLast ? 3 : 2;
+
+                uint8_t bytes[6]{};
+
+                for (uint8_t i = 0; i < count; i++) { bytes[i] = payload[offset + i]; }
+
+                uint32_t words[2]
+                {
+                    (3u << 28) | (static_cast<uint32_t>(status) << 20) |
+                    (static_cast<uint32_t>(count) << 16) |
+                    (static_cast<uint32_t>(bytes[0]) << 8) | bytes[1],
+
+                    (static_cast<uint32_t>(bytes[2]) << 24) |
+                    (static_cast<uint32_t>(bytes[3]) << 16) |
+                    (static_cast<uint32_t>(bytes[4]) << 8) | bytes[5],
+                };
+
+                dispatcher.ProcessWords(words, 2);
+            }
+
+            UmpDispatcher::PendingPropertyRequest request{};
+
+            const bool parked = dispatcher.TakePendingPropertyRequest(request);
+
+            const bool correct =
+                parked &&
+                request.RequestId == 0x07 &&
+                request.InitiatorMuid == 0x0000001 &&
+                request.HeaderByteCount == headerLength &&
+                memcmp(request.Header, header, headerLength) == 0;
+
+            // And only once: a second take with nothing new must report nothing.
+            UmpDispatcher::PendingPropertyRequest again{};
+
+            check("a property request is parked with its header intact",
+                correct && !dispatcher.TakePendingPropertyRequest(again));
+        }
+
         // An unknown message type must not desynchronize the stream.
         {
             SynthEngine engine;
