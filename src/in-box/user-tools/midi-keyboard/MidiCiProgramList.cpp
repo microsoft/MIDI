@@ -151,6 +151,54 @@ namespace midikeyboard
                 return {};
             }
         }
+
+        // "tags" and "category" are arrays of strings; join them for display
+        std::wstring GetStringArray(JsonObject const& object, wchar_t const* name) noexcept
+        {
+            std::wstring result{};
+
+            try
+            {
+                if (object == nullptr || !object.HasKey(name))
+                {
+                    return result;
+                }
+
+                auto const values = object.GetNamedArray(name, nullptr);
+
+                if (values == nullptr)
+                {
+                    return result;
+                }
+
+                for (auto const& value : values)
+                {
+                    if (value == nullptr || value.ValueType() != JsonValueType::String)
+                    {
+                        continue;
+                    }
+
+                    auto const text = std::wstring{ value.GetString() };
+
+                    if (text.empty())
+                    {
+                        continue;
+                    }
+
+                    if (!result.empty())
+                    {
+                        result += L", ";
+                    }
+
+                    result += text;
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return result;
+        }
     }
 
     // The processor is stateful per exchange and its callbacks capture the query, so each query
@@ -843,6 +891,8 @@ namespace midikeyboard
                 {
                     continue;
                 }
+
+                program.Tags = GetStringArray(entry, L"tags");
 
                 // These three go on the wire exactly as they arrive. M2-107-UM section 2.3
                 // gives a worked example: bankPC [121,2,49] is sent as Program Change 49.

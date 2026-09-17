@@ -134,6 +134,7 @@
     <ClInclude Include="KeyboardLayout.h" />
     <ClInclude Include="MidiCiProgramList.h" />
     <ClInclude Include="MidiOutput.h" />
+    <ClInclude Include="ProgramChoice.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="TemporaryFlags.h" />
@@ -163,6 +164,7 @@
     <ClCompile Include="KeyboardLayout.cpp" />
     <ClCompile Include="MidiCiProgramList.cpp" />
     <ClCompile Include="MidiOutput.cpp" />
+    <ClCompile Include="ProgramChoice.cpp" />
     <ClCompile Include="StringResources.cpp" />
     <ClCompile Include="App.xaml.cpp">
       <DependentUpon>App.xaml</DependentUpon>

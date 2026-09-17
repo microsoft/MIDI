@@ -111,14 +111,22 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <!-- where the notes are going -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+                <!-- where the notes are going. A Grid rather than a StackPanel so the name is
+                     given a bounded width and can actually trim. -->
+                <Grid Grid.Column="0" VerticalAlignment="Center" ColumnSpacing="10" HorizontalAlignment="Left">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
                     <Ellipse x:Name="ConnectionStateDot"
+                             Grid.Column="0"
                              Width="10"
                              Height="10"
                              VerticalAlignment="Center"
                              Fill="{ThemeResource TextFillColorDisabledBrush}" />
-                    <StackPanel VerticalAlignment="Center">
+                    <!-- capped so a long device name trims instead of pushing the button away -->
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" MaxWidth="240">
                         <TextBlock x:Name="ConnectionNameText"
                                    AutomationProperties.AutomationId="ConnectionNameText"
                                    Text=""
@@ -132,7 +140,21 @@
                                    Style="{ThemeResource CaptionTextBlockStyle}"
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                     </StackPanel>
-                </StackPanel>
+
+                    <!-- changing destination is a common thing to do, so it does not belong
+                         behind the settings gear -->
+                    <DropDownButton x:Name="EndpointSwitchButton"
+                                    x:Uid="EndpointSwitchButton"
+                                    AutomationProperties.AutomationId="EndpointSwitchButton"
+                                    Grid.Column="2"
+                                    VerticalAlignment="Center"
+                                    Padding="8,4,8,4">
+                        <DropDownButton.Flyout>
+                            <MenuFlyout x:Name="EndpointSwitchFlyout"
+                                        Opening="OnEndpointSwitchFlyoutOpening" />
+                        </DropDownButton.Flyout>
+                    </DropDownButton>
+                </Grid>
 
                 <!-- octave shift, the one thing a player reaches for mid performance -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
@@ -223,13 +245,34 @@
                                           HorizontalAlignment="Stretch"
                                           Visibility="Collapsed"
                                           SelectionChanged="OnProgramListSelectionChanged">
+                                    <ComboBox.ItemContainerStyle>
+                                        <Style TargetType="ComboBoxItem">
+                                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                        </Style>
+                                    </ComboBox.ItemContainerStyle>
                                     <!-- device program names are arbitrary, so trim rather
                                          than let a long one run past the edge -->
                                     <ComboBox.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Text="{Binding}"
-                                                       TextTrimming="CharacterEllipsis"
-                                                       TextWrapping="NoWrap" />
+                                        <DataTemplate x:DataType="local:ProgramChoice">
+                                            <Grid ColumnSpacing="10"
+                                                  AutomationProperties.Name="{x:Bind AutomationName}">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{x:Bind DisplayName}"
+                                                           VerticalAlignment="Center"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           TextWrapping="NoWrap" />
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{x:Bind Tags}"
+                                                           Visibility="{x:Bind TagsVisibility}"
+                                                           VerticalAlignment="Center"
+                                                           TextWrapping="NoWrap"
+                                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                            </Grid>
                                         </DataTemplate>
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
@@ -308,7 +351,7 @@
                         Click="OnPanicClick">
                     <!-- icon only: the strip has no room for the caption once bank and program
                          are here, and the name and tooltip still carry it -->
-                    <FontIcon Glyph="&#xE711;" FontSize="12" />
+                    <FontIcon Glyph="&#xE74F;" FontSize="14" />
                 </Button>
             </Grid>
         </Border>
@@ -503,7 +546,14 @@
                                               x:Uid="GroupComboBox"
                                               AutomationProperties.AutomationId="GroupComboBox"
                                               HorizontalAlignment="Stretch"
-                                              SelectionChanged="OnGroupSelectionChanged" />
+                                              SelectionChanged="OnGroupSelectionChanged">
+                                        <ComboBox.ItemTemplate>
+                                            <DataTemplate x:DataType="shared:NamedChoice">
+                                                <TextBlock Text="{x:Bind DisplayName}"
+                                                           TextTrimming="CharacterEllipsis" />
+                                            </DataTemplate>
+                                        </ComboBox.ItemTemplate>
+                                    </ComboBox>
                                 </StackPanel>
                                 <StackPanel Grid.Column="1" Spacing="4">
                                     <TextBlock x:Uid="ChannelPickerLabel"

@@ -7,6 +7,21 @@
 
 namespace midikeyboard
 {
+    // One row in the program picker. The tags matter: a sound set routinely gives a program
+    // and its bank variation the same name, so the tag is the only thing telling them apart.
+    [default_interface]
+    runtimeclass ProgramChoice
+    {
+        ProgramChoice();
+
+        String DisplayName{ get; };
+        String Tags{ get; };
+        Microsoft.UI.Xaml.Visibility TagsVisibility{ get; };
+
+        // a templated row has no text of its own, so screen readers need this spelled out
+        String AutomationName{ get; };
+    }
+
     [default_interface]
     runtimeclass MainWindow : Microsoft.UI.Xaml.Window
     {

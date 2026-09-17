@@ -20,6 +20,10 @@ namespace midikeyboard
         uint8_t BankLsb{ 0 };
         uint8_t ProgramChange{ 0 };
 
+        // "tags" from the entry, joined for display. A sound set commonly gives a program and
+        // its bank variation the same title, so this is often the only thing telling them apart.
+        std::wstring Tags{};
+
         // "Factory Presets", "GM2 Programs" and so on, from the ChannelList link that led here.
         // Empty when the device only offers one collection.
         std::wstring CollectionTitle{};

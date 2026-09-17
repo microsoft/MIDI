@@ -64,6 +64,9 @@ namespace winrt::midikeyboard::implementation
         void OnOctaveUpClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnPanicClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        void OnEndpointSwitchFlyoutOpening(foundation::IInspectable const& sender, foundation::IInspectable const& args);
+        void OnEndpointSwitchItemClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
         void OnPatchFlyoutOpened(foundation::IInspectable const& sender, foundation::IInspectable const& args);
         void OnProgramNumberChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnBankMsbChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
@@ -196,6 +199,7 @@ namespace winrt::midikeyboard::implementation
         winrt::event_token m_watcherAddedToken{};
         winrt::event_token m_watcherRemovedToken{};
         winrt::event_token m_watcherUpdatedToken{};
+        winrt::event_token m_watcherEnumerationCompletedToken{};
 
         collections::IObservableVector<appshared::EndpointChoice> m_endpoints{ nullptr };
         collections::IObservableVector<appshared::NamedChoice> m_groups{ nullptr };
@@ -266,6 +270,11 @@ namespace winrt::midikeyboard::implementation
         // lets the strip be redrawn once the endpoint list arrives, which is what turns the
         // raw device id into the device's name
         ::midikeyboard::ConnectResult m_lastConnectResult{ ::midikeyboard::ConnectResult::NoEndpointChosen };
+
+        // The first refresh runs before the watcher has enumerated, so an empty list at that
+        // point means "not known yet", not "device gone". Presence is only tracked after that.
+        bool m_endpointListReady{ false };
+        bool m_endpointWasPresent{ true };
         bool m_reconnectRequested{ false };
     };
 }

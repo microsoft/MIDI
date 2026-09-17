@@ -11,6 +11,7 @@
 
 #include "App.xaml.h"
 #include "BackgroundWork.h"
+#include "ProgramChoice.h"
 #include "StringResources.h"
 #include "TemporaryFlags.h"
 #include "resource.h"
@@ -492,6 +493,26 @@ namespace winrt::midikeyboard::implementation
             m_watcherRemovedToken = m_watcher.Removed([refresh](auto&&, auto&&) { refresh(); });
             m_watcherUpdatedToken = m_watcher.Updated([refresh](auto&&, auto&&) { refresh(); });
 
+            // Devices arrive one at a time, so only this tells us the absence of a device is
+            // real rather than just "not enumerated yet".
+            m_watcherEnumerationCompletedToken = m_watcher.EnumerationCompleted(
+                [weak = get_weak(), queue = m_dispatcherQueue](auto&&, auto&&)
+                {
+                    if (queue == nullptr)
+                    {
+                        return;
+                    }
+
+                    queue.TryEnqueue([weak]()
+                        {
+                            if (auto strong = weak.get())
+                            {
+                                strong->m_endpointListReady = true;
+                                strong->RefreshEndpointList();
+                            }
+                        });
+                });
+
             m_watcher.Start();
 
             RefreshEndpointList();
@@ -587,6 +608,27 @@ namespace winrt::midikeyboard::implementation
             m_suppressSettingHandlers = previousSuppress;
 
             RefreshGroupList();
+
+            // A device coming back should just start working again. Nothing else in the app
+            // offers a way to reconnect, and hunting for one mid-session is no good.
+            auto const presentNow = selectedIndex >= 0;
+
+            if (!m_endpointListReady)
+            {
+                // still enumerating; absence here means nothing yet
+                m_endpointWasPresent = presentNow;
+            }
+            else
+            {
+                if (presentNow && !m_endpointWasPresent &&
+                    !m_reconnectInProgress &&
+                    settings.Connection() == native::ConnectionMode::ExistingEndpoint)
+                {
+                    ReconnectAsync();
+                }
+
+                m_endpointWasPresent = presentNow;
+            }
 
             if (!m_startupOptionsApplied && selectedIndex >= 0 && !options.EndpointDeviceId.empty())
             {
@@ -810,6 +852,7 @@ namespace winrt::midikeyboard::implementation
 
             winrt::hstring const endpointId{ settings.EndpointDeviceId() };
             winrt::hstring endpointName{ endpointId };
+            bool endpointFound{ false };
 
             // The combo lives in the settings panel and is populated later than this runs, so
             // resolve against the endpoint list itself rather than against its selection.
@@ -823,9 +866,23 @@ namespace winrt::midikeyboard::implementation
                         midiapp::EndpointIdsMatch(choice.EndpointDeviceId(), endpointId))
                     {
                         endpointName = choice.DisplayName();
+                        endpointFound = true;
                         break;
                     }
                 }
+            }
+
+            // The open connection outlives the device going away, so presence has to come from
+            // the endpoint list. Without this the light stays green over a device that is gone.
+            if (m_endpoints != nullptr && m_endpoints.Size() > 0 && !endpointFound)
+            {
+                ConnectionStateDot().Fill(LookupBrush(L"SystemFillColorCautionBrush"));
+
+                SetStripText(ConnectionNameText(), endpointName);
+                SetStripText(ConnectionDetailText(),
+                    res::GetString(L"ConnectionEndpointUnavailable"),
+                    res::GetString(L"ConnectionEndpointUnavailableToolTip"));
+                return;
             }
 
             SetStripText(ConnectionNameText(), endpointName);
@@ -2039,6 +2096,94 @@ namespace winrt::midikeyboard::implementation
     }
 
     // ------------------------------------------------------------------------------------
+    // Changing destination from the strip
+    // ------------------------------------------------------------------------------------
+
+    _Use_decl_annotations_
+    void MainWindow::OnEndpointSwitchFlyoutOpening(
+        foundation::IInspectable const&,
+        foundation::IInspectable const&)
+    {
+        try
+        {
+            auto items = EndpointSwitchFlyout().Items();
+            items.Clear();
+
+            if (m_endpoints == nullptr || m_endpoints.Size() == 0)
+            {
+                controls::MenuFlyoutItem empty{};
+                empty.Text(res::GetString(L"EndpointSwitchNone"));
+                empty.IsEnabled(false);
+                items.Append(empty);
+                return;
+            }
+
+            auto const currentId = winrt::hstring{ native::AppSettings::Current().EndpointDeviceId() };
+
+            for (uint32_t i = 0; i < m_endpoints.Size(); i++)
+            {
+                auto const choice = m_endpoints.GetAt(i);
+
+                if (choice == nullptr)
+                {
+                    continue;
+                }
+
+                controls::ToggleMenuFlyoutItem item{};
+
+                item.Text(choice.DisplayName());
+                item.Tag(winrt::box_value(choice.EndpointDeviceId()));
+                item.IsChecked(midiapp::EndpointIdsMatch(choice.EndpointDeviceId(), currentId));
+                item.Click({ this, &MainWindow::OnEndpointSwitchItemClick });
+
+                items.Append(item);
+            }
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to list the MIDI destinations.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnEndpointSwitchItemClick(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            // ToggleMenuFlyoutItem is not a MenuFlyoutItem, so read the tag off the base type
+            auto const element = sender.try_as<xaml::FrameworkElement>();
+
+            if (element == nullptr)
+            {
+                return;
+            }
+
+            auto const endpointId = winrt::unbox_value_or<winrt::hstring>(element.Tag(), L"");
+
+            if (endpointId.empty())
+            {
+                return;
+            }
+
+            auto& settings = native::AppSettings::Current();
+
+            if (settings.Connection() == native::ConnectionMode::ExistingEndpoint &&
+                midiapp::EndpointIdsMatch(endpointId, winrt::hstring{ settings.EndpointDeviceId() }))
+            {
+                return;
+            }
+
+            EndAllNotes();
+
+            settings.EndpointDeviceId(std::wstring{ endpointId.c_str() });
+            settings.Connection(native::ConnectionMode::ExistingEndpoint);
+
+            InitializeControlsFromSettings();
+            ReconnectAsync();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the MIDI destination.")
+    }
+
+    // ------------------------------------------------------------------------------------
     // Bank and program
     // ------------------------------------------------------------------------------------
 
@@ -2368,7 +2513,8 @@ namespace winrt::midikeyboard::implementation
                     ? entry.Title
                     : entry.CollectionTitle + L" - " + entry.Title;
 
-                items.Append(winrt::box_value(winrt::hstring{ label }));
+                items.Append(winrt::make<ProgramChoice>(
+                    winrt::hstring{ label }, winrt::hstring{ entry.Tags }));
             }
 
             ProgramListComboBox().Visibility(xaml::Visibility::Visible);

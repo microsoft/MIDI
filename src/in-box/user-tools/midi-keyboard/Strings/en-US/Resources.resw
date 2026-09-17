@@ -136,6 +136,21 @@
   <data name="PatchFlyoutTitle.Text" xml:space="preserve">
     <value>Bank and program</value>
   </data>
+  <data name="EndpointSwitchButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Change MIDI destination</value>
+  </data>
+  <data name="EndpointSwitchButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Choose which device this keyboard plays</value>
+  </data>
+  <data name="EndpointSwitchNone" xml:space="preserve">
+    <value>No MIDI destinations found</value>
+  </data>
+  <data name="ConnectionEndpointUnavailable" xml:space="preserve">
+    <value>Not available right now</value>
+  </data>
+  <data name="ConnectionEndpointUnavailableToolTip" xml:space="preserve">
+    <value>This device is no longer connected. The keyboard will start playing it again as soon as it comes back.</value>
+  </data>
   <data name="ProgramListComboBox.Header" xml:space="preserve">
     <value>Programs on this device</value>
   </data>
