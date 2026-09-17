@@ -16,8 +16,10 @@
 #include <WexTestClass.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <format>
 #include <span>
 #include <string>
@@ -28,5 +30,8 @@
 #include <MidiSynth/DlsCollection.h>
 #include <MidiSynth/DlsTypes.h>
 #include <MidiSynth/RiffReader.h>
+#include <MidiSynth/SynthConfig.h>
+#include <MidiSynth/SynthEngine.h>
+#include <MidiSynth/UmpDispatcher.h>
 
 #endif //PCH_H
