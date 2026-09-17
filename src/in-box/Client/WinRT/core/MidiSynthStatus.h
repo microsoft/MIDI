@@ -21,6 +21,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Synth::implementation
         synth::MidiSynthBankSelectMode BankSelectMode() const noexcept { return m_bankSelectMode; }
         double VolumeDecibels() const noexcept { return m_volumeDecibels; }
         bool AreEffectsEnabled() const noexcept { return m_areEffectsEnabled; }
+        winrt::hstring EndpointDeviceId() const noexcept { return m_endpointDeviceId; }
 
         void InternalInitializeFromJson(_In_ json::JsonObject const& responseJson);
 
@@ -31,5 +32,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Synth::implementation
         synth::MidiSynthBankSelectMode m_bankSelectMode{ synth::MidiSynthBankSelectMode::Automatic };
         double m_volumeDecibels{ 0.0 };
         bool m_areEffectsEnabled{ true };
+        winrt::hstring m_endpointDeviceId{};
     };
 }

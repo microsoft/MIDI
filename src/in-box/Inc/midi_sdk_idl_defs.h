@@ -442,6 +442,7 @@
 
 #define UUID_IMidiSynthSoundSetInfo                             8087b303-0519-c0de-31d1-dd00F0604000
 #define UUID_IMidiSynthDrumKitInfo                              8087b303-0519-c0de-31d1-dd00F0605000
+#define UUID_IMidiSynthInstrumentInfo                           8087b303-0519-c0de-31d1-dd00F0606000
 
 
 #endif

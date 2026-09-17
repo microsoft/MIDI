@@ -24,6 +24,9 @@
 #define MIDI_SYNTH_JSON_VOLUME_PROPERTY_KEY             L"volumeDecibels"
 #define MIDI_SYNTH_JSON_EFFECTS_PROPERTY_KEY            L"effectsEnabled"
 
+// Reported, never accepted: the transport owns its endpoint's identity.
+#define MIDI_SYNTH_JSON_ENDPOINT_DEVICE_ID_KEY          L"endpointDeviceId"
+
 #define MIDI_SYNTH_JSON_SYNTH_MODE_COMPATIBLE           L"compatible"
 #define MIDI_SYNTH_JSON_SYNTH_MODE_MODERN               L"modern"
 
@@ -43,6 +46,7 @@
 #define MIDI_SYNTH_COMMAND_ENABLE                       L"enable"
 #define MIDI_SYNTH_COMMAND_DISABLE                      L"disable"
 #define MIDI_SYNTH_COMMAND_SOUND_SET                    L"soundset"
+#define MIDI_SYNTH_COMMAND_INSTRUMENT_LIST              L"instrumentlist"
 #define MIDI_SYNTH_COMMAND_SET_DRUM_CHANNEL             L"setdrumchannel"
 
 #define MIDI_SYNTH_COMMAND_ARG_CHANNEL                  L"channel"
@@ -58,6 +62,15 @@
 #define MIDI_SYNTH_JSON_SOUND_SET_MELODIC_KEY           L"melodicCount"
 #define MIDI_SYNTH_JSON_SOUND_SET_KITS_KEY              L"drumKits"
 #define MIDI_SYNTH_JSON_SOUND_SET_KIT_NAME_KEY          L"name"
+
+// Melodic instrument list. Separate from the sound set reply because it is hundreds of entries and
+// most callers only want the counts. Fixed for a given sound set: configuration changes how an
+// incoming bank select is read, not what the sound set contains.
+#define MIDI_SYNTH_JSON_INSTRUMENTS_KEY                 L"instruments"
+#define MIDI_SYNTH_JSON_INSTRUMENT_NAME_KEY             L"name"
+#define MIDI_SYNTH_JSON_INSTRUMENT_BANK_MSB_KEY         L"bankMsb"
+#define MIDI_SYNTH_JSON_INSTRUMENT_BANK_LSB_KEY         L"bankLsb"
+#define MIDI_SYNTH_JSON_INSTRUMENT_PROGRAM_KEY          L"program"
 #define MIDI_SYNTH_JSON_SOUND_SET_KIT_PROGRAM_KEY       L"program"
 
 #endif

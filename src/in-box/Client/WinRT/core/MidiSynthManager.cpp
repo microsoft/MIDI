@@ -12,6 +12,7 @@
 
 #include "MidiSynthStatus.h"
 #include "MidiSynthSoundSetInfo.h"
+#include "MidiSynthInstrumentInfo.h"
 
 #include "MidiReporting.h"
 #include "MidiServiceConfigResponse.h"
@@ -127,6 +128,72 @@ namespace winrt::Windows::Devices::Midi2::Transports::Synth::implementation
         {
             MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception reading the synthesizer sound set.");
             return nullptr;
+        }
+    }
+
+    foundation::Collections::IVectorView<synth::MidiSynthInstrumentInfo>
+        MidiSynthManager::GetMelodicInstruments() noexcept
+    {
+        auto instruments = winrt::single_threaded_vector<synth::MidiSynthInstrumentInfo>();
+
+        try
+        {
+            auto const responseJson = SendSynthCommand(MIDI_SYNTH_COMMAND_INSTRUMENT_LIST, {});
+
+            if (responseJson == nullptr)
+            {
+                return instruments.GetView();
+            }
+
+            auto const entries = responseJson.GetNamedArray(MIDI_SYNTH_JSON_INSTRUMENTS_KEY, nullptr);
+
+            if (entries == nullptr)
+            {
+                return instruments.GetView();
+            }
+
+            for (auto const& element : entries)
+            {
+                // Iterating a JsonArray yields IJsonValue, which does not QI to JsonObject. A
+                // try_as here would silently skip every entry.
+                if (element == nullptr || element.ValueType() != json::JsonValueType::Object)
+                {
+                    continue;
+                }
+
+                auto const entry = element.GetObject();
+
+                auto info = winrt::make_self<implementation::MidiSynthInstrumentInfo>();
+
+                info->InternalSet(
+                    entry.GetNamedString(MIDI_SYNTH_JSON_INSTRUMENT_NAME_KEY, L""),
+                    static_cast<uint8_t>(entry.GetNamedNumber(MIDI_SYNTH_JSON_INSTRUMENT_BANK_MSB_KEY, 0.0)),
+                    static_cast<uint8_t>(entry.GetNamedNumber(MIDI_SYNTH_JSON_INSTRUMENT_BANK_LSB_KEY, 0.0)),
+                    static_cast<uint8_t>(entry.GetNamedNumber(MIDI_SYNTH_JSON_INSTRUMENT_PROGRAM_KEY, 0.0)));
+
+                instruments.Append(*info);
+            }
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception reading the synthesizer instrument list.");
+        }
+
+        return instruments.GetView();
+    }
+
+    winrt::hstring MidiSynthManager::EndpointDeviceId() noexcept
+    {
+        try
+        {
+            auto const status = GetStatus();
+
+            return status == nullptr ? winrt::hstring{} : status.EndpointDeviceId();
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception reading the synthesizer endpoint device id.");
+            return {};
         }
     }
 

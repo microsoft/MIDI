@@ -34,6 +34,7 @@ namespace midi2console
 
     int RunSynthStatusCommand();
     int RunSynthSoundSetCommand();
+    int RunSynthInstrumentsCommand();
     int RunSynthEnableCommand(_In_ SynthEnableOptions const& options);
     int RunSynthConfigureCommand(_In_ SynthConfigureOptions const& options);
 }

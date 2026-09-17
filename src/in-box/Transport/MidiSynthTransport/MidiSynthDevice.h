@@ -45,6 +45,7 @@ public:
     // MIDI-CI Property Exchange already carries it as ProgramList, and duplicating 235 entries
     // into every configuration response would make a cheap query expensive.
     HRESULT AddSoundSetInfoToResponse(_Inout_ json::JsonObject& responseObject);
+    HRESULT AddInstrumentListToResponse(_Inout_ json::JsonObject& responseObject);
 
     // Live only, and not persisted: a System Reset in a file puts channel 10 back as the only
     // drum channel, so remembering an override would promise something content can overrule.

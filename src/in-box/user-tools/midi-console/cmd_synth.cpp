@@ -283,6 +283,46 @@ namespace midi2console
         return 0;
     }
 
+    int RunSynthInstrumentsCommand()
+    {
+        if (!midi2synth::MidiSynthManager::IsTransportAvailable())
+        {
+            WriteErrorLine(ResourceString(IDS_SYNTH_NOT_AVAILABLE));
+            return 1;
+        }
+
+        auto const instruments = midi2synth::MidiSynthManager::GetMelodicInstruments();
+
+        if (instruments == nullptr || instruments.Size() == 0)
+        {
+            WriteErrorLine(FormatResourceString(IDS_SYNTH_COMMAND_FAILED, std::string{}));
+            return 1;
+        }
+
+        ConsoleTable table{ ResourceString(IDS_SYNTH_INSTRUMENTS_TITLE) };
+
+        table.AddColumn(ResourceString(IDS_SYNTH_LABEL_BANK_MSB), ColumnAlignment::Right);
+        table.AddColumn(ResourceString(IDS_SYNTH_LABEL_BANK_LSB), ColumnAlignment::Right);
+        table.AddColumn(ResourceString(IDS_SYNTH_LABEL_KIT_PROGRAM), ColumnAlignment::Right);
+        table.AddColumn(ResourceString(IDS_SYNTH_LABEL_INSTRUMENT_NAME), ColumnAlignment::Left);
+        table.SetLastColumnShrinkable();
+
+        for (auto const& instrument : instruments)
+        {
+            table.BeginRow();
+            table.AddCell(std::format("{}", static_cast<uint32_t>(instrument.BankMsb())));
+            table.AddCell(std::format("{}", static_cast<uint32_t>(instrument.BankLsb())));
+            table.AddCell(std::format("{}", static_cast<uint32_t>(instrument.Program())));
+            table.AddCell(ToUtf8(instrument.Name()));
+        }
+
+        table.Render();
+
+        WriteInfoLine(ResourceString(IDS_SYNTH_INSTRUMENTS_HELP));
+
+        return 0;
+    }
+
     int RunSynthConfigureCommand(_In_ SynthConfigureOptions const& options)
     {
         if (options.SynthMode.empty() && options.AudioMode.empty() &&

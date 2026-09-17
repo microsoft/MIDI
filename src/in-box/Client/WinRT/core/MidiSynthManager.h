@@ -22,6 +22,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Synth::implementation
         static synth::MidiSynthStatus GetStatus() noexcept;
         static synth::MidiSynthSoundSetInfo GetSoundSetInfo() noexcept;
 
+        static foundation::Collections::IVectorView<synth::MidiSynthInstrumentInfo> GetMelodicInstruments() noexcept;
+
+        static winrt::hstring EndpointDeviceId() noexcept;
+
         static bool SetDrumChannel(_In_ uint8_t const channelIndex, _In_ bool const isDrumChannel) noexcept;
 
     private:

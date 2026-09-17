@@ -276,6 +276,15 @@ CMidi2MidiSynthConfigurationManager::ProcessCommand(
         return S_OK;
     }
 
+    if (_wcsicmp(verb.c_str(), MIDI_SYNTH_COMMAND_INSTRUMENT_LIST) == 0)
+    {
+        RETURN_IF_FAILED(device->AddInstrumentListToResponse(responseObject));
+
+        internal::SetConfigurationResponseObjectSuccess(responseObject);
+
+        return S_OK;
+    }
+
     if (_wcsicmp(verb.c_str(), MIDI_SYNTH_COMMAND_ENABLE) == 0 ||
         _wcsicmp(verb.c_str(), MIDI_SYNTH_COMMAND_DISABLE) == 0)
     {
@@ -434,6 +443,14 @@ CMidi2MidiSynthConfigurationManager::AddCurrentSettingsToResponse(json::JsonObje
 
     responseObject.SetNamedValue(MIDI_SYNTH_JSON_EFFECTS_PROPERTY_KEY,
         json::JsonValue::CreateBooleanValue(settings.EffectsEnabled));
+
+    // Empty while the synthesizer is switched off, because then there is no endpoint to name.
+    auto const endpointManager = TransportState::Current().GetEndpointManager();
+
+    responseObject.SetNamedValue(MIDI_SYNTH_JSON_ENDPOINT_DEVICE_ID_KEY,
+        json::JsonValue::CreateStringValue(endpointManager == nullptr
+            ? winrt::hstring{}
+            : winrt::hstring{ endpointManager->EndpointDeviceInterfaceId() }));
 }
 
 

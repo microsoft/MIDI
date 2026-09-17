@@ -586,6 +586,46 @@ MidiSynthDevice::AddSoundSetInfoToResponse(json::JsonObject& responseObject)
 }
 
 
+_Use_decl_annotations_
+HRESULT
+MidiSynthDevice::AddInstrumentListToResponse(json::JsonObject& responseObject)
+{
+    RETURN_IF_FAILED(EnsureSoundSetLoaded());
+
+    auto instruments = json::JsonArray();
+
+    for (auto const& instrument : m_collection.Instruments())
+    {
+        // Kits are reported by the sound set command instead: they are selected by a program
+        // change on a drum channel, so a bank address for them would be misleading.
+        if (instrument.IsDrumKit)
+        {
+            continue;
+        }
+
+        auto entry = json::JsonObject();
+
+        entry.SetNamedValue(MIDI_SYNTH_JSON_INSTRUMENT_NAME_KEY,
+            json::JsonValue::CreateStringValue(instrument.Name));
+
+        entry.SetNamedValue(MIDI_SYNTH_JSON_INSTRUMENT_BANK_MSB_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(instrument.BankMsb & 0x7F)));
+
+        entry.SetNamedValue(MIDI_SYNTH_JSON_INSTRUMENT_BANK_LSB_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(instrument.BankLsb & 0x7F)));
+
+        entry.SetNamedValue(MIDI_SYNTH_JSON_INSTRUMENT_PROGRAM_KEY,
+            json::JsonValue::CreateNumberValue(static_cast<double>(instrument.Program & 0x7F)));
+
+        instruments.Append(entry);
+    }
+
+    responseObject.SetNamedValue(MIDI_SYNTH_JSON_INSTRUMENTS_KEY, instruments);
+
+    return S_OK;
+}
+
+
 HRESULT
 MidiSynthDevice::Shutdown() noexcept
 {

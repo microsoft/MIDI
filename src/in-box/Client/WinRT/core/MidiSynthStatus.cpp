@@ -25,6 +25,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Synth::implementation
         m_isEnabled = responseJson.GetNamedBoolean(MIDI_SYNTH_JSON_ENABLED_PROPERTY_KEY, false);
         m_areEffectsEnabled = responseJson.GetNamedBoolean(MIDI_SYNTH_JSON_EFFECTS_PROPERTY_KEY, true);
         m_volumeDecibels = responseJson.GetNamedNumber(MIDI_SYNTH_JSON_VOLUME_PROPERTY_KEY, 0.0);
+        m_endpointDeviceId = responseJson.GetNamedString(MIDI_SYNTH_JSON_ENDPOINT_DEVICE_ID_KEY, L"");
 
         auto const renderMode = responseJson.GetNamedString(MIDI_SYNTH_JSON_SYNTH_MODE_PROPERTY_KEY, L"");
 

@@ -704,3 +704,9 @@
 #define IDS_OPT_SYNTH_VOLUME                            52139
 #define IDS_OPT_SYNTH_EFFECTS                           52140
 #define IDS_SYNTH_NOT_AVAILABLE                         52141
+#define IDS_SYNTH_INSTRUMENTS_TITLE                     52142
+#define IDS_SYNTH_INSTRUMENTS_HELP                      52143
+#define IDS_SYNTH_LABEL_BANK_MSB                        52144
+#define IDS_SYNTH_LABEL_BANK_LSB                        52145
+#define IDS_SYNTH_LABEL_INSTRUMENT_NAME                 52146
+#define IDS_CMD_SYNTH_INSTRUMENTS                       52147

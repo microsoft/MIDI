@@ -26,6 +26,7 @@ namespace winrt::midisettings::implementation
 
         void OnRootLoaded(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnRootSizeChanged(foundation::IInspectable const& sender, xaml::SizeChangedEventArgs const& args);
+        void OnWindowActivated(foundation::IInspectable const& sender, xaml::WindowActivatedEventArgs const& args);
 
         void OnAlwaysOnTopToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnAppearanceButtonClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);

@@ -1,0 +1,33 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Synth
+{
+    [contract(MidiTransportsSynthApiContract, 1)]
+
+    // One melodic instrument in the active sound set, with the address that selects it.
+    //
+    // A connected application should prefer the MIDI-CI Property Exchange ProgramList, which is
+    // the standard way to ask any device what it can play. This is here for the case Property
+    // Exchange cannot serve: choosing an instrument before opening a connection, which is what a
+    // settings or patch-browsing UI wants to do.
+    [interface_name("Windows.Devices.Midi2.Transports.Synth.IMidiSynthInstrumentInfo", UUID_IMidiSynthInstrumentInfo)]
+    runtimeclass MidiSynthInstrumentInfo
+    {
+        String Name{ get; };
+
+        // All zero-based, as they appear on the wire. How an incoming bank select is interpreted
+        // depends on MidiSynthBankSelectMode, but these addresses do not change with it.
+        UInt8 BankMsb{ get; };
+        UInt8 BankLsb{ get; };
+        UInt8 Program{ get; };
+    }
+}

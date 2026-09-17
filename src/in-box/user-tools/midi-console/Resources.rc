@@ -766,6 +766,12 @@ IDS_OPT_SYNTH_BANK_SELECT_MODE              L"How an incoming bank select is rea
 IDS_OPT_SYNTH_VOLUME                        L"Volume trim in decibels, from -60 to 12. Zero is the calibrated level."
 IDS_OPT_SYNTH_EFFECTS                       L"Reverb and chorus: on or off"
 IDS_SYNTH_NOT_AVAILABLE                     L"The General MIDI synthesizer is not installed on this PC."
+IDS_SYNTH_INSTRUMENTS_TITLE                 L"Melodic Instruments"
+IDS_SYNTH_INSTRUMENTS_HELP                  L"Select an instrument with a bank select followed by a program change. A connected application can read the same list over MIDI-CI Property Exchange."
+IDS_SYNTH_LABEL_BANK_MSB                    L"Bank MSB"
+IDS_SYNTH_LABEL_BANK_LSB                    L"Bank LSB"
+IDS_SYNTH_LABEL_INSTRUMENT_NAME             L"Instrument"
+IDS_CMD_SYNTH_INSTRUMENTS                   L"List the melodic instruments in the active sound set"
 
 END
 

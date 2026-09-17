@@ -51,7 +51,7 @@ namespace
 
     // The API has no EndpointDeviceId of its own, so the supported way to find the synthesizer is
     // to match enumeration against the transport id the manager reports.
-    winrt::hstring FindSynthEndpointDeviceId()
+    winrt::hstring FindSynthEndpointDeviceIdByEnumeration()
     {
         auto const transportId = MidiSynthManager::TransportId();
 
@@ -133,6 +133,45 @@ void MidiSynthApiTests::TestSoundSetIsReadable()
         VERIFY_IS_LESS_THAN_OR_EQUAL(static_cast<uint32_t>(kit.Program()), 127u);
         VERIFY_IS_FALSE(kit.Name().empty());
     }
+}
+
+
+// Fixed for a given sound set: bank select mode changes how an incoming bank select is read, not
+// what the sound set contains. So this is safe to cache, and safe to read before connecting.
+void MidiSynthApiTests::TestMelodicInstrumentsAreReadable()
+{
+    if (!SynthAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"The General MIDI synthesizer transport is not available.");
+        return;
+    }
+
+    auto const instruments = MidiSynthManager::GetMelodicInstruments();
+
+    VERIFY_IS_NOT_NULL(instruments);
+    VERIFY_IS_GREATER_THAN(instruments.Size(), 0u);
+
+    auto const soundSet = MidiSynthManager::GetSoundSetInfo();
+    VERIFY_IS_NOT_NULL(soundSet);
+
+    // The count the sound set reports and the list it hands out have to agree, or one of them is
+    // filtering drum kits differently.
+    VERIFY_ARE_EQUAL(soundSet.MelodicInstrumentCount(), instruments.Size());
+
+    for (auto const& instrument : instruments)
+    {
+        VERIFY_IS_FALSE(instrument.Name().empty());
+
+        // Every address is a 7-bit value on the wire.
+        VERIFY_IS_LESS_THAN_OR_EQUAL(static_cast<uint32_t>(instrument.BankMsb()), 127u);
+        VERIFY_IS_LESS_THAN_OR_EQUAL(static_cast<uint32_t>(instrument.BankLsb()), 127u);
+        VERIFY_IS_LESS_THAN_OR_EQUAL(static_cast<uint32_t>(instrument.Program()), 127u);
+    }
+
+    // Reading it twice has to give the same thing, since nothing about it depends on state.
+    auto const again = MidiSynthManager::GetMelodicInstruments();
+
+    VERIFY_ARE_EQUAL(instruments.Size(), again.Size());
 }
 
 
@@ -274,9 +313,45 @@ void MidiSynthApiTests::TestSetDrumChannelRejectsOutOfRange()
 }
 
 
+// The id the manager hands out has to be the one enumeration reports for this transport, or an
+// application would connect to something other than the synthesizer.
+void MidiSynthApiTests::TestEndpointDeviceIdMatchesEnumeration()
+{
+    if (!SynthAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"The General MIDI synthesizer transport is not available.");
+        return;
+    }
+
+    auto const status = MidiSynthManager::GetStatus();
+    VERIFY_IS_NOT_NULL(status);
+
+    auto const fromManager = MidiSynthManager::EndpointDeviceId();
+
+    VERIFY_ARE_EQUAL(status.EndpointDeviceId(), fromManager,
+        L"The manager and the status agree.");
+
+    if (!status.IsEnabled())
+    {
+        // Switched off means there is no endpoint, so an empty id is the correct answer.
+        VERIFY_IS_TRUE(fromManager.empty(), L"A switched-off synthesizer names no endpoint.");
+        return;
+    }
+
+    VERIFY_IS_FALSE(fromManager.empty());
+
+    auto const fromEnumeration = FindSynthEndpointDeviceIdByEnumeration();
+
+    VERIFY_IS_FALSE(fromEnumeration.empty(), L"Enumeration finds an endpoint for this transport.");
+
+    // Endpoint ids are compared case-insensitively everywhere else in the API, so do the same here.
+    VERIFY_ARE_EQUAL(0, _wcsicmp(fromManager.c_str(), fromEnumeration.c_str()),
+        L"The manager names the same endpoint enumeration does.");
+}
+
+
 // The setting lives in the engine, and the engine only exists while something is connected, so an
-// in-range call is refused until a connection is open. That precondition is easy to get wrong, so
-// both sides of it are covered here.
+// in-range call is refused until a connection is open. That precondition is easy to get wrong.
 void MidiSynthApiTests::TestSetDrumChannelNeedsAnOpenConnection()
 {
     if (!SynthAvailable())
@@ -293,11 +368,11 @@ void MidiSynthApiTests::TestSetDrumChannelNeedsAnOpenConnection()
         return;
     }
 
-    auto const endpointId = FindSynthEndpointDeviceId();
+    auto const endpointId = MidiSynthManager::EndpointDeviceId();
 
     if (endpointId.empty())
     {
-        Log::Result(TestResults::Skipped, L"No endpoint carries the synthesizer transport id.");
+        Log::Result(TestResults::Skipped, L"The synthesizer reported no endpoint device id.");
         return;
     }
 

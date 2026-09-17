@@ -493,7 +493,11 @@ int main()
 
     auto synthSoundSetCommand = synthCommand->add_subcommand("sound-set", ResourceString(IDS_CMD_SYNTH_SOUNDSET));
     synthSoundSetCommand->alias("soundset");
-    synthSoundSetCommand->alias("instruments");
+
+    auto synthInstrumentsCommand = synthCommand->add_subcommand("instrument-list", ResourceString(IDS_CMD_SYNTH_INSTRUMENTS));
+    synthInstrumentsCommand->alias("instrumentlist");
+    synthInstrumentsCommand->alias("instruments");
+    synthInstrumentsCommand->alias("programs");
 
     SynthEnableOptions synthEnableOptions{ true, false };
 
@@ -804,6 +808,7 @@ int main()
         if (basicLoopbackUnmuteCommand->parsed())   return RunBasicLoopbackMuteCommand(basicLoopbackUnmuteOptions);
         if (synthStatusCommand->parsed())           return RunSynthStatusCommand();
         if (synthSoundSetCommand->parsed())         return RunSynthSoundSetCommand();
+        if (synthInstrumentsCommand->parsed())      return RunSynthInstrumentsCommand();
         if (synthEnableCommand->parsed())           return RunSynthEnableCommand(synthEnableOptions);
         if (synthDisableCommand->parsed())          return RunSynthEnableCommand(synthDisableOptions);
         if (synthConfigureCommand->parsed())        return RunSynthConfigureCommand(synthConfigureOptions);

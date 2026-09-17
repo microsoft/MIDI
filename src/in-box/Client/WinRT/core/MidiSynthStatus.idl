@@ -35,5 +35,9 @@ namespace Windows.Devices.Midi2.Transports.Synth
         Double VolumeDecibels{ get; };
 
         Boolean AreEffectsEnabled{ get; };
+
+        // The synthesizer's single endpoint. Empty while it is switched off, because then the
+        // endpoint does not exist. Pass this to MidiSession.CreateEndpointConnection.
+        String EndpointDeviceId{ get; };
     }
 }

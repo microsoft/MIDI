@@ -17,6 +17,7 @@ public:
     TEST_METHOD(TestTransportAvailabilityAndId);
     TEST_METHOD(TestStatusIsReadable);
     TEST_METHOD(TestSoundSetIsReadable);
+    TEST_METHOD(TestMelodicInstrumentsAreReadable);
     TEST_METHOD(TestDefaultConfigHasSaneValues);
     TEST_METHOD(TestConfigFromStatusCopiesEveryProperty);
     TEST_METHOD(TestSinglePropertyChangeLeavesTheRestAlone);
@@ -24,4 +25,5 @@ public:
     TEST_METHOD(TestConfigFromNullStatusIsUsable);
     TEST_METHOD(TestSetDrumChannelRejectsOutOfRange);
     TEST_METHOD(TestSetDrumChannelNeedsAnOpenConnection);
+    TEST_METHOD(TestEndpointDeviceIdMatchesEnumeration);
 };

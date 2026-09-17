@@ -59,12 +59,33 @@ namespace winrt::midisettings::implementation
         MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to update the title bar insets.")
     }
 
+    // The console and this app can both change the synthesizer, and there is no change notification
+    // from the service, so coming back to the window is the moment to re-read it.
+    _Use_decl_annotations_
+    void MainWindow::OnWindowActivated(
+        foundation::IInspectable const&,
+        xaml::WindowActivatedEventArgs const& args)
+    {
+        try
+        {
+            if (args.WindowActivationState() == xaml::WindowActivationState::Deactivated)
+            {
+                return;
+            }
+
+            RefreshSynthSettings();
+        }
+        MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to refresh on activation.")
+    }
+
     _Use_decl_annotations_
     void MainWindow::OnRootLoaded(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
         try
         {
             m_dispatcherQueue = winrt::Microsoft::UI::Dispatching::DispatcherQueue::GetForCurrentThread();
+
+            Activated({ this, &MainWindow::OnWindowActivated });
 
             Title(res::GetString(L"AppTitle"));
             AppTitleTextBlock().Text(res::GetString(L"AppTitle"));

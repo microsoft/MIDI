@@ -11,6 +11,7 @@ import "MidiApiContracts.idl";
 
 import "MidiSynthStatus.idl";
 import "MidiSynthSoundSetInfo.idl";
+import "MidiSynthInstrumentInfo.idl";
 
 namespace Windows.Devices.Midi2.Transports.Synth
 {
@@ -27,6 +28,22 @@ namespace Windows.Devices.Midi2.Transports.Synth
         [noexcept] static MidiSynthStatus GetStatus();
 
         [noexcept] static MidiSynthSoundSetInfo GetSoundSetInfo();
+
+        // The melodic instruments in the active sound set, with the bank and program which select
+        // each one. Kept out of MidiSynthSoundSetInfo because it is hundreds of entries and most
+        // callers only want the counts.
+        //
+        // A connected application should prefer the MIDI-CI Property Exchange ProgramList. This is
+        // for the case Property Exchange cannot serve, which is browsing instruments before a
+        // connection is open. The list is fixed for a given sound set: configuration changes how an
+        // incoming bank select is read, not what the sound set contains.
+        [noexcept] static Windows.Foundation.Collections.IVectorView<MidiSynthInstrumentInfo> GetMelodicInstruments();
+
+        // The synthesizer has exactly one endpoint, so it can be named without enumerating. Empty
+        // when the transport is not installed, and when the synthesizer is switched off, because
+        // then the endpoint does not exist. Equivalent to GetStatus().EndpointDeviceId, and worth
+        // one call rather than two when connecting is all you want.
+        [noexcept] static String EndpointDeviceId{ get; };
 
         // Any channel can be a rhythm part. A file can ask for this itself with the usual system
         // exclusive message; this is the same thing for an application which is not playing a file.

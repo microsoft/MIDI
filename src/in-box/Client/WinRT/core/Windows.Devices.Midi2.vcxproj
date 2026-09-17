@@ -537,6 +537,9 @@
     <ClInclude Include="MidiSynthDrumKitInfo.h">
       <DependentUpon>MidiSynthDrumKitInfo.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiSynthInstrumentInfo.h">
+      <DependentUpon>MidiSynthInstrumentInfo.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiSynthSoundSetInfo.h">
       <DependentUpon>MidiSynthSoundSetInfo.idl</DependentUpon>
     </ClInclude>
@@ -1278,6 +1281,7 @@
     <Midl Include="MidiSynthAudioOutputModeEnum.idl" />
     <Midl Include="MidiSynthBankSelectModeEnum.idl" />
     <Midl Include="MidiSynthDrumKitInfo.idl" />
+    <Midl Include="MidiSynthInstrumentInfo.idl" />
     <Midl Include="MidiSynthSoundSetInfo.idl" />
     <Midl Include="MidiSynthStatus.idl" />
     <Midl Include="MidiSynthConfig.idl" />
