@@ -63,7 +63,7 @@
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..\..\lib\MidiSynthLib\inc;$(MSBuildThisFileDirectory)..\..\..\..\in-box\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..\..\..\..\in-box\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_CONSOLE;WIN32_LEAN_AND_MEAN;WINRT_LEAN_AND_MEAN;NOMINMAX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions>%(AdditionalOptions) /permissive- /bigobj</AdditionalOptions>
       <Optimization Condition="'$(Configuration)'=='Debug'">Disabled</Optimization>
@@ -89,7 +89,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\lib\MidiSynthLib\MidiSynthLib.vcxproj">
+    <ProjectReference Include="..\..\..\..\in-box\Libs\MidiSynthLib\MidiSynthLib.vcxproj">
       <Project>{6F1B1B93-6C5B-4A2E-9A8D-3E1E0B9C4A11}</Project>
     </ProjectReference>
   </ItemGroup>

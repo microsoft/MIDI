@@ -20,10 +20,11 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
-    <ProjectGuid>{CA10A8C8-E68E-4804-A78F-66544856F136}</ProjectGuid>
+    <ProjectGuid>{202e05f1-9bfb-4242-bfc6-a5aee095a9b0}</ProjectGuid>
+    <RootNamespace>Midi2MidiSynthLibunittests</RootNamespace>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>Midi2.MidiSynthTransport</ProjectName>
+    <ProjectName>Midi2.MidiSynthLib.unittests</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
@@ -32,6 +33,7 @@
     <CharacterSet>Unicode</CharacterSet>
     <UseDebugLibraries Condition="'$(Configuration)'=='Debug'">true</UseDebugLibraries>
     <UseDebugLibraries Condition="'$(Configuration)'=='Release'">false</UseDebugLibraries>
+    <WholeProgramOptimization Condition="'$(Configuration)'=='Release'">true</WholeProgramOptimization>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -47,70 +49,50 @@
     <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Platform)'=='x64'">
-    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\TransportUtilities\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Platform)'=='ARM64'">
-    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(SolutionDir)VSFiles\intermediate\TransportUtilities\$(Platform)\$(Configuration)</LibraryPath>
+    <LibraryPath>$(VC_LibraryPath_ARM64);$(WindowsSDK_LibraryPath_ARM64);$(WindowsSdkDir)\Testing\Development\lib\$(Platform);$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <DisableSpecificWarnings>4324</DisableSpecificWarnings>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)inc;$(SolutionDir)VSFiles\intermediate\idl\$(Platform)\$(Configuration);$(IntDir);$(SolutionDir)Libs\TransportUtilities\inc;$(SolutionDir)Client\WinRT\core\vcpkg_installed\x64-windows\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(WindowsSdkDir)Testing\Development\inc;$(SolutionDir)Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Optimization Condition="'$(Configuration)'=='Debug'">Disabled</Optimization>
+      <Optimization Condition="'$(Configuration)'=='Release'">MaxSpeed</Optimization>
+      <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>%(AdditionalDependencies);onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiEndpointNamingLib.lib;$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\MidiPluginConfigurationLib.lib</AdditionalDependencies>
-      <ModuleDefinitionFile>Midi2.MidiSynthTransport.def</ModuleDefinitionFile>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableUAC>false</EnableUAC>
+      <AdditionalDependencies>onecoreuap.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <Midl>
-      <AdditionalIncludeDirectories>$(SolutionDir)\idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <OutputDirectory>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</OutputDirectory>
-      <HeaderFileName>%(Filename).h</HeaderFileName>
-    </Midl>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="MidiSynthDlsTests.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
-    <ClCompile Include="Midi2.MidiSynthBidi.cpp" />
-    <ClCompile Include="Midi2.MidiSynthConfigurationManager.cpp" />
-    <ClCompile Include="Midi2.MidiSynthEndpointManager.cpp" />
-    <ClCompile Include="Midi2.MidiSynthTransport.cpp" />
-    <ClCompile Include="Midi2MidiSynthPluginMetadataProvider.cpp" />
-    <ClCompile Include="MidiSynthDevice.cpp" />
-    <ClCompile Include="TransportState.cpp" />
+    <ClCompile Include="MidiSynthDlsTests.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Midl Include="Midi2MidiSynthTransport.idl">
-      <EnableWindowsRuntime>false</EnableWindowsRuntime>
-    </Midl>
+    <ResourceCompile Include="Resource.rc" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Midi2.MidiSynthTransport.def" />
-    <None Include="Midi2.MidiSynthTransport.rgs" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="dllmain.h" />
-    <ClInclude Include="Midi2.MidiSynthBidi.h" />
-    <ClInclude Include="Midi2.MidiSynthConfigurationManager.h" />
-    <ClInclude Include="Midi2.MidiSynthEndpointManager.h" />
-    <ClInclude Include="Midi2.MidiSynthPluginMetadataProvider.h" />
-    <ClInclude Include="Midi2.MidiSynthTransport.h" />
-    <ClInclude Include="midi_synth_transport_defs.h" />
-    <ClInclude Include="MidiSynthDevice.h" />
-    <ClInclude Include="MidiSynthSettings.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="Resource.h" />
-    <ClInclude Include="TransportState.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Midi2.MidiSynthTransport.rc" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Libs\MidiSynthLib\MidiSynthLib.vcxproj">

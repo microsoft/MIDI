@@ -48,13 +48,13 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
 
   <PropertyGroup>
-    <OutDir>$(MSBuildThisFileDirectory)..\..\out\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(MSBuildThisFileDirectory)..\..\out\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)VSFiles\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)VSFiles\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
 
     <!-- libmidi2's M2Utils scaling is header only, so this is an include path and not a link
          dependency. It is the same arithmetic the service uses, which is the point. The triplet is
          x64 for every platform because nothing here is compiled, only included. -->
-    <SynthLibMidi2Include>$(MSBuildThisFileDirectory)..\..\..\..\in-box\Client\WinRT\core\vcpkg_installed\x64-windows\include</SynthLibMidi2Include>
+    <SynthLibMidi2Include>$(MSBuildThisFileDirectory)..\..\Client\WinRT\core\vcpkg_installed\x64-windows\include</SynthLibMidi2Include>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
@@ -65,7 +65,7 @@
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)inc;$(MSBuildThisFileDirectory)..\..\..\..\in-box\Inc;$(SynthLibMidi2Include);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)Inc;$(SynthLibMidi2Include);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Optimization Condition="'$(Configuration)'=='Debug'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)'=='Release'">MaxSpeed</Optimization>
@@ -76,35 +76,35 @@
   </ItemDefinitionGroup>
 
   <ItemGroup>
-    <ClInclude Include="inc\MidiSynth\Articulation.h" />
-    <ClInclude Include="inc\MidiSynth\AudioEffect.h" />
-    <ClInclude Include="inc\MidiSynth\AudioSink.h" />
-    <ClInclude Include="inc\MidiSynth\ChorusEffect.h" />
-    <ClInclude Include="inc\MidiSynth\DlsCollection.h" />
-    <ClInclude Include="inc\MidiSynth\ReverbEffect.h" />
-    <ClInclude Include="inc\MidiSynth\DlsTypes.h" />
-    <ClInclude Include="inc\MidiSynth\DlsUnits.h" />
-    <ClInclude Include="inc\MidiSynth\ProgramList.h" />
-    <ClInclude Include="inc\MidiSynth\PropertyExchangeSource.h" />
-    <ClInclude Include="inc\MidiSynth\RiffReader.h" />
-    <ClInclude Include="inc\MidiSynth\SpscRingBuffer.h" />
-    <ClInclude Include="inc\MidiSynth\SynthConfig.h" />
-    <ClInclude Include="inc\MidiSynth\SynthEngine.h" />
-    <ClInclude Include="inc\MidiSynth\UmpDispatcher.h" />
-    <ClInclude Include="inc\MidiSynth\UmpRenderSource.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\Articulation.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\AudioEffect.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\AudioSink.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\ChorusEffect.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\DlsCollection.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\ReverbEffect.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\DlsTypes.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\DlsUnits.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\ProgramList.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\PropertyExchangeSource.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\RiffReader.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\SpscRingBuffer.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\SynthConfig.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\SynthEngine.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\UmpDispatcher.h" />
+    <ClInclude Include="..\..\Inc\MidiSynth\UmpRenderSource.h" />
   </ItemGroup>
 
   <ItemGroup>
-    <ClCompile Include="src\Articulation.cpp" />
-    <ClCompile Include="src\ChorusEffect.cpp" />
-    <ClCompile Include="src\DlsCollection.cpp" />
-    <ClCompile Include="src\ProgramList.cpp" />
-    <ClCompile Include="src\PropertyExchangeSource.cpp" />
-    <ClCompile Include="src\ReverbEffect.cpp" />
-    <ClCompile Include="src\SynthEngine.cpp" />
-    <ClCompile Include="src\UmpDispatcher.cpp" />
-    <ClCompile Include="src\UmpRenderSource.cpp" />
-    <ClCompile Include="src\WasapiAudioSink.cpp" />
+    <ClCompile Include="Articulation.cpp" />
+    <ClCompile Include="ChorusEffect.cpp" />
+    <ClCompile Include="DlsCollection.cpp" />
+    <ClCompile Include="ProgramList.cpp" />
+    <ClCompile Include="PropertyExchangeSource.cpp" />
+    <ClCompile Include="ReverbEffect.cpp" />
+    <ClCompile Include="SynthEngine.cpp" />
+    <ClCompile Include="UmpDispatcher.cpp" />
+    <ClCompile Include="UmpRenderSource.cpp" />
+    <ClCompile Include="WasapiAudioSink.cpp" />
   </ItemGroup>
 
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
