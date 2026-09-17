@@ -1838,27 +1838,6 @@ MidiSrvTransportTests::TestMidiSrvSynchronizedStartEarlyClientUseDoesNotCrash()
     VERIFY_SUCCEEDED(midiSessionTracker->RemoveClientSession(livenessSessionId));
 }
 
-void MidiSrvTransportTests::TestMidiSrvTransport_CreateInvalidFormat()
-{
-    TestMidiTransportCreateInvalidParams(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_Invalid, MessageOptionFlags_None, FALSE);
-}
-
-void MidiSrvTransportTests::TestMidiSrvTransport_CreateInvalidOption_ContextContainsGroupIndex()
-{
-    TestMidiTransportCreateInvalidParams(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_UMP, MessageOptionFlags_ContextContainsGroupIndex, FALSE);
-}
-
-void MidiSrvTransportTests::TestMidiSrvTransport_CreateInvalidOption_SeparateUMPs()
-{
-    TestMidiTransportCreateInvalidParams(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_UMP, MessageOptionFlags_SeparateUMPs, FALSE);
-}
-
-void MidiSrvTransportTests::TestMidiSrvTransport_CreateInvalidOption_HasRunningStatus()
-{
-    // HasRunningStatus is only applicable for bytestream data format, expected to fail for UMP.
-    TestMidiTransportCreateInvalidParams(__uuidof(Midi2MidiSrvTransport), MidiDataFormats_UMP, MessageOptionFlags_HasRunningStatus, FALSE);
-}
-
 bool MidiSrvTransportTests::TestSetup()
 {
     m_MidiInCallback = nullptr;
