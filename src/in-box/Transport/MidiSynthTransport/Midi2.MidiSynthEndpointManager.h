@@ -35,7 +35,7 @@ private:
     HRESULT CreateParentDevice();
     HRESULT CreateEndpoint();
     HRESULT RemoveEndpoint();
-    HRESULT WriteDeviceIdentity(_In_ std::wstring const& endpointInterfaceId);
+    HRESULT InitiateDiscoveryAndNegotiation(_In_ std::wstring const& endpointInterfaceId);
 
     bool m_initialized{ false };
 
@@ -51,4 +51,8 @@ private:
 
     wil::com_ptr_nothrow<IMidiDeviceManager> m_midiDeviceManager;
     wil::com_ptr_nothrow<IMidiEndpointProtocolManager> m_midiProtocolManager;
+
+    // Discovery opens a client connection back to this endpoint, so it cannot run on the thread
+    // that is still creating it.
+    std::thread m_negotiationThread;
 };

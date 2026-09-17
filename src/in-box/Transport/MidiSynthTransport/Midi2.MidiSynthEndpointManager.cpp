@@ -313,7 +313,7 @@ CMidi2MidiSynthEndpointManager::CreateEndpoint()
         m_endpointDeviceInterfaceId = endpointInterfaceId;
     }
 
-    RETURN_IF_FAILED(WriteDeviceIdentity(endpointInterfaceId));
+    RETURN_IF_FAILED(InitiateDiscoveryAndNegotiation(endpointInterfaceId));
 
     TraceLoggingWrite(
         MidiSynthTransportTelemetryProvider::Provider(),
@@ -329,63 +329,53 @@ CMidi2MidiSynthEndpointManager::CreateEndpoint()
 }
 
 
-// Must run after ActivateEndpoint, not as part of it. ActivateEndpoint appends its own
-// DEVPROP_TYPE_EMPTY entries for every property that in-protocol discovery owns, identity
-// included, and those come after the transport's in the same array, so anything written there is
-// deleted on the way in. This synthesizer answers no UMP Stream discovery, so it declares the
-// identity itself, from the same values the SysEx Identity Reply and Property Exchange use.
+// ActivateEndpoint appends its own DEVPROP_TYPE_EMPTY entries for every property that in-protocol
+// discovery owns, so anything the transport writes for those is deleted on the way in. The
+// synthesizer answers UMP Stream discovery itself, exactly as an external MIDI 2.0 device does, so
+// the endpoint name, product instance id, device identity and function block all arrive over the
+// wire and the service writes them. Nothing here declares them on the synthesizer's behalf.
+//
+// This runs on its own thread. DiscoverAndNegotiate is a COM call back into the service which
+// opens a client connection to this very endpoint, and the caller is still inside endpoint
+// creation, so doing it inline would have the transport waiting on itself.
 HRESULT
-CMidi2MidiSynthEndpointManager::WriteDeviceIdentity(std::wstring const& endpointInterfaceId)
+CMidi2MidiSynthEndpointManager::InitiateDiscoveryAndNegotiation(std::wstring const& endpointInterfaceId)
 {
-    RETURN_HR_IF_NULL(E_POINTER, m_midiDeviceManager);
+    RETURN_HR_IF_NULL(E_POINTER, m_midiProtocolManager);
     RETURN_HR_IF(E_UNEXPECTED, endpointInterfaceId.empty());
 
-    MidiSynth::SynthIdentity const identity{};
-
-    MidiDeviceIdentityProperty deviceIdentity{};
-    deviceIdentity.ManufacturerSysExIdByte1 = identity.ManufacturerSysExId[0];
-    deviceIdentity.ManufacturerSysExIdByte2 = identity.ManufacturerSysExId[1];
-    deviceIdentity.ManufacturerSysExIdByte3 = identity.ManufacturerSysExId[2];
-    deviceIdentity.DeviceFamilyLsb = static_cast<uint8_t>(identity.FamilyCode & 0x7F);
-    deviceIdentity.DeviceFamilyMsb = static_cast<uint8_t>((identity.FamilyCode >> 7) & 0x7F);
-    deviceIdentity.DeviceFamilyModelNumberLsb = static_cast<uint8_t>(identity.FamilyMemberCode & 0x7F);
-    deviceIdentity.DeviceFamilyModelNumberMsb = static_cast<uint8_t>((identity.FamilyMemberCode >> 7) & 0x7F);
-    deviceIdentity.SoftwareRevisionLevelByte1 = identity.SoftwareRevision[0];
-    deviceIdentity.SoftwareRevisionLevelByte2 = identity.SoftwareRevision[1];
-    deviceIdentity.SoftwareRevisionLevelByte3 = identity.SoftwareRevision[2];
-    deviceIdentity.SoftwareRevisionLevelByte4 = identity.SoftwareRevision[3];
-
-    FILETIME identityUpdateTime{};
-    GetSystemTimePreciseAsFileTime(&identityUpdateTime);
-
-    // The synthesizer is a singleton, so its product instance id is the same unique identifier the
-    // endpoint is named after. The specification limits this to printable ASCII without spaces,
-    // which this already is.
-    std::wstring const productInstanceId{ MIDI_SYNTH_ENDPOINT_UNIQUE_ID };
-
-    static_assert(
-        ARRAYSIZE(MIDI_SYNTH_ENDPOINT_UNIQUE_ID) - 1 <= MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT,
-        "The product instance id must fit the UMP stream message that carries it.");
-
-    DEVPROPERTY props[]
+    if (m_negotiationThread.joinable())
     {
-        { { PKEY_MIDI_DeviceIdentity, DEVPROP_STORE_SYSTEM, nullptr },
-            DEVPROP_TYPE_BINARY, (ULONG)sizeof(deviceIdentity), (PVOID)&deviceIdentity },
+        m_negotiationThread.join();
+    }
 
-        { { PKEY_MIDI_DeviceIdentityLastUpdateTime, DEVPROP_STORE_SYSTEM, nullptr },
-            DEVPROP_TYPE_FILETIME, (ULONG)sizeof(FILETIME), (PVOID)&identityUpdateTime },
+    auto protocolManager = m_midiProtocolManager;
+    auto const transportId = m_transportId;
+    std::wstring const interfaceId{ endpointInterfaceId };
 
-        { { PKEY_MIDI_EndpointProvidedProductInstanceId, DEVPROP_STORE_SYSTEM, nullptr },
-            DEVPROP_TYPE_STRING,
-            (ULONG)((productInstanceId.length() + 1) * sizeof(wchar_t)),
-            (PVOID)productInstanceId.c_str() },
+    m_negotiationThread = std::thread([protocolManager, transportId, interfaceId]()
+    {
+        // An exception escaping a thread body in midisrv takes MIDI down for the whole machine.
+        try
+        {
+            winrt::init_apartment();
 
-        { { PKEY_MIDI_EndpointProvidedProductInstanceIdLastUpdateTime, DEVPROP_STORE_SYSTEM, nullptr },
-            DEVPROP_TYPE_FILETIME, (ULONG)sizeof(FILETIME), (PVOID)&identityUpdateTime },
-    };
+            ENDPOINTPROTOCOLNEGOTIATIONPARAMS negotiationParams{};
+            negotiationParams.PreferredMidiProtocol = MIDI_PROP_CONFIGURED_PROTOCOL_MIDI2;
+            negotiationParams.PreferToSendJitterReductionTimestampsToEndpoint = false;
+            negotiationParams.PreferToReceiveJitterReductionTimestampsFromEndpoint = false;
 
-    RETURN_IF_FAILED(m_midiDeviceManager->UpdateEndpointProperties(
-        endpointInterfaceId.c_str(), ARRAYSIZE(props), props));
+            LOG_IF_FAILED(protocolManager->DiscoverAndNegotiate(
+                transportId,
+                interfaceId.c_str(),
+                negotiationParams
+            ));
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+    });
 
     return S_OK;
 }
@@ -403,6 +393,13 @@ CMidi2MidiSynthEndpointManager::Shutdown()
     );
 
     LOG_IF_FAILED(TransportState::Current().Shutdown());
+
+    // The negotiation thread holds a reference to the protocol manager, so it has to be done with
+    // it before that pointer is released.
+    if (m_negotiationThread.joinable())
+    {
+        m_negotiationThread.join();
+    }
 
     m_midiDeviceManager.reset();
     m_midiProtocolManager.reset();

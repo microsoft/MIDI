@@ -200,6 +200,13 @@ MidiSynthDevice::AcquireAudio()
     m_dispatcher.Initialize(&m_engine, MIDI_SYNTH_GROUP_INDEX, m_muid);
     m_dispatcher.SetOutput(&m_output, SynthIdentity{});
 
+    // What the endpoint answers UMP Stream discovery with. The name is the same resource string the
+    // endpoint was created from, so the in-protocol name and the transport supplied name agree.
+    auto const discoveryName = internal::Utf8FromWString(
+        internal::ResourceGetWString(IDS_ENDPOINT_NAME));
+
+    m_dispatcher.SetEndpointIdentity(discoveryName.c_str(), MIDI_SYNTH_ENDPOINT_UNIQUE_ID_UTF8);
+
     auto source = std::make_unique<UmpRenderSource>(
         m_engine, m_dispatcher, m_inbound, sink->SampleRate(), sink->BufferFrames(),
         m_drainedEvent.get());

@@ -1,8 +1,21 @@
 #include "MidiSynth/UmpDispatcher.h"
 
+// ump_helpers.h is written against the Windows types, so they have to come first.
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+
+#include "ump_helpers.h"
+#include "midi_ump_message_defs.h"
+
 #include <libmidi2/utils.h>
 
 #include <algorithm>
+#include <cstring>
 
 namespace MidiSynth
 {
@@ -13,6 +26,7 @@ namespace MidiSynth
         constexpr uint32_t MessageTypeMidi1ChannelVoice = 0x2;
         constexpr uint32_t MessageTypeSysEx7 = 0x3;
         constexpr uint32_t MessageTypeMidi2ChannelVoice = 0x4;
+        constexpr uint32_t MessageTypeStream = 0xF;
 
         constexpr uint8_t StatusNoteOff = 0x8;
         constexpr uint8_t StatusNoteOn = 0x9;
@@ -76,6 +90,310 @@ namespace MidiSynth
     void UmpDispatcher::SetMuid(uint32_t muid) noexcept
     {
         m_responder.SetMuid(muid & 0x0FFFFFFF);
+    }
+
+    _Use_decl_annotations_
+    void UmpDispatcher::SetEndpointIdentity(
+        const char* endpointName,
+        const char* productInstanceId) noexcept
+    {
+        auto copy = [](char* destination, size_t capacity, const char* source)
+        {
+            if (source == nullptr)
+            {
+                destination[0] = '\0';
+                return;
+            }
+
+            size_t length = 0;
+
+            while (length + 1 < capacity && source[length] != '\0')
+            {
+                destination[length] = source[length];
+                length++;
+            }
+
+            destination[length] = '\0';
+        };
+
+        copy(m_endpointName, sizeof(m_endpointName), endpointName);
+        copy(m_productInstanceId, sizeof(m_productInstanceId), productInstanceId);
+    }
+
+    _Use_decl_annotations_
+    void UmpDispatcher::SendStreamMessage(
+        uint32_t word0, uint32_t word1, uint32_t word2, uint32_t word3) noexcept
+    {
+        if (m_output == nullptr)
+        {
+            return;
+        }
+
+        const uint32_t words[4]{ word0, word1, word2, word3 };
+
+        m_output->SendUmp(words, 4);
+        m_stats.DiscoveryRepliesSent++;
+    }
+
+    _Use_decl_annotations_
+    void UmpDispatcher::HandleStream(const uint32_t* words) noexcept
+    {
+        const uint32_t word0 = words[0];
+
+        if (::WindowsMidiServicesInternal::MessageIsEndpointDiscoveryRequest(word0))
+        {
+            const uint8_t filter =
+                ::WindowsMidiServicesInternal::GetEndpointDiscoveryMessageFilterFlagsFromSecondWord(words[1]);
+
+            if (::WindowsMidiServicesInternal::EndpointDiscoveryFilterRequestsEndpointInfoNotification(filter))
+            {
+                SendEndpointInfoNotification();
+            }
+
+            if (::WindowsMidiServicesInternal::EndpointDiscoveryFilterRequestsDeviceIdentityNotification(filter))
+            {
+                SendDeviceIdentityNotification();
+            }
+
+            if (::WindowsMidiServicesInternal::EndpointDiscoveryFilterRequestsEndpointNameNotification(filter))
+            {
+                SendTextNotification(
+                    MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_NAME_NOTIFICATION, -1, m_endpointName);
+            }
+
+            if (::WindowsMidiServicesInternal::EndpointDiscoveryFilterRequestsProductInstanceIdNotification(filter))
+            {
+                SendTextNotification(
+                    MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_PRODUCT_INSTANCE_ID_NOTIFICATION,
+                    -1,
+                    m_productInstanceId);
+            }
+
+            if (::WindowsMidiServicesInternal::EndpointDiscoveryFilterRequestsStreamConfigurationNotification(filter))
+            {
+                SendStreamConfigurationNotification();
+            }
+
+            return;
+        }
+
+        if (::WindowsMidiServicesInternal::MessageIsFunctionBlockDiscoveryRequest(word0))
+        {
+            const uint8_t requested =
+                ::WindowsMidiServicesInternal::GetFunctionBlockNumberFromFunctionBlockDiscoveryRequestFirstWord(word0);
+
+            if (requested != MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_REQUEST_ALL_FUNCTION_BLOCKS &&
+                requested != SynthEndpoint::FunctionBlockNumber)
+            {
+                m_stats.Ignored++;
+                return;
+            }
+
+            const uint8_t filter =
+                ::WindowsMidiServicesInternal::GetFunctionBlockDiscoveryMessageFilterFlagsFromFirstWord(word0);
+
+            if (::WindowsMidiServicesInternal::FunctionBlockDiscoveryFilterRequestsInfoNotification(filter))
+            {
+                SendFunctionBlockInfoNotification();
+            }
+
+            if (::WindowsMidiServicesInternal::FunctionBlockDiscoveryFilterRequestsNameNotification(filter))
+            {
+                SendTextNotification(
+                    MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_NAME_NOTIFICATION,
+                    SynthEndpoint::FunctionBlockNumber,
+                    m_endpointName);
+            }
+
+            return;
+        }
+
+        if (::WindowsMidiServicesInternal::MessageIsStreamConfigurationRequest(word0))
+        {
+            // The requested protocol is accepted as-is. This is a software endpoint with no wire
+            // between it and the host, so there is nothing it cannot speak.
+            SendStreamConfigurationNotification();
+            return;
+        }
+
+        m_stats.Ignored++;
+    }
+
+    void UmpDispatcher::SendEndpointInfoNotification() noexcept
+    {
+        uint32_t word0{ 0 };
+
+        ::WindowsMidiServicesInternal::SetUmpMessageType(word0, MIDI_STREAM_MESSAGE_UMP_MESSAGE_TYPE);
+        ::WindowsMidiServicesInternal::SetUmpStreamMessageForm(word0, MIDI_STREAM_MESSAGE_STANDARD_FORM0);
+        ::WindowsMidiServicesInternal::SetUmpStreamMessageStatus(word0, MIDI_STREAM_MESSAGE_STATUS_ENDPOINT_INFO_NOTIFICATION);
+        ::WindowsMidiServicesInternal::SetMidiWordMostSignificantByte3(word0, MIDI_PREFERRED_UMP_VERSION_MAJOR);
+        ::WindowsMidiServicesInternal::SetMidiWordMostSignificantByte4(word0, MIDI_PREFERRED_UMP_VERSION_MINOR);
+
+        // Static function blocks: this endpoint is one synthesizer and its shape never changes.
+        uint32_t word1 = 0x80000000;
+
+        word1 |= static_cast<uint32_t>(SynthEndpoint::FunctionBlockCount) << 24;
+
+        // Both protocols, because the dispatcher decodes MIDI 1.0 and MIDI 2.0 channel voice
+        // messages alike. No jitter reduction timestamps in either direction yet.
+        word1 |= 0x0100 | 0x0200;
+
+        SendStreamMessage(word0, word1, MIDI_RESERVED_WORD, MIDI_RESERVED_WORD);
+    }
+
+    void UmpDispatcher::SendDeviceIdentityNotification() noexcept
+    {
+        if (!m_identity.IsConfigured())
+        {
+            return;
+        }
+
+        uint32_t word0{ 0 };
+
+        ::WindowsMidiServicesInternal::SetUmpMessageType(word0, MIDI_STREAM_MESSAGE_UMP_MESSAGE_TYPE);
+        ::WindowsMidiServicesInternal::SetUmpStreamMessageForm(word0, MIDI_STREAM_MESSAGE_STANDARD_FORM0);
+        ::WindowsMidiServicesInternal::SetUmpStreamMessageStatus(word0, MIDI_STREAM_MESSAGE_STATUS_DEVICE_IDENTITY_NOTIFICATION);
+
+        ::WindowsMidiServicesInternal::DeviceIdentityFields identity{};
+        identity.ManufacturerSysExIdByte1 = m_identity.ManufacturerSysExId[0];
+        identity.ManufacturerSysExIdByte2 = m_identity.ManufacturerSysExId[1];
+        identity.ManufacturerSysExIdByte3 = m_identity.ManufacturerSysExId[2];
+        identity.DeviceFamilyLsb = static_cast<uint8_t>(m_identity.FamilyCode & 0x7F);
+        identity.DeviceFamilyMsb = static_cast<uint8_t>((m_identity.FamilyCode >> 7) & 0x7F);
+        identity.DeviceFamilyModelNumberLsb = static_cast<uint8_t>(m_identity.FamilyMemberCode & 0x7F);
+        identity.DeviceFamilyModelNumberMsb = static_cast<uint8_t>((m_identity.FamilyMemberCode >> 7) & 0x7F);
+        identity.SoftwareRevisionLevelByte1 = m_identity.SoftwareRevision[0];
+        identity.SoftwareRevisionLevelByte2 = m_identity.SoftwareRevision[1];
+        identity.SoftwareRevisionLevelByte3 = m_identity.SoftwareRevision[2];
+        identity.SoftwareRevisionLevelByte4 = m_identity.SoftwareRevision[3];
+
+        uint32_t word1{ 0 };
+        uint32_t word2{ 0 };
+        uint32_t word3{ 0 };
+
+        ::WindowsMidiServicesInternal::BuildDeviceIdentityNotificationWords(identity, word1, word2, word3);
+
+        SendStreamMessage(word0, word1, word2, word3);
+    }
+
+    void UmpDispatcher::SendStreamConfigurationNotification() noexcept
+    {
+        // Protocol 2 is MIDI 2.0. There is no wire between this endpoint and the host, so whatever
+        // was asked for is what it will speak.
+        constexpr uint8_t midi2Protocol = 0x02;
+
+        const uint32_t word0 = ::WindowsMidiServicesInternal::BuildStreamConfigurationNotificationFirstWord(
+            midi2Protocol, false, false);
+
+        SendStreamMessage(word0, MIDI_RESERVED_WORD, MIDI_RESERVED_WORD, MIDI_RESERVED_WORD);
+    }
+
+    void UmpDispatcher::SendFunctionBlockInfoNotification() noexcept
+    {
+        uint32_t word0{ 0 };
+
+        ::WindowsMidiServicesInternal::SetUmpMessageType(word0, MIDI_STREAM_MESSAGE_UMP_MESSAGE_TYPE);
+        ::WindowsMidiServicesInternal::SetUmpStreamMessageForm(word0, MIDI_STREAM_MESSAGE_STANDARD_FORM0);
+        ::WindowsMidiServicesInternal::SetUmpStreamMessageStatus(word0, MIDI_STREAM_MESSAGE_STATUS_FUNCTION_BLOCK_INFO_NOTIFICATION);
+
+        // Active, then the block number in the low seven bits of the same byte.
+        word0 |= 0x00008000;
+        word0 |= static_cast<uint32_t>(SynthEndpoint::FunctionBlockNumber & 0x7F) << 8;
+
+        // User interface hint and direction. Bidirectional in both, because the synthesizer
+        // answers MIDI-CI on the same block it receives notes on.
+        constexpr uint32_t bidirectional = 0x3;
+
+        word0 |= bidirectional << 4;
+        word0 |= bidirectional;
+
+        uint32_t word1 = static_cast<uint32_t>(SynthEndpoint::FirstGroupIndex) << 24;
+
+        word1 |= static_cast<uint32_t>(SynthEndpoint::GroupCount) << 16;
+
+        // MIDI-CI version 1.2, and no SysEx8 streams.
+        word1 |= static_cast<uint32_t>(0x02) << 8;
+
+        SendStreamMessage(word0, word1, MIDI_RESERVED_WORD, MIDI_RESERVED_WORD);
+    }
+
+    _Use_decl_annotations_
+    void UmpDispatcher::SendTextNotification(
+        uint16_t status,
+        int functionBlockNumber,
+        const char* text) noexcept
+    {
+        if (text == nullptr || text[0] == '\0')
+        {
+            return;
+        }
+
+        const bool isFunctionBlockText = (functionBlockNumber >= 0);
+
+        // The function block number takes the byte the first text character would have used.
+        const size_t bytesPerPacket = isFunctionBlockText
+            ? MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_NAME_CHARACTERS_PER_PACKET
+            : MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET;
+
+        const size_t length = strnlen(text, SynthEndpoint::MaxEndpointNameBytes);
+        const size_t packetCount = (length + bytesPerPacket - 1) / bytesPerPacket;
+
+        for (size_t packet = 0; packet < packetCount; packet++)
+        {
+            uint8_t form = MIDI_STREAM_MESSAGE_MULTI_FORM_COMPLETE;
+
+            if (packetCount > 1)
+            {
+                if (packet == 0)
+                {
+                    form = MIDI_STREAM_MESSAGE_MULTI_FORM_START;
+                }
+                else if (packet == packetCount - 1)
+                {
+                    form = MIDI_STREAM_MESSAGE_MULTI_FORM_END;
+                }
+                else
+                {
+                    form = MIDI_STREAM_MESSAGE_MULTI_FORM_CONTINUE;
+                }
+            }
+
+            uint32_t words[4]{ 0, 0, 0, 0 };
+
+            ::WindowsMidiServicesInternal::SetUmpMessageType(words[0], MIDI_STREAM_MESSAGE_UMP_MESSAGE_TYPE);
+            ::WindowsMidiServicesInternal::SetUmpStreamMessageForm(words[0], form);
+            ::WindowsMidiServicesInternal::SetUmpStreamMessageStatus(words[0], status);
+
+            // Byte two of the first word is either the block number or the first text byte, and
+            // everything after it is text regardless.
+            size_t byteIndex = isFunctionBlockText ? 3 : 2;
+
+            if (isFunctionBlockText)
+            {
+                words[0] |= static_cast<uint32_t>(functionBlockNumber & 0x7F) << 8;
+            }
+
+            for (size_t i = 0; i < bytesPerPacket; i++)
+            {
+                const size_t sourceIndex = packet * bytesPerPacket + i;
+
+                if (sourceIndex >= length)
+                {
+                    break;
+                }
+
+                const auto value = static_cast<uint32_t>(
+                    static_cast<uint8_t>(text[sourceIndex]));
+
+                const size_t wordIndex = byteIndex / 4;
+                const size_t shift = 24 - 8 * (byteIndex % 4);
+
+                words[wordIndex] |= value << shift;
+                byteIndex++;
+            }
+
+            SendStreamMessage(words[0], words[1], words[2], words[3]);
+        }
     }
 
     _Use_decl_annotations_
@@ -429,8 +747,11 @@ namespace MidiSynth
                 break;
             }
 
-            // Other groups belong to other function blocks and are not ours to act on.
-            if (Group(word0) != m_group && MessageType(word0) != MessageTypeUtility)
+            // Other groups belong to other function blocks and are not ours to act on. Stream
+            // messages carry no group at all, so the same bits there are the form and status.
+            if (Group(word0) != m_group &&
+                MessageType(word0) != MessageTypeUtility &&
+                MessageType(word0) != MessageTypeStream)
             {
                 m_stats.Ignored++;
                 consumed += packetWords;
@@ -457,6 +778,10 @@ namespace MidiSynth
 
             case MessageTypeMidi2ChannelVoice:
                 HandleMidi2ChannelVoice(word0, words[consumed + 1]);
+                break;
+
+            case MessageTypeStream:
+                HandleStream(words + consumed);
                 break;
 
             default:

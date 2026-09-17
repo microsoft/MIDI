@@ -35,4 +35,5 @@ public:
     TEST_METHOD(TestPerNotePitchBend);
     TEST_METHOD(TestPerNoteControllers);
     TEST_METHOD(TestPerNoteManagement);
+    TEST_METHOD(TestUmpStreamDiscovery);
 };

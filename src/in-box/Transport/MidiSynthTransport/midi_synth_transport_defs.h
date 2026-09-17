@@ -21,6 +21,9 @@
 // endpoint device id is the point: applications and WinMM port assignments remember it.
 #define MIDI_SYNTH_ENDPOINT_UNIQUE_ID L"GM1"
 
+// The same value as UTF-8, for the UMP Stream Product Instance Id Notification.
+#define MIDI_SYNTH_ENDPOINT_UNIQUE_ID_UTF8 "GM1"
+
 #define TRANSPORT_PARENT_ID L"MIDIU_GMSYNTH_TRANSPORT"
 
 #define TRANSPORT_ENUMERATOR L"MIDISRV"

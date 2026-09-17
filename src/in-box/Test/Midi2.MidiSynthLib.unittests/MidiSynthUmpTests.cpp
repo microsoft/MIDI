@@ -1557,3 +1557,152 @@ void MidiSynthUmpTests::TestPerNoteManagement()
         L"per-note management resets the per-note controllers");
 }
 
+// A MIDI 2.0 endpoint describes itself in protocol. Nothing else tells the service its product
+// instance id, its function blocks or the name it wants to be known by.
+void MidiSynthUmpTests::TestUmpStreamDiscovery()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    SynthEngine engine;
+    UmpDispatcher dispatcher;
+    CaptureOutput output;
+
+    FreshEngine(*collection, engine, dispatcher, 0);
+    dispatcher.SetOutput(&output, SynthIdentity{});
+    dispatcher.SetEndpointIdentity("Test Synthesizer", "GM1");
+
+    // Endpoint Discovery asking for everything.
+    uint32_t discovery[4]{ 0xF0000101, 0x0000001F, 0, 0 };
+    dispatcher.ProcessWords(discovery, 4);
+
+    VERIFY_IS_TRUE(output.Words.size() % 4 == 0, L"every reply is a 128 bit stream message");
+    VERIFY_IS_TRUE(output.Words.size() >= 4 * 5, L"a reply arrived for each part of the request");
+
+    auto statusOf = [](uint32_t word0) { return static_cast<uint16_t>((word0 >> 16) & 0x3FF); };
+    auto formOf = [](uint32_t word0) { return static_cast<uint8_t>((word0 >> 26) & 0x3); };
+
+    // Collects the UTF-8 text out of however many packets a text notification took.
+    auto textFor = [&](uint16_t status, bool isFunctionBlockText)
+    {
+        std::string text;
+
+        for (size_t i = 0; i + 3 < output.Words.size(); i += 4)
+        {
+            if (statusOf(output.Words[i]) != status)
+            {
+                continue;
+            }
+
+            const uint32_t packet[4]{
+                output.Words[i], output.Words[i + 1], output.Words[i + 2], output.Words[i + 3] };
+
+            for (size_t byteIndex = isFunctionBlockText ? 3 : 2; byteIndex < 16; byteIndex++)
+            {
+                const auto value = static_cast<char>(
+                    (packet[byteIndex / 4] >> (24 - 8 * (byteIndex % 4))) & 0xFF);
+
+                if (value != '\0')
+                {
+                    text.push_back(value);
+                }
+            }
+        }
+
+        return text;
+    };
+
+    bool sawEndpointInfo = false;
+    bool sawDeviceIdentity = false;
+    bool sawStreamConfiguration = false;
+    uint8_t declaredFunctionBlocks = 0;
+
+    for (size_t i = 0; i + 3 < output.Words.size(); i += 4)
+    {
+        VERIFY_IS_TRUE((output.Words[i] >> 28) == 0xF, L"the reply is a UMP Stream message");
+
+        switch (statusOf(output.Words[i]))
+        {
+        case 0x001:
+            sawEndpointInfo = true;
+            declaredFunctionBlocks = static_cast<uint8_t>((output.Words[i + 1] >> 24) & 0x7F);
+
+            VERIFY_IS_TRUE((output.Words[i + 1] & 0x0200) != 0, L"MIDI 2.0 protocol is declared");
+            VERIFY_IS_TRUE((output.Words[i + 1] & 0x0100) != 0, L"MIDI 1.0 protocol is declared");
+            break;
+
+        case 0x002:
+            sawDeviceIdentity = true;
+            break;
+
+        case 0x006:
+            sawStreamConfiguration = true;
+            break;
+
+        default:
+            break;
+        }
+    }
+
+    VERIFY_IS_TRUE(sawEndpointInfo, L"an Endpoint Info Notification was sent");
+    VERIFY_IS_TRUE(sawDeviceIdentity, L"a Device Identity Notification was sent");
+    VERIFY_IS_TRUE(sawStreamConfiguration, L"a Stream Configuration Notification was sent");
+    VERIFY_ARE_EQUAL(declaredFunctionBlocks, (uint8_t)1, L"one function block is declared");
+
+    const auto endpointName = textFor(0x003, false);
+    const auto productInstanceId = textFor(0x004, false);
+
+    Log::Comment(String().Format(L"name '%S', product instance id '%S'",
+        endpointName.c_str(), productInstanceId.c_str()));
+
+    VERIFY_ARE_EQUAL(endpointName, std::string{ "Test Synthesizer" });
+    VERIFY_ARE_EQUAL(productInstanceId, std::string{ "GM1" });
+
+    // A name longer than one packet has to arrive as start, continue and end.
+    {
+        CaptureOutput longOutput;
+        UmpDispatcher longDispatcher;
+        FreshEngine(*collection, engine, longDispatcher, 0);
+        longDispatcher.SetOutput(&longOutput, SynthIdentity{});
+        // Thirty bytes, so it needs a start, one continue and an end.
+        longDispatcher.SetEndpointIdentity("A synthesizer with a long name", "GM1");
+
+        uint32_t nameOnly[4]{ 0xF0000101, 0x00000004, 0, 0 };
+        longDispatcher.ProcessWords(nameOnly, 4);
+
+        VERIFY_ARE_EQUAL(longOutput.Words.size(), (size_t)12, L"the name took three packets");
+        VERIFY_ARE_EQUAL(formOf(longOutput.Words[0]), (uint8_t)1, L"first packet is a start");
+        VERIFY_ARE_EQUAL(formOf(longOutput.Words[4]), (uint8_t)2, L"middle packet is a continue");
+        VERIFY_ARE_EQUAL(formOf(longOutput.Words[8]), (uint8_t)3, L"last packet is an end");
+    }
+
+    // Function Block Discovery, asking for all blocks, info and name.
+    output.Words.clear();
+
+    uint32_t functionBlockDiscovery[4]{ 0xF010FF03, 0, 0, 0 };
+    dispatcher.ProcessWords(functionBlockDiscovery, 4);
+
+    bool sawFunctionBlockInfo = false;
+
+    for (size_t i = 0; i + 3 < output.Words.size(); i += 4)
+    {
+        if (statusOf(output.Words[i]) == 0x011)
+        {
+            sawFunctionBlockInfo = true;
+
+            VERIFY_IS_TRUE((output.Words[i] & 0x8000) != 0, L"the function block is active");
+            VERIFY_ARE_EQUAL((output.Words[i] & 0x3), (uint32_t)0x3, L"it is bidirectional");
+            VERIFY_ARE_EQUAL((output.Words[i + 1] >> 24), (uint32_t)0, L"it starts at group 1");
+            VERIFY_ARE_EQUAL(((output.Words[i + 1] >> 16) & 0xFF), (uint32_t)1, L"it spans one group");
+        }
+    }
+
+    VERIFY_IS_TRUE(sawFunctionBlockInfo, L"a Function Block Info Notification was sent");
+    VERIFY_ARE_EQUAL(textFor(0x012, true), std::string{ "Test Synthesizer" },
+        L"the function block is named");
+}
+

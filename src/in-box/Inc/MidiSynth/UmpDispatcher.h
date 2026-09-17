@@ -32,6 +32,12 @@ namespace MidiSynth
         constexpr uint8_t FunctionBlockCount = 1;
         constexpr uint8_t FunctionBlockNumber = 0;
         constexpr bool FunctionBlockIsBidirectional = true;
+
+        // UTF-8 byte counts, matching what a UMP Stream text notification can carry. The
+        // specification's own limits; duplicated as plain numbers only to keep this header
+        // readable next to the buffers they size.
+        constexpr size_t MaxEndpointNameBytes = 98;
+        constexpr size_t MaxProductInstanceIdBytes = 42;
     }
 
     // Reply sent for a Universal System Exclusive Identity Request.
@@ -102,6 +108,14 @@ namespace MidiSynth
         // Supplying an output lets the dispatcher answer an Identity Request.
         void SetOutput(_In_opt_ IUmpOutput* output, _In_ const SynthIdentity& identity) noexcept;
 
+        // What this endpoint answers UMP Stream Endpoint Discovery with. Both are UTF-8 and are
+        // truncated rather than refused, because a name that is too long is still worth reporting.
+        // An empty product instance id suppresses that notification, which is how a device says it
+        // does not have one.
+        void SetEndpointIdentity(
+            _In_opt_z_ const char* endpointName,
+            _In_opt_z_ const char* productInstanceId) noexcept;
+
         // Processes a run of UMP words. Returns the number of words consumed; a trailing partial
         // message is left unconsumed so the caller can present it again with the rest.
         uint32_t ProcessWords(_In_reads_(wordCount) const uint32_t* words, _In_ uint32_t wordCount) noexcept;
@@ -156,6 +170,25 @@ namespace MidiSynth
         void SendIdentityReply(_In_ uint8_t requestedDeviceId) noexcept;
         void SendSysEx7(_In_reads_(count) const uint8_t* payload, _In_ size_t count) noexcept;
 
+        // UMP Stream. This is how a MIDI 2.0 endpoint describes itself, and it is the only way the
+        // service learns the endpoint name, product instance id and function blocks.
+        void HandleStream(_In_reads_(4) const uint32_t* words) noexcept;
+        void SendStreamMessage(
+            _In_ uint32_t word0, _In_ uint32_t word1,
+            _In_ uint32_t word2, _In_ uint32_t word3) noexcept;
+        void SendEndpointInfoNotification() noexcept;
+        void SendDeviceIdentityNotification() noexcept;
+        void SendStreamConfigurationNotification() noexcept;
+        void SendFunctionBlockInfoNotification() noexcept;
+
+        // One text notification, split across as many packets as the text needs. A function block
+        // number of -1 means the text belongs to the endpoint rather than to a block, which is
+        // also what decides whether fourteen or thirteen bytes fit in a packet.
+        void SendTextNotification(
+            _In_ uint16_t status,
+            _In_ int functionBlockNumber,
+            _In_z_ const char* text) noexcept;
+
         // Rebuilds the responder configuration from the identity and group we were given.
         void ConfigureResponder(_In_ uint32_t muid) noexcept;
 
@@ -167,6 +200,9 @@ namespace MidiSynth
         IUmpOutput* m_output{ nullptr };
         SynthIdentity m_identity{};
         uint8_t m_group{ 0 };
+
+        char m_endpointName[SynthEndpoint::MaxEndpointNameBytes + 1]{};
+        char m_productInstanceId[SynthEndpoint::MaxProductInstanceIdBytes + 1]{};
 
         // All MIDI-CI behavior lives in the shared responder, which produces replies into a buffer
         // and never sends. Only this class knows how to put them on the wire.
