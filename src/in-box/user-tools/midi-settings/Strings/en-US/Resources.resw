@@ -767,6 +767,36 @@
   <data name="GlobalServiceHeader.Text" xml:space="preserve">
     <value>MIDI service</value>
   </data>
+  <data name="GlobalSynthHeader.Text" xml:space="preserve">
+    <value>General MIDI synthesizer</value>
+  </data>
+  <data name="GlobalSynthHelp.Text" xml:space="preserve">
+    <value>The built-in synthesizer plays MIDI through your default Windows audio device. Turning it off removes its MIDI ports and releases the audio device, which is what you want when another application needs exclusive or ASIO access.</value>
+  </data>
+  <data name="SynthEnabledToggle.Header" xml:space="preserve">
+    <value>Built-in General MIDI synthesizer</value>
+  </data>
+  <data name="SynthEnabledToggle.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="SynthEnabledToggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="SynthStateOn" xml:space="preserve">
+    <value>The synthesizer is available to applications. It opens the audio device only while something is connected to it.</value>
+  </data>
+  <data name="SynthStateOff" xml:space="preserve">
+    <value>The synthesizer's MIDI ports have been removed and no audio device is held.</value>
+  </data>
+  <data name="SynthNotAvailable" xml:space="preserve">
+    <value>The built-in synthesizer is not installed on this PC.</value>
+  </data>
+  <data name="SynthChangeFailed" xml:space="preserve">
+    <value>The synthesizer setting could not be changed.</value>
+  </data>
+  <data name="SynthNotSaved" xml:space="preserve">
+    <value>The change was applied, but could not be saved, so it will not survive a service restart.</value>
+  </data>
   <data name="GlobalServiceHelp.Text" xml:space="preserve">
     <value>Changing the configuration file or the port naming takes effect when the service restarts.</value>
   </data>

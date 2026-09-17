@@ -1,0 +1,37 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Synth
+{
+    [contract(MidiTransportsSynthApiContract, 1)]
+
+    // How an incoming bank select is read.
+    //
+    // The built-in sound set is addressed the Roland GS way: the variation lives in the bank MSB
+    // and the LSB is always zero. A file written for XG puts the variation in the LSB, and a file
+    // written for General MIDI 2 fixes the MSB at 121, so on either one every variation lookup
+    // misses and falls back to the plain instrument.
+    enum MidiSynthBankSelectMode
+    {
+        // Native addressing for the built-in sound set.
+        RolandGS = 0,
+
+        // Variation in the LSB. MSB 127 and 126 select drum kits.
+        YamahaXG = 1,
+
+        // MSB 121 melodic, MSB 120 drum kit, variation in the LSB.
+        GeneralMidi2 = 2,
+
+        // Follow whichever System On or reset the sender last sent. Starts from RolandGS, and an
+        // explicit choice is never overridden by what a file claims.
+        Automatic = 3,
+    };
+}

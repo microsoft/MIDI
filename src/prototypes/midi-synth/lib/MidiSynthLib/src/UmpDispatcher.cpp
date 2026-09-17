@@ -676,10 +676,21 @@ namespace MidiSynth
                 return;
             }
 
-            // GM System On resets everything.
+            // GM System On resets everything. Sub-id 2 distinguishes GM1 from GM2, and which one
+            // it is decides how a later bank select should be read.
             if (m_sysex[2] == 0x09)
             {
                 m_engine->SystemReset();
+
+                if (size >= 4 && m_sysex[3] == 0x03)
+                {
+                    m_engine->NotifyAddressingConvention(BankSelectMode::GeneralMidi2);
+                }
+                else
+                {
+                    m_engine->NotifyAddressingConvention(BankSelectMode::RolandGS);
+                }
+
                 return;
             }
 
@@ -727,6 +738,38 @@ namespace MidiSynth
             m_sysex[4] == 0x40 && m_sysex[5] == 0x00 && m_sysex[6] == 0x7F)
         {
             m_engine->SystemReset();
+            m_engine->NotifyAddressingConvention(BankSelectMode::RolandGS);
+            return;
+        }
+
+        // Roland GS "Use For Rhythm Part", address 40 1p 15, where p is the part number and the
+        // value is 0 for a melodic part or 1 or 2 to select a drum map. This is the only way a
+        // file can put a kit on a channel other than 10, and without it eight of the nine kits in
+        // this sound set can never be heard alongside the tenth.
+        if (m_sysex[0] == 0x41 && size >= 8 &&
+            m_sysex[2] == 0x42 && m_sysex[3] == 0x12 &&
+            m_sysex[4] == 0x40 && (m_sysex[5] & 0xF0) == 0x10 && m_sysex[6] == 0x15)
+        {
+            // The GS part number in the address is not the MIDI channel: part 0 addresses channel
+            // 10, and parts 1 to 9 address channels 1 to 9.
+            const uint8_t part = m_sysex[5] & 0x0F;
+            const uint8_t channel = (part == 0) ? 9u : ((part < 10) ? static_cast<uint8_t>(part - 1) : part);
+
+            if (channel < MidiChannelCount)
+            {
+                m_engine->SetDrumChannel(channel, (m_sysex[7] & 0x7F) != 0);
+                return;
+            }
+        }
+
+        // Yamaha XG System On, address 00 00 7E 00. Seven bytes, one shorter than the GS messages
+        // above, so it does not share their length guard.
+        if (m_sysex[0] == 0x43 && size >= 7 &&
+            m_sysex[2] == 0x4C &&
+            m_sysex[3] == 0x00 && m_sysex[4] == 0x00 && m_sysex[5] == 0x7E)
+        {
+            m_engine->SystemReset();
+            m_engine->NotifyAddressingConvention(BankSelectMode::YamahaXG);
             return;
         }
 

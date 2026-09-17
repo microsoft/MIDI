@@ -156,6 +156,9 @@ namespace network = ::winrt::Windows::Devices::Midi2::Transports::Network;
 namespace winrt::Windows::Devices::Midi2::Transports::Bluetooth {};
 namespace bluetooth = ::winrt::Windows::Devices::Midi2::Transports::Bluetooth;
 
+namespace winrt::Windows::Devices::Midi2::Transports::Synth {};
+namespace synth = ::winrt::Windows::Devices::Midi2::Transports::Synth;
+
 
 #define SAFE_COTASKMEMFREE(p) \
     if (NULL != p) { \

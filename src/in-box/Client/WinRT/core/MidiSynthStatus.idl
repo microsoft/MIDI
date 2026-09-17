@@ -1,0 +1,39 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiSynthRenderModeEnum.idl";
+import "MidiSynthAudioOutputModeEnum.idl";
+import "MidiSynthBankSelectModeEnum.idl";
+
+namespace Windows.Devices.Midi2.Transports.Synth
+{
+    [contract(MidiTransportsSynthApiContract, 1)]
+
+    // What the synthesizer is set to right now.
+    [interface_name("Windows.Devices.Midi2.Transports.Synth.IMidiSynthStatus", UUID_IMidiSynthStatus)]
+    runtimeclass MidiSynthStatus
+    {
+        // When false the synthesizer has no MIDI endpoint at all and holds no audio device. That
+        // is the point of switching it off: an application which opens every MIDI port it can find
+        // cannot then keep the audio device away from an exclusive mode or ASIO application.
+        Boolean IsEnabled{ get; };
+
+        MidiSynthRenderMode RenderMode{ get; };
+        MidiSynthAudioOutputMode AudioOutputMode{ get; };
+        MidiSynthBankSelectMode BankSelectMode{ get; };
+
+        // The customer's own trim, in decibels. Zero is the calibrated level, which is set to match
+        // the older in-box synthesizer so that existing files sound as loud as they always did.
+        Double VolumeDecibels{ get; };
+
+        Boolean AreEffectsEnabled{ get; };
+    }
+}

@@ -99,6 +99,12 @@ namespace MidiSynth
         m_config = config;
         m_renderSampleRate = static_cast<double>(config.RenderSampleRate());
 
+        // Automatic starts from the addressing this sound set actually uses and moves only when a
+        // sender says otherwise.
+        m_detectedBankSelectMode = (config.BankSelect == BankSelectMode::Automatic)
+            ? BankSelectMode::RolandGS
+            : config.BankSelect;
+
         if (m_renderSampleRate <= 0.0)
         {
             return false;
@@ -170,27 +176,137 @@ namespace MidiSynth
     }
 
     _Use_decl_annotations_
+    void SynthEngine::ResolveBankAddressing(
+        SynthChannelState const& state,
+        uint32_t& variationBank,
+        bool& isDrumKit) const noexcept
+    {
+        variationBank = 0;
+        isDrumKit = state.IsDrumChannel;
+
+        switch (m_detectedBankSelectMode)
+        {
+        case BankSelectMode::YamahaXG:
+            // XG carries the variation in the LSB and marks drum kits with MSB 127 or 126.
+            variationBank = state.BankLsb;
+
+            if (state.BankMsb == 127 || state.BankMsb == 126)
+            {
+                isDrumKit = true;
+                variationBank = 0;
+            }
+            break;
+
+        case BankSelectMode::GeneralMidi2:
+            // GM2 fixes the MSB and carries the variation in the LSB. A bank select which is
+            // neither of the two defined values is not GM2 addressing, so it is left alone.
+            if (state.BankMsb == 120)
+            {
+                isDrumKit = true;
+                variationBank = 0;
+            }
+            else if (state.BankMsb == 121)
+            {
+                variationBank = state.BankLsb;
+            }
+            else
+            {
+                variationBank = state.BankMsb;
+            }
+            break;
+
+        case BankSelectMode::RolandGS:
+        case BankSelectMode::Automatic:
+        default:
+            variationBank = state.BankMsb;
+            break;
+        }
+
+        // Kits are addressed by a flag in this sound set rather than by a bank, so whatever the
+        // convention used to say "this is a kit", the lookup itself is always bank zero.
+        if (isDrumKit)
+        {
+            variationBank = 0;
+        }
+    }
+
+    _Use_decl_annotations_
+    void SynthEngine::NotifyAddressingConvention(BankSelectMode convention)
+    {
+        // Only Automatic follows the sender. An explicit choice is the customer overriding what
+        // the file claims, which is the whole point of offering it.
+        if (m_config.BankSelect != BankSelectMode::Automatic)
+        {
+            return;
+        }
+
+        if (m_detectedBankSelectMode == convention)
+        {
+            return;
+        }
+
+        m_detectedBankSelectMode = convention;
+
+        for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
+        {
+            ResolveInstrument(channel);
+        }
+    }
+
+    _Use_decl_annotations_
+    void SynthEngine::SetDrumChannel(uint8_t channel, bool isDrumChannel)
+    {
+        if (channel >= MidiChannelCount)
+        {
+            return;
+        }
+
+        if (m_channels[channel].IsDrumChannel == isDrumChannel)
+        {
+            return;
+        }
+
+        m_channels[channel].IsDrumChannel = isDrumChannel;
+
+        ResolveInstrument(channel);
+    }
+
+    _Use_decl_annotations_
+    void SynthEngine::SetBankSelectMode(BankSelectMode mode)
+    {
+        m_config.BankSelect = mode;
+
+        // Automatic keeps whatever the last reset message implied; anything else is absolute.
+        if (mode != BankSelectMode::Automatic)
+        {
+            m_detectedBankSelectMode = mode;
+        }
+
+        for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
+        {
+            ResolveInstrument(channel);
+        }
+    }
+
+    _Use_decl_annotations_
     void SynthEngine::ResolveInstrument(uint8_t channel) noexcept
     {
         auto& state = m_channels[channel];
 
-        const uint32_t bankMsb = state.IsDrumChannel ? 0u : state.BankMsb;
-        const uint32_t bankLsb = state.IsDrumChannel ? 0u : state.BankLsb;
+        uint32_t variationBank{ 0 };
+        bool isDrumKit{ false };
 
-        state.Instrument = m_collection->FindInstrument(bankMsb, bankLsb, state.Program, state.IsDrumChannel);
+        ResolveBankAddressing(state, variationBank, isDrumKit);
+
+        state.Instrument = m_collection->FindInstrument(variationBank, 0, state.Program, isDrumKit);
 
         // Fall back the way a GS device does: unknown variation drops to the capital tone.
-        if (state.Instrument == nullptr && bankMsb != 0)
+        if (state.Instrument == nullptr && variationBank != 0)
         {
-            state.Instrument = m_collection->FindInstrument(0, bankLsb, state.Program, state.IsDrumChannel);
+            state.Instrument = m_collection->FindInstrument(0, 0, state.Program, isDrumKit);
         }
 
-        if (state.Instrument == nullptr && bankLsb != 0)
-        {
-            state.Instrument = m_collection->FindInstrument(0, 0, state.Program, state.IsDrumChannel);
-        }
-
-        if (state.Instrument == nullptr && state.IsDrumChannel)
+        if (state.Instrument == nullptr && isDrumKit)
         {
             state.Instrument = m_collection->FindInstrument(0, 0, 0, true);
         }
@@ -861,7 +977,7 @@ namespace MidiSynth
             ConcaveTransformDb(state.Expression);
 
         const double totalGainDb = voice.StaticGainDb + channelGainDb + lfoAttenuationDb
-            + m_config.MasterGainDb + m_masterVolumeDb;
+            + m_config.MasterGainDb + m_masterVolumeDb + m_userVolumeDb;
 
         const double amplitude = envelopeGain * DecibelsToLinear(totalGainDb) / 32768.0;
 

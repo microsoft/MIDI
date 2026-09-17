@@ -1237,6 +1237,31 @@
                     </StackPanel>
 
                     <StackPanel Spacing="8">
+                        <TextBlock x:Uid="GlobalSynthHeader"
+                                   Text="General MIDI synthesizer"
+                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock x:Uid="GlobalSynthHelp"
+                                   Text="The built-in synthesizer plays MIDI through your default Windows audio device. Turning it off removes its MIDI ports and releases the audio device, which is what you want when another application needs exclusive or ASIO access."
+                                   TextWrapping="Wrap"
+                                   Style="{StaticResource PropertyLabelStyle}" />
+
+                        <Border Style="{StaticResource SettingsCardStyle}">
+                            <StackPanel Spacing="8">
+                                <ToggleSwitch x:Name="SynthEnabledToggle"
+                                              x:Uid="SynthEnabledToggle"
+                                              Header="Built-in General MIDI synthesizer"
+                                              OnContent="On"
+                                              OffContent="Off"
+                                              Toggled="OnSynthEnabledToggled" />
+                                <TextBlock x:Name="SynthStatusText"
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Spacing="8">
                         <TextBlock x:Uid="GlobalServiceHeader"
                                    Text="MIDI service"
                                    Style="{ThemeResource BodyStrongTextBlockStyle}" />

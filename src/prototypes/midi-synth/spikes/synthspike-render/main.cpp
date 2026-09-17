@@ -1436,6 +1436,234 @@ namespace
             check("program change carries its bank", engine.ActiveVoiceCount() == 1);
         }
 
+        // Bank addressing. gm.dls carries its 98 variations in the bank MSB with the LSB always
+        // zero, so a file written for XG or GM2 misses every one of them unless the incoming bank
+        // select is translated. The expected names are read from the sound set rather than from
+        // the engine, so a mapping which quietly resolves to the wrong instrument still fails.
+        {
+            auto sendSysExPayload = [](UmpDispatcher& dispatcher, const std::vector<uint8_t>& payload)
+            {
+                for (size_t offset = 0; offset < payload.size(); offset += 6)
+                {
+                    const auto count = static_cast<uint8_t>(
+                        (std::min)(size_t{ 6 }, payload.size() - offset));
+
+                    const bool isFirst = (offset == 0);
+                    const bool isLast = (offset + count >= payload.size());
+                    const uint8_t status = (isFirst && isLast) ? 0 : isFirst ? 1 : isLast ? 3 : 2;
+
+                    uint8_t bytes[6]{};
+
+                    for (uint8_t i = 0; i < count; i++)
+                    {
+                        bytes[i] = payload[offset + i];
+                    }
+
+                    const uint32_t words[2]
+                    {
+                        (3u << 28) | (static_cast<uint32_t>(status) << 20)
+                            | (static_cast<uint32_t>(count) << 16)
+                            | (static_cast<uint32_t>(bytes[0]) << 8) | bytes[1],
+
+                        (static_cast<uint32_t>(bytes[2]) << 24)
+                            | (static_cast<uint32_t>(bytes[3]) << 16)
+                            | (static_cast<uint32_t>(bytes[4]) << 8) | bytes[5],
+                    };
+
+                    dispatcher.ProcessWords(words, 2);
+                }
+            };
+
+            // Program 0 in variation bank 8 is a real, named entry in this sound set. If it ever
+            // stops being one the test says so rather than silently passing on a fallback.
+            const auto* const expectedVariation = collection.FindInstrument(8, 0, 0, false);
+            const auto* const capitalTone = collection.FindInstrument(0, 0, 0, false);
+
+            check("sound set has a variation to test with",
+                expectedVariation != nullptr && capitalTone != nullptr &&
+                expectedVariation != capitalTone);
+
+            auto selectedInstrument = [&](BankSelectMode mode, uint8_t msb, uint8_t lsb)
+            {
+                SynthEngine engine;
+                UmpDispatcher dispatcher;
+
+                auto modeConfig = config;
+                modeConfig.BankSelect = mode;
+
+                engine.Initialize(&collection, modeConfig);
+                dispatcher.Initialize(&engine, 0, 0x0123456);
+
+                uint32_t word = MakeMidi1Cv(0, 0xB, 0, 0, msb);
+                dispatcher.ProcessWords(&word, 1);
+
+                word = MakeMidi1Cv(0, 0xB, 0, 32, lsb);
+                dispatcher.ProcessWords(&word, 1);
+
+                word = MakeMidi1Cv(0, 0xC, 0, 0, 0);
+                dispatcher.ProcessWords(&word, 1);
+
+                return engine.ChannelState(0).Instrument;
+            };
+
+            check("GS addressing reads the variation from the MSB",
+                selectedInstrument(BankSelectMode::RolandGS, 8, 0) == expectedVariation);
+
+            check("XG addressing reads the variation from the LSB",
+                selectedInstrument(BankSelectMode::YamahaXG, 0, 8) == expectedVariation);
+
+            check("GM2 addressing reads the variation from the LSB under MSB 121",
+                selectedInstrument(BankSelectMode::GeneralMidi2, 121, 8) == expectedVariation);
+
+            // The point of the mapping is that the wrong convention misses. If this passed, the
+            // lookup would be ignoring the mode and the three checks above would prove nothing.
+            check("XG style select under GS addressing falls back to the capital tone",
+                selectedInstrument(BankSelectMode::RolandGS, 0, 8) == capitalTone);
+
+            // Automatic follows the sender.
+            {
+                SynthEngine engine;
+                UmpDispatcher dispatcher;
+
+                auto autoConfig = config;
+                autoConfig.BankSelect = BankSelectMode::Automatic;
+
+                engine.Initialize(&collection, autoConfig);
+                dispatcher.Initialize(&engine, 0, 0x0123456);
+
+                const bool startsAsGs = engine.EffectiveBankSelectMode() == BankSelectMode::RolandGS;
+
+                // XG System On: 43 10 4C 00 00 7E 00
+                sendSysExPayload(dispatcher, { 0x43, 0x10, 0x4C, 0x00, 0x00, 0x7E, 0x00 });
+
+                const bool becameXg = engine.EffectiveBankSelectMode() == BankSelectMode::YamahaXG;
+
+                uint32_t word = MakeMidi1Cv(0, 0xB, 0, 32, 8);
+                dispatcher.ProcessWords(&word, 1);
+                word = MakeMidi1Cv(0, 0xC, 0, 0, 0);
+                dispatcher.ProcessWords(&word, 1);
+
+                check("automatic addressing follows an XG System On",
+                    startsAsGs && becameXg &&
+                    engine.ChannelState(0).Instrument == expectedVariation);
+            }
+
+            // An explicit choice is the customer overriding the file, so it must not be moved by
+            // what the file claims.
+            {
+                SynthEngine engine;
+                UmpDispatcher dispatcher;
+
+                auto gsConfig = config;
+                gsConfig.BankSelect = BankSelectMode::RolandGS;
+
+                engine.Initialize(&collection, gsConfig);
+                dispatcher.Initialize(&engine, 0, 0x0123456);
+
+                sendSysExPayload(dispatcher, { 0x43, 0x10, 0x4C, 0x00, 0x00, 0x7E, 0x00 });
+
+                check("an explicit addressing choice ignores the sender",
+                    engine.EffectiveBankSelectMode() == BankSelectMode::RolandGS);
+            }
+
+            // Drum kits on a channel other than 10. Without the GS rhythm part message eight of
+            // the nine kits in this sound set can never be heard alongside the tenth.
+            {
+                SynthEngine engine;
+                UmpDispatcher dispatcher;
+                freshEngine(engine, dispatcher, 0);
+
+                const bool startsMelodic = !engine.IsDrumChannel(0);
+
+                // 41 10 42 12 40 11 15 01 <sum>. The nibble is a Roland block number, not a MIDI
+                // channel: block 0 is channel 10 and blocks 1 to 9 are channels 1 to 9, so block 1
+                // is MIDI channel 1, which is index zero here.
+                sendSysExPayload(dispatcher, { 0x41, 0x10, 0x42, 0x12, 0x40, 0x11, 0x15, 0x01, 0x29 });
+
+                const bool becameDrum = engine.IsDrumChannel(0);
+
+                // And back again, so a file can hand the channel back to melodic use.
+                sendSysExPayload(dispatcher, { 0x41, 0x10, 0x42, 0x12, 0x40, 0x11, 0x15, 0x00, 0x2A });
+
+                check("GS Use For Rhythm Part makes another channel a drum part",
+                    startsMelodic && becameDrum && !engine.IsDrumChannel(0));
+            }
+
+            // Channel 10 must stay a drum part through a reset, and an assignment must not.
+            {
+                SynthEngine engine;
+                UmpDispatcher dispatcher;
+                freshEngine(engine, dispatcher, 0);
+
+                engine.SetDrumChannel(2, true);
+                const bool assigned = engine.IsDrumChannel(2);
+
+                engine.SystemReset();
+
+                check("reset restores channel 10 as the only drum part",
+                    assigned && engine.IsDrumChannel(9) && !engine.IsDrumChannel(2));
+            }
+        }
+
+        // The customer's volume trim. This is the synthesizer's only volume control, because a
+        // session 0 service gets no slider in the Windows Volume Mixer and exclusive and ASIO
+        // output have no Windows mixer in the path at all.
+        {
+            auto renderAt = [&](double userVolumeDb)
+            {
+                SynthEngine engine;
+                UmpDispatcher dispatcher;
+                freshEngine(engine, dispatcher, 0);
+
+                engine.SetUserVolumeDb(userVolumeDb);
+
+                const uint32_t word = MakeMidi1Cv(0, 0x9, 0, 60, 100);
+                dispatcher.ProcessWords(&word, 1);
+
+                return RenderBurstRms(engine, rate, 0.20);
+            };
+
+            const double unity = renderAt(0.0);
+            const double quiet = renderAt(-20.0);
+
+            const double deltaDb = (unity > 0.0 && quiet > 0.0)
+                ? 20.0 * std::log10(quiet / unity)
+                : 0.0;
+
+            check("user volume of -20 dB attenuates by 20 dB",
+                std::abs(deltaDb + 20.0) < 0.5,
+                deltaDb != 0.0 ? "" : "no output to measure");
+
+            // The GM2 master volume belongs to the content and a System Reset clears it. The
+            // customer's trim must not ride along, or any file which opens with a reset would
+            // silently discard what the customer chose.
+            {
+                SynthEngine engine;
+                UmpDispatcher dispatcher;
+                freshEngine(engine, dispatcher, 0);
+
+                engine.SetUserVolumeDb(-12.0);
+                engine.SystemReset();
+
+                check("a System Reset leaves the customer's volume alone",
+                    std::abs(engine.UserVolumeDb() + 12.0) < 0.001);
+            }
+
+            {
+                SynthEngine engine;
+                UmpDispatcher dispatcher;
+                freshEngine(engine, dispatcher, 0);
+
+                engine.SetUserVolumeDb(999.0);
+                const bool clampedHigh = engine.UserVolumeDb() <= SynthEngine::MaximumUserVolumeDb;
+
+                engine.SetUserVolumeDb(-999.0);
+                const bool clampedLow = engine.UserVolumeDb() >= SynthEngine::MinimumUserVolumeDb;
+
+                check("user volume is clamped to its range", clampedHigh && clampedLow);
+            }
+        }
+
         // GM System On, as a complete sysex7 packet.
         {
             SynthEngine engine;

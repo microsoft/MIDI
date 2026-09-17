@@ -1,0 +1,39 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiSynthStatus.idl";
+import "MidiSynthSoundSetInfo.idl";
+
+namespace Windows.Devices.Midi2.Transports.Synth
+{
+    [contract(MidiTransportsSynthApiContract, 1)]
+
+    [static_name("Windows.Devices.Midi2.Transports.Synth.IMidiSynthManagerStatics", UUID_IMidiSynthManagerStatics)]
+    static runtimeclass MidiSynthManager
+    {
+        [noexcept] static Boolean IsTransportAvailable{ get; };
+
+        [noexcept] static Guid TransportId{ get; };
+
+        // Null when the transport is not installed or did not answer.
+        [noexcept] static MidiSynthStatus GetStatus();
+
+        [noexcept] static MidiSynthSoundSetInfo GetSoundSetInfo();
+
+        // Any channel can be a rhythm part. A file can ask for this itself with the usual system
+        // exclusive message; this is the same thing for an application which is not playing a file.
+        // The synthesizer occupies a single group, so only the channel is needed.
+        //
+        // Deliberately not persisted: the content owns it, and a System Reset in a file puts
+        // channel 10 back as the only drum channel. Use MidiSynthConfig for settings which stay.
+        [noexcept] static Boolean SetDrumChannel(UInt8 channelIndex, Boolean isDrumChannel);
+    }
+}

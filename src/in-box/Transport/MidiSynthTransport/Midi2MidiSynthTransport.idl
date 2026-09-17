@@ -1,0 +1,29 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "unknwn.idl";
+
+import "WindowsMidiServices.idl";
+
+
+[
+    uuid(c6fd1c01-4252-439b-83a3-f9b45c10bc09),
+    version(1.0),
+]
+library Midi2MidiSynthTransportLib
+{
+    importlib("stdole2.tlb");
+
+    [uuid(7605713e-fea9-409d-a90f-a81233200d0a), version(1.0)]
+    coclass Midi2MidiSynthTransport
+    {
+        [default] interface IMidiTransport;
+    }
+};

@@ -19,6 +19,7 @@
 #include "MidiSynth/AudioSink.h"
 #include "MidiSynth/DlsCollection.h"
 #include "MidiSynth/ProgramList.h"
+#include "MidiSynth/PropertyExchangeSource.h"
 #include "MidiSynth/SpscRingBuffer.h"
 #include "MidiSynth/SynthEngine.h"
 #include "MidiSynth/UmpDispatcher.h"
@@ -142,31 +143,12 @@ namespace
         // is only ever a byte range slice.
         void BuildPropertyResources()
         {
-            namespace ci = WindowsMidiServicesCapabilityInquiry;
-
-            m_programListJson = MidiSynth::BuildProgramListJson(m_collection);
-
-            ci::DeviceInfoFields info{};
-
-            info.ManufacturerId[0] = MIDI_MANUFACTURER_SYSEX_ID_MICROSOFT_BYTE1;
-            info.ManufacturerId[1] = MIDI_MANUFACTURER_SYSEX_ID_MICROSOFT_BYTE2;
-            info.ManufacturerId[2] = MIDI_MANUFACTURER_SYSEX_ID_MICROSOFT_BYTE3;
-            info.Manufacturer = "Microsoft";
-            info.FamilyId[0] = MIDI_DEVICE_FAMILY_WINDOWS_11;
-            info.Family = "Windows";
-            info.ModelId[0] = MIDI_DEVICE_FAMILY_MODEL_NUMBER_GM_SYNTH;
-            info.Model = "General MIDI Synth";
-
-            m_deviceInfoJson.resize(ci::BuildDeviceInfoJson(info, nullptr, 0));
-            (void)ci::BuildDeviceInfoJson(info, m_deviceInfoJson.data(), m_deviceInfoJson.size());
-
-            char const* const names[]{ "ResourceList", "DeviceInfo", "ChannelList", "ProgramList" };
-
-            m_resourceListJson.resize(ci::BuildResourceListJson(names, 4, nullptr, 0));
-            (void)ci::BuildResourceListJson(names, 4, m_resourceListJson.data(), m_resourceListJson.size());
+            m_propertyExchange.Build(m_collection, SynthIdentity{});
 
             wprintf(L"Property Exchange: ResourceList %zu, DeviceInfo %zu, ProgramList %zu bytes\n",
-                m_resourceListJson.size(), m_deviceInfoJson.size(), m_programListJson.size());
+                m_propertyExchange.ResourceListJson().size(),
+                m_propertyExchange.DeviceInfoJson().size(),
+                m_propertyExchange.ProgramListJson().size());
         }
 
         // Called from the sender thread. Emits at most one chunk per call, because a full program
@@ -181,15 +163,13 @@ namespace
             catch (...)
             {
                 wprintf(L"Property request handling failed, request abandoned\n");
-                m_nextChunk = 0;
+                m_propertyExchange.AbandonReply();
             }
         }
 
         void ServicePropertyRequestsInner()
         {
-            namespace ci = WindowsMidiServicesCapabilityInquiry;
-
-            if (m_nextChunk == 0)
+            if (!m_propertyExchange.ReplyInProgress())
             {
                 UmpDispatcher::PendingPropertyRequest request{};
 
@@ -199,10 +179,11 @@ namespace
                 }
 
                 const std::vector<char>* blob = nullptr;
+                bool cacheable{ true };
 
-                const auto lookup = ResourceForHeader(request.Header, request.HeaderByteCount, &blob);
+                const auto lookup = ResourceForHeader(request.Header, request.HeaderByteCount, &blob, cacheable);
 
-                if (lookup != ResourceLookup::Found)
+                if (lookup != ResourceLookup::Found || blob == nullptr)
                 {
                     const std::string asked(
                         reinterpret_cast<const char*>(request.Header), request.HeaderByteCount);
@@ -211,71 +192,19 @@ namespace
                         lookup == ResourceLookup::HeaderNotJson ? L"header was not JSON" : L"for a resource we do not have",
                         asked.c_str());
 
-                    SendNotFound(request);
+                    m_propertyExchange.SendNotFound(
+                        m_output, SynthEndpoint::FirstGroupIndex, m_dispatcher.Muid(), request);
+
                     return;
                 }
 
-                m_replyInitiatorMuid = request.InitiatorMuid;
-                m_replyRequestId = request.RequestId;
+                m_propertyExchange.BeginReply(request, *blob, cacheable);
 
-                m_chunker = {};
-                m_chunker.Resource = reinterpret_cast<const uint8_t*>(blob->data());
-                m_chunker.ResourceByteCount = blob->size();
-                m_chunker.Header = m_replyIsCacheable ? ReplyHeaderOkCacheable : ReplyHeaderOk;
-                m_chunker.HeaderByteCount = static_cast<uint16_t>(
-                    m_replyIsCacheable ? sizeof(ReplyHeaderOkCacheable) : sizeof(ReplyHeaderOk));
-                // What the initiator said it can receive. 512 is the smallest seen in practice.
-                if (!m_chunker.Plan(512))
-                {
-                    return;
-                }
-
-                m_nextChunk = 1;
-
-                wprintf(L"Property request: %zu bytes in %u chunks\n",
-                    blob->size(), m_chunker.ChunkCount);
+                wprintf(L"Property request: %zu bytes\n", blob->size());
             }
 
-            uint8_t buffer[640]{};
-
-            const auto written = m_chunker.BuildChunk(
-                m_nextChunk, m_dispatcher.Muid(), m_replyInitiatorMuid, m_replyRequestId,
-                buffer, sizeof(buffer));
-
-            if (written == 0)
-            {
-                m_nextChunk = 0;
-                return;
-            }
-
-            UmpDispatcher::PacketizeSysEx7(m_output, 0, buffer, written);
-
-            m_nextChunk = (m_nextChunk >= m_chunker.ChunkCount) ? 0 : static_cast<uint16_t>(m_nextChunk + 1);
-        }
-
-        void SendNotFound(_In_ const UmpDispatcher::PendingPropertyRequest& request)
-        {
-            namespace ci = WindowsMidiServicesCapabilityInquiry;
-
-            ci::PropertyExchangeMessageFields fields{};
-
-            fields.Type = ci::MessageType::PropertyGetDataReply;
-            fields.SourceMuid = m_dispatcher.Muid();
-            fields.DestinationMuid = request.InitiatorMuid;
-            fields.RequestId = request.RequestId;
-            fields.Header = ReplyHeaderNotFound;
-            fields.HeaderByteCount = static_cast<uint16_t>(sizeof(ReplyHeaderNotFound));
-            fields.ChunkCount = 1;
-            fields.ChunkNumber = 1;
-
-            uint8_t buffer[64]{};
-
-            const auto written = ci::BuildPropertyExchangeMessage(fields, buffer, sizeof(buffer));
-
-            if (written > 0)
-            {
-                UmpDispatcher::PacketizeSysEx7(m_output, 0, buffer, written);
-            }
+            (void)m_propertyExchange.SendNextChunk(
+                m_output, SynthEndpoint::FirstGroupIndex, m_dispatcher.Muid());
         }
 
         void SetMode(_In_ SynthMode mode) noexcept { m_mode = mode; }
@@ -456,22 +385,6 @@ namespace
             wprintf(L"  audio released\n");
         }
 
-        // Reply header for a successful property exchange request.
-        static constexpr uint8_t ReplyHeaderOk[]{ '{', '"', 's', 't', 'a', 't', 'u', 's', '"', ':', '2', '0', '0', '}' };
-
-        // The sound set is loaded once and cannot change while this host runs, so the resources
-        // built from it are worth caching. Without this a client refetches nine kilobytes on every
-        // reconnect. ChannelList deliberately does not get one: it changes on every program change.
-        static constexpr uint8_t ReplyHeaderOkCacheable[]
-        {
-            '{', '"', 's', 't', 'a', 't', 'u', 's', '"', ':', '2', '0', '0', ',',
-            '"', 'c', 'a', 'c', 'h', 'e', 'T', 'i', 'm', 'e', '"', ':', '3', '6', '0', '0', '}'
-        };
-
-        // Asking for something we do not have is answered, not ignored. An initiator that gets
-        // silence waits for a timeout and may give up on the device entirely.
-        static constexpr uint8_t ReplyHeaderNotFound[]{ '{', '"', 's', 't', 'a', 't', 'u', 's', '"', ':', '4', '0', '4', '}' };
-
         enum class ResourceLookup
         {
             Found = 0,
@@ -484,13 +397,13 @@ namespace
         ResourceLookup ResourceForHeader(
             _In_reads_(headerBytes) const uint8_t* header,
             _In_ uint16_t headerBytes,
-            _Outptr_result_maybenull_ const std::vector<char>** blob) const
+            _Outptr_result_maybenull_ const std::vector<char>** blob,
+            _Out_ bool& cacheable)
         {
             namespace json = ::winrt::Windows::Data::Json;
 
             *blob = nullptr;
-
-            m_replyIsCacheable = true;
+            cacheable = true;
 
             const std::string text(reinterpret_cast<const char*>(header), headerBytes);
 
@@ -503,72 +416,19 @@ namespace
 
             const auto resource = parsed.GetNamedString(L"resource", L"");
 
-            if (resource == L"ResourceList") { *blob = &m_resourceListJson; return ResourceLookup::Found; }
-            if (resource == L"DeviceInfo") { *blob = &m_deviceInfoJson; return ResourceLookup::Found; }
-            if (resource == L"ProgramList") { *blob = &m_programListJson; return ResourceLookup::Found; }
+            if (resource == L"ResourceList") { *blob = &m_propertyExchange.ResourceListJson(); return ResourceLookup::Found; }
+            if (resource == L"DeviceInfo") { *blob = &m_propertyExchange.DeviceInfoJson(); return ResourceLookup::Found; }
+            if (resource == L"ProgramList") { *blob = &m_propertyExchange.ProgramListJson(); return ResourceLookup::Found; }
 
             // Rebuilt per request: unlike the others this reflects what is selected right now.
             if (resource == L"ChannelList")
             {
-                RebuildChannelList();
-                *blob = &m_channelListJson;
-                m_replyIsCacheable = false;
+                *blob = &m_propertyExchange.RebuildChannelListJson(m_engine, m_collection);
+                cacheable = false;
                 return ResourceLookup::Found;
             }
 
             return ResourceLookup::UnknownResource;
-        }
-
-        void RebuildChannelList() const
-        {
-            namespace ci = WindowsMidiServicesCapabilityInquiry;
-
-            ci::ChannelListEntry entries[MidiChannelCount]{};
-            char titles[MidiChannelCount][16]{};
-            std::string programTitles[MidiChannelCount];
-
-            for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
-            {
-                const auto state = m_engine.ChannelState(channel);
-
-                snprintf(titles[channel], sizeof(titles[channel]), "Channel %u", channel + 1u);
-
-                entries[channel].Title = titles[channel];
-                entries[channel].Channel = static_cast<uint16_t>(channel + 1);
-                entries[channel].BankMsb = state.BankMsb;
-                entries[channel].BankLsb = state.BankLsb;
-                entries[channel].Program = state.Program;
-
-                // Channel 10 is the drum channel by convention, and kits are addressed by a flag
-                // in this sound set rather than by a bank.
-                const auto* instrument = m_collection.FindInstrument(
-                    state.BankMsb, state.BankLsb, state.Program, channel == 9);
-
-                if (instrument != nullptr)
-                {
-                    programTitles[channel] = ToNarrow(instrument->Name);
-                    entries[channel].ProgramTitle = programTitles[channel].c_str();
-                }
-            }
-
-            const auto required = ci::BuildChannelListJson(entries, MidiChannelCount, nullptr, 0);
-
-            m_channelListJson.resize(required);
-
-            (void)ci::BuildChannelListJson(
-                entries, MidiChannelCount, m_channelListJson.data(), m_channelListJson.size());
-        }
-
-        static std::string ToNarrow(_In_ const std::wstring& text)
-        {
-            std::string result;
-
-            for (const auto character : text)
-            {
-                result += (character > 0 && character < 0x80) ? static_cast<char>(character) : '?';
-            }
-
-            return result;
         }
 
         DlsCollection m_collection;
@@ -579,16 +439,7 @@ namespace
         OutboundQueue m_outbound;
         QueuedUmpOutput m_output{ m_outbound };
 
-        std::vector<char> m_programListJson;
-        std::vector<char> m_deviceInfoJson;
-        std::vector<char> m_resourceListJson;
-        mutable std::vector<char> m_channelListJson;
-        mutable bool m_replyIsCacheable{ true };
-
-        WindowsMidiServicesCapabilityInquiry::PropertyReplyChunker m_chunker{};
-        uint16_t m_nextChunk{ 0 };
-        uint32_t m_replyInitiatorMuid{ 0 };
-        uint8_t m_replyRequestId{ 0 };
+        PropertyExchangeSource m_propertyExchange;
 
         std::unique_ptr<WasapiAudioSink> m_sink;
         std::unique_ptr<UmpRenderSource> m_source;

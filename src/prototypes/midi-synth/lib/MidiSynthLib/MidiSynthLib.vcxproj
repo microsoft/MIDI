@@ -9,6 +9,22 @@
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64EC">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64EC</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64EC">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64EC</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
 
   <PropertyGroup Label="Globals">
@@ -36,7 +52,8 @@
     <IntDir>$(MSBuildThisFileDirectory)..\..\out\intermediate\$(MSBuildProjectName)\$(Platform)\$(Configuration)\</IntDir>
 
     <!-- libmidi2's M2Utils scaling is header only, so this is an include path and not a link
-         dependency. It is the same arithmetic the service uses, which is the point. -->
+         dependency. It is the same arithmetic the service uses, which is the point. The triplet is
+         x64 for every platform because nothing here is compiled, only included. -->
     <SynthLibMidi2Include>$(MSBuildThisFileDirectory)..\..\..\..\in-box\Client\WinRT\core\vcpkg_installed\x64-windows\include</SynthLibMidi2Include>
   </PropertyGroup>
 
@@ -68,6 +85,7 @@
     <ClInclude Include="inc\MidiSynth\DlsTypes.h" />
     <ClInclude Include="inc\MidiSynth\DlsUnits.h" />
     <ClInclude Include="inc\MidiSynth\ProgramList.h" />
+    <ClInclude Include="inc\MidiSynth\PropertyExchangeSource.h" />
     <ClInclude Include="inc\MidiSynth\RiffReader.h" />
     <ClInclude Include="inc\MidiSynth\SpscRingBuffer.h" />
     <ClInclude Include="inc\MidiSynth\SynthConfig.h" />
@@ -81,6 +99,7 @@
     <ClCompile Include="src\ChorusEffect.cpp" />
     <ClCompile Include="src\DlsCollection.cpp" />
     <ClCompile Include="src\ProgramList.cpp" />
+    <ClCompile Include="src\PropertyExchangeSource.cpp" />
     <ClCompile Include="src\ReverbEffect.cpp" />
     <ClCompile Include="src\SynthEngine.cpp" />
     <ClCompile Include="src\UmpDispatcher.cpp" />

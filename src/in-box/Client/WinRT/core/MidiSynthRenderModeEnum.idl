@@ -1,0 +1,25 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Synth
+{
+    [contract(MidiTransportsSynthApiContract, 1)]
+    enum MidiSynthRenderMode
+    {
+        // Reproduces the observable behavior of the older in-box synthesizer, limits included:
+        // 32 voices, linear interpolation, no reverb or chorus, and a 22050 Hz render rate whose
+        // bandwidth limit is part of the sound being reproduced.
+        Compatible = 0,
+
+        // The same sound set without the historic limits.
+        Modern = 1,
+    };
+}

@@ -170,6 +170,8 @@ namespace winrt::midisettings::implementation
 
             m_suppressPortNamingHandling = false;
 
+            RefreshSynthSettings();
+
             GlobalStatusText().Text({});
         }
         catch (...)
@@ -178,6 +180,113 @@ namespace winrt::midisettings::implementation
 
             MIDI_SETTINGS_LOG_GENERAL_EXCEPTION(L"Unable to load the global settings.");
         }
+    }
+
+
+    namespace
+    {
+        // Must match the CLSID the synthesizer transport is registered under.
+        constexpr winrt::guid SynthTransportId
+        {
+            0x7605713e, 0xfea9, 0x409d, { 0xa9, 0x0f, 0xa8, 0x12, 0x33, 0x20, 0x0d, 0x0a }
+        };
+
+        midi2config::MidiServiceConfigResponse SendSynthVerb(_In_ winrt::hstring const& verb)
+        {
+            midi2config::MidiServiceTransportCommand command(SynthTransportId, verb);
+
+            return midi2config::MidiServiceTransportPluginConfigManager::SendCommand(command);
+        }
+
+        bool SynthResponseSucceeded(_In_ midi2config::MidiServiceConfigResponse const& response)
+        {
+            return response != nullptr &&
+                response.Status() == midi2config::MidiServiceConfigResponseStatus::Success;
+        }
+    }
+
+
+    void MainWindow::RefreshSynthSettings() noexcept
+    {
+        m_suppressSynthHandling = true;
+
+        auto restore = wil::scope_exit([&]() { m_suppressSynthHandling = false; });
+
+        try
+        {
+            auto const response = SendSynthVerb(L"status");
+
+            // A machine without the synthesizer transport installed is not an error. Hide the
+            // control rather than showing one which cannot do anything.
+            if (!SynthResponseSucceeded(response) || response.ResponseJson() == nullptr)
+            {
+                SynthEnabledToggle().Visibility(xaml::Visibility::Collapsed);
+                SynthStatusText().Text(res::GetString(L"SynthNotAvailable"));
+                return;
+            }
+
+            SynthEnabledToggle().Visibility(xaml::Visibility::Visible);
+
+            auto const enabled = response.ResponseJson().GetNamedBoolean(L"enabled", false);
+
+            SynthEnabledToggle().IsOn(enabled);
+            SynthStatusText().Text(res::GetString(enabled ? L"SynthStateOn" : L"SynthStateOff"));
+        }
+        catch (...)
+        {
+            SynthEnabledToggle().Visibility(xaml::Visibility::Collapsed);
+            SynthStatusText().Text(res::GetString(L"SynthNotAvailable"));
+
+            MIDI_SETTINGS_LOG_GENERAL_EXCEPTION(L"Unable to read the synthesizer settings.");
+        }
+    }
+
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnSynthEnabledToggled(
+        foundation::IInspectable const&,
+        xaml::RoutedEventArgs const&)
+    {
+        auto lifetime = get_strong();
+
+        if (m_suppressSynthHandling)
+        {
+            co_return;
+        }
+
+        try
+        {
+            auto const enabled = SynthEnabledToggle().IsOn();
+
+            // The verb changes the running service. The settings object is what gets written to
+            // the configuration file, because a command is an action and the file holds state.
+            auto const response = SendSynthVerb(enabled ? L"enable" : L"disable");
+
+            if (!SynthResponseSucceeded(response))
+            {
+                SynthStatusText().Text(res::GetString(L"SynthChangeFailed"));
+                RefreshSynthSettings();
+                co_return;
+            }
+
+            json::JsonObject config;
+            config.SetNamedValue(L"enabled", json::JsonValue::CreateBooleanValue(enabled));
+
+            auto const saveResponse =
+                midi2config::MidiServiceTransportPluginConfigManager::SaveUpdate(SynthTransportId, config);
+
+            if (saveResponse != nullptr && saveResponse.Success())
+            {
+                SynthStatusText().Text(res::GetString(enabled ? L"SynthStateOn" : L"SynthStateOff"));
+            }
+            else
+            {
+                SynthStatusText().Text(res::GetString(L"SynthNotSaved"));
+            }
+        }
+        MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to change the synthesizer setting.")
+
+        co_return;
     }
 
     _Use_decl_annotations_

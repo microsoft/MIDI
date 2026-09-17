@@ -79,6 +79,7 @@ namespace winrt::midisettings::implementation
         void OnCreateConfigFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCopyConfigFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnPortNamingChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnSynthEnabledToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnRestartServiceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnRestartElevatedClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
@@ -136,6 +137,7 @@ namespace winrt::midisettings::implementation
 
         // --- global settings ---
         void RefreshGlobalSettings() noexcept;
+        void RefreshSynthSettings() noexcept;
         void RefreshNotificationSettings() noexcept;
         void ShowFirstRunInvitation() noexcept;
 
@@ -150,6 +152,10 @@ namespace winrt::midisettings::implementation
         bool m_healthCheckInFlight{ false };
         bool m_suppressFilterHandling{ false };
         bool m_suppressPortNamingHandling{ false };
+
+        // Setting ToggleSwitch::IsOn raises Toggled, so a refresh would write the value it just
+        // read back to the service on every open of the dialog.
+        bool m_suppressSynthHandling{ false };
         bool m_updatingNotificationToggles{ false };
 
         // The detail dialog asks to be reopened after a customization, and its status line is

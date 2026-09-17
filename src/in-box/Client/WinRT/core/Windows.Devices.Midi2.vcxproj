@@ -534,6 +534,21 @@
     <ClInclude Include="MidiBluetoothOfflineRetentionConfig.h">
       <DependentUpon>MidiBluetoothOfflineRetentionConfig.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiSynthDrumKitInfo.h">
+      <DependentUpon>MidiSynthDrumKitInfo.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSynthSoundSetInfo.h">
+      <DependentUpon>MidiSynthSoundSetInfo.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSynthStatus.h">
+      <DependentUpon>MidiSynthStatus.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSynthConfig.h">
+      <DependentUpon>MidiSynthConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSynthManager.h">
+      <DependentUpon>MidiSynthManager.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiBluetoothPeripheralClientListConfig.h">
       <DependentUpon>MidiBluetoothPeripheralClientListConfig.idl</DependentUpon>
     </ClInclude>
@@ -964,6 +979,18 @@
     <ClCompile Include="MidiBluetoothOfflineRetentionConfig.cpp">
       <DependentUpon>MidiBluetoothOfflineRetentionConfig.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiSynthSoundSetInfo.cpp">
+      <DependentUpon>MidiSynthSoundSetInfo.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSynthStatus.cpp">
+      <DependentUpon>MidiSynthStatus.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSynthConfig.cpp">
+      <DependentUpon>MidiSynthConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSynthManager.cpp">
+      <DependentUpon>MidiSynthManager.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiBluetoothPeripheralClientListConfig.cpp">
       <DependentUpon>MidiBluetoothPeripheralClientListConfig.idl</DependentUpon>
     </ClCompile>
@@ -1247,6 +1274,14 @@
     <Midl Include="MidiBluetoothRememberedClient.idl" />
     <Midl Include="MidiBluetoothOfflineRetentionConfig.idl" />
     <Midl Include="MidiBluetoothOfflineRetentionEnum.idl" />
+    <Midl Include="MidiSynthRenderModeEnum.idl" />
+    <Midl Include="MidiSynthAudioOutputModeEnum.idl" />
+    <Midl Include="MidiSynthBankSelectModeEnum.idl" />
+    <Midl Include="MidiSynthDrumKitInfo.idl" />
+    <Midl Include="MidiSynthSoundSetInfo.idl" />
+    <Midl Include="MidiSynthStatus.idl" />
+    <Midl Include="MidiSynthConfig.idl" />
+    <Midl Include="MidiSynthManager.idl" />
     <Midl Include="MidiBluetoothPeripheralClientListConfig.idl" />
     <Midl Include="MidiBluetoothDeviceInformation.idl" />
     <Midl Include="MidiBluetoothPeripheralClient.idl" />

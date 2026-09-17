@@ -39,6 +39,28 @@ namespace MidiSynth
         QuietestReleasing,
     };
 
+    // How an incoming bank select is read.
+    //
+    // This matters because gm.dls is addressed the Roland GS way: the variation lives in the bank
+    // MSB and the LSB is always zero. A file written for XG puts the variation in the LSB and a
+    // file written for GM2 fixes the MSB at 121, so on either one every variation lookup misses and
+    // silently falls back to the capital tone. Measured over 175,163 real files, XG style LSB
+    // selects outnumber GM2 style by more than twenty to one, so this is not a rare case.
+    enum class BankSelectMode
+    {
+        // Native addressing for this sound set.
+        RolandGS = 0,
+
+        // Yamaha XG: variation in the LSB. MSB 127 and 126 select drum kits.
+        YamahaXG,
+
+        // General MIDI 2: MSB 121 melodic, MSB 120 drum kit, variation in the LSB.
+        GeneralMidi2,
+
+        // Follow whichever System On or reset the sender last sent, starting from GS.
+        Automatic,
+    };
+
     struct SynthConfig
     {
         SynthMode Mode{ SynthMode::Modern };
@@ -54,6 +76,8 @@ namespace MidiSynth
         InterpolationQuality Interpolation{ InterpolationQuality::Cubic };
 
         VoiceStealingPolicy StealingPolicy{ VoiceStealingPolicy::QuietestReleasing };
+
+        BankSelectMode BankSelect{ BankSelectMode::Automatic };
 
         // Applied to the whole mix. Set so output level matches the in-box synth, measured by
         // capturing it and correcting for the loopback path gain: a drop-in replacement that is
@@ -87,6 +111,9 @@ namespace MidiSynth
                 config.StealingPolicy = VoiceStealingPolicy::LowestChannelPriority;
                 config.EnableLimiter = false;
                 config.EnableEffects = false;
+
+                // Reproducing the older synthesizer means reproducing the misses too.
+                config.BankSelect = BankSelectMode::RolandGS;
             }
 
             return config;

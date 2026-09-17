@@ -46,6 +46,14 @@
 #include <winrt/Windows.Storage.FileProperties.h>
 #include <winrt/Windows.Storage.Streams.h>
 
+// windows.h defines GetObject as a macro, which renames a method on the JSON projection. This has
+// to come before the Midi2 headers: they pull the JSON implementation headers in themselves, and
+// whichever include lands first is the one that decides the name.
+#pragma push_macro("GetObject")
+#undef GetObject
+#include <winrt/Windows.Data.Json.h>
+#pragma pop_macro("GetObject")
+
 #include <winrt/Windows.Devices.Midi2.h>
 #include <winrt/Windows.Devices.Midi2.ClientPlugins.h>
 #include <winrt/Windows.Devices.Midi2.Diagnostics.h>
@@ -62,6 +70,7 @@
 
 namespace foundation = winrt::Windows::Foundation;
 namespace collections = winrt::Windows::Foundation::Collections;
+namespace json = winrt::Windows::Data::Json;
 namespace midi2 = winrt::Windows::Devices::Midi2;
 namespace midi2enum = winrt::Windows::Devices::Midi2::Enumeration;
 namespace midi2legacy = winrt::Windows::Devices::Midi2::Enumeration::Legacy;

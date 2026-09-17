@@ -17,6 +17,7 @@
 #include "cmd_enumerate.h"
 #include "cmd_forward.h"
 #include "cmd_loopback.h"
+#include "cmd_synth.h"
 #include "cmd_network.h"
 #include "cmd_sysex.h"
 #include "cmd_system.h"
@@ -480,6 +481,43 @@ int main()
     auto basicLoopbackUnmuteCommand = basicLoopbackCommand->add_subcommand("unmute", ResourceString(IDS_CMD_LOOPBACK_UNMUTE));
     basicLoopbackUnmuteCommand->add_option("-i,--association-id", basicLoopbackUnmuteOptions.AssociationId, ResourceString(IDS_OPT_ASSOCIATION_ID))->required();
 
+    // ---------------------------------------------------------------- synth
+
+    auto synthCommand = app.add_subcommand("synth", ResourceString(IDS_CMD_SYNTH));
+    synthCommand->alias("gm-synth");
+    synthCommand->alias("synthesizer");
+    synthCommand->require_subcommand(1);
+
+    auto synthStatusCommand = synthCommand->add_subcommand("status", ResourceString(IDS_CMD_SYNTH_STATUS));
+    synthStatusCommand->alias("info");
+
+    auto synthSoundSetCommand = synthCommand->add_subcommand("sound-set", ResourceString(IDS_CMD_SYNTH_SOUNDSET));
+    synthSoundSetCommand->alias("soundset");
+    synthSoundSetCommand->alias("instruments");
+
+    SynthEnableOptions synthEnableOptions{ true, false };
+
+    auto synthEnableCommand = synthCommand->add_subcommand("enable", ResourceString(IDS_CMD_SYNTH_ENABLE));
+    synthEnableCommand->alias("on");
+    synthEnableCommand->add_flag("-t,--temporary", synthEnableOptions.Temporary, ResourceString(IDS_OPT_SYNTH_TEMPORARY));
+
+    SynthEnableOptions synthDisableOptions{ false, false };
+
+    auto synthDisableCommand = synthCommand->add_subcommand("disable", ResourceString(IDS_CMD_SYNTH_DISABLE));
+    synthDisableCommand->alias("off");
+    synthDisableCommand->add_flag("-t,--temporary", synthDisableOptions.Temporary, ResourceString(IDS_OPT_SYNTH_TEMPORARY));
+
+    SynthConfigureOptions synthConfigureOptions{};
+
+    auto synthConfigureCommand = synthCommand->add_subcommand("configure", ResourceString(IDS_CMD_SYNTH_CONFIGURE));
+    synthConfigureCommand->alias("config");
+    synthConfigureCommand->add_option("-m,--synth-mode", synthConfigureOptions.SynthMode, ResourceString(IDS_OPT_SYNTH_SYNTH_MODE));
+    synthConfigureCommand->add_option("-a,--audio-mode", synthConfigureOptions.AudioMode, ResourceString(IDS_OPT_SYNTH_AUDIO_MODE));
+    synthConfigureCommand->add_option("-b,--bank-select-mode", synthConfigureOptions.BankSelectMode, ResourceString(IDS_OPT_SYNTH_BANK_SELECT_MODE));
+    synthConfigureCommand->add_option("-v,--volume", synthConfigureOptions.Volume, ResourceString(IDS_OPT_SYNTH_VOLUME));
+    synthConfigureCommand->add_option("-e,--effects", synthConfigureOptions.Effects, ResourceString(IDS_OPT_SYNTH_EFFECTS));
+    synthConfigureCommand->add_flag("-t,--temporary", synthConfigureOptions.Temporary, ResourceString(IDS_OPT_SYNTH_TEMPORARY));
+
     // ---------------------------------------------------------------- service, time, watch
 
     auto serviceCommand = app.add_subcommand("service", ResourceString(IDS_CMD_SERVICE));
@@ -649,7 +687,8 @@ int main()
     SetCommandExamples(sysExSendCommand, { "midi sysex send-file .\\patch.syx", "midi sysex send-file .\\patch.syx --group 1 --pause 20" });
     SetCommandExamples(sysExReceiveCommand, { "midi sysex receive-file .\\dump.syx", "midi sysex receive-file .\\dump.syx --overwrite" });
     SetCommandExamples(loopbackCreateCommand, { "midi loopback create --name-a \"Loop A\" --name-b \"Loop B\"" });
-    SetCommandExamples(servicePingCommand, { "midi service ping", "midi service ping --count 20" });
+    SetCommandExamples(synthDisableCommand, { "midi synth disable", "midi synth disable --temporary" });
+    SetCommandExamples(synthConfigureCommand, { "midi synth configure --synth-mode modern", "midi synth configure --audio-mode sharedLowLatency" });    SetCommandExamples(servicePingCommand, { "midi service ping", "midi service ping --count 20" });
 
     // ---------------------------------------------------------------- parse and dispatch
 
@@ -762,6 +801,11 @@ int main()
         if (basicLoopbackRemoveCommand->parsed())   return RunBasicLoopbackRemoveCommand(basicLoopbackRemoveOptions);
         if (basicLoopbackMuteCommand->parsed())     return RunBasicLoopbackMuteCommand(basicLoopbackMuteOptions);
         if (basicLoopbackUnmuteCommand->parsed())   return RunBasicLoopbackMuteCommand(basicLoopbackUnmuteOptions);
+        if (synthStatusCommand->parsed())           return RunSynthStatusCommand();
+        if (synthSoundSetCommand->parsed())         return RunSynthSoundSetCommand();
+        if (synthEnableCommand->parsed())           return RunSynthEnableCommand(synthEnableOptions);
+        if (synthDisableCommand->parsed())          return RunSynthEnableCommand(synthDisableOptions);
+        if (synthConfigureCommand->parsed())        return RunSynthConfigureCommand(synthConfigureOptions);
 
         if (serviceStatusCommand->parsed())         return RunServiceStatusCommand(serviceStatusOptions);
         if (servicePingCommand->parsed())           return RunServicePingCommand(servicePingOptions);

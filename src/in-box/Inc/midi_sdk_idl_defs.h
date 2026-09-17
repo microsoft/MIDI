@@ -225,6 +225,34 @@
 #define UUID_IMidiSystemExclusiveReceiver                                   8087b303-0519-c0de-31d1-dd00E0304000
 #define UUID_IMidiSystemExclusiveReceiverFactory                            8087b303-0519-c0de-31d1-ff00E0304000
 
+// ============================================================================
+// Windows.Devices.Midi2.Utilities.Sequencing : Interface number 00E04
+
+#define UUID_IMidiSequenceTextEvent                                         8087b303-0519-c0de-31d1-dd00E0401000
+
+#define UUID_IMidiSequenceLyricLine                                         8087b303-0519-c0de-31d1-dd00E0402000
+
+#define UUID_IMidiSequenceTrack                                             8087b303-0519-c0de-31d1-dd00E0403000
+
+#define UUID_IMidiSequence                                                  8087b303-0519-c0de-31d1-dd00E0404000
+
+#define UUID_IMidiSequenceTrackRouting                                      8087b303-0519-c0de-31d1-dd00E0405000
+//#define UUID_IMidiSequenceTrackRoutingFactory                               8087b303-0519-c0de-31d1-ff00E0405000
+
+#define UUID_IMidiSequencePlayer                                            8087b303-0519-c0de-31d1-dd00E0406000
+#define UUID_IMidiSequencePlayerStatics                                     8087b303-0519-c0de-31d1-ee00E0406000
+#define UUID_IMidiSequencePlayerFactory                                     8087b303-0519-c0de-31d1-ff00E0406000
+
+// ============================================================================
+// Windows.Devices.Midi2.Utilities.Files : Interface number 00E05
+
+#define UUID_IMidiFileReadOptions                                           8087b303-0519-c0de-31d1-dd00E0501000
+//#define UUID_IMidiFileReadOptionsFactory                                    8087b303-0519-c0de-31d1-ff00E0501000
+
+#define UUID_IMidiFileReadResult                                            8087b303-0519-c0de-31d1-dd00E0502000
+
+#define UUID_IMidiStandardFileReaderStatics                                 8087b303-0519-c0de-31d1-ee00E0503000
+
 
 // ========== Transports : Interface number 0F ========================================================================
 
@@ -399,6 +427,21 @@
 #define UUID_IMidiBluetoothPeripheralClientListConfigFactory    8087b303-0519-c0de-31d1-ff00F050E000
 #define UUID_IMidiBluetoothOfflineRetentionConfig               8087b303-0519-c0de-31d1-dd00F050F000
 #define UUID_IMidiBluetoothOfflineRetentionConfigFactory        8087b303-0519-c0de-31d1-ff00F050F000
+
+
+// ============================================================================
+// Windows.Devices.Midi2.Transports.Synth : Interface number 00F06
+// The built-in General MIDI synthesizer. One namespace, because there is one of it.
+
+#define UUID_IMidiSynthManagerStatics                           8087b303-0519-c0de-31d1-ee00F0601000
+
+#define UUID_IMidiSynthConfig                                   8087b303-0519-c0de-31d1-dd00F0602000
+#define UUID_IMidiSynthConfigFactory                            8087b303-0519-c0de-31d1-ff00F0602000
+
+#define UUID_IMidiSynthStatus                                   8087b303-0519-c0de-31d1-dd00F0603000
+
+#define UUID_IMidiSynthSoundSetInfo                             8087b303-0519-c0de-31d1-dd00F0604000
+#define UUID_IMidiSynthDrumKitInfo                              8087b303-0519-c0de-31d1-dd00F0605000
 
 
 #endif

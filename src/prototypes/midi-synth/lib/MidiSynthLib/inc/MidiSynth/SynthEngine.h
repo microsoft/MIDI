@@ -14,6 +14,7 @@
 
 #include <sal.h>
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <vector>
@@ -148,6 +149,44 @@ namespace MidiSynth
         void ResetAllControllers(_In_ uint8_t channel);
         void SystemReset();
 
+        // Any channel can be a rhythm part. GS says so through a SysEx and nothing else can, so
+        // without this the eight kits other than the one on channel 10 are unreachable no matter
+        // what a file sends. Resetting the synthesizer puts this back to channel 10 only.
+        void SetDrumChannel(_In_ uint8_t channel, _In_ bool isDrumChannel);
+        bool IsDrumChannel(_In_ uint8_t channel) const noexcept
+        {
+            return m_channels[channel & 0x0F].IsDrumChannel;
+        }
+
+        // Changing this re-resolves every channel, so a mode chosen mid-song takes effect at once
+        // rather than at the next program change.
+        void SetBankSelectMode(_In_ BankSelectMode mode);
+        BankSelectMode EffectiveBankSelectMode() const noexcept { return m_detectedBankSelectMode; }
+
+        // Reported by the dispatcher when a System On or reset identifies the convention in use.
+        // Ignored unless the configured mode is Automatic.
+        void NotifyAddressingConvention(_In_ BankSelectMode convention);
+
+        // The customer's own volume trim, in dB, deliberately separate from the GM2 master volume
+        // above. That one belongs to the content and is cleared by a System Reset, so sharing it
+        // would let any file silently discard what the customer chose. Applied before the limiter,
+        // so turning it down buys headroom rather than only scaling what the limiter already did.
+        //
+        // This is the synthesizer's only volume control: midisrv runs in session 0, so it gets no
+        // slider of its own in the Windows Volume Mixer, and exclusive and ASIO output have no
+        // Windows mixer in the path at all.
+        void SetUserVolumeDb(_In_ double decibels) noexcept
+        {
+            m_userVolumeDb = (std::clamp)(decibels, MinimumUserVolumeDb, MaximumUserVolumeDb);
+        }
+
+        double UserVolumeDb() const noexcept { return m_userVolumeDb; }
+
+        // Quiet enough to be inaudible at the bottom, and a little make-up gain at the top for a
+        // customer whose other applications are much louder.
+        static constexpr double MinimumUserVolumeDb{ -60.0 };
+        static constexpr double MaximumUserVolumeDb{ 12.0 };
+
         // GM2 requires a device to respond to Active Sensing. Once a sender has used it, silence
         // for longer than the specified timeout means the link is gone and everything stops.
         void ActiveSensing() noexcept;
@@ -194,6 +233,12 @@ namespace MidiSynth
         }
 
     private:
+        // Translates an incoming bank select into the addressing this sound set actually uses.
+        void ResolveBankAddressing(
+            _In_ SynthChannelState const& state,
+            _Out_ uint32_t& variationBank,
+            _Out_ bool& isDrumKit) const noexcept;
+
         _Ret_maybenull_ const DlsRegion* SelectRegion(
             _In_ const DlsInstrument& instrument,
             _In_ uint8_t note,
@@ -230,6 +275,9 @@ namespace MidiSynth
         std::array<SynthChannelState, MidiChannelCount> m_channels;
 
         uint64_t m_nextStartOrder{ 1 };
+
+        // What Automatic has settled on. Equal to the configured mode when it is not Automatic.
+        BankSelectMode m_detectedBankSelectMode{ BankSelectMode::RolandGS };
         uint64_t m_stolenVoiceCount{ 0 };
         uint64_t m_droppedNoteCount{ 0 };
         uint64_t m_clippedSampleCount{ 0 };
@@ -238,6 +286,9 @@ namespace MidiSynth
 
         // GM2 device controls, applied on top of the configured master gain.
         double m_masterVolumeDb{ 0.0 };
+
+        // Survives a System Reset on purpose: it is the customer's, not the content's.
+        double m_userVolumeDb{ 0.0 };
         double m_masterFineCents{ 0.0 };
         double m_masterCoarseCents{ 0.0 };
         double m_masterTuningCents{ 0.0 };
