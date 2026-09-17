@@ -411,7 +411,8 @@ namespace MidiSynth
         const DlsInstrument& instrument,
         uint8_t channel,
         uint8_t note,
-        uint16_t velocity) noexcept
+        uint16_t velocity,
+        double pitchNoteNumber) noexcept
     {
         const DlsWaveSample& waveSample = region.HasWaveSample ? region.WaveSample : wave.WaveSample;
 
@@ -448,11 +449,14 @@ namespace MidiSynth
             ? static_cast<double>(wave.SamplesPerSecond)
             : m_renderSampleRate;
 
+        // pitchNoteNumber is normally just the note number. A MIDI 2.0 Pitch 7.9 attribute makes it
+        // fractional, so the sample is tuned to the pitch that was asked for rather than to the key.
         const double tuningCents =
-            (static_cast<double>(note) - static_cast<double>(waveSample.UnityNote)) * 100.0 +
+            (pitchNoteNumber - static_cast<double>(waveSample.UnityNote)) * 100.0 +
             static_cast<double>(waveSample.FineTune);
 
         voice.BasePitchRatio = (waveRate / m_renderSampleRate) * CentsToPitchRatio(tuningCents);
+        voice.PitchNoteNumber = pitchNoteNumber;
 
         // Velocity uses the full 16 bit range so MIDI 2.0 resolution survives to the envelope.
         const double normalizedVelocity = static_cast<double>(velocity) / 65535.0;
@@ -496,10 +500,29 @@ namespace MidiSynth
     _Use_decl_annotations_
     void SynthEngine::NoteOn(uint8_t channel, uint8_t note, uint16_t velocity)
     {
+        NoteOnWithPitch(channel, note, velocity, static_cast<double>(note));
+    }
+
+    _Use_decl_annotations_
+    void SynthEngine::NoteOnWithPitch(
+        uint8_t channel,
+        uint8_t note,
+        uint16_t velocity,
+        double pitchNoteNumber)
+    {
         if (channel >= MidiChannelCount || note > 127 || m_collection == nullptr)
         {
             return;
         }
+
+        // A pitch outside the MIDI range would run the resampler at a ratio that is either
+        // inaudible or ruinously expensive, so it is clamped rather than trusted.
+        if (!std::isfinite(pitchNoteNumber))
+        {
+            pitchNoteNumber = static_cast<double>(note);
+        }
+
+        pitchNoteNumber = (std::clamp)(pitchNoteNumber, 0.0, 127.0);
 
         // Velocity zero is NOT treated as a note off here. That is a MIDI 1.0 convention and
         // belongs to whatever decodes MIDI 1.0; in MIDI 2.0 zero is simply the lowest velocity.
@@ -521,10 +544,13 @@ namespace MidiSynth
         }
 
         // A second note on of the same note kills the first unless the region opts out. This is
-        // the DLS Level 1 default, not a quirk of any particular implementation.
+        // the DLS Level 1 default, not a quirk of any particular implementation. A note that was
+        // detached by MIDI 2.0 Per-Note Management is deliberately left alone, which is the whole
+        // reason to detach one.
         for (auto& voice : m_voices)
         {
-            if (voice.Active && voice.Channel == channel && voice.Note == note && !voice.SelfNonExclusive)
+            if (voice.Active && voice.Channel == channel && voice.Note == note &&
+                !voice.SelfNonExclusive && !voice.Detached)
             {
                 KillVoice(voice);
             }
@@ -536,7 +562,8 @@ namespace MidiSynth
         {
             for (auto& voice : m_voices)
             {
-                if (voice.Active && voice.Channel == channel && voice.KeyGroup == region->KeyGroup)
+                if (voice.Active && voice.Channel == channel && voice.KeyGroup == region->KeyGroup &&
+                    !voice.Detached)
                 {
                     KillVoice(voice);
                 }
@@ -559,7 +586,120 @@ namespace MidiSynth
             return;
         }
 
-        StartVoice(*voice, *region, wave, *state.Instrument, channel, note, velocity);
+        StartVoice(*voice, *region, wave, *state.Instrument, channel, note, velocity, pitchNoteNumber);
+    }
+
+    _Use_decl_annotations_
+    void SynthEngine::PerNotePitchBend(uint8_t channel, uint8_t note, double normalized)
+    {
+        if (channel >= MidiChannelCount || note > 127 || !std::isfinite(normalized))
+        {
+            return;
+        }
+
+        normalized = (std::clamp)(normalized, -1.0, 1.0);
+
+        // The per-note bend uses the channel's bend range, which is what a receiver is expected to
+        // do when no per-note range has been registered.
+        const double cents =
+            normalized * m_channels[channel].PitchBendRangeSemitones * 100.0;
+
+        for (auto& voice : m_voices)
+        {
+            if (voice.Active && voice.Channel == channel && voice.Note == note)
+            {
+                voice.PerNoteBendCents = cents;
+            }
+        }
+    }
+
+    _Use_decl_annotations_
+    void SynthEngine::PerNoteController(
+        uint8_t channel,
+        uint8_t note,
+        uint8_t controller,
+        uint32_t value)
+    {
+        if (channel >= MidiChannelCount || note > 127)
+        {
+            return;
+        }
+
+        constexpr double maximum32 = 4294967295.0;
+        const double normalized = static_cast<double>(value) / maximum32;
+
+        for (auto& voice : m_voices)
+        {
+            if (!voice.Active || voice.Channel != channel || voice.Note != note)
+            {
+                continue;
+            }
+
+            switch (controller)
+            {
+            case PerNoteControllerPitch:
+            {
+                // Pitch 7.25: the top seven bits are a note number and the remaining twenty five
+                // are the fraction of a semitone above it. This is an absolute pitch, so it is
+                // taken relative to the pitch the voice started at.
+                const double absolutePitch =
+                    static_cast<double>((value >> 25) & 0x7F) +
+                    static_cast<double>(value & 0x01FFFFFF) / 33554432.0;
+
+                voice.PerNoteTuningCents = (absolutePitch - voice.PitchNoteNumber) * 100.0;
+                break;
+            }
+
+            case PerNoteControllerVolume:
+                // Same concave curve the channel volume uses, so a note set to the same value as
+                // its channel sounds the same as the channel alone would.
+                voice.PerNoteGain = DecibelsToLinear(ConcaveTransformDb(normalized));
+                break;
+
+            case PerNoteControllerPan:
+                voice.PerNotePan = normalized - 0.5;
+                break;
+
+            default:
+                // Deliberately ignored. Approximating a controller this engine has no mechanism for
+                // would be worse than not responding to it at all.
+                break;
+            }
+        }
+    }
+
+    _Use_decl_annotations_
+    void SynthEngine::PerNoteManagement(
+        uint8_t channel,
+        uint8_t note,
+        bool detach,
+        bool resetPerNoteControllers)
+    {
+        if (channel >= MidiChannelCount || note > 127)
+        {
+            return;
+        }
+
+        for (auto& voice : m_voices)
+        {
+            if (!voice.Active || voice.Channel != channel || voice.Note != note)
+            {
+                continue;
+            }
+
+            if (resetPerNoteControllers)
+            {
+                voice.PerNoteTuningCents = 0.0;
+                voice.PerNoteBendCents = 0.0;
+                voice.PerNoteGain = 1.0;
+                voice.PerNotePan = 0.0;
+            }
+
+            if (detach)
+            {
+                voice.Detached = true;
+            }
+        }
     }
 
     _Use_decl_annotations_
@@ -979,10 +1119,14 @@ namespace MidiSynth
         const double totalGainDb = voice.StaticGainDb + channelGainDb + lfoAttenuationDb
             + m_config.MasterGainDb + m_masterVolumeDb + m_userVolumeDb;
 
-        const double amplitude = envelopeGain * DecibelsToLinear(totalGainDb) / 32768.0;
+        // Per-note volume multiplies the channel's rather than replacing it, so a channel fade
+        // still takes every note with it.
+        const double amplitude =
+            envelopeGain * voice.PerNoteGain * DecibelsToLinear(totalGainDb) / 32768.0;
 
-        // Equal power pan, combining the region's placement with the channel's.
-        const double pan = (std::clamp)(articulation.PanFraction + state.PanOffset, -0.5, 0.5) + 0.5;
+        // Equal power pan, combining the region's placement with the channel's and the note's.
+        const double pan =
+            (std::clamp)(articulation.PanFraction + state.PanOffset + voice.PerNotePan, -0.5, 0.5) + 0.5;
 
         const double panAngle = pan * (3.14159265358979323846 / 2.0);
 
@@ -1006,8 +1150,12 @@ namespace MidiSynth
         const double lfoPitchCents =
             lfoValue * (articulation.LfoToPitchCents + articulation.LfoModWheelToPitchCents * modulationDepth);
 
+        // Per-note pitch adds to the channel bend rather than replacing it, so a MIDI 2.0 note can
+        // be bent on its own while the channel wheel still moves the whole part.
         const double totalCents =
-            bendCents + lfoPitchCents + state.FineTuneCents + state.CoarseTuneSemitones * 100.0
+            bendCents + voice.PerNoteTuningCents + voice.PerNoteBendCents + lfoPitchCents +
+            state.FineTuneCents +
+            state.CoarseTuneSemitones * 100.0
             + (state.IsDrumChannel ? 0.0 : m_masterTuningCents);
 
         voice.BlockPitchRatio = voice.BasePitchRatio * CentsToPitchRatio(totalCents);

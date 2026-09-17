@@ -24,6 +24,19 @@ namespace MidiSynth
 
         constexpr uint8_t StatusRegisteredController = 0x2;
 
+        // MIDI 2.0 channel voice statuses that have no MIDI 1.0 equivalent at all.
+        constexpr uint8_t StatusRegisteredPerNoteController = 0x0;
+        constexpr uint8_t StatusPerNotePitchBend = 0x6;
+        constexpr uint8_t StatusPerNoteManagement = 0xF;
+
+        // Note On attribute types. Only the pitch attribute changes what is heard here; the others
+        // describe the source instrument rather than the sound, so they are carried no further.
+        constexpr uint8_t NoteAttributePitch79 = 0x03;
+
+        // Per-Note Management option flags.
+        constexpr uint8_t PerNoteManagementReset = 0x01;
+        constexpr uint8_t PerNoteManagementDetach = 0x02;
+
         constexpr uint8_t SystemReset = 0xFF;
         constexpr uint8_t ActiveSensing = 0xFE;
 
@@ -525,7 +538,25 @@ namespace MidiSynth
         {
             // Unlike MIDI 1.0, a MIDI 2.0 note on with zero velocity is still a note on.
             const auto velocity = static_cast<uint16_t>((word1 >> 16) & 0xFFFF);
-            m_engine->NoteOn(channel, index1 & 0x7F, velocity);
+            const uint8_t note = index1 & 0x7F;
+            const uint8_t attributeType = static_cast<uint8_t>(word0 & 0xFF);
+            const auto attributeData = static_cast<uint16_t>(word1 & 0xFFFF);
+
+            if (attributeType == NoteAttributePitch79)
+            {
+                // Pitch 7.9: the top seven bits are a note number and the low nine bits are the
+                // fraction of a semitone above it. The note number in the message still chooses
+                // the region, so a microtonal scale keeps the articulation belonging to the key.
+                const double pitch =
+                    static_cast<double>((attributeData >> 9) & 0x7F) +
+                    static_cast<double>(attributeData & 0x01FF) / 512.0;
+
+                m_engine->NoteOnWithPitch(channel, note, velocity, pitch);
+            }
+            else
+            {
+                m_engine->NoteOn(channel, note, velocity);
+            }
             break;
         }
 
@@ -573,6 +604,36 @@ namespace MidiSynth
             {
                 m_stats.Ignored++;
             }
+            break;
+        }
+
+        case StatusRegisteredPerNoteController:
+            m_engine->PerNoteController(
+                channel,
+                index1 & 0x7F,
+                static_cast<uint8_t>(word0 & 0xFF),
+                word1);
+            break;
+
+        case StatusPerNotePitchBend:
+        {
+            // Centered at the midpoint of the thirty two bit range, exactly like the channel bend.
+            constexpr double center = 2147483648.0;
+            const double normalized = (static_cast<double>(word1) - center) / center;
+
+            m_engine->PerNotePitchBend(channel, index1 & 0x7F, normalized);
+            break;
+        }
+
+        case StatusPerNoteManagement:
+        {
+            const uint8_t flags = static_cast<uint8_t>(word0 & 0xFF);
+
+            m_engine->PerNoteManagement(
+                channel,
+                index1 & 0x7F,
+                (flags & PerNoteManagementDetach) != 0,
+                (flags & PerNoteManagementReset) != 0);
             break;
         }
 

@@ -114,6 +114,76 @@ namespace
         return std::sqrt(energy / buffer.size());
     }
 
+    // Estimates the fundamental of a rendered burst by autocorrelation. The per-note pitch tests
+    // only ever compare one estimate against another, so this needs to be consistent rather than
+    // absolutely accurate, which autocorrelation on a sustained tone comfortably is.
+    double EstimateFundamentalHertz(
+        _In_ SynthEngine& engine,
+        _In_ uint32_t sampleRate,
+        _In_ double seconds)
+    {
+        const auto frames = static_cast<uint32_t>(seconds * sampleRate);
+        std::vector<float> buffer(static_cast<size_t>(frames) * 2, 0.0f);
+
+        uint32_t rendered = 0;
+
+        while (rendered < frames)
+        {
+            const uint32_t chunk = (std::min)(256u, frames - rendered);
+            engine.Render(buffer.data() + static_cast<size_t>(rendered) * 2, chunk);
+            rendered += chunk;
+        }
+
+        // Sum to mono, and skip the attack so the estimate sees the steady part of the note.
+        const size_t skip = static_cast<size_t>(sampleRate) / 20;
+
+        if (frames <= skip)
+        {
+            return 0.0;
+        }
+
+        std::vector<double> mono(frames - skip, 0.0);
+
+        for (size_t i = 0; i < mono.size(); i++)
+        {
+            const size_t source = (i + skip) * 2;
+            mono[i] = (static_cast<double>(buffer[source]) + buffer[source + 1]) * 0.5;
+        }
+
+        const size_t minimumLag = sampleRate / 2000;
+        const size_t maximumLag = (std::min)(mono.size() / 2, static_cast<size_t>(sampleRate) / 50);
+
+        if (maximumLag <= minimumLag)
+        {
+            return 0.0;
+        }
+
+        double bestScore = -1.0;
+        size_t bestLag = 0;
+
+        for (size_t lag = minimumLag; lag <= maximumLag; lag++)
+        {
+            double correlation = 0.0;
+            double energyLagged = 0.0;
+
+            for (size_t i = 0; i + lag < mono.size(); i++)
+            {
+                correlation += mono[i] * mono[i + lag];
+                energyLagged += mono[i + lag] * mono[i + lag];
+            }
+
+            const double score = (energyLagged > 0.0) ? correlation / std::sqrt(energyLagged) : 0.0;
+
+            if (score > bestScore)
+            {
+                bestScore = score;
+                bestLag = lag;
+            }
+        }
+
+        return (bestLag > 0) ? static_cast<double>(sampleRate) / static_cast<double>(bestLag) : 0.0;
+    }
+
     void FreshEngine(
         _In_ const DlsCollection& collection,
         _In_ SynthEngine& engine,
@@ -1238,3 +1308,252 @@ void MidiSynthUmpTests::TestAllSoundOff()
     VERIFY_IS_TRUE(engine.ActiveVoiceCount() == 0 && milliseconds < 50.0,
         L"all sound off drains to silence quickly");
 }
+
+// A MIDI 2.0 note on can carry an absolute pitch that is not on a key boundary. Nothing in MIDI 1.0
+// can express that without stealing the channel's bend wheel from every other note.
+void MidiSynthUmpTests::TestNoteOnPitchAttribute()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    const uint32_t rate = TestConfig().RenderSampleRate();
+
+    auto pitchOfNote = [&](uint8_t note, uint8_t attributeType, uint16_t attributeData)
+    {
+        SynthEngine engine;
+        UmpDispatcher dispatcher;
+        FreshEngine(*collection, engine, dispatcher, 0);
+        engine.ProgramChange(0, 19);
+
+        uint32_t words[2];
+        MakeMidi2Cv(0, 0x9, 0, note, attributeType,
+            (0xC000u << 16) | attributeData, words);
+        dispatcher.ProcessWords(words, 2);
+
+        return EstimateFundamentalHertz(engine, rate, 0.40);
+    };
+
+    const double plain60 = pitchOfNote(60, 0, 0);
+    const double plain61 = pitchOfNote(61, 0, 0);
+
+    // Note 60 with a Pitch 7.9 attribute asking for 60.5, which is half a semitone up.
+    const uint16_t quarterTone = static_cast<uint16_t>((60u << 9) | 256u);
+    const double quarter = pitchOfNote(60, 0x03, quarterTone);
+
+    Log::Comment(String().Format(L"60 = %.2f Hz, 60.5 = %.2f Hz, 61 = %.2f Hz",
+        plain60, quarter, plain61));
+
+    VERIFY_IS_TRUE(plain60 > 0.0 && plain61 > 0.0 && quarter > 0.0,
+        L"all three notes produced a measurable pitch");
+
+    VERIFY_IS_TRUE(quarter > plain60 * 1.005 && quarter < plain61 * 0.995,
+        L"the Pitch 7.9 attribute lands between the two keys");
+
+    // An attribute type this engine does not act on must not change the pitch, rather than being
+    // mistaken for a pitch.
+    const double unknownAttribute = pitchOfNote(60, 0x01, quarterTone);
+
+    VERIFY_IS_TRUE(std::abs(unknownAttribute - plain60) < plain60 * 0.005,
+        L"an unrelated attribute type leaves the pitch alone");
+}
+
+// Per-note pitch bend moves one sounding note without touching anything else on the channel.
+void MidiSynthUmpTests::TestPerNotePitchBend()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    const uint32_t rate = TestConfig().RenderSampleRate();
+
+    auto pitchWithBend = [&](uint8_t bentNote, uint32_t bendValue)
+    {
+        SynthEngine engine;
+        UmpDispatcher dispatcher;
+        FreshEngine(*collection, engine, dispatcher, 0);
+        engine.ProgramChange(0, 19);
+
+        uint32_t words[2];
+        MakeMidi2Cv(0, 0x9, 0, 60, 0, 0xC0000000, words);
+        dispatcher.ProcessWords(words, 2);
+
+        MakeMidi2Cv(0, 0x6, 0, bentNote, 0, bendValue, words);
+        dispatcher.ProcessWords(words, 2);
+
+        return EstimateFundamentalHertz(engine, rate, 0.40);
+    };
+
+    const double centered = pitchWithBend(60, 0x80000000);
+    const double bentUp = pitchWithBend(60, 0xFFFFFFFF);
+    const double bentOther = pitchWithBend(62, 0xFFFFFFFF);
+
+    Log::Comment(String().Format(L"centered %.2f Hz, bent %.2f Hz, other note bent %.2f Hz",
+        centered, bentUp, bentOther));
+
+    VERIFY_IS_TRUE(centered > 0.0, L"the note produced a measurable pitch");
+
+    // The default bend range is two semitones, so a full bend up is close to a whole tone.
+    VERIFY_IS_TRUE(bentUp > centered * 1.05, L"per-note pitch bend raises the note it addresses");
+
+    VERIFY_IS_TRUE(std::abs(bentOther - centered) < centered * 0.005,
+        L"a per-note bend addressed to another note leaves this one alone");
+}
+
+// Registered per-note controllers give each note its own volume, pan and tuning.
+void MidiSynthUmpTests::TestPerNoteControllers()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    const uint32_t rate = TestConfig().RenderSampleRate();
+
+    auto withController = [&](uint8_t note, uint8_t controller, uint32_t value,
+        bool wantPitch)
+    {
+        SynthEngine engine;
+        UmpDispatcher dispatcher;
+        FreshEngine(*collection, engine, dispatcher, 0);
+        engine.ProgramChange(0, 19);
+
+        uint32_t words[2];
+        MakeMidi2Cv(0, 0x9, 0, 60, 0, 0xC0000000, words);
+        dispatcher.ProcessWords(words, 2);
+
+        MakeMidi2Cv(0, 0x0, 0, note, controller, value, words);
+        dispatcher.ProcessWords(words, 2);
+
+        return wantPitch
+            ? EstimateFundamentalHertz(engine, rate, 0.40)
+            : RenderBurstRms(engine, rate, 0.20);
+    };
+
+    // Volume, controller 7.
+    const double fullVolume = withController(60, 7, 0xFFFFFFFF, false);
+    const double quietVolume = withController(60, 7, 0x20000000, false);
+    const double otherNoteVolume = withController(62, 7, 0x20000000, false);
+
+    Log::Comment(String().Format(L"per-note volume: full %.6f, quiet %.6f, other note %.6f",
+        fullVolume, quietVolume, otherNoteVolume));
+
+    VERIFY_IS_TRUE(fullVolume > 0.0, L"the note was audible");
+    VERIFY_IS_TRUE(quietVolume < fullVolume * 0.7, L"per-note volume attenuates the note");
+    VERIFY_IS_TRUE(otherNoteVolume > fullVolume * 0.9,
+        L"per-note volume addressed to another note leaves this one alone");
+
+    // Pitch, controller 3, carried as 7.25. Ask for 61.0 on a note that was played as 60.
+    const double basePitch = withController(60, 7, 0xFFFFFFFF, true);
+    const double retuned = withController(60, 3, static_cast<uint32_t>(61u) << 25, true);
+
+    Log::Comment(String().Format(L"per-note pitch: base %.2f Hz, retuned %.2f Hz",
+        basePitch, retuned));
+
+    VERIFY_IS_TRUE(retuned > basePitch * 1.03,
+        L"the per-note pitch controller retunes the note it addresses");
+
+    // Pan, controller 10. Hard left must not be the same as hard right.
+    const double panLeft = withController(60, 10, 0, false);
+    const double panRight = withController(60, 10, 0xFFFFFFFF, false);
+
+    VERIFY_IS_TRUE(panLeft > 0.0 && panRight > 0.0, L"the note was audible at both extremes");
+
+    // A controller this engine has no mechanism for must be ignored rather than approximated.
+    const double unknownController = withController(60, 74, 0, false);
+
+    VERIFY_IS_TRUE(unknownController > fullVolume * 0.9,
+        L"an unhandled per-note controller changes nothing");
+}
+
+// Per-note management lets a note be taken out of the channel's control so a retrigger cannot
+// steal it, and lets its per-note controllers be put back to their defaults.
+void MidiSynthUmpTests::TestPerNoteManagement()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    const uint32_t rate = TestConfig().RenderSampleRate();
+
+    auto retriggerVoiceCount = [&](uint8_t flags)
+    {
+        SynthEngine engine;
+        UmpDispatcher dispatcher;
+        FreshEngine(*collection, engine, dispatcher, 0);
+        engine.ProgramChange(0, 19);
+
+        uint32_t words[2];
+        MakeMidi2Cv(0, 0x9, 0, 60, 0, 0xC0000000, words);
+        dispatcher.ProcessWords(words, 2);
+
+        if (flags != 0)
+        {
+            MakeMidi2Cv(0, 0xF, 0, 60, flags, 0, words);
+            dispatcher.ProcessWords(words, 2);
+        }
+
+        MakeMidi2Cv(0, 0x9, 0, 60, 0, 0xC0000000, words);
+        dispatcher.ProcessWords(words, 2);
+
+        // A stolen voice is faded out rather than cut, so both cases still hold two voices at this
+        // instant. Rendering past the fade is what tells the two apart.
+        (void)RenderBurstRms(engine, rate, 0.10);
+
+        return engine.ActiveVoiceCount();
+    };
+
+    const auto withoutDetach = retriggerVoiceCount(0x00);
+    const auto withDetach = retriggerVoiceCount(0x02);
+
+    Log::Comment(String().Format(L"voices after retrigger: plain %u, detached %u",
+        static_cast<unsigned>(withoutDetach), static_cast<unsigned>(withDetach)));
+
+    VERIFY_IS_TRUE(withDetach > withoutDetach,
+        L"a detached note survives a retrigger of the same note number");
+
+    // The reset flag returns the per-note controllers to their defaults.
+    auto volumeAfterReset = [&](bool reset)
+    {
+        SynthEngine engine;
+        UmpDispatcher dispatcher;
+        FreshEngine(*collection, engine, dispatcher, 0);
+        engine.ProgramChange(0, 19);
+
+        uint32_t words[2];
+        MakeMidi2Cv(0, 0x9, 0, 60, 0, 0xC0000000, words);
+        dispatcher.ProcessWords(words, 2);
+
+        MakeMidi2Cv(0, 0x0, 0, 60, 7, 0x20000000, words);
+        dispatcher.ProcessWords(words, 2);
+
+        if (reset)
+        {
+            MakeMidi2Cv(0, 0xF, 0, 60, 0x01, 0, words);
+            dispatcher.ProcessWords(words, 2);
+        }
+
+        return RenderBurstRms(engine, rate, 0.20);
+    };
+
+    const double stillQuiet = volumeAfterReset(false);
+    const double restored = volumeAfterReset(true);
+
+    Log::Comment(String().Format(L"per-note volume: held %.6f, after reset %.6f",
+        stillQuiet, restored));
+
+    VERIFY_IS_TRUE(restored > stillQuiet * 1.2,
+        L"per-note management resets the per-note controllers");
+}
+

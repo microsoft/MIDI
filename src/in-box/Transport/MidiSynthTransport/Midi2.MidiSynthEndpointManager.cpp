@@ -358,12 +358,29 @@ CMidi2MidiSynthEndpointManager::WriteDeviceIdentity(std::wstring const& endpoint
     FILETIME identityUpdateTime{};
     GetSystemTimePreciseAsFileTime(&identityUpdateTime);
 
+    // The synthesizer is a singleton, so its product instance id is the same unique identifier the
+    // endpoint is named after. The specification limits this to printable ASCII without spaces,
+    // which this already is.
+    std::wstring const productInstanceId{ MIDI_SYNTH_ENDPOINT_UNIQUE_ID };
+
+    static_assert(
+        ARRAYSIZE(MIDI_SYNTH_ENDPOINT_UNIQUE_ID) - 1 <= MIDI_MAX_UMP_PRODUCT_INSTANCE_ID_BYTE_COUNT,
+        "The product instance id must fit the UMP stream message that carries it.");
+
     DEVPROPERTY props[]
     {
         { { PKEY_MIDI_DeviceIdentity, DEVPROP_STORE_SYSTEM, nullptr },
             DEVPROP_TYPE_BINARY, (ULONG)sizeof(deviceIdentity), (PVOID)&deviceIdentity },
 
         { { PKEY_MIDI_DeviceIdentityLastUpdateTime, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_FILETIME, (ULONG)sizeof(FILETIME), (PVOID)&identityUpdateTime },
+
+        { { PKEY_MIDI_EndpointProvidedProductInstanceId, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_STRING,
+            (ULONG)((productInstanceId.length() + 1) * sizeof(wchar_t)),
+            (PVOID)productInstanceId.c_str() },
+
+        { { PKEY_MIDI_EndpointProvidedProductInstanceIdLastUpdateTime, DEVPROP_STORE_SYSTEM, nullptr },
             DEVPROP_TYPE_FILETIME, (ULONG)sizeof(FILETIME), (PVOID)&identityUpdateTime },
     };
 

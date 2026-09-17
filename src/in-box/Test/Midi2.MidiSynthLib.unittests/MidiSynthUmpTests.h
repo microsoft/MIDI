@@ -30,4 +30,9 @@ public:
     TEST_METHOD(TestMasterTuning);
     TEST_METHOD(TestActiveSensing);
     TEST_METHOD(TestAllSoundOff);
+
+    TEST_METHOD(TestNoteOnPitchAttribute);
+    TEST_METHOD(TestPerNotePitchBend);
+    TEST_METHOD(TestPerNoteControllers);
+    TEST_METHOD(TestPerNoteManagement);
 };

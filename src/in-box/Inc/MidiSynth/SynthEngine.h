@@ -23,6 +23,12 @@ namespace MidiSynth
 {
     constexpr size_t MidiChannelCount = 16;
 
+    // Registered Per-Note Controller numbers this engine acts on. The numbering is shared with the
+    // MIDI 1.0 control change assignments, which is why these look familiar.
+    constexpr uint8_t PerNoteControllerPitch = 3;
+    constexpr uint8_t PerNoteControllerVolume = 7;
+    constexpr uint8_t PerNoteControllerPan = 10;
+
     enum class EnvelopeStage
     {
         Idle,
@@ -60,6 +66,26 @@ namespace MidiSynth
 
         // Recomputed once per control block, held constant across it.
         double BlockPitchRatio{ 1.0 };
+
+        // MIDI 2.0 per-note state. Every one of these is per sounding note rather than per channel,
+        // which is the point of them: two notes on one channel can be bent, panned and balanced
+        // independently, and MIDI 1.0 has no way to express that.
+        //
+        // The note number the voice is tuned to, which is fractional when a Pitch attribute or a
+        // per-note pitch controller asked for a pitch between the keys. Kept so an absolute pitch
+        // arriving later can be turned into an offset from where the voice started.
+        double PitchNoteNumber{ 0.0 };
+
+        // Held apart because they arrive on different messages and neither should erase the other.
+        double PerNoteTuningCents{ 0.0 };
+        double PerNoteBendCents{ 0.0 };
+
+        double PerNoteGain{ 1.0 };
+        double PerNotePan{ 0.0 };
+
+        // A detached note keeps sounding under its own per-note control even when the same note
+        // number is played again on the same channel, so a held note is not stolen by the retrigger.
+        bool Detached{ false };
 
         ResolvedArticulation Articulation;
 
@@ -126,6 +152,37 @@ namespace MidiSynth
 
         void NoteOn(_In_ uint8_t channel, _In_ uint8_t note, _In_ uint16_t velocity);
         void NoteOff(_In_ uint8_t channel, _In_ uint8_t note);
+
+        // MIDI 2.0 Note On carrying the Pitch 7.9 attribute. The note number still selects the
+        // region and the drum kit entry, because that is what picks the sound; pitchNoteNumber is
+        // the fractional note the sample is played at. That separation is what lets a microtonal
+        // scale keep the right articulation for each key.
+        void NoteOnWithPitch(
+            _In_ uint8_t channel,
+            _In_ uint8_t note,
+            _In_ uint16_t velocity,
+            _In_ double pitchNoteNumber);
+
+        // Per-note pitch bend, as a normalized -1 to +1 across the channel's bend range. Applies to
+        // every sounding note with this channel and note number.
+        void PerNotePitchBend(_In_ uint8_t channel, _In_ uint8_t note, _In_ double normalized);
+
+        // Registered Per-Note Controller. Only the controllers this engine can act on are applied;
+        // the rest are ignored rather than approximated.
+        void PerNoteController(
+            _In_ uint8_t channel,
+            _In_ uint8_t note,
+            _In_ uint8_t controller,
+            _In_ uint32_t value);
+
+        // Per-Note Management. Detach keeps a sounding note under its own control when the same
+        // note is retriggered; reset returns its per-note controllers to their default.
+        void PerNoteManagement(
+            _In_ uint8_t channel,
+            _In_ uint8_t note,
+            _In_ bool detach,
+            _In_ bool resetPerNoteControllers);
+
         void ControlChange(_In_ uint8_t channel, _In_ uint8_t controller, _In_ uint8_t value);
         void ProgramChange(_In_ uint8_t channel, _In_ uint8_t program);
 
@@ -253,7 +310,8 @@ namespace MidiSynth
             _In_ const DlsInstrument& instrument,
             _In_ uint8_t channel,
             _In_ uint8_t note,
-            _In_ uint16_t velocity) noexcept;
+            _In_ uint16_t velocity,
+            _In_ double pitchNoteNumber) noexcept;
 
         void ReleaseVoice(_In_ SynthVoice& voice) noexcept;
 
