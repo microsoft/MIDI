@@ -100,6 +100,8 @@ namespace Windows.Devices.Midi2.Enumeration
 
         [noexcept] Boolean IsMuted{ get; };
 
+        [noexcept] Boolean IsEndpointDiscoveryComplete{ get; };
+
 
     }
 }
