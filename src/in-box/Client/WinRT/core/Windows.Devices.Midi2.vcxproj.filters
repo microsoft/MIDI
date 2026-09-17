@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Natvis Include="$(MSBuildThisFileDirectory)..\natvis\wil.natvis" />
-    <Natvis Include="$(MSBuildThisFileDirectory)..\natvis\wil.natstepfilter" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
@@ -48,7 +48,9 @@
     <ClCompile Include="MidiConfigFile.cpp">
       <Filter>SDK\ServiceConfig</Filter>
     </ClCompile>
-    <ClCompile Include="$(SolutionDir)inc\midi_network_port_picker.cpp" />
+    <ClCompile Include="$(SolutionDir)inc\midi_network_port_picker.cpp">
+      <Filter>SDK\Transports\Network</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="midi_stream_message_defs.h" />
@@ -642,6 +644,69 @@
     <Midl Include="MidiNetworkAdvertisedHostChangedPropertiesEnum.idl">
       <Filter>SDK\Transports\Network\Watcher</Filter>
     </Midl>
+    <Midl Include="MidiNetworkClientUpdateConfig.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkClientUpdateErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkClientUpdateResponse.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostKnownClientsConfig.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkHostUpdateConfig.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkKnownRemoteClient.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkRemoteClientForgetConfig.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkRemoteClientForgetErrorCodeEnum.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkRemoteClientForgetResponse.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiNetworkTransportSettings.idl">
+      <Filter>SDK\Transports\Network</Filter>
+    </Midl>
+    <Midl Include="MidiServiceEndpointCustomization.idl">
+      <Filter>SDK\ServiceConfig</Filter>
+    </Midl>
+    <Midl Include="MidiServiceEndpointCustomizationProvenance.idl">
+      <Filter>SDK\ServiceConfig</Filter>
+    </Midl>
+    <Midl Include="MidiSynthAudioOutputModeEnum.idl">
+      <Filter>SDK\Transports\Synth</Filter>
+    </Midl>
+    <Midl Include="MidiSynthBankSelectModeEnum.idl">
+      <Filter>SDK\Transports\Synth</Filter>
+    </Midl>
+    <Midl Include="MidiSynthConfig.idl">
+      <Filter>SDK\Transports\Synth</Filter>
+    </Midl>
+    <Midl Include="MidiSynthDrumKitInfo.idl">
+      <Filter>SDK\Transports\Synth</Filter>
+    </Midl>
+    <Midl Include="MidiSynthInstrumentInfo.idl">
+      <Filter>SDK\Transports\Synth</Filter>
+    </Midl>
+    <Midl Include="MidiSynthManager.idl">
+      <Filter>SDK\Transports\Synth</Filter>
+    </Midl>
+    <Midl Include="MidiSynthRenderModeEnum.idl">
+      <Filter>SDK\Transports\Synth</Filter>
+    </Midl>
+    <Midl Include="MidiSynthSoundSetInfo.idl">
+      <Filter>SDK\Transports\Synth</Filter>
+    </Midl>
+    <Midl Include="MidiSynthStatus.idl">
+      <Filter>SDK\Transports\Synth</Filter>
+    </Midl>
   </ItemGroup>
   <ItemGroup>
     <None Include="midi-app-winrt-sdk.def" />
@@ -738,6 +803,9 @@
     </Filter>
     <Filter Include="SDK\Transports\Bluetooth">
       <UniqueIdentifier>{234700eb-c749-4026-bc65-e036ed3d66f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SDK\Transports\Synth">
+      <UniqueIdentifier>{7b9ee7f9-5507-40bd-ac5f-2468153605c9}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
