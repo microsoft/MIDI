@@ -688,7 +688,8 @@ int main()
     SetCommandExamples(sysExReceiveCommand, { "midi sysex receive-file .\\dump.syx", "midi sysex receive-file .\\dump.syx --overwrite" });
     SetCommandExamples(loopbackCreateCommand, { "midi loopback create --name-a \"Loop A\" --name-b \"Loop B\"" });
     SetCommandExamples(synthDisableCommand, { "midi synth disable", "midi synth disable --temporary" });
-    SetCommandExamples(synthConfigureCommand, { "midi synth configure --synth-mode modern", "midi synth configure --audio-mode sharedLowLatency" });    SetCommandExamples(servicePingCommand, { "midi service ping", "midi service ping --count 20" });
+    SetCommandExamples(synthConfigureCommand, { "midi synth configure --synth-mode modern", "midi synth configure --audio-mode sharedLowLatency" });
+    SetCommandExamples(servicePingCommand, { "midi service ping", "midi service ping --count 20" });
 
     // ---------------------------------------------------------------- parse and dispatch
 

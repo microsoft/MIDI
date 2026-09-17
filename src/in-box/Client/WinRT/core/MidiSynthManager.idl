@@ -32,6 +32,10 @@ namespace Windows.Devices.Midi2.Transports.Synth
         // exclusive message; this is the same thing for an application which is not playing a file.
         // The synthesizer occupies a single group, so only the channel is needed.
         //
+        // Returns false when the channel is out of range, and when the synthesizer is not currently
+        // rendering: the setting lives in the engine, and the engine only exists while something is
+        // connected to the endpoint. Open your connection first, then set the channel.
+        //
         // Deliberately not persisted: the content owns it, and a System Reset in a file puts
         // channel 10 back as the only drum channel. Use MidiSynthConfig for settings which stay.
         [noexcept] static Boolean SetDrumChannel(UInt8 channelIndex, Boolean isDrumChannel);

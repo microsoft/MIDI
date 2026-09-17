@@ -1257,6 +1257,258 @@ namespace
         return std::sqrt(energy / buffer.size());
     }
 
+    // Builds DLS files byte by byte so the parser can be pointed at content no shipped file would
+    // contain. gm.dls lives in System32 and is protected, but the parser should not be the thing
+    // standing between a replaced file and a heap over-read.
+    class DlsBuilder
+    {
+    public:
+        std::vector<std::byte> Bytes;
+
+        void U16(_In_ uint16_t value)
+        {
+            Bytes.push_back(static_cast<std::byte>(value & 0xFF));
+            Bytes.push_back(static_cast<std::byte>((value >> 8) & 0xFF));
+        }
+
+        void U32(_In_ uint32_t value)
+        {
+            for (int shift = 0; shift < 32; shift += 8)
+            {
+                Bytes.push_back(static_cast<std::byte>((value >> shift) & 0xFF));
+            }
+        }
+
+        void Tag(_In_ const char* fourCC)
+        {
+            for (size_t i = 0; i < 4; i++)
+            {
+                Bytes.push_back(static_cast<std::byte>(fourCC[i]));
+            }
+        }
+
+        size_t BeginChunk(_In_ const char* id)
+        {
+            Tag(id);
+            U32(0);
+
+            return Bytes.size();
+        }
+
+        size_t BeginList(_In_ const char* listType)
+        {
+            Tag("LIST");
+            U32(0);
+
+            const size_t payloadStart = Bytes.size();
+
+            Tag(listType);
+
+            return payloadStart;
+        }
+
+        void EndChunk(_In_ size_t payloadStart)
+        {
+            const auto size = static_cast<uint32_t>(Bytes.size() - payloadStart);
+
+            for (int shift = 0, i = 0; shift < 32; shift += 8, i++)
+            {
+                Bytes[payloadStart - 4 + i] = static_cast<std::byte>((size >> shift) & 0xFF);
+            }
+
+            if ((size & 1u) != 0)
+            {
+                Bytes.push_back(std::byte{ 0 });
+            }
+        }
+    };
+
+    // One instrument, one region, one wave: the smallest thing the parser will accept.
+    std::vector<std::byte> BuildMinimalDls(
+        _In_ uint16_t formatTag,
+        _In_ uint16_t channels,
+        _In_ uint16_t bitsPerSample,
+        _In_ uint32_t sampleDataBytes)
+    {
+        DlsBuilder builder;
+
+        builder.Tag("RIFF");
+        builder.U32(0);
+
+        const size_t riffPayload = builder.Bytes.size();
+
+        builder.Tag("DLS ");
+
+        const size_t colh = builder.BeginChunk("colh");
+        builder.U32(1);
+        builder.EndChunk(colh);
+
+        const size_t lins = builder.BeginList("lins");
+        const size_t ins = builder.BeginList("ins ");
+
+        const size_t insh = builder.BeginChunk("insh");
+        builder.U32(1);
+        builder.U32(0);
+        builder.U32(0);
+        builder.EndChunk(insh);
+
+        const size_t lrgn = builder.BeginList("lrgn");
+        const size_t rgn = builder.BeginList("rgn ");
+
+        const size_t rgnh = builder.BeginChunk("rgnh");
+        builder.U16(0);
+        builder.U16(127);
+        builder.U16(0);
+        builder.U16(127);
+        builder.U16(0);
+        builder.U16(0);
+        builder.EndChunk(rgnh);
+
+        const size_t wlnk = builder.BeginChunk("wlnk");
+        builder.U16(0);
+        builder.U16(0);
+        builder.U32(0);
+        builder.U32(0);
+        builder.EndChunk(wlnk);
+
+        builder.EndChunk(rgn);
+        builder.EndChunk(lrgn);
+        builder.EndChunk(ins);
+        builder.EndChunk(lins);
+
+        const size_t ptbl = builder.BeginChunk("ptbl");
+        builder.U32(8);
+        builder.U32(1);
+        builder.U32(0);
+        builder.EndChunk(ptbl);
+
+        const size_t wvpl = builder.BeginList("wvpl");
+        const size_t wave = builder.BeginList("wave");
+
+        const size_t fmt = builder.BeginChunk("fmt ");
+        builder.U16(formatTag);
+        builder.U16(channels);
+        builder.U32(44100);
+        builder.U32(44100u * channels * (bitsPerSample / 8u));
+        builder.U16(static_cast<uint16_t>(channels * (bitsPerSample / 8u)));
+        builder.U16(bitsPerSample);
+        builder.EndChunk(fmt);
+
+        const size_t data = builder.BeginChunk("data");
+
+        for (uint32_t i = 0; i < sampleDataBytes; i++)
+        {
+            builder.Bytes.push_back(std::byte{ 0x11 });
+        }
+
+        builder.EndChunk(data);
+
+        builder.EndChunk(wave);
+        builder.EndChunk(wvpl);
+        builder.EndChunk(riffPayload);
+
+        return builder.Bytes;
+    }
+
+    int RunDlsValidationTest()
+    {
+        int failures = 0;
+
+        auto check = [&failures](const char* name, bool passed, const char* detail = "")
+        {
+            printf("  %-52s %s%s%s\n", name, passed ? "PASS" : "FAIL",
+                (*detail != '\0') ? "  " : "", detail);
+
+            if (!passed)
+            {
+                failures++;
+            }
+        };
+
+        printf("DLS parser validation\n\n");
+
+        DlsParseLimits limits{};
+
+        auto load = [&limits](std::vector<std::byte>&& bytes, DlsCollection& collection)
+        {
+            return DlsCollection::LoadFromMemory(std::move(bytes), limits, collection);
+        };
+
+        // The baseline has to parse, or the rejections below would prove nothing.
+        {
+            DlsCollection collection;
+            const auto status = load(BuildMinimalDls(1, 1, 16, 64), collection);
+
+            check("16-bit mono PCM is accepted", status == DlsParseStatus::Ok,
+                DlsParseStatusToString(status));
+            check("the accepted file has one wave", collection.Waves().size() == 1);
+        }
+
+        // This is the one that mattered: the renderer reads through an int16_t pointer, so an
+        // 8-bit mono wave reports twice as many frames as the chunk actually holds.
+        {
+            DlsCollection collection;
+            const auto status = load(BuildMinimalDls(1, 1, 8, 64), collection);
+
+            check("8-bit mono is rejected, not read as 16-bit",
+                status == DlsParseStatus::UnsupportedWaveFormat, DlsParseStatusToString(status));
+        }
+
+        {
+            DlsCollection collection;
+            const auto status = load(BuildMinimalDls(1, 1, 24, 96), collection);
+
+            check("24-bit is rejected", status == DlsParseStatus::UnsupportedWaveFormat,
+                DlsParseStatusToString(status));
+        }
+
+        {
+            DlsCollection collection;
+            const auto status = load(BuildMinimalDls(3, 1, 32, 128), collection);
+
+            check("non-PCM format tag is rejected", status == DlsParseStatus::UnsupportedWaveFormat,
+                DlsParseStatusToString(status));
+        }
+
+        {
+            DlsCollection collection;
+            const auto status = load(BuildMinimalDls(1, 0, 16, 64), collection);
+
+            check("zero channels is rejected", status == DlsParseStatus::UnsupportedWaveFormat,
+                DlsParseStatusToString(status));
+        }
+
+        // Truncation anywhere should be a clean failure rather than a read past the end.
+        {
+            auto const full = BuildMinimalDls(1, 1, 16, 64);
+            bool allRejected = true;
+            DlsParseStatus lastOk = DlsParseStatus::Ok;
+
+            for (size_t length = 1; length < full.size(); length += 3)
+            {
+                DlsCollection collection;
+                std::vector<std::byte> truncated(full.begin(), full.begin() + length);
+
+                const auto status = load(std::move(truncated), collection);
+
+                if (status == DlsParseStatus::Ok)
+                {
+                    allRejected = false;
+                    lastOk = status;
+                    break;
+                }
+            }
+
+            (void)lastOk;
+
+            check("every truncation of a valid file is rejected", allRejected);
+        }
+
+        printf("\n  %s\n", failures == 0 ? "PASS" : "FAIL");
+
+        return failures == 0 ? 0 : 1;
+    }
+
     int RunUmpTest(_In_ const DlsCollection& collection, _In_ const SynthConfig& config)
     {
         int failures = 0;
@@ -2561,6 +2813,11 @@ int wmain(int argc, wchar_t** argv)
         else if (argument == L"--ump-test")
         {
             umpTest = true;
+        }
+        else if (argument == L"--dls-test")
+        {
+            // Builds its own files, so it never touches the sound set on this machine.
+            return RunDlsValidationTest();
         }
         else
         {

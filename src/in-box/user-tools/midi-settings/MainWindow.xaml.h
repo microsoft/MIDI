@@ -80,6 +80,8 @@ namespace winrt::midisettings::implementation
         void OnCopyConfigFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnPortNamingChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnSynthEnabledToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnSynthOptionChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnSynthVolumeChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
         winrt::fire_and_forget OnRestartServiceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnRestartElevatedClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
@@ -138,6 +140,7 @@ namespace winrt::midisettings::implementation
         // --- global settings ---
         void RefreshGlobalSettings() noexcept;
         void RefreshSynthSettings() noexcept;
+        winrt::fire_and_forget ApplySynthConfigAsync() noexcept;
         void RefreshNotificationSettings() noexcept;
         void ShowFirstRunInvitation() noexcept;
 

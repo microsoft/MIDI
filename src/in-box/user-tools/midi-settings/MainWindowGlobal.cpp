@@ -185,23 +185,40 @@ namespace winrt::midisettings::implementation
 
     namespace
     {
-        // Must match the CLSID the synthesizer transport is registered under.
-        constexpr winrt::guid SynthTransportId
+        // Index order must match the ComboBoxItem order in MainWindow.xaml.
+        constexpr midi2synth::MidiSynthRenderMode RenderModeByIndex[]
         {
-            0x7605713e, 0xfea9, 0x409d, { 0xa9, 0x0f, 0xa8, 0x12, 0x33, 0x20, 0x0d, 0x0a }
+            midi2synth::MidiSynthRenderMode::Compatible,
+            midi2synth::MidiSynthRenderMode::Modern,
         };
 
-        midi2config::MidiServiceConfigResponse SendSynthVerb(_In_ winrt::hstring const& verb)
+        // Exclusive and ASIO are in the API but not implemented, so they are not offered here.
+        constexpr midi2synth::MidiSynthAudioOutputMode AudioModeByIndex[]
         {
-            midi2config::MidiServiceTransportCommand command(SynthTransportId, verb);
+            midi2synth::MidiSynthAudioOutputMode::WasapiShared,
+            midi2synth::MidiSynthAudioOutputMode::WasapiSharedLowLatency,
+        };
 
-            return midi2config::MidiServiceTransportPluginConfigManager::SendCommand(command);
-        }
-
-        bool SynthResponseSucceeded(_In_ midi2config::MidiServiceConfigResponse const& response)
+        constexpr midi2synth::MidiSynthBankSelectMode BankSelectByIndex[]
         {
-            return response != nullptr &&
-                response.Status() == midi2config::MidiServiceConfigResponseStatus::Success;
+            midi2synth::MidiSynthBankSelectMode::Automatic,
+            midi2synth::MidiSynthBankSelectMode::RolandGS,
+            midi2synth::MidiSynthBankSelectMode::YamahaXG,
+            midi2synth::MidiSynthBankSelectMode::GeneralMidi2,
+        };
+
+        template <typename TEnum, size_t TCount>
+        int32_t IndexForValue(_In_ TEnum const (&table)[TCount], _In_ TEnum value) noexcept
+        {
+            for (size_t i = 0; i < TCount; i++)
+            {
+                if (table[i] == value)
+                {
+                    return static_cast<int32_t>(i);
+                }
+            }
+
+            return -1;
         }
     }
 
@@ -214,31 +231,121 @@ namespace winrt::midisettings::implementation
 
         try
         {
-            auto const response = SendSynthVerb(L"status");
+            auto const status = midi2synth::MidiSynthManager::IsTransportAvailable()
+                ? midi2synth::MidiSynthManager::GetStatus()
+                : nullptr;
 
             // A machine without the synthesizer transport installed is not an error. Hide the
-            // control rather than showing one which cannot do anything.
-            if (!SynthResponseSucceeded(response) || response.ResponseJson() == nullptr)
+            // controls rather than showing ones which cannot do anything.
+            if (status == nullptr)
             {
                 SynthEnabledToggle().Visibility(xaml::Visibility::Collapsed);
+                SynthOptionsPanel().Visibility(xaml::Visibility::Collapsed);
                 SynthStatusText().Text(res::GetString(L"SynthNotAvailable"));
                 return;
             }
 
             SynthEnabledToggle().Visibility(xaml::Visibility::Visible);
+            SynthOptionsPanel().Visibility(xaml::Visibility::Visible);
 
-            auto const enabled = response.ResponseJson().GetNamedBoolean(L"enabled", false);
+            auto const enabled = status.IsEnabled();
 
             SynthEnabledToggle().IsOn(enabled);
             SynthStatusText().Text(res::GetString(enabled ? L"SynthStateOn" : L"SynthStateOff"));
+
+            SynthRenderModeCombo().SelectedIndex(IndexForValue(RenderModeByIndex, status.RenderMode()));
+            SynthAudioModeCombo().SelectedIndex(IndexForValue(AudioModeByIndex, status.AudioOutputMode()));
+            SynthBankSelectCombo().SelectedIndex(IndexForValue(BankSelectByIndex, status.BankSelectMode()));
+
+            SynthVolumeSlider().Value(status.VolumeDecibels());
+            SynthVolumeText().Text(res::FormatString(L"SynthVolumeFormat", status.VolumeDecibels()));
+
+            SynthEffectsCheck().IsChecked(status.AreEffectsEnabled());
+
+            auto const soundSet = midi2synth::MidiSynthManager::GetSoundSetInfo();
+
+            SynthSoundSetText().Text(soundSet == nullptr
+                ? winrt::hstring{}
+                : res::FormatString(L"SynthSoundSetFormat",
+                    soundSet.Name(),
+                    soundSet.MelodicInstrumentCount(),
+                    soundSet.DrumKits() == nullptr ? 0u : soundSet.DrumKits().Size()));
         }
         catch (...)
         {
             SynthEnabledToggle().Visibility(xaml::Visibility::Collapsed);
+            SynthOptionsPanel().Visibility(xaml::Visibility::Collapsed);
             SynthStatusText().Text(res::GetString(L"SynthNotAvailable"));
 
             MIDI_SETTINGS_LOG_GENERAL_EXCEPTION(L"Unable to read the synthesizer settings.");
         }
+    }
+
+
+    // Builds the configuration from what the controls show and both sends and saves it. Every
+    // handler funnels through here so a change to one control cannot drop another.
+    winrt::fire_and_forget MainWindow::ApplySynthConfigAsync() noexcept
+    {
+        auto lifetime = get_strong();
+
+        try
+        {
+            auto const status = midi2synth::MidiSynthManager::GetStatus();
+
+            if (status == nullptr)
+            {
+                SynthStatusText().Text(res::GetString(L"SynthChangeFailed"));
+                co_return;
+            }
+
+            midi2synth::MidiSynthConfig config{ status };
+
+            auto const enabled = SynthEnabledToggle().IsOn();
+            config.IsEnabled(enabled);
+
+            auto const renderIndex = SynthRenderModeCombo().SelectedIndex();
+            auto const audioIndex = SynthAudioModeCombo().SelectedIndex();
+            auto const bankIndex = SynthBankSelectCombo().SelectedIndex();
+
+            if (renderIndex >= 0 && renderIndex < static_cast<int32_t>(std::size(RenderModeByIndex)))
+            {
+                config.RenderMode(RenderModeByIndex[renderIndex]);
+            }
+
+            if (audioIndex >= 0 && audioIndex < static_cast<int32_t>(std::size(AudioModeByIndex)))
+            {
+                config.AudioOutputMode(AudioModeByIndex[audioIndex]);
+            }
+
+            if (bankIndex >= 0 && bankIndex < static_cast<int32_t>(std::size(BankSelectByIndex)))
+            {
+                config.BankSelectMode(BankSelectByIndex[bankIndex]);
+            }
+
+            config.VolumeDecibels(SynthVolumeSlider().Value());
+            config.AreEffectsEnabled(SynthEffectsCheck().IsChecked().GetBoolean());
+
+            auto const response =
+                midi2config::MidiServiceTransportPluginConfigManager::SendUpdate(config);
+
+            if (response == nullptr ||
+                response.Status() != midi2config::MidiServiceConfigResponseStatus::Success)
+            {
+                SynthStatusText().Text(res::GetString(L"SynthChangeFailed"));
+                RefreshSynthSettings();
+                co_return;
+            }
+
+            auto const saveResponse =
+                midi2config::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+            SynthStatusText().Text((saveResponse != nullptr && saveResponse.Success())
+                ? res::GetString(enabled ? L"SynthStateOn" : L"SynthStateOff")
+                : res::GetString(L"SynthNotSaved"));
+        }
+        MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to change the synthesizer setting.")
+
+        co_return;
     }
 
 
@@ -254,37 +361,46 @@ namespace winrt::midisettings::implementation
             co_return;
         }
 
-        try
+        ApplySynthConfigAsync();
+
+        co_return;
+    }
+
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnSynthOptionChanged(
+        foundation::IInspectable const&,
+        xaml::RoutedEventArgs const&)
+    {
+        auto lifetime = get_strong();
+
+        if (m_suppressSynthHandling)
         {
-            auto const enabled = SynthEnabledToggle().IsOn();
-
-            // The verb changes the running service. The settings object is what gets written to
-            // the configuration file, because a command is an action and the file holds state.
-            auto const response = SendSynthVerb(enabled ? L"enable" : L"disable");
-
-            if (!SynthResponseSucceeded(response))
-            {
-                SynthStatusText().Text(res::GetString(L"SynthChangeFailed"));
-                RefreshSynthSettings();
-                co_return;
-            }
-
-            json::JsonObject config;
-            config.SetNamedValue(L"enabled", json::JsonValue::CreateBooleanValue(enabled));
-
-            auto const saveResponse =
-                midi2config::MidiServiceTransportPluginConfigManager::SaveUpdate(SynthTransportId, config);
-
-            if (saveResponse != nullptr && saveResponse.Success())
-            {
-                SynthStatusText().Text(res::GetString(enabled ? L"SynthStateOn" : L"SynthStateOff"));
-            }
-            else
-            {
-                SynthStatusText().Text(res::GetString(L"SynthNotSaved"));
-            }
+            co_return;
         }
-        MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to change the synthesizer setting.")
+
+        ApplySynthConfigAsync();
+
+        co_return;
+    }
+
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnSynthVolumeChanged(
+        foundation::IInspectable const&,
+        controls::Primitives::RangeBaseValueChangedEventArgs const& args)
+    {
+        auto lifetime = get_strong();
+
+        // The caption follows the slider even while suppressed, so a refresh shows the right value.
+        SynthVolumeText().Text(res::FormatString(L"SynthVolumeFormat", args.NewValue()));
+
+        if (m_suppressSynthHandling)
+        {
+            co_return;
+        }
+
+        ApplySynthConfigAsync();
 
         co_return;
     }

@@ -797,6 +797,51 @@
   <data name="SynthNotSaved" xml:space="preserve">
     <value>The change was applied, but could not be saved, so it will not survive a service restart.</value>
   </data>
+  <data name="SynthRenderModeCombo.Header" xml:space="preserve">
+    <value>Synthesizer mode</value>
+  </data>
+  <data name="SynthRenderModeCompatible.Content" xml:space="preserve">
+    <value>Compatible with the older Windows synthesizer</value>
+  </data>
+  <data name="SynthRenderModeModern.Content" xml:space="preserve">
+    <value>Modern</value>
+  </data>
+  <data name="SynthAudioModeCombo.Header" xml:space="preserve">
+    <value>Audio output</value>
+  </data>
+  <data name="SynthAudioModeShared.Content" xml:space="preserve">
+    <value>Shared</value>
+  </data>
+  <data name="SynthAudioModeSharedLowLatency.Content" xml:space="preserve">
+    <value>Shared, low latency</value>
+  </data>
+  <data name="SynthBankSelectCombo.Header" xml:space="preserve">
+    <value>Bank select</value>
+  </data>
+  <data name="SynthBankSelectAutomatic.Content" xml:space="preserve">
+    <value>Follow the sender (recommended)</value>
+  </data>
+  <data name="SynthBankSelectGS.Content" xml:space="preserve">
+    <value>Roland GS</value>
+  </data>
+  <data name="SynthBankSelectXG.Content" xml:space="preserve">
+    <value>Yamaha XG</value>
+  </data>
+  <data name="SynthBankSelectGM2.Content" xml:space="preserve">
+    <value>General MIDI 2</value>
+  </data>
+  <data name="SynthVolumeSlider.Header" xml:space="preserve">
+    <value>Volume trim</value>
+  </data>
+  <data name="SynthVolumeFormat" xml:space="preserve">
+    <value>{0:.1f} dB. Zero is the calibrated level, which matches the older Windows synthesizer.</value>
+  </data>
+  <data name="SynthEffectsCheck.Content" xml:space="preserve">
+    <value>Reverb and chorus</value>
+  </data>
+  <data name="SynthSoundSetFormat" xml:space="preserve">
+    <value>Sound set: {0} ({1} instruments, {2} drum kits)</value>
+  </data>
   <data name="GlobalServiceHelp.Text" xml:space="preserve">
     <value>Changing the configuration file or the port naming takes effect when the service restarts.</value>
   </data>

@@ -10,6 +10,89 @@
 
 #include "json_transport_command_helper.h"
 
+namespace
+{
+    // The configuration file is writable by a standard user, so every value here is untrusted.
+    // The two-argument GetNamedXxx accessors only cover a MISSING key: they throw when the key is
+    // present and holds another type, and an exception escaping a transport takes down midisrv.
+    // A wrong-typed value is treated as absent so one bad key cannot discard the whole section.
+    json::JsonValue SafeLookup(
+        _In_ json::JsonObject const& parent,
+        _In_ std::wstring_view key,
+        _In_ json::JsonValueType expectedType) noexcept
+    {
+        try
+        {
+            winrt::hstring const name{ key };
+
+            if (!parent.HasKey(name))
+            {
+                return nullptr;
+            }
+
+            auto const found = parent.Lookup(name);
+
+            if (found == nullptr || found.ValueType() != expectedType)
+            {
+                return nullptr;
+            }
+
+            return found.try_as<json::JsonValue>();
+        }
+        catch (...)
+        {
+            return nullptr;
+        }
+    }
+
+    winrt::hstring SafeGetNamedString(
+        _In_ json::JsonObject const& parent,
+        _In_ std::wstring_view key) noexcept
+    {
+        auto const value = SafeLookup(parent, key, json::JsonValueType::String);
+
+        return value == nullptr ? winrt::hstring{} : value.GetString();
+    }
+
+    bool SafeGetNamedBoolean(
+        _In_ json::JsonObject const& parent,
+        _In_ std::wstring_view key,
+        _In_ bool defaultValue) noexcept
+    {
+        auto const value = SafeLookup(parent, key, json::JsonValueType::Boolean);
+
+        return value == nullptr ? defaultValue : value.GetBoolean();
+    }
+
+    // JSON permits values which are not finite once parsed. A NaN volume would survive a clamp and
+    // silence the synthesizer, so it is rejected here rather than in the engine.
+    bool TryGetNamedFiniteNumber(
+        _In_ json::JsonObject const& parent,
+        _In_ std::wstring_view key,
+        _Out_ double& value) noexcept
+    {
+        value = 0.0;
+
+        auto const found = SafeLookup(parent, key, json::JsonValueType::Number);
+
+        if (found == nullptr)
+        {
+            return false;
+        }
+
+        auto const number = found.GetNumber();
+
+        if (!std::isfinite(number))
+        {
+            return false;
+        }
+
+        value = number;
+
+        return true;
+    }
+}
+
 _Use_decl_annotations_
 HRESULT
 CMidi2MidiSynthConfigurationManager::Initialize(
@@ -236,7 +319,7 @@ CMidi2MidiSynthConfigurationManager::ProcessSettings(
     // Start from what is in effect, so a section which sets only one value leaves the rest alone.
     auto settings = device->Settings();
 
-    auto const synthModeText = jsonObject.GetNamedString(MIDI_SYNTH_JSON_SYNTH_MODE_PROPERTY_KEY, L"");
+    auto const synthModeText = SafeGetNamedString(jsonObject, MIDI_SYNTH_JSON_SYNTH_MODE_PROPERTY_KEY);
 
     if (!synthModeText.empty())
     {
@@ -249,7 +332,7 @@ CMidi2MidiSynthConfigurationManager::ProcessSettings(
         }
     }
 
-    auto const audioModeText = jsonObject.GetNamedString(MIDI_SYNTH_JSON_AUDIO_MODE_PROPERTY_KEY, L"");
+    auto const audioModeText = SafeGetNamedString(jsonObject, MIDI_SYNTH_JSON_AUDIO_MODE_PROPERTY_KEY);
 
     if (!audioModeText.empty())
     {
@@ -273,10 +356,10 @@ CMidi2MidiSynthConfigurationManager::ProcessSettings(
         }
     }
 
-    settings.Enabled = jsonObject.GetNamedBoolean(MIDI_SYNTH_JSON_ENABLED_PROPERTY_KEY, settings.Enabled);
-    settings.EffectsEnabled = jsonObject.GetNamedBoolean(MIDI_SYNTH_JSON_EFFECTS_PROPERTY_KEY, settings.EffectsEnabled);
+    settings.Enabled = SafeGetNamedBoolean(jsonObject, MIDI_SYNTH_JSON_ENABLED_PROPERTY_KEY, settings.Enabled);
+    settings.EffectsEnabled = SafeGetNamedBoolean(jsonObject, MIDI_SYNTH_JSON_EFFECTS_PROPERTY_KEY, settings.EffectsEnabled);
 
-    auto const bankSelectText = jsonObject.GetNamedString(MIDI_SYNTH_JSON_BANK_SELECT_PROPERTY_KEY, L"");
+    auto const bankSelectText = SafeGetNamedString(jsonObject, MIDI_SYNTH_JSON_BANK_SELECT_PROPERTY_KEY);
 
     if (!bankSelectText.empty())
     {
@@ -289,15 +372,14 @@ CMidi2MidiSynthConfigurationManager::ProcessSettings(
         }
     }
 
-    if (jsonObject.HasKey(MIDI_SYNTH_JSON_VOLUME_PROPERTY_KEY))
+    double requestedVolume{ 0.0 };
+
+    if (TryGetNamedFiniteNumber(jsonObject, MIDI_SYNTH_JSON_VOLUME_PROPERTY_KEY, requestedVolume))
     {
         // Out of range is clamped rather than refused: a customer dragging a slider should not get
         // an error, and the engine owns the limits.
-        settings.VolumeDecibels = jsonObject.GetNamedNumber(
-            MIDI_SYNTH_JSON_VOLUME_PROPERTY_KEY, settings.VolumeDecibels);
-
         settings.VolumeDecibels = (std::max)(MidiSynth::SynthEngine::MinimumUserVolumeDb,
-            (std::min)(MidiSynth::SynthEngine::MaximumUserVolumeDb, settings.VolumeDecibels));
+            (std::min)(MidiSynth::SynthEngine::MaximumUserVolumeDb, requestedVolume));
     }
 
     RETURN_IF_FAILED(device->ApplySettings(settings));

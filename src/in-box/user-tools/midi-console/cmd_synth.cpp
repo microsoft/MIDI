@@ -14,60 +14,97 @@
 #include "midi_formatting.h"
 #include "strings.h"
 
-// windows.h defines GetObject as a macro, which renames the JSON accessor at the call site.
-// try_as<JsonObject> is not a substitute: it returns null for an element of a JsonArray.
-#pragma push_macro("GetObject")
-#undef GetObject
-
 namespace midi2console
 {
     namespace
     {
-        // Must match the CLSID the synthesizer transport is registered under.
-        constexpr winrt::guid SynthTransportId
+        template <typename TEnum>
+        struct EnumToken
         {
-            0x7605713e, 0xfea9, 0x409d, { 0xa9, 0x0f, 0xa8, 0x12, 0x33, 0x20, 0x0d, 0x0a }
+            char const* Token;
+            TEnum Value;
         };
 
-        constexpr wchar_t VerbStatus[]{ L"status" };
-        constexpr wchar_t VerbEnable[]{ L"enable" };
-        constexpr wchar_t VerbDisable[]{ L"disable" };
-        constexpr wchar_t VerbSoundSet[]{ L"soundset" };
-
-        // Sends a verb and hands back whatever the transport reported, so the caller can print the
-        // resulting state rather than assuming the change took.
-        midi2config::MidiServiceConfigResponse SendVerb(_In_ std::wstring_view verb)
+        // One table drives both parsing and display, so a value printed by "midi synth status" can
+        // be pasted straight back into "midi synth configure".
+        constexpr EnumToken<midi2synth::MidiSynthRenderMode> RenderModeTokens[]
         {
-            midi2config::MidiServiceTransportCommand command(SynthTransportId, winrt::hstring{ verb });
+            { "compatible", midi2synth::MidiSynthRenderMode::Compatible },
+            { "modern",     midi2synth::MidiSynthRenderMode::Modern },
+        };
 
-            return midi2config::MidiServiceTransportPluginConfigManager::SendCommand(command);
+        constexpr EnumToken<midi2synth::MidiSynthAudioOutputMode> AudioOutputModeTokens[]
+        {
+            { "shared",           midi2synth::MidiSynthAudioOutputMode::WasapiShared },
+            { "sharedLowLatency", midi2synth::MidiSynthAudioOutputMode::WasapiSharedLowLatency },
+            { "exclusive",        midi2synth::MidiSynthAudioOutputMode::WasapiExclusive },
+            { "asio",             midi2synth::MidiSynthAudioOutputMode::Asio },
+        };
+
+        constexpr EnumToken<midi2synth::MidiSynthBankSelectMode> BankSelectModeTokens[]
+        {
+            { "gs",        midi2synth::MidiSynthBankSelectMode::RolandGS },
+            { "xg",        midi2synth::MidiSynthBankSelectMode::YamahaXG },
+            { "gm2",       midi2synth::MidiSynthBankSelectMode::GeneralMidi2 },
+            { "automatic", midi2synth::MidiSynthBankSelectMode::Automatic },
+        };
+
+        template <typename TEnum, size_t TCount>
+        std::optional<TEnum> ParseEnum(
+            _In_ EnumToken<TEnum> const (&tokens)[TCount],
+            _In_ std::string const& text)
+        {
+            for (auto const& entry : tokens)
+            {
+                if (EqualsIgnoreCase(text, entry.Token))
+                {
+                    return entry.Value;
+                }
+            }
+
+            return std::nullopt;
         }
 
-        bool Succeeded(_In_ midi2config::MidiServiceConfigResponse const& response)
+        template <typename TEnum, size_t TCount>
+        std::string TokenForEnum(_In_ EnumToken<TEnum> const (&tokens)[TCount], _In_ TEnum value)
         {
-            return response != nullptr &&
-                response.Status() == midi2config::MidiServiceConfigResponseStatus::Success;
+            for (auto const& entry : tokens)
+            {
+                if (entry.Value == value)
+                {
+                    return entry.Token;
+                }
+            }
+
+            return {};
         }
 
-        void ReportFailure(_In_ midi2config::MidiServiceConfigResponse const& response)
+        // Null when the synthesizer is not installed or the service did not answer. The two are
+        // reported differently because they call for different things from the customer.
+        midi2synth::MidiSynthStatus GetStatusOrReportFailure()
         {
-            auto const message = response == nullptr
-                ? std::string{}
-                : ToUtf8(response.ServiceErrorMessage());
+            if (!midi2synth::MidiSynthManager::IsTransportAvailable())
+            {
+                WriteErrorLine(ResourceString(IDS_SYNTH_NOT_AVAILABLE));
+                return nullptr;
+            }
 
-            WriteErrorLine(FormatResourceString(IDS_SYNTH_COMMAND_FAILED, message));
+            auto const status = midi2synth::MidiSynthManager::GetStatus();
+
+            if (status == nullptr)
+            {
+                WriteErrorLine(FormatResourceString(IDS_SYNTH_COMMAND_FAILED, std::string{}));
+            }
+
+            return status;
         }
 
-        void WriteState(_In_ midi2config::MidiServiceConfigResponse const& response)
+        void WriteState(_In_ midi2synth::MidiSynthStatus const& status)
         {
-            auto const json = response.ResponseJson();
-
-            if (json == nullptr)
+            if (status == nullptr)
             {
                 return;
             }
-
-            auto const enabled = json.GetNamedBoolean(L"enabled", false);
 
             ConsoleTable table{ ResourceString(IDS_SYNTH_TABLE_TITLE) };
 
@@ -75,30 +112,23 @@ namespace midi2console
             table.AddColumn(ResourceString(IDS_SYNTH_LABEL_VALUE), ColumnAlignment::Left);
             table.SetLastColumnShrinkable();
 
-            table.BeginRow();
-            table.AddCell(ResourceString(IDS_SYNTH_LABEL_ENABLED));
-            table.AddCell(ResourceString(enabled ? IDS_SYNTH_STATE_ON : IDS_SYNTH_STATE_OFF));
+            auto addRow = [&table](UINT labelId, std::string const& value)
+            {
+                table.BeginRow();
+                table.AddCell(ResourceString(labelId));
+                table.AddCell(value);
+            };
 
-            table.BeginRow();
-            table.AddCell(ResourceString(IDS_SYNTH_LABEL_SYNTH_MODE));
-            table.AddCell(ToUtf8(json.GetNamedString(L"synthMode", L"")));
+            auto const enabled = status.IsEnabled();
 
-            table.BeginRow();
-            table.AddCell(ResourceString(IDS_SYNTH_LABEL_AUDIO_MODE));
-            table.AddCell(ToUtf8(json.GetNamedString(L"audioMode", L"")));
-
-            table.BeginRow();
-            table.AddCell(ResourceString(IDS_SYNTH_LABEL_BANK_SELECT));
-            table.AddCell(ToUtf8(json.GetNamedString(L"bankSelectMode", L"")));
-
-            table.BeginRow();
-            table.AddCell(ResourceString(IDS_SYNTH_LABEL_VOLUME));
-            table.AddCell(std::format("{:.1f} dB", json.GetNamedNumber(L"volumeDecibels", 0.0)));
-
-            table.BeginRow();
-            table.AddCell(ResourceString(IDS_SYNTH_LABEL_EFFECTS));
-            table.AddCell(ResourceString(
-                json.GetNamedBoolean(L"effectsEnabled", true) ? IDS_SYNTH_STATE_ON : IDS_SYNTH_STATE_OFF));
+            addRow(IDS_SYNTH_LABEL_ENABLED,
+                ResourceString(enabled ? IDS_SYNTH_STATE_ON : IDS_SYNTH_STATE_OFF));
+            addRow(IDS_SYNTH_LABEL_SYNTH_MODE, TokenForEnum(RenderModeTokens, status.RenderMode()));
+            addRow(IDS_SYNTH_LABEL_AUDIO_MODE, TokenForEnum(AudioOutputModeTokens, status.AudioOutputMode()));
+            addRow(IDS_SYNTH_LABEL_BANK_SELECT, TokenForEnum(BankSelectModeTokens, status.BankSelectMode()));
+            addRow(IDS_SYNTH_LABEL_VOLUME, std::format("{:.1f} dB", status.VolumeDecibels()));
+            addRow(IDS_SYNTH_LABEL_EFFECTS,
+                ResourceString(status.AreEffectsEnabled() ? IDS_SYNTH_STATE_ON : IDS_SYNTH_STATE_OFF));
 
             table.Render();
 
@@ -107,77 +137,101 @@ namespace midi2console
             WriteInfoLine(ResourceString(enabled ? IDS_SYNTH_EXPLAIN_ON : IDS_SYNTH_EXPLAIN_OFF));
         }
 
-        // The command verb changes the running service. Persisting is a separate step, and it
-        // writes the settings object rather than the verb, because a command is an action and the
-        // configuration file holds state.
-        void SaveEnabledState(_In_ bool enabled)
+        // Applies the configuration, then optionally persists it. Sending and saving are separate
+        // because a temporary change is one the customer can undo by restarting the service.
+        bool ApplyConfig(_In_ midi2synth::MidiSynthConfig const& config, _In_ bool temporary)
         {
-            json::JsonObject config;
-            config.SetNamedValue(L"enabled", json::JsonValue::CreateBooleanValue(enabled));
-
             auto const response =
-                midi2config::MidiServiceTransportPluginConfigManager::SaveUpdate(SynthTransportId, config);
+                midi2config::MidiServiceTransportPluginConfigManager::SendUpdate(config);
 
-            if (response != nullptr && response.Success())
+            if (response == nullptr ||
+                response.Status() != midi2config::MidiServiceConfigResponseStatus::Success)
             {
-                WriteSuccessLine(ResourceString(IDS_SYNTH_SAVED_TO_CONFIG));
-                return;
+                auto const message = response == nullptr
+                    ? std::string{}
+                    : ToUtf8(response.ServiceErrorMessage());
+
+                WriteErrorLine(FormatResourceString(IDS_SYNTH_COMMAND_FAILED, message));
+                return false;
             }
 
-            auto const message = response == nullptr ? std::string{} : ToUtf8(response.ErrorMessage());
+            if (temporary)
+            {
+                return true;
+            }
 
-            WriteWarningLine(FormatResourceString(IDS_SYNTH_SAVE_FAILED, message));
+            auto const saveResponse =
+                midi2config::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+            if (saveResponse != nullptr && saveResponse.Success())
+            {
+                WriteSuccessLine(ResourceString(IDS_SYNTH_SAVED_TO_CONFIG));
+            }
+            else
+            {
+                auto const message =
+                    saveResponse == nullptr ? std::string{} : ToUtf8(saveResponse.ErrorMessage());
+
+                WriteWarningLine(FormatResourceString(IDS_SYNTH_SAVE_FAILED, message));
+            }
+
+            return true;
         }
     }
 
     int RunSynthStatusCommand()
     {
-        auto const response = SendVerb(VerbStatus);
+        auto const status = GetStatusOrReportFailure();
 
-        if (!Succeeded(response))
+        if (status == nullptr)
         {
-            ReportFailure(response);
             return 1;
         }
 
-        WriteState(response);
+        WriteState(status);
 
         return 0;
     }
 
     int RunSynthEnableCommand(_In_ SynthEnableOptions const& options)
     {
-        auto const response = SendVerb(options.Enabled ? VerbEnable : VerbDisable);
+        auto const status = GetStatusOrReportFailure();
 
-        if (!Succeeded(response))
+        if (status == nullptr)
         {
-            ReportFailure(response);
+            return 1;
+        }
+
+        midi2synth::MidiSynthConfig config{ status };
+        config.IsEnabled(options.Enabled);
+
+        if (!ApplyConfig(config, options.Temporary))
+        {
             return 1;
         }
 
         WriteSuccessLine(ResourceString(options.Enabled ? IDS_SYNTH_ENABLED : IDS_SYNTH_DISABLED));
 
-        if (!options.Temporary)
-        {
-            SaveEnabledState(options.Enabled);
-        }
-
-        WriteState(response);
+        WriteState(midi2synth::MidiSynthManager::GetStatus());
 
         return 0;
     }
 
     int RunSynthSoundSetCommand()
     {
-        auto const response = SendVerb(VerbSoundSet);
-
-        if (!Succeeded(response) || response.ResponseJson() == nullptr)
+        if (!midi2synth::MidiSynthManager::IsTransportAvailable())
         {
-            ReportFailure(response);
+            WriteErrorLine(ResourceString(IDS_SYNTH_NOT_AVAILABLE));
             return 1;
         }
 
-        auto const json = response.ResponseJson();
+        auto const soundSet = midi2synth::MidiSynthManager::GetSoundSetInfo();
+
+        if (soundSet == nullptr)
+        {
+            WriteErrorLine(FormatResourceString(IDS_SYNTH_COMMAND_FAILED, std::string{}));
+            return 1;
+        }
 
         ConsoleTable table{ ResourceString(IDS_SYNTH_SOUNDSET_TITLE) };
 
@@ -192,17 +246,15 @@ namespace midi2console
             table.AddCell(value);
         };
 
-        addRow(IDS_SYNTH_LABEL_SOUNDSET_NAME, ToUtf8(json.GetNamedString(L"soundSetName", L"")));
-        addRow(IDS_SYNTH_LABEL_SOUNDSET_VERSION, ToUtf8(json.GetNamedString(L"soundSetVersion", L"")));
-        addRow(IDS_SYNTH_LABEL_SOUNDSET_PATH, ToUtf8(json.GetNamedString(L"soundSetPath", L"")));
-        addRow(IDS_SYNTH_LABEL_SOUNDSET_MELODIC,
-            std::format("{:.0f}", json.GetNamedNumber(L"melodicCount", 0.0)));
-        addRow(IDS_SYNTH_LABEL_SOUNDSET_WAVES,
-            std::format("{:.0f}", json.GetNamedNumber(L"waveCount", 0.0)));
+        addRow(IDS_SYNTH_LABEL_SOUNDSET_NAME, ToUtf8(soundSet.Name()));
+        addRow(IDS_SYNTH_LABEL_SOUNDSET_VERSION, ToUtf8(soundSet.Version()));
+        addRow(IDS_SYNTH_LABEL_SOUNDSET_PATH, ToUtf8(soundSet.FilePath()));
+        addRow(IDS_SYNTH_LABEL_SOUNDSET_MELODIC, std::format("{}", soundSet.MelodicInstrumentCount()));
+        addRow(IDS_SYNTH_LABEL_SOUNDSET_WAVES, std::format("{}", soundSet.WaveCount()));
 
         table.Render();
 
-        auto const kits = json.GetNamedArray(L"drumKits", nullptr);
+        auto const kits = soundSet.DrumKits();
 
         if (kits == nullptr || kits.Size() == 0)
         {
@@ -215,13 +267,11 @@ namespace midi2console
         kitTable.AddColumn(ResourceString(IDS_SYNTH_LABEL_KIT_NAME), ColumnAlignment::Left);
         kitTable.SetLastColumnShrinkable();
 
-        for (auto const& entry : kits)
+        for (auto const& kit : kits)
         {
-            auto const kit = entry.GetObject();
-
             kitTable.BeginRow();
-            kitTable.AddCell(std::format("{:.0f}", kit.GetNamedNumber(L"program", 0.0)));
-            kitTable.AddCell(ToUtf8(kit.GetNamedString(L"name", L"")));
+            kitTable.AddCell(std::format("{}", static_cast<uint32_t>(kit.Program())));
+            kitTable.AddCell(ToUtf8(kit.Name()));
         }
 
         kitTable.Render();
@@ -242,20 +292,57 @@ namespace midi2console
             return 1;
         }
 
-        json::JsonObject config;
+        auto const status = GetStatusOrReportFailure();
 
-        auto setString = [&config](std::wstring_view key, std::string const& value)
+        if (status == nullptr)
         {
-            if (!value.empty())
-            {
-                config.SetNamedValue(winrt::hstring{ key },
-                    json::JsonValue::CreateStringValue(winrt::hstring{ FromUtf8(value) }));
-            }
-        };
+            return 1;
+        }
 
-        setString(L"synthMode", options.SynthMode);
-        setString(L"audioMode", options.AudioMode);
-        setString(L"bankSelectMode", options.BankSelectMode);
+        // Starting from the current status is what makes changing one setting leave the rest alone.
+        midi2synth::MidiSynthConfig config{ status };
+
+        if (!options.SynthMode.empty())
+        {
+            auto const parsed = ParseEnum(RenderModeTokens, options.SynthMode);
+
+            if (!parsed)
+            {
+                WriteErrorLine(FormatResourceString(IDS_ERROR_INVALID_ENUM_VALUE,
+                    options.SynthMode, std::string{ "--synth-mode" }));
+                return 1;
+            }
+
+            config.RenderMode(parsed.value());
+        }
+
+        if (!options.AudioMode.empty())
+        {
+            auto const parsed = ParseEnum(AudioOutputModeTokens, options.AudioMode);
+
+            if (!parsed)
+            {
+                WriteErrorLine(FormatResourceString(IDS_ERROR_INVALID_ENUM_VALUE,
+                    options.AudioMode, std::string{ "--audio-mode" }));
+                return 1;
+            }
+
+            config.AudioOutputMode(parsed.value());
+        }
+
+        if (!options.BankSelectMode.empty())
+        {
+            auto const parsed = ParseEnum(BankSelectModeTokens, options.BankSelectMode);
+
+            if (!parsed)
+            {
+                WriteErrorLine(FormatResourceString(IDS_ERROR_INVALID_ENUM_VALUE,
+                    options.BankSelectMode, std::string{ "--bank-select-mode" }));
+                return 1;
+            }
+
+            config.BankSelectMode(parsed.value());
+        }
 
         if (!options.Effects.empty())
         {
@@ -266,16 +353,14 @@ namespace midi2console
                 return 1;
             }
 
-            config.SetNamedValue(L"effectsEnabled",
-                json::JsonValue::CreateBooleanValue(EqualsIgnoreCase(options.Effects, "on")));
+            config.AreEffectsEnabled(EqualsIgnoreCase(options.Effects, "on"));
         }
 
         if (!options.Volume.empty())
         {
             try
             {
-                config.SetNamedValue(L"volumeDecibels",
-                    json::JsonValue::CreateNumberValue(std::stod(options.Volume)));
+                config.VolumeDecibels(std::stod(options.Volume));
             }
             catch (...)
             {
@@ -285,37 +370,13 @@ namespace midi2console
             }
         }
 
-        auto const response =
-            midi2config::MidiServiceTransportPluginConfigManager::SendUpdate(SynthTransportId, config);
-
-        if (!Succeeded(response))
+        if (!ApplyConfig(config, options.Temporary))
         {
-            ReportFailure(response);
             return 1;
         }
 
-        if (!options.Temporary)
-        {
-            auto const saveResponse =
-                midi2config::MidiServiceTransportPluginConfigManager::SaveUpdate(SynthTransportId, config);
-
-            if (saveResponse != nullptr && saveResponse.Success())
-            {
-                WriteSuccessLine(ResourceString(IDS_SYNTH_SAVED_TO_CONFIG));
-            }
-            else
-            {
-                auto const message =
-                    saveResponse == nullptr ? std::string{} : ToUtf8(saveResponse.ErrorMessage());
-
-                WriteWarningLine(FormatResourceString(IDS_SYNTH_SAVE_FAILED, message));
-            }
-        }
-
-        WriteState(response);
+        WriteState(midi2synth::MidiSynthManager::GetStatus());
 
         return 0;
     }
 }
-
-#pragma pop_macro("GetObject")

@@ -765,6 +765,7 @@ IDS_SYNTH_KITS_HELP                         L"Select a kit with a program change
 IDS_OPT_SYNTH_BANK_SELECT_MODE              L"How an incoming bank select is read: gs, xg, gm2, or automatic to follow the sender"
 IDS_OPT_SYNTH_VOLUME                        L"Volume trim in decibels, from -60 to 12. Zero is the calibrated level."
 IDS_OPT_SYNTH_EFFECTS                       L"Reverb and chorus: on or off"
+IDS_SYNTH_NOT_AVAILABLE                     L"The General MIDI synthesizer is not installed on this PC."
 
 END
 

@@ -47,6 +47,9 @@ namespace MidiSynth
 
         constexpr size_t MaxNameCharacters = 256;
 
+        constexpr uint16_t WaveFormatPcm = 1;
+        constexpr uint16_t RequiredBitsPerSample = 16;
+
         // INFO text is single byte per the specification. Widening as Latin-1 cannot fail,
         // which keeps a malformed name from becoming a parse failure.
         std::wstring ReadLatin1Name(std::span<const std::byte> payload)
@@ -443,6 +446,20 @@ namespace MidiSynth
             }
 
             if (wave.Channels == 0 || (wave.BitsPerSample % 8) != 0 || wave.BitsPerSample == 0)
+            {
+                return DlsParseStatus::UnsupportedWaveFormat;
+            }
+
+            // The renderer reads sample data through an int16_t pointer using a frame count derived
+            // from BitsPerSample, so 8-bit mono data would be read two bytes at a time past the end
+            // of the chunk. Only the format the renderer actually supports is accepted.
+            if (wave.FormatTag != WaveFormatPcm || wave.BitsPerSample != RequiredBitsPerSample)
+            {
+                return DlsParseStatus::UnsupportedWaveFormat;
+            }
+
+            // Guards the same pointer cast against a data chunk landing on an odd offset.
+            if ((reinterpret_cast<uintptr_t>(wave.SampleData.data()) % alignof(int16_t)) != 0)
             {
                 return DlsParseStatus::UnsupportedWaveFormat;
             }

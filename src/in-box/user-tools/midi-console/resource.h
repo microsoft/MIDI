@@ -703,3 +703,4 @@
 #define IDS_OPT_SYNTH_BANK_SELECT_MODE                  52138
 #define IDS_OPT_SYNTH_VOLUME                            52139
 #define IDS_OPT_SYNTH_EFFECTS                           52140
+#define IDS_SYNTH_NOT_AVAILABLE                         52141
