@@ -7,11 +7,9 @@ audience: everyone
 
 The midi...midi9 entries in the Drivers32 location in the registry come up often, especially in the context of certain brands of drivers, like Korg.
 
-Location for 64-bit apps
-`Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32`
+Location for 64-bit apps `Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32`
 
-Location for 32-bit apps
-`Computer\HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Drivers32`
+Location for 32-bit apps `Computer\HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Drivers32`
 
 This has led to the idea that Windows only supports 10 MIDI devices. In reality, it's only 10 drivers which require their entries in the registry.
 

@@ -9,9 +9,7 @@ Types for configuring simple loopback endpoints.
 
 ## Samples
 
-These create a single MIDI 1.0-style loopback endpoint at runtime, which is what an existing WinMM
-or WinRT MIDI 1.0 application can talk to without any changes. Endpoints created this way are
-transient, so remember to remove what you create.
+These create a single MIDI 1.0-style loopback endpoint at runtime, which is what an existing WinMM or WinRT MIDI 1.0 application can talk to without any changes. Endpoints created this way are transient, so remember to remove what you create.
 
 * [C++/WinRT loopback-basic-endpoints](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/loopback-basic-endpoints)
 * [C# loopback-basic-endpoints](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/loopback-basic-endpoints)

@@ -63,8 +63,7 @@ using (var stream = await file.OpenReadAsync())
 
 ## Samples
 
-These send a `.syx` file to a device. They replace the WinMM sequence of `midiOutPrepareHeader`,
-`midiOutLongMsg` and `midiOutUnprepareHeader`, along with the buffer lifetime rules that went with it.
+These send a `.syx` file to a device. They replace the WinMM sequence of `midiOutPrepareHeader`, `midiOutLongMsg` and `midiOutUnprepareHeader`, along with the buffer lifetime rules that went with it.
 
 * [C++/WinRT sysex-file-sender](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/sysex-file-sender)
 * [C# sysex-file-sender](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/sysex-file-sender)

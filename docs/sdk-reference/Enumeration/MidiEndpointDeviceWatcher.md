@@ -83,10 +83,7 @@ If the auto-reconnect option was used when creating the connection from the SDK,
 
 ## Samples
 
-Use the watcher rather than polling the device count, which is the habit WinMM forced on everyone.
-Handle `Updated` for the whole lifetime of the watcher, not just during a window after startup: a
-MIDI 2.0 endpoint answers discovery after it first appears, and there is no point at which its
-information is guaranteed final.
+Use the watcher rather than polling the device count, which is the habit WinMM forced on everyone. Handle `Updated` for the whole lifetime of the watcher, not just during a window after startup: a MIDI 2.0 endpoint answers discovery after it first appears, and there is no point at which its information is guaranteed final.
 
 * [C++/WinRT watch-endpoints](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/watch-endpoints)
 * [C# watch-endpoints](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/watch-endpoints)

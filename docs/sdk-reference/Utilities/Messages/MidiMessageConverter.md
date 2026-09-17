@@ -54,8 +54,7 @@ This class provides support for representing MIDI 1.0 messages in the Universal 
 
 ## Samples
 
-This is the path to use when your application already holds MIDI 1.0 bytestream data, which is the
-usual situation when porting from WinMM.
+This is the path to use when your application already holds MIDI 1.0 bytestream data, which is the usual situation when porting from WinMM.
 
 * [C++/WinRT sysex-send-bytes](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/sysex-send-bytes)
 * [C# sysex-send-bytes](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/sysex-send-bytes)

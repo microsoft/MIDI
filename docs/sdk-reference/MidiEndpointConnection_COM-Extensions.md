@@ -230,5 +230,4 @@ More complete examples [available on Github](https://aka.ms/midirepo)
 * [C++/WinRT com-extensions](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/com-extensions) shows allocation-free sending and receiving
 * [C++/WinRT scheduled-messages-com-extensions](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/scheduled-messages-com-extensions) shows that the timestamp argument to `SendMidiMessagesRaw` schedules a message the same way the WinRT senders do
 
-The COM Extensions are only available to C++ and other COM-aware languages, so there are no C#
-equivalents of these samples.
+The COM Extensions are only available to C++ and other COM-aware languages, so there are no C# equivalents of these samples.

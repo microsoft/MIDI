@@ -26,10 +26,6 @@ Pass to `MidiNetworkTransportManager.ForgetRemoteClientAsync`.
 
 ## Remarks
 
-Forgetting is not blocking. A session which is already established is left running; only the
-remembered decision is dropped, so the next invitation from that remote client is judged on the
-host's remote client policy alone.
+Forgetting is not blocking. A session which is already established is left running; only the remembered decision is dropped, so the next invitation from that remote client is judged on the host's remote client policy alone.
 
-This applies to the running service. The saved allow and deny lists are separate, and are rewritten
-with `MidiNetworkHostKnownClientsConfig`. An application which forgets a decision should do both,
-or the decision returns the next time the service starts.
+This applies to the running service. The saved allow and deny lists are separate, and are rewritten with `MidiNetworkHostKnownClientsConfig`. An application which forgets a decision should do both, or the decision returns the next time the service starts.

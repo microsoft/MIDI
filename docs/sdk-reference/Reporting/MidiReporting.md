@@ -23,8 +23,7 @@ The two `FindAllSessions...` methods answer "who is using this device?", which i
 
 ## Samples
 
-`GetInstalledTransportPlugins` matched against an endpoint's `TransportId` is how you show a user
-what kind of device they are looking at.
+`GetInstalledTransportPlugins` matched against an endpoint's `TransportId` is how you show a user what kind of device they are looking at.
 
 * [C++/WinRT identify-endpoint-type](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/identify-endpoint-type)
 * [C# identify-endpoint-type](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/identify-endpoint-type)
