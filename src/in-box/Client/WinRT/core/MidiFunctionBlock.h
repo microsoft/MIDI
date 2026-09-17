@@ -80,7 +80,9 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         bool m_isActive{ false };
         midi2enum::MidiFunctionBlockDirection m_direction{ midi2enum::MidiFunctionBlockDirection::Undefined };
         midi2enum::MidiFunctionBlockUIHint m_uiHint{ midi2enum::MidiFunctionBlockUIHint::Unknown };
-        midi2enum::MidiFunctionBlockRepresentsMidi10Connection m_midi10Connection{ midi2enum::MidiFunctionBlockRepresentsMidi10Connection::Reserved };
+        // Reserved is a legal wire value but never a sensible declaration, so a block which says
+        // nothing declares the common case instead.
+        midi2enum::MidiFunctionBlockRepresentsMidi10Connection m_midi10Connection{ midi2enum::MidiFunctionBlockRepresentsMidi10Connection::Not10 };
         uint8_t m_midiCIMessageVersionFormat{ 0 };
         uint8_t m_maxSysEx8Streams{ 0 };
 
