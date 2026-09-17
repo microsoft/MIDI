@@ -324,14 +324,17 @@
       <Component Id="cD574682A30EEB70F" Bitness="always64" Directory="CONFIGURATION_ASSETS_ENDPOINTS_FOLDER"> <!-- default-basic-loop-small.svg -->
         <File Id="fD574682A30EEB70F" Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-basic-loop-small.svg" Vital="true" />
       </Component>
-      <Component Id="c5EEE3142C27FF8AA" Bitness="always64" Directory="CONFIGURATION_ASSETS_ENDPOINTS_FOLDER"> <!-- default-ble10-small.svg -->
-        <File Id="f5EEE3142C27FF8AA" Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-ble10-small.svg" Vital="true" />
+      <Component Id="cF8EE3C89F64872B4" Bitness="always64" Directory="CONFIGURATION_ASSETS_ENDPOINTS_FOLDER"> <!-- default-blemidi-small.svg -->
+        <File Id="fF8EE3C89F64872B4" Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-blemidi-small.svg" Vital="true" />
       </Component>
       <Component Id="cAE6C36996939D0F1" Bitness="always64" Directory="CONFIGURATION_ASSETS_ENDPOINTS_FOLDER"> <!-- default-bloop-small.svg -->
         <File Id="fAE6C36996939D0F1" Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-bloop-small.svg" Vital="true" />
       </Component>
       <Component Id="c09D2C9CA4162ABDE" Bitness="always64" Directory="CONFIGURATION_ASSETS_ENDPOINTS_FOLDER"> <!-- default-diag-small.svg -->
         <File Id="f09D2C9CA4162ABDE" Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-diag-small.svg" Vital="true" />
+      </Component>
+      <Component Id="cDA734B3C5110F5EB" Bitness="always64" Directory="CONFIGURATION_ASSETS_ENDPOINTS_FOLDER"> <!-- default-gmsynth-small.svg -->
+        <File Id="fDA734B3C5110F5EB" Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-gmsynth-small.svg" Vital="true" />
       </Component>
       <Component Id="cC373D56CCF8BD3CB" Bitness="always64" Directory="CONFIGURATION_ASSETS_ENDPOINTS_FOLDER"> <!-- default-ks-small.svg -->
         <File Id="fC373D56CCF8BD3CB" Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-ks-small.svg" Vital="true" />
