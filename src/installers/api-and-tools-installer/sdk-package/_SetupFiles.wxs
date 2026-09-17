@@ -318,8 +318,8 @@
       </Component>
 
       <!-- Assets\Endpoints -->
-      <Component Id="cBD0F812CEDBFDE03" Bitness="always64" Directory="CONFIGURATION_ASSETS_ENDPOINTS_FOLDER"> <!-- default-apppub-small.svg -->
-        <File Id="fBD0F812CEDBFDE03" Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-apppub-small.svg" Vital="true" />
+      <Component Id="c4D5BC2F78568604C" Bitness="always64" Directory="CONFIGURATION_ASSETS_ENDPOINTS_FOLDER"> <!-- default-app-small.svg -->
+        <File Id="f4D5BC2F78568604C" Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-app-small.svg" Vital="true" />
       </Component>
       <Component Id="cD574682A30EEB70F" Bitness="always64" Directory="CONFIGURATION_ASSETS_ENDPOINTS_FOLDER"> <!-- default-basic-loop-small.svg -->
         <File Id="fD574682A30EEB70F" Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-basic-loop-small.svg" Vital="true" />
