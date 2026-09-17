@@ -192,7 +192,7 @@ namespace winrt::midisettings::implementation
             midi2synth::MidiSynthRenderMode::Modern,
         };
 
-        // Exclusive and ASIO are in the API but not implemented, so they are not offered here.
+        // Exclusive mode is in the API but not implemented, so it is not offered here.
         constexpr midi2synth::MidiSynthAudioOutputMode AudioModeByIndex[]
         {
             midi2synth::MidiSynthAudioOutputMode::WasapiShared,

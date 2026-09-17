@@ -1241,7 +1241,7 @@
                                    Text="General MIDI synthesizer"
                                    Style="{ThemeResource BodyStrongTextBlockStyle}" />
                         <TextBlock x:Uid="GlobalSynthHelp"
-                                   Text="The built-in synthesizer plays MIDI through your default Windows audio device. Turning it off removes its MIDI ports and releases the audio device, which is what you want when another application needs exclusive or ASIO access."
+                                   Text="The built-in synthesizer plays MIDI through your default Windows audio device. Turning it off removes its MIDI ports and releases the audio device, which is what you want when another application needs it in WASAPI exclusive mode, or through ASIO."
                                    TextWrapping="Wrap"
                                    Style="{StaticResource PropertyLabelStyle}" />
 

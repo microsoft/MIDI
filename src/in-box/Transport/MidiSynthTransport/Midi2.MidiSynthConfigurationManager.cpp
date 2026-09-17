@@ -353,9 +353,10 @@ CMidi2MidiSynthConfigurationManager::ProcessSettings(
             RETURN_HR(E_INVALIDARG);
         }
 
-        // Exclusive mode and ASIO are in the configuration schema because they are the modes this
-        // will offer, but neither is built yet. Silently falling back to shared would be worse
-        // than refusing: the caller would believe it had taken the device.
+        // Neither exclusive mode nor ASIO is built yet. ASIO is not in the public API at all, and
+        // exclusive is, so both can still arrive here from a hand-edited configuration file.
+        // Silently falling back to shared would be worse than refusing: the caller would believe
+        // it had taken the device.
         if (!settings.AudioModeIsImplemented())
         {
             internal::SetConfigurationResponseObjectFail(

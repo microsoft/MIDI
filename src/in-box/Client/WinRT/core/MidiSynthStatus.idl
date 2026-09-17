@@ -23,7 +23,8 @@ namespace Windows.Devices.Midi2.Transports.Synth
     {
         // When false the synthesizer has no MIDI endpoint at all and holds no audio device. That
         // is the point of switching it off: an application which opens every MIDI port it can find
-        // cannot then keep the audio device away from an exclusive mode or ASIO application.
+        // cannot then keep the audio device away from an application that wants it in WASAPI
+        // exclusive mode, or through ASIO.
         Boolean IsEnabled{ get; };
 
         MidiSynthRenderMode RenderMode{ get; };

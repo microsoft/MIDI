@@ -69,9 +69,6 @@ namespace winrt::Windows::Devices::Midi2::Transports::Synth::implementation
             case synth::MidiSynthAudioOutputMode::WasapiExclusive:
                 text = MIDI_SYNTH_JSON_AUDIO_MODE_EXCLUSIVE;
                 break;
-            case synth::MidiSynthAudioOutputMode::Asio:
-                text = MIDI_SYNTH_JSON_AUDIO_MODE_ASIO;
-                break;
             default:
                 break;
             }

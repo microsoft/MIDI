@@ -38,7 +38,6 @@ namespace midi2console
             { "shared",           midi2synth::MidiSynthAudioOutputMode::WasapiShared },
             { "sharedLowLatency", midi2synth::MidiSynthAudioOutputMode::WasapiSharedLowLatency },
             { "exclusive",        midi2synth::MidiSynthAudioOutputMode::WasapiExclusive },
-            { "asio",             midi2synth::MidiSynthAudioOutputMode::Asio },
         };
 
         constexpr EnumToken<midi2synth::MidiSynthBankSelectMode> BankSelectModeTokens[]
@@ -133,7 +132,7 @@ namespace midi2console
             table.Render();
 
             // The off state is worth explaining, because it does more than mute: this is what
-            // frees the audio device for an exclusive mode or ASIO application.
+            // frees the audio device for WASAPI exclusive mode or ASIO.
             WriteInfoLine(ResourceString(enabled ? IDS_SYNTH_EXPLAIN_ON : IDS_SYNTH_EXPLAIN_OFF));
         }
 

@@ -43,12 +43,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Synth::implementation
         {
             m_audioOutputMode = synth::MidiSynthAudioOutputMode::WasapiExclusive;
         }
-        else if (audioMode == MIDI_SYNTH_JSON_AUDIO_MODE_ASIO)
-        {
-            m_audioOutputMode = synth::MidiSynthAudioOutputMode::Asio;
-        }
         else
         {
+            // Anything the projection has no value for, including a mode a newer service knows
+            // about and this one does not, reads back as shared.
             m_audioOutputMode = synth::MidiSynthAudioOutputMode::WasapiShared;
         }
 

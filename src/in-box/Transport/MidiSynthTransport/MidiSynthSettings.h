@@ -19,6 +19,10 @@ enum class MidiSynthAudioMode
 
     // Not implemented yet. Both take the device away from everything else on the machine, which
     // needs a user facing decision before it can be offered.
+    //
+    // Asio is deliberately absent from the public API: it also needs a device selection, since
+    // there is no default ASIO device, and the SDK and branding that come with it. The hook is
+    // kept here so the work can return without reshaping the settings.
     WasapiExclusive,
     Asio,
 };
@@ -37,7 +41,8 @@ struct MidiSynthSettings
     bool EffectsEnabled{ true };
 
     // A disabled synthesizer has no endpoint at all, so an application which opens every MIDI port
-    // it can find cannot hold the audio device away from an exclusive mode or ASIO application.
+    // it can find cannot hold the audio device away from an application that wants it in WASAPI
+    // exclusive mode, or through ASIO.
     bool Enabled{ true };
 
     bool AudioModeIsImplemented() const noexcept

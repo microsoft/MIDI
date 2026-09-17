@@ -771,7 +771,7 @@
     <value>General MIDI synthesizer</value>
   </data>
   <data name="GlobalSynthHelp.Text" xml:space="preserve">
-    <value>The built-in synthesizer plays MIDI through your default Windows audio device. Turning it off removes its MIDI ports and releases the audio device, which is what you want when another application needs exclusive or ASIO access.</value>
+    <value>The built-in synthesizer plays MIDI through your default Windows audio device. Turning it off removes its MIDI ports and releases the audio device, which is what you want when another application needs it in WASAPI exclusive mode, or through ASIO.</value>
   </data>
   <data name="SynthEnabledToggle.Header" xml:space="preserve">
     <value>Built-in General MIDI synthesizer</value>

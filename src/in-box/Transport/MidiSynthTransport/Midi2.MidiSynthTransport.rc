@@ -109,7 +109,7 @@ BEGIN
     IDS_ERROR_PARSING_JSON              "Error parsing JSON. Is it valid?"
     IDS_ERROR_UNRECOGNIZED_COMMAND      "Unrecognized command."
     IDS_ERROR_UNKNOWN_SYNTH_MODE        "Unrecognized synthesizer mode. Expected 'compatible' or 'modern'."
-    IDS_ERROR_UNKNOWN_AUDIO_MODE        "Unrecognized audio mode. Expected 'shared', 'sharedLowLatency', 'exclusive' or 'asio'."
+    IDS_ERROR_UNKNOWN_AUDIO_MODE        "Unrecognized audio mode. Expected 'shared', 'sharedLowLatency' or 'exclusive'."
     IDS_ERROR_AUDIO_MODE_NOT_AVAILABLE  "That audio mode is not available in this build. Shared and low latency shared modes are supported today."
     IDS_ERROR_UNKNOWN_BANK_SELECT_MODE  "Unrecognized bank select mode. Expected 'gs', 'xg', 'gm2' or 'automatic'."
 

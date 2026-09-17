@@ -22,7 +22,7 @@ public:
     // Creates the endpoint when the synthesizer is switched on and removes it when it is switched
     // off. Removing it is the point of the off switch: an application which opens every MIDI port
     // it can see cannot hold open an endpoint that does not exist, and so cannot keep the audio
-    // device away from an exclusive-mode or ASIO application.
+    // device away from an application that wants it in WASAPI exclusive mode, or through ASIO.
     HRESULT SyncEndpointToSettings();
 
     std::wstring EndpointDeviceInterfaceId() const

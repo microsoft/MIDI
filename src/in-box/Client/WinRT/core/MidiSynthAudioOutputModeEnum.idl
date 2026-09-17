@@ -23,7 +23,5 @@ namespace Windows.Devices.Midi2.Transports.Synth
 
         // Takes the device for the synthesizer alone.
         WasapiExclusive = 2,
-
-        Asio = 3,
     };
 }
