@@ -37,7 +37,10 @@ CMidi2KSAggregateMidiConfigurationManager::Initialize(
 
     RETURN_IF_FAILED(midiServiceConfigurationManagerInterface->QueryInterface(__uuidof(IMidiServiceConfigurationManager), (void**)&m_midiServiceConfigurationManagerInterface));
 
-    m_customizationProcessor.Initialize(m_customPropertiesCache);
+    if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
+    {
+        m_customizationProcessor.Initialize(m_customPropertiesCache);
+    }
 
     return S_OK;
 }
