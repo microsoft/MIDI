@@ -50,7 +50,11 @@ void UpdatedHandler(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformat
 {
     Console.WriteLine($"[updated]  {args.UpdatedDevice.Name}");
 
-    // The args tell you what changed, so you can rebuild only what you need.
+    // The args tell you what changed, so you can rebuild only what you need. At least one of
+    // these is always set, so there is no "something else changed" case to write code for.
+    //
+    // A device coming online produces a sequence of these rather than one. Treat each as
+    // "re-read what I care about", not as "this is the final state".
     if (args.IsNameUpdated)
     {
         Console.WriteLine("           name changed");
@@ -61,11 +65,41 @@ void UpdatedHandler(MidiEndpointDeviceWatcher sender, MidiEndpointDeviceInformat
         // This is the one which should make you rebuild your port list, because
         // the group layout the user sees comes from the function blocks.
         Console.WriteLine("           function blocks changed");
+
+        // Function block names arrive as separate messages from the block information, so a
+        // block can legitimately be reported here before its name has been received. Take the
+        // name on a later update rather than caching the blank.
+        foreach (var block in args.UpdatedDevice.GetDeclaredFunctionBlocks())
+        {
+            var name = string.IsNullOrEmpty(block.Name) ? "(name not received yet)" : block.Name;
+            Console.WriteLine($"             block {block.Number}: {name}");
+        }
     }
 
     if (args.IsEndpointInformationUpdated)
     {
         Console.WriteLine("           endpoint information changed");
+    }
+
+    if (args.IsEndpointDiscoveryStateUpdated)
+    {
+        // True once the service has finished gathering in-protocol information, or gave up
+        // waiting. It is a hint, not a barrier: more updates can still follow, and it stays
+        // false if discovery was abandoned because the device went away. Do not block on it.
+        Console.WriteLine($"           discovery complete: {args.UpdatedDevice.IsEndpointDiscoveryComplete}");
+    }
+
+    if (args.IsMidi1PortMappingUpdated)
+    {
+        // The MIDI 1.0 ports for this endpoint have been rebuilt. Do not enumerate them from
+        // here: the ports are separate device interfaces whose arrival is not ordered against
+        // this event. Use MidiLegacyPortDeviceWatcher, as in the watch-midi1-ports sample.
+        Console.WriteLine("           MIDI 1.0 port mapping changed");
+    }
+
+    if (args.IsDevicePresenceUpdated)
+    {
+        Console.WriteLine("           device presence changed");
     }
 }
 

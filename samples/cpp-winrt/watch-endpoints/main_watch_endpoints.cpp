@@ -96,16 +96,59 @@ int main()
             std::wcout << std::endl;
             std::wcout << "Updated: " << args.UpdatedDevice().EndpointDeviceId().c_str() << std::endl;
 
-            // Show how to use the various data update flags here
+            // A device coming online produces a whole sequence of these, not one. The service
+            // writes properties as the information arrives from the device, so treat each event
+            // as "re-read what I care about" rather than "this is the final state".
+            //
+            // At least one of these is always set. There is no "something else changed" case to
+            // handle: every property the watcher asks for belongs to one of these groups.
 
-            if (args.IsNameUpdated())                     std::wcout << L"- Name" << std::endl;
-            if (args.IsUserMetadataUpdated())             std::wcout << L"- User Metadata" << std::endl;
-            if (args.IsEndpointInformationUpdated())      std::wcout << L"- Endpoint Information" << std::endl;
-            if (args.IsStreamConfigurationUpdated())      std::wcout << L"- Stream Configuration" << std::endl;
-            if (args.AreFunctionBlocksUpdated())          std::wcout << L"- Function Blocks" << std::endl;
-            if (args.IsDeviceIdentityUpdated())           std::wcout << L"- Device Identity" << std::endl;
-            if (args.AreAdditionalCapabilitiesUpdated())  std::wcout << L"- Additional Capabilities" << std::endl;
+            if (args.IsNameUpdated())                          std::wcout << L"- Name" << std::endl;
+            if (args.IsUserMetadataUpdated())                  std::wcout << L"- User Metadata" << std::endl;
+            if (args.IsEndpointInformationUpdated())           std::wcout << L"- Endpoint Information" << std::endl;
+            if (args.IsStreamConfigurationUpdated())           std::wcout << L"- Stream Configuration" << std::endl;
+            if (args.AreFunctionBlocksUpdated())               std::wcout << L"- Function Blocks" << std::endl;
+            if (args.IsDeviceIdentityUpdated())                std::wcout << L"- Device Identity" << std::endl;
+            if (args.AreAdditionalCapabilitiesUpdated())       std::wcout << L"- Additional Capabilities" << std::endl;
+            if (args.AreUniqueIdsUpdated())                    std::wcout << L"- Unique Ids" << std::endl;
+            if (args.AreGroupTerminalBlocksUpdated())          std::wcout << L"- Group Terminal Blocks" << std::endl;
+            if (args.IsMutedStateUpdated())                    std::wcout << L"- Muted State" << std::endl;
+            if (args.IsEndpointDiscoveryStateUpdated())        std::wcout << L"- Endpoint Discovery State" << std::endl;
+            if (args.IsMidi1PortMappingUpdated())              std::wcout << L"- MIDI 1.0 Port Mapping" << std::endl;
+            if (args.IsDevicePresenceUpdated())                std::wcout << L"- Device Presence" << std::endl;
+            if (args.AreLatencyPropertiesUpdated())            std::wcout << L"- Latency Properties" << std::endl;
+            if (args.AreTransportSuppliedPropertiesUpdated())  std::wcout << L"- Transport-supplied Properties" << std::endl;
+            if (args.AreSystemDevicePropertiesUpdated())       std::wcout << L"- System Device Properties" << std::endl;
 
+            // Function block names arrive as separate messages from the block information, so a
+            // block can legitimately be reported here before its name has been received.
+            if (args.AreFunctionBlocksUpdated())
+            {
+                for (auto const& block : args.UpdatedDevice().GetDeclaredFunctionBlocks())
+                {
+                    std::wcout
+                        << L"    Block " << static_cast<int>(block.Number())
+                        << L": " << (block.Name().empty() ? L"(name not received yet)" : block.Name().c_str())
+                        << std::endl;
+                }
+            }
+
+            // True once the service has finished gathering in-protocol information, or given up
+            // waiting. It is a hint: more updates can still follow, and it stays false if
+            // discovery was abandoned because the device went away.
+            if (args.IsEndpointDiscoveryStateUpdated())
+            {
+                std::wcout
+                    << L"    Discovery complete: "
+                    << (args.UpdatedDevice().IsEndpointDiscoveryComplete() ? L"true" : L"false")
+                    << std::endl;
+            }
+
+            // Do NOT enumerate the MIDI 1.0 ports for this endpoint from here. The ports are
+            // separate device interfaces which the service creates, renames and removes as
+            // function block information arrives, and their arrival is not ordered against this
+            // event. Use MidiLegacyPortDeviceWatcher instead, and see the watch-midi1-ports
+            // sample.
         };
 
     // During initial enumeration, this event fires for each endpoint found. After initial enumeration, this will fire
