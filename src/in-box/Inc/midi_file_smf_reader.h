@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "MidiSequence.h"
+#include "midi_file_sequence.h"
 
 #include <sal.h>
 

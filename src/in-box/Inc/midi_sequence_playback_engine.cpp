@@ -6,10 +6,14 @@
 // ============================================================================
 
 #include "pch.h"
-#include "PlaybackEngine.h"
-#include "StringResources.h"
+#include "midi_sequence_playback_engine.h"
 
-namespace res = ::midiplayer::resources;
+#include <winrt/Windows.Devices.Midi2.Utilities.Messages.h>
+
+// Declared here rather than relying on a host project's headers, so this compiles the same way
+// inside the SDK and inside a tool.
+namespace midi2 = ::winrt::Windows::Devices::Midi2;
+namespace midi2msg = ::winrt::Windows::Devices::Midi2::Utilities::Messages;
 
 namespace midiplayer
 {
@@ -58,13 +62,20 @@ namespace midiplayer
     }
 
     _Use_decl_annotations_
-    OpenResult PlaybackEngine::Open(std::wstring const& endpointDeviceId) noexcept
+    OpenResult PlaybackEngine::Open(
+        midi2::MidiSession const& session,
+        std::wstring const& endpointDeviceId) noexcept
     {
         try
         {
             if (endpointDeviceId.empty())
             {
                 return OpenResult::NoEndpointChosen;
+            }
+
+            if (session == nullptr)
+            {
+                return OpenResult::SessionFailed;
             }
 
             std::lock_guard<std::recursive_mutex> const guard{ m_lock };
@@ -81,12 +92,9 @@ namespace midiplayer
                 return OpenResult::ServiceUnavailable;
             }
 
-            m_session = midi2::MidiSession::Create(res::GetString(L"AppDisplayName"));
-
-            if (m_session == nullptr)
-            {
-                return OpenResult::SessionFailed;
-            }
+            // The session belongs to the caller. Only the connection is ours to close.
+            m_session = session;
+            m_ownsConnection = true;
 
             m_connection = m_session.CreateEndpointConnection(winrt::hstring{ endpointDeviceId });
 
@@ -116,6 +124,45 @@ namespace midiplayer
         return OpenResult::ConnectionFailed;
     }
 
+    _Use_decl_annotations_
+    void PlaybackEngine::AttachConnection(midi2::MidiEndpointConnection const& connection) noexcept
+    {
+        try
+        {
+            std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+
+            Close();
+
+            if (connection == nullptr)
+            {
+                return;
+            }
+
+            m_connection = connection;
+            m_session = nullptr;
+            m_ownsConnection = false;
+
+            m_endpointDeviceId = connection.ConnectedEndpointDeviceId().c_str();
+
+            StartWorker();
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to attach the connection.")
+    }
+
+    bool PlaybackEngine::OwnsConnection() const noexcept
+    {
+        std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+
+        return m_ownsConnection;
+    }
+
+    midi2::MidiEndpointConnection PlaybackEngine::Connection() const noexcept
+    {
+        std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+
+        return m_connection;
+    }
+
     void PlaybackEngine::Close() noexcept
     {
         try
@@ -129,18 +176,15 @@ namespace midiplayer
 
             m_state = m_sequence == nullptr ? PlaybackState::Empty : PlaybackState::Stopped;
 
-            if (m_connection != nullptr && m_session != nullptr)
+            // A borrowed connection is left exactly as it was found.
+            if (m_ownsConnection && m_connection != nullptr && m_session != nullptr)
             {
                 m_session.DisconnectEndpointConnection(m_connection.ConnectionId());
             }
 
             m_connection = nullptr;
-
-            if (m_session != nullptr)
-            {
-                m_session.Close();
-                m_session = nullptr;
-            }
+            m_session = nullptr;
+            m_ownsConnection = false;
 
             m_endpointDeviceId.clear();
         }
@@ -602,10 +646,15 @@ namespace midiplayer
                 if (m_nextEventIndex >= m_prepared.size() &&
                     CurrentMicrosecondsUnderLock(now) >= m_sequence->DurationMicroseconds)
                 {
+                    // A file is not obliged to end its own notes, and a truncated one often does
+                    // not, so reaching the end has to silence the instrument like a stop does.
+                    // Immediate only: everything is already in the past, and a swept panic would
+                    // land on top of the next item in the queue.
+                    SendPanicUnderLock(false);
+
                     m_state = PlaybackState::Stopped;
                     m_pausedMicroseconds = 0;
                     m_nextEventIndex = 0;
-                    m_soundingNotes.fill(0);
 
                     completion = m_completionHandler;
                 }

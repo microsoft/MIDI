@@ -1,0 +1,35 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Sequencing
+{
+    // The values from 1 through 9 are the meta event types a file uses for text. ChordSymbol is
+    // deliberately outside that range: it does not come from a meta event at all, but from a
+    // manufacturer system exclusive message that lead sheet and karaoke files use to carry chord
+    // names, because Standard MIDI Files never defined an event for them.
+    [contract(MidiSequencingUtilityApiContract,1)]
+    enum MidiSequenceTextKind
+    {
+        Text = 1,
+        Copyright = 2,
+        TrackName = 3,
+        InstrumentName = 4,
+        Lyric = 5,
+        Marker = 6,
+        CuePoint = 7,
+        ProgramName = 8,
+        DeviceName = 9,
+
+        ChordSymbol = 20
+    };
+}

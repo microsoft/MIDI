@@ -8,7 +8,7 @@
 // Deliberately free of pch.h, WinRT and XAML so that this file compiles unchanged into the unit
 // test project. See MidiSequence.h.
 
-#include "MidiSequence.h"
+#include "midi_file_sequence.h"
 
 #include <algorithm>
 #include <map>
@@ -284,36 +284,318 @@ namespace midifile
             return;
         }
 
-        if (Notes.empty() || Tracks.empty())
+        FillSoundingNoteCounts(tick, counts.data(), static_cast<uint32_t>(counts.size()));
+    }
+
+    _Use_decl_annotations_
+    uint32_t MidiSequence::FillSoundingNoteCounts(uint32_t tick, uint8_t* counts, uint32_t capacity) const noexcept
+    {
+        if (counts == nullptr || capacity == 0)
         {
-            return;
+            return 0;
         }
 
-        // Notes are ordered by start, so one which began earlier can still be sounding here.
-        auto const searchTick = tick > LongestNoteTicks ? tick - LongestNoteTicks : 0u;
+        auto const written = static_cast<uint32_t>(
+            Tracks.size() < capacity ? Tracks.size() : static_cast<size_t>(capacity));
 
-        auto const first = std::lower_bound(
+        std::fill(counts, counts + written, uint8_t{ 0 });
+
+        if (Notes.empty() || Tracks.empty())
+        {
+            return written;
+        }
+
+        for (auto index = FirstNoteIndexForTickRange(tick); index < Notes.size(); ++index)
+        {
+            auto const& note = Notes[index];
+
+            if (note.StartTick > tick)
+            {
+                break;
+            }
+
+            // A note is over at the instant it ends, not after it.
+            if (note.EndTick <= tick || note.TrackIndex >= written)
+            {
+                continue;
+            }
+
+            if (counts[note.TrackIndex] < 255)
+            {
+                ++counts[note.TrackIndex];
+            }
+        }
+
+        return written;
+    }
+
+    _Use_decl_annotations_
+    size_t MidiSequence::FirstNoteIndexForTickRange(uint32_t startTick) const noexcept
+    {
+        auto const searchTick = startTick > LongestNoteTicks ? startTick - LongestNoteTicks : 0u;
+
+        auto const found = std::lower_bound(
             Notes.begin(),
             Notes.end(),
             searchTick,
             [](Note const& note, uint32_t value) noexcept { return note.StartTick < value; });
 
-        for (auto entry = first; entry != Notes.end(); ++entry)
+        return static_cast<size_t>(std::distance(Notes.begin(), found));
+    }
+
+    _Use_decl_annotations_
+    uint32_t MidiSequence::CountNotesInTickRange(uint32_t startTick, uint32_t endTick) const noexcept
+    {
+        uint32_t count{ 0 };
+
+        ForEachNoteInTickRange(startTick, endTick, UINT32_MAX,
+            [&count](Note const&) noexcept { ++count; });
+
+        return count;
+    }
+
+    LyricLine const* MidiSequence::LyricLineAtTick(uint32_t tick) const noexcept
+    {
+        if (LyricLines.empty())
         {
-            if (entry->StartTick > tick)
+            return nullptr;
+        }
+
+        auto const found = std::upper_bound(
+            LyricLines.begin(),
+            LyricLines.end(),
+            tick,
+            [](uint32_t value, LyricLine const& line) noexcept { return value < line.StartTick; });
+
+        if (found == LyricLines.begin())
+        {
+            return nullptr;
+        }
+
+        return &*std::prev(found);
+    }
+
+    void MidiSequence::BuildLyricLines() noexcept
+    {
+        LyricLines.clear();
+
+        try
+        {
+            // Files written as karaoke put the words in plain text events instead of lyric events,
+            // and mark themselves with an "@K" tag. Without that tag a text event is far more
+            // likely to be a copyright or a comment than something anyone wants to sing.
+            bool hasLyricEvents = false;
+
+            for (auto const& event : TextEvents)
             {
-                break;
+                if (event.Kind == TextKind::Lyric)
+                {
+                    hasLyricEvents = true;
+                    break;
+                }
             }
 
-            if (entry->EndTick <= tick || entry->TrackIndex >= counts.size())
+            if (!hasLyricEvents && !IsKaraoke)
             {
-                continue;
+                return;
             }
 
-            if (counts[entry->TrackIndex] < 255)
+            auto const wanted = hasLyricEvents ? TextKind::Lyric : TextKind::Text;
+
+            // Files which mark their own line breaks are believed. The rest carry nothing but bare
+            // syllables, and for those the only signal left is the rest between them: a singer's
+            // line ends where the gap stops being part of the phrase. Word spacing cannot be
+            // recovered the same way, because within a word and between words are the same length.
+            bool marksItsOwnBreaks = false;
+
+            for (auto const& event : TextEvents)
             {
-                ++counts[entry->TrackIndex];
+                if (event.Kind != wanted || event.Text.empty())
+                {
+                    continue;
+                }
+
+                if (event.Text[0] == '/' || event.Text[0] == '\\' ||
+                    event.Text.find_first_of("\r\n") != std::string::npos)
+                {
+                    marksItsOwnBreaks = true;
+                    break;
+                }
             }
+
+            auto const gapForNewLine = static_cast<uint32_t>(NominalTicksPerQuarterNote(Division)) * 2;
+
+            LyricLine current{};
+            bool started = false;
+            uint32_t previousTick = 0;
+
+            auto const flush = [this, &current, &started]() noexcept
+                {
+                    if (started && !current.Text.empty())
+                    {
+                        LyricLines.push_back(current);
+                    }
+
+                    current = LyricLine{};
+                    started = false;
+                };
+
+            for (auto const& event : TextEvents)
+            {
+                if (event.Kind != wanted || event.Text.empty())
+                {
+                    continue;
+                }
+
+                auto syllable = event.Text;
+
+                // The karaoke tags carry the title and language, not words to sing.
+                if (wanted == TextKind::Text && syllable[0] == '@')
+                {
+                    continue;
+                }
+
+                bool breakBefore = false;
+
+                if (marksItsOwnBreaks)
+                {
+                    // A leading slash starts a line and a backslash starts a page.
+                    if (syllable[0] == '/' || syllable[0] == '\\')
+                    {
+                        breakBefore = true;
+                        syllable.erase(0, 1);
+                    }
+                    else if (syllable.find_first_of("\r\n") == 0)
+                    {
+                        breakBefore = true;
+                        syllable.erase(0, syllable.find_first_not_of("\r\n"));
+                    }
+                }
+                else if (started && event.Tick - previousTick >= gapForNewLine)
+                {
+                    breakBefore = true;
+                }
+
+                previousTick = event.Tick;
+
+                // The break has to be taken before the empty check, because a file which marks its
+                // line ends with a bare carriage return leaves nothing behind once it is removed.
+                if (breakBefore)
+                {
+                    flush();
+                }
+
+                if (syllable.empty())
+                {
+                    continue;
+                }
+
+                if (!started)
+                {
+                    current.StartTick = event.Tick;
+                    started = true;
+                }
+
+                for (auto const character : syllable)
+                {
+                    // Anything left is a break inside the syllable, which reads best as a space.
+                    current.Text += (character == '\r' || character == '\n') ? ' ' : character;
+                }
+
+                if (current.Text.size() > MaximumLyricLineLength)
+                {
+                    flush();
+                }
+            }
+
+            flush();
+
+            for (size_t index = 0; index + 1 < LyricLines.size(); ++index)
+            {
+                LyricLines[index].EndTick = LyricLines[index + 1].StartTick;
+            }
+
+            if (!LyricLines.empty())
+            {
+                LyricLines.back().EndTick = LastTick;
+            }
+        }
+        catch (...)
+        {
+            LyricLines.clear();
+        }
+    }
+
+    _Use_decl_annotations_
+    void MidiSequence::CollectGridLines(
+        uint32_t startTick,
+        uint32_t endTick,
+        bool includeBeats,
+        size_t maximum,
+        std::vector<GridLine>& lines) const noexcept
+    {
+        try
+        {
+            lines.clear();
+        }
+        catch (...)
+        {
+            return;
+        }
+
+        if (endTick < startTick || maximum == 0)
+        {
+            return;
+        }
+
+        auto tick = startTick;
+
+        while (tick <= endTick && lines.size() < maximum)
+        {
+            auto const& signature = TimeSignatureAtTick(tick);
+
+            if (signature.TicksPerBar == 0 || signature.Numerator == 0)
+            {
+                return;
+            }
+
+            auto const beatTicks = signature.TicksPerBar / signature.Numerator;
+            auto const step = (includeBeats && beatTicks > 0) ? beatTicks : signature.TicksPerBar;
+
+            if (step == 0)
+            {
+                return;
+            }
+
+            // Align to this signature's own origin, or every line after a meter change lands in
+            // the wrong place.
+            auto const into = tick > signature.Tick ? tick - signature.Tick : 0u;
+            auto const aligned = signature.Tick + ((into + step - 1) / step) * step;
+
+            if (aligned > endTick)
+            {
+                return;
+            }
+
+            try
+            {
+                lines.push_back(GridLine{
+                    aligned,
+                    ((aligned - signature.Tick) % signature.TicksPerBar) == 0 });
+            }
+            catch (...)
+            {
+                return;
+            }
+
+            auto const next = aligned + step;
+
+            if (next <= tick)
+            {
+                return;
+            }
+
+            tick = next;
         }
     }
 
@@ -606,6 +888,9 @@ namespace midifile
                 }
             }
         }
+
+        // Last, because the closing line is given the end of the sequence to run to.
+        BuildLyricLines();
     }
 
     void MidiSequence::Clear() noexcept
@@ -623,6 +908,7 @@ namespace midifile
         TextEvents.clear();
         ProgramChanges.clear();
         ChordSymbolIndexes.clear();
+        LyricLines.clear();
 
         LastTick = 0;
         DurationMicroseconds = 0;
@@ -634,5 +920,7 @@ namespace midifile
 
         Title.clear();
         Copyright.clear();
+
+        IsKaraoke = false;
     }
 }

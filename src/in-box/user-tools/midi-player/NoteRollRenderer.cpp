@@ -62,9 +62,15 @@ namespace midiplayer
             m_compositor = hostVisual.Compositor();
 
             m_root = m_compositor.CreateContainerVisual();
+            m_gridLayer = m_compositor.CreateContainerVisual();
             m_noteLayer = m_compositor.CreateContainerVisual();
 
+            // The grid goes in first so the notes always draw over it.
+            m_root.Children().InsertAtTop(m_gridLayer);
             m_root.Children().InsertAtTop(m_noteLayer);
+
+            m_barBrush = m_compositor.CreateColorBrush(ColorFromArgb(0x38FFFFFF));
+            m_beatBrush = m_compositor.CreateColorBrush(ColorFromArgb(0x18FFFFFF));
 
             m_playhead = m_compositor.CreateSpriteVisual();
             m_playhead.Brush(m_compositor.CreateColorBrush(ColorFromArgb(0xFFFF7043)));
@@ -81,10 +87,14 @@ namespace midiplayer
         try
         {
             m_pool.clear();
+            m_gridPool.clear();
             m_brushes.clear();
 
+            m_barBrush = nullptr;
+            m_beatBrush = nullptr;
             m_playhead = nullptr;
             m_noteLayer = nullptr;
+            m_gridLayer = nullptr;
             m_root = nullptr;
             m_compositor = nullptr;
 
@@ -127,6 +137,7 @@ namespace midiplayer
         }
 
         HideFrom(0);
+        HideGridFrom(0);
     }
 
     _Use_decl_annotations_
@@ -155,6 +166,7 @@ namespace midiplayer
             if (m_sequence == nullptr || m_sequence->Notes.empty())
             {
                 HideFrom(0);
+                HideGridFrom(0);
                 return;
             }
 
@@ -169,6 +181,8 @@ namespace midiplayer
 
             auto const endTick = m_sequence->TickAtMicroseconds(
                 static_cast<uint64_t>((windowEnd < 0.0 ? 0.0 : windowEnd) * MicrosecondsPerSecond));
+
+            RenderGrid(startTick, endTick, windowStart, spanSeconds, width, height);
 
             // Back the search up far enough to catch a long note which started before the window.
             auto const searchTick = startTick > m_sequence->LongestNoteTicks
@@ -282,6 +296,108 @@ namespace midiplayer
             HideFrom(used);
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to draw the note display.")
+    }
+
+    _Use_decl_annotations_
+    void NoteRollRenderer::RenderGrid(
+        uint32_t startTick,
+        uint32_t endTick,
+        double windowStart,
+        double spanSeconds,
+        double width,
+        double height) noexcept
+    {
+        size_t used = 0;
+
+        try
+        {
+            if (m_sequence == nullptr || m_gridLayer == nullptr || endTick <= startTick)
+            {
+                HideGridFrom(0);
+                return;
+            }
+
+            // Decide bar-only or bar-and-beat once for the whole frame, from the signature at the
+            // left edge. Switching partway across the window would look like a rendering fault.
+            auto const& leading = m_sequence->TimeSignatureAtTick(startTick);
+
+            if (leading.TicksPerBar == 0 || leading.Numerator == 0)
+            {
+                HideGridFrom(0);
+                return;
+            }
+
+            auto const windowTicks = static_cast<double>(endTick - startTick);
+            auto const leadingBeatTicks = static_cast<double>(leading.TicksPerBar) / leading.Numerator;
+            auto const beatSpacing = (leadingBeatTicks / windowTicks) * width;
+
+            m_sequence->CollectGridLines(
+                startTick,
+                endTick,
+                beatSpacing >= MinimumBeatSpacing,
+                MaximumGridLines,
+                m_gridLines);
+
+            for (auto const& line : m_gridLines)
+            {
+                auto const seconds = static_cast<double>(m_sequence->MicrosecondsAtTick(line.Tick))
+                    / MicrosecondsPerSecond;
+
+                auto const x = ((seconds - windowStart) / spanSeconds) * width;
+
+                if (x < 0.0 || x > width)
+                {
+                    continue;
+                }
+
+                auto visual = TakeGridVisual(used);
+
+                if (visual == nullptr)
+                {
+                    break;
+                }
+
+                visual.Offset({ static_cast<float>(x), 0.0f, 0.0f });
+                visual.Size({ line.IsBar ? 1.5f : 1.0f, static_cast<float>(height) });
+                visual.Brush(line.IsBar ? m_barBrush : m_beatBrush);
+                visual.IsVisible(true);
+
+                ++used;
+            }
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to draw the bar lines.")
+
+        HideGridFrom(used);
+    }
+
+    _Use_decl_annotations_
+    composition::SpriteVisual NoteRollRenderer::TakeGridVisual(size_t index) noexcept
+    {
+        if (index < m_gridPool.size())
+        {
+            return m_gridPool[index];
+        }
+
+        if (m_compositor == nullptr || m_gridLayer == nullptr)
+        {
+            return nullptr;
+        }
+
+        auto visual = m_compositor.CreateSpriteVisual();
+
+        m_gridLayer.Children().InsertAtTop(visual);
+        m_gridPool.push_back(visual);
+
+        return visual;
+    }
+
+    _Use_decl_annotations_
+    void NoteRollRenderer::HideGridFrom(size_t index) noexcept
+    {
+        for (auto entry = index; entry < m_gridPool.size(); ++entry)
+        {
+            m_gridPool[entry].IsVisible(false);
+        }
     }
 
     _Use_decl_annotations_

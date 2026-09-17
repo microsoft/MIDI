@@ -18,6 +18,7 @@ namespace midiplayer
         constexpr wchar_t ValueGroupIndex[] = L"GroupIndex";
         constexpr wchar_t ValueRepeatQueue[] = L"RepeatQueue";
         constexpr wchar_t ValueShowQueue[] = L"ShowQueue";
+        constexpr wchar_t ValueKeyboardView[] = L"KeyboardView";
     }
 
     AppSettings::AppSettings() noexcept :
@@ -42,6 +43,7 @@ namespace midiplayer
 
         m_repeatQueue = ReadDword(ValueRepeatQueue, 0) != 0;
         m_showQueue = ReadDword(ValueShowQueue, 1) != 0;
+        m_keyboardView = ReadDword(ValueKeyboardView, 0) != 0;
     }
 
     _Use_decl_annotations_
@@ -87,5 +89,16 @@ namespace midiplayer
 
         m_showQueue = value;
         WriteDword(ValueShowQueue, value ? 1 : 0);
+    }
+
+    void AppSettings::KeyboardView(bool value) noexcept
+    {
+        if (m_keyboardView == value)
+        {
+            return;
+        }
+
+        m_keyboardView = value;
+        WriteDword(ValueKeyboardView, value ? 1 : 0);
     }
 }

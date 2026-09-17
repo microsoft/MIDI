@@ -11,7 +11,8 @@
 
 #include "AppSettings.h"
 #include "NoteRollRenderer.h"
-#include "PlaybackEngine.h"
+#include "KeyboardRollRenderer.h"
+#include "midi_sequence_playback_engine.h"
 #include "PlayQueue.h"
 #include "QueueItem.h"
 #include "TrackItem.h"
@@ -47,6 +48,9 @@ namespace winrt::midiplayer::implementation
         void OnNextClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnRepeatToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnQueueToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnKeyboardViewToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        void ApplyViewMode() noexcept;
 
         void OnPositionSliderPointerPressed(foundation::IInspectable const& sender, input::PointerRoutedEventArgs const& args);
         void OnPositionSliderPointerReleased(foundation::IInspectable const& sender, input::PointerRoutedEventArgs const& args);
@@ -101,6 +105,8 @@ namespace winrt::midiplayer::implementation
         // Both driven from the position timer, so both are on the frame path.
         void UpdateTrackActivity(uint32_t tick) noexcept;
         void UpdateChordDisplay(uint32_t tick) noexcept;
+        void UpdateTempoDisplay(double beatsPerMinute) noexcept;
+        void UpdateLyricDisplay(uint32_t tick) noexcept;
         void UpdateNowPlayingText() noexcept;
         void UpdateTransportState() noexcept;
         void UpdatePositionDisplay() noexcept;
@@ -112,6 +118,9 @@ namespace winrt::midiplayer::implementation
         void ShowStatus(winrt::hstring const& message, controls::InfoBarSeverity severity) noexcept;
         void ClearStatus() noexcept;
 
+        // Blocking. Background thread only.
+        bool EnsureSession() noexcept;
+
         void ApplyStartupOptions() noexcept;
 
         HWND WindowHandle() noexcept;
@@ -121,6 +130,11 @@ namespace winrt::midiplayer::implementation
 
         ::midiplayer::PlaybackEngine m_engine{};
         ::midiplayer::PlayQueue m_queue{};
+
+        // The engine borrows a session rather than making one of its own, so the app owns it and
+        // keeps it for the life of the window. Creating it talks to the service, so it is only
+        // ever touched from a background thread.
+        winrt::Windows::Devices::Midi2::MidiSession m_session{ nullptr };
 
         // Only the file being played is held as a full sequence; the queue keeps summaries.
         std::shared_ptr<midifile::MidiSequence const> m_currentSequence{};
@@ -132,6 +146,7 @@ namespace winrt::midiplayer::implementation
         collections::IObservableVector<appshared::NamedChoice> m_groups{ nullptr };
 
         ::midiplayer::NoteRollRenderer m_noteRoll{};
+        ::midiplayer::KeyboardRollRenderer m_keyboardRoll{};
 
         // parallel to m_endpoints, so a picked row can be turned back into its device
         std::vector<midi2enum::MidiEndpointDeviceInformation> m_endpointDevices{};
@@ -161,6 +176,7 @@ namespace winrt::midiplayer::implementation
         bool m_suppressPositionHandlers{ false };
 
         bool m_scrubbing{ false };
+        bool m_keyboardView{ false };
         bool m_busy{ false };
 
         // The clock text only needs rewriting when the second changes, not on every frame.
@@ -169,6 +185,8 @@ namespace winrt::midiplayer::implementation
         // Reused every frame so the activity update does not allocate.
         std::vector<uint8_t> m_soundingCounts{};
         midifile::TextEvent const* m_lastChord{ nullptr };
+        int32_t m_lastDisplayedTempo{ -1 };
+        midifile::LyricLine const* m_lastLyric{ nullptr };
 
         // The saved endpoint was not there when the app started. Playback waits for a choice
         // rather than picking something else and sending notes to the wrong instrument.

@@ -80,7 +80,6 @@ namespace midiplayer
             entry.NoteCount = static_cast<uint32_t>(sequence.Notes.size());
             entry.TrackCount = static_cast<uint32_t>(sequence.Tracks.size());
             entry.EventCount = static_cast<uint32_t>(sequence.Events.size());
-            entry.BeatsPerMinute = sequence.BeatsPerMinuteAtTick(0);
             entry.ChannelMask = sequence.UsedChannelMask;
             entry.Title = WidenUtf8(sequence.Title);
         }

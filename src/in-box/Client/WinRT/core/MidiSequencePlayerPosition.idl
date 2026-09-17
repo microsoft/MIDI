@@ -1,0 +1,34 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+import "MidiSequencePlayerStateEnum.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Sequencing
+{
+    // Everything a transport display needs, read in one call. A struct rather than an event,
+    // because a display refreshes tens of times a second and an event per frame would cost more
+    // than the drawing does. Poll this instead.
+    [contract(MidiSequencingUtilityApiContract,1)]
+    struct MidiSequencePlayerPosition
+    {
+        MidiSequencePlayerState State;
+
+        UInt64 Microseconds;
+        UInt64 DurationMicroseconds;
+        UInt32 Tick;
+
+        UInt32 Bar;
+        UInt32 Beat;
+
+        Double BeatsPerMinute;          // at this position, not for the file
+    };
+}

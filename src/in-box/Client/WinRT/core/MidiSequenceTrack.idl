@@ -1,0 +1,37 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Sequencing
+{
+    [contract(MidiSequencingUtilityApiContract,1)]
+    [interface_name("Windows.Devices.Midi2.Utilities.Sequencing.IMidiSequenceTrack", UUID_IMidiSequenceTrack)]
+    runtimeclass MidiSequenceTrack
+    {
+        UInt16 TrackIndex{ get; };
+
+        String Name{ get; };
+        String InstrumentName{ get; };
+
+        // The port the track was written for, when the file names one. A file meant for several
+        // instruments at once carries this on each track, so it is the starting point for
+        // deciding where a track should be sent.
+        String SuggestedDeviceName{ get; };
+
+        // Bit zero is channel one. A track is not obliged to use only one.
+        UInt16 UsedChannelMask{ get; };
+
+        UInt32 NoteCount{ get; };
+        UInt32 EventCount{ get; };
+        UInt32 LastTick{ get; };
+    };
+}

@@ -61,7 +61,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(ProjectDir);$(ProjectDir)..\..\..\user-tools\midi-player;$(WindowsSdkDir)Testing\Development\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(ProjectDir);$(ProjectDir)..\..\..\Inc;$(ProjectDir)..\..\..\user-tools\midi-player;$(WindowsSdkDir)Testing\Development\inc</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /utf-8</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -87,15 +87,15 @@
     <ClInclude Include="SmfReaderTests.h" />
     <ClInclude Include="SmfTestFileBuilder.h" />
     <!-- shared by source with midiplayer, so the reader is tested exactly as it ships -->
-    <ClInclude Include="..\..\..\user-tools\midi-player\MidiSequence.h" />
-    <ClInclude Include="..\..\..\user-tools\midi-player\SmfReader.h" />
+    <ClInclude Include="..\..\..\Inc\midi_file_sequence.h" />
+    <ClInclude Include="..\..\..\Inc\midi_file_smf_reader.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Module.cpp" />
     <ClCompile Include="SmfReaderTests.cpp" />
     <ClCompile Include="SmfTestFileBuilder.cpp" />
-    <ClCompile Include="..\..\..\user-tools\midi-player\MidiSequence.cpp" />
-    <ClCompile Include="..\..\..\user-tools\midi-player\SmfReader.cpp" />
+    <ClCompile Include="..\..\..\Inc\midi_file_sequence.cpp" />
+    <ClCompile Include="..\..\..\Inc\midi_file_smf_reader.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

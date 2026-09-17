@@ -34,6 +34,9 @@ namespace midifile
     inline constexpr uint32_t MinimumMicrosecondsPerQuarterNote = 1000;     // 60000 BPM, absurd but finite
     inline constexpr uint32_t MaximumMicrosecondsPerQuarterNote = 0xFFFFFF; // the three byte field's limit
 
+    // Some files never mark a line break at all, so a line is cut once it stops being readable.
+    inline constexpr size_t MaximumLyricLineLength = 96;
+
     enum class SequenceFormat : int32_t
     {
         SingleTrack = 0,
@@ -126,6 +129,15 @@ namespace midifile
         std::string Text{};                     // UTF-8
     };
 
+    // A file stores lyrics one syllable at a time, which is unreadable on its own. These are the
+    // syllables assembled back into the lines the writer intended.
+    struct LyricLine
+    {
+        uint32_t StartTick{ 0 };
+        uint32_t EndTick{ 0 };                  // where the next line begins
+        std::string Text{};                     // UTF-8
+    };
+
     // A note with both ends already found. Building this while reading is what makes a piano roll
     // possible: a file stores the two halves separately, and pairing them at paint time would mean
     // searching forward through every event on every frame.
@@ -181,6 +193,13 @@ namespace midifile
         uint32_t TicksIntoBeat{ 0 };
     };
 
+    // One vertical line on the note display.
+    struct GridLine
+    {
+        uint32_t Tick{ 0 };
+        bool IsBar{ false };                    // false means a beat inside a bar
+    };
+
     class MidiSequence
     {
     public:
@@ -206,6 +225,9 @@ namespace midifile
         // share that vector, so a chord lookup would otherwise have to scan past all of them.
         std::vector<uint32_t> ChordSymbolIndexes{};
 
+        // Lyric syllables assembled into readable lines, empty for a file which carries none.
+        std::vector<LyricLine> LyricLines{};
+
         uint32_t LastTick{ 0 };
         uint64_t DurationMicroseconds{ 0 };
         uint16_t UsedChannelMask{ 0 };
@@ -222,6 +244,10 @@ namespace midifile
         std::string Title{};                    // UTF-8, best available name for the sequence
         std::string Copyright{};
 
+        // A Soft Karaoke file, which announces itself with an "@K" text event and then puts its
+        // words in plain text events rather than lyric events.
+        bool IsKaraoke{ false };
+
         bool IsEmpty() const noexcept { return Events.empty(); }
 
         std::span<uint8_t const> BytesOf(_In_ SequenceEvent const& event) const noexcept;
@@ -233,6 +259,15 @@ namespace midifile
         BarPosition BarPositionAtTick(uint32_t tick) const noexcept;
         TimeSignatureChange const& TimeSignatureAtTick(uint32_t tick) const noexcept;
 
+        // Bar and beat boundaries between two ticks. Kept here rather than in the renderer so the
+        // arithmetic, including what a meter change partway through does, can be tested directly.
+        void CollectGridLines(
+            uint32_t startTick,
+            uint32_t endTick,
+            bool includeBeats,
+            size_t maximum,
+            _Inout_ std::vector<GridLine>& lines) const noexcept;
+
         // Index of the first event at or after this tick, for starting playback part way in.
         size_t FirstEventIndexAtTick(uint32_t tick) const noexcept;
 
@@ -240,14 +275,76 @@ namespace midifile
         // one has not been reached. Points into TextEvents and lives as long as this sequence.
         TextEvent const* ChordSymbolAtTick(uint32_t tick) const noexcept;
 
+        // The lyric line being sung at this tick, or null before the first one. Points into
+        // LyricLines and lives as long as this sequence.
+        LyricLine const* LyricLineAtTick(uint32_t tick) const noexcept;
+
         // How many notes each track has sounding at this instant. Resized to the track count, so
         // a caller reusing one vector across frames does not allocate.
         void CollectSoundingNoteCounts(uint32_t tick, _Inout_ std::vector<uint8_t>& counts) const noexcept;
+
+        // The same thing written into storage the caller already owns, which is what lets it be
+        // projected without a copy. Returns how many tracks were written.
+        uint32_t FillSoundingNoteCounts(
+            uint32_t tick,
+            _Out_writes_to_(capacity, return) uint8_t* counts,
+            uint32_t capacity) const noexcept;
+
+        // Index of the first note that could overlap a window. Notes are ordered by where they
+        // start, so a note which began earlier can still be sounding, and the search has to reach
+        // back by the longest note in the sequence to be sure of finding it.
+        size_t FirstNoteIndexForTickRange(uint32_t startTick) const noexcept;
+
+        uint32_t CountNotesInTickRange(uint32_t startTick, uint32_t endTick) const noexcept;
+
+        // Every note overlapping a window, in start order, stopping at maximum. A template so a
+        // caller can write straight into whatever storage it has without a list in between.
+        template<typename TCallback>
+        uint32_t ForEachNoteInTickRange(
+            uint32_t startTick,
+            uint32_t endTick,
+            uint32_t maximum,
+            TCallback&& callback) const noexcept
+        {
+            if (endTick < startTick || maximum == 0)
+            {
+                return 0;
+            }
+
+            uint32_t visited{ 0 };
+
+            for (auto index = FirstNoteIndexForTickRange(startTick); index < Notes.size(); ++index)
+            {
+                auto const& note = Notes[index];
+
+                if (note.StartTick > endTick)
+                {
+                    break;
+                }
+
+                if (note.EndTick < startTick)
+                {
+                    continue;
+                }
+
+                callback(note);
+
+                if (++visited >= maximum)
+                {
+                    break;
+                }
+            }
+
+            return visited;
+        }
 
         // Fills in the derived maps, totals and note pairing once the raw parts are populated.
         // A reader calls this last; nothing else should need it.
         void Finalize() noexcept;
 
         void Clear() noexcept;
+
+    private:
+        void BuildLyricLines() noexcept;
     };
 }

@@ -90,7 +90,13 @@ CmdletsToExport = @(
 
     # Network MIDI 2.0
     'Get-MidiNetworkAdvertisedHost', 'Get-MidiNetworkConfiguredHost', 'Get-MidiNetworkConfiguredClient',
-    'Connect-MidiNetworkHost', 'Disconnect-MidiNetworkHost'
+    'Connect-MidiNetworkHost', 'Disconnect-MidiNetworkHost',
+
+    # built-in General MIDI synthesizer
+    'Get-MidiSynth', 'Get-MidiSynthEndpointDeviceId', 'Set-MidiSynth',
+
+    # Standard MIDI File playback
+    'Start-MidiFilePlayback', 'Stop-MidiFilePlayback'
 )
 
 # Variables to export from this module

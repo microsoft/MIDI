@@ -83,8 +83,19 @@
     <value>Nothing to play</value>
   </data>
   <data name="NowPlayingDetailFormat" xml:space="preserve">
-    <value>{0} tracks · {1} notes · {2} BPM</value>
-    <comment>{0} number of tracks, {1} number of notes, {2} tempo in beats per minute</comment>
+    <value>{0} tracks · {1} notes</value>
+    <comment>{0} number of tracks, {1} number of notes. The tempo is shown separately because it is a live value.</comment>
+  </data>
+  <data name="TempoCaption.Text" xml:space="preserve">
+    <value>TEMPO</value>
+    <comment>Small caption above the tempo at the current playback position</comment>
+  </data>
+  <data name="LiveTempoFormat" xml:space="preserve">
+    <value>{0} BPM</value>
+    <comment>{0} quarter notes per minute at the current playback position</comment>
+  </data>
+  <data name="TempoText.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Current tempo</value>
   </data>
   <data name="ChordCaption.Text" xml:space="preserve">
     <value>CHORD</value>
@@ -137,6 +148,12 @@
   <data name="QueueToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Show or hide the list of queued files</value>
   </data>
+  <data name="KeyboardViewToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Keyboard view</value>
+  </data>
+  <data name="KeyboardViewToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Switch between the track roll and notes falling towards a keyboard</value>
+  </data>
 
   <!-- =================================== Queue =================================== -->
   <data name="QueueHeaderFormat" xml:space="preserve">
@@ -150,8 +167,8 @@
     <value>Clear</value>
   </data>
   <data name="QueueItemDetailFormat" xml:space="preserve">
-    <value>{0} tracks · {1} notes · {2} BPM</value>
-    <comment>{0} number of tracks, {1} number of notes, {2} tempo in beats per minute</comment>
+    <value>{0} tracks · {1} notes</value>
+    <comment>{0} number of tracks, {1} number of notes. No tempo here: a file's tempo changes as it plays, so one number would be misleading.</comment>
   </data>
   <data name="QueueItemNotPlayable" xml:space="preserve">
     <value>This file does not contain anything that can be played</value>

@@ -1,0 +1,38 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiFileReadStatusEnum.idl";
+import "MidiSequence.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Files
+{
+    [contract(MidiFilesUtilityApiContract,1)]
+    [interface_name("Windows.Devices.Midi2.Utilities.Files.IMidiFileReadResult", UUID_IMidiFileReadResult)]
+    runtimeclass MidiFileReadResult
+    {
+        Boolean Succeeded{ get; };
+        MidiFileReadStatus Status{ get; };
+
+        // True when the file ran out, or stopped making sense, before it said it would. What was
+        // read is still in the sequence and is still playable.
+        Boolean Truncated{ get; };
+
+        // Null unless Succeeded.
+        Windows.Devices.Midi2.Utilities.Sequencing.MidiSequence Sequence{ get; };
+
+        // A file that declares more tracks than it contains is common enough to be worth
+        // reporting rather than hiding.
+        UInt32 DeclaredTrackCount{ get; };
+        UInt32 ReadTrackCount{ get; };
+    };
+}

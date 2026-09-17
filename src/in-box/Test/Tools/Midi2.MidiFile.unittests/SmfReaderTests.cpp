@@ -8,7 +8,7 @@
 #include "SmfReaderTests.h"
 #include "SmfTestFileBuilder.h"
 
-#include "SmfReader.h"
+#include "midi_file_smf_reader.h"
 
 #include <windows.h>
 
@@ -684,6 +684,384 @@ void SmfReaderTests::CountsNotesSoundingPerTrack()
     VERIFY_ARE_EQUAL(uint8_t{ 0 }, counts[1]);
 }
 
+void SmfReaderTests::PlacesBarAndBeatLinesForASimpleMeter()
+{
+    TrackBuilder track{};
+
+    track
+        .TimeSignature(0, 4, 2)         // 4/4
+        .NoteOn(0, 0, 60, 100)
+        .NoteOff(3840, 0, 60, 0)
+        .EndOfTrack();
+
+    auto const file = BuildFile(0, TicksPerQuarterNote, { track });
+
+    MidiSequence sequence{};
+    VERIFY_IS_TRUE(Parse(file, sequence).Succeeded());
+
+    // 480 ticks to the quarter, so a 4/4 bar is 1920 and a beat is 480.
+    VERIFY_ARE_EQUAL(uint32_t{ 1920 }, sequence.TimeSignatureAtTick(0).TicksPerBar);
+
+    std::vector<GridLine> lines{};
+
+    sequence.CollectGridLines(0, 1920, true, 64, lines);
+
+    VERIFY_ARE_EQUAL(size_t{ 5 }, lines.size());
+
+    uint32_t const expected[]{ 0, 480, 960, 1440, 1920 };
+    bool const isBar[]{ true, false, false, false, true };
+
+    for (size_t index = 0; index < lines.size(); ++index)
+    {
+        VERIFY_ARE_EQUAL(expected[index], lines[index].Tick);
+        VERIFY_ARE_EQUAL(isBar[index], lines[index].IsBar);
+    }
+
+    // A window which does not begin on a boundary starts at the next one.
+    sequence.CollectGridLines(1, 960, true, 64, lines);
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, lines.size());
+    VERIFY_ARE_EQUAL(uint32_t{ 480 }, lines[0].Tick);
+    VERIFY_IS_FALSE(lines[0].IsBar);
+    VERIFY_ARE_EQUAL(uint32_t{ 960 }, lines[1].Tick);
+}
+
+void SmfReaderTests::RealignsBarLinesAfterAMeterChange()
+{
+    TrackBuilder track{};
+
+    track
+        .TimeSignature(0, 4, 2)         // 4/4, bar = 1920
+        .NoteOn(0, 0, 60, 100)
+        .TimeSignature(1920, 3, 2)      // 3/4 from the second bar, bar = 1440
+        .NoteOff(3840, 0, 60, 0)
+        .EndOfTrack();
+
+    auto const file = BuildFile(0, TicksPerQuarterNote, { track });
+
+    MidiSequence sequence{};
+    VERIFY_IS_TRUE(Parse(file, sequence).Succeeded());
+
+    VERIFY_ARE_EQUAL(uint32_t{ 1440 }, sequence.TimeSignatureAtTick(1920).TicksPerBar);
+
+    std::vector<GridLine> lines{};
+
+    sequence.CollectGridLines(1920, 4800, true, 64, lines);
+
+    // Bars now fall every 1440 ticks counted from 1920, not from zero.
+    uint32_t const expected[]{ 1920, 2400, 2880, 3360, 3840, 4320, 4800 };
+    bool const isBar[]{ true, false, false, true, false, false, true };
+
+    VERIFY_ARE_EQUAL(size_t{ 7 }, lines.size());
+
+    for (size_t index = 0; index < lines.size(); ++index)
+    {
+        VERIFY_ARE_EQUAL(expected[index], lines[index].Tick);
+        VERIFY_ARE_EQUAL(isBar[index], lines[index].IsBar);
+    }
+}
+
+void SmfReaderTests::DropsBeatLinesWhenOnlyBarsAreWanted()
+{
+    TrackBuilder track{};
+
+    track
+        .TimeSignature(0, 4, 2)
+        .NoteOn(0, 0, 60, 100)
+        .NoteOff(7680, 0, 60, 0)
+        .EndOfTrack();
+
+    auto const file = BuildFile(0, TicksPerQuarterNote, { track });
+
+    MidiSequence sequence{};
+    VERIFY_IS_TRUE(Parse(file, sequence).Succeeded());
+
+    std::vector<GridLine> lines{};
+
+    sequence.CollectGridLines(0, 5760, false, 64, lines);
+
+    VERIFY_ARE_EQUAL(size_t{ 4 }, lines.size());
+
+    for (size_t index = 0; index < lines.size(); ++index)
+    {
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(index * 1920), lines[index].Tick);
+        VERIFY_IS_TRUE(lines[index].IsBar);
+    }
+}
+
+void SmfReaderTests::StopsAtTheGridLineLimit()
+{
+    TrackBuilder track{};
+
+    track
+        .TimeSignature(0, 4, 2)
+        .NoteOn(0, 0, 60, 100)
+        .NoteOff(48000, 0, 60, 0)
+        .EndOfTrack();
+
+    auto const file = BuildFile(0, TicksPerQuarterNote, { track });
+
+    MidiSequence sequence{};
+    VERIFY_IS_TRUE(Parse(file, sequence).Succeeded());
+
+    std::vector<GridLine> lines{};
+
+    // A very wide window must not be able to ask for an unbounded number of visuals.
+    sequence.CollectGridLines(0, 480000, true, 16, lines);
+
+    VERIFY_ARE_EQUAL(size_t{ 16 }, lines.size());
+
+    // An empty or inverted window produces nothing rather than misbehaving.
+    sequence.CollectGridLines(960, 480, true, 64, lines);
+    VERIFY_ARE_EQUAL(size_t{ 0 }, lines.size());
+}
+
+void SmfReaderTests::BuildsLyricLinesFromTheMarkersAFileCarries()
+{
+    constexpr uint8_t MetaLyric = 0x05;
+
+    TrackBuilder track{};
+
+    track
+        .NoteOn(0, 0, 60, 100)
+        .MetaText(0, MetaLyric, "Row ")
+        .MetaText(120, MetaLyric, "row ")
+        .MetaText(120, MetaLyric, "your ")
+        .MetaText(120, MetaLyric, "boat")
+        .MetaText(120, MetaLyric, "/Gent")
+        .MetaText(120, MetaLyric, "ly ")
+        .MetaText(120, MetaLyric, "down")
+        .MetaText(120, MetaLyric, "\\Merri")
+        .MetaText(120, MetaLyric, "ly")
+        .NoteOff(0, 0, 60, 0)
+        .EndOfTrack();
+
+    auto const file = BuildFile(0, TicksPerQuarterNote, { track });
+
+    MidiSequence sequence{};
+    VERIFY_IS_TRUE(Parse(file, sequence).Succeeded());
+
+    VERIFY_ARE_EQUAL(size_t{ 3 }, sequence.LyricLines.size());
+    VERIFY_ARE_EQUAL(String(L"Row row your boat"), String(String(sequence.LyricLines[0].Text.c_str())));
+    VERIFY_ARE_EQUAL(String(L"Gently down"), String(String(sequence.LyricLines[1].Text.c_str())));
+    VERIFY_ARE_EQUAL(String(L"Merrily"), String(String(sequence.LyricLines[2].Text.c_str())));
+
+    VERIFY_ARE_EQUAL(uint32_t{ 0 }, sequence.LyricLines[0].StartTick);
+    VERIFY_ARE_EQUAL(uint32_t{ 480 }, sequence.LyricLines[1].StartTick);
+
+    // A line runs until the next one starts, which is what a display needs to hold it on screen.
+    VERIFY_ARE_EQUAL(uint32_t{ 480 }, sequence.LyricLines[0].EndTick);
+
+    VERIFY_ARE_EQUAL(String(L"Row row your boat"), String(String(sequence.LyricLineAtTick(300)->Text.c_str())));
+    VERIFY_ARE_EQUAL(String(L"Gently down"), String(String(sequence.LyricLineAtTick(700)->Text.c_str())));}
+
+void SmfReaderTests::BuildsLyricLinesFromTimingWhenNoMarkersExist()
+{
+    constexpr uint8_t MetaLyric = 0x05;
+
+    // Real karaoke files often carry nothing but bare syllables, so the rest between phrases is
+    // the only thing left to split on.
+    TrackBuilder track{};
+
+    track
+        .NoteOn(0, 0, 60, 100)
+        .MetaText(0, MetaLyric, "Hay")
+        .MetaText(200, MetaLyric, "u")
+        .MetaText(200, MetaLyric, "na")
+        .MetaText(200, MetaLyric, "luz")
+        .MetaText(1400, MetaLyric, "ca")     // three beats later, so a new line
+        .MetaText(200, MetaLyric, "mi")
+        .MetaText(200, MetaLyric, "nar")
+        .NoteOff(0, 0, 60, 0)
+        .EndOfTrack();
+
+    auto const file = BuildFile(0, TicksPerQuarterNote, { track });
+
+    MidiSequence sequence{};
+    VERIFY_IS_TRUE(Parse(file, sequence).Succeeded());
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, sequence.LyricLines.size());
+    VERIFY_ARE_EQUAL(String(L"Hayunaluz"), String(String(sequence.LyricLines[0].Text.c_str())));
+    VERIFY_ARE_EQUAL(String(L"caminar"), String(String(sequence.LyricLines[1].Text.c_str())));
+}
+
+void SmfReaderTests::ReadsSoftKaraokeLyricsFromPlainTextEvents()
+{
+    constexpr uint8_t MetaText = 0x01;
+
+    // A Soft Karaoke file puts its words in plain text events, not lyric events, and announces
+    // itself first. This is the layout of a real .kar file.
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaText, "@KMIDI KARAOKE FILE")
+        .MetaText(0, MetaText, "@TWIND OF CHANGE")
+        .MetaText(0, MetaText, "@LScorpions")
+        .NoteOn(0, 0, 60, 100)
+        .MetaText(480, MetaText, "\\I")
+        .MetaText(0, MetaText, " fol")
+        .MetaText(120, MetaText, "low")
+        .MetaText(120, MetaText, " the")
+        .MetaText(120, MetaText, "/Down")
+        .MetaText(120, MetaText, " to")
+        .NoteOff(480, 0, 60, 0)
+        .EndOfTrack();
+
+    auto const file = BuildFile(0, TicksPerQuarterNote, { track });
+
+    MidiSequence sequence{};
+    VERIFY_IS_TRUE(Parse(file, sequence).Succeeded());
+
+    VERIFY_IS_TRUE(sequence.IsKaraoke);
+
+    // The @K, @T and @L tags are not words to sing. A backslash starts a page and a slash starts
+    // a line, so the syllables between them join into one line each.
+    VERIFY_ARE_EQUAL(size_t{ 2 }, sequence.LyricLines.size());
+    VERIFY_ARE_EQUAL(String(L"I follow the"), String(String(sequence.LyricLines[0].Text.c_str())));
+    VERIFY_ARE_EQUAL(String(L"Down to"), String(String(sequence.LyricLines[1].Text.c_str())));
+}
+
+void SmfReaderTests::FindsNoLyricLinesInAFileWithOnlyPlainText()
+{
+    constexpr uint8_t MetaText = 0x01;
+    constexpr uint8_t MetaCopyright = 0x02;
+
+    // A text event is far more often a comment than something to sing, so without a lyric event
+    // or the karaoke tag nothing should be offered.
+    TrackBuilder track{};
+
+    track
+        .MetaText(0, MetaCopyright, "Copyright 2026")
+        .MetaText(0, MetaText, "Sequenced by somebody")
+        .NoteOn(0, 0, 60, 100)
+        .NoteOff(480, 0, 60, 0)
+        .EndOfTrack();
+
+    auto const file = BuildFile(0, TicksPerQuarterNote, { track });
+
+    MidiSequence sequence{};
+    VERIFY_IS_TRUE(Parse(file, sequence).Succeeded());
+
+    VERIFY_IS_TRUE(sequence.LyricLines.empty());
+    VERIFY_IS_NULL(sequence.LyricLineAtTick(0));
+}
+
+void SmfReaderTests::KeepsItsPlaceAcrossASystemRealTimeByte()
+{
+    TrackBuilder track{};
+
+    track
+        .NoteOn(0, 0, 60, 100)
+        .Raw({ 0x10, 0xFE })            // active sensing, which carries no data bytes at all
+        .RunningStatusData(0x20, 60, 0) // and does not disturb the running status in front of it
+        .EndOfTrack();
+
+    auto const file = BuildFile(0, TicksPerQuarterNote, { track });
+
+    MidiSequence sequence{};
+    VERIFY_IS_TRUE(Parse(file, sequence).Succeeded());
+
+    // Reading a data byte for the real time message would have eaten the next delta time.
+    VERIFY_ARE_EQUAL(size_t{ 1 }, sequence.Notes.size());
+    VERIFY_ARE_EQUAL(uint32_t{ 0 }, sequence.Notes[0].StartTick);
+    VERIFY_ARE_EQUAL(uint32_t{ 0x30 }, sequence.Notes[0].EndTick);
+}
+
+void SmfReaderTests::ReadsTheSystemCommonMessageLengths()
+{
+    TrackBuilder track{};
+
+    track
+        .Raw({ 0x00, 0xF2, 0x10, 0x20 })    // song position pointer, two data bytes
+        .Raw({ 0x00, 0xF3, 0x05 })          // song select, one data byte
+        .Raw({ 0x00, 0xF6 })                // tune request, none
+        .NoteOn(0x40, 0, 60, 100)
+        .NoteOff(0x10, 0, 60, 0)
+        .EndOfTrack();
+
+    auto const file = BuildFile(0, TicksPerQuarterNote, { track });
+
+    MidiSequence sequence{};
+    VERIFY_IS_TRUE(Parse(file, sequence).Succeeded());
+
+    // Getting any of those lengths wrong moves the note, or loses it entirely.
+    VERIFY_ARE_EQUAL(size_t{ 1 }, sequence.Notes.size());
+    VERIFY_ARE_EQUAL(uint32_t{ 0x40 }, sequence.Notes[0].StartTick);
+    VERIFY_ARE_EQUAL(uint32_t{ 0x50 }, sequence.Notes[0].EndTick);
+}
+
+void SmfReaderTests::CancelsRunningStatusOnSystemCommon()
+{
+    TrackBuilder track{};
+
+    track
+        .NoteOn(0, 0, 60, 100)
+        .Raw({ 0x10, 0xF6 })                // tune request is system common, so it cancels
+        .Raw({ 0x10, 0x3C, 0x00 })          // and these are now data bytes with no status
+        .EndOfTrack();
+
+    auto const file = BuildFile(0, TicksPerQuarterNote, { track });
+
+    MidiSequence sequence{};
+    auto const result = Parse(file, sequence);
+
+    VERIFY_IS_TRUE(result.Succeeded());
+    VERIFY_IS_TRUE(result.Truncated);
+
+    // The note on survives, the bytes which relied on a canceled running status do not.
+    VERIFY_ARE_EQUAL(size_t{ 1 }, sequence.Notes.size());
+    VERIFY_ARE_EQUAL(uint32_t{ 0 }, sequence.Notes[0].StartTick);
+}
+
+void SmfReaderTests::StopsWhenADeltaTimeIsTooLargeToBeMusic()
+{
+    TrackBuilder track{};
+
+    track
+        .NoteOn(0, 0, 60, 100)
+        .NoteOff(480, 0, 60, 0)
+        .NoteOn(2000000, 0, 62, 100)    // well past the point where a rest could be real
+        .NoteOff(480, 0, 62, 0)
+        .EndOfTrack();
+
+    auto const file = BuildFile(0, TicksPerQuarterNote, { track });
+
+    MidiSequence sequence{};
+    auto const result = Parse(file, sequence);
+
+    VERIFY_IS_TRUE(result.Succeeded());
+    VERIFY_IS_TRUE(result.Truncated);
+
+    // What was read before the runaway is kept, and the timeline does not follow it.
+    VERIFY_ARE_EQUAL(size_t{ 1 }, sequence.Notes.size());
+    VERIFY_ARE_EQUAL(uint32_t{ 480 }, sequence.LastTick);
+}
+
+void SmfReaderTests::ClampsAnOutOfRangeDataByteInsteadOfGivingUp()
+{
+    // Seen in real files: a tool wrote every velocity as 0xF0 while keeping the track perfectly
+    // aligned, so the value is wrong but nothing after it is.
+    TrackBuilder track{};
+
+    track
+        .Raw({ 0x00, 0x90, 0x39, 0xF0 })
+        .Raw({ 0x60, 0x80, 0x39, 0x64 })
+        .Raw({ 0x00, 0x90, 0x3B, 0xF0 })
+        .Raw({ 0x60, 0x80, 0x3B, 0x64 })
+        .EndOfTrack();
+
+    auto const file = BuildFile(0, TicksPerQuarterNote, { track });
+
+    MidiSequence sequence{};
+    VERIFY_IS_TRUE(Parse(file, sequence).Succeeded());
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, sequence.Notes.size());
+    VERIFY_ARE_EQUAL(uint8_t{ 0x39 }, sequence.Notes[0].NoteNumber);
+    VERIFY_ARE_EQUAL(uint8_t{ 0x70 }, sequence.Notes[0].Velocity);
+    VERIFY_ARE_EQUAL(uint8_t{ 0x3B }, sequence.Notes[1].NoteNumber);
+    VERIFY_ARE_EQUAL(uint32_t{ 0xC0 }, sequence.Notes[1].EndTick);
+}
+
 void SmfReaderTests::RejectsSomethingThatIsNotAMidiFile()
 {
     std::vector<uint8_t> const notMidi{ 'h', 'e', 'l', 'l', 'o', ' ', 't', 'h', 'e', 'r', 'e', '!', '!', '!', '!' };
@@ -960,8 +1338,60 @@ namespace
             sequence.LastTick,
             static_cast<double>(sequence.DurationMicroseconds) / 1000000.0));
 
-        Log::Comment(String().Format(L"  tempo map (%d entries):", static_cast<int>(sequence.TempoMap.size())));
+        // Raw syllables with the delimiters made visible, because how a karaoke file marks a line
+        // break is exactly what is in question when the lines come out wrong.
+        {
+            int shownSyllables = 0;
 
+            for (auto const& event : sequence.TextEvents)
+            {
+                if (event.Kind != TextKind::Lyric && event.Kind != TextKind::Text)
+                {
+                    continue;
+                }
+
+                if (shownSyllables++ >= 24)
+                {
+                    break;
+                }
+
+                std::wstring visible{};
+
+                for (auto const character : event.Text)
+                {
+                    auto const value = static_cast<uint8_t>(character);
+
+                    if (value == '\r') { visible += L"<CR>"; }
+                    else if (value == '\n') { visible += L"<LF>"; }
+                    else if (value == ' ') { visible += L"<SP>"; }
+                    else if (value < 0x20 || value >= 0x7F)
+                    {
+                        wchar_t pair[8]{};
+                        ::swprintf_s(pair, L"<%02X>", value);
+                        visible += pair;
+                    }
+                    else { visible += static_cast<wchar_t>(value); }
+                }
+
+                Log::Comment(String().Format(
+                    L"  syllable kind %d tick %u: %s",
+                    static_cast<int>(event.Kind),
+                    event.Tick,
+                    visible.c_str()));
+            }
+        }
+
+        Log::Comment(String().Format(L"  lyric lines: %d", static_cast<int>(sequence.LyricLines.size())));
+
+        for (size_t index = 0; index < sequence.LyricLines.size() && index < 14; ++index)
+        {
+            Log::Comment(String().Format(
+                L"    [%u] %S",
+                sequence.LyricLines[index].StartTick,
+                sequence.LyricLines[index].Text.c_str()));
+        }
+
+        Log::Comment(String().Format(L"  tempo map (%d entries):", static_cast<int>(sequence.TempoMap.size())));
         size_t shown = 0;
 
         for (auto const& entry : sequence.TempoMap)
@@ -1008,6 +1438,84 @@ namespace
             }
         }
 
+        // A parse which has lost its place starts producing statuses a real file rarely carries,
+        // so the first of those is usually closer to the cause than the first huge delta is.
+        {
+            int reported = 0;
+
+            for (size_t index = 0; index < sequence.Events.size() && reported < 6; ++index)
+            {
+                auto const kind = sequence.Events[index].Kind;
+
+                if (kind != EventKind::SystemCommon && kind != EventKind::SystemRealTime &&
+                    kind != EventKind::PolyphonicPressure)
+                {
+                    continue;
+                }
+
+                auto const bytes = sequence.BytesOf(sequence.Events[index]);
+
+                Log::Comment(String().Format(
+                    L"  unusual status: event %d  tick %u  kind %d  first byte %02X",
+                    static_cast<int>(index),
+                    sequence.Events[index].Tick,
+                    static_cast<int>(kind),
+                    bytes.empty() ? 0 : bytes[0]));
+
+                if (reported == 0)
+                {
+                    auto const back = index > 10 ? index - 10 : size_t{ 0 };
+
+                    for (size_t around = back; around <= index; ++around)
+                    {
+                        auto const lead = sequence.BytesOf(sequence.Events[around]);
+
+                        std::wstring hex{};
+
+                        for (size_t byteIndex = 0; byteIndex < lead.size() && byteIndex < 12; ++byteIndex)
+                        {
+                            wchar_t pair[4]{};
+                            ::swprintf_s(pair, L"%02X ", lead[byteIndex]);
+                            hex += pair;
+                        }
+
+                        Log::Comment(String().Format(
+                            L"    [%d] tick %u  kind %d  bytes %s",
+                            static_cast<int>(around),
+                            sequence.Events[around].Tick,
+                            static_cast<int>(sequence.Events[around].Kind),
+                            hex.c_str()));
+                    }
+                }
+
+                ++reported;
+            }
+        }
+
+        // Ten quarter notes of silence is already suspicious in the middle of a song.
+        {
+            int reported = 0;
+
+            for (size_t index = 1; index < sequence.Events.size() && reported < 6; ++index)
+            {
+                auto const jump = sequence.Events[index].Tick - sequence.Events[index - 1].Tick;
+
+                if (jump < 1920)
+                {
+                    continue;
+                }
+
+                Log::Comment(String().Format(
+                    L"  gap: event %d  %u -> %u  (%u ticks)",
+                    static_cast<int>(index),
+                    sequence.Events[index - 1].Tick,
+                    sequence.Events[index].Tick,
+                    jump));
+
+                ++reported;
+            }
+        }
+
         // The shape of the timeline. A healthy file climbs smoothly.
         Log::Comment(L"  tick progression:");
 
@@ -1033,6 +1541,31 @@ namespace
                     static_cast<int>(index),
                     sequence.Events[index - 1].Tick,
                     sequence.Events[index].Tick));
+
+                auto const windowStart = index > 6 ? index - 6 : size_t{ 0 };
+                auto const windowEnd = (index + 4) < sequence.Events.size() ? index + 4 : sequence.Events.size() - 1;
+
+                for (size_t around = windowStart; around <= windowEnd; ++around)
+                {
+                    auto const bytes = sequence.BytesOf(sequence.Events[around]);
+
+                    std::wstring hex{};
+
+                    for (size_t byteIndex = 0; byteIndex < bytes.size() && byteIndex < 12; ++byteIndex)
+                    {
+                        wchar_t pair[4]{};
+                        ::swprintf_s(pair, L"%02X ", bytes[byteIndex]);
+                        hex += pair;
+                    }
+
+                    Log::Comment(String().Format(
+                        L"    [%d] tick %u  kind %d  bytes %s",
+                        static_cast<int>(around),
+                        sequence.Events[around].Tick,
+                        static_cast<int>(sequence.Events[around].Kind),
+                        hex.c_str()));
+                }
+
                 break;
             }
         }
@@ -1095,6 +1628,7 @@ namespace
         std::vector<std::wstring> ChordExamples{};
 
         std::map<int, int> StatusCounts{};
+        std::vector<std::wstring> NoPlayableExamples{};
 
         int64_t LargestBytes{ 0 };
         std::wstring LargestFile{};
@@ -1224,6 +1758,11 @@ namespace
             ++tally.Files;
             tally.TotalBytes += bytes;
             ++tally.StatusCounts[static_cast<int>(result.Status)];
+
+            if (result.Status == ReadStatus::NoPlayableData && tally.NoPlayableExamples.size() < 10)
+            {
+                tally.NoPlayableExamples.push_back(full);
+            }
 
             if (bytes > tally.LargestBytes)
             {
@@ -1427,6 +1966,11 @@ void SmfReaderTests::ReadsACorpusOfRealFiles()
             status,
             count,
             tally.Files == 0 ? 0.0 : (100.0 * count / tally.Files)));
+    }
+
+    for (auto const& example : tally.NoPlayableExamples)
+    {
+        Log::Comment(String().Format(L"  no playable data: %s", example.c_str()));
     }
 
     Log::Comment(String().Format(L"Largest:     %.2f MB  %s",

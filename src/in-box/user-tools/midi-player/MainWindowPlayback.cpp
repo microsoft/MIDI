@@ -366,6 +366,7 @@ namespace winrt::midiplayer::implementation
             m_queue.Clear();
 
             m_noteRoll.SetSequence(nullptr);
+            m_keyboardRoll.SetSequence(nullptr);
 
             StopPositionTimer();
             RebuildQueueList();
@@ -469,11 +470,13 @@ namespace winrt::midiplayer::implementation
 
             // The cached pointer points into the previous sequence's text events.
             m_lastChord = nullptr;
+            m_lastLyric = nullptr;
 
             if (m_currentSequence == nullptr)
             {
                 RollPanel().Visibility(xaml::Visibility::Collapsed);
                 m_noteRoll.SetSequence(nullptr);
+                m_keyboardRoll.SetSequence(nullptr);
 
                 return;
             }
@@ -574,6 +577,7 @@ namespace winrt::midiplayer::implementation
             }
 
             m_noteRoll.SetAudibleTracks(audible);
+            m_keyboardRoll.SetAudibleTracks(audible);
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to apply the track states.")
     }
@@ -679,9 +683,19 @@ namespace winrt::midiplayer::implementation
                 return;
             }
 
-            auto const host = NoteRollHost();
+            // Only the view on screen is drawn; the other one costs nothing until it is shown.
+            if (m_keyboardView)
+            {
+                auto const host = KeyboardRollHost();
 
-            m_noteRoll.Render(m_engine.Position().Microseconds, host.ActualWidth(), host.ActualHeight());
+                m_keyboardRoll.Render(m_engine.Position().Microseconds, host.ActualWidth(), host.ActualHeight());
+            }
+            else
+            {
+                auto const host = NoteRollHost();
+
+                m_noteRoll.Render(m_engine.Position().Microseconds, host.ActualWidth(), host.ActualHeight());
+            }
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to draw the notes.")
     }
@@ -725,6 +739,34 @@ namespace winrt::midiplayer::implementation
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to update the track activity.")
     }
 
+    void MainWindow::UpdateTempoDisplay(double beatsPerMinute) noexcept
+    {
+        try
+        {
+            if (m_currentSequence == nullptr)
+            {
+                TempoPanel().Visibility(xaml::Visibility::Collapsed);
+                m_lastDisplayedTempo = -1;
+
+                return;
+            }
+
+            TempoPanel().Visibility(xaml::Visibility::Visible);
+
+            auto const rounded = static_cast<int32_t>(beatsPerMinute + 0.5);
+
+            if (rounded == m_lastDisplayedTempo)
+            {
+                return;
+            }
+
+            m_lastDisplayedTempo = rounded;
+
+            TempoText().Text(res::FormatString(L"LiveTempoFormat", rounded));
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to update the tempo.")
+    }
+
     void MainWindow::UpdateChordDisplay(uint32_t tick) noexcept
     {
         try
@@ -755,6 +797,36 @@ namespace winrt::midiplayer::implementation
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to update the chord.")
     }
 
+    void MainWindow::UpdateLyricDisplay(uint32_t tick) noexcept
+    {
+        try
+        {
+            if (m_currentSequence == nullptr || m_currentSequence->LyricLines.empty())
+            {
+                LyricText().Visibility(xaml::Visibility::Collapsed);
+                m_lastLyric = nullptr;
+
+                return;
+            }
+
+            LyricText().Visibility(xaml::Visibility::Visible);
+
+            auto const* const line = m_currentSequence->LyricLineAtTick(tick);
+
+            if (line == m_lastLyric)
+            {
+                return;
+            }
+
+            m_lastLyric = line;
+
+            LyricText().Text(line == nullptr
+                ? winrt::hstring{}
+                : winrt::hstring{ WidenUtf8Text(line->Text) });
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to update the lyrics.")
+    }
+
     _Use_decl_annotations_
     void MainWindow::OnQueueToggled(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
@@ -766,9 +838,62 @@ namespace winrt::midiplayer::implementation
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to change the queue setting.")
     }
 
+    _Use_decl_annotations_
+    void MainWindow::OnKeyboardViewToggled(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            m_keyboardView = KeyboardViewToggle().IsChecked().GetBoolean();
+
+            native::AppSettings::Current().KeyboardView(m_keyboardView);
+
+            ApplyViewMode();
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to change the view.")
+    }
+
+    void MainWindow::ApplyViewMode() noexcept
+    {
+        try
+        {
+            NoteRollHost().Visibility(m_keyboardView ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+            KeyboardRollHost().Visibility(m_keyboardView ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            RenderNoteRoll();
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to switch the view.")
+    }
+
     // ------------------------------------------------------------------------------------
     // Transport
     // ------------------------------------------------------------------------------------
+
+    // One session for the life of the window. Endpoints come and go as the customer picks them,
+    // but a session is what the service uses to attribute connections to this app, so making a
+    // fresh one per file would have the player appear and disappear in the service's session
+    // list for no reason.
+    bool MainWindow::EnsureSession() noexcept
+    {
+        try
+        {
+            if (m_session != nullptr && m_session.IsOpen())
+            {
+                return true;
+            }
+
+            if (!midi2::MidiApi::EnsureServiceAvailable())
+            {
+                return false;
+            }
+
+            m_session = midi2::MidiSession::Create(res::GetString(L"AppDisplayName"));
+
+            return m_session != nullptr;
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to create the MIDI session.")
+
+        return false;
+    }
 
     _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::StartCurrentAsync(bool autoPlay)
@@ -836,7 +961,13 @@ namespace winrt::midiplayer::implementation
             co_await native::RunOnBackgroundAsync(
                 [this, endpointDeviceId, groupIndex, entry, alreadyLoaded, &openResult, &loaded, &sequence]()
                 {
-                    openResult = m_engine.Open(endpointDeviceId);
+                    if (!EnsureSession())
+                    {
+                        openResult = native::OpenResult::SessionFailed;
+                        return;
+                    }
+
+                    openResult = m_engine.Open(m_session, endpointDeviceId);
 
                     if (openResult != native::OpenResult::Success)
                     {
@@ -865,7 +996,9 @@ namespace winrt::midiplayer::implementation
 
             if (openResult != native::OpenResult::Success)
             {
-                auto const key = openResult == native::OpenResult::ServiceUnavailable
+                auto const key =
+                    (openResult == native::OpenResult::ServiceUnavailable ||
+                     openResult == native::OpenResult::SessionFailed)
                     ? L"StatusServiceUnavailable"
                     : L"StatusEndpointConnectFailed";
 
@@ -887,6 +1020,7 @@ namespace winrt::midiplayer::implementation
             m_currentSequenceId = entry.Id;
 
             m_noteRoll.SetSequence(m_currentSequence);
+            m_keyboardRoll.SetSequence(m_currentSequence);
 
             UpdateCurrentQueueRow();
             RebuildTrackList();
@@ -1167,6 +1301,8 @@ namespace winrt::midiplayer::implementation
             RenderNoteRoll();
             UpdateTrackActivity(position.Tick);
             UpdateChordDisplay(position.Tick);
+            UpdateLyricDisplay(position.Tick);
+            UpdateTempoDisplay(position.BeatsPerMinute);
 
             if (position.State != native::PlaybackState::Playing)
             {
@@ -1207,8 +1343,7 @@ namespace winrt::midiplayer::implementation
             std::wstring detail = std::wstring{ res::FormatString(
                 L"NowPlayingDetailFormat",
                 entry.TrackCount,
-                entry.NoteCount,
-                static_cast<int32_t>(entry.BeatsPerMinute + 0.5)) };
+                entry.NoteCount) };
 
             if (m_currentSequence != nullptr && !m_currentSequence->Copyright.empty())
             {

@@ -8,7 +8,7 @@
 #pragma once
 
 #include "TrackItem.g.h"
-#include "MidiSequence.h"
+#include "midi_file_sequence.h"
 
 namespace midiplayer
 {

@@ -259,6 +259,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Spacing="2">
@@ -277,11 +278,41 @@
                                TextTrimming="CharacterEllipsis"
                                Foreground="{ThemeResource TextFillColorSecondaryBrush}"
                                Style="{ThemeResource CaptionTextBlockStyle}" />
+
+                    <!-- Only files which carry lyrics show this at all. -->
+                    <TextBlock x:Name="LyricText"
+                               AutomationProperties.AutomationId="LyricText"
+                               Visibility="Collapsed"
+                               Margin="0,6,0,0"
+                               FontSize="16"
+                               LineHeight="22"
+                               TextWrapping="NoWrap"
+                               TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+
+                <!-- Tempo changes as a file plays, so this is the value at the playhead. -->
+                <StackPanel x:Name="TempoPanel"
+                            Grid.Column="1"
+                            Spacing="0"
+                            MinWidth="86"
+                            Visibility="Collapsed"
+                            HorizontalAlignment="Right">
+                    <TextBlock x:Uid="TempoCaption"
+                               HorizontalAlignment="Right"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                    <TextBlock x:Name="TempoText"
+                               AutomationProperties.AutomationId="TempoText"
+                               HorizontalAlignment="Right"
+                               FontSize="22"
+                               FontWeight="SemiBold"
+                               LineHeight="28"
+                               TextWrapping="NoWrap" />
                 </StackPanel>
 
                 <!-- Only shown for files which carry chord symbols, which is a small minority. -->
                 <StackPanel x:Name="ChordPanel"
-                            Grid.Column="1"
+                            Grid.Column="2"
                             Spacing="0"
                             MinWidth="92"
                             Visibility="Collapsed"
@@ -402,6 +433,14 @@
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4"
                             HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <ToggleButton x:Name="KeyboardViewToggle"
+                                  x:Uid="KeyboardViewToggle"
+                                  AutomationProperties.AutomationId="KeyboardViewToggle"
+                                  Width="40" Height="34" Padding="0"
+                                  Click="OnKeyboardViewToggled">
+                        <FontIcon Glyph="&#xED5B;" FontSize="14" />
+                    </ToggleButton>
+
                     <ToggleButton x:Name="RepeatToggle"
                                   x:Uid="RepeatToggle"
                                   AutomationProperties.AutomationId="RepeatToggle"
@@ -446,6 +485,17 @@
                 <Border x:Name="NoteRollHost"
                         Grid.Column="1"
                         AutomationProperties.AutomationId="NoteRollHost"
+                        CornerRadius="6"
+                        Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        BorderThickness="1"
+                        SizeChanged="OnNoteRollSizeChanged" />
+
+                <!-- The second view. Same sequence, notes falling towards a keyboard. -->
+                <Border x:Name="KeyboardRollHost"
+                        Grid.Column="1"
+                        AutomationProperties.AutomationId="KeyboardRollHost"
+                        Visibility="Collapsed"
                         CornerRadius="6"
                         Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"

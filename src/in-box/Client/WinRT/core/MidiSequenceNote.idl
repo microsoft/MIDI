@@ -1,0 +1,29 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Sequencing
+{
+    // A note with both ends already paired. This is a struct, not a runtimeclass, because a
+    // display asks for every note in a visible window on every frame, and a file can hold
+    // hundreds of millions of them. As a struct a whole window crosses the boundary in one call.
+    [contract(MidiSequencingUtilityApiContract,1)]
+    struct MidiSequenceNote
+    {
+        UInt32 StartTick;
+        UInt32 EndTick;
+        UInt16 TrackIndex;
+        UInt8 ChannelIndex;
+        UInt8 NoteNumber;
+        UInt8 Velocity;
+    };
+}

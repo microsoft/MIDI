@@ -723,6 +723,22 @@
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="$(SolutionDir)inc\midi_file_sequence.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)inc\midi_file_smf_reader.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)inc\midi_sequence_playback_engine.cpp" />
+    <ClCompile Include="MidiSequence.cpp" />
+    <ClCompile Include="MidiSequenceTextEvent.cpp" />
+    <ClCompile Include="MidiSequenceLyricLine.cpp" />
+    <ClCompile Include="MidiSequenceTrack.cpp" />
+    <ClCompile Include="MidiSequenceTrackRouting.cpp" />
+    <ClCompile Include="MidiSequencePlayer.cpp" />
+    <ClCompile Include="MidiFileReadOptions.cpp" />
+    <ClCompile Include="MidiFileReadResult.cpp" />
+    <ClCompile Include="MidiStandardFileReader.cpp" />
     <ClCompile Include="MidiBytestreamToUmpMessageConverterState.cpp" />
     <ClCompile Include="MidiSystemExclusiveReceivedEventArgs.cpp" />
     <ClCompile Include="MidiSystemExclusiveReceiver.cpp" />
@@ -1201,6 +1217,24 @@
     <Midl Include="MidiSystemExclusiveSender.idl" />
     <Midl Include="MidiSystemExclusiveSendProgress.idl" />
     <Midl Include="MidiSystemTimerSettings.idl" />
+    <Midl Include="MidiSequenceFormatEnum.idl" />
+    <Midl Include="MidiSequenceTextKindEnum.idl" />
+    <Midl Include="MidiSequencePlayerStateEnum.idl" />
+    <Midl Include="MidiSequenceNote.idl" />
+    <Midl Include="MidiSequenceBarPosition.idl" />
+    <Midl Include="MidiSequenceTempoChange.idl" />
+    <Midl Include="MidiSequenceTimeSignature.idl" />
+    <Midl Include="MidiSequencePlayerPosition.idl" />
+    <Midl Include="MidiSequenceTextEvent.idl" />
+    <Midl Include="MidiSequenceLyricLine.idl" />
+    <Midl Include="MidiSequenceTrack.idl" />
+    <Midl Include="MidiSequence.idl" />
+    <Midl Include="MidiSequenceTrackRouting.idl" />
+    <Midl Include="MidiSequencePlayer.idl" />
+    <Midl Include="MidiFileReadStatusEnum.idl" />
+    <Midl Include="MidiFileReadOptions.idl" />
+    <Midl Include="MidiFileReadResult.idl" />
+    <Midl Include="MidiStandardFileReader.idl" />
     <Midl Include="MidiUniversalSystemExclusiveChannel.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiGroupEndpointListener.idl" />

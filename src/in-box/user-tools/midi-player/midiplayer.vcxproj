@@ -131,12 +131,13 @@
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="GeneralMidi.h" />
     <ClInclude Include="InstanceHandoff.h" />
-    <ClInclude Include="MidiSequence.h" />
+    <ClInclude Include="..\..\Inc\midi_file_sequence.h" />
     <ClInclude Include="NoteRollRenderer.h" />
-    <ClInclude Include="PlaybackEngine.h" />
+    <ClInclude Include="KeyboardRollRenderer.h" />
+    <ClInclude Include="..\..\Inc\midi_sequence_playback_engine.h" />
     <ClInclude Include="PlayQueue.h" />
     <ClInclude Include="QueueItem.h" />
-    <ClInclude Include="SmfReader.h" />
+    <ClInclude Include="..\..\Inc\midi_file_smf_reader.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="TrackItem.h" />
@@ -165,7 +166,7 @@
     <ClCompile Include="CommandLineOptions.cpp" />
     <ClCompile Include="InstanceHandoff.cpp" />
     <ClCompile Include="NoteRollRenderer.cpp" />
-    <ClCompile Include="PlaybackEngine.cpp" />
+    <ClCompile Include="KeyboardRollRenderer.cpp" />
     <ClCompile Include="PlayQueue.cpp" />
     <ClCompile Include="QueueItem.cpp" />
     <ClCompile Include="StringResources.cpp" />
@@ -175,10 +176,13 @@
     <ClCompile Include="GeneralMidi.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="MidiSequence.cpp">
+    <ClCompile Include="..\..\Inc\midi_file_sequence.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SmfReader.cpp">
+    <ClCompile Include="..\..\Inc\midi_file_smf_reader.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\..\Inc\midi_sequence_playback_engine.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="App.xaml.cpp">

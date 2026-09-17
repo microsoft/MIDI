@@ -8,7 +8,7 @@
 // Deliberately free of pch.h, WinRT and XAML so that this file compiles unchanged into the unit
 // test project. See SmfReader.h for the rules this reader follows about untrusted input.
 
-#include "SmfReader.h"
+#include "midi_file_smf_reader.h"
 
 #include <windows.h>
 
@@ -226,7 +226,11 @@ namespace midifile
         // Text in a Standard MIDI File is bytes with no declared encoding. Modern files are
         // usually UTF-8; older ones are Latin-1. Guessing UTF-8 first and falling back keeps both
         // readable, and nothing here can fail.
-        std::string DecodeText(std::span<uint8_t const> bytes) noexcept
+        //
+        // Lyrics are the one kind where the whitespace is the content: a karaoke file marks its
+        // word breaks with a trailing space and its line breaks with a carriage return, so tidying
+        // those away would run a whole verse together.
+        std::string DecodeText(std::span<uint8_t const> bytes, bool preserveWhitespace = false) noexcept
         {
             std::string text{};
 
@@ -258,13 +262,19 @@ namespace midifile
             }
 
             // Control characters in a track name wreck a text block's layout.
-            std::erase_if(text, [](char value) noexcept
+            std::erase_if(text, [preserveWhitespace](char value) noexcept
                 {
                     auto const byte = static_cast<unsigned char>(value);
+
+                    if (preserveWhitespace && (byte == '\r' || byte == '\n'))
+                    {
+                        return false;
+                    }
+
                     return byte < 0x20 && byte != '\t';
                 });
 
-            while (!text.empty() && (text.back() == ' ' || text.back() == '\t'))
+            while (!preserveWhitespace && !text.empty() && (text.back() == ' ' || text.back() == '\t'))
             {
                 text.pop_back();
             }
@@ -274,6 +284,11 @@ namespace midifile
 
         EventKind KindFromStatus(uint8_t status) noexcept
         {
+            if (status >= 0xF8)
+            {
+                return EventKind::SystemRealTime;
+            }
+
             switch (status & 0xF0)
             {
             case 0x80: return EventKind::NoteOff;
@@ -284,6 +299,27 @@ namespace midifile
             case 0xD0: return EventKind::ChannelPressure;
             case 0xE0: return EventKind::PitchBend;
             default:   return EventKind::SystemCommon;
+            }
+        }
+
+        // How many data bytes follow a status byte inside a track. Getting this wrong for the
+        // system statuses desynchronizes the rest of the track, because the reader would swallow
+        // bytes belonging to the next delta time.
+        uint32_t DataByteCountForStatus(uint8_t status) noexcept
+        {
+            if (status < 0xF0)
+            {
+                auto const highNibble = static_cast<uint8_t>(status & 0xF0);
+
+                return (highNibble == 0xC0 || highNibble == 0xD0) ? 1u : 2u;
+            }
+
+            switch (status)
+            {
+            case 0xF1: return 1u;   // MIDI time code quarter frame
+            case 0xF2: return 2u;   // song position pointer
+            case 0xF3: return 1u;   // song select
+            default:   return 0u;   // tune request, the undefined statuses and all of real time
             }
         }
 
@@ -412,16 +448,20 @@ namespace midifile
                     data = data.subspan(0, limits.MaximumTextBytes);
                 }
 
-                auto text = DecodeText(data);
+                auto const kind = metaType <= 0x09
+                    ? static_cast<TextKind>(metaType)
+                    : TextKind::Text;
+
+                // A karaoke file carries its words in plain text events, so both kinds keep their
+                // spacing; everything else is a name or a note to a reader and is tidied up.
+                auto const preserveWhitespace = kind == TextKind::Lyric || kind == TextKind::Text;
+
+                auto text = DecodeText(data, preserveWhitespace);
 
                 if (text.empty())
                 {
                     return;
                 }
-
-                auto const kind = metaType <= 0x09
-                    ? static_cast<TextKind>(metaType)
-                    : TextKind::Text;
 
                 if (trackIndex < sequence.Tracks.size())
                 {
@@ -451,10 +491,18 @@ namespace midifile
                     sequence.Copyright = text;
                 }
 
+                // A Soft Karaoke file announces itself before its first word, so from here on its
+                // plain text events are lyrics and have to be kept.
+                if (kind == TextKind::Text && !sequence.IsKaraoke && text.rfind("@K", 0) == 0)
+                {
+                    sequence.IsKaraoke = true;
+                }
+
                 // Only the kinds a display uses are kept, so a file full of editor comments does
                 // not grow the model for nothing.
                 if (kind == TextKind::Lyric || kind == TextKind::Marker || kind == TextKind::CuePoint ||
-                    kind == TextKind::TrackName || kind == TextKind::ProgramName)
+                    kind == TextKind::TrackName || kind == TextKind::ProgramName ||
+                    (kind == TextKind::Text && sequence.IsKaraoke))
                 {
                     if (sequence.TextEvents.size() < limits.MaximumTextEvents)
                     {
@@ -533,6 +581,14 @@ namespace midifile
         {
             TrackParseState state{};
 
+            // A gap this long is never a musical rest, so it is used as the signal that the reader
+            // has lost the event boundary. Generous on purpose: at a musical division this is about
+            // twenty five minutes of silence at 120 beats per minute, and slower tempos stretch it
+            // further still, so a real file cannot trip it.
+            auto const maximumDelta = sequence.Division.IsSmpte
+                ? static_cast<uint32_t>(sequence.Division.TicksPerSecond() * 1500.0)
+                : static_cast<uint32_t>(sequence.Division.TicksPerQuarterNote) * 3000u;
+
             state.Tick = tickOffset;
             lastTick = tickOffset;
 
@@ -542,6 +598,14 @@ namespace midifile
 
                 if (!reader.TryReadVariableLength(delta))
                 {
+                    return false;
+                }
+
+                if (delta > maximumDelta)
+                {
+                    // Nothing musical waits this long. The reader has lost the event boundary, and
+                    // carrying on would invent a timeline hours or days long out of whatever bytes
+                    // follow, so keep what is real and stop here.
                     return false;
                 }
 
@@ -675,7 +739,16 @@ namespace midifile
                         return false;
                     }
 
-                    state.RunningStatus = status;
+                    // Real time may be interleaved anywhere and leaves running status alone;
+                    // system common cancels it; only a channel status becomes the new one.
+                    if (status < 0xF0)
+                    {
+                        state.RunningStatus = status;
+                    }
+                    else if (status < 0xF8)
+                    {
+                        state.RunningStatus = 0;
+                    }
                 }
                 else
                 {
@@ -689,8 +762,7 @@ namespace midifile
                     }
                 }
 
-                auto const highNibble = static_cast<uint8_t>(status & 0xF0);
-                auto const dataByteCount = (highNibble == 0xC0 || highNibble == 0xD0) ? 1u : 2u;
+                auto const dataByteCount = DataByteCountForStatus(status);
 
                 std::array<uint8_t, 3> message{};
 
@@ -705,13 +777,13 @@ namespace midifile
                         return false;
                     }
 
-                    // A data byte with the high bit set is invalid and would be read as a status
-                    // byte by anything downstream.
+                    // Out of range, but files written by buggy tools do this consistently while
+                    // staying perfectly aligned, so the value is clamped rather than distrusted.
                     message[index + 1] = static_cast<uint8_t>(value & 0x7F);
                 }
 
-                auto const channel = static_cast<uint8_t>(status & 0x0F);
                 auto const kind = KindFromStatus(status);
+                auto const channel = status < 0xF0 ? static_cast<uint8_t>(status & 0x0F) : ChannelNone;
 
                 if (kind == EventKind::ControlChange)
                 {

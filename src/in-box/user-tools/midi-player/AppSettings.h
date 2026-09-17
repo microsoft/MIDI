@@ -38,6 +38,10 @@ namespace midiplayer
         bool ShowQueue() const noexcept { return m_showQueue; }
         void ShowQueue(bool value) noexcept;
 
+        // False for the track roll, true for the falling notes and keyboard.
+        bool KeyboardView() const noexcept { return m_keyboardView; }
+        void KeyboardView(bool value) noexcept;
+
     private:
         AppSettings() noexcept;
 
@@ -45,5 +49,6 @@ namespace midiplayer
         uint8_t m_groupIndex{ 0 };
         bool m_repeatQueue{ false };
         bool m_showQueue{ true };
+        bool m_keyboardView{ false };
     };
 }

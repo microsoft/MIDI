@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include "MidiSequence.h"
-#include "SmfReader.h"
+#include "midi_file_sequence.h"
+#include "midi_file_smf_reader.h"
 
 namespace midiplayer
 {
@@ -26,7 +26,6 @@ namespace midiplayer
         uint32_t NoteCount{ 0 };
         uint32_t TrackCount{ 0 };
         uint32_t EventCount{ 0 };
-        double BeatsPerMinute{ 120.0 };
         uint16_t ChannelMask{ 0 };
 
         midifile::ReadStatus Status{ midifile::ReadStatus::Success };

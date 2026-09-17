@@ -436,6 +436,15 @@ namespace midi2console
             writeFlag(args.IsDeviceIdentityUpdated(), IDS_WATCH_UPDATE_DEVICE_IDENTITY);
             writeFlag(args.IsUserMetadataUpdated(), IDS_WATCH_UPDATE_USER_METADATA);
             writeFlag(args.AreAdditionalCapabilitiesUpdated(), IDS_WATCH_UPDATE_ADDITIONAL_CAPABILITIES);
+            writeFlag(args.AreUniqueIdsUpdated(), IDS_WATCH_UPDATE_UNIQUE_IDS);
+            writeFlag(args.AreGroupTerminalBlocksUpdated(), IDS_WATCH_UPDATE_GROUP_TERMINAL_BLOCKS);
+            writeFlag(args.IsMutedStateUpdated(), IDS_WATCH_UPDATE_MUTED_STATE);
+            writeFlag(args.IsEndpointDiscoveryStateUpdated(), IDS_WATCH_UPDATE_ENDPOINT_DISCOVERY_STATE);
+            writeFlag(args.IsMidi1PortMappingUpdated(), IDS_WATCH_UPDATE_MIDI1_PORT_MAPPING);
+            writeFlag(args.IsDevicePresenceUpdated(), IDS_WATCH_UPDATE_DEVICE_PRESENCE);
+            writeFlag(args.AreLatencyPropertiesUpdated(), IDS_WATCH_UPDATE_LATENCY);
+            writeFlag(args.AreTransportSuppliedPropertiesUpdated(), IDS_WATCH_UPDATE_TRANSPORT_SUPPLIED);
+            writeFlag(args.AreSystemDevicePropertiesUpdated(), IDS_WATCH_UPDATE_SYSTEM_DEVICE);
 
             if (options.Verbose)
             {

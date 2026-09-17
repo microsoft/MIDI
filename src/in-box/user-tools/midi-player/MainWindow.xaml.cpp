@@ -38,12 +38,23 @@ namespace winrt::midiplayer::implementation
         // Which output a first run should pick. Once the customer has played something the saved
         // choice wins, so this only decides what happens before that.
         //
-        // TODO: replace the name match with the in-box synth's real identity when it ships. It is
-        // deliberately a single function so that is a one line change.
+        // The built-in synthesizer knows its own endpoint, so that is asked for first. The name
+        // match is only there for a PC old enough to still be relying on the legacy wavetable
+        // synth, where there is nothing else to go on.
         bool IsPreferredFirstRunEndpoint(midi2enum::MidiEndpointDeviceInformation const& device) noexcept
         {
             try
             {
+                if (midi2synth::MidiSynthManager::IsTransportAvailable())
+                {
+                    auto const synthEndpointId = midi2synth::MidiSynthManager::EndpointDeviceId();
+
+                    if (!synthEndpointId.empty())
+                    {
+                        return midiapp::EndpointIdsMatch(synthEndpointId, device.EndpointDeviceId());
+                    }
+                }
+
                 std::wstring const name{ device.Name() };
 
                 return name.find(L"General MIDI") != std::wstring::npos
@@ -88,9 +99,14 @@ namespace winrt::midiplayer::implementation
             GroupComboBox().ItemsSource(m_groups);
 
             m_noteRoll.Initialize(NoteRollHost());
+            m_keyboardRoll.Initialize(KeyboardRollHost());
 
             RepeatToggle().IsChecked(native::AppSettings::Current().RepeatQueue());
             QueueToggle().IsChecked(native::AppSettings::Current().ShowQueue());
+
+            m_keyboardView = native::AppSettings::Current().KeyboardView();
+            KeyboardViewToggle().IsChecked(m_keyboardView);
+            ApplyViewMode();
 
             m_engine.SetCompletionHandler([weak = get_weak(), queue = m_dispatcherQueue]() noexcept
                 {
@@ -123,7 +139,14 @@ namespace winrt::midiplayer::implementation
                         strong->m_engine.Stop();
                         strong->m_engine.Close();
 
+                        if (strong->m_session != nullptr)
+                        {
+                            strong->m_session.Close();
+                            strong->m_session = nullptr;
+                        }
+
                         strong->m_noteRoll.Shutdown();
+                        strong->m_keyboardRoll.Shutdown();
 
                         strong->m_chrome.SavePlacement();
                         strong->m_chrome.Shutdown();

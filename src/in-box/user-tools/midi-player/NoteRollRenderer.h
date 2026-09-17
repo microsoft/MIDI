@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include "MidiSequence.h"
+#include "midi_file_sequence.h"
 
 namespace midiplayer
 {
@@ -42,12 +42,29 @@ namespace midiplayer
         winrt::Microsoft::UI::Composition::SpriteVisual TakeVisual(size_t index) noexcept;
         void HideFrom(size_t index) noexcept;
 
+        // Bar and beat lines, so the roll can be read as music rather than as a stripe chart.
+        void RenderGrid(
+            uint32_t startTick,
+            uint32_t endTick,
+            double windowStart,
+            double spanSeconds,
+            double width,
+            double height) noexcept;
+
+        winrt::Microsoft::UI::Composition::SpriteVisual TakeGridVisual(size_t index) noexcept;
+        void HideGridFrom(size_t index) noexcept;
+
         winrt::Microsoft::UI::Composition::Compositor m_compositor{ nullptr };
         winrt::Microsoft::UI::Composition::ContainerVisual m_root{ nullptr };
+        winrt::Microsoft::UI::Composition::ContainerVisual m_gridLayer{ nullptr };
         winrt::Microsoft::UI::Composition::ContainerVisual m_noteLayer{ nullptr };
         winrt::Microsoft::UI::Composition::SpriteVisual m_playhead{ nullptr };
 
         std::vector<winrt::Microsoft::UI::Composition::SpriteVisual> m_pool{};
+        std::vector<winrt::Microsoft::UI::Composition::SpriteVisual> m_gridPool{};
+
+        winrt::Microsoft::UI::Composition::CompositionColorBrush m_barBrush{ nullptr };
+        winrt::Microsoft::UI::Composition::CompositionColorBrush m_beatBrush{ nullptr };
 
         // One brush per track color and dim state, because a brush per note would defeat the
         // point of the pool.
@@ -56,11 +73,20 @@ namespace midiplayer
         std::shared_ptr<midifile::MidiSequence const> m_sequence{};
         std::vector<bool> m_audible{};
 
+        // Reused every frame so the grid does not allocate.
+        std::vector<midifile::GridLine> m_gridLines{};
+
         // A note display which rescales as the range grows would never sit still, so the range is
         // decided once when the file is loaded.
         uint8_t m_lowestNote{ 0 };
         uint8_t m_highestNote{ 127 };
 
         static constexpr size_t MaximumVisibleNotes = 2048;
+
+        // A dense time signature or a very high division could otherwise ask for a line per pixel.
+        static constexpr size_t MaximumGridLines = 256;
+
+        // Below this spacing the beats are drawn as a smear, so only bar lines are kept.
+        static constexpr double MinimumBeatSpacing = 9.0;
     };
 }

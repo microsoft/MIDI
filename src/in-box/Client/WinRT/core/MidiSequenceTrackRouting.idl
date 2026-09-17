@@ -1,0 +1,43 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiEndpointConnection.idl";
+import "MidiGroup.idl";
+import "MidiChannel.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Sequencing
+{
+    // Where one track's messages are sent. A file written for several instruments at once names
+    // the port it wanted for each track, so a sensible default can be worked out, but the choice
+    // belongs to the application.
+    //
+    // Tracks may be sent to different endpoints at the same time and still stay together: every
+    // message is scheduled against the same machine-wide clock.
+    [contract(MidiSequencingUtilityApiContract,1)]
+    [interface_name("Windows.Devices.Midi2.Utilities.Sequencing.IMidiSequenceTrackRouting", UUID_IMidiSequenceTrackRouting)]
+    runtimeclass MidiSequenceTrackRouting
+    {
+        MidiSequenceTrackRouting();
+
+        // Null to use whichever connection the player was created with.
+        Windows.Devices.Midi2.MidiEndpointConnection Connection;
+
+        Windows.Devices.Midi2.MidiGroup Group;
+
+        // Set to move a track onto a different channel than the file wrote it for. Null leaves
+        // the channel in the file alone.
+        Windows.Devices.Midi2.MidiChannel ChannelOverride;
+
+        Boolean IsMuted;
+    };
+}

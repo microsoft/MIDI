@@ -7,7 +7,35 @@
 
 #pragma once
 
-#include "MidiSequence.h"
+#include <cstdint>
+#include <array>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <vector>
+#include <condition_variable>
+#include <thread>
+
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Devices.Midi2.h>
+
+#include "midi_file_sequence.h"
+
+// This compiles into the SDK and, until the player app is moved over, into the app as well. The
+// app defines richer tracing of its own; without it, fall back to the platform's error logging so
+// nothing escapes a worker thread either way.
+#ifndef MIDI_PLAYER_CATCH_AND_LOG
+#define MIDI_PLAYER_CATCH_AND_LOG(messageText)  catch (...) { LOG_IF_FAILED(E_FAIL); }
+#endif
+
+#ifndef MIDI_PLAYER_LOG_GENERAL_EXCEPTION
+#define MIDI_PLAYER_LOG_GENERAL_EXCEPTION(messageText)  LOG_IF_FAILED(E_FAIL)
+#endif
+
+#ifndef MIDI_PLAYER_LOG_INFO_WITH_ENDPOINT
+#define MIDI_PLAYER_LOG_INFO_WITH_ENDPOINT(messageText, endpointId)  ((void)0)
+#endif
 
 namespace midiplayer
 {
@@ -59,7 +87,17 @@ namespace midiplayer
         PlaybackEngine& operator=(PlaybackEngine const&) = delete;
 
         // blocking
-        OpenResult Open(_In_ std::wstring const& endpointDeviceId) noexcept;
+        OpenResult Open(
+            _In_ winrt::Windows::Devices::Midi2::MidiSession const& session,
+            _In_ std::wstring const& endpointDeviceId) noexcept;
+
+        // Uses a connection the caller already opened. The engine will not close it.
+        void AttachConnection(
+            _In_ winrt::Windows::Devices::Midi2::MidiEndpointConnection const& connection) noexcept;
+
+        bool OwnsConnection() const noexcept;
+        winrt::Windows::Devices::Midi2::MidiEndpointConnection Connection() const noexcept;
+
         void Close() noexcept;
 
         bool IsOpen() const noexcept;
@@ -141,6 +179,7 @@ namespace midiplayer
         mutable std::recursive_mutex m_lock{};
 
         winrt::Windows::Devices::Midi2::MidiSession m_session{ nullptr };
+        bool m_ownsConnection{ false };
         winrt::Windows::Devices::Midi2::MidiEndpointConnection m_connection{ nullptr };
         std::wstring m_endpointDeviceId{};
 
