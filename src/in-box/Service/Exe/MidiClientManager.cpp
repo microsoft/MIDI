@@ -431,7 +431,7 @@ CMidiClientManager::GetMidiClient(
     MidiClientHandle newClientHandle{ 0 };
     do
     {
-        newClientHandle = (MidiClientHandle) (((ULONGLONG)RtlRandomEx(&m_handleSeed) << 32) | RtlRandomEx(&m_handleSeed));
+        newClientHandle = (MidiClientHandle) (((ULONGLONG)rand() << 32) | rand());
     } while (newClientHandle == 0 || m_ClientPipes.count(newClientHandle) != 0);
 
     client->ClientHandle = newClientHandle;

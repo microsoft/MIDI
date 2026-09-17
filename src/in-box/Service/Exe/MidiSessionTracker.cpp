@@ -222,8 +222,8 @@ CMidiSessionTracker::AddClientSession(
         do
         {
             const auto randomHandleValue =
-                (static_cast<ULONGLONG>(RtlRandomEx(&m_contextHandleSeed)) << 32) |
-                RtlRandomEx(&m_contextHandleSeed);
+                (static_cast<ULONGLONG>(rand()) << 32) |
+                rand();
             newContextHandle = reinterpret_cast<PVOID>(static_cast<ULONG_PTR>(randomHandleValue));
         } while (newContextHandle == nullptr || FindSessionForContextHandle(newContextHandle) != m_sessions.end());
 

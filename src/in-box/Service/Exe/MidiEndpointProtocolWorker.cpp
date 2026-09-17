@@ -287,10 +287,6 @@ CMidiEndpointProtocolWorker::Start(
 
         if (Feature_Servicing_MIDI2ProtocolNegotiationDeadlock::IsEnabled())
         {
-            // Everything from here on blocks, and none of it mutates state Shutdown() touches,
-            // so the lock is dropped rather than held for the life of the worker.
-            lock.reset();
-
             // Waking on m_endProcessing as well is the point. Shutdown() signals it before it
             // takes m_lock, but the old code was parked on the discovery event alone, so a
             // teardown arriving mid-discovery had to wait out the entire timeout first.
@@ -315,7 +311,7 @@ CMidiEndpointProtocolWorker::Start(
         {
             // m_inInitialFunctionBlockDiscovery is read on the transport callback thread,
             // so publish this transition under m_lock (the broad lock was already released above).
-            auto lock = m_lock.lock();
+            auto reLock = m_lock.lock();
             m_inInitialFunctionBlockDiscovery = false;
         }
 
