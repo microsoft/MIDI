@@ -1,0 +1,143 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util='http://wixtoolset.org/schemas/v4/wxs/util'>
+
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
+    <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\BundleInfo.wxi ?>
+    <?include $(StagingVersionIncludeFile) ?>
+
+    <!-- Shared with any in-box version of this transport, which is what makes the uninstall
+         behavior below matter. -->
+    <?define SynthTransportClsid={7605713E-FEA9-409D-A90F-A81233200D0A} ?>
+    <?define SynthTransportPluginKeyName=Midi2MidiSynthTransport ?>
+
+    <Package
+          Name="Microsoft Windows MIDI Services General MIDI Synthesizer $(var.Platform)"
+          Manufacturer="Microsoft Corporation"
+          Version="$(MidiPluginsNumericVersion)"
+          UpgradeCode="94a024e8-7551-469a-b3ae-03cf9d78a578"
+          Scope="perMachine"
+          Compressed="true"
+          >
+
+        <MediaTemplate EmbedCab="yes" />
+
+        <!--
+          Same version upgrades are allowed because preview builds do not always carry a new
+          version number, and without this two of them install side by side.
+        -->
+        <MajorUpgrade
+            AllowSameVersionUpgrades="yes"
+            DowngradeErrorMessage="A newer version of Windows MIDI Services (General MIDI Synthesizer Preview) is already installed. Uninstall it first to install this version." />
+
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
+                <Directory Id="SERVICE_INSTALLFOLDER" Name="Service" />
+            </Directory>
+        </StandardDirectory>
+
+        <!--
+          Deliberately no SelfRegCost here. Self-registration also self-UNregisters, and
+          DllUnregisterServer removes the CLSID no matter who owns it by then. Registration is done
+          from the custom actions at the bottom of this file instead, and removal only happens when
+          the registration still points at the file this package installed.
+
+          The synthesizer reads the sound set Windows already installs in System32, so the only
+          payload here is the transport itself. Its engine is a static library linked into the DLL.
+        -->
+        <Component Id="WindowsServicePlugins"
+                   Bitness="always64"
+                   Directory="SERVICE_INSTALLFOLDER"
+                   Guid="5a2ef5ee-4af0-411b-8aa5-500a793f9576"  >
+
+            <File Source="$(StagingSourceRootFolder)\api\$(var.Platform)\Midi2.MidiSynthTransport.dll" Vital="true" />
+        </Component>
+
+        <!--
+          The plugin key itself is written by the custom actions, so that uninstall can decline to
+          remove a registration an in-box transport has since taken over. This component marks the
+          preview as present and gives MSI something to reference count.
+        -->
+        <Component Id="ConfigurationRegistryEntries"
+                Bitness="always64"
+                Directory="SERVICE_INSTALLFOLDER"
+                Guid="582d751b-fe42-4367-b0cc-1c06c574865d"
+                NeverOverwrite="false">
+
+            <RegistryKey Root="HKLM"
+                         Key="SOFTWARE\Microsoft\Windows MIDI Services\General MIDI Synth Preview">
+                <RegistryValue Type="string" Name="TransportRegistration" Value="installed" KeyPath="yes" />
+            </RegistryKey>
+        </Component>
+
+        <Component Id="RestartService"
+                    Bitness="always64"
+                    Directory="SERVICE_INSTALLFOLDER"
+                    Guid="4dc818e2-741f-4218-b82c-0fe985bd9f7d">
+
+            <ServiceControl Id="midisrv" Name="midisrv"
+                            Start="both"
+                            Stop="both"/>
+
+        </Component>
+
+        <Feature Id="WindowsMIDIServices">
+            <ComponentRef Id="WindowsServicePlugins"/>
+            <ComponentRef Id="ConfigurationRegistryEntries"/>
+            <ComponentRef Id="RestartService"/>
+        </Feature>
+
+        <Binary Id="CustomActionBinary"
+                SourceFile="$(var.customactions.TargetDir)$(var.customactions.TargetName).CA.dll" />
+
+        <CustomAction Id="Action_TakeRegistryOwnership"
+                      Impersonate="no"
+                      Execute="deferred"
+                      BinaryRef="CustomActionBinary"
+                      DllEntry="TakeRegistryOwnership"
+                      Return="check"/>
+
+        <!-- Deferred custom actions cannot read properties, so everything they need is handed over
+             through CustomActionData. -->
+        <SetProperty Id="Action_RegisterSynthTransport"
+                     Value="DllPath=[SERVICE_INSTALLFOLDER]Midi2.MidiSynthTransport.dll;Clsid=$(SynthTransportClsid);PluginKeyName=$(SynthTransportPluginKeyName)"
+                     Before="Action_RegisterSynthTransport"
+                     Sequence="execute" />
+
+        <CustomAction Id="Action_RegisterSynthTransport"
+                      Impersonate="no"
+                      Execute="deferred"
+                      BinaryRef="CustomActionBinary"
+                      DllEntry="RegisterTransportComServer"
+                      Return="check" />
+
+        <SetProperty Id="Action_UnregisterSynthTransport"
+                     Value="DllPath=[SERVICE_INSTALLFOLDER]Midi2.MidiSynthTransport.dll;Clsid=$(SynthTransportClsid);PluginKeyName=$(SynthTransportPluginKeyName)"
+                     Before="Action_UnregisterSynthTransport"
+                     Sequence="execute" />
+
+        <CustomAction Id="Action_UnregisterSynthTransport"
+                      Impersonate="no"
+                      Execute="deferred"
+                      BinaryRef="CustomActionBinary"
+                      DllEntry="UnregisterTransportComServerIfOwned"
+                      Return="check" />
+
+        <InstallExecuteSequence>
+            <Custom Action="Action_TakeRegistryOwnership"
+                    Before="CreateFolders"
+                    Condition='(NOT Installed) AND NOT (REMOVE="ALL")' />
+
+            <!-- After InstallFiles so the DLL regsvr32 is pointed at is already on disk -->
+            <Custom Action="Action_RegisterSynthTransport"
+                    After="InstallFiles"
+                    Condition='NOT (REMOVE="ALL")' />
+
+            <!-- Before RemoveFiles so the DLL is still there to unregister itself -->
+            <Custom Action="Action_UnregisterSynthTransport"
+                    Before="RemoveFiles"
+                    Condition='(REMOVE="ALL") AND NOT UPGRADINGPRODUCTCODE' />
+
+        </InstallExecuteSequence>
+
+    </Package>
+</Wix>
