@@ -210,8 +210,11 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
             m_group = midi2::MidiGroup((uint8_t)0);
 
+            // Weak, deliberately. The connection holds the handler and this session holds the
+            // connection, so a strong reference here would be a cycle and an application that
+            // forgot to close the session would leave it listening forever.
             m_messageReceivedToken = m_connection.MessageReceived(
-                { this, &MidiCapabilityInquirySession::OnMessageReceived });
+                { get_weak(), &MidiCapabilityInquirySession::OnMessageReceived });
 
             m_isOpen = true;
 
