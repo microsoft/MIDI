@@ -1,0 +1,42 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    // A pointer from one resource to another, as carried in a "links" array. This is how a device
+    // says which ProgramList a given channel selects from, and a device with several collections
+    // is only reachable by following these.
+    [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiResourceLink", UUID_IMidiResourceLink)]
+    [static_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiResourceLinkStatics", UUID_IMidiResourceLinkStatics)]
+    [constructor_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiResourceLinkFactory", UUID_IMidiResourceLinkFactory)]
+    runtimeclass MidiResourceLink : Windows.Foundation.IStringable
+    {
+        MidiResourceLink();
+        MidiResourceLink(String resource, String resourceId);
+
+        // The resource being pointed at, for example "ProgramList".
+        String Resource;
+
+        // Which instance of that resource, when the device offers more than one. Empty means the
+        // device has only the one and the request carries no identifier.
+        String ResourceId;
+
+        // Display name for the collection, when the device gives one.
+        String Title;
+
+        [noexcept] Windows.Data.Json.JsonObject GetJson();
+        [noexcept] static MidiResourceLink FromJson(Windows.Data.Json.JsonObject json);
+    };
+}
