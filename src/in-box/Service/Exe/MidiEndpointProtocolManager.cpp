@@ -9,7 +9,6 @@
 #include "stdafx.h"
 //#include "Midi2MidiSrvTransport.h"
 
-#include "Feature_Servicing_MIDI2FailFast.h"
 #include "Feature_Servicing_MIDI2ProtocolNegotiationDeadlock.h"
 
 // Note: This class only works if these type F messages aren't swallowed up
@@ -82,27 +81,15 @@ CMidiEndpointProtocolManager::Initialize(
             processHandle,
             nullptr));
 
-        if (Feature_Servicing_MIDI2FailFast::IsEnabled())
-        {
-            winrt::hstring deviceSelector(
-                L"System.Devices.InterfaceClassGuid:=\"{E7CCE071-3C03-423f-88D3-F1045D02552B}\" AND " \
-                L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
+        winrt::hstring deviceSelector(
+            L"System.Devices.InterfaceClassGuid:=\"{E7CCE071-3C03-423f-88D3-F1045D02552B}\" AND " \
+            L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
 
-            try
-            {
-                m_watcher = DeviceInformation::CreateWatcher(deviceSelector);
-            }
-            CATCH_RETURN();
-        }
-        else
+        try
         {
-            winrt::hstring deviceSelector(
-                L"System.Devices.InterfaceClassGuid:=\"{E7CCE071-3C03-423f-88D3-F1045D02552B}\" AND " \
-                L"System.Devices.InterfaceEnabled: = System.StructuredQueryType.Boolean#True");
-        
             m_watcher = DeviceInformation::CreateWatcher(deviceSelector);
         }
-
+        CATCH_RETURN();
         auto deviceAddedHandler = TypedEventHandler<DeviceWatcher, DeviceInformation>(this, &CMidiEndpointProtocolManager::OnDeviceAdded);
         auto deviceRemovedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidiEndpointProtocolManager::OnDeviceRemoved);
         auto deviceUpdatedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidiEndpointProtocolManager::OnDeviceUpdated);

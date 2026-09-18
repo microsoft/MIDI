@@ -17,7 +17,6 @@
 #include "midi_ksa_usb_strings.h"
 
 #include "Feature_Servicing_MIDI2DevCaps2.h"
-#include "Feature_Servicing_MIDI2FailFast.h"
 #include "Feature_Servicing_MIDI2CustomOutgoingLatency.h"
 #include "Feature_Servicing_MIDI2PortNamingRework.h"
 

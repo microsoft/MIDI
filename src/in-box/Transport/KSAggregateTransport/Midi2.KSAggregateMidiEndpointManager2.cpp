@@ -14,7 +14,6 @@
 #include <iostream>     // for getline for string parsing of VID/PID/Serial from parent id
 
 #include "Feature_Servicing_MIDI2DevCaps2.h"
-#include "Feature_Servicing_MIDI2FailFast.h"
 #include "Feature_Servicing_MIDI2CustomOutgoingLatency.h"
 
 using namespace wil;
@@ -73,30 +72,16 @@ CMidi2KSAggregateMidiEndpointManager2::Initialize(
 
 
     // the ksa2603 fix enumerates device interfaces instead of parent devices
-    if (Feature_Servicing_MIDI2FailFast::IsEnabled())
+
+    winrt::hstring deviceInterfaceSelector(
+        L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND " \
+        L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
+
+    try
     {
-        winrt::hstring deviceInterfaceSelector(
-            L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND " \
-            L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
-
-        try
-        {
-            m_watcher = DeviceInformation::CreateWatcher(deviceInterfaceSelector);
-        }
-        CATCH_RETURN();
-    }
-    else
-    {
-        winrt::hstring deviceInterfaceSelector(
-            L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND " \
-            L"System.Devices.InterfaceEnabled: = System.StructuredQueryType.Boolean#True");
-
-        auto additionalProps = winrt::single_threaded_vector<winrt::hstring>();
-        additionalProps.Append(L"System.Devices.Parent");
-
         m_watcher = DeviceInformation::CreateWatcher(deviceInterfaceSelector);
     }
-
+    CATCH_RETURN();
     auto deviceAddedHandler = TypedEventHandler<DeviceWatcher, DeviceInformation>(this, &CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceAdded);
     auto deviceRemovedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceRemoved);
     auto deviceUpdatedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSAggregateMidiEndpointManager2::OnFilterDeviceInterfaceUpdated);

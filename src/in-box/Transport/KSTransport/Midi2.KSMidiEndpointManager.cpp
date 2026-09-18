@@ -12,7 +12,6 @@
 
 #include "MidiPnpUtilities.h"
 
-#include "Feature_Servicing_MIDI2FailFast.h"
 #include "Feature_Servicing_MIDI2PortNamingRework.h"
 
 using namespace wil;
@@ -45,28 +44,15 @@ CMidi2KSMidiEndpointManager::Initialize(
 
     RETURN_IF_FAILED(midiDeviceManager->QueryInterface(__uuidof(IMidiDeviceManager), (void**)&m_midiDeviceManager));
     RETURN_IF_FAILED(midiEndpointProtocolManager->QueryInterface(__uuidof(IMidiEndpointProtocolManager), (void**)&m_midiProtocolManager));
+    winrt::hstring deviceSelector(
+        L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND " \
+        L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
 
-    if (Feature_Servicing_MIDI2FailFast::IsEnabled())
+    try
     {
-        winrt::hstring deviceSelector(
-            L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND " \
-            L"System.Devices.InterfaceEnabled:=System.StructuredQueryType.Boolean#True");
-
-        try
-        {
-            m_Watcher = DeviceInformation::CreateWatcher(deviceSelector);
-        }
-        CATCH_RETURN();
-    }
-    else
-    {
-        winrt::hstring deviceSelector(
-            L"System.Devices.InterfaceClassGuid:=\"{6994AD04-93EF-11D0-A3CC-00A0C9223196}\" AND " \
-            L"System.Devices.InterfaceEnabled: = System.StructuredQueryType.Boolean#True");
-        
         m_Watcher = DeviceInformation::CreateWatcher(deviceSelector);
     }
-
+    CATCH_RETURN();
     auto deviceAddedHandler = TypedEventHandler<DeviceWatcher, DeviceInformation>(this, &CMidi2KSMidiEndpointManager::OnDeviceAdded);
     auto deviceRemovedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSMidiEndpointManager::OnDeviceRemoved);
     auto deviceUpdatedHandler = TypedEventHandler<DeviceWatcher, DeviceInformationUpdate>(this, &CMidi2KSMidiEndpointManager::OnDeviceUpdated);
