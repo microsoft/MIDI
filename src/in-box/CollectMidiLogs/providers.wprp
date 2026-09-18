@@ -86,6 +86,9 @@
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.ScratchPad" Name="870ce634-cad0-541e-2eba-206739a2b310" Level="5" NonPagedMemory="false" />
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.SysExTool" Name="cebee286-ab08-5aee-b8a4-5183ee4ed779" Level="5" NonPagedMemory="false" />
     <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.Troubleshooter" Name="3b9d5955-7963-50ee-a951-d1752f852cad" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.Clock" Name="b66ed50c-069b-55bb-3c25-e6a2d8583a2c" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.Player" Name="d73d6253-7040-57b5-91da-fff865d35aed" Level="5" NonPagedMemory="false" />
+    <EventProvider Id="TraceLogging/Microsoft.Windows.Midi2.VirtualKeyboard" Name="4d757852-a6e6-5490-86d9-4ac9794015e1" Level="5" NonPagedMemory="false" />
 
     <EventProvider Id="WPP/usbmidi2.sys" Name="d360bed7-f0d2-4547-aa66-bbfbeb53db7e" Level="5" NonPagedMemory="true">
       <Keywords>
@@ -137,6 +140,9 @@
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.ScratchPad" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.SysExTool" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Troubleshooter" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Clock" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Player" />
+            <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.VirtualKeyboard" />
             <EventProviderId Value="TraceLogging/Windows.Devices.Midi2.Api" />
             <EventProviderId Value="TraceLogging/Microsoft.Windows.Midi2.Sdk" />
             <EventProviderId Value="Microsoft-Windows-Audio" />
