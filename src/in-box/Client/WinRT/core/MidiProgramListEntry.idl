@@ -1,0 +1,51 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiProgramListEntry", UUID_IMidiProgramListEntry)]
+    [static_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiProgramListEntryStatics", UUID_IMidiProgramListEntryStatics)]
+    [constructor_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiProgramListEntryFactory", UUID_IMidiProgramListEntryFactory)]
+    runtimeclass MidiProgramListEntry : Windows.Foundation.IStringable
+    {
+        MidiProgramListEntry();
+        MidiProgramListEntry(String title, UInt8 bankMsb, UInt8 bankLsb, UInt8 programChange);
+
+        // Display name for the program, from the entry's "title".
+        String Title;
+
+        // Straight from the entry's "bankPC" array, and sent on the wire exactly as they appear
+        // here. All three are zero based, which the specification's normative text requires even
+        // though its own example is one based.
+        [noexcept] UInt8 BankMsb;
+        [noexcept] UInt8 BankLsb;
+        [noexcept] UInt8 ProgramChange;
+
+        // A sound set commonly gives a program and its bank variation the same title, so the tags
+        // are often the only thing telling them apart.
+        Windows.Foundation.Collections.IVector<String> Tags{ get; };
+
+        // Appendix A category names, from the entry's "category".
+        Windows.Foundation.Collections.IVector<String> Categories{ get; };
+
+        // Which collection this program came from, when the device offers more than one. Not part
+        // of the resource itself; filled in from the link that led to the list.
+        String CollectionTitle;
+
+        // Round trips the entry as it appears inside a ProgramList resource.
+        [noexcept] Windows.Data.Json.JsonObject GetJson();
+        [noexcept] static MidiProgramListEntry FromJson(Windows.Data.Json.JsonObject json);
+    };
+}

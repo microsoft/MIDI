@@ -195,6 +195,12 @@
 #define UUID_IMidiUniqueIdStatics							                8087b303-0519-c0de-31d1-ee0070001000
 #define UUID_IMidiUniqueIdFactory                                           8087b303-0519-c0de-31d1-ff0070001000
 
+// Property Exchange resources. Each is a strongly typed view of one JSON resource.
+
+#define UUID_IMidiProgramListEntry                                          8087b303-0519-c0de-31d1-dd0070002000
+#define UUID_IMidiProgramListEntryStatics                                   8087b303-0519-c0de-31d1-ee0070002000
+#define UUID_IMidiProgramListEntryFactory                                   8087b303-0519-c0de-31d1-ff0070002000
+
 
 // ========== Utilities : Interface number 0E ========================================================================
 
