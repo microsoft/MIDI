@@ -48,6 +48,13 @@ namespace MidiSynth
         // stop the stream without clipping the tail.
         void RequestDrain() noexcept { m_draining.store(true, std::memory_order_release); }
 
+        // Voices sounding as of the last rendered block. Published here because the engine's own
+        // count walks the voice array, which only the render thread may touch.
+        uint32_t LastActiveVoiceCount() const noexcept
+        {
+            return m_lastActiveVoiceCount.load(std::memory_order_acquire);
+        }
+
         void RenderAudio(
             _Out_writes_(frameCount * 2) float* interleavedStereo,
             _In_ uint32_t frameCount) noexcept override;
@@ -66,6 +73,7 @@ namespace MidiSynth
 
         HANDLE m_drainedEvent{ nullptr };
         std::atomic<bool> m_draining{ false };
+        std::atomic<uint32_t> m_lastActiveVoiceCount{ 0 };
 
         QueuedUmp m_pending[MaxPendingUmpPerBlock]{};
         uint32_t m_pendingOffset[MaxPendingUmpPerBlock]{};

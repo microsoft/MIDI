@@ -98,7 +98,11 @@ namespace MidiSynth
             rendered += frames;
         }
 
-        if (m_draining.load(std::memory_order_acquire) && m_engine.ActiveVoiceCount() == 0)
+        const uint32_t activeVoices = m_engine.ActiveVoiceCount();
+
+        m_lastActiveVoiceCount.store(activeVoices, std::memory_order_release);
+
+        if (m_draining.load(std::memory_order_acquire) && activeVoices == 0)
         {
             if (m_drainedEvent != nullptr)
             {

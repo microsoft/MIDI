@@ -25,6 +25,10 @@ namespace
     // the default playback device. Reopening immediately on every failure would spin.
     constexpr uint64_t AudioRetryIntervalMilliseconds = 1000;
 
+    // How long the synthesizer stays silent before it lets the audio device go. Long enough that
+    // the gaps in a performance never reach it, short enough that a finished song does.
+    constexpr uint64_t AudioIdleReleaseMilliseconds = 5000;
+
     // Long enough for the fade a voice ends with, short enough that a disconnect never hangs.
     constexpr DWORD DrainTimeoutMilliseconds = 100;
 
@@ -151,6 +155,42 @@ MidiSynthDevice::EnsureSoundSetLoaded()
 }
 
 
+// The synthesizer answers discovery, MIDI-CI, identity and property exchange with no audio device
+// open at all. Only a channel voice message needs one, so this is set up as soon as a client
+// connects and the device is left alone until there is something to play.
+void
+MidiSynthDevice::PrimeDispatcher() noexcept
+{
+    // The engine is not initialized yet, and will not be until a sample rate is known. Its entry
+    // points all no-op without a sound set, so the dispatcher can be pointed at it safely.
+    m_dispatcher.Initialize(&m_engine, MIDI_SYNTH_GROUP_INDEX, m_muid);
+    m_dispatcher.SetOutput(&m_output, SynthIdentity{});
+
+    // What the endpoint answers UMP Stream discovery with. The name is the same resource string the
+    // endpoint was created from, so the in-protocol name and the transport supplied name agree.
+    auto const discoveryName = internal::Utf8FromWString(
+        internal::ResourceGetWString(IDS_ENDPOINT_NAME));
+
+    m_dispatcher.SetEndpointIdentity(discoveryName.c_str(), MIDI_SYNTH_ENDPOINT_UNIQUE_ID_UTF8);
+}
+
+
+// Caller must hold m_audioLock exclusively, and must have checked that there is no sink, because
+// the render thread owns the inbound queue whenever there is one.
+void
+MidiSynthDevice::PumpWithoutAudio() noexcept
+{
+    QueuedUmp message{};
+
+    // Stops as soon as a channel voice message has been seen, so the note that starts the audio
+    // device is still in the queue for the render thread rather than being played to nothing.
+    while (!m_audioWanted.load(std::memory_order_acquire) && m_inbound.TryPop(message))
+    {
+        m_dispatcher.ProcessWords(message.Words, message.WordCount);
+    }
+}
+
+
 // Caller must hold m_audioLock exclusively.
 HRESULT
 MidiSynthDevice::AcquireAudio()
@@ -197,15 +237,15 @@ MidiSynthDevice::AcquireAudio()
 
     m_engine.SetUserVolumeDb(settings.VolumeDecibels);
 
-    m_dispatcher.Initialize(&m_engine, MIDI_SYNTH_GROUP_INDEX, m_muid);
-    m_dispatcher.SetOutput(&m_output, SynthIdentity{});
-
-    // What the endpoint answers UMP Stream discovery with. The name is the same resource string the
-    // endpoint was created from, so the in-protocol name and the transport supplied name agree.
-    auto const discoveryName = internal::Utf8FromWString(
-        internal::ResourceGetWString(IDS_ENDPOINT_NAME));
-
-    m_dispatcher.SetEndpointIdentity(discoveryName.c_str(), MIDI_SYNTH_ENDPOINT_UNIQUE_ID_UTF8);
+    // Initialize clears the channel map, and the audio device now comes and goes underneath a
+    // connection, so the customer's rhythm channels have to be put back each time.
+    for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
+    {
+        if ((m_drumChannelMask & (1u << channel)) != 0)
+        {
+            m_engine.SetDrumChannel(channel, true);
+        }
+    }
 
     auto source = std::make_unique<UmpRenderSource>(
         m_engine, m_dispatcher, m_inbound, sink->SampleRate(), sink->BufferFrames(),
@@ -314,14 +354,13 @@ MidiSynthDevice::ConnectClient(IMidiCallback* callback, LONGLONG context)
         auto lock = m_audioLock.lock_exclusive();
 
         m_nextAudioRetryTimestamp = 0;
+        m_audioWanted.store(false, std::memory_order_release);
+        m_lastChannelVoiceTimestamp.store(0, std::memory_order_relaxed);
 
-        auto const audioResult = AcquireAudio();
-
-        // A machine with no usable audio device still gets a working endpoint which accepts
-        // messages, and the worker keeps retrying. Note that nothing is answered while audio is
-        // down, MIDI-CI included: the dispatcher is driven by the render thread, so with no stream
-        // there is nothing pumping it.
-        LOG_IF_FAILED(audioResult);
+        // No audio device yet. The service's protocol manager connects to every MIDI 2.0 endpoint
+        // and stays connected for its lifetime, so opening the device here would hold it open for
+        // as long as the endpoint exists and shut out anything wanting it exclusively.
+        PrimeDispatcher();
     }
 
     m_workerStop.ResetEvent();
@@ -411,6 +450,22 @@ MidiSynthDevice::SendMessage(
         for (size_t word = 0; word < length; word++)
         {
             queued.Words[word] = words[index + word];
+        }
+
+        // A channel voice message is the only thing that has to be heard, so it is what calls for
+        // the audio device. Flagged before the push, so the worker can never drain a note that
+        // arrived before the device was asked for.
+        auto const messageType = internal::GetUmpMessageTypeFromFirstWord(queued.Words[0]);
+
+        if (messageType == MIDI_UMP_MESSAGE_TYPE_MIDI1_CHANNEL_VOICE_32 ||
+            messageType == MIDI_UMP_MESSAGE_TYPE_MIDI2_CHANNEL_VOICE_64)
+        {
+            m_lastChannelVoiceTimestamp.store(
+                internal::GetCurrentMidiTimestamp(), std::memory_order_release);
+
+            // Stored after the timestamp, so a worker that is deciding to release always sees the
+            // newer timestamp if it sees the flag.
+            m_audioWanted.store(true, std::memory_order_release);
         }
 
         if (!m_inbound.TryPush(queued))
@@ -524,10 +579,21 @@ MidiSynthDevice::SetDrumChannel(uint8_t channel, bool isDrumChannel) noexcept
 
     auto lock = m_audioLock.lock_exclusive();
 
-    // The engine only exists while audio is running, and it is the render thread which reads this.
-    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_AVAILABLE), m_sink == nullptr);
+    // Remembered whether or not audio is running, because the device is released whenever the
+    // synthesizer falls quiet and the engine is rebuilt when it next has something to play.
+    if (isDrumChannel)
+    {
+        m_drumChannelMask |= (1u << channel);
+    }
+    else
+    {
+        m_drumChannelMask &= ~(1u << channel);
+    }
 
-    m_engine.SetDrumChannel(channel, isDrumChannel);
+    if (m_sink != nullptr)
+    {
+        m_engine.SetDrumChannel(channel, isDrumChannel);
+    }
 
     return S_OK;
 }
@@ -685,12 +751,51 @@ MidiSynthDevice::WorkerThread() noexcept
             {
                 auto const now = internal::GetCurrentMidiTimestamp();
 
-                // S_FALSE means the synthesizer is switched off rather than broken. Both back off,
-                // because retrying either one every pass would spin.
-                if (now >= m_nextAudioRetryTimestamp && AcquireAudio() != S_OK)
+                if (!m_audioWanted.load(std::memory_order_acquire))
                 {
+                    // Nothing to play. The endpoint still answers discovery, MIDI-CI, identity and
+                    // property exchange from here rather than from the render thread.
+                    PumpWithoutAudio();
+                }
+                else if (now >= m_nextAudioRetryTimestamp && AcquireAudio() != S_OK)
+                {
+                    // S_FALSE means the synthesizer is switched off rather than broken. Both back
+                    // off, because retrying either one every pass would spin.
                     m_nextAudioRetryTimestamp = now +
                         internal::GetMidiTimestampFrequency() * AudioRetryIntervalMilliseconds / 1000;
+                }
+            }
+            else if (m_audioWanted.load(std::memory_order_acquire))
+            {
+                auto const now = internal::GetCurrentMidiTimestamp();
+                auto const last = m_lastChannelVoiceTimestamp.load(std::memory_order_acquire);
+                auto const quietFor = (now > last) ? now - last : 0;
+
+                // Let the device go once nothing has been played for a while and every voice has
+                // finished. The wait is generous so that a reverb tail, a held pedal or a gap
+                // between phrases cannot cut a performance off mid-flight.
+                if (quietFor >= internal::GetMidiTimestampFrequency() * AudioIdleReleaseMilliseconds / 1000 &&
+                    m_source != nullptr && m_source->LastActiveVoiceCount() == 0)
+                {
+                    TraceLoggingWrite(
+                        MidiSynthTransportTelemetryProvider::Provider(),
+                        MIDI_TRACE_EVENT_INFO,
+                        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                        TraceLoggingPointer(this, "this"),
+                        TraceLoggingWideString(L"Idle. Releasing the audio device.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                    );
+
+                    ReleaseAudio();
+
+                    // A note that arrived while this was being decided leaves the flag set, so the
+                    // next pass reopens the device rather than dropping it on a silent engine.
+                    if (m_lastChannelVoiceTimestamp.load(std::memory_order_acquire) == last)
+                    {
+                        m_audioWanted.store(false, std::memory_order_release);
+                    }
+
+                    m_nextAudioRetryTimestamp = 0;
                 }
             }
         }

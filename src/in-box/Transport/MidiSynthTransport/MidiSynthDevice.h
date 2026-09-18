@@ -75,8 +75,17 @@ private:
     // first connection and kept. A machine that never plays a note never reads it at all.
     HRESULT EnsureSoundSetLoaded();
 
+    // Everything the synthesizer can do without making a sound: discovery, MIDI-CI, identity and
+    // property exchange. Separate from AcquireAudio because the protocol manager is connected for
+    // the life of the endpoint, so "a client is connected" cannot mean "hold the audio device".
+    void PrimeDispatcher() noexcept;
+
     HRESULT AcquireAudio();
     void ReleaseAudio() noexcept;
+
+    // Drains messages through the dispatcher when no audio is running, so the endpoint still
+    // answers. Caller must hold m_audioLock exclusively and must have checked there is no sink.
+    void PumpWithoutAudio() noexcept;
 
     void WorkerThread() noexcept;
     void ServiceOutbound() noexcept;
@@ -111,6 +120,14 @@ private:
 
     std::unique_ptr<MidiSynth::WasapiAudioSink> m_sink;
     std::unique_ptr<MidiSynth::UmpRenderSource> m_source;
+
+    // Set when a channel voice message arrives, which is the only thing that needs the audio
+    // device. Cleared when the device is let go again after a quiet spell.
+    std::atomic<bool> m_audioWanted{ false };
+    std::atomic<uint64_t> m_lastChannelVoiceTimestamp{ 0 };
+
+    // Guarded by m_audioLock. One bit per channel, so the assignment outlives the engine.
+    uint16_t m_drumChannelMask{ 0 };
 
     // Guards the sink and render source against a settings change or a device loss arriving while
     // a connection is being made or broken.
