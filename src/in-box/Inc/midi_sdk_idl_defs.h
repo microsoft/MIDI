@@ -248,6 +248,8 @@
 #define UUID_IMidiCapabilityInquirySession                                  8087b303-0519-c0de-31d1-dd0070017000
 #define UUID_IMidiCapabilityInquirySessionStatics                           8087b303-0519-c0de-31d1-ee0070017000
 
+#define UUID_IMidiCapabilityInquiryDeviceResponder                          8087b303-0519-c0de-31d1-dd0070018000
+
 
 // ========== Utilities : Interface number 0E ========================================================================
 

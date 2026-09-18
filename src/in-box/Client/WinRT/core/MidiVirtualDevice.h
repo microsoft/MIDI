@@ -13,6 +13,7 @@
 
 #include "MidiDeclaredEndpointInfo.h"
 #include "MidiDeclaredDeviceIdentity.h"
+#include "MidiCapabilityInquiryDeviceResponder.h"
 
 namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
 {
@@ -58,6 +59,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
         }
 
         bool IsClientEndpointInUse() const noexcept { return m_isClientEndpointInUse; }
+
+        ci::MidiCapabilityInquiryDeviceResponder CapabilityInquiry() const noexcept { return m_capabilityInquiry; }
 
 
         bool SuppressHandledMessages() { return m_suppressHandledMessages; }
@@ -141,6 +144,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
         bool m_suppressHandledMessages{ true };
 
         collections::IMap<uint8_t, midi2enum::MidiFunctionBlock> m_functionBlocks { winrt::single_threaded_map<uint8_t, midi2enum::MidiFunctionBlock>() };
+
+        // Always present, and does nothing until an application enables it. A device that answers
+        // Discovery is declaring that it implements capability inquiry.
+        ci::MidiCapabilityInquiryDeviceResponder m_capabilityInquiry
+            { winrt::make<ci::implementation::MidiCapabilityInquiryDeviceResponder>() };
 
         winrt::event<foundation::TypedEventHandler<virt::MidiVirtualDevice, virt::MidiStreamConfigRequestReceivedEventArgs>> m_streamConfigurationRequestReceivedEvent;
         winrt::event<foundation::TypedEventHandler<virt::MidiVirtualDevice, virt::MidiVirtualDeviceClientEndpointInUseChangedEventArgs>> m_clientEndpointInUseChangedEvent;

@@ -669,6 +669,9 @@
     <ClInclude Include="MidiCapabilityInquirySession.h">
       <DependentUpon>MidiCapabilityInquirySession.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiCapabilityInquiryDeviceResponder.h">
+      <DependentUpon>MidiCapabilityInquiryDeviceResponder.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiSystemExclusiveSendProgress.h">
       <DependentUpon>MidiSystemExclusiveSendProgress.idl</DependentUpon>
     </ClInclude>
@@ -1175,6 +1178,9 @@
     <ClCompile Include="MidiCapabilityInquirySession.cpp">
       <DependentUpon>MidiCapabilityInquirySession.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiCapabilityInquiryDeviceResponder.cpp">
+      <DependentUpon>MidiCapabilityInquiryDeviceResponder.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiSystemExclusiveSendProgress.cpp">
       <DependentUpon>MidiSystemExclusiveSendProgress.idl</DependentUpon>
     </ClCompile>
@@ -1482,6 +1488,7 @@
     <Midl Include="MidiProfileInquiryResponse.idl" />
     <Midl Include="MidiCapabilityInquiryMessageReceivedEventArgs.idl" />
     <Midl Include="MidiCapabilityInquirySession.idl" />
+    <Midl Include="MidiCapabilityInquiryDeviceResponder.idl" />
     <Midl Include="MidiProfileId.idl" />
     <Midl Include="MidiNetworkAdvertisedHost.idl" />
     <Midl Include="MidiNetworkAdvertisedHostAddedEventArgs.idl" />

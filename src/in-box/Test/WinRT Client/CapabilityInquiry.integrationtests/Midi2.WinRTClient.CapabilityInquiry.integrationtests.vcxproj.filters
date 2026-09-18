@@ -32,6 +32,9 @@
     <ClCompile Include="MidiCapabilityInquirySessionTests.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="MidiVirtualDeviceCapabilityInquiryTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Midi2ClientTests.rc">

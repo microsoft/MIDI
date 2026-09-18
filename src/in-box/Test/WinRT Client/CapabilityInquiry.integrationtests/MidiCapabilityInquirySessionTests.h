@@ -32,6 +32,10 @@ public:
     TEST_METHOD(TestProfileInquiryReturnsBothLists);
     TEST_METHOD(TestUnsolicitedProfileReportRaisesAnEvent);
 
+    TEST_METHOD(TestVirtualDeviceAnswersDiscoveryAndResources);
+    TEST_METHOD(TestVirtualDeviceSaysNothingUntilEnabled);
+    TEST_METHOD(TestVirtualDeviceAnswersProfilesAndUnknownResources);
+
 private:
 
 };

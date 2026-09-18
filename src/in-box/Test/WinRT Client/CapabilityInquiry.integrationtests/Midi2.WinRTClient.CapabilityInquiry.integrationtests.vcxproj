@@ -151,6 +151,7 @@
   <ItemGroup>
     <ClCompile Include="MidiCapabilityInquiryTestResponder.cpp" />
     <ClCompile Include="MidiCapabilityInquirySessionTests.cpp" />
+    <ClCompile Include="MidiVirtualDeviceCapabilityInquiryTests.cpp" />
     </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MidiCapabilityInquiryTestResponder.h" />
