@@ -80,7 +80,6 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
-    <VcpkgEnableManifest>true</VcpkgEnableManifest>
     <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
     <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\;$(GeneratedFilesDir);$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)vsfiles-sdk\intermediate\com-extensions-idl\$(Platform)\$(Configuration)</IncludePath>

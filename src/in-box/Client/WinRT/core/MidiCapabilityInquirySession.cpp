@@ -237,13 +237,20 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
             // talking to this session knows to stop.
             SendInvalidateMuid();
 
-            if (m_connection != nullptr && m_messageReceivedToken.value != 0)
+            midi2::MidiEndpointConnection connection{ nullptr };
+
             {
-                m_connection.MessageReceived(m_messageReceivedToken);
-                m_messageReceivedToken = {};
+                std::lock_guard<std::mutex> guard(m_lock);
+
+                connection = m_connection;
+                m_connection = nullptr;
             }
 
-            m_connection = nullptr;
+            if (connection != nullptr && m_messageReceivedToken.value != 0)
+            {
+                connection.MessageReceived(m_messageReceivedToken);
+                m_messageReceivedToken = {};
+            }
         }
         catch (...)
         {
@@ -362,7 +369,16 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
     {
         try
         {
-            if (!m_isOpen || m_connection == nullptr)
+            midi2::MidiEndpointConnection connection{ nullptr };
+
+            {
+                std::lock_guard<std::mutex> guard(m_lock);
+                connection = m_connection;
+            }
+
+            // Deliberately not gated on IsOpen: closing withdraws the identifier, and that message
+            // has to go out after the session has already stopped accepting new requests.
+            if (connection == nullptr)
             {
                 return false;
             }
@@ -379,7 +395,7 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
                 packets.Append(message);
             }
 
-            auto const result = m_connection.SendMultipleMessagesPacketList(packets);
+            auto const result = connection.SendMultipleMessagesPacketList(packets);
 
             return midi2::MidiEndpointConnection::SendMessageSucceeded(result);
         }
