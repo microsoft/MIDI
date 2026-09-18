@@ -359,6 +359,9 @@
     <Midl Include="MidiProgramListEntry.idl">
       <Filter>SDK\CapabilityInquiry</Filter>
     </Midl>
+    <Midl Include="MidiProgramList.idl">
+      <Filter>SDK\CapabilityInquiry</Filter>
+    </Midl>
     <Midl Include="MidiVirtualDevice.idl">
       <Filter>SDK\Transports\Virtual</Filter>
     </Midl>

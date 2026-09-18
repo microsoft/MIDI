@@ -621,6 +621,9 @@
     <ClInclude Include="MidiProgramListEntry.h">
       <DependentUpon>MidiProgramListEntry.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiProgramList.h">
+      <DependentUpon>MidiProgramList.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiSystemExclusiveSendProgress.h">
       <DependentUpon>MidiSystemExclusiveSendProgress.idl</DependentUpon>
     </ClInclude>
@@ -1079,6 +1082,9 @@
     <ClCompile Include="MidiProgramListEntry.cpp">
       <DependentUpon>MidiProgramListEntry.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiProgramList.cpp">
+      <DependentUpon>MidiProgramList.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiSystemExclusiveSendProgress.cpp">
       <DependentUpon>MidiSystemExclusiveSendProgress.idl</DependentUpon>
     </ClCompile>
@@ -1368,6 +1374,7 @@
     <Midl Include="MidiSystemExclusive7MessageHelper.idl" />
     <Midl Include="MidiUniqueId.idl" />
     <Midl Include="MidiProgramListEntry.idl" />
+    <Midl Include="MidiProgramList.idl" />
     <Midl Include="MidiNetworkAdvertisedHost.idl" />
     <Midl Include="MidiNetworkAdvertisedHostAddedEventArgs.idl" />
     <Midl Include="MidiNetworkAdvertisedHostRemovedEventArgs.idl" />

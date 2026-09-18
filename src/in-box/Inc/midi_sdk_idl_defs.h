@@ -201,6 +201,9 @@
 #define UUID_IMidiProgramListEntryStatics                                   8087b303-0519-c0de-31d1-ee0070002000
 #define UUID_IMidiProgramListEntryFactory                                   8087b303-0519-c0de-31d1-ff0070002000
 
+#define UUID_IMidiProgramList                                               8087b303-0519-c0de-31d1-dd0070003000
+#define UUID_IMidiProgramListStatics                                        8087b303-0519-c0de-31d1-ee0070003000
+
 
 // ========== Utilities : Interface number 0E ========================================================================
 
