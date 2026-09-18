@@ -645,6 +645,9 @@
     <ClInclude Include="MidiSystemExclusive7MessageBuilder.h">
       <DependentUpon>MidiSystemExclusive7MessageBuilder.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiCapabilityInquiryMessage.h">
+      <DependentUpon>MidiCapabilityInquiryMessage.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiSystemExclusiveSendProgress.h">
       <DependentUpon>MidiSystemExclusiveSendProgress.idl</DependentUpon>
     </ClInclude>
@@ -1127,6 +1130,9 @@
     <ClCompile Include="MidiSystemExclusive7MessageBuilder.cpp">
       <DependentUpon>MidiSystemExclusive7MessageBuilder.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiCapabilityInquiryMessage.cpp">
+      <DependentUpon>MidiCapabilityInquiryMessage.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiSystemExclusiveSendProgress.cpp">
       <DependentUpon>MidiSystemExclusiveSendProgress.idl</DependentUpon>
     </ClCompile>
@@ -1425,6 +1431,7 @@
     <Midl Include="MidiResourceList.idl" />
     <Midl Include="MidiSystemExclusive7MessageBuilder.idl" />
     <Midl Include="MidiCapabilityInquiryMessageTypeEnum.idl" />
+    <Midl Include="MidiCapabilityInquiryMessage.idl" />
     <Midl Include="MidiNetworkAdvertisedHost.idl" />
     <Midl Include="MidiNetworkAdvertisedHostAddedEventArgs.idl" />
     <Midl Include="MidiNetworkAdvertisedHostRemovedEventArgs.idl" />
