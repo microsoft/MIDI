@@ -33,6 +33,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "sysex-file-receiver-cs", "s
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "sysex-send-bytes-cs", "sysex-send-bytes\sysex-send-bytes-cs.csproj", "{51851DA5-9AAC-4A1E-923C-12DF10F19FA6}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "capability-inquiry-virtual-device-cs", "capability-inquiry-virtual-device\capability-inquiry-virtual-device-cs.csproj", "{A3E60B18-7D24-4F0C-9A56-C81B4D26F907}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "capability-inquiry-browse-cs", "capability-inquiry-browse\capability-inquiry-browse-cs.csproj", "{8D40F2A6-4C71-4E95-B3D8-0F62A5C71E34}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|ARM64 = Debug|ARM64
@@ -161,6 +165,22 @@ Global
 		{51851DA5-9AAC-4A1E-923C-12DF10F19FA6}.Release|ARM64.Build.0 = Release|ARM64
 		{51851DA5-9AAC-4A1E-923C-12DF10F19FA6}.Release|x64.ActiveCfg = Release|x64
 		{51851DA5-9AAC-4A1E-923C-12DF10F19FA6}.Release|x64.Build.0 = Release|x64
+		{A3E60B18-7D24-4F0C-9A56-C81B4D26F907}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{A3E60B18-7D24-4F0C-9A56-C81B4D26F907}.Debug|ARM64.Build.0 = Debug|ARM64
+		{A3E60B18-7D24-4F0C-9A56-C81B4D26F907}.Debug|x64.ActiveCfg = Debug|x64
+		{A3E60B18-7D24-4F0C-9A56-C81B4D26F907}.Debug|x64.Build.0 = Debug|x64
+		{A3E60B18-7D24-4F0C-9A56-C81B4D26F907}.Release|ARM64.ActiveCfg = Release|ARM64
+		{A3E60B18-7D24-4F0C-9A56-C81B4D26F907}.Release|ARM64.Build.0 = Release|ARM64
+		{A3E60B18-7D24-4F0C-9A56-C81B4D26F907}.Release|x64.ActiveCfg = Release|x64
+		{A3E60B18-7D24-4F0C-9A56-C81B4D26F907}.Release|x64.Build.0 = Release|x64
+		{8D40F2A6-4C71-4E95-B3D8-0F62A5C71E34}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{8D40F2A6-4C71-4E95-B3D8-0F62A5C71E34}.Debug|ARM64.Build.0 = Debug|ARM64
+		{8D40F2A6-4C71-4E95-B3D8-0F62A5C71E34}.Debug|x64.ActiveCfg = Debug|x64
+		{8D40F2A6-4C71-4E95-B3D8-0F62A5C71E34}.Debug|x64.Build.0 = Debug|x64
+		{8D40F2A6-4C71-4E95-B3D8-0F62A5C71E34}.Release|ARM64.ActiveCfg = Release|ARM64
+		{8D40F2A6-4C71-4E95-B3D8-0F62A5C71E34}.Release|ARM64.Build.0 = Release|ARM64
+		{8D40F2A6-4C71-4E95-B3D8-0F62A5C71E34}.Release|x64.ActiveCfg = Release|x64
+		{8D40F2A6-4C71-4E95-B3D8-0F62A5C71E34}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

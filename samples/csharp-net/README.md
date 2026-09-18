@@ -7,6 +7,8 @@ Using C# / WinRT and the latest versions of .NET to use the Windows MIDI Service
 | Sample | Description |
 | -------| ----------- |
 | [Basics](basics/) | Shows how to open a MidiSession, and connect to a MidiEndpoint to send and receive messages |
+| [Capability Inquiry Browse](capability-inquiry-browse/) | Asks a device what it can do, and reads the device info, channel list and program list it publishes. This is what a patch browser is built on |
+| [Capability Inquiry Virtual Device](capability-inquiry-virtual-device/) | Publishes device info, channels, programs and a profile from a virtual device, and lets the API answer capability inquiry for it |
 | [Endpoint Listeners](endpoint-listeners/) | Demonstrates filtering incoming messages down to specific groups, which is how you emulate a MIDI 1.0 port |
 | [Get VID and PID](get-vid-pid/) | Shows where to find the USB vendor and product ids for an endpoint. Replaces the WinMM `DRV_QUERYDEVICEINTERFACE` approach |
 | [Identify Endpoint Type](identify-endpoint-type/) | Correlates each endpoint with the transport which created it, so you can tell USB from network from virtual |
