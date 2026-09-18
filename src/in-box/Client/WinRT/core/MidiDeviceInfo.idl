@@ -18,9 +18,20 @@ namespace Windows.Devices.Midi2.CapabilityInquiry
 
     [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiDeviceInfo", UUID_IMidiDeviceInfo)]
     [static_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiDeviceInfoStatics", UUID_IMidiDeviceInfoStatics)]
+    [constructor_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiDeviceInfoFactory", UUID_IMidiDeviceInfoFactory)]
     runtimeclass MidiDeviceInfo : Windows.Foundation.IStringable
     {
         MidiDeviceInfo();
+
+        // The identifiers and the names are not alternatives. A device declares both, and the
+        // names are what a person reads while the identifiers are what code matches on, so the
+        // full constructor takes all of them together.
+        MidiDeviceInfo(Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity identity);
+        MidiDeviceInfo(
+            Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity identity,
+            String manufacturer,
+            String family,
+            String model);
 
         // The same identity the endpoint declares elsewhere, deliberately the same type. A device
         // states who it is through several different carriers and they are required to agree, so

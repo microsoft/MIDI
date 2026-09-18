@@ -25,11 +25,15 @@ namespace Windows.Devices.Midi2.CapabilityInquiry
         MidiChannelListEntry(UInt16 channel, String title);
 
         // Display name for the channel, from the entry's "title".
-        String Title;
+        [noexcept] String Title;
 
-        // ONE based, and deliberately not adjusted here. The channel list numbers channels from 1
-        // while the bank and program values below are zero based, which is the specification's own
-        // inconsistency rather than ours to correct.
+        // ONE based, and 1 to 256 rather than 1 to 16. The specification numbers channels from the
+        // first channel of the first Group and runs across all sixteen Groups, so this cannot be a
+        // MidiChannel: that type addresses a channel within one Group and stops at 16.
+        //
+        // Note also that this is one based while the bank and program values below are zero based.
+        // That is the specification's own inconsistency, carried through as it arrives rather than
+        // quietly corrected into something a caller would have to undo before transmitting.
         [noexcept] UInt16 Channel;
 
         // Zero based, exactly as in a program list entry.
@@ -38,11 +42,11 @@ namespace Windows.Devices.Midi2.CapabilityInquiry
         [noexcept] UInt8 ProgramChange;
 
         // Name of whatever is currently selected on the channel, when the device reports one.
-        String ProgramTitle;
+        [noexcept] String ProgramTitle;
 
         // Where this channel's programs come from. A device offering several collections is only
         // reachable by following these, so this is the route to every program list it has.
-        Windows.Foundation.Collections.IVector<MidiResourceLink> Links{ get; };
+        [noexcept] Windows.Foundation.Collections.IVector<MidiResourceLink> Links{ get; };
 
         [noexcept] Windows.Data.Json.JsonObject GetJson();
         [noexcept] static MidiChannelListEntry FromJson(Windows.Data.Json.JsonObject json);

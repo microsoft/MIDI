@@ -15,6 +15,19 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
     {
         MidiDeviceInfo() = default;
 
+        MidiDeviceInfo(_In_ midi2enum::MidiDeclaredDeviceIdentity const& identity) noexcept
+            : m_identity(identity) {}
+
+        MidiDeviceInfo(
+            _In_ midi2enum::MidiDeclaredDeviceIdentity const& identity,
+            _In_ winrt::hstring const& manufacturer,
+            _In_ winrt::hstring const& family,
+            _In_ winrt::hstring const& model) noexcept
+            : m_identity(identity)
+            , m_manufacturer(manufacturer)
+            , m_family(family)
+            , m_model(model) {}
+
         midi2enum::MidiDeclaredDeviceIdentity Identity() const noexcept { return m_identity; }
         void Identity(_In_ midi2enum::MidiDeclaredDeviceIdentity const& value) noexcept { m_identity = value; }
 

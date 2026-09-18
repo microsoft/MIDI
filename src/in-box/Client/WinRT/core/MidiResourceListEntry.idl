@@ -34,23 +34,23 @@ namespace Windows.Devices.Midi2.CapabilityInquiry
         [noexcept] static String CanSetPartial{ get; };
 
         // The resource name, for example "DeviceInfo" or "ProgramList".
-        String Resource;
+        [noexcept] String Resource;
 
         // Defaults follow the specification: readable, not writable, not subscribable, not paged.
         [noexcept] Boolean CanGet;
-        String CanSet;
+        [noexcept] String CanSet;
         [noexcept] Boolean CanSubscribe;
         [noexcept] Boolean CanPaginate;
 
         // True when a request for this resource must name which instance of it is wanted.
         [noexcept] Boolean RequireResourceId;
 
-        Windows.Foundation.Collections.IVector<String> MediaTypes{ get; };
-        Windows.Foundation.Collections.IVector<String> Encodings{ get; };
+        [noexcept] Windows.Foundation.Collections.IVector<String> MediaTypes{ get; };
+        [noexcept] Windows.Foundation.Collections.IVector<String> Encodings{ get; };
 
         // The declared JSON Schema, carried through untouched. It is arbitrary schema rather than
         // anything this API interprets, so it is offered as it arrived.
-        Windows.Data.Json.JsonObject Schema;
+        [noexcept] Windows.Data.Json.JsonObject Schema;
 
         [noexcept] Windows.Data.Json.JsonObject GetJson();
         [noexcept] static MidiResourceListEntry FromJson(Windows.Data.Json.JsonObject json);

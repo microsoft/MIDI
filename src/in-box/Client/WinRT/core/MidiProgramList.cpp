@@ -13,16 +13,16 @@
 
 namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 {
-    int32_t MidiProgramList::TotalCount() const noexcept
+    uint32_t MidiProgramList::TotalCount() const noexcept
     {
-        if (m_totalCount >= 0)
+        if (m_totalCountReported)
         {
             return m_totalCount;
         }
 
         try
         {
-            return m_offset + static_cast<int32_t>(m_entries.Size());
+            return m_offset + m_entries.Size();
         }
         catch (...)
         {
@@ -44,7 +44,7 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         }
     }
 
-    int32_t MidiProgramList::NextOffset() const noexcept
+    uint32_t MidiProgramList::NextOffset() const noexcept
     {
         try
         {
@@ -55,7 +55,7 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
                 return 0;
             }
 
-            auto const next = m_offset + static_cast<int32_t>(m_entries.Size());
+            auto const next = m_offset + m_entries.Size();
 
             return (next < TotalCount()) ? next : 0;
         }

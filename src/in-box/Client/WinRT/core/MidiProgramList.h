@@ -17,14 +17,18 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
         foundation::Collections::IVector<ci::MidiProgramListEntry> Entries() const noexcept { return m_entries; }
 
-        int32_t Offset() const noexcept { return m_offset; }
-        void Offset(_In_ int32_t const value) noexcept { m_offset = (value < 0) ? 0 : value; }
+        uint32_t Offset() const noexcept { return m_offset; }
+        void Offset(_In_ uint32_t const value) noexcept { m_offset = value; }
 
-        int32_t TotalCount() const noexcept;
-        void TotalCount(_In_ int32_t const value) noexcept { m_totalCount = (value < 0) ? 0 : value; }
+        uint32_t TotalCount() const noexcept;
+        void TotalCount(_In_ uint32_t const value) noexcept
+        {
+            m_totalCount = value;
+            m_totalCountReported = true;
+        }
 
         bool HasMoreEntries() const noexcept;
-        int32_t NextOffset() const noexcept;
+        uint32_t NextOffset() const noexcept;
 
         json::JsonArray GetJson() noexcept;
         static ci::MidiProgramList FromJson(_In_ json::JsonArray const& jsonArray) noexcept;
@@ -33,10 +37,12 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         foundation::Collections::IVector<ci::MidiProgramListEntry> m_entries
             { winrt::single_threaded_vector<ci::MidiProgramListEntry>() };
 
-        int32_t m_offset{ 0 };
+        uint32_t m_offset{ 0 };
 
-        // Negative means the device did not say, so the entry count stands in for it.
-        int32_t m_totalCount{ -1 };
+        // A device which sends its whole list at once reports no total, in which case the entry
+        // count stands in for it.
+        uint32_t m_totalCount{ 0 };
+        bool m_totalCountReported{ false };
     };
 }
 

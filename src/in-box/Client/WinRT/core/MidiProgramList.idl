@@ -26,16 +26,17 @@ namespace Windows.Devices.Midi2.CapabilityInquiry
 
         // Where this page began, and how many entries the device says it has in total. A device
         // which sends its whole list at once reports neither, so TotalCount is the entry count and
-        // Offset is zero. Both come from the reply header rather than from the resource.
-        [noexcept] Int32 Offset;
-        [noexcept] Int32 TotalCount;
+        // Offset is zero. Both come from the reply header rather than from the resource. Neither
+        // can run backwards: paging only ever moves forward through the list.
+        [noexcept] UInt32 Offset;
+        [noexcept] UInt32 TotalCount;
 
         // True when the device holds entries beyond this page, so a caller paging through a
         // workstation sized list knows to ask again rather than guessing from the count.
         [noexcept] Boolean HasMoreEntries{ get; };
 
         // The offset to ask for next. Zero when there is nothing more.
-        [noexcept] Int32 NextOffset{ get; };
+        [noexcept] UInt32 NextOffset{ get; };
 
         // The ProgramList resource is a JSON array of entries, not an object.
         [noexcept] Windows.Data.Json.JsonArray GetJson();
