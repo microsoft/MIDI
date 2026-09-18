@@ -329,6 +329,12 @@ function Invoke-MSBuild {
         $ProjectOrSolution
         "/p:Configuration=$Configuration"
         "/p:Platform=$BuildPlatform"
+
+        # The 64-bit hosted compiler and linker. The default for a cross-compile is the 32-bit
+        # hosted ones, which run out of address space during link-time code generation on the
+        # larger projects here: C1002, "compiler is out of heap space in pass 2".
+        '/p:PreferredToolArchitecture=x64'
+
         "/v:$Verbosity"
         '/nologo'
         '/nr:false'

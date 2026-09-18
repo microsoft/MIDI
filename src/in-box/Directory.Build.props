@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
 
+  <!-- Build with the 64-bit hosted compiler and linker. A cross-compile defaults to the 32-bit
+       hosted ones, which run out of address space during link-time code generation on the larger
+       projects here and fail with C1002, "compiler is out of heap space in pass 2". The linker
+       notices and restarts itself as 64-bit; the compiler does not, so it has to be asked.
+       This has to be set before Microsoft.Cpp.props is imported, which is why it lives here. -->
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+
   <!-- Points every vcpkg manifest project under src/api at the patched libmidi2 port.
        The overlay lives under src/api because the internal Windows build repo is rooted
        there and cannot see anything above it, and mirrors that repo's own layout at
