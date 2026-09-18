@@ -218,6 +218,13 @@
 #define UUID_IMidiDeviceInfo                                                8087b303-0519-c0de-31d1-dd0070007000
 #define UUID_IMidiDeviceInfoStatics                                         8087b303-0519-c0de-31d1-ee0070007000
 
+#define UUID_IMidiResourceListEntry                                         8087b303-0519-c0de-31d1-dd0070008000
+#define UUID_IMidiResourceListEntryStatics                                  8087b303-0519-c0de-31d1-ee0070008000
+#define UUID_IMidiResourceListEntryFactory                                  8087b303-0519-c0de-31d1-ff0070008000
+
+#define UUID_IMidiResourceList                                              8087b303-0519-c0de-31d1-dd0070009000
+#define UUID_IMidiResourceListStatics                                       8087b303-0519-c0de-31d1-ee0070009000
+
 
 // ========== Utilities : Interface number 0E ========================================================================
 

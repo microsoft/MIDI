@@ -636,6 +636,12 @@
     <ClInclude Include="MidiDeviceInfo.h">
       <DependentUpon>MidiDeviceInfo.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiResourceListEntry.h">
+      <DependentUpon>MidiResourceListEntry.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiResourceList.h">
+      <DependentUpon>MidiResourceList.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiSystemExclusiveSendProgress.h">
       <DependentUpon>MidiSystemExclusiveSendProgress.idl</DependentUpon>
     </ClInclude>
@@ -1109,6 +1115,12 @@
     <ClCompile Include="MidiDeviceInfo.cpp">
       <DependentUpon>MidiDeviceInfo.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiResourceListEntry.cpp">
+      <DependentUpon>MidiResourceListEntry.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiResourceList.cpp">
+      <DependentUpon>MidiResourceList.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiSystemExclusiveSendProgress.cpp">
       <DependentUpon>MidiSystemExclusiveSendProgress.idl</DependentUpon>
     </ClCompile>
@@ -1403,6 +1415,8 @@
     <Midl Include="MidiChannelListEntry.idl" />
     <Midl Include="MidiChannelList.idl" />
     <Midl Include="MidiDeviceInfo.idl" />
+    <Midl Include="MidiResourceListEntry.idl" />
+    <Midl Include="MidiResourceList.idl" />
     <Midl Include="MidiNetworkAdvertisedHost.idl" />
     <Midl Include="MidiNetworkAdvertisedHostAddedEventArgs.idl" />
     <Midl Include="MidiNetworkAdvertisedHostRemovedEventArgs.idl" />
