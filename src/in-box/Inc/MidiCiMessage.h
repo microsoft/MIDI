@@ -45,6 +45,18 @@ namespace WindowsMidiServicesCapabilityInquiry
     {
         Unknown = 0x00,
 
+        ProfileInquiry = 0x20,
+        ProfileInquiryReply = 0x21,
+        SetProfileOn = 0x22,
+        SetProfileOff = 0x23,
+        ProfileEnabledReport = 0x24,
+        ProfileDisabledReport = 0x25,
+        ProfileAddedReport = 0x26,
+        ProfileRemovedReport = 0x27,
+        ProfileDetailsInquiry = 0x28,
+        ProfileDetailsInquiryReply = 0x29,
+        ProfileSpecificData = 0x2F,
+
         PropertyExchangeCapabilitiesInquiry = 0x30,
         PropertyExchangeCapabilitiesReply = 0x31,
         PropertyGetDataInquiry = 0x34,
@@ -55,6 +67,12 @@ namespace WindowsMidiServicesCapabilityInquiry
         PropertySubscriptionReply = 0x39,
         PropertyNotify = 0x3F,
 
+        ProcessInquiryCapabilities = 0x40,
+        ProcessInquiryCapabilitiesReply = 0x41,
+        MidiMessageReport = 0x42,
+        MidiMessageReportReply = 0x43,
+        MidiMessageReportEnd = 0x44,
+
         Discovery = 0x70,
         DiscoveryReply = 0x71,
         EndpointInquiry = 0x72,
@@ -63,6 +81,14 @@ namespace WindowsMidiServicesCapabilityInquiry
         InvalidateMuid = 0x7E,
         Nak = 0x7F,
     };
+
+    // The capability categories a device declares in Discovery, as a bit per category.
+    inline constexpr uint8_t CategoryProtocolNegotiation{ 0x02 };
+    inline constexpr uint8_t CategoryProfileConfiguration{ 0x04 };
+    inline constexpr uint8_t CategoryPropertyExchange{ 0x08 };
+    inline constexpr uint8_t CategoryProcessInquiry{ 0x10 };
+
+    inline constexpr size_t ProfileIdByteCount{ 5 };
 
     enum class ParseStatus
     {
@@ -80,6 +106,18 @@ namespace WindowsMidiServicesCapabilityInquiry
         const auto value = static_cast<uint8_t>(type);
 
         return value >= 0x30 && value <= 0x3F;
+    }
+
+    inline bool MessageTypeIsProfileConfiguration(_In_ MessageType const type) noexcept
+    {
+        const auto value = static_cast<uint8_t>(type);
+
+        return value >= 0x20 && value <= 0x2F;
+    }
+
+    inline bool MessageTypeIsAcknowledgment(_In_ MessageType const type) noexcept
+    {
+        return type == MessageType::Ack || type == MessageType::Nak;
     }
 
     inline bool MuidIsUsable(_In_ uint32_t const muid) noexcept
@@ -119,6 +157,25 @@ namespace WindowsMidiServicesCapabilityInquiry
         bytes[1] = static_cast<uint8_t>((value >> 7) & 0x7F);
     }
 
+    // Profile Specific Data declares its length in four seven-bit bytes rather than two, because
+    // what a profile may send is not bounded by the same rules as a property exchange chunk.
+    inline uint32_t ReadTwentyEightBitValue(_In_reads_(4) uint8_t const* const bytes) noexcept
+    {
+        return
+            (static_cast<uint32_t>(bytes[0] & 0x7F)) |
+            (static_cast<uint32_t>(bytes[1] & 0x7F) << 7) |
+            (static_cast<uint32_t>(bytes[2] & 0x7F) << 14) |
+            (static_cast<uint32_t>(bytes[3] & 0x7F) << 21);
+    }
+
+    inline void WriteTwentyEightBitValue(_Out_writes_(4) uint8_t* const bytes, _In_ uint32_t const value) noexcept
+    {
+        bytes[0] = static_cast<uint8_t>(value & 0x7F);
+        bytes[1] = static_cast<uint8_t>((value >> 7) & 0x7F);
+        bytes[2] = static_cast<uint8_t>((value >> 14) & 0x7F);
+        bytes[3] = static_cast<uint8_t>((value >> 21) & 0x7F);
+    }
+
 
     struct PropertyExchangeFields
     {
@@ -134,6 +191,54 @@ namespace WindowsMidiServicesCapabilityInquiry
         uint16_t DataOffset{ 0 };
     };
 
+    struct ProfileFields
+    {
+        // Every profile message names a profile except Profile Inquiry and the reply to it, which
+        // ask for and return the whole list instead.
+        bool HasProfileId{ false };
+        uint8_t ProfileId[ProfileIdByteCount]{};
+
+        // Set Profile On asks for this many channels; the enabled and disabled reports say how many
+        // were actually taken. Absent on a message from a version 1 device, and specified as zero
+        // when the message is addressed to a group or a function block rather than to a channel.
+        bool HasChannelCount{ false };
+        uint16_t ChannelCount{ 0 };
+
+        // Profile Details Inquiry and its reply. Below 0x40 the meaning is common to all profiles;
+        // from 0x40 up it is defined by the profile itself.
+        bool HasInquiryTarget{ false };
+        uint8_t InquiryTarget{ 0 };
+
+        // The reply to a details inquiry, and the payload of Profile Specific Data. As with
+        // property exchange, the offset is into the buffer the caller passed in.
+        uint32_t TargetDataByteCount{ 0 };
+        uint16_t TargetDataOffset{ 0 };
+
+        // The reply to Profile Inquiry. Both are counts of five byte identifiers packed end to end
+        // at the offset beside them.
+        uint16_t EnabledProfileCount{ 0 };
+        uint16_t EnabledProfileOffset{ 0 };
+
+        uint16_t DisabledProfileCount{ 0 };
+        uint16_t DisabledProfileOffset{ 0 };
+    };
+
+    struct AcknowledgmentFields
+    {
+        // Which message this answers, so a reply can be matched to the transaction that caused it.
+        uint8_t OriginalMessageType{ 0 };
+
+        uint8_t StatusCode{ 0 };
+        uint8_t StatusData{ 0 };
+
+        // What these five bytes mean depends on the branch: a profile identifier for a profile
+        // message, and the request id plus chunk number for property exchange.
+        uint8_t Details[5]{};
+
+        uint16_t MessageTextByteCount{ 0 };
+        uint16_t MessageTextOffset{ 0 };
+    };
+
     struct ParsedMessage
     {
         MessageType Type{ MessageType::Unknown };
@@ -146,6 +251,12 @@ namespace WindowsMidiServicesCapabilityInquiry
 
         bool HasPropertyExchangeFields{ false };
         PropertyExchangeFields PropertyExchange{};
+
+        bool HasProfileFields{ false };
+        ProfileFields Profile{};
+
+        bool HasAcknowledgmentFields{ false };
+        AcknowledgmentFields Acknowledgment{};
 
         // Carried by Invalidate MUID only.
         uint32_t TargetMuid{ 0 };
@@ -205,6 +316,192 @@ namespace WindowsMidiServicesCapabilityInquiry
             {
                 message.OutputPathId = data[29] & 0x7F;
             }
+
+            return ParseStatus::Ok;
+        }
+
+        if (MessageTypeIsProfileConfiguration(message.Type))
+        {
+            size_t offset = CommonHeaderByteCount;
+
+            ProfileFields fields{};
+
+            // Profile Inquiry asks for the whole list and so names no single profile; its reply
+            // returns two counted lists. Everything else in the category names one profile.
+            if (message.Type == MessageType::ProfileInquiryReply)
+            {
+                if (size < offset + 2)
+                {
+                    return ParseStatus::TooShort;
+                }
+
+                fields.EnabledProfileCount = ReadFourteenBitValue(data + offset);
+                offset += 2;
+
+                const size_t enabledBytes = static_cast<size_t>(fields.EnabledProfileCount) * ProfileIdByteCount;
+
+                // A count that came off the wire. Check it against the real buffer before trusting it.
+                if (offset + enabledBytes > size)
+                {
+                    return ParseStatus::LengthFieldExceedsBuffer;
+                }
+
+                fields.EnabledProfileOffset = static_cast<uint16_t>(offset);
+                offset += enabledBytes;
+
+                if (size < offset + 2)
+                {
+                    return ParseStatus::TooShort;
+                }
+
+                fields.DisabledProfileCount = ReadFourteenBitValue(data + offset);
+                offset += 2;
+
+                const size_t disabledBytes = static_cast<size_t>(fields.DisabledProfileCount) * ProfileIdByteCount;
+
+                if (offset + disabledBytes > size)
+                {
+                    return ParseStatus::LengthFieldExceedsBuffer;
+                }
+
+                fields.DisabledProfileOffset = static_cast<uint16_t>(offset);
+
+                message.Profile = fields;
+                message.HasProfileFields = true;
+
+                return ParseStatus::Ok;
+            }
+
+            if (message.Type != MessageType::ProfileInquiry)
+            {
+                if (size < offset + ProfileIdByteCount)
+                {
+                    return ParseStatus::TooShort;
+                }
+
+                for (size_t i = 0; i < ProfileIdByteCount; i++)
+                {
+                    fields.ProfileId[i] = data[offset + i] & 0x7F;
+                }
+
+                fields.HasProfileId = true;
+                offset += ProfileIdByteCount;
+            }
+
+            switch (message.Type)
+            {
+            case MessageType::SetProfileOn:
+            case MessageType::SetProfileOff:
+            case MessageType::ProfileEnabledReport:
+            case MessageType::ProfileDisabledReport:
+                // A version 1 device stops after the identifier, so a missing count is not an error.
+                if (size >= offset + 2)
+                {
+                    fields.ChannelCount = ReadFourteenBitValue(data + offset);
+                    fields.HasChannelCount = true;
+                }
+                break;
+
+            case MessageType::ProfileDetailsInquiry:
+                if (size < offset + 1)
+                {
+                    return ParseStatus::TooShort;
+                }
+
+                fields.InquiryTarget = data[offset] & 0x7F;
+                fields.HasInquiryTarget = true;
+                break;
+
+            case MessageType::ProfileDetailsInquiryReply:
+            {
+                if (size < offset + 3)
+                {
+                    return ParseStatus::TooShort;
+                }
+
+                fields.InquiryTarget = data[offset] & 0x7F;
+                fields.HasInquiryTarget = true;
+                offset++;
+
+                fields.TargetDataByteCount = ReadFourteenBitValue(data + offset);
+                offset += 2;
+
+                if (offset + fields.TargetDataByteCount > size)
+                {
+                    return ParseStatus::LengthFieldExceedsBuffer;
+                }
+
+                fields.TargetDataOffset = static_cast<uint16_t>(offset);
+                break;
+            }
+
+            case MessageType::ProfileSpecificData:
+            {
+                if (size < offset + 4)
+                {
+                    return ParseStatus::TooShort;
+                }
+
+                // Four seven-bit bytes here, not two, so the count can exceed what fits in a buffer
+                // this size by a wide margin. Compare in a type that cannot overflow doing it.
+                fields.TargetDataByteCount = ReadTwentyEightBitValue(data + offset);
+                offset += 4;
+
+                if (static_cast<uint64_t>(offset) + fields.TargetDataByteCount > size)
+                {
+                    return ParseStatus::LengthFieldExceedsBuffer;
+                }
+
+                fields.TargetDataOffset = static_cast<uint16_t>(offset);
+                break;
+            }
+
+            default:
+                break;
+            }
+
+            message.Profile = fields;
+            message.HasProfileFields = true;
+
+            return ParseStatus::Ok;
+        }
+
+        if (MessageTypeIsAcknowledgment(message.Type))
+        {
+            size_t offset = CommonHeaderByteCount;
+
+            // Every field below arrived with message version 2. A version 1 responder sends a bare
+            // acknowledgment, which is still a well formed message and still worth reporting.
+            if (size < offset + 10)
+            {
+                return ParseStatus::Ok;
+            }
+
+            AcknowledgmentFields fields{};
+
+            fields.OriginalMessageType = data[offset++] & 0x7F;
+            fields.StatusCode = data[offset++] & 0x7F;
+            fields.StatusData = data[offset++] & 0x7F;
+
+            for (size_t i = 0; i < 5; i++)
+            {
+                fields.Details[i] = data[offset + i] & 0x7F;
+            }
+
+            offset += 5;
+
+            fields.MessageTextByteCount = ReadFourteenBitValue(data + offset);
+            offset += 2;
+
+            if (offset + fields.MessageTextByteCount > size)
+            {
+                return ParseStatus::LengthFieldExceedsBuffer;
+            }
+
+            fields.MessageTextOffset = static_cast<uint16_t>(offset);
+
+            message.Acknowledgment = fields;
+            message.HasAcknowledgmentFields = true;
 
             return ParseStatus::Ok;
         }
@@ -289,7 +586,382 @@ namespace WindowsMidiServicesCapabilityInquiry
         uint8_t FunctionBlockNumber{ 0 };
     };
 
+    inline bool AllBytesAreSevenBit(
+        _In_reads_opt_(count) uint8_t const* const bytes,
+        _In_ size_t const count
+    ) noexcept
+    {
+        if (bytes == nullptr)
+        {
+            return count == 0;
+        }
+
+        for (size_t i = 0; i < count; i++)
+        {
+            if (bytes[i] > 0x7F)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     inline constexpr size_t DiscoveryReplyByteCount{ 31 };
+
+    // Discovery carries everything its reply does except the function block number, which only a
+    // responder can know.
+    inline constexpr size_t DiscoveryByteCount{ 30 };
+
+    // Writes the thirteen bytes every capability inquiry message starts with. Returns the count
+    // written, or zero when the buffer is too small.
+    inline size_t WriteCommonHeader(
+        _Out_writes_to_opt_(capacity, return) uint8_t* const buffer,
+        _In_ size_t const capacity,
+        _In_ uint8_t const deviceId,
+        _In_ MessageType const type,
+        _In_ uint32_t const sourceMuid,
+        _In_ uint32_t const destinationMuid
+    ) noexcept
+    {
+        if (buffer == nullptr || capacity < CommonHeaderByteCount)
+        {
+            return 0;
+        }
+
+        size_t offset{ 0 };
+
+        buffer[offset++] = UniversalSystemExclusiveId;
+        buffer[offset++] = deviceId & 0x7F;
+        buffer[offset++] = SubId1CapabilityInquiry;
+        buffer[offset++] = static_cast<uint8_t>(type);
+        buffer[offset++] = 0x02;
+
+        WriteMuid(buffer + offset, sourceMuid);
+        offset += 4;
+
+        WriteMuid(buffer + offset, destinationMuid);
+        offset += 4;
+
+        return offset;
+    }
+
+    // An initiator announces itself with this. The destination is always the broadcast MUID,
+    // because the initiator does not yet know who is out there.
+    inline size_t BuildDiscovery(
+        _In_ DiscoveryReplyFields const& fields,
+        _Out_writes_to_opt_(capacity, return) uint8_t* const buffer,
+        _In_ size_t const capacity
+    ) noexcept
+    {
+        if (buffer == nullptr || capacity < DiscoveryByteCount)
+        {
+            return 0;
+        }
+
+        size_t offset = WriteCommonHeader(
+            buffer, capacity, DeviceIdFunctionBlock, MessageType::Discovery,
+            fields.SourceMuid, MuidBroadcast);
+
+        buffer[offset++] = fields.ManufacturerSysExId[0] & 0x7F;
+        buffer[offset++] = fields.ManufacturerSysExId[1] & 0x7F;
+        buffer[offset++] = fields.ManufacturerSysExId[2] & 0x7F;
+
+        WriteFourteenBitValue(buffer + offset, fields.DeviceFamily);
+        offset += 2;
+
+        WriteFourteenBitValue(buffer + offset, fields.DeviceFamilyModelNumber);
+        offset += 2;
+
+        buffer[offset++] = fields.SoftwareRevisionLevel[0] & 0x7F;
+        buffer[offset++] = fields.SoftwareRevisionLevel[1] & 0x7F;
+        buffer[offset++] = fields.SoftwareRevisionLevel[2] & 0x7F;
+        buffer[offset++] = fields.SoftwareRevisionLevel[3] & 0x7F;
+
+        buffer[offset++] = fields.CapabilityCategories & 0x7F;
+
+        WriteMuid(buffer + offset, fields.ReceivableMaximumSysExSize);
+        offset += 4;
+
+        buffer[offset++] = fields.OutputPathId & 0x7F;
+
+        return offset;
+    }
+
+    inline constexpr size_t InvalidateMuidByteCount{ CommonHeaderByteCount + 4 };
+
+    // Withdraws a MUID. It is sent to the broadcast MUID and gets no reply.
+    inline size_t BuildInvalidateMuid(
+        _In_ uint32_t const sourceMuid,
+        _In_ uint32_t const targetMuid,
+        _Out_writes_to_opt_(capacity, return) uint8_t* const buffer,
+        _In_ size_t const capacity
+    ) noexcept
+    {
+        if (buffer == nullptr || capacity < InvalidateMuidByteCount)
+        {
+            return 0;
+        }
+
+        size_t offset = WriteCommonHeader(
+            buffer, capacity, DeviceIdFunctionBlock, MessageType::InvalidateMuid,
+            sourceMuid, MuidBroadcast);
+
+        WriteMuid(buffer + offset, targetMuid);
+        offset += 4;
+
+        return offset;
+    }
+
+    inline constexpr size_t AcknowledgmentFixedByteCount{ CommonHeaderByteCount + 1 + 1 + 1 + 5 + 2 };
+
+    // Builds an ACK or a NAK. Anything else is refused rather than encoded under the wrong sub id.
+    inline size_t BuildAcknowledgment(
+        _In_ MessageType const type,
+        _In_ uint8_t const deviceId,
+        _In_ uint32_t const sourceMuid,
+        _In_ uint32_t const destinationMuid,
+        _In_ AcknowledgmentFields const& fields,
+        _In_reads_opt_(messageTextByteCount) uint8_t const* const messageText,
+        _In_ uint16_t const messageTextByteCount,
+        _Out_writes_to_opt_(capacity, return) uint8_t* const buffer,
+        _In_ size_t const capacity
+    ) noexcept
+    {
+        if (buffer == nullptr || !MessageTypeIsAcknowledgment(type))
+        {
+            return 0;
+        }
+
+        if (capacity < AcknowledgmentFixedByteCount + messageTextByteCount)
+        {
+            return 0;
+        }
+
+        if (!AllBytesAreSevenBit(messageText, messageTextByteCount))
+        {
+            return 0;
+        }
+
+        size_t offset = WriteCommonHeader(
+            buffer, capacity, deviceId, type, sourceMuid, destinationMuid);
+
+        buffer[offset++] = fields.OriginalMessageType & 0x7F;
+        buffer[offset++] = fields.StatusCode & 0x7F;
+        buffer[offset++] = fields.StatusData & 0x7F;
+
+        for (size_t i = 0; i < 5; i++)
+        {
+            buffer[offset++] = fields.Details[i] & 0x7F;
+        }
+
+        WriteFourteenBitValue(buffer + offset, messageTextByteCount);
+        offset += 2;
+
+        for (uint16_t i = 0; i < messageTextByteCount; i++)
+        {
+            buffer[offset++] = messageText[i];
+        }
+
+        return offset;
+    }
+
+
+    struct ProfileMessageFields
+    {
+        MessageType Type{ MessageType::ProfileInquiry };
+
+        uint8_t DeviceId{ DeviceIdFunctionBlock };
+
+        uint32_t SourceMuid{ 0 };
+        uint32_t DestinationMuid{ 0 };
+
+        uint8_t ProfileId[ProfileIdByteCount]{};
+
+        uint16_t ChannelCount{ 0 };
+        uint8_t InquiryTarget{ 0 };
+
+        uint8_t const* Data{ nullptr };
+        uint32_t DataByteCount{ 0 };
+    };
+
+    // Builds any of the profile configuration messages. Which trailing fields are written is
+    // decided by the message type, so a caller fills in only what its message actually carries.
+    inline size_t BuildProfileMessage(
+        _In_ ProfileMessageFields const& fields,
+        _Out_writes_to_opt_(capacity, return) uint8_t* const buffer,
+        _In_ size_t const capacity
+    ) noexcept
+    {
+        if (buffer == nullptr || !MessageTypeIsProfileConfiguration(fields.Type))
+        {
+            return 0;
+        }
+
+        // The reply to Profile Inquiry carries two lists and is built by the caller that owns them.
+        if (fields.Type == MessageType::ProfileInquiryReply)
+        {
+            return 0;
+        }
+
+        size_t required = CommonHeaderByteCount;
+
+        if (fields.Type != MessageType::ProfileInquiry)
+        {
+            required += ProfileIdByteCount;
+        }
+
+        switch (fields.Type)
+        {
+        case MessageType::SetProfileOn:
+        case MessageType::SetProfileOff:
+        case MessageType::ProfileEnabledReport:
+        case MessageType::ProfileDisabledReport:
+            required += 2;
+            break;
+
+        case MessageType::ProfileDetailsInquiry:
+            required += 1;
+            break;
+
+        case MessageType::ProfileDetailsInquiryReply:
+            required += 1 + 2 + fields.DataByteCount;
+            break;
+
+        case MessageType::ProfileSpecificData:
+            required += 4 + fields.DataByteCount;
+            break;
+
+        default:
+            break;
+        }
+
+        if (capacity < required)
+        {
+            return 0;
+        }
+
+        if (!AllBytesAreSevenBit(fields.Data, fields.DataByteCount))
+        {
+            return 0;
+        }
+
+        size_t offset = WriteCommonHeader(
+            buffer, capacity, fields.DeviceId, fields.Type,
+            fields.SourceMuid, fields.DestinationMuid);
+
+        if (fields.Type != MessageType::ProfileInquiry)
+        {
+            for (size_t i = 0; i < ProfileIdByteCount; i++)
+            {
+                buffer[offset++] = fields.ProfileId[i] & 0x7F;
+            }
+        }
+
+        switch (fields.Type)
+        {
+        case MessageType::SetProfileOn:
+        case MessageType::SetProfileOff:
+        case MessageType::ProfileEnabledReport:
+        case MessageType::ProfileDisabledReport:
+            WriteFourteenBitValue(buffer + offset, fields.ChannelCount);
+            offset += 2;
+            break;
+
+        case MessageType::ProfileDetailsInquiry:
+            buffer[offset++] = fields.InquiryTarget & 0x7F;
+            break;
+
+        case MessageType::ProfileDetailsInquiryReply:
+            buffer[offset++] = fields.InquiryTarget & 0x7F;
+
+            WriteFourteenBitValue(buffer + offset, static_cast<uint16_t>(fields.DataByteCount));
+            offset += 2;
+
+            for (uint32_t i = 0; i < fields.DataByteCount; i++)
+            {
+                buffer[offset++] = fields.Data[i];
+            }
+            break;
+
+        case MessageType::ProfileSpecificData:
+            WriteTwentyEightBitValue(buffer + offset, fields.DataByteCount);
+            offset += 4;
+
+            for (uint32_t i = 0; i < fields.DataByteCount; i++)
+            {
+                buffer[offset++] = fields.Data[i];
+            }
+            break;
+
+        default:
+            break;
+        }
+
+        return offset;
+    }
+
+    // Builds the reply to Profile Inquiry from two arrays of five byte identifiers packed end to
+    // end. A device with no profiles on the addressed channel still replies, with both counts zero.
+    inline size_t BuildProfileInquiryReply(
+        _In_ uint8_t const deviceId,
+        _In_ uint32_t const sourceMuid,
+        _In_ uint32_t const destinationMuid,
+        _In_reads_opt_(enabledCount * ProfileIdByteCount) uint8_t const* const enabledProfiles,
+        _In_ uint16_t const enabledCount,
+        _In_reads_opt_(disabledCount * ProfileIdByteCount) uint8_t const* const disabledProfiles,
+        _In_ uint16_t const disabledCount,
+        _Out_writes_to_opt_(capacity, return) uint8_t* const buffer,
+        _In_ size_t const capacity
+    ) noexcept
+    {
+        if (buffer == nullptr)
+        {
+            return 0;
+        }
+
+        if ((enabledProfiles == nullptr && enabledCount > 0) ||
+            (disabledProfiles == nullptr && disabledCount > 0))
+        {
+            return 0;
+        }
+
+        const size_t enabledBytes = static_cast<size_t>(enabledCount) * ProfileIdByteCount;
+        const size_t disabledBytes = static_cast<size_t>(disabledCount) * ProfileIdByteCount;
+
+        if (capacity < CommonHeaderByteCount + 2 + enabledBytes + 2 + disabledBytes)
+        {
+            return 0;
+        }
+
+        if (!AllBytesAreSevenBit(enabledProfiles, enabledBytes) ||
+            !AllBytesAreSevenBit(disabledProfiles, disabledBytes))
+        {
+            return 0;
+        }
+
+        size_t offset = WriteCommonHeader(
+            buffer, capacity, deviceId, MessageType::ProfileInquiryReply,
+            sourceMuid, destinationMuid);
+
+        WriteFourteenBitValue(buffer + offset, enabledCount);
+        offset += 2;
+
+        for (size_t i = 0; i < enabledBytes; i++)
+        {
+            buffer[offset++] = enabledProfiles[i];
+        }
+
+        WriteFourteenBitValue(buffer + offset, disabledCount);
+        offset += 2;
+
+        for (size_t i = 0; i < disabledBytes; i++)
+        {
+            buffer[offset++] = disabledProfiles[i];
+        }
+
+        return offset;
+    }
 
     // Replying to Discovery is required even of a device that supports no MIDI-CI categories at
     // all. Returns the byte count written, or zero when the buffer is too small.
@@ -450,27 +1122,6 @@ namespace WindowsMidiServicesCapabilityInquiry
         uint8_t const* Data{ nullptr };
         uint16_t DataByteCount{ 0 };
     };
-
-    inline bool AllBytesAreSevenBit(
-        _In_reads_opt_(count) uint8_t const* const bytes,
-        _In_ size_t const count
-    ) noexcept
-    {
-        if (bytes == nullptr)
-        {
-            return count == 0;
-        }
-
-        for (size_t i = 0; i < count; i++)
-        {
-            if (bytes[i] > 0x7F)
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
 
     // Returns the byte count written, or zero when the buffer is too small or the caller handed us
     // something that cannot legally travel inside a system exclusive message.

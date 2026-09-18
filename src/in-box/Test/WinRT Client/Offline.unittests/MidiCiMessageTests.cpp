@@ -274,28 +274,71 @@ void MidiCiMessageTests::TestFuzzedMessagesNeverReportOffsetsPastTheBuffer()
             buffer[i] = static_cast<uint8_t>(byteValue(generator));
         }
 
-        // Three quarters of the cases are shaped like a Property Exchange message, because pure
-        // noise is rejected on the first byte and exercises none of the length handling.
-        if (shape(generator) < 8)
+        // Three quarters of the cases are shaped like a real message, because pure noise is
+        // rejected on the first byte and exercises none of the length handling. Every branch that
+        // reads a count off the wire gets a share of them.
+        const int thisShape = shape(generator);
+
+        if (thisShape < 8)
         {
             buffer[0] = 0x7E;
             buffer[2] = 0x0D;
-            buffer[3] = 0x34;
 
-            if (length >= 16)
+            if (thisShape < 4)
             {
-                const auto header = static_cast<uint16_t>(claimedLength(generator));
+                buffer[3] = 0x34;
 
-                WriteFourteenBitValue(buffer + 14, header);
-
-                const size_t dataLengthOffset = 16 + (size_t)header + 4;
-
-                if (dataLengthOffset + 2 <= length)
+                if (length >= 16)
                 {
-                    WriteFourteenBitValue(
-                        buffer + dataLengthOffset,
-                        static_cast<uint16_t>(claimedLength(generator)));
+                    const auto header = static_cast<uint16_t>(claimedLength(generator));
+
+                    WriteFourteenBitValue(buffer + 14, header);
+
+                    const size_t dataLengthOffset = 16 + (size_t)header + 4;
+
+                    if (dataLengthOffset + 2 <= length)
+                    {
+                        WriteFourteenBitValue(
+                            buffer + dataLengthOffset,
+                            static_cast<uint16_t>(claimedLength(generator)));
+                    }
                 }
+            }
+            else if (thisShape < 6)
+            {
+                // Reply to Profile Inquiry: two counts, each multiplied by five before use.
+                buffer[3] = 0x21;
+
+                if (length >= 15)
+                {
+                    const auto enabled = static_cast<uint16_t>(claimedLength(generator) % 6);
+
+                    WriteFourteenBitValue(buffer + 13, enabled);
+
+                    const size_t disabledCountOffset = 15 + (size_t)enabled * 5;
+
+                    if (disabledCountOffset + 2 <= length)
+                    {
+                        WriteFourteenBitValue(
+                            buffer + disabledCountOffset,
+                            static_cast<uint16_t>(claimedLength(generator) % 6));
+                    }
+                }
+            }
+            else if (thisShape < 7)
+            {
+                // Profile Specific Data, whose length is four seven bit bytes rather than two.
+                buffer[3] = 0x2F;
+
+                if (length >= 22)
+                {
+                    WriteTwentyEightBitValue(
+                        buffer + 18, static_cast<uint32_t>(claimedLength(generator)));
+                }
+            }
+            else
+            {
+                buffer[3] = 0x7F;
             }
         }
 
@@ -313,6 +356,30 @@ void MidiCiMessageTests::TestFuzzedMessagesNeverReportOffsetsPastTheBuffer()
 
                 VERIFY_IS_LESS_THAN_OR_EQUAL(
                     (size_t)parsed.PropertyExchange.DataOffset + parsed.PropertyExchange.DataByteCount,
+                    length);
+            }
+
+            if (parsed.HasProfileFields)
+            {
+                VERIFY_IS_LESS_THAN_OR_EQUAL(
+                    (size_t)parsed.Profile.EnabledProfileOffset +
+                        (size_t)parsed.Profile.EnabledProfileCount * ProfileIdByteCount,
+                    length);
+
+                VERIFY_IS_LESS_THAN_OR_EQUAL(
+                    (size_t)parsed.Profile.DisabledProfileOffset +
+                        (size_t)parsed.Profile.DisabledProfileCount * ProfileIdByteCount,
+                    length);
+
+                VERIFY_IS_LESS_THAN_OR_EQUAL(
+                    (size_t)parsed.Profile.TargetDataOffset + parsed.Profile.TargetDataByteCount,
+                    length);
+            }
+
+            if (parsed.HasAcknowledgmentFields)
+            {
+                VERIFY_IS_LESS_THAN_OR_EQUAL(
+                    (size_t)parsed.Acknowledgment.MessageTextOffset + parsed.Acknowledgment.MessageTextByteCount,
                     length);
             }
         }
@@ -701,4 +768,493 @@ void MidiCiMessageTests::TestChunkerRejectsOutOfRangeChunkNumbers()
 
     VERIFY_IS_FALSE(tiny.Plan(16));
     VERIFY_ARE_EQUAL(tiny.BuildChunk(1, 1, 2, 0, buffer, sizeof(buffer)), (size_t)0);
+}
+
+
+void MidiCiMessageTests::TestParseProfileInquiryReply()
+{
+    // Two enabled profiles and one disabled one, worked out from the message table by hand rather
+    // than from our own builder, so builder and parser cannot be wrong together and still agree.
+    const uint8_t message[]
+    {
+        0x7E, 0x00, 0x0D, 0x21, 0x02,       // to channel 1, reply to profile inquiry
+        0x01, 0x00, 0x00, 0x00,             // source muid 1
+        0x02, 0x00, 0x00, 0x00,             // destination muid 2
+        0x02, 0x00,                         // two currently enabled
+        0x7E, 0x40, 0x01, 0x01, 0x01,
+        0x7E, 0x40, 0x02, 0x01, 0x01,
+        0x01, 0x00,                         // one currently disabled
+        0x41, 0x00, 0x00, 0x12, 0x34        // a manufacturer specific profile
+    };
+
+    ParsedMessage parsed{};
+
+    VERIFY_ARE_EQUAL((int)Parse(message, sizeof(message), parsed), (int)ParseStatus::Ok);
+
+    VERIFY_ARE_EQUAL((int)parsed.Type, (int)MessageType::ProfileInquiryReply);
+    VERIFY_ARE_EQUAL(parsed.DeviceId, (uint8_t)0x00);
+    VERIFY_IS_TRUE(parsed.HasProfileFields);
+    VERIFY_IS_FALSE(parsed.Profile.HasProfileId);
+
+    VERIFY_ARE_EQUAL(parsed.Profile.EnabledProfileCount, (uint16_t)2);
+    VERIFY_ARE_EQUAL(parsed.Profile.EnabledProfileOffset, (uint16_t)15);
+    VERIFY_ARE_EQUAL(parsed.Profile.DisabledProfileCount, (uint16_t)1);
+    VERIFY_ARE_EQUAL(parsed.Profile.DisabledProfileOffset, (uint16_t)27);
+
+    // The offsets have to land on the identifiers themselves, not merely inside the buffer.
+    VERIFY_ARE_EQUAL(message[parsed.Profile.EnabledProfileOffset + 2], (uint8_t)0x01);
+    VERIFY_ARE_EQUAL(message[parsed.Profile.EnabledProfileOffset + 7], (uint8_t)0x02);
+    VERIFY_ARE_EQUAL(message[parsed.Profile.DisabledProfileOffset], (uint8_t)0x41);
+}
+
+void MidiCiMessageTests::TestProfileListCountCannotExceedBuffer()
+{
+    // A count of profiles is as much an attacker controlled length as a property exchange header
+    // length is, and it is multiplied by five before it is used.
+    const uint8_t tooManyEnabled[]
+    {
+        0x7E, 0x7F, 0x0D, 0x21, 0x02,
+        0x01, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x00,
+        0x7F, 0x7F,                         // 16383 profiles, in a message carrying none
+    };
+
+    ParsedMessage parsed{};
+
+    VERIFY_ARE_EQUAL((int)Parse(tooManyEnabled, sizeof(tooManyEnabled), parsed), (int)ParseStatus::LengthFieldExceedsBuffer);
+
+    // One profile short is just as bad as sixteen thousand short.
+    const uint8_t oneShort[]
+    {
+        0x7E, 0x7F, 0x0D, 0x21, 0x02,
+        0x01, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x00,
+        0x02, 0x00,                         // claims two
+        0x7E, 0x40, 0x01, 0x01, 0x01        // and carries one
+    };
+
+    VERIFY_ARE_EQUAL((int)Parse(oneShort, sizeof(oneShort), parsed), (int)ParseStatus::LengthFieldExceedsBuffer);
+
+    // The disabled list is a second length field, read after the first has already been honored.
+    const uint8_t disabledTooMany[]
+    {
+        0x7E, 0x7F, 0x0D, 0x21, 0x02,
+        0x01, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x00,
+        0x00, 0x00,                         // no enabled profiles
+        0x03, 0x00                          // three disabled, none present
+    };
+
+    VERIFY_ARE_EQUAL((int)Parse(disabledTooMany, sizeof(disabledTooMany), parsed), (int)ParseStatus::LengthFieldExceedsBuffer);
+
+    // Both lists empty is a legal reply, and the one a device with no profiles has to send.
+    const uint8_t empty[]
+    {
+        0x7E, 0x7F, 0x0D, 0x21, 0x02,
+        0x01, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x00,
+        0x00, 0x00,
+        0x00, 0x00
+    };
+
+    VERIFY_ARE_EQUAL((int)Parse(empty, sizeof(empty), parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL(parsed.Profile.EnabledProfileCount, (uint16_t)0);
+    VERIFY_ARE_EQUAL(parsed.Profile.DisabledProfileCount, (uint16_t)0);
+}
+
+void MidiCiMessageTests::TestParseSetProfileOnWithAndWithoutChannelCount()
+{
+    const uint8_t withCount[]
+    {
+        0x7E, 0x03, 0x0D, 0x22, 0x02,       // to channel 4, set profile on
+        0x01, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x00,
+        0x7E, 0x40, 0x01, 0x01, 0x01,       // profile id
+        0x04, 0x00                          // four channels requested
+    };
+
+    ParsedMessage parsed{};
+
+    VERIFY_ARE_EQUAL((int)Parse(withCount, sizeof(withCount), parsed), (int)ParseStatus::Ok);
+
+    VERIFY_IS_TRUE(parsed.HasProfileFields);
+    VERIFY_IS_TRUE(parsed.Profile.HasProfileId);
+    VERIFY_ARE_EQUAL(parsed.Profile.ProfileId[0], (uint8_t)0x7E);
+    VERIFY_ARE_EQUAL(parsed.Profile.ProfileId[4], (uint8_t)0x01);
+    VERIFY_IS_TRUE(parsed.Profile.HasChannelCount);
+    VERIFY_ARE_EQUAL(parsed.Profile.ChannelCount, (uint16_t)4);
+
+    // A device speaking message version 1 stops after the identifier. That is a shorter message,
+    // not a broken one, and the profile it names still has to come through.
+    const uint8_t version1[]
+    {
+        0x7E, 0x03, 0x0D, 0x22, 0x01,
+        0x01, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x00,
+        0x7E, 0x40, 0x01, 0x01, 0x01
+    };
+
+    VERIFY_ARE_EQUAL((int)Parse(version1, sizeof(version1), parsed), (int)ParseStatus::Ok);
+
+    VERIFY_IS_TRUE(parsed.Profile.HasProfileId);
+    VERIFY_IS_FALSE(parsed.Profile.HasChannelCount);
+    VERIFY_ARE_EQUAL(parsed.Profile.ChannelCount, (uint16_t)0);
+
+    // One byte short of a whole identifier must be refused, not read past.
+    const uint8_t truncated[]
+    {
+        0x7E, 0x03, 0x0D, 0x22, 0x02,
+        0x01, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x00,
+        0x7E, 0x40, 0x01, 0x01
+    };
+
+    VERIFY_ARE_EQUAL((int)Parse(truncated, sizeof(truncated), parsed), (int)ParseStatus::TooShort);
+}
+
+void MidiCiMessageTests::TestParseProfileSpecificData()
+{
+    const uint8_t message[]
+    {
+        0x7E, 0x7F, 0x0D, 0x2F, 0x02,       // profile specific data
+        0x01, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x00,
+        0x7E, 0x40, 0x01, 0x01, 0x01,       // profile id
+        0x03, 0x00, 0x00, 0x00,             // three bytes follow, in a four byte length field
+        0x11, 0x22, 0x33
+    };
+
+    ParsedMessage parsed{};
+
+    VERIFY_ARE_EQUAL((int)Parse(message, sizeof(message), parsed), (int)ParseStatus::Ok);
+
+    VERIFY_IS_TRUE(parsed.HasProfileFields);
+    VERIFY_ARE_EQUAL(parsed.Profile.TargetDataByteCount, (uint32_t)3);
+    VERIFY_ARE_EQUAL(message[parsed.Profile.TargetDataOffset], (uint8_t)0x11);
+    VERIFY_ARE_EQUAL(message[parsed.Profile.TargetDataOffset + 2], (uint8_t)0x33);
+}
+
+void MidiCiMessageTests::TestProfileSpecificDataLengthCannotExceedBuffer()
+{
+    // Four seven bit bytes can express 268435455, which is far more than any offset type here can
+    // hold. Adding it to the offset in a narrow type would wrap and let the check pass.
+    const uint8_t message[]
+    {
+        0x7E, 0x7F, 0x0D, 0x2F, 0x02,
+        0x01, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x00,
+        0x7E, 0x40, 0x01, 0x01, 0x01,
+        0x7F, 0x7F, 0x7F, 0x7F,             // 268435455 bytes claimed
+        0x11
+    };
+
+    ParsedMessage parsed{};
+
+    VERIFY_ARE_EQUAL((int)Parse(message, sizeof(message), parsed), (int)ParseStatus::LengthFieldExceedsBuffer);
+
+    // A details reply carries the same payload behind a two byte length, checked the same way.
+    const uint8_t detailsReply[]
+    {
+        0x7E, 0x7F, 0x0D, 0x29, 0x02,
+        0x01, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x00,
+        0x7E, 0x40, 0x01, 0x01, 0x01,
+        0x00,                               // inquiry target
+        0x7F, 0x7F,                         // 16383 bytes claimed
+        0x11
+    };
+
+    VERIFY_ARE_EQUAL((int)Parse(detailsReply, sizeof(detailsReply), parsed), (int)ParseStatus::LengthFieldExceedsBuffer);
+}
+
+void MidiCiMessageTests::TestBuildProfileMessagesParseBack()
+{
+    const uint8_t profileId[ProfileIdByteCount]{ 0x7E, 0x40, 0x01, 0x01, 0x01 };
+    const uint8_t payload[]{ 0x01, 0x02, 0x03, 0x04 };
+
+    uint8_t buffer[256]{};
+
+    // Set Profile On, which carries the channel count.
+    ProfileMessageFields setOn{};
+
+    setOn.Type = MessageType::SetProfileOn;
+    setOn.DeviceId = 0x02;
+    setOn.SourceMuid = 11;
+    setOn.DestinationMuid = 22;
+    memcpy(setOn.ProfileId, profileId, sizeof(profileId));
+    setOn.ChannelCount = 9;
+
+    auto written = BuildProfileMessage(setOn, buffer, sizeof(buffer));
+
+    VERIFY_IS_GREATER_THAN(written, (size_t)0);
+
+    ParsedMessage parsed{};
+
+    VERIFY_ARE_EQUAL((int)Parse(buffer, written, parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL((int)parsed.Type, (int)MessageType::SetProfileOn);
+    VERIFY_ARE_EQUAL(parsed.DeviceId, (uint8_t)0x02);
+    VERIFY_ARE_EQUAL(parsed.SourceMuid, (uint32_t)11);
+    VERIFY_ARE_EQUAL(parsed.DestinationMuid, (uint32_t)22);
+    VERIFY_ARE_EQUAL(parsed.Profile.ChannelCount, (uint16_t)9);
+    VERIFY_ARE_EQUAL(memcmp(parsed.Profile.ProfileId, profileId, sizeof(profileId)), 0);
+
+    // Profile Specific Data, which carries a payload behind the four byte length.
+    ProfileMessageFields specific{};
+
+    specific.Type = MessageType::ProfileSpecificData;
+    specific.SourceMuid = 11;
+    specific.DestinationMuid = 22;
+    memcpy(specific.ProfileId, profileId, sizeof(profileId));
+    specific.Data = payload;
+    specific.DataByteCount = (uint32_t)sizeof(payload);
+
+    written = BuildProfileMessage(specific, buffer, sizeof(buffer));
+
+    VERIFY_IS_GREATER_THAN(written, (size_t)0);
+    VERIFY_ARE_EQUAL((int)Parse(buffer, written, parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL(parsed.Profile.TargetDataByteCount, (uint32_t)sizeof(payload));
+    VERIFY_ARE_EQUAL(memcmp(buffer + parsed.Profile.TargetDataOffset, payload, sizeof(payload)), 0);
+
+    // Profile Inquiry names no profile at all, so the identifier must not be written.
+    ProfileMessageFields inquiry{};
+
+    inquiry.Type = MessageType::ProfileInquiry;
+    inquiry.SourceMuid = 11;
+    inquiry.DestinationMuid = 22;
+
+    written = BuildProfileMessage(inquiry, buffer, sizeof(buffer));
+
+    VERIFY_ARE_EQUAL(written, CommonHeaderByteCount);
+    VERIFY_ARE_EQUAL((int)Parse(buffer, written, parsed), (int)ParseStatus::Ok);
+    VERIFY_IS_FALSE(parsed.Profile.HasProfileId);
+
+    // A payload with a high bit set cannot travel inside a system exclusive message, and masking it
+    // would change the caller's data without saying so.
+    const uint8_t highBit[]{ 0x01, 0x80 };
+
+    specific.Data = highBit;
+    specific.DataByteCount = (uint32_t)sizeof(highBit);
+
+    VERIFY_ARE_EQUAL(BuildProfileMessage(specific, buffer, sizeof(buffer)), (size_t)0);
+
+    // A buffer one byte short must be refused rather than half filled.
+    specific.Data = payload;
+    specific.DataByteCount = (uint32_t)sizeof(payload);
+
+    const size_t required = CommonHeaderByteCount + ProfileIdByteCount + 4 + sizeof(payload);
+
+    VERIFY_ARE_EQUAL(BuildProfileMessage(specific, buffer, required - 1), (size_t)0);
+    VERIFY_ARE_EQUAL(BuildProfileMessage(specific, buffer, required), required);
+}
+
+void MidiCiMessageTests::TestBuildProfileInquiryReplyParsesBack()
+{
+    const uint8_t enabled[]
+    {
+        0x7E, 0x40, 0x01, 0x01, 0x01,
+        0x7E, 0x40, 0x02, 0x01, 0x01
+    };
+
+    const uint8_t disabled[]{ 0x41, 0x00, 0x00, 0x12, 0x34 };
+
+    uint8_t buffer[256]{};
+
+    const auto written = BuildProfileInquiryReply(
+        0x7F, 11, 22, enabled, 2, disabled, 1, buffer, sizeof(buffer));
+
+    VERIFY_IS_GREATER_THAN(written, (size_t)0);
+
+    ParsedMessage parsed{};
+
+    VERIFY_ARE_EQUAL((int)Parse(buffer, written, parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL(parsed.Profile.EnabledProfileCount, (uint16_t)2);
+    VERIFY_ARE_EQUAL(parsed.Profile.DisabledProfileCount, (uint16_t)1);
+    VERIFY_ARE_EQUAL(memcmp(buffer + parsed.Profile.EnabledProfileOffset, enabled, sizeof(enabled)), 0);
+    VERIFY_ARE_EQUAL(memcmp(buffer + parsed.Profile.DisabledProfileOffset, disabled, sizeof(disabled)), 0);
+
+    // A device with nothing to declare still replies.
+    const auto writtenEmpty = BuildProfileInquiryReply(
+        0x7F, 11, 22, nullptr, 0, nullptr, 0, buffer, sizeof(buffer));
+
+    VERIFY_ARE_EQUAL(writtenEmpty, CommonHeaderByteCount + 4);
+    VERIFY_ARE_EQUAL((int)Parse(buffer, writtenEmpty, parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL(parsed.Profile.EnabledProfileCount, (uint16_t)0);
+
+    // A count with no array behind it is a caller error, not something to read from a null pointer.
+    VERIFY_ARE_EQUAL(
+        BuildProfileInquiryReply(0x7F, 11, 22, nullptr, 3, nullptr, 0, buffer, sizeof(buffer)),
+        (size_t)0);
+}
+
+void MidiCiMessageTests::TestParseNak()
+{
+    const uint8_t message[]
+    {
+        0x7E, 0x7F, 0x0D, 0x7F, 0x02,       // NAK
+        0x01, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x00,
+        0x34,                               // answering a get property data inquiry
+        0x01,                               // status code: message not supported
+        0x00,                               // status data
+        0x05, 0x01, 0x00, 0x00, 0x00,       // details: request id 5, chunk 1
+        0x02, 0x00,                         // two bytes of text
+        0x4E, 0x6F                          // "No"
+    };
+
+    ParsedMessage parsed{};
+
+    VERIFY_ARE_EQUAL((int)Parse(message, sizeof(message), parsed), (int)ParseStatus::Ok);
+
+    VERIFY_ARE_EQUAL((int)parsed.Type, (int)MessageType::Nak);
+    VERIFY_IS_TRUE(parsed.HasAcknowledgmentFields);
+    VERIFY_ARE_EQUAL(parsed.Acknowledgment.OriginalMessageType, (uint8_t)0x34);
+    VERIFY_ARE_EQUAL(parsed.Acknowledgment.StatusCode, (uint8_t)0x01);
+    VERIFY_ARE_EQUAL(parsed.Acknowledgment.Details[0], (uint8_t)0x05);
+    VERIFY_ARE_EQUAL(parsed.Acknowledgment.MessageTextByteCount, (uint16_t)2);
+    VERIFY_ARE_EQUAL(message[parsed.Acknowledgment.MessageTextOffset], (uint8_t)0x4E);
+
+    // A device speaking message version 1 sends the header and nothing else. It is still a NAK and
+    // still tells the initiator its transaction failed.
+    const uint8_t bare[]
+    {
+        0x7E, 0x7F, 0x0D, 0x7F, 0x01,
+        0x01, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x00
+    };
+
+    VERIFY_ARE_EQUAL((int)Parse(bare, sizeof(bare), parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL((int)parsed.Type, (int)MessageType::Nak);
+    VERIFY_IS_FALSE(parsed.HasAcknowledgmentFields);
+
+    // The text length is the last attacker controlled field in the message.
+    const uint8_t overlongText[]
+    {
+        0x7E, 0x7F, 0x0D, 0x7F, 0x02,
+        0x01, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x00,
+        0x34, 0x01, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00,
+        0x7F, 0x7F,
+        0x4E
+    };
+
+    VERIFY_ARE_EQUAL((int)Parse(overlongText, sizeof(overlongText), parsed), (int)ParseStatus::LengthFieldExceedsBuffer);
+}
+
+void MidiCiMessageTests::TestBuildAcknowledgmentParsesBack()
+{
+    const uint8_t text[]{ 'B', 'u', 's', 'y' };
+
+    AcknowledgmentFields fields{};
+
+    fields.OriginalMessageType = 0x36;
+    fields.StatusCode = 0x20;
+    fields.StatusData = 0x01;
+    fields.Details[0] = 0x07;
+
+    uint8_t buffer[128]{};
+
+    auto written = BuildAcknowledgment(
+        MessageType::Nak, DeviceIdFunctionBlock, 11, 22, fields,
+        text, (uint16_t)sizeof(text), buffer, sizeof(buffer));
+
+    VERIFY_ARE_EQUAL(written, AcknowledgmentFixedByteCount + sizeof(text));
+
+    ParsedMessage parsed{};
+
+    VERIFY_ARE_EQUAL((int)Parse(buffer, written, parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL((int)parsed.Type, (int)MessageType::Nak);
+    VERIFY_ARE_EQUAL(parsed.Acknowledgment.OriginalMessageType, (uint8_t)0x36);
+    VERIFY_ARE_EQUAL(parsed.Acknowledgment.StatusCode, (uint8_t)0x20);
+    VERIFY_ARE_EQUAL(parsed.Acknowledgment.StatusData, (uint8_t)0x01);
+    VERIFY_ARE_EQUAL(parsed.Acknowledgment.MessageTextByteCount, (uint16_t)sizeof(text));
+    VERIFY_ARE_EQUAL(memcmp(buffer + parsed.Acknowledgment.MessageTextOffset, text, sizeof(text)), 0);
+
+    // An ACK is the same shape under a different sub id. Anything else is not an acknowledgment
+    // and must not be encoded as one.
+    written = BuildAcknowledgment(
+        MessageType::Ack, DeviceIdFunctionBlock, 11, 22, fields,
+        nullptr, 0, buffer, sizeof(buffer));
+
+    VERIFY_ARE_EQUAL(written, AcknowledgmentFixedByteCount);
+    VERIFY_ARE_EQUAL((int)Parse(buffer, written, parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL((int)parsed.Type, (int)MessageType::Ack);
+
+    VERIFY_ARE_EQUAL(
+        BuildAcknowledgment(MessageType::Discovery, DeviceIdFunctionBlock, 11, 22, fields,
+            nullptr, 0, buffer, sizeof(buffer)),
+        (size_t)0);
+}
+
+void MidiCiMessageTests::TestBuildDiscoveryBytes()
+{
+    DiscoveryReplyFields fields{};
+
+    fields.SourceMuid = 1;
+    fields.ManufacturerSysExId[0] = 0x00;
+    fields.ManufacturerSysExId[1] = 0x00;
+    fields.ManufacturerSysExId[2] = 0x41;
+    fields.DeviceFamily = 0x0B;
+    fields.DeviceFamilyModelNumber = 0x01;
+    fields.SoftwareRevisionLevel[0] = 0x01;
+    fields.CapabilityCategories = CategoryPropertyExchange;
+    fields.ReceivableMaximumSysExSize = 512;
+    fields.OutputPathId = 0x03;
+
+    // The function block number belongs only to a reply, and must not appear here.
+    fields.FunctionBlockNumber = 0x05;
+
+    uint8_t buffer[64]{};
+
+    const auto written = BuildDiscovery(fields, buffer, sizeof(buffer));
+
+    VERIFY_ARE_EQUAL(written, DiscoveryByteCount);
+
+    // Worked out from the message table, not from the builder.
+    const uint8_t expected[]
+    {
+        0x7E, 0x7F, 0x0D, 0x70, 0x02,
+        0x01, 0x00, 0x00, 0x00,
+        0x7F, 0x7F, 0x7F, 0x7F,
+        0x00, 0x00, 0x41,
+        0x0B, 0x00,
+        0x01, 0x00,
+        0x01, 0x00, 0x00, 0x00,
+        0x08,
+        0x00, 0x04, 0x00, 0x00,
+        0x03
+    };
+
+    VERIFY_ARE_EQUAL(written, sizeof(expected));
+    VERIFY_ARE_EQUAL(memcmp(buffer, expected, sizeof(expected)), 0);
+
+    ParsedMessage parsed{};
+
+    VERIFY_ARE_EQUAL((int)Parse(buffer, written, parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL((int)parsed.Type, (int)MessageType::Discovery);
+    VERIFY_ARE_EQUAL(parsed.DestinationMuid, MuidBroadcast);
+    VERIFY_ARE_EQUAL(parsed.OutputPathId, (uint8_t)0x03);
+
+    VERIFY_ARE_EQUAL(BuildDiscovery(fields, buffer, DiscoveryByteCount - 1), (size_t)0);
+}
+
+void MidiCiMessageTests::TestBuildInvalidateMuidParsesBack()
+{
+    uint8_t buffer[64]{};
+
+    const auto written = BuildInvalidateMuid(11, 22, buffer, sizeof(buffer));
+
+    VERIFY_ARE_EQUAL(written, InvalidateMuidByteCount);
+
+    ParsedMessage parsed{};
+
+    VERIFY_ARE_EQUAL((int)Parse(buffer, written, parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL((int)parsed.Type, (int)MessageType::InvalidateMuid);
+    VERIFY_ARE_EQUAL(parsed.SourceMuid, (uint32_t)11);
+    VERIFY_ARE_EQUAL(parsed.TargetMuid, (uint32_t)22);
+
+    // Invalidate MUID is always broadcast, whoever is being told about it.
+    VERIFY_ARE_EQUAL(parsed.DestinationMuid, MuidBroadcast);
+
+    VERIFY_ARE_EQUAL(BuildInvalidateMuid(11, 22, buffer, InvalidateMuidByteCount - 1), (size_t)0);
 }

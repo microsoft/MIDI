@@ -40,6 +40,18 @@ public:
     TEST_METHOD(TestChunkerEmitsEveryChunkExactlyOnce);
     TEST_METHOD(TestChunkerRejectsOutOfRangeChunkNumbers);
 
+    TEST_METHOD(TestParseProfileInquiryReply);
+    TEST_METHOD(TestProfileListCountCannotExceedBuffer);
+    TEST_METHOD(TestParseSetProfileOnWithAndWithoutChannelCount);
+    TEST_METHOD(TestParseProfileSpecificData);
+    TEST_METHOD(TestProfileSpecificDataLengthCannotExceedBuffer);
+    TEST_METHOD(TestBuildProfileMessagesParseBack);
+    TEST_METHOD(TestBuildProfileInquiryReplyParsesBack);
+    TEST_METHOD(TestParseNak);
+    TEST_METHOD(TestBuildAcknowledgmentParsesBack);
+    TEST_METHOD(TestBuildDiscoveryBytes);
+    TEST_METHOD(TestBuildInvalidateMuidParsesBack);
+
 private:
 
 };
