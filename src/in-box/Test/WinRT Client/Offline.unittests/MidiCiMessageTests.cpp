@@ -723,7 +723,17 @@ void MidiCiMessageTests::TestChunkerEmitsEveryChunkExactlyOnce()
         VERIFY_ARE_EQUAL(parsed.PropertyExchange.RequestId, (uint8_t)7);
         VERIFY_ARE_EQUAL(parsed.PropertyExchange.ChunkCount, chunker.ChunkCount);
         VERIFY_ARE_EQUAL(parsed.PropertyExchange.ChunkNumber, chunk);
-        VERIFY_ARE_EQUAL(parsed.PropertyExchange.HeaderByteCount, (uint16_t)sizeof(header));
+
+        // The header goes on the first chunk and no other. Every later chunk has to declare a
+        // header length of zero, so a receiver reading headers cannot see the same one twice.
+        if (chunk == 1)
+        {
+            VERIFY_ARE_EQUAL(parsed.PropertyExchange.HeaderByteCount, (uint16_t)sizeof(header));
+        }
+        else
+        {
+            VERIFY_ARE_EQUAL(parsed.PropertyExchange.HeaderByteCount, (uint16_t)0);
+        }
 
         for (uint16_t i = 0; i < parsed.PropertyExchange.DataByteCount; i++)
         {

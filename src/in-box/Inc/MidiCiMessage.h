@@ -1202,22 +1202,66 @@ namespace WindowsMidiServicesCapabilityInquiry
         uint8_t const* Resource{ nullptr };
         size_t ResourceByteCount{ 0 };
 
-        // The reply header, already built. It is repeated on every chunk.
+        // The reply header, already built. It goes on the first chunk and no other: the
+        // specification requires every later chunk to declare a header length of zero.
         uint8_t const* Header{ nullptr };
         uint16_t HeaderByteCount{ 0 };
 
         uint16_t ChunkCount{ 0 };
-        uint16_t DataBytesPerChunk{ 0 };
+
+        // The first chunk gives up room to the header, so the two sizes differ and a chunk's
+        // position in the resource cannot be worked out by multiplication alone.
+        uint16_t FirstChunkDataByteCount{ 0 };
+        uint16_t LaterChunkDataByteCount{ 0 };
 
         // Sized against what the far end declared it can receive, not against what we can send.
         bool Plan(_In_ size_t const initiatorMaximumSysExMessageSize) noexcept
         {
-            DataBytesPerChunk = MaximumPropertyDataBytesPerChunk(
+            FirstChunkDataByteCount = MaximumPropertyDataBytesPerChunk(
                 initiatorMaximumSysExMessageSize, HeaderByteCount);
 
-            ChunkCount = ChunkCountForDataSize(ResourceByteCount, DataBytesPerChunk);
+            LaterChunkDataByteCount = MaximumPropertyDataBytesPerChunk(
+                initiatorMaximumSysExMessageSize, 0);
 
-            return DataBytesPerChunk > 0 && ChunkCount > 0;
+            if (FirstChunkDataByteCount == 0 || LaterChunkDataByteCount == 0)
+            {
+                ChunkCount = 0;
+                return false;
+            }
+
+            if (ResourceByteCount <= FirstChunkDataByteCount)
+            {
+                // One chunk, which is also the answer for a resource with no data at all: chunk
+                // numbering starts at one, so there is no such thing as a reply of zero chunks.
+                ChunkCount = 1;
+            }
+            else
+            {
+                const auto remaining = ResourceByteCount - FirstChunkDataByteCount;
+                const auto later = ChunkCountForDataSize(remaining, LaterChunkDataByteCount);
+
+                if (later == 0 || later > 0x3FFE)
+                {
+                    ChunkCount = 0;
+                    return false;
+                }
+
+                ChunkCount = static_cast<uint16_t>(later + 1);
+            }
+
+            return true;
+        }
+
+        // Where a chunk's data starts in the resource.
+        size_t OffsetOfChunk(_In_ uint16_t const chunkNumber) const noexcept
+        {
+            if (chunkNumber <= 1)
+            {
+                return 0;
+            }
+
+            return static_cast<size_t>(FirstChunkDataByteCount) +
+                static_cast<size_t>(chunkNumber - 2) * LaterChunkDataByteCount;
         }
 
         // Chunk numbers count from one. Returns bytes written, or zero.
@@ -1230,21 +1274,22 @@ namespace WindowsMidiServicesCapabilityInquiry
             _In_ size_t const capacity
         ) const noexcept
         {
-            if (chunkNumber == 0 || chunkNumber > ChunkCount || DataBytesPerChunk == 0)
+            if (chunkNumber == 0 || chunkNumber > ChunkCount || FirstChunkDataByteCount == 0)
             {
                 return 0;
             }
 
-            const size_t offset = static_cast<size_t>(chunkNumber - 1) * DataBytesPerChunk;
+            const size_t offset = OffsetOfChunk(chunkNumber);
 
             if (offset > ResourceByteCount)
             {
                 return 0;
             }
 
+            const size_t budget = (chunkNumber == 1) ? FirstChunkDataByteCount : LaterChunkDataByteCount;
             const size_t remaining = ResourceByteCount - offset;
-            const auto thisChunk = static_cast<uint16_t>(
-                remaining < DataBytesPerChunk ? remaining : DataBytesPerChunk);
+
+            const auto thisChunk = static_cast<uint16_t>(remaining < budget ? remaining : budget);
 
             PropertyExchangeMessageFields fields{};
 
@@ -1252,8 +1297,8 @@ namespace WindowsMidiServicesCapabilityInquiry
             fields.SourceMuid = sourceMuid;
             fields.DestinationMuid = destinationMuid;
             fields.RequestId = requestId;
-            fields.Header = Header;
-            fields.HeaderByteCount = HeaderByteCount;
+            fields.Header = (chunkNumber == 1) ? Header : nullptr;
+            fields.HeaderByteCount = (chunkNumber == 1) ? HeaderByteCount : (uint16_t)0;
             fields.ChunkCount = ChunkCount;
             fields.ChunkNumber = chunkNumber;
             fields.Data = (thisChunk > 0) ? (Resource + offset) : nullptr;
