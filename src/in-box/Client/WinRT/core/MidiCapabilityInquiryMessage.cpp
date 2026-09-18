@@ -11,6 +11,7 @@
 
 // Both are consumed here, so their implementation headers are needed as well as the projection.
 #include "MidiUniqueId.h"
+#include "MidiProfileId.h"
 #include "MidiSystemExclusive7MessageHelper.h"
 
 #include "MidiCiMessage.h"
@@ -51,6 +52,20 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
             try
             {
                 return winrt::make<implementation::MidiUniqueId>(value);
+            }
+            catch (...)
+            {
+                LOG_CAUGHT_EXCEPTION();
+                return nullptr;
+            }
+        }
+
+        ci::MidiProfileId MakeProfileId(_In_reads_(5) uint8_t const* const bytes) noexcept
+        {
+            try
+            {
+                return winrt::make<implementation::MidiProfileId>(
+                    bytes[0], bytes[1], bytes[2], bytes[3], bytes[4]);
             }
             catch (...)
             {
@@ -105,6 +120,79 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
             if (parsed.Type == native::MessageType::InvalidateMuid)
             {
                 message->m_targetMuid = MakeUniqueId(parsed.TargetMuid);
+            }
+
+            if (parsed.HasProfileFields)
+            {
+                message->m_hasProfileFields = true;
+
+                auto const& profile = parsed.Profile;
+
+                if (profile.HasProfileId)
+                {
+                    message->m_profileId = MakeProfileId(profile.ProfileId);
+                }
+
+                message->m_profileChannelCount = profile.ChannelCount;
+
+                message->m_hasProfileInquiryTarget = profile.HasInquiryTarget;
+                message->m_profileInquiryTarget = profile.InquiryTarget;
+
+                // The parser reports where these sit in the buffer it was given rather than copying
+                // them, and it has already checked every offset against the real length.
+                for (uint32_t i = 0; i < profile.TargetDataByteCount; i++)
+                {
+                    message->m_profileData.Append(bytes[profile.TargetDataOffset + i]);
+                }
+
+                for (uint16_t i = 0; i < profile.EnabledProfileCount; i++)
+                {
+                    message->m_enabledProfiles.Append(
+                        MakeProfileId(bytes.data() + profile.EnabledProfileOffset +
+                            (size_t)i * native::ProfileIdByteCount));
+                }
+
+                for (uint16_t i = 0; i < profile.DisabledProfileCount; i++)
+                {
+                    message->m_disabledProfiles.Append(
+                        MakeProfileId(bytes.data() + profile.DisabledProfileOffset +
+                            (size_t)i * native::ProfileIdByteCount));
+                }
+
+                return *message;
+            }
+
+            if (parsed.HasAcknowledgmentFields)
+            {
+                message->m_hasAcknowledgmentFields = true;
+
+                auto const& acknowledgment = parsed.Acknowledgment;
+
+                message->m_originalMessageType =
+                    static_cast<ci::MidiCapabilityInquiryMessageType>(acknowledgment.OriginalMessageType);
+
+                message->m_statusCode = acknowledgment.StatusCode;
+                message->m_statusData = acknowledgment.StatusData;
+
+                for (auto const value : acknowledgment.Details)
+                {
+                    message->m_statusDetails.Append(value);
+                }
+
+                // Text in a capability inquiry message is seven bit ASCII, so widening each byte is
+                // the whole conversion.
+                std::wstring statusMessage{};
+                statusMessage.reserve(acknowledgment.MessageTextByteCount);
+
+                for (uint16_t i = 0; i < acknowledgment.MessageTextByteCount; i++)
+                {
+                    statusMessage.push_back(
+                        static_cast<wchar_t>(bytes[acknowledgment.MessageTextOffset + i]));
+                }
+
+                message->m_statusMessage = winrt::hstring{ statusMessage };
+
+                return *message;
             }
 
             if (!parsed.HasPropertyExchangeFields)

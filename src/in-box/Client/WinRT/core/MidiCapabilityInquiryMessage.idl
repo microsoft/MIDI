@@ -10,6 +10,7 @@
 import "MidiApiContracts.idl";
 import "MidiCapabilityInquiryMessageTypeEnum.idl";
 import "MidiUniqueId.idl";
+import "MidiProfileId.idl";
 import "MidiMessage64.idl";
 
 
@@ -66,6 +67,49 @@ namespace Windows.Devices.Midi2.CapabilityInquiry
         // This chunk's slice of the property data, which is only the whole resource when the
         // message is the single chunk of a one chunk reply.
         Windows.Foundation.Collections.IVector<UInt8> Body{ get; };
+
+        // Profile configuration. Meaningless unless the message is a profile message.
+        [noexcept] Boolean HasProfileFields{ get; };
+
+        // The profile the message is about. Null for Profile Inquiry and for the reply to it, which
+        // deal in whole lists rather than in any one profile.
+        MidiProfileId ProfileId{ get; };
+
+        // Channels asked for by Set Profile On, or taken by an enabled or disabled report. Zero
+        // when the message addresses a group or a function block, whose width is already known, and
+        // zero when it came from a device speaking the first message version.
+        [noexcept] UInt16 ProfileChannelCount{ get; };
+
+        // Profile Details Inquiry and its reply. Below 0x40 the meaning is common to every profile;
+        // from 0x40 up the profile specification defines it.
+        [noexcept] Boolean HasProfileInquiryTarget{ get; };
+        [noexcept] UInt8 ProfileInquiryTarget{ get; };
+
+        // The payload of a details reply, or of Profile Specific Data.
+        Windows.Foundation.Collections.IVector<UInt8> ProfileData{ get; };
+
+        // The two lists a reply to Profile Inquiry carries. A device with no profiles on the
+        // addressed channel still replies, with both lists empty.
+        Windows.Foundation.Collections.IVector<MidiProfileId> EnabledProfiles{ get; };
+        Windows.Foundation.Collections.IVector<MidiProfileId> DisabledProfiles{ get; };
+
+        // Acknowledgment fields, carried by ACK and NAK. A device speaking the first message
+        // version sends neither, so this is false even though the message itself is well formed.
+        [noexcept] Boolean HasAcknowledgmentFields{ get; };
+
+        // Which message this answers, so a reply can be matched to the transaction that caused it.
+        [noexcept] MidiCapabilityInquiryMessageType OriginalMessageType{ get; };
+
+        [noexcept] UInt8 StatusCode{ get; };
+        [noexcept] UInt8 StatusData{ get; };
+
+        // Five bytes whose meaning depends on the branch: the profile identifier for a profile
+        // message, and the request id followed by the chunk number for property exchange.
+        Windows.Foundation.Collections.IVector<UInt8> StatusDetails{ get; };
+
+        // Text the device sent to explain the failure. The specification says to show it to the
+        // person using the application.
+        String StatusMessage{ get; };
 
         // Decodes from the assembled system exclusive payload, excluding the 0xF0 and 0xF7 markers.
         [noexcept] static MidiCapabilityInquiryMessage FromSystemExclusiveData(

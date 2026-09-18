@@ -40,6 +40,25 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
         foundation::Collections::IVector<uint8_t> Body() const noexcept { return m_body; }
 
+        bool HasProfileFields() const noexcept { return m_hasProfileFields; }
+        ci::MidiProfileId ProfileId() const noexcept { return m_profileId; }
+        uint16_t ProfileChannelCount() const noexcept { return m_profileChannelCount; }
+
+        bool HasProfileInquiryTarget() const noexcept { return m_hasProfileInquiryTarget; }
+        uint8_t ProfileInquiryTarget() const noexcept { return m_profileInquiryTarget; }
+
+        foundation::Collections::IVector<uint8_t> ProfileData() const noexcept { return m_profileData; }
+
+        foundation::Collections::IVector<ci::MidiProfileId> EnabledProfiles() const noexcept { return m_enabledProfiles; }
+        foundation::Collections::IVector<ci::MidiProfileId> DisabledProfiles() const noexcept { return m_disabledProfiles; }
+
+        bool HasAcknowledgmentFields() const noexcept { return m_hasAcknowledgmentFields; }
+        ci::MidiCapabilityInquiryMessageType OriginalMessageType() const noexcept { return m_originalMessageType; }
+        uint8_t StatusCode() const noexcept { return m_statusCode; }
+        uint8_t StatusData() const noexcept { return m_statusData; }
+        foundation::Collections::IVector<uint8_t> StatusDetails() const noexcept { return m_statusDetails; }
+        winrt::hstring StatusMessage() const noexcept { return m_statusMessage; }
+
         static ci::MidiCapabilityInquiryMessage FromSystemExclusiveData(
             _In_ foundation::Collections::IIterable<uint8_t> const& data) noexcept;
 
@@ -76,6 +95,35 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
         foundation::Collections::IVector<uint8_t> m_body
             { winrt::single_threaded_vector<uint8_t>() };
+
+        bool m_hasProfileFields{ false };
+        ci::MidiProfileId m_profileId{ nullptr };
+        uint16_t m_profileChannelCount{ 0 };
+
+        bool m_hasProfileInquiryTarget{ false };
+        uint8_t m_profileInquiryTarget{ 0 };
+
+        foundation::Collections::IVector<uint8_t> m_profileData
+            { winrt::single_threaded_vector<uint8_t>() };
+
+        foundation::Collections::IVector<ci::MidiProfileId> m_enabledProfiles
+            { winrt::single_threaded_vector<ci::MidiProfileId>() };
+
+        foundation::Collections::IVector<ci::MidiProfileId> m_disabledProfiles
+            { winrt::single_threaded_vector<ci::MidiProfileId>() };
+
+        bool m_hasAcknowledgmentFields{ false };
+
+        ci::MidiCapabilityInquiryMessageType m_originalMessageType
+            { ci::MidiCapabilityInquiryMessageType::Discovery };
+
+        uint8_t m_statusCode{ 0 };
+        uint8_t m_statusData{ 0 };
+
+        foundation::Collections::IVector<uint8_t> m_statusDetails
+            { winrt::single_threaded_vector<uint8_t>() };
+
+        winrt::hstring m_statusMessage{};
     };
 }
 
