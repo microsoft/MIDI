@@ -395,6 +395,24 @@
     <Midl Include="MidiCapabilityInquiryMessageBuilder.idl">
       <Filter>SDK\CapabilityInquiry</Filter>
     </Midl>
+    <Midl Include="MidiCapabilityInquiryStatusEnum.idl">
+      <Filter>SDK\CapabilityInquiry</Filter>
+    </Midl>
+    <Midl Include="MidiCapabilityInquiryResponder.idl">
+      <Filter>SDK\CapabilityInquiry</Filter>
+    </Midl>
+    <Midl Include="MidiPropertyExchangeResponse.idl">
+      <Filter>SDK\CapabilityInquiry</Filter>
+    </Midl>
+    <Midl Include="MidiProfileInquiryResponse.idl">
+      <Filter>SDK\CapabilityInquiry</Filter>
+    </Midl>
+    <Midl Include="MidiCapabilityInquiryMessageReceivedEventArgs.idl">
+      <Filter>SDK\CapabilityInquiry</Filter>
+    </Midl>
+    <Midl Include="MidiCapabilityInquirySession.idl">
+      <Filter>SDK\CapabilityInquiry</Filter>
+    </Midl>
     <Midl Include="MidiProfileId.idl">
       <Filter>SDK\CapabilityInquiry</Filter>
     </Midl>

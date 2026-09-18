@@ -654,6 +654,21 @@
     <ClInclude Include="MidiCapabilityInquiryMessageBuilder.h">
       <DependentUpon>MidiCapabilityInquiryMessageBuilder.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiCapabilityInquiryResponder.h">
+      <DependentUpon>MidiCapabilityInquiryResponder.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiPropertyExchangeResponse.h">
+      <DependentUpon>MidiPropertyExchangeResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiProfileInquiryResponse.h">
+      <DependentUpon>MidiProfileInquiryResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiCapabilityInquiryMessageReceivedEventArgs.h">
+      <DependentUpon>MidiCapabilityInquiryMessageReceivedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiCapabilityInquirySession.h">
+      <DependentUpon>MidiCapabilityInquirySession.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiSystemExclusiveSendProgress.h">
       <DependentUpon>MidiSystemExclusiveSendProgress.idl</DependentUpon>
     </ClInclude>
@@ -1145,6 +1160,21 @@
     <ClCompile Include="MidiCapabilityInquiryMessageBuilder.cpp">
       <DependentUpon>MidiCapabilityInquiryMessageBuilder.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiCapabilityInquiryResponder.cpp">
+      <DependentUpon>MidiCapabilityInquiryResponder.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiPropertyExchangeResponse.cpp">
+      <DependentUpon>MidiPropertyExchangeResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiProfileInquiryResponse.cpp">
+      <DependentUpon>MidiProfileInquiryResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiCapabilityInquiryMessageReceivedEventArgs.cpp">
+      <DependentUpon>MidiCapabilityInquiryMessageReceivedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiCapabilityInquirySession.cpp">
+      <DependentUpon>MidiCapabilityInquirySession.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiSystemExclusiveSendProgress.cpp">
       <DependentUpon>MidiSystemExclusiveSendProgress.idl</DependentUpon>
     </ClCompile>
@@ -1446,6 +1476,12 @@
     <Midl Include="MidiCapabilityInquiryCategoriesEnum.idl" />
     <Midl Include="MidiCapabilityInquiryMessage.idl" />
     <Midl Include="MidiCapabilityInquiryMessageBuilder.idl" />
+    <Midl Include="MidiCapabilityInquiryStatusEnum.idl" />
+    <Midl Include="MidiCapabilityInquiryResponder.idl" />
+    <Midl Include="MidiPropertyExchangeResponse.idl" />
+    <Midl Include="MidiProfileInquiryResponse.idl" />
+    <Midl Include="MidiCapabilityInquiryMessageReceivedEventArgs.idl" />
+    <Midl Include="MidiCapabilityInquirySession.idl" />
     <Midl Include="MidiProfileId.idl" />
     <Midl Include="MidiNetworkAdvertisedHost.idl" />
     <Midl Include="MidiNetworkAdvertisedHostAddedEventArgs.idl" />

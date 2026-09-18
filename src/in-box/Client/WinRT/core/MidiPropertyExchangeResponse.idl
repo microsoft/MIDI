@@ -1,0 +1,60 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+import "MidiCapabilityInquiryStatusEnum.idl";
+import "MidiUniqueId.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    // The answer to a property exchange request, with every chunk already put back together.
+    [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiPropertyExchangeResponse", UUID_IMidiPropertyExchangeResponse)]
+    runtimeclass MidiPropertyExchangeResponse
+    {
+        [noexcept] MidiCapabilityInquiryStatus Status{ get; };
+
+        MidiUniqueId ResponderMuid{ get; };
+
+        [noexcept] UInt8 RequestId{ get; };
+
+        // The reply header, which carries the device's own status for the request and anything it
+        // wants to say about the data, for example the total count behind a paged list. Null when
+        // the device sent a header this could not read as JSON; HeaderText still holds what came.
+        Windows.Data.Json.JsonObject Header{ get; };
+        String HeaderText{ get; };
+
+        // The status the device put in its reply header. 200 means it answered; anything else is
+        // the device declining, and the header usually says why in a "message" property.
+        [noexcept] Int32 ResourceStatus{ get; };
+
+        // How many chunks the reply arrived in. Worth knowing only to understand a transfer's cost.
+        [noexcept] UInt16 ChunkCount{ get; };
+
+        // The property data, reassembled.
+        Windows.Foundation.Collections.IVector<UInt8> Body{ get; };
+
+        // The same data as text. Every resource defined by the MIDI Association is JSON text, and
+        // this is empty when the reply header declares an encoding this does not decode.
+        String BodyAsText{ get; };
+
+        // The same data parsed. Null when the body is not JSON, which includes the case where it
+        // arrived encoded. A list resource parses as an array and everything else as an object, so
+        // this is the common interface rather than either one.
+        Windows.Data.Json.IJsonValue BodyAsJson{ get; };
+
+        // Set when the device answered with a negative acknowledgment rather than a reply. The
+        // specification asks that the message be shown to the person using the application.
+        [noexcept] UInt8 NakStatusCode{ get; };
+        String NakStatusMessage{ get; };
+    };
+}

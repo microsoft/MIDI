@@ -1,0 +1,58 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+import "MidiCapabilityInquiryCategoriesEnum.idl";
+import "MidiUniqueId.idl";
+import "MidiDeclaredDeviceIdentity.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    // A device which answered Discovery, described by what it said about itself. One endpoint may
+    // hold several of these: a responder is a function block, not a device, and each has its own
+    // identifier.
+    [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiCapabilityInquiryResponder", UUID_IMidiCapabilityInquiryResponder)]
+    runtimeclass MidiCapabilityInquiryResponder : Windows.Foundation.IStringable
+    {
+        // Changes every time the device powers up, so it identifies the responder for as long as
+        // this session lasts and no longer. Never store it.
+        MidiUniqueId Muid{ get; };
+
+        Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity Identity{ get; };
+
+        [noexcept] MidiCapabilityInquiryCategories SupportedCategories{ get; };
+
+        // The largest system exclusive message this responder says it can receive. Everything sent
+        // to it is sized against this rather than against what we are able to send.
+        [noexcept] UInt32 ReceivableMaximumSystemExclusiveSize{ get; };
+
+        // Which of our outputs the reply came back on, echoed from the Discovery we sent.
+        [noexcept] UInt8 OutputPathId{ get; };
+
+        [noexcept] UInt8 FunctionBlockNumber{ get; };
+
+        // The MIDI-CI version the responder used. A device below version 2 leaves out fields that
+        // later messages carry.
+        [noexcept] UInt8 MessageVersion{ get; };
+
+        // Read from SupportedCategories, and worth having by name because they are what decides
+        // whether a request is worth sending at all.
+        [noexcept] Boolean SupportsPropertyExchange{ get; };
+        [noexcept] Boolean SupportsProfiles{ get; };
+        [noexcept] Boolean SupportsProcessInquiry{ get; };
+
+        // How many property exchange requests this responder is willing to have outstanding at
+        // once, from its reply to the capabilities inquiry. Zero until that reply arrives.
+        [noexcept] UInt8 MaximumSimultaneousPropertyRequests{ get; };
+    };
+}

@@ -235,6 +235,19 @@
 
 #define UUID_IMidiCapabilityInquiryMessageBuilderStatics                    8087b303-0519-c0de-31d1-ee0070012000
 
+// The initiator session, and the answers it hands back.
+
+#define UUID_IMidiCapabilityInquiryResponder                                8087b303-0519-c0de-31d1-dd0070013000
+
+#define UUID_IMidiPropertyExchangeResponse                                  8087b303-0519-c0de-31d1-dd0070014000
+
+#define UUID_IMidiProfileInquiryResponse                                    8087b303-0519-c0de-31d1-dd0070015000
+
+#define UUID_IMidiCapabilityInquiryMessageReceivedEventArgs                 8087b303-0519-c0de-31d1-dd0070016000
+
+#define UUID_IMidiCapabilityInquirySession                                  8087b303-0519-c0de-31d1-dd0070017000
+#define UUID_IMidiCapabilityInquirySessionStatics                           8087b303-0519-c0de-31d1-ee0070017000
+
 
 // ========== Utilities : Interface number 0E ========================================================================
 

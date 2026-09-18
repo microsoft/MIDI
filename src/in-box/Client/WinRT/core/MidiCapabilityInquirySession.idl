@@ -1,0 +1,167 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+import "MidiCapabilityInquiryStatusEnum.idl";
+import "MidiCapabilityInquiryCategoriesEnum.idl";
+import "MidiCapabilityInquiryResponder.idl";
+import "MidiCapabilityInquiryMessageReceivedEventArgs.idl";
+import "MidiPropertyExchangeResponse.idl";
+import "MidiProfileInquiryResponse.idl";
+import "MidiProfileId.idl";
+import "MidiUniqueId.idl";
+import "MidiDeviceInfo.idl";
+import "MidiResourceList.idl";
+import "MidiChannelList.idl";
+import "MidiProgramList.idl";
+import "MidiDeclaredDeviceIdentity.idl";
+import "MidiEndpointConnection.idl";
+import "MidiGroup.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    // Asks capability inquiry questions over an endpoint connection and waits for the answers.
+    //
+    // A session is an initiator. It owns one identifier for as long as it is open, numbers its own
+    // requests, puts chunked replies back together and matches each one to the request that caused
+    // it. Anything which arrives that it did not ask for is raised as an event instead, so an
+    // application can act on a device announcing a change without having to poll for it.
+    //
+    // The session does not take ownership of the connection and does not close it. Several sessions
+    // may share one connection, each with its own identifier, which is how an application talks to
+    // more than one function block on the same endpoint.
+    [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiCapabilityInquirySession", UUID_IMidiCapabilityInquirySession)]
+    [static_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiCapabilityInquirySessionStatics", UUID_IMidiCapabilityInquirySessionStatics)]
+    runtimeclass MidiCapabilityInquirySession : Windows.Foundation.IClosable
+    {
+        // The connection must already be open. A new random identifier is drawn for the session,
+        // which is what the specification requires: an identifier must not survive a restart or be
+        // derived from anything stable.
+        [noexcept] static MidiCapabilityInquirySession Create(
+            Windows.Devices.Midi2.MidiEndpointConnection connection);
+
+        // For an application which is also a device and already has an identity to declare.
+        [noexcept] static MidiCapabilityInquirySession Create(
+            Windows.Devices.Midi2.MidiEndpointConnection connection,
+            Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity identity);
+
+        [noexcept] MidiUniqueId SourceMuid{ get; };
+
+        // Which group capability inquiry traffic goes out on. Group 1 unless set otherwise.
+        Windows.Devices.Midi2.MidiGroup Group;
+
+        // How long to wait for an answer before giving up on it. Two seconds by default, which is
+        // long enough for a device that is busy and short enough that a device which is not going
+        // to answer does not hold up a user interface.
+        [noexcept] UInt32 ResponseTimeoutMilliseconds;
+
+        // What this session declares about itself when it announces itself with Discovery.
+        Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity Identity;
+
+        [noexcept] Boolean IsOpen{ get; };
+
+        // Responders found so far, including any which announced themselves rather than being
+        // asked. Cleared only by closing the session.
+        Windows.Foundation.Collections.IVectorView<MidiCapabilityInquiryResponder> GetResponders();
+
+        [noexcept] MidiCapabilityInquiryResponder GetResponder(MidiUniqueId muid);
+
+        // Broadcasts Discovery and collects every reply that arrives before the timeout. Unlike the
+        // other requests this always waits the whole timeout, because there is no way to know how
+        // many devices are out there until they have all had a chance to answer.
+        Windows.Foundation.IAsyncOperation<Windows.Foundation.Collections.IVectorView<MidiCapabilityInquiryResponder> > DiscoverAsync();
+
+        // Withdraws this session's identifier. Sent automatically when the session is closed, so an
+        // application only needs this if it wants to release the identifier earlier.
+        [noexcept] Boolean SendInvalidateMuid();
+
+
+        // ------------------------------------------------------------- property exchange
+
+        // Asks the responder how many requests it will take at once, and records the answer on the
+        // responder. Nothing else here requires it to have been called.
+        Windows.Foundation.IAsyncOperation<MidiCapabilityInquiryStatus> RequestPropertyExchangeCapabilitiesAsync(
+            MidiUniqueId destinationMuid);
+
+        // The general request. The header names the resource and carries any options, and the
+        // reply comes back with every chunk already put together.
+        Windows.Foundation.IAsyncOperation<MidiPropertyExchangeResponse> GetPropertyDataAsync(
+            MidiUniqueId destinationMuid,
+            Windows.Data.Json.JsonObject header);
+
+        Windows.Foundation.IAsyncOperation<MidiPropertyExchangeResponse> SetPropertyDataAsync(
+            MidiUniqueId destinationMuid,
+            Windows.Data.Json.JsonObject header,
+            Windows.Foundation.Collections.IIterable<UInt8> body);
+
+        // Named resources. Each is the general request with the header filled in and the reply
+        // parsed into the type that resource describes, which is what most applications want.
+        Windows.Foundation.IAsyncOperation<MidiResourceList> GetResourceListAsync(MidiUniqueId destinationMuid);
+
+        Windows.Foundation.IAsyncOperation<MidiDeviceInfo> GetDeviceInfoAsync(MidiUniqueId destinationMuid);
+
+        Windows.Foundation.IAsyncOperation<MidiChannelList> GetChannelListAsync(MidiUniqueId destinationMuid);
+
+        // A workstation's program list runs to thousands of entries and arrives a page at a time.
+        // This asks for pages until the device says there are no more, so the list which comes back
+        // is the whole list. resourceId may be empty for a device with only one program list.
+        Windows.Foundation.IAsyncOperation<MidiProgramList> GetProgramListAsync(
+            MidiUniqueId destinationMuid,
+            String resourceId);
+
+        // One page of the same list, for an application which would rather page itself.
+        Windows.Foundation.IAsyncOperation<MidiProgramList> GetProgramListPageAsync(
+            MidiUniqueId destinationMuid,
+            String resourceId,
+            UInt32 offset,
+            UInt32 limit);
+
+
+        // ------------------------------------------------------------------- profiles
+
+        // deviceId addresses a channel with 0x00 to 0x0F, a group with 0x7E, or the whole function
+        // block with 0x7F.
+        Windows.Foundation.IAsyncOperation<MidiProfileInquiryResponse> GetProfilesAsync(
+            MidiUniqueId destinationMuid,
+            UInt8 deviceId);
+
+        // A responder answers these with a broadcast report rather than a direct reply, and it may
+        // refuse. These return once the message has been sent; watch ProfileStateChanged for what
+        // the device actually did.
+        [noexcept] Boolean SendSetProfileOn(
+            MidiUniqueId destinationMuid,
+            UInt8 deviceId,
+            MidiProfileId profileId,
+            UInt16 channelCount);
+
+        [noexcept] Boolean SendSetProfileOff(
+            MidiUniqueId destinationMuid,
+            UInt8 deviceId,
+            MidiProfileId profileId);
+
+
+        // ------------------------------------------------------------------- events
+
+        // Raised for a profile added, removed, enabled or disabled report. These are broadcast, so
+        // they arrive whether or not this session asked for anything.
+        event Windows.Foundation.TypedEventHandler<MidiCapabilityInquirySession, MidiCapabilityInquiryMessageReceivedEventArgs> ProfileStateChanged;
+
+        // Raised when a responder answers Discovery, including outside a DiscoverAsync call.
+        event Windows.Foundation.TypedEventHandler<MidiCapabilityInquirySession, MidiCapabilityInquiryResponder> ResponderFound;
+
+        // Every capability inquiry message which was not matched to an outstanding request. A
+        // subscription update, a device's own Discovery, and anything this API has no strong type
+        // for all arrive here with their payload intact.
+        event Windows.Foundation.TypedEventHandler<MidiCapabilityInquirySession, MidiCapabilityInquiryMessageReceivedEventArgs> MessageReceived;
+    };
+}
