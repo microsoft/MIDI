@@ -229,6 +229,10 @@
 #define UUID_IMidiCapabilityInquiryMessage                                  8087b303-0519-c0de-31d1-dd0070010000
 #define UUID_IMidiCapabilityInquiryMessageStatics                           8087b303-0519-c0de-31d1-ee0070010000
 
+#define UUID_IMidiProfileId                                                 8087b303-0519-c0de-31d1-dd0070011000
+#define UUID_IMidiProfileIdStatics                                          8087b303-0519-c0de-31d1-ee0070011000
+#define UUID_IMidiProfileIdFactory                                          8087b303-0519-c0de-31d1-ff0070011000
+
 
 // ========== Utilities : Interface number 0E ========================================================================
 

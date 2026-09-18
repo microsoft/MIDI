@@ -1,0 +1,67 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    // The five byte identifier of a profile. The first byte says which kind it is: 0x7E for a
+    // profile the MIDI Association and AMEI have adopted, and a manufacturer's own system exclusive
+    // identifier for anything else. The remaining four bytes mean different things in each case,
+    // which is why they are readable both as raw bytes and through the named accessors.
+    [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiProfileId", UUID_IMidiProfileId)]
+    [static_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiProfileIdStatics", UUID_IMidiProfileIdStatics)]
+    [constructor_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiProfileIdFactory", UUID_IMidiProfileIdFactory)]
+    runtimeclass MidiProfileId : Windows.Foundation.IStringable
+    {
+        MidiProfileId();
+        MidiProfileId(UInt8 idByte1, UInt8 idByte2, UInt8 idByte3, UInt8 idByte4, UInt8 idByte5);
+
+        // The first byte of a profile adopted by the MIDI Association and AMEI.
+        [noexcept] static UInt8 StandardDefinedIdByte1{ get; };
+
+        [noexcept] static MidiProfileId CreateStandardDefined(
+            UInt8 profileBank,
+            UInt8 profileNumber,
+            UInt8 profileVersion,
+            UInt8 profileLevel);
+
+        // A manufacturer with a one byte system exclusive identifier puts it in the first byte and
+        // leaves the next two as zero, exactly as it would in any other system exclusive message.
+        [noexcept] static MidiProfileId CreateManufacturerSpecific(
+            UInt8 manufacturerSysExIdByte1,
+            UInt8 manufacturerSysExIdByte2,
+            UInt8 manufacturerSysExIdByte3,
+            UInt8 manufacturerInfoByte1,
+            UInt8 manufacturerInfoByte2);
+
+        [noexcept] UInt8 IdByte1;
+        [noexcept] UInt8 IdByte2;
+        [noexcept] UInt8 IdByte3;
+        [noexcept] UInt8 IdByte4;
+        [noexcept] UInt8 IdByte5;
+
+        [noexcept] Boolean IsStandardDefined{ get; };
+
+        // The four bytes after the first, named as the profile specifications name them. They read
+        // as zero for a manufacturer specific profile, where those bytes mean something else.
+        [noexcept] UInt8 ProfileBank{ get; };
+        [noexcept] UInt8 ProfileNumber{ get; };
+        [noexcept] UInt8 ProfileVersion{ get; };
+        [noexcept] UInt8 ProfileLevel{ get; };
+
+        // Two profiles are the same profile when all five bytes agree. Version and level are part
+        // of the identity, so a device offering two versions of one profile offers two profiles.
+        [noexcept] Boolean IsSameProfileAs(MidiProfileId other);
+    };
+}

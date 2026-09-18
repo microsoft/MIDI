@@ -386,7 +386,13 @@
     <Midl Include="MidiCapabilityInquiryMessageTypeEnum.idl">
       <Filter>SDK\CapabilityInquiry</Filter>
     </Midl>
+    <Midl Include="MidiCapabilityInquiryCategoriesEnum.idl">
+      <Filter>SDK\CapabilityInquiry</Filter>
+    </Midl>
     <Midl Include="MidiCapabilityInquiryMessage.idl">
+      <Filter>SDK\CapabilityInquiry</Filter>
+    </Midl>
+    <Midl Include="MidiProfileId.idl">
       <Filter>SDK\CapabilityInquiry</Filter>
     </Midl>
     <Midl Include="MidiVirtualDevice.idl">
