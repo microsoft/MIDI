@@ -17,6 +17,7 @@ This is the class that a virtual device application uses as its interface to the
 | `AssociationId` | The id used to associate the client and device endpoints |
 | `FunctionBlocks` | Current list of function blocks for this device. |
 | `IsClientEndpointInUse` | True when one or more applications are connected to this device's client-visible endpoint. Readable at any time, including before any client has ever connected. |
+| `CapabilityInquiry` | Answers MIDI Capability Inquiry on this device's behalf, the same way this class already answers endpoint discovery. It does nothing until an application enables it and gives it something to publish. See [`MidiCapabilityInquiryDeviceResponder`]({{ site.baseurl }}/sdk-reference/CapabilityInquiry/MidiCapabilityInquiryDeviceResponder). |
 | `SuppressHandledMessages` | **Defaults to true.** When true, the endpoint discovery and stream configuration messages this class handles and responds to are removed from the incoming message stream, so your application does not have to filter out protocol traffic it never asked for. Set it to false if you want to observe those messages yourself, for example when debugging a client's discovery behavior. Note that the virtual device still responds to them either way. |
 
 ## Functions
@@ -51,3 +52,5 @@ When the virtual device is torn down, `IsClientEndpointInUse` returns to false a
 
 * [C++ Sample](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/simple-app-to-app-midi)
 * [C# Sample](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/virtual-device-app-winui)
+* [C++ Sample: answering capability inquiry](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/capability-inquiry-virtual-device)
+* [C# Sample: answering capability inquiry](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/capability-inquiry-virtual-device)
