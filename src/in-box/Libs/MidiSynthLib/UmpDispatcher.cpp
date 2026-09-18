@@ -330,12 +330,17 @@ namespace MidiSynth
 
         const bool isFunctionBlockText = (functionBlockNumber >= 0);
 
-        // The function block number takes the byte the first text character would have used.
+        // The function block number takes the byte the first text character would have used, which
+        // is also why a block name gets fewer bytes in total than an endpoint name.
         const size_t bytesPerPacket = isFunctionBlockText
             ? MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_NAME_CHARACTERS_PER_PACKET
             : MIDI_STREAM_MESSAGE_ENDPOINT_NAME_CHARACTERS_PER_PACKET;
 
-        const size_t length = strnlen(text, SynthEndpoint::MaxEndpointNameBytes);
+        const size_t maximumBytes = isFunctionBlockText
+            ? MIDI_STREAM_MESSAGE_FUNCTION_BLOCK_NAME_MAX_LENGTH
+            : MIDI_STREAM_MESSAGE_ENDPOINT_NAME_MAX_LENGTH;
+
+        const size_t length = strnlen(text, maximumBytes);
         const size_t packetCount = (length + bytesPerPacket - 1) / bytesPerPacket;
 
         for (size_t packet = 0; packet < packetCount; packet++)
