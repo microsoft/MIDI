@@ -365,6 +365,12 @@
     <Midl Include="MidiResourceLink.idl">
       <Filter>SDK\CapabilityInquiry</Filter>
     </Midl>
+    <Midl Include="MidiChannelListEntry.idl">
+      <Filter>SDK\CapabilityInquiry</Filter>
+    </Midl>
+    <Midl Include="MidiChannelList.idl">
+      <Filter>SDK\CapabilityInquiry</Filter>
+    </Midl>
     <Midl Include="MidiVirtualDevice.idl">
       <Filter>SDK\Transports\Virtual</Filter>
     </Midl>

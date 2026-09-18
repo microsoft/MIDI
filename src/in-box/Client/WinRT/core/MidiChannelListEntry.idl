@@ -1,0 +1,50 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+import "MidiResourceLink.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiChannelListEntry", UUID_IMidiChannelListEntry)]
+    [static_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiChannelListEntryStatics", UUID_IMidiChannelListEntryStatics)]
+    [constructor_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiChannelListEntryFactory", UUID_IMidiChannelListEntryFactory)]
+    runtimeclass MidiChannelListEntry : Windows.Foundation.IStringable
+    {
+        MidiChannelListEntry();
+        MidiChannelListEntry(UInt16 channel, String title);
+
+        // Display name for the channel, from the entry's "title".
+        String Title;
+
+        // ONE based, and deliberately not adjusted here. The channel list numbers channels from 1
+        // while the bank and program values below are zero based, which is the specification's own
+        // inconsistency rather than ours to correct.
+        [noexcept] UInt16 Channel;
+
+        // Zero based, exactly as in a program list entry.
+        [noexcept] UInt8 BankMsb;
+        [noexcept] UInt8 BankLsb;
+        [noexcept] UInt8 ProgramChange;
+
+        // Name of whatever is currently selected on the channel, when the device reports one.
+        String ProgramTitle;
+
+        // Where this channel's programs come from. A device offering several collections is only
+        // reachable by following these, so this is the route to every program list it has.
+        Windows.Foundation.Collections.IVector<MidiResourceLink> Links{ get; };
+
+        [noexcept] Windows.Data.Json.JsonObject GetJson();
+        [noexcept] static MidiChannelListEntry FromJson(Windows.Data.Json.JsonObject json);
+    };
+}

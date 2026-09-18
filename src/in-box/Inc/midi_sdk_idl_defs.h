@@ -208,6 +208,13 @@
 #define UUID_IMidiResourceLinkStatics                                       8087b303-0519-c0de-31d1-ee0070004000
 #define UUID_IMidiResourceLinkFactory                                       8087b303-0519-c0de-31d1-ff0070004000
 
+#define UUID_IMidiChannelListEntry                                          8087b303-0519-c0de-31d1-dd0070005000
+#define UUID_IMidiChannelListEntryStatics                                   8087b303-0519-c0de-31d1-ee0070005000
+#define UUID_IMidiChannelListEntryFactory                                   8087b303-0519-c0de-31d1-ff0070005000
+
+#define UUID_IMidiChannelList                                               8087b303-0519-c0de-31d1-dd0070006000
+#define UUID_IMidiChannelListStatics                                        8087b303-0519-c0de-31d1-ee0070006000
+
 
 // ========== Utilities : Interface number 0E ========================================================================
 
