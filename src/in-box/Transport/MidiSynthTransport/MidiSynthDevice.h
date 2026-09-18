@@ -129,6 +129,14 @@ private:
     // Guarded by m_audioLock. One bit per channel, so the assignment outlives the engine.
     uint16_t m_drumChannelMask{ 0 };
 
+    // Guarded by m_audioLock. What the engine was last built from, so that reopening the audio
+    // device does not rebuild it and throw away everything the song has set up.
+    bool m_engineInitialized{ false };
+    MidiSynth::SynthMode m_engineSynthMode{};
+    MidiSynth::BankSelectMode m_engineBankSelect{};
+    uint32_t m_engineSampleRate{ 0 };
+    bool m_engineEffectsEnabled{ false };
+
     // Guards the sink and render source against a settings change or a device loss arriving while
     // a connection is being made or broken.
     mutable wil::srwlock m_audioLock;

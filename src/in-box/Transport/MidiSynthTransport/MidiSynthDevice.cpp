@@ -233,19 +233,38 @@ MidiSynthDevice::AcquireAudio()
     config.BankSelect = settings.BankSelect;
     config.EnableEffects = settings.EffectsEnabled && config.EnableEffects;
 
-    RETURN_HR_IF(E_FAIL, !m_engine.Initialize(&m_collection, config));
+    // The audio device now comes and goes underneath a connection, and initializing the engine
+    // clears every channel: programs, bank, volume, pan and tuning. A song that sets its
+    // instruments up and then rests longer than the idle timeout would come back playing pianos.
+    // So the engine is only rebuilt when something it was built from actually changed.
+    bool const engineMatchesDevice =
+        m_engineInitialized &&
+        m_engineSynthMode == settings.SynthMode &&
+        m_engineSampleRate == sink->SampleRate() &&
+        m_engineBankSelect == settings.BankSelect &&
+        m_engineEffectsEnabled == config.EnableEffects;
+
+    if (!engineMatchesDevice)
+    {
+        RETURN_HR_IF(E_FAIL, !m_engine.Initialize(&m_collection, config));
+
+        // Initialize clears the channel map, so the customer's rhythm channels go back afterwards.
+        for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
+        {
+            if ((m_drumChannelMask & (1u << channel)) != 0)
+            {
+                m_engine.SetDrumChannel(channel, true);
+            }
+        }
+
+        m_engineInitialized = true;
+        m_engineSynthMode = settings.SynthMode;
+        m_engineSampleRate = sink->SampleRate();
+        m_engineBankSelect = settings.BankSelect;
+        m_engineEffectsEnabled = config.EnableEffects;
+    }
 
     m_engine.SetUserVolumeDb(settings.VolumeDecibels);
-
-    // Initialize clears the channel map, and the audio device now comes and goes underneath a
-    // connection, so the customer's rhythm channels have to be put back each time.
-    for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
-    {
-        if ((m_drumChannelMask & (1u << channel)) != 0)
-        {
-            m_engine.SetDrumChannel(channel, true);
-        }
-    }
 
     auto source = std::make_unique<UmpRenderSource>(
         m_engine, m_dispatcher, m_inbound, sink->SampleRate(), sink->BufferFrames(),
@@ -511,10 +530,15 @@ MidiSynthDevice::ApplySettings(MidiSynthSettings const& settings) noexcept
     {
         auto lock = m_audioLock.lock_exclusive();
 
-        if (m_sink != nullptr)
+        // Applied to the engine rather than to the stream, so this still lands while the audio
+        // device is released. Recording the bank mode keeps the next acquisition from deciding the
+        // engine is stale and rebuilding it.
+        if (m_engineInitialized)
         {
             m_engine.SetUserVolumeDb(settings.VolumeDecibels);
             m_engine.SetBankSelectMode(settings.BankSelect);
+
+            m_engineBankSelect = settings.BankSelect;
         }
     }
 
@@ -590,7 +614,7 @@ MidiSynthDevice::SetDrumChannel(uint8_t channel, bool isDrumChannel) noexcept
         m_drumChannelMask &= ~(1u << channel);
     }
 
-    if (m_sink != nullptr)
+    if (m_engineInitialized)
     {
         m_engine.SetDrumChannel(channel, isDrumChannel);
     }
