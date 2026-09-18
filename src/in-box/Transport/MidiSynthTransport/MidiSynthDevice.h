@@ -126,6 +126,9 @@ private:
     std::atomic<bool> m_audioWanted{ false };
     std::atomic<uint64_t> m_lastChannelVoiceTimestamp{ 0 };
 
+    // When the device was asked for, so a trace can report how long acquiring it took.
+    std::atomic<uint64_t> m_audioRequestedTimestamp{ 0 };
+
     // Guarded by m_audioLock. One bit per channel, so the assignment outlives the engine.
     uint16_t m_drumChannelMask{ 0 };
 

@@ -275,6 +275,20 @@ MidiSynthDevice::AcquireAudio()
         return HRESULT_FROM_WIN32(ERROR_DEVICE_NOT_AVAILABLE);
     }
 
+    // Measured from the message that asked for the device, so a trace answers "how long before the
+    // first note sounds" without having to correlate two events by hand.
+    auto const requestedAt = m_audioRequestedTimestamp.load(std::memory_order_acquire);
+    auto const frequency = internal::GetMidiTimestampFrequency();
+    auto const acquiredAt = internal::GetCurrentMidiTimestamp();
+
+    double acquireMilliseconds = 0.0;
+
+    if (requestedAt != 0 && acquiredAt > requestedAt && frequency > 0)
+    {
+        acquireMilliseconds =
+            static_cast<double>(acquiredAt - requestedAt) * 1000.0 / static_cast<double>(frequency);
+    }
+
     TraceLoggingWrite(
         MidiSynthTransportTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -285,7 +299,9 @@ MidiSynthDevice::AcquireAudio()
         TraceLoggingWideString(sink->DeviceName().c_str(), "device"),
         TraceLoggingUInt32(sink->SampleRate(), "sample rate"),
         TraceLoggingFloat64(sink->PeriodMilliseconds(), "period ms"),
-        TraceLoggingBool(sink->UsingLowLatencyPath(), "low latency")
+        TraceLoggingBool(sink->UsingLowLatencyPath(), "low latency"),
+        TraceLoggingFloat64(acquireMilliseconds, "ms since requested"),
+        TraceLoggingBool(!engineMatchesDevice, "engine rebuilt")
     );
 
     m_source = std::move(source);
@@ -479,12 +495,28 @@ MidiSynthDevice::SendMessage(
         if (messageType == MIDI_UMP_MESSAGE_TYPE_MIDI1_CHANNEL_VOICE_32 ||
             messageType == MIDI_UMP_MESSAGE_TYPE_MIDI2_CHANNEL_VOICE_64)
         {
-            m_lastChannelVoiceTimestamp.store(
-                internal::GetCurrentMidiTimestamp(), std::memory_order_release);
+            auto const arrivedAt = internal::GetCurrentMidiTimestamp();
+
+            m_lastChannelVoiceTimestamp.store(arrivedAt, std::memory_order_release);
 
             // Stored after the timestamp, so a worker that is deciding to release always sees the
-            // newer timestamp if it sees the flag.
-            m_audioWanted.store(true, std::memory_order_release);
+            // newer timestamp if it sees the flag. Only the transition is traced: this runs for
+            // every message, and tracing each one would swamp a capture during a performance.
+            if (!m_audioWanted.exchange(true, std::memory_order_acq_rel))
+            {
+                m_audioRequestedTimestamp.store(arrivedAt, std::memory_order_release);
+
+                TraceLoggingWrite(
+                    MidiSynthTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_INFO,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(L"Audio requested by a channel voice message", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingUInt32(static_cast<uint32_t>(messageType), "message type"),
+                    TraceLoggingUInt64(arrivedAt, "timestamp")
+                );
+            }
         }
 
         if (!m_inbound.TryPush(queued))
@@ -807,7 +839,13 @@ MidiSynthDevice::WorkerThread() noexcept
                         TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
                         TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                         TraceLoggingPointer(this, "this"),
-                        TraceLoggingWideString(L"Idle. Releasing the audio device.", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+                        TraceLoggingWideString(L"Idle. Releasing the audio device.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                        TraceLoggingFloat64(
+                            (internal::GetMidiTimestampFrequency() > 0)
+                                ? static_cast<double>(quietFor) * 1000.0 /
+                                    static_cast<double>(internal::GetMidiTimestampFrequency())
+                                : 0.0,
+                            "silent for ms")
                     );
 
                     ReleaseAudio();
