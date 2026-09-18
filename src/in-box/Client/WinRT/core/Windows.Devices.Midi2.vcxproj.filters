@@ -380,6 +380,9 @@
     <Midl Include="MidiResourceList.idl">
       <Filter>SDK\CapabilityInquiry</Filter>
     </Midl>
+    <Midl Include="MidiSystemExclusive7MessageBuilder.idl">
+      <Filter>SDK\Utilities\Messages</Filter>
+    </Midl>
     <Midl Include="MidiVirtualDevice.idl">
       <Filter>SDK\Transports\Virtual</Filter>
     </Midl>
