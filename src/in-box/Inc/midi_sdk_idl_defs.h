@@ -215,6 +215,9 @@
 #define UUID_IMidiChannelList                                               8087b303-0519-c0de-31d1-dd0070006000
 #define UUID_IMidiChannelListStatics                                        8087b303-0519-c0de-31d1-ee0070006000
 
+#define UUID_IMidiDeviceInfo                                                8087b303-0519-c0de-31d1-dd0070007000
+#define UUID_IMidiDeviceInfoStatics                                         8087b303-0519-c0de-31d1-ee0070007000
+
 
 // ========== Utilities : Interface number 0E ========================================================================
 

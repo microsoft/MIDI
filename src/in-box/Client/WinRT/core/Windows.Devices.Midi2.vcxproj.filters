@@ -371,6 +371,9 @@
     <Midl Include="MidiChannelList.idl">
       <Filter>SDK\CapabilityInquiry</Filter>
     </Midl>
+    <Midl Include="MidiDeviceInfo.idl">
+      <Filter>SDK\CapabilityInquiry</Filter>
+    </Midl>
     <Midl Include="MidiVirtualDevice.idl">
       <Filter>SDK\Transports\Virtual</Filter>
     </Midl>
