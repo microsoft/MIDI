@@ -383,6 +383,9 @@
     <Midl Include="MidiSystemExclusive7MessageBuilder.idl">
       <Filter>SDK\Utilities\Messages</Filter>
     </Midl>
+    <Midl Include="MidiCapabilityInquiryMessageTypeEnum.idl">
+      <Filter>SDK\CapabilityInquiry</Filter>
+    </Midl>
     <Midl Include="MidiVirtualDevice.idl">
       <Filter>SDK\Transports\Virtual</Filter>
     </Midl>

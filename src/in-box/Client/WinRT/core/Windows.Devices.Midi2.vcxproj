@@ -1424,6 +1424,7 @@
     <Midl Include="MidiResourceListEntry.idl" />
     <Midl Include="MidiResourceList.idl" />
     <Midl Include="MidiSystemExclusive7MessageBuilder.idl" />
+    <Midl Include="MidiCapabilityInquiryMessageTypeEnum.idl" />
     <Midl Include="MidiNetworkAdvertisedHost.idl" />
     <Midl Include="MidiNetworkAdvertisedHostAddedEventArgs.idl" />
     <Midl Include="MidiNetworkAdvertisedHostRemovedEventArgs.idl" />
