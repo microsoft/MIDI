@@ -392,6 +392,9 @@
     <Midl Include="MidiCapabilityInquiryMessage.idl">
       <Filter>SDK\CapabilityInquiry</Filter>
     </Midl>
+    <Midl Include="MidiCapabilityInquiryMessageBuilder.idl">
+      <Filter>SDK\CapabilityInquiry</Filter>
+    </Midl>
     <Midl Include="MidiProfileId.idl">
       <Filter>SDK\CapabilityInquiry</Filter>
     </Midl>

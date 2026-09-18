@@ -1199,6 +1199,9 @@ namespace WindowsMidiServicesCapabilityInquiry
     // it. Nothing is built and nothing is allocated while a request is being answered.
     struct PropertyReplyChunker
     {
+        // Any property exchange message may be chunked, not only a reply to a get.
+        MessageType Type{ MessageType::PropertyGetDataReply };
+
         uint8_t const* Resource{ nullptr };
         size_t ResourceByteCount{ 0 };
 
@@ -1293,7 +1296,7 @@ namespace WindowsMidiServicesCapabilityInquiry
 
             PropertyExchangeMessageFields fields{};
 
-            fields.Type = MessageType::PropertyGetDataReply;
+            fields.Type = Type;
             fields.SourceMuid = sourceMuid;
             fields.DestinationMuid = destinationMuid;
             fields.RequestId = requestId;
