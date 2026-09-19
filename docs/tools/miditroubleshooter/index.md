@@ -3,6 +3,9 @@ layout: tools_page
 title: MIDI Troubleshooting and Repair
 tool: miditroubleshooter
 description: Check the health of MIDI on this PC, collect diagnostics for support, and repair common problems
+icon: /assets/images/miditroubleshooter.png
+categories:
+  - Diagnostic Tools
 ---
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.

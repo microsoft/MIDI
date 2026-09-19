@@ -3,6 +3,9 @@ layout: tools_page
 title: MIDI Settings
 tool: settings
 description: See every MIDI endpoint on this PC, customize them, and launch the rest of the MIDI tools
+icon: /assets/images/midisettings.png
+categories:
+  - Core Tools
 ---
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.

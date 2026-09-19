@@ -1,38 +1,120 @@
 <!-- Start SDK Left Nav Area -->
-    <div class="col-md-4">
+<style>
+/* style.css is generated from assets/scss, so these nav rules live here instead */
+@media (min-width: 768px) {
+    .sdk-left-nav-col { flex: 0 0 36%; max-width: 36%; width: 36%; }
+    .sdk-reference-content-col { flex: 0 0 64%; max-width: 64%; width: 64%; }
+}
+.sdk-left-nav-toggle-all { border: 1px solid #d5d5d5; background: #ffffff; color: #4a4a4a; border-radius: 4px; font-size: 12px; line-height: 16px; padding: 4px 10px; margin-bottom: 12px; }
+.sdk-left-nav-toggle-all:hover { border-color: #3399f0; color: #216cbc; }
+.sdk-left-nav-group { margin: 0 0 1px 0; }
+.sdk-left-nav-group > summary { cursor: pointer; display: block; font-size: 13px; line-height: 18px; font-weight: bold; color: #333333; padding: 3px 0; list-style: none; }
+.sdk-left-nav-group > summary::-webkit-details-marker { display: none; }
+.sdk-left-nav-group > summary::before { content: "\25B8"; display: inline-block; width: 13px; color: #999999; font-weight: normal; transition: transform ease 0.15s; }
+.sdk-left-nav-group[open] > summary::before { transform: rotate(90deg); }
+.sdk-left-nav-group > summary:hover { color: #216cbc; }
+/* child selectors, so the nested type badge is not caught by the item rules */
+.sdk-left-nav-group .sdk-left-nav-item > a,
+.sdk-left-nav-group .sdk-left-nav-item > span { display: block; margin: 0 0 0 13px; padding: 2px 4px; font-size: 13px; line-height: 18px; }
+.sdk-left-nav-group .sdk-left-nav-item > a { color: #4a4a4a; transition: all ease 0.2s; }
+.sdk-left-nav-group .sdk-left-nav-item > a:hover { color: #216cbc; background: #3399f010; }
+/* margin + border + padding must total the 17px (13 + 4) that a plain link indents to */
+.sdk-left-nav-group .sdk-left-nav-item > span.current { color: #216cbc; font-weight: bold; background: #3399f01a; border-left: 3px solid #3399f0; margin-left: 10px; padding-left: 4px; }
+/* scoped to out-specify the theme's .sdk-left-nav-item span rule in style.css */
+/* vertical-align:middle lands 1px low against a 13px em box, hence the nudge */
+.sdk-left-nav-tree span.sdk-type-badge { display: inline-block; position: relative; top: -1px; width: 14px; height: 14px; margin: 0 6px 0 0; padding: 0; border-radius: 3px; background: #8a8886; color: #ffffff; font-family: Consolas, "Courier New", monospace; font-size: 9px; font-weight: bold; line-height: 14px; text-align: center; vertical-align: middle; }
+.sdk-left-nav-tree span.sdk-type-badge-runtimeclass { background: #c9760a; }
+.sdk-left-nav-tree span.sdk-type-badge-interface { background: #0f6cbd; }
+.sdk-left-nav-tree span.sdk-type-badge-struct { background: #8256d0; }
+.sdk-left-nav-tree span.sdk-type-badge-enum { background: #107c41; }
+.sdk-left-nav-tree span.sdk-type-badge-apicontract { background: #5d5d5d; }
+.sdk-type-legend { margin: 10px 0 14px 0; font-size: 11px; line-height: 20px; color: #6a6a6a; }
+.sdk-type-legend em { font-style: normal; margin-right: 10px; white-space: nowrap; }
+</style>
+    <div class="col-md-4 sdk-left-nav-col">
         <div class="sidebar-area sidebar-left">
-            <h4 class="sub-title heading-5">SDK Types</h4>
             <div class="sdk-left-nav-tree">
                 <div class="recent-widget sidebar-widget">
+                    <button type="button" class="sdk-left-nav-toggle-all" id="sdk-left-nav-toggle-all" aria-expanded="false">Expand all</button>
+
+                    <div class="sdk-type-legend">
+                        <em><span class="sdk-type-badge sdk-type-badge-runtimeclass" aria-hidden="true">C</span>class</em>
+                        <em><span class="sdk-type-badge sdk-type-badge-interface" aria-hidden="true">I</span>interface</em>
+                        <em><span class="sdk-type-badge sdk-type-badge-struct" aria-hidden="true">S</span>struct</em>
+                        <em><span class="sdk-type-badge sdk-type-badge-enum" aria-hidden="true">E</span>enum</em>
+                    </div>
+
                     {% assign sdk_page_groups = site.pages | where: "layout", "sdk_reference_page" | group_by: "namespace" %}
                     {% assign sdk_page_groups_sorted = sdk_page_groups | sort: "name" %}
                     {% for ns in sdk_page_groups_sorted %}
 
-                    {% assign ns_name_size = ns.name | size %}
-                    {% if ns_name_size > 45 %}
-                        {% assign display_ns = ns.name | replace: ".Devices.Midi2.", "..." %}
-                    {% else %}
-                        {% assign display_ns = ns.name %}
+                    {% comment %} Open the group holding the current page, and on a namespace index, its child namespaces too. {% endcomment %}
+                    {% assign open_group = false %}
+                    {% if ns.name == page.namespace %}
+                        {% assign open_group = true %}
+                    {% elsif page.layout == "sdk_namespace_page" and page.namespace != "Windows.Devices.Midi2" %}
+                        {% assign ns_prefix = page.namespace | append: "." %}
+                        {% if ns.name contains ns_prefix %}
+                            {% assign open_group = true %}
+                        {% endif %}
                     {% endif %}
 
-                      <div class="sdk-left-nav-item">
-                          <h6>{{display_ns}}</h6>
-                      </div>
-                      
-                      {% assign ns_pages_sorted = ns.items | sort: "title" %}
+                    {% assign ns_pages_sorted = ns.items | sort: "title" %}
 
-                      {% for ns_page in ns_pages_sorted %}
+                    <details class="sdk-left-nav-group"{% if open_group %} open{% endif %}>
+                        <summary>{{ns.name}}</summary>
+
+                        {% for ns_page in ns_pages_sorted %}
+                        {% case ns_page.type %}
+                            {% when "runtimeclass" %}{% assign badge_letter = "C" %}{% assign badge_label = "Runtime class" %}
+                            {% when "interface" %}{% assign badge_letter = "I" %}{% assign badge_label = "Interface" %}
+                            {% when "struct" %}{% assign badge_letter = "S" %}{% assign badge_label = "Struct" %}
+                            {% when "enum" %}{% assign badge_letter = "E" %}{% assign badge_label = "Enumeration" %}
+                            {% when "apicontract" %}{% assign badge_letter = "A" %}{% assign badge_label = "API contract" %}
+                            {% else %}{% assign badge_letter = "?" %}{% assign badge_label = "Type" %}
+                        {% endcase %}
                         <div class="sdk-left-nav-item">
-                            {% if page.title == ns_page.title  %}
-                                <span>{{ns_page.title}}</span>
+                            {% if page.url == ns_page.url %}
+                                <span class="current" aria-current="page"><span class="sdk-type-badge sdk-type-badge-{{ns_page.type}}" title="{{badge_label}}" aria-hidden="true">{{badge_letter}}</span>{{ns_page.title}}</span>
                             {% else %}
-                                <a class="current" href="{{ns_page.url | relative_url}}">{{ns_page.title}}</a>
+                                <a href="{{ns_page.url | relative_url}}"><span class="sdk-type-badge sdk-type-badge-{{ns_page.type}}" title="{{badge_label}}" aria-hidden="true">{{badge_letter}}</span>{{ns_page.title}}</a>
                             {% endif %}
                         </div>
-                      {% endfor %}
+                        {% endfor %}
+                    </details>
                     {% endfor %}
                   </div>
             </div>
         </div>           
     </div>
+
+<script>
+(function () {
+    var button = document.getElementById("sdk-left-nav-toggle-all");
+    if (button === null) { return; }
+
+    var groups = document.querySelectorAll(".sdk-left-nav-group");
+
+    function syncButton() {
+        var allOpen = true;
+        for (var i = 0; i < groups.length; i++) {
+            if (!groups[i].open) { allOpen = false; break; }
+        }
+        button.textContent = allOpen ? "Collapse all" : "Expand all";
+        button.setAttribute("aria-expanded", allOpen ? "true" : "false");
+    }
+
+    button.addEventListener("click", function () {
+        var expand = button.getAttribute("aria-expanded") !== "true";
+        for (var i = 0; i < groups.length; i++) { groups[i].open = expand; }
+        syncButton();
+    });
+
+    for (var i = 0; i < groups.length; i++) {
+        groups[i].addEventListener("toggle", syncButton);
+    }
+
+    syncButton();
+})();
+</script>
 <!-- End SDK Left Nav Area -->

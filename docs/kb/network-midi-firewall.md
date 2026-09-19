@@ -3,6 +3,9 @@ layout: kb
 title: Adding Network MIDI 2 to your firewall so other devices can connect
 audience: everyone
 description: Network MIDI 2.0, to act as a host, must be allowed through the firewall. This article explains how.
+categories:
+  - Troubleshooting
+  - Transport Details
 ---
 
 Can other Network MIDI 2.0-enabled PCs or devices see your PC, but cannot connect to it?

@@ -3,6 +3,8 @@ layout: kb
 title: About the Virtual Device App Transport
 audience: everyone
 description: All about the Virtual Device app (app-to-app MIDI) transport
+categories:
+  - Transport Details
 ---
 
 | Property | Value |

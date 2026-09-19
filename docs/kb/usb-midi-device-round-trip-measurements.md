@@ -3,6 +3,8 @@ layout: kb
 title: USB MIDI 1.0 device round trip measurements
 description: Unofficial round trip time and jitter measurements for a set of USB MIDI 1.0 interfaces, taken on a single PC while tuning the outbound message scheduler
 audience: everyone
+categories:
+  - Internals
 ---
 
 # USB MIDI 1.0 device round trip measurements

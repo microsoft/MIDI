@@ -3,6 +3,8 @@ layout: kb
 title: MIDI 2.0 Implementation Details
 audience: everyone
 description: Details about our MIDI 2.0 implementation in Windows MIDI Services
+categories:
+  - Internals
 ---
 
 Specifications can be funny. As much as the MIDI Association, and all of us in it, try to be very specific and crisp on wording, there's often room for interpretation. Most of these we work out among the various OS companies under the umbrella of the MIDI Association. But there are others were an approach may just not make sense on one OS or the other. Here are the ones that are Windows-specific, that you should be aware of as a developer.

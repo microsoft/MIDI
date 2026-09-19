@@ -3,6 +3,9 @@ layout: tools_page
 title: MIDI SysEx Utility
 tool: midisysextool
 description: Send System Exclusive files to a device, and capture dumps back to disk
+icon: /assets/images/midisysextool.png
+categories:
+  - General Purpose MIDI Tools
 ---
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.

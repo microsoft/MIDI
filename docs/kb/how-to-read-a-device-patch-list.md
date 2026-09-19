@@ -3,6 +3,8 @@ layout: kb
 title: How to read a device's patch list
 audience: developers
 description: Using MIDI Capability Inquiry to show a person the names of the sounds on their instrument, instead of a list of numbers
+categories:
+  - Developer Guidance
 ---
 
 A program change is a number. Nobody thinks in numbers. If your application shows `Program 42` where the instrument's own screen says `Warm Pad`, the person using it has to keep a chart, and every instrument needs a different chart.

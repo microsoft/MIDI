@@ -3,6 +3,8 @@ layout: kb
 title: Porting a MIDI Library or Framework to Windows MIDI Services
 audience: developers
 description: Guidance for maintainers of cross-platform MIDI libraries, language bindings, and application frameworks which wrap the operating system MIDI API
+categories:
+  - Developer Guidance
 ---
 
 <!-- Short link for this page: aka.ms/MidiLibraryPorting -->

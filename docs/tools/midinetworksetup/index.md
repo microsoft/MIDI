@@ -3,6 +3,9 @@ layout: tools_page
 title: Network MIDI 2.0 Setup
 tool: midinetworksetup
 description: Connect this PC to Network MIDI 2.0 devices over your local network
+icon: /assets/images/midinetworksetup.png
+categories:
+  - Device/Transport Configuration Tools
 ---
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.

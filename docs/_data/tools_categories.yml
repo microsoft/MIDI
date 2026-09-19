@@ -1,0 +1,9 @@
+# Order here sets the order of the sections, and of the chiclets, on the tools index page.
+# A tool page joins a section by listing the exact name below in its "categories" front matter.
+# A page may be in more than one. Anything with no match lands in "Other tools".
+
+- Core Tools
+- Device/Transport Configuration Tools
+- General Purpose MIDI Tools
+- Diagnostic Tools
+- Developer and Technical User Tools

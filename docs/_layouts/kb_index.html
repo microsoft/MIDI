@@ -21,6 +21,15 @@ layout: default
     </div>
 </section>
 
+<style>
+/* style.css is generated from assets/scss, so these list-specific rules live here instead */
+.kb-category-chiclets { margin-bottom: 30px; }
+.kb-category-chiclet { display: inline-block; margin: 0 8px 8px 0; padding: 6px 14px; border-radius: 4px; background: #3399f0; color: #ffffff; font-size: 13px; line-height: 18px; }
+.kb-category-chiclet:hover, .kb-category-chiclet:focus { background: #216cbc; color: #ffffff; text-decoration: none; }
+.kb-category-chiclet .kb-category-count { opacity: 0.7; margin-left: 6px; }
+.kb-category-heading { margin-top: 40px; margin-bottom: 20px; }
+</style>
+
 <section class="layout-area bg-color3 content tutorial">
     <div class="kb-wrapper section-spacing bminus-30">
         <div class="container">
@@ -30,36 +39,45 @@ layout: default
             </div>
 
             {% assign kb_pages = site.pages | where: "layout", "kb" | sort: "title" %}
+
+            {% comment %} Anything whose categories do not match the list in _data/kb_categories.yml still has to appear somewhere. {% endcomment %}
+            {% assign uncategorized = "" | split: "" %}
             {% for kb in kb_pages %}
+                {% assign matched = false %}
+                {% for category in site.data.kb_categories %}
+                    {% if kb.categories contains category %}{% assign matched = true %}{% endif %}
+                {% endfor %}
+                {% unless matched %}{% assign uncategorized = uncategorized | push: kb %}{% endunless %}
+            {% endfor %}
 
-            <div class="row">
-                <div class="col-md-12">
-                    <article class="kb-service bg-color1">
-                        <header>                           
-                            {% if kb.audience != empty and kb.audience != nil %}
-                                {% if kb.audience == "developers" %}
-                                <div class="kb-article-audience-pill kb-article-audience-pill-developer">
-                                    <span>Developer / Technical Article</span>
-                                </div>
-                                {% elsif kb.audience == "everyone" %}
-                                <div class="kb-article-audience-pill kb-article-audience-pill-everyone">
-                                    <span>Everyone</span>
-                                </div>
-                                {% endif %}
-                            {% endif %}
-
-                            <a href="{{kb.url | relative_url}}"><h4 class="heading-4">{{kb.title}}</h4></a>
-
-                        </header>
-                        <footer class="kb-list-content">
-                            <p>{{kb.description}} </p>
-
-                        </footer>
-                    </article>
-                </div>
+            <div class="kb-category-chiclets">
+                {% for category in site.data.kb_categories %}
+                    {% assign in_category = kb_pages | where_exp: "kb", "kb.categories contains category" %}
+                    {% if in_category.size > 0 %}
+                    <a class="kb-category-chiclet" href="#{{ category | slugify }}">{{ category }}<span class="kb-category-count">{{ in_category.size }}</span></a>
+                    {% endif %}
+                {% endfor %}
+                {% if uncategorized.size > 0 %}
+                <a class="kb-category-chiclet" href="#other-articles">Other articles<span class="kb-category-count">{{ uncategorized.size }}</span></a>
+                {% endif %}
             </div>
 
+            {% for category in site.data.kb_categories %}
+                {% assign in_category = kb_pages | where_exp: "kb", "kb.categories contains category" %}
+                {% if in_category.size > 0 %}
+                <h2 class="heading-3 kb-category-heading" id="{{ category | slugify }}">{{ category }}</h2>
+                {% for kb in in_category %}
+                {% include kb_index_article.html kb=kb %}
+                {% endfor %}
+                {% endif %}
             {% endfor %}
+
+            {% if uncategorized.size > 0 %}
+            <h2 class="heading-3 kb-category-heading" id="other-articles">Other articles</h2>
+            {% for kb in uncategorized %}
+            {% include kb_index_article.html kb=kb %}
+            {% endfor %}
+            {% endif %}
 
         </div>
     </div>

@@ -3,6 +3,8 @@ layout: kb
 title: About the MIDI 2.0 Loopback Transport
 audience: everyone
 description: All about the MIDI 2.0 loopback (app-to-app MIDI) transport
+categories:
+  - Transport Details
 ---
 
 | Property | Value |

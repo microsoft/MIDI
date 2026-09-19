@@ -3,6 +3,8 @@ layout: kb
 title: How to change the API mode
 description: How customers can change the API mode or revert to the older MIDI 1.0 stack.
 audience: everyone
+categories:
+  - Troubleshooting
 ---
 
 # API Modes

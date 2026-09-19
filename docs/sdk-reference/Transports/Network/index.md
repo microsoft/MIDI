@@ -1,6 +1,6 @@
 ---
 layout: sdk_namespace_page
-title: App SDK Support for Network MIDI 2.0 Endpoints
+title: WinRT API Support for Network MIDI 2.0 Endpoints
 namespace: Windows.Devices.Midi2.Transports.Network
 description: Namespace for creating and managing Network MIDI 2.0 (UDP) hosts and clients
 ---
@@ -77,4 +77,4 @@ The service reads `allowedClients` and `deniedClients` lists for each host from 
 
 - Authentication is not implemented. A host configured to require it is rejected at configuration time rather than silently accepting unauthenticated connections. See [issue 733](https://github.com/microsoft/MIDI/issues/733)
 - mDNS discovery is limited to the local subnet. Direct connections are not
-- mDNS discovery can be slow to settle. `midimdnsinfo.exe` in the SDK tools is useful for checking what is visible on the network
+- mDNS discovery can be slow to settle. `midimdnsinfo.exe` in the MIDI tools is useful for checking what is visible on the network

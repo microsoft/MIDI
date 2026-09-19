@@ -3,6 +3,8 @@ layout: kb
 title: How Network MIDI 2.0 works in Windows
 audience: everyone
 description: What the Windows Network MIDI 2.0 transport does, what it does not do in this first release, and the configuration file entries behind it.
+categories:
+  - Transport Details
 ---
 
 > <h4>First release</h4>

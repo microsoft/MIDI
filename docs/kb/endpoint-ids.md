@@ -3,6 +3,9 @@ layout: kb
 title: Understanding Endpoint Device Ids
 audience: everyone
 description: General information about what makes up a Endpoint Device Id
+categories:
+  - Developer Guidance
+  - Internals
 ---
 
 The Endpoint Device Id (also referred to as a Device Interface Id or Endpoint Device Interface Id) is the way we identify individual devices and interfaces in Windows. 

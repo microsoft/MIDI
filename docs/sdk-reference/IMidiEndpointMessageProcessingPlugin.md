@@ -3,10 +3,10 @@ layout: sdk_reference_page
 title: IMidiEndpointMessageProcessingPlugin
 namespace: Windows.Devices.Midi2
 type: interface
-description: Interface implemented by any type which can be an endpoint processing plugin in the client app SDK
+description: Interface implemented by any type which can be an endpoint processing plugin in the client WinRT API
 ---
 
-This interface is implemented by any type which can be an endpoint processing plugin in the client app SDK. These plugins are used to process or manipulate messages coming from an endpoint. 
+This interface is implemented by any type which can be an endpoint processing plugin in the client WinRT API. These plugins are used to process or manipulate messages coming from an endpoint. 
 
 Microsoft provides several plugins in the API, including the `MidiVirtualEndpointDevice`, the `MidiChannelEndpointListener`, and the `MidiGroupEndpointListener`. All of these types implement the `IMidiEndpointMessageProcessingPlugin` interface and operate in the same way.
 

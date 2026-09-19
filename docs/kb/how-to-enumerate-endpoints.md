@@ -3,6 +3,8 @@ layout: kb
 title: How to Enumerate UMP Endpoints
 audience: developers
 description: How to list the Windows MIDI Services endpoints in your application.
+categories:
+  - Developer Guidance
 ---
 
 Sometimes, an application wants to get a snapshot of active endpoints. For example, the MIDI console application does this when it presents a list of devices to pick from. This process is called enumeration.

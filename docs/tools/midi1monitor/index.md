@@ -3,6 +3,9 @@ layout: tools_page
 title: MIDI1Monitor tool Overview
 tool: midi1monitor
 description: All about the midi1monitor tool
+icon: /assets/images/midi1monitor.png
+categories:
+  - Developer and Technical User Tools
 ---
 
 `midi1monitor.exe` is a very simple MIDI input / source monitor supplied as part of the SDK. It uses the WinMM MIDI 1.0 API to display messages on an incoming port. 

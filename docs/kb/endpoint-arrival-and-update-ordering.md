@@ -3,6 +3,9 @@ layout: kb
 title: Endpoint Arrival and Update Ordering
 audience: developers
 description: What actually happens when a MIDI device appears, which notifications you get in which order, and which information is safe to read when
+categories:
+  - Developer Guidance
+  - Internals
 ---
 
 # Endpoint Arrival and Update Ordering

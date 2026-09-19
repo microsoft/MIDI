@@ -3,6 +3,9 @@ layout: kb
 title: Bluetooth Low Energy MIDI Transport Architecture
 audience: developers
 description: How the Windows MIDI Services Bluetooth LE MIDI transport discovers, connects to, and exchanges MIDI with BLE MIDI 1.0 and BLE MIDI 2.0 devices.
+categories:
+  - Transport Details
+  - Internals
 ---
 
 > <h4>Preview</h4>

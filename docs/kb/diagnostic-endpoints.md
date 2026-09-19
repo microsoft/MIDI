@@ -3,6 +3,8 @@ layout: kb
 title: About the Diagnostics Endpoints Transport
 audience: developers
 description: Information about the diagnostics transport
+categories:
+  - Transport Details
 ---
 
 # MIDI Diagnostic Endpoints

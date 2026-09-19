@@ -3,6 +3,9 @@ layout: kb
 title: Application Backwards Compatibility
 audience: everyone
 description: Explains the API backwards compatibility for Windows MIDI Services.
+categories:
+  - Getting Started
+  - Internals
 ---
 
 **Our intention is for developers to begin adopting Windows MIDI Services in place of the older WinMM, WinRT, and (deprecated) DirectMusic APIs in their applications.** All new MIDI features, transports, and more are being implemented in Windows MIDI Services and the new API. A select number of features, slightly more than their current baseline, are available to WinMM and WinRT APIs through our backwards-compatibility shims, but this is simply to ensure existing applications continue to function on systems using Windows MIDI Services. **Please note that we are not providing backwards compatibility to support DirectMusic MIDI APIs.**

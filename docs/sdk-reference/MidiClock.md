@@ -61,7 +61,7 @@ Windows supports putting the system timer into a low-latency / high-frequency mo
 
 `timeBeginPeriod` and `timeEndPeriod` are reference counted by Windows precisely so that independent components in one process can each ask for a low-latency period without coordinating. These functions follow that model.
 
-This matters because the SDK is frequently loaded into a host which also loads plugins. If a host asks for a low-latency period and a plugin asks as well, both receive `true`, and the period is only released once both have called the End function. A caller which is told `true` can rely on being in a low-latency period regardless of whether it was the one that started it.
+This matters because the WinRT API is frequently loaded into a host which also loads plugins. If a host asks for a low-latency period and a plugin asks as well, both receive `true`, and the period is only released once both have called the End function. A caller which is told `true` can rely on being in a low-latency period regardless of whether it was the one that started it.
 
 `BeginLowLatencySystemTimerPeriod` returns `false` only when the request actually failed. `EndLowLatencySystemTimerPeriod` returns `false` when there was no outstanding request to release, which usually means it has been called more times than Begin was.
 

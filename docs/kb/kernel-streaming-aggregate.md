@@ -3,6 +3,8 @@ layout: kb
 title: About the Kernel Streaming Aggregate Transport
 audience: everyone
 description: All about the Kernel Streaming Aggregate transport, which is the service code which talks to existing MIDI 1.0 drivers, whether vendor-supplied or in-box.
+categories:
+  - Transport Details
 ---
 
 | Property | Value |

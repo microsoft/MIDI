@@ -35,7 +35,7 @@ configuration is set up. Change the sample you run by setting that project as st
 
 Before running, you will need the current Windows MIDI Services NuGet package, in a location on your
 PC configured as a NuGet package source. The package is available from the
-[releases page](https://github.com/microsoft/MIDI/releases).
+[releases page](https://aka.ms/midireleases).
 
 ## Background information
 

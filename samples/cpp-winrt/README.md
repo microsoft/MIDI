@@ -37,7 +37,7 @@ For C++, Windows MIDI Services is only being tested with C++/WinRT, not CX or WR
 
 We recommend you load the entire solution in Visual Studio, as that is how the NuGet package configuration is set up. Change the sample you run by setting that project as startup.
 
-Before running, you will need the current Windows MIDI Services NuGet package, in a location on your PC configured as a NuGet package source. The package is available from the [releases page](https://github.com/microsoft/MIDI/releases).
+Before running, you will need the current Windows MIDI Services NuGet package, in a location on your PC configured as a NuGet package source. The package is available from the [releases page](https://aka.ms/midireleases).
 
 ## Background information
 

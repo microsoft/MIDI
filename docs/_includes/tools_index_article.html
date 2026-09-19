@@ -1,0 +1,16 @@
+<article class="kb-service bg-color1">
+    <span style="float:right; color:gray">{{include.tool.tool}}</span>
+    <div class="tools-index-item">
+        {% if include.tool.icon %}
+        <a class="tools-index-icon" href="{{include.tool.url | relative_url}}" tabindex="-1" aria-hidden="true"><img src="{{include.tool.icon | relative_url}}" alt=""></a>
+        {% else %}
+        <span class="tools-index-icon"></span>
+        {% endif %}
+        <div class="tools-index-text">
+            <header>
+                <a href="{{include.tool.url | relative_url}}"><h4 class="heading-4">{{include.tool.title}}</h4></a>
+            </header>
+            <footer>{{include.tool.description}}</footer>
+        </div>
+    </div>
+</article>

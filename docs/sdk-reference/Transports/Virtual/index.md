@@ -1,6 +1,6 @@
 ---
 layout: sdk_namespace_page
-title: App SDK Support for app-to-app Virtual Devices
+title: WinRT API Support for app-to-app Virtual Devices
 namespace: Windows.Devices.Midi2.Transports.Virtual
 description: Namespace for virtual / app-to-app MIDI management
 ---

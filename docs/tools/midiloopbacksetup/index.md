@@ -3,6 +3,9 @@ layout: tools_page
 title: MIDI Loopback Setup
 tool: midiloopbacksetup
 description: Create loopback endpoints so apps on this PC can send MIDI to each other
+icon: /assets/images/midiloopbacksetup.png
+categories:
+  - Device/Transport Configuration Tools
 ---
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.
@@ -111,5 +114,7 @@ The two pages are checked separately, so it's normal for one to work while the o
 ## Learn more
 
 For the technical detail of how each kind of loopback is implemented, and how they appear in the configuration file, see [About the MIDI 2.0 Loopback Transport]({{ site.baseurl }}/kb/virtual-loopback/) and [About the MIDI 1.0 Basic Loopback Transport]({{ site.baseurl }}/kb/virtual-basic-midi1-loopback/).
+
+To create loopbacks from a script or a command prompt rather than from this app, use the `loopback` and `basic-loopback` commands in the [MIDI Console]({{ site.baseurl }}/tools/console/). Loopbacks made that way are temporary, lasting only until the console session which created them ends, and the console is also where you work with the association id you need in order to remove a MIDI 2.0 pair again from a script.
 
 To watch what's actually traveling through a loopback, point [MIDI Monitor]({{ site.baseurl }}/tools/midi2monitor/) at one end of it. To send something through by hand, use the [MIDI Scratch Pad]({{ site.baseurl }}/tools/midiscratchpad/).

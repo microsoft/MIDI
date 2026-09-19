@@ -3,6 +3,8 @@ layout: kb
 title: About the MIDI 1.0 Basic Loopback Transport
 audience: everyone
 description: All about the MIDI 1.0 basic loopback (MIDI 1.0 app-to-app MIDI) transport
+categories:
+  - Transport Details
 ---
 
 | Property | Value |

@@ -3,6 +3,8 @@ layout: kb
 title: Understanding How we Map MIDI 1.0 Ports to UMP Endpoints
 audience: everyone
 description: This document explains how MIDI 1.0 ports relate to MIDI 2.0 UMP endpoints
+categories:
+  - Internals
 ---
 
 The big conceptual change between MIDI 1.0 and MIDI 2.0 / UMP (Universal MIDI Packet) endpoints is that the concept of a "Port" is no longer used.

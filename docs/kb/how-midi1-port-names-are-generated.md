@@ -3,6 +3,8 @@ layout: kb
 title: How Windows MIDI Services generates MIDI 1.0 port names
 audience: developers
 description: How Windows MIDI Services derives endpoint and MIDI 1.0 port names, what a device can supply to influence them, and when a name is allowed to change.
+categories:
+  - Internals
 ---
 
 # How Windows MIDI Services generates MIDI 1.0 port names

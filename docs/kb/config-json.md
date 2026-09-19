@@ -3,6 +3,8 @@ layout: kb
 title: About the Config JSON File for Transport Configuration
 audience: everyone
 description: General information about the MIDI configuration file format.
+categories:
+  - Internals
 ---
 
 ## Only Windows MIDI Services may write this file
@@ -86,48 +88,6 @@ Here's an example of a bare-bones file, with sections for three different transp
     }
 }
 ```
-
-### Endpoint Properties
-
-> <h4>NOTE: </h4>
-> This section is in flux, as we're changing how devices are identified, and how properties are set.
-
-Here's how the KS (USB using the new UMP driver) transport works as an example as it has the most complex lookup mechanisms to attempt to identify devices, even when they are moved from USB port to port.
-
-```json
-"{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}":
-{
-    "_comment": "KS MIDI (USB etc.)",
-    "update":
-    [
-        {
-            "match":
-            {
-                "SWD": "\\\\?\\swd#midisrv#midiu_ks_bidi_6051189816177518400_outpin.0_inpin.2#{e7cce071-3c03-423f-88d3-f1045d02552b}"
-            },
-            "_comment" : "Roland A88 mk2",
-            "userSuppliedName" : "Pete's A88",
-            "userSuppliedDescription" : "The A88 is the giant MIDI 2.0 piano-action keyboard here in my studio."
-        },
-        {
-            ...
-        }
-    ]   
-},
-```
-
-> TODO: Include KSA endpoints and their generated group terminal blocks / groups.
-
-> <h4>NOTE</h4>
-> Endpoint-level matching details and mutability rules vary by transport and continue to evolve. Prefer using the Settings app or SDK APIs over editing this section by hand.
-
-
-Valid properties you can set:
-
-| Property | Type | Description |
-| -------- | ---- | ----------- |
-| `userSuppliedName` | Quoted Text | The name you want to use for the endpoint. This will override the name displayed in correctly-coded applications, but won't necessarily change what you see in Device Manager. These names should be relatively short so they display fully in all/most applications, but meaningful to you. |
-| `userSuppliedDescription` | Quoted Text | A text description and/or notes about the endpoint. Applications may or may not use this data |
 
 ## Plugin-specific settings
 

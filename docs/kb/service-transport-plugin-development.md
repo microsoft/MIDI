@@ -3,6 +3,9 @@ layout: kb
 title: Developing MIDI Service Transport Plugins (COM)
 audience: developers
 description: Guidance for creating third-party COM Transport plugins for Windows MIDI Services.
+categories:
+  - Developer Guidance
+  - Transport Details
 ---
 
 Windows MIDI Services Transport plugins are COM components loaded by the MIDI service (`midisrv`). They can often replace custom kernel drivers or legacy WinMM `.drv` style integration for many scenarios, while still allowing a transport to discover, create, and manage endpoints.

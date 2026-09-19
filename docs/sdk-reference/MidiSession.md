@@ -50,7 +50,7 @@ using (var session = MidiSession.Create("API Sample Session"))
 
 C++
 ```cpp
-// remember to initialize the WinRT apartment and also initialize the SDK 
+// remember to initialize the WinRT apartment and also initialize the WinRT API 
 // runtime first. See samples for example code 
 
 auto session = MidiSession::Create("API Sample Session");

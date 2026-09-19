@@ -3,6 +3,8 @@ layout: kb
 title: About the Kernel Streaming Transport
 audience: everyone
 description: All about the Kernel Streaming transport, which is the service code which talks to the new USB MIDI 2.0 UMP driver.
+categories:
+  - Transport Details
 ---
 
 # Kernel Streaming

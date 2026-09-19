@@ -3,6 +3,9 @@ layout: tools_page
 title: Bluetooth MIDI Setup
 tool: midibluetoothsetup
 description: Connect this PC to Bluetooth LE MIDI devices, and let other devices connect to this PC
+icon: /assets/images/midibluetoothsetup.png
+categories:
+  - Device/Transport Configuration Tools
 ---
 
 > Bluetooth MIDI is a preview feature for Windows MIDI Services. It's installed separately from the

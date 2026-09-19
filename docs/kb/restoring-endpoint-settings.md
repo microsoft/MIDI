@@ -3,6 +3,8 @@ layout: kb
 title: When saved endpoint settings do not match a device
 audience: everyone
 description: Why the name, picture and other settings you saved for a MIDI device can stop being applied, why that is usually nothing to worry about, and how to put them back when it is not.
+categories:
+  - Troubleshooting
 ---
 
 # When saved endpoint settings do not match a device

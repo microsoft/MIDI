@@ -3,6 +3,9 @@ layout: kb
 title: Map MIDI 1 port names to new endpoints
 audience: developers
 description: How to to map stored MIDI WinMM port names to current endpoints
+categories:
+  - Developer Guidance
+  - Internals
 ---
 
 # WinMM Naming

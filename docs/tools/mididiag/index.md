@@ -3,6 +3,9 @@ layout: tools_page
 title: MIDI Diagnostics Report
 tool: mididiag
 description: All about the mididiag tool - a reporting tool for troubleshooting and for technical support.
+icon: /assets/images/mididiag-output-1.png
+categories:
+  - Diagnostic Tools
 ---
 
 When seeking technical support, the support team will often want to check basic operation of your system. At the request of MIDI hardware partners, the `mididiag.exe` tool has been provided as a way to supply a machine-readible text dump of the state of MIDI on your PC.

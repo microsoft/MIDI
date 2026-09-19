@@ -3,6 +3,8 @@ layout: kb
 title: Best Practices and Performance Optimizations
 audience: developers
 description: Best practices for developers using the Windows MIDI Services SDK
+categories:
+  - Developer Guidance
 ---
 
 Here's a list of some best practices and performance optimizations for MIDI API-consuming applications.

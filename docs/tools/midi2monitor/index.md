@@ -3,6 +3,9 @@ layout: tools_page
 title: MIDI Monitor
 tool: midi2monitor
 description: Watch the MIDI messages coming from your instruments and controllers
+icon: /assets/images/midi2monitor.png
+categories:
+  - General Purpose MIDI Tools
 ---
 
 > This page covers information about a Windows MIDI Services feature and application that will be released to consumers in November 2026. It's currently available for developers.

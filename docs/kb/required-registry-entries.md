@@ -3,6 +3,8 @@ layout: kb
 title: Required registry entries in Drivers32 for Windows MIDI Services
 description: The drivers32 location of the registry is commonly messed up by uninstallers and third-party tools. This article explains what is required.
 audience: everyone
+categories:
+  - Troubleshooting
 ---
 
 The midi...midi9 entries in the Drivers32 location in the registry come up often, especially in the context of certain brands of drivers, like Korg.

@@ -3,6 +3,9 @@ layout: kb
 title: What are the Valid Persistent Endpoint Identifiers?
 audience: developers
 description: In old APIs like WinMM, the port name was the only identifier available. There are many more options now. This document provides guidance on what you can and cannot use.
+categories:
+  - Developer Guidance
+  - Internals
 ---
 
 > <h4>IMPORTANT NOTE</h4>

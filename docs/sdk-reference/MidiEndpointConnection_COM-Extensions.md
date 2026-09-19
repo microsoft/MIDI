@@ -9,9 +9,9 @@ tags: session, connection, endpoint
 ---
 WinRT is designed to work across multiple languages in a type-safe way. As a result, WinRT APIs cannot expose functions which take pointers as parameters, or return pointers as their result.
 
-To provide more efficiency for the C++ and other COM-aware and pointer-friendly languages which use this SDK, and which often already have their own code to validate the integrity of UMPs, we've added a small set of COM extensions which can be used for send and receive of multiple messages. These are primarily designed for use with Digital Audio Workstation apps, and cross-platform plugin / app frameworks using languages like C++ and Delphi.
+To provide more efficiency for the C++ and other COM-aware and pointer-friendly languages which use this API, and which often already have their own code to validate the integrity of UMPs, we've added a small set of COM extensions which can be used for send and receive of multiple messages. These are primarily designed for use with Digital Audio Workstation apps, and cross-platform plugin / app frameworks using languages like C++ and Delphi.
 
-> IMPORTANT: When using these interfaces, it is essential that you fully release and reset any COM references before shutting down the SDK and unitializing the apartment. Failure to do so may result in crashes when you shut down the SDK or when you uninitialize COM.
+> IMPORTANT: When using these interfaces, it is essential that you fully release and reset any COM references before shutting down the WinRT API and unitializing the apartment. Failure to do so may result in crashes when you shut down the API or when you uninitialize COM.
 
 ## IMidiEndpointConnectionRaw
 
@@ -172,7 +172,7 @@ If you are writing a cross-platform framework or a language projection on top of
 
 ## IMidiEndpointConnectionMessagesReceivedCallback
 
-A single callback type may optionally handle incoming messages from multiple `MidiEndpointConnection` instances. From an SDK standpoint, there is no inherent advantage or disadvantage to having multiple handlers or a single handler as long as your code is thread-safe.
+A single callback type may optionally handle incoming messages from multiple `MidiEndpointConnection` instances. From an API standpoint, there is no inherent advantage or disadvantage to having multiple handlers or a single handler as long as your code is thread-safe.
 
 When attaching only to a single `MidiEndpointConnection`, the handler code does not necessarily need to be thread-safe, because it will be called serially on the callback thread.
 
