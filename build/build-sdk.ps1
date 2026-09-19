@@ -173,8 +173,10 @@ $GuiTools = @(
     [pscustomobject]@{ Name = 'midi2monitor';      Folder = 'Monitor';      Display = 'MIDI Monitor';           DirectoryId = 'TOOL_MONITOR_FOLDER' }
     [pscustomobject]@{ Name = 'miditroubleshooter'; Folder = 'Troubleshooter'; Display = 'MIDI Troubleshooting and Repair'; DirectoryId = 'TOOL_TROUBLESHOOTER_FOLDER' }
     # Aumid: the notification platform will not accept a toast from an unpackaged app unless the
-    # identity it publishes under is on a Start Menu shortcut. RunAtLogon starts it for every
-    # user; whether it then does anything is that user's own setting, which MIDI Settings owns.
+    # identity it publishes under is on a Start Menu shortcut. RunAtLogon means the installer
+    # PRESERVES an existing machine wide Run entry across an upgrade - it never creates one. A
+    # tray app that nobody asked for is not something to install by default; MIDI Settings owns
+    # turning it on, per user or for everyone.
     [pscustomobject]@{ Name = 'midinotifications'; Folder = 'Notifications'; Display = 'MIDI Notifications'; DirectoryId = 'TOOL_NOTIFICATIONS_FOLDER'; Aumid = 'Microsoft.WindowsMidiServices.Notifications'; RunAtLogon = $true }
 )
 
@@ -1206,6 +1208,29 @@ function New-StartMenuFragment {
     [void]$sb.AppendLine("      <Directory Id=`"MIDI_PROGRAMS_FOLDER`" Name=`"$StartMenuFolderName`" />")
     [void]$sb.AppendLine('    </StandardDirectory>')
     [void]$sb.AppendLine('')
+
+    $autostartTools = @($GuiTools | Where-Object { $_.PSObject.Properties.Name -contains 'RunAtLogon' -and $_.RunAtLogon })
+
+    # !! THE INSTALLER DELIBERATELY DOES NOT TURN AUTOSTART ON. !!
+    # Nothing should sit in the notification area of a PC whose owner has not asked for it, so a
+    # clean install writes no Run entry and the app never starts. The searches below only find an
+    # entry which is ALREADY there, and the component that writes it is conditioned on that, which
+    # is what keeps an upgrade from undoing a customer who did ask for it: same component guid and
+    # same key path as the previous build, so the value is reference counted across the upgrade
+    # rather than removed. MIDI Settings owns this setting - see midi-settings\NotificationSettings.cpp.
+    # A Property is not allowed inside a ComponentGroup, so these sit above it in the fragment.
+    foreach ($tool in $autostartTools) {
+        [void]$sb.AppendLine("    <Property Id=`"$($tool.Name.ToUpperInvariant())AUTOSTARTPRESENT`">")
+        [void]$sb.AppendLine("      <RegistrySearch Id=`"$($tool.Name)AutostartSearch`"")
+        [void]$sb.AppendLine('                      Root="HKLM"')
+        [void]$sb.AppendLine('                      Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run"')
+        [void]$sb.AppendLine('                      Name="WindowsMidiServicesNotifications"')
+        [void]$sb.AppendLine('                      Type="raw"')
+        [void]$sb.AppendLine('                      Bitness="always64" />')
+        [void]$sb.AppendLine('    </Property>')
+        [void]$sb.AppendLine('')
+    }
+
     [void]$sb.AppendLine('    <ComponentGroup Id="ToolAppShortcuts">')
     [void]$sb.AppendLine('      <Component Id="ToolAppShortcutsComponent" Bitness="always64" Directory="MIDI_PROGRAMS_FOLDER" Guid="0d1b7b1e-3a5e-4a2f-9a3c-6f2b6c4d5e71">')
 
@@ -1232,11 +1257,11 @@ function New-StartMenuFragment {
     [void]$sb.AppendLine('        </RegistryKey>')
     [void]$sb.AppendLine('      </Component>')
 
-    foreach ($tool in $GuiTools | Where-Object { $_.PSObject.Properties.Name -contains 'RunAtLogon' -and $_.RunAtLogon }) {
+    foreach ($tool in $autostartTools) {
         # Separate component, and the Run value is deliberately not the key path. MIDI Settings
         # lets a customer turn this off by deleting the value, and an MSI repair would put back
         # anything it holds the key path for.
-        [void]$sb.AppendLine("      <Component Id=`"$($tool.Name)Autostart`" Bitness=`"always64`" Directory=`"MIDI_PROGRAMS_FOLDER`" Guid=`"6f3a9c21-58d4-4b7e-b1a6-0c9d3e7f2a48`">")
+        [void]$sb.AppendLine("      <Component Id=`"$($tool.Name)Autostart`" Bitness=`"always64`" Directory=`"MIDI_PROGRAMS_FOLDER`" Guid=`"6f3a9c21-58d4-4b7e-b1a6-0c9d3e7f2a48`" Condition=`"$($tool.Name.ToUpperInvariant())AUTOSTARTPRESENT`">")
         [void]$sb.AppendLine('        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run">')
         # Quoted: the install path contains a space, and Run splits an unquoted value on it.
         [void]$sb.AppendLine("          <RegistryValue Type=`"string`" Name=`"WindowsMidiServicesNotifications`" Value=`"&quot;[#$($tool.Name)Exe]&quot;`" />")

@@ -7,6 +7,15 @@
       <Directory Id="MIDI_PROGRAMS_FOLDER" Name="Windows MIDI (Preview)" />
     </StandardDirectory>
 
+    <Property Id="MIDINOTIFICATIONSAUTOSTARTPRESENT">
+      <RegistrySearch Id="midinotificationsAutostartSearch"
+                      Root="HKLM"
+                      Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run"
+                      Name="WindowsMidiServicesNotifications"
+                      Type="raw"
+                      Bitness="always64" />
+    </Property>
+
     <ComponentGroup Id="ToolAppShortcuts">
       <Component Id="ToolAppShortcutsComponent" Bitness="always64" Directory="MIDI_PROGRAMS_FOLDER" Guid="0d1b7b1e-3a5e-4a2f-9a3c-6f2b6c4d5e71">
         <Shortcut Id="Shortcut_midisettings"
@@ -56,7 +65,7 @@
           <RegistryValue Type="string" Name="ToolAppShortcuts" Value="installed" KeyPath="yes" />
         </RegistryKey>
       </Component>
-      <Component Id="midinotificationsAutostart" Bitness="always64" Directory="MIDI_PROGRAMS_FOLDER" Guid="6f3a9c21-58d4-4b7e-b1a6-0c9d3e7f2a48">
+      <Component Id="midinotificationsAutostart" Bitness="always64" Directory="MIDI_PROGRAMS_FOLDER" Guid="6f3a9c21-58d4-4b7e-b1a6-0c9d3e7f2a48" Condition="MIDINOTIFICATIONSAUTOSTARTPRESENT">
         <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run">
           <RegistryValue Type="string" Name="WindowsMidiServicesNotifications" Value="&quot;[#midinotificationsExe]&quot;" />
         </RegistryKey>

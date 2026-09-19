@@ -177,12 +177,13 @@
             <ComponentRef Id="WindowsMidiServicesMidiFileAssociation"/>
     </Feature>
 
-    <!-- The Run entry only takes effect at the next sign-in, so without this the customer would
-         install, see nothing in the notification area, and have no reason to think it worked.
+    <!-- Only for a PC which already had the notifications app starting at sign-in, so that an
+         upgrade puts back what the customer had rather than leaving them without it until they
+         next sign in. A clean install starts nothing: see the Run entry search in _StartMenu.wxs
+         for why the installer never turns this on by itself.
          Impersonated because a tray icon belongs to the installing user's session, not to SYSTEM,
          and asyncNoWait because the app runs until signed out and would otherwise hang setup.
-         Starting a second copy on an upgrade is harmless: the app is single instance and the
-         later one exits. -->
+         Starting a second copy is harmless: the app is single instance and the later one exits. -->
     <CustomAction Id="Action_StartNotificationsApp"
                   FileRef="midinotificationsExe"
                   ExeCommand=""
@@ -193,7 +194,7 @@
     <InstallExecuteSequence>
       <Custom Action="Action_StartNotificationsApp"
               After="InstallFinalize"
-              Condition="NOT Installed" />
+              Condition="NOT Installed AND MIDINOTIFICATIONSAUTOSTARTPRESENT" />
     </InstallExecuteSequence>
 
     </Package>
