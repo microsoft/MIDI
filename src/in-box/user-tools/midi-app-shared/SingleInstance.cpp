@@ -80,31 +80,9 @@ namespace midiapp
     _Use_decl_annotations_
     bool SingleInstance::TryActivateExisting(std::wstring const& appKey) noexcept
     {
-        auto const sectionName = SectionName(appKey);
+        auto const window = FindExistingWindow(appKey);
 
-        wil::unique_handle section{ ::OpenFileMappingW(FILE_MAP_READ, FALSE, sectionName.c_str()) };
-
-        if (!section)
-        {
-            return false;
-        }
-
-        auto view = ::MapViewOfFile(section.get(), FILE_MAP_READ, 0, 0, sizeof(uint64_t));
-
-        if (view == nullptr)
-        {
-            return false;
-        }
-
-        auto const handleValue = *static_cast<uint64_t volatile*>(view);
-
-        ::UnmapViewOfFile(view);
-
-        auto const window = reinterpret_cast<HWND>(static_cast<ULONG_PTR>(handleValue));
-
-        // The other instance may still be starting, or may have gone away between the mutex
-        // check and here.
-        if (window == nullptr || !::IsWindow(window))
+        if (window == nullptr)
         {
             return false;
         }
@@ -119,6 +97,53 @@ namespace midiapp
         // it. Failing means their window is restored but not raised, which is still better than
         // a second copy of the app.
         return ::SetForegroundWindow(window) != FALSE;
+    }
+
+    _Use_decl_annotations_
+    HWND SingleInstance::FindExistingWindow(std::wstring const& appKey) noexcept
+    {
+        auto const sectionName = SectionName(appKey);
+
+        wil::unique_handle section{ ::OpenFileMappingW(FILE_MAP_READ, FALSE, sectionName.c_str()) };
+
+        if (!section)
+        {
+            return nullptr;
+        }
+
+        auto view = ::MapViewOfFile(section.get(), FILE_MAP_READ, 0, 0, sizeof(uint64_t));
+
+        if (view == nullptr)
+        {
+            return nullptr;
+        }
+
+        auto const handleValue = *static_cast<uint64_t volatile*>(view);
+
+        ::UnmapViewOfFile(view);
+
+        auto const window = reinterpret_cast<HWND>(static_cast<ULONG_PTR>(handleValue));
+
+        // The other instance may still be starting, or may have gone away between the mutex
+        // check and here.
+        return (window != nullptr && ::IsWindow(window)) ? window : nullptr;
+    }
+
+    _Use_decl_annotations_
+    bool SingleInstance::IsRunning(std::wstring const& appKey) noexcept
+    {
+        auto const mutexName = MutexName(appKey);
+
+        wil::unique_handle instanceMutex{ ::OpenMutexW(SYNCHRONIZE, FALSE, mutexName.c_str()) };
+
+        if (instanceMutex)
+        {
+            return true;
+        }
+
+        // Anything other than "there is no such object" means it exists but this process cannot
+        // have it, which still answers the question that was asked.
+        return ::GetLastError() != ERROR_FILE_NOT_FOUND;
     }
 
     _Use_decl_annotations_

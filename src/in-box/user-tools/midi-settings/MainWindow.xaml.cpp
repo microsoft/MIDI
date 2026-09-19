@@ -59,12 +59,33 @@ namespace winrt::midisettings::implementation
         MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to update the title bar insets.")
     }
 
+    // The console and this app can both change the synthesizer, and there is no change notification
+    // from the service, so coming back to the window is the moment to re-read it.
+    _Use_decl_annotations_
+    void MainWindow::OnWindowActivated(
+        foundation::IInspectable const&,
+        xaml::WindowActivatedEventArgs const& args)
+    {
+        try
+        {
+            if (args.WindowActivationState() == xaml::WindowActivationState::Deactivated)
+            {
+                return;
+            }
+
+            RefreshSynthSettings();
+        }
+        MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to refresh on activation.")
+    }
+
     _Use_decl_annotations_
     void MainWindow::OnRootLoaded(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
         try
         {
             m_dispatcherQueue = winrt::Microsoft::UI::Dispatching::DispatcherQueue::GetForCurrentThread();
+
+            Activated({ this, &MainWindow::OnWindowActivated });
 
             Title(res::GetString(L"AppTitle"));
             AppTitleTextBlock().Text(res::GetString(L"AppTitle"));
@@ -84,6 +105,8 @@ namespace winrt::midisettings::implementation
             // Now that there is a window, a later launch has something to bring forward.
             ::midiapp::SingleInstance::PublishMainWindow(m_chrome.WindowHandle());
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
+
+            StartListeningForLaunchRequests();
 
             // 32px source for a 16px slot, so it stays crisp on a high DPI display
             AppTitleBarIcon().Source(midiapp::WindowChrome::LoadIconImageSource(IDI_APPICON, 32));
@@ -106,6 +129,7 @@ namespace winrt::midisettings::implementation
                     if (auto strong = weak.get())
                     {
                         strong->m_closing = true;
+                        strong->StopListeningForLaunchRequests();
                         strong->StopHealthTimer();
                         strong->StopWatchers();
                         ::midisettings::ShutDownPanicSession();
@@ -118,6 +142,21 @@ namespace winrt::midisettings::implementation
 
             StartWatchersAsync();
             StartHealthTimer();
+
+            // Another tool sent the customer here for one thing. Queued rather than shown from
+            // inside Loaded, so the window behind the dialog is laid out first.
+            if (App::ShowNotificationsOnLaunch() && m_dispatcherQueue != nullptr)
+            {
+                m_dispatcherQueue.TryEnqueue(
+                    winrt::Microsoft::UI::Dispatching::DispatcherQueuePriority::Low,
+                    [weak = get_weak()]()
+                    {
+                        if (auto strong = weak.get(); strong != nullptr && !strong->m_closing)
+                        {
+                            strong->OnNotificationsClick(nullptr, xaml::RoutedEventArgs{ nullptr });
+                        }
+                    });
+            }
         }
         MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to finish loading the window.")
     }

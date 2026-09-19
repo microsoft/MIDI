@@ -1,6 +1,6 @@
 ---
 layout: sdk_namespace_page
-title: App SDK Utilities Overview
+title: WinRT API Utilities Overview
 namespace: Windows.Devices.Midi2.Utilities
 description: Utility types
 ---

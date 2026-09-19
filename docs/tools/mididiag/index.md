@@ -3,6 +3,9 @@ layout: tools_page
 title: MIDI Diagnostics Report
 tool: mididiag
 description: All about the mididiag tool - a reporting tool for troubleshooting and for technical support.
+icon: /assets/images/mididiag-output-1.png
+categories:
+  - Diagnostic Tools
 ---
 
 When seeking technical support, the support team will often want to check basic operation of your system. At the request of MIDI hardware partners, the `mididiag.exe` tool has been provided as a way to supply a machine-readible text dump of the state of MIDI on your PC.
@@ -24,9 +27,7 @@ From this report, the viewer can identify
 - The list of all Windows MIDI Services endpoints, and their mapped MIDI 1.0 ports, their group terminal blocks, their name tables, and more
 - The results of a ping test
 
-![mididiag]({{ site.baseurl }}/assets/images/mididiag-output-1.png)
-...
-![mididiag]({{ site.baseurl }}/assets/images/mididiag-output-2.png)
+![mididiag]({{ site.baseurl }}/assets/images/mididiag-output-1.png) ... ![mididiag]({{ site.baseurl }}/assets/images/mididiag-output-2.png)
 
 
 Typically, when asked to provide the output, you will type something like this:

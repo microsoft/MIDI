@@ -1,6 +1,6 @@
 ---
 layout: sdk_namespace_page
-title: App SDK System Exclusive Transfer Utilities
+title: WinRT API System Exclusive Transfer Utilities
 namespace: Windows.Devices.Midi2.Utilities.SysExTransfer
 description: Namespace with types for sending System Exclusive data to an endpoint
 ---

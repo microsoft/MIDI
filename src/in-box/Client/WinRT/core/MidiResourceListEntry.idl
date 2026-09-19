@@ -1,0 +1,58 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    // One resource a device offers, as declared in its ResourceList, together with what may be
+    // done with it. A client reads these before asking for anything: they say whether a resource
+    // can be read, written, subscribed to, or paged through.
+    [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiResourceListEntry", UUID_IMidiResourceListEntry)]
+    [static_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiResourceListEntryStatics", UUID_IMidiResourceListEntryStatics)]
+    [constructor_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiResourceListEntryFactory", UUID_IMidiResourceListEntryFactory)]
+    runtimeclass MidiResourceListEntry : Windows.Foundation.IStringable
+    {
+        MidiResourceListEntry();
+        MidiResourceListEntry(String resource);
+
+        // Well known values for CanSet. It is a string rather than a flag because the set is open:
+        // the specification defines these three and a device may declare its own, so an enumeration
+        // here would be unable to carry what a real device sends.
+        [noexcept] static String CanSetNone{ get; };
+        [noexcept] static String CanSetFull{ get; };
+        [noexcept] static String CanSetPartial{ get; };
+
+        // The resource name, for example "DeviceInfo" or "ProgramList".
+        [noexcept] String Resource;
+
+        // Defaults follow the specification: readable, not writable, not subscribable, not paged.
+        [noexcept] Boolean CanGet;
+        [noexcept] String CanSet;
+        [noexcept] Boolean CanSubscribe;
+        [noexcept] Boolean CanPaginate;
+
+        // True when a request for this resource must name which instance of it is wanted.
+        [noexcept] Boolean RequireResourceId;
+
+        [noexcept] Windows.Foundation.Collections.IVector<String> MediaTypes{ get; };
+        [noexcept] Windows.Foundation.Collections.IVector<String> Encodings{ get; };
+
+        // The declared JSON Schema, carried through untouched. It is arbitrary schema rather than
+        // anything this API interprets, so it is offered as it arrived.
+        [noexcept] Windows.Data.Json.JsonObject Schema;
+
+        [noexcept] Windows.Data.Json.JsonObject GetJson();
+        [noexcept] static MidiResourceListEntry FromJson(Windows.Data.Json.JsonObject json);
+    };
+}

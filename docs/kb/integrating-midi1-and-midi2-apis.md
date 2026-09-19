@@ -3,6 +3,8 @@ layout: kb
 title: Integrating MIDI 1.0 (like WinMM and WinRT MIDI 1.0) and MIDI 2.0 APIs
 audience: developers
 description: This document explains how to associate MIDI 1.0 ports and Windows MIDI Services endpoints
+categories:
+  - Developer Guidance
 ---
 
 # Background

@@ -122,6 +122,7 @@ namespace appshared = ::winrt::MidiAppShared;
 #include "WindowChrome.h"
 #include "MidiEndpointHelpers.h"
 #include "MonitorLauncher.h"
+#include "SettingsAppLauncher.h"
 #include "AppearanceFlyout.h"
 
 // XAML generated type info activates these shared types by name, so their declarations have to
@@ -132,3 +133,7 @@ namespace appshared = ::winrt::MidiAppShared;
 #include "NetworkItems.h"
 
 #include "network_setup_protocol_defs.h"
+
+// The notifications app is what raises a toast when a remote is waiting for an answer. This app
+// only needs to know whether it is running, and how to send the customer to its settings.
+#include "..\midi-notifications\notification_settings_defs.h"

@@ -167,13 +167,16 @@ $GuiTools = @(
     [pscustomobject]@{ Name = 'midiloopbacksetup'; Folder = 'LoopSetup';    Display = 'MIDI Loopback Setup';    DirectoryId = 'TOOL_LOOPSETUP_FOLDER' }
     [pscustomobject]@{ Name = 'midiscratchpad';    Folder = 'ScratchPad';   Display = 'MIDI Scratch Pad';       DirectoryId = 'TOOL_SCRATCHPAD_FOLDER' }
     [pscustomobject]@{ Name = 'midikeyboard';      Folder = 'Keyboard';     Display = 'Windows MIDI Keyboard';  DirectoryId = 'TOOL_KEYBOARD_FOLDER' }
+    [pscustomobject]@{ Name = 'midiplayer';        Folder = 'Player';       Display = 'Windows MIDI Player';    DirectoryId = 'TOOL_PLAYER_FOLDER' }
     [pscustomobject]@{ Name = 'midiclock';         Folder = 'Clock';        Display = 'Windows MIDI Clock';     DirectoryId = 'TOOL_CLOCK_FOLDER' }
     [pscustomobject]@{ Name = 'midisysextool';     Folder = 'SysEx';        Display = 'MIDI SysEx Tool';        DirectoryId = 'TOOL_SYSEX_FOLDER' }
     [pscustomobject]@{ Name = 'midi2monitor';      Folder = 'Monitor';      Display = 'MIDI Monitor';           DirectoryId = 'TOOL_MONITOR_FOLDER' }
     [pscustomobject]@{ Name = 'miditroubleshooter'; Folder = 'Troubleshooter'; Display = 'MIDI Troubleshooting and Repair'; DirectoryId = 'TOOL_TROUBLESHOOTER_FOLDER' }
     # Aumid: the notification platform will not accept a toast from an unpackaged app unless the
-    # identity it publishes under is on a Start Menu shortcut. RunAtLogon starts it for every
-    # user; whether it then does anything is that user's own setting, which MIDI Settings owns.
+    # identity it publishes under is on a Start Menu shortcut. RunAtLogon means the installer
+    # PRESERVES an existing machine wide Run entry across an upgrade - it never creates one. A
+    # tray app that nobody asked for is not something to install by default; MIDI Settings owns
+    # turning it on, per user or for everyone.
     [pscustomobject]@{ Name = 'midinotifications'; Folder = 'Notifications'; Display = 'MIDI Notifications'; DirectoryId = 'TOOL_NOTIFICATIONS_FOLDER'; Aumid = 'Microsoft.WindowsMidiServices.Notifications'; RunAtLogon = $true }
 )
 
@@ -232,6 +235,69 @@ function Write-Detail {
 function Write-Note {
     param([string] $Message)
     Write-Host "     $Message" -ForegroundColor Yellow
+}
+
+# ----------------------------------------------------------------------------------------------
+# Servicing gate listing
+# ----------------------------------------------------------------------------------------------
+
+# mididiag reports which servicing gates are present so support can read it off a customer machine,
+# but that section is compiled out of public builds. Nothing else notices when the list drifts, and
+# gates are retired on a rolling basis, so a stale entry surfaces much later as a bare C1083 on a
+# header nobody remembers deleting. Check it before any compiling starts.
+function Test-ServicingGateListing {
+    $gateFolder = Join-Path $ApiRoot 'Inc'
+    $mididiagSource = Join-Path $ApiRoot 'user-tools\mididiag\mididiag_main.cpp'
+
+    if (-not (Test-Path $mididiagSource)) {
+        throw "mididiag source not found: $mididiagSource"
+    }
+
+    $declared = @(Get-ChildItem (Join-Path $gateFolder 'Feature_Servicing_*.h') -ErrorAction SilentlyContinue |
+        ForEach-Object { $_.BaseName -replace '^Feature_Servicing_', '' })
+
+    if ($declared.Count -eq 0) {
+        throw "No Feature_Servicing_*.h headers found under $gateFolder"
+    }
+
+    $source = Get-Content $mididiagSource -Raw
+
+    $included = @([regex]::Matches($source, '#include\s+"Feature_Servicing_(\w+)\.h"') |
+        ForEach-Object { $_.Groups[1].Value })
+
+    $reported = @([regex]::Matches($source, 'OutputSingleFeatureEnablement\(\s*Feature_Servicing_(\w+)::IsEnabled\(\)\s*,\s*L"([^" (]+)') |
+        ForEach-Object { [pscustomobject]@{ Gate = $_.Groups[1].Value; Label = $_.Groups[2].Value } })
+
+    $reportedGates = @($reported | ForEach-Object { $_.Gate })
+
+    $problems = @()
+
+    foreach ($gate in ($declared | Where-Object { $reportedGates -notcontains $_ })) {
+        $problems += "  $gate - header exists but mididiag does not report it"
+    }
+
+    foreach ($gate in ($reportedGates | Where-Object { $declared -notcontains $_ })) {
+        $problems += "  $gate - mididiag reports it but the header is gone"
+    }
+
+    foreach ($gate in ($reportedGates | Where-Object { $included -notcontains $_ })) {
+        $problems += "  $gate - reported by mididiag but never included"
+    }
+
+    # The listing is compiled out, so a copy-paste label naming the wrong gate is otherwise silent.
+    foreach ($entry in ($reported | Where-Object { $_.Gate -ne $_.Label })) {
+        $problems += "  $($entry.Gate) - reported under the wrong label '$($entry.Label)'"
+    }
+
+    if ($problems.Count -gt 0) {
+        Write-Host ''
+        Write-Host '     Servicing gate listing in mididiag is out of date:' -ForegroundColor Red
+        $problems | Sort-Object -Unique | ForEach-Object { Write-Host $_ -ForegroundColor Red }
+        Write-Host ''
+        throw 'mididiag does not match the Feature_Servicing_*.h headers. Update DoSectionFeatureEnablement in mididiag_main.cpp.'
+    }
+
+    Write-Detail "Servicing gates $($declared.Count), all reported by mididiag"
 }
 
 # ----------------------------------------------------------------------------------------------
@@ -416,6 +482,12 @@ function Invoke-MSBuild {
         $ProjectOrSolution
         "/p:Configuration=$Configuration"
         "/p:Platform=$BuildPlatform"
+
+        # The 64-bit hosted compiler and linker. The default for a cross-compile is the 32-bit
+        # hosted ones, which run out of address space during link-time code generation on the
+        # larger projects here: C1002, "compiler is out of heap space in pass 2".
+        '/p:PreferredToolArchitecture=x64'
+
         "/v:$Verbosity"
         '/nologo'
         '/nr:false'
@@ -1136,6 +1208,29 @@ function New-StartMenuFragment {
     [void]$sb.AppendLine("      <Directory Id=`"MIDI_PROGRAMS_FOLDER`" Name=`"$StartMenuFolderName`" />")
     [void]$sb.AppendLine('    </StandardDirectory>')
     [void]$sb.AppendLine('')
+
+    $autostartTools = @($GuiTools | Where-Object { $_.PSObject.Properties.Name -contains 'RunAtLogon' -and $_.RunAtLogon })
+
+    # !! THE INSTALLER DELIBERATELY DOES NOT TURN AUTOSTART ON. !!
+    # Nothing should sit in the notification area of a PC whose owner has not asked for it, so a
+    # clean install writes no Run entry and the app never starts. The searches below only find an
+    # entry which is ALREADY there, and the component that writes it is conditioned on that, which
+    # is what keeps an upgrade from undoing a customer who did ask for it: same component guid and
+    # same key path as the previous build, so the value is reference counted across the upgrade
+    # rather than removed. MIDI Settings owns this setting - see midi-settings\NotificationSettings.cpp.
+    # A Property is not allowed inside a ComponentGroup, so these sit above it in the fragment.
+    foreach ($tool in $autostartTools) {
+        [void]$sb.AppendLine("    <Property Id=`"$($tool.Name.ToUpperInvariant())AUTOSTARTPRESENT`">")
+        [void]$sb.AppendLine("      <RegistrySearch Id=`"$($tool.Name)AutostartSearch`"")
+        [void]$sb.AppendLine('                      Root="HKLM"')
+        [void]$sb.AppendLine('                      Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run"')
+        [void]$sb.AppendLine('                      Name="WindowsMidiServicesNotifications"')
+        [void]$sb.AppendLine('                      Type="raw"')
+        [void]$sb.AppendLine('                      Bitness="always64" />')
+        [void]$sb.AppendLine('    </Property>')
+        [void]$sb.AppendLine('')
+    }
+
     [void]$sb.AppendLine('    <ComponentGroup Id="ToolAppShortcuts">')
     [void]$sb.AppendLine('      <Component Id="ToolAppShortcutsComponent" Bitness="always64" Directory="MIDI_PROGRAMS_FOLDER" Guid="0d1b7b1e-3a5e-4a2f-9a3c-6f2b6c4d5e71">')
 
@@ -1162,11 +1257,11 @@ function New-StartMenuFragment {
     [void]$sb.AppendLine('        </RegistryKey>')
     [void]$sb.AppendLine('      </Component>')
 
-    foreach ($tool in $GuiTools | Where-Object { $_.PSObject.Properties.Name -contains 'RunAtLogon' -and $_.RunAtLogon }) {
+    foreach ($tool in $autostartTools) {
         # Separate component, and the Run value is deliberately not the key path. MIDI Settings
         # lets a customer turn this off by deleting the value, and an MSI repair would put back
         # anything it holds the key path for.
-        [void]$sb.AppendLine("      <Component Id=`"$($tool.Name)Autostart`" Bitness=`"always64`" Directory=`"MIDI_PROGRAMS_FOLDER`" Guid=`"6f3a9c21-58d4-4b7e-b1a6-0c9d3e7f2a48`">")
+        [void]$sb.AppendLine("      <Component Id=`"$($tool.Name)Autostart`" Bitness=`"always64`" Directory=`"MIDI_PROGRAMS_FOLDER`" Guid=`"6f3a9c21-58d4-4b7e-b1a6-0c9d3e7f2a48`" Condition=`"$($tool.Name.ToUpperInvariant())AUTOSTARTPRESENT`">")
         [void]$sb.AppendLine('        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Run">')
         # Quoted: the install path contains a space, and Run splits an unquoted value on it.
         [void]$sb.AppendLine("          <RegistryValue Type=`"string`" Name=`"WindowsMidiServicesNotifications`" Value=`"&quot;[#$($tool.Name)Exe]&quot;`" />")
@@ -1385,6 +1480,8 @@ $previousPriority = [System.Diagnostics.Process]::GetCurrentProcess().PriorityCl
 [System.Diagnostics.Process]::GetCurrentProcess().PriorityClass = [System.Diagnostics.ProcessPriorityClass]$Priority
 
 try {
+    Test-ServicingGateListing
+
     $version = Get-BuildVersion
 
     if ($targets -notcontains 'Version') {

@@ -1,0 +1,38 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+import "MidiResourceListEntry.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiResourceList", UUID_IMidiResourceList)]
+    [static_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiResourceListStatics", UUID_IMidiResourceListStatics)]
+    runtimeclass MidiResourceList
+    {
+        MidiResourceList();
+
+        Windows.Foundation.Collections.IVector<MidiResourceListEntry> Entries{ get; };
+
+        // The entry for a named resource, or null when the device does not offer it. Asking this
+        // before making a request is what stops a client sending an inquiry the device will only
+        // reject.
+        [noexcept] MidiResourceListEntry GetEntry(String resource);
+
+        [noexcept] Boolean SupportsResource(String resource);
+
+        // The ResourceList resource is a JSON array of entries.
+        [noexcept] Windows.Data.Json.JsonArray GetJson();
+        [noexcept] static MidiResourceList FromJson(Windows.Data.Json.JsonArray json);
+    };
+}

@@ -534,6 +534,24 @@
     <ClInclude Include="MidiBluetoothOfflineRetentionConfig.h">
       <DependentUpon>MidiBluetoothOfflineRetentionConfig.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiSynthDrumKitInfo.h">
+      <DependentUpon>MidiSynthDrumKitInfo.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSynthInstrumentInfo.h">
+      <DependentUpon>MidiSynthInstrumentInfo.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSynthSoundSetInfo.h">
+      <DependentUpon>MidiSynthSoundSetInfo.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSynthStatus.h">
+      <DependentUpon>MidiSynthStatus.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSynthConfig.h">
+      <DependentUpon>MidiSynthConfig.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSynthManager.h">
+      <DependentUpon>MidiSynthManager.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiBluetoothPeripheralClientListConfig.h">
       <DependentUpon>MidiBluetoothPeripheralClientListConfig.idl</DependentUpon>
     </ClInclude>
@@ -599,6 +617,60 @@
     </ClInclude>
     <ClInclude Include="MidiUniqueId.h">
       <DependentUpon>MidiUniqueId.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiProgramListEntry.h">
+      <DependentUpon>MidiProgramListEntry.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiProgramList.h">
+      <DependentUpon>MidiProgramList.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiResourceLink.h">
+      <DependentUpon>MidiResourceLink.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiChannelListEntry.h">
+      <DependentUpon>MidiChannelListEntry.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiChannelList.h">
+      <DependentUpon>MidiChannelList.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiDeviceInfo.h">
+      <DependentUpon>MidiDeviceInfo.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiResourceListEntry.h">
+      <DependentUpon>MidiResourceListEntry.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiResourceList.h">
+      <DependentUpon>MidiResourceList.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiSystemExclusive7MessageBuilder.h">
+      <DependentUpon>MidiSystemExclusive7MessageBuilder.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiCapabilityInquiryMessage.h">
+      <DependentUpon>MidiCapabilityInquiryMessage.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiProfileId.h">
+      <DependentUpon>MidiProfileId.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiCapabilityInquiryMessageBuilder.h">
+      <DependentUpon>MidiCapabilityInquiryMessageBuilder.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiCapabilityInquiryResponder.h">
+      <DependentUpon>MidiCapabilityInquiryResponder.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiPropertyExchangeResponse.h">
+      <DependentUpon>MidiPropertyExchangeResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiProfileInquiryResponse.h">
+      <DependentUpon>MidiProfileInquiryResponse.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiCapabilityInquiryMessageReceivedEventArgs.h">
+      <DependentUpon>MidiCapabilityInquiryMessageReceivedEventArgs.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiCapabilityInquirySession.h">
+      <DependentUpon>MidiCapabilityInquirySession.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiCapabilityInquiryDeviceResponder.h">
+      <DependentUpon>MidiCapabilityInquiryDeviceResponder.idl</DependentUpon>
     </ClInclude>
     <ClInclude Include="MidiSystemExclusiveSendProgress.h">
       <DependentUpon>MidiSystemExclusiveSendProgress.idl</DependentUpon>
@@ -705,6 +777,22 @@
   <ItemGroup>
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)\module.g.cpp" />
+    <ClCompile Include="$(SolutionDir)inc\midi_file_sequence.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)inc\midi_file_smf_reader.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)inc\midi_sequence_playback_engine.cpp" />
+    <ClCompile Include="MidiSequence.cpp" />
+    <ClCompile Include="MidiSequenceTextEvent.cpp" />
+    <ClCompile Include="MidiSequenceLyricLine.cpp" />
+    <ClCompile Include="MidiSequenceTrack.cpp" />
+    <ClCompile Include="MidiSequenceTrackRouting.cpp" />
+    <ClCompile Include="MidiSequencePlayer.cpp" />
+    <ClCompile Include="MidiFileReadOptions.cpp" />
+    <ClCompile Include="MidiFileReadResult.cpp" />
+    <ClCompile Include="MidiStandardFileReader.cpp" />
     <ClCompile Include="MidiBytestreamToUmpMessageConverterState.cpp" />
     <ClCompile Include="MidiSystemExclusiveReceivedEventArgs.cpp" />
     <ClCompile Include="MidiSystemExclusiveReceiver.cpp" />
@@ -964,6 +1052,18 @@
     <ClCompile Include="MidiBluetoothOfflineRetentionConfig.cpp">
       <DependentUpon>MidiBluetoothOfflineRetentionConfig.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiSynthSoundSetInfo.cpp">
+      <DependentUpon>MidiSynthSoundSetInfo.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSynthStatus.cpp">
+      <DependentUpon>MidiSynthStatus.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSynthConfig.cpp">
+      <DependentUpon>MidiSynthConfig.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSynthManager.cpp">
+      <DependentUpon>MidiSynthManager.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiBluetoothPeripheralClientListConfig.cpp">
       <DependentUpon>MidiBluetoothPeripheralClientListConfig.idl</DependentUpon>
     </ClCompile>
@@ -1026,6 +1126,60 @@
     </ClCompile>
     <ClCompile Include="MidiUniqueId.cpp">
       <DependentUpon>MidiUniqueId.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiProgramListEntry.cpp">
+      <DependentUpon>MidiProgramListEntry.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiProgramList.cpp">
+      <DependentUpon>MidiProgramList.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiResourceLink.cpp">
+      <DependentUpon>MidiResourceLink.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiChannelListEntry.cpp">
+      <DependentUpon>MidiChannelListEntry.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiChannelList.cpp">
+      <DependentUpon>MidiChannelList.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiDeviceInfo.cpp">
+      <DependentUpon>MidiDeviceInfo.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiResourceListEntry.cpp">
+      <DependentUpon>MidiResourceListEntry.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiResourceList.cpp">
+      <DependentUpon>MidiResourceList.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiSystemExclusive7MessageBuilder.cpp">
+      <DependentUpon>MidiSystemExclusive7MessageBuilder.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiCapabilityInquiryMessage.cpp">
+      <DependentUpon>MidiCapabilityInquiryMessage.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiProfileId.cpp">
+      <DependentUpon>MidiProfileId.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiCapabilityInquiryMessageBuilder.cpp">
+      <DependentUpon>MidiCapabilityInquiryMessageBuilder.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiCapabilityInquiryResponder.cpp">
+      <DependentUpon>MidiCapabilityInquiryResponder.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiPropertyExchangeResponse.cpp">
+      <DependentUpon>MidiPropertyExchangeResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiProfileInquiryResponse.cpp">
+      <DependentUpon>MidiProfileInquiryResponse.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiCapabilityInquiryMessageReceivedEventArgs.cpp">
+      <DependentUpon>MidiCapabilityInquiryMessageReceivedEventArgs.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiCapabilityInquirySession.cpp">
+      <DependentUpon>MidiCapabilityInquirySession.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiCapabilityInquiryDeviceResponder.cpp">
+      <DependentUpon>MidiCapabilityInquiryDeviceResponder.idl</DependentUpon>
     </ClCompile>
     <ClCompile Include="MidiSystemExclusiveSendProgress.cpp">
       <DependentUpon>MidiSystemExclusiveSendProgress.idl</DependentUpon>
@@ -1171,6 +1325,24 @@
     <Midl Include="MidiSystemExclusiveSender.idl" />
     <Midl Include="MidiSystemExclusiveSendProgress.idl" />
     <Midl Include="MidiSystemTimerSettings.idl" />
+    <Midl Include="MidiSequenceFormatEnum.idl" />
+    <Midl Include="MidiSequenceTextKindEnum.idl" />
+    <Midl Include="MidiSequencePlayerStateEnum.idl" />
+    <Midl Include="MidiSequenceNote.idl" />
+    <Midl Include="MidiSequenceBarPosition.idl" />
+    <Midl Include="MidiSequenceTempoChange.idl" />
+    <Midl Include="MidiSequenceTimeSignature.idl" />
+    <Midl Include="MidiSequencePlayerPosition.idl" />
+    <Midl Include="MidiSequenceTextEvent.idl" />
+    <Midl Include="MidiSequenceLyricLine.idl" />
+    <Midl Include="MidiSequenceTrack.idl" />
+    <Midl Include="MidiSequence.idl" />
+    <Midl Include="MidiSequenceTrackRouting.idl" />
+    <Midl Include="MidiSequencePlayer.idl" />
+    <Midl Include="MidiFileReadStatusEnum.idl" />
+    <Midl Include="MidiFileReadOptions.idl" />
+    <Midl Include="MidiFileReadResult.idl" />
+    <Midl Include="MidiStandardFileReader.idl" />
     <Midl Include="MidiUniversalSystemExclusiveChannel.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiGroupEndpointListener.idl" />
@@ -1247,6 +1419,15 @@
     <Midl Include="MidiBluetoothRememberedClient.idl" />
     <Midl Include="MidiBluetoothOfflineRetentionConfig.idl" />
     <Midl Include="MidiBluetoothOfflineRetentionEnum.idl" />
+    <Midl Include="MidiSynthRenderModeEnum.idl" />
+    <Midl Include="MidiSynthAudioOutputModeEnum.idl" />
+    <Midl Include="MidiSynthBankSelectModeEnum.idl" />
+    <Midl Include="MidiSynthDrumKitInfo.idl" />
+    <Midl Include="MidiSynthInstrumentInfo.idl" />
+    <Midl Include="MidiSynthSoundSetInfo.idl" />
+    <Midl Include="MidiSynthStatus.idl" />
+    <Midl Include="MidiSynthConfig.idl" />
+    <Midl Include="MidiSynthManager.idl" />
     <Midl Include="MidiBluetoothPeripheralClientListConfig.idl" />
     <Midl Include="MidiBluetoothDeviceInformation.idl" />
     <Midl Include="MidiBluetoothPeripheralClient.idl" />
@@ -1288,6 +1469,27 @@
     <Midl Include="MidiMessageHelper.idl" />
     <Midl Include="MidiSystemExclusive7MessageHelper.idl" />
     <Midl Include="MidiUniqueId.idl" />
+    <Midl Include="MidiProgramListEntry.idl" />
+    <Midl Include="MidiProgramList.idl" />
+    <Midl Include="MidiResourceLink.idl" />
+    <Midl Include="MidiChannelListEntry.idl" />
+    <Midl Include="MidiChannelList.idl" />
+    <Midl Include="MidiDeviceInfo.idl" />
+    <Midl Include="MidiResourceListEntry.idl" />
+    <Midl Include="MidiResourceList.idl" />
+    <Midl Include="MidiSystemExclusive7MessageBuilder.idl" />
+    <Midl Include="MidiCapabilityInquiryMessageTypeEnum.idl" />
+    <Midl Include="MidiCapabilityInquiryCategoriesEnum.idl" />
+    <Midl Include="MidiCapabilityInquiryMessage.idl" />
+    <Midl Include="MidiCapabilityInquiryMessageBuilder.idl" />
+    <Midl Include="MidiCapabilityInquiryStatusEnum.idl" />
+    <Midl Include="MidiCapabilityInquiryResponder.idl" />
+    <Midl Include="MidiPropertyExchangeResponse.idl" />
+    <Midl Include="MidiProfileInquiryResponse.idl" />
+    <Midl Include="MidiCapabilityInquiryMessageReceivedEventArgs.idl" />
+    <Midl Include="MidiCapabilityInquirySession.idl" />
+    <Midl Include="MidiCapabilityInquiryDeviceResponder.idl" />
+    <Midl Include="MidiProfileId.idl" />
     <Midl Include="MidiNetworkAdvertisedHost.idl" />
     <Midl Include="MidiNetworkAdvertisedHostAddedEventArgs.idl" />
     <Midl Include="MidiNetworkAdvertisedHostRemovedEventArgs.idl" />

@@ -51,7 +51,13 @@ namespace winrt::Windows::Devices::Midi2::implementation
 
 
         // internal to the API
-        void SetName(_In_ winrt::hstring value) { m_name = value; }
+
+        // The service rejects a longer name outright, which would fail session creation, so bound
+        // it here instead. MAXIMUM_SESSION_NAME_CHARACTER_COUNT is the same count it measures.
+        void SetName(_In_ winrt::hstring value)
+        {
+            m_name = winrt::hstring{ internal::TruncateToCharacterCount(value.c_str(), MAXIMUM_SESSION_NAME_CHARACTER_COUNT) };
+        }
 
         _Success_(return == true)
         bool InternalStart();

@@ -157,6 +157,11 @@
     <ClCompile Include="MidiMessage64Tests.cpp" />
     <ClCompile Include="MidiMessage96Tests.cpp" />
     <ClCompile Include="MidiMessagePacketTests.cpp" />
+    <ClCompile Include="MidiCiMessageTests.cpp" />
+    <ClCompile Include="MidiCapabilityInquiryMessageTests.cpp" />
+    <ClCompile Include="MidiCiProgramListTests.cpp" />
+    <ClCompile Include="MidiCiResponderTests.cpp" />
+    <ClCompile Include="MidiStreamMessageBuilderTests.cpp" />
     <ClCompile Include="MidiUniqueIdTests.cpp" />
     <ClCompile Include="Module.cpp" />
   </ItemGroup>
@@ -169,6 +174,11 @@
     <ClInclude Include="MidiMessage64Tests.h" />
     <ClInclude Include="MidiMessage96Tests.h" />
     <ClInclude Include="MidiMessagePacketTests.h" />
+    <ClInclude Include="MidiCiMessageTests.h" />
+    <ClInclude Include="MidiCapabilityInquiryMessageTests.h" />
+    <ClInclude Include="MidiCiProgramListTests.h" />
+    <ClInclude Include="MidiCiResponderTests.h" />
+    <ClInclude Include="MidiStreamMessageBuilderTests.h" />
     <ClInclude Include="MidiUniqueIdTests.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>

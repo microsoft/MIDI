@@ -45,9 +45,7 @@ When scheduling messages, you may want to use a more convenient time units. Thes
 | `OffsetTimestampByMilliseconds(timestampValue, offsetMilliseconds)` | Offsets a given timestamp by the provided (signed) number of milliseconds |
 | `OffsetTimestampBySeconds(timestampValue, offsetSeconds)` | Offsets a given timestamp by the provided (signed) number of seconds |
 
-A negative offset moves the timestamp earlier, which is how you compensate for a known output
-latency. An offset which would take the timestamp below zero returns zero rather than wrapping
-around to a very large value.
+A negative offset moves the timestamp earlier, which is how you compensate for a known output latency. An offset which would take the timestamp below zero returns zero rather than wrapping around to a very large value.
 
 ## Static Functions for Windows Timer Frequency
 
@@ -61,18 +59,11 @@ Windows supports putting the system timer into a low-latency / high-frequency mo
 
 ### These calls are counted, so independent components can each ask
 
-`timeBeginPeriod` and `timeEndPeriod` are reference counted by Windows precisely so that independent
-components in one process can each ask for a low-latency period without coordinating. These
-functions follow that model.
+`timeBeginPeriod` and `timeEndPeriod` are reference counted by Windows precisely so that independent components in one process can each ask for a low-latency period without coordinating. These functions follow that model.
 
-This matters because the SDK is frequently loaded into a host which also loads plugins. If a host
-asks for a low-latency period and a plugin asks as well, both receive `true`, and the period is only
-released once both have called the End function. A caller which is told `true` can rely on being in
-a low-latency period regardless of whether it was the one that started it.
+This matters because the WinRT API is frequently loaded into a host which also loads plugins. If a host asks for a low-latency period and a plugin asks as well, both receive `true`, and the period is only released once both have called the End function. A caller which is told `true` can rely on being in a low-latency period regardless of whether it was the one that started it.
 
-`BeginLowLatencySystemTimerPeriod` returns `false` only when the request actually failed.
-`EndLowLatencySystemTimerPeriod` returns `false` when there was no outstanding request to release,
-which usually means it has been called more times than Begin was.
+`BeginLowLatencySystemTimerPeriod` returns `false` only when the request actually failed. `EndLowLatencySystemTimerPeriod` returns `false` when there was no outstanding request to release, which usually means it has been called more times than Begin was.
 
 ### The benefit is per-process, even though the cost is not
 
@@ -95,9 +86,7 @@ Bound retry loops by a deadline you read from a clock, not by counting iteration
 
 ## Samples
 
-The `OffsetTimestampBy...` functions are how you schedule a message for the future. Read `Now` once
-and offset that single value, rather than reading the clock again for each message. There was no
-WinMM equivalent for scheduled sending.
+The `OffsetTimestampBy...` functions are how you schedule a message for the future. Read `Now` once and offset that single value, rather than reading the clock again for each message. There was no WinMM equivalent for scheduled sending.
 
 * [C++/WinRT scheduled-send-messages](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/scheduled-send-messages)
 * [C# scheduled-send-messages](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/scheduled-send-messages)

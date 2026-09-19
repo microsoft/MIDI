@@ -11,6 +11,7 @@
 
 #include "App.xaml.h"
 #include "BackgroundWork.h"
+#include "ProgramChoice.h"
 #include "StringResources.h"
 #include "TemporaryFlags.h"
 #include "resource.h"
@@ -346,6 +347,7 @@ namespace winrt::midikeyboard::implementation
             AppendChoice(pressureModes, L"KeyPressurePerNote");
             AppendChoice(pressureModes, L"KeyPressureChannel");
             AppendChoice(pressureModes, L"KeyPressurePoly");
+            AppendChoice(pressureModes, L"KeyPressureModWheel");
             KeyPressureComboBox().ItemsSource(pressureModes);
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to build the choice lists.")
@@ -492,6 +494,26 @@ namespace winrt::midikeyboard::implementation
             m_watcherRemovedToken = m_watcher.Removed([refresh](auto&&, auto&&) { refresh(); });
             m_watcherUpdatedToken = m_watcher.Updated([refresh](auto&&, auto&&) { refresh(); });
 
+            // Devices arrive one at a time, so only this tells us the absence of a device is
+            // real rather than just "not enumerated yet".
+            m_watcherEnumerationCompletedToken = m_watcher.EnumerationCompleted(
+                [weak = get_weak(), queue = m_dispatcherQueue](auto&&, auto&&)
+                {
+                    if (queue == nullptr)
+                    {
+                        return;
+                    }
+
+                    queue.TryEnqueue([weak]()
+                        {
+                            if (auto strong = weak.get())
+                            {
+                                strong->m_endpointListReady = true;
+                                strong->RefreshEndpointList();
+                            }
+                        });
+                });
+
             m_watcher.Start();
 
             RefreshEndpointList();
@@ -588,6 +610,27 @@ namespace winrt::midikeyboard::implementation
 
             RefreshGroupList();
 
+            // A device coming back should just start working again. Nothing else in the app
+            // offers a way to reconnect, and hunting for one mid-session is no good.
+            auto const presentNow = selectedIndex >= 0;
+
+            if (!m_endpointListReady)
+            {
+                // still enumerating; absence here means nothing yet
+                m_endpointWasPresent = presentNow;
+            }
+            else
+            {
+                if (presentNow && !m_endpointWasPresent &&
+                    !m_reconnectInProgress &&
+                    settings.Connection() == native::ConnectionMode::ExistingEndpoint)
+                {
+                    ReconnectAsync();
+                }
+
+                m_endpointWasPresent = presentNow;
+            }
+
             if (!m_startupOptionsApplied && selectedIndex >= 0 && !options.EndpointDeviceId.empty())
             {
                 m_startupOptionsApplied = true;
@@ -609,6 +652,9 @@ namespace winrt::midikeyboard::implementation
                 RefreshGroupList();
                 ReconnectAsync();
             }
+
+            // the list is what carries the device's name, so the strip can only show it now
+            UpdateConnectionDisplay(m_lastConnectResult);
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to refresh the endpoint list.")
     }
@@ -774,6 +820,8 @@ namespace winrt::midikeyboard::implementation
             auto const& settings = native::AppSettings::Current();
             auto const connected = result == native::ConnectResult::Success;
 
+            m_lastConnectResult = result;
+
             ConnectionStateDot().Fill(LookupBrush(
                 connected ? L"SystemFillColorSuccessBrush" : L"SystemFillColorCriticalBrush"));
 
@@ -803,11 +851,39 @@ namespace winrt::midikeyboard::implementation
                 return;
             }
 
-            winrt::hstring endpointName{ settings.EndpointDeviceId() };
+            winrt::hstring const endpointId{ settings.EndpointDeviceId() };
+            winrt::hstring endpointName{ endpointId };
+            bool endpointFound{ false };
 
-            if (auto const choice = EndpointComboBox().SelectedItem().try_as<appshared::EndpointChoice>())
+            // The combo lives in the settings panel and is populated later than this runs, so
+            // resolve against the endpoint list itself rather than against its selection.
+            if (m_endpoints != nullptr)
             {
-                endpointName = choice.DisplayName();
+                for (uint32_t i = 0; i < m_endpoints.Size(); i++)
+                {
+                    auto const choice = m_endpoints.GetAt(i);
+
+                    if (choice != nullptr &&
+                        midiapp::EndpointIdsMatch(choice.EndpointDeviceId(), endpointId))
+                    {
+                        endpointName = choice.DisplayName();
+                        endpointFound = true;
+                        break;
+                    }
+                }
+            }
+
+            // The open connection outlives the device going away, so presence has to come from
+            // the endpoint list. Without this the light stays green over a device that is gone.
+            if (m_endpoints != nullptr && m_endpoints.Size() > 0 && !endpointFound)
+            {
+                ConnectionStateDot().Fill(LookupBrush(L"SystemFillColorCautionBrush"));
+
+                SetStripText(ConnectionNameText(), endpointName);
+                SetStripText(ConnectionDetailText(),
+                    res::GetString(L"ConnectionEndpointUnavailable"),
+                    res::GetString(L"ConnectionEndpointUnavailableToolTip"));
+                return;
             }
 
             SetStripText(ConnectionNameText(), endpointName);
@@ -1282,14 +1358,26 @@ namespace winrt::midikeyboard::implementation
                     SendNoteOffNow(noteNumber);
                 }
 
-                if (native::AppSettings::Current().KeyPressure() == native::KeyPressureMode::ChannelPressure)
+                // Both of these are channel wide, so they have to be released when the last
+                // note goes, or the sound stays modulated with nothing held down.
+                auto const pressureMode = native::AppSettings::Current().KeyPressure();
+
+                if (pressureMode == native::KeyPressureMode::ChannelPressure ||
+                    pressureMode == native::KeyPressureMode::ModWheel)
                 {
                     auto const anyHeld = std::any_of(m_noteHoldCount.begin(), m_noteHoldCount.end(),
                         [](int32_t value) { return value > 0; });
 
                     if (!anyHeld)
                     {
-                        m_output.SendChannelPressure(TransmitGroupIndex(), TransmitChannelIndex(), 0);
+                        if (pressureMode == native::KeyPressureMode::ChannelPressure)
+                        {
+                            m_output.SendChannelPressure(TransmitGroupIndex(), TransmitChannelIndex(), 0);
+                        }
+                        else
+                        {
+                            ApplyModValue(0.0, true);
+                        }
                     }
                 }
             }
@@ -1357,7 +1445,7 @@ namespace winrt::midikeyboard::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::SendKeyPressure(int32_t noteNumber, uint32_t pressure) noexcept
+    void MainWindow::SendKeyPressure(int32_t noteNumber, uint32_t pressure, double normalized) noexcept
     {
         try
         {
@@ -1384,6 +1472,12 @@ namespace winrt::midikeyboard::implementation
 
             case native::KeyPressureMode::PolyPressure:
                 m_output.SendPolyPressure(group, channel, note, pressure);
+                break;
+
+            case native::KeyPressureMode::ModWheel:
+                // The mod ribbon owns the same controller, so this goes through the ribbon's
+                // own path: it shows the value being sent and the two cannot drift apart.
+                ApplyModValue(normalized, true);
                 break;
 
             default:
@@ -1507,7 +1601,7 @@ namespace winrt::midikeyboard::implementation
             if (pressure != entry->second.Pressure)
             {
                 entry->second.Pressure = pressure;
-                SendKeyPressure(entry->second.NoteNumber, pressure);
+                SendKeyPressure(entry->second.NoteNumber, pressure, normalized);
             }
 
             args.Handled(true);
@@ -2021,6 +2115,94 @@ namespace winrt::midikeyboard::implementation
     }
 
     // ------------------------------------------------------------------------------------
+    // Changing destination from the strip
+    // ------------------------------------------------------------------------------------
+
+    _Use_decl_annotations_
+    void MainWindow::OnEndpointSwitchFlyoutOpening(
+        foundation::IInspectable const&,
+        foundation::IInspectable const&)
+    {
+        try
+        {
+            auto items = EndpointSwitchFlyout().Items();
+            items.Clear();
+
+            if (m_endpoints == nullptr || m_endpoints.Size() == 0)
+            {
+                controls::MenuFlyoutItem empty{};
+                empty.Text(res::GetString(L"EndpointSwitchNone"));
+                empty.IsEnabled(false);
+                items.Append(empty);
+                return;
+            }
+
+            auto const currentId = winrt::hstring{ native::AppSettings::Current().EndpointDeviceId() };
+
+            for (uint32_t i = 0; i < m_endpoints.Size(); i++)
+            {
+                auto const choice = m_endpoints.GetAt(i);
+
+                if (choice == nullptr)
+                {
+                    continue;
+                }
+
+                controls::ToggleMenuFlyoutItem item{};
+
+                item.Text(choice.DisplayName());
+                item.Tag(winrt::box_value(choice.EndpointDeviceId()));
+                item.IsChecked(midiapp::EndpointIdsMatch(choice.EndpointDeviceId(), currentId));
+                item.Click({ this, &MainWindow::OnEndpointSwitchItemClick });
+
+                items.Append(item);
+            }
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to list the MIDI destinations.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnEndpointSwitchItemClick(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            // ToggleMenuFlyoutItem is not a MenuFlyoutItem, so read the tag off the base type
+            auto const element = sender.try_as<xaml::FrameworkElement>();
+
+            if (element == nullptr)
+            {
+                return;
+            }
+
+            auto const endpointId = winrt::unbox_value_or<winrt::hstring>(element.Tag(), L"");
+
+            if (endpointId.empty())
+            {
+                return;
+            }
+
+            auto& settings = native::AppSettings::Current();
+
+            if (settings.Connection() == native::ConnectionMode::ExistingEndpoint &&
+                midiapp::EndpointIdsMatch(endpointId, winrt::hstring{ settings.EndpointDeviceId() }))
+            {
+                return;
+            }
+
+            EndAllNotes();
+
+            settings.EndpointDeviceId(std::wstring{ endpointId.c_str() });
+            settings.Connection(native::ConnectionMode::ExistingEndpoint);
+
+            InitializeControlsFromSettings();
+            ReconnectAsync();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the MIDI destination.")
+    }
+
+    // ------------------------------------------------------------------------------------
     // Bank and program
     // ------------------------------------------------------------------------------------
 
@@ -2350,7 +2532,8 @@ namespace winrt::midikeyboard::implementation
                     ? entry.Title
                     : entry.CollectionTitle + L" - " + entry.Title;
 
-                items.Append(winrt::box_value(winrt::hstring{ label }));
+                items.Append(winrt::make<ProgramChoice>(
+                    winrt::hstring{ label }, winrt::hstring{ entry.Tags }));
             }
 
             ProgramListComboBox().Visibility(xaml::Visibility::Visible);

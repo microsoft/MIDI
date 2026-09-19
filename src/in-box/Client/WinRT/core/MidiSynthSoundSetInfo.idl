@@ -1,0 +1,36 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiSynthDrumKitInfo.idl";
+
+namespace Windows.Devices.Midi2.Transports.Synth
+{
+    [contract(MidiTransportsSynthApiContract, 1)]
+
+    // What the active sound set contains. Read-only: the synthesizer plays the sound set Windows
+    // installed and nothing else, so that a fault in parsing a file cannot be reached from outside.
+    //
+    // The melodic instruments are deliberately not listed here. A connected MIDI application can
+    // already fetch the full list over MIDI-CI Property Exchange as ProgramList, which is where it
+    // belongs, and copying hundreds of entries through a settings query would make it expensive.
+    [interface_name("Windows.Devices.Midi2.Transports.Synth.IMidiSynthSoundSetInfo", UUID_IMidiSynthSoundSetInfo)]
+    runtimeclass MidiSynthSoundSetInfo
+    {
+        String Name{ get; };
+        String Version{ get; };
+        String FilePath{ get; };
+
+        UInt32 MelodicInstrumentCount{ get; };
+        UInt32 WaveCount{ get; };
+
+        IVectorView<MidiSynthDrumKitInfo> DrumKits{ get; };
+    }
+}

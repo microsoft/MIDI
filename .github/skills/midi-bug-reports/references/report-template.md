@@ -2,6 +2,8 @@
 
 Fill every row. `Not tested` is an acceptable value; a missing row is not.
 
+Do not hard-wrap the prose you put in these sections. Keep each paragraph, bullet and table row on a single line, however long, and use newlines only between blocks. Code fences keep their own line breaks.
+
 ---
 
 ## Title
@@ -28,8 +30,7 @@ Fill every row. `Not tested` is an acceptable value; a missing row is not.
 | WinRT MIDI 1.0 | | Pass / Fail / Not tested |
 | WinMM (classic) | `midi1monitor.exe` | Pass / Fail / Not tested |
 
-**What the matrix localizes:** `<service/transport/driver>` if the native path also fails, or
-`<WinMM client / MIDI 1.0 translation>` if only WinMM fails.
+**What the matrix localizes:** `<service/transport/driver>` if the native path also fails, or `<WinMM client / MIDI 1.0 translation>` if only WinMM fails.
 
 ## API mode
 
@@ -41,11 +42,7 @@ Fill every row. `Not tested` is an acceptable value; a missing row is not.
 
 ## Workaround guidance for the user
 
-Legacy API mode (`midi api-mode set legacy`, elevated, then reboot) is a supported way to stay
-unblocked while this is open. It gives up multi-client sharing, built-in loopbacks, Network MIDI 2.0,
-Bluetooth LE MIDI, USB MIDI 2.0 device support, and new-style or custom MIDI 1.0 port names.
-Return with `midi api-mode set full` and reboot.
-See https://microsoft.github.io/MIDI/kb/how-to-change-api-mode/
+Legacy API mode (`midi api-mode set legacy`, elevated, then reboot) is a supported way to stay unblocked while this is open. It gives up multi-client sharing, built-in loopbacks, Network MIDI 2.0, Bluetooth LE MIDI, USB MIDI 2.0 device support, and new-style or custom MIDI 1.0 port names. Return with `midi api-mode set full` and reboot. See https://microsoft.github.io/MIDI/kb/how-to-change-api-mode/
 
 ## Steps to reproduce
 
@@ -53,8 +50,7 @@ See https://microsoft.github.io/MIDI/kb/how-to-change-api-mode/
 2.
 3.
 
-Expected:
-Actual:
+Expected: Actual:
 
 ## Evidence
 

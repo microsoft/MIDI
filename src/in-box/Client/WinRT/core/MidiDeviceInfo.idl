@@ -1,0 +1,50 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+import "MidiDeclaredDeviceIdentity.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiDeviceInfo", UUID_IMidiDeviceInfo)]
+    [static_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiDeviceInfoStatics", UUID_IMidiDeviceInfoStatics)]
+    [constructor_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiDeviceInfoFactory", UUID_IMidiDeviceInfoFactory)]
+    runtimeclass MidiDeviceInfo : Windows.Foundation.IStringable
+    {
+        MidiDeviceInfo();
+
+        // The identifiers and the names are not alternatives. A device declares both, and the
+        // names are what a person reads while the identifiers are what code matches on, so the
+        // full constructor takes all of them together.
+        MidiDeviceInfo(Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity identity);
+        MidiDeviceInfo(
+            Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity identity,
+            String manufacturer,
+            String family,
+            String model);
+
+        // The same identity the endpoint declares elsewhere, deliberately the same type. A device
+        // states who it is through several different carriers and they are required to agree, so
+        // sharing the type is what keeps them from drifting apart.
+        Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity Identity;
+
+        // Names for the numbers above. A device is free to send either, or neither.
+        String Manufacturer;
+        String Family;
+        String Model;
+        String Version;
+
+        [noexcept] Windows.Data.Json.JsonObject GetJson();
+        [noexcept] static MidiDeviceInfo FromJson(Windows.Data.Json.JsonObject json);
+    };
+}

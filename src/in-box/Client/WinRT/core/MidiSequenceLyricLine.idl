@@ -1,0 +1,29 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Sequencing
+{
+    // A file stores lyrics one syllable at a time, which is unreadable on its own, so these are
+    // the syllables put back together into the lines the writer intended. The line breaks come
+    // from the file where it marks them and from the spacing of the singing where it does not,
+    // so this is an interpretation. The syllables themselves are still available as text events
+    // for an application that would rather do its own.
+    [contract(MidiSequencingUtilityApiContract,1)]
+    [interface_name("Windows.Devices.Midi2.Utilities.Sequencing.IMidiSequenceLyricLine", UUID_IMidiSequenceLyricLine)]
+    runtimeclass MidiSequenceLyricLine
+    {
+        UInt32 StartTick{ get; };
+        UInt32 EndTick{ get; };         // where the next line begins
+        String Text{ get; };
+    };
+}

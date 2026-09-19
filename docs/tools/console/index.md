@@ -3,6 +3,9 @@ layout: tools_page
 title: MIDI Console
 tool: console
 description: Complete command and option reference for the Windows MIDI Services Console
+icon: /assets/images/console-midi-endpoint-properties.png
+categories:
+  - Developer and Technical User Tools
 ---
 
 The Windows MIDI Services Console is a command-line tool for enumerating, inspecting, monitoring, and testing MIDI endpoints. If you have it installed, you can invoke it from any command prompt using `midi`. We recommend using [Windows Terminal](https://aka.ms/terminal) for the best experience.
@@ -11,7 +14,7 @@ This single page documents every command and option. To get the same information
 
 ## Where to Get it
 
-The Windows MIDI Services console is delivered as part of the SDK Runtime and Tools installer available via the links at the top of this page.
+The Windows MIDI Services console is delivered as part of the SDK Runtime and Tools package. For developers and technical customers, you may download the latest preview releases from [GitHub](https://aka.ms/midireleases). Everyone else should wait until the software is delivered with Windows 11.
 
 ## Usage: Commands vs Options
 
@@ -569,7 +572,7 @@ midi svc status --verbose
 
 ## service ping
 
-Ping the MIDI Windows Service. This calls the app SDK functions to send a proprietary ping through the Ping endpoint in the service, and returns information about the round-trip speed characteristics of the ping series.
+Ping the MIDI Windows Service. This calls the WinRT API functions to send a proprietary ping through the Ping endpoint in the service, and returns information about the round-trip speed characteristics of the ping series.
 
 | Option | Short | Default | Description |
 | ----- | ----- | ----- | ----- |

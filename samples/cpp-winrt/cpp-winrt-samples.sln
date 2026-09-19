@@ -33,6 +33,10 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sysex-file-receiver-cpp", "
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sysex-send-bytes-cpp", "sysex-send-bytes\sysex-send-bytes-cpp.vcxproj", "{E5B31567-03E7-450D-9E33-24905E2CFDE1}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "capability-inquiry-virtual-device-cpp", "capability-inquiry-virtual-device\capability-inquiry-virtual-device-cpp.vcxproj", "{5F91B27C-08A4-4D3E-B6C1-2E48D95A730B}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "capability-inquiry-browse-cpp", "capability-inquiry-browse\capability-inquiry-browse-cpp.vcxproj", "{2C7A4E10-9D63-4B18-8F52-7A13C60D9E41}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "scheduled-send-messages-cpp", "scheduled-send-messages\scheduled-send-messages-cpp.vcxproj", "{6B36FA48-BE0F-4EA8-A786-E8836D834AB4}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "scheduled-messages-com-extensions-cpp", "scheduled-messages-com-extensions\scheduled-messages-com-extensions-cpp.vcxproj", "{339BA1C2-90C5-4798-B1E8-CDF73DB162CF}"
@@ -293,6 +297,38 @@ Global
 		{E5B31567-03E7-450D-9E33-24905E2CFDE1}.Release|x64.Build.0 = Release|x64
 		{E5B31567-03E7-450D-9E33-24905E2CFDE1}.Release|x86.ActiveCfg = Release|x64
 		{E5B31567-03E7-450D-9E33-24905E2CFDE1}.Release|x86.Build.0 = Release|x64
+		{5F91B27C-08A4-4D3E-B6C1-2E48D95A730B}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{5F91B27C-08A4-4D3E-B6C1-2E48D95A730B}.Debug|ARM64.Build.0 = Debug|ARM64
+		{5F91B27C-08A4-4D3E-B6C1-2E48D95A730B}.Debug|ARM64EC.ActiveCfg = Debug|ARM64EC
+		{5F91B27C-08A4-4D3E-B6C1-2E48D95A730B}.Debug|ARM64EC.Build.0 = Debug|ARM64EC
+		{5F91B27C-08A4-4D3E-B6C1-2E48D95A730B}.Debug|x64.ActiveCfg = Debug|x64
+		{5F91B27C-08A4-4D3E-B6C1-2E48D95A730B}.Debug|x64.Build.0 = Debug|x64
+		{5F91B27C-08A4-4D3E-B6C1-2E48D95A730B}.Debug|x86.ActiveCfg = Debug|x64
+		{5F91B27C-08A4-4D3E-B6C1-2E48D95A730B}.Debug|x86.Build.0 = Debug|x64
+		{5F91B27C-08A4-4D3E-B6C1-2E48D95A730B}.Release|ARM64.ActiveCfg = Release|ARM64
+		{5F91B27C-08A4-4D3E-B6C1-2E48D95A730B}.Release|ARM64.Build.0 = Release|ARM64
+		{5F91B27C-08A4-4D3E-B6C1-2E48D95A730B}.Release|ARM64EC.ActiveCfg = Release|ARM64EC
+		{5F91B27C-08A4-4D3E-B6C1-2E48D95A730B}.Release|ARM64EC.Build.0 = Release|ARM64EC
+		{5F91B27C-08A4-4D3E-B6C1-2E48D95A730B}.Release|x64.ActiveCfg = Release|x64
+		{5F91B27C-08A4-4D3E-B6C1-2E48D95A730B}.Release|x64.Build.0 = Release|x64
+		{5F91B27C-08A4-4D3E-B6C1-2E48D95A730B}.Release|x86.ActiveCfg = Release|x64
+		{5F91B27C-08A4-4D3E-B6C1-2E48D95A730B}.Release|x86.Build.0 = Release|x64
+		{2C7A4E10-9D63-4B18-8F52-7A13C60D9E41}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{2C7A4E10-9D63-4B18-8F52-7A13C60D9E41}.Debug|ARM64.Build.0 = Debug|ARM64
+		{2C7A4E10-9D63-4B18-8F52-7A13C60D9E41}.Debug|ARM64EC.ActiveCfg = Debug|ARM64EC
+		{2C7A4E10-9D63-4B18-8F52-7A13C60D9E41}.Debug|ARM64EC.Build.0 = Debug|ARM64EC
+		{2C7A4E10-9D63-4B18-8F52-7A13C60D9E41}.Debug|x64.ActiveCfg = Debug|x64
+		{2C7A4E10-9D63-4B18-8F52-7A13C60D9E41}.Debug|x64.Build.0 = Debug|x64
+		{2C7A4E10-9D63-4B18-8F52-7A13C60D9E41}.Debug|x86.ActiveCfg = Debug|x64
+		{2C7A4E10-9D63-4B18-8F52-7A13C60D9E41}.Debug|x86.Build.0 = Debug|x64
+		{2C7A4E10-9D63-4B18-8F52-7A13C60D9E41}.Release|ARM64.ActiveCfg = Release|ARM64
+		{2C7A4E10-9D63-4B18-8F52-7A13C60D9E41}.Release|ARM64.Build.0 = Release|ARM64
+		{2C7A4E10-9D63-4B18-8F52-7A13C60D9E41}.Release|ARM64EC.ActiveCfg = Release|ARM64EC
+		{2C7A4E10-9D63-4B18-8F52-7A13C60D9E41}.Release|ARM64EC.Build.0 = Release|ARM64EC
+		{2C7A4E10-9D63-4B18-8F52-7A13C60D9E41}.Release|x64.ActiveCfg = Release|x64
+		{2C7A4E10-9D63-4B18-8F52-7A13C60D9E41}.Release|x64.Build.0 = Release|x64
+		{2C7A4E10-9D63-4B18-8F52-7A13C60D9E41}.Release|x86.ActiveCfg = Release|x64
+		{2C7A4E10-9D63-4B18-8F52-7A13C60D9E41}.Release|x86.Build.0 = Release|x64
 		{6B36FA48-BE0F-4EA8-A786-E8836D834AB4}.Debug|ARM64.ActiveCfg = Debug|ARM64
 		{6B36FA48-BE0F-4EA8-A786-E8836D834AB4}.Debug|ARM64.Build.0 = Debug|ARM64
 		{6B36FA48-BE0F-4EA8-A786-E8836D834AB4}.Debug|ARM64EC.ActiveCfg = Debug|ARM64EC

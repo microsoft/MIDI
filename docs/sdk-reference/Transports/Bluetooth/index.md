@@ -1,6 +1,6 @@
 ---
 layout: sdk_namespace_page
-title: App SDK Support for Bluetooth MIDI Endpoints
+title: WinRT API Support for Bluetooth MIDI Endpoints
 namespace: Windows.Devices.Midi2.Transports.Bluetooth
 description: Namespace for Bluetooth Low Energy MIDI device and peripheral management
 ---

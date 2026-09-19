@@ -1,0 +1,42 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+import "MidiCapabilityInquiryStatusEnum.idl";
+import "MidiUniqueId.idl";
+import "MidiProfileId.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    // What a responder said about the profiles at one address. Both lists being empty is a real
+    // answer: it means the responder supports no profiles where it was asked, which is not the same
+    // as it supporting none anywhere.
+    [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiProfileInquiryResponse", UUID_IMidiProfileInquiryResponse)]
+    runtimeclass MidiProfileInquiryResponse
+    {
+        [noexcept] MidiCapabilityInquiryStatus Status{ get; };
+
+        MidiUniqueId ResponderMuid{ get; };
+
+        // The address the question was asked at: a channel from 0x00 to 0x0F, a group with 0x7E,
+        // or the whole function block with 0x7F.
+        [noexcept] UInt8 DeviceId{ get; };
+
+        // Profiles the responder supports and which are active now.
+        Windows.Foundation.Collections.IVector<MidiProfileId> EnabledProfiles{ get; };
+
+        // Profiles the responder can support but which are not active. These are the ones worth
+        // offering to turn on.
+        Windows.Foundation.Collections.IVector<MidiProfileId> DisabledProfiles{ get; };
+    };
+}

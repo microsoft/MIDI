@@ -3,6 +3,8 @@ layout: kb
 title: Moving from WinMM to Windows MIDI Services
 audience: developers
 description: Concepts and mapping from the primary MIDI 1 API to Windows MIDI Services
+categories:
+  - Developer Guidance
 ---
 
 # Moving from WinMM to Windows MIDI Services

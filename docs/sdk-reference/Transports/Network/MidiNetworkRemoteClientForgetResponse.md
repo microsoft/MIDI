@@ -21,8 +21,6 @@ Returned by `MidiNetworkTransportManager.ForgetRemoteClientAsync`.
 
 ## Remarks
 
-Forgetting an identity the host holds no decision for reports success, because what the caller
-asked for is already true.
+Forgetting an identity the host holds no decision for reports success, because what the caller asked for is already true.
 
-`Success` being false with `UnrecognizedCommand` means the service predates this command. The
-saved lists can still be rewritten, but the old decision stays in force until the service restarts.
+`Success` being false with `UnrecognizedCommand` means the service predates this command. The saved lists can still be rewritten, but the old decision stays in force until the service restarts.

@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation and Contributors.
+// Copyright (c) Microsoft Corporation and Contributors.
 // Licensed under the MIT License
 // ============================================================================
 // This is part of the Windows MIDI Services WinRT API and should be used
@@ -1441,11 +1441,10 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 // =======================================================
 
 #include "Feature_Servicing_MIDI2WinRtStartup.h"
-#include "Feature_Servicing_MIDI2LegacyControl.h"
+#include "Feature_Servicing_MIDI2LegacyTimestamp.h"
 #include "Feature_Servicing_MIDI2DevCaps2.h"
 
 // 11D 2026 (planned)
-#include "Feature_Servicing_MIDI2FailFast.h"
 #include "Feature_Servicing_MIDIPortDisambiguators.h"
 #include "Feature_Servicing_MIDI2LoopbackMuteAndList.h"
 #include "Feature_Servicing_MIDI2UnicodeConversion.h"
@@ -1457,6 +1456,35 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2USBSystemRealTimeUmpSize.h"
 #include "Feature_Servicing_MIDI2BsToUMPConvDisallowNOOPs.h"
 #include "Feature_Servicing_MIDI2XProcSendWaitTimeouts.h"
+#include "Feature_Servicing_MIDI2ConfigJsonSizeLimit.h"
+#include "Feature_Servicing_MIDI2SessionNameLimit.h"
+#include "Feature_Servicing_MIDI2ComponentSignatureCache.h"
+#include "Feature_Servicing_MIDI2CustomOutgoingLatency.h"
+#include "Feature_Servicing_MIDI2EndpointCustomizationEnhancements.h"
+#include "Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit.h"
+#include "Feature_Servicing_MIDI2EndpointUniqueIdValidation.h"
+#include "Feature_Servicing_MIDI2LoopbackErrorStringResources.h"
+#include "Feature_Servicing_MIDI2LoopbackUniqueEndpointNames.h"
+#include "Feature_Servicing_MIDI2PortNamingRework.h"
+#include "Feature_Servicing_MIDI2ProtocolNegotiationDeadlock.h"
+#include "Feature_Servicing_MIDI2RecommendedCCIntervalProp.h"
+#include "Feature_Servicing_MIDI2SchedulerV2.h"
+#include "Feature_Servicing_MIDI2ServiceConfigJsonHardening.h"
+#include "Feature_Servicing_MIDI2SessionTrackerConnectionTime.h"
+#include "Feature_Servicing_MIDI2StreamTextUtf8.h"
+#include "Feature_Servicing_MIDI2StringCharacterSets.h"
+#include "Feature_Servicing_MIDI2SynchronizedStart.h"
+#include "Feature_Servicing_MIDI2TransportAssociationIdGuidValidation.h"
+#include "Feature_Servicing_MIDI2TransportCommandJsonHardening.h"
+#include "Feature_Servicing_MIDI2TransportConfigRejectionReasons.h"
+#include "Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse.h"
+#include "Feature_Servicing_MIDI2VirtualDeviceClientReconnect.h"
+#include "Feature_Servicing_MIDI2WinMMCleanupAfterDeviceRemoval.h"
+#include "Feature_Servicing_MIDI2WinMMCompleteLongBufferOnFailure.h"
+#include "Feature_Servicing_MIDI2WinMMInterfaceRemovalPerf.h"
+#include "Feature_Servicing_MIDI2WinMMPortHandleSlotWidth.h"
+#include "Feature_Servicing_MIDI2WinMMShortMessageNoSendWait.h"
+#include "Feature_Servicing_MIDI2XProcBatchedReads.h"
 
 void OutputSingleFeatureEnablement(_In_ bool enabled, _In_ std::wstring const& featureName)
 {
@@ -1480,7 +1508,6 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinRtStartup::IsEnabled(),             L"MIDI2WinRtStartup");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LegacyTimestamp::IsEnabled(),          L"MIDI2LegacyTimestamp");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2DevCaps2::IsEnabled(),                 L"MIDI2DevCaps2");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2FailFast::IsEnabled(),                 L"MIDI2FailFast");
 
     // 11d 2026 (planned)
 
@@ -1495,6 +1522,35 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2BsToUMPConvDisallowNOOPs::IsEnabled(), L"MIDI2BsToUMPConvDisallowNOOPs (ensure over-stated MIDI 1 packet size doesn't result in trailing NOOPs)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock::IsEnabled(), L"MIDI2VirtualDeviceRemovalDeadlock (fix service hang when a virtual device is shut down)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2XProcSendWaitTimeouts::IsEnabled(),    L"MIDI2XProcSendWaitTimeouts (stop aborting sends to devices that are slow to accept data)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2ConfigJsonSizeLimit::IsEnabled(),      L"MIDI2ConfigJsonSizeLimit (bound the configuration json a client may send over rpc)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2SessionNameLimit::IsEnabled(),         L"MIDI2SessionNameLimit (bound the session name a client may register or update)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2ComponentSignatureCache::IsEnabled(),  L"MIDI2ComponentSignatureCache (cache transport and transform signature checks, which cost about a second per dll)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2CustomOutgoingLatency::IsEnabled(),    L"MIDI2CustomOutgoingLatency (user-supplied outgoing latency compensation for an endpoint)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled(), L"MIDI2EndpointCustomizationEnhancements (rework of how endpoint customizations are matched and applied)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit::IsEnabled(), L"MIDI2EndpointNameUtf8ByteLimit (enforce the ump spec utf-8 byte limit on endpoint names)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2EndpointUniqueIdValidation::IsEnabled(), L"MIDI2EndpointUniqueIdValidation (reject a unique id which is not usable in a device id)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackErrorStringResources::IsEnabled(), L"MIDI2LoopbackErrorStringResources (localizable error text for loopback configuration failures)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LoopbackUniqueEndpointNames::IsEnabled(), L"MIDI2LoopbackUniqueEndpointNames (reject duplicate names when creating loopback endpoints)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2PortNamingRework::IsEnabled(),         L"MIDI2PortNamingRework (rework of how midi 1.0 port names are generated)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2ProtocolNegotiationDeadlock::IsEnabled(), L"MIDI2ProtocolNegotiationDeadlock (fix service hang during endpoint protocol negotiation)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2RecommendedCCIntervalProp::IsEnabled(), L"MIDI2RecommendedCCIntervalProp (recommended control change interval property for an endpoint)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2SchedulerV2::IsEnabled(),              L"MIDI2SchedulerV2 (replacement message scheduler, removes the busy wait and applies latency compensation)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2ServiceConfigJsonHardening::IsEnabled(), L"MIDI2ServiceConfigJsonHardening (harden parsing of the configuration json sent over rpc)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2SessionTrackerConnectionTime::IsEnabled(), L"MIDI2SessionTrackerConnectionTime (report when each client connected to an endpoint)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2StreamTextUtf8::IsEnabled(),           L"MIDI2StreamTextUtf8 (decode ump stream message text as utf-8)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2StringCharacterSets::IsEnabled(),      L"MIDI2StringCharacterSets (remove characters which are not allowed in ids and names)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2SynchronizedStart::IsEnabled(),        L"MIDI2SynchronizedStart (client waits for the service to finish enumerating devices)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2TransportAssociationIdGuidValidation::IsEnabled(), L"MIDI2TransportAssociationIdGuidValidation (reject a loopback association id which is not a valid guid)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2TransportCommandJsonHardening::IsEnabled(), L"MIDI2TransportCommandJsonHardening (harden parsing of transport command json)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2TransportConfigRejectionReasons::IsEnabled(), L"MIDI2TransportConfigRejectionReasons (return the reason a transport rejected a configuration)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled(), L"MIDI2VirtualDeviceClientEndpointInUse (tell a virtual device when its client endpoint is in use)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2VirtualDeviceClientReconnect::IsEnabled(), L"MIDI2VirtualDeviceClientReconnect (allow a client to reconnect to a virtual device endpoint)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMCleanupAfterDeviceRemoval::IsEnabled(), L"MIDI2WinMMCleanupAfterDeviceRemoval (clean up winmm port state after a device is removed)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMCompleteLongBufferOnFailure::IsEnabled(), L"MIDI2WinMMCompleteLongBufferOnFailure (return a winmm long buffer to the app when a send fails)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMInterfaceRemovalPerf::IsEnabled(), L"MIDI2WinMMInterfaceRemovalPerf (speed up winmm handling of device interface removal)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMPortHandleSlotWidth::IsEnabled(), L"MIDI2WinMMPortHandleSlotWidth (fix winmm port handle corruption in 32 bit clients)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMShortMessageNoSendWait::IsEnabled(), L"MIDI2WinMMShortMessageNoSendWait (stop winmm waiting for send completion on short messages)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2XProcBatchedReads::IsEnabled(),        L"MIDI2XProcBatchedReads (batch cross-process reads to reduce per-message overhead)");
 
     
 #endif    

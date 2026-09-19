@@ -26,9 +26,16 @@
 #define MIDI_NOTIFICATIONS_AUMID \
     L"Microsoft.WindowsMidiServices.Notifications"
 
-// Where the Run entry lives. The installer writes it machine wide so a new user gets
-// notifications without setting anything up; MIDI Settings adds and removes it.
+// Where the Run entry lives. MIDI Settings adds and removes it, per user or machine wide.
+//
+// The installer deliberately does NOT create it: nothing should sit in the notification area of
+// a PC whose owner has not asked for it. It only preserves an entry that is already there, so an
+// upgrade never turns this on or off behind the customer.
 #define MIDI_NOTIFICATIONS_RUN_REG_KEY \
     L"Software\\Microsoft\\Windows\\CurrentVersion\\Run"
 
 #define MIDI_NOTIFICATIONS_RUN_VALUE_NAME               L"WindowsMidiServicesNotifications"
+
+// The single instance key the notifications app takes, so another tool can ask whether it is
+// running without having a window to look for.
+#define MIDI_NOTIFICATIONS_INSTANCE_KEY                 L"Notifications"

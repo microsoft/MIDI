@@ -245,17 +245,35 @@
   <data name="NotificationsStartupToggle.OffContent" xml:space="preserve">
     <value>Off</value>
   </data>
+  <data name="NotificationsAllUsersToggle.Header" xml:space="preserve">
+    <value>Start it for everyone who uses this PC</value>
+  </data>
+  <data name="NotificationsAllUsersToggle.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="NotificationsAllUsersToggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="NotificationsAllUsersHelp.Text" xml:space="preserve">
+    <value>Everyone who signs in to this PC still chooses what to be told about, and turning off Show MIDI notifications above stops it for you alone.</value>
+  </data>
   <data name="NotificationsMachineStartupBar.Title" xml:space="preserve">
-    <value>This PC is set up to start it for everyone</value>
+    <value>Administrator rights are needed</value>
   </data>
   <data name="NotificationsMachineStartupBar.Message" xml:space="preserve">
-    <value>An administrator chose to start the notifications app for every person who uses this PC, and that cannot be changed from here. Turning off Show MIDI notifications above still stops it for you.</value>
+    <value>Starting the notifications app for everyone who uses this PC is shared, so only an administrator can change it. Everything else here is yours alone.</value>
+  </data>
+  <data name="NotificationsElevationButton.Content" xml:space="preserve">
+    <value>Restart as administrator</value>
   </data>
   <data name="NotificationsAppMissing" xml:space="preserve">
     <value>The notifications app is not installed on this PC.</value>
   </data>
   <data name="NotificationsStartupChangeFailed" xml:space="preserve">
     <value>That setting could not be changed. The notifications app may not be installed.</value>
+  </data>
+  <data name="NotificationsAllUsersChangeFailed" xml:space="preserve">
+    <value>That setting could not be changed for everyone. Administrator rights are needed, and the notifications app has to be installed.</value>
   </data>
   <data name="GlobalSettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Global MIDI Settings</value>
@@ -766,6 +784,81 @@
   </data>
   <data name="GlobalServiceHeader.Text" xml:space="preserve">
     <value>MIDI service</value>
+  </data>
+  <data name="GlobalSynthHeader.Text" xml:space="preserve">
+    <value>General MIDI synthesizer</value>
+  </data>
+  <data name="GlobalSynthHelp.Text" xml:space="preserve">
+    <value>The built-in synthesizer plays MIDI through your default Windows audio device. Turning it off removes its MIDI ports and releases the audio device, which is what you want when another application needs it in WASAPI exclusive mode, or through ASIO.</value>
+  </data>
+  <data name="SynthEnabledToggle.Header" xml:space="preserve">
+    <value>Built-in General MIDI synthesizer</value>
+  </data>
+  <data name="SynthEnabledToggle.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="SynthEnabledToggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="SynthStateOn" xml:space="preserve">
+    <value>The synthesizer is available to applications. It opens the audio device only while something is connected to it.</value>
+  </data>
+  <data name="SynthStateOff" xml:space="preserve">
+    <value>The synthesizer's MIDI ports have been removed and no audio device is held.</value>
+  </data>
+  <data name="SynthNotAvailable" xml:space="preserve">
+    <value>The built-in synthesizer is not installed on this PC.</value>
+  </data>
+  <data name="SynthChangeFailed" xml:space="preserve">
+    <value>The synthesizer setting could not be changed.</value>
+  </data>
+  <data name="SynthNotSaved" xml:space="preserve">
+    <value>The change was applied, but could not be saved, so it will not survive a service restart.</value>
+  </data>
+  <data name="SynthRenderModeCombo.Header" xml:space="preserve">
+    <value>Synthesizer mode</value>
+  </data>
+  <data name="SynthRenderModeCompatible.Content" xml:space="preserve">
+    <value>Compatible with the older Windows synthesizer</value>
+  </data>
+  <data name="SynthRenderModeModern.Content" xml:space="preserve">
+    <value>Modern</value>
+  </data>
+  <data name="SynthAudioModeCombo.Header" xml:space="preserve">
+    <value>Audio output</value>
+  </data>
+  <data name="SynthAudioModeShared.Content" xml:space="preserve">
+    <value>Shared</value>
+  </data>
+  <data name="SynthAudioModeSharedLowLatency.Content" xml:space="preserve">
+    <value>Shared, low latency</value>
+  </data>
+  <data name="SynthBankSelectCombo.Header" xml:space="preserve">
+    <value>Bank select</value>
+  </data>
+  <data name="SynthBankSelectAutomatic.Content" xml:space="preserve">
+    <value>Follow the sender (recommended)</value>
+  </data>
+  <data name="SynthBankSelectGS.Content" xml:space="preserve">
+    <value>Roland GS</value>
+  </data>
+  <data name="SynthBankSelectXG.Content" xml:space="preserve">
+    <value>Yamaha XG</value>
+  </data>
+  <data name="SynthBankSelectGM2.Content" xml:space="preserve">
+    <value>General MIDI 2</value>
+  </data>
+  <data name="SynthVolumeSlider.Header" xml:space="preserve">
+    <value>Volume trim</value>
+  </data>
+  <data name="SynthVolumeFormat" xml:space="preserve">
+    <value>{0:.1f} dB. Zero is the calibrated level, which matches the older Windows synthesizer.</value>
+  </data>
+  <data name="SynthEffectsCheck.Content" xml:space="preserve">
+    <value>Reverb and chorus</value>
+  </data>
+  <data name="SynthSoundSetFormat" xml:space="preserve">
+    <value>Sound set: {0} ({1} instruments, {2} drum kits)</value>
   </data>
   <data name="GlobalServiceHelp.Text" xml:space="preserve">
     <value>Changing the configuration file or the port naming takes effect when the service restarts.</value>

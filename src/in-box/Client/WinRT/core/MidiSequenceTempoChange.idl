@@ -1,0 +1,29 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Sequencing
+{
+    // A file stores tempo as microseconds per quarter note and never as a beats per minute value,
+    // so BeatsPerMinute here is derived. It is also always quarter notes per minute regardless of
+    // the meter in force, which is what the file format defines and what a sequencer transport
+    // shows. In a compound meter such as 6/8 the conducted pulse is a dotted quarter, so this
+    // number is exact but is not the felt tempo.
+    [contract(MidiSequencingUtilityApiContract,1)]
+    struct MidiSequenceTempoChange
+    {
+        UInt32 Tick;
+        UInt32 MicrosecondsPerQuarterNote;
+        Double BeatsPerMinute;
+        UInt64 MicrosecondsAtTick;
+    };
+}

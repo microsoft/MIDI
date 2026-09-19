@@ -1237,6 +1237,85 @@
                     </StackPanel>
 
                     <StackPanel Spacing="8">
+                        <TextBlock x:Uid="GlobalSynthHeader"
+                                   Text="General MIDI synthesizer"
+                                   Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <TextBlock x:Uid="GlobalSynthHelp"
+                                   Text="The built-in synthesizer plays MIDI through your default Windows audio device. Turning it off removes its MIDI ports and releases the audio device, which is what you want when another application needs it in WASAPI exclusive mode, or through ASIO."
+                                   TextWrapping="Wrap"
+                                   Style="{StaticResource PropertyLabelStyle}" />
+
+                        <Border Style="{StaticResource SettingsCardStyle}">
+                            <StackPanel Spacing="8">
+                                <ToggleSwitch x:Name="SynthEnabledToggle"
+                                              x:Uid="SynthEnabledToggle"
+                                              Header="Built-in General MIDI synthesizer"
+                                              OnContent="On"
+                                              OffContent="Off"
+                                              Toggled="OnSynthEnabledToggled" />
+                                <TextBlock x:Name="SynthStatusText"
+                                           TextWrapping="Wrap"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                <StackPanel x:Name="SynthOptionsPanel" Spacing="8">
+                                    <ComboBox x:Name="SynthRenderModeCombo"
+                                              x:Uid="SynthRenderModeCombo"
+                                              Header="Synthesizer mode"
+                                              HorizontalAlignment="Stretch"
+                                              SelectionChanged="OnSynthOptionChanged">
+                                        <ComboBoxItem x:Uid="SynthRenderModeCompatible" Content="Compatible with the older Windows synthesizer" />
+                                        <ComboBoxItem x:Uid="SynthRenderModeModern" Content="Modern" />
+                                    </ComboBox>
+
+                                    <ComboBox x:Name="SynthAudioModeCombo"
+                                              x:Uid="SynthAudioModeCombo"
+                                              Header="Audio output"
+                                              HorizontalAlignment="Stretch"
+                                              SelectionChanged="OnSynthOptionChanged">
+                                        <ComboBoxItem x:Uid="SynthAudioModeShared" Content="Shared" />
+                                        <ComboBoxItem x:Uid="SynthAudioModeSharedLowLatency" Content="Shared, low latency" />
+                                    </ComboBox>
+
+                                    <ComboBox x:Name="SynthBankSelectCombo"
+                                              x:Uid="SynthBankSelectCombo"
+                                              Header="Bank select"
+                                              HorizontalAlignment="Stretch"
+                                              SelectionChanged="OnSynthOptionChanged">
+                                        <ComboBoxItem x:Uid="SynthBankSelectAutomatic" Content="Follow the sender (recommended)" />
+                                        <ComboBoxItem x:Uid="SynthBankSelectGS" Content="Roland GS" />
+                                        <ComboBoxItem x:Uid="SynthBankSelectXG" Content="Yamaha XG" />
+                                        <ComboBoxItem x:Uid="SynthBankSelectGM2" Content="General MIDI 2" />
+                                    </ComboBox>
+
+                                    <Slider x:Name="SynthVolumeSlider"
+                                            x:Uid="SynthVolumeSlider"
+                                            Header="Volume trim"
+                                            Minimum="-60"
+                                            Maximum="12"
+                                            StepFrequency="1"
+                                            TickFrequency="12"
+                                            HorizontalAlignment="Stretch"
+                                            ValueChanged="OnSynthVolumeChanged" />
+                                    <TextBlock x:Name="SynthVolumeText"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                                    <CheckBox x:Name="SynthEffectsCheck"
+                                              x:Uid="SynthEffectsCheck"
+                                              Content="Reverb and chorus"
+                                              Click="OnSynthOptionChanged" />
+
+                                    <TextBlock x:Name="SynthSoundSetText"
+                                               TextWrapping="Wrap"
+                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </StackPanel>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
+                    <StackPanel Spacing="8">
                         <TextBlock x:Uid="GlobalServiceHeader"
                                    Text="MIDI service"
                                    Style="{ThemeResource BodyStrongTextBlockStyle}" />
@@ -1275,6 +1354,20 @@
                                Text="Windows MIDI Services can tell you when something needs your attention, such as a device on the network asking to connect to this PC. These choices are yours alone and do not affect anyone else who uses this PC."
                                TextWrapping="Wrap"
                                Style="{StaticResource PropertyLabelStyle}" />
+
+                    <InfoBar x:Name="NotificationsMachineStartupBar"
+                             x:Uid="NotificationsMachineStartupBar"
+                             IsOpen="False"
+                             IsClosable="False"
+                             Severity="Informational"
+                             Title="Administrator rights are needed"
+                             Message="Starting the notifications app for everyone who uses this PC is shared, so only an administrator can change it. Everything else here is yours alone.">
+                        <InfoBar.ActionButton>
+                            <Button x:Uid="NotificationsElevationButton"
+                                    Content="Restart as administrator"
+                                    Click="OnNotificationsRestartElevatedClick" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
 
                     <StackPanel Spacing="8">
                         <TextBlock x:Uid="NotificationsShowHeader"
@@ -1327,13 +1420,17 @@
                                               OffContent="Off"
                                               Toggled="OnNotificationsStartupToggled" />
 
-                                <InfoBar x:Name="NotificationsMachineStartupBar"
-                                         x:Uid="NotificationsMachineStartupBar"
-                                         IsOpen="False"
-                                         IsClosable="False"
-                                         Severity="Informational"
-                                         Title="This PC is set up to start it for everyone"
-                                         Message="An administrator chose to start the notifications app for every person who uses this PC, and that cannot be changed from here. Turning off Show MIDI notifications above still stops it for you." />
+                                <ToggleSwitch x:Name="NotificationsAllUsersToggle"
+                                              x:Uid="NotificationsAllUsersToggle"
+                                              Header="Start it for everyone who uses this PC"
+                                              OnContent="On"
+                                              OffContent="Off"
+                                              Toggled="OnNotificationsAllUsersToggled" />
+
+                                <TextBlock x:Uid="NotificationsAllUsersHelp"
+                                           Text="Everyone who signs in to this PC still chooses what to be told about, and turning off Show MIDI notifications above stops it for you alone."
+                                           TextWrapping="Wrap"
+                                           Style="{StaticResource PropertyLabelStyle}" />
 
                             </StackPanel>
                         </Border>

@@ -1,0 +1,60 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiSynthStatus.idl";
+import "MidiSynthSoundSetInfo.idl";
+import "MidiSynthInstrumentInfo.idl";
+
+namespace Windows.Devices.Midi2.Transports.Synth
+{
+    [contract(MidiTransportsSynthApiContract, 1)]
+
+    [static_name("Windows.Devices.Midi2.Transports.Synth.IMidiSynthManagerStatics", UUID_IMidiSynthManagerStatics)]
+    static runtimeclass MidiSynthManager
+    {
+        [noexcept] static Boolean IsTransportAvailable{ get; };
+
+        [noexcept] static Guid TransportId{ get; };
+
+        // Null when the transport is not installed or did not answer.
+        [noexcept] static MidiSynthStatus GetStatus();
+
+        [noexcept] static MidiSynthSoundSetInfo GetSoundSetInfo();
+
+        // The melodic instruments in the active sound set, with the bank and program which select
+        // each one. Kept out of MidiSynthSoundSetInfo because it is hundreds of entries and most
+        // callers only want the counts.
+        //
+        // A connected application should prefer the MIDI-CI Property Exchange ProgramList. This is
+        // for the case Property Exchange cannot serve, which is browsing instruments before a
+        // connection is open. The list is fixed for a given sound set: configuration changes how an
+        // incoming bank select is read, not what the sound set contains.
+        [noexcept] static Windows.Foundation.Collections.IVectorView<MidiSynthInstrumentInfo> GetMelodicInstruments();
+
+        // The synthesizer has exactly one endpoint, so it can be named without enumerating. Empty
+        // when the transport is not installed, and when the synthesizer is switched off, because
+        // then the endpoint does not exist. Equivalent to GetStatus().EndpointDeviceId, and worth
+        // one call rather than two when connecting is all you want.
+        [noexcept] static String EndpointDeviceId{ get; };
+
+        // Any channel can be a rhythm part. A file can ask for this itself with the usual system
+        // exclusive message; this is the same thing for an application which is not playing a file.
+        // The synthesizer occupies a single group, so only the channel is needed.
+        //
+        // Returns false when the channel is out of range, and when the synthesizer is not currently
+        // rendering: the setting lives in the engine, and the engine only exists while something is
+        // connected to the endpoint. Open your connection first, then set the channel.
+        //
+        // Deliberately not persisted: the content owns it, and a System Reset in a file puts
+        // channel 10 back as the only drum channel. Use MidiSynthConfig for settings which stay.
+        [noexcept] static Boolean SetDrumChannel(UInt8 channelIndex, Boolean isDrumChannel);
+    }
+}

@@ -3,6 +3,8 @@ layout: tools_page
 title: PowerShell cmdlets for MIDI
 tool: powershell
 description: About the PowerShell cmdlets which enable scripting Windows MIDI Services
+categories:
+  - Developer and Technical User Tools
 ---
 
 PowerShell support for MIDI is currently experimental and in-development. Expect minor changes in the cmdlets in the future.

@@ -3,6 +3,8 @@ layout: kb
 title: Minimum System Requirements
 audience: everyone
 description: Minimum system requirements for Windows MIDI Services
+categories:
+  - Getting Started
 ---
 
 Windows MIDI Services will run on the latest supported 64 bit desktop versions (Arm and Intel/AMD) of Windows 11.

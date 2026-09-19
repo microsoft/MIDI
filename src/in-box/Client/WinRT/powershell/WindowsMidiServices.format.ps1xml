@@ -496,5 +496,85 @@
       </TableControl>
     </View>
 
+    <View>
+      <Name>MidiSynthStatus</Name>
+      <ViewSelectedBy>
+        <TypeName>Windows.Devices.Midi2.Transports.Synth.MidiSynthStatus</TypeName>
+      </ViewSelectedBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <Label>Enabled</Label>
+                <PropertyName>IsEnabled</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>RenderMode</Label>
+                <PropertyName>RenderMode</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>AudioOutputMode</Label>
+                <PropertyName>AudioOutputMode</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>BankSelectMode</Label>
+                <PropertyName>BankSelectMode</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>VolumeDecibels</Label>
+                <PropertyName>VolumeDecibels</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>EffectsEnabled</Label>
+                <PropertyName>AreEffectsEnabled</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>EndpointDeviceId</Label>
+                <PropertyName>EndpointDeviceId</PropertyName>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+
+    <View>
+      <Name>MidiFilePlayback</Name>
+      <ViewSelectedBy>
+        <TypeName>WindowsMidiServices.MidiFilePlayback</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>State</Label>
+            <Width>9</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>File</Label>
+            <Width>32</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>EndpointDeviceId</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>State</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>[System.IO.Path]::GetFileName($_.FilePath)</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>EndpointDeviceId</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
   </ViewDefinitions>
 </Configuration>

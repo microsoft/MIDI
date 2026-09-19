@@ -1,12 +1,13 @@
 ---
 layout: sdk_reference_page
-title: Midi API Contracts
+title: MidiApiContracts
 namespace: Windows.Devices.Midi2
 type: apicontract
-description: API contracts used by the Windows MIDI Services App SDK namespaces
+idl: MidiApiContracts.idl
+description: API contracts used by the Windows MIDI Services WinRT API namespaces
 ---
 
-Windows MIDI Services App SDK namespaces are versioned using WinRT API contracts.
+Windows MIDI Services WinRT API namespaces are versioned using WinRT API contracts.
 
 ## Contracts
 
@@ -24,8 +25,12 @@ Windows MIDI Services App SDK namespaces are versioned using WinRT API contracts
 | `MidiTransportsBasicLoopbackApiContract` | `Windows.Devices.Midi2.Transports.BasicLoopback` |
 | `MidiTransportsVirtualApiContract` | `Windows.Devices.Midi2.Transports.Virtual` |
 | `MidiTransportsNetworkApiContract` | `Windows.Devices.Midi2.Transports.Network` |
+| `MidiTransportsBluetoothApiContract` | `Windows.Devices.Midi2.Transports.Bluetooth` |
+| `MidiTransportsSynthApiContract` | `Windows.Devices.Midi2.Transports.Synth` |
 | `MidiMessageUtilityApiContract` | `Windows.Devices.Midi2.Utilities.Messages` |
 | `MidiSysExTransferUtilityApiContract` | `Windows.Devices.Midi2.Utilities.SysExTransfer` |
+| `MidiSequencingUtilityApiContract` | `Windows.Devices.Midi2.Utilities.Sequencing` |
+| `MidiFilesUtilityApiContract` | `Windows.Devices.Midi2.Utilities.Files` |
 
 ## Remarks
 

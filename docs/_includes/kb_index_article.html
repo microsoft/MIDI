@@ -1,0 +1,26 @@
+<div class="row">
+    <div class="col-md-12">
+        <article class="kb-service bg-color1">
+            <header>
+                {% if include.kb.audience != empty and include.kb.audience != nil %}
+                    {% if include.kb.audience == "developers" %}
+                    <div class="kb-article-audience-pill kb-article-audience-pill-developer">
+                        <span>Developer / Technical Article</span>
+                    </div>
+                    {% elsif include.kb.audience == "everyone" %}
+                    <div class="kb-article-audience-pill kb-article-audience-pill-everyone">
+                        <span>Everyone</span>
+                    </div>
+                    {% endif %}
+                {% endif %}
+
+                <a href="{{include.kb.url | relative_url}}"><h4 class="heading-4">{{include.kb.title}}</h4></a>
+
+            </header>
+            <footer class="kb-list-content">
+                <p>{{include.kb.description}} </p>
+
+            </footer>
+        </article>
+    </div>
+</div>

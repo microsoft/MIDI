@@ -1,0 +1,56 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "IMidiServiceTransportPluginConfig.idl";
+import "MidiSynthStatus.idl";
+import "MidiSynthRenderModeEnum.idl";
+import "MidiSynthAudioOutputModeEnum.idl";
+import "MidiSynthBankSelectModeEnum.idl";
+
+namespace Windows.Devices.Midi2.Transports.Synth
+{
+    [contract(MidiTransportsSynthApiContract, 1)]
+
+    // The synthesizer's settings, as a complete set. Every property here is written when this is
+    // sent, so build it from the current status and change only what you mean to change:
+    //
+    //     var config = new MidiSynthConfig(MidiSynthManager.GetStatus());
+    //     config.VolumeDecibels = -6.0;
+    //     MidiServiceTransportPluginConfigManager.SendUpdate(config);
+    //
+    // Pass it to MidiServiceTransportPluginConfigManager.SendUpdate to apply it to the running
+    // service, and to SaveUpdate to keep it across a service restart. Sending without saving offers
+    // a change the customer can undo by restarting; saving without sending stages one for later.
+    [interface_name("Windows.Devices.Midi2.Transports.Synth.IMidiSynthConfig", UUID_IMidiSynthConfig)]
+    [constructor_name("Windows.Devices.Midi2.Transports.Synth.IMidiSynthConfigFactory", UUID_IMidiSynthConfigFactory)]
+    runtimeclass MidiSynthConfig : Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfig
+    {
+        MidiSynthConfig();
+
+        // Starts from what the synthesizer is set to now, which is what makes changing a single
+        // property safe.
+        MidiSynthConfig(MidiSynthStatus currentStatus);
+
+        // Turning the synthesizer off removes its MIDI endpoint and releases the audio device.
+        // Turning it back on recreates the endpoint with the same device id, so an application
+        // which remembered it finds it again.
+        [noexcept] Boolean IsEnabled;
+
+        [noexcept] MidiSynthRenderMode RenderMode;
+        [noexcept] MidiSynthAudioOutputMode AudioOutputMode;
+        [noexcept] MidiSynthBankSelectMode BankSelectMode;
+
+        // Clamped by the service to the range the synthesizer supports.
+        [noexcept] Double VolumeDecibels;
+
+        [noexcept] Boolean AreEffectsEnabled;
+    }
+}

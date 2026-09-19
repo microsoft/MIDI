@@ -70,7 +70,7 @@ Windows MIDI Services also comes with a number of tools, like MIDI Settings and 
 
 ## SDK Reference for Software Developers
 
-As mentioned at the top, we ship Windows MIDI Services in two parts. The part that ships in-box supports MIDI 1.0 in-box APIs. The service, transports, and plumbing are all there for MIDI 2.0, however apps will need to use the Windows MIDI Services App SDK to interface with it. The existing WinMM and WinRT MIDI 1.0 APIs cannot support the newer constructs, message scheduling, creating virtual device apps, etc. All of those features are in the new SDK.
+As mentioned at the top, we ship Windows MIDI Services in two parts. The part that ships in-box supports MIDI 1.0 in-box APIs. The service, transports, and plumbing are all there for MIDI 2.0, however apps will need to use the Windows MIDI Services WinRT API to interface with it. The existing WinMM and WinRT MIDI 1.0 APIs cannot support the newer constructs, message scheduling, creating virtual device apps, etc. All of those features are in the new API.
 
 - Get an [overview of the SDK here]({{ "/sdk-reference/" | relative_url }}).
 - The namespaces and types are [documented here]({{ "/sdk-reference/" | relative_url }}).

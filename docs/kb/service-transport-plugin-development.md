@@ -3,6 +3,9 @@ layout: kb
 title: Developing MIDI Service Transport Plugins (COM)
 audience: developers
 description: Guidance for creating third-party COM Transport plugins for Windows MIDI Services.
+categories:
+  - Developer Guidance
+  - Transport Details
 ---
 
 Windows MIDI Services Transport plugins are COM components loaded by the MIDI service (`midisrv`). They can often replace custom kernel drivers or legacy WinMM `.drv` style integration for many scenarios, while still allowing a transport to discover, create, and manage endpoints.
@@ -158,34 +161,17 @@ References:
 
 ### Naming the MIDI 1.0 ports you create
 
-A MIDI 1.0 port name is limited to 31 characters plus a terminator, and Windows keeps more than one
-candidate name per port so that a customer can choose between compatibility with older Windows
-naming and names built from what the device reports. How those names are composed is described in
-[How Windows MIDI Services generates MIDI 1.0 port names]({{ site.baseurl }}/kb/how-midi1-port-names-are-generated/).
+A MIDI 1.0 port name is limited to 31 characters plus a terminator, and Windows keeps more than one candidate name per port so that a customer can choose between compatibility with older Windows naming and names built from what the device reports. How those names are composed is described in [How Windows MIDI Services generates MIDI 1.0 port names]({{ site.baseurl }}/kb/how-midi1-port-names-are-generated/).
 
 Your transport is responsible for three things.
 
-**Write the port name table.** Writing group terminal blocks alone is not enough; port names come
-from `PKEY_MIDI_Midi1PortNameTable`. Populate it with `MidiEndpointNameTable` and write it into the
-same property set you pass to `ActivateEndpoint`. Note that the property holds a raw pointer, so the
-backing data must outlive the call.
+**Write the port name table.** Writing group terminal blocks alone is not enough; port names come from `PKEY_MIDI_Midi1PortNameTable`. Populate it with `MidiEndpointNameTable` and write it into the same property set you pass to `ActivateEndpoint`. Note that the property holds a raw pointer, so the backing data must outlive the call.
 
-**Declare whether your endpoints have a legacy equivalent.** This is the single fact that tells
-Windows whether it is allowed to improve the port names on its own. Set it to false when the ports
-your transport creates did not exist in Windows before Windows MIDI Services, so there is no older
-name to stay compatible with — that is the case for network, wireless and software-created
-endpoints. Set it to true only when a customer could have been using these same ports, under their
-old names, on an earlier version of Windows.
+**Declare whether your endpoints have a legacy equivalent.** This is the single fact that tells Windows whether it is allowed to improve the port names on its own. Set it to false when the ports your transport creates did not exist in Windows before Windows MIDI Services, so there is no older name to stay compatible with — that is the case for network, wireless and software-created endpoints. Set it to true only when a customer could have been using these same ports, under their old names, on an earlier version of Windows.
 
-When it is absent, Windows assumes true and leaves the names alone, so an existing transport keeps
-behaving exactly as it does today until you set it.
+When it is absent, Windows assumes true and leaves the names alone, so an existing transport keeps behaving exactly as it does today until you set it.
 
-**Regenerate, never read back.** If you synthesize group terminal blocks or port names rather than
-reading them from hardware, build them fresh on every enumeration from the values the device or
-remote endpoint reports. Do not read back the properties your transport wrote last time. Windows
-writes customer-supplied custom names into those same properties to keep them consistent with the
-port names, and a transport that treats its own previous output as input will make a custom name
-permanent and unclearable.
+**Regenerate, never read back.** If you synthesize group terminal blocks or port names rather than reading them from hardware, build them fresh on every enumeration from the values the device or remote endpoint reports. Do not read back the properties your transport wrote last time. Windows writes customer-supplied custom names into those same properties to keep them consistent with the port names, and a transport that treats its own previous output as input will make a custom name permanent and unclearable.
 
 ## Midisrv is the only client
 

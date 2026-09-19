@@ -273,6 +273,186 @@ namespace
     // Renders a tone of known amplitude while capturing loopback, so the gain of the capture path
     // can be measured instead of assumed. Without this there is no way to tell whether a level
     // difference between two captures is real or is just the endpoint volume control.
+    // Renders a tone and writes what happened to a file. Built to be run as a service account in
+    // session 0, where there is no console anyone can see, to find out whether audio rendered
+    // there reaches the endpoint the logged on user hears.
+    int RunTone(_In_ IMMDevice* device, _In_ double amplitude, _In_ double seconds,
+        _In_ const std::wstring& logPath)
+    {
+        std::wostringstream log;
+
+        auto finish = [&](int code)
+        {
+            log << L"exit " << code << L"\n";
+
+            if (!logPath.empty())
+            {
+                std::wofstream file(logPath);
+
+                if (file)
+                {
+                    file << log.str();
+                }
+            }
+
+            wprintf(L"%s", log.str().c_str());
+            return code;
+        };
+
+        DWORD sessionId = 0;
+        ProcessIdToSessionId(GetCurrentProcessId(), &sessionId);
+        log << L"session " << sessionId << L"\n";
+
+        {
+            wchar_t userName[256]{};
+            DWORD userNameLength = ARRAYSIZE(userName);
+            GetUserNameW(userName, &userNameLength);
+            log << L"account " << userName << L"\n";
+        }
+
+        {
+            ComPtr<IPropertyStore> properties;
+
+            if (SUCCEEDED(device->OpenPropertyStore(STGM_READ, &properties)))
+            {
+                PROPVARIANT name{};
+                PropVariantInit(&name);
+
+                if (SUCCEEDED(properties->GetValue(PKEY_Device_FriendlyName, &name)) &&
+                    name.vt == VT_LPWSTR)
+                {
+                    log << L"device " << name.pwszVal << L"\n";
+                }
+
+                PropVariantClear(&name);
+            }
+
+            LPWSTR deviceId = nullptr;
+
+            if (SUCCEEDED(device->GetId(&deviceId)) && deviceId != nullptr)
+            {
+                log << L"device id " << deviceId << L"\n";
+                CoTaskMemFree(deviceId);
+            }
+        }
+
+        ComPtr<IAudioClient> renderClient;
+        ComPtr<IAudioRenderClient> renderService;
+
+        HRESULT hr = device->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr,
+            reinterpret_cast<void**>(&renderClient));
+
+        WAVEFORMATEX* mixFormat = nullptr;
+
+        if (SUCCEEDED(hr)) { hr = renderClient->GetMixFormat(&mixFormat); }
+
+        if (FAILED(hr) || mixFormat == nullptr)
+        {
+            log << L"GetMixFormat failed 0x" << std::hex << hr << std::dec << L"\n";
+            return finish(1);
+        }
+
+        const uint32_t rate = mixFormat->nSamplesPerSec;
+        const uint16_t channels = mixFormat->nChannels;
+
+        const bool isFloat = (mixFormat->wFormatTag == WAVE_FORMAT_IEEE_FLOAT) ||
+            (mixFormat->wFormatTag == WAVE_FORMAT_EXTENSIBLE &&
+             reinterpret_cast<WAVEFORMATEXTENSIBLE*>(mixFormat)->SubFormat == KSDATAFORMAT_SUBTYPE_IEEE_FLOAT);
+
+        log << L"mix format " << rate << L" Hz, " << channels << L" channels, "
+            << mixFormat->wBitsPerSample << L" bit " << (isFloat ? L"float" : L"int") << L"\n";
+
+        if (!isFloat)
+        {
+            log << L"expects a float mix format\n";
+            CoTaskMemFree(mixFormat);
+            return finish(1);
+        }
+
+        hr = renderClient->Initialize(AUDCLNT_SHAREMODE_SHARED, 0, 10000000, 0, mixFormat, nullptr);
+        log << L"Initialize 0x" << std::hex << hr << std::dec << L"\n";
+
+        if (SUCCEEDED(hr)) { hr = renderClient->GetService(IID_PPV_ARGS(&renderService)); }
+
+        if (FAILED(hr))
+        {
+            log << L"could not open the render stream\n";
+            CoTaskMemFree(mixFormat);
+            return finish(1);
+        }
+
+        UINT32 bufferFrames = 0;
+        renderClient->GetBufferSize(&bufferFrames);
+
+        const auto totalFrames = static_cast<uint32_t>(seconds * rate);
+        constexpr double Pi = 3.14159265358979323846;
+        constexpr double ToneHertz = 440.0;
+
+        uint32_t written = 0;
+
+        hr = renderClient->Start();
+        log << L"Start 0x" << std::hex << hr << std::dec << L"\n";
+
+        if (FAILED(hr))
+        {
+            CoTaskMemFree(mixFormat);
+            return finish(1);
+        }
+
+        while (written < totalFrames)
+        {
+            UINT32 padding = 0;
+
+            if (FAILED(renderClient->GetCurrentPadding(&padding)))
+            {
+                break;
+            }
+
+            const UINT32 available = bufferFrames - padding;
+
+            if (available == 0)
+            {
+                Sleep(5);
+                continue;
+            }
+
+            const UINT32 count = (std::min)(available, totalFrames - written);
+
+            BYTE* buffer = nullptr;
+
+            if (FAILED(renderService->GetBuffer(count, &buffer)) || buffer == nullptr)
+            {
+                break;
+            }
+
+            auto samples = reinterpret_cast<float*>(buffer);
+
+            for (UINT32 frame = 0; frame < count; frame++)
+            {
+                const auto value = static_cast<float>(
+                    amplitude * std::sin(2.0 * Pi * ToneHertz * (written + frame) / rate));
+
+                for (uint16_t channel = 0; channel < channels; channel++)
+                {
+                    samples[frame * channels + channel] = value;
+                }
+            }
+
+            renderService->ReleaseBuffer(count, 0);
+            written += count;
+        }
+
+        Sleep(200);
+        renderClient->Stop();
+
+        log << L"rendered " << written << L" of " << totalFrames << L" frames at amplitude "
+            << amplitude << L"\n";
+
+        CoTaskMemFree(mixFormat);
+
+        return finish(written == totalFrames ? 0 : 1);
+    }
+
     int RunCalibration(_In_ IMMDevice* device, _In_ double amplitude, _In_ double seconds)
     {
         ComPtr<IAudioClient> renderClient;
@@ -505,6 +685,8 @@ int wmain(int argc, wchar_t** argv)
     double tailSeconds = 2.0;
     bool calibrate = false;
     double calibrationAmplitude = 0.1;
+    double toneSeconds = 0.0;
+    std::wstring logPath;
 
     for (int i = 1; i < argc; i++)
     {
@@ -516,6 +698,8 @@ int wmain(int argc, wchar_t** argv)
         else if (argument == L"--silence" && i + 1 < argc) { silenceSeconds = _wtof(argv[++i]); }
         else if (argument == L"--tail" && i + 1 < argc) { tailSeconds = _wtof(argv[++i]); }
         else if (argument == L"--calibrate") { calibrate = true; }
+        else if (argument == L"--tone" && i + 1 < argc) { toneSeconds = _wtof(argv[++i]); }
+        else if (argument == L"--log" && i + 1 < argc) { logPath = argv[++i]; }
         else if (argument == L"--amplitude" && i + 1 < argc) { calibrationAmplitude = _wtof(argv[++i]); }
         else
         {
@@ -523,13 +707,14 @@ int wmain(int argc, wchar_t** argv)
             printf("                          [--device <name substring>] [--tail <seconds>]\n");
             printf("       synthspike-capture --silence <seconds> [--out <file.wav>]\n");
             printf("       synthspike-capture --calibrate [--amplitude <0..1>]\n");
+            printf("       synthspike-capture --tone <seconds> [--amplitude <0..1>] [--log <file>]\n");
             return 2;
         }
     }
 
     std::vector<TimedEvent> events;
 
-    if (!calibrate && silenceSeconds <= 0.0)
+    if (!calibrate && toneSeconds <= 0.0 && silenceSeconds <= 0.0)
     {
         if (scorePath.empty() || !TryParseScore(scorePath, events))
         {
@@ -583,6 +768,13 @@ int wmain(int argc, wchar_t** argv)
     if (calibrate)
     {
         const int result = RunCalibration(device.Pointer, calibrationAmplitude, 2.0);
+        CoUninitialize();
+        return result;
+    }
+
+    if (toneSeconds > 0.0)
+    {
+        const int result = RunTone(device.Pointer, calibrationAmplitude, toneSeconds, logPath);
         CoUninitialize();
         return result;
     }

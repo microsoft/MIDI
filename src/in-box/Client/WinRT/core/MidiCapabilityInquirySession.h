@@ -1,0 +1,213 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#pragma once
+#include "CapabilityInquiry.MidiCapabilityInquirySession.g.h"
+
+#include <condition_variable>
+#include <map>
+#include <mutex>
+#include <vector>
+
+namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
+{
+    struct MidiCapabilityInquirySession : MidiCapabilityInquirySessionT<MidiCapabilityInquirySession>
+    {
+        MidiCapabilityInquirySession() = default;
+        ~MidiCapabilityInquirySession() { Close(); }
+
+        static ci::MidiCapabilityInquirySession Create(
+            _In_ midi2::MidiEndpointConnection const& connection) noexcept;
+
+        static ci::MidiCapabilityInquirySession Create(
+            _In_ midi2::MidiEndpointConnection const& connection,
+            _In_ midi2enum::MidiDeclaredDeviceIdentity const& identity) noexcept;
+
+        ci::MidiUniqueId SourceMuid() const noexcept { return m_sourceMuid; }
+
+        midi2::MidiGroup Group() const noexcept;
+        void Group(_In_ midi2::MidiGroup const& value) noexcept;
+
+        uint32_t ResponseTimeoutMilliseconds() const noexcept { return m_responseTimeoutMilliseconds; }
+        void ResponseTimeoutMilliseconds(_In_ uint32_t const value) noexcept;
+
+        midi2enum::MidiDeclaredDeviceIdentity Identity() const noexcept;
+        void Identity(_In_ midi2enum::MidiDeclaredDeviceIdentity const& value) noexcept;
+
+        bool IsOpen() const noexcept { return m_isOpen; }
+
+        foundation::Collections::IVectorView<ci::MidiCapabilityInquiryResponder> GetResponders();
+        ci::MidiCapabilityInquiryResponder GetResponder(_In_ ci::MidiUniqueId const& muid) noexcept;
+
+        foundation::IAsyncOperation<foundation::Collections::IVectorView<ci::MidiCapabilityInquiryResponder>>
+            DiscoverAsync();
+
+        bool SendInvalidateMuid() noexcept;
+
+        foundation::IAsyncOperation<ci::MidiCapabilityInquiryStatus>
+            RequestPropertyExchangeCapabilitiesAsync(_In_ ci::MidiUniqueId destinationMuid);
+
+        foundation::IAsyncOperation<ci::MidiPropertyExchangeResponse> GetPropertyDataAsync(
+            _In_ ci::MidiUniqueId destinationMuid,
+            _In_ json::JsonObject header);
+
+        foundation::IAsyncOperation<ci::MidiPropertyExchangeResponse> SetPropertyDataAsync(
+            _In_ ci::MidiUniqueId destinationMuid,
+            _In_ json::JsonObject header,
+            _In_ foundation::Collections::IIterable<uint8_t> body);
+
+        foundation::IAsyncOperation<ci::MidiResourceList> GetResourceListAsync(
+            _In_ ci::MidiUniqueId destinationMuid);
+
+        foundation::IAsyncOperation<ci::MidiDeviceInfo> GetDeviceInfoAsync(
+            _In_ ci::MidiUniqueId destinationMuid);
+
+        foundation::IAsyncOperation<ci::MidiChannelList> GetChannelListAsync(
+            _In_ ci::MidiUniqueId destinationMuid);
+
+        foundation::IAsyncOperation<ci::MidiProgramList> GetProgramListAsync(
+            _In_ ci::MidiUniqueId destinationMuid,
+            _In_ winrt::hstring resourceId);
+
+        foundation::IAsyncOperation<ci::MidiProgramList> GetProgramListPageAsync(
+            _In_ ci::MidiUniqueId destinationMuid,
+            _In_ winrt::hstring resourceId,
+            _In_ uint32_t offset,
+            _In_ uint32_t limit);
+
+        foundation::IAsyncOperation<ci::MidiProfileInquiryResponse> GetProfilesAsync(
+            _In_ ci::MidiUniqueId destinationMuid,
+            _In_ uint8_t deviceId);
+
+        bool SendSetProfileOn(
+            _In_ ci::MidiUniqueId const& destinationMuid,
+            _In_ uint8_t const deviceId,
+            _In_ ci::MidiProfileId const& profileId,
+            _In_ uint16_t const channelCount) noexcept;
+
+        bool SendSetProfileOff(
+            _In_ ci::MidiUniqueId const& destinationMuid,
+            _In_ uint8_t const deviceId,
+            _In_ ci::MidiProfileId const& profileId) noexcept;
+
+        winrt::event_token ProfileStateChanged(
+            _In_ foundation::TypedEventHandler<ci::MidiCapabilityInquirySession, ci::MidiCapabilityInquiryMessageReceivedEventArgs> const& handler);
+        void ProfileStateChanged(_In_ winrt::event_token const& token) noexcept;
+
+        winrt::event_token ResponderFound(
+            _In_ foundation::TypedEventHandler<ci::MidiCapabilityInquirySession, ci::MidiCapabilityInquiryResponder> const& handler);
+        void ResponderFound(_In_ winrt::event_token const& token) noexcept;
+
+        winrt::event_token MessageReceived(
+            _In_ foundation::TypedEventHandler<ci::MidiCapabilityInquirySession, ci::MidiCapabilityInquiryMessageReceivedEventArgs> const& handler);
+        void MessageReceived(_In_ winrt::event_token const& token) noexcept;
+
+        void Close() noexcept;
+
+        // Not projected. Called by the static Create methods once the object exists, because
+        // subscribing to the connection needs a reference to this session.
+        bool InternalInitialize(
+            _In_ midi2::MidiEndpointConnection const& connection,
+            _In_ midi2enum::MidiDeclaredDeviceIdentity const& identity) noexcept;
+
+    private:
+        // One outstanding request. The waiting coroutine owns it; the receive handler fills it in
+        // and signals it.
+        struct PendingRequest
+        {
+            ci::MidiCapabilityInquiryMessageType ExpectedReply{ ci::MidiCapabilityInquiryMessageType::PropertyGetDataInquiryReply };
+
+            uint32_t DestinationMuid{ 0 };
+            uint8_t RequestId{ 0 };
+            uint8_t DeviceId{ 0x7F };
+
+            bool IsComplete{ false };
+
+            // Property exchange replies arrive in chunks, and the header comes only on the first.
+            uint16_t ChunkCount{ 0 };
+            uint16_t ChunksReceived{ 0 };
+
+            ci::MidiCapabilityInquiryMessage FirstMessage{ nullptr };
+            std::vector<uint8_t> Body{};
+        };
+
+        void OnMessageReceived(
+            _In_ foundation::IInspectable const& sender,
+            _In_ midi2::MidiMessageReceivedEventArgs const& args) noexcept;
+
+        void HandleCompleteTransfer(
+            _In_ std::vector<uint8_t> const& payload,
+            _In_ midi2::MidiGroup const& group,
+            _In_ internal::MidiTimestamp const timestamp) noexcept;
+
+        // Returns true when the message answered something this session asked for.
+        bool TryCompleteRequest(_In_ ci::MidiCapabilityInquiryMessage const& message) noexcept;
+
+        void RecordResponder(_In_ ci::MidiCapabilityInquiryMessage const& message) noexcept;
+
+        bool Send(_In_ foundation::Collections::IVector<midi2::MidiMessage64> const& messages) noexcept;
+
+        uint8_t NextRequestId() noexcept;
+
+        // Waits for the pending request at this key, or for the timeout. Returns false on timeout
+        // or when the session closed while waiting.
+        bool WaitForRequest(_In_ uint64_t const key) noexcept;
+
+        void RemoveRequest(_In_ uint64_t const key) noexcept;
+
+        uint32_t MaximumSystemExclusiveSizeFor(_In_ uint32_t const muid) noexcept;
+
+        // Fills in a response object from a completed request, including the negative
+        // acknowledgment case.
+        ci::MidiPropertyExchangeResponse BuildPropertyResponse(
+            _In_ PendingRequest const& request,
+            _In_ bool const timedOut) noexcept;
+
+        ci::MidiPropertyExchangeResponse RequestProperty(
+            _In_ ci::MidiUniqueId const& destinationMuid,
+            _In_ json::JsonObject const& header,
+            _In_ foundation::Collections::IIterable<uint8_t> const& body,
+            _In_ bool const isSet) noexcept;
+
+        std::atomic<bool> m_isOpen{ false };
+
+        midi2::MidiEndpointConnection m_connection{ nullptr };
+        winrt::event_token m_messageReceivedToken{};
+
+        ci::MidiUniqueId m_sourceMuid{ nullptr };
+        uint32_t m_sourceMuidValue{ 0 };
+
+        midi2::MidiGroup m_group{ nullptr };
+        midi2enum::MidiDeclaredDeviceIdentity m_identity{ nullptr };
+
+        std::atomic<uint32_t> m_responseTimeoutMilliseconds{ 2000 };
+        std::atomic<uint8_t> m_nextRequestId{ 1 };
+
+        // Guards everything below, and is not held while an event is raised.
+        mutable std::mutex m_lock;
+        std::condition_variable m_requestCompleted;
+
+        std::map<uint64_t, PendingRequest> m_pendingRequests{};
+        std::map<uint32_t, ci::MidiCapabilityInquiryResponder> m_responders{};
+
+        // Reassembly of the system exclusive transfer currently arriving.
+        std::vector<uint8_t> m_incoming{};
+        bool m_incomingIsOpen{ false };
+
+        winrt::event<foundation::TypedEventHandler<ci::MidiCapabilityInquirySession, ci::MidiCapabilityInquiryMessageReceivedEventArgs>> m_profileStateChangedEvent;
+        winrt::event<foundation::TypedEventHandler<ci::MidiCapabilityInquirySession, ci::MidiCapabilityInquiryResponder>> m_responderFoundEvent;
+        winrt::event<foundation::TypedEventHandler<ci::MidiCapabilityInquirySession, ci::MidiCapabilityInquiryMessageReceivedEventArgs>> m_messageReceivedEvent;
+    };
+}
+
+namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::factory_implementation
+{
+    struct MidiCapabilityInquirySession : MidiCapabilityInquirySessionT<MidiCapabilityInquirySession, implementation::MidiCapabilityInquirySession>
+    {
+    };
+}

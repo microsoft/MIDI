@@ -1,6 +1,8 @@
 // Spike: render a score offline to a WAV file, with no audio device and no timing, so the
 // engine can be judged and regression tested deterministically.
 
+#include "MidiSynth/ChorusEffect.h"
+#include "MidiSynth/ReverbEffect.h"
 #include "MidiSynth/SynthEngine.h"
 #include "MidiSynth/UmpDispatcher.h"
 
@@ -1209,557 +1211,70 @@ namespace
         return (exceeding == 0) ? 0 : 1;
     }
 
-    uint32_t MakeMidi1Cv(
-        _In_ uint8_t group, _In_ uint8_t status, _In_ uint8_t channel,
-        _In_ uint8_t data1, _In_ uint8_t data2) noexcept
+    // Effects run on the mix bus, so their cost is independent of polyphony and worth knowing
+    // separately from the voice cost.
+    int RunEffectsBenchmark(_In_ uint32_t sampleRate, _In_ double seconds)
     {
-        return (2u << 28) | (static_cast<uint32_t>(group) << 24) |
-               (static_cast<uint32_t>(status) << 20) | (static_cast<uint32_t>(channel) << 16) |
-               (static_cast<uint32_t>(data1) << 8) | data2;
-    }
+        constexpr uint32_t blockFrames = 480;
 
-    void MakeMidi2Cv(
-        _In_ uint8_t group, _In_ uint8_t status, _In_ uint8_t channel,
-        _In_ uint8_t index1, _In_ uint8_t index2, _In_ uint32_t data,
-        _Out_writes_(2) uint32_t* words) noexcept
-    {
-        words[0] = (4u << 28) | (static_cast<uint32_t>(group) << 24) |
-                   (static_cast<uint32_t>(status) << 20) | (static_cast<uint32_t>(channel) << 16) |
-                   (static_cast<uint32_t>(index1) << 8) | index2;
-        words[1] = data;
-    }
+        std::vector<float> input(static_cast<size_t>(blockFrames) * 2, 0.0f);
+        std::vector<float> output(static_cast<size_t>(blockFrames) * 2, 0.0f);
 
-    // Renders a short burst and reports its RMS, which is how the resolution checks below tell
-    // two nearly identical velocities apart.
-    double RenderBurstRms(_In_ SynthEngine& engine, _In_ uint32_t sampleRate, _In_ double seconds)
-    {
-        const auto frames = static_cast<uint32_t>(seconds * sampleRate);
-        std::vector<float> buffer(static_cast<size_t>(frames) * 2, 0.0f);
-
-        uint32_t rendered = 0;
-
-        while (rendered < frames)
+        // Something with content across the spectrum, so no denormal shortcuts flatter the result.
+        for (size_t i = 0; i < input.size(); i++)
         {
-            const uint32_t chunk = (std::min)(256u, frames - rendered);
-            engine.Render(buffer.data() + static_cast<size_t>(rendered) * 2, chunk);
-            rendered += chunk;
+            input[i] = 0.25f * std::sin(static_cast<float>(i) * 0.07f);
         }
 
-        double energy = 0.0;
+        ReverbEffect reverb;
+        ChorusEffect chorus;
 
-        for (const auto sample : buffer)
+        if (!reverb.Configure(sampleRate) || !chorus.Configure(sampleRate))
         {
-            energy += static_cast<double>(sample) * sample;
+            printf("could not configure the effects\n");
+            return 1;
         }
 
-        return std::sqrt(energy / buffer.size());
-    }
+        reverb.SetParameter(AudioEffectParameter::WetLevel, 0.35);
+        reverb.SetParameter(AudioEffectParameter::Time, 2.0);
+        chorus.SetParameter(AudioEffectParameter::WetLevel, 0.30);
 
-    int RunUmpTest(_In_ const DlsCollection& collection, _In_ const SynthConfig& config)
-    {
-        int failures = 0;
+        const auto blocks = static_cast<uint32_t>(seconds * sampleRate / blockFrames);
 
-        auto check = [&failures](const char* name, bool passed, const char* detail = "")
+        LARGE_INTEGER frequency{};
+        QueryPerformanceFrequency(&frequency);
+
+        auto measure = [&](const char* name, IAudioEffect* first, IAudioEffect* second)
         {
-            printf("  %-52s %s%s%s\n", name, passed ? "PASS" : "FAIL",
-                (*detail != '\0') ? "  " : "", detail);
+            LARGE_INTEGER start{};
+            QueryPerformanceCounter(&start);
 
-            if (!passed)
+            for (uint32_t i = 0; i < blocks; i++)
             {
-                failures++;
+                std::fill(output.begin(), output.end(), 0.0f);
+
+                if (first != nullptr) { first->Process(input.data(), output.data(), blockFrames); }
+                if (second != nullptr) { second->Process(input.data(), output.data(), blockFrames); }
             }
+
+            LARGE_INTEGER end{};
+            QueryPerformanceCounter(&end);
+
+            const double elapsed =
+                static_cast<double>(end.QuadPart - start.QuadPart) / static_cast<double>(frequency.QuadPart);
+
+            const double audioSeconds = static_cast<double>(blocks) * blockFrames / sampleRate;
+
+            printf("  %-22s %6.3f %% of one core\n", name, 100.0 * elapsed / audioSeconds);
         };
 
-        printf("UMP dispatcher\n\n");
+        printf("Effects at %u Hz\n\n", sampleRate);
 
-        // Packet sizing has to be right or the whole stream desynchronizes.
-        {
-            bool sizesOk =
-                UmpDispatcher::PacketWordCount(0x00000000) == 1 &&   // utility
-                UmpDispatcher::PacketWordCount(0x10000000) == 1 &&   // system
-                UmpDispatcher::PacketWordCount(0x20000000) == 1 &&   // MIDI 1.0 channel voice
-                UmpDispatcher::PacketWordCount(0x30000000) == 2 &&   // sysex7
-                UmpDispatcher::PacketWordCount(0x40000000) == 2 &&   // MIDI 2.0 channel voice
-                UmpDispatcher::PacketWordCount(0x50000000) == 4 &&   // sysex8
-                UmpDispatcher::PacketWordCount(0xD0000000) == 4 &&   // flex data
-                UmpDispatcher::PacketWordCount(0xF0000000) == 4;     // stream
+        measure("reverb", &reverb, nullptr);
+        measure("chorus", nullptr, &chorus);
+        measure("both", &reverb, &chorus);
 
-            check("packet word counts by message type", sizesOk);
-        }
-
-        const uint32_t rate = config.RenderSampleRate();
-
-        auto freshEngine = [&](SynthEngine& engine, UmpDispatcher& dispatcher, uint8_t group)
-        {
-            engine.Initialize(&collection, config);
-
-            // A fixed identifier keeps the expected reply bytes deterministic.
-            dispatcher.Initialize(&engine, group, 0x0123456);
-        };
-
-        // A MIDI 1.0 note on with zero velocity is a note off.
-        {
-            SynthEngine engine;
-            UmpDispatcher dispatcher;
-            freshEngine(engine, dispatcher, 0);
-
-            uint32_t word = MakeMidi1Cv(0, 0x9, 0, 60, 100);
-            dispatcher.ProcessWords(&word, 1);
-            const uint32_t afterOn = engine.ActiveVoiceCount();
-
-            word = MakeMidi1Cv(0, 0x9, 0, 60, 0);
-            dispatcher.ProcessWords(&word, 1);
-
-            (void)RenderBurstRms(engine, rate, 0.01);
-
-            check("MIDI 1.0 note on velocity zero is a note off", afterOn == 1);
-        }
-
-        // A MIDI 2.0 note on with zero velocity is still a note on. This is the difference that
-        // silently breaks a synthesizer that reuses its MIDI 1.0 path.
-        {
-            SynthEngine engine;
-            UmpDispatcher dispatcher;
-            freshEngine(engine, dispatcher, 0);
-
-            uint32_t words[2];
-            MakeMidi2Cv(0, 0x9, 0, 60, 0, 0x00000000, words);
-            dispatcher.ProcessWords(words, 2);
-
-            check("MIDI 2.0 note on velocity zero still sounds", engine.ActiveVoiceCount() == 1);
-        }
-
-        // Messages for another group belong to another function block.
-        {
-            SynthEngine engine;
-            UmpDispatcher dispatcher;
-            freshEngine(engine, dispatcher, 0);
-
-            const uint32_t word = MakeMidi1Cv(3, 0x9, 0, 60, 100);
-            dispatcher.ProcessWords(&word, 1);
-
-            check("messages for a different group are ignored", engine.ActiveVoiceCount() == 0);
-        }
-
-        // A packet split across two calls must not be consumed early.
-        {
-            SynthEngine engine;
-            UmpDispatcher dispatcher;
-            freshEngine(engine, dispatcher, 0);
-
-            uint32_t words[2];
-            MakeMidi2Cv(0, 0x9, 0, 60, 0, 0x40000000, words);
-
-            const uint32_t consumed = dispatcher.ProcessWords(words, 1);
-            const bool leftAlone = (consumed == 0) && (engine.ActiveVoiceCount() == 0);
-
-            const uint32_t after = dispatcher.ProcessWords(words, 2);
-
-            check("a partial packet is left for the next call",
-                leftAlone && after == 2 && engine.ActiveVoiceCount() == 1);
-        }
-
-        // Two velocities that would collapse to the same seven bit value must stay distinct.
-        {
-            auto levelForVelocity = [&](uint16_t velocity)
-            {
-                SynthEngine engine;
-                UmpDispatcher dispatcher;
-                freshEngine(engine, dispatcher, 0);
-                engine.ProgramChange(0, 19);
-
-                uint32_t words[2];
-                MakeMidi2Cv(0, 0x9, 0, 60, 0, static_cast<uint32_t>(velocity) << 16, words);
-                dispatcher.ProcessWords(words, 2);
-
-                return RenderBurstRms(engine, rate, 0.20);
-            };
-
-            const double low = levelForVelocity(0x8000);
-            const double high = levelForVelocity(0x81FF);
-            const double differenceDb = (low > 0.0) ? 20.0 * std::log10(high / low) : 0.0;
-
-            char detail[64]{};
-            (void)snprintf(detail, sizeof(detail), "%.3f dB apart", differenceDb);
-
-            // Both values are 64 when truncated to seven bits, so any difference proves the
-            // sixteen bit velocity survived.
-            check("16 bit velocity resolution is preserved", differenceDb > 0.05, detail);
-        }
-
-        // Same idea for a 32 bit control change.
-        {
-            auto levelForVolume = [&](uint32_t volume)
-            {
-                SynthEngine engine;
-                UmpDispatcher dispatcher;
-                freshEngine(engine, dispatcher, 0);
-                engine.ProgramChange(0, 19);
-
-                uint32_t words[2];
-                MakeMidi2Cv(0, 0xB, 0, 7, 0, volume, words);
-                dispatcher.ProcessWords(words, 2);
-
-                MakeMidi2Cv(0, 0x9, 0, 60, 0, 0xC0000000, words);
-                dispatcher.ProcessWords(words, 2);
-
-                return RenderBurstRms(engine, rate, 0.20);
-            };
-
-            const double low = levelForVolume(0x80000000);
-            const double high = levelForVolume(0x80FFFFFF);
-            const double differenceDb = (low > 0.0) ? 20.0 * std::log10(high / low) : 0.0;
-
-            char detail[64]{};
-            (void)snprintf(detail, sizeof(detail), "%.3f dB apart", differenceDb);
-
-            check("32 bit control change resolution is preserved", differenceDb > 0.05, detail);
-        }
-
-        // MIDI 2.0 carries the bank with the program change rather than in separate messages.
-        {
-            SynthEngine engine;
-            UmpDispatcher dispatcher;
-            freshEngine(engine, dispatcher, 0);
-
-            uint32_t words[2];
-
-            // Bank valid flag set, bank MSB 8, program 0, which is a GS variation piano.
-            MakeMidi2Cv(0, 0xC, 0, 0, 0x01, (0u << 24) | (8u << 8) | 0u, words);
-            dispatcher.ProcessWords(words, 2);
-
-            MakeMidi2Cv(0, 0x9, 0, 60, 0, 0xC0000000, words);
-            dispatcher.ProcessWords(words, 2);
-
-            check("program change carries its bank", engine.ActiveVoiceCount() == 1);
-        }
-
-        // GM System On, as a complete sysex7 packet.
-        {
-            SynthEngine engine;
-            UmpDispatcher dispatcher;
-            freshEngine(engine, dispatcher, 0);
-
-            uint32_t word = MakeMidi1Cv(0, 0x9, 0, 60, 100);
-            dispatcher.ProcessWords(&word, 1);
-            const bool sounding = engine.ActiveVoiceCount() == 1;
-
-            uint32_t sysex[2];
-            sysex[0] = (3u << 28) | (0u << 24) | (0u << 20) | (4u << 16) | (0x7Eu << 8) | 0x7F;
-            sysex[1] = (0x09u << 24) | (0x01u << 16);
-            dispatcher.ProcessWords(sysex, 2);
-
-            check("GM System On resets the synthesizer",
-                sounding && engine.ActiveVoiceCount() == 0);
-        }
-
-        // An unknown message type must not desynchronize the stream.
-        {
-            SynthEngine engine;
-            UmpDispatcher dispatcher;
-            freshEngine(engine, dispatcher, 0);
-
-            uint32_t stream[5];
-            stream[0] = (0xBu << 28);                       // three word reserved type
-            stream[1] = 0;
-            stream[2] = 0;
-            stream[3] = MakeMidi1Cv(0, 0x9, 0, 60, 100);
-            stream[4] = 0;
-
-            const uint32_t consumed = dispatcher.ProcessWords(stream, 4);
-
-            check("an unknown message type is skipped by its declared size",
-                consumed == 4 && engine.ActiveVoiceCount() == 1);
-        }
-
-        // An Identity Request needs a reply, which means an output path. The in-box synth cannot
-        // do this at all, having no MIDI input, so this is new behavior rather than compatibility.
-        {
-            struct CaptureOutput final : IUmpOutput
-            {
-                std::vector<uint32_t> Words;
-
-                void SendUmp(const uint32_t* words, uint32_t wordCount) noexcept override
-                {
-                    for (uint32_t i = 0; i < wordCount; i++)
-                    {
-                        Words.push_back(words[i]);
-                    }
-                }
-            };
-
-            auto sendIdentityRequest = [](UmpDispatcher& dispatcher)
-            {
-                // 7E 7F 06 01, as a complete sysex7 packet.
-                uint32_t sysex[2];
-                sysex[0] = (3u << 28) | (0u << 20) | (4u << 16) | (0x7Eu << 8) | 0x7F;
-                sysex[1] = (0x06u << 24) | (0x01u << 16);
-                dispatcher.ProcessWords(sysex, 2);
-            };
-
-            auto DecodeSysEx7 = [](const std::vector<uint32_t>& words)
-            {
-                std::vector<uint8_t> payload;
-
-                for (size_t packet = 0; packet * 2 + 1 < words.size(); packet++)
-                {
-                    const uint32_t w0 = words[packet * 2];
-                    const uint32_t w1 = words[packet * 2 + 1];
-                    const auto count = static_cast<uint8_t>((w0 >> 16) & 0x0F);
-
-                    const uint8_t bytes[6] =
-                    {
-                        static_cast<uint8_t>((w0 >> 8) & 0x7F),
-                        static_cast<uint8_t>(w0 & 0x7F),
-                        static_cast<uint8_t>((w1 >> 24) & 0x7F),
-                        static_cast<uint8_t>((w1 >> 16) & 0x7F),
-                        static_cast<uint8_t>((w1 >> 8) & 0x7F),
-                        static_cast<uint8_t>(w1 & 0x7F),
-                    };
-
-                    for (uint8_t i = 0; i < count && i < 6; i++)
-                    {
-                        payload.push_back(bytes[i]);
-                    }
-                }
-
-                return payload;
-            };
-
-            // A cleared identifier must stay silent rather than send zeros.
-            {
-                SynthEngine engine;
-                UmpDispatcher dispatcher;
-                freshEngine(engine, dispatcher, 0);
-
-                CaptureOutput output;
-
-                SynthIdentity cleared;
-                cleared.ManufacturerSysExId[0] = 0;
-                cleared.ManufacturerSysExId[1] = 0;
-                cleared.ManufacturerSysExId[2] = 0;
-
-                dispatcher.SetOutput(&output, cleared);
-                sendIdentityRequest(dispatcher);
-
-                check("no reply when the manufacturer identifier is cleared", output.Words.empty());
-            }
-
-            // These values go out on the wire, so pin them.
-            {
-                SynthEngine engine;
-                UmpDispatcher dispatcher;
-                freshEngine(engine, dispatcher, 0);
-
-                CaptureOutput output;
-                dispatcher.SetOutput(&output, SynthIdentity{});
-                sendIdentityRequest(dispatcher);
-
-                const auto payload = DecodeSysEx7(output.Words);
-
-                const bool ok =
-                    payload.size() == 15 &&
-                    payload[0] == 0x7E && payload[2] == 0x06 && payload[3] == 0x02 &&
-                    payload[4] == 0x00 && payload[5] == 0x00 && payload[6] == 0x41 &&   // Microsoft
-                    payload[7] == 11 && payload[8] == 0 &&                              // Windows 11
-                    payload[9] == 1 && payload[10] == 0 &&                              // this synth
-                    payload[11] == 1 && payload[12] == 0 &&
-                    payload[13] == 0 && payload[14] == 0;                               // 1.0.0.0
-
-                check("default identity is Microsoft, Windows 11, model 1, rev 1.0.0.0", ok);
-            }
-
-            // A real Discovery Inquiry captured from the in-box MIDI Keyboard app. Replying is
-            // mandatory even though no MIDI-CI categories are supported yet.
-            {
-                SynthEngine engine;
-                UmpDispatcher dispatcher;
-                freshEngine(engine, dispatcher, 0);
-
-                CaptureOutput output;
-                dispatcher.SetOutput(&output, SynthIdentity{});
-
-                const uint32_t discovery[10]
-                {
-                    0x30167E7F, 0x0D70021F,
-                    0x30263075, 0x4A7F7F7F,
-                    0x30267F7D, 0x00000000,
-                    0x30260000, 0x01000000,
-                    0x30361C00, 0x04000000,
-                };
-
-                dispatcher.ProcessWords(discovery, 10);
-
-                const auto payload = DecodeSysEx7(output.Words);
-                const uint32_t muid = dispatcher.Muid();
-
-                const bool ok =
-                    payload.size() == 31 &&
-                    payload[0] == 0x7E && payload[1] == 0x7F &&
-                    payload[2] == 0x0D && payload[3] == 0x71 &&
-                    payload[4] == 0x02 &&
-                    payload[5] == (muid & 0x7F) &&
-                    payload[6] == ((muid >> 7) & 0x7F) &&
-                    payload[7] == ((muid >> 14) & 0x7F) &&
-                    payload[8] == ((muid >> 21) & 0x7F) &&
-                    payload[9] == 0x1F && payload[10] == 0x30 &&       // initiator muid echoed
-                    payload[11] == 0x75 && payload[12] == 0x4A &&
-                    payload[13] == 0x00 && payload[14] == 0x00 && payload[15] == 0x41 &&
-                    payload[16] == 11 && payload[18] == 1 &&
-                    payload[30] == 0;                                   // our function block
-
-                char detail[64]{};
-                (void)snprintf(detail, sizeof(detail), "%zu bytes, muid 0x%07X",
-                    payload.size(), muid);
-
-                check("MIDI-CI Discovery is answered with a Reply to Discovery", ok, detail);
-            }
-
-            // A one byte manufacturer identifier produces a thirteen byte reply, a three byte one
-            // produces fifteen. Both shapes are checked because getting the length wrong makes the
-            // reply unparseable to the requester.
-            auto checkReply = [&](const char* name, bool extendedId)
-            {
-                SynthEngine engine;
-                UmpDispatcher dispatcher;
-                freshEngine(engine, dispatcher, 0);
-
-                CaptureOutput output;
-
-                SynthIdentity identity;
-
-                if (extendedId)
-                {
-                    identity.ManufacturerSysExId[0] = 0x00;
-                    identity.ManufacturerSysExId[1] = 0x01;
-                    identity.ManufacturerSysExId[2] = 0x02;
-                }
-                else
-                {
-                    // 7D is the identifier reserved for non commercial and educational use.
-                    identity.ManufacturerSysExId[0] = 0x7D;
-                }
-
-                identity.FamilyCode = 0x0102;
-                identity.FamilyMemberCode = 0x0304;
-
-                dispatcher.SetOutput(&output, identity);
-                sendIdentityRequest(dispatcher);
-
-                const auto payload = DecodeSysEx7(output.Words);
-
-                const size_t expected = extendedId ? 15u : 13u;
-                const size_t familyAt = extendedId ? 7u : 5u;
-
-                const bool ok =
-                    payload.size() == expected &&
-                    payload[0] == 0x7E && payload[2] == 0x06 && payload[3] == 0x02 &&
-                    payload[familyAt] == 0x02 && payload[familyAt + 1] == 0x02 &&
-                    payload[familyAt + 2] == 0x04 && payload[familyAt + 3] == 0x06;
-
-                char detail[48]{};
-                (void)snprintf(detail, sizeof(detail), "%zu bytes", payload.size());
-
-                check(name, ok, detail);
-            };
-
-            checkReply("Identity Reply, one byte manufacturer identifier", false);
-            checkReply("Identity Reply, three byte manufacturer identifier", true);
-        }
-
-        // The specification's upscale preserves the center value. A plain bit repeat puts MIDI 1.0
-        // velocity 64 slightly above the MIDI 2.0 center, which is the defect this pins down.
-        {
-            auto levelFor = [&](bool midi1, uint16_t value)
-            {
-                SynthEngine engine;
-                UmpDispatcher dispatcher;
-                freshEngine(engine, dispatcher, 0);
-
-                if (midi1)
-                {
-                    uint32_t word = MakeMidi1Cv(0, 0x9, 0, 60, static_cast<uint8_t>(value));
-                    dispatcher.ProcessWords(&word, 1);
-                }
-                else
-                {
-                    uint32_t words[2];
-                    MakeMidi2Cv(0, 0x9, 0, 60, 0, static_cast<uint32_t>(value) << 16, words);
-                    dispatcher.ProcessWords(words, 2);
-                }
-
-                return RenderBurstRms(engine, rate, 0.20);
-            };
-
-            const double midi1Level = levelFor(true, 64);
-            const double midi2Level = levelFor(false, 32768);
-
-            const double differenceDb = (midi1Level > 0.0 && midi2Level > 0.0)
-                ? std::abs(20.0 * std::log10(midi2Level / midi1Level)) : 99.0;
-
-            char detail[48]{};
-            (void)snprintf(detail, sizeof(detail), "%.4f dB apart", differenceDb);
-
-            check("MIDI 1.0 velocity 64 scales to the MIDI 2.0 center",
-                differenceDb < 0.001, detail);
-        }
-
-        // Shutdown releases the audio device, so it has to drain first or disconnecting clicks.
-        // This measures the bound the transport has to allow for.
-        {
-            SynthEngine engine;
-            UmpDispatcher dispatcher;
-            freshEngine(engine, dispatcher, 0);
-
-            for (uint8_t note = 60; note < 66; note++)
-            {
-                engine.NoteOn(0, note, static_cast<uint16_t>(100u << 9));
-            }
-
-            std::vector<float> block(256 * 2);
-            engine.Render(block.data(), 256);
-
-            for (uint8_t channel = 0; channel < 16; channel++)
-            {
-                engine.AllSoundOff(channel);
-            }
-
-            uint32_t frames = 0;
-            const uint32_t limit = rate;
-
-            // Drain at the control rate, otherwise this measures the block size rather than the fade.
-            const uint32_t drainBlock = config.ControlRateFrames;
-
-            while (frames < limit)
-            {
-                engine.Render(block.data(), drainBlock);
-                frames += drainBlock;
-
-                float peak = 0.0f;
-
-                for (uint32_t i = 0; i < drainBlock * 2; i++)
-                {
-                    peak = (std::max)(peak, std::fabs(block[i]));
-                }
-
-                if (engine.ActiveVoiceCount() == 0 && peak == 0.0f)
-                {
-                    break;
-                }
-            }
-
-            const double milliseconds = (1000.0 * frames) / rate;
-
-            char detail[64]{};
-            (void)snprintf(detail, sizeof(detail), "silent after %.1f ms", milliseconds);
-
-            check("all sound off drains to silence quickly",
-                engine.ActiveVoiceCount() == 0 && milliseconds < 50.0, detail);
-        }
-
-        printf("\n  %s\n", (failures == 0) ? "PASS" : "FAIL");
-
-        return (failures == 0) ? 0 : 1;
+        return 0;
     }
 
     int RunBenchmark(_In_ SynthEngine& engine, _In_ uint32_t targetVoices, _In_ double seconds)
@@ -1836,12 +1351,12 @@ int wmain(int argc, wchar_t** argv)
     SynthMode mode = SynthMode::Modern;
     uint32_t sampleRate = 48000;
     bool benchmark = false;
+    bool effectsBenchmark = false;
     uint32_t benchmarkVoices = 64;
     bool tuningTest = false;
     uint8_t tuningProgram = 0;
     bool articulationDump = false;
     uint8_t articulationProgram = 0;
-    bool umpTest = false;
 
     for (int i = 1; i < argc; i++)
     {
@@ -1870,6 +1385,10 @@ int wmain(int argc, wchar_t** argv)
         else if (argument == L"--rate" && i + 1 < argc)
         {
             sampleRate = static_cast<uint32_t>(_wtoi(argv[++i]));
+        }
+        else if (argument == L"--fxbench")
+        {
+            effectsBenchmark = true;
         }
         else if (argument == L"--bench")
         {
@@ -1925,10 +1444,6 @@ int wmain(int argc, wchar_t** argv)
             const double threshold = (i + 1 < argc && argv[i + 1][0] != L'-') ? _wtof(argv[++i]) : 0.05;
             return RunClicks(clicksPath, threshold);
         }
-        else if (argument == L"--ump-test")
-        {
-            umpTest = true;
-        }
         else
         {
             printf("usage: synthspike-render [--dls <file>] [--score <file>] [--out <file.wav>]\n");
@@ -1947,7 +1462,8 @@ int wmain(int argc, wchar_t** argv)
     }
 
     DlsCollection collection;
-    const auto status = DlsCollection::LoadFromFile(dlsPath, DlsParseLimits{}, collection);
+    const auto status = DlsCollection::LoadFromFile(
+        dlsPath, DlsParseLimits{}, SoundSetOrigin::AnyPath, collection);
 
     if (status != DlsParseStatus::Ok)
     {
@@ -1956,6 +1472,13 @@ int wmain(int argc, wchar_t** argv)
     }
 
     SynthConfig config = SynthConfig::ForMode(mode, sampleRate);
+
+    // Analysis measures the voice engine, so a reverb tail would smear the very thing being
+    // measured. The effects have their own benchmark.
+    if (tuningTest)
+    {
+        config.EnableEffects = false;
+    }
 
     if (benchmark)
     {
@@ -1984,9 +1507,10 @@ int wmain(int argc, wchar_t** argv)
         return RunArticulation(collection, articulationProgram, false);
     }
 
-    if (umpTest)
+    // Effects do not need a sound set, so this runs before any file is touched.
+    if (effectsBenchmark)
     {
-        return RunUmpTest(collection, config);
+        return RunEffectsBenchmark(sampleRate, 5.0);
     }
 
     if (benchmark)

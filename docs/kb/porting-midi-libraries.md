@@ -3,6 +3,8 @@ layout: kb
 title: Porting a MIDI Library or Framework to Windows MIDI Services
 audience: developers
 description: Guidance for maintainers of cross-platform MIDI libraries, language bindings, and application frameworks which wrap the operating system MIDI API
+categories:
+  - Developer Guidance
 ---
 
 <!-- Short link for this page: aka.ms/MidiLibraryPorting -->
@@ -205,6 +207,8 @@ This is the part of the platform library authors tell us is the most frustrating
 This means two things for a library with an index-based public API.
 
 **Rebuild your port list on `Updated` when `AreFunctionBlocksUpdated` is set, and keep doing so for as long as you hold the watcher.** Not just during a window after startup. Otherwise a MIDI 2.0 device enumerated before discovery finished keeps its fallback metadata permanently, with names and groupings that do not match what the device actually reports.
+
+Function block names arrive as separate messages from the block information, so a block can be reported to you before its name has been received. Re-read the names on every update and treat a blank one as "not yet" rather than caching it. [Endpoint Arrival and Update Ordering]({{ site.baseurl }}/kb/endpoint-arrival-and-update-ordering/) covers the full sequence.
 
 **Do not assume a port index is stable across enumerations**, and do not persist one. Indexes were already fragile under WinMM; here the list can legitimately change shape after a device arrives, without anything being plugged or unplugged. Keep offering the index in your public API if your callers need it, but resolve it against the endpoint device id and group you stored, so that a stale index fails cleanly rather than silently opening the wrong device.
 

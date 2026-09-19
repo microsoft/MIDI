@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup />
+  <ItemDefinitionGroup />
+  <ItemGroup>
+    <ProjectReference Include="G:\Github\microsoft\midi\src\in-box\Libs\SDK-MidiPluginConfigurationLib\MidiPluginConfigurationLib.vcxproj">
+      <AdditionalProperties>Configuration=Release; Platform=x64</AdditionalProperties>
+      <Platform>x64</Platform>
+      <Configuration>Release</Configuration>
+      <ToolsVersion>
+      </ToolsVersion>
+      <SkipNonexistentProjects>False</SkipNonexistentProjects>
+    </ProjectReference>
+    <ProjectReference Include="G:\Github\microsoft\midi\src\in-box\Libs\SDK-MidiPnpLib\MidiPnpLib.vcxproj">
+      <AdditionalProperties>Configuration=Release; Platform=x64</AdditionalProperties>
+      <Platform>x64</Platform>
+      <Configuration>Release</Configuration>
+      <ToolsVersion>
+      </ToolsVersion>
+      <SkipNonexistentProjects>False</SkipNonexistentProjects>
+    </ProjectReference>
+    <ProjectReference Include="G:\Github\microsoft\midi\src\in-box\Libs\SDK-MidiEndpointNamingLib\MidiEndpointNamingLib.vcxproj">
+      <AdditionalProperties>Configuration=Release; Platform=x64</AdditionalProperties>
+      <Platform>x64</Platform>
+      <Configuration>Release</Configuration>
+      <ToolsVersion>
+      </ToolsVersion>
+      <SkipNonexistentProjects>False</SkipNonexistentProjects>
+    </ProjectReference>
+  </ItemGroup>
+  <Target Name="Clean">
+    <MSBuild BuildInParallel="True" Projects="@(ProjectReference-&gt;Reverse())" Targets="Clean" Properties="BuildingSolutionFile=true; CurrentSolutionConfigurationContents=$(CurrentSolutionConfigurationContents); SolutionDir=$(SolutionDir); SolutionExt=$(SolutionExt); SolutionFileName=$(SolutionFileName); SolutionName=$(SolutionName); SolutionPath=$(SolutionPath)" />
+    <MSBuild ToolsVersion="$(ProjectToolsVersion)" BuildInParallel="True" Projects="G:\Github\microsoft\midi\src\in-box\Test\WinRT Client\Enumeration.integrationtests\Midi2.WinRTClient.Enumeration.integrationtests.vcxproj" Targets="Clean" Properties="Configuration=Release; Platform=x64;BuildingSolutionFile=true; CurrentSolutionConfigurationContents=$(CurrentSolutionConfigurationContents); SolutionDir=$(SolutionDir); SolutionExt=$(SolutionExt); SolutionFileName=$(SolutionFileName); SolutionName=$(SolutionName); SolutionPath=$(SolutionPath)" />
+  </Target>
+  <Target Name="Build" Outputs="@(Midi2_WinRTClient_Enumeration_integrationtestsBuildOutput)">
+    <MSBuild BuildInParallel="True" Projects="@(ProjectReference)" Properties="BuildingSolutionFile=true; CurrentSolutionConfigurationContents=$(CurrentSolutionConfigurationContents); SolutionDir=$(SolutionDir); SolutionExt=$(SolutionExt); SolutionFileName=$(SolutionFileName); SolutionName=$(SolutionName); SolutionPath=$(SolutionPath)" />
+    <MSBuild ToolsVersion="$(ProjectToolsVersion)" BuildInParallel="True" Projects="G:\Github\microsoft\midi\src\in-box\Test\WinRT Client\Enumeration.integrationtests\Midi2.WinRTClient.Enumeration.integrationtests.vcxproj" Properties="Configuration=Release; Platform=x64;BuildingSolutionFile=true; CurrentSolutionConfigurationContents=$(CurrentSolutionConfigurationContents); SolutionDir=$(SolutionDir); SolutionExt=$(SolutionExt); SolutionFileName=$(SolutionFileName); SolutionName=$(SolutionName); SolutionPath=$(SolutionPath)">
+      <Output TaskParameter="TargetOutputs" ItemName="Midi2_WinRTClient_Enumeration_integrationtestsBuildOutput" />
+    </MSBuild>
+  </Target>
+  <Target Name="Rebuild" Outputs="@(Midi2_WinRTClient_Enumeration_integrationtestsBuildOutput)">
+    <MSBuild BuildInParallel="True" Projects="@(ProjectReference)" Targets="Rebuild" Properties="BuildingSolutionFile=true; CurrentSolutionConfigurationContents=$(CurrentSolutionConfigurationContents); SolutionDir=$(SolutionDir); SolutionExt=$(SolutionExt); SolutionFileName=$(SolutionFileName); SolutionName=$(SolutionName); SolutionPath=$(SolutionPath)" />
+    <MSBuild ToolsVersion="$(ProjectToolsVersion)" BuildInParallel="True" Projects="G:\Github\microsoft\midi\src\in-box\Test\WinRT Client\Enumeration.integrationtests\Midi2.WinRTClient.Enumeration.integrationtests.vcxproj" Targets="Rebuild" Properties="Configuration=Release; Platform=x64;BuildingSolutionFile=true; CurrentSolutionConfigurationContents=$(CurrentSolutionConfigurationContents); SolutionDir=$(SolutionDir); SolutionExt=$(SolutionExt); SolutionFileName=$(SolutionFileName); SolutionName=$(SolutionName); SolutionPath=$(SolutionPath)">
+      <Output TaskParameter="TargetOutputs" ItemName="Midi2_WinRTClient_Enumeration_integrationtestsBuildOutput" />
+    </MSBuild>
+  </Target>
+  <Target Name="Publish">
+    <MSBuild BuildInParallel="True" Projects="@(ProjectReference)" Targets="Publish" Properties="BuildingSolutionFile=true; CurrentSolutionConfigurationContents=$(CurrentSolutionConfigurationContents); SolutionDir=$(SolutionDir); SolutionExt=$(SolutionExt); SolutionFileName=$(SolutionFileName); SolutionName=$(SolutionName); SolutionPath=$(SolutionPath)" />
+    <MSBuild ToolsVersion="$(ProjectToolsVersion)" BuildInParallel="True" Projects="G:\Github\microsoft\midi\src\in-box\Test\WinRT Client\Enumeration.integrationtests\Midi2.WinRTClient.Enumeration.integrationtests.vcxproj" Targets="Publish" Properties="Configuration=Release; Platform=x64;BuildingSolutionFile=true; CurrentSolutionConfigurationContents=$(CurrentSolutionConfigurationContents); SolutionDir=$(SolutionDir); SolutionExt=$(SolutionExt); SolutionFileName=$(SolutionFileName); SolutionName=$(SolutionName); SolutionPath=$(SolutionPath)" />
+  </Target>
+  <Target Name="ValidateSolutionConfiguration">
+    <MSBuild BuildInParallel="True" Projects="@(ProjectReference)" Targets="ValidateSolutionConfiguration" Properties="BuildingSolutionFile=true; CurrentSolutionConfigurationContents=$(CurrentSolutionConfigurationContents); SolutionDir=$(SolutionDir); SolutionExt=$(SolutionExt); SolutionFileName=$(SolutionFileName); SolutionName=$(SolutionName); SolutionPath=$(SolutionPath)" />
+    <MSBuild ToolsVersion="$(ProjectToolsVersion)" BuildInParallel="True" Projects="G:\Github\microsoft\midi\src\in-box\Test\WinRT Client\Enumeration.integrationtests\Midi2.WinRTClient.Enumeration.integrationtests.vcxproj" Targets="ValidateSolutionConfiguration" Properties="Configuration=Release; Platform=x64;BuildingSolutionFile=true; CurrentSolutionConfigurationContents=$(CurrentSolutionConfigurationContents); SolutionDir=$(SolutionDir); SolutionExt=$(SolutionExt); SolutionFileName=$(SolutionFileName); SolutionName=$(SolutionName); SolutionPath=$(SolutionPath)" />
+  </Target>
+</Project>

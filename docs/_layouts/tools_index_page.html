@@ -21,6 +21,19 @@ layout: default
 
 <!-- TODO: Need to change out these styles for specific ones that don't reuse kb styles -->
 
+<style>
+/* style.css is generated from assets/scss, so these list-specific rules live here instead */
+.tools-index-item { display: flex; align-items: flex-start; }
+.tools-index-icon { flex: 0 0 auto; width: 112px; height: 64px; margin-right: 20px; display: block; }
+.tools-index-icon img { width: 100%; height: 100%; object-fit: contain; object-position: left top; }
+.tools-index-text { flex: 1 1 auto; min-width: 0; }
+.tools-category-chiclets { margin-bottom: 30px; }
+.tools-category-chiclet { display: inline-block; margin: 0 8px 8px 0; padding: 6px 14px; border-radius: 4px; background: #3399f0; color: #ffffff; font-size: 13px; line-height: 18px; }
+.tools-category-chiclet:hover, .tools-category-chiclet:focus { background: #216cbc; color: #ffffff; text-decoration: none; }
+.tools-category-chiclet .tools-category-count { opacity: 0.7; margin-left: 6px; }
+.tools-category-heading { margin-top: 40px; margin-bottom: 20px; }
+</style>
+
 {% assign related_pages = site.pages | where: "layout", "tools_page" | sort: "tool" %}
 {% if related_pages.size > 0 %}
 <section class="layout-area bg-color3 content tutorial">
@@ -28,18 +41,51 @@ layout: default
         <div class="container">
             <div class="row">
                 <div class="col-md-12 col-lg-12">
-                    <h2>Tools Pages</h2>
-                        {% for related_page in related_pages %}
-                            {% if related_page.url != page.url %}                
-                            <article class="kb-service bg-color1">
-                                <span style="float:right; color:gray">{{related_page.tool}}</span>
-                                <header>
-                                    <a href="{{related_page.url | relative_url}}"><h4 class="heading-4">{{related_page.title}}</h4></a>
-                                </header>
-                                <footer>{{related_page.description}}</footer>
-                            </article>
+                    <h2 class="heading-2">Windows MIDI Services Tools</h2>
+
+                    {% comment %} Anything whose categories do not match the list in _data/tools_categories.yml still has to appear somewhere. {% endcomment %}
+                    {% assign uncategorized = "" | split: "" %}
+                    {% for related_page in related_pages %}
+                        {% if related_page.url != page.url %}
+                            {% assign matched = false %}
+                            {% for category in site.data.tools_categories %}
+                                {% if related_page.categories contains category %}{% assign matched = true %}{% endif %}
+                            {% endfor %}
+                            {% unless matched %}{% assign uncategorized = uncategorized | push: related_page %}{% endunless %}
+                        {% endif %}
+                    {% endfor %}
+
+                    <div class="tools-category-chiclets">
+                        {% for category in site.data.tools_categories %}
+                            {% assign in_category = related_pages | where_exp: "tool", "tool.categories contains category" %}
+                            {% if in_category.size > 0 %}
+                            <a class="tools-category-chiclet" href="#{{ category | slugify }}">{{ category }}<span class="tools-category-count">{{ in_category.size }}</span></a>
                             {% endif %}
                         {% endfor %}
+                        {% if uncategorized.size > 0 %}
+                        <a class="tools-category-chiclet" href="#other-tools">Other tools<span class="tools-category-count">{{ uncategorized.size }}</span></a>
+                        {% endif %}
+                    </div>
+
+                    {% for category in site.data.tools_categories %}
+                        {% assign in_category = related_pages | where_exp: "tool", "tool.categories contains category" %}
+                        {% if in_category.size > 0 %}
+                        <h2 class="heading-3 tools-category-heading" id="{{ category | slugify }}">{{ category }}</h2>
+                        {% for related_page in in_category %}
+                            {% if related_page.url != page.url %}
+                            {% include tools_index_article.html tool=related_page %}
+                            {% endif %}
+                        {% endfor %}
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if uncategorized.size > 0 %}
+                    <h2 class="heading-3 tools-category-heading" id="other-tools">Other tools</h2>
+                    {% for related_page in uncategorized %}
+                    {% include tools_index_article.html tool=related_page %}
+                    {% endfor %}
+                    {% endif %}
+
                 </div>
             </div>
         </div>

@@ -24,7 +24,7 @@ namespace
 
     // Per session, not machine wide. Every logged on customer gets their own notifications, so a
     // Global name here would silently leave all but the first user without any.
-    constexpr wchar_t SingleInstanceKey[]{ L"Notifications" };
+    constexpr wchar_t SingleInstanceKey[]{ MIDI_NOTIFICATIONS_INSTANCE_KEY };
 
     constexpr wchar_t WindowClassName[]{ L"MidiNotificationsMessageWindow" };
 

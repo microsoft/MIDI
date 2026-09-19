@@ -195,6 +195,61 @@
 #define UUID_IMidiUniqueIdStatics							                8087b303-0519-c0de-31d1-ee0070001000
 #define UUID_IMidiUniqueIdFactory                                           8087b303-0519-c0de-31d1-ff0070001000
 
+// Property Exchange resources. Each is a strongly typed view of one JSON resource.
+
+#define UUID_IMidiProgramListEntry                                          8087b303-0519-c0de-31d1-dd0070002000
+#define UUID_IMidiProgramListEntryStatics                                   8087b303-0519-c0de-31d1-ee0070002000
+#define UUID_IMidiProgramListEntryFactory                                   8087b303-0519-c0de-31d1-ff0070002000
+
+#define UUID_IMidiProgramList                                               8087b303-0519-c0de-31d1-dd0070003000
+#define UUID_IMidiProgramListStatics                                        8087b303-0519-c0de-31d1-ee0070003000
+
+#define UUID_IMidiResourceLink                                              8087b303-0519-c0de-31d1-dd0070004000
+#define UUID_IMidiResourceLinkStatics                                       8087b303-0519-c0de-31d1-ee0070004000
+#define UUID_IMidiResourceLinkFactory                                       8087b303-0519-c0de-31d1-ff0070004000
+
+#define UUID_IMidiChannelListEntry                                          8087b303-0519-c0de-31d1-dd0070005000
+#define UUID_IMidiChannelListEntryStatics                                   8087b303-0519-c0de-31d1-ee0070005000
+#define UUID_IMidiChannelListEntryFactory                                   8087b303-0519-c0de-31d1-ff0070005000
+
+#define UUID_IMidiChannelList                                               8087b303-0519-c0de-31d1-dd0070006000
+#define UUID_IMidiChannelListStatics                                        8087b303-0519-c0de-31d1-ee0070006000
+
+#define UUID_IMidiDeviceInfo                                                8087b303-0519-c0de-31d1-dd0070007000
+#define UUID_IMidiDeviceInfoStatics                                         8087b303-0519-c0de-31d1-ee0070007000
+#define UUID_IMidiDeviceInfoFactory                                         8087b303-0519-c0de-31d1-ff0070007000
+
+#define UUID_IMidiResourceListEntry                                         8087b303-0519-c0de-31d1-dd0070008000
+#define UUID_IMidiResourceListEntryStatics                                  8087b303-0519-c0de-31d1-ee0070008000
+#define UUID_IMidiResourceListEntryFactory                                  8087b303-0519-c0de-31d1-ff0070008000
+
+#define UUID_IMidiResourceList                                              8087b303-0519-c0de-31d1-dd0070009000
+#define UUID_IMidiResourceListStatics                                       8087b303-0519-c0de-31d1-ee0070009000
+
+#define UUID_IMidiCapabilityInquiryMessage                                  8087b303-0519-c0de-31d1-dd0070010000
+#define UUID_IMidiCapabilityInquiryMessageStatics                           8087b303-0519-c0de-31d1-ee0070010000
+
+#define UUID_IMidiProfileId                                                 8087b303-0519-c0de-31d1-dd0070011000
+#define UUID_IMidiProfileIdStatics                                          8087b303-0519-c0de-31d1-ee0070011000
+#define UUID_IMidiProfileIdFactory                                          8087b303-0519-c0de-31d1-ff0070011000
+
+#define UUID_IMidiCapabilityInquiryMessageBuilderStatics                    8087b303-0519-c0de-31d1-ee0070012000
+
+// The initiator session, and the answers it hands back.
+
+#define UUID_IMidiCapabilityInquiryResponder                                8087b303-0519-c0de-31d1-dd0070013000
+
+#define UUID_IMidiPropertyExchangeResponse                                  8087b303-0519-c0de-31d1-dd0070014000
+
+#define UUID_IMidiProfileInquiryResponse                                    8087b303-0519-c0de-31d1-dd0070015000
+
+#define UUID_IMidiCapabilityInquiryMessageReceivedEventArgs                 8087b303-0519-c0de-31d1-dd0070016000
+
+#define UUID_IMidiCapabilityInquirySession                                  8087b303-0519-c0de-31d1-dd0070017000
+#define UUID_IMidiCapabilityInquirySessionStatics                           8087b303-0519-c0de-31d1-ee0070017000
+
+#define UUID_IMidiCapabilityInquiryDeviceResponder                          8087b303-0519-c0de-31d1-dd0070018000
+
 
 // ========== Utilities : Interface number 0E ========================================================================
 
@@ -207,6 +262,7 @@
 #define UUID_IMidiMessageHelperStatics						                8087b303-0519-c0de-31d1-ee00E0103000
 #define UUID_IMidiStreamMessageBuilderStatics				                8087b303-0519-c0de-31d1-ee00E0104000
 #define UUID_IMidiSystemExclusive7MessageHelperStatics                      8087b303-0519-c0de-31d1-ee00E0105000
+#define UUID_IMidiSystemExclusive7MessageBuilderStatics                     8087b303-0519-c0de-31d1-ee00E0109000
 //#define UUID_IMidiUniversalSystemExclusive7MessageBuilderStatics            8087b303-0519-c0de-31d1-ee00E0106000
 
 #define UUID_IMidiBytestreamToUmpMessageConverterState                      8087b303-0519-c0de-31d1-dd00E0108000
@@ -224,6 +280,34 @@
 
 #define UUID_IMidiSystemExclusiveReceiver                                   8087b303-0519-c0de-31d1-dd00E0304000
 #define UUID_IMidiSystemExclusiveReceiverFactory                            8087b303-0519-c0de-31d1-ff00E0304000
+
+// ============================================================================
+// Windows.Devices.Midi2.Utilities.Sequencing : Interface number 00E04
+
+#define UUID_IMidiSequenceTextEvent                                         8087b303-0519-c0de-31d1-dd00E0401000
+
+#define UUID_IMidiSequenceLyricLine                                         8087b303-0519-c0de-31d1-dd00E0402000
+
+#define UUID_IMidiSequenceTrack                                             8087b303-0519-c0de-31d1-dd00E0403000
+
+#define UUID_IMidiSequence                                                  8087b303-0519-c0de-31d1-dd00E0404000
+
+#define UUID_IMidiSequenceTrackRouting                                      8087b303-0519-c0de-31d1-dd00E0405000
+//#define UUID_IMidiSequenceTrackRoutingFactory                               8087b303-0519-c0de-31d1-ff00E0405000
+
+#define UUID_IMidiSequencePlayer                                            8087b303-0519-c0de-31d1-dd00E0406000
+#define UUID_IMidiSequencePlayerStatics                                     8087b303-0519-c0de-31d1-ee00E0406000
+#define UUID_IMidiSequencePlayerFactory                                     8087b303-0519-c0de-31d1-ff00E0406000
+
+// ============================================================================
+// Windows.Devices.Midi2.Utilities.Files : Interface number 00E05
+
+#define UUID_IMidiFileReadOptions                                           8087b303-0519-c0de-31d1-dd00E0501000
+//#define UUID_IMidiFileReadOptionsFactory                                    8087b303-0519-c0de-31d1-ff00E0501000
+
+#define UUID_IMidiFileReadResult                                            8087b303-0519-c0de-31d1-dd00E0502000
+
+#define UUID_IMidiStandardFileReaderStatics                                 8087b303-0519-c0de-31d1-ee00E0503000
 
 
 // ========== Transports : Interface number 0F ========================================================================
@@ -399,6 +483,22 @@
 #define UUID_IMidiBluetoothPeripheralClientListConfigFactory    8087b303-0519-c0de-31d1-ff00F050E000
 #define UUID_IMidiBluetoothOfflineRetentionConfig               8087b303-0519-c0de-31d1-dd00F050F000
 #define UUID_IMidiBluetoothOfflineRetentionConfigFactory        8087b303-0519-c0de-31d1-ff00F050F000
+
+
+// ============================================================================
+// Windows.Devices.Midi2.Transports.Synth : Interface number 00F06
+// The built-in General MIDI synthesizer. One namespace, because there is one of it.
+
+#define UUID_IMidiSynthManagerStatics                           8087b303-0519-c0de-31d1-ee00F0601000
+
+#define UUID_IMidiSynthConfig                                   8087b303-0519-c0de-31d1-dd00F0602000
+#define UUID_IMidiSynthConfigFactory                            8087b303-0519-c0de-31d1-ff00F0602000
+
+#define UUID_IMidiSynthStatus                                   8087b303-0519-c0de-31d1-dd00F0603000
+
+#define UUID_IMidiSynthSoundSetInfo                             8087b303-0519-c0de-31d1-dd00F0604000
+#define UUID_IMidiSynthDrumKitInfo                              8087b303-0519-c0de-31d1-dd00F0605000
+#define UUID_IMidiSynthInstrumentInfo                           8087b303-0519-c0de-31d1-dd00F0606000
 
 
 #endif

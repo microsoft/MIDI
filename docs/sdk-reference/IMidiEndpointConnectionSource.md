@@ -3,10 +3,10 @@ layout: sdk_reference_page
 title: IMidiEndpointConnectionSource
 namespace: Windows.Devices.Midi2
 type: interface
-description: Interface which is used to prevent circular references in the SDK, specifically with message processing plugins
+description: Interface which is used to prevent circular references in the WinRT API, specifically with message processing plugins
 ---
 
-Interface which is used to prevent circular references in the SDK, specifically with message processing plugins. This interface is only supported when used by the `MidiEndpointConnection` class.
+Interface which is used to prevent circular references in the WinRT API, specifically with message processing plugins. This interface is only supported when used by the `MidiEndpointConnection` class.
 
 ## Properties
 

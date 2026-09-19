@@ -23,5 +23,4 @@ Used by `MidiNetworkRemoteClientForgetResponse.ErrorCode`.
 
 ## Remarks
 
-There is deliberately no `RemoteClientNotFound` here. Unlike a disconnect, forgetting an identity
-the host holds no decision for succeeds, because what the caller asked for is already true.
+There is deliberately no `RemoteClientNotFound` here. Unlike a disconnect, forgetting an identity the host holds no decision for succeeds, because what the caller asked for is already true.

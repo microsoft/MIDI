@@ -15,15 +15,17 @@ layout: default
       <div class="row">
         {% include sdk_reference_left_nav.html %}
 
-        <div class="col-md-8">
+        <div class="col-md-8 sdk-reference-content-col">
           <div class="tutorial-content mx-auto">
             <div class="sdk-common-properties">
-                {% if page.type == "enum" %}		
-                    {% assign idl_file_name = page.title | append: "Enum" %}
+                {% comment %} A page whose title is not the IDL file name sets "idl" in its front matter. {% endcomment %}
+                {% if page.idl != nil and page.idl != empty %}
+                    {% assign idl_file_name = page.idl %}
+                {% elsif page.type == "enum" %}
+                    {% assign idl_file_name = page.title | append: "Enum.idl" %}
                 {% else %}
-                    {% assign idl_file_name = page.title %}
+                    {% assign idl_file_name = page.title | append: ".idl" %}
                 {% endif %}
-                {% assign idl_file_name = idl_file_name | append: ".idl" %}
                 {% assign idl_url = site.sdk_idl_root_url | append: idl_file_name %}
 
                 <table>
@@ -92,7 +94,7 @@ layout: default
 
             {% if page.status == "preview" %}
             <div class="sdk-preview-banner">
-                <span>This is a preview SDK feature and subject to change or removal. Shipping applications shall not use this SDK feature. There is no compatibility guaranteed.</span>
+                <span>This is a preview WinRT API feature and subject to change or removal. Shipping applications shall not use this API feature. There is no compatibility guaranteed.</span>
             </div>
             {% endif %}
 

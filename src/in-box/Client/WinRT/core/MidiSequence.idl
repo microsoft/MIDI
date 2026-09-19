@@ -1,0 +1,98 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiSequenceFormatEnum.idl";
+import "MidiSequenceNote.idl";
+import "MidiSequenceBarPosition.idl";
+import "MidiSequenceTempoChange.idl";
+import "MidiSequenceTimeSignature.idl";
+import "MidiSequenceTextEvent.idl";
+import "MidiSequenceLyricLine.idl";
+import "MidiSequenceTrack.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Sequencing
+{
+    // Music on a timeline, ready to be played or drawn. This is deliberately not tied to any file
+    // format: a Standard MIDI File produces one, a MIDI Clip File produces one, and so does an
+    // application building a sequence itself.
+    //
+    // A sequence is a handle over its own storage rather than a collection of message objects.
+    // Files in the wild reach millions of events, so the dense parts of a sequence are never
+    // projected one item at a time. The sparse parts, which a display genuinely needs in full,
+    // are ordinary collections.
+    [contract(MidiSequencingUtilityApiContract,1)]
+    [interface_name("Windows.Devices.Midi2.Utilities.Sequencing.IMidiSequence", UUID_IMidiSequence)]
+    runtimeclass MidiSequence
+    {
+        MidiSequenceFormat Format{ get; };
+
+        // Ticks per quarter note, unless the file is timed in SMPTE frames, in which case the
+        // tick is an absolute division of a second and tempo does not apply.
+        UInt16 TicksPerQuarterNote{ get; };
+        Boolean UsesSmpteTiming{ get; };
+
+        UInt64 DurationMicroseconds{ get; };
+        UInt32 LastTick{ get; };
+
+        UInt32 EventCount{ get; };
+        UInt32 NoteCount{ get; };
+
+        String Title{ get; };
+        String Copyright{ get; };
+
+        // Set when the file announced itself as a karaoke file, which changes where its words
+        // are stored. Worth surfacing because it tells an application there are words to show.
+        Boolean IsKaraoke{ get; };
+
+        // The range actually played, so a display can fill its height with the music instead of
+        // all 128 notes.
+        UInt8 LowestNoteNumber{ get; };
+        UInt8 HighestNoteNumber{ get; };
+
+        // Notes are ordered by where they start, so a note that began before a window can still
+        // be sounding inside it. This is how far back a search has to reach to find them all.
+        UInt32 LongestNoteTicks{ get; };
+
+        UInt16 UsedChannelMask{ get; };
+
+        IVectorView<MidiSequenceTrack> Tracks{ get; };
+
+        // Sparse enough to hand over whole.
+        IVectorView<MidiSequenceTempoChange> TempoMap{ get; };
+        IVectorView<MidiSequenceTimeSignature> TimeSignatureMap{ get; };
+        IVectorView<MidiSequenceTextEvent> TextEvents{ get; };
+        IVectorView<MidiSequenceLyricLine> LyricLines{ get; };
+
+        // Position, both ways. Both are backed by a map built while reading, so neither walks
+        // the sequence.
+        UInt64 ConvertTickToMicroseconds(UInt32 tick);
+        UInt32 ConvertMicrosecondsToTick(UInt64 microseconds);
+
+        Double GetBeatsPerMinuteAtTick(UInt32 tick);
+        MidiSequenceBarPosition GetBarPositionAtTick(UInt32 tick);
+
+        // What is in force at a moment, rather than what happens at it. Null before the first one.
+        MidiSequenceTextEvent GetChordSymbolAtTick(UInt32 tick);
+        MidiSequenceLyricLine GetLyricLineAtTick(UInt32 tick);
+
+        // Notes are the dense part. Ask for a window and fill an array you own, so drawing a
+        // frame costs one call rather than one per note. Returns the number written, which is
+        // capped by the length of the array you provide.
+        UInt32 GetNoteCountInTickRange(UInt32 startTick, UInt32 endTick);
+        UInt32 FillNotesInTickRange(UInt32 startTick, UInt32 endTick, UInt32 startIndex, ref MidiSequenceNote[] notes);
+
+        // How many notes each track is holding at a moment, for a level display. One entry per
+        // track, filled into an array you own.
+        UInt32 FillSoundingNoteCountsAtTick(UInt32 tick, ref UInt8[] countsPerTrack);
+    };
+}

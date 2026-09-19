@@ -18,9 +18,21 @@
 
 #include "MidiSynth/AudioSink.h"
 #include "MidiSynth/DlsCollection.h"
+#include "MidiSynth/ProgramList.h"
+#include "MidiSynth/PropertyExchangeSource.h"
 #include "MidiSynth/SpscRingBuffer.h"
 #include "MidiSynth/SynthEngine.h"
 #include "MidiSynth/UmpDispatcher.h"
+#include "MidiSynth/UmpRenderSource.h"
+
+#include "MidiCiProgramList.h"
+#include "MidiDefs.h"
+
+// windows.h defines GetObject as a macro, which collides with a method on the JSON projection.
+#pragma push_macro("GetObject")
+#undef GetObject
+#include <winrt/Windows.Data.Json.h>
+#pragma pop_macro("GetObject")
 
 #include <algorithm>
 #include <atomic>
@@ -39,35 +51,22 @@ using namespace MidiSynth;
 
 namespace
 {
-    constexpr uint32_t MaxPendingPerBlock = 256;
-
-    struct QueuedUmp
-    {
-        uint32_t Words[4]{};
-        uint8_t WordCount{ 0 };
-
-        // QPC at arrival, so the render thread can place the event at the right sample offset
-        // rather than collapsing a whole period of messages onto the block start.
-        int64_t Timestamp{ 0 };
-    };
-
-    using InboundQueue = SpscRingBuffer<QueuedUmp, 8192>;
-    using OutboundQueue = SpscRingBuffer<QueuedUmp, 256>;
-
     std::wstring DefaultDlsPath()
     {
         wchar_t systemDirectory[MAX_PATH]{};
 
-        if (GetSystemDirectoryW(systemDirectory, ARRAYSIZE(systemDirectory)) == 0)
+        if (GetSystemDirectoryW(systemDirectory, MAX_PATH) == 0)
         {
-            return L"gm.dls";
+            return L"C:\\Windows\\System32\\drivers\\gm.dls";
         }
 
-        return std::wstring(systemDirectory) + L"\\drivers\\gm.dls";
+        return std::wstring{ systemDirectory } + L"\\drivers\\gm.dls";
     }
 
-    // Replies leave the audio thread through a queue; sending through the SDK there would
-    // allocate and block.
+    // Replies are produced on whichever thread dispatched the message, so they are queued here and
+    // put on the wire by the sender thread.
+    using OutboundQueue = SpscRingBuffer<QueuedUmp, 256>;
+
     class QueuedUmpOutput final : public IUmpOutput
     {
     public:
@@ -80,123 +79,20 @@ namespace
                 return;
             }
 
-            QueuedUmp message;
-            message.WordCount = static_cast<uint8_t>(wordCount);
+            QueuedUmp message{};
 
             for (uint32_t i = 0; i < wordCount; i++)
             {
                 message.Words[i] = words[i];
             }
 
+            message.WordCount = static_cast<uint8_t>(wordCount);
+
             (void)m_queue.TryPush(message);
         }
 
     private:
         OutboundQueue& m_queue;
-    };
-
-    class SynthRenderSource final : public IAudioRenderSource
-    {
-    public:
-        SynthRenderSource(
-            _In_ SynthEngine& engine,
-            _In_ UmpDispatcher& dispatcher,
-            _In_ InboundQueue& queue,
-            _In_ uint32_t deviceSampleRate,
-            _In_ HANDLE drainedEvent) noexcept
-            : m_engine(engine)
-            , m_dispatcher(dispatcher)
-            , m_queue(queue)
-            , m_deviceSampleRate(deviceSampleRate)
-            , m_drainedEvent(drainedEvent)
-        {
-            LARGE_INTEGER frequency{};
-            QueryPerformanceFrequency(&frequency);
-            m_ticksPerSecond = frequency.QuadPart;
-        }
-
-        void RequestDrain() noexcept { m_draining.store(true, std::memory_order_release); }
-
-        void RenderAudio(float* interleavedStereo, uint32_t frameCount) noexcept override
-        {
-            LARGE_INTEGER now{};
-            QueryPerformanceCounter(&now);
-
-            // Audio in this block represents the period that just elapsed, so a message that
-            // arrived part way through it belongs part way through the block.
-            const double blockTicks =
-                static_cast<double>(frameCount) * static_cast<double>(m_ticksPerSecond)
-                / static_cast<double>(m_deviceSampleRate);
-
-            const double blockStartTicks = static_cast<double>(now.QuadPart) - blockTicks;
-
-            uint32_t pendingCount = 0;
-            QueuedUmp message;
-
-            while (pendingCount < MaxPendingPerBlock && m_queue.TryPop(message))
-            {
-                double offset = 0.0;
-
-                if (blockTicks > 0.0)
-                {
-                    offset = (static_cast<double>(message.Timestamp) - blockStartTicks)
-                        / blockTicks * static_cast<double>(frameCount);
-                }
-
-                const double maxOffset = static_cast<double>(frameCount > 0 ? frameCount - 1 : 0);
-
-                m_pending[pendingCount] = message;
-                m_pendingOffset[pendingCount] =
-                    static_cast<uint32_t>((std::clamp)(offset, 0.0, maxOffset));
-
-                pendingCount++;
-            }
-
-            uint32_t rendered = 0;
-            uint32_t nextEvent = 0;
-
-            while (rendered < frameCount)
-            {
-                while (nextEvent < pendingCount && m_pendingOffset[nextEvent] <= rendered)
-                {
-                    (void)m_dispatcher.ProcessWords(
-                        m_pending[nextEvent].Words, m_pending[nextEvent].WordCount);
-
-                    nextEvent++;
-                }
-
-                uint32_t limit = frameCount;
-
-                if (nextEvent < pendingCount)
-                {
-                    limit = (std::min)(limit, (std::max)(m_pendingOffset[nextEvent], rendered + 1));
-                }
-
-                const uint32_t frames = limit - rendered;
-
-                m_engine.Render(interleavedStereo + static_cast<size_t>(rendered) * 2, frames);
-                rendered += frames;
-            }
-
-            if (m_draining.load(std::memory_order_acquire) && m_engine.ActiveVoiceCount() == 0)
-            {
-                SetEvent(m_drainedEvent);
-            }
-        }
-
-    private:
-        SynthEngine& m_engine;
-        UmpDispatcher& m_dispatcher;
-        InboundQueue& m_queue;
-
-        uint32_t m_deviceSampleRate{ 48000 };
-        int64_t m_ticksPerSecond{ 1 };
-
-        HANDLE m_drainedEvent{ nullptr };
-        std::atomic<bool> m_draining{ false };
-
-        QueuedUmp m_pending[MaxPendingPerBlock]{};
-        uint32_t m_pendingOffset[MaxPendingPerBlock]{};
     };
 
     class SynthHost final
@@ -224,7 +120,10 @@ namespace
         // goes, so a client connecting pays for stream start rather than re-reading 3.4 MB.
         bool LoadSoundSet(_In_ const std::wstring& path)
         {
-            const auto status = DlsCollection::LoadFromFile(path, DlsParseLimits{}, m_collection);
+            // This engine is destined for the service, so only sound sets Windows installed are
+            // accepted. The library still supports other paths for offline tools.
+            const auto status = DlsCollection::LoadFromFile(
+                path, DlsParseLimits{}, SoundSetOrigin::SystemOnly, m_collection);
 
             if (status != DlsParseStatus::Ok)
             {
@@ -235,8 +134,80 @@ namespace
             wprintf(L"Sound set: %s, %zu instruments, %zu waves\n",
                 path.c_str(), m_collection.Instruments().size(), m_collection.Waves().size());
 
+            BuildPropertyResources();
+
             return true;
         }
+
+        // Every property exchange resource is serialized once, here, so that answering a request
+        // is only ever a byte range slice.
+        void BuildPropertyResources()
+        {
+            m_propertyExchange.Build(m_collection, SynthIdentity{});
+
+            wprintf(L"Property Exchange: ResourceList %zu, DeviceInfo %zu, ProgramList %zu bytes\n",
+                m_propertyExchange.ResourceListJson().size(),
+                m_propertyExchange.DeviceInfoJson().size(),
+                m_propertyExchange.ProgramListJson().size());
+        }
+
+        // Called from the sender thread. Emits at most one chunk per call, because a full program
+        // list is far more system exclusive packets than the outbound queue can hold at once.
+        // Nothing may escape: this runs on a thread whose body has no other guard.
+        void ServicePropertyRequests() noexcept
+        {
+            try
+            {
+                ServicePropertyRequestsInner();
+            }
+            catch (...)
+            {
+                wprintf(L"Property request handling failed, request abandoned\n");
+                m_propertyExchange.AbandonReply();
+            }
+        }
+
+        void ServicePropertyRequestsInner()
+        {
+            if (!m_propertyExchange.ReplyInProgress())
+            {
+                UmpDispatcher::PendingPropertyRequest request{};
+
+                if (!m_dispatcher.TakePendingPropertyRequest(request))
+                {
+                    return;
+                }
+
+                const std::vector<char>* blob = nullptr;
+                bool cacheable{ true };
+
+                const auto lookup = ResourceForHeader(request.Header, request.HeaderByteCount, &blob, cacheable);
+
+                if (lookup != ResourceLookup::Found || blob == nullptr)
+                {
+                    const std::string asked(
+                        reinterpret_cast<const char*>(request.Header), request.HeaderByteCount);
+
+                    wprintf(L"Property request %s: %S\n",
+                        lookup == ResourceLookup::HeaderNotJson ? L"header was not JSON" : L"for a resource we do not have",
+                        asked.c_str());
+
+                    m_propertyExchange.SendNotFound(
+                        m_output, SynthEndpoint::FirstGroupIndex, m_dispatcher.Muid(), request);
+
+                    return;
+                }
+
+                m_propertyExchange.BeginReply(request, *blob, cacheable);
+
+                wprintf(L"Property request: %zu bytes\n", blob->size());
+            }
+
+            (void)m_propertyExchange.SendNextChunk(
+                m_output, SynthEndpoint::FirstGroupIndex, m_dispatcher.Muid());
+        }
+
+        void SetMode(_In_ SynthMode mode) noexcept { m_mode = mode; }
 
         void QueueInbound(_In_reads_(wordCount) const uint32_t* words, _In_ uint8_t wordCount) noexcept
         {
@@ -354,14 +325,15 @@ namespace
             }
 
             // Modern mode renders at the device rate, so nothing resamples.
-            const auto config = SynthConfig::ForMode(SynthMode::Modern, sink->SampleRate());
+            const auto config = SynthConfig::ForMode(m_mode, sink->SampleRate());
 
             m_engine.Initialize(&m_collection, config);
             m_dispatcher.Initialize(&m_engine, 0, m_muid);
             m_dispatcher.SetOutput(&m_output, SynthIdentity{});
 
-            auto source = std::make_unique<SynthRenderSource>(
-                m_engine, m_dispatcher, m_inbound, sink->SampleRate(), m_drainedEvent);
+            auto source = std::make_unique<UmpRenderSource>(
+                m_engine, m_dispatcher, m_inbound, sink->SampleRate(),
+                sink->BufferFrames(), m_drainedEvent);
 
             if (!sink->Start(source.get()))
             {
@@ -371,6 +343,12 @@ namespace
 
             wprintf(L"  audio acquired: %s, %u Hz, period %.2f ms\n",
                 sink->DeviceName().c_str(), sink->SampleRate(), sink->PeriodMilliseconds());
+
+            if (config.RenderSampleRate() != sink->SampleRate())
+            {
+                wprintf(L"  compatible mode renders at %u Hz and is resampled\n",
+                    config.RenderSampleRate());
+            }
 
             m_source = std::move(source);
             m_sink = std::move(sink);
@@ -407,16 +385,64 @@ namespace
             wprintf(L"  audio released\n");
         }
 
+        enum class ResourceLookup
+        {
+            Found = 0,
+            HeaderNotJson,
+            UnknownResource,
+        };
+
+        // The header is short ASCII JSON. Windows.Data.Json is the only parser allowed, so it is
+        // used here rather than anywhere in the library, which has to stay free of WinRT.
+        ResourceLookup ResourceForHeader(
+            _In_reads_(headerBytes) const uint8_t* header,
+            _In_ uint16_t headerBytes,
+            _Outptr_result_maybenull_ const std::vector<char>** blob,
+            _Out_ bool& cacheable)
+        {
+            namespace json = ::winrt::Windows::Data::Json;
+
+            *blob = nullptr;
+            cacheable = true;
+
+            const std::string text(reinterpret_cast<const char*>(header), headerBytes);
+
+            json::JsonObject parsed{ nullptr };
+
+            if (!json::JsonObject::TryParse(winrt::to_hstring(text), parsed))
+            {
+                return ResourceLookup::HeaderNotJson;
+            }
+
+            const auto resource = parsed.GetNamedString(L"resource", L"");
+
+            if (resource == L"ResourceList") { *blob = &m_propertyExchange.ResourceListJson(); return ResourceLookup::Found; }
+            if (resource == L"DeviceInfo") { *blob = &m_propertyExchange.DeviceInfoJson(); return ResourceLookup::Found; }
+            if (resource == L"ProgramList") { *blob = &m_propertyExchange.ProgramListJson(); return ResourceLookup::Found; }
+
+            // Rebuilt per request: unlike the others this reflects what is selected right now.
+            if (resource == L"ChannelList")
+            {
+                *blob = &m_propertyExchange.RebuildChannelListJson(m_engine, m_collection);
+                cacheable = false;
+                return ResourceLookup::Found;
+            }
+
+            return ResourceLookup::UnknownResource;
+        }
+
         DlsCollection m_collection;
         SynthEngine m_engine;
         UmpDispatcher m_dispatcher;
 
-        InboundQueue m_inbound;
+        UmpInboundQueue m_inbound;
         OutboundQueue m_outbound;
         QueuedUmpOutput m_output{ m_outbound };
 
+        PropertyExchangeSource m_propertyExchange;
+
         std::unique_ptr<WasapiAudioSink> m_sink;
-        std::unique_ptr<SynthRenderSource> m_source;
+        std::unique_ptr<UmpRenderSource> m_source;
 
         std::mutex m_audioLock;
         std::mutex m_producerLock;
@@ -425,6 +451,8 @@ namespace
         uint32_t m_muid{ MidiUniqueId::CreateRandom().AsCombined28BitValue() };
 
         std::atomic<uint64_t> m_droppedCount{ 0 };
+
+        SynthMode m_mode{ SynthMode::Modern };
 
         HANDLE m_drainedEvent{ nullptr };
     };
@@ -481,9 +509,19 @@ namespace
     }
 }
 
-int main()
+int main(int argc, char** argv)
 {
     winrt::init_apartment();
+
+    SynthMode mode = SynthMode::Modern;
+
+    for (int i = 1; i < argc; i++)
+    {
+        if (_stricmp(argv[i], "--compat") == 0)
+        {
+            mode = SynthMode::Compatible;
+        }
+    }
 
     if (!MidiApi::EnsureServiceAvailable())
     {
@@ -492,6 +530,9 @@ int main()
     }
 
     SynthHost host;
+    host.SetMode(mode);
+
+    wprintf(L"Mode: %s\n", (mode == SynthMode::Compatible) ? L"compatible" : L"modern");
 
     if (!host.LoadSoundSet(DefaultDlsPath()))
     {
@@ -563,9 +604,15 @@ int main()
     // Replies queued by the render thread are sent from here.
     std::thread sender([&host, &deviceEndpoint, &running]()
         {
+            // Answering a property request parses JSON through WinRT, which needs an apartment on
+            // this thread. The one in main does not cover it.
+            winrt::init_apartment(winrt::apartment_type::multi_threaded);
+
             while (running.load(std::memory_order_acquire))
             {
                 QueuedUmp message;
+
+                host.ServicePropertyRequests();
 
                 while (host.TryPopOutbound(message))
                 {

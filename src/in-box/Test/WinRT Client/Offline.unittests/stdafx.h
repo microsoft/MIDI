@@ -10,6 +10,13 @@
 
 #include <windows.h>
 
+// windows.h defines GetObject, which collides with a member of the JSON projection. This has to
+// come before anything that pulls the JSON headers in, and the Midi2 projections do.
+#pragma push_macro("GetObject")
+#undef GetObject
+#include <winrt/Windows.Data.Json.h>
+#pragma pop_macro("GetObject")
+
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Devices.Enumeration.h>
@@ -17,6 +24,7 @@
 #include <winrt/Windows.Devices.Midi2.h>
 #include <winrt/Windows.Devices.Midi2.Enumeration.h>
 #include <winrt/Windows.Devices.Midi2.Utilities.Messages.h>
+#include <winrt/Windows.Devices.Midi2.CapabilityInquiry.h>
 
 
 using namespace winrt::Windows::Devices::Midi2;
@@ -47,6 +55,12 @@ using namespace winrt::Windows::Devices::Midi2::Utilities::Messages;
 #include "MidiMessage96Tests.h"
 #include "MidiMessage128Tests.h"
 #include "MidiMessagePacketTests.h"
+
+#include "MidiStreamMessageBuilderTests.h"
+#include "MidiCiMessageTests.h"
+#include "MidiCapabilityInquiryMessageTests.h"
+#include "MidiCiProgramListTests.h"
+#include "MidiCiResponderTests.h"
 
 //#include "MidiFunctionBlockMessageBuilderTests.h"
 //#include "MidiMessageBuilderTests.h"

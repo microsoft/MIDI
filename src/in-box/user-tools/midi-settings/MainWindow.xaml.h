@@ -26,6 +26,7 @@ namespace winrt::midisettings::implementation
 
         void OnRootLoaded(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnRootSizeChanged(foundation::IInspectable const& sender, xaml::SizeChangedEventArgs const& args);
+        void OnWindowActivated(foundation::IInspectable const& sender, xaml::WindowActivatedEventArgs const& args);
 
         void OnAlwaysOnTopToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnAppearanceButtonClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -44,6 +45,8 @@ namespace winrt::midisettings::implementation
         void OnNotificationsEnabledToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNotificationsNetworkToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNotificationsStartupToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnNotificationsAllUsersToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnNotificationsRestartElevatedClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         // Endpoint list
         void OnTransportFilterChanged(
@@ -79,6 +82,9 @@ namespace winrt::midisettings::implementation
         void OnCreateConfigFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCopyConfigFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         winrt::fire_and_forget OnPortNamingChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnSynthEnabledToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnSynthOptionChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        winrt::fire_and_forget OnSynthVolumeChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
         winrt::fire_and_forget OnRestartServiceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnRestartElevatedClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
@@ -136,8 +142,24 @@ namespace winrt::midisettings::implementation
 
         // --- global settings ---
         void RefreshGlobalSettings() noexcept;
+        void RefreshSynthSettings() noexcept;
+        winrt::fire_and_forget ApplySynthConfigAsync() noexcept;
         void RefreshNotificationSettings() noexcept;
         void ShowFirstRunInvitation() noexcept;
+
+        // Another MIDI tool can ask this app to open the notifications dialog, either on the
+        // command line or, when a copy is already running, by posting to its window. Only a
+        // subclass can see that message: the window class belongs to XAML.
+        void StartListeningForLaunchRequests() noexcept;
+        void StopListeningForLaunchRequests() noexcept;
+
+        static LRESULT CALLBACK LaunchRequestSubclassProcedure(
+            _In_ HWND window,
+            _In_ UINT message,
+            _In_ WPARAM wparam,
+            _In_ LPARAM lparam,
+            _In_ UINT_PTR idSubclass,
+            _In_ DWORD_PTR referenceData) noexcept;
 
         midiapp::WindowChrome m_chrome{};
 
@@ -150,7 +172,15 @@ namespace winrt::midisettings::implementation
         bool m_healthCheckInFlight{ false };
         bool m_suppressFilterHandling{ false };
         bool m_suppressPortNamingHandling{ false };
+
+        // Setting ToggleSwitch::IsOn raises Toggled, so a refresh would write the value it just
+        // read back to the service on every open of the dialog.
+        bool m_suppressSynthHandling{ false };
         bool m_updatingNotificationToggles{ false };
+
+        // The subclass is only removed when it was actually installed, and the handle is kept
+        // because the window is gone by the time the XAML Closed handler runs.
+        HWND m_launchRequestWindow{ nullptr };
 
         // The detail dialog asks to be reopened after a customization, and its status line is
         // only safe to touch while it is actually up.

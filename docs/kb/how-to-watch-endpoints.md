@@ -3,6 +3,8 @@ layout: kb
 title: How to Enumerate UMP Endpoints with Add/Remove/Change Notification
 audience: developers
 description: Follow the instructions here to get add/update/remove notifications in Windows when endpoints change
+categories:
+  - Developer Guidance
 ---
 
 In WinRT, a device watcher is a type class which raises events when specific devices are added, removed, or have had property changes. The concept of a device watcher is central to working with all types of devices in Windows. The Windows SDK ships with a general `Windows::Devices::Enumeration::DeviceWatcher` class which can be used for any type of device query.
@@ -41,14 +43,15 @@ An application may track added / updated / removed devices in its own container,
 
 That this map is dynamic, and changes when devices are added or removed. For that reason, we recommend not caching copies of the objects in there, but instead accessing them by the `EndpointDeviceId` (the map key) each time. This will help ensure you always have the latest properties, and also that you are not holding references to invalidated (removed) objects.
 
+## What to expect from the `Updated` event
+
+A device being plugged in produces a sequence of `Updated` events, not one, because the service publishes each piece of the device's description as it arrives. Which information is safe to read when, and why you should not list MIDI 1.0 ports from inside an endpoint update, are covered in [Endpoint Arrival and Update Ordering]({{ site.baseurl }}/kb/endpoint-arrival-and-update-ordering/).
+
 ## Samples
 
 * [C++/WinRT watch-endpoints](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/watch-endpoints)
 * [C# watch-endpoints](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/watch-endpoints)
 
-If you are porting an application which thinks in WinMM ports and are not ready to restructure
-around endpoints and groups yet, there is an equivalent watcher for the MIDI 1.0 port list:
-[C++/WinRT watch-midi1-ports](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/watch-midi1-ports)
-and [C# watch-midi1-ports](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/watch-midi1-ports).
+If you are porting an application which thinks in WinMM ports and are not ready to restructure around endpoints and groups yet, there is an equivalent watcher for the MIDI 1.0 port list: [C++/WinRT watch-midi1-ports](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/watch-midi1-ports) and [C# watch-midi1-ports](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/watch-midi1-ports).
 
 

@@ -1,0 +1,42 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiFileReadOptions.idl";
+import "MidiFileReadResult.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Files
+{
+    // Reads a Standard MIDI File, in any of its three formats, and the RIFF wrapper some files
+    // use around one. Produces a sequence which is no longer tied to the file format.
+    //
+    // Reading is asynchronous because a file may come from anywhere: a download, a mail
+    // attachment, a document a browser was handed.
+    [contract(MidiFilesUtilityApiContract,1)]
+    [static_name("Windows.Devices.Midi2.Utilities.Files.IMidiStandardFileReaderStatics", UUID_IMidiStandardFileReaderStatics)]
+    static runtimeclass MidiStandardFileReader
+    {
+        static Windows.Foundation.IAsyncOperation<MidiFileReadResult> ReadAsync(
+            Windows.Storage.Streams.IRandomAccessStream stream);
+
+        static Windows.Foundation.IAsyncOperation<MidiFileReadResult> ReadAsync(
+            Windows.Storage.Streams.IRandomAccessStream stream,
+            MidiFileReadOptions options);
+
+        static Windows.Foundation.IAsyncOperation<MidiFileReadResult> ReadFromFileAsync(
+            Windows.Storage.StorageFile file);
+
+        static Windows.Foundation.IAsyncOperation<MidiFileReadResult> ReadFromFileAsync(
+            Windows.Storage.StorageFile file,
+            MidiFileReadOptions options);
+    };
+}

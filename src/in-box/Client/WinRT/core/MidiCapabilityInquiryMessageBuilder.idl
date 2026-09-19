@@ -1,0 +1,273 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+import "MidiCapabilityInquiryMessageTypeEnum.idl";
+import "MidiCapabilityInquiryCategoriesEnum.idl";
+import "MidiUniqueId.idl";
+import "MidiProfileId.idl";
+import "MidiDeclaredDeviceIdentity.idl";
+import "MidiMessage64.idl";
+import "MidiGroup.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    // Builds capability inquiry messages as the UMP packets which carry them, so what comes out can
+    // be handed straight to an endpoint connection. Every method returns an empty list rather than a
+    // half formed message when it is given something that cannot legally travel inside a system
+    // exclusive message.
+    //
+    // Nothing here sends anything, and nothing here keeps state. A caller owns its own identifier,
+    // its own request numbering and its own decisions about what to ask for.
+    [static_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiCapabilityInquiryMessageBuilderStatics", UUID_IMidiCapabilityInquiryMessageBuilderStatics)]
+    static runtimeclass MidiCapabilityInquiryMessageBuilder
+    {
+        // Every device which implements profiles or property exchange has to be able to receive at
+        // least this much system exclusive data, so it is the safe assumption about a device which
+        // has not said otherwise.
+        [noexcept] static UInt32 MinimumReceivableSystemExclusiveSize{ get; };
+
+
+        // ------------------------------------------------------------------ management
+
+        // An initiator announces itself with this. It always goes to the broadcast identifier,
+        // because the initiator does not yet know what is out there to address.
+        //
+        // The output path id names which of the initiator's own outputs this went out of. A
+        // responder echoes it, which is how an application with several outputs can tell which one
+        // reached the device.
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildDiscovery(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            MidiUniqueId sourceMuid,
+            Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity identity,
+            MidiCapabilityInquiryCategories supportedCategories,
+            UInt32 receivableMaximumSystemExclusiveSize,
+            UInt8 outputPathId);
+
+        // A responder must answer Discovery even when it supports no categories at all.
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildDiscoveryReply(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            MidiUniqueId sourceMuid,
+            MidiUniqueId destinationMuid,
+            Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity identity,
+            MidiCapabilityInquiryCategories supportedCategories,
+            UInt32 receivableMaximumSystemExclusiveSize,
+            UInt8 outputPathId,
+            UInt8 functionBlockNumber);
+
+        // Withdraws an identifier, which is what a device does when it has to change the one it was
+        // using. It is broadcast and gets no reply.
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildInvalidateMuid(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            MidiUniqueId sourceMuid,
+            MidiUniqueId muidToInvalidate);
+
+        // The status message is shown to the person using the application, so it is worth writing.
+        // It is seven bit text on the wire; anything outside that is refused rather than mangled.
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildAck(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            UInt8 deviceId,
+            MidiUniqueId sourceMuid,
+            MidiUniqueId destinationMuid,
+            MidiCapabilityInquiryMessageType originalMessageType,
+            UInt8 statusCode,
+            UInt8 statusData,
+            Windows.Foundation.Collections.IIterable<UInt8> statusDetails,
+            String statusMessage);
+
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildNak(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            UInt8 deviceId,
+            MidiUniqueId sourceMuid,
+            MidiUniqueId destinationMuid,
+            MidiCapabilityInquiryMessageType originalMessageType,
+            UInt8 statusCode,
+            UInt8 statusData,
+            Windows.Foundation.Collections.IIterable<UInt8> statusDetails,
+            String statusMessage);
+
+
+        // ------------------------------------------------------------- property exchange
+
+        // How many requests each end is willing to have outstanding at once. Ask before getting
+        // anything: a device which does not answer this does not do property exchange.
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildPropertyExchangeCapabilitiesInquiry(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            MidiUniqueId sourceMuid,
+            MidiUniqueId destinationMuid,
+            UInt8 maximumSimultaneousRequests);
+
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildPropertyExchangeCapabilitiesReply(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            MidiUniqueId sourceMuid,
+            MidiUniqueId destinationMuid,
+            UInt8 maximumSimultaneousRequests);
+
+        // Asks for a resource. The header names it and carries any options, for example the offset
+        // and limit that page through a long list.
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildPropertyGetDataInquiry(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            MidiUniqueId sourceMuid,
+            MidiUniqueId destinationMuid,
+            UInt8 requestId,
+            Windows.Data.Json.JsonObject header);
+
+        // Any property exchange message, split into as many chunks as the destination's declared
+        // system exclusive size needs, and each chunk into as many packets as it needs. The whole
+        // transfer comes back as one list, in the order it must be sent.
+        //
+        // The header travels on the first chunk only, which is what the specification requires, so
+        // a caller must not try to chunk by calling this once per chunk.
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildPropertyMessage(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            MidiCapabilityInquiryMessageType messageType,
+            MidiUniqueId sourceMuid,
+            MidiUniqueId destinationMuid,
+            UInt8 requestId,
+            Windows.Data.Json.JsonObject header,
+            Windows.Foundation.Collections.IIterable<UInt8> body,
+            UInt32 destinationMaximumSystemExclusiveSize);
+
+        // How many chunks the same call will produce, without producing them. Lets a caller decide
+        // whether a transfer is worth starting, and show progress once it has.
+        [noexcept] static UInt16 GetPropertyChunkCount(
+            Windows.Data.Json.JsonObject header,
+            UInt32 bodyByteCount,
+            UInt32 destinationMaximumSystemExclusiveSize);
+
+
+        // ------------------------------------------------------------------- profiles
+
+        // Profile messages may address one channel, 0x00 to 0x0F, a whole group with 0x7E, or a
+        // whole function block with 0x7F. Which of those a device will answer is its own business.
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildProfileInquiry(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            UInt8 deviceId,
+            MidiUniqueId sourceMuid,
+            MidiUniqueId destinationMuid);
+
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildProfileInquiryReply(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            UInt8 deviceId,
+            MidiUniqueId sourceMuid,
+            MidiUniqueId destinationMuid,
+            Windows.Foundation.Collections.IIterable<MidiProfileId> enabledProfiles,
+            Windows.Foundation.Collections.IIterable<MidiProfileId> disabledProfiles);
+
+        // The channel count asks the device to give the profile that many channels. Send zero when
+        // the message addresses a group or a function block, whose width is already decided.
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildSetProfileOn(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            UInt8 deviceId,
+            MidiUniqueId sourceMuid,
+            MidiUniqueId destinationMuid,
+            MidiProfileId profileId,
+            UInt16 channelCount);
+
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildSetProfileOff(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            UInt8 deviceId,
+            MidiUniqueId sourceMuid,
+            MidiUniqueId destinationMuid,
+            MidiProfileId profileId);
+
+        // The four reports are always broadcast, so they take no destination. A device sends them
+        // whenever its own state changes, not only in answer to being asked.
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildProfileEnabledReport(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            UInt8 deviceId,
+            MidiUniqueId sourceMuid,
+            MidiProfileId profileId,
+            UInt16 channelCount);
+
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildProfileDisabledReport(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            UInt8 deviceId,
+            MidiUniqueId sourceMuid,
+            MidiProfileId profileId,
+            UInt16 channelCount);
+
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildProfileAddedReport(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            UInt8 deviceId,
+            MidiUniqueId sourceMuid,
+            MidiProfileId profileId);
+
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildProfileRemovedReport(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            UInt8 deviceId,
+            MidiUniqueId sourceMuid,
+            MidiProfileId profileId);
+
+        // Asks what a device's implementation of a profile can do, which may be worth knowing
+        // before enabling it. An inquiry target below 0x40 means the same thing for every profile;
+        // from 0x40 up the profile's own specification defines it.
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildProfileDetailsInquiry(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            UInt8 deviceId,
+            MidiUniqueId sourceMuid,
+            MidiUniqueId destinationMuid,
+            MidiProfileId profileId,
+            UInt8 inquiryTarget);
+
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildProfileDetailsReply(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            UInt8 deviceId,
+            MidiUniqueId sourceMuid,
+            MidiUniqueId destinationMuid,
+            MidiProfileId profileId,
+            UInt8 inquiryTarget,
+            Windows.Foundation.Collections.IIterable<UInt8> inquiryTargetData);
+
+        // Carries whatever a profile specification says it carries. This API does not interpret it.
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildProfileSpecificData(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            UInt8 deviceId,
+            MidiUniqueId sourceMuid,
+            MidiUniqueId destinationMuid,
+            MidiProfileId profileId,
+            Windows.Foundation.Collections.IIterable<UInt8> data);
+
+
+        // ------------------------------------------------------------------- raw
+
+        // Packs a capability inquiry payload this API has no builder for. The bytes start at the
+        // universal system exclusive byte and exclude the enclosing markers, which is the same shape
+        // MidiCapabilityInquiryMessage.FromSystemExclusiveData reads and the same shape its Data
+        // property returns, so a message can be taken apart, altered and sent on.
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildFromSystemExclusiveData(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Foundation.Collections.IIterable<UInt8> data);
+    };
+}

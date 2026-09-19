@@ -117,6 +117,10 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Messages::implementation
             _In_ collections::IIterable<midi2::IMidiUniversalPacket> const& messages
             );
 
+        static midi2enum::MidiDeclaredDeviceIdentity ParseDeviceIdentityNotificationMessage(
+            _In_ midi2::IMidiUniversalPacket const& message
+            ) noexcept;
+
 
 
 

@@ -3,6 +3,9 @@ layout: kb
 title: Why a Service Plugin may not load correctly
 audience: everyone
 description: Explains how to get a third-party service plugin to load in Windows MIDI Services.
+categories:
+  - Troubleshooting
+  - Developer Guidance
 ---
 
 Windows MIDI Services supports the creation of Transport (and in the future, Transform) plugins in the service, as a way to create or prototype new MIDI standards and communications methods without having to write kernel drivers.

@@ -3,6 +3,8 @@ layout: kb
 title: How to switch between MIDI class drivers
 description: How to move between the older usbaudio.sys and the newer usbmidi2-acx.sys drivers
 audience: everyone
+categories:
+  - Troubleshooting
 ---
 
 With the Windows MIDI Services release, we introduced a new class driver USBMidi2-ACX. That new driver supports MIDI 1.0 and MIDI 2.0 devices, but it's not always going to be compatible with every device. For that reason, we kept the existing USB MIDI 1.0 class driver: usbaudio.sys. 

@@ -20,6 +20,10 @@ namespace midikeyboard
         uint8_t BankLsb{ 0 };
         uint8_t ProgramChange{ 0 };
 
+        // "tags" from the entry, joined for display. A sound set commonly gives a program and
+        // its bank variation the same title, so this is often the only thing telling them apart.
+        std::wstring Tags{};
+
         // "Factory Presets", "GM2 Programs" and so on, from the ChannelList link that led here.
         // Empty when the device only offers one collection.
         std::wstring CollectionTitle{};
@@ -41,9 +45,13 @@ namespace midikeyboard
 
     // Asks an endpoint for its program list over MIDI-CI Property Exchange.
     //
-    // The whole exchange is driven from the connection's message callback, so this never blocks.
-    // Results arrive on the completion handler, which runs on the MIDI callback thread; callers
-    // needing the UI thread must marshal for themselves.
+    // The exchange itself belongs to Windows.Devices.Midi2.CapabilityInquiry: this walks a device's
+    // ChannelList to find which program lists the transmitting channel can actually select from,
+    // then fetches each of them. Everything underneath, the identifier, the request numbering, the
+    // chunk reassembly, the paging and the timeouts, is the API's business.
+    //
+    // Results arrive on the completion handler, which runs on a background thread; callers needing
+    // the UI thread must marshal for themselves.
     //
     // One instance handles one query. Create it, Start it, and let it go once the handler fires.
     class MidiCiProgramListQuery : public std::enable_shared_from_this<MidiCiProgramListQuery>
@@ -68,81 +76,44 @@ namespace midikeyboard
         static constexpr uint32_t StepTimeoutMilliseconds = 2000;
 
     private:
-        enum class Stage : int32_t
-        {
-            Idle = 0,
-            AwaitingDiscoveryReply,
-            AwaitingChannelList,
-            AwaitingProgramList,
-            Finished
-        };
-
         void Begin(
             _In_ winrt::Windows::Devices::Midi2::MidiEndpointConnection const& connection,
             _In_ uint8_t group,
             _In_ uint8_t channel,
             _In_ CompletedHandler handler) noexcept;
 
-        void OnMessageReceived(
-            _In_ winrt::Windows::Foundation::IInspectable const& sender,
-            _In_ winrt::Windows::Devices::Midi2::MidiMessageReceivedEventArgs const& args) noexcept;
+        // The whole exchange, start to finish, on a background thread. Every step waits for the
+        // device's answer, so none of this may run on the user interface thread.
+        void Run() noexcept;
 
-        void OnDiscoveryReply(_In_ uint32_t remoteMuid) noexcept;
-        void OnPropertyReply(_In_ std::string const& headerJson, _In_ std::vector<uint8_t> const& body) noexcept;
+        // Which program lists the transmitting channel can select from. Empty when the device does
+        // not publish a ChannelList, which is not an error: a device with a single list needs no
+        // map from channels to lists.
+        std::vector<winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiResourceLink>
+            ProgramListLinksForChannel(
+                _In_ winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiChannelList const& channelList) noexcept;
 
-        void CollectCollectionsFromChannelList(_In_ winrt::Windows::Data::Json::JsonArray const& array) noexcept;
-
-        // returns how many usable rows this reply added, which is what drives paging
-        int32_t CollectProgramsFromList(_In_ winrt::Windows::Data::Json::JsonArray const& array) noexcept;
-
-        void RequestChannelList() noexcept;
-        void RequestProgramList() noexcept;
-
-        // true when another collection was queued, false when the list is complete
-        bool RequestNextCollection() noexcept;
-
-        void SendCiMessage(_In_reads_bytes_(length) uint8_t const* bytes, _In_ uint16_t length) noexcept;
-        void SendPropertyGet(_In_ std::string const& headerJson) noexcept;
+        // Returns how many usable rows this list added.
+        int32_t CollectPrograms(
+            _In_ winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiProgramList const& programList,
+            _In_ std::wstring const& collectionTitle,
+            _In_ bool const labelWithCollection) noexcept;
 
         void Complete(_In_ ProgramListResult result) noexcept;
-        void ArmTimeout() noexcept;
 
-        std::recursive_mutex m_lock{};
+        std::mutex m_lock{};
 
-        winrt::Windows::Devices::Midi2::MidiEndpointConnection m_connection{ nullptr };
-        winrt::event_token m_messageToken{};
+        winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiCapabilityInquirySession m_session{ nullptr };
 
         uint8_t m_group{ 0 };
         uint8_t m_channel{ 0 };
+
         CompletedHandler m_handler{};
 
-        Stage m_stage{ Stage::Idle };
-        uint32_t m_localMuid{ 0 };
-        uint32_t m_remoteMuid{ 0 };
-        uint8_t m_requestId{ 0 };
-
-        // reassembly across Property Exchange chunks
-        std::string m_replyHeader{};
-        std::vector<uint8_t> m_replyBody{};
-
-        // one entry per ProgramList collection still to be fetched
-        struct PendingCollection
-        {
-            std::string ResourceId;
-            std::wstring Title;
-        };
-        std::vector<PendingCollection> m_pendingCollections{};
-        std::wstring m_currentCollectionTitle{};
-        std::string m_currentResourceId{};
-
-        // paging within the collection being fetched
-        int32_t m_offset{ 0 };
-        int32_t m_totalCount{ 0 };
+        std::atomic<bool> m_canceled{ false };
+        std::atomic<bool> m_completed{ false };
 
         std::vector<ProgramListEntry> m_entries{};
-
-        winrt::Windows::System::Threading::ThreadPoolTimer m_timeoutTimer{ nullptr };
-        uint32_t m_timeoutGeneration{ 0 };
 
         // Keeps the object alive for the length of the exchange. Released by Complete.
         std::shared_ptr<MidiCiProgramListQuery> m_self{};

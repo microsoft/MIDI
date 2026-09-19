@@ -100,7 +100,7 @@ namespace midikeyboard
 
         m_keyPressure = ReadEnum(
             ReadDword(ValueKeyPressure, static_cast<uint32_t>(KeyPressureMode::PolyPressure)),
-            KeyPressureMode::PolyPressure, KeyPressureMode::PolyPressure);
+            KeyPressureMode::ModWheel, KeyPressureMode::PolyPressure);
 
         m_perNoteControllerIndex = std::clamp(ReadDword(ValuePerNoteController, 1u), 0u, 127u);
 

@@ -1,0 +1,54 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+import "MidiResourceLink.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiChannelListEntry", UUID_IMidiChannelListEntry)]
+    [static_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiChannelListEntryStatics", UUID_IMidiChannelListEntryStatics)]
+    [constructor_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiChannelListEntryFactory", UUID_IMidiChannelListEntryFactory)]
+    runtimeclass MidiChannelListEntry : Windows.Foundation.IStringable
+    {
+        MidiChannelListEntry();
+        MidiChannelListEntry(UInt16 channel, String title);
+
+        // Display name for the channel, from the entry's "title".
+        [noexcept] String Title;
+
+        // ONE based, and 1 to 256 rather than 1 to 16. The specification numbers channels from the
+        // first channel of the first Group and runs across all sixteen Groups, so this cannot be a
+        // MidiChannel: that type addresses a channel within one Group and stops at 16.
+        //
+        // Note also that this is one based while the bank and program values below are zero based.
+        // That is the specification's own inconsistency, carried through as it arrives rather than
+        // quietly corrected into something a caller would have to undo before transmitting.
+        [noexcept] UInt16 Channel;
+
+        // Zero based, exactly as in a program list entry.
+        [noexcept] UInt8 BankMsb;
+        [noexcept] UInt8 BankLsb;
+        [noexcept] UInt8 ProgramChange;
+
+        // Name of whatever is currently selected on the channel, when the device reports one.
+        [noexcept] String ProgramTitle;
+
+        // Where this channel's programs come from. A device offering several collections is only
+        // reachable by following these, so this is the route to every program list it has.
+        [noexcept] Windows.Foundation.Collections.IVector<MidiResourceLink> Links{ get; };
+
+        [noexcept] Windows.Data.Json.JsonObject GetJson();
+        [noexcept] static MidiChannelListEntry FromJson(Windows.Data.Json.JsonObject json);
+    };
+}

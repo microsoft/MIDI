@@ -1,0 +1,9 @@
+# Order here sets the order of the sections, and of the chiclets, on the knowledge base index page.
+# An article joins a section by listing the exact name below in its "categories" front matter.
+# An article may be in more than one. Anything with no match lands in "Other articles".
+
+- Getting Started
+- Troubleshooting
+- Transport Details
+- Internals
+- Developer Guidance

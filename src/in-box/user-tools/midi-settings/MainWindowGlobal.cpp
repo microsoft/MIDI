@@ -170,6 +170,8 @@ namespace winrt::midisettings::implementation
 
             m_suppressPortNamingHandling = false;
 
+            RefreshSynthSettings();
+
             GlobalStatusText().Text({});
         }
         catch (...)
@@ -178,6 +180,229 @@ namespace winrt::midisettings::implementation
 
             MIDI_SETTINGS_LOG_GENERAL_EXCEPTION(L"Unable to load the global settings.");
         }
+    }
+
+
+    namespace
+    {
+        // Index order must match the ComboBoxItem order in MainWindow.xaml.
+        constexpr midi2synth::MidiSynthRenderMode RenderModeByIndex[]
+        {
+            midi2synth::MidiSynthRenderMode::Compatible,
+            midi2synth::MidiSynthRenderMode::Modern,
+        };
+
+        // Exclusive mode is in the API but not implemented, so it is not offered here.
+        constexpr midi2synth::MidiSynthAudioOutputMode AudioModeByIndex[]
+        {
+            midi2synth::MidiSynthAudioOutputMode::WasapiShared,
+            midi2synth::MidiSynthAudioOutputMode::WasapiSharedLowLatency,
+        };
+
+        constexpr midi2synth::MidiSynthBankSelectMode BankSelectByIndex[]
+        {
+            midi2synth::MidiSynthBankSelectMode::Automatic,
+            midi2synth::MidiSynthBankSelectMode::RolandGS,
+            midi2synth::MidiSynthBankSelectMode::YamahaXG,
+            midi2synth::MidiSynthBankSelectMode::GeneralMidi2,
+        };
+
+        template <typename TEnum, size_t TCount>
+        int32_t IndexForValue(_In_ TEnum const (&table)[TCount], _In_ TEnum value) noexcept
+        {
+            for (size_t i = 0; i < TCount; i++)
+            {
+                if (table[i] == value)
+                {
+                    return static_cast<int32_t>(i);
+                }
+            }
+
+            return -1;
+        }
+    }
+
+
+    void MainWindow::RefreshSynthSettings() noexcept
+    {
+        m_suppressSynthHandling = true;
+
+        auto restore = wil::scope_exit([&]() { m_suppressSynthHandling = false; });
+
+        try
+        {
+            auto const status = midi2synth::MidiSynthManager::IsTransportAvailable()
+                ? midi2synth::MidiSynthManager::GetStatus()
+                : nullptr;
+
+            // A machine without the synthesizer transport installed is not an error. Hide the
+            // controls rather than showing ones which cannot do anything.
+            if (status == nullptr)
+            {
+                SynthEnabledToggle().Visibility(xaml::Visibility::Collapsed);
+                SynthOptionsPanel().Visibility(xaml::Visibility::Collapsed);
+                SynthStatusText().Text(res::GetString(L"SynthNotAvailable"));
+                return;
+            }
+
+            SynthEnabledToggle().Visibility(xaml::Visibility::Visible);
+            SynthOptionsPanel().Visibility(xaml::Visibility::Visible);
+
+            auto const enabled = status.IsEnabled();
+
+            SynthEnabledToggle().IsOn(enabled);
+            SynthStatusText().Text(res::GetString(enabled ? L"SynthStateOn" : L"SynthStateOff"));
+
+            SynthRenderModeCombo().SelectedIndex(IndexForValue(RenderModeByIndex, status.RenderMode()));
+            SynthAudioModeCombo().SelectedIndex(IndexForValue(AudioModeByIndex, status.AudioOutputMode()));
+            SynthBankSelectCombo().SelectedIndex(IndexForValue(BankSelectByIndex, status.BankSelectMode()));
+
+            SynthVolumeSlider().Value(status.VolumeDecibels());
+            SynthVolumeText().Text(res::FormatString(L"SynthVolumeFormat", status.VolumeDecibels()));
+
+            SynthEffectsCheck().IsChecked(status.AreEffectsEnabled());
+
+            auto const soundSet = midi2synth::MidiSynthManager::GetSoundSetInfo();
+
+            SynthSoundSetText().Text(soundSet == nullptr
+                ? winrt::hstring{}
+                : res::FormatString(L"SynthSoundSetFormat",
+                    soundSet.Name(),
+                    soundSet.MelodicInstrumentCount(),
+                    soundSet.DrumKits() == nullptr ? 0u : soundSet.DrumKits().Size()));
+        }
+        catch (...)
+        {
+            SynthEnabledToggle().Visibility(xaml::Visibility::Collapsed);
+            SynthOptionsPanel().Visibility(xaml::Visibility::Collapsed);
+            SynthStatusText().Text(res::GetString(L"SynthNotAvailable"));
+
+            MIDI_SETTINGS_LOG_GENERAL_EXCEPTION(L"Unable to read the synthesizer settings.");
+        }
+    }
+
+
+    // Builds the configuration from what the controls show and both sends and saves it. Every
+    // handler funnels through here so a change to one control cannot drop another.
+    winrt::fire_and_forget MainWindow::ApplySynthConfigAsync() noexcept
+    {
+        auto lifetime = get_strong();
+
+        try
+        {
+            auto const status = midi2synth::MidiSynthManager::GetStatus();
+
+            if (status == nullptr)
+            {
+                SynthStatusText().Text(res::GetString(L"SynthChangeFailed"));
+                co_return;
+            }
+
+            midi2synth::MidiSynthConfig config{ status };
+
+            auto const enabled = SynthEnabledToggle().IsOn();
+            config.IsEnabled(enabled);
+
+            auto const renderIndex = SynthRenderModeCombo().SelectedIndex();
+            auto const audioIndex = SynthAudioModeCombo().SelectedIndex();
+            auto const bankIndex = SynthBankSelectCombo().SelectedIndex();
+
+            if (renderIndex >= 0 && renderIndex < static_cast<int32_t>(std::size(RenderModeByIndex)))
+            {
+                config.RenderMode(RenderModeByIndex[renderIndex]);
+            }
+
+            if (audioIndex >= 0 && audioIndex < static_cast<int32_t>(std::size(AudioModeByIndex)))
+            {
+                config.AudioOutputMode(AudioModeByIndex[audioIndex]);
+            }
+
+            if (bankIndex >= 0 && bankIndex < static_cast<int32_t>(std::size(BankSelectByIndex)))
+            {
+                config.BankSelectMode(BankSelectByIndex[bankIndex]);
+            }
+
+            config.VolumeDecibels(SynthVolumeSlider().Value());
+            config.AreEffectsEnabled(SynthEffectsCheck().IsChecked().GetBoolean());
+
+            auto const response =
+                midi2config::MidiServiceTransportPluginConfigManager::SendUpdate(config);
+
+            if (response == nullptr ||
+                response.Status() != midi2config::MidiServiceConfigResponseStatus::Success)
+            {
+                SynthStatusText().Text(res::GetString(L"SynthChangeFailed"));
+                RefreshSynthSettings();
+                co_return;
+            }
+
+            auto const saveResponse =
+                midi2config::MidiServiceTransportPluginConfigManager::SaveUpdate(config);
+
+            SynthStatusText().Text((saveResponse != nullptr && saveResponse.Success())
+                ? res::GetString(enabled ? L"SynthStateOn" : L"SynthStateOff")
+                : res::GetString(L"SynthNotSaved"));
+        }
+        MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to change the synthesizer setting.")
+
+        co_return;
+    }
+
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnSynthEnabledToggled(
+        foundation::IInspectable const&,
+        xaml::RoutedEventArgs const&)
+    {
+        auto lifetime = get_strong();
+
+        if (m_suppressSynthHandling)
+        {
+            co_return;
+        }
+
+        ApplySynthConfigAsync();
+
+        co_return;
+    }
+
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnSynthOptionChanged(
+        foundation::IInspectable const&,
+        xaml::RoutedEventArgs const&)
+    {
+        auto lifetime = get_strong();
+
+        if (m_suppressSynthHandling)
+        {
+            co_return;
+        }
+
+        ApplySynthConfigAsync();
+
+        co_return;
+    }
+
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::OnSynthVolumeChanged(
+        foundation::IInspectable const&,
+        controls::Primitives::RangeBaseValueChangedEventArgs const& args)
+    {
+        auto lifetime = get_strong();
+
+        // The caption follows the slider even while suppressed, so a refresh shows the right value.
+        SynthVolumeText().Text(res::FormatString(L"SynthVolumeFormat", args.NewValue()));
+
+        if (m_suppressSynthHandling)
+        {
+            co_return;
+        }
+
+        ApplySynthConfigAsync();
+
+        co_return;
     }
 
     _Use_decl_annotations_

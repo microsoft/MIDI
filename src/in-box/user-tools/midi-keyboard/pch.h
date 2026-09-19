@@ -87,6 +87,7 @@
 #include <winrt/Microsoft.Windows.ApplicationModel.Resources.h>
 
 #include <winrt/Windows.Devices.Midi2.h>
+#include <winrt/Windows.Devices.Midi2.CapabilityInquiry.h>
 #include <winrt/Windows.Devices.Midi2.Enumeration.h>
 #include <winrt/Windows.Devices.Midi2.Transports.Virtual.h>
 #include <winrt/Windows.Devices.Midi2.Utilities.Messages.h>

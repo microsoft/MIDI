@@ -123,6 +123,10 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
         bool IsMuted() const noexcept { return internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_IsMuted, false); }
         //bool IsMidi1PortCreationEnabled() const noexcept { return internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_CreateMidi1PortsForEndpoint, true); }
 
+        // Set when in-protocol discovery finishes or times out, and at creation for endpoints
+        // which do not use in-protocol discovery. Stays false if discovery was abandoned.
+        bool IsEndpointDiscoveryComplete() const noexcept { return internal::GetDeviceInfoProperty<bool>(m_properties, STRING_PKEY_MIDI_EndpointDiscoveryProcessComplete, false); }
+
     };
 }
 namespace winrt::Windows::Devices::Midi2::Enumeration::factory_implementation

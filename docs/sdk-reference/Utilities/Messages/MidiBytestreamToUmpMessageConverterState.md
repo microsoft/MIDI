@@ -24,8 +24,7 @@ Create an instance of this class and pass it to the `MidiMessageConverter.Conver
 
 ## Samples
 
-This state object is what remembers you are mid-System-Exclusive between calls. Without it, a
-continuation buffer is parsed as though it were the start of a new message.
+This state object is what remembers you are mid-System-Exclusive between calls. Without it, a continuation buffer is parsed as though it were the start of a new message.
 
 * [C++/WinRT sysex-send-bytes](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/sysex-send-bytes)
 * [C# sysex-send-bytes](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/sysex-send-bytes)

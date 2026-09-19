@@ -14,6 +14,8 @@ For C++, Windows MIDI Services is only being tested with C++/WinRT, not CX or WR
 | Sample | Description |
 | -------| ----------- |
 | [Basics](basics/) | Shows how to open a MidiSession, and connect to a MidiEndpoint to send and receive messages |
+| [Capability Inquiry Browse](capability-inquiry-browse/) | Asks a device what it can do, and reads the device info, channel list and program list it publishes. This is what a patch browser is built on |
+| [Capability Inquiry Virtual Device](capability-inquiry-virtual-device/) | Publishes device info, channels, programs and a profile from a virtual device, and lets the API answer capability inquiry for it |
 | [COM Extensions](com-extensions/) | Shows how to use the COM extensions for super fast allocation-free MIDI Message send/receive |
 | [Detect Windows MIDI Services](detect-midi-services/) | Works out at runtime whether to drive Windows MIDI Services or fall back to WinMM / WinRT MIDI 1.0, with and without a reference to the SDK. Start here if you ship a library or a plug-in |
 | [Endpoint Listeners](endpoint-listeners/) | Demonstrates filtering incoming messages by group, channel, or message type |
@@ -35,7 +37,7 @@ For C++, Windows MIDI Services is only being tested with C++/WinRT, not CX or WR
 
 We recommend you load the entire solution in Visual Studio, as that is how the NuGet package configuration is set up. Change the sample you run by setting that project as startup.
 
-Before running, you will need the current Windows MIDI Services NuGet package, in a location on your PC configured as a NuGet package source. The package is available from the [releases page](https://github.com/microsoft/MIDI/releases).
+Before running, you will need the current Windows MIDI Services NuGet package, in a location on your PC configured as a NuGet package source. The package is available from the [releases page](https://aka.ms/midireleases).
 
 ## Background information
 

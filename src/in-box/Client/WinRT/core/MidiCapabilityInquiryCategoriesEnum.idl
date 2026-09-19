@@ -1,0 +1,33 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    // What a device says it can do, declared once in its Discovery message. A device answers only
+    // the categories it declares here, so an application reads this before asking for anything.
+    [flags]
+    enum MidiCapabilityInquiryCategories
+    {
+        None =                      0x00000000,
+
+        // Retired in MIDI-CI version 1.2, which negotiates protocol through UMP stream messages
+        // instead. Devices built before that still declare it, so it is still worth reading.
+        ProtocolNegotiation =       0x00000002,
+
+        ProfileConfiguration =      0x00000004,
+        PropertyExchange =          0x00000008,
+        ProcessInquiry =            0x00000010,
+    };
+}

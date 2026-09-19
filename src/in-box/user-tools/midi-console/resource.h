@@ -371,6 +371,14 @@
 #define IDS_WATCH_UPDATE_ADDITIONAL_CAPABILITIES        51113
 #define IDS_WATCH_UPDATE_UNIQUE_IDS                     51114
 #define IDS_WATCH_UPDATE_PORT_NUMBER                    51115
+#define IDS_WATCH_UPDATE_GROUP_TERMINAL_BLOCKS          51116
+#define IDS_WATCH_UPDATE_MUTED_STATE                    51117
+#define IDS_WATCH_UPDATE_ENDPOINT_DISCOVERY_STATE       51118
+#define IDS_WATCH_UPDATE_MIDI1_PORT_MAPPING             51119
+#define IDS_WATCH_UPDATE_DEVICE_PRESENCE                51120
+#define IDS_WATCH_UPDATE_LATENCY                        51121
+#define IDS_WATCH_UPDATE_TRANSPORT_SUPPLIED             51122
+#define IDS_WATCH_UPDATE_SYSTEM_DEVICE                  51123
 
 // ---------------------------------------------------------------- bluetooth     51200
 #define IDS_BT_TABLE_TITLE                              51200
@@ -653,3 +661,52 @@
 #define IDS_FWD_CONSOLE_TITLE                           52019
 #define IDS_FWD_ERROR_NO_INTERACTIVE                    52020
 
+// General MIDI synthesizer
+#define IDS_CMD_SYNTH                                   52100
+#define IDS_CMD_SYNTH_STATUS                            52101
+#define IDS_CMD_SYNTH_ENABLE                            52102
+#define IDS_CMD_SYNTH_DISABLE                           52103
+#define IDS_CMD_SYNTH_CONFIGURE                         52104
+#define IDS_OPT_SYNTH_SYNTH_MODE                        52105
+#define IDS_OPT_SYNTH_AUDIO_MODE                        52106
+#define IDS_OPT_SYNTH_TEMPORARY                         52107
+#define IDS_SYNTH_TABLE_TITLE                           52108
+#define IDS_SYNTH_LABEL_SETTING                         52109
+#define IDS_SYNTH_LABEL_VALUE                           52110
+#define IDS_SYNTH_LABEL_ENABLED                         52111
+#define IDS_SYNTH_LABEL_SYNTH_MODE                      52112
+#define IDS_SYNTH_LABEL_AUDIO_MODE                      52113
+#define IDS_SYNTH_STATE_ON                              52114
+#define IDS_SYNTH_STATE_OFF                             52115
+#define IDS_SYNTH_EXPLAIN_ON                            52116
+#define IDS_SYNTH_EXPLAIN_OFF                           52117
+#define IDS_SYNTH_ENABLED                               52118
+#define IDS_SYNTH_DISABLED                              52119
+#define IDS_SYNTH_SAVED_TO_CONFIG                       52120
+#define IDS_SYNTH_SAVE_FAILED                           52121
+#define IDS_SYNTH_COMMAND_FAILED                        52122
+#define IDS_SYNTH_NOTHING_TO_CHANGE                     52123
+#define IDS_SYNTH_LABEL_BANK_SELECT                     52124
+#define IDS_SYNTH_LABEL_VOLUME                          52125
+#define IDS_SYNTH_LABEL_EFFECTS                         52126
+#define IDS_CMD_SYNTH_SOUNDSET                          52127
+#define IDS_SYNTH_SOUNDSET_TITLE                        52128
+#define IDS_SYNTH_KITS_TITLE                            52129
+#define IDS_SYNTH_LABEL_SOUNDSET_NAME                   52130
+#define IDS_SYNTH_LABEL_SOUNDSET_VERSION                52131
+#define IDS_SYNTH_LABEL_SOUNDSET_PATH                   52132
+#define IDS_SYNTH_LABEL_SOUNDSET_MELODIC                52133
+#define IDS_SYNTH_LABEL_SOUNDSET_WAVES                  52134
+#define IDS_SYNTH_LABEL_KIT_PROGRAM                     52135
+#define IDS_SYNTH_LABEL_KIT_NAME                        52136
+#define IDS_SYNTH_KITS_HELP                             52137
+#define IDS_OPT_SYNTH_BANK_SELECT_MODE                  52138
+#define IDS_OPT_SYNTH_VOLUME                            52139
+#define IDS_OPT_SYNTH_EFFECTS                           52140
+#define IDS_SYNTH_NOT_AVAILABLE                         52141
+#define IDS_SYNTH_INSTRUMENTS_TITLE                     52142
+#define IDS_SYNTH_INSTRUMENTS_HELP                      52143
+#define IDS_SYNTH_LABEL_BANK_MSB                        52144
+#define IDS_SYNTH_LABEL_BANK_LSB                        52145
+#define IDS_SYNTH_LABEL_INSTRUMENT_NAME                 52146
+#define IDS_CMD_SYNTH_INSTRUMENTS                       52147

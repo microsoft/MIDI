@@ -16,6 +16,198 @@
 #include "MidiEndpointDeviceInformationRemovedEventArgs.h"
 #include "MidiEndpointDeviceInformationAddedEventArgs.h"
 
+#include "mmdeviceapi.h"    // for E_NOTFOUND in the pin map property code
+#include "midi_ksa_pin_map_property.h"
+
+
+namespace
+{
+    // Every one of these is also in MidiEndpointDeviceInformation::GetAdditionalPropertiesList().
+    // A property which is requested there but appears in none of the groups below produces an
+    // Updated event with no flags set, which is what applications have to guess about.
+
+    constexpr PCWSTR PropertyKeySystemDeviceParent = L"System.Devices.Parent";
+    constexpr PCWSTR PropertyKeySystemDeviceManufacturer = L"System.Devices.DeviceManufacturer";
+    constexpr PCWSTR PropertyKeySystemInterfaceClassGuid = L"System.Devices.InterfaceClassGuid";
+    constexpr PCWSTR PropertyKeySystemDevicePresent = L"System.Devices.Present";
+    constexpr PCWSTR PropertyKeySystemInterfaceEnabled = L"System.Devices.InterfaceEnabled";
+    constexpr PCWSTR PropertyKeySystemItemNameDisplay = L"System.ItemNameDisplay";
+    constexpr PCWSTR PropertyKeySystemFriendlyName = L"System.Devices.FriendlyName";
+
+    bool ContainsAnyProperty(
+        _In_ collections::IMapView<winrt::hstring, foundation::IInspectable> const& properties,
+        _In_ std::initializer_list<PCWSTR> const keys)
+    {
+        for (auto const& key : keys)
+        {
+            if (properties.HasKey(key))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    uint32_t ComputeUpdatedFlags(
+        _In_ collections::IMapView<winrt::hstring, foundation::IInspectable> const& properties)
+    {
+        using flags = winrt::Windows::Devices::Midi2::Enumeration::implementation::MidiEndpointDeviceInformationUpdateFlags;
+
+        uint32_t updatedFlags{ flags::None };
+
+        if (ContainsAnyProperty(properties, {
+            STRING_PKEY_MIDI_EndpointName,
+            PropertyKeySystemItemNameDisplay,
+            PropertyKeySystemFriendlyName,
+            STRING_PKEY_MIDI_EndpointProvidedName,
+            STRING_PKEY_MIDI_CustomEndpointName,
+            STRING_PKEY_MIDI_EndpointProvidedNameLastUpdateTime }))
+        {
+            updatedFlags |= flags::Name;
+        }
+
+        if (ContainsAnyProperty(properties, {
+            STRING_PKEY_MIDI_EndpointProvidedProductInstanceId,
+            STRING_PKEY_MIDI_EndpointProvidedProductInstanceIdLastUpdateTime,
+            STRING_PKEY_MIDI_SerialNumber }))
+        {
+            updatedFlags |= flags::UniqueIds;
+        }
+
+        if (ContainsAnyProperty(properties, {
+            STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol,
+            STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol,
+            STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps,
+            STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps,
+            STRING_PKEY_MIDI_EndpointUmpVersionMajor,
+            STRING_PKEY_MIDI_EndpointUmpVersionMinor,
+            STRING_PKEY_MIDI_EndpointProvidedName,
+            STRING_PKEY_MIDI_EndpointProvidedProductInstanceId,
+            STRING_PKEY_MIDI_FunctionBlocksAreStatic,
+            STRING_PKEY_MIDI_FunctionBlockDeclaredCount,
+            STRING_PKEY_MIDI_EndpointInformationLastUpdateTime }))
+        {
+            updatedFlags |= flags::EndpointInformation;
+        }
+
+        if (ContainsAnyProperty(properties, {
+            STRING_PKEY_MIDI_DeviceIdentity,
+            STRING_PKEY_MIDI_DeviceIdentityLastUpdateTime }))
+        {
+            updatedFlags |= flags::DeviceIdentity;
+        }
+
+        if (ContainsAnyProperty(properties, {
+            STRING_PKEY_MIDI_EndpointConfiguredProtocol,
+            STRING_PKEY_MIDI_EndpointConfiguredToSendJRTimestamps,
+            STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps,
+            STRING_PKEY_MIDI_EndpointConfigurationLastUpdateTime }))
+        {
+            updatedFlags |= flags::StreamConfiguration;
+        }
+
+        if (internal::PropertyMapContainsAnyFunctionBlockProperty(properties) ||
+            properties.HasKey(STRING_PKEY_MIDI_FunctionBlocksLastUpdateTime))
+        {
+            updatedFlags |= flags::FunctionBlocks;
+        }
+
+        if (ContainsAnyProperty(properties, {
+            STRING_PKEY_MIDI_CustomEndpointName,
+            STRING_PKEY_MIDI_CustomImagePath,
+            STRING_PKEY_MIDI_CustomDescription }))
+        {
+            updatedFlags |= flags::UserMetadata;
+        }
+
+        if (ContainsAnyProperty(properties, {
+            STRING_PKEY_MIDI_RequiresNoteOffTranslation,
+            STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression,
+            STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS }))
+        {
+            updatedFlags |= flags::AdditionalCapabilities;
+        }
+
+        if (properties.HasKey(STRING_PKEY_MIDI_GroupTerminalBlocks))
+        {
+            updatedFlags |= flags::GroupTerminalBlocks;
+        }
+
+        if (properties.HasKey(STRING_PKEY_MIDI_IsMuted))
+        {
+            updatedFlags |= flags::MutedState;
+        }
+
+        if (properties.HasKey(STRING_PKEY_MIDI_EndpointDiscoveryProcessComplete))
+        {
+            updatedFlags |= flags::EndpointDiscoveryState;
+        }
+
+        if (ContainsAnyProperty(properties, {
+            STRING_PKEY_MIDI_Midi1PortNameTable,
+            STRING_PKEY_MIDI_Midi1PortNamingSelection }))
+        {
+            updatedFlags |= flags::Midi1PortMapping;
+        }
+
+        if (ContainsAnyProperty(properties, {
+            PropertyKeySystemDevicePresent,
+            PropertyKeySystemInterfaceEnabled }))
+        {
+            updatedFlags |= flags::DevicePresence;
+        }
+
+        if (ContainsAnyProperty(properties, {
+            STRING_PKEY_MIDI_MidiOutCalculatedLatencyTicks,
+            STRING_PKEY_MIDI_MidiOutCustomLatencyTicks,
+            STRING_PKEY_MIDI_MidiOutLatencyTicksUserOverride }))
+        {
+            updatedFlags |= flags::LatencyProperties;
+        }
+
+        if (ContainsAnyProperty(properties, {
+            STRING_PKEY_MIDI_TransportLayer,
+            STRING_PKEY_MIDI_TransportCode,
+            STRING_PKEY_MIDI_NativeDataFormat,
+            STRING_PKEY_MIDI_SupportedDataFormats,
+            STRING_PKEY_MIDI_SupportsMulticlient,
+            STRING_PKEY_MIDI_ManufacturerName,
+            STRING_PKEY_MIDI_GenerateIncomingTimestamp,
+            STRING_PKEY_MIDI_Description,
+            STRING_PKEY_MIDI_EndpointName,
+            STRING_PKEY_MIDI_SerialNumber,
+            STRING_PKEY_MIDI_UsbVID,
+            STRING_PKEY_MIDI_UsbPID,
+            STRING_PKEY_MIDI_AssociatedUMP,
+            STRING_PKEY_MIDI_EndpointDevicePurpose,
+            STRING_PKEY_MIDI_DriverDeviceInterface,
+            STRING_DEVPKEY_KsAggMidiGroupPinMap,
+            STRING_PKEY_MIDI_TransportEndpointConfigId,
+            STRING_PKEY_MIDI_VirtualMidiEndpointAssociator,
+            STRING_PKEY_MIDI_NetworkMidiLastRemoteHostName,
+            STRING_PKEY_MIDI_NetworkMidiLastRemotePort,
+            STRING_PKEY_MIDI_NetworkMidiConnectionRole }))
+        {
+            updatedFlags |= flags::TransportSuppliedProperties;
+        }
+
+        if (ContainsAnyProperty(properties, {
+            PropertyKeySystemDeviceParent,
+            PropertyKeySystemDeviceManufacturer,
+            PropertyKeySystemInterfaceClassGuid,
+            PropertyKeySystemDevicePresent,
+            PropertyKeySystemInterfaceEnabled,
+            PropertyKeySystemItemNameDisplay,
+            PropertyKeySystemFriendlyName }))
+        {
+            updatedFlags |= flags::SystemDeviceProperties;
+        }
+
+        return updatedFlags;
+    }
+}
+
 
 namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 {
@@ -249,122 +441,27 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 
                     if (m_deviceUpdatedEvent)
                     {
+                        auto updatedFlags = ComputeUpdatedFlags(args.Properties());
+
+                        if (updatedFlags == MidiEndpointDeviceInformationUpdateFlags::None)
+                        {
+                            // A property was requested during enumeration but belongs to no group,
+                            // so applications see an update they cannot act on. Fix the grouping.
+                            LOG_IF_FAILED(E_UNEXPECTED);   // this also generates a fallback error with file and line number info
+
+                            TraceLoggingWrite(
+                                Midi2SdkTelemetryProvider::Provider(),
+                                MIDI_SDK_TRACE_EVENT_ERROR,
+                                TraceLoggingString(__FUNCTION__, MIDI_SDK_TRACE_LOCATION_FIELD),
+                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingPointer(this, MIDI_SDK_TRACE_THIS_FIELD),
+                                TraceLoggingWideString(L"Updated properties match no update flag group", MIDI_SDK_TRACE_MESSAGE_FIELD),
+                                TraceLoggingWideString(mapKey.c_str(), MIDI_SDK_TRACE_ENDPOINT_DEVICE_ID_FIELD)
+                            );
+                        }
+
                         newArgs = winrt::make_self<MidiEndpointDeviceInformationUpdatedEventArgs>();
-
-                    bool updatedName{ false };
-                    bool updatedInProtocolEndpointInformation{ false };
-                    bool updatedDeviceIdentity{ false };
-                    bool updatedStreamConfiguration{ false };
-                    bool updatedFunctionBlocks{ false };
-                    bool updatedUserMetadata{ false };
-                    bool updatedAdditionalCapabilities{ false };
-                    bool updatedUniqueIds{ false };
-                    bool updatedGroupTerminalBlocks{ false };
-                    bool updatedMutedState{ false };
-
-
-                    if (args.Properties().HasKey(STRING_PKEY_MIDI_EndpointName) ||
-                        args.Properties().HasKey(L"System.ItemNameDisplay") ||
-                        args.Properties().HasKey(L"System.Devices.FriendlyName") ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedName) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_CustomEndpointName) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedNameLastUpdateTime)
-                        )
-                    {
-                        updatedName = true;
-                    }
-
-                    if (args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedProductInstanceId) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedProductInstanceIdLastUpdateTime) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_SerialNumber)
-                        )
-                    {
-                        updatedUniqueIds = true;
-                    }
-
-
-                    if (args.Properties().HasKey(STRING_PKEY_MIDI_EndpointSupportsMidi2Protocol) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointSupportsMidi1Protocol) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointSupportsReceivingJRTimestamps) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointSupportsSendingJRTimestamps) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointUmpVersionMajor) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointUmpVersionMinor) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedName) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointProvidedProductInstanceId) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_FunctionBlocksAreStatic) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_FunctionBlockDeclaredCount) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointInformationLastUpdateTime)
-                        )
-                    {
-                        updatedInProtocolEndpointInformation = true;
-                    }
-
-                    if (args.Properties().HasKey(STRING_PKEY_MIDI_DeviceIdentity) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_DeviceIdentityLastUpdateTime)
-                        )
-                    {
-                        updatedDeviceIdentity = true;
-                    }
-
-
-                    if (args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfiguredProtocol) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfiguredToSendJRTimestamps) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfiguredToReceiveJRTimestamps) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_EndpointConfigurationLastUpdateTime)
-                        )
-                    {
-                        updatedStreamConfiguration = true;
-                    }
-
-                    if (internal::PropertyMapContainsAnyFunctionBlockProperty(args.Properties()) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_FunctionBlocksLastUpdateTime)
-                        )
-                    {
-                        updatedFunctionBlocks = true;
-                    }
-
-                    if (args.Properties().HasKey(STRING_PKEY_MIDI_CustomEndpointName) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_CustomImagePath) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_CustomDescription)
-                        )
-                    {
-                        updatedUserMetadata = true;
-                    }
-
-                    if (args.Properties().HasKey(STRING_PKEY_MIDI_RequiresNoteOffTranslation) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_SupportsMidiPolyphonicExpression) ||
-                        args.Properties().HasKey(STRING_PKEY_MIDI_RecommendedCCAutomationIntervalMS)
-                        )
-                    {
-                        updatedAdditionalCapabilities = true;
-                    }
-
-                    if (args.Properties().HasKey(STRING_PKEY_MIDI_GroupTerminalBlocks)
-                        )
-                    {
-                        updatedGroupTerminalBlocks = true;
-                    }
-
-
-                    if (args.Properties().HasKey(STRING_PKEY_MIDI_IsMuted))
-                    {
-                        updatedMutedState = true;
-                    }
-
-                    newArgs->InternalInitialize(
-                        *ep,
-                        args,
-                        updatedName,
-                        updatedInProtocolEndpointInformation,
-                        updatedDeviceIdentity,
-                        updatedStreamConfiguration,
-                        updatedFunctionBlocks,
-                        updatedUserMetadata,
-                        updatedAdditionalCapabilities,
-                        updatedUniqueIds,
-                        updatedGroupTerminalBlocks,
-                        updatedMutedState
-                        );
+                        newArgs->InternalInitialize(*ep, args, updatedFlags);
                     }
                 }
             }

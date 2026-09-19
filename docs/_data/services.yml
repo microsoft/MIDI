@@ -1,18 +1,18 @@
 - title: Overview
   icon: /assets/images/service-icon2.png
-  description: Overview of Windows MIDI Services features and tools
+  description: Overview of Windows MIDI Services features
   button_label: Learn More
   url: /overview/
   
-- title: Get Latest
+- title: Tools
   icon: /assets/images/service-icon.png
-  description:  Windows MIDI Services tools and runtime available for download.
-  button_label: Get Latest
-  url: /get-latest/
+  description: MIDI Settings, MIDI Console, monitoring, troubleshooting, and setup tools
+  button_label: See Tools
+  url: /tools/
   
 - title: Developer Docs
   icon: /assets/images/service-icon3.png
-  description:  Developer app SDK reference and how-to documentation
+  description:  Developer WinRT API reference and how-to documentation
   button_label: Read Docs
   url: /sdk-overview/
   

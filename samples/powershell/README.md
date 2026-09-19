@@ -30,7 +30,7 @@ hardware attached.
 ## Before running
 
 These samples need the `WindowsMidiServices` PowerShell module, which is installed as part of
-Windows MIDI Services from the [releases page](https://github.com/microsoft/MIDI/releases). The
+Windows MIDI Services from the [releases page](https://aka.ms/midireleases). The
 installer adds the module to your `PSModulePath`, so `import-module WindowsMidiServices` will find
 it without any further setup.
 

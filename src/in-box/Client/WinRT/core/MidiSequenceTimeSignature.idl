@@ -1,0 +1,27 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Sequencing
+{
+    // TicksPerBar and BarNumberAtTick are worked out while reading, so asking where a tick falls
+    // in the music does not mean walking the file.
+    [contract(MidiSequencingUtilityApiContract,1)]
+    struct MidiSequenceTimeSignature
+    {
+        UInt32 Tick;
+        UInt8 Numerator;
+        UInt8 Denominator;              // 4 means a quarter note, 8 an eighth, and so on
+        UInt32 TicksPerBar;
+        UInt32 BarNumberAtTick;
+    };
+}

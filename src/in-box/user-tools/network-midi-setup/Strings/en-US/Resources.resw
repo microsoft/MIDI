@@ -165,6 +165,21 @@
   <data name="PendingInvitationsBar.Title" xml:space="preserve">
     <value>Devices are waiting for permission</value>
   </data>
+  <data name="NotificationsBar.Title" xml:space="preserve">
+    <value>You will not be told when a device asks to connect</value>
+  </data>
+  <data name="NotificationsBarButton.Content" xml:space="preserve">
+    <value>Set up notifications</value>
+  </data>
+  <data name="NotificationsBarMessage" xml:space="preserve">
+    <value>The MIDI notifications app sits in the notification area near the clock and tells you when a device on your network is waiting for you to allow or block it. It is not running, so you will only see those requests while this window is open. Setting it up opens MIDI Settings, which asks for administrator rights.</value>
+  </data>
+  <data name="NotificationsBarSettingsMissingMessage" xml:space="preserve">
+    <value>The MIDI notifications app tells you when a device on your network is waiting for you to allow or block it. It is not running, so you will only see those requests while this window is open. Turning it on is done in MIDI Settings, which is not installed on this PC.</value>
+  </data>
+  <data name="NotificationsBarLaunchFailedMessage" xml:space="preserve">
+    <value>MIDI Settings could not be opened. Start it from the Start menu and choose Notifications.</value>
+  </data>
   <data name="AllowOnceButton.Content" xml:space="preserve">
     <value>Allow once</value>
   </data>

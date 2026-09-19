@@ -209,6 +209,11 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
         try
         {
             m_endpointConnection = endpointConnection.as<midi2::MidiEndpointConnection>();
+
+            // The responder answers on this device's behalf and declares the same identity the
+            // device declares through endpoint discovery, so the two cannot disagree.
+            winrt::get_self<ci::implementation::MidiCapabilityInquiryDeviceResponder>(m_capabilityInquiry)
+                ->InternalAttach(m_endpointConnection, m_declaredDeviceIdentity);
         }
         catch (winrt::hresult_error const& ex)
         {
@@ -230,6 +235,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
     void MidiVirtualDevice::Cleanup() noexcept
     {
         StopClientEndpointInUseWatcher();
+
+        winrt::get_self<ci::implementation::MidiCapabilityInquiryDeviceResponder>(m_capabilityInquiry)
+            ->InternalDetach();
 
         m_streamConfigurationRequestReceivedEvent.clear();
         m_clientEndpointInUseChangedEvent.clear();
@@ -854,6 +862,22 @@ namespace winrt::Windows::Devices::Midi2::Transports::Virtual::implementation
                 }
             
 
+            }
+            else if (args.MessageType() == MidiMessageType::DataMessage64)
+            {
+                // Seven bit system exclusive, which is how capability inquiry travels. The
+                // responder decides whether it is capability inquiry at all, and answers if so.
+                uint32_t word0{};
+                uint32_t word1{};
+                uint32_t word2{};
+                uint32_t word3{};
+
+                if (args.FillWords(word0, word1, word2, word3) == 2)
+                {
+                    handled = winrt::get_self<ci::implementation::MidiCapabilityInquiryDeviceResponder>(
+                        m_capabilityInquiry)->InternalProcessSystemExclusivePacket(
+                            word0, word1, args.Timestamp());
+                }
             }
             else
             {

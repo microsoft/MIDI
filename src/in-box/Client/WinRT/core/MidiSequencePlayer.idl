@@ -1,0 +1,100 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiSession.idl";
+import "MidiEndpointConnection.idl";
+import "MidiGroup.idl";
+import "MidiSequence.idl";
+import "MidiSequenceTrackRouting.idl";
+import "MidiSequencePlayerStateEnum.idl";
+import "MidiSequencePlayerPosition.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Sequencing
+{
+    // Plays a sequence to one or more endpoints.
+    //
+    // The player hands its messages to the service with a timestamp for each and lets the
+    // service release them, rather than waking up to send each one itself. That is what keeps
+    // playback steady, and it is why a sequence has to be prepared before it starts.
+    //
+    // A player can borrow a connection the application already has open, or open and own one of
+    // its own. Prefer borrowing: a connection is not cheap, and an application that already has
+    // one should not be made to pay for a second.
+    [contract(MidiSequencingUtilityApiContract,1)]
+    [interface_name("Windows.Devices.Midi2.Utilities.Sequencing.IMidiSequencePlayer", UUID_IMidiSequencePlayer)]
+    [static_name("Windows.Devices.Midi2.Utilities.Sequencing.IMidiSequencePlayerStatics", UUID_IMidiSequencePlayerStatics)]
+    [constructor_name("Windows.Devices.Midi2.Utilities.Sequencing.IMidiSequencePlayerFactory", UUID_IMidiSequencePlayerFactory)]
+    runtimeclass MidiSequencePlayer : Windows.Foundation.IClosable
+    {
+        // Borrows a connection the application opened. Closing the player leaves it open.
+        MidiSequencePlayer(Windows.Devices.Midi2.MidiEndpointConnection connection, Windows.Devices.Midi2.MidiGroup group);
+
+        // Opens and owns a connection on the supplied session. Closing the player closes it.
+        // The session still belongs to the caller.
+        static Windows.Foundation.IAsyncOperation<MidiSequencePlayer> CreateForEndpointAsync(
+            Windows.Devices.Midi2.MidiSession session,
+            String endpointDeviceId,
+            Windows.Devices.Midi2.MidiGroup group);
+
+        Boolean OwnsConnection{ get; };
+        Windows.Devices.Midi2.MidiEndpointConnection Connection{ get; };
+
+        // Preparing converts the sequence once, so this is the expensive call and not Play.
+        Windows.Foundation.IAsyncAction SetSequenceAsync(MidiSequence sequence);
+        MidiSequence Sequence{ get; };
+
+        MidiSequencePlayerState State{ get; };
+
+        // Poll this to drive a display. There is deliberately no position event.
+        MidiSequencePlayerPosition Position{ get; };
+
+        void Play();
+        void Pause();
+        void Stop();
+
+        void SeekToMicroseconds(UInt64 microseconds);
+        void SeekToTick(UInt32 tick);
+
+        // Seeking re-sends the bank, program, controllers and pitch bend each channel was left
+        // in, so starting in the middle of a file does not play the rest of it on the wrong
+        // sound.
+
+        MidiSequenceTrackRouting GetTrackRouting(UInt16 trackIndex);
+        void SetTrackRouting(UInt16 trackIndex, MidiSequenceTrackRouting routing);
+
+        void SetTrackMuted(UInt16 trackIndex, Boolean muted);
+        Boolean IsTrackMuted(UInt16 trackIndex);
+
+        // Negative for none. Soloing silences the others without forgetting their mute state.
+        Int32 SoloTrackIndex;
+
+        // Only note starts are held back by muting and soloing. Everything else still goes out,
+        // or a track comes back on the wrong sound and with a chord still sounding.
+
+        // How far ahead messages are handed to the service is deliberately not settable. The
+        // figure depends on how often this player sweeps and on how late a high resolution timer
+        // wakes, which are ours to know, and the service will refuse anything beyond five
+        // minutes anyway. The only thing a caller knows that we do not is whether it would
+        // rather playback resist a stall or react quickly, and that is a choice between two
+        // intentions rather than a number. If it turns out to be needed, it can be added later
+        // as exactly that.
+
+        // Silences everything this player has started: note offs for what is sounding, then
+        // sustain off, all notes off, all sound off and pitch bend center on each channel the
+        // sequence uses. Sent for you on stop, on pause, on seek and at the end of a sequence.
+        void SilenceAllNotes();
+
+        event Windows.Foundation.TypedEventHandler<MidiSequencePlayer, Object> PlaybackEnded;
+        event Windows.Foundation.TypedEventHandler<MidiSequencePlayer, Object> StateChanged;
+    };
+}

@@ -1,0 +1,45 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+import "MidiProgramListEntry.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiProgramList", UUID_IMidiProgramList)]
+    [static_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiProgramListStatics", UUID_IMidiProgramListStatics)]
+    runtimeclass MidiProgramList
+    {
+        MidiProgramList();
+
+        Windows.Foundation.Collections.IVector<MidiProgramListEntry> Entries{ get; };
+
+        // Where this page began, and how many entries the device says it has in total. A device
+        // which sends its whole list at once reports neither, so TotalCount is the entry count and
+        // Offset is zero. Both come from the reply header rather than from the resource. Neither
+        // can run backwards: paging only ever moves forward through the list.
+        [noexcept] UInt32 Offset;
+        [noexcept] UInt32 TotalCount;
+
+        // True when the device holds entries beyond this page, so a caller paging through a
+        // workstation sized list knows to ask again rather than guessing from the count.
+        [noexcept] Boolean HasMoreEntries{ get; };
+
+        // The offset to ask for next. Zero when there is nothing more.
+        [noexcept] UInt32 NextOffset{ get; };
+
+        // The ProgramList resource is a JSON array of entries, not an object.
+        [noexcept] Windows.Data.Json.JsonArray GetJson();
+        [noexcept] static MidiProgramList FromJson(Windows.Data.Json.JsonArray json);
+    };
+}

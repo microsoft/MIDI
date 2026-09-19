@@ -3,6 +3,9 @@ layout: kb
 title: Application Backwards Compatibility
 audience: everyone
 description: Explains the API backwards compatibility for Windows MIDI Services.
+categories:
+  - Getting Started
+  - Internals
 ---
 
 **Our intention is for developers to begin adopting Windows MIDI Services in place of the older WinMM, WinRT, and (deprecated) DirectMusic APIs in their applications.** All new MIDI features, transports, and more are being implemented in Windows MIDI Services and the new API. A select number of features, slightly more than their current baseline, are available to WinMM and WinRT APIs through our backwards-compatibility shims, but this is simply to ensure existing applications continue to function on systems using Windows MIDI Services. **Please note that we are not providing backwards compatibility to support DirectMusic MIDI APIs.**
@@ -59,15 +62,11 @@ Each of the features listed is from the viewpoint of an application using the AP
 | 64-bit UWP or Packaged App | ❓ | No | ✅ |
 | 32-bit desktop app | No | ✅ | ❓ |
 
-\* The Windows MIDI Services API includes converters and helpers to translate between MIDI 1.0 byte format and UMP in client apps.
-\** Note that we are also investigating and experimenting with how to best incorporate the existing in-box Roland GS / General MIDI Synth into this architecture for apps using the new UMP-based API. We may add an additional transport in the future, specific to this or to another compatible synth.
-\*** Incoming timestamps have been available in WinMM and WinRT MIDI 1.0 APIs since their introduction.
+\* The Windows MIDI Services API includes converters and helpers to translate between MIDI 1.0 byte format and UMP in client apps. \** Note that we are also investigating and experimenting with how to best incorporate the existing in-box Roland GS / General MIDI Synth into this architecture for apps using the new UMP-based API. We may add an additional transport in the future, specific to this or to another compatible synth. \*** Incoming timestamps have been available in WinMM and WinRT MIDI 1.0 APIs since their introduction.
 
 Arm64 and x86-64 ("x64" or "amd64") are both equally supported by the 64 bit APIs. There is no support for 32-bit operating systems.
 
-✅ Feature is supported
-❓We are investigating
-\* Messages are translated between MIDI 1.0 protocol / data format and MIDI 2.0 protocol / UMP format
+✅ Feature is supported ❓We are investigating \* Messages are translated between MIDI 1.0 protocol / data format and MIDI 2.0 protocol / UMP format
 
 ## Reverting to the old MIDI Stack
 

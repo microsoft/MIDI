@@ -13,6 +13,7 @@ import "MidiStreamConfigRequestReceivedEventArgs.idl";
 import "MidiVirtualDeviceClientEndpointInUseChangedEventArgs.idl";
 import "IMidiEndpointMessageProcessingPlugin.idl";
 import "MidiFunctionBlock.idl";
+import "MidiCapabilityInquiryDeviceResponder.idl";
 
 
 namespace Windows.Devices.Midi2.Transports.Virtual
@@ -34,6 +35,11 @@ namespace Windows.Devices.Midi2.Transports.Virtual
         // True when one or more applications are connected to the client-visible endpoint. Read
         // it at any time, or subscribe below to be told when it changes.
         [noexcept] Boolean IsClientEndpointInUse{ get; };
+
+        // Answers capability inquiry on this device's behalf, the same way this device already
+        // answers endpoint discovery. It does nothing until an application enables it and gives it
+        // something to publish.
+        [noexcept] Windows.Devices.Midi2.CapabilityInquiry.MidiCapabilityInquiryDeviceResponder CapabilityInquiry{ get; };
 
         [noexcept] Boolean SuppressHandledMessages;
 

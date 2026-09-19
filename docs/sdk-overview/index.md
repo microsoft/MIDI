@@ -1,17 +1,17 @@
 ---
 layout: doc
-title: Windows MIDI Services App SDK Overview
+title: Windows MIDI Services WinRT API Overview
 ---
 
-# SDK Types
+# WinRT API Types
 
-The [SDK namespaces and types in the metadata are documented here]({{"/sdk-reference/" | relative_url}}).
+The [namespaces and types in the metadata are documented here]({{"/sdk-reference/" | relative_url}}).
 
 ## Get started
 
 To get started, you will need the compiler of your choice, until the types are in the official Windows SDK, the NuGet package for `Windows.Devices.Midi2` and if you are using C++, the `C++/WinRT` 3.x package. The latter is used to ingest the metadata and generate the necessary header files. C# developers will need the `C#/WinRT` package. Developers in other languages will need to speak to their compiler vendor to understand what tools they provide for generating WinRT projections.
 
-Once set up, I recommend going to the samples area of the repo and learning how SDK and Service initialization happen, and then how to use the basic features of the SDK. The samples are all available [here](https://aka.ms/midisamples). The `cpp-winrt` folder contains the majority of the C++ code.
+Once set up, I recommend going to the samples area of the repo and learning how API and Service initialization happen, and then how to use the basic features of the WinRT API. The samples are all available [here](https://aka.ms/midisamples). The `cpp-winrt` folder contains the majority of the C++ code.
 
 Before you get far into your own implementation, read [Best practices and performance optimizations]({{"/kb/best-practices/" | relative_url}}). It covers the things which are easy to get wrong early and expensive to change later, including how to send and receive messages efficiently, how many connections and sessions to open, and how to present endpoints, groups and function blocks to your users.
 

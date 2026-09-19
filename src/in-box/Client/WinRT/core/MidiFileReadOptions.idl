@@ -1,0 +1,37 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Files
+{
+    // A MIDI file usually arrives from somewhere the application does not control, so nothing is
+    // allocated from a length the file declares without checking the bytes are really there.
+    // These are the ceilings that stops a hostile or broken file from being able to ask for an
+    // unreasonable amount of memory. The defaults are generous enough for real music.
+    [contract(MidiFilesUtilityApiContract,1)]
+    [interface_name("Windows.Devices.Midi2.Utilities.Files.IMidiFileReadOptions", UUID_IMidiFileReadOptions)]
+    runtimeclass MidiFileReadOptions
+    {
+        MidiFileReadOptions();
+
+        UInt64 MaximumFileBytes;
+        UInt32 MaximumTrackCount;
+        UInt32 MaximumEventCount;
+        UInt32 MaximumTextEventCount;
+        UInt32 MaximumSingleMessageBytes;
+
+        // A file that stops making sense partway through is read up to that point and reported
+        // as truncated, because a file with a damaged tail is usually still worth hearing. Set
+        // this to refuse it outright instead.
+        Boolean FailOnUnreadableData;
+    };
+}

@@ -45,7 +45,10 @@ namespace midikeyboard
         ChannelPressure = 2,
 
         // one value per sounding note
-        PolyPressure = 3
+        PolyPressure = 3,
+
+        // CC 1, the same controller the mod ribbon uses
+        ModWheel = 4
     };
 
     enum class VelocityMode : int32_t

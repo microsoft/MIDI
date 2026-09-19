@@ -42,9 +42,7 @@ Use this type to assemble incoming SysEx 7 traffic from a `MidiEndpointConnectio
 
 ## Samples
 
-These receive a System Exclusive message and write it to a `.syx` file. They replace handling
-`MIM_LONGDATA`, preparing and requeueing `MIDIHDR` buffers, and reassembling a message which
-arrived across several of them.
+These receive a System Exclusive message and write it to a `.syx` file. They replace handling `MIM_LONGDATA`, preparing and requeueing `MIDIHDR` buffers, and reassembling a message which arrived across several of them.
 
 * [C++/WinRT sysex-file-receiver](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/sysex-file-receiver)
 * [C# sysex-file-receiver](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/sysex-file-receiver)

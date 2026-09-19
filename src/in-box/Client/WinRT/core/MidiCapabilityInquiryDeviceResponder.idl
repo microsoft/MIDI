@@ -1,0 +1,94 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+import "MidiCapabilityInquiryCategoriesEnum.idl";
+import "MidiCapabilityInquiryMessageReceivedEventArgs.idl";
+import "MidiProfileId.idl";
+import "MidiUniqueId.idl";
+import "MidiDeviceInfo.idl";
+import "MidiResourceList.idl";
+import "MidiChannelList.idl";
+import "MidiProgramList.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    // Answers capability inquiry on a virtual device's behalf, the same way the virtual device
+    // already answers endpoint discovery. An application gives it the resources it wants to
+    // publish and stops thinking about the wire.
+    //
+    // It is reached through MidiVirtualDevice.CapabilityInquiry and is off until IsEnabled is set,
+    // because a device that answers Discovery is saying it implements capability inquiry and should
+    // only say that if it means it.
+    [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiCapabilityInquiryDeviceResponder", UUID_IMidiCapabilityInquiryDeviceResponder)]
+    runtimeclass MidiCapabilityInquiryDeviceResponder
+    {
+        [noexcept] Boolean IsEnabled;
+
+        // Identifiers belong to function blocks rather than to devices, so a device with several
+        // function blocks answers with a different one on each. Each is drawn fresh at startup and
+        // must not survive a restart.
+        [noexcept] MidiUniqueId GetMuid(UInt8 functionBlockNumber);
+
+        // Draws a new identifier for a function block and withdraws the old one. The specification
+        // requires this when a function block's group placement or group count changes.
+        [noexcept] Boolean RegenerateMuid(UInt8 functionBlockNumber);
+
+        // What this responder will declare in a Discovery reply, which follows from what it has
+        // been given to answer with rather than from anything an application sets directly.
+        [noexcept] MidiCapabilityInquiryCategories SupportedCategories{ get; };
+
+        // The largest system exclusive message this device declares it can receive. The minimum
+        // the specification allows unless set higher.
+        [noexcept] UInt32 ReceivableMaximumSystemExclusiveSize;
+
+        // The resources with a type of their own. Setting one is all it takes for the responder to
+        // start answering requests for it.
+        MidiDeviceInfo DeviceInfo;
+        MidiChannelList ChannelList;
+
+        // Built from what has been set here when an application has not supplied one, so a device
+        // does not have to describe itself twice.
+        MidiResourceList ResourceList;
+
+        // A device may publish more than one program list, told apart by resource id. Pass an empty
+        // id for a device with only one.
+        [noexcept] void SetProgramList(String resourceId, MidiProgramList programList);
+        [noexcept] MidiProgramList GetProgramList(String resourceId);
+
+        // Anything this API has no type for, as the JSON text of the resource. This is also how an
+        // application publishes a resource from one of the specifications the API does not model.
+        [noexcept] void SetResource(String resource, String resourceId, String jsonData);
+        [noexcept] Boolean RemoveResource(String resource, String resourceId);
+
+        // Profiles at one address: 0x00 to 0x0F for a channel, 0x7E for a group, 0x7F for the
+        // whole function block. Setting any profile at any address is what makes this responder
+        // declare that it does profile configuration.
+        [noexcept] void SetProfiles(
+            UInt8 deviceId,
+            Windows.Foundation.Collections.IIterable<MidiProfileId> enabledProfiles,
+            Windows.Foundation.Collections.IIterable<MidiProfileId> disabledProfiles);
+
+        // The four reports a device sends when its own profile state changes. They are broadcast,
+        // so an initiator learns about the change without having asked.
+        [noexcept] Boolean SendProfileEnabledReport(UInt8 functionBlockNumber, UInt8 deviceId, MidiProfileId profileId, UInt16 channelCount);
+        [noexcept] Boolean SendProfileDisabledReport(UInt8 functionBlockNumber, UInt8 deviceId, MidiProfileId profileId, UInt16 channelCount);
+        [noexcept] Boolean SendProfileAddedReport(UInt8 functionBlockNumber, UInt8 deviceId, MidiProfileId profileId);
+        [noexcept] Boolean SendProfileRemovedReport(UInt8 functionBlockNumber, UInt8 deviceId, MidiProfileId profileId);
+
+        // Every capability inquiry message this responder did not answer itself, with its payload
+        // intact. An application that wants to implement something the API does not, or to watch
+        // what it is being asked, handles this.
+        event Windows.Foundation.TypedEventHandler<MidiCapabilityInquiryDeviceResponder, MidiCapabilityInquiryMessageReceivedEventArgs> MessageReceived;
+    };
+}

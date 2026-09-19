@@ -1,0 +1,44 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    // How a capability inquiry request ended. A device is allowed to ignore a request it does not
+    // implement, so silence is an ordinary outcome and not an error in the transport.
+    enum MidiCapabilityInquiryStatus
+    {
+        Success = 0,
+
+        // Nothing came back before the timeout. Usually means the device does not implement the
+        // request, but a busy device or a crowded cable can also produce it.
+        NoResponse,
+
+        // The device answered and said no. The status code and the device's own explanation say
+        // why, and the specification asks that the explanation be shown to the person using the app.
+        NegativeAcknowledgment,
+
+        // Something came back which could not be read as an answer to the request.
+        InvalidResponse,
+
+        // The device declared in Discovery that it does not do this at all, so nothing was sent.
+        NotSupported,
+
+        Canceled,
+
+        // The request could not be sent. The session has no connection, or the connection refused
+        // the messages.
+        Failed,
+    };
+}

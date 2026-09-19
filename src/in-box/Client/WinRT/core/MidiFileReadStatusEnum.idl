@@ -1,0 +1,28 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Files
+{
+    [contract(MidiFilesUtilityApiContract,1)]
+    enum MidiFileReadStatus
+    {
+        Success = 0,
+
+        NotAMidiFile = 1,           // the header is not one we recognize
+        UnsupportedFormat = 2,
+        CorruptData = 3,
+        NoPlayableData = 4,         // read cleanly, but there is nothing to send
+        TooLarge = 5,               // refused before reading, against the supplied limits
+        ReadError = 6
+    };
+}

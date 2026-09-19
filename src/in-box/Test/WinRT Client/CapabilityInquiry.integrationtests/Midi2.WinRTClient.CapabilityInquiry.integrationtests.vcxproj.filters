@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Support">
+      <UniqueIdentifier>{4b1f6d92-5c8a-4e31-9a77-1d2c3e4f5061}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{7c2a8e14-3f6b-4d52-8e09-5a6b7c8d9e10}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source">
+      <UniqueIdentifier>{2d5e9f03-8a1c-4b76-93de-0f1a2b3c4d5e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Support</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiCapabilityInquiryTestResponder.h">
+      <Filter>Support</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiCapabilityInquirySessionTests.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="MidiCapabilityInquiryTestResponder.cpp">
+      <Filter>Support</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiCapabilityInquirySessionTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MidiVirtualDeviceCapabilityInquiryTests.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Midi2ClientTests.rc">
+      <Filter>Support</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natvis" />
+    <Natvis Include="$(MSBuildThisFileDirectory)..\..\natvis\wil.natstepfilter" />
+  </ItemGroup>
+</Project>

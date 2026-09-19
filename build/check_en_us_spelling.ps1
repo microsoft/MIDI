@@ -239,6 +239,14 @@ $replacements = [ordered]@{
     'spelt'           = 'spelled'
 }
 
+# Whole identifiers from somebody else's API which carry an en-GB spelling. We do not get to
+# rename these, and the word is still worth flagging everywhere else, so the exception is the
+# exact token rather than the word. Same reasoning as "marshalling" and "grey" above, but those
+# appear in too many forms to list.
+$foreignIdentifiers = @(
+    'ERROR_CANCELLED'       # Win32, the last error a declined elevation prompt leaves behind
+)
+
 # Two passes, because identifiers do not use word boundaries the way prose does.
 #   prose / SNAKE_CASE / kebab-case : bounded by anything that is not a letter
 #   camelCase / PascalCase          : a lowercase-to-uppercase hump, e.g. SendCancelled
@@ -250,6 +258,9 @@ $regexes = @(
     [regex]::new("(?i)(?<![A-Za-z])($alternation)(?![A-Za-z])", 'Compiled')
     [regex]::new("(?<=[a-z0-9])($humped)(?![a-z])", 'Compiled')
 )
+
+# The token a hit sits inside, so an exception can be granted to the identifier and not the word.
+$identifierAtMatch = [regex]::new('[A-Za-z0-9_]+', 'Compiled')
 
 $roots = foreach ($p in ($Path -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ }))
 {
@@ -286,6 +297,12 @@ foreach ($file in $files)
         {
             foreach ($match in $regex.Matches($line))
             {
+                $token = $identifierAtMatch.Matches($line) |
+                    Where-Object { $_.Index -le $match.Index -and ($_.Index + $_.Length) -ge ($match.Index + $match.Length) } |
+                    Select-Object -First 1
+
+                if ($token -and $foreignIdentifiers -contains $token.Value) { continue }
+
                 $findings.Add([PSCustomObject]@{
                     File       = $file.FullName
                     Line       = $lineNumber

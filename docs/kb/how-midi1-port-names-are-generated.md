@@ -3,46 +3,29 @@ layout: kb
 title: How Windows MIDI Services generates MIDI 1.0 port names
 audience: developers
 description: How Windows MIDI Services derives endpoint and MIDI 1.0 port names, what a device can supply to influence them, and when a name is allowed to change.
+categories:
+  - Internals
 ---
 
 # How Windows MIDI Services generates MIDI 1.0 port names
 
-This describes how Windows MIDI Services names endpoints and the MIDI 1.0 ports (WinMM and WinRT
-MIDI 1.0) created from them. It is published so that device makers can predict the names their
-hardware will produce, and choose descriptors that give their customers good results.
+This describes how Windows MIDI Services names endpoints and the MIDI 1.0 ports (WinMM and WinRT MIDI 1.0) created from them. It is published so that device makers can predict the names their hardware will produce, and choose descriptors that give their customers good results.
 
-A MIDI 1.0 port name is limited to **31 characters plus a terminator**. That limit is imposed by
-WinMM and cannot be changed. Endpoint names have no such limit.
+A MIDI 1.0 port name is limited to **31 characters plus a terminator**. That limit is imposed by WinMM and cannot be changed. Endpoint names have no such limit.
 
 ## Why this is not simply a better algorithm
 
-**Old names cannot just be replaced.** The WinMM MIDI API dates from 1993, and applications have
-always identified a port by its name. Tens of thousands of project files, song files, templates and
-scripts in the wild have those exact strings saved inside them. Change the name a device reports and
-those files stop finding their device. So however poor a name is, Windows has to be able to keep
-producing it, and that is why one of the naming styles below exists solely to reproduce what
-Windows has always done.
+**Old names cannot just be replaced.** The WinMM MIDI API dates from 1993, and applications have always identified a port by its name. Tens of thousands of project files, song files, templates and scripts in the wild have those exact strings saved inside them. Change the name a device reports and those files stop finding their device. So however poor a name is, Windows has to be able to keep producing it, and that is why one of the naming styles below exists solely to reproduce what Windows has always done.
 
-**No single source of names makes everyone happy.** The text that could reasonably name a port
-comes from several places, none of which every device fills in, and no two manufacturers use in the
-same way: USB string descriptors on the device and on each jack, registry entries written when the
-driver was installed, PnP device names, kernel streaming interface names, group terminal blocks and
-function blocks. Some devices describe each port; some describe only the product; some leave
-placeholders behind that Windows itself generated.
+**No single source of names makes everyone happy.** The text that could reasonably name a port comes from several places, none of which every device fills in, and no two manufacturers use in the same way: USB string descriptors on the device and on each jack, registry entries written when the driver was installed, PnP device names, kernel streaming interface names, group terminal blocks and function blocks. Some devices describe each port; some describe only the product; some leave placeholders behind that Windows itself generated.
 
-So rather than pick one source and force every device through it, Windows reads them in a defined
-order and works out **what the device was trying to say**. A device that troubled to name its jacks
-gets names built from them. A device that said nothing keeps the names it has always had.
+So rather than pick one source and force every device through it, Windows reads them in a defined order and works out **what the device was trying to say**. A device that troubled to name its jacks gets names built from them. A device that said nothing keeps the names it has always had.
 
-That evaluation also preserves continuity when a customer moves a device from a vendor driver to the
-in-box class driver. Vendor drivers commonly name their ports from the device's jack strings, so
-reading those same strings means the port names a customer has in their projects survive the move,
-instead of collapsing into `MIDIOUT2 (Device)`.
+That evaluation also preserves continuity when a customer moves a device from a vendor driver to the in-box class driver. Vendor drivers commonly name their ports from the device's jack strings, so reading those same strings means the port names a customer has in their projects survive the move, instead of collapsing into `MIDIOUT2 (Device)`.
 
 ## Three naming styles
 
-Windows keeps two names for every MIDI 1.0 port and publishes one of them. The choice is a system
-setting, and can also be set per endpoint.
+Windows keeps two names for every MIDI 1.0 port and publishes one of them. The choice is a system setting, and can also be set per endpoint.
 
 | Style | What you get |
 |---|---|
@@ -52,8 +35,7 @@ setting, and can also be set per endpoint.
 
 ### Legacy WinMM compatible names
 
-Unchanged from earlier versions of Windows, and deliberately so. The first port of a device takes
-the device name; the rest take the classic form:
+Unchanged from earlier versions of Windows, and deliberately so. The first port of a device takes the device name; the rest take the classic form:
 
 ```
 SoftStep
@@ -61,11 +43,9 @@ MIDIOUT2 (SoftStep)
 MIDIOUT3 (SoftStep)
 ```
 
-These names carry no information about what each port is for, but applications have been matching
-on them for decades.
+These names carry no information about what each port is for, but applications have been matching on them for decades.
 
-When more than one unit of the same model is connected, the second and later units carry a leading
-marker on the device name, exactly as Windows did before Windows MIDI Services:
+When more than one unit of the same model is connected, the second and later units carry a leading marker on the device name, exactly as Windows did before Windows MIDI Services:
 
 ```
 Some Device                 MIDIOUT6 (Some Device)
@@ -73,45 +53,29 @@ Some Device                 MIDIOUT6 (Some Device)
 3- Some Device              MIDIOUT6 (3- Some Device)
 ```
 
-The marker is `N- ` — a digit, a hyphen and a single space, with no space before the hyphen. The
-first unit is never marked. Nothing else about a legacy name changes, so an application matching a
-stored name still finds it.
+The marker is `N- ` — a digit, a hyphen and a single space, with no space before the hyphen. The first unit is never marked. Nothing else about a legacy name changes, so an application matching a stored name still finds it.
 
-Not every device produced this marker on earlier versions of Windows: some models gave both units
-the same name instead, leaving applications no way to tell them apart. Windows MIDI Services applies
-the marker consistently, so a pair of devices that used to collide can now be distinguished.
+Not every device produced this marker on earlier versions of Windows: some models gave both units the same name instead, leaving applications no way to tell them apart. Windows MIDI Services applies the marker consistently, so a pair of devices that used to collide can now be distinguished.
 
 ### Automatic
 
 Automatic picks **new style** when either of these is true, and **legacy** otherwise:
 
-1. The endpoint has **no legacy equivalent** — its ports did not exist before Windows MIDI Services,
-   so there is no older name to stay compatible with. Network MIDI 2.0, Bluetooth LE MIDI,
-   loopbacks and app-created endpoints are all in this group. Each transport declares this for the
-   endpoints it creates, so transports from outside Microsoft make the same choice for themselves.
-2. The device **told us something useful about its individual ports** — a jack name, a per-port
-   driver name, a per-port filter name, a group terminal block or a function block.
+1. The endpoint has **no legacy equivalent** — its ports did not exist before Windows MIDI Services, so there is no older name to stay compatible with. Network MIDI 2.0, Bluetooth LE MIDI, loopbacks and app-created endpoints are all in this group. Each transport declares this for the endpoints it creates, so transports from outside Microsoft make the same choice for themselves.
+2. The device **told us something useful about its individual ports** — a jack name, a per-port driver name, a per-port filter name, a group terminal block or a function block.
 
-The second rule follows from a single principle: *change a port's name only when the new name
-carries information the old one did not.* When a device names its jacks, the new name says
-something real and the change earns its cost. When a device says nothing, a new-style name would be
-a string Windows invented — it breaks applications that match on names and gives nothing back.
+The second rule follows from a single principle: *change a port's name only when the new name carries information the old one did not.* When a device names its jacks, the new name says something real and the change earns its cost. When a device says nothing, a new-style name would be a string Windows invented — it breaks applications that match on names and gives nothing back.
 
-So a SoftStep, whose jacks are named, moves to `SoftStep Control Surface` and friends. A Roland
-UM-ONE, whose jack names are placeholders generated by Windows, keeps `UM-ONE` and
-`MIDIOUT2 (UM-ONE)`. With a second UM-ONE attached, the legacy names keep the form Windows has
-always used, where the marker goes on the device name and stays inside the parentheses:
+So a SoftStep, whose jacks are named, moves to `SoftStep Control Surface` and friends. A Roland UM-ONE, whose jack names are placeholders generated by Windows, keeps `UM-ONE` and `MIDIOUT2 (UM-ONE)`. With a second UM-ONE attached, the legacy names keep the form Windows has always used, where the marker goes on the device name and stays inside the parentheses:
 
 ```
 UM-ONE               2 - UM-ONE
 MIDIOUT2 (UM-ONE)    MIDIOUT2 (2 - UM-ONE)
 ```
 
-Legacy names are still generated for every endpoint, including those with no legacy equivalent, so
-that choosing the legacy style explicitly always produces a usable name.
+Legacy names are still generated for every endpoint, including those with no legacy equivalent, so that choosing the legacy style explicitly always produces a usable name.
 
-Endpoint names are improved in every style. Only the MIDI 1.0 **port** names are held back for
-compatibility.
+Endpoint names are improved in every style. Only the MIDI 1.0 **port** names are held back for compatibility.
 
 ---
 
@@ -123,8 +87,7 @@ The remainder of this article describes **new style** names.
 port name  =  <endpoint name> + " " + <port name supplied by the device>
 ```
 
-with the device name omitted when the device already included it, and with a group number added
-when two ports would otherwise share a name.
+with the device name omitted when the device already included it, and with a group number added when two ports would otherwise share a name.
 
 ---
 
@@ -135,25 +98,13 @@ In order, first non-empty wins:
 1. A **custom name** set by the user.
 2. The **in-protocol UMP Endpoint Name**, for MIDI 2.0 devices that declare one.
 3. The **device's own product name**:
-   - USB: the `iProduct` string descriptor, read from the **USB device node** — the node carrying
-     the vendor id, product id and serial number. For a composite device this is the parent of the
-     `&MI_xx` interface node, not the interface node itself.
-   - Non-USB: the PnP friendly name, then the device description. The bus-reported description is
-     **not** used, because for PCI and similar buses it is a class description such as
-     `Multimedia Audio Controller`.
-4. **Model-name recovery.** If the name so far shares no word with a common leading run of the
-   port names, that common run is used instead. This recovers a usable name from drivers that give
-   every device the same description.
+   - USB: the `iProduct` string descriptor, read from the **USB device node** — the node carrying the vendor id, product id and serial number. For a composite device this is the parent of the `&MI_xx` interface node, not the interface node itself.
+   - Non-USB: the PnP friendly name, then the device description. The bus-reported description is **not** used, because for PCI and similar buses it is a class description such as `Multimedia Audio Controller`.
+4. **Model-name recovery.** If the name so far shares no word with a common leading run of the port names, that common run is used instead. This recovers a usable name from drivers that give every device the same description.
 
-   A MOTU Express 128 arrives as `MOTU USB MIDI Device for 64 bit Windows` — the driver's own
-   description, identical for every MOTU interface. Its eight ports are named
-   `Express  128: Port 1` through `Port 8`, which share the leading run `Express  128`. That run
-   has no word in common with the driver's description, so it is a model name the description is
-   missing, and the endpoint becomes **`Express  128`**.
+   A MOTU Express 128 arrives as `MOTU USB MIDI Device for 64 bit Windows` — the driver's own description, identical for every MOTU interface. Its eight ports are named `Express  128: Port 1` through `Port 8`, which share the leading run `Express  128`. That run has no word in common with the driver's description, so it is a model name the description is missing, and the endpoint becomes **`Express  128`**.
 
-   An RME HDSPe MADI FX arrives correctly named, and its four ports share the run `HDSPe FX`. That
-   run *does* share words with `RME HDSPe MADI FX`, so it is the same model stated twice rather
-   than new information, and the device's own name is kept.
+   An RME HDSPe MADI FX arrives correctly named, and its four ports share the run `HDSPe FX`. That run *does* share words with `RME HDSPe MADI FX`, so it is the same model stated twice rather than new information, and the device's own name is kept.
 
 > Why the USB device node matters: the `&MI_xx` interface node often carries a decorated name. An
 > Ableton Push 3 reports `Ableton Push 3` on the device node and `Ableton Push 3 MIDI` on the
@@ -171,50 +122,33 @@ The first of these that says something the endpoint name does not:
 | 4 | **Group Terminal Block name** | For devices using the MIDI 2.0 driver, and for transports that synthesize blocks. |
 | 5 | **Function block name** | See section 7. |
 
-A value is discarded when it is empty; when it is `MIDI`, which is what the Windows USB and KS
-stack inserts for a jack the device did not name; when it is the filter name with a bracketed index
-appended (`SoftStep [0]`), which Windows also generates; when it is one of the unhelpful values
-manufacturers commonly supply, such as `In`, `Out`, `IO`, `Port` or `Port 2`; or when it says
-nothing the endpoint name does not already say.
+A value is discarded when it is empty; when it is `MIDI`, which is what the Windows USB and KS stack inserts for a jack the device did not name; when it is the filter name with a bracketed index appended (`SoftStep [0]`), which Windows also generates; when it is one of the unhelpful values manufacturers commonly supply, such as `In`, `Out`, `IO`, `Port` or `Port 2`; or when it says nothing the endpoint name does not already say.
 
-A name is kept even if it looks generic when the other ports on the same endpoint and direction
-carry different names — whatever tells the ports apart is by definition meaningful.
+A name is kept even if it looks generic when the other ports on the same endpoint and direction carry different names — whatever tells the ports apart is by definition meaningful.
 
 ## 3. Putting the two together
 
 - **No port name supplied** → the endpoint name.
-- **The port name already begins with the device name**, or repeats most of it → the port name is
-  used exactly as supplied. The device name is not added twice.
+- **The port name already begins with the device name**, or repeats most of it → the port name is used exactly as supplied. The device name is not added twice.
 - **Otherwise** → `<endpoint name> <port name>`.
 
-Then one numbering rule covers every case: **whenever two or more ports in the same direction would
-end up with the same name, all of them are numbered by group** — `<name> group N`, using the group
-number the device uses, counted from 1. A device that supplies no port names has every port named
-after the endpoint, so every port gets a number. A device whose ports are already named
-differently gets none.
+Then one numbering rule covers every case: **whenever two or more ports in the same direction would end up with the same name, all of them are numbered by group** — `<name> group N`, using the group number the device uses, counted from 1. A device that supplies no port names has every port named after the endpoint, so every port gets a number. A device whose ports are already named differently gets none.
 
-The word `group` costs six characters more than the number alone, which a long name cannot always
-spare. When keeping it would mean cutting the name, the number is used on its own instead:
+The word `group` costs six characters more than the number alone, which a long name cannot always spare. When keeping it would mean cutting the name, the number is used on its own instead:
 
 ```
 My Bome Box group 1              short enough for the word
 Renamed Port Creation Test 1     not, so the name is kept and the word dropped
 ```
 
-The choice is made once per endpoint and direction, so a single long port name never leaves some
-ports on a device carrying the device name and others not, and never leaves one port numbered
-`group 1` while another on the same device is numbered `2`.
+The choice is made once per endpoint and direction, so a single long port name never leaves some ports on a device carrying the device name and others not, and never leaves one port numbered `group 1` while another on the same device is numbered `2`.
 
 ## 4. Fitting 31 characters
 
-Applied in order, and the part that distinguishes one port from another is never the part that is
-cut. When a group number is needed, it is reserved first and always survives:
+Applied in order, and the part that distinguishes one port from another is never the part that is cut. When a group number is needed, it is reserved first and always survives:
 
 1. The combined name, if it fits.
-2. If the port name repeats the device name, that repetition is removed and as much of the device
-   name as still fits is put back. With a device called `Montage M8x`,
-   `Montage M8x DAW Remote Control Port 1` becomes `M8x DAW Remote Control Port 1` — when only part
-   of the device name fits, the model is kept in preference to the family.
+2. If the port name repeats the device name, that repetition is removed and as much of the device name as still fits is put back. With a device called `Montage M8x`, `Montage M8x DAW Remote Control Port 1` becomes `M8x DAW Remote Control Port 1` — when only part of the device name fits, the model is kept in preference to the family.
 3. The port name on its own, when the port names on that endpoint and direction are all different.
 4. The group number without the word `group`, when that is what it takes to keep the name whole.
 5. A shortened device name, cut at a word boundary, with the port name intact.
@@ -224,44 +158,31 @@ A port never ends up with an empty name.
 
 ## 5. More than one of the same device
 
-Disambiguation is applied to the **endpoint name**, not to the individual port names, so that
-`<device> (2) group 3` reads as group 3 of the second device rather than as an unexplained suffix:
+Disambiguation is applied to the **endpoint name**, not to the individual port names, so that `<device> (2) group 3` reads as group 3 of the second device rather than as an unexplained suffix:
 
 ```
 ESI M8U eX group 1       ESI M8U eX group 2       ESI M8U eX group 3       ...
 ESI M8U eX (2) group 1   ESI M8U eX (2) group 2   ESI M8U eX (2) group 3   ...
 ```
 
-When the port name comes from the device and cannot be edited without corrupting it, the marker is
-appended instead: `MPK mini IV Software Port (2)`.
+When the port name comes from the device and cannot be edited without corrupting it, the marker is appended instead: `MPK mini IV Software Port (2)`.
 
-The two styles mark the device differently, and deliberately so. New style appends ` (2)`, which
-reads naturally in front of a group number. Legacy prepends `2- `, because that is the form Windows
-used and the form applications have stored. The same second unit is therefore
-`ESI M8U eX (2) group 1` in new style and `2- ESI M8U eX` in legacy.
+The two styles mark the device differently, and deliberately so. New style appends ` (2)`, which reads naturally in front of a group number. Legacy prepends `2- `, because that is the form Windows used and the form applications have stored. The same second unit is therefore `ESI M8U eX (2) group 1` in new style and `2- ESI M8U eX` in legacy.
 
 Two rules govern this:
 
-- A name is assigned when the device is enumerated and is **not recalculated because of anything
-  another device does**. Plugging in a second device never renames the first.
-- Uniqueness is enforced on the name that is actually published, not on the device name it was
-  derived from.
+- A name is assigned when the device is enumerated and is **not recalculated because of anything another device does**. Plugging in a second device never renames the first.
+- Uniqueness is enforced on the name that is actually published, not on the device name it was derived from.
 
 ### Network MIDI 2.0 ports always carry their group number
 
-A network port is named `<endpoint> group N` even when the endpoint currently has only one port,
-which is the one place a group number appears without another port to distinguish it from.
+A network port is named `<endpoint> group N` even when the endpoint currently has only one port, which is the one place a group number appears without another port to distinguish it from.
 
-This is deliberate. A network endpoint is addressed by group, its port count can change while it is
-connected, and its ports did not exist before Windows MIDI Services, so there is no older name to
-stay compatible with. Keeping the number means a port does not get renamed the moment a second one
-appears. A manufacturer who wants something more meaningful than a group number should supply names
-for the ports, the same as for any other device.
+This is deliberate. A network endpoint is addressed by group, its port count can change while it is connected, and its ports did not exist before Windows MIDI Services, so there is no older name to stay compatible with. Keeping the number means a port does not get renamed the moment a second one appears. A manufacturer who wants something more meaningful than a group number should supply names for the ports, the same as for any other device.
 
 ## 6. When a name is allowed to change
 
-A port name is fixed once it is published, with three deliberate exceptions. All three are things
-the customer did, or expects:
+A port name is fixed once it is published, with three deliberate exceptions. All three are things the customer did, or expects:
 
 | A name may change | Why |
 |---|---|
@@ -270,22 +191,15 @@ the customer did, or expects:
 | When the customer changes the device | Renaming or moving a function block, or renaming the device or its ports with the manufacturer's editor, is a deliberate act. The customer expects Windows to follow. |
 | When the customer sets a custom name | Explicit. |
 
-The name a port is built from is the same one the endpoint itself displays: the customer's custom
-name if there is one, otherwise the in-protocol UMP Endpoint Name, otherwise the product name. A
-device whose product string is `Iridium (MIDI 2.0)` but which calls itself `Iridium` in-protocol
-gets ports named after `Iridium`.
+The name a port is built from is the same one the endpoint itself displays: the customer's custom name if there is one, otherwise the in-protocol UMP Endpoint Name, otherwise the product name. A device whose product string is `Iridium (MIDI 2.0)` but which calls itself `Iridium` in-protocol gets ports named after `Iridium`.
 
-It may **not** change because another device arrived, because devices enumerated in a different
-order, or because the service restarted.
+It may **not** change because another device arrived, because devices enumerated in a different order, or because the service restarted.
 
 ## 7. MIDI 2.0 and function blocks
 
-When a device declares function blocks, the MIDI 1.0 port names follow them. Function block names
-appear in manuals and in the manufacturer's software, so matching them is what a customer expects,
-and renaming one on the device is a deliberate act.
+When a device declares function blocks, the MIDI 1.0 port names follow them. Function block names appear in manuals and in the manufacturer's software, so matching them is what a customer expects, and renaming one on the device is a deliberate act.
 
-A function block's name is used for every group the block covers, however many that is. Because
-several ports then share a name, each is numbered by its group:
+A function block's name is used for every group the block covers, however many that is. Because several ports then share a name, each is numbered by its group:
 
 ```
 Iridium Synth group 1
@@ -296,68 +210,45 @@ A block covering a single group needs no number, so it is simply `Iridium Synth`
 
 ### Group terminal blocks on a MIDI 1.0 device
 
-A MIDI 1.0 device has no group terminal blocks of its own, so Windows synthesizes them. Those
-synthesized block names are kept identical to the MIDI 1.0 port names, group for group. A
-MIDI 2.0-aware application showing block names and an older application showing port names are
-describing the same physical port, and a customer comparing the two must not be shown two
-different names for it.
+A MIDI 1.0 device has no group terminal blocks of its own, so Windows synthesizes them. Those synthesized block names are kept identical to the MIDI 1.0 port names, group for group. A MIDI 2.0-aware application showing block names and an older application showing port names are describing the same physical port, and a customer comparing the two must not be shown two different names for it.
 
-This holds for whichever naming style is in effect, not only for names the customer set by hand, so
-the block names follow when the naming style changes. A device that supplies no port names of its
-own and therefore keeps its legacy names has blocks named to match:
+This holds for whichever naming style is in effect, not only for names the customer set by hand, so the block names follow when the naming style changes. A device that supplies no port names of its own and therefore keeps its legacy names has blocks named to match:
 
 ```
 Block   ESI MIDIMATE eX            Port   ESI MIDIMATE eX
 Block   MIDIIN2 (ESI MIDIMATE eX)  Port   MIDIIN2 (ESI MIDIMATE eX)
 ```
 
-A device that does declare group terminal blocks is a different matter: those names come from the
-device, and Windows does not overwrite them.
+A device that does declare group terminal blocks is a different matter: those names come from the device, and Windows does not overwrite them.
 
 Two cases fall back to `<endpoint name> group N` with no block name:
 
-- A group that belongs to **more than one** active block has no single name. The specification
-  permits this; in practice nothing implements it, and it is handled predictably rather than by
-  whichever block happened to be read last.
+- A group that belongs to **more than one** active block has no single name. The specification permits this; in practice nothing implements it, and it is handled predictably rather than by whichever block happened to be read last.
 - A device with no function blocks at all.
 
 ## 8. Custom names
 
-A custom name set by the user always wins, for both endpoints and individual ports, and is never
-overridden by any rule above.
+A custom name set by the user always wins, for both endpoints and individual ports, and is never overridden by any rule above.
 
-A custom **port** name is published exactly as it was typed. It is not numbered by group, not given
-a duplicate marker, and not shortened to make room for anything — the only limit is the 31
-characters WinMM allows. Two ports may end up with the same custom name, and Windows will not
-intervene: the customer is assumed to have meant it.
+A custom **port** name is published exactly as it was typed. It is not numbered by group, not given a duplicate marker, and not shortened to make room for anything — the only limit is the 31 characters WinMM allows. Two ports may end up with the same custom name, and Windows will not intervene: the customer is assumed to have meant it.
 
-Applications generally expect port names to be unique, and some behave unpredictably when they are
-not, so a tool that offers custom naming should say so at the point the name is entered. That is a
-matter for the tool, not for the naming rules.
+Applications generally expect port names to be unique, and some behave unpredictably when they are not, so a tool that offers custom naming should say so at the point the name is entered. That is a matter for the tool, not for the naming rules.
 
-A custom **endpoint** name is different. It replaces the device name and then goes through the
-composition rules like any other, so it can be shortened, and it can cost a port its `group` word
-if it is long.
+A custom **endpoint** name is different. It replaces the device name and then goes through the composition rules like any other, so it can be shortened, and it can cost a port its `group` word if it is long.
 
-When a MIDI 1.0 port is given a custom name, the corresponding group terminal block is renamed to
-match, so that applications reading either one see the same thing.
+When a MIDI 1.0 port is given a custom name, the corresponding group terminal block is renamed to match, so that applications reading either one see the same thing.
 
-Names are always re-derived from what the device reports, never from what Windows wrote last time.
-Clearing a custom name therefore restores the original name rather than leaving the custom one
-baked in.
+Names are always re-derived from what the device reports, never from what Windows wrote last time. Clearing a custom name therefore restores the original name rather than leaving the custom one baked in.
 
 ## 9. Words we generate
 
-Any part of a name that Windows supplies rather than the device — `group`, and the numbering — is
-the same in every language. Applications match on port names, so a localized name would break them
-when the system language changed.
+Any part of a name that Windows supplies rather than the device — `group`, and the numbering — is the same in every language. Applications match on port names, so a localized name would break them when the system language changed.
 
 ---
 
 ## Worked examples
 
-"Automatic" is the column that matters for most customers, since it is what Windows chooses on its
-own. New style names are shown for every device so the two can be compared.
+"Automatic" is the column that matters for most customers, since it is what Windows chooses on its own. New style names are shown for every device so the two can be compared.
 
 | Device | What the device supplies | Endpoint | New style ports | Automatic picks |
 |---|---|---|---|---|
@@ -379,23 +270,12 @@ own. New style names are shown for every device so the two can be compared.
 
 ## Advice for device makers
 
-If you have named your jacks and never seen those names on Windows, that is expected. Windows had
-no way to use them until Windows MIDI Services shipped, and the legacy style was the default at
-first, so they stayed hidden. They are used now.
+If you have named your jacks and never seen those names on Windows, that is expected. Windows had no way to use them until Windows MIDI Services shipped, and the legacy style was the default at first, so they stayed hidden. They are used now.
 
-- **Name your jacks.** An iJack string is the single highest-value thing you can add. It is used
-  before everything else, it survives being moved to a different driver, and it is what tells
-  Windows to use the better names at all — a device that names nothing stays on the old
-  `MIDIOUT2 (Device)` names under the default setting.
-- **Keep jack names short and different from each other.** They are combined with the product name
-  inside 31 characters. `Live Port` works; `Live Performance Control Port` does not leave room.
+- **Name your jacks.** An iJack string is the single highest-value thing you can add. It is used before everything else, it survives being moved to a different driver, and it is what tells Windows to use the better names at all — a device that names nothing stays on the old `MIDIOUT2 (Device)` names under the default setting.
+- **Keep jack names short and different from each other.** They are combined with the product name inside 31 characters. `Live Port` works; `Live Performance Control Port` does not leave room.
 - **You may include the product name in a jack name.** It will not be added twice.
 - **Do not number ports in a way that only differs past the 31st character.**
-- **Put a good product name in `iProduct`.** It becomes the endpoint name, and it is what
-  distinguishes two of your devices from each other.
-- **Avoid embedding a serial number in the product name** unless you also give each unit distinct
-  jack names. It makes every name longer and harder for customers to recognize.
-- **Name your function blocks.** A block's name becomes part of the port name for every group it
-  covers, so keep it short enough to leave room for the product name and a group number. Budget
-  eight characters for ` group N`: if the rest does not fit, the ports are numbered ` N` instead,
-  which still reads correctly but tells the customer less.
+- **Put a good product name in `iProduct`.** It becomes the endpoint name, and it is what distinguishes two of your devices from each other.
+- **Avoid embedding a serial number in the product name** unless you also give each unit distinct jack names. It makes every name longer and harder for customers to recognize.
+- **Name your function blocks.** A block's name becomes part of the port name for every group it covers, so keep it short enough to leave room for the product name and a group number. Budget eight characters for ` group N`: if the rest does not fit, the ports are numbered ` N` instead, which still reads correctly but tells the customer less.

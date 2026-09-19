@@ -1,0 +1,31 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+namespace midiplayer
+{
+    // One file in the play queue, as the list shows it.
+    [default_interface]
+    runtimeclass QueueItem : Microsoft.UI.Xaml.Data.INotifyPropertyChanged
+    {
+        QueueItem();
+
+        String Id{ get; };
+        String FilePath{ get; };
+        String DisplayName{ get; };
+        String FileName{ get; };
+        String DurationText{ get; };
+        String DetailText{ get; };
+
+        Boolean IsCurrent{ get; };
+        Boolean IsPlayable{ get; };
+
+        Microsoft.UI.Xaml.Visibility CurrentVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility WarningVisibility{ get; };
+
+        String RemoveAccessibleName{ get; };
+    }
+}

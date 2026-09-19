@@ -1,6 +1,6 @@
 ---
 layout: sdk_namespace_page
-title: App SDK Message Helpers and Utilities
+title: WinRT API Message Helpers and Utilities
 namespace: Windows.Devices.Midi2.Utilities.Messages
 description: Namespace with MIDI message helper, builder, and converter classes
 ---

@@ -66,6 +66,7 @@ bool CreateVirtualDevice()
     block0.FirstGroup(MidiGroup(static_cast<uint8_t>(0)));
     block0.GroupCount(3); 
     block0.Direction(MidiFunctionBlockDirection::Bidirectional); // both an input and an output
+    block0.RepresentsMidi10Connection(MidiFunctionBlockRepresentsMidi10Connection::Not10);
     creationConfig.FunctionBlocks().Append(block0);
 
     MidiFunctionBlock block1;
@@ -75,6 +76,7 @@ bool CreateVirtualDevice()
     block1.FirstGroup(MidiGroup(static_cast<uint8_t>(3)));
     block1.GroupCount(3); 
     block1.Direction(MidiFunctionBlockDirection::BlockInput);   // a midi message destination
+    block1.RepresentsMidi10Connection(MidiFunctionBlockRepresentsMidi10Connection::Not10);
     creationConfig.FunctionBlocks().Append(block1);
 
     MidiFunctionBlock block2;
@@ -84,6 +86,7 @@ bool CreateVirtualDevice()
     block2.FirstGroup(MidiGroup(static_cast<uint8_t>(5)));  // this will overlap with block1, which is allowed per-spec
     block2.GroupCount(1);
     block2.Direction(MidiFunctionBlockDirection::BlockOutput);  // a midi message source
+    block2.RepresentsMidi10Connection(MidiFunctionBlockRepresentsMidi10Connection::Not10);
     creationConfig.FunctionBlocks().Append(block2);
 
     MidiFunctionBlock block3;
@@ -93,6 +96,7 @@ bool CreateVirtualDevice()
     block3.FirstGroup(MidiGroup(static_cast<uint8_t>(11)));
     block3.GroupCount(5);                                       // this gets us to index 15, which is max index
     block3.Direction(MidiFunctionBlockDirection::BlockInput);   // a midi message destination
+    block3.RepresentsMidi10Connection(MidiFunctionBlockRepresentsMidi10Connection::Not10);
     creationConfig.FunctionBlocks().Append(block3);
 
     // creates the device using the endpoint info provided above
@@ -128,6 +132,7 @@ void UpdateFunctionBlocks()
     block.FirstGroup(MidiGroup((uint8_t)0));
     block.GroupCount(3);
     block.Direction(MidiFunctionBlockDirection::BlockOutput);  // a midi message source
+    block.RepresentsMidi10Connection(MidiFunctionBlockRepresentsMidi10Connection::Not10);
 
     if (m_virtualDevice.UpdateFunctionBlock(block))
     {
@@ -260,4 +265,8 @@ int main()
         session.Close();
     }
 
+    // Release the virtual device before returning. It is a global here for the sake of the
+    // sample, and a WinRT object released during static destruction is released after main has
+    // returned, which is not a good place to be calling into the MIDI service.
+    m_virtualDevice = nullptr;
 }

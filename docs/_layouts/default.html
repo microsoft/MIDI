@@ -35,6 +35,31 @@
     <link rel="stylesheet" href="{{ '/assets/css/app.min.css' | relative_url }} "/>
     <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }} "/>
     <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600" rel="stylesheet">
+
+    <script>window.midiSearchJsonUrl = "{{ '/search.json' | relative_url }}";</script>
+
+    <style>
+    /* style.css is generated from assets/scss, so these content-table rules live here instead */
+    /* cells inherit the 30px body line-height, which double-spaces every description */
+    .tutorial-content table td,
+    .tutorial-content table th,
+    .tech-content table td,
+    .tech-content table th,
+    .doc-content table td,
+    .doc-content table th,
+    .sdk-common-properties table td,
+    .sdk-common-properties table th { line-height: 20px; padding-top: 7px; padding-bottom: 7px; }
+    .tutorial-content table p,
+    .tech-content table p,
+    .doc-content table p { line-height: 20px; margin-bottom: 8px; }
+    .tutorial-content table p:last-child,
+    .tech-content table p:last-child,
+    .doc-content table p:last-child { margin-bottom: 0; }
+    .tutorial-content table,
+    .tech-content table,
+    .doc-content table,
+    .sdk-common-properties table { margin-bottom: 30px; }
+    </style>
 	
 </head>
 

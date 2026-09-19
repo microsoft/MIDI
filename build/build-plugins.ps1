@@ -4,7 +4,8 @@
 
 .DESCRIPTION
     Replaces the old Nuke build (build/nuke_build-plugins). Produces standalone installers for
-    the Network MIDI 2.0 and Basic Loopback MIDI service transports, for x64 and Arm64.
+    the Network MIDI 2.0, Basic Loopback MIDI and General MIDI Synthesizer service transports,
+    for x64 and Arm64.
 
     This is a SEPARATE release train from the App SDK (build/build-sdk.ps1). It owns
     build/staging/version/BundleInfo.wxi; the App SDK owns build/staging/version/AppSdkVersion.wxi.
@@ -16,7 +17,7 @@
       Service  Build src/in-box/Midi2.sln for each platform.
       Stage    Copy the transport binaries into build/staging/api, and the shared API headers
                into src/shared/api-ref (mididiag and midi2monitor have that on their IncludePath).
-      Setup    Build the Network MIDI 2.0 and Basic Loopback installers.
+      Setup    Build the installer for each transport.
       Release  Collect the installers into build/release/plugins-<version>.
       Clean    Delete plugin staging and service solution output folders.
       All      Version, Service, Stage, Setup, Release.
@@ -154,6 +155,16 @@ $Plugins = @(
         Solution     = 'midi-services-basic-loopback-setup.sln'
         BundleName   = 'WindowsMidiServicesBasicLoopbackSetup'
         InstallerName = 'Windows MIDI Services (Basic MIDI 1.0 Loopback Preview)'
+        AppName      = $null
+        AppStagingName = $null
+    }
+    [pscustomobject]@{
+        Name         = 'General MIDI Synthesizer'
+        Binary       = 'Midi2.MidiSynthTransport'
+        SolutionDir  = Join-Path $SourceRoot 'installers\oob-setup-synth'
+        Solution     = 'midi-services-synth-setup.sln'
+        BundleName   = 'WindowsMidiServicesSynthSetup'
+        InstallerName = 'Windows MIDI Services (General MIDI Synthesizer Preview)'
         AppName      = $null
         AppStagingName = $null
     }
@@ -318,6 +329,12 @@ function Invoke-MSBuild {
         $ProjectOrSolution
         "/p:Configuration=$Configuration"
         "/p:Platform=$BuildPlatform"
+
+        # The 64-bit hosted compiler and linker. The default for a cross-compile is the 32-bit
+        # hosted ones, which run out of address space during link-time code generation on the
+        # larger projects here: C1002, "compiler is out of heap space in pass 2".
+        '/p:PreferredToolArchitecture=x64'
+
         "/v:$Verbosity"
         '/nologo'
         '/nr:false'

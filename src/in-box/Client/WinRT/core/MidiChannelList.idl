@@ -1,0 +1,41 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+import "MidiChannelListEntry.idl";
+import "MidiResourceLink.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiChannelList", UUID_IMidiChannelList)]
+    [static_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiChannelListStatics", UUID_IMidiChannelListStatics)]
+    runtimeclass MidiChannelList
+    {
+        MidiChannelList();
+
+        Windows.Foundation.Collections.IVector<MidiChannelListEntry> Entries{ get; };
+
+        // The entry for a channel, or null when the device did not describe it. The argument is
+        // one based, matching the numbering the resource itself uses.
+        [noexcept] MidiChannelListEntry GetEntryForChannel(UInt16 oneBasedChannel);
+
+        // Every distinct program list the channels point at, in the order first encountered. This
+        // is what a caller walks to fetch all of a device's programs, and de-duplicating it here
+        // keeps a sixteen channel device from being asked for the same collection sixteen times.
+        [noexcept] Windows.Foundation.Collections.IVector<MidiResourceLink> GetProgramListLinks();
+
+        // The ChannelList resource is a JSON array of entries.
+        [noexcept] Windows.Data.Json.JsonArray GetJson();
+        [noexcept] static MidiChannelList FromJson(Windows.Data.Json.JsonArray json);
+    };
+}

@@ -1,0 +1,43 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+import "MidiMessage64.idl";
+import "MidiGroup.idl";
+
+
+
+namespace Windows.Devices.Midi2.Utilities.Messages
+{
+    [contract(MidiMessageUtilityApiContract,1)]
+
+    // Splits a system exclusive payload across as many UMP packets as it needs. This is the
+    // counterpart to MidiSystemExclusive7MessageHelper, which reassembles them.
+    [static_name("Windows.Devices.Midi2.Utilities.Messages.IMidiSystemExclusive7MessageBuilderStatics", UUID_IMidiSystemExclusive7MessageBuilderStatics)]
+    static runtimeclass MidiSystemExclusive7MessageBuilder
+    {
+        // The payload is the bytes BETWEEN the 0xF0 and 0xF7 markers, not including them: the UMP
+        // packet's own status says where a message starts and ends, so the markers have no place
+        // on the wire here.
+        //
+        // Every byte must be seven bit. A payload containing a byte with the high bit set returns
+        // an empty list rather than a masked message, because silently altering data is worse than
+        // refusing to send it.
+        [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildSystemExclusive7Messages(
+            UInt64 timestamp,
+            Windows.Devices.Midi2.MidiGroup group,
+            Windows.Foundation.Collections.IIterable<UInt8> dataBytes);
+
+        // How many packets a payload of this size will take. Lets a caller size a buffer, or decide
+        // whether a transfer is worth starting, without building anything.
+        [noexcept] static UInt32 GetMessageCountForDataByteCount(UInt32 dataByteCount);
+
+        [noexcept] static UInt8 MaxDataBytesPerMessage{ get; };
+    };
+}

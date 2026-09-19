@@ -1,0 +1,64 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    // The sub-id 2 byte which says what a capability inquiry message is. The specification groups
+    // these into categories by range, and the ranges matter: a device may address profile messages
+    // to a channel, a group or a function block, while property exchange is only ever addressed to
+    // a function block.
+    enum MidiCapabilityInquiryMessageType
+    {
+        // Category 2: Profile Configuration, 0x20 to 0x2F
+        ProfileInquiry =                            0x20,
+        ProfileInquiryReply =                       0x21,
+        SetProfileOn =                              0x22,
+        SetProfileOff =                             0x23,
+        ProfileEnabledReport =                      0x24,
+        ProfileDisabledReport =                     0x25,
+        ProfileAddedReport =                        0x26,
+        ProfileRemovedReport =                      0x27,
+        ProfileDetailsInquiry =                     0x28,
+        ProfileDetailsInquiryReply =                0x29,
+        ProfileSpecificData =                       0x2F,
+
+        // Category 3: Property Exchange, 0x30 to 0x3F
+        PropertyExchangeCapabilitiesInquiry =       0x30,
+        PropertyExchangeCapabilitiesInquiryReply =  0x31,
+        PropertyGetDataInquiry =                    0x34,
+        PropertyGetDataInquiryReply =               0x35,
+        PropertySetDataInquiry =                    0x36,
+        PropertySetDataInquiryReply =               0x37,
+        PropertySubscriptionInquiry =               0x38,
+        PropertySubscriptionInquiryReply =          0x39,
+        PropertyNotify =                            0x3F,
+
+        // Category 4: Process Inquiry, 0x40 to 0x4F
+        ProcessInquiryCapabilities =                0x40,
+        ProcessInquiryCapabilitiesReply =           0x41,
+        MidiMessageReport =                         0x42,
+        MidiMessageReportReply =                    0x43,
+        MidiMessageReportEnd =                      0x44,
+
+        // Category 5: Management, 0x70 to 0x7F
+        Discovery =                                 0x70,
+        DiscoveryReply =                            0x71,
+        EndpointInquiry =                           0x72,
+        EndpointInquiryReply =                      0x73,
+        Ack =                                       0x7D,
+        InvalidateMuid =                            0x7E,
+        Nak =                                       0x7F,
+    };
+}

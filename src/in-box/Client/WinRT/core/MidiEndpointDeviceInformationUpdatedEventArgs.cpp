@@ -16,37 +16,14 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::implementation
 {
     _Use_decl_annotations_
     void MidiEndpointDeviceInformationUpdatedEventArgs::InternalInitialize(
-        midi2enum::MidiEndpointDeviceInformation const& removedDevice,
+        midi2enum::MidiEndpointDeviceInformation const& updatedDevice,
         enumeration::DeviceInformationUpdate const& deviceInformationUpdate,
-        bool const updatedName,
-        bool const updatedInProtocolEndpointInformation,
-        bool const updatedDeviceIdentity,
-        bool const updatedStreamConfiguration,
-        bool const updatedFunctionBlocks,
-        bool const updatedUserMetadata,
-        bool const updatedAdditionalCapabilities,
-        bool const updatedUniqueIds,
-        bool const updatedGroupTerminalBlocks,
-        bool const updatedMutedState
+        uint32_t const updatedFlags
     ) noexcept
     {
-
-        m_updatedName = updatedName;
-        m_updatedInProtocolEndpointInformation = updatedInProtocolEndpointInformation;
-        m_updatedDeviceIdentity = updatedDeviceIdentity;
-        m_updatedStreamConfiguration = updatedStreamConfiguration;
-        m_updatedFunctionBlocks = updatedFunctionBlocks;
-        m_updatedUserMetadata = updatedUserMetadata;
-        m_updatedAdditionalCapabilities = updatedAdditionalCapabilities;
-
-        m_updatedDevice = removedDevice;
+        m_updatedDevice = updatedDevice;
         m_deviceInformationUpdate = deviceInformationUpdate;
-
-        m_updatedUniqueIds = updatedUniqueIds;
-
-        m_updatedGroupTerminalBlocks = updatedGroupTerminalBlocks;
-
-        m_updatedMutedState = updatedMutedState;
+        m_updatedFlags = updatedFlags;
     }
 
 }

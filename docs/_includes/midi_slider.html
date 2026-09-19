@@ -1,6 +1,5 @@
 <!-- Start Slider  Area -->
 <section class="slider-area bg-cover1">
-    <!--<p id="testOut"></p>-->
     <div class="slider-wrapper full-padding">
         <div class="container">
             <div class="row">
@@ -8,22 +7,10 @@
                      <div class="slider-carousel owl-carousel">
                         <div class="slider-content wow fadeIn" data-wow-duration="3s">
                             <h1 class="heading-1">Windows MIDI Services is Here</h1>
-                            <h4 class="heading-4">SDK Runtime and Tools Release Candidate</h4>
-                            <h4 class="heading-4"><span>Everyone on retail/consumer Windows 11 24h2, 25h2, and 26h1 who has updates enabled has the new Windows MIDI Services already in Windows.</span> Windows MIDI Services brings enhanced MIDI 1.0 support (including multi-client and built-in loopbacks) to your PC, and enables the MIDI 2.0 infrastructure including a new driver.<br/><br/>This download is the recommended tools and app SDK runtime, including the MIDI Settings app, MIDI Console, PowerShell scripting, troubleshooting tools, and more.<span>Note: Tools are unsigned and your browser will display a warning when downloading</span>. For support, please visit our Discord Server via the links on this page.</h4>
+                            <h4 class="heading-4"><span>Everyone on supported Windows 11 releases (currently 25h2 and later) who has updates enabled has the new Windows MIDI Services already in Windows.</span> Windows MIDI Services brings enhanced MIDI 1.0 support (including multi-client and built-in loopbacks) to your PC, and enables the MIDI 2.0 infrastructure including a new driver.<br/><br/>For developers and technical customers, you may download the latest preview releases from GitHub. Everyone else should wait until the software is delivered with Windows 11.<br/><br/>For support, please visit our Discord Server via the links on this page.</h4>
                             <p>
-                            <!-- Download for this PC  -->
-                            <a id="download_this_pc_x64" href="https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_Directx64" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">Download for Intel/AMD x64 Processors</a>
-                            <a id="download_this_pc_arm64" href="https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_DirectArm64" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">Download for Qualcomm and other Arm Processors</a>
+                            <a href="https://aka.ms/midireleases" class="btn-style3 btn wow fadeInDown" data-wow-duration="500ms">Latest releases on GitHub</a>
                             </p>
-                            <p id="download_all_slider_links" style="display: none">
-                            <!-- All downloads. Simple links -->
-                            <span style="color:rgb(159, 200, 239)">All downloads: </span>
-                            <a id="download_x64" style="color:white" href="https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_Directx64">Download runtime and tools for Intel/AMD x64</a>
-                            &nbsp;|&nbsp;
-                            <a id="download_arm64" style="color:white" href="https://aka.ms/MidiServicesLatestSdkRuntimeInstaller_DirectArm64">Download runtime and tools for Qualcomm/Arm</a>
-                            &nbsp;|&nbsp;
-                            </p>
-                    
                         </div>
                     </div>
                 </div>
@@ -31,94 +18,6 @@
         </div>
     </div>
 </section>
-
-<!-- architecture detection -->
-<script>
-function enableArchitectureSpecificDownloads()
-{
-    // this doesn't work on firefox, so FF users won't get a recommended download, just both downloads
-    navigator.userAgentData.getHighEntropyValues(["architecture", "bitness"])
-    .then(ua => 
-    {
-        var elem_download_this_pc_x64 = document.getElementById("download_this_pc_x64");
-        var elem_download_this_pc_arm64 = document.getElementById("download_this_pc_arm64");
-
-        var elem_download_all_slider_links = document.getElementById("download_all_slider_links");
-        //var elem_release_notes = document.getElementById("slider_links_release_notes");
-
-        // always display this
-        //elem_release_notes.style.display = "block";
-
-        if ((elem_download_this_pc_arm64 != null) && (elem_download_this_pc_x64 != null))
-        {
-            console.log("enableArchitectureSpecificDownloads: Elements are not null");
-
-            if (navigator.userAgentData.platform === "Windows") 
-            {
-                console.log("enableArchitectureSpecificDownloads: Platform is Windows");
-
-                if (ua.bitness === '64') 
-                {
-                    console.log("enableArchitectureSpecificDownloads: Bitness is 64");
-
-                    if (ua.architecture === 'arm') 
-                    {
-                        console.log("enableArchitectureSpecificDownloads: Arm64 architecture");
-
-                        elem_download_this_pc_x64.remove();
-                        elem_download_this_pc_arm64.innerText += " (Recommended for this PC)";
-
-                        elem_download_all_slider_links.style.display = "block";
-                        //document.getElementById("download_arm64").innerText += " (recommended for this PC)";
-
-                        console.log("enableArchitectureSpecificDownloads: Finished manipulations for Arm");
-                    }
-                    else if (ua.architecture === 'x86')
-                    {
-                        console.log("enableArchitectureSpecificDownloads: x86-64 architecture");
-
-                        elem_download_this_pc_arm64.remove();
-                        elem_download_this_pc_x64.innerText += " (Recommended for this PC)";
-
-                        elem_download_all_slider_links.style.display = "block";
-                        //document.getElementById("download_x64").innerText += " (recommended for this PC)";
-
-                        console.log("enableArchitectureSpecificDownloads: Finished manipulations for x64");
-                    }
-                    else
-                    {
-                        console.error("enableArchitectureSpecificDownloads: Unknown architecture");
-                    }
-                }
-                else
-                {
-                    console.log("enableArchitectureSpecificDownloads: not 64 bit");
-
-                    // Not 64 bit
-                    elem_download_this_pc_x64.style.visibility = 'collapse'; 
-                    elem_download_this_pc_arm64.style.visibility = 'collapse';
-                }
-            }
-            else
-            {
-                console.log("enableArchitectureSpecificDownloads: not Windows");
-
-                // not Windows
-                elem_download_this_pc_x64.style.visibility = 'collapse';  
-                elem_download_this_pc_arm64.style.visibility = 'collapse';
-            }
-        }
-        else
-        {
-            // could not find elements
-            console.error("enableArchitectureSpecificDownloads: Unable to find elements");
-        }
-    });
-}
-
-window.onload = enableArchitectureSpecificDownloads();
-
-</script>
 
 <!-- End Slider Area -->
 

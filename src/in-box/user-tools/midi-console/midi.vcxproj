@@ -137,6 +137,7 @@
     <ClInclude Include="cmd_enumerate.h" />
     <ClInclude Include="cmd_forward.h" />
     <ClInclude Include="cmd_loopback.h" />
+    <ClInclude Include="cmd_synth.h" />
     <ClInclude Include="cmd_network.h" />
     <ClInclude Include="cmd_sysex.h" />
     <ClInclude Include="cmd_system.h" />
@@ -167,6 +168,7 @@
     <ClCompile Include="cmd_enumerate.cpp" />
     <ClCompile Include="cmd_forward.cpp" />
     <ClCompile Include="cmd_loopback.cpp" />
+    <ClCompile Include="cmd_synth.cpp" />
     <ClCompile Include="cmd_network.cpp" />
     <ClCompile Include="cmd_sysex.cpp" />
     <ClCompile Include="cmd_system.cpp" />

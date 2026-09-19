@@ -1,6 +1,6 @@
 ---
 layout: sdk_namespace_page
-title: App SDK Support for app-to-app Virtual Devices
+title: WinRT API Support for app-to-app Virtual Devices
 namespace: Windows.Devices.Midi2.Transports.Virtual
 description: Namespace for virtual / app-to-app MIDI management
 ---
@@ -13,5 +13,5 @@ In addition to the service component, it is implemented in the client API as a t
 
 ## Examples
 
-[C++ Sample](https://github.com/microsoft/MIDI/blob/main/samples/cpp-winrt/simple-app-to-app-midi/main.cpp)
-[C# Sample](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/virtual-device-app-winui)
+* [C++ Sample](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/simple-app-to-app-midi)
+* [C# Sample](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/virtual-device-app-winui)

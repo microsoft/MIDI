@@ -17,6 +17,7 @@
 #include <shlobj_core.h>
 #include <knownfolders.h>
 #include <pathcch.h>
+#include <commctrl.h>
 
 #include <winmeta.h>
 #include <TraceLoggingProvider.h>
@@ -97,6 +98,7 @@
 #include <winrt/Windows.Devices.Midi2.Utilities.Messages.h>
 #include <winrt/Windows.Devices.Midi2.Reporting.h>
 #include <winrt/Windows.Devices.Midi2.ServiceConfig.h>
+#include <winrt/Windows.Devices.Midi2.Transports.Synth.h>
 
 #include <microsoft.ui.xaml.window.h>
 #include <shobjidl.h>
@@ -116,6 +118,7 @@ namespace midi2legacy = ::winrt::Windows::Devices::Midi2::Enumeration::Legacy;
 namespace midi2msg = ::winrt::Windows::Devices::Midi2::Utilities::Messages;
 namespace midi2rept = ::winrt::Windows::Devices::Midi2::Reporting;
 namespace midi2config = ::winrt::Windows::Devices::Midi2::ServiceConfig;
+namespace midi2synth = ::winrt::Windows::Devices::Midi2::Transports::Synth;
 namespace appshared = ::winrt::MidiAppShared;
 
 #include "Telemetry.h"
@@ -138,3 +141,6 @@ namespace appshared = ::winrt::MidiAppShared;
 // contract shared with it.
 #include "..\midi-notifications\notification_settings_defs.h"
 #include "NotificationSettings.h"
+
+// How the other MIDI tools ask this app to open one of its dialogs.
+#include "settings_app_launch_defs.h"

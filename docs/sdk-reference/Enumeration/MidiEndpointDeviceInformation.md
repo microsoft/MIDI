@@ -24,6 +24,12 @@ When a device is first enumerated by the MIDI Service, if it is a UMP-native dev
 
 For more information about the Endpoint Discovery and Protocol Negotiation aspect of MIDI 2.0, please [see the MIDI 2.0 UMP specification at the MIDI Association web site](https://midi.org/specs).
 
+### Knowing when discovery has finished
+
+`IsEndpointDiscoveryComplete` becomes true when discovery completes or when the timeout is reached, and the watcher raises `Updated` with `IsEndpointDiscoveryStateUpdated` set. For an endpoint which does not use in-protocol discovery, such as a MIDI 1.0 device, it is true from the moment the endpoint is created.
+
+It is a useful hint, not a guarantee. It stays false if discovery was abandoned, for example because the device was removed part way through. Do not block your application waiting for it, and keep handling later updates after you have seen it — function block names and MIDI 1.0 port names in particular can still arrive afterwards.
+
 ## Properties
 
 | Property | Source | Description |
@@ -40,6 +46,7 @@ For more information about the Endpoint Discovery and Protocol Negotiation aspec
 | `DeclaredFunctionBlocksLastUpdateTime` | Discovery | The time of the last update of function blocks |
 | `Midi1PortNamingApproach` | User/Config | The naming approach used when generating MIDI 1.0 port names for this endpoint. |
 | `IsMuted` | Config | True if this endpoint is muted (all MIDI communication suppressed). |
+| `IsEndpointDiscoveryComplete` | Discovery | True when the service has finished gathering in-protocol information for this endpoint. See the note below. |
 | `Properties` | Windows | Returns the raw device properties for this endpoint. The property values and their ids are not something an application should rely upon -- they are an implementation detail subject to change, and are not part of the contract with apps. Instead, all of the interesting/useful properties have been broken out in other ways with strong types. |
 
 ## Static Properties

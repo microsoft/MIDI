@@ -25,26 +25,17 @@ This is all information supplied by the user through the MIDI Settings app and/o
 
 ## Outgoing latency compensation
 
-The outbound message scheduler releases a message early by the endpoint's compensation value, so
-that it reaches the device at the timestamp the application asked for rather than some time after
-it. Two values feed that, and this property decides between them.
+The outbound message scheduler releases a message early by the endpoint's compensation value, so that it reaches the device at the timestamp the application asked for rather than some time after it. Two values feed that, and this property decides between them.
 
 | Source | Where it comes from |
 | ------ | ------------------- |
 | Calculated | Worked out by the transport. Bluetooth uses half the negotiated connection interval; Network MIDI 2.0 uses half the measured ping round trip. Nothing to configure. |
 | Custom | `CustomMidiOutgoingLatencyTicks`, supplied by the user through the MIDI Console or a settings app. |
 
-`UseCustomMidiOutgoingLatencyTicksForScheduling` is set automatically when a user supplies a custom
-value, and cleared when that value is removed. When it is true the custom value is used; otherwise
-the calculated value is used. The two are never combined.
+`UseCustomMidiOutgoingLatencyTicksForScheduling` is set automatically when a user supplies a custom value, and cleared when that value is removed. When it is true the custom value is used; otherwise the calculated value is used. The two are never combined.
 
-A customer can also make that choice explicitly, through `UseCustomOutgoingLatency` on
-`MidiServiceEndpointCustomizationConfig`. That is what allows compensation to be switched off
-without discarding a value which took a loopback cable and a measurement to obtain.
+A customer can also make that choice explicitly, through `UseCustomOutgoingLatency` on `MidiServiceEndpointCustomizationConfig`. That is what allows compensation to be switched off without discarding a value which took a loopback cable and a measurement to obtain.
 
-The scheduler reads the compensation when a connection to the endpoint is opened, so a change takes
-effect the next time an application connects rather than immediately.
+The scheduler reads the compensation when a connection to the endpoint is opened, so a change takes effect the next time an application connects rather than immediately.
 
-Transports which cannot work out a meaningful value, including endpoints served by MIDI 1.0 drivers
-that are not USB devices, supply no calculated latency. Those endpoints are uncompensated unless a
-custom value is supplied.
+Transports which cannot work out a meaningful value, including endpoints served by MIDI 1.0 drivers that are not USB devices, supply no calculated latency. Those endpoints are uncompensated unless a custom value is supplied.

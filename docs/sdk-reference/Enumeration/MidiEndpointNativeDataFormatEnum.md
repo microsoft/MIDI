@@ -16,7 +16,7 @@ Represents the data format that the device expects to send to and to receive fro
 | MIDI 1.0 device connected to a vendor driver | `Midi1ByteFormat` |
 | MIDI 1.0 device connected to the MIDI 1.0 class driver | `Midi1ByteFormat` |
 
-Of course, when sending messages through the app SDK, you always use the Universal MIDI Packet (UMP) format. The MIDI Service will handle the translation between formats.
+Of course, when sending messages through the WinRT API, you always use the Universal MIDI Packet (UMP) format. The MIDI Service will handle the translation between formats.
 
 ## Properties
 

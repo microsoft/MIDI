@@ -637,6 +637,91 @@ namespace WindowsMidiServicesInternal
     }
 
 
+    // Device Identity Notification and related.
+
+    struct DeviceIdentityFields
+    {
+        uint8_t ManufacturerSysExIdByte1{ 0 };
+        uint8_t ManufacturerSysExIdByte2{ 0 };
+        uint8_t ManufacturerSysExIdByte3{ 0 };
+
+        uint8_t DeviceFamilyLsb{ 0 };
+        uint8_t DeviceFamilyMsb{ 0 };
+
+        uint8_t DeviceFamilyModelNumberLsb{ 0 };
+        uint8_t DeviceFamilyModelNumberMsb{ 0 };
+
+        uint8_t SoftwareRevisionLevelByte1{ 0 };
+        uint8_t SoftwareRevisionLevelByte2{ 0 };
+        uint8_t SoftwareRevisionLevelByte3{ 0 };
+        uint8_t SoftwareRevisionLevelByte4{ 0 };
+    };
+
+    inline bool MessageIsDeviceIdentityNotification(_In_ std::uint32_t const firstWord) noexcept
+    {
+        if (GetUmpMessageTypeFromFirstWord(firstWord) == 0xF)
+        {
+            if (GetFormFromStreamMessageFirstWord(firstWord) == 0 &&
+                GetStatusFromStreamMessageFirstWord(firstWord) == 0x02)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // A device identity is carried by four different messages with three different encodings, so
+    // the one place the UMP Stream layout is written down is here. Builder and parser both use it.
+
+    inline void BuildDeviceIdentityNotificationWords(
+        _In_ DeviceIdentityFields const& identity,
+        _Out_ uint32_t& word1,
+        _Out_ uint32_t& word2,
+        _Out_ uint32_t& word3
+    ) noexcept
+    {
+        // The most significant byte of word 1 is reserved and stays zero.
+        word1 =
+            ((uint32_t)CleanupByte7(identity.ManufacturerSysExIdByte1) << 16) |
+            ((uint32_t)CleanupByte7(identity.ManufacturerSysExIdByte2) << 8) |
+            ((uint32_t)CleanupByte7(identity.ManufacturerSysExIdByte3));
+
+        word2 =
+            ((uint32_t)CleanupByte7(identity.DeviceFamilyLsb) << 24) |
+            ((uint32_t)CleanupByte7(identity.DeviceFamilyMsb) << 16) |
+            ((uint32_t)CleanupByte7(identity.DeviceFamilyModelNumberLsb) << 8) |
+            ((uint32_t)CleanupByte7(identity.DeviceFamilyModelNumberMsb));
+
+        word3 =
+            ((uint32_t)CleanupByte7(identity.SoftwareRevisionLevelByte1) << 24) |
+            ((uint32_t)CleanupByte7(identity.SoftwareRevisionLevelByte2) << 16) |
+            ((uint32_t)CleanupByte7(identity.SoftwareRevisionLevelByte3) << 8) |
+            ((uint32_t)CleanupByte7(identity.SoftwareRevisionLevelByte4));
+    }
+
+    inline void ParseDeviceIdentityNotificationWords(
+        _In_ uint32_t const word1,
+        _In_ uint32_t const word2,
+        _In_ uint32_t const word3,
+        _Out_ DeviceIdentityFields& identity
+    ) noexcept
+    {
+        identity.ManufacturerSysExIdByte1 = CleanupByte7(MIDIWORDBYTE2(word1));
+        identity.ManufacturerSysExIdByte2 = CleanupByte7(MIDIWORDBYTE3(word1));
+        identity.ManufacturerSysExIdByte3 = CleanupByte7(MIDIWORDBYTE4(word1));
+
+        identity.DeviceFamilyLsb = CleanupByte7(MIDIWORDBYTE1(word2));
+        identity.DeviceFamilyMsb = CleanupByte7(MIDIWORDBYTE2(word2));
+        identity.DeviceFamilyModelNumberLsb = CleanupByte7(MIDIWORDBYTE3(word2));
+        identity.DeviceFamilyModelNumberMsb = CleanupByte7(MIDIWORDBYTE4(word2));
+
+        identity.SoftwareRevisionLevelByte1 = CleanupByte7(MIDIWORDBYTE1(word3));
+        identity.SoftwareRevisionLevelByte2 = CleanupByte7(MIDIWORDBYTE2(word3));
+        identity.SoftwareRevisionLevelByte3 = CleanupByte7(MIDIWORDBYTE3(word3));
+        identity.SoftwareRevisionLevelByte4 = CleanupByte7(MIDIWORDBYTE4(word3));
+    }
+
 
     inline uint8_t GetEndpointInfoNotificationUmpVersionMajorFirstWord(
         _In_ uint32_t const word0

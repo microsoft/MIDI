@@ -1,0 +1,26 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+namespace Windows.Devices.Midi2.Transports.Synth
+{
+    [contract(MidiTransportsSynthApiContract, 1)]
+
+    // One drum kit in the active sound set. Kits are selected by a program change on a drum
+    // channel, not by a bank select.
+    [interface_name("Windows.Devices.Midi2.Transports.Synth.IMidiSynthDrumKitInfo", UUID_IMidiSynthDrumKitInfo)]
+    runtimeclass MidiSynthDrumKitInfo
+    {
+        String Name{ get; };
+
+        // Zero-based, as it appears on the wire.
+        UInt8 Program{ get; };
+    }
+}
