@@ -214,7 +214,9 @@ CMidiEndpointProtocolWorker::Start(
             }
             else
             {
-                RETURN_IF_FAILED(internal::IsComponentPermitted(midi2MidiSrvTransportIID));
+                // componentFileLock pins the verified DLL across the CoCreateInstance below.
+                wil::unique_hfile componentFileLock;
+                RETURN_IF_FAILED(internal::IsComponentPermitted(midi2MidiSrvTransportIID, componentFileLock));
             }
             RETURN_IF_FAILED(CoCreateInstance((IID)midi2MidiSrvTransportIID, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&serviceTransport)));
             RETURN_IF_NULL_ALLOC(serviceTransport);
@@ -264,6 +266,12 @@ CMidiEndpointProtocolWorker::Start(
 
         m_alreadyTriedToNegotiationOnce = false;
 
+        // The transport callback thread now also acquires m_lock to safely
+        // update the function block maps. Holding m_lock across the discovery
+        // and end-processing waits below would deadlock with that callback
+        // thread, so release it here now that the protected init/reset is done.
+        lock.reset();
+            
         TraceLoggingWrite(
             MidiSrvTelemetryProvider::Provider(),
             MIDI_TRACE_EVENT_INFO,
@@ -279,10 +287,6 @@ CMidiEndpointProtocolWorker::Start(
 
         if (Feature_Servicing_MIDI2ProtocolNegotiationDeadlock::IsEnabled())
         {
-            // Everything from here on blocks, and none of it mutates state Shutdown() touches,
-            // so the lock is dropped rather than held for the life of the worker.
-            lock.reset();
-
             // Waking on m_endProcessing as well is the point. Shutdown() signals it before it
             // takes m_lock, but the old code was parked on the discovery event alone, so a
             // teardown arriving mid-discovery had to wait out the entire timeout first.
@@ -304,7 +308,13 @@ CMidiEndpointProtocolWorker::Start(
         RETURN_IF_FAILED(UpdateAllFunctionBlockPropertiesIfComplete());
 
         // after timing out, or receiving everything, we set the Discovery Complete property
-        m_inInitialFunctionBlockDiscovery = false;
+        {
+            // m_inInitialFunctionBlockDiscovery is read on the transport callback thread,
+            // so publish this transition under m_lock (the broad lock was already released above).
+            auto reLock = m_lock.lock();
+            m_inInitialFunctionBlockDiscovery = false;
+        }
+
         RETURN_IF_FAILED(SetDiscoveryCompleteProperty());
 
 
@@ -406,6 +416,7 @@ CMidiEndpointProtocolWorker::Callback(
 
     RETURN_HR_IF_NULL(E_INVALIDARG, data);
 
+    auto lock = m_lock.lock();
 
     internal::UmpBufferIterator bufferIterator(
         static_cast<uint32_t*>(data), 
@@ -1047,7 +1058,10 @@ CMidiEndpointProtocolWorker::RequestAllEndpointDiscoveryInformation()
         TraceLoggingWideString(m_endpointDeviceInterfaceId.c_str(), MIDI_TRACE_EVENT_DEVICE_SWD_ID_FIELD)
     );
 
-    RETURN_HR_IF_NULL(E_POINTER, m_midiBidiDevice);
+    if (Feature_Servicing_MIDI2ComponentSignatureCache::IsEnabled())
+    {
+        RETURN_HR_IF_NULL(E_POINTER, m_midiBidiDevice);
+    }
 
     internal::PackedUmp128 ump{};
 
@@ -1058,8 +1072,21 @@ CMidiEndpointProtocolWorker::RequestAllEndpointDiscoveryInformation()
     uint8_t filterBitmap = MIDI_ENDPOINT_DISCOVERY_MESSAGE_ALL_FILTER_FLAGS;
     internal::SetMidiWordMostSignificantByte4(ump.word1, filterBitmap);
 
+    // This runs on the worker thread (from Start) after the broad lock has been
+    // released, so m_midiBidiDevice can be reset concurrently by Shutdown(). Snapshot
+    // it under m_lock and send through the local copy so the device can't be freed out
+    // from under us. We deliberately do not hold m_lock across SendMidiMessage to avoid
+    // deadlocking with the transport callback thread.
+    wil::com_ptr_nothrow<IMidiBidirectional> midiBidiDevice;
+    {
+        auto lock = m_lock.lock();
+        midiBidiDevice = m_midiBidiDevice;
+    }
+
+    RETURN_HR_IF_NULL(E_POINTER, midiBidiDevice);
+
     // send it immediately
-    RETURN_IF_FAILED(m_midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (byte*)&ump, (UINT)sizeof(ump), 0));
+    RETURN_IF_FAILED(midiBidiDevice->SendMidiMessage(MessageOptionFlags_None, (byte*)&ump, (UINT)sizeof(ump), 0));
 
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
@@ -1186,11 +1213,21 @@ CMidiEndpointProtocolWorker::Shutdown()
 
     // signal to stop worker thread
     EndProcessing();
-    auto lock = m_lock.lock();
-    if (m_midiBidiDevice)
+
+    // Capture the device under m_lock, then release the lock BEFORE calling
+    // Shutdown() on it. The transport's Shutdown() drains in-flight callbacks,
+    // and those callbacks (CMidiEndpointProtocolWorker::Callback) acquire m_lock.
+    // Holding m_lock across Shutdown() would deadlock against a callback that has
+    // already passed the m_endProcessing check and is blocked acquiring m_lock.
+    wil::com_ptr_nothrow<IMidiBidirectional> midiBidiDevice;
     {
-        LOG_IF_FAILED(m_midiBidiDevice->Shutdown());
-        m_midiBidiDevice.reset();
+        auto lock = m_lock.lock();
+        midiBidiDevice = std::move(m_midiBidiDevice);
+    }
+
+    if (midiBidiDevice)
+    {
+        LOG_IF_FAILED(midiBidiDevice->Shutdown());
     }
 
     //if (m_sessionTracker)
@@ -1548,32 +1585,57 @@ CMidiEndpointProtocolWorker::UpdateAllFunctionBlockPropertiesIfComplete()
 
     std::vector<DEVPROPERTY> props{ };
 
-    // add all function blocks
-    for (auto const& fb : m_functionBlocks)
+    // Local, owned backing storage for the data referenced by 'props'. The DEVPROPERTY
+    // entries hold raw pointers, so the data they point at must remain valid and stable
+    // until UpdateEndpointProperties returns. We cannot point directly into m_functionBlocks
+    // / m_functionBlockNames because those are mutated on the transport callback thread
+    // (ProcessFunctionBlock*NotificationMessage), which would race with - and potentially
+    // free out from under us (use-after-free) - the buffers referenced here. We reserve
+    // up front so that push_back never reallocates and invalidates pointers already in 'props'.
+    std::vector<MidiFunctionBlockProperty> functionBlockValues{ };
+    std::vector<std::wstring> functionBlockNameValues{ };
+
     {
-        DEVPROPKEY propKey = FunctionBlockPropertyKeyFromNumber(fb.first);
+        // Hold the lock only while reading the shared maps and copying their contents
+        // into local storage. We deliberately do not hold it across UpdateEndpointProperties.
+        auto lock = m_lock.lock();
 
-        props.push_back({{ propKey, DEVPROP_STORE_SYSTEM, nullptr},
-            DEVPROP_TYPE_BINARY, static_cast<ULONG>(sizeof(fb.second)), (PVOID)(&fb.second) });
-    }
+        functionBlockValues.reserve(m_functionBlocks.size());
+        functionBlockNameValues.reserve(m_functionBlockNames.size());
 
-    // add all function block names
-
-    for (auto& fbname : m_functionBlockNames)
-    {
-        if (fbname.second.IsComplete)
+        // add all function blocks
+        for (auto const& fb : m_functionBlocks)
         {
-            fbname.second.Name = internal::TrimmedWStringCopy(fbname.second.Name) + L"\0" ;
+            functionBlockValues.push_back(fb.second);
+            auto const& storedBlock = functionBlockValues.back();
 
-            if (!fbname.second.Name.empty())
+            DEVPROPKEY propKey = FunctionBlockPropertyKeyFromNumber(fb.first);
+
+            props.push_back({{ propKey, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_BINARY, static_cast<ULONG>(sizeof(storedBlock)), (PVOID)(&storedBlock) });
+        }
+
+        // add all function block names
+
+        for (auto& fbname : m_functionBlockNames)
+        {
+            if (fbname.second.IsComplete)
             {
-                props.push_back({{ FunctionBlockNamePropertyKeyFromNumber(fbname.first), DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_STRING, static_cast<ULONG>((fbname.second.Name.length() + 1) * sizeof(WCHAR)), (PVOID)(fbname.second.Name.c_str()) });
-            }
-            else
-            {
-                props.push_back({{ FunctionBlockNamePropertyKeyFromNumber(fbname.first), DEVPROP_STORE_SYSTEM, nullptr},
-                    DEVPROP_TYPE_EMPTY, 0, nullptr });
+                fbname.second.Name = internal::TrimmedWStringCopy(fbname.second.Name) + L"\0" ;
+
+                if (!fbname.second.Name.empty())
+                {
+                    functionBlockNameValues.push_back(fbname.second.Name);
+                    auto const& storedName = functionBlockNameValues.back();
+
+                    props.push_back({{ FunctionBlockNamePropertyKeyFromNumber(fbname.first), DEVPROP_STORE_SYSTEM, nullptr},
+                        DEVPROP_TYPE_STRING, static_cast<ULONG>((storedName.length() + 1) * sizeof(WCHAR)), (PVOID)(storedName.c_str()) });
+                }
+                else
+                {
+                    props.push_back({{ FunctionBlockNamePropertyKeyFromNumber(fbname.first), DEVPROP_STORE_SYSTEM, nullptr},
+                        DEVPROP_TYPE_EMPTY, 0, nullptr });
+                }
             }
         }
     }
@@ -1587,11 +1649,16 @@ CMidiEndpointProtocolWorker::UpdateAllFunctionBlockPropertiesIfComplete()
             DEVPROP_TYPE_FILETIME, static_cast<ULONG>(sizeof(FILETIME)), (PVOID)(&currentTime) });
 
 
-    // update all the properties
+    // update all the properties. The data referenced by 'props' is backed by the local
+    // functionBlockValues / functionBlockNameValues, which are stable for this call.
     RETURN_IF_FAILED(m_deviceManager->UpdateEndpointProperties(m_endpointDeviceInterfaceId.c_str(), (ULONG)props.size(), (DEVPROPERTY*)props.data()));
 
-    // we have all the initial function blocks, so we're out of the FB discovery phase
-    m_inInitialFunctionBlockDiscovery = false;
+    {
+        // m_inInitialFunctionBlockDiscovery is read on the transport callback thread,
+        // so publish this transition under m_lock.
+        auto lock = m_lock.lock();
+        m_inInitialFunctionBlockDiscovery = false;
+    }
 
     return S_OK;
 }

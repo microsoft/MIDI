@@ -811,6 +811,14 @@ MidiPin::HandleIo()
                         ULONG midiOutReadPosition = (ULONG) InterlockedCompareExchange((LONG *)m_ReadRegister, 0, 0);
                         ULONG midiOutWritePosition = (ULONG) InterlockedCompareExchange((LONG *)m_WriteRegister, 0, 0);
 
+                        if (midiOutReadPosition >= m_BufferSize ||
+                            midiOutWritePosition >= m_BufferSize)
+                        {
+                            // data is malformed, abort.
+                            status = STATUS_INVALID_DEVICE_REQUEST;
+                            goto cleanup;
+                        }
+
                         // first figure out how much data there is to read, taking
                         // into account the looping buffer.
                         if (midiOutReadPosition <= midiOutWritePosition)
@@ -867,6 +875,14 @@ MidiPin::HandleIo()
                         // so we can have as much free space as possible.
                         ULONG midiInWritePosition = (ULONG) InterlockedCompareExchange((LONG *)m_Filter->m_FilterInstance->MidiInPin->m_WriteRegister, 0, 0);
                         ULONG midiInReadPosition = (ULONG) InterlockedCompareExchange((LONG *)m_Filter->m_FilterInstance->MidiInPin->m_ReadRegister, 0, 0);
+
+                        if (midiInWritePosition >= m_BufferSize ||
+                            midiInReadPosition >= m_BufferSize)
+                        {
+                            // data is malformed, abort.
+                            status = STATUS_INVALID_DEVICE_REQUEST;
+                            goto cleanup;
+                        }
 
                         // Now we need to calculate the available space, taking into account the looping
                         // buffer.

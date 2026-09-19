@@ -1441,18 +1441,8 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 // =======================================================
 
 #include "Feature_Servicing_MIDI2WinRtStartup.h"
-#include "Feature_Servicing_MIDI2USBSerial.h"
-#include "Feature_Servicing_MIDI2SWDAbortCrash.h"
-#include "Feature_Servicing_MIDI2RTTimestamp.h"
-#include "Feature_Servicing_MIDI2NumDevsPerf.h"
-#include "Feature_Servicing_MIDI2LegacyTimestamp.h"
 #include "Feature_Servicing_MIDI2LegacyControl.h"
-#include "Feature_Servicing_MIDI2KSHandleWrapperCrash.h"
-#include "Feature_Servicing_MIDI2KSATVSFix.h"
-#include "Feature_Servicing_MIDI2IsUniqueIdLock.h"
-#include "Feature_Servicing_MIDI2FillReadCrash.h"
 #include "Feature_Servicing_MIDI2DevCaps2.h"
-#include "Feature_Servicing_MIDI2BsToUMPConv.h"
 
 // 11D 2026 (planned)
 #include "Feature_Servicing_MIDI2FailFast.h"
@@ -1488,18 +1478,8 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_FEATURE_ENABLEMENT);
 
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinRtStartup::IsEnabled(),             L"MIDI2WinRtStartup");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2USBSerial::IsEnabled(),                L"MIDI2USBSerial");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2SWDAbortCrash::IsEnabled(),            L"MIDI2SWDAbortCrash");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2RTTimestamp::IsEnabled(),              L"MIDI2RTTimestamp (fix WinRT MIDI 1.0 timestamps)");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2NumDevsPerf::IsEnabled(),              L"MIDI2NumDevsPerf (move WinMM device enum to async)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LegacyTimestamp::IsEnabled(),          L"MIDI2LegacyTimestamp");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LegacyControl::IsEnabled(),            L"MIDI2LegacyControl (support for UseLegacyMidi)");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSHandleWrapperCrash::IsEnabled(),     L"MIDI2KSHandleWrapperCrash");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSATVSFix::IsEnabled(),                L"MIDI2KSATVSFix");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2IsUniqueIdLock::IsEnabled(),           L"MIDI2IsUniqueIdLock");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2FillReadCrash::IsEnabled(),            L"MIDI2FillReadCrash (usbmidi2-acx driver crash)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2DevCaps2::IsEnabled(),                 L"MIDI2DevCaps2");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2BsToUMPConv::IsEnabled(),              L"MIDI2BsToUMPConv");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2FailFast::IsEnabled(),                 L"MIDI2FailFast");
 
     // 11d 2026 (planned)

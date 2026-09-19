@@ -8,7 +8,7 @@
 
 #pragma once
 
-class Feature_Servicing_MIDI2KSATVSFix
+class Feature_Servicing_MIDI2SessionNameLimit
 {
 public:
     static bool IsEnabled()

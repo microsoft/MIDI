@@ -310,12 +310,13 @@ void NamingTests::TestPopulateEntryForMidi1DeviceUsingUmpDriver()
 
 }
 
-
 // A name with a character outside ASCII used to be formatted through a narrow string and widened
 // one byte at a time, so "Pete\u2019s MacBook Pro" reached WinMM as its UTF-8 bytes. Only the
 // ports after the first were affected, because only those get the MIDIIN/MIDIOUT prefix.
 void NamingTests::TestLegacyNameKeepsNonAsciiCharacters()
 {
+    if (SkipUnlessPortNamingReworkEnabled()) { return; }
+
     MidiEndpointNameTable table;
 
     std::wstring const deviceName{ L"Pete\u2019s Mac" };
