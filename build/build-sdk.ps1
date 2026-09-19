@@ -171,6 +171,7 @@ $GuiTools = @(
     [pscustomobject]@{ Name = 'midiclock';         Folder = 'Clock';        Display = 'Windows MIDI Clock';     DirectoryId = 'TOOL_CLOCK_FOLDER' }
     [pscustomobject]@{ Name = 'midisysextool';     Folder = 'SysEx';        Display = 'MIDI SysEx Tool';        DirectoryId = 'TOOL_SYSEX_FOLDER' }
     [pscustomobject]@{ Name = 'midi2monitor';      Folder = 'Monitor';      Display = 'MIDI Monitor';           DirectoryId = 'TOOL_MONITOR_FOLDER' }
+    [pscustomobject]@{ Name = 'midipatchbay';      Folder = 'Patchbay';     Display = 'MIDI Patchbay';          DirectoryId = 'TOOL_PATCHBAY_FOLDER' }
     [pscustomobject]@{ Name = 'miditroubleshooter'; Folder = 'Troubleshooter'; Display = 'MIDI Troubleshooting and Repair'; DirectoryId = 'TOOL_TROUBLESHOOTER_FOLDER' }
     # Aumid: the notification platform will not accept a toast from an unpackaged app unless the
     # identity it publishes under is on a Start Menu shortcut. RunAtLogon means the installer
