@@ -45,6 +45,8 @@ namespace winrt::midisettings::implementation
         void OnNotificationsEnabledToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNotificationsNetworkToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNotificationsStartupToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnNotificationsAllUsersToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnNotificationsRestartElevatedClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         // Endpoint list
         void OnTransportFilterChanged(
@@ -145,6 +147,20 @@ namespace winrt::midisettings::implementation
         void RefreshNotificationSettings() noexcept;
         void ShowFirstRunInvitation() noexcept;
 
+        // Another MIDI tool can ask this app to open the notifications dialog, either on the
+        // command line or, when a copy is already running, by posting to its window. Only a
+        // subclass can see that message: the window class belongs to XAML.
+        void StartListeningForLaunchRequests() noexcept;
+        void StopListeningForLaunchRequests() noexcept;
+
+        static LRESULT CALLBACK LaunchRequestSubclassProcedure(
+            _In_ HWND window,
+            _In_ UINT message,
+            _In_ WPARAM wparam,
+            _In_ LPARAM lparam,
+            _In_ UINT_PTR idSubclass,
+            _In_ DWORD_PTR referenceData) noexcept;
+
         midiapp::WindowChrome m_chrome{};
 
         winrt::Microsoft::UI::Dispatching::DispatcherQueue m_dispatcherQueue{ nullptr };
@@ -161,6 +177,10 @@ namespace winrt::midisettings::implementation
         // read back to the service on every open of the dialog.
         bool m_suppressSynthHandling{ false };
         bool m_updatingNotificationToggles{ false };
+
+        // The subclass is only removed when it was actually installed, and the handle is kept
+        // because the window is gone by the time the XAML Closed handler runs.
+        HWND m_launchRequestWindow{ nullptr };
 
         // The detail dialog asks to be reopened after a customization, and its status line is
         // only safe to touch while it is actually up.

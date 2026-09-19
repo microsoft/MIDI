@@ -18,6 +18,7 @@ using namespace winrt::Microsoft::UI::Xaml;
 namespace winrt::midisettings::implementation
 {
     bool App::s_isElevated{ false };
+    bool App::s_showNotificationsOnLaunch{ false };
 
     App::App()
     {

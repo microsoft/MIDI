@@ -139,14 +139,36 @@
             <Grid>
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
+
+                <!-- Shown only while the notifications app is not running. Nothing on this PC
+                     watches for a device asking to connect unless the customer has asked for it,
+                     so this explains what they are missing and offers to turn it on. The message
+                     is set in code, because it depends on whether MIDI Settings is installed. -->
+                <InfoBar x:Name="NotificationsBar"
+                         x:Uid="NotificationsBar"
+                         Grid.Row="0"
+                         Severity="Informational"
+                         IsOpen="False"
+                         IsClosable="True"
+                         Title="You will not be told when a device asks to connect"
+                         CloseButtonClick="OnNotificationsBarCloseClick"
+                         Margin="16,12,16,0">
+                    <InfoBar.ActionButton>
+                        <Button x:Name="NotificationsBarButton"
+                                x:Uid="NotificationsBarButton"
+                                Content="Set up notifications"
+                                Click="OnNotificationsBarButtonClick" />
+                    </InfoBar.ActionButton>
+                </InfoBar>
 
                 <!-- Time sensitive: someone is waiting on the customer to decide, so this sits
                      above both pages rather than inside either one -->
                 <InfoBar x:Name="PendingInvitationsBar"
                          x:Uid="PendingInvitationsBar"
-                         Grid.Row="0"
+                         Grid.Row="1"
                          Severity="Warning"
                          IsOpen="False"
                          IsClosable="False"
@@ -197,7 +219,7 @@
                     </InfoBar.Content>
                 </InfoBar>
 
-                <Grid Grid.Row="1">
+                <Grid Grid.Row="2">
                 <!-- Shown instead of everything else when the transport is missing or too old -->
                 <InfoBar x:Name="TransportUnavailableBar"
                          x:Uid="TransportUnavailableBar"

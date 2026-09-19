@@ -21,12 +21,17 @@ namespace winrt::midisettings::implementation
         // relaunch rather than the app demanding elevation just to browse endpoints.
         static bool IsElevated() noexcept { return s_isElevated; }
 
+        // Set from wWinMain, because the command line is read before there is an application.
+        static void ShowNotificationsOnLaunch(_In_ bool const value) noexcept { s_showNotificationsOnLaunch = value; }
+        static bool ShowNotificationsOnLaunch() noexcept { return s_showNotificationsOnLaunch; }
+
     private:
         void OnUnhandledException(
             foundation::IInspectable const& sender,
             xaml::UnhandledExceptionEventArgs const& args);
 
         static bool s_isElevated;
+        static bool s_showNotificationsOnLaunch;
 
         xaml::Window m_window{ nullptr };
     };

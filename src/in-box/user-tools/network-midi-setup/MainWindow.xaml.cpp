@@ -284,6 +284,8 @@ namespace winrt::midinetworksetup::implementation
             StartWatcher();
             StartRefreshTimer();
 
+            RefreshNotificationsBanner();
+
             RequestRefreshAsync();
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to finish loading the window.")
@@ -376,6 +378,74 @@ namespace winrt::midinetworksetup::implementation
             m_chrome.ApplyAlwaysOnTop();
         }
         MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to change the always on top setting.")
+    }
+
+    // Nothing on this PC watches for a connection request unless the customer has asked for it,
+    // so the bar explains what the notifications app does and offers to set it up. It is only
+    // ever a report and an offer: this app never starts that app behind them.
+    void MainWindow::RefreshNotificationsBanner() noexcept
+    {
+        try
+        {
+            if (midiapp::SingleInstance::IsRunning(MIDI_NOTIFICATIONS_INSTANCE_KEY))
+            {
+                NotificationsBar().IsOpen(false);
+
+                // It has run since, so a later stop is worth mentioning again.
+                m_notificationsBannerDismissed = false;
+
+                return;
+            }
+
+            // The file probes behind IsSettingsAppAvailable only run on the way up, not on every
+            // refresh tick.
+            if (m_notificationsBannerDismissed || NotificationsBar().IsOpen())
+            {
+                return;
+            }
+
+            auto const settingsAvailable = midiapp::IsSettingsAppAvailable();
+
+            NotificationsBarButton().Visibility(
+                settingsAvailable ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            NotificationsBar().Message(res::GetString(
+                settingsAvailable ? L"NotificationsBarMessage" : L"NotificationsBarSettingsMissingMessage"));
+
+            NotificationsBar().IsOpen(true);
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to show the notifications banner.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnNotificationsBarButtonClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            switch (midiapp::ShowSettingsNotifications())
+            {
+            case midiapp::SettingsAppRequestResult::Shown:
+            case midiapp::SettingsAppRequestResult::Declined:
+                // The refresh closes the bar by itself once the app is actually running.
+                break;
+
+            case midiapp::SettingsAppRequestResult::NotInstalled:
+                NotificationsBarButton().Visibility(xaml::Visibility::Collapsed);
+                NotificationsBar().Message(res::GetString(L"NotificationsBarSettingsMissingMessage"));
+                break;
+
+            default:
+                NotificationsBar().Message(res::GetString(L"NotificationsBarLaunchFailedMessage"));
+                break;
+            }
+        }
+        MIDI_NETSETUP_CATCH_AND_LOG(L"Unable to open the notification settings.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnNotificationsBarCloseClick(controls::InfoBar const&, foundation::IInspectable const&)
+    {
+        m_notificationsBannerDismissed = true;
     }
 
     _Use_decl_annotations_
@@ -914,6 +984,8 @@ namespace winrt::midinetworksetup::implementation
             }
 
             m_transportMissingReported = false;
+
+            RefreshNotificationsBanner();
 
             ApplyPendingInvitations(snapshot);
             ApplyLocalHosts(snapshot);

@@ -28,6 +28,9 @@ namespace winrt::midinetworksetup::implementation
         void OnAlwaysOnTopToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnAppearanceButtonClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        void OnNotificationsBarButtonClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnNotificationsBarCloseClick(controls::InfoBar const& sender, foundation::IInspectable const& args);
+
         void OnNavigationSelectionChanged(
             controls::NavigationView const& sender,
             controls::NavigationViewSelectionChangedEventArgs const& args);
@@ -113,6 +116,10 @@ namespace winrt::midinetworksetup::implementation
         void ApplyPendingInvitations(ServiceSnapshot const& snapshot) noexcept;
         void ApplyRemoteHosts(ServiceSnapshot const& snapshot) noexcept;
         void ApplyLocalHosts(ServiceSnapshot const& snapshot) noexcept;
+
+        // Whether anything is watching for connection requests while this window is closed. Only
+        // reports: the notifications app is started by the customer, never by this app.
+        void RefreshNotificationsBanner() noexcept;
 
         void ShowPage(uint32_t const pageIndex) noexcept;
         winrt::Windows::Foundation::IInspectable NavigationItemForPage(uint32_t const pageIndex) noexcept;
@@ -233,6 +240,10 @@ namespace winrt::midinetworksetup::implementation
         // append them a second time.
         bool m_transportSettingDefaultsShown{ false };
         bool m_transportMissingReported{ false };
+
+        // Closing the notifications bar means "not now", so it stays closed until the app has
+        // run and stopped again rather than coming back on the next refresh.
+        bool m_notificationsBannerDismissed{ false };
     };
 }
 

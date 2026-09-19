@@ -181,9 +181,51 @@ namespace winrt::midiclock::implementation
                     {
                         strong->m_chrome.ApplyTheme();
                     }
-                });
+                },
+                nullptr,
+                BuildPerformanceNote());
         }
         MIDI_CLOCK_CATCH_AND_LOG(L"Unable to show the appearance settings.")
+    }
+
+    xaml::UIElement MainWindow::BuildPerformanceNote() noexcept
+    {
+        try
+        {
+            controls::StackPanel panel{};
+            panel.Spacing(4.0);
+
+            controls::TextBlock heading{};
+            heading.Text(res::GetString(L"PerformanceNoteHeader"));
+            heading.Style(xaml::Application::Current().Resources()
+                .Lookup(winrt::box_value(L"BodyStrongTextBlockStyle")).as<xaml::Style>());
+
+            controls::TextBlock body{};
+            body.Text(res::GetString(L"PerformanceNoteBody"));
+            body.TextWrapping(xaml::TextWrapping::Wrap);
+            body.Style(xaml::Application::Current().Resources()
+                .Lookup(winrt::box_value(L"CaptionTextBlockStyle")).as<xaml::Style>());
+            body.Foreground(xaml::Application::Current().Resources()
+                .Lookup(winrt::box_value(L"TextFillColorSecondaryBrush")).as<xaml::Media::Brush>());
+
+            panel.Children().Append(heading);
+            panel.Children().Append(body);
+
+            controls::Border border{};
+            border.Padding(xaml::Thickness{ 12, 10, 12, 12 });
+            border.CornerRadius(xaml::CornerRadius{ 4, 4, 4, 4 });
+            border.BorderThickness(xaml::Thickness{ 1, 1, 1, 1 });
+            border.Background(xaml::Application::Current().Resources()
+                .Lookup(winrt::box_value(L"CardBackgroundFillColorDefaultBrush")).as<xaml::Media::Brush>());
+            border.BorderBrush(xaml::Application::Current().Resources()
+                .Lookup(winrt::box_value(L"CardStrokeColorDefaultBrush")).as<xaml::Media::Brush>());
+            border.Child(panel);
+
+            return border;
+        }
+        MIDI_CLOCK_CATCH_AND_LOG(L"Unable to build the performance note.")
+
+        return nullptr;
     }
 
     // ------------------------------------------------------------------------------------

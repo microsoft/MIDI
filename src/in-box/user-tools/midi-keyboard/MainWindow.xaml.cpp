@@ -347,6 +347,7 @@ namespace winrt::midikeyboard::implementation
             AppendChoice(pressureModes, L"KeyPressurePerNote");
             AppendChoice(pressureModes, L"KeyPressureChannel");
             AppendChoice(pressureModes, L"KeyPressurePoly");
+            AppendChoice(pressureModes, L"KeyPressureModWheel");
             KeyPressureComboBox().ItemsSource(pressureModes);
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to build the choice lists.")
@@ -1357,14 +1358,26 @@ namespace winrt::midikeyboard::implementation
                     SendNoteOffNow(noteNumber);
                 }
 
-                if (native::AppSettings::Current().KeyPressure() == native::KeyPressureMode::ChannelPressure)
+                // Both of these are channel wide, so they have to be released when the last
+                // note goes, or the sound stays modulated with nothing held down.
+                auto const pressureMode = native::AppSettings::Current().KeyPressure();
+
+                if (pressureMode == native::KeyPressureMode::ChannelPressure ||
+                    pressureMode == native::KeyPressureMode::ModWheel)
                 {
                     auto const anyHeld = std::any_of(m_noteHoldCount.begin(), m_noteHoldCount.end(),
                         [](int32_t value) { return value > 0; });
 
                     if (!anyHeld)
                     {
-                        m_output.SendChannelPressure(TransmitGroupIndex(), TransmitChannelIndex(), 0);
+                        if (pressureMode == native::KeyPressureMode::ChannelPressure)
+                        {
+                            m_output.SendChannelPressure(TransmitGroupIndex(), TransmitChannelIndex(), 0);
+                        }
+                        else
+                        {
+                            ApplyModValue(0.0, true);
+                        }
                     }
                 }
             }
@@ -1432,7 +1445,7 @@ namespace winrt::midikeyboard::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::SendKeyPressure(int32_t noteNumber, uint32_t pressure) noexcept
+    void MainWindow::SendKeyPressure(int32_t noteNumber, uint32_t pressure, double normalized) noexcept
     {
         try
         {
@@ -1459,6 +1472,12 @@ namespace winrt::midikeyboard::implementation
 
             case native::KeyPressureMode::PolyPressure:
                 m_output.SendPolyPressure(group, channel, note, pressure);
+                break;
+
+            case native::KeyPressureMode::ModWheel:
+                // The mod ribbon owns the same controller, so this goes through the ribbon's
+                // own path: it shows the value being sent and the two cannot drift apart.
+                ApplyModValue(normalized, true);
                 break;
 
             default:
@@ -1582,7 +1601,7 @@ namespace winrt::midikeyboard::implementation
             if (pressure != entry->second.Pressure)
             {
                 entry->second.Pressure = pressure;
-                SendKeyPressure(entry->second.NoteNumber, pressure);
+                SendKeyPressure(entry->second.NoteNumber, pressure, normalized);
             }
 
             args.Handled(true);

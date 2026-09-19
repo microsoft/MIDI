@@ -1355,6 +1355,20 @@
                                TextWrapping="Wrap"
                                Style="{StaticResource PropertyLabelStyle}" />
 
+                    <InfoBar x:Name="NotificationsMachineStartupBar"
+                             x:Uid="NotificationsMachineStartupBar"
+                             IsOpen="False"
+                             IsClosable="False"
+                             Severity="Informational"
+                             Title="Administrator rights are needed"
+                             Message="Starting the notifications app for everyone who uses this PC is shared, so only an administrator can change it. Everything else here is yours alone.">
+                        <InfoBar.ActionButton>
+                            <Button x:Uid="NotificationsElevationButton"
+                                    Content="Restart as administrator"
+                                    Click="OnNotificationsRestartElevatedClick" />
+                        </InfoBar.ActionButton>
+                    </InfoBar>
+
                     <StackPanel Spacing="8">
                         <TextBlock x:Uid="NotificationsShowHeader"
                                    Text="Show notifications"
@@ -1406,13 +1420,17 @@
                                               OffContent="Off"
                                               Toggled="OnNotificationsStartupToggled" />
 
-                                <InfoBar x:Name="NotificationsMachineStartupBar"
-                                         x:Uid="NotificationsMachineStartupBar"
-                                         IsOpen="False"
-                                         IsClosable="False"
-                                         Severity="Informational"
-                                         Title="This PC is set up to start it for everyone"
-                                         Message="An administrator chose to start the notifications app for every person who uses this PC, and that cannot be changed from here. Turning off Show MIDI notifications above still stops it for you." />
+                                <ToggleSwitch x:Name="NotificationsAllUsersToggle"
+                                              x:Uid="NotificationsAllUsersToggle"
+                                              Header="Start it for everyone who uses this PC"
+                                              OnContent="On"
+                                              OffContent="Off"
+                                              Toggled="OnNotificationsAllUsersToggled" />
+
+                                <TextBlock x:Uid="NotificationsAllUsersHelp"
+                                           Text="Everyone who signs in to this PC still chooses what to be told about, and turning off Show MIDI notifications above stops it for you alone."
+                                           TextWrapping="Wrap"
+                                           Style="{StaticResource PropertyLabelStyle}" />
 
                             </StackPanel>
                         </Border>

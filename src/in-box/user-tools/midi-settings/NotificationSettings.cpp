@@ -106,20 +106,34 @@ namespace midisettings
                 return {};
             }
 
-            std::filesystem::path path{ modulePath };
-
-            // The tools are installed as siblings, one folder each.
-            auto const candidate =
-                path.parent_path().parent_path() / L"Notifications" / L"midinotifications.exe";
-
+            std::filesystem::path const path{ modulePath };
             std::error_code error{};
 
-            if (!std::filesystem::exists(candidate, error))
+            // The tools are installed as siblings, one folder each.
+            auto candidate =
+                path.parent_path().parent_path() / L"Notifications" / L"midinotifications.exe";
+
+            if (std::filesystem::exists(candidate, error))
             {
-                return {};
+                return candidate.wstring();
             }
 
-            return candidate.wstring();
+            // Development layout: out\<tool>\<platform>\<configuration>\<tool>.exe. Without this
+            // every switch in the notifications dialog is disabled on a machine where the
+            // installer has never run, which is every machine we develop on.
+            auto const here = path.parent_path();
+
+            candidate =
+                here.parent_path().parent_path().parent_path() /
+                L"midinotifications" / here.parent_path().filename() / here.filename() /
+                L"midinotifications.exe";
+
+            if (std::filesystem::exists(candidate, error))
+            {
+                return candidate.wstring();
+            }
+
+            return {};
         }
         catch (...)
         {
@@ -151,6 +165,12 @@ namespace midisettings
             nullptr) == ERROR_SUCCESS;
     }
 
+    _Use_decl_annotations_
+    bool NotificationSettings::TrySetStartsForAllUsers(bool const value) noexcept
+    {
+        return TrySetRunEntry(HKEY_LOCAL_MACHINE, value);
+    }
+
     bool NotificationSettings::StartsAtSignIn() noexcept
     {
         wil::unique_hkey key{};
@@ -177,10 +197,18 @@ namespace midisettings
     _Use_decl_annotations_
     bool NotificationSettings::TrySetStartsAtSignIn(bool const value) noexcept
     {
+        return TrySetRunEntry(HKEY_CURRENT_USER, value);
+    }
+
+    _Use_decl_annotations_
+    bool NotificationSettings::TrySetRunEntry(HKEY const root, bool const value) noexcept
+    {
         wil::unique_hkey key{};
 
+        // Opening HKLM for write is what fails for a standard user, and that is the signal the
+        // caller turns into the offer to restart elevated.
         if (::RegCreateKeyExW(
-                HKEY_CURRENT_USER,
+                root,
                 MIDI_NOTIFICATIONS_RUN_REG_KEY,
                 0,
                 nullptr,

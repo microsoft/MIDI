@@ -37,6 +37,10 @@ namespace midiapp
         // that a second launch can hand its file over rather than losing it.
         static HWND FindExistingWindow(_In_ std::wstring const& appKey) noexcept;
 
+        // Whether a tool is running, asked from a process which is not that tool. Only the mutex
+        // is consulted, so this also answers for a tool which has no window at all.
+        static bool IsRunning(_In_ std::wstring const& appKey) noexcept;
+
         static void Release() noexcept;
 
     private:

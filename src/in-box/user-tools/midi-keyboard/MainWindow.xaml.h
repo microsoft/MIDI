@@ -173,7 +173,7 @@ namespace winrt::midikeyboard::implementation
 
         void SendNoteOnNow(int32_t noteNumber, uint16_t velocity) noexcept;
         void SendNoteOffNow(int32_t noteNumber) noexcept;
-        void SendKeyPressure(int32_t noteNumber, uint32_t pressure) noexcept;
+        void SendKeyPressure(int32_t noteNumber, uint32_t pressure, double normalized) noexcept;
 
         uint8_t TransmitGroupIndex() const noexcept;
         uint8_t TransmitChannelIndex() const noexcept;

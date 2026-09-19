@@ -702,7 +702,7 @@
 
                         <StackPanel Spacing="4">
                             <TextBlock x:Uid="KeyPressureLabel"
-                                       Text="Key pressure (drag up a key)"
+                                       Text="Dragging up a key sends"
                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                             <ComboBox x:Name="KeyPressureComboBox"

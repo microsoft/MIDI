@@ -64,6 +64,9 @@ namespace winrt::midiclock::implementation
         void InitializeWindowChrome() noexcept;
         void InitializeStaticText() noexcept;
 
+        // Sits at the top of the settings flyout, above the appearance controls.
+        static xaml::UIElement BuildPerformanceNote() noexcept;
+
         void StartEndpointWatcher() noexcept;
         void StopEndpointWatcher() noexcept;
         void RefreshEndpointList() noexcept;

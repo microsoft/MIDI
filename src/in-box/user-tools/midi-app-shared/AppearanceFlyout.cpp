@@ -54,7 +54,8 @@ namespace midiapp
         MidiAppSettings& settings,
         AppearanceStrings const& strings,
         std::function<void()> const& onChanged,
-        wux::UIElement const& extraContent) noexcept
+        wux::UIElement const& extraContent,
+        wux::UIElement const& topContent) noexcept
     {
         try
         {
@@ -75,6 +76,11 @@ namespace midiapp
             title.Style(wux::Application::Current().Resources()
                 .Lookup(winrt::box_value(L"SubtitleTextBlockStyle")).as<wux::Style>());
             panel.Children().Append(title);
+
+            if (topContent != nullptr)
+            {
+                panel.Children().Append(topContent);
+            }
 
             auto themeBox = MakePicker(strings.ThemeLabel,
                 { strings.ThemeSystem, strings.ThemeLight, strings.ThemeDark },

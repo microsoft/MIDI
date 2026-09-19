@@ -130,6 +130,23 @@ namespace midiapp
     }
 
     _Use_decl_annotations_
+    bool SingleInstance::IsRunning(std::wstring const& appKey) noexcept
+    {
+        auto const mutexName = MutexName(appKey);
+
+        wil::unique_handle instanceMutex{ ::OpenMutexW(SYNCHRONIZE, FALSE, mutexName.c_str()) };
+
+        if (instanceMutex)
+        {
+            return true;
+        }
+
+        // Anything other than "there is no such object" means it exists but this process cannot
+        // have it, which still answers the question that was asked.
+        return ::GetLastError() != ERROR_FILE_NOT_FOUND;
+    }
+
+    _Use_decl_annotations_
     void SingleInstance::PublishMainWindow(HWND const window) noexcept
     {
         if (s_windowView == nullptr)

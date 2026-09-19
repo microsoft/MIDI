@@ -420,13 +420,13 @@
     <value>Fixed velocity</value>
   </data>
   <data name="KeyPressureLabel.Text" xml:space="preserve">
-    <value>Key pressure, by dragging up a key</value>
+    <value>Dragging up a key sends</value>
   </data>
   <data name="KeyPressureComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Key pressure</value>
+    <value>What dragging up a key sends</value>
   </data>
   <data name="KeyPressureOff" xml:space="preserve">
-    <value>Off</value>
+    <value>Nothing</value>
   </data>
   <data name="KeyPressurePerNote" xml:space="preserve">
     <value>Per-note controller</value>
@@ -436,6 +436,9 @@
   </data>
   <data name="KeyPressurePoly" xml:space="preserve">
     <value>Poly pressure (poly aftertouch)</value>
+  </data>
+  <data name="KeyPressureModWheel" xml:space="preserve">
+    <value>Mod wheel (CC 1), shared with the mod ribbon</value>
   </data>
   <data name="PerNoteControllerBox.Header" xml:space="preserve">
     <value>Per-note controller number</value>
