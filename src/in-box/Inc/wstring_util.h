@@ -397,6 +397,34 @@ namespace WindowsMidiServicesInternal
     }
 
 
+    // Shortens the string to maxCharacterCount wide characters. This is the count the service's
+    // RPC entry points measure with wcsnlen_s, so anything validated against one of those limits
+    // has to be bounded here and not by the UTF-8 helpers above. A character outside the BMP
+    // occupies two wide characters, so the cut can land between the halves of a surrogate pair;
+    // dropping the orphaned lead is what keeps the result a valid string.
+    inline std::wstring TruncateToCharacterCount(_In_ std::wstring const& value, _In_ size_t const maxCharacterCount) noexcept
+    {
+        if (maxCharacterCount == 0)
+        {
+            return {};
+        }
+
+        if (value.length() <= maxCharacterCount)
+        {
+            return value;
+        }
+
+        auto bounded = value.substr(0, maxCharacterCount);
+
+        if (IS_HIGH_SURROGATE(bounded.back()))
+        {
+            bounded.pop_back();
+        }
+
+        return bounded;
+    }
+
+
     inline bool WStringEndsWidth(_In_ std::wstring source, _In_ std::wstring ending)
     {
         if (ending.size() > source.size())

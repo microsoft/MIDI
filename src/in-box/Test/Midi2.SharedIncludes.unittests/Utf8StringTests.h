@@ -31,4 +31,11 @@ public:
     TEST_METHOD(TestTruncateEmptyString);
     TEST_METHOD(TestTruncateSingleCharacterTooLarge);
     TEST_METHOD(TestTruncatedResultAlwaysWithinLimit);
+
+    TEST_METHOD(TestTruncateToCharacterCountNotNeeded);
+    TEST_METHOD(TestTruncateToCharacterCountAscii);
+    TEST_METHOD(TestTruncateToCharacterCountIgnoresUtf8ByteCount);
+    TEST_METHOD(TestTruncateToCharacterCountSplitsSurrogatePair);
+    TEST_METHOD(TestTruncateToCharacterCountEdgeCases);
+    TEST_METHOD(TestTruncateToCharacterCountMatchesServiceLimit);
 };

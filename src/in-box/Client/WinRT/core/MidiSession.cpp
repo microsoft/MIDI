@@ -209,7 +209,8 @@ namespace winrt::Windows::Devices::Midi2::implementation
     {
         try
         {
-            auto cleanName = internal::TrimmedHStringCopy(newName);
+            auto cleanName = winrt::hstring{ internal::TruncateToCharacterCount(
+                internal::TrimmedHStringCopy(newName).c_str(), MAXIMUM_SESSION_NAME_CHARACTER_COUNT) };
 
             // this can be called only if we've already initialized the session tracker
             if (m_sessionTracker)
