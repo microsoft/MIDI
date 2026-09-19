@@ -9,6 +9,14 @@
 </div>
 
 <!-- Start Header Area -->
+<style>
+.midi-search-button { background: transparent; border: 1px solid rgba(255,255,255,0.35); border-radius: 4px; color: #ffffff; width: 34px; height: 34px; line-height: 32px; padding: 0; margin-left: 14px; vertical-align: middle; }
+.midi-search-button:hover, .midi-search-button:focus { background: rgba(255,255,255,0.15); border-color: #ffffff; }
+#results-container { list-style: none; margin: 0; padding: 0 16px 16px 16px; }
+#results-container .search-results { border-top: 1px solid #ececec; padding: 10px 0; }
+#results-container .search-results h3 { font-size: 15px; line-height: 20px; margin: 0 0 4px 0; }
+#results-container .search-results p { font-size: 13px; line-height: 18px; color: #6a6a6a; margin: 0; }
+</style>
 <header class="header-area">
     <div class="header-navigation">
         <div class="container">
@@ -50,6 +58,8 @@
 				{% endfor %}
 			    </ul>
                 </nav>
+
+                    <button type="button" class="midi-search-button" data-toggle="modal" data-target="#modal" aria-label="Search the documentation" title="Search the documentation"><i class="fa fa-search"></i></button>
 	
                 </div>
                 <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -63,12 +73,9 @@
 						  </div>
 
                             <div class="modal-body">
-                                <form class="modal-search-form" action="#">
+                                <form class="modal-search-form" onsubmit="return false;">
                                     <div class="input-group">
-                                        <input type="text" class="form-control" id="search-input" placeholder="Search Somthing" required="">
-                                        <span class="input-group-btn">
-                                   <button class="btn btn-primary" type="submit"><i class="fa fa-search"></i></button>
-                                     </span>
+                                        <input type="text" class="form-control" id="search-input" placeholder="Search the documentation" autocomplete="off">
                                     </div>
                                 </form>
                             </div>
