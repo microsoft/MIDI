@@ -177,7 +177,7 @@ std::shared_ptr<MidiEndpointCustomProperties> MidiEndpointCustomProperties::From
                         latencyval = std::numeric_limits<uint32_t>::max();
                     }
 
-                    props->OutgoingLatencyTicks = static_cast<int64_t>(latencyval);
+                    props->OutgoingLatencyTicks = static_cast<uint64_t>(latencyval);
                 }
                 else
                 {

@@ -8,7 +8,7 @@
 
 #pragma once
 
-class Feature_Servicing_MIDI2SWDAbortCrash
+class Feature_Servicing_MIDI2ConfigJsonSizeLimit
 {
 public:
     static bool IsEnabled()

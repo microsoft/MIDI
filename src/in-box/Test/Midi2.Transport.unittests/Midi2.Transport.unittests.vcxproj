@@ -141,7 +141,10 @@
     <ClCompile Include="MidiEndpointCustomPropertiesTests.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Midi2TransportTests.h" />
+    <ClInclude Include="Midi2KSAggregateTransportTests.h" />
+    <ClInclude Include="Midi2KSTransportTests.h" />
+    <ClInclude Include="Midi2SrvTransportTests.h" />
+    <ClInclude Include="Midi2TransportTestsBase.h" />
     <ClInclude Include="MidiEndpointCustomPropertiesTests.h" />
     <ClInclude Include="stdafx.h" />
   </ItemGroup>

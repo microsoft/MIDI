@@ -8,6 +8,8 @@
 
 #include "stdafx.h"
 #include <filesystem>
+#include "Feature_Servicing_MIDI2ConfigJsonSizeLimit.h"
+#include "Feature_Servicing_MIDI2SessionNameLimit.h"
 
 #include "Feature_Servicing_MIDI2ServiceConfigJsonHardening.h"
 
@@ -202,7 +204,7 @@ HRESULT MidiSrvCreateClient(
 }
 
 HRESULT MidiSrvDestroyClient(
-    /* [in] */ handle_t /* bindingHandle */,
+    /* [in] */ handle_t bindingHandle,
     /* [in] */ __RPC__in MidiClientHandle clientHandle)
 {
     TraceLoggingWrite(
@@ -229,9 +231,12 @@ HRESULT MidiSrvDestroyClient(
 
     auto coInit = wil::CoInitializeEx(COINIT_MULTITHREADED);
 
-    // Client manager creates the client, fills in the MIDISRV_CLIENT information
+    // verify caller owns this handle
+    DWORD callerProcessId{};
+    RETURN_IF_FAILED(HRESULT_FROM_RPCSTATUS(I_RpcBindingInqLocalClientPID(bindingHandle, &callerProcessId)));
+
     RETURN_IF_FAILED(g_MidiService->GetClientManager(clientManager));
-    RETURN_IF_FAILED(clientManager->DestroyMidiClient(clientHandle));
+    RETURN_IF_FAILED(clientManager->DestroyMidiClient(clientHandle, callerProcessId));
 
     traceLogger->LogMidi2DestroyClient(S_OK);
 
@@ -320,6 +325,14 @@ MidiSrvUpdateConfiguration(
     *responseJson = nullptr;
 
     RETURN_HR_IF_NULL(E_INVALIDARG, configurationJson);
+
+    if (Feature_Servicing_MIDI2ConfigJsonSizeLimit::IsEnabled())
+    {
+        RETURN_HR_IF(
+            E_INVALIDARG,
+            wcsnlen_s(configurationJson, (MAXIMUM_JSON_SIZE / sizeof(wchar_t)) + 1) >
+                (MAXIMUM_JSON_SIZE / sizeof(wchar_t)));
+    }
     //RETURN_HR_IF_NULL(E_INVALIDARG, responseJson);
 
     TraceLoggingWrite(
@@ -399,6 +412,14 @@ MidiSrvRegisterSession(
     __RPC__deref_out_opt PMIDISRV_CONTEXT_HANDLE* contextHandle
 )
 {
+    if (Feature_Servicing_MIDI2SessionNameLimit::IsEnabled())
+    {
+        RETURN_HR_IF(
+            E_INVALIDARG,
+            sessionName == nullptr ||
+            wcsnlen_s(sessionName, MAXIMUM_SESSION_NAME_CHARACTER_COUNT + 1) > MAXIMUM_SESSION_NAME_CHARACTER_COUNT);
+    }
+
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -445,6 +466,14 @@ MidiSrvUpdateSessionName(
     __RPC__in_string LPCWSTR sessionName
 )
 {
+    if (Feature_Servicing_MIDI2SessionNameLimit::IsEnabled())
+    {
+        RETURN_HR_IF(
+            E_INVALIDARG,
+            sessionName == nullptr ||
+            wcsnlen_s(sessionName, MAXIMUM_SESSION_NAME_CHARACTER_COUNT + 1) > MAXIMUM_SESSION_NAME_CHARACTER_COUNT);
+    }
+
     UNREFERENCED_PARAMETER(contextHandle);
 
     TraceLoggingWrite(

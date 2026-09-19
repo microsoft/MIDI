@@ -1068,7 +1068,6 @@ MidiEndpointNameTable::RebuildNewStyleNames(
     std::wstring const& endpointName,
     bool const driverRegistryNamesArePerFilter) noexcept
 {
-    if (!Feature_Servicing_MIDI2PortNamingRework::IsEnabled()) return S_OK;
 
     try
     {
@@ -1138,29 +1137,43 @@ std::shared_ptr<Midi1PortNameEntry> MidiEndpointNameTable::GetDestinationEntry(
 
 Midi1PortNameSelection MidiEndpointNameTable::GetSystemDefaultPortNameSelection() noexcept
 {
-    // Absence of the registry value is what selects Automatic, so a rollback lands exactly on the
-    // legacy default that shipped.
-    uint32_t const valueWhenUnset = Feature_Servicing_MIDI2PortNamingRework::IsEnabled() ?
-        static_cast<uint32_t>(Midi1PortNameSelection::UseAutomatic) :
-        MIDI_MIDI1_PORT_NAMING_DEFAULT_VALUE;
-
-    DWORD defaultPortNamingForMidi1Drivers{ valueWhenUnset };
-
-    if (SUCCEEDED(wil::reg::get_value_dword_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_REG_KEY, MIDI_MIDI1_PORT_NAMING_DEFAULT_REG_VALUE_NAME, &defaultPortNamingForMidi1Drivers)))
+    if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
     {
-        auto defaultMidi1PortNamingForByteDriverSelection = static_cast<Midi1PortNameSelection>(defaultPortNamingForMidi1Drivers);
+        // Absence of the registry value selects Automatic
+        uint32_t const valueWhenUnset = static_cast<uint32_t>(Midi1PortNameSelection::UseAutomatic);
+        DWORD defaultPortNamingForMidi1Drivers{ valueWhenUnset };
 
-        // make sure we don't get all recursive here
-        if (defaultMidi1PortNamingForByteDriverSelection != Midi1PortNameSelection::UseGlobalDefault)
+        if (SUCCEEDED(wil::reg::get_value_dword_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_REG_KEY, MIDI_MIDI1_PORT_NAMING_DEFAULT_REG_VALUE_NAME, &defaultPortNamingForMidi1Drivers)))
         {
-            return defaultMidi1PortNamingForByteDriverSelection;
+            auto defaultMidi1PortNamingForByteDriverSelection = static_cast<Midi1PortNameSelection>(defaultPortNamingForMidi1Drivers);
+
+            // make sure we don't get all recursive here
+            if (defaultMidi1PortNamingForByteDriverSelection != Midi1PortNameSelection::UseGlobalDefault)
+            {
+                return defaultMidi1PortNamingForByteDriverSelection;
+            }
         }
+
+        return static_cast<Midi1PortNameSelection>(valueWhenUnset);
     }
+    else
+    {
+        DWORD defaultPortNamingForMidi1Drivers{ MIDI_MIDI1_PORT_NAMING_DEFAULT_VALUE };
 
-    return static_cast<Midi1PortNameSelection>(valueWhenUnset);
+        if (SUCCEEDED(wil::reg::get_value_dword_nothrow(HKEY_LOCAL_MACHINE, MIDI_ROOT_REG_KEY, MIDI_MIDI1_PORT_NAMING_DEFAULT_REG_VALUE_NAME, &defaultPortNamingForMidi1Drivers)))
+        {
+            auto defaultMidi1PortNamingForByteDriverSelection = static_cast<Midi1PortNameSelection>(defaultPortNamingForMidi1Drivers);
+
+            // make sure we don't get all recursive here
+            if (defaultMidi1PortNamingForByteDriverSelection != Midi1PortNameSelection::UseGlobalDefault)
+            {
+                return defaultMidi1PortNamingForByteDriverSelection;
+            }
+        }
+
+        return static_cast<Midi1PortNameSelection>(MIDI_MIDI1_PORT_NAMING_DEFAULT_VALUE);
+    }
 }
-
-
 
 std::wstring MidiEndpointNameTable::GetPreferredName(
     _In_ uint8_t const groupIndex,

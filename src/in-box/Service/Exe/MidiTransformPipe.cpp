@@ -37,14 +37,16 @@ CMidiTransformPipe::Initialize(
     m_DevicePipe = devicePipe;
 
     // Confirm that this component is either signed, or we are in developer mode.
-    // Else, do not use it.
     if (Feature_Servicing_MIDI2ComponentSignatureCache::IsEnabled())
     {
         RETURN_IF_FAILED(internal::IsComponentPermittedWithCaching(m_TransformGuid));
     }
     else
     {
-        RETURN_IF_FAILED(internal::IsComponentPermitted(m_TransformGuid));
+        // Else, do not use it. componentFileLock must stay in scope until after the
+        // CoCreateInstance below so the verified DLL cannot be swapped before load.
+        wil::unique_hfile componentFileLock;
+        RETURN_IF_FAILED(internal::IsComponentPermitted(m_TransformGuid, componentFileLock));
     }
 
     // Transforms are "bidirectional" from the midi pipes perspective,

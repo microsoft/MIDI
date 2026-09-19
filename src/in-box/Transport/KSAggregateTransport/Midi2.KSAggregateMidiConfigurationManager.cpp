@@ -37,7 +37,10 @@ CMidi2KSAggregateMidiConfigurationManager::Initialize(
 
     RETURN_IF_FAILED(midiServiceConfigurationManagerInterface->QueryInterface(__uuidof(IMidiServiceConfigurationManager), (void**)&m_midiServiceConfigurationManagerInterface));
 
-    m_customizationProcessor.Initialize(m_customPropertiesCache);
+    if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
+    {
+        m_customizationProcessor.Initialize(m_customPropertiesCache);
+    }
 
     return S_OK;
 }
@@ -146,8 +149,6 @@ CMidi2KSAggregateMidiConfigurationManager::ProcessEndpointCustomizations(
 
     return S_OK;
 }
-
-
 
 
 _Use_decl_annotations_
@@ -309,10 +310,6 @@ CMidi2KSAggregateMidiConfigurationManager::ProcessCustomProperties(
 }
 
 
-
-
-
-
 _Use_decl_annotations_
 HRESULT
 CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
@@ -368,121 +365,123 @@ CMidi2KSAggregateMidiConfigurationManager::UpdateConfiguration(
             return hr;
         }
 
-
-        // get all the updates we need to process
-        auto updateArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY, nullptr);
-
         if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
         {
             LOG_IF_FAILED(ProcessEndpointCustomizations(jsonObject, responseObject));
         }
-        else if (updateArray != nullptr && updateArray.Size() > 0)
+        else
         {
-            for (auto const& updateVal : updateArray)
+            // get all the updates we need to process
+            auto updateArray = jsonObject.GetNamedArray(MIDI_CONFIG_JSON_ENDPOINT_COMMON_UPDATE_KEY, nullptr);
+
+            if (updateArray != nullptr && updateArray.Size() > 0)
             {
-                auto updateObject = updateVal.GetObject();
-
-                if (updateObject == nullptr)
+                for (auto const& updateVal : updateArray)
                 {
-                    // unexpected non-object in the array. Could be a comment or something. Ignore and move on.
-                    continue;
-                }
+                    auto updateObject = updateVal.GetObject();
 
-                auto matchObject = updateObject.GetNamedObject(WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey, nullptr);
-                if (matchObject == nullptr)
-                {
-                    // no match object found, so no away to associate this update to an endpoint. Move on.
-                    continue;
-                }
-
-                std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties{ nullptr };
-                std::shared_ptr<WindowsMidiServicesNamingLib::MidiEndpointNameTable> nameTable{ nullptr };
-                std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria> matchCriteria = WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::FromJson(matchObject);
-                std::vector<DEVPROPERTY> endpointDevProperties{};
-
-                // Resolve the EndpointDeviceId in case we matched on something else
-                winrt::hstring matchingEndpointDeviceId{};
-
-                if (Feature_Servicing_MIDI2KSAWatcherHardening::IsEnabled())
-                {
-                    auto em = TransportState::Current().GetEndpointManager3();
-                    if (em != nullptr)
+                    if (updateObject == nullptr)
                     {
-                        matchingEndpointDeviceId = em->FindMatchingInstantiatedEndpoint(*matchCriteria);
+                        // unexpected non-object in the array. Could be a comment or something. Ignore and move on.
+                        continue;
                     }
-                }
-                else
-                {
-                    auto em = TransportState::Current().GetEndpointManager2();
-                    if (em != nullptr)
+
+                    auto matchObject = updateObject.GetNamedObject(WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::PropertyKey, nullptr);
+                    if (matchObject == nullptr)
                     {
-                        matchingEndpointDeviceId = em->FindMatchingInstantiatedEndpoint(*matchCriteria);
+                        // no match object found, so no away to associate this update to an endpoint. Move on.
+                        continue;
                     }
-                }
 
-                // process all the custom props like Name, Description, Image, etc.
-                LOG_IF_FAILED(ProcessCustomProperties(
-                    matchingEndpointDeviceId,
-                    matchCriteria,
-                    updateObject,
-                    customProperties,
-                    endpointDevProperties,
-                    nameTable,
-                    responseObject));
+                    std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointCustomProperties> customProperties{ nullptr };
+                    std::shared_ptr<WindowsMidiServicesNamingLib::MidiEndpointNameTable> nameTable{ nullptr };
+                    std::shared_ptr<WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria> matchCriteria = WindowsMidiServicesPluginConfigurationLib::MidiEndpointMatchCriteria::FromJson(matchObject);
+                    std::vector<DEVPROPERTY> endpointDevProperties{};
 
-                if (endpointDevProperties.size() == 0)
-                {
-                    // no properties to update, so move on
-                    continue;
-                }
+                    // Resolve the EndpointDeviceId in case we matched on something else
+                    winrt::hstring matchingEndpointDeviceId{};
 
-                if (!matchingEndpointDeviceId.empty())
-                {
-                    // The device manager checks to see if the endpoint exists
-                    // and will return a E_NOTFOUND if it doesn't.
-
-                    auto updatePropsHR = m_midiDeviceManager->UpdateEndpointProperties(
-                        matchingEndpointDeviceId.c_str(),
-                        (ULONG)endpointDevProperties.size(),
-                        endpointDevProperties.data()
-                    );
-
-                    if (SUCCEEDED(updatePropsHR))
+                    if (Feature_Servicing_MIDI2KSAWatcherHardening::IsEnabled())
                     {
-                        TraceLoggingWrite(
-                            MidiKSAggregateTransportTelemetryProvider::Provider(),
-                            MIDI_TRACE_EVENT_INFO,
-                            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-                            TraceLoggingPointer(this, "this"),
-                            TraceLoggingWideString(L"Properties updated", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                            TraceLoggingWideString(matchCriteria->EndpointDeviceId.c_str(), "swd")
-                        );
+                        auto em = TransportState::Current().GetEndpointManager3();
+                        if (em != nullptr)
+                        {
+                            matchingEndpointDeviceId = em->FindMatchingInstantiatedEndpoint(*matchCriteria);
+                        }
                     }
                     else
                     {
-                        // TODO: We need to update the MIDI 1 endpoint naming table as well, and then recreate the MIDI 1 ports
+                        auto em = TransportState::Current().GetEndpointManager2();
+                        if (em != nullptr)
+                        {
+                            matchingEndpointDeviceId = em->FindMatchingInstantiatedEndpoint(*matchCriteria);
+                        }
+                    }
 
-                        if (updatePropsHR != E_NOTFOUND)
+                    // process all the custom props like Name, Description, Image, etc.
+                    LOG_IF_FAILED(ProcessCustomProperties(
+                        matchingEndpointDeviceId,
+                        matchCriteria,
+                        updateObject,
+                        customProperties,
+                        endpointDevProperties,
+                        nameTable,
+                        responseObject));
+
+                    if (endpointDevProperties.size() == 0)
+                    {
+                        // no properties to update, so move on
+                        continue;
+                    }
+
+                    if (!matchingEndpointDeviceId.empty())
+                    {
+                        // The device manager checks to see if the endpoint exists
+                        // and will return a E_NOTFOUND if it doesn't.
+
+                        auto updatePropsHR = m_midiDeviceManager->UpdateEndpointProperties(
+                            matchingEndpointDeviceId.c_str(),
+                            (ULONG)endpointDevProperties.size(),
+                            endpointDevProperties.data()
+                        );
+
+                        if (SUCCEEDED(updatePropsHR))
                         {
                             TraceLoggingWrite(
                                 MidiKSAggregateTransportTelemetryProvider::Provider(),
-                                MIDI_TRACE_EVENT_ERROR,
+                                MIDI_TRACE_EVENT_INFO,
                                 TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                                TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
                                 TraceLoggingPointer(this, "this"),
-                                TraceLoggingWideString(L"Error updating device properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                                TraceLoggingHResult(updatePropsHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                                TraceLoggingWideString(L"Properties updated", MIDI_TRACE_EVENT_MESSAGE_FIELD),
                                 TraceLoggingWideString(matchCriteria->EndpointDeviceId.c_str(), "swd")
                             );
+                        }
+                        else
+                        {
+                            // TODO: We need to update the MIDI 1 endpoint naming table as well, and then recreate the MIDI 1 ports
 
-                            RETURN_IF_FAILED(E_FAIL);
+                            if (updatePropsHR != E_NOTFOUND)
+                            {
+                                TraceLoggingWrite(
+                                    MidiKSAggregateTransportTelemetryProvider::Provider(),
+                                    MIDI_TRACE_EVENT_ERROR,
+                                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                                    TraceLoggingLevel(WINEVENT_LEVEL_ERROR),
+                                    TraceLoggingPointer(this, "this"),
+                                    TraceLoggingWideString(L"Error updating device properties", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                                    TraceLoggingHResult(updatePropsHR, MIDI_TRACE_EVENT_HRESULT_FIELD),
+                                    TraceLoggingWideString(matchCriteria->EndpointDeviceId.c_str(), "swd")
+                                );
+
+                                RETURN_IF_FAILED(E_FAIL);
+                            }
                         }
                     }
                 }
-            }
 
-            internal::SetConfigurationResponseObjectSuccess(responseObject);
+                internal::SetConfigurationResponseObjectSuccess(responseObject);
+            }
         }
     }
     catch (const std::exception& e)

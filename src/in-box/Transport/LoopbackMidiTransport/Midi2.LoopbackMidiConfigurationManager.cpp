@@ -638,7 +638,14 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                             internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                            return internal::ConfigurationRejectionResult(E_FAIL);
+                            if (Feature_Servicing_MIDI2TransportConfigRejectionReasons::IsEnabled())
+                            {
+                                return internal::ConfigurationRejectionResult(E_FAIL);
+                            }
+                            else
+                            {
+                                return E_FAIL;
+                            }
                         }
 
                         if (definitionA->EndpointName.empty() || definitionB->EndpointName.empty())
@@ -657,7 +664,14 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                             internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                            return internal::ConfigurationRejectionResult(E_FAIL);
+                            if (Feature_Servicing_MIDI2TransportConfigRejectionReasons::IsEnabled())
+                            {
+                                return internal::ConfigurationRejectionResult(E_FAIL);
+                            }
+                            else
+                            {
+                                return E_FAIL;
+                            }
                         }
 
 
@@ -677,7 +691,14 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                             internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                            return internal::ConfigurationRejectionResult(E_FAIL);
+                            if (Feature_Servicing_MIDI2TransportConfigRejectionReasons::IsEnabled())
+                            {
+                                return internal::ConfigurationRejectionResult(E_FAIL);
+                            }
+                            else
+                            {
+                                return E_FAIL;
+                            }
                         }
 
 
@@ -702,7 +723,14 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                                 internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                                return internal::ConfigurationRejectionResult(E_FAIL);
+                                if (Feature_Servicing_MIDI2TransportConfigRejectionReasons::IsEnabled())
+                                {
+                                    return internal::ConfigurationRejectionResult(E_FAIL);
+                                }
+                                else
+                                {
+                                    return E_FAIL;
+                                }
                             }
 
                             if (internal::RemoveInvalidSWDUniqueIdCharacters(definitionA->EndpointUniqueIdentifier) != definitionA->EndpointUniqueIdentifier ||
@@ -722,7 +750,14 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                                 internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                                return internal::ConfigurationRejectionResult(E_FAIL);
+                                if (Feature_Servicing_MIDI2TransportConfigRejectionReasons::IsEnabled())
+                                {
+                                    return internal::ConfigurationRejectionResult(E_FAIL);
+                                }
+                                else
+                                {
+                                    return E_FAIL;
+                                }
                             }
                         }
 
@@ -747,7 +782,14 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                             internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                            return internal::ConfigurationRejectionResult(E_FAIL);
+                            if (Feature_Servicing_MIDI2TransportConfigRejectionReasons::IsEnabled())
+                            {
+                                return internal::ConfigurationRejectionResult(E_FAIL);
+                            }
+                            else
+                            {
+                                return E_FAIL;
+                            }
                         }
 
                         allocatedUniqueIdsA.emplace(definitionA->EndpointUniqueIdentifier, true);
@@ -770,7 +812,14 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                             internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                            return internal::ConfigurationRejectionResult(E_FAIL);
+                            if (Feature_Servicing_MIDI2TransportConfigRejectionReasons::IsEnabled())
+                            {
+                                return internal::ConfigurationRejectionResult(E_FAIL);
+                            }
+                            else
+                            {
+                                return E_FAIL;
+                            }
                         }
                          
                         allocatedUniqueIdsB.emplace(definitionB->EndpointUniqueIdentifier, true);
@@ -852,7 +901,14 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                                 internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                                return internal::ConfigurationRejectionResult(E_FAIL);
+                                if (Feature_Servicing_MIDI2TransportConfigRejectionReasons::IsEnabled())
+                                {
+                                    return internal::ConfigurationRejectionResult(E_FAIL);
+                                }
+                                else
+                                {
+                                    return E_FAIL;
+                                }
                             }
 
                         }
@@ -882,8 +938,14 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                         internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                        return internal::ConfigurationRejectionResult(E_FAIL);
-
+                        if (Feature_Servicing_MIDI2TransportConfigRejectionReasons::IsEnabled())
+                        {
+                            return internal::ConfigurationRejectionResult(E_FAIL);
+                        }
+                        else
+                        {
+                            return E_FAIL;
+                        }
                     }
                 }
                 else
@@ -900,7 +962,14 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
 
                     internal::JsonStringifyObjectToOutParam(responseObject, response);
 
-                    return internal::ConfigurationRejectionResult(E_FAIL);
+                    if (Feature_Servicing_MIDI2TransportConfigRejectionReasons::IsEnabled())
+                    {
+                        return internal::ConfigurationRejectionResult(E_FAIL);
+                    }
+                    else
+                    {
+                        return E_FAIL;
+                    }
                 }
 
                 o.MoveNext();

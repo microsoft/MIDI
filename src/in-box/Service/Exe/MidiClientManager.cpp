@@ -37,6 +37,10 @@ CMidiClientManager::Initialize(
     m_DeviceManager = deviceManager;
     m_SessionTracker = sessionTracker;
 
+    FILETIME ft{};
+    GetSystemTimeAsFileTime(&ft);
+    m_handleSeed = ft.dwLowDateTime ^ ft.dwHighDateTime ^ GetCurrentProcessId();
+
     TraceLoggingWrite(
         MidiSrvTelemetryProvider::Provider(),
         MIDI_TRACE_EVENT_INFO,
@@ -416,8 +420,22 @@ CMidiClientManager::GetMidiClient(
     RETURN_IF_FAILED(clientPipe->Initialize(clientProcessHandle.get(), cleanMidiDevice.c_str(), groupIndex, sessionId, clientProcessId, creationParams, client, &m_MmcssTaskId, overwriteIncomingZeroTimestamps));
 
     // Add this client to the client pipes list and set the output client handle
-    client->ClientHandle = (MidiClientHandle)clientPipe.get();
     midiClientPipe = clientPipe.get();
+
+    // Generate an opaque, unpredictable handle value instead of exposing the
+    // address of the client pipe, which would leak the service address space
+    // layout to a lower-privileged client. Regenerate on the astronomically
+    // unlikely chance of a zero or colliding value. The client manager lock is
+    // held by the caller (CreateMidiClient), so the collision check against
+    // m_ClientPipes is safe.
+    MidiClientHandle newClientHandle{ 0 };
+    do
+    {
+        newClientHandle = (MidiClientHandle) (((ULONGLONG)rand() << 32) | rand());
+    } while (newClientHandle == 0 || m_ClientPipes.count(newClientHandle) != 0);
+
+    client->ClientHandle = newClientHandle;
+
     m_ClientPipes.emplace(client->ClientHandle, std::move(clientPipe));
 
     TraceLoggingWrite(
@@ -1106,7 +1124,7 @@ CMidiClientManager::CreateMidiClient(
         // DestroyMidiClient also acquires the lock and SWR locks aren't reentrant
         if (client->ClientHandle != NULL)
         {
-            LOG_IF_FAILED(DestroyMidiClient(client->ClientHandle));
+            LOG_IF_FAILED(DestroyMidiClient(client->ClientHandle, 0));
         }
 
         // If any handles were allocated for the client, close them now
@@ -1183,7 +1201,8 @@ CMidiClientManager::CreateMidiClient(
         }
 
         RETURN_IF_FAILED(GetMidiDevice(primaryMidiDevice.c_str(), &deviceCreationParams, devicePipe));
-        devicePipe->AddClient((MidiClientHandle)clientPipe.get());
+
+        devicePipe->AddClient(client->ClientHandle);
 
         // MidiFlowIn on the client flows data from the midi device to the client,
         // so we register the clientPipe to receive the callbacks from the clientConnectionPipe.
@@ -1205,7 +1224,8 @@ CMidiClientManager::CreateMidiClient(
                     clientConnectionPipe,
                     newClientConnectionPipe)); // clientConnectionPipe is the plugin
 
-                newClientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
+                newClientConnectionPipe->AddClient(client->ClientHandle);
+
                 clientConnectionPipe = newClientConnectionPipe;
             }
 
@@ -1248,7 +1268,7 @@ CMidiClientManager::CreateMidiClient(
                         clientConnectionPipe,
                         newClientConnectionPipe));
 
-                    newClientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
+                    newClientConnectionPipe->AddClient(client->ClientHandle);
                     clientConnectionPipe = newClientConnectionPipe;
                 }
 
@@ -1270,7 +1290,7 @@ CMidiClientManager::CreateMidiClient(
                         clientConnectionPipe,
                         newClientConnectionPipe)); // clientConnectionPipe is the plugin
 
-                    newClientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
+                    newClientConnectionPipe->AddClient(client->ClientHandle);
                     clientConnectionPipe = newClientConnectionPipe;
                 }
 
@@ -1290,7 +1310,7 @@ CMidiClientManager::CreateMidiClient(
                         clientConnectionPipe,
                         newClientConnectionPipe));
 
-                    newClientConnectionPipe->AddClient((MidiClientHandle)clientPipe.get());
+                    newClientConnectionPipe->AddClient(client->ClientHandle);
                     clientConnectionPipe = newClientConnectionPipe;
                 }
             }
@@ -1346,316 +1366,305 @@ CMidiClientManager::CreateMidiClient(
 _Use_decl_annotations_
 HRESULT
 CMidiClientManager::DestroyMidiClient(
-    MidiClientHandle clientHandle
+    MidiClientHandle clientHandle,
+    DWORD callerPid
 )
 {
     if (Feature_Servicing_MIDI2VirtualDeviceRemovalDeadlock::IsEnabled())
     {
-        return DestroyMidiClientDeferredPipeShutdown(clientHandle);
-    }
-
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingUInt64(clientHandle, "client handle")
-    );
-
-    {
-        // notify the client to shut down, but don't remove it yet.
-        // This just stops it from moving data to allow everything to complete
-        // for shutdown.
-        auto lock = m_ClientManagerLock.lock_shared();
-        auto client = m_ClientPipes.find(clientHandle);
-        if (client != m_ClientPipes.end())
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt64(clientHandle, "client handle")
+        );
+        
         {
-            wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
-            wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
-            midiClientPipe->Shutdown();
-        }
-    }
-
-    {
-        auto lock = m_ClientManagerLock.lock_exclusive();
-
-        // locate this client in the list and clean it up, which will disconnect
-        // itself from the device pipe.
-        // After the client is cleaned up and released, locate the device pipe
-        // which was used, and if it no longer has any associated clients, clean
-        // it up as well.
-        auto client = m_ClientPipes.find(clientHandle);
-        if (client != m_ClientPipes.end())
-        {
-            wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
-            wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
-
-            m_SessionTracker->RemoveClientEndpointConnection(midiClientPipe->SessionId(), midiClientPipe->ClientProcessId(), client->second->MidiDevice().c_str(), clientHandle);
-
-            // remove this client from all of the transforms and disconnect it and any transforms no longer in use
-            for (auto transform = m_TransformPipes.begin(); transform != m_TransformPipes.end();)
+            // notify the client to shut down, but don't remove it yet.
+            // This just stops it from moving data to allow everything to complete
+            // for shutdown.
+            auto lock = m_ClientManagerLock.lock_shared();
+            auto client = m_ClientPipes.find(clientHandle);
+            if (client != m_ClientPipes.end())
             {
-                wil::com_ptr_nothrow<CMidiPipe> midiTransformPipe = transform->second.get();
-
-                // Remove the connection between the client and the transform, if connected.
-                //
-                // Also unregister this client as a client of this tranform, it may be
-                // a client of this transform without being directly attached to it.
-                midiTransformPipe->RemoveConnectedPipe(clientAsMidiPipe);
-                midiTransformPipe->RemoveClient(clientHandle);
-
-                // if this transform is no longer in use, has no clients associated to it,
-                // disconnect it from any devices or other transforms it may have been connected to,
-                // and clean it up.
-                if (!midiTransformPipe->InUse())
+                wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
+                RETURN_HR_IF(E_ACCESSDENIED, callerPid != 0 && midiClientPipe->ClientProcessId() != callerPid);
+                wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
+                midiClientPipe->Shutdown();
+            }
+        }
+        
+        // holds a reference to every pipe erased below, so they stay alive until we
+        // shut them down after the lock has been released
+        std::vector<wil::com_ptr_nothrow<CMidiPipe>> pipesToShutdown;
+        
+        // captured under the lock below, published after it is released
+        std::wstring inUseReportingTarget{ };
+        bool endpointInUse{ false };
+        
+        // Also captured under the lock and used after it is released. The session tracker takes
+        // its own lock, and a thread holding m_ClientManagerLock exclusive must not wait on it:
+        // the session rundown path takes them in the opposite order.
+        bool removeClientConnection{ false };
+        GUID removedSessionId{ };
+        DWORD removedClientProcessId{ 0 };
+        std::wstring removedEndpointId{ };
+        
+        {
+            auto lock = m_ClientManagerLock.lock_exclusive();
+        
+            // locate this client in the list and clean it up, which will disconnect
+            // itself from the device pipe.
+            // After the client is cleaned up and released, locate the device pipe
+            // which was used, and if it no longer has any associated clients, clean
+            // it up as well.
+            auto client = m_ClientPipes.find(clientHandle);
+            if (client != m_ClientPipes.end())
+            {
+                wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
+                wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
+        
+                // the device pipe is erased below once its last client goes, so read this first
+                std::wstring endpointId = client->second->MidiDevice();
+        
+                if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
                 {
-                    for (auto connection = m_DevicePipes.begin(); connection != m_DevicePipes.end();++connection)
+                    inUseReportingTarget = GetEndpointInUseReportingTarget(endpointId);
+                }
+        
+                removeClientConnection = true;
+                removedSessionId = midiClientPipe->SessionId();
+                removedClientProcessId = midiClientPipe->ClientProcessId();
+                removedEndpointId = endpointId;
+        
+                // remove this client from all of the transforms and disconnect it and any transforms no longer in use
+                for (auto transform = m_TransformPipes.begin(); transform != m_TransformPipes.end();)
+                {
+                    wil::com_ptr_nothrow<CMidiPipe> midiTransformPipe = transform->second.get();
+        
+                    // Remove the connection between the client and the transform, if connected.
+                    //
+                    // Also unregister this client as a client of this tranform, it may be
+                    // a client of this transform without being directly attached to it.
+                    midiTransformPipe->RemoveConnectedPipe(clientAsMidiPipe);
+                    midiTransformPipe->RemoveClient(clientHandle);
+        
+                    // if this transform is no longer in use, has no clients associated to it,
+                    // disconnect it from any devices or other transforms it may have been connected to,
+                    // and clean it up.
+                    if (!midiTransformPipe->InUse())
                     {
-                        connection->second->RemoveConnectedPipe(midiTransformPipe);
+                        for (auto connection = m_DevicePipes.begin(); connection != m_DevicePipes.end();++connection)
+                        {
+                            connection->second->RemoveConnectedPipe(midiTransformPipe);
+                        }
+                        for (auto connection = m_TransformPipes.begin(); connection != m_TransformPipes.end();++connection)
+                        {
+                            connection->second->RemoveConnectedPipe(midiTransformPipe);
+                        }
+        
+                        pipesToShutdown.push_back(midiTransformPipe);
+                        transform = m_TransformPipes.erase(transform);
                     }
-                    for (auto connection = m_TransformPipes.begin(); connection != m_TransformPipes.end();++connection)
+                    else
                     {
-                        connection->second->RemoveConnectedPipe(midiTransformPipe);
+                        transform++;
                     }
-
-                    midiTransformPipe->Shutdown();
-                    transform = m_TransformPipes.erase(transform);
                 }
-                else
+        
+                for (auto device = m_DevicePipes.begin(); device != m_DevicePipes.end();)
                 {
-                    transform++;
-                }
-            }
-
-            for (auto device = m_DevicePipes.begin(); device != m_DevicePipes.end();)
-            {
-                wil::com_ptr_nothrow<CMidiPipe> midiDevicePipe = device->second.get();
-
-                // Remove the connection between the client and the device, if connected.
-                //
-                // Also unregister this client as a client of this device, it may be
-                // a client of this device without being directly attached to it.
-                midiDevicePipe->RemoveConnectedPipe(clientAsMidiPipe);
-                midiDevicePipe->RemoveClient(clientHandle);
-
-                // if this device is no longer in use, has no clients associated to it,
-                // clean it up.
-                if (!midiDevicePipe->InUse())
-                {
-                    midiDevicePipe->Shutdown();
-                    device = m_DevicePipes.erase(device);
-                }
-                else
-                {
-                    device++;
-                }
-            }
-
-            m_ClientPipes.erase(client);
-        }
-        else
-        {
-            RETURN_IF_FAILED(E_INVALIDARG);
-        }
-    }
-
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingUInt64(clientHandle, "client handle")
-    );
-
-
-    return S_OK;
-}
-
-// Same teardown as DestroyMidiClient, except that no pipe is shut down while
-// m_ClientManagerLock is held. A virtual device's pipe Shutdown deletes the associated
-// client-side endpoint, which re-enters this class through OnDeviceRemoved and would
-// deadlock on the exclusive lock this thread already owns.
-_Use_decl_annotations_
-HRESULT
-CMidiClientManager::DestroyMidiClientDeferredPipeShutdown(
-    MidiClientHandle clientHandle
-)
-{
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingUInt64(clientHandle, "client handle")
-    );
-
-    {
-        // notify the client to shut down, but don't remove it yet.
-        // This just stops it from moving data to allow everything to complete
-        // for shutdown.
-        auto lock = m_ClientManagerLock.lock_shared();
-        auto client = m_ClientPipes.find(clientHandle);
-        if (client != m_ClientPipes.end())
-        {
-            wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
-            wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
-            midiClientPipe->Shutdown();
-        }
-    }
-
-    // holds a reference to every pipe erased below, so they stay alive until we
-    // shut them down after the lock has been released
-    std::vector<wil::com_ptr_nothrow<CMidiPipe>> pipesToShutdown;
-
-    // captured under the lock below, published after it is released
-    std::wstring inUseReportingTarget{ };
-    bool endpointInUse{ false };
-
-    // Also captured under the lock and used after it is released. The session tracker takes
-    // its own lock, and a thread holding m_ClientManagerLock exclusive must not wait on it:
-    // the session rundown path takes them in the opposite order.
-    bool removeClientConnection{ false };
-    GUID removedSessionId{ };
-    DWORD removedClientProcessId{ 0 };
-    std::wstring removedEndpointId{ };
-
-    {
-        auto lock = m_ClientManagerLock.lock_exclusive();
-
-        // locate this client in the list and clean it up, which will disconnect
-        // itself from the device pipe.
-        // After the client is cleaned up and released, locate the device pipe
-        // which was used, and if it no longer has any associated clients, clean
-        // it up as well.
-        auto client = m_ClientPipes.find(clientHandle);
-        if (client != m_ClientPipes.end())
-        {
-            wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
-            wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
-
-            // the device pipe is erased below once its last client goes, so read this first
-            std::wstring endpointId = client->second->MidiDevice();
-
-            if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
-            {
-                inUseReportingTarget = GetEndpointInUseReportingTarget(endpointId);
-            }
-
-            removeClientConnection = true;
-            removedSessionId = midiClientPipe->SessionId();
-            removedClientProcessId = midiClientPipe->ClientProcessId();
-            removedEndpointId = endpointId;
-
-            // remove this client from all of the transforms and disconnect it and any transforms no longer in use
-            for (auto transform = m_TransformPipes.begin(); transform != m_TransformPipes.end();)
-            {
-                wil::com_ptr_nothrow<CMidiPipe> midiTransformPipe = transform->second.get();
-
-                // Remove the connection between the client and the transform, if connected.
-                //
-                // Also unregister this client as a client of this tranform, it may be
-                // a client of this transform without being directly attached to it.
-                midiTransformPipe->RemoveConnectedPipe(clientAsMidiPipe);
-                midiTransformPipe->RemoveClient(clientHandle);
-
-                // if this transform is no longer in use, has no clients associated to it,
-                // disconnect it from any devices or other transforms it may have been connected to,
-                // and clean it up.
-                if (!midiTransformPipe->InUse())
-                {
-                    for (auto connection = m_DevicePipes.begin(); connection != m_DevicePipes.end();++connection)
+                    wil::com_ptr_nothrow<CMidiPipe> midiDevicePipe = device->second.get();
+        
+                    // Remove the connection between the client and the device, if connected.
+                    //
+                    // Also unregister this client as a client of this device, it may be
+                    // a client of this device without being directly attached to it.
+                    midiDevicePipe->RemoveConnectedPipe(clientAsMidiPipe);
+                    midiDevicePipe->RemoveClient(clientHandle);
+        
+                    // if this device is no longer in use, has no clients associated to it,
+                    // clean it up.
+                    if (!midiDevicePipe->InUse())
                     {
-                        connection->second->RemoveConnectedPipe(midiTransformPipe);
+                        pipesToShutdown.push_back(midiDevicePipe);
+                        device = m_DevicePipes.erase(device);
                     }
-                    for (auto connection = m_TransformPipes.begin(); connection != m_TransformPipes.end();++connection)
+                    else
                     {
-                        connection->second->RemoveConnectedPipe(midiTransformPipe);
+                        device++;
                     }
-
-                    pipesToShutdown.push_back(midiTransformPipe);
-                    transform = m_TransformPipes.erase(transform);
                 }
-                else
+        
+                m_ClientPipes.erase(client);
+        
+                if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
                 {
-                    transform++;
+                    if (!inUseReportingTarget.empty())
+                    {
+                        endpointInUse = EndpointHasApplicationClients(endpointId);
+                    }
                 }
             }
-
-            for (auto device = m_DevicePipes.begin(); device != m_DevicePipes.end();)
+            else
             {
-                wil::com_ptr_nothrow<CMidiPipe> midiDevicePipe = device->second.get();
-
-                // Remove the connection between the client and the device, if connected.
-                //
-                // Also unregister this client as a client of this device, it may be
-                // a client of this device without being directly attached to it.
-                midiDevicePipe->RemoveConnectedPipe(clientAsMidiPipe);
-                midiDevicePipe->RemoveClient(clientHandle);
-
-                // if this device is no longer in use, has no clients associated to it,
-                // clean it up.
-                if (!midiDevicePipe->InUse())
-                {
-                    pipesToShutdown.push_back(midiDevicePipe);
-                    device = m_DevicePipes.erase(device);
-                }
-                else
-                {
-                    device++;
-                }
+                RETURN_IF_FAILED(E_INVALIDARG);
             }
-
-            m_ClientPipes.erase(client);
-
-            if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
+        }
+        
+        // kept ahead of the pipe shutdowns below, which is where it sat when it ran under the lock
+        if (removeClientConnection)
+        {
+            LOG_IF_FAILED(m_SessionTracker->RemoveClientEndpointConnection(
+                removedSessionId, removedClientProcessId, removedEndpointId.c_str(), clientHandle));
+        }
+        
+        if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
+        {
+            if (!inUseReportingTarget.empty())
             {
-                if (!inUseReportingTarget.empty())
-                {
-                    endpointInUse = EndpointHasApplicationClients(endpointId);
-                }
+                LOG_IF_FAILED(UpdateEndpointInUseProperty(inUseReportingTarget, endpointInUse));
             }
         }
-        else
+        
+        for (auto const& pipe : pipesToShutdown)
         {
-            RETURN_IF_FAILED(E_INVALIDARG);
+            pipe->Shutdown();
         }
+        
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt64(clientHandle, "client handle")
+        );
     }
-
-    // kept ahead of the pipe shutdowns below, which is where it sat when it ran under the lock
-    if (removeClientConnection)
+    else
     {
-        LOG_IF_FAILED(m_SessionTracker->RemoveClientEndpointConnection(
-            removedSessionId, removedClientProcessId, removedEndpointId.c_str(), clientHandle));
-    }
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt64(clientHandle, "client handle")
+        );
 
-    if (Feature_Servicing_MIDI2VirtualDeviceClientEndpointInUse::IsEnabled())
-    {
-        if (!inUseReportingTarget.empty())
         {
-            LOG_IF_FAILED(UpdateEndpointInUseProperty(inUseReportingTarget, endpointInUse));
+            // notify the client to shut down, but don't remove it yet.
+            // This just stops it from moving data to allow everything to complete
+            // for shutdown.
+            auto lock = m_ClientManagerLock.lock_shared();
+            auto client = m_ClientPipes.find(clientHandle);
+            if (client != m_ClientPipes.end())
+            {
+                wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
+                RETURN_HR_IF(E_ACCESSDENIED, callerPid != 0 && midiClientPipe->ClientProcessId() != callerPid);
+                wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
+                midiClientPipe->Shutdown();
+            }
         }
-    }
 
-    for (auto const& pipe : pipesToShutdown)
-    {
-        pipe->Shutdown();
-    }
+        {
+            auto lock = m_ClientManagerLock.lock_exclusive();
 
-    TraceLoggingWrite(
-        MidiSrvTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingUInt64(clientHandle, "client handle")
-    );
+            // locate this client in the list and clean it up, which will disconnect
+            // itself from the device pipe.
+            // After the client is cleaned up and released, locate the device pipe
+            // which was used, and if it no longer has any associated clients, clean
+            // it up as well.
+            auto client = m_ClientPipes.find(clientHandle);
+            if (client != m_ClientPipes.end())
+            {
+                wil::com_ptr_nothrow<CMidiClientPipe> midiClientPipe = (CMidiClientPipe*)(client->second.get());
+                wil::com_ptr_nothrow<CMidiPipe> clientAsMidiPipe = midiClientPipe.get();
+
+                m_SessionTracker->RemoveClientEndpointConnection(midiClientPipe->SessionId(), midiClientPipe->ClientProcessId(), client->second->MidiDevice().c_str(), clientHandle);
+
+                // remove this client from all of the transforms and disconnect it and any transforms no longer in use
+                for (auto transform = m_TransformPipes.begin(); transform != m_TransformPipes.end();)
+                {
+                    wil::com_ptr_nothrow<CMidiPipe> midiTransformPipe = transform->second.get();
+
+                    // Remove the connection between the client and the transform, if connected.
+                    //
+                    // Also unregister this client as a client of this tranform, it may be
+                    // a client of this transform without being directly attached to it.
+                    midiTransformPipe->RemoveConnectedPipe(clientAsMidiPipe);
+                    midiTransformPipe->RemoveClient(clientHandle);
+
+                    // if this transform is no longer in use, has no clients associated to it,
+                    // disconnect it from any devices or other transforms it may have been connected to,
+                    // and clean it up.
+                    if (!midiTransformPipe->InUse())
+                    {
+                        for (auto connection = m_DevicePipes.begin(); connection != m_DevicePipes.end();++connection)
+                        {
+                            connection->second->RemoveConnectedPipe(midiTransformPipe);
+                        }
+                        for (auto connection = m_TransformPipes.begin(); connection != m_TransformPipes.end();++connection)
+                        {
+                            connection->second->RemoveConnectedPipe(midiTransformPipe);
+                        }
+
+                        midiTransformPipe->Shutdown();
+                        transform = m_TransformPipes.erase(transform);
+                    }
+                    else
+                    {
+                        transform++;
+                    }
+                }
+
+                for (auto device = m_DevicePipes.begin(); device != m_DevicePipes.end();)
+                {
+                    wil::com_ptr_nothrow<CMidiPipe> midiDevicePipe = device->second.get();
+
+                    // Remove the connection between the client and the device, if connected.
+                    //
+                    // Also unregister this client as a client of this device, it may be
+                    // a client of this device without being directly attached to it.
+                    midiDevicePipe->RemoveConnectedPipe(clientAsMidiPipe);
+                    midiDevicePipe->RemoveClient(clientHandle);
+
+                    // if this device is no longer in use, has no clients associated to it,
+                    // clean it up.
+                    if (!midiDevicePipe->InUse())
+                    {
+                        midiDevicePipe->Shutdown();
+                        device = m_DevicePipes.erase(device);
+                    }
+                    else
+                    {
+                        device++;
+                    }
+                }
+
+                m_ClientPipes.erase(client);
+            }
+            else
+            {
+                RETURN_IF_FAILED(E_INVALIDARG);
+            }
+        }
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exit success", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt64(clientHandle, "client handle")
+        );
+    }
 
     return S_OK;
 }

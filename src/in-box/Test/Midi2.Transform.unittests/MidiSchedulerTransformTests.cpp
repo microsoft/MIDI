@@ -44,70 +44,13 @@ bool MidiSchedulerTransformTests::ClassSetup()
 
 namespace
 {
-    // Only used for its address, to find the module this code was linked into.
-    int g_moduleAnchor{ 0 };
-
-    // The registered CLSID resolves to the copy in System32, which is not necessarily the one this
-    // build produced. These measurements have to describe the binary under test, so the transform is
-    // activated directly out of the test output folder instead of through CoCreateInstance.
-    wil::unique_hmodule LoadLocalSchedulerTransform(_Out_ std::wstring& resolvedPath)
-    {
-        resolvedPath.clear();
-
-        HMODULE selfModule{ nullptr };
-
-        if (!GetModuleHandleExW(
-            GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
-            reinterpret_cast<LPCWSTR>(&g_moduleAnchor),
-            &selfModule))
-        {
-            return wil::unique_hmodule{};
-        }
-
-        wchar_t modulePath[MAX_PATH]{};
-
-        auto const length = GetModuleFileNameW(selfModule, modulePath, ARRAYSIZE(modulePath));
-
-        if (length == 0 || length >= ARRAYSIZE(modulePath))
-        {
-            return wil::unique_hmodule{};
-        }
-
-        std::wstring folder{ modulePath };
-
-        auto const separator = folder.find_last_of(L'\\');
-
-        if (separator == std::wstring::npos)
-        {
-            return wil::unique_hmodule{};
-        }
-
-        folder.resize(separator + 1);
-
-        resolvedPath = folder + L"Midi2.SchedulerTransform.dll";
-
-        return wil::unique_hmodule{ LoadLibraryW(resolvedPath.c_str()) };
-    }
-
     HRESULT CreateSchedulerTransform(
-        _In_ HMODULE transformModule,
         _Out_ wil::com_ptr_nothrow<IMidiDataTransform>& transform)
     {
-        using DllGetClassObjectProc = HRESULT(STDAPICALLTYPE*)(REFCLSID, REFIID, LPVOID*);
-
-        auto const getClassObject = reinterpret_cast<DllGetClassObjectProc>(
-            reinterpret_cast<void*>(GetProcAddress(transformModule, "DllGetClassObject")));
-
-        RETURN_HR_IF_NULL(E_NOINTERFACE, getClassObject);
-
-        wil::com_ptr_nothrow<IClassFactory> factory;
-        RETURN_IF_FAILED(getClassObject(__uuidof(Midi2SchedulerTransform), IID_PPV_ARGS(&factory)));
-
         wil::com_ptr_nothrow<IMidiTransform> transformLib;
-        RETURN_IF_FAILED(factory->CreateInstance(nullptr, __uuidof(IMidiTransform), transformLib.put_void()));
-
+        auto iid = __uuidof(Midi2SchedulerTransform);
+        VERIFY_SUCCEEDED(CoCreateInstance(iid, nullptr, CLSCTX_ALL, IID_PPV_ARGS(&transformLib)));
         RETURN_IF_FAILED(transformLib->Activate(__uuidof(IMidiDataTransform), transform.put_void()));
-
         return S_OK;
     }
 
@@ -217,12 +160,8 @@ void MidiSchedulerTransformTests::RunBaselineScenario(
         (FileTimeToTicks(controlKernelEnd) - FileTimeToTicks(controlKernelStart))
         + (FileTimeToTicks(controlUserEnd) - FileTimeToTicks(controlUserStart))) / 10000.0;
 
-    std::wstring transformPath;
-    auto transformModule = LoadLocalSchedulerTransform(transformPath);
-    VERIFY_IS_TRUE(static_cast<bool>(transformModule));
-
     wil::com_ptr_nothrow<IMidiDataTransform> transform;
-    VERIFY_SUCCEEDED(CreateSchedulerTransform(transformModule.get(), transform));
+    VERIFY_SUCCEEDED(CreateSchedulerTransform(transform));
 
     // Intended timestamp paired with the QPC value captured the moment the callback ran.
     std::vector<std::pair<LONGLONG, LONGLONG>> arrivals(messageCount);
@@ -415,7 +354,6 @@ void MidiSchedulerTransformTests::RunBaselineScenario(
     std::wstringstream report;
     report << std::fixed << std::setprecision(1);
     report << L"\r\n=== " << label << L" ===\r\n";
-    report << L"  transform            : " << transformPath << L"\r\n";
     report << L"  messages / lead / gap: " << messageCount << L" / " << leadMilliseconds << L" ms / " << spacingMicroseconds << L" us\r\n";
     report << L"  enqueue order        : " << (shuffleEnqueueOrder ? L"shuffled" : L"in order") << L"\r\n";
     report << L"  scheduled            : " << scheduledCount << L"\r\n";

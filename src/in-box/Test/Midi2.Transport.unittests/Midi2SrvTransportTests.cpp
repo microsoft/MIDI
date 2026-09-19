@@ -1468,6 +1468,14 @@ MidiSrvTransportTests::TestKSAPortEnumeration()
 
     VERIFY_SUCCEEDED(midiSessionTracker->AddClientSession(m_SessionId, L"TestKSAPortEnumeration"));
 
+    auto cleanupOnExit = wil::scope_exit([&]() {
+    
+        if (midiSessionTracker.get() != nullptr)
+        {
+            midiSessionTracker->RemoveClientSession(m_SessionId);
+        }
+    });
+
     GetKSAMinMidiEndpoints(midiInDevices, midiOutDevices);
 
     if (midiInDevices.size() == 0 || midiOutDevices.size() == 0)
