@@ -236,6 +236,69 @@ function Write-Note {
 }
 
 # ----------------------------------------------------------------------------------------------
+# Servicing gate listing
+# ----------------------------------------------------------------------------------------------
+
+# mididiag reports which servicing gates are present so support can read it off a customer machine,
+# but that section is compiled out of public builds. Nothing else notices when the list drifts, and
+# gates are retired on a rolling basis, so a stale entry surfaces much later as a bare C1083 on a
+# header nobody remembers deleting. Check it before any compiling starts.
+function Test-ServicingGateListing {
+    $gateFolder = Join-Path $ApiRoot 'Inc'
+    $mididiagSource = Join-Path $ApiRoot 'user-tools\mididiag\mididiag_main.cpp'
+
+    if (-not (Test-Path $mididiagSource)) {
+        throw "mididiag source not found: $mididiagSource"
+    }
+
+    $declared = @(Get-ChildItem (Join-Path $gateFolder 'Feature_Servicing_*.h') -ErrorAction SilentlyContinue |
+        ForEach-Object { $_.BaseName -replace '^Feature_Servicing_', '' })
+
+    if ($declared.Count -eq 0) {
+        throw "No Feature_Servicing_*.h headers found under $gateFolder"
+    }
+
+    $source = Get-Content $mididiagSource -Raw
+
+    $included = @([regex]::Matches($source, '#include\s+"Feature_Servicing_(\w+)\.h"') |
+        ForEach-Object { $_.Groups[1].Value })
+
+    $reported = @([regex]::Matches($source, 'OutputSingleFeatureEnablement\(\s*Feature_Servicing_(\w+)::IsEnabled\(\)\s*,\s*L"([^" (]+)') |
+        ForEach-Object { [pscustomobject]@{ Gate = $_.Groups[1].Value; Label = $_.Groups[2].Value } })
+
+    $reportedGates = @($reported | ForEach-Object { $_.Gate })
+
+    $problems = @()
+
+    foreach ($gate in ($declared | Where-Object { $reportedGates -notcontains $_ })) {
+        $problems += "  $gate - header exists but mididiag does not report it"
+    }
+
+    foreach ($gate in ($reportedGates | Where-Object { $declared -notcontains $_ })) {
+        $problems += "  $gate - mididiag reports it but the header is gone"
+    }
+
+    foreach ($gate in ($reportedGates | Where-Object { $included -notcontains $_ })) {
+        $problems += "  $gate - reported by mididiag but never included"
+    }
+
+    # The listing is compiled out, so a copy-paste label naming the wrong gate is otherwise silent.
+    foreach ($entry in ($reported | Where-Object { $_.Gate -ne $_.Label })) {
+        $problems += "  $($entry.Gate) - reported under the wrong label '$($entry.Label)'"
+    }
+
+    if ($problems.Count -gt 0) {
+        Write-Host ''
+        Write-Host '     Servicing gate listing in mididiag is out of date:' -ForegroundColor Red
+        $problems | Sort-Object -Unique | ForEach-Object { Write-Host $_ -ForegroundColor Red }
+        Write-Host ''
+        throw 'mididiag does not match the Feature_Servicing_*.h headers. Update DoSectionFeatureEnablement in mididiag_main.cpp.'
+    }
+
+    Write-Detail "Servicing gates $($declared.Count), all reported by mididiag"
+}
+
+# ----------------------------------------------------------------------------------------------
 # Version
 # ----------------------------------------------------------------------------------------------
 
@@ -1392,6 +1455,8 @@ $previousPriority = [System.Diagnostics.Process]::GetCurrentProcess().PriorityCl
 [System.Diagnostics.Process]::GetCurrentProcess().PriorityClass = [System.Diagnostics.ProcessPriorityClass]$Priority
 
 try {
+    Test-ServicingGateListing
+
     $version = Get-BuildVersion
 
     if ($targets -notcontains 'Version') {
