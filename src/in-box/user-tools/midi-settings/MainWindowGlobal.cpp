@@ -641,12 +641,18 @@ namespace winrt::midisettings::implementation
     {
         try
         {
+            // ownership goes to the elevated copy before it starts, or it finds this window
+            // still up, raises it, and exits just as this one closes
+            ::midiapp::SingleInstance::Release();
+
             if (native::TryRelaunchElevated())
             {
                 Close();
             }
             else
             {
+                ::midiapp::SingleInstance::Reacquire();
+
                 GlobalStatusText().Text(res::GetString(L"ElevationDeclined"));
             }
         }
