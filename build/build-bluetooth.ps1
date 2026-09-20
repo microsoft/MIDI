@@ -34,6 +34,14 @@
 .PARAMETER BumpBuildNumber
     Increments and persists the 'build' field in version-plugins.json before computing versions.
 
+.PARAMETER Sign
+    Authenticode-sign the staged transport, the setup app, the MSI packages and the installer
+    bundle. Needs the Artifact Signing client tools and a signed-in identity; see
+    build/sign-files.ps1.
+
+.PARAMETER SigningMetadata
+    The Artifact Signing metadata JSON used by -Sign. Defaults to MIDI_SIGNING_METADATA.
+
 .PARAMETER MaxCpuCount
     How many projects MSBuild builds at once. Defaults to three quarters of the logical
     processors so the machine stays usable while a build runs. 0 uses every logical processor,
@@ -65,6 +73,10 @@ param(
     [int] $BuildNumber = -1,
 
     [switch] $BumpBuildNumber,
+
+    [switch] $Sign,
+
+    [string] $SigningMetadata = $env:MIDI_SIGNING_METADATA,
 
     # Explicit MSBuild.exe. Leave empty to let vswhere find the newest install.
     [string] $MSBuildPath,
@@ -130,6 +142,8 @@ $BundleInfoFile = Join-Path $VersionStagingFolder 'BundleInfo.wxi'
 
 $VersionFile = Join-Path $BuildRoot 'version-plugins.json'
 
+$SignScript = Join-Path $BuildRoot 'sign-files.ps1'
+
 $SetupSolutionDir = Join-Path $SourceRoot 'installers\oob-setup-bluetooth'
 $SetupSolution = Join-Path $SetupSolutionDir 'midi-services-bluetooth-midi-preview-setup.sln'
 
@@ -177,6 +191,23 @@ function Write-Detail {
 function Write-Note {
     param([string] $Message)
     Write-Host "     $Message" -ForegroundColor Yellow
+}
+
+# ----------------------------------------------------------------------------------------------
+# Signing
+# ----------------------------------------------------------------------------------------------
+
+# A no-op unless -Sign was passed. The installer signs itself through
+# src/installers/Directory.Build.targets, which keys off MIDI_SIGNING_METADATA.
+function Invoke-SignPath {
+    param([Parameter(Mandatory)] [string[]] $Path)
+
+    if (-not $Sign) { return }
+
+    $existing = @($Path | Where-Object { $_ -and (Test-Path $_) })
+    if ($existing.Count -eq 0) { return }
+
+    & $SignScript -Path $existing -MetadataFile $SigningMetadata
 }
 
 # ----------------------------------------------------------------------------------------------
@@ -329,8 +360,11 @@ function Invoke-AppTarget {
     Write-Step 'Build App SDK and setup app'
 
     foreach ($plat in $Platform) {
+        # This installer does not ship the SDK NuGet package, and its nuspec pulls from the
+        # Arm64EC output that only build-sdk.ps1 produces. Packing here would either fail
+        # outright or publish a package built from whatever is left on disk.
         Invoke-MSBuild -ProjectOrSolution $AppSdkSolution -BuildPlatform $plat `
-            -Properties @{ 'NoWarn' = 'MIDL2111' }
+            -Properties @{ 'NoWarn' = 'MIDL2111'; 'GeneratePackageOnBuild' = 'false' }
     }
 }
 
@@ -363,6 +397,10 @@ function Invoke-StageTarget {
 
         Write-Detail "Staged $TransportBinary -> api\$plat"
 
+        # Before Setup, not after: WiX embeds these files into the MSI packages, so signing them
+        # afterwards would sign a copy nobody installs.
+        Invoke-SignPath -Path (Join-Path $transportDestination "$TransportBinary.dll")
+
         $appSource = Join-Path $AppSdkOutRoot "midibluetoothsetup\$plat\$Configuration"
         $appDestination = Join-Path $AppStagingRoot $plat
 
@@ -375,6 +413,8 @@ function Invoke-StageTarget {
         }
 
         Write-Detail "Staged $($AppPayload.Count) app files -> bluetooth-app\$plat"
+
+        Invoke-SignPath -Path $appDestination
     }
 }
 
@@ -489,7 +529,9 @@ function Invoke-CleanTarget {
 
 $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
-$targets = if ($Target -contains 'All') { @('Version', 'Service', 'App', 'Stage', 'Setup', 'Release') } else { $Target }
+# @() matters: a one-element array unrolls to a scalar through an if-expression, and StrictMode
+# then fails the .Count test below.
+$targets = @(if ($Target -contains 'All') { @('Version', 'Service', 'App', 'Stage', 'Setup', 'Release') } else { $Target })
 
 $parallelism = if ($MaxCpuCount -gt 0) { "$MaxCpuCount of $([Environment]::ProcessorCount)" } else { "all $([Environment]::ProcessorCount)" }
 
@@ -500,6 +542,23 @@ Write-Detail "Targets       $($targets -join ', ')"
 Write-Detail "Platforms     $($Platform -join ', ')"
 Write-Detail "Configuration $Configuration"
 Write-Detail "Parallelism   $parallelism logical processors, $Priority priority"
+
+if ($Sign) {
+    if (-not $SigningMetadata) {
+        throw '-Sign needs -SigningMetadata, or the MIDI_SIGNING_METADATA environment variable, pointing at the Artifact Signing metadata JSON. See build\sign-files.ps1.'
+    }
+    if (-not (Test-Path $SigningMetadata)) {
+        throw "Signing metadata file not found: $SigningMetadata"
+    }
+
+    $SigningMetadata = (Resolve-Path $SigningMetadata).Path
+    Write-Detail "Signing       $SigningMetadata"
+}
+
+# The WiX projects sign themselves off this variable (src/installers/Directory.Build.targets). It
+# is set or cleared here rather than inherited, so a signed installer can never end up wrapped
+# around an unsigned payload because the variable happened to be set in the shell.
+$env:MIDI_SIGNING_METADATA = if ($Sign) { $SigningMetadata } else { '' }
 
 if ($targets -contains 'Clean') {
     Invoke-CleanTarget

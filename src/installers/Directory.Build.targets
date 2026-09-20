@@ -1,0 +1,41 @@
+<Project>
+
+  <!--
+    Opt-in Authenticode signing for the installer packages and bundles.
+
+    Nothing here runs unless MIDI_SIGNING_METADATA (or the MidiSigningMetadata property) points at
+    an Azure Artifact Signing metadata JSON file. The release scripts set that variable when they
+    are run with -Sign; see build/sign-files.ps1.
+
+    A Burn bundle has to be signed in two pieces - the extracted engine first, then the whole
+    bundle - which is why SignBundleEngine and SignBundle are separate. WiX does the detach and
+    reattach around them.
+
+    MSI packages must be signed before the bundle is built, because the bundle embeds them. That
+    happens automatically here: the bundle project references the package projects, so their
+    SignMsi targets run first.
+  -->
+
+  <PropertyGroup>
+    <MidiSigningMetadata Condition="'$(MidiSigningMetadata)' == ''">$(MIDI_SIGNING_METADATA)</MidiSigningMetadata>
+    <MidiSignCommand>pwsh -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildThisFileDirectory)..\..\build\sign-files.ps1" -MetadataFile "$(MidiSigningMetadata)"</MidiSignCommand>
+    <SignOutput Condition="'$(MidiSigningMetadata)' != ''">true</SignOutput>
+  </PropertyGroup>
+
+  <Target Name="SignCabs" Condition="'$(MidiSigningMetadata)' != ''">
+    <Exec Command="$(MidiSignCommand) -Path &quot;%(SignCabs.FullPath)&quot;" />
+  </Target>
+
+  <Target Name="SignMsi" Condition="'$(MidiSigningMetadata)' != ''">
+    <Exec Command="$(MidiSignCommand) -Path &quot;%(SignMsi.FullPath)&quot;" />
+  </Target>
+
+  <Target Name="SignBundleEngine" Condition="'$(MidiSigningMetadata)' != ''">
+    <Exec Command="$(MidiSignCommand) -Path &quot;%(SignBundleEngine.FullPath)&quot;" />
+  </Target>
+
+  <Target Name="SignBundle" Condition="'$(MidiSigningMetadata)' != ''">
+    <Exec Command="$(MidiSignCommand) -Path &quot;%(SignBundle.FullPath)&quot;" />
+  </Target>
+
+</Project>
