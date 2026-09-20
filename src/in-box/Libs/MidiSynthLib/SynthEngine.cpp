@@ -1013,15 +1013,18 @@ namespace MidiSynth
 
         auto& state = m_channels[channel];
 
-        state.Volume = 100.0 / 127.0;
+        // GM2 3.5.2 and M2-113 appendix A both exclude channel volume, pan, bank select, program,
+        // portamento time and the effect sends from this message, and neither resets the pitch bend
+        // range. Power-up values for those come from SynthChannelState by way of SystemReset.
         state.Expression = 1.0;
-        state.PanOffset = 0.0;
         state.Modulation = 0.0;
-        state.SustainPedal = false;
         state.PitchBendNormalized = 0.0;
-        state.PitchBendRangeSemitones = 2.0;
         state.RpnMsb = 0x7F;
         state.RpnLsb = 0x7F;
+
+        // Routed through the controller so held voices get released, rather than clearing the flag
+        // and stranding them.
+        ControlChange(channel, ControllerSustainPedal, 0);
     }
 
     _Use_decl_annotations_

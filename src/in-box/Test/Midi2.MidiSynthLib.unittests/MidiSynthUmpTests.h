@@ -23,6 +23,7 @@ public:
     TEST_METHOD(TestDrumChannelAssignment);
     TEST_METHOD(TestUserVolume);
     TEST_METHOD(TestResets);
+    TEST_METHOD(TestResetAllControllersScope);
     TEST_METHOD(TestPropertyRequestParking);
     TEST_METHOD(TestIdentityReply);
     TEST_METHOD(TestMidiCiDiscovery);
