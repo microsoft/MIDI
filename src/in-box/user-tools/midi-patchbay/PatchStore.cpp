@@ -36,6 +36,8 @@ namespace midipatchbay
         constexpr wchar_t KeyDestinationEndpoint[] = L"destinationEndpointId";
         constexpr wchar_t KeyDestinationGroup[] = L"destinationGroup";
         constexpr wchar_t KeyMuted[] = L"muted";
+        constexpr wchar_t KeyFilter[] = L"filter";
+        constexpr wchar_t KeyTransform[] = L"transform";
         constexpr wchar_t KeyComment[] = L"_comment";
 
         constexpr wchar_t CommentText[] =
@@ -632,6 +634,8 @@ namespace midipatchbay
                         connection.DestinationEndpointId = GetNamedString(item, KeyDestinationEndpoint);
                         connection.DestinationGroupIndex = ReadGroupIndex(item, KeyDestinationGroup);
                         connection.Muted = GetNamedBool(item, KeyMuted, false);
+                        connection.Filter = FilterFromJson(GetNamedObject(item, KeyFilter));
+                        connection.Transform = TransformFromJson(GetNamedObject(item, KeyTransform));
 
                         if (connection.Id.empty())
                         {
@@ -799,6 +803,17 @@ namespace midipatchbay
                 item.SetNamedValue(KeyDestinationEndpoint, json::JsonValue::CreateStringValue(connection.DestinationEndpointId));
                 item.SetNamedValue(KeyDestinationGroup, json::JsonValue::CreateNumberValue(connection.DestinationGroupIndex));
                 item.SetNamedValue(KeyMuted, json::JsonValue::CreateBooleanValue(connection.Muted));
+
+                // Only when it does something, so an untouched patch file stays readable.
+                if (!connection.Filter.PassesEverything())
+                {
+                    item.SetNamedValue(KeyFilter, FilterToJson(connection.Filter));
+                }
+
+                if (!connection.Transform.ChangesNothing())
+                {
+                    item.SetNamedValue(KeyTransform, TransformToJson(connection.Transform));
+                }
 
                 connections.Append(item);
             }

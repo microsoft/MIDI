@@ -130,6 +130,8 @@
     <ClInclude Include="BackgroundWork.h" />
     <ClInclude Include="CommandLineOptions.h" />
     <ClInclude Include="EndpointCatalog.h" />
+    <ClInclude Include="MessageFilter.h" />
+    <ClInclude Include="MessageTransform.h" />
     <ClInclude Include="PatchCanvas.h" />
     <ClInclude Include="PatchGraph.h" />
     <ClInclude Include="PatchModel.h" />
@@ -163,6 +165,8 @@
     <ClCompile Include="BackgroundWork.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
     <ClCompile Include="EndpointCatalog.cpp" />
+    <ClCompile Include="MessageFilter.cpp" />
+    <ClCompile Include="MessageTransform.cpp" />
     <ClCompile Include="PatchCanvas.cpp" />
     <ClCompile Include="PatchGraph.cpp" />
     <ClCompile Include="PatchModel.cpp" />
@@ -179,6 +183,8 @@
     </ClCompile>
     <ClCompile Include="MainWindowDialogs.cpp" />
     <ClCompile Include="MainWindowInspector.cpp" />
+    <ClCompile Include="MainWindowFilters.cpp" />
+    <ClCompile Include="MainWindowTransforms.cpp" />
     <ClCompile Include="MainWindowRouting.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />

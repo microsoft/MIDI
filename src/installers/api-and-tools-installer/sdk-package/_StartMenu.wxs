@@ -50,6 +50,10 @@
                   Name="MIDI Monitor"
                   Target="[#midi2monitorExe]"
                   WorkingDirectory="TOOL_MONITOR_FOLDER" />
+        <Shortcut Id="Shortcut_midipatchbay"
+                  Name="MIDI Patchbay"
+                  Target="[#midipatchbayExe]"
+                  WorkingDirectory="TOOL_PATCHBAY_FOLDER" />
         <Shortcut Id="Shortcut_miditroubleshooter"
                   Name="MIDI Troubleshooting and Repair"
                   Target="[#miditroubleshooterExe]"

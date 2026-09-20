@@ -729,7 +729,111 @@ namespace winrt::midipatchbay::implementation
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to create the loopback.")
     }
 
+    // --------------------------------------------- remove what is selected
+
+    void MainWindow::DeleteSelection() noexcept
+    {
+        DeleteSelectionAsync();
+    }
+
+    winrt::fire_and_forget MainWindow::DeleteSelectionAsync()
+    {
+        auto strong = get_strong();
+
+        try
+        {
+            auto const kind = m_canvas.SelectionKind();
+
+            if (kind == patchbay::CanvasSelectionKind::None)
+            {
+                co_return;
+            }
+
+            auto const endpointId = m_canvas.SelectedEndpointId();
+            auto const connectionId = m_canvas.SelectedConnectionId();
+
+            auto* patch = CurrentPatch();
+
+            if (patch == nullptr)
+            {
+                co_return;
+            }
+
+            winrt::hstring what{};
+
+            if (kind == patchbay::CanvasSelectionKind::Endpoint)
+            {
+                auto const* endpoint = patch->FindEndpoint(endpointId);
+
+                if (endpoint == nullptr)
+                {
+                    co_return;
+                }
+
+                what = resources::FormatString(L"RemoveEndpointMessageFormat", endpoint->DisplayName);
+            }
+            else
+            {
+                if (patch->FindConnection(connectionId) == nullptr)
+                {
+                    co_return;
+                }
+
+                what = resources::GetString(L"RemoveConnectionMessage");
+            }
+
+            if (patchbay::AppSettings::Current().ConfirmCanvasRemove())
+            {
+                ConfirmRemoveText().Text(what);
+                ConfirmRemoveSkipCheck().IsChecked(false);
+                ConfirmRemoveDialog().XamlRoot(Content().XamlRoot());
+
+                auto const result = co_await ConfirmRemoveDialog().ShowAsync();
+
+                if (result != controls::ContentDialogResult::Primary)
+                {
+                    co_return;
+                }
+
+                auto const skip = ConfirmRemoveSkipCheck().IsChecked();
+
+                if (skip && skip.Value())
+                {
+                    patchbay::AppSettings::Current().ConfirmCanvasRemove(false);
+                }
+            }
+
+            // Re-fetched: the dialog gave the customer time to switch patches.
+            patch = CurrentPatch();
+
+            if (patch == nullptr)
+            {
+                co_return;
+            }
+
+            if (kind == patchbay::CanvasSelectionKind::Endpoint)
+            {
+                patch->RemoveEndpoint(endpointId);
+            }
+            else
+            {
+                patch->RemoveConnection(connectionId);
+            }
+
+            m_canvas.ClearSelection();
+
+            MarkDirty();
+            RefreshAnalysis();
+            RebuildCanvas();
+            RefreshInspector();
+            UpdateMessages();
+            ApplyRouting();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to remove the selection.")
+    }
+
     // ------------------------------------------------------------ quick patch
+
 
     _Use_decl_annotations_
     void MainWindow::OnNewQuickPatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
@@ -1126,7 +1230,7 @@ namespace winrt::midipatchbay::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::ShowEndpointMenu(std::wstring const& endpointId) noexcept
+    void MainWindow::ShowEndpointMenu(std::wstring const& endpointId, foundation::Point const& position) noexcept
     {
         try
         {
@@ -1244,7 +1348,12 @@ namespace winrt::midipatchbay::implementation
 
             menu.Items().Append(removeItem);
 
-            menu.ShowAt(CanvasScroller());
+            primitives::FlyoutShowOptions options{};
+
+            options.Position(position);
+            options.Placement(primitives::FlyoutPlacementMode::BottomEdgeAlignedLeft);
+
+            menu.ShowAt(CanvasScroller(), options);
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the endpoint menu.")
     }

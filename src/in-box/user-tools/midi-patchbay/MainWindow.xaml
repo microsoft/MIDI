@@ -76,6 +76,7 @@
             <Border x:Name="DividerStrokeColorDefaultBrush" Background="{ThemeResource DividerStrokeColorDefaultBrush}" />
             <Border x:Name="ControlAltFillColorSecondaryBrush" Background="{ThemeResource ControlAltFillColorSecondaryBrush}" />
             <Border x:Name="SolidBackgroundFillColorSecondaryBrush" Background="{ThemeResource SolidBackgroundFillColorSecondaryBrush}" />
+            <Border x:Name="SolidBackgroundFillColorTertiaryBrush" Background="{ThemeResource SolidBackgroundFillColorTertiaryBrush}" />
             <Border x:Name="CardBackgroundFillColorDefaultBrush" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
             <Border x:Name="CardBackgroundFillColorSecondaryBrush" Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}" />
             <Border x:Name="CardStrokeColorDefaultBrush" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
@@ -401,10 +402,36 @@
                                 Click="OnZoomOutClick">
                             <FontIcon Glyph="&#xE71F;" FontSize="14" />
                         </Button>
-                        <TextBlock x:Name="ZoomText"
-                                   Width="44"
-                                   TextAlignment="Center"
-                                   Style="{StaticResource StatusTextStyle}" />
+                        <Button x:Name="ZoomButton"
+                                x:Uid="ZoomButton"
+                                Style="{StaticResource ToolbarButtonStyle}"
+                                MinWidth="52"
+                                Padding="4,0,4,0">
+                            <TextBlock x:Name="ZoomText"
+                                       TextAlignment="Center"
+                                       Style="{StaticResource StatusTextStyle}" />
+                            <Button.Flyout>
+                                <Flyout x:Name="ZoomFlyout" Opening="OnZoomFlyoutOpening">
+                                    <StackPanel Spacing="10" Width="188">
+                                        <NumberBox x:Name="ZoomInputBox"
+                                                   x:Uid="ZoomInputBox"
+                                                   Header="Zoom percent"
+                                                   Minimum="40"
+                                                   Maximum="150"
+                                                   SmallChange="5"
+                                                   LargeChange="10"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValidationMode="InvalidInputOverwritten"
+                                                   ValueChanged="OnZoomValueChanged" />
+                                        <Button x:Name="ZoomApplyButton"
+                                                x:Uid="ZoomApplyButton"
+                                                Content="Apply"
+                                                HorizontalAlignment="Right"
+                                                Click="OnZoomApplyClick" />
+                                    </StackPanel>
+                                </Flyout>
+                            </Button.Flyout>
+                        </Button>
                         <Button x:Name="ZoomInButton"
                                 x:Uid="ZoomInButton"
                                 Style="{StaticResource ToolbarButtonStyle}"
@@ -751,6 +778,108 @@
                        CloseButtonText="Cancel"
                        DefaultButton="Close">
             <TextBlock x:Name="ConfirmDeleteText" TextWrapping="Wrap" />
+        </ContentDialog>
+
+        <ContentDialog x:Name="ConfirmRemoveDialog"
+                       x:Uid="ConfirmRemoveDialog"
+                       Title="Remove this from the patch?"
+                       PrimaryButtonText="Remove"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Primary">
+            <StackPanel Spacing="14" Width="400">
+                <TextBlock x:Name="ConfirmRemoveText" TextWrapping="Wrap" />
+                <CheckBox x:Name="ConfirmRemoveSkipCheck"
+                          x:Uid="ConfirmRemoveSkipCheck"
+                          Content="Don't ask again" />
+            </StackPanel>
+        </ContentDialog>
+
+        <ContentDialog x:Name="FilterDialog"
+                       x:Uid="FilterDialog"
+                       Title="Filters for this connection"
+                       PrimaryButtonText="Apply"
+                       SecondaryButtonText="Pass everything"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Primary">
+            <ContentDialog.Resources>
+                <x:Double x:Key="ContentDialogMaxWidth">900</x:Double>
+                <x:Double x:Key="ContentDialogMaxHeight">760</x:Double>
+            </ContentDialog.Resources>
+            <Grid Width="760" MaxHeight="520">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock x:Uid="FilterDialogIntroText"
+                           Grid.Row="0"
+                           Text="Everything is allowed until you clear something here. A message has to pass every section to be sent on."
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,12"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,14,0">
+                    <StackPanel x:Name="FilterContent" Spacing="16" />
+                </ScrollViewer>
+
+                <Border Grid.Row="2"
+                        Margin="0,14,0,0"
+                        Padding="12,10,12,10"
+                        CornerRadius="6"
+                        BorderThickness="1"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+                    <TextBlock x:Name="FilterSummaryText"
+                               FontSize="12"
+                               TextWrapping="Wrap"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Border>
+            </Grid>
+        </ContentDialog>
+
+        <ContentDialog x:Name="TransformDialog"
+                       x:Uid="TransformDialog"
+                       Title="Transforms for this connection"
+                       PrimaryButtonText="Apply"
+                       SecondaryButtonText="Change nothing"
+                       CloseButtonText="Cancel"
+                       DefaultButton="Primary">
+            <ContentDialog.Resources>
+                <x:Double x:Key="ContentDialogMaxWidth">900</x:Double>
+                <x:Double x:Key="ContentDialogMaxHeight">760</x:Double>
+            </ContentDialog.Resources>
+            <Grid Width="760" MaxHeight="520">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <TextBlock x:Uid="TransformDialogIntroText"
+                           Grid.Row="0"
+                           Text="Transforms run after the filters, on the copy sent to this destination. Nothing here changes what any other connection carries."
+                           TextWrapping="Wrap"
+                           Margin="0,0,0,12"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,14,0">
+                    <StackPanel x:Name="TransformContent" Spacing="16" />
+                </ScrollViewer>
+
+                <Border Grid.Row="2"
+                        Margin="0,14,0,0"
+                        Padding="12,10,12,10"
+                        CornerRadius="6"
+                        BorderThickness="1"
+                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                        Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}">
+                    <TextBlock x:Name="TransformSummaryText"
+                               FontSize="12"
+                               TextWrapping="Wrap"
+                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                </Border>
+            </Grid>
         </ContentDialog>
     </Grid>
 </Window>

@@ -7,6 +7,9 @@
 
 #pragma once
 
+#include "MessageFilter.h"
+#include "MessageTransform.h"
+
 namespace midipatchbay
 {
     // A connection point that carries every group untouched. Stored as -1 so a group index and
@@ -75,6 +78,9 @@ namespace midipatchbay
         std::wstring DestinationEndpointId{};
         int32_t DestinationGroupIndex{ AllGroups };
         bool Muted{ false };
+
+        MessageFilter Filter{};
+        MessageTransform Transform{};
     };
 
     // A patch is a file. Nothing in here touches WinRT UI types, so this whole layer is what a

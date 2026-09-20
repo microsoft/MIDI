@@ -183,6 +183,15 @@
   <data name="ZoomPercentFormat" xml:space="preserve">
     <value>{0}%</value>
   </data>
+  <data name="ZoomButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Set the zoom level</value>
+  </data>
+  <data name="ZoomInputBox.Header" xml:space="preserve">
+    <value>Zoom percent</value>
+  </data>
+  <data name="ZoomApplyButton.Content" xml:space="preserve">
+    <value>Apply</value>
+  </data>
 
   <!-- =============================================================== canvas -->
   <data name="EmptyCanvasTitle.Text" xml:space="preserve">
@@ -339,10 +348,347 @@
     <value>Send to group</value>
   </data>
   <data name="InspectorFilters" xml:space="preserve">
-    <value>Filters and transforms</value>
+    <value>Filters</value>
   </data>
-  <data name="InspectorFiltersComingSoon" xml:space="preserve">
-    <value>Channel, message type and note range filters go here in the next update.</value>
+  <data name="ActionEditFilters" xml:space="preserve">
+    <value>Edit filters...</value>
+  </data>
+  <data name="InspectorTransforms" xml:space="preserve">
+    <value>Transforms</value>
+  </data>
+  <data name="ActionEditTransforms" xml:space="preserve">
+    <value>Edit transforms...</value>
+  </data>
+
+  <!-- =========================================================== transforms -->
+  <data name="TransformDialog.Title" xml:space="preserve">
+    <value>Transforms for this connection</value>
+  </data>
+  <data name="TransformDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="TransformDialog.SecondaryButtonText" xml:space="preserve">
+    <value>Change nothing</value>
+  </data>
+  <data name="TransformDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="TransformDialogIntroText.Text" xml:space="preserve">
+    <value>Transforms run after the filters, on the copy sent to this destination. Nothing here changes what any other connection carries.</value>
+  </data>
+  <data name="TransformDialogSummaryFormat" xml:space="preserve">
+    <value>This connection does: {0}</value>
+  </data>
+  <data name="TransformSectionTranspose" xml:space="preserve">
+    <value>Transpose</value>
+  </data>
+  <data name="TransformSectionTransposeHint" xml:space="preserve">
+    <value>Shifts every note, including aftertouch and the MIDI 2.0 per note messages. A note pushed past either end is clamped rather than wrapped, so nothing lands an octave out.</value>
+  </data>
+  <data name="TransformSemitones" xml:space="preserve">
+    <value>Semitones</value>
+  </data>
+  <data name="TransformTransposeExampleFormat" xml:space="preserve">
+    <value>{0} is sent as {1}</value>
+  </data>
+  <data name="TransformSectionNoteMap" xml:space="preserve">
+    <value>Note mapping</value>
+  </data>
+  <data name="TransformSectionNoteMapHint" xml:space="preserve">
+    <value>Exceptions to the transpose. A note listed here goes exactly where you send it; every other note is transposed as usual. Play sends the destination note so you can hear where it lands.</value>
+  </data>
+  <data name="TransformAddNoteMapping" xml:space="preserve">
+    <value>Add a note mapping</value>
+  </data>
+  <data name="TransformNoNoteMappings" xml:space="preserve">
+    <value>No notes are remapped.</value>
+  </data>
+  <data name="TransformNoteMapLabelFormat" xml:space="preserve">
+    <value>{0} to {1}</value>
+  </data>
+  <data name="TransformPlay" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="TransformPlayAccessibleName" xml:space="preserve">
+    <value>Play this note on the destination endpoint</value>
+  </data>
+  <data name="TransformRemove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="TransformSectionVelocity" xml:space="preserve">
+    <value>Note on velocity</value>
+  </data>
+  <data name="TransformSectionVelocityHint" xml:space="preserve">
+    <value>Only note on messages are touched. A MIDI 1.0 note on with velocity zero is a note off, so it is always left alone.</value>
+  </data>
+  <data name="TransformCurveUnchanged" xml:space="preserve">
+    <value>Leave the velocity alone</value>
+  </data>
+  <data name="TransformCurveLinearToCurved" xml:space="preserve">
+    <value>Linear to curved (harder to play loud)</value>
+  </data>
+  <data name="TransformCurveCurvedToLinear" xml:space="preserve">
+    <value>Curved to linear (easier to play loud)</value>
+  </data>
+  <data name="TransformRescaleVelocity" xml:space="preserve">
+    <value>Rescale into a narrower range</value>
+  </data>
+  <data name="TransformQuietest" xml:space="preserve">
+    <value>Quietest</value>
+  </data>
+  <data name="TransformLoudest" xml:space="preserve">
+    <value>Loudest</value>
+  </data>
+  <data name="TransformSectionControlMap" xml:space="preserve">
+    <value>Control change mapping</value>
+  </data>
+  <data name="TransformSectionControlMapHint" xml:space="preserve">
+    <value>Moves a controller to a different number and carries its value over untouched. Controllers you do not list are passed through.</value>
+  </data>
+  <data name="TransformAddControlMapping" xml:space="preserve">
+    <value>Add a control change mapping</value>
+  </data>
+  <data name="TransformNoControlMappings" xml:space="preserve">
+    <value>No control change messages are remapped.</value>
+  </data>
+  <data name="TransformControlFrom" xml:space="preserve">
+    <value>CC</value>
+  </data>
+  <data name="TransformControlTo" xml:space="preserve">
+    <value>Becomes CC</value>
+  </data>
+  <data name="TransformTestNoDestination" xml:space="preserve">
+    <value>The destination endpoint is not available right now, so there is nothing to play on.</value>
+  </data>
+  <data name="TransformTestFailed" xml:space="preserve">
+    <value>That note could not be sent to the destination endpoint.</value>
+  </data>
+  <data name="TransformSummaryNothing" xml:space="preserve">
+    <value>Nothing, messages are passed through as they are</value>
+  </data>
+  <data name="TransformSummaryTransposeFormat" xml:space="preserve">
+    <value>Transpose {0} semitones</value>
+  </data>
+  <data name="TransformSummaryNoteMapFormat" xml:space="preserve">
+    <value>{0} note mappings</value>
+  </data>
+  <data name="TransformSummaryOneNoteMap" xml:space="preserve">
+    <value>1 note mapping</value>
+  </data>
+  <data name="TransformSummaryControlMapFormat" xml:space="preserve">
+    <value>{0} control change mappings</value>
+  </data>
+  <data name="TransformSummaryOneControlMap" xml:space="preserve">
+    <value>1 control change mapping</value>
+  </data>
+  <data name="TransformNoteFrom" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="TransformNoteTo" xml:space="preserve">
+    <value>Becomes note</value>
+  </data>
+  <data name="TransformSummaryCurved" xml:space="preserve">
+    <value>Velocity linear to curved</value>
+  </data>
+  <data name="TransformSummaryLinear" xml:space="preserve">
+    <value>Velocity curved to linear</value>
+  </data>
+  <data name="TransformSummaryVelocityRangeFormat" xml:space="preserve">
+    <value>Velocity {0} to {1}</value>
+  </data>
+
+  <!-- ============================================================== filters -->
+  <data name="FilterDialog.Title" xml:space="preserve">
+    <value>Filters for this connection</value>
+  </data>
+  <data name="FilterDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="FilterDialog.SecondaryButtonText" xml:space="preserve">
+    <value>Pass everything</value>
+  </data>
+  <data name="FilterDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="FilterDialogIntroText.Text" xml:space="preserve">
+    <value>Everything is allowed until you clear something here. A message has to pass every section to be sent on.</value>
+  </data>
+  <data name="FilterDialogSummaryFormat" xml:space="preserve">
+    <value>This connection carries: {0}</value>
+  </data>
+  <data name="FilterSectionMessageTypes" xml:space="preserve">
+    <value>Message types</value>
+  </data>
+  <data name="FilterSectionMessageTypesHint" xml:space="preserve">
+    <value>The coarsest switch. Clearing one here drops every message of that type, whatever the sections below say.</value>
+  </data>
+  <data name="FilterSectionChannelVoice" xml:space="preserve">
+    <value>Channel messages</value>
+  </data>
+  <data name="FilterSectionChannelVoiceHint" xml:space="preserve">
+    <value>Applies to both MIDI 1.0 and MIDI 2.0 channel voice messages.</value>
+  </data>
+  <data name="FilterSectionSystem" xml:space="preserve">
+    <value>System messages</value>
+  </data>
+  <data name="FilterSectionSystemHint" xml:space="preserve">
+    <value>Clock and active sensing are the two most often taken out of a route.</value>
+  </data>
+  <data name="FilterSectionChannels" xml:space="preserve">
+    <value>Channels</value>
+  </data>
+  <data name="FilterSectionChannelsHint" xml:space="preserve">
+    <value>Only applies to channel messages. Everything else ignores this.</value>
+  </data>
+  <data name="FilterChannelFormat" xml:space="preserve">
+    <value>Channel {0}</value>
+  </data>
+  <data name="FilterSectionNotes" xml:space="preserve">
+    <value>Note range</value>
+  </data>
+  <data name="FilterSectionNotesHint" xml:space="preserve">
+    <value>Click a key for the bottom of the range, Shift and click for the top. Applies to note on, note off, poly pressure and the MIDI 2.0 per note messages.</value>
+  </data>
+  <data name="FilterLimitNoteRange" xml:space="preserve">
+    <value>Only pass notes within a range</value>
+  </data>
+  <data name="FilterLowestNote" xml:space="preserve">
+    <value>Lowest note</value>
+  </data>
+  <data name="FilterHighestNote" xml:space="preserve">
+    <value>Highest note</value>
+  </data>
+  <data name="FilterNoteRangeFormat" xml:space="preserve">
+    <value>{0} ({1}) to {2} ({3})</value>
+  </data>
+  <data name="FilterNoteRangeAll" xml:space="preserve">
+    <value>Every note</value>
+  </data>
+  <data name="FilterSummaryEverything" xml:space="preserve">
+    <value>Everything</value>
+  </data>
+  <data name="FilterSummaryNoTypesFormat" xml:space="preserve">
+    <value>No {0}</value>
+  </data>
+  <data name="FilterSummaryNoMessagesFormat" xml:space="preserve">
+    <value>No {0}</value>
+  </data>
+  <data name="FilterSummaryChannelsFormat" xml:space="preserve">
+    <value>Channels {0} only</value>
+  </data>
+  <data name="FilterSummaryNotesFormat" xml:space="preserve">
+    <value>Notes {0} to {1} only</value>
+  </data>
+  <data name="MessageTypeUtility" xml:space="preserve">
+    <value>Utility</value>
+  </data>
+  <data name="MessageTypeSystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="MessageTypeMidi1ChannelVoice" xml:space="preserve">
+    <value>MIDI 1.0 channel voice</value>
+  </data>
+  <data name="MessageTypeSysEx7" xml:space="preserve">
+    <value>System exclusive 7</value>
+  </data>
+  <data name="MessageTypeMidi2ChannelVoice" xml:space="preserve">
+    <value>MIDI 2.0 channel voice</value>
+  </data>
+  <data name="MessageTypeData128" xml:space="preserve">
+    <value>System exclusive 8</value>
+  </data>
+  <data name="MessageTypeFlexData" xml:space="preserve">
+    <value>Flex data</value>
+  </data>
+  <data name="MessageTypeStream" xml:space="preserve">
+    <value>UMP stream</value>
+  </data>
+  <data name="MessageTypeReservedFormat" xml:space="preserve">
+    <value>Reserved type {0}</value>
+  </data>
+  <data name="VoiceNotes" xml:space="preserve">
+    <value>Note on and note off</value>
+  </data>
+  <data name="VoiceNoteOff" xml:space="preserve">
+    <value>Note off</value>
+  </data>
+  <data name="VoiceNoteOn" xml:space="preserve">
+    <value>Note on</value>
+  </data>
+  <data name="VoicePolyPressure" xml:space="preserve">
+    <value>Poly pressure</value>
+  </data>
+  <data name="VoiceControlChange" xml:space="preserve">
+    <value>Control change</value>
+  </data>
+  <data name="VoiceProgramChange" xml:space="preserve">
+    <value>Program change</value>
+  </data>
+  <data name="VoiceChannelPressure" xml:space="preserve">
+    <value>Channel pressure</value>
+  </data>
+  <data name="VoicePitchBend" xml:space="preserve">
+    <value>Pitch bend</value>
+  </data>
+  <data name="VoiceRegisteredPerNote" xml:space="preserve">
+    <value>Registered per note controller</value>
+  </data>
+  <data name="VoiceAssignablePerNote" xml:space="preserve">
+    <value>Assignable per note controller</value>
+  </data>
+  <data name="VoiceRegisteredController" xml:space="preserve">
+    <value>Registered controller (RPN)</value>
+  </data>
+  <data name="VoiceAssignableController" xml:space="preserve">
+    <value>Assignable controller (NRPN)</value>
+  </data>
+  <data name="VoiceRelativeRegisteredController" xml:space="preserve">
+    <value>Relative registered controller</value>
+  </data>
+  <data name="VoiceRelativeAssignableController" xml:space="preserve">
+    <value>Relative assignable controller</value>
+  </data>
+  <data name="VoicePerNotePitchBend" xml:space="preserve">
+    <value>Per note pitch bend</value>
+  </data>
+  <data name="VoicePerNoteManagement" xml:space="preserve">
+    <value>Per note management</value>
+  </data>
+  <data name="VoiceReservedFormat" xml:space="preserve">
+    <value>Reserved status {0}</value>
+  </data>
+  <data name="SystemTimeCode" xml:space="preserve">
+    <value>MIDI time code</value>
+  </data>
+  <data name="SystemSongPosition" xml:space="preserve">
+    <value>Song position</value>
+  </data>
+  <data name="SystemSongSelect" xml:space="preserve">
+    <value>Song select</value>
+  </data>
+  <data name="SystemTuneRequest" xml:space="preserve">
+    <value>Tune request</value>
+  </data>
+  <data name="SystemTimingClock" xml:space="preserve">
+    <value>Timing clock</value>
+  </data>
+  <data name="SystemStart" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="SystemContinue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="SystemStop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="SystemActiveSensing" xml:space="preserve">
+    <value>Active sensing</value>
+  </data>
+  <data name="SystemReset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="SystemReservedFormat" xml:space="preserve">
+    <value>Reserved system message {0}</value>
   </data>
   <data name="InspectorActivity" xml:space="preserve">
     <value>Activity</value>
@@ -473,6 +819,24 @@
   </data>
   <data name="DeletePatchMessageFormat" xml:space="preserve">
     <value>"{0}" and its file will be removed. Routing for it stops right away.</value>
+  </data>
+  <data name="ConfirmRemoveDialog.Title" xml:space="preserve">
+    <value>Remove this from the patch?</value>
+  </data>
+  <data name="ConfirmRemoveDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="ConfirmRemoveDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ConfirmRemoveSkipCheck.Content" xml:space="preserve">
+    <value>Don't ask again</value>
+  </data>
+  <data name="RemoveEndpointMessageFormat" xml:space="preserve">
+    <value>"{0}" and every connection to it will be taken off this patch. The endpoint itself is not changed.</value>
+  </data>
+  <data name="RemoveConnectionMessage" xml:space="preserve">
+    <value>This connection will be removed and stop carrying messages.</value>
   </data>
 
   <!-- ========================================================== quick patch -->

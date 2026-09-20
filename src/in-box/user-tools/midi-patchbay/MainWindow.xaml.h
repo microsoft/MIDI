@@ -51,6 +51,9 @@ namespace winrt::midipatchbay::implementation
         void OnFitClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnZoomInClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnZoomOutClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnZoomApplyClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnZoomFlyoutOpening(foundation::IInspectable const& sender, foundation::IInspectable const& args);
+        void OnZoomValueChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnTestClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         void OnShowLoopClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -88,7 +91,32 @@ namespace winrt::midipatchbay::implementation
         void OnCanvasSelectionChanged() noexcept;
         void OnConnectionRequested(_In_ ::midipatchbay::PatchConnection connection) noexcept;
         void OnCanvasLayoutChanged() noexcept;
-        void ShowEndpointMenu(_In_ std::wstring const& endpointId) noexcept;
+        void ShowEndpointMenu(_In_ std::wstring const& endpointId, _In_ foundation::Point const& position) noexcept;
+
+        void ApplyZoom(_In_ float zoom) noexcept;
+        void UpdateZoomText(_In_ float zoom) noexcept;
+
+        void DeleteSelection() noexcept;
+        winrt::fire_and_forget DeleteSelectionAsync();
+
+        // ---- filters, in MainWindowFilters.cpp ----
+        winrt::fire_and_forget ShowFilterDialogAsync(std::wstring connectionId);
+        void BuildFilterDialog() noexcept;
+        xaml::UIElement BuildNoteRangeSection() noexcept;
+        void SetNoteRangeEnd(_In_ uint8_t note, _In_ bool isLow) noexcept;
+        void RefreshNoteRangeUi() noexcept;
+        void UpdateFilterSummary() noexcept;
+
+        // ---- transforms, in MainWindowTransforms.cpp ----
+        winrt::fire_and_forget ShowTransformDialogAsync(std::wstring connectionId);
+        void BuildTransformDialog() noexcept;
+        void RebuildNoteMapRows() noexcept;
+        void RefreshNoteMapRowLabels() noexcept;
+        void RebuildControlMapRows() noexcept;
+        void CommitTransformMaps() noexcept;
+        void UpdateTransformSummary() noexcept;
+        void DrawVelocityCurve() noexcept;
+        winrt::fire_and_forget PlayTestNoteAsync(_In_ uint8_t note);
 
         // ---- inspector, in MainWindowInspector.cpp ----
         void RefreshInspector() noexcept;
@@ -164,6 +192,38 @@ namespace winrt::midipatchbay::implementation
         std::vector<int32_t> m_quickSourceGroups{};
         std::vector<int32_t> m_quickDestinationGroups{};
         bool m_fillingQuickPatch{ false };
+        bool m_settingZoomBox{ false };
+
+        // The filter dialog edits a copy, so Cancel leaves a live route untouched.
+        ::midipatchbay::MessageFilter m_editingFilter{};
+        std::wstring m_editingFilterConnectionId{};
+        bool m_updatingNoteRange{ false };
+
+        controls::NumberBox m_noteLowBox{ nullptr };
+        controls::NumberBox m_noteHighBox{ nullptr };
+        controls::CheckBox m_noteLimitCheck{ nullptr };
+        controls::TextBlock m_noteRangeText{ nullptr };
+        controls::Canvas m_noteKeyboard{ nullptr };
+        std::vector<std::pair<uint8_t, shapes::Rectangle>> m_noteKeyFills{};
+
+        // The transform dialog also edits a copy. The two tables are edited as row lists and
+        // collected back into the sparse arrays on Apply.
+        ::midipatchbay::MessageTransform m_editingTransform{};
+        std::wstring m_editingTransformConnectionId{};
+
+        std::vector<std::pair<int32_t, int32_t>> m_noteMapRows{};
+        std::vector<std::pair<int32_t, int32_t>> m_controlMapRows{};
+
+        controls::StackPanel m_noteMapPanel{ nullptr };
+        controls::StackPanel m_controlMapPanel{ nullptr };
+        std::vector<controls::TextBlock> m_noteMapLabels{};
+        std::vector<controls::NumberBox> m_velocityRangeBoxes{};
+        controls::TextBlock m_transposeExampleText{ nullptr };
+        controls::Canvas m_velocityCurveCanvas{ nullptr };
+
+        // Where the audition button plays, captured when the dialog opens.
+        std::wstring m_testEndpointDeviceId{};
+        int32_t m_testGroupIndex{ ::midipatchbay::AllGroups };
 
         uint64_t m_lastTotalMessages{ 0 };
         std::chrono::steady_clock::time_point m_lastRateSample{};

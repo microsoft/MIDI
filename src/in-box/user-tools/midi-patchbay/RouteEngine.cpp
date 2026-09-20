@@ -21,6 +21,9 @@ namespace midipatchbay
 
         constexpr wchar_t SessionName[] = L"MIDI Patchbay";
 
+        // Long enough to hear, short enough that the button does not feel stuck.
+        constexpr uint32_t TestNoteMilliseconds = 350;
+
         std::wstring LowerCopy(_In_ std::wstring value) noexcept
         {
             std::transform(value.begin(), value.end(), value.begin(),
@@ -104,6 +107,11 @@ namespace midipatchbay
                             continue;
                         }
 
+                        if (!target->Filter.Allows(messages + position, messageWordCount))
+                        {
+                            continue;
+                        }
+
                         auto const destinationGroup = target->DestinationGroupIndex == AllGroups
                             ? group
                             : target->DestinationGroupIndex;
@@ -120,6 +128,11 @@ namespace midipatchbay
                         {
                             target->SendBuffer[target->SendBufferUsed + i] = messages[position + i];
                         }
+
+                        // On this target's own copy, so one destination's transform cannot
+                        // disturb what another destination is sent.
+                        target->Transform.Apply(
+                            target->SendBuffer.data() + target->SendBufferUsed, messageWordCount);
 
                         target->SendBufferUsed += messageWordCount;
 
@@ -171,7 +184,9 @@ namespace midipatchbay
                 LowerCopy(entry.SourceEndpointDeviceId) + L'|' +
                 std::to_wstring(entry.SourceGroupIndex) + L'|' +
                 LowerCopy(entry.DestinationEndpointDeviceId) + L'|' +
-                std::to_wstring(entry.DestinationGroupIndex));
+                std::to_wstring(entry.DestinationGroupIndex) + L'|' +
+                FilterSignature(entry.Filter) + L'|' +
+                TransformSignature(entry.Transform));
         }
 
         std::sort(parts.begin(), parts.end());
@@ -374,6 +389,8 @@ namespace midipatchbay
                 target->Destination = destinationRaw;
                 target->SourceGroupIndex = entry.SourceGroupIndex;
                 target->DestinationGroupIndex = entry.DestinationGroupIndex;
+                target->Filter = entry.Filter;
+                target->Transform = entry.Transform;
                 target->ConnectionId = entry.ConnectionId;
                 target->SendBuffer.assign(maxWords, 0);
 
@@ -480,5 +497,92 @@ namespace midipatchbay
     {
         std::scoped_lock guard{ m_lock };
         return m_activeRoutes;
+    }
+
+    _Use_decl_annotations_
+    bool RouteEngine::SendTestNote(
+        std::wstring const& endpointDeviceId,
+        int32_t groupIndex,
+        uint8_t noteIndex) noexcept
+    {
+        try
+        {
+            if (endpointDeviceId.empty())
+            {
+                return false;
+            }
+
+            auto const group = static_cast<uint32_t>(groupIndex == AllGroups ? 0 : std::clamp(groupIndex, 0, 15));
+            auto const note = static_cast<uint32_t>(noteIndex & 0x7F);
+
+            // MIDI 1.0 channel voice on channel 1: the one shape every endpoint understands,
+            // whether or not it is natively UMP.
+            auto const noteOn = (2u << 28) | (group << 24) | (0x9u << 20) | (note << 8) | 100u;
+            auto const noteOff = (2u << 28) | (group << 24) | (0x8u << 20) | (note << 8) | 0u;
+
+            midi2::MidiSession temporarySession{ nullptr };
+            midi2::MidiEndpointConnection temporaryConnection{ nullptr };
+            winrt::com_ptr<IMidiEndpointConnectionRaw> raw{ nullptr };
+
+            {
+                std::scoped_lock guard{ m_lock };
+
+                auto const it = m_connections.find(LowerCopy(endpointDeviceId));
+
+                if (it != m_connections.end() && it->second != nullptr)
+                {
+                    raw = it->second.try_as<IMidiEndpointConnectionRaw>();
+                }
+            }
+
+            if (raw == nullptr)
+            {
+                if (!midi2::MidiApi::EnsureServiceAvailable())
+                {
+                    return false;
+                }
+
+                temporarySession = midi2::MidiSession::Create(SessionName);
+
+                if (temporarySession == nullptr)
+                {
+                    return false;
+                }
+
+                temporaryConnection = temporarySession.CreateEndpointConnection(winrt::hstring{ endpointDeviceId });
+
+                if (temporaryConnection == nullptr || !temporaryConnection.Open())
+                {
+                    temporarySession.Close();
+                    return false;
+                }
+
+                raw = temporaryConnection.try_as<IMidiEndpointConnectionRaw>();
+            }
+
+            auto const closeTemporary = wil::scope_exit([&temporarySession]()
+                {
+                    if (temporarySession != nullptr)
+                    {
+                        temporarySession.Close();
+                    }
+                });
+
+            if (raw == nullptr)
+            {
+                return false;
+            }
+
+            auto sent = SUCCEEDED(raw->SendMidiMessagesRaw(0, 1, &noteOn));
+
+            std::this_thread::sleep_for(std::chrono::milliseconds{ TestNoteMilliseconds });
+
+            sent = SUCCEEDED(raw->SendMidiMessagesRaw(0, 1, &noteOff)) && sent;
+
+            return sent;
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to play the test note.")
+
+        return false;
     }
 }

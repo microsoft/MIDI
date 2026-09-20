@@ -24,6 +24,9 @@ namespace midipatchbay
         std::wstring ParentDeviceName{};
         std::wstring TransportSuppliedName{};
 
+        // Full path of the picture the customer gave this endpoint, if there is one.
+        std::wstring ImagePath{};
+
         uint16_t UsbVendorId{ 0 };
         uint16_t UsbProductId{ 0 };
         std::wstring UsbSerialNumber{};

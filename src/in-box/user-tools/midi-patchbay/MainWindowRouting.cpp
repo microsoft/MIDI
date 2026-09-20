@@ -223,6 +223,8 @@ namespace winrt::midipatchbay::implementation
                     entry.DestinationEndpointDeviceId = liveDestination->EndpointDeviceId;
                     entry.SourceGroupIndex = connection.SourceGroupIndex;
                     entry.DestinationGroupIndex = connection.DestinationGroupIndex;
+                    entry.Filter = connection.Filter;
+                    entry.Transform = connection.Transform;
 
                     plan.push_back(std::move(entry));
                 }

@@ -62,7 +62,9 @@ namespace midipatchbay
             // A node was dragged to a new place; the patch is now unsaved.
             std::function<void()> LayoutChanged{};
 
-            std::function<void(std::wstring)> EndpointContextMenuRequested{};
+            // The point is relative to the scroll viewer, so the menu opens where the click
+            // happened rather than at the corner of the canvas.
+            std::function<void(std::wstring, foundation::Point)> EndpointContextMenuRequested{};
 
             std::function<void()> ViewportChanged{};
         };
@@ -115,6 +117,8 @@ namespace midipatchbay
             double OffsetY{ 0 };
             shapes::Ellipse Dot{ nullptr };
             controls::Button Row{ nullptr };
+            controls::TextBlock Label{ nullptr };
+            media::Brush LabelBrush{ nullptr };
         };
 
         struct NodeVisual
@@ -135,6 +139,11 @@ namespace midipatchbay
         {
             std::wstring ConnectionId{};
             shapes::Path Line{ nullptr };
+
+            // Drawn under the line, wider and translucent, so a selected connection reads as
+            // lifted rather than merely thicker.
+            shapes::Path Glow{ nullptr };
+
             controls::Border Pill{ nullptr };
             controls::TextBlock PillText{ nullptr };
             bool IsLoopMuted{ false };
@@ -174,6 +183,8 @@ namespace midipatchbay
         void OnPortClicked(_In_ PortKey const& key) noexcept;
         void ClearArmedPort() noexcept;
         void ApplyPortAppearance(_In_ PortVisual& port) noexcept;
+        void RefreshPortAppearance() noexcept;
+        void FocusCanvas() noexcept;
         void RequestConnection(_In_ PortKey const& source, _In_ PortKey const& destination) noexcept;
 
         static media::Brush ThemeBrush(_In_ std::wstring_view key, _In_ winrt::Windows::UI::Color fallback) noexcept;
@@ -214,6 +225,9 @@ namespace midipatchbay
         PortKey m_dragSourcePort{};
         std::optional<PortKey> m_hoverPort{};
         std::optional<PortKey> m_armedPort{};
+
+        // Which connection point the pointer is over, whether or not a drag is under way.
+        std::optional<PortKey> m_hoverRowPort{};
 
         foundation::Size m_extent{ 0, 0 };
 

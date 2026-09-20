@@ -18,6 +18,7 @@ namespace midipatchbay
         constexpr wchar_t ValueMinimizeToNotificationArea[] = L"MinimizeToNotificationArea";
         constexpr wchar_t ValueStartMinimized[] = L"StartMinimized";
         constexpr wchar_t ValueWarnAboutLoops[] = L"WarnAboutLoops";
+        constexpr wchar_t ValueConfirmCanvasRemove[] = L"ConfirmCanvasRemove";
         constexpr wchar_t ValueActivateSavedPatches[] = L"ActivateSavedPatchesAtStartup";
 
         constexpr wchar_t RunKeyPath[] = LR"(Software\Microsoft\Windows\CurrentVersion\Run)";
@@ -71,6 +72,7 @@ namespace midipatchbay
         m_minimizeToNotificationArea = ReadDword(ValueMinimizeToNotificationArea, 0) != 0;
         m_startMinimized = ReadDword(ValueStartMinimized, 0) != 0;
         m_warnAboutLoops = ReadDword(ValueWarnAboutLoops, 1) != 0;
+        m_confirmCanvasRemove = ReadDword(ValueConfirmCanvasRemove, 1) != 0;
         m_activateSavedPatchesAtStartup = ReadDword(ValueActivateSavedPatches, 1) != 0;
     }
 
@@ -100,6 +102,13 @@ namespace midipatchbay
     {
         m_warnAboutLoops = value;
         WriteDword(ValueWarnAboutLoops, value ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::ConfirmCanvasRemove(bool value) noexcept
+    {
+        m_confirmCanvasRemove = value;
+        WriteDword(ValueConfirmCanvasRemove, value ? 1u : 0u);
     }
 
     _Use_decl_annotations_

@@ -215,6 +215,12 @@ namespace midipatchbay
                         endpoint.ParentDeviceName = SafeString(parent.Name());
                     }
 
+                    if (auto const userInfo = device.GetUserSuppliedInfo())
+                    {
+                        endpoint.ImagePath = SafeString(
+                            midiapp::ResolveEndpointImagePath(userInfo.ImageFileName()));
+                    }
+
                     endpoint.DeclaredGroups = midiapp::DeclaredGroups(device);
 
                     // The MIDI 1.0 port names are what the customer already sees everywhere

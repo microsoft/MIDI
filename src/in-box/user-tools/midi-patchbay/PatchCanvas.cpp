@@ -15,15 +15,20 @@ namespace midipatchbay
     {
         constexpr double HeaderHeight = 48.0;
         constexpr double ColumnHeaderHeight = 20.0;
-        constexpr double PortRowHeight = 28.0;
+        constexpr double PortRowHeight = 32.0;
         constexpr double NodeCornerRadius = 8.0;
-        constexpr double DotDiameter = 11.0;
+        constexpr double DotDiameter = 14.0;
         constexpr double MinimapWidth = 170.0;
         constexpr double MinimapHeight = 116.0;
 
         constexpr double DefaultColumnX[2] = { 60.0, 460.0 };
         constexpr double ArrangeTopMargin = 48.0;
         constexpr double ArrangeRowGap = 32.0;
+
+        // Within the connection layer: the selection glow, then the line, then its group label.
+        constexpr int32_t GlowZIndex = 0;
+        constexpr int32_t LineZIndex = 1;
+        constexpr int32_t PillZIndex = 2;
 
         winrt::Windows::UI::Color Rgb(_In_ uint8_t r, _In_ uint8_t g, _In_ uint8_t b, _In_ uint8_t a = 255) noexcept
         {
@@ -89,6 +94,43 @@ namespace midipatchbay
             collection.Append(off);
 
             return collection;
+        }
+
+        // BitmapImage cannot render SVG and the shipped default endpoint art is SVG, so the
+        // decoder is chosen by extension, the same way the Settings app does it.
+        media::ImageSource LoadEndpointImage(_In_ std::wstring const& path, _In_ int32_t pixelHeight) noexcept
+        {
+            if (path.empty())
+            {
+                return nullptr;
+            }
+
+            try
+            {
+                foundation::Uri const uri{ L"file:///" + winrt::hstring{ path } };
+
+                if (midiapp::EndpointImageAssets::IsScalableVector(path))
+                {
+                    media::Imaging::SvgImageSource source{};
+
+                    source.RasterizePixelHeight(pixelHeight);
+                    source.UriSource(uri);
+
+                    return source;
+                }
+
+                media::Imaging::BitmapImage bitmap{};
+
+                bitmap.DecodePixelHeight(pixelHeight);
+                bitmap.UriSource(uri);
+
+                return bitmap;
+            }
+            catch (...)
+            {
+            }
+
+            return nullptr;
         }
     }
 
@@ -157,6 +199,7 @@ namespace midipatchbay
             m_surface.PointerPressed([this](auto&&, input::PointerRoutedEventArgs const& args)
                 {
                     UNREFERENCED_PARAMETER(args);
+                    FocusCanvas();
                     ClearArmedPort();
                     ClearSelection();
                 });
@@ -172,6 +215,10 @@ namespace midipatchbay
                             m_callbacks.ViewportChanged();
                         }
                     });
+
+                // Focusable so arrow keys scroll it, and so Delete has somewhere on the canvas
+                // to bubble up from.
+                m_scrollViewer.IsTabStop(true);
             }
 
             m_initialized = true;
@@ -302,10 +349,28 @@ namespace midipatchbay
 
         auto const isLoopback = live != nullptr && live->IsLoopback;
 
-        art.Child(MakeGlyph(
-            node.IsOffline ? L"\uE711" : (isLoopback ? L"\uE895" : L"\uE7F6"),
-            14,
-            node.IsOffline ? critical : accent));
+        // The customer's own picture wins where there is one. It is small at this size, but it
+        // is the thing they chose to recognize the device by.
+        auto const artwork = node.IsOffline || live == nullptr
+            ? nullptr : LoadEndpointImage(live->ImagePath, 56);
+
+        if (artwork != nullptr)
+        {
+            controls::Image image{};
+
+            image.Source(artwork);
+            image.Stretch(media::Stretch::Uniform);
+            image.Margin(xaml::ThicknessHelper::FromUniformLength(3));
+
+            art.Child(image);
+        }
+        else
+        {
+            art.Child(MakeGlyph(
+                node.IsOffline ? L"\uE711" : (isLoopback ? L"\uE895" : L"\uE7F6"),
+                14,
+                node.IsOffline ? critical : accent));
+        }
 
         controls::Grid::SetColumn(art, 0);
         header.Children().Append(art);
@@ -504,6 +569,9 @@ namespace midipatchbay
                         {
                             m_hoverPort = key;
                         }
+
+                        m_hoverRowPort = key;
+                        RefreshPortAppearance();
                     });
 
                 row.PointerExited([this, keyText](auto&&, auto&&)
@@ -512,17 +580,24 @@ namespace midipatchbay
                         {
                             m_hoverPort.reset();
                         }
+
+                        if (m_hoverRowPort.has_value() && m_hoverRowPort->ToString() == keyText)
+                        {
+                            m_hoverRowPort.reset();
+                            RefreshPortAppearance();
+                        }
                     });
 
+                // Either end can start the drag. Insisting on Out first is a rule the customer
+                // cannot see, and a drag that does nothing reads as a broken hit target.
                 row.PointerPressed([this, key](auto&&, input::PointerRoutedEventArgs const& args)
                     {
                         args.Handled(true);
 
-                        if (key.IsOutput)
-                        {
-                            BeginConnectionDrag(key);
-                            m_surface.CapturePointer(args.Pointer());
-                        }
+                        FocusCanvas();
+
+                        BeginConnectionDrag(key);
+                        m_surface.CapturePointer(args.Pointer());
                     });
 
                 row.Click([this, key](auto&&, auto&&) { OnPortClicked(key); });
@@ -531,6 +606,8 @@ namespace midipatchbay
                 port.Key = key;
                 port.Dot = dot;
                 port.Row = row;
+                port.Label = label;
+                port.LabelBrush = groupIndex == AllGroups ? textPrimary : textSecondary;
 
                 node.Ports.push_back(std::move(port));
 
@@ -582,6 +659,7 @@ namespace midipatchbay
         root.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(NodeCornerRadius));
         root.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
         root.Background(ThemeBrush(L"CardBackgroundFillColorDefaultBrush", Rgb(0x2B, 0x2B, 0x2B)));
+        root.Shadow(media::ThemeShadow{});
         root.Child(body);
 
         controls::Canvas::SetLeft(root, endpoint.CanvasX);
@@ -592,6 +670,9 @@ namespace midipatchbay
         root.PointerPressed([this, endpointId](auto&&, input::PointerRoutedEventArgs const& args)
             {
                 args.Handled(true);
+
+                FocusCanvas();
+
                 OnNodePointerPressed(endpointId, args);
             });
 
@@ -601,7 +682,8 @@ namespace midipatchbay
 
                 if (m_callbacks.EndpointContextMenuRequested)
                 {
-                    m_callbacks.EndpointContextMenuRequested(endpointId);
+                    m_callbacks.EndpointContextMenuRequested(endpointId,
+                        m_scrollViewer == nullptr ? foundation::Point{} : args.GetPosition(m_scrollViewer));
                 }
             });
 
@@ -706,15 +788,28 @@ namespace midipatchbay
             visual.IsMuted = connection.Muted;
             visual.IsLoopMuted = m_loopMutedConnectionIds.count(connection.Id) != 0;
 
+            visual.Glow = shapes::Path{};
+            visual.Glow.StrokeThickness(9.0);
+            visual.Glow.StrokeEndLineCap(xaml::Media::PenLineCap::Round);
+            visual.Glow.IsHitTestVisible(false);
+            visual.Glow.Visibility(xaml::Visibility::Collapsed);
+
+            controls::Canvas::SetZIndex(visual.Glow, GlowZIndex);
+
+            m_connectionLayer.Children().Append(visual.Glow);
+
             visual.Line = shapes::Path{};
             visual.Line.StrokeThickness(2.0);
             visual.Line.StrokeEndLineCap(xaml::Media::PenLineCap::Round);
+
+            controls::Canvas::SetZIndex(visual.Line, LineZIndex);
 
             auto const connectionId = connection.Id;
 
             visual.Line.PointerPressed([this, connectionId](auto&&, input::PointerRoutedEventArgs const& args)
                 {
                     args.Handled(true);
+                    FocusCanvas();
                     Select(CanvasSelectionKind::Connection, connectionId);
                 });
 
@@ -722,10 +817,15 @@ namespace midipatchbay
 
             controls::Border pill{};
 
+            controls::Canvas::SetZIndex(pill, PillZIndex);
+
             pill.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(11));
             pill.Padding(xaml::ThicknessHelper::FromLengths(9, 2, 9, 2));
             pill.BorderThickness(xaml::ThicknessHelper::FromUniformLength(1));
-            pill.Background(ThemeBrush(L"CardBackgroundFillColorDefaultBrush", Rgb(0x2F, 0x2F, 0x2F)));
+
+            // Opaque on purpose. The card brushes are a few percent white in dark mode, so the
+            // line the label sits on would show straight through it.
+            pill.Background(ThemeBrush(L"SolidBackgroundFillColorTertiaryBrush", Rgb(0x28, 0x28, 0x28)));
 
             auto pillText = MakeText(L"", 11, textSecondary);
             pill.Child(pillText);
@@ -733,17 +833,29 @@ namespace midipatchbay
             pill.PointerPressed([this, connectionId](auto&&, input::PointerRoutedEventArgs const& args)
                 {
                     args.Handled(true);
+                    FocusCanvas();
                     Select(CanvasSelectionKind::Connection, connectionId);
                 });
 
             visual.Pill = pill;
             visual.PillText = pillText;
 
-            m_connectionLayer.Children().Append(pill);
-
             m_connections.push_back(std::move(visual));
+        }
 
-            ApplyConnectionAppearance(m_connections.back());
+        // Child order alone did not hold the label above a line that crosses it, so the three
+        // parts of a connection carry an explicit z-index.
+        for (auto const& visual : m_connections)
+        {
+            if (visual.Pill != nullptr)
+            {
+                m_connectionLayer.Children().Append(visual.Pill);
+            }
+        }
+
+        for (auto& visual : m_connections)
+        {
+            ApplyConnectionAppearance(visual);
         }
     }
 
@@ -775,6 +887,11 @@ namespace midipatchbay
                 {
                     visual.Line.Visibility(xaml::Visibility::Collapsed);
 
+                    if (visual.Glow != nullptr)
+                    {
+                        visual.Glow.Visibility(xaml::Visibility::Collapsed);
+                    }
+
                     if (visual.Pill != nullptr)
                     {
                         visual.Pill.Visibility(xaml::Visibility::Collapsed);
@@ -793,44 +910,57 @@ namespace midipatchbay
                 auto const dx = std::abs(to->X - from->X);
                 auto const reach = static_cast<float>(std::clamp(dx * 0.55, 42.0, 140.0));
 
-                media::PathGeometry geometry{};
-                media::PathFigure figure{};
+                // Built twice on purpose: a Geometry is a DependencyObject and cannot be the
+                // Data of two Paths at once, so sharing one with the glow throws.
+                auto const buildGeometry = [&]()
+                    {
+                        media::PathGeometry geometry{};
+                        media::PathFigure figure{};
 
-                figure.StartPoint(from.value());
+                        figure.StartPoint(from.value());
 
-                if (to->X < from->X + 20)
+                        if (to->X < from->X + 20)
+                        {
+                            // A feedback connection: bow it under everything rather than
+                            // dragging it back through the nodes it came from.
+                            auto const bow = static_cast<float>(std::max(from->Y, to->Y) + 130.0);
+                            auto const mid = (from->X + to->X) / 2;
+
+                            media::BezierSegment first{};
+                            first.Point1(foundation::Point{ from->X + 90, from->Y });
+                            first.Point2(foundation::Point{ mid + 80, bow });
+                            first.Point3(foundation::Point{ mid, bow });
+
+                            media::BezierSegment second{};
+                            second.Point1(foundation::Point{ mid - 80, bow });
+                            second.Point2(foundation::Point{ to->X - 90, to->Y });
+                            second.Point3(to.value());
+
+                            figure.Segments().Append(first);
+                            figure.Segments().Append(second);
+                        }
+                        else
+                        {
+                            media::BezierSegment segment{};
+                            segment.Point1(foundation::Point{ from->X + reach, from->Y });
+                            segment.Point2(foundation::Point{ to->X - reach, to->Y });
+                            segment.Point3(to.value());
+
+                            figure.Segments().Append(segment);
+                        }
+
+                        geometry.Figures().Append(figure);
+
+                        return geometry;
+                    };
+
+                visual.Line.Data(buildGeometry());
+
+                if (visual.Glow != nullptr)
                 {
-                    // A feedback connection: bow it under everything rather than dragging it
-                    // back through the nodes it came from.
-                    auto const bow = static_cast<float>(std::max(from->Y, to->Y) + 130.0);
-                    auto const mid = (from->X + to->X) / 2;
-
-                    media::BezierSegment first{};
-                    first.Point1(foundation::Point{ from->X + 90, from->Y });
-                    first.Point2(foundation::Point{ mid + 80, bow });
-                    first.Point3(foundation::Point{ mid, bow });
-
-                    media::BezierSegment second{};
-                    second.Point1(foundation::Point{ mid - 80, bow });
-                    second.Point2(foundation::Point{ to->X - 90, to->Y });
-                    second.Point3(to.value());
-
-                    figure.Segments().Append(first);
-                    figure.Segments().Append(second);
+                    visual.Glow.Data(buildGeometry());
+                    ApplyConnectionAppearance(visual);
                 }
-                else
-                {
-                    media::BezierSegment segment{};
-                    segment.Point1(foundation::Point{ from->X + reach, from->Y });
-                    segment.Point2(foundation::Point{ to->X - reach, to->Y });
-                    segment.Point3(to.value());
-
-                    figure.Segments().Append(segment);
-                }
-
-                geometry.Figures().Append(figure);
-
-                visual.Line.Data(geometry);
 
                 if (visual.PillText != nullptr)
                 {
@@ -891,6 +1021,10 @@ namespace midipatchbay
 
         node.Root.BorderBrush(selected ? accent : (node.IsOffline ? critical : stroke));
         node.Root.BorderThickness(xaml::ThicknessHelper::FromUniformLength(selected ? 2.0 : 1.0));
+
+        // Lifting the card casts the shadow, which reads as selection without relying on the
+        // border color alone.
+        node.Root.Translation(winrt::Windows::Foundation::Numerics::float3{ 0, 0, selected ? 28.0f : 0.0f });
     }
 
     _Use_decl_annotations_
@@ -905,25 +1039,36 @@ namespace midipatchbay
         auto const critical = ThemeBrush(L"SystemFillColorCriticalBrush", Rgb(0xFF, 0x99, 0xA4));
         auto const stroke = ThemeBrush(L"CardStrokeColorDefaultBrush", Rgb(0x40, 0x40, 0x40));
 
+        // A different hue rather than a thicker line of the same color, so selection does not
+        // depend on judging two widths against each other.
+        auto const selectedStroke = ThemeBrush(L"TextFillColorPrimaryBrush", Rgb(0xFF, 0xFF, 0xFF));
+
         auto const selected = m_selectionKind == CanvasSelectionKind::Connection &&
             m_selectedConnectionId == visual.ConnectionId;
 
+        if (visual.Glow != nullptr)
+        {
+            visual.Glow.Visibility(selected ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            visual.Glow.Stroke(visual.IsLoopMuted ? critical : accent);
+            visual.Glow.Opacity(0.35);
+        }
+
         if (visual.IsLoopMuted)
         {
-            visual.Line.Stroke(critical);
-            visual.Line.StrokeThickness(selected ? 3.0 : 2.5);
+            visual.Line.Stroke(selected ? selectedStroke : critical);
+            visual.Line.StrokeThickness(selected ? 3.5 : 2.5);
             visual.Line.StrokeDashArray(MakeDashArray(6.0, 4.0));
         }
         else if (visual.IsMuted)
         {
-            visual.Line.Stroke(stroke);
-            visual.Line.StrokeThickness(selected ? 3.0 : 2.0);
+            visual.Line.Stroke(selected ? selectedStroke : stroke);
+            visual.Line.StrokeThickness(selected ? 3.5 : 2.0);
             visual.Line.StrokeDashArray(MakeDashArray(3.0, 3.0));
         }
         else
         {
-            visual.Line.Stroke(accent);
-            visual.Line.StrokeThickness(selected ? 3.0 : 2.0);
+            visual.Line.Stroke(selected ? selectedStroke : accent);
+            visual.Line.StrokeThickness(selected ? 3.5 : 2.0);
             visual.Line.StrokeDashArray(nullptr);
             visual.Line.Opacity(selected ? 1.0 : 0.72);
         }
@@ -1115,6 +1260,8 @@ namespace midipatchbay
         {
             m_dragLine.Visibility(xaml::Visibility::Visible);
         }
+
+        RefreshPortAppearance();
     }
 
     _Use_decl_annotations_
@@ -1173,6 +1320,8 @@ namespace midipatchbay
             auto const target = m_hoverPort;
             m_hoverPort.reset();
 
+            RefreshPortAppearance();
+
             // A press that never moved is a click, and the click handler is what arms the port
             // for the keyboard friendly two step path.
             m_suppressNextPortClick = m_dragMoved;
@@ -1182,12 +1331,21 @@ namespace midipatchbay
                 return;
             }
 
-            if (!target.has_value() || target->IsOutput)
+            // The two ends have to be opposite sides; which one the drag started from does not
+            // matter, so the pair is ordered here rather than being demanded of the customer.
+            if (!target.has_value() || target->IsOutput == m_dragSourcePort.IsOutput)
             {
                 return;
             }
 
-            RequestConnection(m_dragSourcePort, target.value());
+            if (m_dragSourcePort.IsOutput)
+            {
+                RequestConnection(m_dragSourcePort, target.value());
+            }
+            else
+            {
+                RequestConnection(target.value(), m_dragSourcePort);
+            }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to finish making a connection.")
     }
@@ -1203,30 +1361,29 @@ namespace midipatchbay
                 return;
             }
 
-            if (m_armedPort.has_value() && m_armedPort->IsOutput && !key.IsOutput)
+            if (m_armedPort.has_value() && m_armedPort->IsOutput != key.IsOutput)
             {
-                auto const source = m_armedPort.value();
+                auto const first = m_armedPort.value();
 
                 ClearArmedPort();
-                RequestConnection(source, key);
+
+                if (first.IsOutput)
+                {
+                    RequestConnection(first, key);
+                }
+                else
+                {
+                    RequestConnection(key, first);
+                }
 
                 return;
             }
 
             ClearArmedPort();
 
-            if (key.IsOutput)
-            {
-                m_armedPort = key;
+            m_armedPort = key;
 
-                for (auto& node : m_nodes)
-                {
-                    for (auto& port : node.Ports)
-                    {
-                        ApplyPortAppearance(port);
-                    }
-                }
-            }
+            RefreshPortAppearance();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to select a connection point.")
     }
@@ -1240,12 +1397,26 @@ namespace midipatchbay
 
         m_armedPort.reset();
 
+        RefreshPortAppearance();
+    }
+
+    void PatchCanvas::RefreshPortAppearance() noexcept
+    {
         for (auto& node : m_nodes)
         {
             for (auto& port : node.Ports)
             {
                 ApplyPortAppearance(port);
             }
+        }
+    }
+
+    // Delete is handled on the scroll viewer, which only sees it while the canvas has focus.
+    void PatchCanvas::FocusCanvas() noexcept
+    {
+        if (m_scrollViewer != nullptr)
+        {
+            m_scrollViewer.Focus(xaml::FocusState::Pointer);
         }
     }
 
@@ -1259,13 +1430,35 @@ namespace midipatchbay
 
         auto const accent = ThemeBrush(L"AccentFillColorDefaultBrush", Rgb(0x60, 0xCD, 0xFF));
         auto const tertiary = ThemeBrush(L"TextFillColorTertiaryBrush", Rgb(0x90, 0x90, 0x90));
+        auto const secondary = ThemeBrush(L"TextFillColorSecondaryBrush", Rgb(0xC8, 0xC8, 0xC8));
 
         auto const armed = m_armedPort.has_value() && m_armedPort.value() == port.Key;
+        auto const hovered = m_hoverRowPort.has_value() && m_hoverRowPort.value() == port.Key;
 
-        port.Dot.Stroke(armed ? accent : tertiary);
-        port.Dot.Fill(armed
+        // While a connection is being made, every end that could receive it is filled in, so
+        // the customer can see where the drag is allowed to land instead of guessing.
+        auto const candidate =
+            (m_draggingConnection && m_dragSourcePort.IsOutput != port.Key.IsOutput) ||
+            (m_armedPort.has_value() && m_armedPort->IsOutput != port.Key.IsOutput);
+
+        auto const filled = armed || candidate;
+
+        port.Dot.Stroke(filled || hovered ? accent : tertiary);
+        port.Dot.Fill(filled
             ? accent
             : ThemeBrush(L"SolidBackgroundFillColorSecondaryBrush", Rgb(0x2B, 0x2B, 0x2B)));
+
+        if (port.Row != nullptr)
+        {
+            port.Row.Background(hovered
+                ? ThemeBrush(L"SubtleFillColorSecondaryBrush", Rgb(0xFF, 0xFF, 0xFF, 0x0F))
+                : media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
+        }
+
+        if (port.Label != nullptr)
+        {
+            port.Label.Foreground(hovered || filled ? secondary : port.LabelBrush);
+        }
     }
 
     _Use_decl_annotations_

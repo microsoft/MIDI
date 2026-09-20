@@ -84,9 +84,9 @@ namespace winrt::midipatchbay::implementation
                     [this]() { OnCanvasSelectionChanged(); },
                     [this](patchbay::PatchConnection connection) { OnConnectionRequested(std::move(connection)); },
                     [this]() { OnCanvasLayoutChanged(); },
-                    [this](std::wstring endpointId) { ShowEndpointMenu(endpointId); },
-                    [this]() { ZoomText().Text(resources::FormatString(L"ZoomPercentFormat",
-                        static_cast<int>(std::lround(CanvasScroller().ZoomFactor() * 100)))); }
+                    [this](std::wstring endpointId, foundation::Point position)
+                        { ShowEndpointMenu(endpointId, position); },
+                    [this]() { UpdateZoomText(CanvasScroller().ZoomFactor()); }
                 });
 
             // The catalog raises its change on a watcher thread, so everything that touches XAML
@@ -103,6 +103,36 @@ namespace winrt::midipatchbay::implementation
                         strong->RebuildCanvas();
                         strong->RefreshInspector();
                     }
+                });
+
+            // Delete is handled here rather than on the canvas so it works whichever part of the
+            // canvas has focus, and it is given up to anything the customer might be typing in.
+            RootGrid().KeyDown([weak](auto&&, input::KeyRoutedEventArgs const& args)
+                {
+                    auto strong = weak.get();
+
+                    if (strong == nullptr || args.Key() != winrt::Windows::System::VirtualKey::Delete)
+                    {
+                        return;
+                    }
+
+                    if (strong->m_canvas.SelectionKind() == patchbay::CanvasSelectionKind::None)
+                    {
+                        return;
+                    }
+
+                    auto const focused = xaml::Input::FocusManager::GetFocusedElement(strong->Content().XamlRoot());
+
+                    if (focused.try_as<controls::TextBox>() != nullptr ||
+                        focused.try_as<controls::NumberBox>() != nullptr ||
+                        focused.try_as<controls::AutoSuggestBox>() != nullptr ||
+                        focused.try_as<controls::RichEditBox>() != nullptr)
+                    {
+                        return;
+                    }
+
+                    args.Handled(true);
+                    strong->DeleteSelection();
                 });
 
             patchbay::EndpointCatalog::Current().SetChangedHandler([weak, queue]()
@@ -946,14 +976,7 @@ namespace winrt::midipatchbay::implementation
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
 
-        try
-        {
-            auto const zoom = std::min(1.5f, CanvasScroller().ZoomFactor() + 0.1f);
-
-            CanvasScroller().ChangeView(nullptr, nullptr,
-                winrt::box_value(zoom).as<foundation::IReference<float>>());
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to zoom in.")
+        ApplyZoom(CanvasScroller().ZoomFactor() + 0.1f);
     }
 
     _Use_decl_annotations_
@@ -962,14 +985,92 @@ namespace winrt::midipatchbay::implementation
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
 
+        ApplyZoom(CanvasScroller().ZoomFactor() - 0.1f);
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::ApplyZoom(float zoom) noexcept
+    {
         try
         {
-            auto const zoom = std::max(0.4f, CanvasScroller().ZoomFactor() - 0.1f);
+            // Snapped to whole steps. Adding 0.1f repeatedly drifts, and the drift shows up as
+            // 101% where the customer expects to land back on 100.
+            auto const snapped = std::clamp(std::round(zoom * 20.0f) / 20.0f, 0.4f, 1.5f);
 
             CanvasScroller().ChangeView(nullptr, nullptr,
-                winrt::box_value(zoom).as<foundation::IReference<float>>());
+                winrt::box_value(snapped).as<foundation::IReference<float>>());
+
+            UpdateZoomText(snapped);
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to zoom out.")
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to change the zoom.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::UpdateZoomText(float zoom) noexcept
+    {
+        try
+        {
+            ZoomText().Text(resources::FormatString(L"ZoomPercentFormat",
+                static_cast<int>(std::lround(zoom * 100))));
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the zoom level.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnZoomFlyoutOpening(foundation::IInspectable const& sender, foundation::IInspectable const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            m_settingZoomBox = true;
+            ZoomInputBox().Value(std::lround(CanvasScroller().ZoomFactor() * 100));
+            m_settingZoomBox = false;
+        }
+        catch (...)
+        {
+            m_settingZoomBox = false;
+            MIDI_PATCHBAY_LOG_GENERAL_EXCEPTION(L"Unable to show the zoom box.");
+        }
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnZoomValueChanged(
+        controls::NumberBox const& sender,
+        controls::NumberBoxValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+
+        if (m_settingZoomBox)
+        {
+            return;
+        }
+
+        // NumberBox raises this on commit, not per keystroke, so Enter and moving focus away
+        // both land here and a half typed number never takes effect.
+        auto const value = args.NewValue();
+
+        if (!std::isnan(value))
+        {
+            ApplyZoom(static_cast<float>(value / 100.0));
+        }
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnZoomApplyClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            // Taking focus is what makes the number box commit what was typed.
+            ZoomApplyButton().Focus(xaml::FocusState::Programmatic);
+
+            ZoomFlyout().Hide();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to apply the zoom.")
     }
 
     _Use_decl_annotations_

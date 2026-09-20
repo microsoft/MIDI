@@ -628,16 +628,73 @@ namespace winrt::midipatchbay::implementation
                 InspectorContent().Children().Append(section);
             }
 
-            // ------------------------------------------------ filters placeholder
+            // ------------------------------------------------ filters
             {
                 auto section = Section(resources::GetString(L"InspectorFilters"));
 
                 controls::StackPanel body{};
-                body.Spacing(6);
+                body.Spacing(8);
 
-                auto message = ValueText(resources::GetString(L"InspectorFiltersComingSoon"), 12, true);
-                message.Foreground(BrushOrNull(L"TextFillColorTertiaryBrush"));
-                body.Children().Append(message);
+                auto summary = ValueText(patchbay::SummarizeFilter(connection.Filter), 12, false);
+                summary.TextWrapping(xaml::TextWrapping::Wrap);
+                summary.TextTrimming(xaml::TextTrimming::None);
+
+                if (connection.Filter.PassesEverything())
+                {
+                    summary.Foreground(BrushOrNull(L"TextFillColorTertiaryBrush"));
+                }
+
+                body.Children().Append(summary);
+
+                controls::Button editButton{};
+                editButton.Content(winrt::box_value(resources::GetString(L"ActionEditFilters")));
+                editButton.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
+
+                editButton.Click([weak, connectionId](auto&&, auto&&)
+                    {
+                        if (auto strong = weak.get())
+                        {
+                            strong->ShowFilterDialogAsync(connectionId);
+                        }
+                    });
+
+                body.Children().Append(editButton);
+
+                section.Children().Append(Card(body));
+                InspectorContent().Children().Append(section);
+            }
+
+            // ------------------------------------------------ transforms
+            {
+                auto section = Section(resources::GetString(L"InspectorTransforms"));
+
+                controls::StackPanel body{};
+                body.Spacing(8);
+
+                auto summary = ValueText(patchbay::SummarizeTransform(connection.Transform), 12, false);
+                summary.TextWrapping(xaml::TextWrapping::Wrap);
+                summary.TextTrimming(xaml::TextTrimming::None);
+
+                if (connection.Transform.ChangesNothing())
+                {
+                    summary.Foreground(BrushOrNull(L"TextFillColorTertiaryBrush"));
+                }
+
+                body.Children().Append(summary);
+
+                controls::Button transformButton{};
+                transformButton.Content(winrt::box_value(resources::GetString(L"ActionEditTransforms")));
+                transformButton.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
+
+                transformButton.Click([weak, connectionId](auto&&, auto&&)
+                    {
+                        if (auto strong = weak.get())
+                        {
+                            strong->ShowTransformDialogAsync(connectionId);
+                        }
+                    });
+
+                body.Children().Append(transformButton);
 
                 section.Children().Append(Card(body));
                 InspectorContent().Children().Append(section);

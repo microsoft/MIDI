@@ -21,6 +21,9 @@ namespace midipatchbay
         std::wstring DestinationEndpointDeviceId{};
         int32_t SourceGroupIndex{ AllGroups };
         int32_t DestinationGroupIndex{ AllGroups };
+
+        MessageFilter Filter{};
+        MessageTransform Transform{};
     };
 
     struct RouteStats
@@ -56,6 +59,14 @@ namespace midipatchbay
 
         size_t ActiveRouteCount() const noexcept;
 
+        // Plays one note on an endpoint so a mapping can be heard. Reuses the open connection
+        // when the patch is already routing, and otherwise opens one for the length of the note.
+        // Blocks for the duration, so it has to be called from a background thread.
+        bool SendTestNote(
+            _In_ std::wstring const& endpointDeviceId,
+            _In_ int32_t groupIndex,
+            _In_ uint8_t noteIndex) noexcept;
+
     private:
         RouteEngine() noexcept = default;
 
@@ -65,6 +76,10 @@ namespace midipatchbay
 
             int32_t SourceGroupIndex{ AllGroups };
             int32_t DestinationGroupIndex{ AllGroups };
+
+            // Copied when the plan is applied, then only read by the callback thread.
+            MessageFilter Filter{};
+            MessageTransform Transform{};
 
             std::wstring ConnectionId{};
 

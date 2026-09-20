@@ -46,6 +46,10 @@ namespace midipatchbay
         bool WarnAboutLoops() const noexcept { return m_warnAboutLoops; }
         void WarnAboutLoops(_In_ bool value) noexcept;
 
+        // Whether pressing Delete on the canvas asks first.
+        bool ConfirmCanvasRemove() const noexcept { return m_confirmCanvasRemove; }
+        void ConfirmCanvasRemove(_In_ bool value) noexcept;
+
         bool ActivateSavedPatchesAtStartup() const noexcept { return m_activateSavedPatchesAtStartup; }
         void ActivateSavedPatchesAtStartup(_In_ bool value) noexcept;
 
@@ -61,6 +65,7 @@ namespace midipatchbay
         bool m_minimizeToNotificationArea{ false };
         bool m_startMinimized{ false };
         bool m_warnAboutLoops{ true };
+        bool m_confirmCanvasRemove{ true };
         bool m_activateSavedPatchesAtStartup{ true };
     };
 }
