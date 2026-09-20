@@ -273,6 +273,8 @@ namespace winrt::midikeyboard::implementation
             Title(res::GetString(L"AppDisplayName"));
             AppTitleTextBlock().Text(res::GetString(L"AppDisplayName"));
 
+            midiapp::ApplyPreviewBadgeVisibility(PreviewChiclet());
+
             midiapp::WindowChromeElements elements{};
 
             elements.Window = *this;
@@ -408,6 +410,7 @@ namespace winrt::midikeyboard::implementation
             BaseOctaveBox().Value(settings.BaseOctave());
             OctaveCountBox().Value(settings.OctaveCount());
             TransposeBox().Value(settings.Transpose());
+            MinimumKeyWidthBox().Value(settings.MinimumWhiteKeyWidth());
 
             ShowNoteNamesCheckBox().IsChecked(settings.ShowNoteNames());
             ShowComputerKeysCheckBox().IsChecked(settings.ShowComputerKeys());
@@ -994,6 +997,51 @@ namespace winrt::midikeyboard::implementation
         return noteNumber + native::AppSettings::Current().Transpose();
     }
 
+    _Use_decl_annotations_
+    double MainWindow::KeyboardContentWidth(double viewportWidth) const noexcept
+    {
+        auto const& settings = native::AppSettings::Current();
+
+        auto const needed =
+            static_cast<double>(native::WhiteKeyCount(settings.OctaveCount())) *
+            static_cast<double>(settings.MinimumWhiteKeyWidth());
+
+        return std::max(viewportWidth, needed);
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::UpdateKeyboardScrollBar(double viewportWidth, double contentWidth) noexcept
+    {
+        try
+        {
+            auto const bar = KeyboardScrollBar();
+            auto const hidden = contentWidth - viewportWidth;
+
+            auto const restore = wil::scope_exit([this]() noexcept { m_suppressScrollHandler = false; });
+            m_suppressScrollHandler = true;
+
+            if (hidden <= 0.5)
+            {
+                m_keyboardScrollOffset = 0.0;
+                bar.Value(0.0);
+                bar.Visibility(xaml::Visibility::Collapsed);
+                return;
+            }
+
+            m_keyboardScrollOffset = std::clamp(m_keyboardScrollOffset, 0.0, hidden);
+
+            bar.Maximum(hidden);
+            bar.ViewportSize(viewportWidth);
+            bar.LargeChange(viewportWidth * 0.9);
+            bar.SmallChange(contentWidth /
+                std::max(1.0, static_cast<double>(
+                    native::WhiteKeyCount(native::AppSettings::Current().OctaveCount()))));
+            bar.Value(m_keyboardScrollOffset);
+            bar.Visibility(xaml::Visibility::Visible);
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to update the keyboard scroll bar.")
+    }
+
     void MainWindow::RebuildKeyboard() noexcept
     {
         try
@@ -1016,7 +1064,8 @@ namespace winrt::midikeyboard::implementation
             auto const width = std::max(1.0, canvas.ActualWidth());
             auto const height = std::max(1.0, canvas.ActualHeight());
 
-            m_keyGeometry = native::BuildKeyboard(FirstNoteNumber(), settings.OctaveCount(), width, height);
+            m_keyGeometry = native::BuildKeyboard(
+                FirstNoteNumber(), settings.OctaveCount(), KeyboardContentWidth(width), height);
 
             m_keys.reserve(m_keyGeometry.size());
 
@@ -1079,15 +1128,25 @@ namespace winrt::midikeyboard::implementation
 
             auto const width = std::max(1.0, canvas.ActualWidth());
             auto const height = std::max(1.0, canvas.ActualHeight());
+            auto const contentWidth = KeyboardContentWidth(width);
 
-            m_keyGeometry = native::BuildKeyboard(FirstNoteNumber(), settings.OctaveCount(), width, height);
+            // keys scrolled past the edge must not paint over the ribbons beside the frame
+            media::RectangleGeometry clip{};
+            clip.Rect(foundation::Rect{
+                0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height) });
+            canvas.Clip(clip);
+
+            UpdateKeyboardScrollBar(width, contentWidth);
+
+            m_keyGeometry = native::BuildKeyboard(
+                FirstNoteNumber(), settings.OctaveCount(), contentWidth, height);
 
             if (m_keyGeometry.size() != m_keys.size())
             {
                 return;
             }
 
-            auto const whiteWidth = width / static_cast<double>(native::WhiteKeyCount(settings.OctaveCount()));
+            auto const whiteWidth = contentWidth / static_cast<double>(native::WhiteKeyCount(settings.OctaveCount()));
 
             auto const noteFontSize = std::clamp(whiteWidth * 0.26, 6.0, 13.0);
             auto const computerFontSize = std::clamp(whiteWidth * 0.28, 6.0, 14.0);
@@ -1105,7 +1164,7 @@ namespace winrt::midikeyboard::implementation
                 auto const& geometry = m_keyGeometry[i];
                 auto& key = m_keys[i];
 
-                controls::Canvas::SetLeft(key.Body, geometry.Left);
+                controls::Canvas::SetLeft(key.Body, geometry.Left - m_keyboardScrollOffset);
                 controls::Canvas::SetTop(key.Body, geometry.Top);
 
                 key.Body.Width(geometry.Width);
@@ -1504,6 +1563,25 @@ namespace winrt::midikeyboard::implementation
     }
 
     _Use_decl_annotations_
+    void MainWindow::OnKeyboardScrollChanged(
+        foundation::IInspectable const&,
+        primitives::RangeBaseValueChangedEventArgs const& args)
+    {
+        try
+        {
+            if (m_suppressScrollHandler)
+            {
+                return;
+            }
+
+            m_keyboardScrollOffset = std::max(0.0, args.NewValue());
+
+            LayoutKeyboard();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to scroll the keyboard.")
+    }
+
+    _Use_decl_annotations_
     void MainWindow::OnKeyboardPointerPressed(
         foundation::IInspectable const&,
         input::PointerRoutedEventArgs const& args)
@@ -1514,7 +1592,8 @@ namespace winrt::midikeyboard::implementation
             auto const point = args.GetCurrentPoint(canvas);
             auto const position = point.Position();
 
-            auto const index = native::HitTestKey(m_keyGeometry, position.X, position.Y);
+            auto const index = native::HitTestKey(
+                m_keyGeometry, position.X + m_keyboardScrollOffset, position.Y);
 
             if (!IsIndexValid(index, m_keyGeometry.size()))
             {
@@ -1559,7 +1638,8 @@ namespace winrt::midikeyboard::implementation
             auto const canvas = KeyboardCanvas();
             auto const position = args.GetCurrentPoint(canvas).Position();
 
-            auto const index = native::HitTestKey(m_keyGeometry, position.X, position.Y);
+            auto const index = native::HitTestKey(
+                m_keyGeometry, position.X + m_keyboardScrollOffset, position.Y);
 
             // sliding sideways off one key and onto another plays the new one, the way a
             // finger dragged along a real keyboard does
@@ -2930,6 +3010,35 @@ namespace winrt::midikeyboard::implementation
             UpdateOctaveDisplay();
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the octave count.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnMinimumKeyWidthChanged(
+        controls::NumberBox const&,
+        controls::NumberBoxValueChangedEventArgs const& args)
+    {
+        try
+        {
+            if (m_suppressSettingHandlers || std::isnan(args.NewValue()))
+            {
+                return;
+            }
+
+            auto const width = static_cast<uint32_t>(std::lround(args.NewValue()));
+
+            if (width == native::AppSettings::Current().MinimumWhiteKeyWidth())
+            {
+                return;
+            }
+
+            EndAllNotes();
+            native::AppSettings::Current().MinimumWhiteKeyWidth(width);
+
+            m_keyboardScrollOffset = 0.0;
+
+            LayoutKeyboard();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the smallest key width.")
     }
 
     _Use_decl_annotations_

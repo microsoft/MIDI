@@ -156,6 +156,8 @@ namespace winrt::midisysextool::implementation
         {
             UpdateWindowTitle();
 
+            midiapp::ApplyPreviewBadgeVisibility(PreviewChiclet());
+
             midiapp::WindowChromeElements elements{};
 
             elements.Window = *this;

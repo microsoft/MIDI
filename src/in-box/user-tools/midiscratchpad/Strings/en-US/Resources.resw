@@ -62,6 +62,10 @@
   <data name="AppDisplayName" xml:space="preserve">
     <value>Windows MIDI Scratch Pad</value>
   </data>
+  <data name="PreviewChicletText.Text" xml:space="preserve">
+    <value>PREVIEW</value>
+    <comment>Shown in the title bar. All capitals on purpose, so it reads as a badge.</comment>
+  </data>
   <data name="WindowTitleFormat" xml:space="preserve">
     <value>{0} - {1}</value>
     <comment>{0} is the device name, {1} is the app name</comment>

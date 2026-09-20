@@ -60,7 +60,11 @@
   </resheader>
 
   <data name="AppTitle" xml:space="preserve">
-    <value>MIDI Settings</value>
+    <value>Windows MIDI Settings</value>
+  </data>
+  <data name="PreviewChicletText.Text" xml:space="preserve">
+    <value>PREVIEW</value>
+    <comment>Shown in the title bar. All capitals on purpose, so it reads as a badge.</comment>
   </data>
 
   <!-- Title bar -->
@@ -177,10 +181,10 @@
     <value>Scratch Pad</value>
   </data>
   <data name="KeyboardButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Windows MIDI Keyboard</value>
+    <value>MIDI Keyboard</value>
   </data>
   <data name="KeyboardButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Windows MIDI Keyboard</value>
+    <value>MIDI Keyboard</value>
   </data>
   <data name="KeyboardButtonText.Text" xml:space="preserve">
     <value>Virtual Keyboard</value>

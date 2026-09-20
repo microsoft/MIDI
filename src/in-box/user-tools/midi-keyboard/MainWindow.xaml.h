@@ -86,6 +86,7 @@ namespace winrt::midikeyboard::implementation
 
         void OnBaseOctaveChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnOctaveCountChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnMinimumKeyWidthChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnTransposeChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnShowNoteNamesChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnShowComputerKeysChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -99,6 +100,7 @@ namespace winrt::midikeyboard::implementation
         void OnPerNoteControllerChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
 
         void OnKeyboardSizeChanged(foundation::IInspectable const& sender, xaml::SizeChangedEventArgs const& args);
+        void OnKeyboardScrollChanged(foundation::IInspectable const& sender, primitives::RangeBaseValueChangedEventArgs const& args);
         void OnKeyboardPointerPressed(foundation::IInspectable const& sender, input::PointerRoutedEventArgs const& args);
         void OnKeyboardPointerMoved(foundation::IInspectable const& sender, input::PointerRoutedEventArgs const& args);
         void OnKeyboardPointerReleased(foundation::IInspectable const& sender, input::PointerRoutedEventArgs const& args);
@@ -156,6 +158,11 @@ namespace winrt::midikeyboard::implementation
         // ------------------------------------------------------------------ keyboard
         void RebuildKeyboard() noexcept;
         void LayoutKeyboard() noexcept;
+
+        // Width the keys need at the customer's minimum key width. Wider than the canvas means
+        // the keyboard scrolls.
+        double KeyboardContentWidth(double viewportWidth) const noexcept;
+        void UpdateKeyboardScrollBar(double viewportWidth, double contentWidth) noexcept;
         void RefreshKeyGlow(int32_t noteNumber) noexcept;
         void SetKeyGlow(KeyVisual& key, double opacity, bool fade) noexcept;
         int32_t KeyIndexForNote(int32_t noteNumber) const noexcept;
@@ -207,6 +214,13 @@ namespace winrt::midikeyboard::implementation
 
         std::vector<KeyVisual> m_keys{};
         std::vector<::midikeyboard::KeyGeometry> m_keyGeometry{};
+
+        // how far the keyboard is scrolled, in canvas pixels. Always 0 when everything fits.
+        double m_keyboardScrollOffset{ 0.0 };
+
+        // set while the scroll bar's own properties are being written, because changing Maximum
+        // or ViewportSize coerces Value and raises ValueChanged straight back at us
+        bool m_suppressScrollHandler{ false };
 
         // how many separate inputs are holding each note down
         std::array<int32_t, 128> m_noteHoldCount{};

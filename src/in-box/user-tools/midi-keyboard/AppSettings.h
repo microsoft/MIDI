@@ -130,6 +130,12 @@ namespace midikeyboard
         uint32_t OctaveCount() const noexcept { return m_octaveCount; }
         void OctaveCount(uint32_t value) noexcept;
 
+        // The keys never get narrower than this. When the window cannot hold them all at this
+        // width the keyboard scrolls instead of shrinking, because a key too narrow to hit with
+        // a finger is worse than a keyboard you have to scroll.
+        uint32_t MinimumWhiteKeyWidth() const noexcept { return m_minimumWhiteKeyWidth; }
+        void MinimumWhiteKeyWidth(uint32_t value) noexcept;
+
         int32_t Transpose() const noexcept { return m_transpose; }
         void Transpose(int32_t value) noexcept;
 
@@ -173,6 +179,9 @@ namespace midikeyboard
         static constexpr int32_t MaximumBaseOctave = 8;
         static constexpr uint32_t MinimumOctaveCount = 1;
         static constexpr uint32_t MaximumOctaveCount = 10;
+        static constexpr uint32_t SmallestWhiteKeyWidth = 12;
+        static constexpr uint32_t LargestWhiteKeyWidth = 400;
+        static constexpr uint32_t DefaultWhiteKeyWidth = 90;
         static constexpr int32_t MinimumTranspose = -24;
         static constexpr int32_t MaximumTranspose = 24;
         static constexpr uint32_t MinimumBpm = 20;
@@ -205,6 +214,8 @@ namespace midikeyboard
         // three octaves is the most that still leaves the keys playable at the default window
         // size; a wider window is what earns more of them
         uint32_t m_octaveCount{ 3 };
+
+        uint32_t m_minimumWhiteKeyWidth{ DefaultWhiteKeyWidth };
 
         int32_t m_transpose{ 0 };
 

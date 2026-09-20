@@ -249,6 +249,8 @@ namespace winrt::midipatchbay::implementation
     {
         try
         {
+            midiapp::ApplyPreviewBadgeVisibility(PreviewChiclet());
+
             midiapp::WindowChromeElements elements{};
 
             elements.Window = *this;

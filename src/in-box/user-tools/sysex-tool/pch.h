@@ -110,6 +110,7 @@ namespace appshared = ::winrt::MidiAppShared;
 
 #include "Telemetry.h"
 
+#include "PreviewBuild.h"
 #include "WindowChrome.h"
 #include "MidiEndpointHelpers.h"
 #include "AppearanceFlyout.h"

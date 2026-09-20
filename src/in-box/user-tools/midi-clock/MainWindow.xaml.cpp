@@ -111,6 +111,8 @@ namespace winrt::midiclock::implementation
     {
         try
         {
+            midiapp::ApplyPreviewBadgeVisibility(PreviewChiclet());
+
             midiapp::WindowChromeElements elements{};
 
             elements.Window = *this;

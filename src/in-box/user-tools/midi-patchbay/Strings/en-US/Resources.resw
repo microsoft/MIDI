@@ -61,7 +61,7 @@
 
   <!-- ============================================================= application -->
   <data name="AppDisplayName" xml:space="preserve">
-    <value>MIDI Patchbay</value>
+    <value>Windows MIDI Patchbay</value>
   </data>
 
   <!-- ============================================================== title bar -->
