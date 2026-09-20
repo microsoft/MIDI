@@ -25,10 +25,14 @@ namespace midipatchbay
         constexpr double ArrangeTopMargin = 48.0;
         constexpr double ArrangeRowGap = 32.0;
 
+        // How close a drop has to be to a connection point to land on it.
+        constexpr double PortSnapRadius = 36.0;
+
         // Within the connection layer: the selection glow, then the line, then its group label.
-        constexpr int32_t GlowZIndex = 0;
-        constexpr int32_t LineZIndex = 1;
-        constexpr int32_t PillZIndex = 2;
+        constexpr int GlowZIndex = 0;
+        constexpr int LineZIndex = 1;
+        constexpr int HitAreaZIndex = 2;
+        constexpr int PillZIndex = 3;
 
         winrt::Windows::UI::Color Rgb(_In_ uint8_t r, _In_ uint8_t g, _In_ uint8_t b, _In_ uint8_t a = 255) noexcept
         {
@@ -176,23 +180,37 @@ namespace midipatchbay
 
             m_overlayLayer.Children().Append(m_dragLine);
 
-            m_surface.PointerMoved([this](auto&&, input::PointerRoutedEventArgs const& args)
-                { OnSurfacePointerMoved(args); });
-
-            m_surface.PointerReleased([this](auto&&, input::PointerRoutedEventArgs const& args)
-                { OnSurfacePointerReleased(args); });
-
-            m_surface.PointerCanceled([this](auto&&, auto&&)
+            // Dragging deliberately does NOT depend on pointer capture. The connection points
+            // are Buttons and the canvas sits in a ScrollViewer, and both take capture for their
+            // own purposes; treating the resulting PointerCaptureLost as "the drag ended" is what
+            // made dragging impossible. Instead the scroll viewer is watched with
+            // handledEventsToo, so the moves arrive whoever happens to hold capture.
+            auto const watch = [this](xaml::UIElement const& element)
                 {
-                    m_draggingNode = false;
-                    EndConnectionDrag();
-                });
+                    if (element == nullptr)
+                    {
+                        return;
+                    }
 
-            m_surface.PointerCaptureLost([this](auto&&, auto&&)
-                {
-                    m_draggingNode = false;
-                    EndConnectionDrag();
-                });
+                    element.AddHandler(xaml::UIElement::PointerMovedEvent(),
+                        winrt::box_value(input::PointerEventHandler{
+                            [this](auto&&, input::PointerRoutedEventArgs const& args) { OnSurfacePointerMoved(args); } }),
+                        true);
+
+                    element.AddHandler(xaml::UIElement::PointerReleasedEvent(),
+                        winrt::box_value(input::PointerEventHandler{
+                            [this](auto&&, input::PointerRoutedEventArgs const& args) { OnSurfacePointerReleased(args); } }),
+                        true);
+
+                    element.AddHandler(xaml::UIElement::PointerCanceledEvent(),
+                        winrt::box_value(input::PointerEventHandler{
+                            [this](auto&&, auto&&) { CancelDrags(); } }),
+                        true);
+                };
+
+            // Only the scroll viewer: it is an ancestor of the surface, so registering on both
+            // would deliver every move and release twice.
+            watch(m_scrollViewer);
 
             // Clicking empty canvas clears the selection; the node handlers mark their own
             // events handled so this only fires for the background.
@@ -565,22 +583,12 @@ namespace midipatchbay
 
                 row.PointerEntered([this, key](auto&&, auto&&)
                     {
-                        if (m_draggingConnection)
-                        {
-                            m_hoverPort = key;
-                        }
-
                         m_hoverRowPort = key;
                         RefreshPortAppearance();
                     });
 
                 row.PointerExited([this, keyText](auto&&, auto&&)
                     {
-                        if (m_hoverPort.has_value() && m_hoverPort->ToString() == keyText)
-                        {
-                            m_hoverPort.reset();
-                        }
-
                         if (m_hoverRowPort.has_value() && m_hoverRowPort->ToString() == keyText)
                         {
                             m_hoverRowPort.reset();
@@ -590,15 +598,21 @@ namespace midipatchbay
 
                 // Either end can start the drag. Insisting on Out first is a rule the customer
                 // cannot see, and a drag that does nothing reads as a broken hit target.
-                row.PointerPressed([this, key](auto&&, input::PointerRoutedEventArgs const& args)
-                    {
-                        args.Handled(true);
+                // AddHandler, not row.PointerPressed: ButtonBase marks PointerPressed handled in
+                // its class handler, and a plain instance handler never sees a handled event.
+                // This is what stopped a drag from ever starting.
+                row.AddHandler(xaml::UIElement::PointerPressedEvent(),
+                    winrt::box_value(input::PointerEventHandler{
+                        [this, key](auto&&, input::PointerRoutedEventArgs const& args)
+                        {
+                            args.Handled(true);
 
-                        FocusCanvas();
+                            FocusCanvas();
+                            CancelDrags();
 
-                        BeginConnectionDrag(key);
-                        m_surface.CapturePointer(args.Pointer());
-                    });
+                            BeginConnectionDrag(key);
+                        } }),
+                    true);
 
                 row.Click([this, key](auto&&, auto&&) { OnPortClicked(key); });
 
@@ -672,6 +686,7 @@ namespace midipatchbay
                 args.Handled(true);
 
                 FocusCanvas();
+                CancelDrags();
 
                 OnNodePointerPressed(endpointId, args);
             });
@@ -801,19 +816,58 @@ namespace midipatchbay
             visual.Line = shapes::Path{};
             visual.Line.StrokeThickness(2.0);
             visual.Line.StrokeEndLineCap(xaml::Media::PenLineCap::Round);
+            visual.Line.IsHitTestVisible(false);
 
             controls::Canvas::SetZIndex(visual.Line, LineZIndex);
 
+            m_connectionLayer.Children().Append(visual.Line);
+
             auto const connectionId = connection.Id;
 
-            visual.Line.PointerPressed([this, connectionId](auto&&, input::PointerRoutedEventArgs const& args)
+            visual.HitArea = shapes::Path{};
+            visual.HitArea.StrokeThickness(16.0);
+            visual.HitArea.StrokeEndLineCap(xaml::Media::PenLineCap::Round);
+
+            // Transparent rather than null: a null stroke is not hit tested at all.
+            visual.HitArea.Stroke(media::SolidColorBrush{ Rgb(0, 0, 0, 0) });
+
+            controls::Canvas::SetZIndex(visual.HitArea, HitAreaZIndex);
+
+            visual.HitArea.PointerPressed([this, connectionId](auto&&, input::PointerRoutedEventArgs const& args)
                 {
                     args.Handled(true);
                     FocusCanvas();
+                    CancelDrags();
                     Select(CanvasSelectionKind::Connection, connectionId);
+
+                    // Grabbing a cord picks up whichever end is nearer, so it can be dropped on
+                    // a different connection point.
+                    auto const position = args.GetCurrentPoint(m_surface).Position();
+
+                    if (auto const* connection = m_patch == nullptr
+                        ? nullptr : m_patch->FindConnection(connectionId))
+                    {
+                        auto const sourcePoint = PortPoint(PortKey{
+                            connection->SourceEndpointId, true, connection->SourceGroupIndex });
+                        auto const destinationPoint = PortPoint(PortKey{
+                            connection->DestinationEndpointId, false, connection->DestinationGroupIndex });
+
+                        if (sourcePoint.has_value() && destinationPoint.has_value())
+                        {
+                            auto const distanceTo = [&position](foundation::Point const& p)
+                                {
+                                    auto const dx = position.X - p.X;
+                                    auto const dy = position.Y - p.Y;
+                                    return dx * dx + dy * dy;
+                                };
+
+                            BeginRetargetDrag(connectionId,
+                                distanceTo(sourcePoint.value()) <= distanceTo(destinationPoint.value()));
+                        }
+                    }
                 });
 
-            m_connectionLayer.Children().Append(visual.Line);
+            m_connectionLayer.Children().Append(visual.HitArea);
 
             controls::Border pill{};
 
@@ -892,6 +946,11 @@ namespace midipatchbay
                         visual.Glow.Visibility(xaml::Visibility::Collapsed);
                     }
 
+                    if (visual.HitArea != nullptr)
+                    {
+                        visual.HitArea.Visibility(xaml::Visibility::Collapsed);
+                    }
+
                     if (visual.Pill != nullptr)
                     {
                         visual.Pill.Visibility(xaml::Visibility::Collapsed);
@@ -901,6 +960,11 @@ namespace midipatchbay
                 }
 
                 visual.Line.Visibility(xaml::Visibility::Visible);
+
+                if (visual.HitArea != nullptr)
+                {
+                    visual.HitArea.Visibility(xaml::Visibility::Visible);
+                }
 
                 if (visual.Pill != nullptr)
                 {
@@ -955,6 +1019,11 @@ namespace midipatchbay
                     };
 
                 visual.Line.Data(buildGeometry());
+
+                if (visual.HitArea != nullptr)
+                {
+                    visual.HitArea.Data(buildGeometry());
+                }
 
                 if (visual.Glow != nullptr)
                 {
@@ -1165,8 +1234,6 @@ namespace midipatchbay
             m_dragStartPointer = point.Position();
             m_dragStartX = endpoint->CanvasX;
             m_dragStartY = endpoint->CanvasY;
-
-            m_surface.CapturePointer(args.Pointer());
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to start a node drag.")
     }
@@ -1181,8 +1248,16 @@ namespace midipatchbay
                 return;
             }
 
-            auto const position = args.GetCurrentPoint(m_surface).Position();
+            ApplyDragPosition(args.GetCurrentPoint(m_surface).Position());
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to move a node.")
+    }
 
+    _Use_decl_annotations_
+    void PatchCanvas::ApplyDragPosition(foundation::Point const& position) noexcept
+    {
+        try
+        {
             if (m_draggingConnection)
             {
                 UpdateConnectionDrag(position);
@@ -1222,7 +1297,12 @@ namespace midipatchbay
     {
         try
         {
-            m_surface.ReleasePointerCapture(args.Pointer());
+            // Move events are coalesced and a quick drag can deliver none near the target, so
+            // where the button came up is what decides the result, for cords and nodes alike.
+            if (m_draggingConnection || m_draggingNode)
+            {
+                ApplyDragPosition(args.GetCurrentPoint(m_surface).Position());
+            }
 
             if (m_draggingConnection)
             {
@@ -1252,9 +1332,14 @@ namespace midipatchbay
     void PatchCanvas::BeginConnectionDrag(PortKey const& key) noexcept
     {
         m_draggingConnection = true;
+        m_retargeting = false;
         m_dragMoved = false;
         m_dragSourcePort = key;
+        m_dragWantsOutput = !key.IsOutput;
         m_hoverPort.reset();
+
+        auto const anchor = PortPoint(key);
+        m_dragAnchor = anchor.value_or(foundation::Point{});
 
         if (m_dragLine != nullptr)
         {
@@ -1265,33 +1350,141 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
-    void PatchCanvas::UpdateConnectionDrag(foundation::Point const& point) noexcept
+    void PatchCanvas::BeginRetargetDrag(std::wstring const& connectionId, bool movingSource) noexcept
     {
         try
         {
-            auto const from = PortPoint(m_dragSourcePort);
-
-            if (!from.has_value() || m_dragLine == nullptr)
+            if (m_patch == nullptr)
             {
                 return;
             }
 
-            if (std::abs(point.X - from->X) > 6 || std::abs(point.Y - from->Y) > 6)
+            auto const* connection = m_patch->FindConnection(connectionId);
+
+            if (connection == nullptr)
+            {
+                return;
+            }
+
+            // The end that is NOT moving stays pinned, so the line rubber bands from there.
+            auto const anchor = movingSource
+                ? PortPoint(PortKey{ connection->DestinationEndpointId, false, connection->DestinationGroupIndex })
+                : PortPoint(PortKey{ connection->SourceEndpointId, true, connection->SourceGroupIndex });
+
+            if (!anchor.has_value())
+            {
+                return;
+            }
+
+            m_draggingConnection = true;
+            m_retargeting = true;
+            m_retargetConnectionId = connectionId;
+            m_retargetMovingSource = movingSource;
+            m_dragMoved = false;
+            m_dragWantsOutput = movingSource;
+            m_dragAnchor = anchor.value();
+            m_hoverPort.reset();
+
+            if (m_dragLine != nullptr)
+            {
+                m_dragLine.Visibility(xaml::Visibility::Visible);
+            }
+
+            RefreshPortAppearance();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to pick up the connection.")
+    }
+
+    _Use_decl_annotations_
+    std::optional<PortKey> PatchCanvas::FindPortNear(foundation::Point const& point, bool wantOutput) noexcept
+    {
+        if (m_patch == nullptr)
+        {
+            return std::nullopt;
+        }
+
+        std::optional<PortKey> best{};
+        double bestDistance = PortSnapRadius;
+
+        for (auto const& node : m_nodes)
+        {
+            auto const* endpoint = m_patch->FindEndpoint(node.EndpointId);
+
+            if (endpoint == nullptr)
+            {
+                continue;
+            }
+
+            for (auto const& port : node.Ports)
+            {
+                if (port.Key.IsOutput != wantOutput)
+                {
+                    continue;
+                }
+
+                auto const dx = point.X - (endpoint->CanvasX + port.OffsetX);
+                auto const dy = point.Y - (endpoint->CanvasY + port.OffsetY);
+                auto const distance = std::sqrt(dx * dx + dy * dy);
+
+                if (distance < bestDistance)
+                {
+                    bestDistance = distance;
+                    best = port.Key;
+                }
+            }
+        }
+
+        return best;
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::UpdateConnectionDrag(foundation::Point const& point) noexcept
+    {
+        try
+        {
+            if (m_dragLine == nullptr)
+            {
+                return;
+            }
+
+            auto const from = m_dragAnchor;
+
+            if (std::abs(point.X - from.X) > 6 || std::abs(point.Y - from.Y) > 6)
             {
                 m_dragMoved = true;
             }
 
-            auto const reach = static_cast<float>(std::clamp(std::abs(point.X - from->X) * 0.55, 42.0, 140.0));
+            auto const target = FindPortNear(point, m_dragWantsOutput);
+
+            if (target.has_value() != m_hoverPort.has_value() ||
+                (target.has_value() && !(target.value() == m_hoverPort.value())))
+            {
+                m_hoverPort = target;
+                RefreshPortAppearance();
+            }
+
+            // Snap the loose end onto the target, so it is obvious where the drop will land.
+            auto end = point;
+
+            if (target.has_value())
+            {
+                if (auto const snapped = PortPoint(target.value()))
+                {
+                    end = snapped.value();
+                }
+            }
+
+            auto const reach = static_cast<float>(std::clamp(std::abs(end.X - from.X) * 0.55, 42.0, 140.0));
 
             media::PathGeometry geometry{};
             media::PathFigure figure{};
 
-            figure.StartPoint(from.value());
+            figure.StartPoint(from);
 
             media::BezierSegment segment{};
-            segment.Point1(foundation::Point{ from->X + reach, from->Y });
-            segment.Point2(foundation::Point{ point.X - reach, point.Y });
-            segment.Point3(point);
+            segment.Point1(foundation::Point{ from.X + reach, from.Y });
+            segment.Point2(foundation::Point{ end.X - reach, end.Y });
+            segment.Point3(end);
 
             figure.Segments().Append(segment);
             geometry.Figures().Append(figure);
@@ -1318,7 +1511,12 @@ namespace midipatchbay
             }
 
             auto const target = m_hoverPort;
+            auto const wasRetargeting = m_retargeting;
+            auto const retargetId = m_retargetConnectionId;
+            auto const movingSource = m_retargetMovingSource;
+
             m_hoverPort.reset();
+            m_retargeting = false;
 
             RefreshPortAppearance();
 
@@ -1326,14 +1524,20 @@ namespace midipatchbay
             // for the keyboard friendly two step path.
             m_suppressNextPortClick = m_dragMoved;
 
-            if (!m_dragMoved)
+            if (!m_dragMoved || !target.has_value())
             {
+                return;
+            }
+
+            if (wasRetargeting)
+            {
+                RequestRetarget(retargetId, movingSource, target.value());
                 return;
             }
 
             // The two ends have to be opposite sides; which one the drag started from does not
             // matter, so the pair is ordered here rather than being demanded of the customer.
-            if (!target.has_value() || target->IsOutput == m_dragSourcePort.IsOutput)
+            if (target->IsOutput == m_dragSourcePort.IsOutput)
             {
                 return;
             }
@@ -1348,6 +1552,44 @@ namespace midipatchbay
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to finish making a connection.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::RequestRetarget(
+        std::wstring const& connectionId,
+        bool movingSource,
+        PortKey const& port) noexcept
+    {
+        try
+        {
+            if (!m_callbacks.ConnectionRetargetRequested || m_patch == nullptr)
+            {
+                return;
+            }
+
+            auto const* existing = m_patch->FindConnection(connectionId);
+
+            if (existing == nullptr)
+            {
+                return;
+            }
+
+            auto updated = *existing;
+
+            if (movingSource)
+            {
+                updated.SourceEndpointId = port.EndpointId;
+                updated.SourceGroupIndex = port.GroupIndex;
+            }
+            else
+            {
+                updated.DestinationEndpointId = port.EndpointId;
+                updated.DestinationGroupIndex = port.GroupIndex;
+            }
+
+            m_callbacks.ConnectionRetargetRequested(connectionId, std::move(updated));
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to move the connection.")
     }
 
     _Use_decl_annotations_
@@ -1420,6 +1662,25 @@ namespace midipatchbay
         }
     }
 
+    void PatchCanvas::CancelDrags() noexcept
+    {
+        m_draggingNode = false;
+
+        if (m_draggingConnection)
+        {
+            m_draggingConnection = false;
+            m_retargeting = false;
+            m_hoverPort.reset();
+
+            if (m_dragLine != nullptr)
+            {
+                m_dragLine.Visibility(xaml::Visibility::Collapsed);
+            }
+
+            RefreshPortAppearance();
+        }
+    }
+
     _Use_decl_annotations_
     void PatchCanvas::ApplyPortAppearance(PortVisual& port) noexcept
     {
@@ -1438,12 +1699,16 @@ namespace midipatchbay
         // While a connection is being made, every end that could receive it is filled in, so
         // the customer can see where the drag is allowed to land instead of guessing.
         auto const candidate =
-            (m_draggingConnection && m_dragSourcePort.IsOutput != port.Key.IsOutput) ||
+            (m_draggingConnection && m_dragWantsOutput == port.Key.IsOutput) ||
             (m_armedPort.has_value() && m_armedPort->IsOutput != port.Key.IsOutput);
 
-        auto const filled = armed || candidate;
+        // The one it would actually snap to right now.
+        auto const snapped = m_hoverPort.has_value() && m_hoverPort.value() == port.Key;
+
+        auto const filled = armed || candidate || snapped;
 
         port.Dot.Stroke(filled || hovered ? accent : tertiary);
+        port.Dot.StrokeThickness(snapped ? 3.0 : 2.0);
         port.Dot.Fill(filled
             ? accent
             : ThemeBrush(L"SolidBackgroundFillColorSecondaryBrush", Rgb(0x2B, 0x2B, 0x2B)));

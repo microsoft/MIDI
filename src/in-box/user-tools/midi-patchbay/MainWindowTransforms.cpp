@@ -70,8 +70,14 @@ namespace winrt::midipatchbay::implementation
             box.Maximum(maximum);
             box.SmallChange(1);
             box.LargeChange(12);
-            box.Width(112);
-            box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+
+            // Wide enough that the value is still readable once the clear button appears next to
+            // the two inline spin buttons.
+            box.Width(148);
+
+            // Inline, not Compact: the compact spin buttons live in a popup that the dialog's
+            // scroll viewer does not clip, so they hang over everything and never go away.
+            box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Inline);
             box.ValidationMode(controls::NumberBoxValidationMode::InvalidInputOverwritten);
             box.Value(value);
 
@@ -557,7 +563,7 @@ namespace winrt::midipatchbay::implementation
                         auto box = SmallNumberBox(0, 127, isSource
                             ? m_noteMapRows[index].first : m_noteMapRows[index].second);
 
-                        box.Width(96);
+                        box.Width(128);
                         box.Header(winrt::box_value(resources::GetString(
                             isSource ? L"TransformNoteFrom" : L"TransformNoteTo")));
 
@@ -716,7 +722,7 @@ namespace winrt::midipatchbay::implementation
                         auto box = SmallNumberBox(0, 127, isSource
                             ? m_controlMapRows[index].first : m_controlMapRows[index].second);
 
-                        box.Width(96);
+                        box.Width(128);
                         box.Header(winrt::box_value(resources::GetString(
                             isSource ? L"TransformControlFrom" : L"TransformControlTo")));
 

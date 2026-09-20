@@ -420,7 +420,7 @@
                                                    Maximum="150"
                                                    SmallChange="5"
                                                    LargeChange="10"
-                                                   SpinButtonPlacementMode="Compact"
+                                                   SpinButtonPlacementMode="Inline"
                                                    ValidationMode="InvalidInputOverwritten"
                                                    ValueChanged="OnZoomValueChanged" />
                                         <Button x:Name="ZoomApplyButton"
@@ -481,26 +481,31 @@
                                         HorizontalAlignment="Center"
                                         VerticalAlignment="Center"
                                         Spacing="8"
-                                        IsHitTestVisible="False"
                                         Visibility="Collapsed">
                                 <FontIcon Glyph="&#xE71B;"
                                           FontSize="34"
                                           Foreground="{ThemeResource TextFillColorDisabledBrush}" />
                                 <TextBlock x:Name="EmptyCanvasTitle"
                                            x:Uid="EmptyCanvasTitle"
-                                           Text="Drop endpoints here"
+                                           Text="Nothing on this patch yet"
                                            FontSize="15"
                                            HorizontalAlignment="Center"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                 <TextBlock x:Name="EmptyCanvasSubtitle"
                                            x:Uid="EmptyCanvasSubtitle"
-                                           Text="Then drag an Out connection point to an In connection point. Nothing is sent until you do."
+                                           Text="Add the endpoints you want to route between, then drag from an Out connection point to an In connection point. Nothing is sent until you do."
                                            FontSize="12"
                                            MaxWidth="360"
                                            TextWrapping="Wrap"
                                            TextAlignment="Center"
                                            HorizontalAlignment="Center"
                                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                <Button x:Name="EmptyCanvasAddButton"
+                                        x:Uid="EmptyCanvasAddButton"
+                                        Content="Add endpoint"
+                                        HorizontalAlignment="Center"
+                                        Margin="0,6,0,0"
+                                        Click="OnAddEndpointClick" />
                             </StackPanel>
 
                             <Border x:Name="MinimapPanel"

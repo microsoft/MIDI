@@ -66,6 +66,10 @@ namespace midipatchbay
             // happened rather than at the corner of the canvas.
             std::function<void(std::wstring, foundation::Point)> EndpointContextMenuRequested{};
 
+            // The customer dragged one end of an existing connection onto a different port.
+            // The window validates and commits it, the same as a brand new connection.
+            std::function<void(std::wstring, PatchConnection)> ConnectionRetargetRequested{};
+
             std::function<void()> ViewportChanged{};
         };
 
@@ -144,6 +148,10 @@ namespace midipatchbay
             // lifted rather than merely thicker.
             shapes::Path Glow{ nullptr };
 
+            // Invisible and much thicker than the line, because a two pixel cord is unreasonable
+            // to expect anyone to hit.
+            shapes::Path HitArea{ nullptr };
+
             controls::Border Pill{ nullptr };
             controls::TextBlock PillText{ nullptr };
             bool IsLoopMuted{ false };
@@ -174,9 +182,21 @@ namespace midipatchbay
         void OnSurfacePointerMoved(_In_ input::PointerRoutedEventArgs const& args) noexcept;
         void OnSurfacePointerReleased(_In_ input::PointerRoutedEventArgs const& args) noexcept;
 
+        // Shared by the move and the release, so a drag that delivered no useful move events
+        // still ends up where the pointer actually was.
+        void ApplyDragPosition(_In_ foundation::Point const& position) noexcept;
+
         void BeginConnectionDrag(_In_ PortKey const& key) noexcept;
+
+        // Picks up one end of an existing connection so it can be dropped somewhere else.
+        void BeginRetargetDrag(_In_ std::wstring const& connectionId, _In_ bool movingSource) noexcept;
+
         void UpdateConnectionDrag(_In_ foundation::Point const& point) noexcept;
         void EndConnectionDrag() noexcept;
+
+        // The drop target, by proximity. A captured pointer never raises PointerEntered on the
+        // row being dragged onto, so hover cannot be used to find it.
+        std::optional<PortKey> FindPortNear(_In_ foundation::Point const& point, _In_ bool wantOutput) noexcept;
 
         // Dragging is not reachable from the keyboard, so a connection can also be made by
         // choosing the Out point and then the In point.
@@ -185,7 +205,14 @@ namespace midipatchbay
         void ApplyPortAppearance(_In_ PortVisual& port) noexcept;
         void RefreshPortAppearance() noexcept;
         void FocusCanvas() noexcept;
+
+        // Abandons whatever drag is in progress without committing it.
+        void CancelDrags() noexcept;
         void RequestConnection(_In_ PortKey const& source, _In_ PortKey const& destination) noexcept;
+        void RequestRetarget(
+            _In_ std::wstring const& connectionId,
+            _In_ bool movingSource,
+            _In_ PortKey const& port) noexcept;
 
         static media::Brush ThemeBrush(_In_ std::wstring_view key, _In_ winrt::Windows::UI::Color fallback) noexcept;
 
@@ -223,6 +250,15 @@ namespace midipatchbay
         bool m_dragMoved{ false };
         bool m_suppressNextPortClick{ false };
         PortKey m_dragSourcePort{};
+
+        // Where the line being dragged is pinned, and which side the drop has to land on.
+        foundation::Point m_dragAnchor{};
+        bool m_dragWantsOutput{ false };
+
+        bool m_retargeting{ false };
+        std::wstring m_retargetConnectionId{};
+        bool m_retargetMovingSource{ false };
+
         std::optional<PortKey> m_hoverPort{};
         std::optional<PortKey> m_armedPort{};
 

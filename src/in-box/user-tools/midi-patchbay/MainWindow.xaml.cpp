@@ -86,6 +86,8 @@ namespace winrt::midipatchbay::implementation
                     [this]() { OnCanvasLayoutChanged(); },
                     [this](std::wstring endpointId, foundation::Point position)
                         { ShowEndpointMenu(endpointId, position); },
+                    [this](std::wstring connectionId, patchbay::PatchConnection updated)
+                        { OnConnectionRetargetRequested(connectionId, std::move(updated)); },
                     [this]() { UpdateZoomText(CanvasScroller().ZoomFactor()); }
                 });
 
@@ -149,6 +151,7 @@ namespace winrt::midipatchbay::implementation
                                 strong->m_liveEndpoints = patchbay::EndpointCatalog::Current().Snapshot();
                                 strong->RefreshAnalysis();
                                 strong->RebuildCanvas();
+                                strong->RefreshNavigationBadges();
                                 strong->UpdateMessages();
                                 strong->ApplyRouting();
                             }
@@ -541,6 +544,37 @@ namespace winrt::midipatchbay::implementation
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to load the patches.")
     }
 
+    // Endpoints come and go while the window is open, so the badge that says a patch is waiting
+    // for one has to be re-evaluated. Rebuilding the list on every catalog change would be far too
+    // much churn, so only a change in which patches are affected is acted on.
+    std::wstring MainWindow::NavigationBadgeSignature() const noexcept
+    {
+        std::wstring signature{};
+
+        for (auto const& patch : m_patches)
+        {
+            auto const offline = std::any_of(patch.Endpoints.begin(), patch.Endpoints.end(),
+                [](patchbay::PatchEndpoint const& e)
+                { return !patchbay::EndpointCatalog::Current().Resolve(e).has_value(); });
+
+            signature += offline ? L"1" : L"0";
+        }
+
+        return signature;
+    }
+
+    void MainWindow::RefreshNavigationBadges() noexcept
+    {
+        try
+        {
+            if (NavigationBadgeSignature() != m_navigationBadgeSignature)
+            {
+                RebuildNavigation();
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to refresh the patch list badges.")
+    }
+
     void MainWindow::RebuildNavigation() noexcept
     {
         try
@@ -548,6 +582,7 @@ namespace winrt::midipatchbay::implementation
             m_rebuildingNavigation = true;
 
             auto const previous = m_currentPatchKey;
+            m_navigationBadgeSignature = NavigationBadgeSignature();
 
             MainNavigation().MenuItems().Clear();
 
@@ -950,6 +985,66 @@ namespace winrt::midipatchbay::implementation
             m_canvas.Select(patchbay::CanvasSelectionKind::Connection, connection.Id);
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to add the connection.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnConnectionRetargetRequested(
+        std::wstring const& connectionId,
+        patchbay::PatchConnection updated) noexcept
+    {
+        try
+        {
+            auto* patch = CurrentPatch();
+
+            if (patch == nullptr)
+            {
+                return;
+            }
+
+            auto* existing = patch->FindConnection(connectionId);
+
+            if (existing == nullptr)
+            {
+                return;
+            }
+
+            if (updated.SourceEndpointId == updated.DestinationEndpointId &&
+                updated.SourceGroupIndex == updated.DestinationGroupIndex)
+            {
+                ShowStatus(resources::GetString(L"ConnectionSelfRejected"), controls::InfoBarSeverity::Warning);
+                return;
+            }
+
+            // Landing on top of a connection that already exists would leave a duplicate behind.
+            for (auto const& other : patch->Connections)
+            {
+                if (other.Id != connectionId &&
+                    other.SourceEndpointId == updated.SourceEndpointId &&
+                    other.SourceGroupIndex == updated.SourceGroupIndex &&
+                    other.DestinationEndpointId == updated.DestinationEndpointId &&
+                    other.DestinationGroupIndex == updated.DestinationGroupIndex)
+                {
+                    ShowStatus(resources::GetString(L"ConnectionDuplicate"), controls::InfoBarSeverity::Informational);
+                    return;
+                }
+            }
+
+            // The filter and the transform belong to the cord, so they move with it.
+            existing->SourceEndpointId = updated.SourceEndpointId;
+            existing->SourceGroupIndex = updated.SourceGroupIndex;
+            existing->DestinationEndpointId = updated.DestinationEndpointId;
+            existing->DestinationGroupIndex = updated.DestinationGroupIndex;
+
+            MarkDirty();
+            RefreshAnalysis();
+            RebuildCanvas();
+            RefreshInspector();
+            ApplyRouting();
+            UpdateMessages();
+
+            m_canvas.Select(patchbay::CanvasSelectionKind::Connection, connectionId);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to move the connection.")
     }
 
     _Use_decl_annotations_

@@ -320,6 +320,83 @@ namespace midipatchbay
         }
     }
 
+    namespace
+    {
+        // Beyond this the list stops being something anyone reads and turns into a wall of text.
+        constexpr size_t MaximumNamesInSummary = 4;
+
+        std::wstring JoinNames(_In_ std::vector<std::wstring> const& names)
+        {
+            std::wstring text{};
+            auto const shown = (std::min)(names.size(), MaximumNamesInSummary);
+
+            for (size_t i = 0; i < shown; i++)
+            {
+                if (!text.empty())
+                {
+                    text += L", ";
+                }
+
+                text += names[i];
+            }
+
+            if (names.size() > shown)
+            {
+                text = std::wstring{ resources::FormatString(L"FilterSummaryMoreFormat",
+                    text, static_cast<int>(names.size() - shown)) };
+            }
+
+            return text;
+        }
+
+        // Saying "no A, B, C, D, E, F, G, H, I, J" when only two things are kept is unreadable, so
+        // whichever side is shorter is the one described.
+        void DescribeGroup(
+            _In_reads_(count) bool const* values,
+            _In_ size_t count,
+            _In_ std::function<winrt::hstring(size_t)> const& describe,
+            _In_ std::wstring_view onlyKey,
+            _In_ std::wstring_view noneKey,
+            _In_ std::wstring_view nothingKey,
+            _Inout_ std::vector<std::wstring>& parts)
+        {
+            std::vector<std::wstring> kept{};
+            std::vector<std::wstring> dropped{};
+
+            for (size_t i = 0; i < count; i++)
+            {
+                auto const name = describe(i);
+
+                if (values[i])
+                {
+                    kept.push_back(std::wstring{ name });
+                }
+                else
+                {
+                    dropped.push_back(std::wstring{ name });
+                }
+            }
+
+            if (dropped.empty())
+            {
+                return;
+            }
+
+            if (kept.empty())
+            {
+                parts.push_back(std::wstring{ resources::GetString(nothingKey) });
+            }
+            else if (kept.size() <= dropped.size())
+            {
+                parts.push_back(std::wstring{ resources::FormatString(onlyKey, JoinNames(kept)) });
+            }
+            else
+            {
+                parts.push_back(std::wstring{ resources::FormatString(noneKey, JoinNames(dropped)) });
+            }
+        }
+    }
+
     _Use_decl_annotations_
     winrt::hstring SummarizeFilter(MessageFilter const& filter) noexcept
     {
@@ -332,71 +409,20 @@ namespace midipatchbay
 
             std::vector<std::wstring> parts{};
 
-            if (!AllTrue(filter.MessageTypes.data(), filter.MessageTypes.size()))
-            {
-                std::wstring names{};
+            DescribeGroup(filter.MessageTypes.data(), MessageTypeCount,
+                [](size_t i) { return DescribeMessageType(static_cast<uint8_t>(i)); },
+                L"FilterSummaryOnlyTypesFormat", L"FilterSummaryNoTypesFormat",
+                L"FilterSummaryNothingFormat", parts);
 
-                for (size_t i = 0; i < MessageTypeCount; i++)
-                {
-                    if (filter.MessageTypes[i])
-                    {
-                        continue;
-                    }
+            DescribeGroup(filter.ChannelVoiceStatuses.data(), ChannelVoiceStatusCount,
+                [](size_t i) { return DescribeChannelVoiceStatus(static_cast<uint8_t>(i)); },
+                L"FilterSummaryOnlyMessagesFormat", L"FilterSummaryNoMessagesFormat",
+                L"FilterSummaryNoChannelMessages", parts);
 
-                    if (!names.empty())
-                    {
-                        names += L", ";
-                    }
-
-                    names += std::wstring{ DescribeMessageType(static_cast<uint8_t>(i)) };
-                }
-
-                parts.push_back(std::wstring{ resources::FormatString(L"FilterSummaryNoTypesFormat", names) });
-            }
-
-            if (!AllTrue(filter.ChannelVoiceStatuses.data(), filter.ChannelVoiceStatuses.size()))
-            {
-                std::wstring names{};
-
-                for (size_t i = 0; i < ChannelVoiceStatusCount; i++)
-                {
-                    if (filter.ChannelVoiceStatuses[i])
-                    {
-                        continue;
-                    }
-
-                    if (!names.empty())
-                    {
-                        names += L", ";
-                    }
-
-                    names += std::wstring{ DescribeChannelVoiceStatus(static_cast<uint8_t>(i)) };
-                }
-
-                parts.push_back(std::wstring{ resources::FormatString(L"FilterSummaryNoMessagesFormat", names) });
-            }
-
-            if (!AllTrue(filter.SystemMessages.data(), filter.SystemMessages.size()))
-            {
-                std::wstring names{};
-
-                for (size_t i = 0; i < SystemMessageCount; i++)
-                {
-                    if (filter.SystemMessages[i])
-                    {
-                        continue;
-                    }
-
-                    if (!names.empty())
-                    {
-                        names += L", ";
-                    }
-
-                    names += std::wstring{ DescribeSystemMessage(SystemMessageList[i]) };
-                }
-
-                parts.push_back(std::wstring{ resources::FormatString(L"FilterSummaryNoMessagesFormat", names) });
-            }
+            DescribeGroup(filter.SystemMessages.data(), SystemMessageCount,
+                [](size_t i) { return DescribeSystemMessage(SystemMessageList[i]); },
+                L"FilterSummaryOnlyMessagesFormat", L"FilterSummaryNoMessagesFormat",
+                L"FilterSummaryNoSystemMessages", parts);
 
             if (!AllTrue(filter.Channels.data(), filter.Channels.size()))
             {

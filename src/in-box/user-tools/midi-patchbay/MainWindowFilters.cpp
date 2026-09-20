@@ -460,7 +460,7 @@ namespace winrt::midipatchbay::implementation
                     box.SmallChange(1);
                     box.LargeChange(12);
                     box.Width(150);
-                    box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+                    box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Inline);
                     box.ValidationMode(controls::NumberBoxValidationMode::InvalidInputOverwritten);
                     box.Value(isLow ? m_editingFilter.LowestAllowedNote : m_editingFilter.HighestAllowedNote);
 

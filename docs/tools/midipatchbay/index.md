@@ -14,6 +14,8 @@ MIDI Patchbay connects MIDI endpoints to each other. You drop the devices you ca
 
 It's the software version of the patchbay in a studio rack: keys into a sound module, a drum machine into your DAW, one controller split across three instruments.
 
+![The MIDI Patchbay canvas]({{ site.baseurl }}/assets/images/midipatchbay.png)
+
 ## What a patch is
 
 A **patch** is one canvas: the endpoints on it, the connections between them, and a name. Patches are saved as files in **Documents &rsaquo; MIDI Patchbay**, one file per patch, so you can back one up or copy it to another PC.
@@ -21,6 +23,8 @@ A **patch** is one canvas: the endpoints on it, the connections between them, an
 You can have as many patches as you like, and more than one can be routing at the same time. Whether a patch is routing is separate from whether it's the one on screen, so you can look at one patch while three others are working.
 
 A patch you don't name is **temporary**: it routes right now and disappears when Patchbay closes. Nothing is written to disk. Give it a name and it sticks around.
+
+**New quick patch** is the fastest way to get going: pick a source, pick a destination, and you have a patch with one connection in it. **New empty patch** gives you a blank canvas to build on instead.
 
 ## Connection points
 
@@ -33,7 +37,43 @@ There's a row for each group the endpoint declares, labeled with the same name t
 
 Connect a specific group to a different specific group and Patchbay rewrites the group as the message goes past. That's how you fold four groups of one device onto one group of another.
 
-You can draw a connection by dragging from an Out point to an In point, or by clicking the Out point and then clicking the In point. The second way also works from the keyboard.
+You can draw a connection by dragging from an Out point to an In point, or by clicking the Out point and then clicking the In point. The second way also works from the keyboard. You don't have to land exactly on the point &mdash; get close and the connection snaps to it.
+
+To change where an existing connection goes, drag the end of the cord onto a different point. Drag a node by its title bar to move it out of the way. Select a connection or an endpoint and press **Delete** to remove it; the first time, Patchbay asks, and offers to stop asking.
+
+## Filters
+
+Each connection can be narrowed so only some of what arrives is passed on. Select the connection and choose **Edit filters**.
+
+![Choosing which messages a connection carries]({{ site.baseurl }}/assets/images/midipatchbay-filters.png)
+
+Everything is allowed until you clear something. A message has to pass every section to be sent on, so the sections work together: clearing a whole message type drops those messages whatever the sections below say.
+
+- **Message types** is the coarsest switch, at the UMP message type level.
+- **Channel messages** applies to both MIDI 1.0 and MIDI 2.0 channel voice messages, so you can drop program changes or keep only notes.
+- **System messages** is where you stop a device flooding everything downstream with timing clock or active sensing.
+- **Channels** limits which of the sixteen channels get through.
+
+A **note range** keeps only notes inside a span, which is how you split a keyboard across two instruments. Click a key for the bottom of the range and shift-click for the top, or type the note numbers. It applies to note on, note off, poly pressure and the MIDI 2.0 per note messages, so a held note can't be stranded.
+
+![Setting a note range on the keyboard]({{ site.baseurl }}/assets/images/midipatchbay-note-range.png)
+
+## Transforms
+
+Transforms change messages on the way past. They run after the filters, on the copy sent to that one destination, so nothing here affects what any other connection carries.
+
+![Transposing and reshaping velocity]({{ site.baseurl }}/assets/images/midipatchbay-transforms.png)
+
+- **Transpose** shifts every note, including aftertouch and the MIDI 2.0 per note messages. A note pushed past either end is clamped rather than wrapped, so nothing lands an octave out.
+- **Note mapping** is the list of exceptions to the transpose: a note listed here goes exactly where you send it, and everything else is transposed as usual. **Play** sends the destination note so you can hear where it lands.
+- **Note on velocity** reshapes the ramp, linear to curved or curved to linear, and can rescale it into a narrower range so a light touch still speaks and a heavy one doesn't max out. Only note on messages are touched, and a MIDI 1.0 note on with velocity zero is a note off, so it's always left alone.
+- **Control change mapping** moves a controller to a different number and carries its value over untouched. Controllers you don't list are passed through.
+
+![Moving one controller to another]({{ site.baseurl }}/assets/images/midipatchbay-control-change.png)
+
+Selecting a connection shows what its filters and transforms add up to, so you can see at a glance what a cord is doing without opening either dialog.
+
+![What a connection carries]({{ site.baseurl }}/assets/images/midipatchbay-connection.png)
 
 ## Routing only runs while Patchbay is running
 
@@ -77,7 +117,3 @@ Patchbay only knows about the connections it routes itself. A DIN cable between 
 ## Testing a route
 
 Right-click an endpoint, or use **Test** on the toolbar, to open [MIDI Monitor]({{ site.baseurl }}/tools/midi2monitor/), the MIDI keyboard or the [scratch pad]({{ site.baseurl }}/tools/midiscratchpad/) already pointed at that endpoint. Selecting a connection shows a running count of what it has forwarded, which is how you tell "nothing is arriving" apart from "arriving and going nowhere".
-
-## Coming next
-
-Filters and transforms on each connection: only certain channels, only certain message types, only notes in a range, and dropping clock and other system real-time messages so a chatty device stops flooding everything downstream. The details panel already shows where they'll live.

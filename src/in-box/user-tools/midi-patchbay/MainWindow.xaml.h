@@ -75,6 +75,8 @@ namespace winrt::midipatchbay::implementation
         // ---- patch list and navigation ----
         void LoadPatches() noexcept;
         void RebuildNavigation() noexcept;
+        void RefreshNavigationBadges() noexcept;
+        std::wstring NavigationBadgeSignature() const noexcept;
         void SelectPatch(_In_ std::wstring const& patchId) noexcept;
 
         // An empty preferred name gives the numbered untitled name.
@@ -90,6 +92,9 @@ namespace winrt::midipatchbay::implementation
         void RebuildCanvas() noexcept;
         void OnCanvasSelectionChanged() noexcept;
         void OnConnectionRequested(_In_ ::midipatchbay::PatchConnection connection) noexcept;
+        void OnConnectionRetargetRequested(
+            _In_ std::wstring const& connectionId,
+            _In_ ::midipatchbay::PatchConnection updated) noexcept;
         void OnCanvasLayoutChanged() noexcept;
         void ShowEndpointMenu(_In_ std::wstring const& endpointId, _In_ foundation::Point const& position) noexcept;
 
@@ -236,6 +241,9 @@ namespace winrt::midipatchbay::implementation
         bool m_loaded{ false };
         bool m_closing{ false };
         bool m_rebuildingNavigation{ false };
+
+        // Which patches were showing a missing-endpoint badge the last time the list was built.
+        std::wstring m_navigationBadgeSignature{};
 
         xaml::DispatcherTimer m_refreshTimer{ nullptr };
 

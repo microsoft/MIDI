@@ -195,10 +195,13 @@
 
   <!-- =============================================================== canvas -->
   <data name="EmptyCanvasTitle.Text" xml:space="preserve">
-    <value>Drop endpoints here</value>
+    <value>Nothing on this patch yet</value>
   </data>
   <data name="EmptyCanvasSubtitle.Text" xml:space="preserve">
-    <value>Then drag an Out connection point to an In connection point. Nothing is sent until you do.</value>
+    <value>Add the endpoints you want to route between, then drag from an Out connection point to an In connection point. Nothing is sent until you do.</value>
+  </data>
+  <data name="EmptyCanvasAddButton.Content" xml:space="preserve">
+    <value>Add endpoint</value>
   </data>
   <data name="PortColumnIn" xml:space="preserve">
     <value>In</value>
@@ -570,8 +573,26 @@
   <data name="FilterSummaryNoTypesFormat" xml:space="preserve">
     <value>No {0}</value>
   </data>
+  <data name="FilterSummaryOnlyTypesFormat" xml:space="preserve">
+    <value>{0} only</value>
+  </data>
   <data name="FilterSummaryNoMessagesFormat" xml:space="preserve">
     <value>No {0}</value>
+  </data>
+  <data name="FilterSummaryOnlyMessagesFormat" xml:space="preserve">
+    <value>{0} only</value>
+  </data>
+  <data name="FilterSummaryNothingFormat" xml:space="preserve">
+    <value>Nothing at all</value>
+  </data>
+  <data name="FilterSummaryNoChannelMessages" xml:space="preserve">
+    <value>No channel messages</value>
+  </data>
+  <data name="FilterSummaryNoSystemMessages" xml:space="preserve">
+    <value>No system messages</value>
+  </data>
+  <data name="FilterSummaryMoreFormat" xml:space="preserve">
+    <value>{0} and {1} more</value>
   </data>
   <data name="FilterSummaryChannelsFormat" xml:space="preserve">
     <value>Channels {0} only</value>
