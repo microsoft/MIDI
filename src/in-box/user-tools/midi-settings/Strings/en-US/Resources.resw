@@ -140,6 +140,15 @@
   <data name="NetworkSetupButtonText.Text" xml:space="preserve">
     <value>Network Setup</value>
   </data>
+  <data name="PatchbayButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI Patchbay</value>
+  </data>
+  <data name="PatchbayButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>MIDI Patchbay</value>
+  </data>
+  <data name="PatchbayButtonText.Text" xml:space="preserve">
+    <value>Patchbay</value>
+  </data>
   <data name="SysExButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>MIDI SysEx Tool</value>
   </data>
@@ -593,6 +602,9 @@
   </data>
   <data name="CustomizePortNamesButton.Content" xml:space="preserve">
     <value>Edit port names...</value>
+  </data>
+  <data name="Midi1PortNamesDialog.Title" xml:space="preserve">
+    <value>MIDI 1.0 port names</value>
   </data>
   <data name="Midi1PortNamesDialog.PrimaryButtonText" xml:space="preserve">
     <value>Save</value>

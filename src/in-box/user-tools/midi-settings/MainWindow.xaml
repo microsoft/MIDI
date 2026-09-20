@@ -399,6 +399,18 @@
 
                     <Rectangle x:Name="SetupToolsSeparator" Style="{StaticResource ToolSeparatorStyle}" />
 
+                    <Button x:Name="PatchbayButton"
+                            x:Uid="PatchbayButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnPatchbayClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Image x:Name="PatchbayIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                            <TextBlock x:Uid="PatchbayButtonText"
+                                       Text="Patchbay"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
+
                     <Button x:Name="SysExButton"
                             x:Uid="SysExButton"
                             Style="{StaticResource ToolButtonStyle}"

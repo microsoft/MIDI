@@ -16,6 +16,7 @@ namespace midisettings
         LoopbackSetup = 0,
         BluetoothSetup,
         NetworkSetup,
+        Patchbay,
         SysEx,
         ScratchPad,
         Keyboard,

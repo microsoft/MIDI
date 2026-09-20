@@ -222,6 +222,7 @@ namespace winrt::midisettings::implementation
             ApplyToolButton(LoopbackSetupButton(), LoopbackSetupIcon(), native::MidiTool::LoopbackSetup);
             ApplyToolButton(BluetoothSetupButton(), BluetoothSetupIcon(), native::MidiTool::BluetoothSetup);
             ApplyToolButton(NetworkSetupButton(), NetworkSetupIcon(), native::MidiTool::NetworkSetup);
+            ApplyToolButton(PatchbayButton(), PatchbayIcon(), native::MidiTool::Patchbay);
             ApplyToolButton(SysExButton(), SysExIcon(), native::MidiTool::SysEx);
             ApplyToolButton(MonitorButton(), MonitorIcon(), native::MidiTool::Monitor);
             ApplyToolButton(ScratchPadButton(), ScratchPadIcon(), native::MidiTool::ScratchPad);
@@ -236,6 +237,7 @@ namespace winrt::midisettings::implementation
                 native::GetToolLocation(native::MidiTool::NetworkSetup).Installed;
 
             auto const utilitiesInstalled =
+                native::GetToolLocation(native::MidiTool::Patchbay).Installed ||
                 native::GetToolLocation(native::MidiTool::SysEx).Installed ||
                 native::GetToolLocation(native::MidiTool::Monitor).Installed ||
                 native::GetToolLocation(native::MidiTool::ScratchPad).Installed ||
@@ -295,6 +297,12 @@ namespace winrt::midisettings::implementation
     void MainWindow::OnNetworkSetupClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
         native::LaunchTool(native::MidiTool::NetworkSetup);
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnPatchbayClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        native::LaunchTool(native::MidiTool::Patchbay);
     }
 
     _Use_decl_annotations_
