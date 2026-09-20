@@ -10,15 +10,19 @@
             {% assign ns_url = sdk_url_root %}
             {% assign remaining_ns = page.namespace | remove: "Windows.Devices.Midi2." | split: "." %}
 
+            {% comment %} One crumb per namespace segment. The page title is added after the loop, not inside it, or it repeats once per segment. {% endcomment %}
             {% for sub_ns in remaining_ns %}           
                 {% assign ns_url = ns_url | append: sub_ns | append: "/" %}
                 {% if forloop.last == true and page.layout == "sdk_namespace_page" %}
                     <li class="breadcrumb-item active" aria-current="page">{{sub_ns}}</li>
                 {% else %}
                     <li class="breadcrumb-item"><a href="{{ ns_url | relative_url }}">{{sub_ns}}</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">{{page.title}}</li>
                 {% endif %}
             {% endfor %}
+
+            {% if page.layout != "sdk_namespace_page" %}
+                <li class="breadcrumb-item active" aria-current="page">{{page.title}}</li>
+            {% endif %}
 
         {% elsif page.layout != "sdk_namespace_page" %}
             <li class="breadcrumb-item active" aria-current="page">{{page.title}}</li>
