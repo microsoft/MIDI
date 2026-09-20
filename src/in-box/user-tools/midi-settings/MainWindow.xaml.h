@@ -35,6 +35,7 @@ namespace winrt::midisettings::implementation
         void OnLoopbackSetupClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnBluetoothSetupClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNetworkSetupClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnPatchbayClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSysExClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnMonitorClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnScratchPadClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);

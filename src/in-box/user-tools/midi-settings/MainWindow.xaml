@@ -313,10 +313,34 @@
 
             <TextBlock x:Name="AppTitleTextBlock"
                        Grid.Column="2"
-                       Text="MIDI Settings"
+                       Text="Windows MIDI Settings"
                        Margin="12,0,0,0"
                        VerticalAlignment="Center"
                        Style="{ThemeResource CaptionTextBlockStyle}" />
+
+            <!-- Spans every column so it sits in the middle of the window rather than the middle
+                 of the stretchy column. Not hit testable, so it stays part of the drag region.
+                 Hidden when this is not a preview build; see midi-app-shared\PreviewBuild.h. -->
+            <Border x:Name="PreviewChiclet"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="6"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Height="18"
+                    Padding="9,0,9,0"
+                    CornerRadius="9"
+                    IsHitTestVisible="False"
+                    BorderThickness="1"
+                    BorderBrush="{ThemeResource SystemFillColorCautionBrush}"
+                    Background="{ThemeResource SystemFillColorCautionBackgroundBrush}">
+                <TextBlock x:Name="PreviewChicletText"
+                           x:Uid="PreviewChicletText"
+                           Text="PREVIEW"
+                           FontSize="10"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+            </Border>
 
             <Button x:Name="AppearanceButton"
                     x:Uid="AppearanceButton"
@@ -398,6 +422,18 @@
                     </Button>
 
                     <Rectangle x:Name="SetupToolsSeparator" Style="{StaticResource ToolSeparatorStyle}" />
+
+                    <Button x:Name="PatchbayButton"
+                            x:Uid="PatchbayButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnPatchbayClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Image x:Name="PatchbayIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                            <TextBlock x:Uid="PatchbayButtonText"
+                                       Text="Patchbay"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
 
                     <Button x:Name="SysExButton"
                             x:Uid="SysExButton"

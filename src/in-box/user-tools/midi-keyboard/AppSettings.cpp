@@ -25,6 +25,7 @@ namespace midikeyboard
         constexpr wchar_t ValueSendPatchOnStartup[] = L"SendPatchOnStartup";
         constexpr wchar_t ValueBaseOctave[] = L"BaseOctave";
         constexpr wchar_t ValueOctaveCount[] = L"OctaveCount";
+        constexpr wchar_t ValueMinimumWhiteKeyWidth[] = L"MinimumWhiteKeyWidth";
         constexpr wchar_t ValueTranspose[] = L"Transpose";
         constexpr wchar_t ValueRibbons[] = L"Ribbons";
         constexpr wchar_t ValueKeyPressure[] = L"KeyPressure";
@@ -89,6 +90,10 @@ namespace midikeyboard
             MinimumBaseOctave, MaximumBaseOctave);
 
         m_octaveCount = std::clamp(ReadDword(ValueOctaveCount, 3u), MinimumOctaveCount, MaximumOctaveCount);
+
+        m_minimumWhiteKeyWidth = std::clamp(
+            ReadDword(ValueMinimumWhiteKeyWidth, DefaultWhiteKeyWidth),
+            SmallestWhiteKeyWidth, LargestWhiteKeyWidth);
 
         m_transpose = std::clamp(
             static_cast<int32_t>(ReadDword(ValueTranspose, static_cast<uint32_t>(0))),
@@ -188,6 +193,12 @@ namespace midikeyboard
     {
         m_octaveCount = std::clamp(value, MinimumOctaveCount, MaximumOctaveCount);
         WriteDword(ValueOctaveCount, m_octaveCount);
+    }
+
+    void AppSettings::MinimumWhiteKeyWidth(uint32_t value) noexcept
+    {
+        m_minimumWhiteKeyWidth = std::clamp(value, SmallestWhiteKeyWidth, LargestWhiteKeyWidth);
+        WriteDword(ValueMinimumWhiteKeyWidth, m_minimumWhiteKeyWidth);
     }
 
     void AppSettings::Transpose(int32_t value) noexcept

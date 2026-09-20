@@ -63,6 +63,10 @@
   <data name="AppDisplayName" xml:space="preserve">
     <value>Windows MIDI Monitor</value>
   </data>
+  <data name="PreviewChicletText.Text" xml:space="preserve">
+    <value>PREVIEW</value>
+    <comment>Shown in the title bar. All capitals on purpose, so it reads as a badge.</comment>
+  </data>
   <data name="SessionName" xml:space="preserve">
     <value>Windows MIDI Monitor</value>
   </data>

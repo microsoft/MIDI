@@ -27,6 +27,7 @@ namespace midisettings
             { MidiTool::LoopbackSetup,  L"LoopSetup",       L"midiloopbacksetup.exe" },
             { MidiTool::BluetoothSetup, L"BluetoothSetup",  L"midibluetoothsetup.exe" },
             { MidiTool::NetworkSetup,   L"NetworkSetup",    L"midinetworksetup.exe" },
+            { MidiTool::Patchbay,       L"Patchbay",        L"midipatchbay.exe" },
             { MidiTool::SysEx,          L"SysEx",           L"midisysextool.exe" },
             { MidiTool::ScratchPad,     L"ScratchPad",      L"midiscratchpad.exe" },
             { MidiTool::Keyboard,       L"Keyboard",        L"midikeyboard.exe" },

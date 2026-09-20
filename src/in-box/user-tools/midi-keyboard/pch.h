@@ -105,6 +105,7 @@ namespace foundation = ::winrt::Windows::Foundation;
 namespace collections = ::winrt::Windows::Foundation::Collections;
 namespace xaml = ::winrt::Microsoft::UI::Xaml;
 namespace controls = ::winrt::Microsoft::UI::Xaml::Controls;
+namespace primitives = ::winrt::Microsoft::UI::Xaml::Controls::Primitives;
 namespace shapes = ::winrt::Microsoft::UI::Xaml::Shapes;
 namespace media = ::winrt::Microsoft::UI::Xaml::Media;
 namespace animation = ::winrt::Microsoft::UI::Xaml::Media::Animation;
@@ -117,6 +118,7 @@ namespace appshared = ::winrt::MidiAppShared;
 
 #include "Telemetry.h"
 
+#include "PreviewBuild.h"
 #include "WindowChrome.h"
 #include "MidiEndpointHelpers.h"
 #include "AppearanceFlyout.h"

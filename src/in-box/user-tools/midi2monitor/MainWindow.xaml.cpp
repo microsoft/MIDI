@@ -183,6 +183,8 @@ namespace winrt::midi2monitor::implementation
         {
             UpdateWindowTitle();
 
+            midiapp::ApplyPreviewBadgeVisibility(PreviewChiclet());
+
             midiapp::WindowChromeElements elements{};
 
             elements.Window = *this;

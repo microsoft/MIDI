@@ -5,6 +5,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:midikeyboard"
     xmlns:shared="using:MidiAppShared"
+    xmlns:primitives="using:Microsoft.UI.Xaml.Controls.Primitives"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
@@ -58,6 +59,30 @@
                        VerticalAlignment="Center"
                        TextTrimming="CharacterEllipsis"
                        Style="{ThemeResource CaptionTextBlockStyle}" />
+
+            <!-- Spans every column so it sits in the middle of the window rather than the middle
+                 of the stretchy column. Not hit testable, so it stays part of the drag region.
+                 Hidden when this is not a preview build; see midi-app-shared\PreviewBuild.h. -->
+            <Border x:Name="PreviewChiclet"
+                    Grid.Column="0"
+                    Grid.ColumnSpan="5"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Height="18"
+                    Padding="9,0,9,0"
+                    CornerRadius="9"
+                    IsHitTestVisible="False"
+                    BorderThickness="1"
+                    BorderBrush="{ThemeResource SystemFillColorCautionBrush}"
+                    Background="{ThemeResource SystemFillColorCautionBackgroundBrush}">
+                <TextBlock x:Name="PreviewChicletText"
+                           x:Uid="PreviewChicletText"
+                           Text="PREVIEW"
+                           FontSize="10"
+                           FontWeight="SemiBold"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+            </Border>
 
             <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top">
                 <StackPanel.Resources>
@@ -439,24 +464,44 @@
             </StackPanel>
 
             <!-- the keys themselves are built in code and positioned on this canvas -->
-            <Border x:Name="KeyboardFrame"
-                    Grid.Column="1"
-                    Margin="8,0,8,12"
-                    CornerRadius="6"
-                    BorderThickness="1">
-                <Canvas x:Name="KeyboardCanvas"
-                        x:Uid="KeyboardCanvas"
-                        AutomationProperties.AutomationId="KeyboardCanvas"
-                        Background="Transparent"
-                        IsTabStop="True"
-                        UseSystemFocusVisuals="False"
-                        SizeChanged="OnKeyboardSizeChanged"
-                        PointerPressed="OnKeyboardPointerPressed"
-                        PointerMoved="OnKeyboardPointerMoved"
-                        PointerReleased="OnKeyboardPointerReleased"
-                        PointerCanceled="OnKeyboardPointerReleased"
-                        PointerCaptureLost="OnKeyboardPointerReleased" />
-            </Border>
+            <Grid Grid.Column="1" Margin="8,0,8,12">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Border x:Name="KeyboardFrame"
+                        Grid.Row="0"
+                        CornerRadius="6"
+                        BorderThickness="1">
+                    <Canvas x:Name="KeyboardCanvas"
+                            x:Uid="KeyboardCanvas"
+                            AutomationProperties.AutomationId="KeyboardCanvas"
+                            Background="Transparent"
+                            IsTabStop="True"
+                            UseSystemFocusVisuals="False"
+                            SizeChanged="OnKeyboardSizeChanged"
+                            PointerPressed="OnKeyboardPointerPressed"
+                            PointerMoved="OnKeyboardPointerMoved"
+                            PointerReleased="OnKeyboardPointerReleased"
+                            PointerCanceled="OnKeyboardPointerReleased"
+                            PointerCaptureLost="OnKeyboardPointerReleased" />
+                </Border>
+
+                <!-- A bare ScrollBar, not a ScrollViewer wrapped around the keys. A ScrollViewer
+                     treats a finger on the keys as the start of a pan and takes the pointer away
+                     mid note, and playing the keyboard matters more than panning it. -->
+                <primitives:ScrollBar x:Name="KeyboardScrollBar"
+                                      x:Uid="KeyboardScrollBar"
+                                      AutomationProperties.AutomationId="KeyboardScrollBar"
+                                      Grid.Row="1"
+                                      Orientation="Horizontal"
+                                      Margin="0,4,0,0"
+                                      Minimum="0"
+                                      Visibility="Collapsed"
+                                      IndicatorMode="MouseIndicator"
+                                      ValueChanged="OnKeyboardScrollChanged" />
+            </Grid>
 
             <!-- ================================ Settings ================================ -->
             <Border x:Name="SettingsPanel"
@@ -619,6 +664,24 @@
                                        SpinButtonPlacementMode="Compact"
                                        ValueChanged="OnTransposeChanged" />
                         </Grid>
+
+                        <StackPanel Spacing="4">
+                            <NumberBox x:Name="MinimumKeyWidthBox"
+                                       x:Uid="MinimumKeyWidthBox"
+                                       AutomationProperties.AutomationId="MinimumKeyWidthBox"
+                                       Header="Smallest white key width"
+                                       Minimum="12"
+                                       Maximum="400"
+                                       SmallChange="5"
+                                       LargeChange="10"
+                                       SpinButtonPlacementMode="Compact"
+                                       ValueChanged="OnMinimumKeyWidthChanged" />
+                            <TextBlock x:Uid="MinimumKeyWidthHint"
+                                       Text="In pixels. When the window is too narrow to fit every key at this width, the keyboard scrolls instead of shrinking."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
 
                         <CheckBox x:Name="ShowNoteNamesCheckBox"
                                   x:Uid="ShowNoteNamesCheckBox"

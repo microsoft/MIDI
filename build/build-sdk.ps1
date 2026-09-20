@@ -30,6 +30,14 @@
 .PARAMETER BumpBuildNumber
     Increments and persists the 'build' field in version.json before computing versions.
 
+.PARAMETER Sign
+    Authenticode-sign everything that ships: the staged binaries, the binaries the NuGet package
+    carries, the MSI packages and the installer bundle. Needs the Artifact Signing client tools
+    and a signed-in identity; see build/sign-files.ps1.
+
+.PARAMETER SigningMetadata
+    The Artifact Signing metadata JSON used by -Sign. Defaults to MIDI_SIGNING_METADATA.
+
 .PARAMETER MaxCpuCount
     How many projects MSBuild builds at once. Defaults to three quarters of the logical
     processors so the machine stays usable while a build runs. 0 uses every logical processor,
@@ -50,6 +58,10 @@
 .EXAMPLE
     .\build-sdk.ps1 -Target Sdk,Stage -Platform x64
     Build and stage x64 only, skipping the installer.
+
+.EXAMPLE
+    .\build-sdk.ps1 -Sign -SigningMetadata C:\signing\metadata.json
+    Full release build, signed with an Azure Artifact Signing certificate profile.
 #>
 [CmdletBinding()]
 param(
@@ -65,6 +77,10 @@ param(
     [int] $BuildNumber = -1,
 
     [switch] $BumpBuildNumber,
+
+    [switch] $Sign,
+
+    [string] $SigningMetadata = $env:MIDI_SIGNING_METADATA,
 
     # Explicit MSBuild.exe. Leave empty to let vswhere find the newest install.
     [string] $MSBuildPath,
@@ -120,6 +136,7 @@ $SdkIntermediateRoot = Join-Path $ApiRoot 'vsfiles-sdk\intermediate'
 $SdkNuGetOutput = Join-Path $ApiRoot 'vsfiles-sdk\PublishedNuGet'
 
 $NuspecFile = Join-Path $ApiRoot 'Client\WinRT\NuGet\Windows.Devices.Midi2.NuGet\nuget\Windows.Devices.Midi2.nuspec'
+$NuGetProject = Join-Path $ApiRoot 'Client\WinRT\NuGet\Windows.Devices.Midi2.NuGet\Windows.Devices.Midi2.NuGet.csproj'
 
 $PowerShellProject = Join-Path $ApiRoot 'Client\WinRT\powershell\WindowsMidiServices.csproj'
 
@@ -142,6 +159,8 @@ $AppSdkVersionFile = Join-Path $VersionStagingFolder 'AppSdkVersion.wxi'
 
 $VersionFile = Join-Path $BuildRoot 'version.json'
 
+$SignScript = Join-Path $BuildRoot 'sign-files.ps1'
+
 # The .wxs files resolve staging as "$(env.MIDI_REPO_ROOT)\build\staging", so this must NOT
 # have a trailing separator.
 $env:MIDI_REPO_ROOT = $RepoRoot.TrimEnd('\')
@@ -158,7 +177,10 @@ $ConsoleTools = @(
 # GUI tools each install into their OWN subfolder of Tools. MIDI Settings resolves the others by
 # convention at %ProgramFiles%\Windows MIDI Services\Tools\<Folder>\<exe> - see ToolLauncher.cpp
 # in midi-settings - so Folder must match that table exactly.
-# Display names come from Resources.resw (ToolApp_*_Name) so the Start Menu matches the app.
+# Display is the Start Menu shortcut name, and it DELIBERATELY drops the "Windows" the app's own
+# title bar carries. The Start Menu gives a tile about a dozen characters before it elides, so
+# "Windows MIDI Player" showed as "Windows MIDI..." and the only part that identified the app was
+# the part that got cut. The group these all sit in is already called Windows MIDI (Preview).
 # Network MIDI 2.0 Setup and Bluetooth MIDI Setup are deliberately NOT here: each ships in the
 # installer that carries its transport, because the app is useless without it, and two installers
 # writing the same files to the same folder would break each other's uninstall.
@@ -166,11 +188,12 @@ $GuiTools = @(
     [pscustomobject]@{ Name = 'midisettings';      Folder = 'Settings';     Display = 'MIDI Settings';          DirectoryId = 'TOOL_SETTINGS_FOLDER' }
     [pscustomobject]@{ Name = 'midiloopbacksetup'; Folder = 'LoopSetup';    Display = 'MIDI Loopback Setup';    DirectoryId = 'TOOL_LOOPSETUP_FOLDER' }
     [pscustomobject]@{ Name = 'midiscratchpad';    Folder = 'ScratchPad';   Display = 'MIDI Scratch Pad';       DirectoryId = 'TOOL_SCRATCHPAD_FOLDER' }
-    [pscustomobject]@{ Name = 'midikeyboard';      Folder = 'Keyboard';     Display = 'Windows MIDI Keyboard';  DirectoryId = 'TOOL_KEYBOARD_FOLDER' }
-    [pscustomobject]@{ Name = 'midiplayer';        Folder = 'Player';       Display = 'Windows MIDI Player';    DirectoryId = 'TOOL_PLAYER_FOLDER' }
-    [pscustomobject]@{ Name = 'midiclock';         Folder = 'Clock';        Display = 'Windows MIDI Clock';     DirectoryId = 'TOOL_CLOCK_FOLDER' }
+    [pscustomobject]@{ Name = 'midikeyboard';      Folder = 'Keyboard';     Display = 'MIDI Keyboard';          DirectoryId = 'TOOL_KEYBOARD_FOLDER' }
+    [pscustomobject]@{ Name = 'midiplayer';        Folder = 'Player';       Display = 'MIDI Player';            DirectoryId = 'TOOL_PLAYER_FOLDER' }
+    [pscustomobject]@{ Name = 'midiclock';         Folder = 'Clock';        Display = 'MIDI Clock';             DirectoryId = 'TOOL_CLOCK_FOLDER' }
     [pscustomobject]@{ Name = 'midisysextool';     Folder = 'SysEx';        Display = 'MIDI SysEx Tool';        DirectoryId = 'TOOL_SYSEX_FOLDER' }
     [pscustomobject]@{ Name = 'midi2monitor';      Folder = 'Monitor';      Display = 'MIDI Monitor';           DirectoryId = 'TOOL_MONITOR_FOLDER' }
+    [pscustomobject]@{ Name = 'midipatchbay';      Folder = 'Patchbay';     Display = 'MIDI Patchbay';          DirectoryId = 'TOOL_PATCHBAY_FOLDER' }
     [pscustomobject]@{ Name = 'miditroubleshooter'; Folder = 'Troubleshooter'; Display = 'MIDI Troubleshooting and Repair'; DirectoryId = 'TOOL_TROUBLESHOOTER_FOLDER' }
     # Aumid: the notification platform will not accept a toast from an unpackaged app unless the
     # identity it publishes under is on a Start Menu shortcut. RunAtLogon means the installer
@@ -204,12 +227,22 @@ $SdkBuildSource = 'GitHub Preview'
 # Arm64EC is built only to produce the Arm64X SDK binary. These are Windows.Devices.Midi2 and the
 # projects it declares as solution dependencies, in build order - static libs are not rebuilt by
 # their dependents, so they have to come first.
+#
+# The first two exist only to emit generated headers the rest include out of their per-platform
+# intermediate folders. Together with com-extensions-idl they cover every intermediate folder
+# these projects include from, which is what makes this list complete on a clean tree.
 $Arm64EcProjects = @(
-    'Libs\SDK-MidiPluginConfigurationLib\MidiPluginConfigurationLib.vcxproj'
-    'Libs\SDK-MidiEndpointNamingLib\MidiEndpointNamingLib.vcxproj'
-    'Libs\SDK-MidiPnpLib\MidiPnpLib.vcxproj'
-    'Client\WinRT\com-extensions-idl\com-extensions-idl.vcxproj'
-    'Client\WinRT\core\Windows.Devices.Midi2.vcxproj'
+    @{ Project = 'idl\IDL.vcxproj'; Targets = @() }
+
+    # Midl only: the SDK core includes this project's generated header, but compiling its C++
+    # needs the service's RPC stubs, which are never generated for Arm64EC.
+    @{ Project = 'Transport\MidiSrvTransport\Midi2.MidiSrvTransport.vcxproj'; Targets = @('Midl') }
+
+    @{ Project = 'Libs\SDK-MidiPluginConfigurationLib\MidiPluginConfigurationLib.vcxproj'; Targets = @() }
+    @{ Project = 'Libs\SDK-MidiEndpointNamingLib\MidiEndpointNamingLib.vcxproj'; Targets = @() }
+    @{ Project = 'Libs\SDK-MidiPnpLib\MidiPnpLib.vcxproj'; Targets = @() }
+    @{ Project = 'Client\WinRT\com-extensions-idl\com-extensions-idl.vcxproj'; Targets = @() }
+    @{ Project = 'Client\WinRT\core\Windows.Devices.Midi2.vcxproj'; Targets = @() }
 )
 
 # ----------------------------------------------------------------------------------------------
@@ -235,6 +268,23 @@ function Write-Detail {
 function Write-Note {
     param([string] $Message)
     Write-Host "     $Message" -ForegroundColor Yellow
+}
+
+# ----------------------------------------------------------------------------------------------
+# Signing
+# ----------------------------------------------------------------------------------------------
+
+# A no-op unless -Sign was passed. The installers sign themselves through
+# src/installers/Directory.Build.targets, which keys off MIDI_SIGNING_METADATA.
+function Invoke-SignPath {
+    param([Parameter(Mandatory)] [string[]] $Path)
+
+    if (-not $Sign) { return }
+
+    $existing = @($Path | Where-Object { $_ -and (Test-Path $_) })
+    if ($existing.Count -eq 0) { return }
+
+    & $SignScript -Path $existing -MetadataFile $SigningMetadata
 }
 
 # ----------------------------------------------------------------------------------------------
@@ -561,8 +611,8 @@ function Invoke-SdkTarget {
         # Solution-level target names (/t:Windows_Devices_Midi2) do NOT work here - MSBuild
         # forwards the name to every project and they all fail with MSB4057.
         foreach ($project in $Arm64EcProjects) {
-            Invoke-MSBuild -ProjectOrSolution (Join-Path $ApiRoot $project) -BuildPlatform 'Arm64EC' `
-                -Properties $armProps -SolutionDir $ApiRoot
+            Invoke-MSBuild -ProjectOrSolution (Join-Path $ApiRoot $project.Project) -BuildPlatform 'Arm64EC' `
+                -Targets $project.Targets -Properties $armProps -SolutionDir $ApiRoot
         }
     }
     else {
@@ -570,7 +620,28 @@ function Invoke-SdkTarget {
     }
 
     if ($Platform -contains 'x64') {
-        Invoke-MSBuild -ProjectOrSolution $SdkSolution -BuildPlatform 'x64' -Properties $versionProps
+        $x64Props = $versionProps.Clone()
+
+        # The package has to contain signed binaries, so packing waits until the SDK binaries its
+        # nuspec points at have been through signtool.
+        if ($Sign) { $x64Props['GeneratePackageOnBuild'] = 'false' }
+
+        Invoke-MSBuild -ProjectOrSolution $SdkSolution -BuildPlatform 'x64' -Properties $x64Props
+    }
+
+    if ($Sign) {
+        # Only what the nuspec packages. Everything else ships from build/staging and is signed
+        # there, on the copy, so the build output stays usable for an incremental rebuild.
+        $packaged = foreach ($plat in @('x64', 'Arm64EC')) {
+            Join-Path $SdkOutRoot "Windows.Devices.Midi2\$plat\$Configuration\Windows.Devices.Midi2.dll"
+        }
+        Invoke-SignPath -Path $packaged
+
+        $packProps = $versionProps.Clone()
+        $packProps['NoBuild'] = 'true'
+
+        Invoke-MSBuild -ProjectOrSolution $NuGetProject -BuildPlatform 'x64' -Targets @('Pack') `
+            -Properties $packProps -SolutionDir $ApiRoot -Serial
     }
 
     if (Test-Path $SdkNuGetOutput) {
@@ -1049,6 +1120,20 @@ function Invoke-StageTarget {
         Copy-Staged -Source (Join-Path $CollectMidiLogsRoot $f) -Destination $logsStaging
     }
     Write-Detail 'Staged CollectMidiLogs'
+
+    # --- Sign ---------------------------------------------------------------------------------
+    # Must happen before Setup: WiX embeds these files into the MSI packages, so signing them
+    # afterwards would sign a copy nobody installs.
+    if ($Sign) {
+        $signPaths = @($logsStaging)
+        foreach ($plat in $Platform) {
+            $signPaths += Join-Path $StagingRoot "app-sdk\$plat"
+            $signPaths += Join-Path $StagingRoot "midi-console\$plat"
+            $signPaths += Join-Path $StagingRoot "midi-powershell\$plat"
+        }
+
+        Invoke-SignPath -Path $signPaths
+    }
 }
 
 # ----------------------------------------------------------------------------------------------
@@ -1457,7 +1542,9 @@ function Invoke-CleanTarget {
 
 $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 
-$targets = if ($Target -contains 'All') { @('Version', 'Sdk', 'Samples', 'Stage', 'Setup', 'Release') } else { $Target }
+# @() matters: a one-element array unrolls to a scalar through an if-expression, and StrictMode
+# then fails the .Count test below.
+$targets = @(if ($Target -contains 'All') { @('Version', 'Sdk', 'Samples', 'Stage', 'Setup', 'Release') } else { $Target })
 
 $parallelism = if ($MaxCpuCount -gt 0) { "$MaxCpuCount of $([Environment]::ProcessorCount)" } else { "all $([Environment]::ProcessorCount)" }
 
@@ -1468,6 +1555,23 @@ Write-Detail "Targets       $($targets -join ', ')"
 Write-Detail "Platforms     $($Platform -join ', ')"
 Write-Detail "Configuration $Configuration"
 Write-Detail "Parallelism   $parallelism logical processors, $Priority priority"
+
+if ($Sign) {
+    if (-not $SigningMetadata) {
+        throw '-Sign needs -SigningMetadata, or the MIDI_SIGNING_METADATA environment variable, pointing at the Artifact Signing metadata JSON. See build\sign-files.ps1.'
+    }
+    if (-not (Test-Path $SigningMetadata)) {
+        throw "Signing metadata file not found: $SigningMetadata"
+    }
+
+    $SigningMetadata = (Resolve-Path $SigningMetadata).Path
+    Write-Detail "Signing       $SigningMetadata"
+}
+
+# The WiX projects sign themselves off this variable (src/installers/Directory.Build.targets). It
+# is set or cleared here rather than inherited, so a signed installer can never end up wrapped
+# around an unsigned payload because the variable happened to be set in the shell.
+$env:MIDI_SIGNING_METADATA = if ($Sign) { $SigningMetadata } else { '' }
 
 if ($targets -contains 'Clean') {
     Invoke-CleanTarget

@@ -150,6 +150,7 @@
     <ClInclude Include="MidiMessageViewModel.h" />
     <ClInclude Include="MonitorColumn.h" />
     <!-- shared with the other Windows MIDI Services user tools; see midi-app-shared\README.md -->
+    <ClInclude Include="..\midi-app-shared\PreviewBuild.h" />
     <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
     <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
     <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />

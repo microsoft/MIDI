@@ -16,19 +16,6 @@
             Version="$(SetupVersionNumber)" 
             UpgradeCode="42eba498-e57e-4f5b-b8e2-7ff9642aeb3e">
 
-        <!-- Require Dev Mode to be turned on to run this installer -->
-        <WixVariable Id="DevModeEnabled" Value="0" />
-        <util:RegistrySearch
-            Id="DevMode"
-            Root="HKLM"
-            Key="SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock"
-            Value="AllowDevelopmentWithoutDevLicense"
-            Variable="DevModeEnabled"
-            Result="value"/>
-
-        <bal:Condition Message="Developer mode in Windows Settings must be enabled to install this Windows MIDI Services preview package."
-                 Condition="DevModeEnabled=1" />
-
         <WixVariable Id="WixUIDialogBmp" Value="midi_installer_logo.bmp" />
 
         <BootstrapperApplication>

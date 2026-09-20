@@ -61,6 +61,10 @@
   <data name="AppTitle" xml:space="preserve">
     <value>Windows MIDI Network Setup</value>
   </data>
+  <data name="PreviewChicletText.Text" xml:space="preserve">
+    <value>PREVIEW</value>
+    <comment>Shown in the title bar. All capitals on purpose, so it reads as a badge.</comment>
+  </data>
   <data name="UnnamedDevice" xml:space="preserve">
     <value>Unnamed device</value>
   </data>

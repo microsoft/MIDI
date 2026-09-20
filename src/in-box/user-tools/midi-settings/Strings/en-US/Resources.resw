@@ -60,7 +60,11 @@
   </resheader>
 
   <data name="AppTitle" xml:space="preserve">
-    <value>MIDI Settings</value>
+    <value>Windows MIDI Settings</value>
+  </data>
+  <data name="PreviewChicletText.Text" xml:space="preserve">
+    <value>PREVIEW</value>
+    <comment>Shown in the title bar. All capitals on purpose, so it reads as a badge.</comment>
   </data>
 
   <!-- Title bar -->
@@ -140,6 +144,15 @@
   <data name="NetworkSetupButtonText.Text" xml:space="preserve">
     <value>Network Setup</value>
   </data>
+  <data name="PatchbayButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI Patchbay</value>
+  </data>
+  <data name="PatchbayButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>MIDI Patchbay</value>
+  </data>
+  <data name="PatchbayButtonText.Text" xml:space="preserve">
+    <value>Patchbay</value>
+  </data>
   <data name="SysExButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>MIDI SysEx Tool</value>
   </data>
@@ -168,10 +181,10 @@
     <value>Scratch Pad</value>
   </data>
   <data name="KeyboardButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Windows MIDI Keyboard</value>
+    <value>MIDI Keyboard</value>
   </data>
   <data name="KeyboardButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Windows MIDI Keyboard</value>
+    <value>MIDI Keyboard</value>
   </data>
   <data name="KeyboardButtonText.Text" xml:space="preserve">
     <value>Virtual Keyboard</value>
@@ -593,6 +606,9 @@
   </data>
   <data name="CustomizePortNamesButton.Content" xml:space="preserve">
     <value>Edit port names...</value>
+  </data>
+  <data name="Midi1PortNamesDialog.Title" xml:space="preserve">
+    <value>MIDI 1.0 port names</value>
   </data>
   <data name="Midi1PortNamesDialog.PrimaryButtonText" xml:space="preserve">
     <value>Save</value>

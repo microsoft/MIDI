@@ -201,6 +201,8 @@ namespace winrt::midinetworksetup::implementation
             Title(res::GetString(L"AppTitle"));
             AppTitleTextBlock().Text(res::GetString(L"AppTitle"));
 
+            midiapp::ApplyPreviewBadgeVisibility(PreviewChiclet());
+
             midiapp::WindowChromeElements elements{};
 
             elements.Window = *this;

@@ -63,6 +63,10 @@
   <data name="AppDisplayName" xml:space="preserve">
     <value>Windows MIDI Clock</value>
   </data>
+  <data name="PreviewChicletText.Text" xml:space="preserve">
+    <value>PREVIEW</value>
+    <comment>Shown in the title bar. All capitals on purpose, so it reads as a badge.</comment>
+  </data>
 
   <!-- ================================= Title bar ================================= -->
   <data name="SettingsToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">

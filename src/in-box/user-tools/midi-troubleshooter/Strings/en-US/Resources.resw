@@ -60,7 +60,11 @@
   </resheader>
 
   <data name="AppTitle" xml:space="preserve">
-    <value>MIDI Troubleshooting and Repair</value>
+    <value>Windows MIDI Troubleshooting and Repair</value>
+  </data>
+  <data name="PreviewChicletText.Text" xml:space="preserve">
+    <value>PREVIEW</value>
+    <comment>Shown in the title bar. All capitals on purpose, so it reads as a badge.</comment>
   </data>
   <data name="ValueUnknown" xml:space="preserve">
     <value>Unknown</value>

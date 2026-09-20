@@ -95,6 +95,7 @@
 // projection for the shared user tool types, generated from midi-app-shared\MidiAppShared.idl
 #include <winrt/MidiAppShared.h>
 
+#include "PreviewBuild.h"
 #include "WindowChrome.h"
 #include "MidiEndpointHelpers.h"
 

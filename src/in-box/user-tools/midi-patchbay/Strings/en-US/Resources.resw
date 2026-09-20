@@ -1,0 +1,1099 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+
+  <!-- ============================================================= application -->
+  <data name="AppDisplayName" xml:space="preserve">
+    <value>Windows MIDI Patchbay</value>
+  </data>
+
+  <!-- ============================================================== title bar -->
+  <data name="AppearanceButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Appearance and settings</value>
+  </data>
+  <data name="AppearanceButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Appearance and settings</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Keep this window on top</value>
+  </data>
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keep this window on top</value>
+  </data>
+  <data name="PreviewChicletText.Text" xml:space="preserve">
+    <value>PREVIEW</value>
+    <comment>Shown in the title bar. All capitals on purpose, so it reads as a badge.</comment>
+  </data>
+
+  <!-- ============================================================= navigation -->
+  <data name="OpenFolderButton.Content" xml:space="preserve">
+    <value>Open patch folder</value>
+  </data>
+  <data name="NewPatchButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>New empty patch</value>
+  </data>
+  <data name="NewPatchText.Text" xml:space="preserve">
+    <value>New empty patch</value>
+  </data>
+  <data name="NewQuickPatchButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>New quick patch</value>
+  </data>
+  <data name="NewQuickPatchText.Text" xml:space="preserve">
+    <value>New quick patch</value>
+  </data>
+  <data name="PatchesHeaderText.Text" xml:space="preserve">
+    <value>Patches</value>
+  </data>
+  <data name="SortButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Sort the patch list</value>
+  </data>
+  <data name="SortButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Sort the patch list</value>
+  </data>
+  <data name="NavSortNewest" xml:space="preserve">
+    <value>Newest first</value>
+  </data>
+  <data name="NavSortName" xml:space="preserve">
+    <value>Name, A to Z</value>
+  </data>
+  <data name="UntitledPatchName" xml:space="preserve">
+    <value>Untitled patch</value>
+  </data>
+  <data name="UntitledPatchNameFormat" xml:space="preserve">
+    <value>Untitled patch {0}</value>
+  </data>
+  <data name="PatchNameSuffixFormat" xml:space="preserve">
+    <value>{0} ({1})</value>
+  </data>
+
+  <!-- ========================================================== patch header -->
+  <data name="SavePatchButton.Content" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="PatchMenuButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>More patch actions</value>
+  </data>
+  <data name="ChipSaved" xml:space="preserve">
+    <value>Saved</value>
+  </data>
+  <data name="ChipUnsaved" xml:space="preserve">
+    <value>Not saved</value>
+  </data>
+  <data name="ChipTemporary" xml:space="preserve">
+    <value>Temporary</value>
+  </data>
+  <data name="ChipRouting" xml:space="preserve">
+    <value>Routing</value>
+  </data>
+  <data name="ChipNotRouting" xml:space="preserve">
+    <value>Not routing</value>
+  </data>
+  <data name="RoutingToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Route this patch</value>
+  </data>
+  <data name="MenuRouteThisPatch" xml:space="preserve">
+    <value>Route this patch</value>
+  </data>
+  <data name="MenuRenameAndSave" xml:space="preserve">
+    <value>Rename and save...</value>
+  </data>
+  <data name="MenuDeletePatch" xml:space="preserve">
+    <value>Delete this patch...</value>
+  </data>
+
+  <!-- ============================================================== toolbar -->
+  <data name="AddEndpointButton.Content" xml:space="preserve">
+    <value>Add endpoint</value>
+  </data>
+  <data name="CreateLoopbackButton.Content" xml:space="preserve">
+    <value>Create loopback</value>
+  </data>
+  <data name="AutoArrangeButton.Content" xml:space="preserve">
+    <value>Auto arrange</value>
+  </data>
+  <data name="FitButton.Content" xml:space="preserve">
+    <value>Fit</value>
+  </data>
+  <data name="TestButton.Content" xml:space="preserve">
+    <value>Test</value>
+  </data>
+  <data name="ZoomInButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Zoom in</value>
+  </data>
+  <data name="ZoomOutButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Zoom out</value>
+  </data>
+  <data name="ZoomPercentFormat" xml:space="preserve">
+    <value>{0}%</value>
+  </data>
+  <data name="ZoomButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Set the zoom level</value>
+  </data>
+  <data name="ZoomInputBox.Header" xml:space="preserve">
+    <value>Zoom percent</value>
+  </data>
+  <data name="ZoomApplyButton.Content" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+
+  <!-- =============================================================== canvas -->
+  <data name="EmptyCanvasTitle.Text" xml:space="preserve">
+    <value>Nothing on this patch yet</value>
+  </data>
+  <data name="EmptyCanvasSubtitle.Text" xml:space="preserve">
+    <value>Add the endpoints you want to route between, then drag from an Out connection point to an In connection point. Nothing is sent until you do.</value>
+  </data>
+  <data name="EmptyCanvasAddButton.Content" xml:space="preserve">
+    <value>Add endpoint</value>
+  </data>
+  <data name="PortColumnIn" xml:space="preserve">
+    <value>In</value>
+  </data>
+  <data name="PortColumnOut" xml:space="preserve">
+    <value>Out</value>
+  </data>
+  <data name="PortAccessibleNameFormat" xml:space="preserve">
+    <value>{0}, {1}, on {2}</value>
+  </data>
+  <data name="PortAllGroups" xml:space="preserve">
+    <value>All groups</value>
+  </data>
+  <data name="PortGroupOnlyFormat" xml:space="preserve">
+    <value>Group {0}</value>
+  </data>
+  <data name="PortGroupWithNameFormat" xml:space="preserve">
+    <value>{0} - {1}</value>
+  </data>
+  <data name="NodeNotConnected" xml:space="preserve">
+    <value>Not connected</value>
+  </data>
+  <data name="NodeOfflineMessage" xml:space="preserve">
+    <value>The connections to this endpoint are held open. They start carrying messages again as soon as it appears.</value>
+  </data>
+  <data name="NodeReplacementSuggestedFormat" xml:space="preserve">
+    <value>"{0}" is connected now and looks like a match. Select this endpoint to use it.</value>
+  </data>
+  <data name="ConnectionPillAllGroups" xml:space="preserve">
+    <value>All groups</value>
+  </data>
+  <data name="ConnectionPillFormat" xml:space="preserve">
+    <value>{0} to {1}</value>
+  </data>
+  <data name="ConnectionPillAny" xml:space="preserve">
+    <value>any</value>
+  </data>
+  <data name="ConnectionPillSame" xml:space="preserve">
+    <value>same</value>
+  </data>
+  <data name="ConnectionSelfRejected" xml:space="preserve">
+    <value>That connection would send an endpoint's own output straight back into the same connection point.</value>
+  </data>
+  <data name="ConnectionDuplicate" xml:space="preserve">
+    <value>Those two connection points are already connected.</value>
+  </data>
+  <data name="ConnectionLimitReached" xml:space="preserve">
+    <value>This patch already has as many connections as it can hold.</value>
+  </data>
+
+  <!-- ============================================================ status bar -->
+  <data name="StatusEndpointsFormat" xml:space="preserve">
+    <value>{0} endpoints</value>
+  </data>
+  <data name="StatusEndpointsOne" xml:space="preserve">
+    <value>1 endpoint</value>
+  </data>
+  <data name="StatusConnectionsFormat" xml:space="preserve">
+    <value>{0} connections</value>
+  </data>
+  <data name="StatusConnectionsOne" xml:space="preserve">
+    <value>1 connection</value>
+  </data>
+  <data name="StatusRateFormat" xml:space="preserve">
+    <value>{0} messages per second</value>
+  </data>
+  <data name="StatusNoLoopsDetected" xml:space="preserve">
+    <value>No loops detected</value>
+  </data>
+  <data name="StatusLoopMutedFormat" xml:space="preserve">
+    <value>{0} connections muted to break a loop</value>
+  </data>
+  <data name="StatusLoopMutedOne" xml:space="preserve">
+    <value>1 connection muted to break a loop</value>
+  </data>
+  <data name="StatusPatchTemporary" xml:space="preserve">
+    <value>This patch is temporary. It routes now and disappears when Patchbay closes.</value>
+  </data>
+  <data name="StatusPatchSavedFormat" xml:space="preserve">
+    <value>"{0}" was saved.</value>
+  </data>
+  <data name="StatusNoPatchOpen" xml:space="preserve">
+    <value>Create or select a patch first.</value>
+  </data>
+  <data name="StatusEndpointLimit" xml:space="preserve">
+    <value>This patch already has as many endpoints as it can hold.</value>
+  </data>
+  <data name="StatusNothingToTest" xml:space="preserve">
+    <value>Add a connected endpoint to this patch to test it.</value>
+  </data>
+  <data name="StatusLoopbackCreatedFormat" xml:space="preserve">
+    <value>"{0}" was created and added to this patch.</value>
+  </data>
+  <data name="ListSeparator" xml:space="preserve">
+    <value>, </value>
+  </data>
+
+  <!-- =============================================================== messages -->
+  <data name="ServiceBar.Title" xml:space="preserve">
+    <value>Windows MIDI Services is not responding</value>
+  </data>
+  <data name="ServiceBar.Message" xml:space="preserve">
+    <value>Patches cannot route until the service is running.</value>
+  </data>
+  <data name="LoopShowButton.Content" xml:space="preserve">
+    <value>Show me the loop</value>
+  </data>
+  <data name="LoopCertainTitle" xml:space="preserve">
+    <value>This patch sends messages back to where they started</value>
+  </data>
+  <data name="LoopCertainMessageFormat" xml:space="preserve">
+    <value>{0}. A loop like this floods every device on the path within a second, so the connection that closes it is held muted until you break the circle.</value>
+  </data>
+  <data name="LoopPossibleTitle" xml:space="preserve">
+    <value>This patch could feed back</value>
+  </data>
+  <data name="LoopPossibleMessageFormat" xml:space="preserve">
+    <value>{0}. This only loops if {1} echoes what it receives, which Patchbay cannot see, so nothing has been muted.</value>
+  </data>
+  <data name="OfflineTitleFormat" xml:space="preserve">
+    <value>Waiting for {0} endpoints</value>
+  </data>
+  <data name="OfflineTitleOne" xml:space="preserve">
+    <value>Waiting for 1 endpoint</value>
+  </data>
+  <data name="OfflineMessageFormat" xml:space="preserve">
+    <value>{0} is not connected. The rest of this patch is routing normally, and the connections wire themselves up when the device comes back.</value>
+  </data>
+
+  <!-- ============================================================= inspector -->
+  <data name="InspectorCloseButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Close the details panel</value>
+  </data>
+  <data name="InspectorPopOutButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Open the details panel in its own window</value>
+  </data>
+  <data name="InspectorConnectionTitle" xml:space="preserve">
+    <value>Connection</value>
+  </data>
+  <data name="InspectorFrom" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="InspectorTo" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="InspectorSendToGroup" xml:space="preserve">
+    <value>Send to group</value>
+  </data>
+  <data name="InspectorFilters" xml:space="preserve">
+    <value>Filters</value>
+  </data>
+  <data name="ActionEditFilters" xml:space="preserve">
+    <value>Edit filters...</value>
+  </data>
+  <data name="InspectorTransforms" xml:space="preserve">
+    <value>Transforms</value>
+  </data>
+  <data name="ActionEditTransforms" xml:space="preserve">
+    <value>Edit transforms...</value>
+  </data>
+
+  <!-- =========================================================== transforms -->
+  <data name="TransformDialog.Title" xml:space="preserve">
+    <value>Transforms for this connection</value>
+  </data>
+  <data name="TransformDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="TransformDialog.SecondaryButtonText" xml:space="preserve">
+    <value>Change nothing</value>
+  </data>
+  <data name="TransformDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="TransformDialogIntroText.Text" xml:space="preserve">
+    <value>Transforms run after the filters, on the copy sent to this destination. Nothing here changes what any other connection carries.</value>
+  </data>
+  <data name="TransformDialogSummaryFormat" xml:space="preserve">
+    <value>This connection does: {0}</value>
+  </data>
+  <data name="TransformSectionTranspose" xml:space="preserve">
+    <value>Transpose</value>
+  </data>
+  <data name="TransformSectionTransposeHint" xml:space="preserve">
+    <value>Shifts every note, including aftertouch and the MIDI 2.0 per note messages. A note pushed past either end is clamped rather than wrapped, so nothing lands an octave out.</value>
+  </data>
+  <data name="TransformSemitones" xml:space="preserve">
+    <value>Semitones</value>
+  </data>
+  <data name="TransformTransposeExampleFormat" xml:space="preserve">
+    <value>{0} is sent as {1}</value>
+  </data>
+  <data name="TransformSectionNoteMap" xml:space="preserve">
+    <value>Note mapping</value>
+  </data>
+  <data name="TransformSectionNoteMapHint" xml:space="preserve">
+    <value>Exceptions to the transpose. A note listed here goes exactly where you send it; every other note is transposed as usual. Play sends the destination note so you can hear where it lands.</value>
+  </data>
+  <data name="TransformAddNoteMapping" xml:space="preserve">
+    <value>Add a note mapping</value>
+  </data>
+  <data name="TransformNoNoteMappings" xml:space="preserve">
+    <value>No notes are remapped.</value>
+  </data>
+  <data name="TransformNoteMapLabelFormat" xml:space="preserve">
+    <value>{0} to {1}</value>
+  </data>
+  <data name="TransformPlay" xml:space="preserve">
+    <value>Play</value>
+  </data>
+  <data name="TransformPlayAccessibleName" xml:space="preserve">
+    <value>Play this note on the destination endpoint</value>
+  </data>
+  <data name="TransformRemove" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="TransformSectionVelocity" xml:space="preserve">
+    <value>Note on velocity</value>
+  </data>
+  <data name="TransformSectionVelocityHint" xml:space="preserve">
+    <value>Only note on messages are touched. A MIDI 1.0 note on with velocity zero is a note off, so it is always left alone.</value>
+  </data>
+  <data name="TransformCurveUnchanged" xml:space="preserve">
+    <value>Leave the velocity alone</value>
+  </data>
+  <data name="TransformCurveLinearToCurved" xml:space="preserve">
+    <value>Linear to curved (harder to play loud)</value>
+  </data>
+  <data name="TransformCurveCurvedToLinear" xml:space="preserve">
+    <value>Curved to linear (easier to play loud)</value>
+  </data>
+  <data name="TransformRescaleVelocity" xml:space="preserve">
+    <value>Rescale into a narrower range</value>
+  </data>
+  <data name="TransformQuietest" xml:space="preserve">
+    <value>Quietest</value>
+  </data>
+  <data name="TransformLoudest" xml:space="preserve">
+    <value>Loudest</value>
+  </data>
+  <data name="TransformSectionControlMap" xml:space="preserve">
+    <value>Control change mapping</value>
+  </data>
+  <data name="TransformSectionControlMapHint" xml:space="preserve">
+    <value>Moves a controller to a different number and carries its value over untouched. Controllers you do not list are passed through.</value>
+  </data>
+  <data name="TransformAddControlMapping" xml:space="preserve">
+    <value>Add a control change mapping</value>
+  </data>
+  <data name="TransformNoControlMappings" xml:space="preserve">
+    <value>No control change messages are remapped.</value>
+  </data>
+  <data name="TransformControlFrom" xml:space="preserve">
+    <value>CC</value>
+  </data>
+  <data name="TransformControlTo" xml:space="preserve">
+    <value>Becomes CC</value>
+  </data>
+  <data name="TransformTestNoDestination" xml:space="preserve">
+    <value>The destination endpoint is not available right now, so there is nothing to play on.</value>
+  </data>
+  <data name="TransformTestFailed" xml:space="preserve">
+    <value>That note could not be sent to the destination endpoint.</value>
+  </data>
+  <data name="TransformSummaryNothing" xml:space="preserve">
+    <value>Nothing, messages are passed through as they are</value>
+  </data>
+  <data name="TransformSummaryTransposeFormat" xml:space="preserve">
+    <value>Transpose {0} semitones</value>
+  </data>
+  <data name="TransformSummaryNoteMapFormat" xml:space="preserve">
+    <value>{0} note mappings</value>
+  </data>
+  <data name="TransformSummaryOneNoteMap" xml:space="preserve">
+    <value>1 note mapping</value>
+  </data>
+  <data name="TransformSummaryControlMapFormat" xml:space="preserve">
+    <value>{0} control change mappings</value>
+  </data>
+  <data name="TransformSummaryOneControlMap" xml:space="preserve">
+    <value>1 control change mapping</value>
+  </data>
+  <data name="TransformNoteFrom" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="TransformNoteTo" xml:space="preserve">
+    <value>Becomes note</value>
+  </data>
+  <data name="TransformSummaryCurved" xml:space="preserve">
+    <value>Velocity linear to curved</value>
+  </data>
+  <data name="TransformSummaryLinear" xml:space="preserve">
+    <value>Velocity curved to linear</value>
+  </data>
+  <data name="TransformSummaryVelocityRangeFormat" xml:space="preserve">
+    <value>Velocity {0} to {1}</value>
+  </data>
+
+  <!-- ============================================================== filters -->
+  <data name="FilterDialog.Title" xml:space="preserve">
+    <value>Filters for this connection</value>
+  </data>
+  <data name="FilterDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Apply</value>
+  </data>
+  <data name="FilterDialog.SecondaryButtonText" xml:space="preserve">
+    <value>Pass everything</value>
+  </data>
+  <data name="FilterDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="FilterDialogIntroText.Text" xml:space="preserve">
+    <value>Everything is allowed until you clear something here. A message has to pass every section to be sent on.</value>
+  </data>
+  <data name="FilterDialogSummaryFormat" xml:space="preserve">
+    <value>This connection carries: {0}</value>
+  </data>
+  <data name="FilterSectionMessageTypes" xml:space="preserve">
+    <value>Message types</value>
+  </data>
+  <data name="FilterSectionMessageTypesHint" xml:space="preserve">
+    <value>The coarsest switch. Clearing one here drops every message of that type, whatever the sections below say.</value>
+  </data>
+  <data name="FilterSectionChannelVoice" xml:space="preserve">
+    <value>Channel messages</value>
+  </data>
+  <data name="FilterSectionChannelVoiceHint" xml:space="preserve">
+    <value>Applies to both MIDI 1.0 and MIDI 2.0 channel voice messages.</value>
+  </data>
+  <data name="FilterSectionSystem" xml:space="preserve">
+    <value>System messages</value>
+  </data>
+  <data name="FilterSectionSystemHint" xml:space="preserve">
+    <value>Clock and active sensing are the two most often taken out of a route.</value>
+  </data>
+  <data name="FilterSectionChannels" xml:space="preserve">
+    <value>Channels</value>
+  </data>
+  <data name="FilterSectionChannelsHint" xml:space="preserve">
+    <value>Only applies to channel messages. Everything else ignores this.</value>
+  </data>
+  <data name="FilterChannelFormat" xml:space="preserve">
+    <value>Channel {0}</value>
+  </data>
+  <data name="FilterSectionNotes" xml:space="preserve">
+    <value>Note range</value>
+  </data>
+  <data name="FilterSectionNotesHint" xml:space="preserve">
+    <value>Click a key for the bottom of the range, Shift and click for the top. Applies to note on, note off, poly pressure and the MIDI 2.0 per note messages.</value>
+  </data>
+  <data name="FilterLimitNoteRange" xml:space="preserve">
+    <value>Only pass notes within a range</value>
+  </data>
+  <data name="FilterLowestNote" xml:space="preserve">
+    <value>Lowest note</value>
+  </data>
+  <data name="FilterHighestNote" xml:space="preserve">
+    <value>Highest note</value>
+  </data>
+  <data name="FilterNoteRangeFormat" xml:space="preserve">
+    <value>{0} ({1}) to {2} ({3})</value>
+  </data>
+  <data name="FilterNoteRangeAll" xml:space="preserve">
+    <value>Every note</value>
+  </data>
+  <data name="FilterSummaryEverything" xml:space="preserve">
+    <value>Everything</value>
+  </data>
+  <data name="FilterSummaryNoTypesFormat" xml:space="preserve">
+    <value>No {0}</value>
+  </data>
+  <data name="FilterSummaryOnlyTypesFormat" xml:space="preserve">
+    <value>{0} only</value>
+  </data>
+  <data name="FilterSummaryNoMessagesFormat" xml:space="preserve">
+    <value>No {0}</value>
+  </data>
+  <data name="FilterSummaryOnlyMessagesFormat" xml:space="preserve">
+    <value>{0} only</value>
+  </data>
+  <data name="FilterSummaryNothingFormat" xml:space="preserve">
+    <value>Nothing at all</value>
+  </data>
+  <data name="FilterSummaryNoChannelMessages" xml:space="preserve">
+    <value>No channel messages</value>
+  </data>
+  <data name="FilterSummaryNoSystemMessages" xml:space="preserve">
+    <value>No system messages</value>
+  </data>
+  <data name="FilterSummaryMoreFormat" xml:space="preserve">
+    <value>{0} and {1} more</value>
+  </data>
+  <data name="FilterSummaryChannelsFormat" xml:space="preserve">
+    <value>Channels {0} only</value>
+  </data>
+  <data name="FilterSummaryNotesFormat" xml:space="preserve">
+    <value>Notes {0} to {1} only</value>
+  </data>
+  <data name="MessageTypeUtility" xml:space="preserve">
+    <value>Utility</value>
+  </data>
+  <data name="MessageTypeSystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="MessageTypeMidi1ChannelVoice" xml:space="preserve">
+    <value>MIDI 1.0 channel voice</value>
+  </data>
+  <data name="MessageTypeSysEx7" xml:space="preserve">
+    <value>System exclusive 7</value>
+  </data>
+  <data name="MessageTypeMidi2ChannelVoice" xml:space="preserve">
+    <value>MIDI 2.0 channel voice</value>
+  </data>
+  <data name="MessageTypeData128" xml:space="preserve">
+    <value>System exclusive 8</value>
+  </data>
+  <data name="MessageTypeFlexData" xml:space="preserve">
+    <value>Flex data</value>
+  </data>
+  <data name="MessageTypeStream" xml:space="preserve">
+    <value>UMP stream</value>
+  </data>
+  <data name="MessageTypeReservedFormat" xml:space="preserve">
+    <value>Reserved type {0}</value>
+  </data>
+  <data name="VoiceNotes" xml:space="preserve">
+    <value>Note on and note off</value>
+  </data>
+  <data name="VoiceNoteOff" xml:space="preserve">
+    <value>Note off</value>
+  </data>
+  <data name="VoiceNoteOn" xml:space="preserve">
+    <value>Note on</value>
+  </data>
+  <data name="VoicePolyPressure" xml:space="preserve">
+    <value>Poly pressure</value>
+  </data>
+  <data name="VoiceControlChange" xml:space="preserve">
+    <value>Control change</value>
+  </data>
+  <data name="VoiceProgramChange" xml:space="preserve">
+    <value>Program change</value>
+  </data>
+  <data name="VoiceChannelPressure" xml:space="preserve">
+    <value>Channel pressure</value>
+  </data>
+  <data name="VoicePitchBend" xml:space="preserve">
+    <value>Pitch bend</value>
+  </data>
+  <data name="VoiceRegisteredPerNote" xml:space="preserve">
+    <value>Registered per note controller</value>
+  </data>
+  <data name="VoiceAssignablePerNote" xml:space="preserve">
+    <value>Assignable per note controller</value>
+  </data>
+  <data name="VoiceRegisteredController" xml:space="preserve">
+    <value>Registered controller (RPN)</value>
+  </data>
+  <data name="VoiceAssignableController" xml:space="preserve">
+    <value>Assignable controller (NRPN)</value>
+  </data>
+  <data name="VoiceRelativeRegisteredController" xml:space="preserve">
+    <value>Relative registered controller</value>
+  </data>
+  <data name="VoiceRelativeAssignableController" xml:space="preserve">
+    <value>Relative assignable controller</value>
+  </data>
+  <data name="VoicePerNotePitchBend" xml:space="preserve">
+    <value>Per note pitch bend</value>
+  </data>
+  <data name="VoicePerNoteManagement" xml:space="preserve">
+    <value>Per note management</value>
+  </data>
+  <data name="VoiceReservedFormat" xml:space="preserve">
+    <value>Reserved status {0}</value>
+  </data>
+  <data name="SystemTimeCode" xml:space="preserve">
+    <value>MIDI time code</value>
+  </data>
+  <data name="SystemSongPosition" xml:space="preserve">
+    <value>Song position</value>
+  </data>
+  <data name="SystemSongSelect" xml:space="preserve">
+    <value>Song select</value>
+  </data>
+  <data name="SystemTuneRequest" xml:space="preserve">
+    <value>Tune request</value>
+  </data>
+  <data name="SystemTimingClock" xml:space="preserve">
+    <value>Timing clock</value>
+  </data>
+  <data name="SystemStart" xml:space="preserve">
+    <value>Start</value>
+  </data>
+  <data name="SystemContinue" xml:space="preserve">
+    <value>Continue</value>
+  </data>
+  <data name="SystemStop" xml:space="preserve">
+    <value>Stop</value>
+  </data>
+  <data name="SystemActiveSensing" xml:space="preserve">
+    <value>Active sensing</value>
+  </data>
+  <data name="SystemReset" xml:space="preserve">
+    <value>Reset</value>
+  </data>
+  <data name="SystemReservedFormat" xml:space="preserve">
+    <value>Reserved system message {0}</value>
+  </data>
+  <data name="InspectorActivity" xml:space="preserve">
+    <value>Activity</value>
+  </data>
+  <data name="InspectorIdentifyBy" xml:space="preserve">
+    <value>Identify this device by</value>
+  </data>
+  <data name="MatchModeDeviceId" xml:space="preserve">
+    <value>Its exact device ID</value>
+  </data>
+  <data name="MatchModeDeviceIdHint" xml:space="preserve">
+    <value>Safest. Can change if a device with no serial number moves to another USB port.</value>
+  </data>
+  <data name="MatchModeUsb" xml:space="preserve">
+    <value>Manufacturer, VID and PID</value>
+  </data>
+  <data name="MatchModeUsbHintFormat" xml:space="preserve">
+    <value>VID {0}, PID {1}. Matches the same model in any port.</value>
+  </data>
+  <data name="MatchModeUsbUnavailable" xml:space="preserve">
+    <value>This endpoint does not report a USB vendor and product ID.</value>
+  </data>
+  <data name="MatchModeName" xml:space="preserve">
+    <value>Its name</value>
+  </data>
+  <data name="MatchModeNameHint" xml:space="preserve">
+    <value>Last resort. Two identical devices look the same.</value>
+  </data>
+  <data name="ReplacementTitle" xml:space="preserve">
+    <value>A device looks like a match</value>
+  </data>
+  <data name="ReplacementMessageFormat" xml:space="preserve">
+    <value>"{0}" is connected now, with a different device ID.</value>
+  </data>
+  <data name="ReplacementUse" xml:space="preserve">
+    <value>Use this device</value>
+  </data>
+  <data name="GroupSameAsSource" xml:space="preserve">
+    <value>Same group as the source</value>
+  </data>
+  <data name="ConnectionLoopMuted" xml:space="preserve">
+    <value>Muted because it closes a loop.</value>
+  </data>
+  <data name="ConnectionMuted" xml:space="preserve">
+    <value>Muted.</value>
+  </data>
+  <data name="ConnectionWaiting" xml:space="preserve">
+    <value>Waiting for its endpoints.</value>
+  </data>
+  <data name="ConnectionForwardedFormat" xml:space="preserve">
+    <value>{0} messages forwarded</value>
+  </data>
+  <data name="ConnectionSendFailuresFormat" xml:space="preserve">
+    <value>{0} batches were refused by the destination, so messages were lost.</value>
+  </data>
+  <data name="ActionShowAllGroups" xml:space="preserve">
+    <value>Show all 16 groups</value>
+  </data>
+  <data name="ActionShowDeclaredGroups" xml:space="preserve">
+    <value>Show only the declared groups</value>
+  </data>
+  <data name="ActionRemoveEndpoint" xml:space="preserve">
+    <value>Remove from this patch</value>
+  </data>
+  <data name="ActionRemoveConnection" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="ActionMute" xml:space="preserve">
+    <value>Mute</value>
+  </data>
+  <data name="ActionUnmute" xml:space="preserve">
+    <value>Unmute</value>
+  </data>
+
+  <!-- ============================================================== palette -->
+  <data name="PaletteNothingToAdd" xml:space="preserve">
+    <value>Every connected endpoint is already on this canvas</value>
+  </data>
+  <data name="PaletteSeenBefore" xml:space="preserve">
+    <value>Seen before, not connected</value>
+  </data>
+
+  <!-- ========================================================= save a patch -->
+  <data name="SavePatchDialog.Title" xml:space="preserve">
+    <value>Save this patch</value>
+  </data>
+  <data name="SavePatchDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="SavePatchDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="SavePatchIntroText.Text" xml:space="preserve">
+    <value>Patches are files in Documents, MIDI Patchbay. You can copy one to another PC, but the endpoints have to be matched there.</value>
+  </data>
+  <data name="SavePatchNameBox.Header" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="SavePatchDescriptionBox.Header" xml:space="preserve">
+    <value>Description, optional</value>
+  </data>
+  <data name="SavePatchDescriptionHint.Text" xml:space="preserve">
+    <value>Shown when you hover the patch in the list.</value>
+  </data>
+  <data name="SavePatchKeepRadio.Content" xml:space="preserve">
+    <value>Keep this patch</value>
+  </data>
+  <data name="SavePatchKeepHint.Text" xml:space="preserve">
+    <value>Saved to disk and offered again next time Patchbay starts.</value>
+  </data>
+  <data name="SavePatchTemporaryRadio.Content" xml:space="preserve">
+    <value>Temporary</value>
+  </data>
+  <data name="SavePatchTemporaryHint.Text" xml:space="preserve">
+    <value>Routes now, disappears when Patchbay closes. Nothing is written to disk.</value>
+  </data>
+  <data name="SavePatchStartupCheck.Content" xml:space="preserve">
+    <value>Start routing this patch when Patchbay starts</value>
+  </data>
+  <data name="ConfirmDeleteDialog.Title" xml:space="preserve">
+    <value>Delete this patch?</value>
+  </data>
+  <data name="ConfirmDeleteDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="ConfirmDeleteDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="DeletePatchMessageFormat" xml:space="preserve">
+    <value>"{0}" and its file will be removed. Routing for it stops right away.</value>
+  </data>
+  <data name="ConfirmRemoveDialog.Title" xml:space="preserve">
+    <value>Remove this from the patch?</value>
+  </data>
+  <data name="ConfirmRemoveDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="ConfirmRemoveDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="ConfirmRemoveSkipCheck.Content" xml:space="preserve">
+    <value>Don't ask again</value>
+  </data>
+  <data name="RemoveEndpointMessageFormat" xml:space="preserve">
+    <value>"{0}" and every connection to it will be taken off this patch. The endpoint itself is not changed.</value>
+  </data>
+  <data name="RemoveConnectionMessage" xml:space="preserve">
+    <value>This connection will be removed and stop carrying messages.</value>
+  </data>
+
+  <!-- ========================================================== quick patch -->
+  <data name="QuickPatchDialog.Title" xml:space="preserve">
+    <value>New quick patch</value>
+  </data>
+  <data name="QuickPatchDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="QuickPatchDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="QuickPatchIntroText.Text" xml:space="preserve">
+    <value>One route, from one endpoint to another. It goes on the canvas as an ordinary patch, so you can add to it, edit it or save it afterwards.</value>
+  </data>
+  <data name="QuickPatchSourceCombo.Header" xml:space="preserve">
+    <value>Messages come from</value>
+  </data>
+  <data name="QuickPatchSourceGroupCombo.Header" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="QuickPatchDestinationCombo.Header" xml:space="preserve">
+    <value>Messages go to</value>
+  </data>
+  <data name="QuickPatchDestinationGroupCombo.Header" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="QuickPatchNameFormat" xml:space="preserve">
+    <value>{0} to {1}</value>
+  </data>
+  <data name="QuickPatchPickBoth" xml:space="preserve">
+    <value>Choose an endpoint for each end of the route.</value>
+  </data>
+  <data name="QuickPatchSameGroup" xml:space="preserve">
+    <value>A group cannot route to itself. Choose a different group on one end, or a different endpoint.</value>
+  </data>
+  <data name="QuickPatchNoEndpoints" xml:space="preserve">
+    <value>There are no MIDI endpoints on this PC to route between.</value>
+  </data>
+  <data name="QuickPatchEndpointGone" xml:space="preserve">
+    <value>One of those endpoints is no longer available.</value>
+  </data>
+
+  <!-- ==================================================== create a loopback -->
+  <data name="CreateLoopbackDialog.Title" xml:space="preserve">
+    <value>Create a loopback</value>
+  </data>
+  <data name="CreateLoopbackDialog.PrimaryButtonText" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="CreateLoopbackDialog.CloseButtonText" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="CreateLoopbackIntroText.Text" xml:space="preserve">
+    <value>A loopback is what a DAW or another app connects to. Patchbay can only route a message source to a message destination, so a loopback is how you get messages into software that is not on this canvas.</value>
+  </data>
+  <data name="LoopbackBasicRadio.Content" xml:space="preserve">
+    <value>MIDI 1.0 basic loopback</value>
+  </data>
+  <data name="LoopbackBasicHint.Text" xml:space="preserve">
+    <value>One endpoint that echoes back to itself. The simplest thing for most apps.</value>
+  </data>
+  <data name="LoopbackPairRadio.Content" xml:space="preserve">
+    <value>MIDI 2.0 loopback pair (A and B)</value>
+  </data>
+  <data name="LoopbackPairHint.Text" xml:space="preserve">
+    <value>Two endpoints. Send into A, read from B. UMP, full MIDI 2.0.</value>
+  </data>
+  <data name="LoopbackNameBox.Header" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="LoopbackKeepCheck.Content" xml:space="preserve">
+    <value>Keep this loopback after Patchbay closes</value>
+  </data>
+  <data name="LoopbackInfoBar.Message" xml:space="preserve">
+    <value>Loopbacks are real MIDI endpoints on this PC. Every app sees them, not just Patchbay.</value>
+  </data>
+  <data name="LoopbackDefaultName" xml:space="preserve">
+    <value>Patchbay Loopback</value>
+  </data>
+  <data name="LoopbackSideAFormat" xml:space="preserve">
+    <value>{0} (A)</value>
+  </data>
+  <data name="LoopbackSideBFormat" xml:space="preserve">
+    <value>{0} (B)</value>
+  </data>
+
+  <!-- ================================================================= test -->
+  <data name="TestOpenMonitor" xml:space="preserve">
+    <value>Open MIDI Monitor on this endpoint</value>
+  </data>
+  <data name="TestOpenKeyboard" xml:space="preserve">
+    <value>Open MIDI Keyboard on this endpoint</value>
+  </data>
+  <data name="TestOpenScratchPad" xml:space="preserve">
+    <value>Open MIDI Scratch Pad on this endpoint</value>
+  </data>
+
+  <!-- ============================================================= settings -->
+  <data name="AppearanceTitle" xml:space="preserve">
+    <value>Appearance and settings</value>
+  </data>
+  <data name="AppearanceTheme" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="AppearanceThemeSystem" xml:space="preserve">
+    <value>Use system setting</value>
+  </data>
+  <data name="AppearanceThemeLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="AppearanceThemeDark" xml:space="preserve">
+    <value>Dark</value>
+  </data>
+  <data name="AppearanceBackdrop" xml:space="preserve">
+    <value>Window background</value>
+  </data>
+  <data name="AppearanceBackdropSolid" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="AppearanceBackdropMica" xml:space="preserve">
+    <value>Mica</value>
+  </data>
+  <data name="AppearanceBackdropAcrylic" xml:space="preserve">
+    <value>Acrylic</value>
+  </data>
+  <data name="AppearanceCustomColor" xml:space="preserve">
+    <value>Custom window color</value>
+  </data>
+  <data name="AppearanceColorPicker" xml:space="preserve">
+    <value>Window color</value>
+  </data>
+  <data name="AppearanceRoutingNote" xml:space="preserve">
+    <value>Routing only runs while Patchbay is running. Closing the window stops every patch unless you keep it in the notification area.</value>
+  </data>
+  <data name="SettingsSectionHeading" xml:space="preserve">
+    <value>Patchbay</value>
+  </data>
+  <data name="SettingStartWithWindows" xml:space="preserve">
+    <value>Start when I sign in</value>
+  </data>
+  <data name="SettingStartWithWindowsHint" xml:space="preserve">
+    <value>For this account only.</value>
+  </data>
+  <data name="SettingNotificationArea" xml:space="preserve">
+    <value>Keep running in the notification area</value>
+  </data>
+  <data name="SettingNotificationAreaHint" xml:space="preserve">
+    <value>Off by default. Turn this on if you want patches to keep routing after you close the window.</value>
+  </data>
+  <data name="SettingStartMinimized" xml:space="preserve">
+    <value>Start minimized</value>
+  </data>
+  <data name="SettingActivateAtStartup" xml:space="preserve">
+    <value>Start routing saved patches at startup</value>
+  </data>
+  <data name="SettingWarnAboutLoops" xml:space="preserve">
+    <value>Warn me when a patch could feed back</value>
+  </data>
+
+  <!-- ============================================================= notification area -->
+  <data name="TrayHeaderFormat" xml:space="preserve">
+    <value>MIDI Patchbay - {0} patches routing</value>
+  </data>
+  <data name="TrayNoPatches" xml:space="preserve">
+    <value>MIDI Patchbay - no patches</value>
+  </data>
+  <data name="TrayTooltipFormat" xml:space="preserve">
+    <value>MIDI Patchbay - {0} routing</value>
+  </data>
+  <data name="TrayStopAll" xml:space="preserve">
+    <value>Stop all routing</value>
+  </data>
+  <data name="TrayOpen" xml:space="preserve">
+    <value>Open MIDI Patchbay</value>
+  </data>
+  <data name="TrayExit" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+  <data name="TrayWaiting" xml:space="preserve">
+    <value>waiting</value>
+  </data>
+  <data name="TrayOff" xml:space="preserve">
+    <value>off</value>
+  </data>
+
+  <!-- =============================================================== errors -->
+  <data name="ErrorNoPatchFolder" xml:space="preserve">
+    <value>The MIDI Patchbay folder in Documents could not be opened.</value>
+  </data>
+  <data name="ErrorCreateFolderFormat" xml:space="preserve">
+    <value>The folder "{0}" could not be created.</value>
+  </data>
+  <data name="ErrorReadPatches" xml:space="preserve">
+    <value>The patches in Documents could not be read.</value>
+  </data>
+  <data name="ErrorSavePatch" xml:space="preserve">
+    <value>The patch could not be saved.</value>
+  </data>
+  <data name="ErrorSavePatchFormat" xml:space="preserve">
+    <value>The patch could not be written to "{0}".</value>
+  </data>
+  <data name="ErrorDeletePatch" xml:space="preserve">
+    <value>The patch file could not be deleted.</value>
+  </data>
+  <data name="ErrorDeletePatchFormat" xml:space="preserve">
+    <value>The file "{0}" could not be deleted.</value>
+  </data>
+  <data name="ErrorServiceUnavailable" xml:space="preserve">
+    <value>Windows MIDI Services is not available, so nothing can be routed.</value>
+  </data>
+  <data name="ErrorSessionFailed" xml:space="preserve">
+    <value>A MIDI session could not be created.</value>
+  </data>
+  <data name="ErrorNoComExtensions" xml:space="preserve">
+    <value>This build of the MIDI SDK does not offer the fast message path Patchbay needs.</value>
+  </data>
+  <data name="ErrorReceiveCallback" xml:space="preserve">
+    <value>Patchbay could not listen to one of the endpoints in this patch.</value>
+  </data>
+  <data name="ErrorRoutingFailed" xml:space="preserve">
+    <value>The routing could not be set up. Check that the endpoints in this patch are still available.</value>
+  </data>
+  <data name="ErrorStartupEntry" xml:space="preserve">
+    <value>The startup entry could not be changed.</value>
+  </data>
+  <data name="ErrorBasicLoopbackUnavailable" xml:space="preserve">
+    <value>The MIDI 1.0 basic loopback transport is not available on this PC.</value>
+  </data>
+  <data name="ErrorLoopbackUnavailable" xml:space="preserve">
+    <value>The MIDI 2.0 loopback transport is not available on this PC.</value>
+  </data>
+  <data name="ErrorLoopbackCreateFailed" xml:space="preserve">
+    <value>The loopback could not be created.</value>
+  </data>
+  <data name="ErrorToolNotFoundFormat" xml:space="preserve">
+    <value>{0} is not installed on this PC.</value>
+  </data>
+</root>

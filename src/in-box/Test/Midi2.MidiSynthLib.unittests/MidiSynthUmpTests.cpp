@@ -905,6 +905,148 @@ void MidiSynthUmpTests::TestResets()
 }
 
 
+// GM2 3.5.2 lists what Reset All Controllers touches, and names channel volume, pan, bank select,
+// program, portamento time and the effect sends as explicitly NOT reset. M2-113 appendix A agrees,
+// marking CC7 and CC10 "Do Not Set". Neither resets the pitch bend range.
+void MidiSynthUmpTests::TestResetAllControllersScope()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    const auto config = TestConfig();
+    const uint32_t rate = config.RenderSampleRate();
+
+    // Drawbar organ. Its flat sustain is what makes two separate runs comparable at the same
+    // offset from the note onset; a decaying patch would measure the decay rather than the
+    // controller under test.
+    constexpr uint8_t OrganProgram = 16;
+    constexpr uint8_t ResetAllControllers = 121;
+
+    struct StereoLevels
+    {
+        double Left{ 0.0 };
+        double Right{ 0.0 };
+
+        double Sum() const noexcept { return Left + Right; }
+    };
+
+    const auto play =
+        [&](uint8_t volume, uint8_t pan, uint8_t expression, bool reset) -> StereoLevels
+    {
+        SynthEngine engine;
+        UmpDispatcher dispatcher;
+        FreshEngine(*collection, engine, dispatcher, 0);
+
+        engine.ProgramChange(0, OrganProgram);
+        engine.ControlChange(0, 7, volume);
+        engine.ControlChange(0, 10, pan);
+        engine.ControlChange(0, 11, expression);
+
+        if (reset)
+        {
+            engine.ControlChange(0, ResetAllControllers, 0);
+        }
+
+        engine.NoteOn(0, 60, static_cast<uint16_t>(100u << 9));
+
+        const uint32_t frames = rate / 2;
+        std::vector<float> buffer(static_cast<size_t>(frames) * 2, 0.0f);
+
+        uint32_t rendered = 0;
+
+        while (rendered < frames)
+        {
+            const uint32_t chunk = (std::min)(256u, frames - rendered);
+            engine.Render(buffer.data() + static_cast<size_t>(rendered) * 2, chunk);
+            rendered += chunk;
+        }
+
+        double left = 0.0;
+        double right = 0.0;
+
+        for (size_t i = 0; i + 1 < buffer.size(); i += 2)
+        {
+            left += static_cast<double>(buffer[i]) * buffer[i];
+            right += static_cast<double>(buffer[i + 1]) * buffer[i + 1];
+        }
+
+        const auto divisor = static_cast<double>(frames);
+
+        return StereoLevels{ std::sqrt(left / divisor), std::sqrt(right / divisor) };
+    };
+
+    // Channel volume. Restoring the power-up 100 over a set 20 would be about 28 dB louder, so
+    // this discriminates by a factor of roughly 25 rather than by a hair.
+    {
+        const auto quiet = play(20, 64, 127, false);
+        const auto afterReset = play(20, 64, 127, true);
+
+        VERIFY_IS_TRUE(quiet.Sum() > 0.0, L"the quiet reference actually made sound");
+
+        VERIFY_IS_TRUE(std::fabs(afterReset.Sum() - quiet.Sum()) < quiet.Sum() * 0.05,
+            L"Reset All Controllers leaves channel volume alone");
+    }
+
+    // Pan, hard left. Returning it to center would even the two channels out.
+    {
+        const auto afterReset = play(100, 0, 127, true);
+
+        VERIFY_IS_TRUE(afterReset.Left > afterReset.Right * 4.0,
+            L"Reset All Controllers leaves pan alone");
+    }
+
+    // The control that proves this test is not simply asserting that the message does nothing:
+    // expression IS in both reset lists, so a channel silenced by CC11 comes back.
+    {
+        const auto silenced = play(100, 64, 0, false);
+        const auto afterReset = play(100, 64, 0, true);
+
+        VERIFY_IS_TRUE(silenced.Sum() == 0.0, L"expression 0 silences the channel");
+
+        VERIFY_IS_TRUE(afterReset.Sum() > 0.0, L"Reset All Controllers restores expression");
+    }
+
+    // Lifting the pedal has to release what it was holding. Clearing the flag on its own would
+    // strand those voices until something stole them.
+    {
+        SynthEngine engine;
+        UmpDispatcher dispatcher;
+        FreshEngine(*collection, engine, dispatcher, 0);
+
+        engine.ProgramChange(0, OrganProgram);
+        engine.ControlChange(0, 64, 127);
+        engine.NoteOn(0, 60, static_cast<uint16_t>(100u << 9));
+
+        std::vector<float> block(256 * 2, 0.0f);
+        engine.Render(block.data(), 256);
+
+        engine.NoteOff(0, 60);
+        engine.Render(block.data(), 256);
+
+        const bool heldByPedal = engine.ActiveVoiceCount() == 1;
+
+        engine.ControlChange(0, ResetAllControllers, 0);
+
+        uint32_t frames = 0;
+
+        while (frames < rate && engine.ActiveVoiceCount() > 0)
+        {
+            engine.Render(block.data(), 256);
+            frames += 256;
+        }
+
+        VERIFY_IS_TRUE(heldByPedal, L"the sustain pedal held the note through note off");
+
+        VERIFY_IS_TRUE(engine.ActiveVoiceCount() == 0,
+            L"Reset All Controllers releases what the sustain pedal was holding");
+    }
+}
+
+
 // A property exchange request must be parked for a worker thread, never answered here.
 void MidiSynthUmpTests::TestPropertyRequestParking()
 {

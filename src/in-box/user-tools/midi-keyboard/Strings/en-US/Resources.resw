@@ -63,6 +63,10 @@
   <data name="AppDisplayName" xml:space="preserve">
     <value>Windows MIDI Keyboard</value>
   </data>
+  <data name="PreviewChicletText.Text" xml:space="preserve">
+    <value>PREVIEW</value>
+    <comment>Shown in the title bar. All capitals on purpose, so it reads as a badge.</comment>
+  </data>
   <data name="VirtualDeviceDescription" xml:space="preserve">
     <value>Virtual MIDI device created by the Windows MIDI Keyboard app</value>
   </data>
@@ -359,6 +363,18 @@
   </data>
   <data name="TransposeBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Transpose in semitones</value>
+  </data>
+  <data name="MinimumKeyWidthBox.Header" xml:space="preserve">
+    <value>Smallest white key width</value>
+  </data>
+  <data name="MinimumKeyWidthBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Smallest white key width in pixels</value>
+  </data>
+  <data name="MinimumKeyWidthHint.Text" xml:space="preserve">
+    <value>In pixels. When the window is too narrow to fit every key at this width, the keyboard scrolls instead of shrinking.</value>
+  </data>
+  <data name="KeyboardScrollBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Scroll the keyboard</value>
   </data>
   <data name="ShowNoteNamesCheckBox.Content" xml:space="preserve">
     <value>Show note names and numbers</value>

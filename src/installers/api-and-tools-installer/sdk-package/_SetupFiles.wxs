@@ -23,6 +23,8 @@
       <Directory Id="TOOL_MONITOR_FOLDER_Styles" Name="Styles">
       </Directory>
     </DirectoryRef>
+    <DirectoryRef Id="TOOL_PATCHBAY_FOLDER">
+    </DirectoryRef>
     <DirectoryRef Id="TOOL_TROUBLESHOOTER_FOLDER">
     </DirectoryRef>
     <DirectoryRef Id="TOOL_NOTIFICATIONS_FOLDER">
@@ -266,6 +268,32 @@
         <File Id="fA8A27593953D92AB" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Monitor\Styles\MonitorStyles.xbf" Vital="true" />
       </Component>
 
+      <!-- app-sdk\$(var.Platform)\Patchbay -->
+      <Component Id="cAE56A735CE85BC47" Bitness="always64" Directory="TOOL_PATCHBAY_FOLDER"> <!-- App.xbf -->
+        <File Id="fAE56A735CE85BC47" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Patchbay\App.xbf" Vital="true" />
+      </Component>
+      <Component Id="c4D039076BBFD56A8" Bitness="always64" Directory="TOOL_PATCHBAY_FOLDER"> <!-- MainWindow.xbf -->
+        <File Id="f4D039076BBFD56A8" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Patchbay\MainWindow.xbf" Vital="true" />
+      </Component>
+      <Component Id="c983BB614AB6934AC" Bitness="always64" Directory="TOOL_PATCHBAY_FOLDER"> <!-- Microsoft.Web.WebView2.Core.dll -->
+        <File Id="f983BB614AB6934AC" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Patchbay\Microsoft.Web.WebView2.Core.dll" Vital="true" />
+      </Component>
+      <Component Id="c691428A48377F690" Bitness="always64" Directory="TOOL_PATCHBAY_FOLDER"> <!-- Microsoft.WindowsAppRuntime.Bootstrap.dll -->
+        <File Id="f691428A48377F690" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Patchbay\Microsoft.WindowsAppRuntime.Bootstrap.dll" Vital="true" />
+      </Component>
+      <Component Id="c2621F1F1E8C96778" Bitness="always64" Directory="TOOL_PATCHBAY_FOLDER"> <!-- midipatchbay.exe -->
+        <File Id="midipatchbayExe" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Patchbay\midipatchbay.exe" Vital="true" />
+      </Component>
+      <Component Id="c7F21F3FE472BE32D" Bitness="always64" Directory="TOOL_PATCHBAY_FOLDER"> <!-- resources.pri -->
+        <File Id="f7F21F3FE472BE32D" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Patchbay\resources.pri" Vital="true" />
+      </Component>
+      <Component Id="c69516CB2FEA660EC" Bitness="always64" Directory="TOOL_PATCHBAY_FOLDER"> <!-- Windows.Devices.Midi2.dll -->
+        <File Id="f69516CB2FEA660EC" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Patchbay\Windows.Devices.Midi2.dll" Vital="true" />
+      </Component>
+      <Component Id="c2A7869ED7EA62DDC" Bitness="always64" Directory="TOOL_PATCHBAY_FOLDER"> <!-- Windows.Devices.Midi2.pri -->
+        <File Id="f2A7869ED7EA62DDC" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Patchbay\Windows.Devices.Midi2.pri" Vital="true" />
+      </Component>
+
       <!-- app-sdk\$(var.Platform)\Troubleshooter -->
       <Component Id="cAE62618B4C1337AA" Bitness="always64" Directory="TOOL_TROUBLESHOOTER_FOLDER"> <!-- App.xbf -->
         <File Id="fAE62618B4C1337AA" Source="$(StagingSourceRootFolder)\app-sdk\$(var.Platform)\Troubleshooter\App.xbf" Vital="true" />
@@ -320,6 +348,9 @@
       <!-- Assets\Endpoints -->
       <Component Id="c4D5BC2F78568604C" Bitness="always64" Directory="CONFIGURATION_ASSETS_ENDPOINTS_FOLDER"> <!-- default-app-small.svg -->
         <File Id="f4D5BC2F78568604C" Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-app-small.svg" Vital="true" />
+      </Component>
+      <Component Id="cBD0F812CEDBFDE03" Bitness="always64" Directory="CONFIGURATION_ASSETS_ENDPOINTS_FOLDER"> <!-- default-apppub-small.svg -->
+        <File Id="fBD0F812CEDBFDE03" Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-apppub-small.svg" Vital="true" />
       </Component>
       <Component Id="cD574682A30EEB70F" Bitness="always64" Directory="CONFIGURATION_ASSETS_ENDPOINTS_FOLDER"> <!-- default-basic-loop-small.svg -->
         <File Id="fD574682A30EEB70F" Source="$(StagingSourceRootFolder)\Assets\Endpoints\default-basic-loop-small.svg" Vital="true" />
