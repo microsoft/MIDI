@@ -177,7 +177,10 @@ $ConsoleTools = @(
 # GUI tools each install into their OWN subfolder of Tools. MIDI Settings resolves the others by
 # convention at %ProgramFiles%\Windows MIDI Services\Tools\<Folder>\<exe> - see ToolLauncher.cpp
 # in midi-settings - so Folder must match that table exactly.
-# Display names come from Resources.resw (ToolApp_*_Name) so the Start Menu matches the app.
+# Display is the Start Menu shortcut name, and it DELIBERATELY drops the "Windows" the app's own
+# title bar carries. The Start Menu gives a tile about a dozen characters before it elides, so
+# "Windows MIDI Player" showed as "Windows MIDI..." and the only part that identified the app was
+# the part that got cut. The group these all sit in is already called Windows MIDI (Preview).
 # Network MIDI 2.0 Setup and Bluetooth MIDI Setup are deliberately NOT here: each ships in the
 # installer that carries its transport, because the app is useless without it, and two installers
 # writing the same files to the same folder would break each other's uninstall.
@@ -185,9 +188,9 @@ $GuiTools = @(
     [pscustomobject]@{ Name = 'midisettings';      Folder = 'Settings';     Display = 'MIDI Settings';          DirectoryId = 'TOOL_SETTINGS_FOLDER' }
     [pscustomobject]@{ Name = 'midiloopbacksetup'; Folder = 'LoopSetup';    Display = 'MIDI Loopback Setup';    DirectoryId = 'TOOL_LOOPSETUP_FOLDER' }
     [pscustomobject]@{ Name = 'midiscratchpad';    Folder = 'ScratchPad';   Display = 'MIDI Scratch Pad';       DirectoryId = 'TOOL_SCRATCHPAD_FOLDER' }
-    [pscustomobject]@{ Name = 'midikeyboard';      Folder = 'Keyboard';     Display = 'Windows MIDI Keyboard';  DirectoryId = 'TOOL_KEYBOARD_FOLDER' }
-    [pscustomobject]@{ Name = 'midiplayer';        Folder = 'Player';       Display = 'Windows MIDI Player';    DirectoryId = 'TOOL_PLAYER_FOLDER' }
-    [pscustomobject]@{ Name = 'midiclock';         Folder = 'Clock';        Display = 'Windows MIDI Clock';     DirectoryId = 'TOOL_CLOCK_FOLDER' }
+    [pscustomobject]@{ Name = 'midikeyboard';      Folder = 'Keyboard';     Display = 'MIDI Keyboard';          DirectoryId = 'TOOL_KEYBOARD_FOLDER' }
+    [pscustomobject]@{ Name = 'midiplayer';        Folder = 'Player';       Display = 'MIDI Player';            DirectoryId = 'TOOL_PLAYER_FOLDER' }
+    [pscustomobject]@{ Name = 'midiclock';         Folder = 'Clock';        Display = 'MIDI Clock';             DirectoryId = 'TOOL_CLOCK_FOLDER' }
     [pscustomobject]@{ Name = 'midisysextool';     Folder = 'SysEx';        Display = 'MIDI SysEx Tool';        DirectoryId = 'TOOL_SYSEX_FOLDER' }
     [pscustomobject]@{ Name = 'midi2monitor';      Folder = 'Monitor';      Display = 'MIDI Monitor';           DirectoryId = 'TOOL_MONITOR_FOLDER' }
     [pscustomobject]@{ Name = 'midipatchbay';      Folder = 'Patchbay';     Display = 'MIDI Patchbay';          DirectoryId = 'TOOL_PATCHBAY_FOLDER' }
