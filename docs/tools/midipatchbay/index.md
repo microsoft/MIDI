@@ -80,7 +80,7 @@ Selecting a connection shows what its filters and transforms add up to, so you c
 This is the important limitation. Patchbay routes by receiving messages in its own process and sending them back out, so the routes exist only while the app is open. Two settings in the appearance and settings flyout deal with that:
 
 - **Start when I sign in** launches Patchbay with Windows.
-- **Keep running in the notification area** means closing the window leaves the routes up.
+- **Keep running in the notification area** means closing or minimizing the window puts Patchbay in the notification area with the routes still up. Click the icon to bring the window back, or right-click it for the list of patches, to stop everything, or to exit properly.
 
 Both are off unless you turn them on. Patchbay doesn't put itself in the notification area uninvited.
 
