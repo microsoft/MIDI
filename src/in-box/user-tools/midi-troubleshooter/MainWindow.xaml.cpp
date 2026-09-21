@@ -51,6 +51,18 @@ namespace winrt::miditroubleshooter::implementation
 
             midiapp::ApplyPreviewBadgeVisibility(PreviewChiclet());
 
+            midiapp::MakeLiveStatusRegion(ApiModeStatusText());
+            midiapp::MakeLiveStatusRegion(MidiDiagStatusText());
+            midiapp::MakeLiveStatusRegion(MidiKsInfoStatusText());
+            midiapp::MakeLiveStatusRegion(CaptureStatusText());
+            midiapp::MakeLiveStatusRegion(SessionsStatusText());
+            midiapp::MakeLiveStatusRegion(TransportsStatusText());
+            midiapp::MakeLiveStatusRegion(ServiceStatusText());
+            midiapp::MakeLiveStatusRegion(RegistryStatusText());
+            midiapp::MakeLiveStatusRegion(DriversStatusText());
+            midiapp::MakeLiveStatusRegion(KorgDriverStatusText());
+            midiapp::MakeLiveStatusRegion(KorgBleDriverStatusText());
+
             midiapp::WindowChromeElements elements{};
 
             elements.Window = *this;

@@ -26,6 +26,14 @@ namespace midipatchbay
         constexpr UINT TrayIconId = 1;
 
         constexpr size_t MaximumMenuPatches = 40;
+
+        // Registered once and never unregistered, which is how this broadcast is meant to work.
+        UINT TaskbarCreatedMessage() noexcept
+        {
+            static UINT const message = ::RegisterWindowMessageW(L"TaskbarCreated");
+
+            return message;
+        }
     }
 
     TrayIcon::~TrayIcon()
@@ -53,17 +61,31 @@ namespace midipatchbay
 
         if (self != nullptr)
         {
-            return self->HandleMessage(message, wParam, lParam);
+            return self->HandleMessage(window, message, wParam, lParam);
         }
 
         return ::DefWindowProcW(window, message, wParam, lParam);
     }
 
     _Use_decl_annotations_
-    LRESULT TrayIcon::HandleMessage(UINT message, WPARAM wParam, LPARAM lParam) noexcept
+    LRESULT TrayIcon::HandleMessage(HWND window, UINT message, WPARAM wParam, LPARAM lParam) noexcept
     {
         try
         {
+            // Explorer restarting empties the notification area, and an app whose window is
+            // hidden behind the icon has no other way back.
+            if (message != 0 && message == TaskbarCreatedMessage())
+            {
+                if (m_visible)
+                {
+                    // the icon went with the old Explorer, so this has to add it again
+                    m_visible = false;
+                    Show();
+                }
+
+                return 0;
+            }
+
             switch (message)
             {
             case TrayCallbackMessage:
@@ -121,7 +143,7 @@ namespace midipatchbay
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"A notification area message handler failed.")
 
-        return ::DefWindowProcW(m_window, message, wParam, lParam);
+        return ::DefWindowProcW(window, message, wParam, lParam);
     }
 
     bool TrayIcon::EnsureWindow() noexcept
@@ -142,10 +164,13 @@ namespace midipatchbay
         // survived a previous instance of this object
         ::RegisterClassExW(&windowClass);
 
+        // A plain top level window rather than a message only one, because message only windows
+        // do not receive the TaskbarCreated broadcast. It is never shown, and WS_EX_TOOLWINDOW
+        // keeps it out of the taskbar and out of Alt-Tab.
         m_window = ::CreateWindowExW(
-            0, WindowClassName, WindowClassName, 0,
+            WS_EX_TOOLWINDOW, WindowClassName, WindowClassName, WS_POPUP,
             0, 0, 0, 0,
-            HWND_MESSAGE, nullptr, ::GetModuleHandleW(nullptr), this);
+            nullptr, nullptr, ::GetModuleHandleW(nullptr), this);
 
         return m_window != nullptr;
     }
@@ -173,7 +198,7 @@ namespace midipatchbay
             data.uCallbackMessage = TrayCallbackMessage;
             data.hIcon = static_cast<HICON>(::LoadImageW(
                 ::GetModuleHandleW(nullptr), MAKEINTRESOURCEW(IDI_APPICON), IMAGE_ICON,
-                ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), 0));
+                ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), LR_SHARED));
 
             auto const tooltip = m_tooltip.empty()
                 ? std::wstring{ resources::GetString(L"AppDisplayName") }

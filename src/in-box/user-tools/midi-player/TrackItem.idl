@@ -29,6 +29,7 @@ namespace midiplayer
         // Dimmed when another track is soloed, or this one is muted.
         Double ContentOpacity{ get; };
 
+        String RowAccessibleName{ get; };
         String MuteAccessibleName{ get; };
         String SoloAccessibleName{ get; };
     }

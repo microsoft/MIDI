@@ -26,6 +26,7 @@ namespace midiplayer
         Microsoft.UI.Xaml.Visibility CurrentVisibility{ get; };
         Microsoft.UI.Xaml.Visibility WarningVisibility{ get; };
 
+        String RowAccessibleName{ get; };
         String RemoveAccessibleName{ get; };
     }
 }

@@ -91,9 +91,16 @@ namespace midiapp
             return false;
         }
 
+        // One call rather than a show followed by a restore, because a tool which hides itself
+        // in the notification area acts on the window becoming visible and would hide it again.
         if (::IsIconic(window))
         {
             ::ShowWindow(window, SW_RESTORE);
+        }
+        else if (!::IsWindowVisible(window))
+        {
+            // Naming the state is what keeps a window that was hidden while maximized maximized.
+            ::ShowWindow(window, ::IsZoomed(window) ? SW_SHOWMAXIMIZED : SW_SHOW);
         }
 
         // This is best effort. Windows refuses a foreground change from a process which has not

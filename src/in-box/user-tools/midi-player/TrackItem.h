@@ -62,6 +62,7 @@ namespace winrt::midiplayer::implementation
 
         double ContentOpacity() const noexcept;
 
+        winrt::hstring RowAccessibleName() const noexcept;
         winrt::hstring MuteAccessibleName() const noexcept;
         winrt::hstring SoloAccessibleName() const noexcept;
 

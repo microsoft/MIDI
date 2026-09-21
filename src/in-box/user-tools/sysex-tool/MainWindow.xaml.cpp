@@ -747,6 +747,7 @@ namespace winrt::midisysextool::implementation
 
             UpdateCommandStates();
 
+            SendProgressBar().IsIndeterminate(false);
             SendProgressBar().Value(0);
             StatusText().Text(res::GetString(L"SendStarting"));
 
@@ -790,6 +791,9 @@ namespace winrt::midisysextool::implementation
             m_sendOperation = nullptr;
             m_isSending = false;
 
+            // A file with no reported size runs the bar indeterminate, so it has to be taken
+            // out of that state here or it animates for the rest of the session.
+            SendProgressBar().IsIndeterminate(false);
             SendProgressBar().Value(succeeded ? 100 : 0);
 
             StatusText().Text(succeeded
@@ -803,6 +807,8 @@ namespace winrt::midisysextool::implementation
             m_sendOperation = nullptr;
             m_isSending = false;
 
+            ResetSendProgressBar();
+
             StatusText().Text(res::GetString(L"SendCanceled"));
             UpdateCommandStates();
         }
@@ -813,9 +819,21 @@ namespace winrt::midisysextool::implementation
             m_sendOperation = nullptr;
             m_isSending = false;
 
+            ResetSendProgressBar();
+
             StatusText().Text(res::GetString(L"SendFailed"));
             UpdateCommandStates();
         }
+    }
+
+    void MainWindow::ResetSendProgressBar() noexcept
+    {
+        try
+        {
+            SendProgressBar().IsIndeterminate(false);
+            SendProgressBar().Value(0);
+        }
+        MIDI_SYSEXTOOL_CATCH_AND_LOG(L"Unable to reset the transfer progress.")
     }
 
     void MainWindow::CancelSend() noexcept
@@ -908,7 +926,7 @@ namespace winrt::midisysextool::implementation
             m_sendFilePath = chosen.get();
             SendFilePathBox().Text(winrt::hstring{ m_sendFilePath });
 
-            SendProgressBar().Value(0);
+            ResetSendProgressBar();
             SendProgressText().Text(L"");
 
             UpdateCommandStates();

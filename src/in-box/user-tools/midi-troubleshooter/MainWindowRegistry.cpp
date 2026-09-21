@@ -116,6 +116,22 @@ namespace winrt::miditroubleshooter::implementation
             RefreshRegistryButton().IsEnabled(false);
             RegistryStatusText().Text(res::GetString(L"RegistryScanning"));
 
+            // Runs on the closing and the exception paths too, so a scan that goes wrong cannot
+            // leave the button dead for the rest of the session.
+            auto const clearBusy = wil::scope_exit([this]() noexcept
+                {
+                    try
+                    {
+                        if (!m_closing)
+                        {
+                            RefreshRegistryButton().IsEnabled(true);
+                        }
+                    }
+                    catch (...)
+                    {
+                    }
+                });
+
             native::RegistryScan scan{};
 
             co_await native::RunOnBackgroundAsync([&scan]()
@@ -127,8 +143,6 @@ namespace winrt::miditroubleshooter::implementation
             {
                 co_return;
             }
-
-            RefreshRegistryButton().IsEnabled(true);
 
             ApplyRegistryScan(scan);
 
@@ -180,6 +194,22 @@ namespace winrt::miditroubleshooter::implementation
 
             RepairRegistryButton().IsEnabled(false);
             RegistryStatusText().Text(res::GetString(L"RegistryRepairing"));
+
+            // The rescan below decides whether there is anything left to repair, so the button
+            // is restored from the scan rather than simply switched back on.
+            auto const clearBusy = wil::scope_exit([this]() noexcept
+                {
+                    try
+                    {
+                        if (!m_closing)
+                        {
+                            RepairRegistryButton().IsEnabled(m_registryScan.Plan.AnyChanges() && m_elevated);
+                        }
+                    }
+                    catch (...)
+                    {
+                    }
+                });
 
             native::RepairResult result{};
 

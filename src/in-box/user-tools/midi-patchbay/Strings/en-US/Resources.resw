@@ -1006,7 +1006,7 @@
     <value>Keep running in the notification area</value>
   </data>
   <data name="SettingNotificationAreaHint" xml:space="preserve">
-    <value>Off by default. Turn this on if you want patches to keep routing after you close the window.</value>
+    <value>Off by default. Turn this on if you want patches to keep routing after you close or minimize the window.</value>
   </data>
   <data name="SettingStartMinimized" xml:space="preserve">
     <value>Start minimized</value>

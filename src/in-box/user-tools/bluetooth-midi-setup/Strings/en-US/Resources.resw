@@ -110,6 +110,10 @@
   <data name="OfflineRetentionLabel.Text" xml:space="preserve">
     <value>Keep endpoint when offline</value>
   </data>
+  <data name="OfflineRetentionCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Keep endpoint when offline</value>
+    <comment>Accessible name for the drop-down in each device row. It repeats the visible label beside it, because a control inside a list row cannot point at a label outside the row.</comment>
+  </data>
   <data name="DeviceDetailsExpander.Header" xml:space="preserve">
     <value>Details</value>
   </data>

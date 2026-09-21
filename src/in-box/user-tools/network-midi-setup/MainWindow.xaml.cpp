@@ -203,6 +203,11 @@ namespace winrt::midinetworksetup::implementation
 
             midiapp::ApplyPreviewBadgeVisibility(PreviewChiclet());
 
+            midiapp::MakeLiveStatusRegion(RemoteStatusText());
+            midiapp::MakeLiveStatusRegion(LocalStatusText());
+            midiapp::MakeLiveStatusRegion(SettingsStatusText());
+            midiapp::MakeLiveStatusRegion(CreateHostStatusText());
+
             midiapp::WindowChromeElements elements{};
 
             elements.Window = *this;

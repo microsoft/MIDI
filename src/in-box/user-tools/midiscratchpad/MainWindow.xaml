@@ -78,25 +78,37 @@
                            Foreground="{ThemeResource SystemFillColorCautionBrush}" />
             </Border>
 
-            <ToggleButton x:Name="AlwaysOnTopToggle"
-                          x:Uid="AlwaysOnTopToggle"
-                          Grid.Column="3"
-                          Width="46"
-                          Height="32"
-                          VerticalAlignment="Top"
-                          Padding="0"
-                          BorderThickness="0"
-                          Click="OnAlwaysOnTopToggled">
-                <ToggleButton.Resources>
+            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top">
+                <StackPanel.Resources>
                     <SolidColorBrush x:Key="ToggleButtonBackground" Color="Transparent" />
                     <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
                     <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
                     <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
                     <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
                     <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
-                </ToggleButton.Resources>
-                <FontIcon Glyph="&#xE718;" FontSize="14" />
-            </ToggleButton>
+                </StackPanel.Resources>
+
+                <Button x:Name="SettingsButton"
+                        x:Uid="SettingsButton"
+                        Width="46"
+                        Height="32"
+                        Padding="0"
+                        BorderThickness="0"
+                        Background="Transparent"
+                        Click="OnSettingsClick">
+                    <FontIcon Glyph="&#xE713;" FontSize="14" />
+                </Button>
+
+                <ToggleButton x:Name="AlwaysOnTopToggle"
+                              x:Uid="AlwaysOnTopToggle"
+                              Width="46"
+                              Height="32"
+                              Padding="0"
+                              BorderThickness="0"
+                              Click="OnAlwaysOnTopToggled">
+                    <FontIcon Glyph="&#xE718;" FontSize="14" />
+                </ToggleButton>
+            </StackPanel>
         </Grid>
 
         <!-- ============================== Destination header ============================= -->
@@ -136,7 +148,8 @@
                         </ComboBox.ItemContainerStyle>
                         <ComboBox.ItemTemplate>
                             <DataTemplate x:DataType="shared:EndpointChoice">
-                                <Grid ColumnSpacing="8" Loaded="OnEndpointChoiceLoaded">
+                                  <Grid ColumnSpacing="8" Loaded="OnEndpointChoiceLoaded"
+                                        AutomationProperties.Name="{x:Bind DisplayName}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
@@ -478,15 +491,6 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
-                <Button x:Name="SettingsButton"
-                        x:Uid="SettingsButton"
-                        TabIndex="10"
-                        Width="36"
-                        Height="32"
-                        Padding="0"
-                        Click="OnSettingsClick">
-                    <FontIcon Glyph="&#xE713;" FontSize="16" />
-                </Button>
                 <ToggleSwitch x:Name="RunningStatusToggle"
                               x:Uid="RunningStatusToggle"
                               TabIndex="6"

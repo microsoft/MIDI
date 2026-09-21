@@ -92,6 +92,17 @@ namespace winrt::midisettings::implementation
 
             midiapp::ApplyPreviewBadgeVisibility(PreviewChiclet());
 
+            // The endpoint count is deliberately not a live region: it moves on every watcher
+            // tick, and announcing it would talk over everything else.
+            midiapp::MakeLiveStatusRegion(StatusText());
+            midiapp::MakeLiveStatusRegion(DetailStatusText());
+            midiapp::MakeLiveStatusRegion(CustomizeStatusText());
+            midiapp::MakeLiveStatusRegion(RelinkStatusText());
+            midiapp::MakeLiveStatusRegion(Midi1PortNamesStatusText());
+            midiapp::MakeLiveStatusRegion(SynthStatusText());
+            midiapp::MakeLiveStatusRegion(GlobalStatusText());
+            midiapp::MakeLiveStatusRegion(NotificationsStatusText());
+
             midiapp::WindowChromeElements elements{};
 
             elements.Window = *this;

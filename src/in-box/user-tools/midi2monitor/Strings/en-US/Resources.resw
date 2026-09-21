@@ -106,6 +106,21 @@
   <data name="StopMonitoringButtonName" xml:space="preserve">
     <value>Stop listening</value>
   </data>
+  <data name="MessagesListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Captured MIDI messages</value>
+  </data>
+  <data name="RowAccessibleGroupFormat" xml:space="preserve">
+    <value>{0}, group {1}</value>
+    <comment>Builds up what a screen reader says for one message row. {0} what has been said so far, {1} the group number.</comment>
+  </data>
+  <data name="RowAccessibleChannelFormat" xml:space="preserve">
+    <value>{0}, channel {1}</value>
+    <comment>Builds up what a screen reader says for one message row. {0} what has been said so far, {1} the channel number.</comment>
+  </data>
+  <data name="RowAccessibleDetailFormat" xml:space="preserve">
+    <value>{0}, {1} {2}</value>
+    <comment>Builds up what a screen reader says for one message row. {0} what has been said so far, {1} a field name such as Note, {2} its value.</comment>
+  </data>
   <data name="ShowClockToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Show Clock messages</value>
   </data>

@@ -220,6 +220,13 @@ namespace winrt::midiloopbacksetup::implementation
 
             midiapp::ApplyPreviewBadgeVisibility(PreviewChiclet());
 
+            midiapp::MakeLiveStatusRegion(LoopbackStatusText());
+            midiapp::MakeLiveStatusRegion(BasicLoopbackStatusText());
+            midiapp::MakeLiveStatusRegion(CreateLoopbackStatusText());
+            midiapp::MakeLiveStatusRegion(CreateBasicLoopbackStatusText());
+            midiapp::MakeLiveStatusRegion(EditLoopbackStatusText());
+            midiapp::MakeLiveStatusRegion(EditBasicLoopbackStatusText());
+
             midiapp::WindowChromeElements elements{};
 
             elements.Window = *this;

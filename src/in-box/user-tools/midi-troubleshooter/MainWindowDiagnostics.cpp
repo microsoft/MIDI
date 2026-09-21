@@ -43,6 +43,22 @@ namespace winrt::miditroubleshooter::implementation
             RunMidiDiagButton().IsEnabled(false);
             MidiDiagStatusText().Text(res::GetString(L"DiagnosticsRunning"));
 
+            // Runs on the closing and the exception paths too, so a report that goes wrong
+            // cannot leave the button dead for the rest of the session.
+            auto const clearBusy = wil::scope_exit([this]() noexcept
+                {
+                    try
+                    {
+                        if (!m_closing)
+                        {
+                            RunMidiDiagButton().IsEnabled(true);
+                        }
+                    }
+                    catch (...)
+                    {
+                    }
+                });
+
             native::ProcessResult result{};
 
             co_await native::RunOnBackgroundAsync([&result, &toolPath]()
@@ -54,8 +70,6 @@ namespace winrt::miditroubleshooter::implementation
             {
                 co_return;
             }
-
-            RunMidiDiagButton().IsEnabled(true);
 
             if (!result.Started)
             {
@@ -96,6 +110,22 @@ namespace winrt::miditroubleshooter::implementation
             RunMidiKsInfoButton().IsEnabled(false);
             MidiKsInfoStatusText().Text(res::GetString(L"DiagnosticsRunning"));
 
+            // Runs on the closing and the exception paths too, so a report that goes wrong
+            // cannot leave the button dead for the rest of the session.
+            auto const clearBusy = wil::scope_exit([this]() noexcept
+                {
+                    try
+                    {
+                        if (!m_closing)
+                        {
+                            RunMidiKsInfoButton().IsEnabled(true);
+                        }
+                    }
+                    catch (...)
+                    {
+                    }
+                });
+
             native::ProcessResult result{};
 
             co_await native::RunOnBackgroundAsync([&result, &toolPath]()
@@ -107,8 +137,6 @@ namespace winrt::miditroubleshooter::implementation
             {
                 co_return;
             }
-
-            RunMidiKsInfoButton().IsEnabled(true);
 
             if (!result.Started)
             {

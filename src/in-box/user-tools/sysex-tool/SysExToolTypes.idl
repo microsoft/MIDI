@@ -33,5 +33,9 @@ namespace midisysextool
 
         // set when the status nibble does not follow on from the previous message
         Boolean IsOutOfSequence{ get; };
+
+        // What a screen reader announces for the row. The row shows several separate text
+        // elements, but only the container's name is spoken.
+        String RowAccessibleName{ get; };
     }
 }

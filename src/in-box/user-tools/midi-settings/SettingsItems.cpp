@@ -16,6 +16,10 @@
 #include "TransportChoice.g.cpp"
 #include "ConfigFileChoice.g.cpp"
 
+#include "StringResources.h"
+
+namespace res = ::midisettings::resources;
+
 namespace winrt::midisettings::implementation
 {
     media::ImageSource EndpointItem::Image() const noexcept
@@ -90,6 +94,34 @@ namespace winrt::midisettings::implementation
 
             RaisePropertyChanged(L"MonitorVisibility");
         }
+
+        RaisePropertyChanged(L"RowAccessibleName");
+        RaisePropertyChanged(L"MonitorAccessibleName");
+        RaisePropertyChanged(L"PanicAccessibleName");
+    }
+
+    winrt::hstring EndpointItem::RowAccessibleName() const noexcept
+    {
+        return m_description.empty()
+            ? res::FormatString(
+                L"EndpointRowAccessibleNameFormat",
+                std::wstring{ m_name },
+                std::wstring{ m_detailText })
+            : res::FormatString(
+                L"EndpointRowDescribedAccessibleNameFormat",
+                std::wstring{ m_name },
+                std::wstring{ m_description },
+                std::wstring{ m_detailText });
+    }
+
+    winrt::hstring EndpointItem::MonitorAccessibleName() const noexcept
+    {
+        return res::FormatString(L"EndpointMonitorAccessibleNameFormat", std::wstring{ m_name });
+    }
+
+    winrt::hstring EndpointItem::PanicAccessibleName() const noexcept
+    {
+        return res::FormatString(L"EndpointPanicAccessibleNameFormat", std::wstring{ m_name });
     }
 
     _Use_decl_annotations_
@@ -101,6 +133,16 @@ namespace winrt::midisettings::implementation
         UpdateField(m_portDeviceId, portDeviceId, L"PortDeviceId");
         UpdateField(m_name, name, L"Name");
         UpdateField(m_detailText, detailText, L"DetailText");
+
+        RaisePropertyChanged(L"RowAccessibleName");
+    }
+
+    winrt::hstring Midi1PortItem::RowAccessibleName() const noexcept
+    {
+        return res::FormatString(
+            L"Midi1PortRowAccessibleNameFormat",
+            std::wstring{ m_name },
+            std::wstring{ m_detailText });
     }
 
     _Use_decl_annotations_

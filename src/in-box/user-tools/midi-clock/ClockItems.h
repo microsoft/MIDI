@@ -67,6 +67,7 @@ namespace winrt::midiclock::implementation
         winrt::hstring StartStopAccessibleName() const noexcept;
         winrt::hstring EditAccessibleName() const noexcept;
         winrt::hstring SelectAccessibleName() const noexcept;
+        winrt::hstring TileAccessibleName() const noexcept;
 
         winrt::event_token PropertyChanged(
             xaml::Data::PropertyChangedEventHandler const& handler)

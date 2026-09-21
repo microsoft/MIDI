@@ -67,6 +67,7 @@ namespace winrt::midiplayer::implementation
             RaisePropertyChanged(L"DetailText");
             RaisePropertyChanged(L"IsPlayable");
             RaisePropertyChanged(L"WarningVisibility");
+            RaisePropertyChanged(L"RowAccessibleName");
             RaisePropertyChanged(L"RemoveAccessibleName");
         }
         MIDI_PLAYER_CATCH_AND_LOG(L"Unable to update a queue row.")
@@ -83,6 +84,30 @@ namespace winrt::midiplayer::implementation
 
         RaisePropertyChanged(L"IsCurrent");
         RaisePropertyChanged(L"CurrentVisibility");
+        RaisePropertyChanged(L"RowAccessibleName");
+    }
+
+    winrt::hstring QueueItem::RowAccessibleName() const noexcept
+    {
+        // The row shows three separate text elements; a screen reader announces the container's
+        // name only, so they have to be composed into it.
+        auto text = m_durationText.empty()
+            ? res::FormatString(
+                L"QueueRowAccessibleNameNoDurationFormat",
+                std::wstring{ m_displayName },
+                std::wstring{ m_detailText })
+            : res::FormatString(
+                L"QueueRowAccessibleNameFormat",
+                std::wstring{ m_displayName },
+                std::wstring{ m_durationText },
+                std::wstring{ m_detailText });
+
+        if (m_isCurrent)
+        {
+            text = res::FormatString(L"QueueRowCurrentAccessibleNameFormat", std::wstring{ text });
+        }
+
+        return text;
     }
 
     winrt::hstring QueueItem::RemoveAccessibleName() const noexcept

@@ -56,6 +56,10 @@ namespace midi2monitor
         Microsoft.UI.Xaml.Visibility Word3Visibility{ get; };
 
         String MessageName{ get; };
+
+        // What a screen reader announces for the row. A row is a grid of separate text elements
+        // but only the container's name is spoken, so it is composed here.
+        String RowAccessibleName{ get; };
         Double RowFontSize{ get; };
         Double ChicletFontSize{ get; };
         Double CommentButtonSize{ get; };

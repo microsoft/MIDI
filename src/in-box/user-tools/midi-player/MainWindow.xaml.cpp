@@ -290,6 +290,8 @@ namespace winrt::midiplayer::implementation
         {
             midiapp::ApplyPreviewBadgeVisibility(PreviewChiclet());
 
+            midiapp::MakeLiveStatusRegion(StatusInfoBar());
+
             midiapp::WindowChromeElements elements{};
 
             elements.Window = *this;

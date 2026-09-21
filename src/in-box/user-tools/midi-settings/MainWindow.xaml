@@ -90,7 +90,8 @@
                         Width="230"
                         Height="252"
                         Margin="2"
-                        Padding="12">
+                        Padding="12"
+                        AutomationProperties.Name="{x:Bind RowAccessibleName, Mode=OneWay}">
                     <Grid RowSpacing="8">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -104,6 +105,7 @@
                                 Background="{ThemeResource SubtleFillColorSecondaryBrush}">
                             <Image Source="{x:Bind Image, Mode=OneWay}"
                                    Stretch="Uniform"
+                                   AutomationProperties.AccessibilityView="Raw"
                                    Margin="8" />
                         </Border>
 
@@ -125,6 +127,7 @@
                             <Button x:Uid="EndpointMonitorButton"
                                     Visibility="{x:Bind MonitorVisibility, Mode=OneWay}"
                                     Tag="{x:Bind EndpointDeviceId, Mode=OneWay}"
+                                    AutomationProperties.Name="{x:Bind MonitorAccessibleName, Mode=OneWay}"
                                     Click="OnEndpointMonitorClick"
                                     Padding="8,4,8,4">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
@@ -134,6 +137,7 @@
                             </Button>
                             <Button x:Uid="EndpointPanicButton"
                                     Tag="{x:Bind EndpointDeviceId, Mode=OneWay}"
+                                    AutomationProperties.Name="{x:Bind PanicAccessibleName, Mode=OneWay}"
                                     Click="OnEndpointPanicClick"
                                     Padding="8,4,8,4">
                                 <StackPanel Orientation="Horizontal" Spacing="6">
@@ -149,7 +153,8 @@
             <DataTemplate x:Key="EndpointRowTemplate" x:DataType="local:EndpointItem">
                 <Border Style="{StaticResource EndpointSurfaceStyle}"
                         Margin="0,3,0,3"
-                        Padding="12,8,12,8">
+                        Padding="12,8,12,8"
+                        AutomationProperties.Name="{x:Bind RowAccessibleName, Mode=OneWay}">
                     <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
@@ -162,7 +167,8 @@
                                 Height="40"
                                 CornerRadius="4"
                                 Background="{ThemeResource SubtleFillColorSecondaryBrush}">
-                            <Image Source="{x:Bind Image, Mode=OneWay}" Stretch="Uniform" Margin="3" />
+                            <Image Source="{x:Bind Image, Mode=OneWay}" Stretch="Uniform" Margin="3"
+                                   AutomationProperties.AccessibilityView="Raw" />
                         </Border>
 
                         <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="1">
@@ -183,12 +189,14 @@
                             <Button x:Uid="EndpointMonitorButton"
                                     Visibility="{x:Bind MonitorVisibility, Mode=OneWay}"
                                     Tag="{x:Bind EndpointDeviceId, Mode=OneWay}"
+                                    AutomationProperties.Name="{x:Bind MonitorAccessibleName, Mode=OneWay}"
                                     Click="OnEndpointMonitorClick"
                                     Padding="8,4,8,4">
                                 <FontIcon Glyph="&#xE9D9;" FontSize="14" />
                             </Button>
                             <Button x:Uid="EndpointPanicButton"
                                     Tag="{x:Bind EndpointDeviceId, Mode=OneWay}"
+                                    AutomationProperties.Name="{x:Bind PanicAccessibleName, Mode=OneWay}"
                                     Click="OnEndpointPanicClick"
                                     Padding="8,4,8,4">
                                 <FontIcon Glyph="&#xE711;" FontSize="14" />
@@ -199,7 +207,8 @@
             </DataTemplate>
 
             <DataTemplate x:Key="Midi1PortTemplate" x:DataType="local:Midi1PortItem">
-                <Grid ColumnSpacing="8" Margin="0,2,0,2">
+                <Grid ColumnSpacing="8" Margin="0,2,0,2"
+                      AutomationProperties.Name="{x:Bind RowAccessibleName, Mode=OneWay}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <!-- fixed, not Auto: every row is its own Grid, so an Auto column is
@@ -228,7 +237,8 @@
                  the same reason as Midi1PortTemplate: each row is its own Grid, so Auto would be
                  sized per row and nothing would line up down the column. -->
             <DataTemplate x:Key="Midi1PortNameTemplate" x:DataType="local:Midi1PortNameItem">
-                <Grid ColumnSpacing="12" Margin="0,3,0,3">
+                <Grid ColumnSpacing="12" Margin="0,3,0,3"
+                      AutomationProperties.Name="{x:Bind CurrentName, Mode=OneWay}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="44" />
                         <ColumnDefinition Width="200" />
@@ -950,6 +960,7 @@
                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
 
                 <ListView x:Name="RelinkOrphanList"
+                          x:Uid="RelinkOrphanList"
                           Grid.Row="1" Grid.Column="0"
                           SelectionMode="Single"
                           SelectionChanged="OnRelinkOrphanSelectionChanged"
@@ -958,7 +969,8 @@
                           CornerRadius="4">
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="local:OrphanedCustomizationItem">
-                            <Grid ColumnSpacing="12" Margin="0,8,0,8">
+                            <Grid ColumnSpacing="12" Margin="0,8,0,8"
+                                  AutomationProperties.Name="{x:Bind DisplayName}">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
@@ -969,7 +981,8 @@
                                         CornerRadius="4"
                                         VerticalAlignment="Top"
                                         Background="{ThemeResource SubtleFillColorSecondaryBrush}">
-                                    <Image Source="{x:Bind Image}" Stretch="Uniform" Margin="3" />
+                                    <Image Source="{x:Bind Image}" Stretch="Uniform" Margin="3"
+                                           AutomationProperties.AccessibilityView="Raw" />
                                 </Border>
 
                                 <StackPanel Grid.Column="1" Spacing="2">
@@ -996,6 +1009,7 @@
                 </ListView>
 
                 <ListView x:Name="RelinkCandidateList"
+                          x:Uid="RelinkCandidateList"
                           Grid.Row="1" Grid.Column="1"
                           SelectionMode="Single"
                           SelectionChanged="OnRelinkCandidateSelectionChanged"
@@ -1004,7 +1018,8 @@
                           CornerRadius="4">
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="local:RelinkCandidateItem">
-                            <StackPanel Spacing="2" Margin="0,8,0,8">
+                            <StackPanel Spacing="2" Margin="0,8,0,8"
+                                        AutomationProperties.Name="{x:Bind Name}">
                                 <TextBlock Text="{x:Bind Name}"
                                            Style="{ThemeResource BodyStrongTextBlockStyle}"
                                            TextTrimming="CharacterEllipsis" />

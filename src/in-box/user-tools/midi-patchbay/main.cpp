@@ -17,10 +17,20 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 {
     winrt::init_apartment(winrt::apartment_type::single_threaded);
 
+    // One copy only. A second one would route the same saved patches a second time, and with
+    // the window hidden in the notification area, launching again is the natural way to ask for
+    // it back.
+    if (!::midiapp::SingleInstance::AcquireOrActivateExisting(L"Patchbay"))
+    {
+        return 0;
+    }
+
     ::winrt::Microsoft::UI::Xaml::Application::Start([](auto&&)
         {
             ::winrt::make<::winrt::midipatchbay::implementation::App>();
         });
+
+    ::midiapp::SingleInstance::Release();
 
     return 0;
 }

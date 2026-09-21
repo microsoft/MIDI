@@ -28,6 +28,12 @@ namespace midisettings
 
         Microsoft.UI.Xaml.Visibility DescriptionVisibility{ get; };
         Microsoft.UI.Xaml.Visibility MonitorVisibility{ get; };
+
+        // A card or row shows several separate text elements, but a screen reader announces the
+        // container's name only, so they are composed here.
+        String RowAccessibleName{ get; };
+        String MonitorAccessibleName{ get; };
+        String PanicAccessibleName{ get; };
     }
 
     // One WinMM / WinRT MIDI 1.0 port belonging to an endpoint.
@@ -39,6 +45,8 @@ namespace midisettings
         String PortDeviceId{ get; };
         String Name{ get; };
         String DetailText{ get; };
+
+        String RowAccessibleName{ get; };
     }
 
     // One row in the MIDI 1.0 port naming grids. The three generated names are shown side by

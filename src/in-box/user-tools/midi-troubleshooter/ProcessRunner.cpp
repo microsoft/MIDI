@@ -196,6 +196,15 @@ namespace miditroubleshooter
                     // below would never be reached. Peeking first keeps every read short.
                     for (;;)
                     {
+                        // Checked before the read rather than after it. A tracer or a merge step
+                        // writes progress continuously, so a deadline tested only on an empty
+                        // pipe is never reached and the caller waits forever.
+                        if (std::chrono::steady_clock::now() >= deadline)
+                        {
+                            result.TimedOut = true;
+                            break;
+                        }
+
                         DWORD available{ 0 };
 
                         if (!::PeekNamedPipe(readPipe.get(), nullptr, 0, nullptr, &available, nullptr))
@@ -224,12 +233,6 @@ namespace miditroubleshooter
                         // this only stops once an exited child has also stopped producing.
                         if (::WaitForSingleObject(processHandle.get(), ReadPollIntervalMilliseconds) == WAIT_OBJECT_0)
                         {
-                            break;
-                        }
-
-                        if (std::chrono::steady_clock::now() >= deadline)
-                        {
-                            result.TimedOut = true;
                             break;
                         }
                     }
@@ -296,5 +299,84 @@ namespace miditroubleshooter
         std::chrono::seconds timeout) noexcept
     {
         return Run(executablePath, arguments, timeout, false);
+    }
+
+    _Use_decl_annotations_
+    ProcessResult StartAndWatch(
+        std::wstring const& executablePath,
+        std::wstring const& arguments,
+        std::chrono::seconds settleTime) noexcept
+    {
+        ProcessResult result{};
+
+        try
+        {
+            if (executablePath.empty())
+            {
+                result.ErrorMessage = L"No path was supplied for the program to run.";
+                return result;
+            }
+
+            STARTUPINFOW startupInfo{};
+            startupInfo.cb = sizeof(startupInfo);
+            startupInfo.dwFlags = STARTF_USESHOWWINDOW;
+            startupInfo.wShowWindow = SW_HIDE;
+
+            PROCESS_INFORMATION processInformation{};
+
+            auto commandLine = BuildCommandLine(executablePath, arguments);
+
+            auto const created = ::CreateProcessW(
+                executablePath.c_str(),
+                commandLine.data(),
+                nullptr,
+                nullptr,
+                FALSE,
+                CREATE_NO_WINDOW,
+                nullptr,
+                nullptr,
+                &startupInfo,
+                &processInformation);
+
+            if (!created)
+            {
+                result.ErrorMessage = FormatSystemError(::GetLastError());
+                return result;
+            }
+
+            wil::unique_handle processHandle{ processInformation.hProcess };
+            wil::unique_handle threadHandle{ processInformation.hThread };
+
+            result.Started = true;
+
+            auto const milliseconds =
+                std::chrono::duration_cast<std::chrono::milliseconds>(settleTime).count();
+
+            if (::WaitForSingleObject(processHandle.get(), static_cast<DWORD>(milliseconds)) == WAIT_TIMEOUT)
+            {
+                result.StillRunning = true;
+            }
+            else
+            {
+                DWORD exitCode{ 0 };
+
+                if (::GetExitCodeProcess(processHandle.get(), &exitCode))
+                {
+                    result.ExitCode = exitCode;
+                }
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            result.ErrorMessage = ex.message();
+            MIDI_TSHOOT_LOG_HRESULT_EXCEPTION(ex, L"Unable to start an external program.");
+        }
+        catch (...)
+        {
+            result.ErrorMessage = L"An unexpected error occurred while starting the program.";
+            MIDI_TSHOOT_LOG_GENERAL_EXCEPTION(L"Unable to start an external program.");
+        }
+
+        return result;
     }
 }

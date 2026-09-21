@@ -113,6 +113,8 @@ namespace winrt::midiclock::implementation
         {
             midiapp::ApplyPreviewBadgeVisibility(PreviewChiclet());
 
+            midiapp::MakeLiveStatusRegion(StatusTextBlock());
+
             midiapp::WindowChromeElements elements{};
 
             elements.Window = *this;

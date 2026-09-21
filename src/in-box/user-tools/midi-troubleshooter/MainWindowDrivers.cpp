@@ -311,6 +311,20 @@ namespace winrt::miditroubleshooter::implementation
             DriversProgressRing().IsActive(true);
             DriversStatusText().Text(res::GetString(L"ServiceRestarting"));
 
+            auto const clearRing = wil::scope_exit([this]() noexcept
+                {
+                    try
+                    {
+                        if (!m_closing)
+                        {
+                            DriversProgressRing().IsActive(false);
+                        }
+                    }
+                    catch (...)
+                    {
+                    }
+                });
+
             native::ServiceOperationResult restart{};
 
             co_await native::RunOnBackgroundAsync([&restart]()
@@ -322,8 +336,6 @@ namespace winrt::miditroubleshooter::implementation
             {
                 co_return;
             }
-
-            DriversProgressRing().IsActive(false);
 
             DriversStatusText().Text(restart.Succeeded ?
                 res::GetString(L"ServiceRestarted") :
@@ -407,6 +419,23 @@ namespace winrt::miditroubleshooter::implementation
             DriversProgressRing().IsActive(true);
             DriversStatusText().Text(res::GetString(L"DriversScanning"));
 
+            // Runs on the closing and the exception paths too, so a scan that goes wrong cannot
+            // leave the page spinning with its refresh button dead.
+            auto const clearBusy = wil::scope_exit([this]() noexcept
+                {
+                    try
+                    {
+                        if (!m_closing)
+                        {
+                            DriversProgressRing().IsActive(false);
+                            RefreshDriversButton().IsEnabled(true);
+                        }
+                    }
+                    catch (...)
+                    {
+                    }
+                });
+
             std::vector<native::HardwareDeviceInfo> devices{};
             std::vector<native::DriverPackageInfo> korgUsbPackages{};
             std::vector<native::DriverPackageInfo> korgBlePackages{};
@@ -422,9 +451,6 @@ namespace winrt::miditroubleshooter::implementation
             {
                 co_return;
             }
-
-            RefreshDriversButton().IsEnabled(true);
-            DriversProgressRing().IsActive(false);
 
             ApplyDriverDevices(devices, korgUsbPackages, korgBlePackages);
         }
@@ -463,13 +489,18 @@ namespace winrt::miditroubleshooter::implementation
 
             item.IsBusy(true);
 
-            // fires on the closing and the exception paths too, so the row cannot be left marked
-            // busy with no way back other than a refresh
-            auto const clearBusy = wil::scope_exit([&item]() noexcept
+            // fires on the closing and the exception paths too, so neither the row nor the page
+            // can be left marked busy with no way back other than a refresh
+            auto const clearBusy = wil::scope_exit([this, &item]() noexcept
                 {
                     try
                     {
                         item.IsBusy(false);
+
+                        if (!m_closing)
+                        {
+                            DriversProgressRing().IsActive(false);
+                        }
                     }
                     catch (...)
                     {
@@ -493,7 +524,6 @@ namespace winrt::miditroubleshooter::implementation
                 co_return;
             }
 
-            DriversProgressRing().IsActive(false);
             DriversStatusText().Text(winrt::hstring{ result.Message });
 
             OnRefreshDriversClick(nullptr, nullptr);
@@ -538,13 +568,18 @@ namespace winrt::miditroubleshooter::implementation
 
             item.IsBusy(true);
 
-            // fires on the closing and the exception paths too, so the row cannot be left marked
-            // busy with no way back other than a refresh
-            auto const clearBusy = wil::scope_exit([&item]() noexcept
+            // fires on the closing and the exception paths too, so neither the row nor the page
+            // can be left marked busy with no way back other than a refresh
+            auto const clearBusy = wil::scope_exit([this, &item]() noexcept
                 {
                     try
                     {
                         item.IsBusy(false);
+
+                        if (!m_closing)
+                        {
+                            DriversProgressRing().IsActive(false);
+                        }
                     }
                     catch (...)
                     {
@@ -568,7 +603,6 @@ namespace winrt::miditroubleshooter::implementation
                 co_return;
             }
 
-            DriversProgressRing().IsActive(false);
             DriversStatusText().Text(winrt::hstring{ result.Message });
 
             OnRefreshDriversClick(nullptr, nullptr);
@@ -647,6 +681,22 @@ namespace winrt::miditroubleshooter::implementation
             DriversProgressRing().IsActive(true);
             DriversStatusText().Text(res::GetString(L"KorgRemoving"));
 
+            // The buttons are put back by the refresh below, which reads what is still
+            // installed. Only the ring has to be unwound by hand.
+            auto const clearRing = wil::scope_exit([this]() noexcept
+                {
+                    try
+                    {
+                        if (!m_closing)
+                        {
+                            DriversProgressRing().IsActive(false);
+                        }
+                    }
+                    catch (...)
+                    {
+                    }
+                });
+
             native::DriverOperationResult result{};
 
             co_await native::RunOnBackgroundAsync([&result, &packages]()
@@ -658,8 +708,6 @@ namespace winrt::miditroubleshooter::implementation
             {
                 co_return;
             }
-
-            DriversProgressRing().IsActive(false);
 
             std::wstring status{ result.Message };
 
