@@ -101,11 +101,14 @@ namespace WindowsMidiServicesCapabilityInquiry
     };
 
 
-    inline bool MessageTypeIsPropertyExchange(_In_ MessageType const type) noexcept
+    // Property exchange spans 0x30 to 0x3F, but only the messages from 0x34 up carry the request
+    // id, header, chunk and data layout. The capabilities pair at 0x30 and 0x31 carries three plain
+    // bytes instead, so reading it as a chunked message runs off the end of it.
+    inline bool MessageTypeCarriesPropertyExchangeData(_In_ MessageType const type) noexcept
     {
         const auto value = static_cast<uint8_t>(type);
 
-        return value >= 0x30 && value <= 0x3F;
+        return value >= 0x34 && value <= 0x3F;
     }
 
     inline bool MessageTypeIsProfileConfiguration(_In_ MessageType const type) noexcept
@@ -506,7 +509,7 @@ namespace WindowsMidiServicesCapabilityInquiry
             return ParseStatus::Ok;
         }
 
-        if (MessageTypeIsPropertyExchange(message.Type))
+        if (MessageTypeCarriesPropertyExchangeData(message.Type))
         {
             // request id, then a two byte header length
             size_t offset = CommonHeaderByteCount;
@@ -1131,7 +1134,7 @@ namespace WindowsMidiServicesCapabilityInquiry
         _In_ size_t const capacity
     ) noexcept
     {
-        if (buffer == nullptr || !MessageTypeIsPropertyExchange(fields.Type))
+        if (buffer == nullptr || !MessageTypeCarriesPropertyExchangeData(fields.Type))
         {
             return 0;
         }

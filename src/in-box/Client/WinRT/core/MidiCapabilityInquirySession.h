@@ -12,6 +12,7 @@
 #include <condition_variable>
 #include <map>
 #include <mutex>
+#include <set>
 #include <vector>
 
 namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
@@ -162,6 +163,16 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
         uint32_t MaximumSystemExclusiveSizeFor(_In_ uint32_t const muid) noexcept;
 
+        // The capabilities transaction, blocking. The projected method and the automatic one below
+        // are both this.
+        ci::MidiCapabilityInquiryStatus RequestPropertyExchangeCapabilities(
+            _In_ ci::MidiUniqueId const& destinationMuid) noexcept;
+
+        // Runs the capabilities transaction the first time this session asks a responder for a
+        // property, because the specification puts it ahead of everything else in property
+        // exchange and it is how the responder declares the limits the session has to honor.
+        void EnsurePropertyExchangeCapabilities(_In_ ci::MidiUniqueId const& destinationMuid) noexcept;
+
         // Fills in a response object from a completed request, including the negative
         // acknowledgment case.
         ci::MidiPropertyExchangeResponse BuildPropertyResponse(
@@ -194,6 +205,10 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
         std::map<uint64_t, PendingRequest> m_pendingRequests{};
         std::map<uint32_t, ci::MidiCapabilityInquiryResponder> m_responders{};
+
+        // Responders this session has already run the capabilities transaction with, whatever the
+        // outcome was, so a device which does not answer it is asked only once.
+        std::set<uint32_t> m_propertyExchangeCapabilitiesAsked{};
 
         // Reassembly of the system exclusive transfer currently arriving.
         std::vector<uint8_t> m_incoming{};

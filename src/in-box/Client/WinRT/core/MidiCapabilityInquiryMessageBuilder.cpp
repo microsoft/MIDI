@@ -584,7 +584,7 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         {
             auto const nativeType = static_cast<native::MessageType>(messageType);
 
-            if (!native::MessageTypeIsPropertyExchange(nativeType))
+            if (!native::MessageTypeCarriesPropertyExchangeData(nativeType))
             {
                 return EmptyMessageList();
             }

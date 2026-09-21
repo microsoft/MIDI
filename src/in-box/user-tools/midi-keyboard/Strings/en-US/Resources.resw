@@ -261,6 +261,13 @@
   <data name="KeyboardCanvas.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Performance keyboard</value>
   </data>
+  <data name="ComputerKeysPausedHint.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>The computer keyboard is not playing notes right now</value>
+  </data>
+  <data name="ComputerKeysPausedHintText.Text" xml:space="preserve">
+    <value>Press Esc to play with the computer keyboard</value>
+    <comment>Shown over the keys while a text box or list has the keyboard focus. Esc is the key name and is not translated.</comment>
+  </data>
 
   <!-- ================================ Connection ================================== -->
   <data name="SettingsSectionConnection.Text" xml:space="preserve">
@@ -381,6 +388,22 @@
   </data>
   <data name="ShowComputerKeysCheckBox.Content" xml:space="preserve">
     <value>Show computer keyboard keys</value>
+  </data>
+  <data name="ComputerKeyboardLayoutLabel.Text" xml:space="preserve">
+    <value>Computer keyboard layout</value>
+  </data>
+  <data name="ComputerKeyboardLayoutComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Computer keyboard layout</value>
+  </data>
+  <data name="ComputerKeyboardLayoutHint.Text" xml:space="preserve">
+    <value>The notes always follow the same physical keys. This only changes which letters are printed on them, for when the layout Windows is using is not the one on your keyboard.</value>
+  </data>
+  <data name="ComputerKeyboardLayoutAutomatic" xml:space="preserve">
+    <value>Follow the layout Windows is using</value>
+  </data>
+  <data name="ComputerKeyboardLayoutChoiceFormat" xml:space="preserve">
+    <value>{0} - {1}</value>
+    <comment>{0} is the name of a keyboard layout's language, {1} is the letters on its top row, such as QWERTZ</comment>
   </data>
 
   <!-- ================================ Expression ================================== -->

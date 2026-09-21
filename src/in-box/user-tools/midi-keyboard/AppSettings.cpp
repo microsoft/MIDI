@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "AppSettings.h"
+#include "KeyboardLayout.h"
 #include "TemporaryFlags.h"
 
 namespace midikeyboard
@@ -35,6 +36,7 @@ namespace midikeyboard
         constexpr wchar_t ValueVelocityMaximum[] = L"VelocityMaximum";
         constexpr wchar_t ValueFixedVelocity[] = L"FixedVelocity";
         constexpr wchar_t ValueShowComputerKeys[] = L"ShowComputerKeys";
+        constexpr wchar_t ValueComputerKeyboardLayout[] = L"ComputerKeyboardLayout";
         constexpr wchar_t ValueShowNoteNames[] = L"ShowNoteNames";
         constexpr wchar_t ValueArpeggiator[] = L"Arpeggiator";
         constexpr wchar_t ValueArpeggiatorBpm[] = L"ArpeggiatorBpm";
@@ -124,6 +126,15 @@ namespace midikeyboard
 
         m_showComputerKeys = ReadDword(ValueShowComputerKeys, 1u) != 0;
         m_showNoteNames = ReadDword(ValueShowNoteNames, 1u) != 0;
+
+        // a layout that has since been uninstalled falls back to automatic in memory only, so
+        // the choice comes back when the layout does
+        m_computerKeyboardLayout = ReadDword(ValueComputerKeyboardLayout, 0u);
+
+        if (m_computerKeyboardLayout != 0 && !IsKeyboardLayoutInstalled(m_computerKeyboardLayout))
+        {
+            m_computerKeyboardLayout = 0;
+        }
 
         m_arpeggiator = ReadEnum(
             ReadDword(ValueArpeggiator, static_cast<uint32_t>(ArpeggiatorMode::Off)),
@@ -253,6 +264,12 @@ namespace midikeyboard
     {
         m_showComputerKeys = value;
         WriteDword(ValueShowComputerKeys, value ? 1u : 0u);
+    }
+
+    void AppSettings::ComputerKeyboardLayout(uint32_t value) noexcept
+    {
+        m_computerKeyboardLayout = value;
+        WriteDword(ValueComputerKeyboardLayout, value);
     }
 
     void AppSettings::ShowNoteNames(bool value) noexcept

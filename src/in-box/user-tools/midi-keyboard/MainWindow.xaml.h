@@ -53,6 +53,7 @@ namespace winrt::midikeyboard::implementation
 
         void OnRootLoaded(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnRootSizeChanged(foundation::IInspectable const& sender, xaml::SizeChangedEventArgs const& args);
+        void OnRootFocusChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnRootPreviewKeyDown(foundation::IInspectable const& sender, input::KeyRoutedEventArgs const& args);
         void OnRootPreviewKeyUp(foundation::IInspectable const& sender, input::KeyRoutedEventArgs const& args);
 
@@ -90,6 +91,7 @@ namespace winrt::midikeyboard::implementation
         void OnTransposeChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnShowNoteNamesChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnShowComputerKeysChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnComputerKeyboardLayoutChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
         void OnRibbonPositionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnVelocityModeChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
@@ -195,6 +197,18 @@ namespace winrt::midikeyboard::implementation
 
         bool IsTextInputFocused() noexcept;
 
+        // Puts the focus back on the keys so the computer keyboard plays again.
+        void FocusKeyboard() noexcept;
+
+        // Lights the keyboard frame when the computer keys will play, and shows the hint when
+        // they will not.
+        void UpdateComputerKeyState() noexcept;
+
+        // The layout whose letters go on the keys: the chosen one, or the one Windows is
+        // using when the setting is automatic.
+        uint32_t ResolveKeyLabelLayout() const noexcept;
+        void RefreshKeyLabelsIfLayoutChanged() noexcept;
+
         midiapp::WindowChrome m_chrome{};
 
         winrt::Microsoft::UI::Dispatching::DispatcherQueue m_dispatcherQueue{ nullptr };
@@ -253,6 +267,16 @@ namespace winrt::midikeyboard::implementation
         winrt::Windows::UI::Color m_glowColor{};
         media::Brush m_whiteKeyTextBrush{ nullptr };
         media::Brush m_blackKeyTextBrush{ nullptr };
+
+        media::Brush m_keyboardFrameBrush{ nullptr };
+        media::Brush m_keyboardFrameFocusBrush{ nullptr };
+
+        // the keyboard layout the letters currently drawn on the keys came from
+        uint32_t m_keyLabelLayout{ 0 };
+
+        // the layouts offered in the settings panel, in the order they are listed there. The
+        // first entry is automatic, which has no layout of its own.
+        std::vector<::midikeyboard::InstalledKeyboardLayout> m_keyboardLayoutChoices{};
 
         bool m_initialized{ false };
 

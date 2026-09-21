@@ -1268,3 +1268,56 @@ void MidiCiMessageTests::TestBuildInvalidateMuidParsesBack()
 
     VERIFY_ARE_EQUAL(BuildInvalidateMuid(11, 22, buffer, InvalidateMuidByteCount - 1), (size_t)0);
 }
+
+void MidiCiMessageTests::TestPropertyExchangeCapabilitiesParseBack()
+{
+    // The capabilities pair carries three plain bytes, not the request id, header and chunk layout
+    // the rest of property exchange uses. Reading it as a chunked message runs off the end of it,
+    // which used to make every one of these messages fail to parse.
+    const uint8_t inquiry[]
+    {
+        0x7E, 0x7F, 0x0D, 0x30, 0x02,
+        0x01, 0x00, 0x00, 0x00,
+        0x02, 0x00, 0x00, 0x00,
+        0x01,                               // simultaneous requests
+        0x00, 0x00                          // property exchange version
+    };
+
+    ParsedMessage parsedInquiry{};
+
+    VERIFY_ARE_EQUAL((int)Parse(inquiry, sizeof(inquiry), parsedInquiry), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL((int)parsedInquiry.Type, (int)MessageType::PropertyExchangeCapabilitiesInquiry);
+    VERIFY_IS_FALSE(parsedInquiry.HasPropertyExchangeFields);
+
+    uint8_t buffer[64]{};
+
+    const auto written = BuildPropertyExchangeCapabilitiesReply(77, 88, 4, buffer, sizeof(buffer));
+
+    VERIFY_ARE_EQUAL(written, PropertyExchangeCapabilitiesByteCount);
+
+    ParsedMessage parsedReply{};
+
+    VERIFY_ARE_EQUAL((int)Parse(buffer, written, parsedReply), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL((int)parsedReply.Type, (int)MessageType::PropertyExchangeCapabilitiesReply);
+    VERIFY_ARE_EQUAL(parsedReply.SourceMuid, (uint32_t)77);
+    VERIFY_ARE_EQUAL(parsedReply.DestinationMuid, (uint32_t)88);
+    VERIFY_IS_FALSE(parsedReply.HasPropertyExchangeFields);
+
+    // The simultaneous request count is the first byte after the common header, which is where
+    // every reader of this message looks for it.
+    VERIFY_ARE_EQUAL(buffer[CommonHeaderByteCount], (uint8_t)4);
+
+    // A chunked message cannot be built for either of them.
+    PropertyExchangeMessageFields fields{};
+
+    fields.Type = MessageType::PropertyExchangeCapabilitiesInquiry;
+    fields.SourceMuid = 77;
+    fields.DestinationMuid = 88;
+
+    VERIFY_ARE_EQUAL(BuildPropertyExchangeMessage(fields, buffer, sizeof(buffer)), (size_t)0);
+
+    // Get Property Data is the first type that does use that layout, and must still build.
+    fields.Type = MessageType::PropertyGetDataInquiry;
+
+    VERIFY_IS_GREATER_THAN(BuildPropertyExchangeMessage(fields, buffer, sizeof(buffer)), (size_t)0);
+}

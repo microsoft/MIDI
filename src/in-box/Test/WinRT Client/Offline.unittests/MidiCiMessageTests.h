@@ -34,6 +34,7 @@ public:
     TEST_METHOD(TestBuildDiscoveryReplyRefusesShortBuffer);
     TEST_METHOD(TestDiscoveryReplyParsesBack);
     TEST_METHOD(TestBuildPropertyExchangeReplyParsesBack);
+    TEST_METHOD(TestPropertyExchangeCapabilitiesParseBack);
     TEST_METHOD(TestPropertyExchangeRefusesHighBitPayload);
     TEST_METHOD(TestChunkArithmetic);
     TEST_METHOD(TestChunkedResourceReassembles);
