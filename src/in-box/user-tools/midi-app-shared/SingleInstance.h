@@ -33,6 +33,11 @@ namespace midiapp
         // Doing nothing when this instance did not acquire ownership is deliberate.
         static void PublishMainWindow(_In_ HWND const window) noexcept;
 
+        // Takes ownership back after a relaunch that did not happen, and republishes the window
+        // that was published before. False means another copy got in during the gap and was
+        // brought forward, so this process should close.
+        static bool Reacquire() noexcept;
+
         // The running instance's window, or null. A tool which opens documents needs this so
         // that a second launch can hand its file over rather than losing it.
         static HWND FindExistingWindow(_In_ std::wstring const& appKey) noexcept;
@@ -41,6 +46,11 @@ namespace midiapp
         // is consulted, so this also answers for a tool which has no window at all.
         static bool IsRunning(_In_ std::wstring const& appKey) noexcept;
 
+        // Also the way to hand ownership to a copy of this app which is about to be started, for
+        // example an elevated relaunch. The new copy runs its own check before it has a window,
+        // so an owner which is on its way out looks like a running instance and turns it away,
+        // leaving no window at all. Release first, start the copy, and Reacquire if it did not
+        // start.
         static void Release() noexcept;
 
     private:
@@ -52,5 +62,7 @@ namespace midiapp
         static HANDLE s_instanceMutex;
         static HANDLE s_windowSection;
         static void* s_windowView;
+        static std::wstring s_appKey;
+        static HWND s_publishedWindow;
     };
 }

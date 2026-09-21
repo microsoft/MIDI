@@ -68,7 +68,20 @@ namespace winrt::miditroubleshooter::implementation
             // A declined prompt still leaves a usable read-only tool.
             if (!s_isElevated && !s_startupOptions.NoElevate && !s_startupOptions.Relaunched)
             {
+                // The elevated copy takes the single instance check before it has a window, so
+                // ownership has to be given up before it starts or it turns itself away and
+                // neither copy ends up with a window.
+                ::midiapp::SingleInstance::Release();
+
                 if (::miditroubleshooter::TryRelaunchElevated(L"--relaunched"))
+                {
+                    Exit();
+                    return;
+                }
+
+                // The prompt was declined, so this copy stays read-only and takes the instance
+                // back.
+                if (!::midiapp::SingleInstance::Reacquire())
                 {
                     Exit();
                     return;

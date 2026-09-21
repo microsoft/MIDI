@@ -13,6 +13,8 @@ namespace midiapp
     HANDLE SingleInstance::s_instanceMutex{ nullptr };
     HANDLE SingleInstance::s_windowSection{ nullptr };
     void* SingleInstance::s_windowView{ nullptr };
+    std::wstring SingleInstance::s_appKey{};
+    HWND SingleInstance::s_publishedWindow{ nullptr };
 
     _Use_decl_annotations_
     std::wstring SingleInstance::MutexName(std::wstring const& appKey) noexcept
@@ -30,6 +32,8 @@ namespace midiapp
     bool SingleInstance::AcquireOrActivateExisting(std::wstring const& appKey) noexcept
     {
         auto const mutexName = MutexName(appKey);
+
+        s_appKey = appKey;
 
         s_instanceMutex = ::CreateMutexW(nullptr, TRUE, mutexName.c_str());
 
@@ -149,6 +153,8 @@ namespace midiapp
     _Use_decl_annotations_
     void SingleInstance::PublishMainWindow(HWND const window) noexcept
     {
+        s_publishedWindow = window;
+
         if (s_windowView == nullptr)
         {
             return;
@@ -156,6 +162,33 @@ namespace midiapp
 
         *static_cast<uint64_t volatile*>(s_windowView) =
             static_cast<uint64_t>(reinterpret_cast<ULONG_PTR>(window));
+    }
+
+    bool SingleInstance::Reacquire() noexcept
+    {
+        if (s_instanceMutex != nullptr)
+        {
+            return true;
+        }
+
+        if (s_appKey.empty())
+        {
+            return false;
+        }
+
+        auto const window = s_publishedWindow;
+
+        if (!AcquireOrActivateExisting(s_appKey))
+        {
+            return false;
+        }
+
+        if (window != nullptr)
+        {
+            PublishMainWindow(window);
+        }
+
+        return true;
     }
 
     void SingleInstance::Release() noexcept
