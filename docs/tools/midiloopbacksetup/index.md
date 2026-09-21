@@ -18,6 +18,16 @@ If you've used a third-party loopback or "virtual MIDI cable" driver before, thi
 
 Loopbacks you create here belong to the PC, not to the app that made them. They're there for every app, they show up in Windows like any other MIDI device, and they come back after a restart unless you ask for one that doesn't.
 
+## You don't need to keep this app running
+
+This app is here to create and remove loopbacks. It doesn't carry any MIDI data, and nothing depends on it once you've closed it.
+
+The loopbacks themselves are part of Windows MIDI Services, so everything passing through one goes through the MIDI service, not through this window. Make what you need, close the app, and your loopbacks carry on working. A saved loopback is there again after you restart the PC, with nothing to launch and nothing sitting in the notification area. Even a loopback you chose *not* to save is unaffected by closing this app: it lasts until the MIDI service restarts, which is a different thing entirely.
+
+That's worth knowing if you've used a third-party virtual MIDI cable tool before, because several of those have to stay open for their ports to exist at all.
+
+Open this app again when you want to add, rename, mute, or remove a loopback. The rest of the time it can stay closed.
+
 ## Which kind do you need?
 
 There are two, one on each page, and the difference is what the other app sees.

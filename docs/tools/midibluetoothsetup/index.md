@@ -23,6 +23,18 @@ There are three pages:
 - **This PC** is for letting *something else connect to this PC*. Here this PC is the peripheral. For example, you may want to use a tablet PC as a wireless controller.
 - **Transport settings** holds the defaults which apply to every Bluetooth MIDI device.
 
+## You don't need to keep this app running
+
+This app is here to set connections up. It doesn't carry any MIDI data, and nothing depends on it once you've closed it.
+
+That's worth saying plainly, because it's the opposite of how most Bluetooth MIDI software for Windows has worked. In those, the Bluetooth connection belongs to the application, so the application has to stay open, usually sitting in the notification area, and your MIDI device disappears the moment you close it or it crashes.
+
+Bluetooth MIDI here is part of Windows MIDI Services itself. Finding devices, connecting, reconnecting, and moving messages all happen in the MIDI service. Connect a device on this page, close this app, and the device stays connected and stays usable in your DAW. It's reconnected on its own when it comes back after being switched off or out of range, and it's connected again after you restart the PC, with nothing of ours running and nothing for you to remember to start.
+
+The same goes for the **This PC** page. Once you've published this PC as a Bluetooth MIDI peripheral, it stays published with this window closed.
+
+Open this app when you want to connect something new, change a setting, or look at what a device is doing. The rest of the time it can stay closed.
+
 ## Finding devices
 
 Devices appear on the **Bluetooth devices** page on their own. There is nothing to scan or search.

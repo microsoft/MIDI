@@ -21,6 +21,20 @@ There are two pages, each with a different but related function:
 - **Network devices** is for connecting *this PC to something else*, such as an interface or a synth. The remote device is a "host", and this PC is a "client". The connection is initiated from this PC.
 - **This PC** is for letting *other devices connect to this PC*, such as a laptop or a phone or external device that wants to communicate over MIDI. In this case, this PC is the "host" and the remote device is the "client". The connection is initiated by the remote device.
 
+## You don't need to keep this app running
+
+This app is here to set connections up. It doesn't carry any MIDI data, and nothing depends on it once you've closed it.
+
+Network MIDI 2.0 is part of Windows MIDI Services itself, so finding devices, connecting, reconnecting, and moving messages all happen in the MIDI service. Connect a device on this page, close this app, and the device stays connected and stays usable in your DAW. The connection is re-established on its own when the device comes back, and after you restart the PC, with nothing of ours running and nothing for you to remember to start. A host you create on the **This PC** page is the same: it stays on the network and keeps accepting devices with this window closed.
+
+The one part that benefits from something running is approvals, and only if you've set a host to **Ask me first**. A device asking to connect then waits for your answer, and the place to answer it is this window, so you'd have to happen to have the app open or know to go and open it.
+
+### MIDI Notifications
+
+That's what MIDI Notifications is for. It's a small app that sits in the notification area, watches for devices waiting on your permission, and tells you when there is one. Select the notification and Network MIDI 2.0 Setup opens on the waiting device, so you can allow or deny it.
+
+It doesn't carry any MIDI data either, and it isn't required. Turn it on or off, and choose whether it starts with Windows, on the **Notifications** page of the [MIDI Settings]({{ site.baseurl }}/tools/settings/) app. Without it nothing is broken: a device that asks to connect waits, and you answer it the next time you open this app. And if your hosts are set to **Let any device connect**, there's nothing to approve and nothing to be notified about.
+
 ## Finding and connecting to devices
 
 Devices that advertise themselves on your network appear on the **Network devices** page on their own. There's nothing to scan or search: as long as the device is switched on and on the same network (and same subnet), it shows up within a few seconds.
@@ -146,6 +160,8 @@ You have four answers:
 - **Always allow** connects it now and remembers, so it connects on its own in future.
 - **Deny** refuses this attempt, but asks again next time.
 - **Block** refuses and remembers, so the device is turned away without asking you again.
+
+Because the prompt is in this window, a device can be waiting while you're doing something else entirely. That's what [MIDI Notifications](#midi-notifications) is for: it tells you a device is waiting, and opens this app on it.
 
 ### Connected devices
 
