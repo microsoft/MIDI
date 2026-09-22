@@ -17,6 +17,7 @@
 #include "midi_ksa_usb_strings.h"
 #include "Feature_Servicing_MIDI2CustomOutgoingLatency.h"
 #include "Feature_Servicing_MIDI2PortNamingRework.h"
+#include "Feature_Servicing_MIDI2KSAShutdownCrash.h"
 
 using namespace wil;
 using namespace winrt::Windows::Devices::Enumeration;
@@ -3743,15 +3744,18 @@ CMidi2KSAggregateMidiEndpointManager3::Shutdown()
         catch (...) {}
     }
 
-    // an aborted watcher never reports Stopped, so don't wait out the full timeout on it
-    uint8_t tries{ 0 };
-    while (m_watcher &&
-           m_watcher.Status() != DeviceWatcherStatus::Stopped &&
-           m_watcher.Status() != DeviceWatcherStatus::Aborted &&
-           tries < 50)
+    if (Feature_Servicing_MIDI2KSAShutdownCrash::IsEnabled())
     {
-        Sleep(100);
-        tries++;
+        // an aborted watcher never reports Stopped, so don't wait out the full timeout on it
+        uint8_t tries{ 0 };
+        while (m_watcher &&
+               m_watcher.Status() != DeviceWatcherStatus::Stopped &&
+               m_watcher.Status() != DeviceWatcherStatus::Aborted &&
+               tries < 50)
+        {
+            Sleep(100);
+            tries++;
+        }
     }
 
     // wake and join the worker before touching any of the collections it uses,
@@ -3787,6 +3791,19 @@ CMidi2KSAggregateMidiEndpointManager3::Shutdown()
         m_allParentDeviceDefinitions.clear();
     }
 
+    if (!Feature_Servicing_MIDI2KSAShutdownCrash::IsEnabled())
+    {
+        // an aborted watcher never reports Stopped, so don't wait out the full timeout on it
+        uint8_t tries{ 0 };
+        while (m_watcher &&
+               m_watcher.Status() != DeviceWatcherStatus::Stopped &&
+               m_watcher.Status() != DeviceWatcherStatus::Aborted &&
+               tries < 50)
+        {
+            Sleep(100);
+            tries++;
+        }
+    }
 
     TraceLoggingWrite(
         MidiKSAggregateTransportTelemetryProvider::Provider(),

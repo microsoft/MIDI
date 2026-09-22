@@ -14,6 +14,7 @@
 #include <iostream>     // for getline for string parsing of VID/PID/Serial from parent id
 
 #include "Feature_Servicing_MIDI2CustomOutgoingLatency.h"
+#include "Feature_Servicing_MIDI2KSAShutdownCrash.h"
 
 using namespace wil;
 using namespace winrt::Windows::Devices::Enumeration;
@@ -3061,23 +3062,49 @@ CMidi2KSAggregateMidiEndpointManager2::Shutdown()
     m_DeviceEnumerationCompleted.revoke();
     m_watcher.Stop();
 
+    if (Feature_Servicing_MIDI2KSAShutdownCrash::IsEnabled())
+    {
+        uint8_t tries{ 0 };
+        while (m_watcher.Status() != DeviceWatcherStatus::Stopped && tries < 50)
+        {
+            Sleep(100);
+            tries++;
+        }
+
+        m_endpointCreationThread.request_stop();
+        m_EnumerationCompleted.SetEvent();
+        m_endpointCreationThreadWakeup.SetEvent();
+        m_initialEndpointCreationCompleted.SetEvent();
+
+        if (m_endpointCreationThread.joinable())
+        {
+            m_endpointCreationThread.join();
+        }
+    }
+
     auto pendingLock = m_pendingEndpointDefinitionsLock.lock();
     m_pendingEndpointDefinitions.clear();
 
-    m_endpointCreationThread.request_stop();
-    m_EnumerationCompleted.SetEvent();
+    if (!Feature_Servicing_MIDI2KSAShutdownCrash::IsEnabled())
+    {
+        m_endpointCreationThread.request_stop();
+        m_EnumerationCompleted.SetEvent();
 
-    m_endpointCreationThreadWakeup.SetEvent();
-    m_initialEndpointCreationCompleted.SetEvent();
+        m_endpointCreationThreadWakeup.SetEvent();
+        m_initialEndpointCreationCompleted.SetEvent();
+    }
 
     m_activatedEndpointDefinitions.clear();
     m_pendingEndpointDefinitions.clear();
 
-    uint8_t tries{ 0 };
-    while (m_watcher.Status() != DeviceWatcherStatus::Stopped && tries < 50)
+    if (!Feature_Servicing_MIDI2KSAShutdownCrash::IsEnabled())
     {
-        Sleep(100);
-        tries++;
+        uint8_t tries{ 0 };
+        while (m_watcher.Status() != DeviceWatcherStatus::Stopped && tries < 50)
+        {
+            Sleep(100);
+            tries++;
+        }
     }
 
     TransportState::Current().Shutdown();
