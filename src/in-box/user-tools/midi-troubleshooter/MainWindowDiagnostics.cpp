@@ -23,6 +23,45 @@ namespace winrt::miditroubleshooter::implementation
         // These reports walk every endpoint and every kernel streaming filter on the PC, so a
         // couple of minutes is normal on a machine with a lot of hardware.
         constexpr std::chrono::seconds ReportTimeout{ 300 };
+
+        bool WriteUtf8TextFile(_In_ std::wstring const& path, _In_ std::wstring const& contents) noexcept
+        {
+            try
+            {
+                // UTF-8 with a byte order mark, which is what the WinRT file writer produced
+                auto const required = ::WideCharToMultiByte(
+                    CP_UTF8, 0, contents.c_str(), static_cast<int>(contents.size()), nullptr, 0, nullptr, nullptr);
+
+                std::string utf8{};
+
+                if (required > 0)
+                {
+                    utf8.resize(static_cast<size_t>(required));
+
+                    ::WideCharToMultiByte(
+                        CP_UTF8, 0, contents.c_str(), static_cast<int>(contents.size()),
+                        utf8.data(), required, nullptr, nullptr);
+                }
+
+                std::ofstream stream{ path, std::ios::binary | std::ios::trunc };
+
+                if (!stream.is_open())
+                {
+                    return false;
+                }
+
+                constexpr char byteOrderMark[]{ '\xEF', '\xBB', '\xBF' };
+
+                stream.write(byteOrderMark, sizeof(byteOrderMark));
+                stream.write(utf8.data(), static_cast<std::streamsize>(utf8.size()));
+
+                return stream.good();
+            }
+            catch (...)
+            {
+                return false;
+            }
+        }
     }
 
     _Use_decl_annotations_
@@ -208,29 +247,32 @@ namespace winrt::miditroubleshooter::implementation
     {
         auto lifetime = get_strong();
 
-        auto const name = suggestedName;
-        auto const contents = text;
+        auto const name = std::wstring{ suggestedName };
+        auto const contents = std::wstring{ text };
 
         try
         {
-            winrt::Windows::Storage::Pickers::FileSavePicker picker{};
+            auto const path = ShowSaveFileDialog(
+                std::wstring{ res::GetString(L"SaveTextFileType") }, L"txt", name);
 
-            // a desktop app has no implicit window for the picker to parent to
-            picker.as<::IInitializeWithWindow>()->Initialize(WindowHandle());
-
-            auto extensions = winrt::single_threaded_vector<winrt::hstring>({ L".txt" });
-
-            picker.FileTypeChoices().Insert(res::GetString(L"SaveTextFileType"), extensions);
-            picker.SuggestedFileName(name);
-
-            auto const file = co_await picker.PickSaveFileAsync();
-
-            if (file == nullptr)
+            if (path.empty())
             {
                 co_return;
             }
 
-            co_await winrt::Windows::Storage::FileIO::WriteTextAsync(file, contents);
+            bool written{ false };
+
+            co_await native::RunOnBackgroundAsync([&written, &path, &contents]()
+                {
+                    written = WriteUtf8TextFile(path, contents);
+                });
+
+            if (m_closing || written)
+            {
+                co_return;
+            }
+
+            MIDI_TSHOOT_LOG_WARNING(L"Unable to write the report file.");
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to save the report.")
     }

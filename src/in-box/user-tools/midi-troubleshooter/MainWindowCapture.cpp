@@ -161,23 +161,15 @@ namespace winrt::miditroubleshooter::implementation
         {
             // The destination is chosen before anything is collected, so a canceled dialog
             // does not throw away a trace that has already been stopped.
-            winrt::Windows::Storage::Pickers::FileSavePicker picker{};
+            auto const outputPath = ShowSaveFileDialog(
+                std::wstring{ res::GetString(L"SaveZipFileType") },
+                L"zip",
+                native::ReproCapture::SuggestedFileName());
 
-            picker.as<::IInitializeWithWindow>()->Initialize(WindowHandle());
-
-            auto extensions = winrt::single_threaded_vector<winrt::hstring>({ L".zip" });
-
-            picker.FileTypeChoices().Insert(res::GetString(L"SaveZipFileType"), extensions);
-            picker.SuggestedFileName(winrt::hstring{ native::ReproCapture::SuggestedFileName() });
-
-            auto const file = co_await picker.PickSaveFileAsync();
-
-            if (file == nullptr || m_closing)
+            if (outputPath.empty() || m_closing)
             {
                 co_return;
             }
-
-            auto const outputPath = std::wstring{ file.Path() };
 
             native::CaptureStepResult result{};
 
@@ -221,18 +213,14 @@ namespace winrt::miditroubleshooter::implementation
                 co_return;
             }
 
-            CaptureStatusText().Text(res::FormatString(L"CaptureSavedFormat", file.Path()));
+            CaptureStatusText().Text(res::FormatString(L"CaptureSavedFormat", winrt::hstring{ outputPath }));
 
             // Shows the package selected in Explorer, which is what the customer needs next.
-            auto const folder = co_await file.GetParentAsync();
-
-            if (folder != nullptr)
+            if (auto const idList = ::ILCreateFromPathW(outputPath.c_str()))
             {
-                winrt::Windows::System::FolderLauncherOptions launcherOptions{};
+                LOG_IF_FAILED(::SHOpenFolderAndSelectItems(idList, 0, nullptr, 0));
 
-                launcherOptions.ItemsToSelect().Append(file);
-
-                co_await winrt::Windows::System::Launcher::LaunchFolderAsync(folder, launcherOptions);
+                ::ILFree(idList);
             }
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to finish the capture.")

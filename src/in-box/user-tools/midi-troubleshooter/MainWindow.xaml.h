@@ -148,6 +148,14 @@ namespace winrt::miditroubleshooter::implementation
 
         winrt::fire_and_forget SaveTextAsync(winrt::hstring const& suggestedName, winrt::hstring const& text) noexcept;
 
+        // The Win32 save dialog rather than Windows.Storage.Pickers: the WinRT picker never
+        // completes in an elevated process, and this tool normally runs elevated. Blocks until
+        // the dialog is dismissed, and returns an empty string when the customer cancels.
+        std::wstring ShowSaveFileDialog(
+            std::wstring const& fileTypeLabel,
+            std::wstring const& extension,
+            std::wstring const& suggestedFileName) noexcept;
+
         void CopyToClipboard(winrt::hstring const& text) noexcept;
 
         void AppendCaptureLog(std::vector<std::wstring> const& lines) noexcept;
