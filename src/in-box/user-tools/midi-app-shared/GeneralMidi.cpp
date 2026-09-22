@@ -9,7 +9,7 @@
 
 #include "GeneralMidi.h"
 
-namespace midiplayer
+namespace midiapp
 {
     namespace
     {
