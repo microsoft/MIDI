@@ -7,8 +7,6 @@ categories:
   - Troubleshooting
 ---
 
-# When saved endpoint settings do not match a device
-
 Windows MIDI Services lets you give a MIDI device your own name, choose a picture for it, rename its MIDI 1.0 ports and set other options. Those settings are stored and applied whenever the device is there.
 
 Sometimes MIDI Settings will tell you that some of your saved settings do not match anything connected. There are two quite different reasons for that, and it is worth knowing which one you are looking at.

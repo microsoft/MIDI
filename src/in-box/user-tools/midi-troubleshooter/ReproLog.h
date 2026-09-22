@@ -27,6 +27,10 @@ namespace miditroubleshooter
     {
         bool Succeeded{ false };
 
+        // Time travel tracing attached during this capture. It cannot detach from a running
+        // process, so the service carries the recording overhead until Windows is restarted.
+        bool TimeTravelTraceRecorded{ false };
+
         // one line per action taken, shown live in the app and worth keeping
         std::vector<std::wstring> Log{};
 

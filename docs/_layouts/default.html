@@ -39,7 +39,31 @@
     <script>window.midiSearchJsonUrl = "{{ '/search.json' | relative_url }}";</script>
 
     <style>
-    /* style.css is generated from assets/scss, so these content-table rules live here instead */
+    /* style.css is generated from assets/scss, so these content rules live here instead */
+
+    /* The theme paints every link #404040, which is also the body text color, so a link inside an
+       article read as ordinary text. Color alone still is not enough here: #0D65B0 on #404040 is
+       only 1.75:1, well under the 3:1 that would let color carry the meaning, so prose links are
+       underlined too. Delete the text-decoration lines to go back to color only. */
+    :is(.tutorial-content, .tech-content, .doc-content, .sdk-common-properties) :is(p, li, td, th, dd, blockquote) a {
+        color: #0D65B0;
+        text-decoration: underline !important;
+        text-underline-offset: 2px;
+    }
+    :is(.tutorial-content, .tech-content, .doc-content, .sdk-common-properties) :is(p, li, td, th, dd, blockquote) a:hover,
+    :is(.tutorial-content, .tech-content, .doc-content, .sdk-common-properties) :is(p, li, td, th, dd, blockquote) a:focus {
+        color: #0A4E88;
+    }
+    /* inline code keeps its own color otherwise, so a link written as `SomeType` stayed dark */
+    :is(.tutorial-content, .tech-content, .doc-content, .sdk-common-properties) :is(p, li, td, th, dd, blockquote) a code {
+        color: inherit;
+    }
+    /* the theme sets outline:none on every a, which leaves keyboard users with no focus indicator */
+    :is(.tutorial-content, .tech-content, .doc-content, .sdk-common-properties) a:focus-visible {
+        outline: 2px solid #0D65B0;
+        outline-offset: 2px;
+    }
+
     /* cells inherit the 30px body line-height, which double-spaces every description */
     .tutorial-content table td,
     .tutorial-content table th,

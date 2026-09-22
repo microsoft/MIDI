@@ -8,8 +8,6 @@ categories:
   - Internals
 ---
 
-# Endpoint Arrival and Update Ordering
-
 A MIDI 2.0 device doesn't arrive fully described. It arrives, and then it tells us about itself. Windows MIDI Services publishes each piece of that description as it comes in, so an application watching endpoints sees a *sequence* of notifications for a single device being plugged in, not one.
 
 That surprises people. Applications which assume a device is fully described the moment it appears, or the moment any single notification arrives, end up caching half-built information: blank function block names, a MIDI 1.0 port list with a port missing, an endpoint name which is later replaced by the one the device reports.

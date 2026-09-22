@@ -5,12 +5,72 @@ layout: default
 {% include header.html %}
 {% include tools_header.html %}
 
+<style>
+    .tools-toc {
+        background-color: #f7f9fb;
+        border: 1px solid #e1e7ed;
+        border-radius: 6px;
+        padding: 18px 24px 20px 24px;
+        margin-bottom: 34px;
+    }
+
+    .tools-toc .tools-toc-title {
+        margin: 0 0 10px 0;
+        font-size: 16px;
+        line-height: 20px;
+    }
+
+    .tools-toc ul {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        column-width: 260px;
+        column-gap: 40px;
+    }
+
+    .tools-toc li {
+        line-height: 20px;
+        padding: 3px 0;
+        break-inside: avoid;
+    }
+
+    .tools-toc li a {
+        font-size: 14px;
+        color: #0D65B0;
+    }
+
+    /* this is a block of links, not links inside a sentence, so it does not carry the underline
+       the site-wide prose rule in _layouts/default.html applies */
+    .tech-content nav.tools-toc li a {
+        text-decoration: none !important;
+    }
+
+    .tech-content nav.tools-toc li a:hover,
+    .tech-content nav.tools-toc li a:focus {
+        text-decoration: underline !important;
+    }
+</style>
+
 <section class="layout-area bg-color1 content tutorial">
     <div class="layout-wrapper section-spacing bminus-30">
         <div class="container">
             <div class="row">
                 <div class="col-md-12 col-lg-12">
                     <div class="tech-content">
+                        {% assign toc_parts = content | split: '<h2 id="' %}
+                        {% if toc_parts.size > 2 %}
+                        <nav class="tools-toc">
+                            <h2 class="heading-4 tools-toc-title">On this page</h2>
+                            <ul>
+                                {% for toc_part in toc_parts offset: 1 %}
+                                {% assign toc_heading = toc_part | split: '</h2>' | first %}
+                                {% assign toc_id = toc_heading | split: '"' | first %}
+                                {% assign toc_text = toc_heading | split: '">' | last | strip_html | strip %}
+                                <li><a href="#{{ toc_id }}">{{ toc_text }}</a></li>
+                                {% endfor %}
+                            </ul>
+                        </nav>
+                        {% endif %}
                         {{content}}
                     </div>
                 </div>

@@ -8,7 +8,7 @@ categories:
   - Internals
 ---
 
-# WinMM Naming
+## WinMM naming
 
 WinMM had a specific approach to naming MIDI 1.0 ports which resulted in names like `MIDIOUT2 (Some Device)`. That name worked well for decades, but was not what manufacturers and customers have asked for. So in Windows MIDI Services, we have introduced modern port naming, which uses the names the device itself supplies, such as its `iJack` strings, when they are available.
 

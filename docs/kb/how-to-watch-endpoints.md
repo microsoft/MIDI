@@ -15,7 +15,7 @@ In Windows MIDI Services, we've provided a specialized version of the device wat
 
 ## Events
 
-To use the [`MidiEndpointDeviceWatcher`]({{ site.baseurl }}/sdk-reference/MidiEndpointDeviceWatcher), first wire up handlers for the `Added`, `Removed`, and `Updated` events. Optionally, you may wire up handlers for the `EnumerationCompleted` event to be notified when initial enumeration has finished, and the `Stopped` event to know when the watcher has been stopped by a call to the `Stop` method.
+To use the [`MidiEndpointDeviceWatcher`]({{ site.baseurl }}/sdk-reference/Enumeration/MidiEndpointDeviceWatcher), first wire up handlers for the `Added`, `Removed`, and `Updated` events. Optionally, you may wire up handlers for the `EnumerationCompleted` event to be notified when initial enumeration has finished, and the `Stopped` event to know when the watcher has been stopped by a call to the `Stop` method.
 
 Once the event handlers have been wired up, create the watcher using the static `Create` function.
 

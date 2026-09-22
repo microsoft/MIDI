@@ -16,7 +16,7 @@ The Windows MIDI Service does a signing check for all loaded service plugins, in
 
 To get around this, developers, and those testing out unsigned plugins, must turn on Developer Mode in Windows Settings. This bypasses the signing check. It's required to be on for as long as the unsigned plugin is used.
 
-> <h4>NOTE<h4>
+> <h4>NOTE</h4>
 > Bypassing the signing check could put your PC at risk by loading malicious code into the MIDI Service. Do this only for plugins you know and trust.
 
 ## Failed Initialize call

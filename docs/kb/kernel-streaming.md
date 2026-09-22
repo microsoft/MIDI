@@ -7,8 +7,6 @@ categories:
   - Transport Details
 ---
 
-# Kernel Streaming
-
 | Property | Value |
 | -------- | ----- |
 | Transport Id | `{26FA740D-469C-4D33-BEB1-3885DE7D6DF1}` |

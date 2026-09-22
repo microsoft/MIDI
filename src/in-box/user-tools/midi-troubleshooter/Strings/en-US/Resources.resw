@@ -357,7 +357,16 @@
     <value>Include midiksinfo output</value>
   </data>
   <data name="CaptureTimeTravelCheck.Content" xml:space="preserve">
-    <value>Include a time travel trace of the MIDI service (much larger)</value>
+    <value>Include a time travel trace of the MIDI service</value>
+  </data>
+  <data name="CaptureTimeTravelCaption.Text" xml:space="preserve">
+    <value>The most useful information you can send, but much larger, and it needs a reboot or a MIDI service restart afterwards.</value>
+  </data>
+  <data name="CaptureTimeTravelInfoBar.Title" xml:space="preserve">
+    <value>The MIDI service will run slowly until it is restarted</value>
+  </data>
+  <data name="CaptureTimeTravelInfoBar.Message" xml:space="preserve">
+    <value>Time travel tracing cannot detach from a process once it has attached, so the Windows MIDI service keeps the recording overhead. MIDI still works, but with noticeably more latency. Restart Windows to clear it. Restarting only the MIDI service works as well, but every MIDI application has to be closed first, including background ones you did not start yourself.</value>
   </data>
   <data name="StartCaptureButton.Content" xml:space="preserve">
     <value>Start capture</value>

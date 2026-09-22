@@ -9,8 +9,6 @@ categories:
 
 <!-- Short link for this page: aka.ms/MidiLibraryPorting -->
 
-# Porting a MIDI Library or Framework to Windows MIDI Services
-
 This article is for you if you maintain something that other people build applications on top of: a cross-platform MIDI library, a language binding, a game engine subsystem, or an application framework. It assumes you already read [Moving from WinMM to Windows MIDI Services]({{ site.baseurl }}/kb/moving-from-winmm-to-wms/), and it covers only the parts that are different when you are the layer in the middle rather than the application.
 
 The difference is not academic. That article opens by telling you to stop thinking in terms of ports. You cannot do that. Your public API almost certainly has a type called `MidiIn` or `MidiOutputPort` or `open_port(index)`, and there are applications in the world pinned to it. Breaking that to model UMP endpoints faithfully is usually not an option, and we are not going to pretend otherwise. What follows is how to sit honestly on top of endpoints while continuing to present ports to your callers, and which of your existing habits will now cause defects.
@@ -299,7 +297,7 @@ The expected delay will be the amount of time the device takes to reboot and bec
 
 ### Assuming exclusive access
 
-**Do not treat a successful open as evidence that nothing else is using the device, and do not treat a failure to open as evidence that something is.** Multi-client is a first-class feature now, and it was the single most requested one. Logic that inferred exclusivity from open behavior was always inferential and no longer holds.
+**Do not treat a successful open as evidence that nothing else is using the device, and do not treat a failure to open as evidence that something is.** Multi-client is a core feature now, and it was the single most requested one. Logic that inferred exclusivity from open behavior was always a guess, and no longer holds.
 
 ## Things that are true elsewhere and false here
 
@@ -324,7 +322,7 @@ You can get real coverage in CI on a machine with no MIDI devices attached.
 - The two cross-wired diagnostic loopback endpoints are always present when the service is running, and give you a genuine round trip through the service, including the cross-process buffer. That is enough to test your send path, your receive path, your splitting logic and your shutdown ordering. (Send to A, receive on B. Send to B, receive on A)
 - Loopback endpoints and virtual devices let you construct multi-group endpoints on demand, which is how you test the group filtering and port emulation described above without owning a device that has eight cables.
 - The `midi` console tool that ships with Windows MIDI Services can enumerate endpoints and show properties, which is useful for asserting from a test script what your library should be seeing. `midi endpoint properties <id> --verbose` shows both function blocks and group terminal blocks; without `--verbose` the group terminal blocks are deliberately hidden when function blocks are present, which will mislead you if you are using the console to check your precedence logic.
-- Windows MIDI Services runs on Arm64, and Arm64 is a first-class citizen with Windows 11. If your library ships Arm64 binaries, run at least the enumeration and loopback tests there too.
+- Windows MIDI Services runs on Arm64, and Arm64 is fully supported on Windows 11. If your library ships Arm64 binaries, run at least the enumeration and loopback tests there too.
 
 ## Checklist
 

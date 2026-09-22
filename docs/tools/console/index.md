@@ -84,11 +84,11 @@ midi endpoint [Endpoint Device Id] <command> [OPTIONS]
 
 ---
 
-# Enumerate
+## Enumerate
 
 Lists what is present on the system. The `enumerate` command has the aliases `enum` and `list`, so `midi enumerate endpoints`, `midi enum endpoints`, and `midi list endpoints` are all equivalent.
 
-## enumerate midi-services-endpoints
+### enumerate midi-services-endpoints
 
 *Aliases: `endpoints`, `ump-endpoints`, `ep`*
 
@@ -112,7 +112,7 @@ midi enum ep
 
 ![MIDI enum endpoints]({{ site.baseurl }}/assets/images/console-midi-enum-endpoints.png)
 
-## enumerate legacy-winrt-api-endpoints
+### enumerate legacy-winrt-api-endpoints
 
 *Aliases: `legacy-endpoints`, `bytestream-endpoints`, `legacy`, `winrt1`*
 
@@ -129,7 +129,7 @@ midi enumerate legacy --direction all
 midi list legacy-endpoints
 ```
 
-## enumerate active-sessions
+### enumerate active-sessions
 
 *Alias: `sessions`*
 
@@ -144,7 +144,7 @@ midi enumerate active-sessions
 midi enumerate sessions
 ```
 
-## enumerate transport-plugins
+### enumerate transport-plugins
 
 *Alias: `transports`*
 
@@ -161,7 +161,7 @@ midi enumerate transports
 
 ![Enumerate Transport Plugins]({{ site.baseurl }}/assets/images/console-enum-transports.png)
 
-## enumerate endpoint-property-keys
+### enumerate endpoint-property-keys
 
 *Alias: `property-keys`*
 
@@ -174,13 +174,13 @@ midi enumerate property-keys
 
 ---
 
-# Endpoint
+## Endpoint
 
 Commands which operate on a single UMP endpoint. The `endpoint` branch has the alias `ep`. All of these accept an optional Endpoint Device Id as described in [Specifying an Endpoint](#specifying-an-endpoint).
 
 ![midi endpoint help]({{ site.baseurl }}/assets/images/console-midi-endpoint-help.png)
 
-## endpoint monitor
+### endpoint monitor
 
 *Alias: `listen`*
 
@@ -211,7 +211,7 @@ midi endpoint monitor --verbose
 
 ![midi endpoint monitor verbose]({{ site.baseurl }}/assets/images/console-midi-endpoint-monitor-verbose.png)
 
-### Saving messages to a file
+#### Saving messages to a file
 
 When monitoring, you can save the messages to a file. This can be used to capture test data which you will later send using `send-message-file`, or for storing something like a System Exclusive dump.
 
@@ -225,7 +225,7 @@ If no file extension is specified, the extension `.midi2` is automatically added
 
 When you have finished monitoring an endpoint, hit the `escape` key to close the connection and the app.
 
-## endpoint send-message
+### endpoint send-message
 
 *Aliases: `send-ump`, `send`*
 
@@ -253,7 +253,7 @@ midi endpoint send-message 0x41234567 0xDEADBEEF --count 15 --pause 2000
 
 In general, we recommend sending messages in hexadecimal format as it is easier to visually inspect the information being sent. The 1-4 MIDI words are in order from left to right.
 
-### Special debug messages
+#### Special debug messages
 
 Sending otherwise valid UMP messages where the last word is incremented by 1 for each sent message helps validate that all messages were received by your application, and in the correct order. This requires a message type of at least two words. We don't recommend sending Type F stream messages as those have the potential to corrupt data; a Type 4 MIDI 2.0 channel voice message is usually safer.
 
@@ -263,7 +263,7 @@ midi endpoint send-message 0x41234567 0x00000000 --count 10000 --pause 2 --debug
 
 You should see the second word update from `0x00000000` through `0x00002710` (decimal 10000). We recommend the pause when sending large numbers of messages because a pause of 0 can flood the buffers with more data than the client may be able to retrieve in time, and may result in dropped messages.
 
-### Scheduling messages
+#### Scheduling messages
 
 `--offset-microseconds` adds a fixed time to each outgoing message so that it is scheduled that far into the future. Offsets are in microseconds to provide more precise control compared to milliseconds.
 
@@ -279,7 +279,7 @@ midi endpoint send-message 0x41234567 0xFEEDF00D --timestamp 0
 
 You can use the `midi time` command to see the current timestamp, and then use that to pick a future timestamp. If you do not specify a timestamp, the current time is used.
 
-## endpoint send-message-file
+### endpoint send-message-file
 
 *Aliases: `send-ump-file`, `send-file`*
 
@@ -334,7 +334,7 @@ Here is one of the test files we use. It demonstrates comments, multiple represe
 # And the file ends with a comment
 ```
 
-## endpoint send-sysex-file
+### endpoint send-sysex-file
 
 *Alias: `send-sysex`*
 
@@ -353,7 +353,7 @@ midi endpoint send-sysex-file %USERPROFILE%\Documents\patch_dump.syx
 midi endpoint send-sysex patch_dump.syx --group-index 2
 ```
 
-## endpoint play-notes
+### endpoint play-notes
 
 *Alias: `play`*
 
@@ -378,7 +378,7 @@ midi endpoint play-notes 50 55 52 60 72 90 --group 1 --channel 10 --velocity 100
 
 ![Play Notes]({{ site.baseurl }}/assets/images/console-midi-endpoint-play-notes.png)
 
-## endpoint properties
+### endpoint properties
 
 *Aliases: `props`, `information`, `info`*
 
@@ -399,13 +399,13 @@ midi endpoint properties --verbose
 
 ---
 
-# Endpoint Request
+## Endpoint Request
 
 Send MIDI 2.0 stream request messages without having to remember their exact format. These are primarily a convenience for developers and for debugging MIDI 2.0 hardware. The `request` branch has the alias `req`.
 
 Before sending a request, you may want to open another console window with `midi watch-endpoints` active, so you can see when the stored properties change. You may also want a verbose `midi endpoint monitor` window open so you can see the response messages come back.
 
-## endpoint request function-blocks
+### endpoint request function-blocks
 
 *Aliases: `function-block`, `fb`, `function`, `functions`*
 
@@ -427,7 +427,7 @@ midi endpoint request function-blocks --all --request-name false
 midi endpoint request function-blocks --all --request-info false
 ```
 
-## endpoint request endpoint-info
+### endpoint request endpoint-info
 
 *Aliases: `endpoint-metadata`, `endpoint-data`, `em`, `metadata`*
 
@@ -452,11 +452,11 @@ midi endpoint request metadata --name --endpoint-info false
 
 ---
 
-# Loopback Endpoints
+## Loopback Endpoints
 
 Loopback endpoints are useful for testing, and for connecting two applications together on the same PC. These endpoints are temporary: they exist until the console session which created them ends.
 
-## loopback create
+### loopback create
 
 *Branch aliases: `midi2-loopback`, `bidirectional-loopback`*
 
@@ -475,7 +475,7 @@ midi loopback create --name-a "My Loopback A" --name-b "My Loopback B"
 midi loopback create --root-name "My Loopback"
 ```
 
-## loopback remove
+### loopback remove
 
 *Alias: `delete`*
 
@@ -489,7 +489,7 @@ Remove a pair of loopback endpoints by providing the association id.
 midi loopback remove --association-id {bb872b25-bc38-4009-a85a-559824398a13}
 ```
 
-## basic-loopback create
+### basic-loopback create
 
 *Branch aliases: `midi1-loopback`, `simple-loopback`*
 
@@ -505,7 +505,7 @@ Create a temporary basic MIDI 1.0 loopback endpoint for connecting two MIDI 1.0 
 midi basic-loopback create --name "My Loopback"
 ```
 
-## basic-loopback remove
+### basic-loopback remove
 
 *Alias: `delete`*
 
@@ -521,11 +521,11 @@ midi basic-loopback remove --association-id {bb872b25-bc38-4009-a85a-559824398a1
 
 ---
 
-# Bridge
+## Bridge
 
 *Branch alias: `connect`*
 
-## bridge ble
+### bridge ble
 
 *Alias: `bluetooth`*
 
@@ -545,7 +545,7 @@ midi connect bluetooth --name "My BLE Keyboard"
 
 ---
 
-# Service
+## Service
 
 *Branch alias: `svc`*
 
@@ -555,7 +555,7 @@ The `midi service` command provides information about the status and health of t
 
 ![MIDI Service Command]({{ site.baseurl }}/assets/images/console-midi-service.png)
 
-## service status
+### service status
 
 Check to see if the Windows Service is running.
 
@@ -570,7 +570,7 @@ midi svc status --verbose
 
 ![MIDI Service Status Command]({{ site.baseurl }}/assets/images/console-midi-service-status.png)
 
-## service ping
+### service ping
 
 Ping the MIDI Windows Service. This calls the WinRT API functions to send a proprietary ping through the Ping endpoint in the service, and returns information about the round-trip speed characteristics of the ping series.
 
@@ -589,13 +589,13 @@ midi service ping --verbose --count 20 --timeout 20000
 
 ---
 
-# Watching for Changes
+## Watching for Changes
 
 Enumerating gives you a snapshot of the list at a moment in time. Watching gives you a constantly updating list which reflects device add/remove as well as property updates. This is useful for developers, or for those using tools to modify endpoints who want to verify that the changes were reported.
 
 To stop watching, hit the `escape` key.
 
-## watch-endpoints
+### watch-endpoints
 
 *Alias: `watch-ump`*
 
@@ -611,7 +611,7 @@ midi watch-endpoints
 midi watch-ump --include-loopback
 ```
 
-## watch-ports
+### watch-ports
 
 *Alias: `watch-legacy`*
 
@@ -628,7 +628,7 @@ midi watch-legacy --verbose
 
 ---
 
-# Time
+## Time
 
 *Alias: `clock`*
 

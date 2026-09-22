@@ -59,7 +59,7 @@ If you need to keep other devices off a host, put it on a network you control, o
 
 ---
 
-# Details
+## Details
 
 The rest of this page is for people who want to understand the transport itself, or who edit the configuration file by hand.
 

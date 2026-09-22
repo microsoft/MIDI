@@ -7,16 +7,14 @@ categories:
   - Transport Details
 ---
 
-# MIDI Diagnostic Endpoints
-
 | Property | Value |
 | -------- | ----- |
 | Transport Id | `{ac9b5417-3fe0-4e62-960f-034ee4235a1a}` |
 | Abbreviation | `DIAG` |
 
-(Note: This transport cannot be disabled and is not listed in the registry. Its activation is hard-coded into the Windows service. Settings for this transport are not read from the configuration file and cannot be changed.)
+> This transport can't be disabled and isn't listed in the registry. It is activated directly by the Windows service. Its settings aren't read from the configuration file and can't be changed.
 
-Windows MIDI Services comes with three diagnostic endpoints, two of which are there for application development, testing, and debugging. These will not normally be used by musicians or displayed through music-creation applications.
+Windows MIDI Services comes with three diagnostic endpoints, two of which are there for application development, testing, and debugging. These aren't normally used by musicians or shown in music-creation applications.
 
 ## Loopbacks A and B
 

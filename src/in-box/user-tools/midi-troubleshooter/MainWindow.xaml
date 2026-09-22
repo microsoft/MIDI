@@ -517,6 +517,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
@@ -539,8 +540,12 @@
                             <CheckBox x:Name="CaptureMidiKsInfoCheck" x:Uid="CaptureMidiKsInfoCheck"
                                       Content="Include midiksinfo output" IsChecked="True" />
                             <CheckBox x:Name="CaptureTimeTravelCheck" x:Uid="CaptureTimeTravelCheck"
-                                      Content="Include a time travel trace of the MIDI service (much larger)"
+                                      Content="Include a time travel trace of the MIDI service"
                                       IsChecked="True" />
+                            <TextBlock x:Name="CaptureTimeTravelCaption" x:Uid="CaptureTimeTravelCaption"
+                                       Margin="32,-4,0,0" MaxWidth="700" HorizontalAlignment="Left"
+                                       Style="{StaticResource PropertyLabelStyle}" TextWrapping="Wrap"
+                                       Text="The most useful information you can send, but much larger, and it needs a reboot or a MIDI service restart afterwards." />
                             <TextBlock x:Name="CaptureProfileText"
                                        Style="{StaticResource PropertyLabelStyle}"
                                        TextWrapping="Wrap" />
@@ -570,7 +575,14 @@
                                    TextWrapping="Wrap" />
                     </Grid>
 
-                    <TextBox x:Name="CaptureLogBox" x:Uid="CaptureLogBox" Grid.Row="3"
+                    <!-- time travel tracing cannot detach from a running process, so the service
+                         carries the recording overhead until it is restarted -->
+                    <InfoBar x:Name="CaptureTimeTravelInfoBar" x:Uid="CaptureTimeTravelInfoBar"
+                             Grid.Row="3" Severity="Warning" IsOpen="False"
+                             Title="The MIDI service will run slowly until it is restarted"
+                             Message="Time travel tracing cannot detach from a process once it has attached, so the Windows MIDI service keeps the recording overhead. MIDI still works, but with noticeably more latency. Restart Windows to clear it. Restarting only the MIDI service works as well, but every MIDI application has to be closed first, including background ones you did not start yourself." />
+
+                    <TextBox x:Name="CaptureLogBox" x:Uid="CaptureLogBox" Grid.Row="4"
                              Style="{StaticResource OutputTextBoxStyle}"
                              TextWrapping="Wrap" MinHeight="120" />
                 </Grid>

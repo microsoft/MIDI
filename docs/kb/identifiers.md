@@ -35,7 +35,7 @@ I wrote an article about `iSerialNumber` here, and have evangelized its use with
 
 That's all to say that we can try our best to associate data with USB MIDI devices lacking a proper `iSerialNumber`, but there is no guarantee that the metadata, including unique identifiers, will be sticky. 
 
-# What other identifiers are available?
+## What other identifiers are available?
 
 ## All MIDI 2.0 devices
 
@@ -96,7 +96,7 @@ The unique identifiers for these are specified at creation time. As long as the 
 
 For third-party loopback or virtual devices using their own drivers, we do not control how those devices are created or what information they provide, and so can offer no guidance there.
 
-# Future Transports
+## Future transports
 
 ## Network MIDI 2.0 devices
 
@@ -113,7 +113,7 @@ Note that IP addresses and ports are not persistent identifiers for remote hosts
 
 Information on upcoming BLE MIDI 1.0 will be provided when the transports are available.
 
-# Scenarios
+## Scenarios
 
 ## I need to reconnect to a MIDI device between sessions on the same PC
 

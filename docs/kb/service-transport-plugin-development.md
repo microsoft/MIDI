@@ -361,7 +361,7 @@ Recommended patterns:
 - Catch all exceptions at API boundaries and convert to `HRESULT` or structured response
 - Use dedicated worker queues/threads for transport operations that can block
 - Keep lock scopes short and avoid lock inversion between callback and control paths
-- Support idempotent cleanup (`Initialize`/`Shutdown` ordering should be robust)
+- Support idempotent cleanup: calling `Initialize` and `Shutdown` more than once, or out of order, must be safe
 
 ## Framework and language choices
 

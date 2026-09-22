@@ -7,8 +7,6 @@ categories:
   - Internals
 ---
 
-# How Windows MIDI Services generates MIDI 1.0 port names
-
 This describes how Windows MIDI Services names endpoints and the MIDI 1.0 ports (WinMM and WinRT MIDI 1.0) created from them. It is published so that device makers can predict the names their hardware will produce, and choose descriptors that give their customers good results.
 
 A MIDI 1.0 port name is limited to **31 characters plus a terminator**. That limit is imposed by WinMM and cannot be changed. Endpoint names have no such limit.

@@ -74,6 +74,6 @@ Each loopback endpoint is identified by a GUID for the association id. This was 
 | (endpoint) description | Optional. This becomes the transport-supplied description for the loopback endpoint. |
 | (endpoint) uniqueIdentifier | Required. This is a short (32 characters or fewer) case-insensitive unique Id for the endpoint. When combined with the basic loopback prefix in the service, it must be unique across all loopback endpoints in Windows. |
 
-# Implementation
+## Implementation
 
 Internally, the Basic Loopback transport creates one endpoint that is wired out-to-in. Anything sent to the loopback Destination/Output port arrives on the Source/Input port of that same endpoint. There's no practical limit to the number of loopback endpoints you can define.

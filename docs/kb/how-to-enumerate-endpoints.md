@@ -30,7 +30,7 @@ The application may then iterate through the list, reading the properties as nee
 
 Windows MIDI Services has a very rich set of properties available for a UMP Endpoint. This information includes hardware and other transport information, parent device information, user-supplied information, and in the case of a MIDI 2.0 UMP Endpoint, declared information from endpoint discovery and protocol negotiation carried out within the Windows service.
 
-For more details, see the [`MidiEndpointDeviceInformation`]({{ site.baseurl }}/sdk-reference/MidiEndpointDeviceInformation) class documentation. You may also use the [MIDI Console application]({{ site.baseurl }}/tools/console/) to see all of the properties (including the raw property data if you choose to) for an endpoint.
+For more details, see the [`MidiEndpointDeviceInformation`]({{ site.baseurl }}/sdk-reference/Enumeration/MidiEndpointDeviceInformation) class documentation. You may also use the [MIDI Console application]({{ site.baseurl }}/tools/console/) to see all of the properties (including the raw property data if you choose to) for an endpoint.
 
 ## Sample Code
 
