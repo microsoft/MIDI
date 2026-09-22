@@ -7,8 +7,6 @@ categories:
   - Developer Guidance
 ---
 
-# Moving from WinMM to Windows MIDI Services
-
 This article is targeted to developers looking to move from WinMM to Windows MIDI Services APIs.
 
 > If you maintain a cross-platform MIDI library, a language binding, or an application framework rather than an application, read this article first and then see [Porting a MIDI Library or Framework to Windows MIDI Services]({{ site.baseurl }}/kb/porting-midi-libraries/). That article covers what is different when you have a port-based public API you cannot change, and the WinMM habits which are now defects.
@@ -103,7 +101,7 @@ Custom drivers for things like loopbacks were more troublesome, because inside W
 
 > Note that we ultimately want to eliminate the need for any kernel drivers for MIDI beyond the in-box ones. We know we will not meet that goal 100%, but it is why we have built-in loopback endpoints, as well as virtual device support, and an open architecture for creating transport service plugins using COM. Devices should not become unusable due to a vendor no longer maintaining a driver, and vendor driver bugs should not hold back innovation in MIDI in Windows.
 
-# Concrete Concept Mapping
+## Concrete concept mapping
 
 WinMM is a simple API, but part of that simplicity is because it provides very limited information about ports, and lacks a lot of features customers and developers have requested over the past 30+ years. As a result of that and the integration of MIDI 2.0, the Windows MIDI Services API is somewhat more complex. Here's a mapping of concepts from WinMM to the Windows MIDI Services API.
 

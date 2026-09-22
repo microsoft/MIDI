@@ -7,41 +7,42 @@ categories:
   - Troubleshooting
 ---
 
-The midi...midi9 entries in the Drivers32 location in the registry come up often, especially in the context of certain brands of drivers, like Korg.
+The `midi` through `midi9` entries in the Drivers32 part of the registry come up a lot, especially with certain brands of drivers such as Korg.
 
-Location for 64-bit apps `Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32`
+Location for 64-bit apps: `Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32`
 
-Location for 32-bit apps `Computer\HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Drivers32`
+Location for 32-bit apps: `Computer\HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\Windows NT\CurrentVersion\Drivers32`
 
-This has led to the idea that Windows only supports 10 MIDI devices. In reality, it's only 10 drivers which require their entries in the registry.
+There are only ten of these entries, which is where the idea that Windows supports only ten MIDI devices comes from. It was never ten devices. It's ten *drivers* that need an entry here.
 
-## Tools can break this registry location
+## Tools can break this part of the registry
 
-Some tools, driver uninstallers, and entry reordering tools, can break this location in the registry. For example, they can create an incorrect `midi0` entry when the first entry needs to be named `midi` not `midi0`.
+Some tools, driver uninstallers and "MIDI port reordering" utilities break this location. A common example is creating a `midi0` entry, when the first entry has to be named `midi` with no number.
 
-With Windows MIDI Services, these tools can also remove the necessary entries which make Windows MIDI Services work. 
+With Windows MIDI Services, those tools can also remove the entries that make Windows MIDI Services work.
 
-## Necessary MIDI Entries in the registry
+## The entries Windows MIDI Services needs
 
-Windows MIDI Services does not load drivers from the registry. Instead, it relies on the two `midiN` entries and ignores the remainder. You no longer need to ensure other drivers are listed within the 10 entries.
+Windows MIDI Services doesn't load drivers from the registry. It uses the two entries below and ignores the rest, so you no longer have to squeeze other drivers into the ten slots.
 
-These entries are used in the 32-bit and 64-bit registry locations.
+These entries are used in both the 32-bit and the 64-bit registry locations.
 
 | Entry | Type | Value | Description |
 | ----- | ---- | ----- | ----------- |
-| `midi`  | String | `wdmaud.drv` | This is required for loading the in-box MIDI synthesizer |
-| `midi1` | String |  `wdmaud2.drv` | This sends control of the rest of enumeration to the midisrv service. |
+| `midi`  | String | `wdmaud.drv` | Required for loading the in-box MIDI synthesizer |
+| `midi1` | String |  `wdmaud2.drv` | Hands the rest of enumeration over to the midisrv service |
 
-In addition, these values are used only in the 64-bit registry location.
+These two are used only in the 64-bit location.
 
 | Entry | Type | Value | Description |
-| `MidisrvTransferComplete` | DWORD | `1` | Indicates that AudioEndpointBuilder should not enumerate MIDI devices. Instead, the Windows MIDI Service will handle that. |
-| `UseLegacyMidi` | String | 0=use midisrv, 1=use legacy, 2=hybrid (not recommended) | Optional and defaults to 0 if not specified. |
+| ----- | ---- | ----- | ----------- |
+| `MidisrvTransferComplete` | DWORD | `1` | Tells AudioEndpointBuilder not to enumerate MIDI devices, because the Windows MIDI service handles that |
+| `UseLegacyMidi` | String | 0 = use midisrv, 1 = use legacy, 2 = hybrid (not recommended) | Optional. Defaults to 0 when it isn't there. |
 
-## Tool to fix the registry entries
+## How to fix these entries
 
-The MIDI Settings app has a feature on the troubleshooting page which can be used to fix these registry locations.
+The **Registry** page in the [MIDI Troubleshooting and Repair]({{ site.baseurl }}/tools/miditroubleshooter/) app shows what's actually there, marks anything that's wrong, and repairs it for you. Windows has to be restarted afterwards, because the audio and MIDI services read these values when they start.
 
 ## You don't need as many third-party drivers now
 
-Windows MIDI Services is now fully multi-client, which was one of the primary reasons to use vendor drivers for otherwise class-compliant MIDI devices. We recommned that you not install third-party drivers unless necessary.
+Windows MIDI Services is fully multi-client, and that was one of the main reasons to install a vendor driver for a device that's already class-compliant. We recommend not installing third-party drivers unless you need them.

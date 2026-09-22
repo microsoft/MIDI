@@ -86,6 +86,6 @@ Each loopback endpoint pair is identified by a GUID for the association id. The 
 | (endpoint) description | Optional. This becomes the transport-supplied description for the loopback endpoint. |
 | (endpoint) uniqueIdentifier | Required. This is a short (32 characters or fewer) case-insensitive unique Id for the endpoint. When combined with the loopback A/B prefixes in the service, it must be unique across all loopback endpoints in Windows. You can use the same unique id for each endpoint in the same pair, but not the same as other pairs. |
 
-# Implementation
+## Implementation
 
 Internally, the Virtual Loopback is implemented as two endpoints which are cross-wired, so anything sent out to Loopback A arrives on the input of Loopback B, and vice versa. Each declared pair has an exclusive relationship, and there's no practical limit to the number of loopback pairs you can define.

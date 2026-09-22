@@ -7,44 +7,45 @@ categories:
   - Internals
 ---
 
-The big conceptual change between MIDI 1.0 and MIDI 2.0 / UMP (Universal MIDI Packet) endpoints is that the concept of a "Port" is no longer used.
+The big change between MIDI 1.0 and MIDI 2.0 UMP (Universal MIDI Packet) endpoints is that there are no longer any "ports".
 
 ## Background
 
-In USB MIDI 1.0, messages are sent over USB using a 32-bit packet. That packet includes a virtual cable identifier, which is a number which maps to one of 16 possible virtual cables on the endpoint. This allows a single MIDI 1.0 device to have, for example, 8 input ports and 8 output ports on the single endpoint.
+In USB MIDI 1.0, messages travel over USB in a 32-bit packet. That packet carries a virtual cable number, which picks one of the 16 possible virtual cables on the endpoint. That's how a single MIDI 1.0 device can have, say, 8 input ports and 8 output ports on one connection.
 
-MIDI 2.0 UMP has a similar concept, but the logical equivalent of that cable is a group. Because the group index is included in the message itself, and not in additional data sent to the device, all addressing required to route within an endpoint is included in the message.
+MIDI 2.0 UMP does something similar, but the equivalent of a cable is called a group. The group number is part of the message itself instead of being sent alongside it, so everything needed to route a message inside an endpoint travels with the message.
 
-Additionally, some MIDI 2.0 UMP messages have no group information because they apply to the entire endpoint. For example, Endpoint Discovery messages, Function Block Info Notifications, and others.
+Some UMP messages carry no group at all, because they apply to the whole endpoint. Endpoint Discovery messages and Function Block Info Notifications are two examples.
 
-## How we approach this in Windows MIDI Services
+## How Windows MIDI Services handles this
 
-With Windows MIDI Services, we made the decision early on, validated by hardware and software partners, to provide a single unified view of an endpoint, whether it represents a MIDI 2.0 native endpoint or a collection of MIDI 1.0 cables on an endpoint. We also decided, because UMP was designed with this in mind and includes 1:1 mappings between MIDI 1.0 byte-format messages and their MIDI 1.0 Protocol in UMP equivalents, to present all MIDI 1.0 and MIDI 2.0 messages using a single format: UMP.
+We decided early on, with hardware and software partners agreeing, to show one unified view of an endpoint, whether it's a native MIDI 2.0 endpoint or a bundle of MIDI 1.0 cables. We also decided to present every MIDI 1.0 and MIDI 2.0 message in a single format: UMP. That works because UMP was designed for it, and every MIDI 1.0 byte format message has an exact UMP equivalent.
 
-> That means that Windows MIDI Services has no "ports". (We do map back to ports for our older MIDI 1.0 APIs, but that is for backwards compatibility with those APIs)
+> So Windows MIDI Services has no "ports". We do map back to ports for the older MIDI 1.0 APIs, but only so those APIs keep working.
 
-The way the messages themselves map over is super clean. It's documented in the MIDI 2.0 UMP spec, but in a nut shell, it looks like this (in the case of a MIDI 1.0 Channel Voice message):
+The messages map across very neatly. The UMP specification has the details, but for a MIDI 1.0 channel voice message it looks like this:
 
-| UMP Message Type | **Group** | Status | Channel Index | ... |
+| UMP message type | **Group** | Status | Channel index | ... |
+| ----- | ----- | ----- | ----- | ----- |
 | 2 | **0-15** | 8 | 2 | rest of data |
 
-### Cables to Groups
+### Cables become groups
 
-When we enumerate a MIDI 1.0 USB device in the service, we create an aggregate endpoint for that device. As part of that, we build a map of UMP group indexes to MIDI 1.0 KS Pins. We use this for routing so when you address a specific Group.
+When the service enumerates a MIDI 1.0 USB device, it creates one aggregate endpoint for the whole device. As part of that it builds a map from UMP group numbers to the device's MIDI 1.0 kernel streaming pins, and uses that map to route a message to the right place when you address a group.
 
-At the same time, we create virtual Group Terminal Blocks for that device. The names that normally show up as the port name in MIDI 1.0, now become the name of the group terminal.
+At the same time it creates virtual group terminal blocks for the device. The names that used to show up as MIDI 1.0 port names become the names of those group terminals.
 
-### Message listeners for MIDI 1.0 port-like access
+### Message listeners, if you want something port-like
 
-If your application is set up to deal more with single ports, we have an affordance in the SDK: the Message Listener. Anyone can build a message listener, but we supply ones to listen to one or more groups specifically for this use-case. This enables us to scale better by keeping only one connection to the endpoint, but filtering the messages on the client, providing "port-like" functionality.
+If your application really works in terms of single ports, the SDK has message listeners. Anyone can write one, and we supply listeners that watch one or more groups for exactly this case. Your app keeps one connection to the endpoint and filters messages on the client side, which scales much better than opening a connection per port.
 
-Sending messages are still accomplished by communicating directly with the endpoint object, with an appropriate Group index in the message itself.
+Sending is unchanged: you send to the endpoint object, with the right group number in the message.
 
 ## How to present this to your users
 
-In MIDI 2.0 and UMP, the addressible entities are the `Endpoint`, the `Group`, and the `Channel`. That information should always be made available in some way to your user.
+In MIDI 2.0 and UMP the things you can address are the `Endpoint`, the `Group`, and the `Channel`. Make all three visible to your user somehow.
 
-MIDI 2.0 devices typically support Function Blocks, which are named entities which can span one or more groups, and which can be moved at runtime, by design. Whenever possible, Function Blocks are preferred over Group Terminal Blocks.
+MIDI 2.0 devices usually support function blocks. These are named, they can span more than one group, and they're designed to be moved while the device is running. Prefer function blocks over group terminal blocks whenever you have them.
 
 > The enumeration support in `MidiEndpointDeviceInformation` also supports projecting a Group Terminal Block (a USB concept) to its equivalent Function Block. So if Function Blocks are not available natively from the MIDI 2.0 device, you can still work with the same entity as projected from the Group Terminal Block.
 
@@ -52,7 +53,7 @@ When an endpoint reports both kinds of block, use the Function Blocks and ignore
 
 Group Terminal Blocks come from USB descriptors. Windows MIDI Services also synthesizes them for Bluetooth LE MIDI 1.0 devices so there is always something to enumerate, but MIDI 2.0 endpoints which are not USB, such as Network MIDI 2.0, Bluetooth LE MIDI 2.0 and virtual devices, have Function Blocks and no Group Terminal Blocks at all. They do not currently change at runtime, and are not currently renameable, although a device could create different ones the next time it is enumerated (most do not).
 
-So when presenting the information to your users, one possible format would be
+So one way to show this to your users would be
 
 ```
 <Endpoint Name>
@@ -61,7 +62,7 @@ So when presenting the information to your users, one possible format would be
 - Group <Group Number> (<Group Terminal Block or Function Block Name which could change>) <Channel>
 ```
 
-An example would be
+For example
 
 ```
 Contoso Synth
@@ -71,8 +72,8 @@ Contoso Synth
 
 ```
 
-Of course, how you present this to your users is up to you and the unique needs of your application. This is only one possible approach.
+How you present it is up to you and what your application needs. This is only one approach.
 
-> Note that Groups, like Channels, are 0-15 for the index, but 1-16 for the display value. The `MidiGroup` and `MidiChannel` types handle this for you automatically, if you use them. They also include the abbrviations for Group and Channel.
+> Groups and channels are numbered 0-15 internally but displayed as 1-16. The `MidiGroup` and `MidiChannel` types handle that for you, and they also supply the abbreviations for group and channel.
 
-It may take a little getting used to to work with the new endpoint approach, but this is designed for the future, so as more MIDI 2.0 native devices arrive on market, the approach will seem more natural. And most importantly, no functionality is lost compared to the old approach.
+This takes a little getting used to, but it's designed for what's coming. As more native MIDI 2.0 devices arrive, it will feel more natural. Most importantly, nothing you could do with ports is lost.

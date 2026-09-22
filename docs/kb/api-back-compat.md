@@ -8,11 +8,11 @@ categories:
   - Internals
 ---
 
-**Our intention is for developers to begin adopting Windows MIDI Services in place of the older WinMM, WinRT, and (deprecated) DirectMusic APIs in their applications.** All new MIDI features, transports, and more are being implemented in Windows MIDI Services and the new API. A select number of features, slightly more than their current baseline, are available to WinMM and WinRT APIs through our backwards-compatibility shims, but this is simply to ensure existing applications continue to function on systems using Windows MIDI Services. **Please note that we are not providing backwards compatibility to support DirectMusic MIDI APIs.**
+**We want developers to move to Windows MIDI Services and away from WinMM, WinRT MIDI 1.0 and DirectMusic.** Every new MIDI feature and transport is being built in Windows MIDI Services and the new API. The older APIs get a few things they didn't have before, through our compatibility layer, but the point of that layer is to keep existing applications working on a PC that runs Windows MIDI Services. **We are not providing backwards compatibility for the DirectMusic MIDI APIs.**
 
-The existing MIDI APIs on Windows talk (almost) directly to MIDI 1.0 drivers through API calls. This is why only one application can use a driver at a time, unless the driver has had additional code implemented to keep track of each connected app. In Windows MIDI Services, the architecture is built around a central Windows Service, much like our audio system today. It also uses a much faster IO mechanism for communication with the new MIDI 1/MIDI 2 USB driver. This provides much more flexibility, including multi-client use, and good baseline speed with our new class driver.
+The older MIDI APIs on Windows talk almost directly to MIDI 1.0 drivers. That's why only one application can use a driver at a time, unless the driver has extra code to keep track of each connected app. Windows MIDI Services is built around a Windows service instead, much like the audio system, and it uses a much faster way of moving data to and from the new MIDI 1.0 and MIDI 2.0 USB driver. That's what gives you multi-client access and good speed out of the box.
 
-The MIDI Service also includes internal translation between MIDI 1.0 data format and the UMP (MIDI 2.0) data format, as well as between the high resolution MIDI 2.0 protocol and MIDI 1.0. This is all transparent to applications and devices.
+The service also translates between the MIDI 1.0 byte format and UMP, and between the high resolution MIDI 2.0 protocol and MIDI 1.0. Applications and devices don't see any of that happening.
 
 ## API Information
 
@@ -68,6 +68,6 @@ Arm64 and x86-64 ("x64" or "amd64") are both equally supported by the 64 bit API
 
 ✅ Feature is supported ❓We are investigating \* Messages are translated between MIDI 1.0 protocol / data format and MIDI 2.0 protocol / UMP format
 
-## Reverting to the old MIDI Stack
+## Reverting to the old MIDI stack
 
-Please see other articles here for how to revert back to the old WinMM implementation, without using the MIDI Service, for cases where devices use DirectMusic drivers, or are otherwise not compatible with the new MIDI stack.
+See [How to change the API mode]({{ site.baseurl }}/kb/how-to-change-api-mode/) for how to put the PC back on the old WinMM implementation, without the MIDI service. That's for devices that use DirectMusic drivers, or anything else that isn't compatible with the new stack.

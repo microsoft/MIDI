@@ -45,7 +45,7 @@ Most apps need to display device and endpoint connection information to their us
 
 ### Use the `MidiEndpointDeviceWatcher` to respond to device changes
 
-MIDI devices come and go based on connecting/disconnecting USB cables, or new network endpoints coming online. In addition, properties like Function Blocks and Endpoint Name are subject to change at any time. Use the `Windows::Devices::Midi2::Enumeration::MidiEndpointDeviceWatcher` class on a background thread to monitor these endpoints, and receive notifications when anything changes. This is a much more robust approach vs simply enumerating a snapshot of devices up-front.
+MIDI devices come and go based on connecting/disconnecting USB cables, or new network endpoints coming online. In addition, properties like Function Blocks and Endpoint Name are subject to change at any time. Use the `Windows::Devices::Midi2::Enumeration::MidiEndpointDeviceWatcher` class on a background thread to monitor these endpoints, and receive notifications when anything changes. That is far more reliable than enumerating a snapshot of the devices once, at startup.
 
 There's no API or service reason to require a customer to reboot or reload/restart a MIDI DAW or other application to see newly added endpoints when using Windows MIDI Services.
 
@@ -86,7 +86,7 @@ SynthCompany Foo Synth 5
 
 Or similar based on the conventions of your application.
 
-Note that a flat list, like what many apps used for MIDI 1.0 ports, is not as reasonable in a MIDI 2.0 world. Best practices for this will come out over time as various applications grapple with the increased address count in MIDI 2.0.
+Note that a flat list, like what many apps used for MIDI 1.0 ports, is not as reasonable in a MIDI 2.0 world. Best practices for this will emerge over time as applications work through the larger number of addresses in MIDI 2.0.
 
 ### Use `.AsEquivalentFunctionBlock()` for Group Terminal Blocks
 

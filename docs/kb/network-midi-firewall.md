@@ -12,7 +12,7 @@ Can other Network MIDI 2.0-enabled PCs or devices see your PC, but cannot connec
 
 By default, the Windows MIDI Service is not allowed to listen to incoming connections through the firewall. That means that external Network MIDI 2.0 devices will see the service advertised, but their connection requests will be ignored, because they are blocked before the service sees them.
 
-# How to fix it
+## How to fix it
 
 1. Go into Windows settings and search for "Firewall". You'll receive several hits. You want the "Allow an app through Windows Firewall"
 

@@ -8,14 +8,14 @@ categories:
   - Developer and Technical User Tools
 ---
 
-`midi1monitor.exe` is a very simple MIDI input / source monitor supplied as part of the SDK. It uses the WinMM MIDI 1.0 API to display messages on an incoming port. 
+`midi1monitor.exe` is a very simple monitor for a MIDI input port, supplied as part of the SDK. It uses the WinMM MIDI 1.0 API to show the messages arriving on a port.
 
-This app is designed primarily for simple use-cases.
+It's built for simple jobs. For anything more, use [MIDI Monitor]({{ site.baseurl }}/tools/midi2monitor/).
 
 ![midi1monitor]({{ site.baseurl }}/assets/images/midi1monitor.png)
 
-The raw MIDI 1.0 byte data is shown on the left in hexidecimal. The interpretation of that data is shown to the right of the raw data. Numbers in the interpretation are in decimal format.
+The raw MIDI 1.0 bytes are on the left, in hexadecimal. What those bytes mean is on the right, with numbers in decimal.
 
-By default, active sense and clock messages are hidden, as they tend to make monitoring other messages more difficult. Hit the spacebar to toggle displaying them.
+Active sensing and clock messages are hidden by default, because they make everything else hard to read. Press the spacebar to show or hide them.
 
-To exit the app, hit escape.
+Press escape to exit.

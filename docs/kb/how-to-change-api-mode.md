@@ -7,75 +7,77 @@ categories:
   - Troubleshooting
 ---
 
-# API Modes
+## API modes
 
-With the June 2026 Week "D" 30-day CFR (Controlled Feature Rollout) in KB5095093, we've introduced the ability to roll back to the old MIDI stack in Windows. That means that "seekers" (people who go into Windows Update and look for updates) will have this feature enabled by the end of July 2026. Others will have it enabled by mid-August 2026.
+With the June 2026 Week "D" 30-day CFR (Controlled Feature Rollout) in KB5095093, we added the ability to roll back to the old MIDI stack in Windows. "Seekers", people who go into Windows Update and look for updates, had this by the end of July 2026. Everyone else had it by mid-August 2026.
 
-You must be fully up to date with a healthy Windows 11 system to use this feature. **If you have uninstalled any updates or used Vive tool or similar, please repair your PC using Windows Settings > System > Recovery > "Fix problems using Windows Update".**
+Your PC needs to be fully up to date and healthy to use this. **If you have uninstalled updates, or used ViVeTool or something like it, repair your PC first using Windows Settings > System > Recovery > "Fix problems using Windows Update".**
 
-> Note: If your PC is joined to a domain rather than using your Microsoft Account to log in, you will probably not yet have this feature. CFRs are blocked on domain-joined PCs by domain policy by default.
+> If your PC is joined to a domain instead of signing in with a Microsoft account, you probably don't have this yet. Domain policy blocks controlled feature rollouts by default.
 
-> Note2: Some Insider builds are not getting these KBs. For example, Insider Canary did not receive that KB. Without that, you will not have this feature.
+> Some Insider builds don't get these updates. Insider Canary, for example, never received that KB, and without it you don't have this feature.
 
 ## Mode 0: Full Windows MIDI Services
 
-This gives you multi-client support, MIDI loopbacks, Network MIDI 2.0, upcoming BLE MIDI 1.0 and 2.0, etc. If MIDI is working fine on your PC, and you are using the new multi-client features etc. then stick with this mode. It is the default and recommended mode.
+This gives you multi-client support, MIDI loopbacks, Network MIDI 2.0, and Bluetooth LE MIDI. If MIDI is working on your PC, stay here. It's the default and it's what we recommend.
 
-## Mode 1: Legacy API Mode
+## Mode 1: Legacy API mode
 
-This puts you back in the same mode before Windows MIDI Services, with the same limitations and behavior. Ports are not multi-client, new-style and custom port names are not available, and the MIDI Service and wdmaud2.drv are not used. You will have no access to the new built-in loopbacks, Network MIDI 2.0, upcoming Bluetooth LE MIDI, or the ability to use USB MIDI 2.0 devices. 
+This puts your PC back the way it was before Windows MIDI Services, with the same limits and the same behavior. Ports aren't multi-client, new-style and custom port names aren't available, and neither the MIDI service nor `wdmaud2.drv` is used. You lose the built-in loopbacks, Network MIDI 2.0, Bluetooth LE MIDI, and the ability to use USB MIDI 2.0 devices.
 
-We've made this available primarily for two reasons:
+We made this available for two reasons:
 
-- The inMusic driver bug. inMusic (AKAI, Rane, NuMark, Alesis, m-audio, etc.) isn't going to be able to fix their driver for lots of out-of-service controllers and devices, but we want those to function on Windows. If you rely on their devices and drivers, and they are not class-compliant MIDI devices (for example: DJ sets and firewire audio/midi interfaces) then this option eliminates the problem where disconnecting the device while in use will crash MIDI on the PC. There will still be hangs in apps when using these drivers, as there have been in Windows in the past. But these can usually be remedied by plugging and unplugging the device or restarting the app.
-- Certain very old Hercules DJ controllers which use DirectMusic drivers, deprecated with Windows Vista. This provides an option to still use these devices on a modern PC vs sending them to the landfill.
+- **The inMusic driver bug.** inMusic (AKAI, Rane, NuMark, Alesis, M-Audio and others) isn't able to fix their driver for a lot of controllers and devices that are out of service, and we want those to keep working on Windows. If you depend on one of their devices and drivers, and it isn't a class-compliant MIDI device (DJ sets and FireWire audio and MIDI interfaces, for example), this mode gets rid of the crash you see when the device is unplugged while it's in use. Apps can still hang with these drivers, as they always have on Windows, but unplugging and replugging the device or restarting the app usually clears it.
+- **Very old Hercules DJ controllers** that use DirectMusic drivers, which Windows dropped back in Vista. This is a way to keep using them instead of throwing them out.
 
-Although this can be used by anyone, this mode is primarily for DJs who don't need advanced MIDI features, but do need their DJ controller not to lock up the PC if accidentally disconnected during a set.
+Anyone can use this mode, but it's mainly for DJs who don't need the newer MIDI features and do need their controller not to lock up the PC if it gets unplugged mid-set.
 
-This mode loses the following Windows MIDI Services features:
+Here's what you give up:
 
-- Support for multiple applications using the same MIDI device (multi-client)
-- Built-in loopback ports (on x64, use products like loopMIDI, loopBE, etc. instead)
-- Access to upcoming Network MIDI 2.0, BLE MIDI 2.0, and other protocols.
-- Access to MIDI 2.0 devices like Montage M, Native Instruments Komplete Kontrol mk3, StudioLogic SL series, Waldorf Iridium and family, Roland A88, and others when MIDI 2.0 mode is selected on those devices. All of those devices also have a MIDI 1.0 mode, so you will need to use that instead.
+- More than one application using the same MIDI device at the same time (multi-client)
+- Built-in loopback ports (on x64, use something like loopMIDI or loopBE instead)
+- Network MIDI 2.0, Bluetooth LE MIDI, and other new transports
+- MIDI 2.0 devices such as the Montage M, Native Instruments Komplete Kontrol mk3, StudioLogic SL series, Waldorf Iridium family and Roland A88 when they're set to MIDI 2.0 mode. All of those have a MIDI 1.0 mode you can use instead.
 - The new, faster combined MIDI 1.0 and MIDI 2.0 driver
 
-## Mode 2: Hybrid API Mode
+## Mode 2: Hybrid API mode
 
-Use with caution. Devices using MIDI 1.0 drivers are available only through the old APIs. Devices using the new combined MIDI 1.0/MIDI 2.0 driver are available only through the new API. The two do not see each other at all. This will be confusing for many because the MIDI ports seen are going to depend on the driver used and the API used by an app.
+Use this carefully. Devices on MIDI 1.0 drivers are visible only to the old APIs, and devices on the new combined MIDI 1.0 and MIDI 2.0 driver are visible only to the new API. Neither side sees the other. That confuses a lot of people, because which MIDI ports you see depends on both the driver and the app.
 
-In general, we don't recommend this mode unless you have a clear need and a full understanding of the implications.
+We don't recommend this mode unless you have a clear reason and you understand what it does.
 
-# How to change the mode
+## How to change the mode
 
-Ensure you have first read the descriptions above, and not just skipped to this section.
+Read the descriptions above first, rather than skipping straight here.
 
-This will eventually be in the MIDI Settings app, once the feature is fully enabled for everyone. However, for those who need this now, and are familiar with how to use regedit, the information is as follows.
+### Using the MIDI Troubleshooting and Repair app
 
-1. Open `regedit.exe`
-2. Set the location to `Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32`
-3. Right click in that location and add a new **DWORD (32-bit) Value** named: `UseLegacyMidi`
-4. Right click on that value, and choose "Modify"
-5. Set the value: one of the above modes: 0, 1, 2
-6. Reboot for it to take effect.
+> This app starts shipping in Windows near the end of 2026. Right now it's available to developers and technical users through our GitHub repo, [https://aka.ms/midirepo](https://aka.ms/midirepo).
 
-## Change using the MIDI Troubleshooting and Repair App
-
-> Important note: This app will start shipping in Windows near the end of 2026, and is currently available only for developers and technical users through our GitHub repo [https://aka.ms/midirepo](https://aka.ms/midirepo).
-
-The **API mode** page in the MIDI Troubleshooting and Repair app shows which mode this PC is using, describes what each mode gives you and takes away, and lets you change it without editing the registry. Because the setting is machine-wide and only takes effect after a restart, the app writes the value and then asks whether you want to restart now.
+The **API mode** page in the MIDI Troubleshooting and Repair app shows which mode this PC is using, describes what each mode gives you and takes away, and changes it for you without any registry editing. The setting is machine-wide and only takes effect after a restart, so the app writes the value and then asks whether you want to restart now.
 
 ![The API mode page in the MIDI Troubleshooting and Repair app]({{ site.baseurl }}/assets/images/miditroubleshooter.png)
 
-More information: [MIDI Troubleshooting and Repair]({{ site.baseurl }}/tools/miditroubleshooter/)
+For more about the app, see [MIDI Troubleshooting and Repair]({{ site.baseurl }}/tools/miditroubleshooter/).
+
+### Using the registry
+
+If you don't have the app, and you're comfortable with `regedit`:
+
+1. Open `regedit.exe`
+2. Go to `Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Drivers32`
+3. Right-click in that location and add a new **DWORD (32-bit) Value** named `UseLegacyMidi`
+4. Right-click the value and choose "Modify"
+5. Set it to one of the modes above: 0, 1 or 2
+6. Restart the PC for it to take effect
 
 ## Important tips
 
-- Do not use the current MIDI tools (MIDI Console, MIDI Settings) if you are in Legacy Mode. Some of these try to force start the service.
-- Do not use `midicheckservice`
-- To verify that your PC is in Legacy Mode, after rebooting, use a MIDI 1.0 app, and check to see if midisrv is running (either in the Services app, or in the details tab of Task Manager). If you are sending/receiving MIDI and midsrv is not running, you are in legacy mode.
+- Don't use the MIDI tools (MIDI Console, MIDI Settings) while you're in Legacy mode. Some of them try to start the service.
+- Don't use `midicheckservice`.
+- To check that your PC really is in Legacy mode, restart, use a MIDI 1.0 app, and look for `midisrv` in the Services app or on the Details tab of Task Manager. If MIDI is working and `midisrv` is not running, you're in Legacy mode.
 
-# Important note for hardware/software manufacturers and support
+## Note for hardware and software manufacturers, and for support staff
 
-If you want to provide these instructions to your customers, please link to this article rather than copy the text. We will have friendlier ways of changing the API mode in the future, and this document will be updated to reflect those changes.
+If you want to give these instructions to your customers, please link to this article instead of copying the text. Changing the API mode is going to get friendlier, and this page will be updated when it does.
 

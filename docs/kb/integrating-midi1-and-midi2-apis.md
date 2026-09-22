@@ -7,7 +7,7 @@ categories:
   - Developer Guidance
 ---
 
-# Background
+## Background
 
 Before reviewing this, [please see "Mapping MIDI 1.0 Port Concepts" here]({{ site.baseurl }}/kb/mapping-midi1-port-concepts/)
 
@@ -27,11 +27,11 @@ In addition, the presence of the UMP endpoint for a device does not mean that th
 
 Documentation for this namespace is here: [SDK Reference: Legacy Enumeration]({{ site.baseurl }}/sdk-reference/Enumeration/Legacy/)
 
-# Scenarios using both legacy and the modern API.
+## Scenarios that use both the old and the new API
 
 The WinMM MIDI 1.0 API contains limited functionality for identifying devices. Most apps ended up using Port names for identifiers, although some used the `DRV_QUERYDEVICEINTERFACE` message to help find parent hardware devices. Using port names is brittle, especially now that users can rename ports, but I can't argue against 30+ years of application code. :)
 
-Although the intent is to move everyone to the new API, the new MIDI API includes functionality that makes it reasonable to partially update your app to be more robust, without requiring you completely switch over to it completely.
+Although the intent is to move everyone to the new API, the new MIDI API includes functionality that makes it reasonable to partially update your app, without switching over to it completely.
 
 ## Subscribe to port update/remove notifications with the Watcher
 
