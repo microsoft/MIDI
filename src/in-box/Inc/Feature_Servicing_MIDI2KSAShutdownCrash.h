@@ -8,7 +8,7 @@
 
 #pragma once
 
-class Feature_Servicing_MIDI2LegacyTimestamp
+class Feature_Servicing_MIDI2KSAShutdownCrash
 {
 public:
     static bool IsEnabled()

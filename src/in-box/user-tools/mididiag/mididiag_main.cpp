@@ -1440,9 +1440,6 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 // Also, these results are only valid for in-box builds
 // =======================================================
 
-#include "Feature_Servicing_MIDI2WinRtStartup.h"
-#include "Feature_Servicing_MIDI2LegacyTimestamp.h"
-#include "Feature_Servicing_MIDI2DevCaps2.h"
 
 // 11D 2026 (planned)
 #include "Feature_Servicing_MIDIPortDisambiguators.h"
@@ -1504,10 +1501,6 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
 
 #if false
     OutputSectionHeader(MIDIDIAG_SECTION_LABEL_FEATURE_ENABLEMENT);
-
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinRtStartup::IsEnabled(),             L"MIDI2WinRtStartup");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2LegacyTimestamp::IsEnabled(),          L"MIDI2LegacyTimestamp");
-    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2DevCaps2::IsEnabled(),                 L"MIDI2DevCaps2");
 
     // 11d 2026 (planned)
 
