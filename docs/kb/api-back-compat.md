@@ -43,7 +43,7 @@ Each of the features listed is from the viewpoint of an application using the AP
 | Device connect/disconnect/update notifications | ✅ | No | ✅ |
 | **Legacy API Features** | | | |
 | Access WinMM .drv-style drivers (MIDI mappers, virtual synths, etc.) | No | ✅ | No |
-| Use the in-box GS MIDI Synth | No** | ✅ | ✅ |
+| Use the in-box GS MIDI Synth | Preview** | ✅ | ✅ |
 | **MIDI 2.0 Features** | | | |
 | High resolution UMP messages | ✅ | No | No |
 | Send/Receive with MIDI 1.0 USB devices | ✅ | ✅ | ✅ |
@@ -55,18 +55,27 @@ Each of the features listed is from the viewpoint of an application using the AP
 | Create Virtual MIDI Device | ✅ | No | No |
 | Send/Receive with Basic and MIDI 2.0 Loopback MIDI Devices | ✅ | ✅ | ✅ |
 | Create Basic and MIDI 2.0 Loopback MIDI Devices | ✅ | No | No |
-| Send/Receive with Bluetooth MIDI 1.0 | After Initial Release | ❓ | ❓ |
-| Send/Receive with Network MIDI 2.0 | After Initial Release | ✅ | ✅ |
+| Send/Receive with Bluetooth MIDI 1.0 | Preview | Preview | Preview |
+| Send/Receive with Network MIDI 2.0 | Preview | Preview | Preview |
 | **Application Types** | | | |
 | 64-bit Win32 (Desktop) App | ✅ | ✅ | ✅ |
 | 64-bit UWP or Packaged App | ❓ | No | ✅ |
-| 32-bit desktop app | No | ✅ | ❓ |
+| 32-bit desktop app | No | ✅ | ✅ |
 
-\* The Windows MIDI Services API includes converters and helpers to translate between MIDI 1.0 byte format and UMP in client apps. \** Note that we are also investigating and experimenting with how to best incorporate the existing in-box Roland GS / General MIDI Synth into this architecture for apps using the new UMP-based API. We may add an additional transport in the future, specific to this or to another compatible synth. \*** Incoming timestamps have been available in WinMM and WinRT MIDI 1.0 APIs since their introduction.
+\* Messages are translated between the MIDI 1.0 byte format and the MIDI 2.0 UMP format whenever they need to be. The Windows MIDI Services API itself works only in UMP, and includes converters and helpers for applications that need MIDI 1.0 bytes.
 
-Arm64 and x86-64 ("x64" or "amd64") are both equally supported by the 64 bit APIs. There is no support for 32-bit operating systems.
+\** The in-box Roland GS and General MIDI synthesizer is being rebuilt as a Windows MIDI Services transport. It's available now as a preview for developers, and ships in late 2026 with full MIDI 2.0 capabilities.
 
-✅ Feature is supported ❓We are investigating \* Messages are translated between MIDI 1.0 protocol / data format and MIDI 2.0 protocol / UMP format
+\*** Incoming timestamps have been available in the WinMM and WinRT MIDI 1.0 APIs since those APIs were introduced.
+
+What the entries in the table mean:
+
+- ✅ Supported
+- Preview: it works today, but only in the preview releases for developers. It isn't in a consumer release of Windows yet.
+- ❓ We're still investigating
+- No: not supported
+
+Arm64 and x86-64 ("x64" or "amd64") are equally supported by the 64 bit APIs. There is no support for 32-bit operating systems.
 
 ## Reverting to the old MIDI stack
 
