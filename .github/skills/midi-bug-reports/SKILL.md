@@ -12,6 +12,17 @@ description: >
 
 # Filing a Windows MIDI Services bug report
 
+## How the report should read: short, plain, and free of jargon
+
+The two things that make an agent-written report useless are jargon and length. Fix both before you worry about anything else.
+
+- **Be brief.** Include the detail a developer needs and stop. Do not bury a fact in a paragraph of setup, do not restate the problem three ways, and do not summarize what you just wrote. A reader should be able to find the failure, the scope and the repro without skimming.
+- **Be technical, not clever.** Component names, error codes, message contents and driver versions are all welcome. Figures of speech are not. Do not write *load-bearing*, *smoking gun*, *deep dive*, *surface it*, *unpack*, *low-hanging fruit*, *rabbit hole* or *move the needle*. Say what actually happens: "removing it breaks device arrival", "this is the proof", "show it in the UI".
+- **Use the plain word.** If an everyday word means the same thing as the impressive one, use the everyday one.
+- **Do not hard-wrap the prose.** One line per paragraph, per bullet and per table row. The full rule is under *Repository rules* below, and it applies to reports filed against other repositories too.
+
+## Getting the claim right
+
 Three mistakes account for nearly every unusable report. Each has a hard rule below. Do not skip a rule because the failure "obviously" applies everywhere — that judgment is exactly what these rules exist to block.
 
 ## Rule 1: scope the claim to what you actually tested

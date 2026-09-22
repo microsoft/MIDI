@@ -61,6 +61,14 @@ and documentation. en-GB spellings are defects, not style preferences. Full rule
 [.github/instructions/en-us-spelling.instructions.md](.github/instructions/en-us-spelling.instructions.md).
 Check your work with `build/check_en_us_spelling.ps1 -Path <file or folder>`.
 
+**Never hard-wrap markdown.** A paragraph is one line, however long. So is a bullet, including its continuation text, and so is a table row. Put newlines only between blocks — between paragraphs, between bullets, and around headings and code fences. Code fences and front matter keep their own line breaks. There is no column limit. This applies to every markdown file here, to GitHub issues and pull request descriptions, and to reports filed against other repositories.
+
+**Public documentation is written for an eighth grader.** Short sentences, everyday words, and the plain term rather than the clever one. Contractions are welcome. Explain why a setting matters, not just what it is.
+
+**Leave the jargon out.** That includes the figures of speech agents reach for by reflex: *load-bearing*, *smoking gun*, *deep dive*, *surface it*, *unpack*, *low-hanging fruit*, *rabbit hole*, *move the needle*. Write what actually happens instead — "removing this breaks every published link", "this is the proof", "show it in the UI".
+
+**Bug reports get the same rules, plus one more: be brief.** Technical language is fine in a bug report. Length is not. Include the detail a developer needs and stop. Do not bury a fact in a paragraph of setup, restate the problem three ways, or summarize what you just wrote. Jargon and length are the two things that make an agent-written bug report useless.
+
 ## Writing or reviewing code
 
 Read [.github/skills/midi-contributing/SKILL.md](.github/skills/midi-contributing/SKILL.md) before

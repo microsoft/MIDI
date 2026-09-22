@@ -2,6 +2,8 @@
 
 Fill every row. `Not tested` is an acceptable value; a missing row is not.
 
+Keep what you write in these sections short and plain. Technical detail belongs here; jargon and padding do not. Leave out figures of speech such as *load-bearing*, *smoking gun*, *deep dive* or *surface it*, and say what actually happens instead.
+
 Do not hard-wrap the prose you put in these sections. Keep each paragraph, bullet and table row on a single line, however long, and use newlines only between blocks. Code fences keep their own line breaks.
 
 ---
