@@ -15,8 +15,6 @@
 
 #include "MidiPnpUtilities.h"
 #include "midi_ksa_usb_strings.h"
-
-#include "Feature_Servicing_MIDI2DevCaps2.h"
 #include "Feature_Servicing_MIDI2CustomOutgoingLatency.h"
 #include "Feature_Servicing_MIDI2PortNamingRework.h"
 
@@ -469,19 +467,16 @@ CMidi2KSAggregateMidiEndpointManager3::DeviceCreateMidiUmpEndpoint(
         pinMapPropertyData,
         groupTerminalBlocks));
 
-    if (Feature_Servicing_MIDI2DevCaps2::IsEnabled())
+    // Write out the KSComponentId information, if available.
+    if (endpointDefinition->KsComponentIdSize > 0)
     {
-        // Write out the KSComponentId information, if available.
-        if (endpointDefinition->KsComponentIdSize > 0)
-        {
-            interfaceDevProperties.push_back({ { PKEY_MIDI_KsComponentId, DEVPROP_STORE_SYSTEM, nullptr },
-                DEVPROP_TYPE_BINARY, static_cast<uint32_t>(endpointDefinition->KsComponentIdSize), &endpointDefinition->KsComponentId });
-        }
-        else
-        {
-            interfaceDevProperties.push_back({ { PKEY_MIDI_KsComponentId, DEVPROP_STORE_SYSTEM, nullptr },
-                DEVPROP_TYPE_EMPTY, 0, nullptr });
-        }
+        interfaceDevProperties.push_back({ { PKEY_MIDI_KsComponentId, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_BINARY, static_cast<uint32_t>(endpointDefinition->KsComponentIdSize), &endpointDefinition->KsComponentId });
+    }
+    else
+    {
+        interfaceDevProperties.push_back({ { PKEY_MIDI_KsComponentId, DEVPROP_STORE_SYSTEM, nullptr },
+            DEVPROP_TYPE_EMPTY, 0, nullptr });
     }
 
     interfaceDevProperties.push_back({ { DEVPKEY_KsAggMidiGroupPinMap, DEVPROP_STORE_SYSTEM, nullptr },
@@ -993,20 +988,13 @@ CMidi2KSAggregateMidiEndpointManager3::GetKSDriverSuppliedName(HANDLE hInstantia
         return hrComponent;
     }
 
-    if (Feature_Servicing_MIDI2DevCaps2::IsEnabled())
+    if (countBytesReturned == sizeof(KSCOMPONENTID))
     {
-        if (countBytesReturned == sizeof(KSCOMPONENTID))
-        {
-            memcpy(&ksComponentId, &componentId, countBytesReturned);
-            ksComponentIdSize = (DWORD) countBytesReturned;
-        }
+        memcpy(&ksComponentId, &componentId, countBytesReturned);
+        ksComponentIdSize = (DWORD) countBytesReturned;
+    }
 
-        // componentId.Name, this is the GUID which points to the registry location with the driver-supplied name
-    }
-    else
-    {
-        componentId.Name;   // this is the GUID which points to the registry location with the driver-supplied name
-    }
+    // componentId.Name, this is the GUID which points to the registry location with the driver-supplied name
 
     if (componentId.Name != GUID_NULL)
     {
@@ -2957,13 +2945,10 @@ CMidi2KSAggregateMidiEndpointManager3::ProcessFilterDeviceInterfaceAdded(
             RETURN_IF_FAILED(CreatePendingEndpointDefinitionForFilterDevice(filterDevice, endpointDefinition));
             RETURN_HR_IF_NULL(E_POINTER, endpointDefinition);
 
-            if (Feature_Servicing_MIDI2DevCaps2::IsEnabled())
+            if (ksComponentIdSize > 0)
             {
-                if (ksComponentIdSize > 0)
-                {
-                    memcpy(&endpointDefinition->KsComponentId, &ksComponentId, ksComponentIdSize);
-                    endpointDefinition->KsComponentIdSize = ksComponentIdSize;
-                }
+                memcpy(&endpointDefinition->KsComponentId, &ksComponentId, ksComponentIdSize);
+                endpointDefinition->KsComponentIdSize = ksComponentIdSize;
             }
 
             endpointDefinition->LockedForUpdating = true;
@@ -3758,6 +3743,17 @@ CMidi2KSAggregateMidiEndpointManager3::Shutdown()
         catch (...) {}
     }
 
+    // an aborted watcher never reports Stopped, so don't wait out the full timeout on it
+    uint8_t tries{ 0 };
+    while (m_watcher &&
+           m_watcher.Status() != DeviceWatcherStatus::Stopped &&
+           m_watcher.Status() != DeviceWatcherStatus::Aborted &&
+           tries < 50)
+    {
+        Sleep(100);
+        tries++;
+    }
+
     // wake and join the worker before touching any of the collections it uses,
     // otherwise the jthread member would join during destruction instead
     m_endpointCreationThread.request_stop();
@@ -3791,16 +3787,6 @@ CMidi2KSAggregateMidiEndpointManager3::Shutdown()
         m_allParentDeviceDefinitions.clear();
     }
 
-    // an aborted watcher never reports Stopped, so don't wait out the full timeout on it
-    uint8_t tries{ 0 };
-    while (m_watcher &&
-           m_watcher.Status() != DeviceWatcherStatus::Stopped &&
-           m_watcher.Status() != DeviceWatcherStatus::Aborted &&
-           tries < 50)
-    {
-        Sleep(100);
-        tries++;
-    }
 
     TraceLoggingWrite(
         MidiKSAggregateTransportTelemetryProvider::Provider(),
