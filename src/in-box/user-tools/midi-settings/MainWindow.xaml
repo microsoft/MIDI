@@ -493,6 +493,20 @@
                         </StackPanel>
                     </Button>
 
+                    <Button x:Name="ClockButton"
+                            x:Uid="ClockButton"
+                            Style="{StaticResource ToolButtonStyle}"
+                            Click="OnClockClick">
+                        <StackPanel Spacing="4" HorizontalAlignment="Center">
+                            <Image x:Name="ClockIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                            <TextBlock x:Uid="ClockButtonText"
+                                       Text="MIDI Clock"
+                                       Style="{StaticResource ToolButtonTextStyle}" />
+                        </StackPanel>
+                    </Button>
+
+                    <Rectangle x:Name="UtilityToolsSeparator" Style="{StaticResource ToolSeparatorStyle}" />
+
                     <Button x:Name="TroubleshooterButton"
                             x:Uid="TroubleshooterButton"
                             Style="{StaticResource ToolButtonStyle}"
@@ -505,7 +519,7 @@
                         </StackPanel>
                     </Button>
 
-                    <Rectangle x:Name="UtilityToolsSeparator" Style="{StaticResource ToolSeparatorStyle}" />
+                    <Rectangle x:Name="TroubleshooterSeparator" Style="{StaticResource ToolSeparatorStyle}" />
 
                     <Button x:Name="GlobalSettingsButton"
                             x:Uid="GlobalSettingsButton"

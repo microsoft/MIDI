@@ -31,6 +31,7 @@ namespace midisettings
             { MidiTool::SysEx,          L"SysEx",           L"midisysextool.exe" },
             { MidiTool::ScratchPad,     L"ScratchPad",      L"midiscratchpad.exe" },
             { MidiTool::Keyboard,       L"Keyboard",        L"midikeyboard.exe" },
+            { MidiTool::Clock,          L"Clock",           L"midiclock.exe" },
             { MidiTool::Troubleshooter, L"Troubleshooter",  L"miditroubleshooter.exe" },
             { MidiTool::Monitor,        L"Monitor",         L"midi2monitor.exe" },
         };

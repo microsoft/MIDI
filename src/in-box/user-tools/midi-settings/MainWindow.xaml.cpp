@@ -240,6 +240,7 @@ namespace winrt::midisettings::implementation
             ApplyToolButton(MonitorButton(), MonitorIcon(), native::MidiTool::Monitor);
             ApplyToolButton(ScratchPadButton(), ScratchPadIcon(), native::MidiTool::ScratchPad);
             ApplyToolButton(KeyboardButton(), KeyboardIcon(), native::MidiTool::Keyboard);
+            ApplyToolButton(ClockButton(), ClockIcon(), native::MidiTool::Clock);
             ApplyToolButton(TroubleshooterButton(), TroubleshooterIcon(), native::MidiTool::Troubleshooter);
 
             // A separator with nothing on one side of it reads as a stray line, so each one
@@ -255,12 +256,18 @@ namespace winrt::midisettings::implementation
                 native::GetToolLocation(native::MidiTool::Monitor).Installed ||
                 native::GetToolLocation(native::MidiTool::ScratchPad).Installed ||
                 native::GetToolLocation(native::MidiTool::Keyboard).Installed ||
+                native::GetToolLocation(native::MidiTool::Clock).Installed;
+
+            auto const troubleshooterInstalled =
                 native::GetToolLocation(native::MidiTool::Troubleshooter).Installed;
 
-            SetupToolsSeparator().Visibility(setupInstalled && utilitiesInstalled ?
+            SetupToolsSeparator().Visibility(setupInstalled && (utilitiesInstalled || troubleshooterInstalled) ?
                 xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
-            UtilityToolsSeparator().Visibility(setupInstalled || utilitiesInstalled ?
+            UtilityToolsSeparator().Visibility((setupInstalled || utilitiesInstalled) && troubleshooterInstalled ?
+                xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            TroubleshooterSeparator().Visibility(setupInstalled || utilitiesInstalled || troubleshooterInstalled ?
                 xaml::Visibility::Visible : xaml::Visibility::Collapsed);
         }
         MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to build the toolbar.")
@@ -340,6 +347,12 @@ namespace winrt::midisettings::implementation
     void MainWindow::OnKeyboardClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
         native::LaunchTool(native::MidiTool::Keyboard);
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnClockClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        native::LaunchTool(native::MidiTool::Clock);
     }
 
     _Use_decl_annotations_
