@@ -26,7 +26,6 @@
 
 #include "midi_timestamp.h"
 
-#include "Feature_Servicing_MIDI2LegacyTimestamp.h"
 #include "Feature_Servicing_MIDI2KSOutputWriteHang.h"
 #include "Feature_Servicing_MIDI2KSInputRemovalDeadlock.h"
 
@@ -522,13 +521,10 @@ KSMidiOutDevice::WritePacketMidiData(
         return WriteAbandonablePacketMidiData(midiData, length, position);
     }
 
-    if (Feature_Servicing_MIDI2LegacyTimestamp::IsEnabled())
-    {
-        // For legacy midi 1, the position is not provided to
-        // the driver via either the PresentationTime, or the
-        // TimeDetaMs
-        UNREFERENCED_PARAMETER(position);
-    }
+    // For legacy midi 1, the position is not provided to
+    // the driver via either the PresentationTime, or the
+    // TimeDetaMs
+    UNREFERENCED_PARAMETER(position);
 
     KSSTREAM_HEADER kssh {0};
     KSMUSICFORMAT *event = nullptr;
@@ -559,12 +555,6 @@ KSMidiOutDevice::WritePacketMidiData(
     // is always 1.
     kssh.PresentationTime.Numerator = 1;
     kssh.PresentationTime.Denominator = 1;
-
-    if (!Feature_Servicing_MIDI2LegacyTimestamp::IsEnabled())
-    {
-        // for legacy midi 1, if the position provided was 0, use 0
-        kssh.PresentationTime.Time = position;
-    }
 
     // the length here is the allocated size of event, so 
     // header structure + data + padding
@@ -626,14 +616,7 @@ KSMidiOutDevice::WriteAbandonablePacketMidiData(
     context->Header.PresentationTime.Numerator = 1;
     context->Header.PresentationTime.Denominator = 1;
 
-    if (!Feature_Servicing_MIDI2LegacyTimestamp::IsEnabled())
-    {
-        context->Header.PresentationTime.Time = position;
-    }
-    else
-    {
-        UNREFERENCED_PARAMETER(position);
-    }
+    UNREFERENCED_PARAMETER(position);
 
     context->Header.DataUsed = context->Header.FrameExtent = totalLength;
     context->Header.Data = context->Payload.get();
@@ -924,14 +907,7 @@ KSMidiInDevice::ReadAbandonableMidiData()
 
             if (m_MidiInCallback && payloadSize > 0)
             {
-                if (Feature_Servicing_MIDI2LegacyTimestamp::IsEnabled())
-                {
-                    LOG_IF_FAILED(m_MidiInCallback->Callback(MessageOptionFlags_None, data, payloadSize, m_StartTime + (context->Event.ksMusicFormat.TimeDeltaMs * (m_qpcFrequency / MILLISECONDS_PER_SECOND)), m_MidiInCallbackContext));
-                }
-                else
-                {
-                    LOG_IF_FAILED(m_MidiInCallback->Callback(MessageOptionFlags_None, data, payloadSize, context->Header.PresentationTime.Time, m_MidiInCallbackContext));
-                }
+                LOG_IF_FAILED(m_MidiInCallback->Callback(MessageOptionFlags_None, data, payloadSize, m_StartTime + (context->Event.ksMusicFormat.TimeDeltaMs * (m_qpcFrequency / MILLISECONDS_PER_SECOND)), m_MidiInCallbackContext));
             }
         }
         else if (hr == HRESULT_FROM_WIN32(ERROR_OPERATION_ABORTED))
@@ -997,18 +973,11 @@ KSMidiInDevice::SendRequestToDriver()
             // is closed and the SyncIoctl returns, it may succeed, but have no data.
             if (m_MidiInCallback && payloadSize > 0)
             {
-                if (Feature_Servicing_MIDI2LegacyTimestamp::IsEnabled())
-                {
-                    // For MidiIn, PresentationTime from the KSSTREAM_HEADER is empty, and legacy drivers provide the TimeDeltaMs
-                    // in the ksmusicformat, which is the time elapsed from the start of the pin for the given buffer.
-                    // 
-                    // convert the delta to HNS time, and then add it to the start time to get the QPC that it would have arrived.
-                    LOG_IF_FAILED(m_MidiInCallback->Callback(MessageOptionFlags_None, data, payloadSize, m_StartTime + (event.ksMusicFormat.TimeDeltaMs * (m_qpcFrequency / MILLISECONDS_PER_SECOND)), m_MidiInCallbackContext));
-                }
-                else
-                {
-                    LOG_IF_FAILED(m_MidiInCallback->Callback(MessageOptionFlags_None, data, payloadSize, kssh.PresentationTime.Time, m_MidiInCallbackContext));
-                }
+                // For MidiIn, PresentationTime from the KSSTREAM_HEADER is empty, and legacy drivers provide the TimeDeltaMs
+                // in the ksmusicformat, which is the time elapsed from the start of the pin for the given buffer.
+                // 
+                // convert the delta to HNS time, and then add it to the start time to get the QPC that it would have arrived.
+                LOG_IF_FAILED(m_MidiInCallback->Callback(MessageOptionFlags_None, data, payloadSize, m_StartTime + (event.ksMusicFormat.TimeDeltaMs * (m_qpcFrequency / MILLISECONDS_PER_SECOND)), m_MidiInCallbackContext));
             }
         }
         else
@@ -1085,18 +1054,15 @@ KSMidiInDevice::Initialize(
     RETURN_HR_IF(E_INVALIDARG, nullptr == callback);
     RETURN_IF_FAILED(KSMidiDevice::Initialize(device, filter, pinId, transport, bufferSize, mmcssTaskId, optionFlags, MidiFlowIn, callback, context));
 
-    if (Feature_Servicing_MIDI2LegacyTimestamp::IsEnabled())
-    {
-        // Start time for the port, the timestamps returned in TimeDeltaMs by
-        // legacy drivers is relative to the start time
-        LARGE_INTEGER qpc{ 0 };
+    // Start time for the port, the timestamps returned in TimeDeltaMs by
+    // legacy drivers is relative to the start time
+    LARGE_INTEGER qpc{ 0 };
 
-        QueryPerformanceFrequency(&qpc);
-        m_qpcFrequency = qpc.QuadPart;
+    QueryPerformanceFrequency(&qpc);
+    m_qpcFrequency = qpc.QuadPart;
 
-        QueryPerformanceCounter(&qpc);
-        m_StartTime = qpc.QuadPart;
-    }
+    QueryPerformanceCounter(&qpc);
+    m_StartTime = qpc.QuadPart;
 
     // Spin up the worker thread if using IOCTL_KS_READ_STREAM
     if (m_Transport == MidiTransport_StandardByteStream)
