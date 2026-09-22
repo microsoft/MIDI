@@ -29,15 +29,28 @@
 
             <!-- One tool button: the real icon of the installed executable above its name, so
                  the toolbar matches what the customer sees in the Start Menu. Fixed height,
-                 because the labels are a mix of one and two lines. -->
+                 because the labels are a mix of one and two lines.
+                 The widths and margins of these four styles are mirrored by the kToolbar*
+                 constants in MainWindow.xaml.cpp, which decide what fits on the toolbar. -->
             <Style x:Key="ToolButtonStyle" TargetType="Button">
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="BorderThickness" Value="0" />
                 <Setter Property="Padding" Value="8,6,8,6" />
-                <Setter Property="MinWidth" Value="92" />
+                <Setter Property="Width" Value="92" />
                 <Setter Property="Height" Value="74" />
                 <!-- so the icons line up across the row whether the label wraps or not -->
                 <Setter Property="VerticalContentAlignment" Value="Top" />
+            </Style>
+
+            <!-- Icons only. Used when the customer turns the labels off, which is also how a
+                 narrow window gets all of its tools back onto the bar. -->
+            <Style x:Key="ToolButtonCompactStyle" TargetType="Button">
+                <Setter Property="Background" Value="Transparent" />
+                <Setter Property="BorderThickness" Value="0" />
+                <Setter Property="Padding" Value="8,6,8,6" />
+                <Setter Property="Width" Value="40" />
+                <Setter Property="Height" Value="40" />
+                <Setter Property="VerticalContentAlignment" Value="Center" />
             </Style>
 
             <Style x:Key="ToolButtonTextStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
@@ -55,6 +68,11 @@
                 <Setter Property="Margin" Value="6,0,6,0" />
                 <Setter Property="VerticalAlignment" Value="Center" />
                 <Setter Property="Fill" Value="{ThemeResource DividerStrokeColorDefaultBrush}" />
+            </Style>
+
+            <Style x:Key="ToolSeparatorCompactStyle" TargetType="Rectangle" BasedOn="{StaticResource ToolSeparatorStyle}">
+                <Setter Property="Height" Value="24" />
+                <Setter Property="Margin" Value="4,0,4,0" />
             </Style>
 
             <!-- One surface per endpoint, shared by the card and the list row so the two views
@@ -384,142 +402,186 @@
             </ToggleButton>
         </Grid>
 
-        <!-- =============================== Application toolbar =========================== -->
+        <!-- =============================== Application toolbar ===========================
+             Three parts: the tools, which give up their labels and then move into the overflow
+             menu as the window narrows; the overflow button; and the two commands that belong
+             to this app, pinned to the right end where they are always reachable. -->
         <Border Grid.Row="1"
                 BorderThickness="0,1,0,1"
                 BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}"
                 Padding="8,4,8,4">
-            <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                          VerticalScrollBarVisibility="Disabled"
-                          HorizontalScrollMode="Auto"
-                          VerticalScrollMode="Disabled">
-                <StackPanel x:Name="ToolButtonPanel" Orientation="Horizontal" Spacing="2">
+            <Border.ContextFlyout>
+                <MenuFlyout>
+                    <ToggleMenuFlyoutItem x:Name="ToolbarLabelsMenuItem"
+                                          x:Uid="ToolbarLabelsMenuItem"
+                                          Text="Show button labels"
+                                          Click="OnToolbarLabelsClick" />
+                </MenuFlyout>
+            </Border.ContextFlyout>
 
-                    <Button x:Name="LoopbackSetupButton"
-                            x:Uid="LoopbackSetupButton"
-                            Style="{StaticResource ToolButtonStyle}"
-                            Click="OnLoopbackSetupClick">
-                        <StackPanel Spacing="4" HorizontalAlignment="Center">
-                            <Image x:Name="LoopbackSetupIcon" Width="24" Height="24" HorizontalAlignment="Center" />
-                            <TextBlock x:Uid="LoopbackSetupButtonText"
-                                       Text="Loopback Setup"
-                                       Style="{StaticResource ToolButtonTextStyle}" />
-                        </StackPanel>
-                    </Button>
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-                    <Button x:Name="BluetoothSetupButton"
-                            x:Uid="BluetoothSetupButton"
-                            Style="{StaticResource ToolButtonStyle}"
-                            Click="OnBluetoothSetupClick">
-                        <StackPanel Spacing="4" HorizontalAlignment="Center">
-                            <Image x:Name="BluetoothSetupIcon" Width="24" Height="24" HorizontalAlignment="Center" />
-                            <TextBlock x:Uid="BluetoothSetupButtonText"
-                                       Text="Bluetooth Setup"
-                                       Style="{StaticResource ToolButtonTextStyle}" />
-                        </StackPanel>
-                    </Button>
+                <Grid x:Name="ToolButtonHost" Grid.Column="0" SizeChanged="OnToolbarHostSizeChanged">
+                    <StackPanel x:Name="ToolButtonPanel"
+                                Orientation="Horizontal"
+                                Spacing="2"
+                                HorizontalAlignment="Left">
 
-                    <Button x:Name="NetworkSetupButton"
-                            x:Uid="NetworkSetupButton"
-                            Style="{StaticResource ToolButtonStyle}"
-                            Click="OnNetworkSetupClick">
-                        <StackPanel Spacing="4" HorizontalAlignment="Center">
-                            <Image x:Name="NetworkSetupIcon" Width="24" Height="24" HorizontalAlignment="Center" />
-                            <TextBlock x:Uid="NetworkSetupButtonText"
-                                       Text="Network Setup"
-                                       Style="{StaticResource ToolButtonTextStyle}" />
-                        </StackPanel>
-                    </Button>
+                        <Button x:Name="LoopbackSetupButton"
+                                x:Uid="LoopbackSetupButton"
+                                Style="{StaticResource ToolButtonStyle}"
+                                Click="OnLoopbackSetupClick">
+                            <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                <Image x:Name="LoopbackSetupIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="LoopbackSetupLabel"
+                                           x:Uid="LoopbackSetupButtonText"
+                                           Text="Loopback Setup"
+                                           Style="{StaticResource ToolButtonTextStyle}" />
+                            </StackPanel>
+                        </Button>
 
-                    <Rectangle x:Name="SetupToolsSeparator" Style="{StaticResource ToolSeparatorStyle}" />
+                        <Button x:Name="BluetoothSetupButton"
+                                x:Uid="BluetoothSetupButton"
+                                Style="{StaticResource ToolButtonStyle}"
+                                Click="OnBluetoothSetupClick">
+                            <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                <Image x:Name="BluetoothSetupIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="BluetoothSetupLabel"
+                                           x:Uid="BluetoothSetupButtonText"
+                                           Text="Bluetooth Setup"
+                                           Style="{StaticResource ToolButtonTextStyle}" />
+                            </StackPanel>
+                        </Button>
 
-                    <Button x:Name="PatchbayButton"
-                            x:Uid="PatchbayButton"
-                            Style="{StaticResource ToolButtonStyle}"
-                            Click="OnPatchbayClick">
-                        <StackPanel Spacing="4" HorizontalAlignment="Center">
-                            <Image x:Name="PatchbayIcon" Width="24" Height="24" HorizontalAlignment="Center" />
-                            <TextBlock x:Uid="PatchbayButtonText"
-                                       Text="Patchbay"
-                                       Style="{StaticResource ToolButtonTextStyle}" />
-                        </StackPanel>
-                    </Button>
+                        <Button x:Name="NetworkSetupButton"
+                                x:Uid="NetworkSetupButton"
+                                Style="{StaticResource ToolButtonStyle}"
+                                Click="OnNetworkSetupClick">
+                            <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                <Image x:Name="NetworkSetupIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="NetworkSetupLabel"
+                                           x:Uid="NetworkSetupButtonText"
+                                           Text="Network Setup"
+                                           Style="{StaticResource ToolButtonTextStyle}" />
+                            </StackPanel>
+                        </Button>
 
-                    <Button x:Name="SysExButton"
-                            x:Uid="SysExButton"
-                            Style="{StaticResource ToolButtonStyle}"
-                            Click="OnSysExClick">
-                        <StackPanel Spacing="4" HorizontalAlignment="Center">
-                            <Image x:Name="SysExIcon" Width="24" Height="24" HorizontalAlignment="Center" />
-                            <TextBlock x:Uid="SysExButtonText"
-                                       Text="SysEx Send/Receive"
-                                       Style="{StaticResource ToolButtonTextStyle}" />
-                        </StackPanel>
-                    </Button>
+                        <Rectangle x:Name="SetupToolsSeparator" Style="{StaticResource ToolSeparatorStyle}" />
 
-                    <Button x:Name="MonitorButton"
-                            x:Uid="MonitorButton"
-                            Style="{StaticResource ToolButtonStyle}"
-                            Click="OnMonitorClick">
-                        <StackPanel Spacing="4" HorizontalAlignment="Center">
-                            <Image x:Name="MonitorIcon" Width="24" Height="24" HorizontalAlignment="Center" />
-                            <TextBlock x:Uid="MonitorButtonText"
-                                       Text="Monitor"
-                                       Style="{StaticResource ToolButtonTextStyle}" />
-                        </StackPanel>
-                    </Button>
+                        <Button x:Name="PatchbayButton"
+                                x:Uid="PatchbayButton"
+                                Style="{StaticResource ToolButtonStyle}"
+                                Click="OnPatchbayClick">
+                            <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                <Image x:Name="PatchbayIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="PatchbayLabel"
+                                           x:Uid="PatchbayButtonText"
+                                           Text="Patchbay"
+                                           Style="{StaticResource ToolButtonTextStyle}" />
+                            </StackPanel>
+                        </Button>
 
-                    <Button x:Name="ScratchPadButton"
-                            x:Uid="ScratchPadButton"
-                            Style="{StaticResource ToolButtonStyle}"
-                            Click="OnScratchPadClick">
-                        <StackPanel Spacing="4" HorizontalAlignment="Center">
-                            <Image x:Name="ScratchPadIcon" Width="24" Height="24" HorizontalAlignment="Center" />
-                            <TextBlock x:Uid="ScratchPadButtonText"
-                                       Text="Scratch Pad"
-                                       Style="{StaticResource ToolButtonTextStyle}" />
-                        </StackPanel>
-                    </Button>
+                        <Button x:Name="SysExButton"
+                                x:Uid="SysExButton"
+                                Style="{StaticResource ToolButtonStyle}"
+                                Click="OnSysExClick">
+                            <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                <Image x:Name="SysExIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="SysExLabel"
+                                           x:Uid="SysExButtonText"
+                                           Text="SysEx Send/Receive"
+                                           Style="{StaticResource ToolButtonTextStyle}" />
+                            </StackPanel>
+                        </Button>
 
-                    <Button x:Name="KeyboardButton"
-                            x:Uid="KeyboardButton"
-                            Style="{StaticResource ToolButtonStyle}"
-                            Click="OnKeyboardClick">
-                        <StackPanel Spacing="4" HorizontalAlignment="Center">
-                            <Image x:Name="KeyboardIcon" Width="24" Height="24" HorizontalAlignment="Center" />
-                            <TextBlock x:Uid="KeyboardButtonText"
-                                       Text="Virtual Keyboard"
-                                       Style="{StaticResource ToolButtonTextStyle}" />
-                        </StackPanel>
-                    </Button>
+                        <Button x:Name="MonitorButton"
+                                x:Uid="MonitorButton"
+                                Style="{StaticResource ToolButtonStyle}"
+                                Click="OnMonitorClick">
+                            <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                <Image x:Name="MonitorIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="MonitorLabel"
+                                           x:Uid="MonitorButtonText"
+                                           Text="Monitor"
+                                           Style="{StaticResource ToolButtonTextStyle}" />
+                            </StackPanel>
+                        </Button>
 
-                    <Button x:Name="ClockButton"
-                            x:Uid="ClockButton"
-                            Style="{StaticResource ToolButtonStyle}"
-                            Click="OnClockClick">
-                        <StackPanel Spacing="4" HorizontalAlignment="Center">
-                            <Image x:Name="ClockIcon" Width="24" Height="24" HorizontalAlignment="Center" />
-                            <TextBlock x:Uid="ClockButtonText"
-                                       Text="MIDI Clock"
-                                       Style="{StaticResource ToolButtonTextStyle}" />
-                        </StackPanel>
-                    </Button>
+                        <Button x:Name="ScratchPadButton"
+                                x:Uid="ScratchPadButton"
+                                Style="{StaticResource ToolButtonStyle}"
+                                Click="OnScratchPadClick">
+                            <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                <Image x:Name="ScratchPadIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="ScratchPadLabel"
+                                           x:Uid="ScratchPadButtonText"
+                                           Text="Scratch Pad"
+                                           Style="{StaticResource ToolButtonTextStyle}" />
+                            </StackPanel>
+                        </Button>
 
-                    <Rectangle x:Name="UtilityToolsSeparator" Style="{StaticResource ToolSeparatorStyle}" />
+                        <Button x:Name="KeyboardButton"
+                                x:Uid="KeyboardButton"
+                                Style="{StaticResource ToolButtonStyle}"
+                                Click="OnKeyboardClick">
+                            <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                <Image x:Name="KeyboardIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="KeyboardLabel"
+                                           x:Uid="KeyboardButtonText"
+                                           Text="Virtual Keyboard"
+                                           Style="{StaticResource ToolButtonTextStyle}" />
+                            </StackPanel>
+                        </Button>
 
-                    <Button x:Name="TroubleshooterButton"
-                            x:Uid="TroubleshooterButton"
-                            Style="{StaticResource ToolButtonStyle}"
-                            Click="OnTroubleshooterClick">
-                        <StackPanel Spacing="4" HorizontalAlignment="Center">
-                            <Image x:Name="TroubleshooterIcon" Width="24" Height="24" HorizontalAlignment="Center" />
-                            <TextBlock x:Uid="TroubleshooterButtonText"
-                                       Text="Troubleshoot and Fix"
-                                       Style="{StaticResource ToolButtonTextStyle}" />
-                        </StackPanel>
-                    </Button>
+                        <Button x:Name="ClockButton"
+                                x:Uid="ClockButton"
+                                Style="{StaticResource ToolButtonStyle}"
+                                Click="OnClockClick">
+                            <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                <Image x:Name="ClockIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="ClockLabel"
+                                           x:Uid="ClockButtonText"
+                                           Text="MIDI Clock"
+                                           Style="{StaticResource ToolButtonTextStyle}" />
+                            </StackPanel>
+                        </Button>
 
-                    <Rectangle x:Name="TroubleshooterSeparator" Style="{StaticResource ToolSeparatorStyle}" />
+                        <Rectangle x:Name="UtilityToolsSeparator" Style="{StaticResource ToolSeparatorStyle}" />
+
+                        <Button x:Name="TroubleshooterButton"
+                                x:Uid="TroubleshooterButton"
+                                Style="{StaticResource ToolButtonStyle}"
+                                Click="OnTroubleshooterClick">
+                            <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                <Image x:Name="TroubleshooterIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="TroubleshooterLabel"
+                                           x:Uid="TroubleshooterButtonText"
+                                           Text="Troubleshoot and Fix"
+                                           Style="{StaticResource ToolButtonTextStyle}" />
+                            </StackPanel>
+                        </Button>
+
+                        <!-- follows the last tool that fit, so the row stays together on the left.
+                             Top aligned so the glyph lines up with the icons beside it. -->
+                        <Button x:Name="ToolOverflowButton"
+                                x:Uid="ToolOverflowButton"
+                                VerticalAlignment="Top"
+                                Style="{StaticResource ToolButtonCompactStyle}"
+                                Visibility="Collapsed">
+                            <FontIcon Glyph="&#xE712;" FontSize="16" />
+                            <Button.Flyout>
+                                <MenuFlyout x:Name="ToolOverflowFlyout" Placement="BottomEdgeAlignedLeft" />
+                            </Button.Flyout>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+                    <Rectangle x:Name="PinnedCommandsSeparator" Style="{StaticResource ToolSeparatorStyle}" />
 
                     <Button x:Name="GlobalSettingsButton"
                             x:Uid="GlobalSettingsButton"
@@ -527,24 +589,27 @@
                             Click="OnGlobalSettingsClick">
                         <StackPanel Spacing="4" HorizontalAlignment="Center">
                             <FontIcon Glyph="&#xE774;" FontSize="20" HorizontalAlignment="Center" Height="24" />
-                            <TextBlock x:Uid="GlobalSettingsButtonText"
+                            <TextBlock x:Name="GlobalSettingsLabel"
+                                       x:Uid="GlobalSettingsButtonText"
                                        Text="Global MIDI Settings"
                                        Style="{StaticResource ToolButtonTextStyle}" />
                         </StackPanel>
                     </Button>
+
                     <Button x:Name="NotificationsButton"
                             x:Uid="NotificationsButton"
                             Style="{StaticResource ToolButtonStyle}"
                             Click="OnNotificationsClick">
                         <StackPanel Spacing="4" HorizontalAlignment="Center">
                             <FontIcon Glyph="&#xEA8F;" FontSize="20" HorizontalAlignment="Center" Height="24" />
-                            <TextBlock x:Uid="NotificationsButtonText"
+                            <TextBlock x:Name="NotificationsLabel"
+                                       x:Uid="NotificationsButtonText"
                                        Text="Notifications"
                                        Style="{StaticResource ToolButtonTextStyle}" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
-            </ScrollViewer>
+            </Grid>
         </Border>
 
         <!-- ================================ Endpoints ==================================== -->

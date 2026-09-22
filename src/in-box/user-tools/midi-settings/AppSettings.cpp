@@ -15,6 +15,7 @@ namespace midisettings
         constexpr wchar_t SettingsKeyPath[] = LR"(Software\Microsoft\Windows MIDI Services\Tools\midisettings)";
 
         constexpr wchar_t ValueViewMode[] = L"EndpointViewMode";
+        constexpr wchar_t ValueShowToolbarLabels[] = L"ShowToolbarLabels";
         constexpr wchar_t ValueTransportFilter[] = L"TransportFilter";
         constexpr wchar_t ValueDismissedOrphanedCustomizations[] = L"DismissedOrphanedCustomizations";
         constexpr wchar_t ValueLastConfigCopyFolder[] = L"LastConfigCopyFolder";
@@ -38,6 +39,8 @@ namespace midisettings
         m_viewMode = ReadDword(ValueViewMode, static_cast<uint32_t>(EndpointViewMode::Cards)) ==
             static_cast<uint32_t>(EndpointViewMode::List) ? EndpointViewMode::List : EndpointViewMode::Cards;
 
+        m_showToolbarLabels = ReadDword(ValueShowToolbarLabels, 1) != 0;
+
         m_transportFilter = ReadString(ValueTransportFilter, std::wstring{});
         m_dismissedOrphanedCustomizations = ReadString(ValueDismissedOrphanedCustomizations, std::wstring{});
         m_lastConfigCopyFolder = ReadString(ValueLastConfigCopyFolder, std::wstring{});
@@ -47,6 +50,12 @@ namespace midisettings
     {
         m_viewMode = value;
         WriteDword(ValueViewMode, static_cast<uint32_t>(m_viewMode));
+    }
+
+    void AppSettings::ShowToolbarLabels(bool value) noexcept
+    {
+        m_showToolbarLabels = value;
+        WriteDword(ValueShowToolbarLabels, m_showToolbarLabels ? 1u : 0u);
     }
 
     _Use_decl_annotations_

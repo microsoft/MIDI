@@ -23,12 +23,17 @@ Across the top are the other Windows MIDI Services apps. Only the ones actually 
 - **Loopback Setup** creates and manages loopback endpoints
 - **Bluetooth Setup** connects Bluetooth LE MIDI devices (installed with the Bluetooth MIDI transport)
 - **Network Setup** sets up Network MIDI 2.0 (installed with the Network MIDI 2.0 transport)
+- **Patchbay** connects endpoints to each other
 - **SysEx Send/Receive** sends and receives system exclusive files
 - **Monitor** watches the messages flowing through an endpoint
 - **Scratch Pad** sends hand-written MIDI messages
+- **Virtual Keyboard** plays notes from your mouse or computer keyboard
+- **MIDI Clock** sends and watches MIDI timing
 - **Troubleshoot and Fix** checks the health of MIDI on this PC and repairs common problems
 
-Last on the toolbar, **Global MIDI Settings** opens the machine-wide settings described below. It is not a separate app; it opens in this window.
+**Global MIDI Settings** and **Notifications** sit at the right end of the toolbar and stay there. Global MIDI Settings opens the machine-wide settings described below, and Notifications chooses when Windows MIDI Services tells you something. Neither is a separate app; both open in this window.
+
+If the window is too narrow for all of the tools, the ones that do not fit move into a **...** button at the end of the row. Click it to reach them. Right-click anywhere on the toolbar and turn off **Show button labels** to get a compact row of icons instead, which fits many more tools in the same space. Point at an icon to see its name. Your choice is remembered.
 
 ## Endpoints
 

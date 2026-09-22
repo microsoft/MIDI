@@ -32,6 +32,8 @@ namespace winrt::midisettings::implementation
         void OnAppearanceButtonClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         // Toolbar
+        void OnToolbarHostSizeChanged(foundation::IInspectable const& sender, xaml::SizeChangedEventArgs const& args);
+        void OnToolbarLabelsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnLoopbackSetupClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnBluetoothSetupClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnNetworkSetupClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -94,11 +96,38 @@ namespace winrt::midisettings::implementation
         HWND WindowHandle() noexcept;
 
         // --- toolbar ---
+
+        // One tool button, in toolbar order. The two commands pinned to the right end are not
+        // in this table: they keep their place whatever the window does.
+        struct ToolbarItem
+        {
+            controls::Button Button{ nullptr };
+            controls::Image Icon{ nullptr };
+            controls::TextBlock Label{ nullptr };
+            xaml::Shapes::Rectangle SeparatorBefore{ nullptr };
+            ::midisettings::MidiTool Tool{ ::midisettings::MidiTool::LoopbackSetup };
+
+            // buttons that belong together between two separators
+            uint32_t Group{ 0 };
+        };
+
+        void BuildToolbarItems() noexcept;
         void ApplyToolButtons() noexcept;
-        void ApplyToolButton(
-            controls::Button const& button,
+        void LoadToolIcon(
             controls::Image const& icon,
             ::midisettings::MidiTool const tool) noexcept;
+
+        // Decides how much of the toolbar fits: labels first, then whole buttons into the
+        // overflow menu. Cheap and idempotent, so it is safe to call from a size change.
+        void ApplyToolbarLayout() noexcept;
+        void ApplyToolButtonMode(
+            controls::Button const& button,
+            controls::TextBlock const& label,
+            bool const compact) noexcept;
+        void ApplyToolSeparatorMode(
+            xaml::Shapes::Rectangle const& separator,
+            bool const compact) noexcept;
+        void BuildToolOverflowMenu(std::vector<size_t> const& overflowItems) noexcept;
 
         // --- endpoints ---
         winrt::fire_and_forget StartWatchersAsync() noexcept;
@@ -174,6 +203,18 @@ namespace winrt::midisettings::implementation
         bool m_healthCheckInFlight{ false };
         bool m_suppressFilterHandling{ false };
         bool m_suppressPortNamingHandling{ false };
+
+        // Toolbar layout state. The last result is kept so a size change that does not alter
+        // the answer leaves the buttons and the overflow menu alone.
+        std::vector<ToolbarItem> m_toolbarItems{};
+        bool m_toolbarLayoutDirty{ true };
+        bool m_toolbarCompact{ false };
+        size_t m_toolbarPrimaryCount{ 0 };
+
+        xaml::Style m_toolButtonStyle{ nullptr };
+        xaml::Style m_toolButtonCompactStyle{ nullptr };
+        xaml::Style m_toolSeparatorStyle{ nullptr };
+        xaml::Style m_toolSeparatorCompactStyle{ nullptr };
 
         // Setting ToggleSwitch::IsOn raises Toggled, so a refresh would write the value it just
         // read back to the service on every open of the dialog.
