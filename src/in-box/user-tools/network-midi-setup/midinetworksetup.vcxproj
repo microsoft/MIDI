@@ -150,6 +150,7 @@
     <ClInclude Include="..\midi-app-shared\SingleInstance.h" />
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
     <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
+    <ClInclude Include="..\midi-app-shared\EndpointImageAssets.h" />
     <ClInclude Include="..\midi-app-shared\MonitorLauncher.h" />
     <ClInclude Include="..\midi-app-shared\SettingsAppLauncher.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
@@ -181,6 +182,7 @@
     <ClCompile Include="..\midi-app-shared\SingleInstance.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
+    <ClCompile Include="..\midi-app-shared\EndpointImageAssets.cpp" />
     <ClCompile Include="..\midi-app-shared\MonitorLauncher.cpp" />
     <ClCompile Include="..\midi-app-shared\SettingsAppLauncher.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />

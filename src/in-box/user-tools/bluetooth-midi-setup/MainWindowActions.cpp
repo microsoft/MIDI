@@ -111,10 +111,7 @@ namespace winrt::midibluetoothsetup::implementation
 
         try
         {
-            winrt::Windows::Storage::Pickers::FileOpenPicker picker{};
-
-            // A picker in a desktop app has no window of its own to sit over, so it is given
-            // this one. Without it the call fails rather than showing anything.
+            // An unpackaged app has no implicit window to parent a picker to.
             HWND handle{ nullptr };
 
             if (auto const native = try_as<::IWindowNative>())
@@ -127,29 +124,18 @@ namespace winrt::midibluetoothsetup::implementation
                 co_return;
             }
 
-            if (auto const initialize = picker.as<::IInitializeWithWindow>())
-            {
-                LOG_IF_FAILED(initialize->Initialize(handle));
-            }
+            // Runs its own modal loop and returns the answer directly. See ShowPicker for why
+            // this is not the WinRT picker: this button lives inside an open ContentDialog.
+            auto const sourcePath = midiapp::EndpointImageAssets::ShowPicker(handle);
 
-            picker.ViewMode(winrt::Windows::Storage::Pickers::PickerViewMode::Thumbnail);
-            picker.SuggestedStartLocation(winrt::Windows::Storage::Pickers::PickerLocationId::PicturesLibrary);
-
-            for (auto const& extension : { L".png", L".jpg", L".jpeg", L".bmp", L".gif", L".svg" })
-            {
-                picker.FileTypeFilter().Append(extension);
-            }
-
-            auto const file = co_await picker.PickSingleFileAsync();
-
-            if (file == nullptr)
+            if (sourcePath.empty())
             {
                 co_return;
             }
 
             // Copied rather than referenced, so the stored value is always a name inside the
             // shared folder and cannot break when the customer moves the original.
-            auto const importedName = co_await ImportImageAsync(file.Path());
+            auto const importedName = co_await ImportImageAsync(winrt::hstring{ sourcePath });
 
             if (importedName.empty())
             {
