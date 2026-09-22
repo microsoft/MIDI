@@ -11,6 +11,24 @@
 
 namespace midiplayer
 {
+    // A note is drawn as two visuals: an outer body which supplies the border, and an inner fill
+    // in the track color. Without a border, two notes which touch - a pair of thirty-second notes,
+    // say - are indistinguishable from one note of twice the length.
+    struct NoteVisuals
+    {
+        winrt::Microsoft::UI::Composition::SpriteVisual Body{ nullptr };
+        winrt::Microsoft::UI::Composition::SpriteVisual Fill{ nullptr };
+    };
+
+    // Shared by both views, so a note is drawn the same way in each.
+    winrt::Windows::UI::Color NoteBorderColor(_In_ winrt::Windows::UI::Color const& fill) noexcept;
+
+    NoteVisuals CreateNoteVisuals(
+        _In_ winrt::Microsoft::UI::Composition::Compositor const& compositor,
+        _In_ winrt::Microsoft::UI::Composition::ContainerVisual const& layer) noexcept;
+
+    void SizeNoteVisuals(_In_ NoteVisuals const& note, float left, float top, float width, float height) noexcept;
+
     // The scrolling note display, drawn with composition visuals rather than XAML elements.
     //
     // A file can hold millions of notes, so nothing is created per note. A fixed pool of sprite
@@ -39,8 +57,12 @@ namespace midiplayer
         static constexpr double SecondsAhead = 5.5;
 
     private:
-        winrt::Microsoft::UI::Composition::SpriteVisual TakeVisual(size_t index) noexcept;
+        NoteVisuals TakeVisual(size_t index) noexcept;
         void HideFrom(size_t index) noexcept;
+
+        // state packs the track, whether the track is audible and whether the note has already
+        // been played; border selects the darker shade drawn around the note.
+        winrt::Microsoft::UI::Composition::CompositionColorBrush NoteBrush(uint32_t state, bool border) noexcept;
 
         // Bar and beat lines, so the roll can be read as music rather than as a stripe chart.
         void RenderGrid(
@@ -60,14 +82,14 @@ namespace midiplayer
         winrt::Microsoft::UI::Composition::ContainerVisual m_noteLayer{ nullptr };
         winrt::Microsoft::UI::Composition::SpriteVisual m_playhead{ nullptr };
 
-        std::vector<winrt::Microsoft::UI::Composition::SpriteVisual> m_pool{};
+        std::vector<NoteVisuals> m_pool{};
         std::vector<winrt::Microsoft::UI::Composition::SpriteVisual> m_gridPool{};
 
         winrt::Microsoft::UI::Composition::CompositionColorBrush m_barBrush{ nullptr };
         winrt::Microsoft::UI::Composition::CompositionColorBrush m_beatBrush{ nullptr };
 
-        // One brush per track color and dim state, because a brush per note would defeat the
-        // point of the pool.
+        // One brush per track color, dim state and border, because a brush per note would defeat
+        // the point of the pool.
         std::map<uint32_t, winrt::Microsoft::UI::Composition::CompositionColorBrush> m_brushes{};
 
         std::shared_ptr<midifile::MidiSequence const> m_sequence{};

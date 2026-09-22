@@ -29,6 +29,17 @@ namespace midiplayer
 
         constexpr float PlayheadFraction = 0.22f;
 
+        // Thin enough not to eat a small note, thick enough that two touching notes show a clear
+        // two pixel division between them.
+        constexpr float NoteBorderThickness = 1.0f;
+
+        // A border on each side plus at least two pixels of fill. Below this the note is drawn
+        // without a border on that axis, because a dark sliver is worse than a missing edge.
+        constexpr float MinimumBorderedSize = NoteBorderThickness * 2.0f + 2.0f;
+
+        // A note shorter than this would otherwise be invisible.
+        constexpr double MinimumNoteWidth = 2.0;
+
         winrt::Windows::UI::Color ColorFromArgb(uint32_t argb) noexcept
         {
             return winrt::Windows::UI::Color
@@ -39,6 +50,51 @@ namespace midiplayer
                 static_cast<uint8_t>(argb & 0xFF)
             };
         }
+    }
+
+    _Use_decl_annotations_
+    winrt::Windows::UI::Color NoteBorderColor(winrt::Windows::UI::Color const& fill) noexcept
+    {
+        // Dark enough to read as an edge where two notes meet, light enough to still be the same
+        // track color.
+        constexpr double Shade = 0.55;
+
+        return winrt::Windows::UI::Color
+        {
+            fill.A,
+            static_cast<uint8_t>(fill.R * Shade),
+            static_cast<uint8_t>(fill.G * Shade),
+            static_cast<uint8_t>(fill.B * Shade)
+        };
+    }
+
+    _Use_decl_annotations_
+    NoteVisuals CreateNoteVisuals(
+        composition::Compositor const& compositor,
+        composition::ContainerVisual const& layer) noexcept
+    {
+        NoteVisuals note{};
+
+        note.Body = compositor.CreateSpriteVisual();
+        note.Fill = compositor.CreateSpriteVisual();
+
+        note.Body.Children().InsertAtTop(note.Fill);
+        layer.Children().InsertAtTop(note.Body);
+
+        return note;
+    }
+
+    _Use_decl_annotations_
+    void SizeNoteVisuals(NoteVisuals const& note, float left, float top, float width, float height) noexcept
+    {
+        note.Body.Offset({ left, top, 0.0f });
+        note.Body.Size({ width, height });
+
+        auto const insetX = width >= MinimumBorderedSize ? NoteBorderThickness : 0.0f;
+        auto const insetY = height >= MinimumBorderedSize ? NoteBorderThickness : 0.0f;
+
+        note.Fill.Offset({ insetX, insetY, 0.0f });
+        note.Fill.Size({ width - insetX * 2.0f, height - insetY * 2.0f });
     }
 
     _Use_decl_annotations_
@@ -239,17 +295,21 @@ namespace midiplayer
 
                 auto const barWidth = clampedRight - clampedLeft;
 
-                auto visual = TakeVisual(used);
+                auto const note = TakeVisual(used);
 
-                if (visual == nullptr)
+                if (note.Body == nullptr)
                 {
                     break;
                 }
 
                 auto const top = height - ((entry->NoteNumber - m_lowestNote + 1) * noteHeight);
 
-                visual.Offset({ static_cast<float>(clampedLeft), static_cast<float>(top), 0.0f });
-                visual.Size({ static_cast<float>(barWidth < 2.0 ? 2.0 : barWidth), drawHeight });
+                SizeNoteVisuals(
+                    note,
+                    static_cast<float>(clampedLeft),
+                    static_cast<float>(top),
+                    static_cast<float>(barWidth < MinimumNoteWidth ? MinimumNoteWidth : barWidth),
+                    drawHeight);
 
                 auto const audible = entry->TrackIndex >= m_audible.size() || m_audible[entry->TrackIndex];
 
@@ -257,38 +317,21 @@ namespace midiplayer
                 // boundary between what was heard and what is coming.
                 auto const played = noteStart <= position;
 
-                uint32_t const key = (static_cast<uint32_t>(entry->TrackIndex % ARRAYSIZE(TrackPalette)) << 2)
+                uint32_t const state = (static_cast<uint32_t>(entry->TrackIndex % ARRAYSIZE(TrackPalette)) << 2)
                     | (audible ? 0x2u : 0x0u)
                     | (played ? 0x1u : 0x0u);
 
-                auto const brush = m_brushes.find(key);
+                auto const fill = NoteBrush(state, false);
+                auto const border = NoteBrush(state, true);
 
-                if (brush != m_brushes.end())
+                if (fill == nullptr || border == nullptr)
                 {
-                    visual.Brush(brush->second);
-                }
-                else
-                {
-                    auto color = TrackColor(entry->TrackIndex);
-
-                    if (!audible)
-                    {
-                        color.A = 48;
-                    }
-                    else if (played)
-                    {
-                        color.A = 150;
-                    }
-
-                    auto created = m_compositor.CreateColorBrush(color);
-
-                    // insert_or_assign, not operator[], because a WinRT type has no default
-                    // constructor for the map to build first.
-                    m_brushes.insert_or_assign(key, created);
-                    visual.Brush(created);
+                    break;
                 }
 
-                visual.IsVisible(true);
+                note.Fill.Brush(fill);
+                note.Body.Brush(border);
+                note.Body.IsVisible(true);
 
                 ++used;
             }
@@ -401,7 +444,7 @@ namespace midiplayer
     }
 
     _Use_decl_annotations_
-    composition::SpriteVisual NoteRollRenderer::TakeVisual(size_t index) noexcept
+    NoteVisuals NoteRollRenderer::TakeVisual(size_t index) noexcept
     {
         if (index < m_pool.size())
         {
@@ -410,15 +453,56 @@ namespace midiplayer
 
         if (m_compositor == nullptr || m_noteLayer == nullptr)
         {
+            return {};
+        }
+
+        auto note = CreateNoteVisuals(m_compositor, m_noteLayer);
+
+        m_pool.push_back(note);
+
+        return note;
+    }
+
+    _Use_decl_annotations_
+    composition::CompositionColorBrush NoteRollRenderer::NoteBrush(uint32_t state, bool border) noexcept
+    {
+        uint32_t const key = (state << 1) | (border ? 0x1u : 0x0u);
+
+        auto const found = m_brushes.find(key);
+
+        if (found != m_brushes.end())
+        {
+            return found->second;
+        }
+
+        if (m_compositor == nullptr)
+        {
             return nullptr;
         }
 
-        auto visual = m_compositor.CreateSpriteVisual();
+        auto color = TrackColor(static_cast<uint16_t>(state >> 2));
 
-        m_noteLayer.Children().InsertAtTop(visual);
-        m_pool.push_back(visual);
+        if ((state & 0x2u) == 0)
+        {
+            color.A = 48;
+        }
+        else if ((state & 0x1u) != 0)
+        {
+            color.A = 150;
+        }
 
-        return visual;
+        if (border)
+        {
+            color = NoteBorderColor(color);
+        }
+
+        auto created = m_compositor.CreateColorBrush(color);
+
+        // insert_or_assign, not operator[], because a WinRT type has no default constructor for
+        // the map to build first.
+        m_brushes.insert_or_assign(key, created);
+
+        return created;
     }
 
     _Use_decl_annotations_
@@ -426,7 +510,7 @@ namespace midiplayer
     {
         for (size_t entry = index; entry < m_pool.size(); ++entry)
         {
-            m_pool[entry].IsVisible(false);
+            m_pool[entry].Body.IsVisible(false);
         }
     }
 }
