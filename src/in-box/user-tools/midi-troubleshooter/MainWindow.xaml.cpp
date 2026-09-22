@@ -566,6 +566,65 @@ namespace winrt::miditroubleshooter::implementation
     }
 
     _Use_decl_annotations_
+    std::wstring MainWindow::ShowSaveFileDialog(
+        std::wstring const& fileTypeLabel,
+        std::wstring const& extension,
+        std::wstring const& suggestedFileName) noexcept
+    {
+        try
+        {
+            winrt::com_ptr<IFileSaveDialog> dialog{};
+
+            if (FAILED(::CoCreateInstance(
+                CLSID_FileSaveDialog, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(dialog.put()))))
+            {
+                return {};
+            }
+
+            auto const pattern = L"*." + extension;
+
+            COMDLG_FILTERSPEC const filters[]
+            {
+                { fileTypeLabel.c_str(), pattern.c_str() }
+            };
+
+            LOG_IF_FAILED(dialog->SetFileTypes(ARRAYSIZE(filters), filters));
+            LOG_IF_FAILED(dialog->SetDefaultExtension(extension.c_str()));
+            LOG_IF_FAILED(dialog->SetOptions(FOS_OVERWRITEPROMPT | FOS_PATHMUSTEXIST | FOS_FORCEFILESYSTEM));
+
+            if (!suggestedFileName.empty())
+            {
+                LOG_IF_FAILED(dialog->SetFileName(suggestedFileName.c_str()));
+            }
+
+            // canceling is reported as a failure hresult, so this is not logged as an error
+            if (FAILED(dialog->Show(WindowHandle())))
+            {
+                return {};
+            }
+
+            winrt::com_ptr<IShellItem> item{};
+
+            if (FAILED(dialog->GetResult(item.put())) || item == nullptr)
+            {
+                return {};
+            }
+
+            wil::unique_cotaskmem_string path{};
+
+            if (FAILED(item->GetDisplayName(SIGDN_FILESYSPATH, path.put())))
+            {
+                return {};
+            }
+
+            return std::wstring{ path.get() };
+        }
+        MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to show the save dialog.")
+
+        return {};
+    }
+
+    _Use_decl_annotations_
     void MainWindow::CopyToClipboard(winrt::hstring const& text) noexcept
     {
         try
