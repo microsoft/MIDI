@@ -173,6 +173,8 @@ namespace winrt::miditroubleshooter::implementation
 
         void SetCaptureUiState(CaptureUiState const state) noexcept;
 
+        void ShowTimeTravelNoticeIfNeeded(::miditroubleshooter::CaptureStepResult const& result) noexcept;
+
         HWND WindowHandle() noexcept;
 
         midiapp::WindowChrome m_chrome{};

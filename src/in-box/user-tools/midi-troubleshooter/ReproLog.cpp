@@ -422,6 +422,8 @@ namespace miditroubleshooter
             }
 
             // after the trace, so any service restart it causes is not in the ETL
+            result.TimeTravelTraceRecorded = m_timeTravelTracingStarted;
+
             StopTracing(result.Log);
 
             m_running = false;
@@ -551,6 +553,8 @@ namespace miditroubleshooter
 
                 result.Log.push_back(res::GetString(L"CaptureLogTracingCanceled"));
             }
+
+            result.TimeTravelTraceRecorded = m_timeTravelTracingStarted;
 
             StopTracing(result.Log);
 

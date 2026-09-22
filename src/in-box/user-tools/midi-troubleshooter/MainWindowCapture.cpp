@@ -83,6 +83,21 @@ namespace winrt::miditroubleshooter::implementation
     }
 
     _Use_decl_annotations_
+    void MainWindow::ShowTimeTravelNoticeIfNeeded(native::CaptureStepResult const& result) noexcept
+    {
+        try
+        {
+            // Shown whether or not the capture succeeded: the attach happened either way, and
+            // the overhead it leaves behind is the same.
+            if (result.TimeTravelTraceRecorded)
+            {
+                CaptureTimeTravelInfoBar().IsOpen(true);
+            }
+        }
+        MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to show the time travel notice.")
+    }
+
+    _Use_decl_annotations_
     winrt::fire_and_forget MainWindow::OnStartCaptureClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
         auto lifetime = get_strong();
@@ -111,6 +126,7 @@ namespace winrt::miditroubleshooter::implementation
 
             SetCaptureUiState(CaptureUiState::Working);
             CaptureStatusText().Text(res::GetString(L"CaptureStarting"));
+            CaptureTimeTravelInfoBar().IsOpen(false);
 
             // Runs on the closing and the exception paths too, so the ring can never be left
             // spinning over a page whose buttons all say no.
@@ -205,6 +221,8 @@ namespace winrt::miditroubleshooter::implementation
                 AppendCaptureLog(result.Log);
             }
 
+            ShowTimeTravelNoticeIfNeeded(result);
+
             if (!result.Succeeded)
             {
                 CaptureStatusText().Text(result.ErrorMessage.empty() ?
@@ -276,6 +294,8 @@ namespace winrt::miditroubleshooter::implementation
             }
 
             AppendCaptureLog(result.Log);
+
+            ShowTimeTravelNoticeIfNeeded(result);
 
             CaptureStatusText().Text(res::GetString(L"CaptureCanceled"));
         }
