@@ -383,16 +383,22 @@
     <value>This connection does: {0}</value>
   </data>
   <data name="TransformSectionTranspose" xml:space="preserve">
-    <value>Transpose</value>
+    <value>Notes</value>
   </data>
   <data name="TransformSectionTransposeHint" xml:space="preserve">
-    <value>Shifts every note, including aftertouch and the MIDI 2.0 per note messages. A note pushed past either end is clamped rather than wrapped, so nothing lands an octave out.</value>
+    <value>Transposing shifts every note, including aftertouch and the MIDI 2.0 per note messages. A note pushed past either end is clamped rather than wrapped, so nothing lands an octave out.</value>
   </data>
   <data name="TransformSemitones" xml:space="preserve">
-    <value>Semitones</value>
+    <value>Transpose semitones</value>
   </data>
   <data name="TransformTransposeExampleFormat" xml:space="preserve">
     <value>{0} is sent as {1}</value>
+  </data>
+  <data name="TransformIgnoreExactPitch" xml:space="preserve">
+    <value>Leave MIDI 2.0 notes that carry an exact pitch alone</value>
+  </data>
+  <data name="TransformIgnoreExactPitchHint" xml:space="preserve">
+    <value>A MIDI 2.0 note can say exactly which pitch to play, which makes its note number an address rather than a pitch. Leave this clear and the pitch moves with the note. Check it and those notes are passed through as they are.</value>
   </data>
   <data name="TransformSectionNoteMap" xml:space="preserve">
     <value>Note mapping</value>
@@ -406,7 +412,7 @@
   <data name="TransformNoNoteMappings" xml:space="preserve">
     <value>No notes are remapped.</value>
   </data>
-  <data name="TransformNoteMapLabelFormat" xml:space="preserve">
+  <data name="TransformMapLabelFormat" xml:space="preserve">
     <value>{0} to {1}</value>
   </data>
   <data name="TransformPlay" xml:space="preserve">
@@ -424,6 +430,18 @@
   <data name="TransformSectionVelocityHint" xml:space="preserve">
     <value>Only note on messages are touched. A MIDI 1.0 note on with velocity zero is a note off, so it is always left alone.</value>
   </data>
+  <data name="TransformValueScale" xml:space="preserve">
+    <value>Show values as</value>
+  </data>
+  <data name="TransformValueScaleSevenBit" xml:space="preserve">
+    <value>0 to 127</value>
+  </data>
+  <data name="TransformValueScalePercent" xml:space="preserve">
+    <value>Percentage</value>
+  </data>
+  <data name="TransformValueScaleHint" xml:space="preserve">
+    <value>MIDI 2.0 carries velocity in sixteen bits, so a percentage is what the number really means. Pick 0 to 127 when your instrument gives each of those 128 steps its own meaning, such as a pad color. The value is the same either way; only the way you type it changes.</value>
+  </data>
   <data name="TransformCurveUnchanged" xml:space="preserve">
     <value>Leave the velocity alone</value>
   </data>
@@ -433,6 +451,12 @@
   <data name="TransformCurveCurvedToLinear" xml:space="preserve">
     <value>Curved to linear (easier to play loud)</value>
   </data>
+  <data name="TransformCurveFixed" xml:space="preserve">
+    <value>Send every note at the same velocity</value>
+  </data>
+  <data name="TransformFixedVelocity" xml:space="preserve">
+    <value>Fixed velocity</value>
+  </data>
   <data name="TransformRescaleVelocity" xml:space="preserve">
     <value>Rescale into a narrower range</value>
   </data>
@@ -441,6 +465,72 @@
   </data>
   <data name="TransformLoudest" xml:space="preserve">
     <value>Loudest</value>
+  </data>
+  <data name="TransformSectionChannelMap" xml:space="preserve">
+    <value>Channel mapping</value>
+  </data>
+  <data name="TransformSectionChannelMapHint" xml:space="preserve">
+    <value>Moves everything on one channel to another, the way the old Windows MIDI Mapper did. Only messages that carry a channel are affected, and channels you do not list are passed through.</value>
+  </data>
+  <data name="TransformAddChannelMapping" xml:space="preserve">
+    <value>Add a channel mapping</value>
+  </data>
+  <data name="TransformNoChannelMappings" xml:space="preserve">
+    <value>No channels are remapped.</value>
+  </data>
+  <data name="TransformChannelFrom" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="TransformChannelTo" xml:space="preserve">
+    <value>Becomes channel</value>
+  </data>
+  <data name="TransformSectionProgramMap" xml:space="preserve">
+    <value>Program mapping</value>
+  </data>
+  <data name="TransformSectionProgramMapHint" xml:space="preserve">
+    <value>Picks a different sound on the destination, for an instrument whose programs are not laid out the way the music expects. These are the numbers on the wire, 0 to 127. Some instruments label the same sounds 1 to 128, so you may need to subtract one. The names are the General MIDI names for those numbers.</value>
+  </data>
+  <data name="TransformAddProgramMapping" xml:space="preserve">
+    <value>Add a program mapping</value>
+  </data>
+  <data name="TransformNoProgramMappings" xml:space="preserve">
+    <value>No programs are remapped.</value>
+  </data>
+  <data name="TransformProgramFrom" xml:space="preserve">
+    <value>Program</value>
+  </data>
+  <data name="TransformProgramTo" xml:space="preserve">
+    <value>Becomes program</value>
+  </data>
+  <data name="TransformSectionBankMsbMap" xml:space="preserve">
+    <value>Bank select MSB</value>
+  </data>
+  <data name="TransformSectionBankMsbMapHint" xml:space="preserve">
+    <value>Controller 0 on MIDI 1.0, and the coarse half of the bank a MIDI 2.0 program change carries. Most instruments use this half on its own, so this is usually the only bank list you need.</value>
+  </data>
+  <data name="TransformAddBankMsbMapping" xml:space="preserve">
+    <value>Add a bank MSB mapping</value>
+  </data>
+  <data name="TransformNoBankMsbMappings" xml:space="preserve">
+    <value>No bank MSB values are remapped.</value>
+  </data>
+  <data name="TransformSectionBankLsbMap" xml:space="preserve">
+    <value>Bank select LSB</value>
+  </data>
+  <data name="TransformSectionBankLsbMapHint" xml:space="preserve">
+    <value>Controller 32 on MIDI 1.0, and the fine half of the bank a MIDI 2.0 program change carries. A MIDI 2.0 program change that does not carry a bank is left alone, because there is nothing to match.</value>
+  </data>
+  <data name="TransformAddBankLsbMapping" xml:space="preserve">
+    <value>Add a bank LSB mapping</value>
+  </data>
+  <data name="TransformNoBankLsbMappings" xml:space="preserve">
+    <value>No bank LSB values are remapped.</value>
+  </data>
+  <data name="TransformBankFrom" xml:space="preserve">
+    <value>Bank</value>
+  </data>
+  <data name="TransformBankTo" xml:space="preserve">
+    <value>Becomes bank</value>
   </data>
   <data name="TransformSectionControlMap" xml:space="preserve">
     <value>Control change mapping</value>
@@ -498,6 +588,32 @@
   </data>
   <data name="TransformSummaryVelocityRangeFormat" xml:space="preserve">
     <value>Velocity {0} to {1}</value>
+  </data>
+  <data name="TransformSummaryFixedVelocityFormat" xml:space="preserve">
+    <value>Every note at velocity {0}</value>
+  </data>
+  <data name="TransformSummaryChannelMapFormat" xml:space="preserve">
+    <value>{0} channel mappings</value>
+  </data>
+  <data name="TransformSummaryOneChannelMap" xml:space="preserve">
+    <value>1 channel mapping</value>
+  </data>
+  <data name="TransformSummaryProgramMapFormat" xml:space="preserve">
+    <value>{0} program mappings</value>
+  </data>
+  <data name="TransformSummaryOneProgramMap" xml:space="preserve">
+    <value>1 program mapping</value>
+  </data>
+  <data name="TransformSummaryBankMapFormat" xml:space="preserve">
+    <value>{0} bank mappings</value>
+  </data>
+  <data name="TransformSummaryOneBankMap" xml:space="preserve">
+    <value>1 bank mapping</value>
+  </data>
+  <!-- A percentage with two decimal places. {0} is the whole part and {1} the hundredths, so a
+       language that writes 56,69 changes the separator here. -->
+  <data name="TransformPercentFormat" xml:space="preserve">
+    <value>{0}.{1:02}%</value>
   </data>
 
   <!-- ============================================================== filters -->

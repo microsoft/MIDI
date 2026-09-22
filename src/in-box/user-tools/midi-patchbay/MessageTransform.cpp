@@ -14,19 +14,44 @@ namespace midipatchbay
     namespace
     {
         constexpr wchar_t KeyActive[] = L"active";
+        constexpr wchar_t KeyScale[] = L"valueScale";
         constexpr wchar_t KeyTranspose[] = L"transposeSemitones";
         constexpr wchar_t KeyNoteMap[] = L"noteMap";
+        constexpr wchar_t KeyIgnoreExactPitch[] = L"ignoreExactPitchNotes";
         constexpr wchar_t KeyControlMap[] = L"controlMap";
+        constexpr wchar_t KeyChannelMap[] = L"channelMap";
+        constexpr wchar_t KeyProgramMap[] = L"programMap";
+        constexpr wchar_t KeyBankMsbMap[] = L"bankMsbMap";
+        constexpr wchar_t KeyBankLsbMap[] = L"bankLsbMap";
         constexpr wchar_t KeyCurve[] = L"velocityCurve";
+        constexpr wchar_t KeyFixedVelocityPercent[] = L"fixedVelocityPercent";
         constexpr wchar_t KeyRescale[] = L"rescaleVelocity";
-        constexpr wchar_t KeyMinimumVelocity[] = L"minimumVelocity";
-        constexpr wchar_t KeyMaximumVelocity[] = L"maximumVelocity";
+        constexpr wchar_t KeyMinimumVelocityPercent[] = L"minimumVelocityPercent";
+        constexpr wchar_t KeyMaximumVelocityPercent[] = L"maximumVelocityPercent";
         constexpr wchar_t KeyFrom[] = L"from";
         constexpr wchar_t KeyTo[] = L"to";
 
+        // Written by the preview that only ever had 0 to 127 velocities, and still written
+        // beside the percentages so rolling a preview back does not lose the range.
+        constexpr wchar_t KeyLegacyMinimumVelocity[] = L"minimumVelocity";
+        constexpr wchar_t KeyLegacyMaximumVelocity[] = L"maximumVelocity";
+
+        constexpr wchar_t ScaleNameSevenBit[] = L"sevenBit";
+        constexpr wchar_t ScaleNamePercent[] = L"percent";
+
+        constexpr uint8_t StatusNoteOff = 0x8;
         constexpr uint8_t StatusNoteOn = 0x9;
         constexpr uint8_t StatusControlChange = 0xB;
+        constexpr uint8_t StatusProgramChange = 0xC;
 
+        constexpr uint8_t BankSelectMsbController = 0;
+        constexpr uint8_t BankSelectLsbController = 32;
+
+        // The MIDI 2.0 note attribute that carries an exact pitch as 7.9 fixed point.
+        constexpr uint8_t PitchAttributeType = 0x03;
+        constexpr int32_t PitchUnitsPerSemitone = 512;
+
+        constexpr uint32_t ChannelFieldMask = 0x000F0000u;
         constexpr uint32_t NoteFieldMask = 0x7Fu << 8;
 
         bool HasAnyEntry(_In_ int16_t const* map, _In_ size_t count) noexcept
@@ -142,9 +167,10 @@ namespace midipatchbay
 
                     auto const from = fromValue.GetNumber();
                     auto const to = toValue.GetNumber();
+                    auto const limit = static_cast<double>(count) - 1;
 
                     if (!std::isfinite(from) || !std::isfinite(to) ||
-                        from < 0 || from >= static_cast<double>(count) || to < 0 || to > 127)
+                        from < 0 || from > limit || to < 0 || to > limit)
                     {
                         continue;
                     }
@@ -159,6 +185,68 @@ namespace midipatchbay
         }
     }
 
+    _Use_decl_annotations_
+    int32_t HundredthsFromSevenBit(int32_t value) noexcept
+    {
+        auto const clamped = std::clamp(value, 0, 127);
+
+        return static_cast<int32_t>((clamped * FullScaleHundredths + 63) / 127);
+    }
+
+    _Use_decl_annotations_
+    int32_t SevenBitFromHundredths(int32_t hundredths) noexcept
+    {
+        auto const clamped = std::clamp(hundredths, 0, FullScaleHundredths);
+
+        return static_cast<int32_t>((clamped * 127 + FullScaleHundredths / 2) / FullScaleHundredths);
+    }
+
+    _Use_decl_annotations_
+    double DisplayFromHundredths(int32_t hundredths, ValueScale scale) noexcept
+    {
+        return scale == ValueScale::SevenBit
+            ? static_cast<double>(SevenBitFromHundredths(hundredths))
+            : std::clamp(hundredths, 0, FullScaleHundredths) / 100.0;
+    }
+
+    _Use_decl_annotations_
+    int32_t HundredthsFromDisplay(double value, ValueScale scale) noexcept
+    {
+        if (!std::isfinite(value))
+        {
+            return 0;
+        }
+
+        if (scale == ValueScale::SevenBit)
+        {
+            return HundredthsFromSevenBit(static_cast<int32_t>(std::lround(value)));
+        }
+
+        return std::clamp(static_cast<int32_t>(std::lround(value * 100.0)), 0, FullScaleHundredths);
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring DescribeScaledValue(int32_t hundredths, ValueScale scale) noexcept
+    {
+        try
+        {
+            if (scale == ValueScale::SevenBit)
+            {
+                return winrt::hstring{ std::to_wstring(SevenBitFromHundredths(hundredths)) };
+            }
+
+            auto const clamped = std::clamp(hundredths, 0, FullScaleHundredths);
+
+            return resources::FormatString(L"TransformPercentFormat",
+                clamped / 100, clamped % 100);
+        }
+        catch (...)
+        {
+        }
+
+        return {};
+    }
+
     MessageTransform::MessageTransform() noexcept
     {
         Reset();
@@ -167,15 +255,23 @@ namespace midipatchbay
     void MessageTransform::Reset() noexcept
     {
         IsActive = false;
+        Scale = ValueScale::Percent;
         TransposeSemitones = 0;
 
+        ChannelMap.fill(-1);
         NoteMap.fill(-1);
         ControlMap.fill(-1);
+        ProgramMap.fill(-1);
+        BankMsbMap.fill(-1);
+        BankLsbMap.fill(-1);
+
+        IgnoreExactPitchNotes = false;
 
         Curve = VelocityCurve::Unchanged;
+        FixedVelocityHundredths = HundredthsFromSevenBit(100);
         RescaleVelocity = false;
-        MinimumVelocity = 1;
-        MaximumVelocity = 127;
+        MinimumVelocityHundredths = 0;
+        MaximumVelocityHundredths = FullScaleHundredths;
     }
 
     bool MessageTransform::ChangesNothing() const noexcept
@@ -188,8 +284,12 @@ namespace midipatchbay
         return TransposeSemitones == 0 &&
             Curve == VelocityCurve::Unchanged &&
             !RescaleVelocity &&
+            !HasAnyEntry(ChannelMap.data(), ChannelMap.size()) &&
             !HasAnyEntry(NoteMap.data(), NoteMap.size()) &&
-            !HasAnyEntry(ControlMap.data(), ControlMap.size());
+            !HasAnyEntry(ControlMap.data(), ControlMap.size()) &&
+            !HasAnyEntry(ProgramMap.data(), ProgramMap.size()) &&
+            !HasAnyEntry(BankMsbMap.data(), BankMsbMap.size()) &&
+            !HasAnyEntry(BankLsbMap.data(), BankLsbMap.size());
     }
 
     _Use_decl_annotations_
@@ -213,6 +313,12 @@ namespace midipatchbay
     _Use_decl_annotations_
     double MessageTransform::ShapeUnit(double value) const noexcept
     {
+        if (Curve == VelocityCurve::Fixed)
+        {
+            // A fixed velocity ignores what was played, and so ignores the range as well.
+            return std::clamp(FixedVelocityHundredths / static_cast<double>(FullScaleHundredths), 0.0, 1.0);
+        }
+
         auto shaped = std::clamp(value, 0.0, 1.0);
 
         switch (Curve)
@@ -231,8 +337,8 @@ namespace midipatchbay
 
         if (RescaleVelocity)
         {
-            auto low = MinimumVelocity / 127.0;
-            auto high = MaximumVelocity / 127.0;
+            auto low = MinimumVelocityHundredths / static_cast<double>(FullScaleHundredths);
+            auto high = MaximumVelocityHundredths / static_cast<double>(FullScaleHundredths);
 
             if (high < low)
             {
@@ -255,10 +361,12 @@ namespace midipatchbay
             return 0;
         }
 
-        // 1 to 127 rather than 0 to 127, so the quietest playable velocity stays playable.
-        auto const shaped = ShapeUnit((velocity - 1) / 126.0);
+        // Full scale is 127 here and in the dialog, so a velocity typed as a MIDI 1.0 step comes
+        // out as exactly that step. The floor of 1 is what keeps a quiet note from becoming a
+        // note off.
+        auto const shaped = ShapeUnit(velocity / 127.0);
 
-        return static_cast<uint8_t>(std::clamp(std::lround(1.0 + shaped * 126.0), 1L, 127L));
+        return static_cast<uint8_t>(std::clamp(std::lround(shaped * 127.0), 1L, 127L));
     }
 
     _Use_decl_annotations_
@@ -287,16 +395,96 @@ namespace midipatchbay
             return;
         }
 
+        // The channel is the outermost address, so it moves before anything addressed within it.
+        {
+            auto const channel = static_cast<uint8_t>((words[0] >> 16) & 0x0F);
+            auto const mappedChannel = ChannelMap[channel];
+
+            if (mappedChannel >= 0 && mappedChannel != channel)
+            {
+                words[0] = (words[0] & ~ChannelFieldMask) |
+                    (static_cast<uint32_t>(mappedChannel & 0x0F) << 16);
+            }
+        }
+
         auto const status = static_cast<uint8_t>((words[0] >> 20) & 0x0F);
 
         if (status == StatusControlChange)
         {
-            auto const index = static_cast<uint8_t>((words[0] >> 8) & 0x7F);
+            auto index = static_cast<uint8_t>((words[0] >> 8) & 0x7F);
             auto const mapped = ControlMap[index];
 
             if (mapped >= 0 && mapped != index)
             {
-                words[0] = (words[0] & ~NoteFieldMask) | (static_cast<uint32_t>(mapped & 0x7F) << 8);
+                index = static_cast<uint8_t>(mapped & 0x7F);
+                words[0] = (words[0] & ~NoteFieldMask) | (static_cast<uint32_t>(index) << 8);
+            }
+
+            // MIDI 1.0 carries the bank in two controllers. A MIDI 2.0 program change carries it
+            // in the message itself, and its controller values are 32 bit, so neither table
+            // belongs here for one.
+            if (isMidi1 && (index == BankSelectMsbController || index == BankSelectLsbController))
+            {
+                auto const& bankMap = index == BankSelectMsbController ? BankMsbMap : BankLsbMap;
+                auto const value = static_cast<uint8_t>(words[0] & 0x7F);
+                auto const mappedBank = bankMap[value];
+
+                if (mappedBank >= 0 && mappedBank != value)
+                {
+                    words[0] = (words[0] & ~0x7Fu) | static_cast<uint32_t>(mappedBank & 0x7F);
+                }
+            }
+
+            return;
+        }
+
+        if (status == StatusProgramChange)
+        {
+            if (isMidi1)
+            {
+                auto const program = static_cast<uint8_t>((words[0] >> 8) & 0x7F);
+                auto const mapped = ProgramMap[program];
+
+                if (mapped >= 0 && mapped != program)
+                {
+                    words[0] = (words[0] & ~NoteFieldMask) | (static_cast<uint32_t>(mapped & 0x7F) << 8);
+                }
+
+                return;
+            }
+
+            if (wordCount < 2)
+            {
+                return;
+            }
+
+            auto const program = static_cast<uint8_t>((words[1] >> 24) & 0x7F);
+            auto const mapped = ProgramMap[program];
+
+            if (mapped >= 0 && mapped != program)
+            {
+                words[1] = (words[1] & 0x00FFFFFFu) | (static_cast<uint32_t>(mapped & 0x7F) << 24);
+            }
+
+            // Bit 0 of the option flags. With no bank in the message there is nothing to match
+            // against, so the tables stay out of it rather than inventing one.
+            if ((words[0] & 0x01u) != 0)
+            {
+                auto const msb = static_cast<uint8_t>((words[1] >> 8) & 0x7F);
+                auto const lsb = static_cast<uint8_t>(words[1] & 0x7F);
+
+                auto const mappedMsb = BankMsbMap[msb];
+                auto const mappedLsb = BankLsbMap[lsb];
+
+                if (mappedMsb >= 0 && mappedMsb != msb)
+                {
+                    words[1] = (words[1] & ~0xFF00u) | (static_cast<uint32_t>(mappedMsb & 0x7F) << 8);
+                }
+
+                if (mappedLsb >= 0 && mappedLsb != lsb)
+                {
+                    words[1] = (words[1] & ~0xFFu) | static_cast<uint32_t>(mappedLsb & 0x7F);
+                }
             }
 
             return;
@@ -307,12 +495,33 @@ namespace midipatchbay
             return;
         }
 
-        auto const note = static_cast<uint8_t>((words[0] >> 8) & 0x7F);
-        auto const outgoing = ResultingNote(note);
+        auto const isNote = status == StatusNoteOn || status == StatusNoteOff;
 
-        if (outgoing != note)
+        // A MIDI 2.0 note can declare the exact pitch it wants, which makes its note number an
+        // address rather than a pitch.
+        auto const carriesExactPitch = isMidi2 && isNote && wordCount >= 2 &&
+            static_cast<uint8_t>(words[0] & 0xFF) == PitchAttributeType;
+
+        if (!carriesExactPitch || !IgnoreExactPitchNotes)
         {
-            words[0] = (words[0] & ~NoteFieldMask) | (static_cast<uint32_t>(outgoing) << 8);
+            auto const note = static_cast<uint8_t>((words[0] >> 8) & 0x7F);
+            auto const outgoing = ResultingNote(note);
+
+            if (outgoing != note)
+            {
+                words[0] = (words[0] & ~NoteFieldMask) | (static_cast<uint32_t>(outgoing) << 8);
+
+                if (carriesExactPitch)
+                {
+                    // Move the declared pitch with the note, or the message would ask for one
+                    // note and the pitch of another.
+                    auto const shifted = static_cast<int32_t>(words[1] & 0xFFFF) +
+                        (static_cast<int32_t>(outgoing) - static_cast<int32_t>(note)) * PitchUnitsPerSemitone;
+
+                    words[1] = (words[1] & 0xFFFF0000u) |
+                        static_cast<uint32_t>(std::clamp(shifted, 0, 0xFFFF));
+                }
+            }
         }
 
         if (status != StatusNoteOn || (Curve == VelocityCurve::Unchanged && !RescaleVelocity))
@@ -345,6 +554,15 @@ namespace midipatchbay
 
             std::vector<std::wstring> parts{};
 
+            auto const channels = CountEntries(transform.ChannelMap.data(), transform.ChannelMap.size());
+
+            if (channels > 0)
+            {
+                parts.push_back(std::wstring{ channels == 1
+                    ? resources::GetString(L"TransformSummaryOneChannelMap")
+                    : resources::FormatString(L"TransformSummaryChannelMapFormat", static_cast<int>(channels)) });
+            }
+
             if (transform.TransposeSemitones != 0)
             {
                 parts.push_back(std::wstring{ resources::FormatString(L"TransformSummaryTransposeFormat",
@@ -370,11 +588,17 @@ namespace midipatchbay
             {
                 parts.push_back(std::wstring{ resources::GetString(L"TransformSummaryLinear") });
             }
+            else if (transform.Curve == VelocityCurve::Fixed)
+            {
+                parts.push_back(std::wstring{ resources::FormatString(L"TransformSummaryFixedVelocityFormat",
+                    DescribeScaledValue(transform.FixedVelocityHundredths, transform.Scale)) });
+            }
 
-            if (transform.RescaleVelocity)
+            if (transform.RescaleVelocity && transform.Curve != VelocityCurve::Fixed)
             {
                 parts.push_back(std::wstring{ resources::FormatString(L"TransformSummaryVelocityRangeFormat",
-                    static_cast<int>(transform.MinimumVelocity), static_cast<int>(transform.MaximumVelocity)) });
+                    DescribeScaledValue(transform.MinimumVelocityHundredths, transform.Scale),
+                    DescribeScaledValue(transform.MaximumVelocityHundredths, transform.Scale)) });
             }
 
             auto const controls = CountEntries(transform.ControlMap.data(), transform.ControlMap.size());
@@ -384,6 +608,26 @@ namespace midipatchbay
                 parts.push_back(std::wstring{ controls == 1
                     ? resources::GetString(L"TransformSummaryOneControlMap")
                     : resources::FormatString(L"TransformSummaryControlMapFormat", static_cast<int>(controls)) });
+            }
+
+            auto const programs = CountEntries(transform.ProgramMap.data(), transform.ProgramMap.size());
+
+            if (programs > 0)
+            {
+                parts.push_back(std::wstring{ programs == 1
+                    ? resources::GetString(L"TransformSummaryOneProgramMap")
+                    : resources::FormatString(L"TransformSummaryProgramMapFormat", static_cast<int>(programs)) });
+            }
+
+            auto const banks =
+                CountEntries(transform.BankMsbMap.data(), transform.BankMsbMap.size()) +
+                CountEntries(transform.BankLsbMap.data(), transform.BankLsbMap.size());
+
+            if (banks > 0)
+            {
+                parts.push_back(std::wstring{ banks == 1
+                    ? resources::GetString(L"TransformSummaryOneBankMap")
+                    : resources::FormatString(L"TransformSummaryBankMapFormat", static_cast<int>(banks)) });
             }
 
             std::wstring text{};
@@ -415,14 +659,34 @@ namespace midipatchbay
         try
         {
             object.SetNamedValue(KeyActive, json::JsonValue::CreateBooleanValue(transform.IsActive));
+
+            object.SetNamedValue(KeyScale, json::JsonValue::CreateStringValue(
+                transform.Scale == ValueScale::SevenBit ? ScaleNameSevenBit : ScaleNamePercent));
+
             object.SetNamedValue(KeyTranspose, json::JsonValue::CreateNumberValue(transform.TransposeSemitones));
+            object.SetNamedValue(KeyIgnoreExactPitch, json::JsonValue::CreateBooleanValue(transform.IgnoreExactPitchNotes));
             object.SetNamedValue(KeyCurve, json::JsonValue::CreateNumberValue(static_cast<int32_t>(transform.Curve)));
             object.SetNamedValue(KeyRescale, json::JsonValue::CreateBooleanValue(transform.RescaleVelocity));
-            object.SetNamedValue(KeyMinimumVelocity, json::JsonValue::CreateNumberValue(transform.MinimumVelocity));
-            object.SetNamedValue(KeyMaximumVelocity, json::JsonValue::CreateNumberValue(transform.MaximumVelocity));
 
+            object.SetNamedValue(KeyFixedVelocityPercent,
+                json::JsonValue::CreateNumberValue(transform.FixedVelocityHundredths / 100.0));
+            object.SetNamedValue(KeyMinimumVelocityPercent,
+                json::JsonValue::CreateNumberValue(transform.MinimumVelocityHundredths / 100.0));
+            object.SetNamedValue(KeyMaximumVelocityPercent,
+                json::JsonValue::CreateNumberValue(transform.MaximumVelocityHundredths / 100.0));
+
+            // Beside the percentages so a rolled back preview still reads a sensible range.
+            object.SetNamedValue(KeyLegacyMinimumVelocity, json::JsonValue::CreateNumberValue(
+                std::max(1, SevenBitFromHundredths(transform.MinimumVelocityHundredths))));
+            object.SetNamedValue(KeyLegacyMaximumVelocity, json::JsonValue::CreateNumberValue(
+                std::max(1, SevenBitFromHundredths(transform.MaximumVelocityHundredths))));
+
+            object.SetNamedValue(KeyChannelMap, MapToJson(transform.ChannelMap.data(), transform.ChannelMap.size()));
             object.SetNamedValue(KeyNoteMap, MapToJson(transform.NoteMap.data(), transform.NoteMap.size()));
             object.SetNamedValue(KeyControlMap, MapToJson(transform.ControlMap.data(), transform.ControlMap.size()));
+            object.SetNamedValue(KeyProgramMap, MapToJson(transform.ProgramMap.data(), transform.ProgramMap.size()));
+            object.SetNamedValue(KeyBankMsbMap, MapToJson(transform.BankMsbMap.data(), transform.BankMsbMap.size()));
+            object.SetNamedValue(KeyBankLsbMap, MapToJson(transform.BankLsbMap.data(), transform.BankLsbMap.size()));
         }
         catch (...)
         {
@@ -477,23 +741,55 @@ namespace midipatchbay
 
             transform.IsActive = readBool(KeyActive, false);
 
+            // A patch written before the scale existed only ever meant 0 to 127, so that is what
+            // its velocities are read back as.
+            auto const hasScale = object.HasKey(KeyScale) &&
+                object.GetNamedValue(KeyScale) != nullptr &&
+                object.GetNamedValue(KeyScale).ValueType() == json::JsonValueType::String;
+
+            transform.Scale = hasScale && object.GetNamedString(KeyScale) == ScaleNamePercent
+                ? ValueScale::Percent
+                : ValueScale::SevenBit;
+
             transform.TransposeSemitones = static_cast<int32_t>(
                 readNumber(KeyTranspose, MinimumTranspose, MaximumTranspose, 0));
 
-            auto const curve = static_cast<int32_t>(readNumber(KeyCurve, 0, 2, 0));
+            transform.IgnoreExactPitchNotes = readBool(KeyIgnoreExactPitch, false);
+
+            auto const curve = static_cast<int32_t>(readNumber(KeyCurve, 0, 3, 0));
             transform.Curve = static_cast<VelocityCurve>(curve);
 
             transform.RescaleVelocity = readBool(KeyRescale, false);
-            transform.MinimumVelocity = static_cast<uint8_t>(readNumber(KeyMinimumVelocity, 1, 127, 1));
-            transform.MaximumVelocity = static_cast<uint8_t>(readNumber(KeyMaximumVelocity, 1, 127, 127));
 
-            if (transform.MinimumVelocity > transform.MaximumVelocity)
+            if (hasScale)
             {
-                std::swap(transform.MinimumVelocity, transform.MaximumVelocity);
+                transform.FixedVelocityHundredths = static_cast<int32_t>(std::lround(
+                    readNumber(KeyFixedVelocityPercent, 0, 100, 100.0 * 100 / 127) * 100.0));
+                transform.MinimumVelocityHundredths = static_cast<int32_t>(std::lround(
+                    readNumber(KeyMinimumVelocityPercent, 0, 100, 0) * 100.0));
+                transform.MaximumVelocityHundredths = static_cast<int32_t>(std::lround(
+                    readNumber(KeyMaximumVelocityPercent, 0, 100, 100) * 100.0));
+            }
+            else
+            {
+                transform.FixedVelocityHundredths = HundredthsFromSevenBit(100);
+                transform.MinimumVelocityHundredths = HundredthsFromSevenBit(
+                    static_cast<int32_t>(readNumber(KeyLegacyMinimumVelocity, 0, 127, 1)));
+                transform.MaximumVelocityHundredths = HundredthsFromSevenBit(
+                    static_cast<int32_t>(readNumber(KeyLegacyMaximumVelocity, 0, 127, 127)));
             }
 
+            if (transform.MinimumVelocityHundredths > transform.MaximumVelocityHundredths)
+            {
+                std::swap(transform.MinimumVelocityHundredths, transform.MaximumVelocityHundredths);
+            }
+
+            MapFromJson(object, KeyChannelMap, transform.ChannelMap.data(), transform.ChannelMap.size());
             MapFromJson(object, KeyNoteMap, transform.NoteMap.data(), transform.NoteMap.size());
             MapFromJson(object, KeyControlMap, transform.ControlMap.data(), transform.ControlMap.size());
+            MapFromJson(object, KeyProgramMap, transform.ProgramMap.data(), transform.ProgramMap.size());
+            MapFromJson(object, KeyBankMsbMap, transform.BankMsbMap.data(), transform.BankMsbMap.size());
+            MapFromJson(object, KeyBankLsbMap, transform.BankLsbMap.data(), transform.BankLsbMap.size());
         }
         catch (...)
         {
@@ -513,25 +809,32 @@ namespace midipatchbay
         std::wstring signature =
             std::to_wstring(transform.TransposeSemitones) + L'.' +
             std::to_wstring(static_cast<int32_t>(transform.Curve)) + L'.' +
+            std::to_wstring(transform.FixedVelocityHundredths) + L'.' +
+            (transform.IgnoreExactPitchNotes ? L'p' : L'-') +
             (transform.RescaleVelocity
-                ? std::to_wstring(transform.MinimumVelocity) + L'-' + std::to_wstring(transform.MaximumVelocity)
+                ? std::to_wstring(transform.MinimumVelocityHundredths) + L'-' +
+                  std::to_wstring(transform.MaximumVelocityHundredths)
                 : std::wstring{ L"n" });
 
-        for (size_t i = 0; i < transform.NoteMap.size(); i++)
-        {
-            if (transform.NoteMap[i] >= 0)
+        // The prefixes are what keep one table's entries from colliding with another's. They must
+        // be strings: L'.c' is a multi character constant, not two characters.
+        auto const appendMap = [&signature](int16_t const* map, size_t count, wchar_t const* prefix)
             {
-                signature += L'.' + std::to_wstring(i) + L'>' + std::to_wstring(transform.NoteMap[i]);
-            }
-        }
+                for (size_t i = 0; i < count; i++)
+                {
+                    if (map[i] >= 0)
+                    {
+                        signature += prefix + std::to_wstring(i) + L'>' + std::to_wstring(map[i]);
+                    }
+                }
+            };
 
-        for (size_t i = 0; i < transform.ControlMap.size(); i++)
-        {
-            if (transform.ControlMap[i] >= 0)
-            {
-                signature += L".c" + std::to_wstring(i) + L'>' + std::to_wstring(transform.ControlMap[i]);
-            }
-        }
+        appendMap(transform.NoteMap.data(), transform.NoteMap.size(), L".n");
+        appendMap(transform.ControlMap.data(), transform.ControlMap.size(), L".c");
+        appendMap(transform.ChannelMap.data(), transform.ChannelMap.size(), L".h");
+        appendMap(transform.ProgramMap.data(), transform.ProgramMap.size(), L".g");
+        appendMap(transform.BankMsbMap.data(), transform.BankMsbMap.size(), L".m");
+        appendMap(transform.BankLsbMap.data(), transform.BankLsbMap.size(), L".l");
 
         return signature;
     }

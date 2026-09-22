@@ -60,16 +60,31 @@ A **note range** keeps only notes inside a span, which is how you split a keyboa
 
 ## Transforms
 
-Transforms change messages on the way past. They run after the filters, on the copy sent to that one destination, so nothing here affects what any other connection carries.
+Transforms change messages on the way past. They run after the filters, on the copy sent to that one destination, so nothing here affects what any other connection carries. Between them they do everything the old Windows MIDI Mapper did, and quite a lot it couldn't.
 
 ![Transposing and reshaping velocity]({{ site.baseurl }}/assets/images/midipatchbay-transforms.png)
 
+- **Channel mapping** moves everything on one channel to another. Only messages that carry a channel are affected, and channels you don't list are passed through.
 - **Transpose** shifts every note, including aftertouch and the MIDI 2.0 per note messages. A note pushed past either end is clamped rather than wrapped, so nothing lands an octave out.
 - **Note mapping** is the list of exceptions to the transpose: a note listed here goes exactly where you send it, and everything else is transposed as usual. **Play** sends the destination note so you can hear where it lands.
-- **Note on velocity** reshapes the ramp, linear to curved or curved to linear, and can rescale it into a narrower range so a light touch still speaks and a heavy one doesn't max out. Only note on messages are touched, and a MIDI 1.0 note on with velocity zero is a note off, so it's always left alone.
+- **Note on velocity** reshapes the ramp, linear to curved or curved to linear. It can rescale into a narrower range so a light touch still speaks and a heavy one doesn't max out, or send every note at the same fixed velocity. Only note on messages are touched, and a MIDI 1.0 note on with velocity zero is a note off, so it's always left alone.
 - **Control change mapping** moves a controller to a different number and carries its value over untouched. Controllers you don't list are passed through.
+- **Program mapping** picks a different sound on the destination, for an instrument whose programs aren't laid out the way the music expects. The numbers are the ones on the wire, 0 to 127, with the General MIDI name beside each one.
+- **Bank select** remaps the bank, as controller 0 and controller 32 on MIDI 1.0 and as the bank a MIDI 2.0 program change carries. Most instruments only use the MSB half.
 
 ![Moving one controller to another]({{ site.baseurl }}/assets/images/midipatchbay-control-change.png)
+
+### Showing values as 0 to 127 or as a percentage
+
+MIDI 2.0 carries velocity in sixteen bits, so a percentage is what a velocity really means, and that's how Patchbay stores it. But plenty of controllers give each of the 128 MIDI 1.0 steps its own meaning, such as a pad color, and typing 0.79% when you mean step 1 is no fun.
+
+So the velocity section starts with a choice: **0 to 127** or **Percentage**. Everything below it follows that choice. The value is the same either way; only the way you type it changes. A patch saved before this choice existed opens as 0 to 127, because that's all it could have meant. A new one starts as a percentage.
+
+### MIDI 2.0 notes that carry an exact pitch
+
+A MIDI 2.0 note on can say exactly which pitch to play, down to a fraction of a semitone. That makes its note number an address rather than a pitch, and moving one without moving the other would produce a message asking for one note and the pitch of another.
+
+Leave **Leave MIDI 2.0 notes that carry an exact pitch alone** clear and the pitch moves with the note, so transposing and note mapping both stay honest. Check it and those notes are passed through untouched, which is what you want when the note number means a drum pad or a key on a controller rather than a pitch.
 
 Selecting a connection shows what its filters and transforms add up to, so you can see at a glance what a cord is doing without opening either dialog.
 

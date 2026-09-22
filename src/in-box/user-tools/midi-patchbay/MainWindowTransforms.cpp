@@ -9,6 +9,7 @@
 #include "MainWindow.xaml.h"
 
 #include "BackgroundWork.h"
+#include "GeneralMidi.h"
 #include "StringResources.h"
 #include "ThemeBrushes.h"
 
@@ -16,6 +17,7 @@ using namespace winrt::Microsoft::UI::Xaml;
 
 namespace patchbay = ::midipatchbay;
 namespace resources = ::midipatchbay::resources;
+namespace numbers = ::winrt::Windows::Globalization::NumberFormatting;
 
 namespace winrt::midipatchbay::implementation
 {
@@ -23,6 +25,60 @@ namespace winrt::midipatchbay::implementation
     {
         constexpr double CurvePreviewSize = 132.0;
         constexpr int32_t CurveSampleCount = 33;
+
+        // Everything one of the mapping tables needs to draw itself. The stored value is always
+        // the number on the wire; DisplayOffset is only what the customer sees, so channels can
+        // be counted from one the way musicians count them.
+        struct MapSectionInfo
+        {
+            wchar_t const* Heading;
+            wchar_t const* Hint;
+            wchar_t const* AddButton;
+            wchar_t const* EmptyText;
+            wchar_t const* FromHeader;
+            wchar_t const* ToHeader;
+            int32_t Maximum;
+            int32_t DefaultValue;
+            int32_t DisplayOffset;
+            bool HasPlayButton;
+            bool HasNames;
+        };
+
+        MapSectionInfo const& SectionInfo(_In_ MainWindow::TransformMap which) noexcept
+        {
+            static constexpr MapSectionInfo sections[]
+            {
+                // Note
+                { L"TransformSectionNoteMap", L"TransformSectionNoteMapHint", L"TransformAddNoteMapping",
+                  L"TransformNoNoteMappings", L"TransformNoteFrom", L"TransformNoteTo", 127, 60, 0, true, true },
+
+                // Control
+                { L"TransformSectionControlMap", L"TransformSectionControlMapHint", L"TransformAddControlMapping",
+                  L"TransformNoControlMappings", L"TransformControlFrom", L"TransformControlTo", 127, 1, 0, false, false },
+
+                // Channel
+                { L"TransformSectionChannelMap", L"TransformSectionChannelMapHint", L"TransformAddChannelMapping",
+                  L"TransformNoChannelMappings", L"TransformChannelFrom", L"TransformChannelTo", 15, 0, 1, false, false },
+
+                // Program
+                { L"TransformSectionProgramMap", L"TransformSectionProgramMapHint", L"TransformAddProgramMapping",
+                  L"TransformNoProgramMappings", L"TransformProgramFrom", L"TransformProgramTo", 127, 0, 0, false, true },
+
+                // BankMsb
+                { L"TransformSectionBankMsbMap", L"TransformSectionBankMsbMapHint", L"TransformAddBankMsbMapping",
+                  L"TransformNoBankMsbMappings", L"TransformBankFrom", L"TransformBankTo", 127, 0, 0, false, false },
+
+                // BankLsb
+                { L"TransformSectionBankLsbMap", L"TransformSectionBankLsbMapHint", L"TransformAddBankLsbMapping",
+                  L"TransformNoBankLsbMappings", L"TransformBankFrom", L"TransformBankTo", 127, 0, 0, false, false },
+            };
+
+            static_assert(std::size(sections) == MainWindow::TransformMapCount);
+
+            auto const index = static_cast<size_t>(which);
+
+            return sections[index < std::size(sections) ? index : 0];
+        }
 
         controls::TextBlock TransformHeading(_In_ winrt::hstring const& text) noexcept
         {
@@ -83,6 +139,19 @@ namespace winrt::midipatchbay::implementation
 
             return box;
         }
+
+        controls::FontIcon MapRowArrow() noexcept
+        {
+            controls::FontIcon arrow{};
+
+            arrow.Glyph(L"\uE72A");
+            arrow.FontSize(12);
+            arrow.VerticalAlignment(xaml::VerticalAlignment::Bottom);
+            arrow.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 0, 8));
+            arrow.Foreground(patchbay::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
+
+            return arrow;
+        }
     }
 
     winrt::fire_and_forget MainWindow::ShowTransformDialogAsync(std::wstring connectionId)
@@ -121,24 +190,27 @@ namespace winrt::midipatchbay::implementation
                 }
             }
 
-            m_noteMapRows.clear();
-            m_controlMapRows.clear();
-
-            for (size_t i = 0; i < patchbay::NoteMapSize; i++)
-            {
-                if (m_editingTransform.NoteMap[i] >= 0)
+            auto const fillRows = [this](TransformMap which, int16_t const* map, size_t count)
                 {
-                    m_noteMapRows.emplace_back(static_cast<int32_t>(i), m_editingTransform.NoteMap[i]);
-                }
-            }
+                    auto& rows = m_mapRows[static_cast<size_t>(which)];
 
-            for (size_t i = 0; i < patchbay::ControlMapSize; i++)
-            {
-                if (m_editingTransform.ControlMap[i] >= 0)
-                {
-                    m_controlMapRows.emplace_back(static_cast<int32_t>(i), m_editingTransform.ControlMap[i]);
-                }
-            }
+                    rows.clear();
+
+                    for (size_t i = 0; i < count; i++)
+                    {
+                        if (map[i] >= 0)
+                        {
+                            rows.emplace_back(static_cast<int32_t>(i), map[i]);
+                        }
+                    }
+                };
+
+            fillRows(TransformMap::Note, m_editingTransform.NoteMap.data(), m_editingTransform.NoteMap.size());
+            fillRows(TransformMap::Control, m_editingTransform.ControlMap.data(), m_editingTransform.ControlMap.size());
+            fillRows(TransformMap::Channel, m_editingTransform.ChannelMap.data(), m_editingTransform.ChannelMap.size());
+            fillRows(TransformMap::Program, m_editingTransform.ProgramMap.data(), m_editingTransform.ProgramMap.size());
+            fillRows(TransformMap::BankMsb, m_editingTransform.BankMsbMap.data(), m_editingTransform.BankMsbMap.size());
+            fillRows(TransformMap::BankLsb, m_editingTransform.BankLsbMap.data(), m_editingTransform.BankLsbMap.size());
 
             BuildTransformDialog();
 
@@ -191,25 +263,30 @@ namespace winrt::midipatchbay::implementation
     {
         try
         {
-            m_editingTransform.NoteMap.fill(-1);
-            m_editingTransform.ControlMap.fill(-1);
-
-            // A repeated source wins on its last row, which is what the customer sees last.
-            for (auto const& [from, to] : m_noteMapRows)
-            {
-                if (from >= 0 && from < static_cast<int32_t>(patchbay::NoteMapSize) && to >= 0 && to <= 127)
+            auto const collect = [this](TransformMap which, int16_t* map, size_t count)
                 {
-                    m_editingTransform.NoteMap[static_cast<size_t>(from)] = static_cast<int16_t>(to);
-                }
-            }
+                    for (size_t i = 0; i < count; i++)
+                    {
+                        map[i] = -1;
+                    }
 
-            for (auto const& [from, to] : m_controlMapRows)
-            {
-                if (from >= 0 && from < static_cast<int32_t>(patchbay::ControlMapSize) && to >= 0 && to <= 127)
-                {
-                    m_editingTransform.ControlMap[static_cast<size_t>(from)] = static_cast<int16_t>(to);
-                }
-            }
+                    // A repeated source wins on its last row, which is what the customer sees last.
+                    for (auto const& [from, to] : m_mapRows[static_cast<size_t>(which)])
+                    {
+                        if (from >= 0 && from < static_cast<int32_t>(count) &&
+                            to >= 0 && to < static_cast<int32_t>(count))
+                        {
+                            map[static_cast<size_t>(from)] = static_cast<int16_t>(to);
+                        }
+                    }
+                };
+
+            collect(TransformMap::Note, m_editingTransform.NoteMap.data(), m_editingTransform.NoteMap.size());
+            collect(TransformMap::Control, m_editingTransform.ControlMap.data(), m_editingTransform.ControlMap.size());
+            collect(TransformMap::Channel, m_editingTransform.ChannelMap.data(), m_editingTransform.ChannelMap.size());
+            collect(TransformMap::Program, m_editingTransform.ProgramMap.data(), m_editingTransform.ProgramMap.size());
+            collect(TransformMap::BankMsb, m_editingTransform.BankMsbMap.data(), m_editingTransform.BankMsbMap.size());
+            collect(TransformMap::BankLsb, m_editingTransform.BankLsbMap.data(), m_editingTransform.BankLsbMap.size());
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to collect the mapping tables.")
     }
@@ -249,13 +326,27 @@ namespace winrt::midipatchbay::implementation
 
             m_transposeExampleText = nullptr;
             m_velocityCurveCanvas = nullptr;
-            m_noteMapPanel = nullptr;
-            m_controlMapPanel = nullptr;
-            m_velocityRangeBoxes.clear();
+            m_fixedVelocityBox = nullptr;
+            m_minimumVelocityBox = nullptr;
+            m_maximumVelocityBox = nullptr;
+            m_velocityRescaleCheck = nullptr;
+
+            for (auto& panel : m_mapPanels)
+            {
+                panel = nullptr;
+            }
+
+            for (auto& labels : m_mapLabels)
+            {
+                labels.clear();
+            }
 
             auto weak = get_weak();
 
-            // ------------------------------------------------------------ transpose
+            // ------------------------------------------------------------ channels
+            TransformContent().Children().Append(TransformCard(BuildMapSection(TransformMap::Channel)));
+
+            // ------------------------------------------------- transpose and notes
             {
                 controls::StackPanel body{};
                 body.Spacing(4);
@@ -300,41 +391,31 @@ namespace winrt::midipatchbay::implementation
 
                 body.Children().Append(row);
 
-                TransformContent().Children().Append(TransformCard(body));
-            }
+                controls::CheckBox exactPitch{};
 
-            // ------------------------------------------------------------ note map
-            {
-                controls::StackPanel body{};
-                body.Spacing(4);
+                exactPitch.Content(winrt::box_value(resources::GetString(L"TransformIgnoreExactPitch")));
+                exactPitch.IsChecked(m_editingTransform.IgnoreExactPitchNotes);
+                exactPitch.Margin(xaml::ThicknessHelper::FromLengths(0, 8, 0, 0));
 
-                body.Children().Append(TransformHeading(resources::GetString(L"TransformSectionNoteMap")));
-                body.Children().Append(TransformHint(resources::GetString(L"TransformSectionNoteMapHint")));
-
-                m_noteMapPanel = controls::StackPanel{};
-                m_noteMapPanel.Spacing(6);
-                m_noteMapPanel.Margin(xaml::ThicknessHelper::FromLengths(0, 4, 0, 6));
-
-                body.Children().Append(m_noteMapPanel);
-
-                controls::Button add{};
-                add.Content(winrt::box_value(resources::GetString(L"TransformAddNoteMapping")));
-
-                add.Click([weak](auto&&, auto&&)
+                auto const setIgnoreExactPitch = [weak](bool value)
                     {
-                        auto s = weak.get();
-
-                        if (s == nullptr || s->m_noteMapRows.size() >= patchbay::MaximumMapEntries)
+                        if (auto s = weak.get())
                         {
-                            return;
+                            s->m_editingTransform.IgnoreExactPitchNotes = value;
+                            s->UpdateTransformSummary();
                         }
+                    };
 
-                        s->m_noteMapRows.emplace_back(60, 60);
-                        s->RebuildNoteMapRows();
-                        s->UpdateTransformSummary();
-                    });
+                exactPitch.Checked([setIgnoreExactPitch](auto&&, auto&&) { setIgnoreExactPitch(true); });
+                exactPitch.Unchecked([setIgnoreExactPitch](auto&&, auto&&) { setIgnoreExactPitch(false); });
 
-                body.Children().Append(add);
+                body.Children().Append(exactPitch);
+                body.Children().Append(TransformHint(resources::GetString(L"TransformIgnoreExactPitchHint")));
+
+                auto noteMap = BuildMapSection(TransformMap::Note);
+                noteMap.Margin(xaml::ThicknessHelper::FromLengths(0, 10, 0, 0));
+
+                body.Children().Append(noteMap);
 
                 TransformContent().Children().Append(TransformCard(body));
             }
@@ -361,6 +442,46 @@ namespace winrt::midipatchbay::implementation
                 controls::StackPanel options{};
                 options.Spacing(6);
 
+                // First, because it decides how every number below it is read and typed.
+                {
+                    controls::RadioButtons scale{};
+
+                    scale.Header(winrt::box_value(resources::GetString(L"TransformValueScale")));
+                    scale.MaxColumns(2);
+
+                    scale.Items().Append(winrt::box_value(resources::GetString(L"TransformValueScaleSevenBit")));
+                    scale.Items().Append(winrt::box_value(resources::GetString(L"TransformValueScalePercent")));
+
+                    scale.SelectedIndex(m_editingTransform.Scale == patchbay::ValueScale::Percent ? 1 : 0);
+
+                    scale.SelectionChanged([weak](foundation::IInspectable const& sender, auto&&)
+                        {
+                            auto s = weak.get();
+
+                            if (s == nullptr || s->m_applyingValueScale)
+                            {
+                                return;
+                            }
+
+                            auto const list = sender.try_as<controls::RadioButtons>();
+
+                            if (list == nullptr || list.SelectedIndex() < 0)
+                            {
+                                return;
+                            }
+
+                            s->m_editingTransform.Scale = list.SelectedIndex() == 1
+                                ? patchbay::ValueScale::Percent
+                                : patchbay::ValueScale::SevenBit;
+
+                            s->ApplyValueScale();
+                            s->UpdateTransformSummary();
+                        });
+
+                    options.Children().Append(scale);
+                    options.Children().Append(TransformHint(resources::GetString(L"TransformValueScaleHint")));
+                }
+
                 auto const addCurveOption = [this, weak, &options](winrt::hstring const& text, patchbay::VelocityCurve curve)
                     {
                         controls::RadioButton radio{};
@@ -371,11 +492,16 @@ namespace winrt::midipatchbay::implementation
 
                         radio.Checked([weak, curve](auto&&, auto&&)
                             {
-                                if (auto s = weak.get())
+                                auto s = weak.get();
+
+                                if (s == nullptr)
                                 {
-                                    s->m_editingTransform.Curve = curve;
-                                    s->UpdateTransformSummary();
+                                    return;
                                 }
+
+                                s->m_editingTransform.Curve = curve;
+                                s->RefreshVelocityEnabledState();
+                                s->UpdateTransformSummary();
                             });
 
                         options.Children().Append(radio);
@@ -384,12 +510,37 @@ namespace winrt::midipatchbay::implementation
                 addCurveOption(resources::GetString(L"TransformCurveUnchanged"), patchbay::VelocityCurve::Unchanged);
                 addCurveOption(resources::GetString(L"TransformCurveLinearToCurved"), patchbay::VelocityCurve::LinearToCurved);
                 addCurveOption(resources::GetString(L"TransformCurveCurvedToLinear"), patchbay::VelocityCurve::CurvedToLinear);
+                addCurveOption(resources::GetString(L"TransformCurveFixed"), patchbay::VelocityCurve::Fixed);
 
-                controls::CheckBox rescale{};
+                m_fixedVelocityBox = SmallNumberBox(0, 127, patchbay::DisplayFromHundredths(
+                    m_editingTransform.FixedVelocityHundredths, m_editingTransform.Scale));
 
-                rescale.Content(winrt::box_value(resources::GetString(L"TransformRescaleVelocity")));
-                rescale.IsChecked(m_editingTransform.RescaleVelocity);
-                rescale.Margin(xaml::ThicknessHelper::FromLengths(0, 8, 0, 0));
+                m_fixedVelocityBox.Header(winrt::box_value(resources::GetString(L"TransformFixedVelocity")));
+                m_fixedVelocityBox.Margin(xaml::ThicknessHelper::FromLengths(28, 0, 0, 0));
+                m_fixedVelocityBox.HorizontalAlignment(xaml::HorizontalAlignment::Left);
+
+                m_fixedVelocityBox.ValueChanged([weak](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
+                    {
+                        auto s = weak.get();
+
+                        if (s == nullptr || s->m_applyingValueScale || std::isnan(args.NewValue()))
+                        {
+                            return;
+                        }
+
+                        s->m_editingTransform.FixedVelocityHundredths =
+                            patchbay::HundredthsFromDisplay(args.NewValue(), s->m_editingTransform.Scale);
+
+                        s->UpdateTransformSummary();
+                    });
+
+                options.Children().Append(m_fixedVelocityBox);
+
+                m_velocityRescaleCheck = controls::CheckBox{};
+
+                m_velocityRescaleCheck.Content(winrt::box_value(resources::GetString(L"TransformRescaleVelocity")));
+                m_velocityRescaleCheck.IsChecked(m_editingTransform.RescaleVelocity);
+                m_velocityRescaleCheck.Margin(xaml::ThicknessHelper::FromLengths(0, 8, 0, 0));
 
                 auto const setRescale = [weak](bool value)
                     {
@@ -401,19 +552,14 @@ namespace winrt::midipatchbay::implementation
                         }
 
                         s->m_editingTransform.RescaleVelocity = value;
-
-                        for (auto const& box : s->m_velocityRangeBoxes)
-                        {
-                            box.IsEnabled(value);
-                        }
-
+                        s->RefreshVelocityEnabledState();
                         s->UpdateTransformSummary();
                     };
 
-                rescale.Checked([setRescale](auto&&, auto&&) { setRescale(true); });
-                rescale.Unchecked([setRescale](auto&&, auto&&) { setRescale(false); });
+                m_velocityRescaleCheck.Checked([setRescale](auto&&, auto&&) { setRescale(true); });
+                m_velocityRescaleCheck.Unchecked([setRescale](auto&&, auto&&) { setRescale(false); });
 
-                options.Children().Append(rescale);
+                options.Children().Append(m_velocityRescaleCheck);
 
                 controls::StackPanel range{};
                 range.Orientation(controls::Orientation::Horizontal);
@@ -422,41 +568,44 @@ namespace winrt::midipatchbay::implementation
 
                 auto const addRangeBox = [this, weak, &range](winrt::hstring const& header, bool isLow)
                     {
-                        auto box = SmallNumberBox(1, 127, isLow
-                            ? m_editingTransform.MinimumVelocity : m_editingTransform.MaximumVelocity);
+                        auto box = SmallNumberBox(0, 127, patchbay::DisplayFromHundredths(
+                            isLow ? m_editingTransform.MinimumVelocityHundredths
+                                  : m_editingTransform.MaximumVelocityHundredths,
+                            m_editingTransform.Scale));
 
                         box.Header(winrt::box_value(header));
-                        box.IsEnabled(m_editingTransform.RescaleVelocity);
 
                         box.ValueChanged([weak, isLow](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
                             {
                                 auto s = weak.get();
 
-                                if (s == nullptr || std::isnan(args.NewValue()))
+                                if (s == nullptr || s->m_applyingValueScale || std::isnan(args.NewValue()))
                                 {
                                     return;
                                 }
 
-                                auto const value = static_cast<uint8_t>(std::clamp(args.NewValue(), 1.0, 127.0));
+                                auto const value = patchbay::HundredthsFromDisplay(
+                                    args.NewValue(), s->m_editingTransform.Scale);
 
                                 if (isLow)
                                 {
-                                    s->m_editingTransform.MinimumVelocity = value;
+                                    s->m_editingTransform.MinimumVelocityHundredths = value;
                                 }
                                 else
                                 {
-                                    s->m_editingTransform.MaximumVelocity = value;
+                                    s->m_editingTransform.MaximumVelocityHundredths = value;
                                 }
 
                                 s->UpdateTransformSummary();
                             });
 
-                        m_velocityRangeBoxes.push_back(box);
                         range.Children().Append(box);
+
+                        return box;
                     };
 
-                addRangeBox(resources::GetString(L"TransformQuietest"), true);
-                addRangeBox(resources::GetString(L"TransformLoudest"), false);
+                m_minimumVelocityBox = addRangeBox(resources::GetString(L"TransformQuietest"), true);
+                m_maximumVelocityBox = addRangeBox(resources::GetString(L"TransformLoudest"), false);
 
                 options.Children().Append(range);
 
@@ -486,308 +635,367 @@ namespace winrt::midipatchbay::implementation
                 TransformContent().Children().Append(TransformCard(body));
             }
 
-            // ------------------------------------------------------- control change map
+            // ------------------------------------------------------ control change
+            TransformContent().Children().Append(TransformCard(BuildMapSection(TransformMap::Control)));
+
+            // ------------------------------------------------------------ programs
+            TransformContent().Children().Append(TransformCard(BuildMapSection(TransformMap::Program)));
+
+            // --------------------------------------------------------- bank select
             {
                 controls::StackPanel body{};
                 body.Spacing(4);
 
-                body.Children().Append(TransformHeading(resources::GetString(L"TransformSectionControlMap")));
-                body.Children().Append(TransformHint(resources::GetString(L"TransformSectionControlMapHint")));
+                body.Children().Append(BuildMapSection(TransformMap::BankMsb));
 
-                m_controlMapPanel = controls::StackPanel{};
-                m_controlMapPanel.Spacing(6);
-                m_controlMapPanel.Margin(xaml::ThicknessHelper::FromLengths(0, 4, 0, 6));
+                auto lsb = BuildMapSection(TransformMap::BankLsb);
+                lsb.Margin(xaml::ThicknessHelper::FromLengths(0, 10, 0, 0));
 
-                body.Children().Append(m_controlMapPanel);
-
-                controls::Button add{};
-                add.Content(winrt::box_value(resources::GetString(L"TransformAddControlMapping")));
-
-                add.Click([weak](auto&&, auto&&)
-                    {
-                        auto s = weak.get();
-
-                        if (s == nullptr || s->m_controlMapRows.size() >= patchbay::MaximumMapEntries)
-                        {
-                            return;
-                        }
-
-                        s->m_controlMapRows.emplace_back(1, 1);
-                        s->RebuildControlMapRows();
-                        s->UpdateTransformSummary();
-                    });
-
-                body.Children().Append(add);
+                body.Children().Append(lsb);
 
                 TransformContent().Children().Append(TransformCard(body));
             }
 
-            RebuildNoteMapRows();
-            RebuildControlMapRows();
+            for (int32_t i = 0; i < static_cast<int32_t>(TransformMapCount); i++)
+            {
+                RebuildMapRows(static_cast<TransformMap>(i));
+            }
+
+            ApplyValueScale();
+            RefreshVelocityEnabledState();
             UpdateTransformSummary();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the transform dialog.")
     }
 
-    void MainWindow::RebuildNoteMapRows() noexcept
+    _Use_decl_annotations_
+    controls::StackPanel MainWindow::BuildMapSection(TransformMap which) noexcept
     {
+        controls::StackPanel body{};
+
         try
         {
-            if (m_noteMapPanel == nullptr)
-            {
-                return;
-            }
+            auto const& info = SectionInfo(which);
+            auto const index = static_cast<size_t>(which);
 
-            m_noteMapPanel.Children().Clear();
-            m_noteMapLabels.clear();
+            body.Spacing(4);
+
+            body.Children().Append(TransformHeading(resources::GetString(info.Heading)));
+            body.Children().Append(TransformHint(resources::GetString(info.Hint)));
+
+            m_mapPanels[index] = controls::StackPanel{};
+            m_mapPanels[index].Spacing(6);
+            m_mapPanels[index].Margin(xaml::ThicknessHelper::FromLengths(0, 4, 0, 6));
+
+            body.Children().Append(m_mapPanels[index]);
+
+            controls::Button add{};
+            add.Content(winrt::box_value(resources::GetString(info.AddButton)));
 
             auto weak = get_weak();
 
-            if (m_noteMapRows.empty())
+            add.Click([weak, which](auto&&, auto&&)
+                {
+                    auto s = weak.get();
+
+                    if (s == nullptr)
+                    {
+                        return;
+                    }
+
+                    auto& rows = s->m_mapRows[static_cast<size_t>(which)];
+                    auto const& added = SectionInfo(which);
+
+                    if (rows.size() >= std::min(patchbay::MaximumMapEntries,
+                        static_cast<size_t>(added.Maximum) + 1))
+                    {
+                        return;
+                    }
+
+                    rows.emplace_back(added.DefaultValue, added.DefaultValue);
+
+                    s->RebuildMapRows(which);
+                    s->UpdateTransformSummary();
+                });
+
+            body.Children().Append(add);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build a mapping section.")
+
+        return body;
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::RebuildMapRows(TransformMap which) noexcept
+    {
+        try
+        {
+            auto const index = static_cast<size_t>(which);
+
+            if (m_mapPanels[index] == nullptr)
             {
-                auto empty = TransformHint(resources::GetString(L"TransformNoNoteMappings"));
+                return;
+            }
+
+            auto const& info = SectionInfo(which);
+            auto& rows = m_mapRows[index];
+
+            m_mapPanels[index].Children().Clear();
+            m_mapLabels[index].clear();
+
+            auto weak = get_weak();
+
+            if (rows.empty())
+            {
+                auto empty = TransformHint(resources::GetString(info.EmptyText));
                 empty.Margin(xaml::ThicknessHelper::FromUniformLength(0));
-                m_noteMapPanel.Children().Append(empty);
+                m_mapPanels[index].Children().Append(empty);
 
                 return;
             }
 
-            for (size_t index = 0; index < m_noteMapRows.size(); index++)
+            for (size_t position = 0; position < rows.size(); position++)
             {
                 controls::StackPanel row{};
                 row.Orientation(controls::Orientation::Horizontal);
                 row.Spacing(8);
 
-                auto const addBox = [this, weak, index, &row](bool isSource)
+                auto const addBox = [weak, which, &info, &rows, position, &row](bool isSource)
                     {
-                        auto box = SmallNumberBox(0, 127, isSource
-                            ? m_noteMapRows[index].first : m_noteMapRows[index].second);
+                        auto box = SmallNumberBox(info.DisplayOffset, info.Maximum + info.DisplayOffset,
+                            (isSource ? rows[position].first : rows[position].second) + info.DisplayOffset);
 
-                        box.Width(128);
                         box.Header(winrt::box_value(resources::GetString(
-                            isSource ? L"TransformNoteFrom" : L"TransformNoteTo")));
+                            isSource ? info.FromHeader : info.ToHeader)));
 
-                        box.ValueChanged([weak, index, isSource](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
+                        box.ValueChanged([weak, which, position, isSource](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
                             {
                                 auto s = weak.get();
 
-                                if (s == nullptr || index >= s->m_noteMapRows.size() || std::isnan(args.NewValue()))
+                                if (s == nullptr || std::isnan(args.NewValue()))
                                 {
                                     return;
                                 }
 
-                                auto const value = static_cast<int32_t>(std::clamp(args.NewValue(), 0.0, 127.0));
+                                auto& target = s->m_mapRows[static_cast<size_t>(which)];
+
+                                if (position >= target.size())
+                                {
+                                    return;
+                                }
+
+                                auto const& bounds = SectionInfo(which);
+
+                                auto const value = static_cast<int32_t>(std::clamp(args.NewValue(),
+                                    static_cast<double>(bounds.DisplayOffset),
+                                    static_cast<double>(bounds.Maximum + bounds.DisplayOffset))) - bounds.DisplayOffset;
 
                                 if (isSource)
                                 {
-                                    s->m_noteMapRows[index].first = value;
+                                    target[position].first = value;
                                 }
                                 else
                                 {
-                                    s->m_noteMapRows[index].second = value;
+                                    target[position].second = value;
                                 }
 
-                                s->RefreshNoteMapRowLabels();
+                                s->RefreshMapRowLabels(which);
                                 s->UpdateTransformSummary();
                             });
 
                         row.Children().Append(box);
-
-                        return box;
                     };
 
                 addBox(true);
-
-                controls::FontIcon arrow{};
-                arrow.Glyph(L"\uE72A");
-                arrow.FontSize(12);
-                arrow.VerticalAlignment(xaml::VerticalAlignment::Bottom);
-                arrow.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 0, 8));
-                arrow.Foreground(patchbay::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
-                row.Children().Append(arrow);
-
+                row.Children().Append(MapRowArrow());
                 addBox(false);
 
-                controls::TextBlock names{};
-                names.FontSize(12);
-                names.VerticalAlignment(xaml::VerticalAlignment::Bottom);
-                names.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 0, 8));
-                names.MinWidth(120);
-                names.Foreground(patchbay::ThemeBrushes::Current().Get(L"TextFillColorSecondaryBrush"));
-                row.Children().Append(names);
+                if (info.HasNames)
+                {
+                    controls::TextBlock names{};
+                    names.FontSize(12);
+                    names.VerticalAlignment(xaml::VerticalAlignment::Bottom);
+                    names.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 0, 8));
+                    names.MinWidth(120);
+                    names.MaxWidth(240);
+                    names.TextTrimming(xaml::TextTrimming::CharacterEllipsis);
+                    names.Foreground(patchbay::ThemeBrushes::Current().Get(L"TextFillColorSecondaryBrush"));
+                    row.Children().Append(names);
 
-                m_noteMapLabels.push_back(names);
+                    m_mapLabels[index].push_back(names);
+                }
 
-                controls::Button play{};
-                play.Content(winrt::box_value(resources::GetString(L"TransformPlay")));
-                play.VerticalAlignment(xaml::VerticalAlignment::Bottom);
+                if (info.HasPlayButton)
+                {
+                    controls::Button play{};
+                    play.Content(winrt::box_value(resources::GetString(L"TransformPlay")));
+                    play.VerticalAlignment(xaml::VerticalAlignment::Bottom);
 
-                xaml::Automation::AutomationProperties::SetName(play,
-                    resources::GetString(L"TransformPlayAccessibleName"));
+                    xaml::Automation::AutomationProperties::SetName(play,
+                        resources::GetString(L"TransformPlayAccessibleName"));
 
-                play.Click([weak, index](auto&&, auto&&)
-                    {
-                        auto s = weak.get();
-
-                        if (s == nullptr || index >= s->m_noteMapRows.size())
+                    play.Click([weak, which, position](auto&&, auto&&)
                         {
-                            return;
-                        }
+                            auto s = weak.get();
 
-                        s->PlayTestNoteAsync(static_cast<uint8_t>(
-                            std::clamp(s->m_noteMapRows[index].second, 0, 127)));
-                    });
+                            if (s == nullptr)
+                            {
+                                return;
+                            }
 
-                row.Children().Append(play);
+                            auto const& target = s->m_mapRows[static_cast<size_t>(which)];
+
+                            if (position >= target.size())
+                            {
+                                return;
+                            }
+
+                            s->PlayTestNoteAsync(static_cast<uint8_t>(
+                                std::clamp(target[position].second, 0, 127)));
+                        });
+
+                    row.Children().Append(play);
+                }
 
                 controls::Button remove{};
                 remove.Content(winrt::box_value(resources::GetString(L"TransformRemove")));
                 remove.VerticalAlignment(xaml::VerticalAlignment::Bottom);
 
-                remove.Click([weak, index](auto&&, auto&&)
+                remove.Click([weak, which, position](auto&&, auto&&)
                     {
                         auto s = weak.get();
 
-                        if (s == nullptr || index >= s->m_noteMapRows.size())
+                        if (s == nullptr)
                         {
                             return;
                         }
 
-                        s->m_noteMapRows.erase(s->m_noteMapRows.begin() + static_cast<ptrdiff_t>(index));
-                        s->RebuildNoteMapRows();
+                        auto& target = s->m_mapRows[static_cast<size_t>(which)];
+
+                        if (position >= target.size())
+                        {
+                            return;
+                        }
+
+                        target.erase(target.begin() + static_cast<ptrdiff_t>(position));
+
+                        s->RebuildMapRows(which);
                         s->UpdateTransformSummary();
                     });
 
                 row.Children().Append(remove);
 
-                m_noteMapPanel.Children().Append(row);
+                m_mapPanels[index].Children().Append(row);
             }
 
-            RefreshNoteMapRowLabels();
+            RefreshMapRowLabels(which);
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to list the note mappings.")
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to list the mappings.")
     }
 
-    void MainWindow::RefreshNoteMapRowLabels() noexcept
+    _Use_decl_annotations_
+    void MainWindow::RefreshMapRowLabels(TransformMap which) noexcept
     {
         try
         {
-            auto const count = std::min(m_noteMapLabels.size(), m_noteMapRows.size());
+            auto const index = static_cast<size_t>(which);
+
+            if (!SectionInfo(which).HasNames)
+            {
+                return;
+            }
+
+            auto const count = std::min(m_mapLabels[index].size(), m_mapRows[index].size());
 
             for (size_t i = 0; i < count; i++)
             {
-                if (m_noteMapLabels[i] == nullptr)
+                if (m_mapLabels[index][i] == nullptr)
                 {
                     continue;
                 }
 
-                m_noteMapLabels[i].Text(resources::FormatString(L"TransformNoteMapLabelFormat",
-                    patchbay::DescribeNote(static_cast<uint8_t>(std::clamp(m_noteMapRows[i].first, 0, 127))),
-                    patchbay::DescribeNote(static_cast<uint8_t>(std::clamp(m_noteMapRows[i].second, 0, 127)))));
+                auto const from = static_cast<uint8_t>(std::clamp(m_mapRows[index][i].first, 0, 127));
+                auto const to = static_cast<uint8_t>(std::clamp(m_mapRows[index][i].second, 0, 127));
+
+                // The General MIDI names are what an instrument without a program list would
+                // play. A device with its own names is not consulted here.
+                m_mapLabels[index][i].Text(which == TransformMap::Program
+                    ? resources::FormatString(L"TransformMapLabelFormat",
+                        midiapp::GeneralMidiProgramName(from), midiapp::GeneralMidiProgramName(to))
+                    : resources::FormatString(L"TransformMapLabelFormat",
+                        patchbay::DescribeNote(from), patchbay::DescribeNote(to)));
             }
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to label the note mappings.")
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to label the mappings.")
     }
 
-    void MainWindow::RebuildControlMapRows() noexcept
+    void MainWindow::ApplyValueScale() noexcept
     {
         try
         {
-            if (m_controlMapPanel == nullptr)
+            m_applyingValueScale = true;
+            auto const done = wil::scope_exit([this]() { m_applyingValueScale = false; });
+
+            auto const scale = m_editingTransform.Scale;
+            auto const isPercent = scale == patchbay::ValueScale::Percent;
+
+            numbers::DecimalFormatter formatter{};
+
+            formatter.IntegerDigits(1);
+            formatter.FractionDigits(isPercent ? 2 : 0);
+            formatter.IsGrouped(false);
+
+            // The maximum has to move before the value does. A 127 sitting in a box that is about
+            // to top out at 100 would otherwise be clamped on the way past.
+            auto const applyBox = [&formatter, isPercent, scale](controls::NumberBox const& box, int32_t hundredths)
+                {
+                    if (box == nullptr)
+                    {
+                        return;
+                    }
+
+                    box.NumberFormatter(formatter);
+                    box.Maximum(isPercent ? 100.0 : 127.0);
+                    box.Value(patchbay::DisplayFromHundredths(hundredths, scale));
+                };
+
+            applyBox(m_fixedVelocityBox, m_editingTransform.FixedVelocityHundredths);
+            applyBox(m_minimumVelocityBox, m_editingTransform.MinimumVelocityHundredths);
+            applyBox(m_maximumVelocityBox, m_editingTransform.MaximumVelocityHundredths);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to change the value scale.")
+    }
+
+    void MainWindow::RefreshVelocityEnabledState() noexcept
+    {
+        try
+        {
+            auto const isFixed = m_editingTransform.Curve == patchbay::VelocityCurve::Fixed;
+
+            if (m_fixedVelocityBox != nullptr)
             {
-                return;
+                m_fixedVelocityBox.IsEnabled(isFixed);
             }
 
-            m_controlMapPanel.Children().Clear();
-
-            auto weak = get_weak();
-
-            if (m_controlMapRows.empty())
+            // A fixed velocity ignores what was played, so a range on top of it would mean nothing.
+            if (m_velocityRescaleCheck != nullptr)
             {
-                auto empty = TransformHint(resources::GetString(L"TransformNoControlMappings"));
-                empty.Margin(xaml::ThicknessHelper::FromUniformLength(0));
-                m_controlMapPanel.Children().Append(empty);
-
-                return;
+                m_velocityRescaleCheck.IsEnabled(!isFixed);
             }
 
-            for (size_t index = 0; index < m_controlMapRows.size(); index++)
+            auto const rangeEnabled = !isFixed && m_editingTransform.RescaleVelocity;
+
+            if (m_minimumVelocityBox != nullptr)
             {
-                controls::StackPanel row{};
-                row.Orientation(controls::Orientation::Horizontal);
-                row.Spacing(8);
+                m_minimumVelocityBox.IsEnabled(rangeEnabled);
+            }
 
-                auto const addBox = [this, weak, index, &row](bool isSource)
-                    {
-                        auto box = SmallNumberBox(0, 127, isSource
-                            ? m_controlMapRows[index].first : m_controlMapRows[index].second);
-
-                        box.Width(128);
-                        box.Header(winrt::box_value(resources::GetString(
-                            isSource ? L"TransformControlFrom" : L"TransformControlTo")));
-
-                        box.ValueChanged([weak, index, isSource](auto&&, controls::NumberBoxValueChangedEventArgs const& args)
-                            {
-                                auto s = weak.get();
-
-                                if (s == nullptr || index >= s->m_controlMapRows.size() || std::isnan(args.NewValue()))
-                                {
-                                    return;
-                                }
-
-                                auto const value = static_cast<int32_t>(std::clamp(args.NewValue(), 0.0, 127.0));
-
-                                if (isSource)
-                                {
-                                    s->m_controlMapRows[index].first = value;
-                                }
-                                else
-                                {
-                                    s->m_controlMapRows[index].second = value;
-                                }
-
-                                s->UpdateTransformSummary();
-                            });
-
-                        row.Children().Append(box);
-                    };
-
-                addBox(true);
-
-                controls::FontIcon arrow{};
-                arrow.Glyph(L"\uE72A");
-                arrow.FontSize(12);
-                arrow.VerticalAlignment(xaml::VerticalAlignment::Bottom);
-                arrow.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 0, 8));
-                arrow.Foreground(patchbay::ThemeBrushes::Current().Get(L"TextFillColorTertiaryBrush"));
-                row.Children().Append(arrow);
-
-                addBox(false);
-
-                controls::Button remove{};
-                remove.Content(winrt::box_value(resources::GetString(L"TransformRemove")));
-                remove.VerticalAlignment(xaml::VerticalAlignment::Bottom);
-
-                remove.Click([weak, index](auto&&, auto&&)
-                    {
-                        auto s = weak.get();
-
-                        if (s == nullptr || index >= s->m_controlMapRows.size())
-                        {
-                            return;
-                        }
-
-                        s->m_controlMapRows.erase(s->m_controlMapRows.begin() + static_cast<ptrdiff_t>(index));
-                        s->RebuildControlMapRows();
-                        s->UpdateTransformSummary();
-                    });
-
-                row.Children().Append(remove);
-
-                m_controlMapPanel.Children().Append(row);
+            if (m_maximumVelocityBox != nullptr)
+            {
+                m_maximumVelocityBox.IsEnabled(rangeEnabled);
             }
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to list the control change mappings.")
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to update the velocity controls.")
     }
 
     void MainWindow::DrawVelocityCurve() noexcept
