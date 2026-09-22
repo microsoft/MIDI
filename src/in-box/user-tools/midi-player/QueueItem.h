@@ -40,6 +40,7 @@ namespace winrt::midiplayer::implementation
             return m_isPlayable ? xaml::Visibility::Collapsed : xaml::Visibility::Visible;
         }
 
+        winrt::hstring RowAccessibleName() const noexcept;
         winrt::hstring RemoveAccessibleName() const noexcept;
 
         winrt::event_token PropertyChanged(xaml::Data::PropertyChangedEventHandler const& handler)

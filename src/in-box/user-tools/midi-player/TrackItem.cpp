@@ -67,6 +67,7 @@ namespace winrt::midiplayer::implementation
             RaisePropertyChanged(L"DetailText");
             RaisePropertyChanged(L"PatchText");
             RaisePropertyChanged(L"ColorBrush");
+            RaisePropertyChanged(L"RowAccessibleName");
             RaisePropertyChanged(L"MuteAccessibleName");
             RaisePropertyChanged(L"SoloAccessibleName");
         }
@@ -133,6 +134,17 @@ namespace winrt::midiplayer::implementation
     double TrackItem::ContentOpacity() const noexcept
     {
         return (m_isMuted || m_silencedByOther) ? 0.4 : 1.0;
+    }
+
+    winrt::hstring TrackItem::RowAccessibleName() const noexcept
+    {
+        // The row shows three separate text elements; a screen reader announces the container's
+        // name only, so they have to be composed into it.
+        return res::FormatString(
+            L"TrackRowAccessibleNameFormat",
+            std::wstring{ m_displayName },
+            std::wstring{ m_patchText },
+            std::wstring{ m_detailText });
     }
 
     winrt::hstring TrackItem::MuteAccessibleName() const noexcept

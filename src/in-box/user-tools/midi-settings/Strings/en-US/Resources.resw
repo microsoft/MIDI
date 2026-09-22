@@ -189,6 +189,15 @@
   <data name="KeyboardButtonText.Text" xml:space="preserve">
     <value>Virtual Keyboard</value>
   </data>
+  <data name="ClockButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI Clock</value>
+  </data>
+  <data name="ClockButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>MIDI Clock</value>
+  </data>
+  <data name="ClockButtonText.Text" xml:space="preserve">
+    <value>MIDI Clock</value>
+  </data>
   <data name="TroubleshooterButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>MIDI Troubleshooting and Repair</value>
   </data>
@@ -337,6 +346,12 @@
   <data name="EndpointListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>MIDI endpoints</value>
   </data>
+  <data name="RelinkOrphanList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Saved settings with no matching device</value>
+  </data>
+  <data name="RelinkCandidateList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Devices these settings could be moved to</value>
+  </data>
   <data name="NoEndpointsText.Text" xml:space="preserve">
     <value>No MIDI endpoints match this filter.</value>
   </data>
@@ -360,6 +375,26 @@
   </data>
   <data name="EndpointPanicButtonText.Text" xml:space="preserve">
     <value>Panic</value>
+  </data>
+  <data name="EndpointRowAccessibleNameFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+    <comment>Spoken by a screen reader for one endpoint card or row. {0} endpoint name, {1} transport and detail summary.</comment>
+  </data>
+  <data name="EndpointRowDescribedAccessibleNameFormat" xml:space="preserve">
+    <value>{0}, {1}, {2}</value>
+    <comment>Spoken by a screen reader for an endpoint which also has a description. {0} endpoint name, {1} description, {2} transport and detail summary.</comment>
+  </data>
+  <data name="EndpointMonitorAccessibleNameFormat" xml:space="preserve">
+    <value>Monitor {0}</value>
+    <comment>{0} endpoint name. Each row has its own Monitor button, so the name has to say which endpoint.</comment>
+  </data>
+  <data name="EndpointPanicAccessibleNameFormat" xml:space="preserve">
+    <value>Send MIDI panic to {0}</value>
+    <comment>{0} endpoint name. Each row has its own Panic button, so the name has to say which endpoint.</comment>
+  </data>
+  <data name="Midi1PortRowAccessibleNameFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+    <comment>Spoken by a screen reader for one MIDI 1.0 port row. {0} port name, {1} group and direction.</comment>
   </data>
 
   <!-- Endpoint descriptions -->

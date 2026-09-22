@@ -72,6 +72,15 @@ namespace winrt::midipatchbay::implementation
         void InitializeStaticText() noexcept;
         xaml::UIElement BuildAppSettingsPanel() noexcept;
 
+        // ---- notification area ----
+        void InitializeNotificationArea() noexcept;
+
+        // True when the close was turned into a hide, which is what keeps the routes running.
+        // False means the window really is going away.
+        bool TryHideToNotificationArea() noexcept;
+
+        void RestoreFromNotificationArea() noexcept;
+
         // ---- patch list and navigation ----
         void LoadPatches() noexcept;
         void RebuildNavigation() noexcept;
@@ -242,12 +251,21 @@ namespace winrt::midipatchbay::implementation
         bool m_closing{ false };
         bool m_rebuildingNavigation{ false };
 
+        // Set by the notification area's Exit, so that close is not turned into a hide again.
+        bool m_exiting{ false };
+
+        // Guards the window briefly reporting itself minimized on its way out of the
+        // notification area, which would otherwise hide it again straight away.
+        bool m_restoringFromNotificationArea{ false };
+
         // Which patches were showing a missing-endpoint badge the last time the list was built.
         std::wstring m_navigationBadgeSignature{};
 
         xaml::DispatcherTimer m_refreshTimer{ nullptr };
 
         winrt::event_token m_closedToken{};
+        winrt::event_token m_closingToken{};
+        winrt::event_token m_windowChangedToken{};
     };
 }
 

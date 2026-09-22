@@ -300,12 +300,14 @@ namespace MidiSynth
         word0 |= 0x00008000;
         word0 |= static_cast<uint32_t>(SynthEndpoint::FunctionBlockNumber & 0x7F) << 8;
 
-        // User interface hint and direction. Bidirectional in both, because the synthesizer
-        // answers MIDI-CI on the same block it receives notes on.
-        constexpr uint32_t bidirectional = 0x3;
+        constexpr uint32_t uiHintReceiver = 0x1;
+        constexpr uint32_t directionBidirectional = 0x3;
 
-        word0 |= bidirectional << 4;
-        word0 |= bidirectional;
+        // The direction is bidirectional because the synthesizer answers MIDI-CI on the same block
+        // it receives notes on, but to the user it is a tone generator, so an application listing
+        // controllers to play from should not offer it.
+        word0 |= uiHintReceiver << 4;
+        word0 |= directionBidirectional;
 
         uint32_t word1 = static_cast<uint32_t>(SynthEndpoint::FirstGroupIndex) << 24;
 

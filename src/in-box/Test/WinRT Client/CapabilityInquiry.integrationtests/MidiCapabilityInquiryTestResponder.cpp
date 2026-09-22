@@ -86,6 +86,12 @@ void MidiCapabilityInquiryTestResponder::SetProfiles(
     m_disabledProfiles = disabled;
 }
 
+std::vector<MidiCapabilityInquiryMessageType> MidiCapabilityInquiryTestResponder::MessageLog() const
+{
+    std::lock_guard<std::mutex> guard(m_lock);
+    return m_messageLog;
+}
+
 void MidiCapabilityInquiryTestResponder::Send(
     winrt::Windows::Foundation::Collections::IVector<MidiMessage64> const& messages)
 {
@@ -203,6 +209,11 @@ void MidiCapabilityInquiryTestResponder::HandleMessage(MidiCapabilityInquiryMess
     }
 
     auto const group = MidiGroup((uint8_t)0);
+
+    {
+        std::lock_guard<std::mutex> guard(m_lock);
+        m_messageLog.push_back(message.MessageType());
+    }
 
     switch (message.MessageType())
     {

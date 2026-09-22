@@ -8,6 +8,7 @@
 #pragma once
 
 #include "SysExRow.g.h"
+#include "StringResources.h"
 
 namespace winrt::midisysextool::implementation
 {
@@ -40,6 +41,16 @@ namespace winrt::midisysextool::implementation
         winrt::hstring ByteData() const noexcept { return m_byteData; }
         winrt::hstring ByteSuffix() const noexcept { return m_byteSuffix; }
         bool IsOutOfSequence() const noexcept { return m_isOutOfSequence; }
+
+        // The bytes are included deliberately: this is a dump tool, and the data is the whole
+        // point of the row. A screen reader user has no other way to read it in list order.
+        winrt::hstring RowAccessibleName() const noexcept
+        {
+            return ::midisysextool::resources::FormatString(
+                L"DumpRowAccessibleNameFormat",
+                std::wstring{ m_messageNumber },
+                std::wstring{ m_bytePrefix } + std::wstring{ m_byteData } + std::wstring{ m_byteSuffix });
+        }
 
     private:
         winrt::hstring m_messageNumber{};

@@ -123,6 +123,37 @@ namespace winrt::midikeyboard::implementation
             return index >= 0 && static_cast<size_t>(index) < count;
         }
 
+        // "German (Germany) - QWERTZ". The letters matter more than the language here: they
+        // are what a player compares against their own key caps.
+        winrt::hstring DescribeKeyboardLayout(native::InstalledKeyboardLayout const& layout) noexcept
+        {
+            try
+            {
+                if (!layout.LanguageName.empty() && !layout.KeySignature.empty())
+                {
+                    return res::FormatString(
+                        L"ComputerKeyboardLayoutChoiceFormat", layout.LanguageName, layout.KeySignature);
+                }
+
+                if (!layout.LanguageName.empty())
+                {
+                    return winrt::hstring{ layout.LanguageName };
+                }
+
+                if (!layout.KeySignature.empty())
+                {
+                    return winrt::hstring{ layout.KeySignature };
+                }
+
+                // a layout Windows will not describe still has to be selectable
+                return winrt::hstring{ std::format(L"{:08X}", layout.Identifier) };
+            }
+            catch (...)
+            {
+                return {};
+            }
+        }
+
         // the strip trims to one line, so anything longer than a few words needs a tooltip
         void SetStripText(
             controls::TextBlock const& block,
@@ -184,6 +215,21 @@ namespace winrt::midikeyboard::implementation
                     RefreshKeyGlow(note);
                 });
 
+            // a player can change Windows keyboard layouts while this window is in the
+            // background, and the letters drawn on the keys have to follow
+            Activated([weak = get_weak()](auto&&, xaml::WindowActivatedEventArgs const& activation)
+                {
+                    if (activation.WindowActivationState() == xaml::WindowActivationState::Deactivated)
+                    {
+                        return;
+                    }
+
+                    if (auto strong = weak.get())
+                    {
+                        strong->RefreshKeyLabelsIfLayoutChanged();
+                    }
+                });
+
             Closed([weak = get_weak()](auto&&, auto&&)
                 {
                     if (auto strong = weak.get())
@@ -210,7 +256,8 @@ namespace winrt::midikeyboard::implementation
 
             // the keyboard itself takes the focus, so the computer keyboard plays notes
             // without the player having to click anything first
-            KeyboardCanvas().Focus(xaml::FocusState::Programmatic);
+            FocusKeyboard();
+            UpdateComputerKeyState();
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to finish loading the window.")
     }
@@ -240,7 +287,13 @@ namespace winrt::midikeyboard::implementation
             }
 
             KeyboardFrame().Background(MakeVerticalGradient(MakeColor(26, 26, 30), MakeColor(12, 12, 14)));
-            KeyboardFrame().BorderBrush(MakeSolidBrush(MakeColor(0, 0, 0, 140)));
+
+            // the frame doubles as the focus indicator: accent while the computer keys will
+            // play, plain while a control that wants the keystrokes has them
+            m_keyboardFrameBrush = MakeSolidBrush(MakeColor(0, 0, 0, 140));
+            m_keyboardFrameFocusBrush = m_glowBrush;
+
+            KeyboardFrame().BorderBrush(m_keyboardFrameBrush);
 
             auto const trackBrush = MakeVerticalGradient(MakeColor(20, 20, 24), MakeColor(38, 38, 44));
             auto const trackBorder = MakeSolidBrush(MakeColor(0, 0, 0, 140));
@@ -274,6 +327,8 @@ namespace winrt::midikeyboard::implementation
             AppTitleTextBlock().Text(res::GetString(L"AppDisplayName"));
 
             midiapp::ApplyPreviewBadgeVisibility(PreviewChiclet());
+
+            midiapp::MakeLiveStatusRegion(ProgramListStatusText());
 
             midiapp::WindowChromeElements elements{};
 
@@ -414,6 +469,28 @@ namespace winrt::midikeyboard::implementation
 
             ShowNoteNamesCheckBox().IsChecked(settings.ShowNoteNames());
             ShowComputerKeysCheckBox().IsChecked(settings.ShowComputerKeys());
+
+            auto layoutChoices = winrt::single_threaded_vector<foundation::IInspectable>();
+            AppendChoice(layoutChoices, L"ComputerKeyboardLayoutAutomatic");
+
+            m_keyboardLayoutChoices = native::InstalledKeyboardLayouts();
+
+            auto selectedLayout = 0;
+
+            for (size_t i = 0; i < m_keyboardLayoutChoices.size(); i++)
+            {
+                auto const& layout = m_keyboardLayoutChoices[i];
+
+                layoutChoices.Append(winrt::box_value(DescribeKeyboardLayout(layout)));
+
+                if (layout.Identifier == settings.ComputerKeyboardLayout())
+                {
+                    selectedLayout = static_cast<int32_t>(i) + 1;
+                }
+            }
+
+            ComputerKeyboardLayoutComboBox().ItemsSource(layoutChoices);
+            ComputerKeyboardLayoutComboBox().SelectedIndex(selectedLayout);
 
             RibbonPositionComboBox().SelectedIndex(static_cast<int32_t>(settings.Ribbons()));
             VelocityModeComboBox().SelectedIndex(static_cast<int32_t>(settings.Velocity()));
@@ -1159,6 +1236,8 @@ namespace winrt::midikeyboard::implementation
 
             auto const cornerRadius = std::clamp(whiteWidth * 0.16, 2.0, 6.0);
 
+            m_keyLabelLayout = ResolveKeyLabelLayout();
+
             for (size_t i = 0; i < m_keys.size(); i++)
             {
                 auto const& geometry = m_keyGeometry[i];
@@ -1191,7 +1270,8 @@ namespace winrt::midikeyboard::implementation
                     key.NoteLabel.Visibility(xaml::Visibility::Collapsed);
                 }
 
-                auto const computerKey = native::ComputerKeyLabel(geometry.NoteNumber - FirstNoteNumber());
+                auto const computerKey = native::ComputerKeyLabel(
+                    geometry.NoteNumber - FirstNoteNumber(), m_keyLabelLayout);
 
                 key.ComputerKeyLabel.Foreground(textBrush);
                 key.ComputerKeyLabel.FontSize(computerFontSize);
@@ -1592,6 +1672,10 @@ namespace winrt::midikeyboard::implementation
             auto const point = args.GetCurrentPoint(canvas);
             auto const position = point.Position();
 
+            // playing a key is also how the player takes the computer keys back from a
+            // control in the strip above
+            FocusKeyboard();
+
             auto const index = native::HitTestKey(
                 m_keyGeometry, position.X + m_keyboardScrollOffset, position.Y);
 
@@ -1749,12 +1833,30 @@ namespace winrt::midikeyboard::implementation
     {
         try
         {
-            if (!m_initialized || IsTextInputFocused())
+            if (!m_initialized)
             {
                 return;
             }
 
             auto const key = static_cast<uint32_t>(args.Key());
+
+            // the way back to the keys from whatever control has taken the focus
+            if (key == VK_ESCAPE)
+            {
+                FocusKeyboard();
+
+                args.Handled(true);
+                return;
+            }
+
+            if (IsTextInputFocused())
+            {
+                return;
+            }
+
+            // switching Windows keyboard layouts changes the letters printed on the keys,
+            // though not the keys the notes are on
+            RefreshKeyLabelsIfLayoutChanged();
 
             if (key == VK_PRIOR || key == VK_NEXT)
             {
@@ -1778,27 +1880,36 @@ namespace winrt::midikeyboard::implementation
                 return;
             }
 
+            auto const status = args.KeyStatus();
+
             // held keys repeat, and a repeat is not a new note
-            if (args.KeyStatus().WasKeyDown)
+            if (status.WasKeyDown)
             {
                 return;
             }
 
-            auto const semitones = native::ComputerKeyToSemitones(key);
+            // Alt is a menu accelerator, and AltGr is how several layouts reach their extra
+            // characters. The extended keys share scan codes with the keys the notes are on.
+            if (status.IsMenuKeyDown || status.IsExtendedKey)
+            {
+                return;
+            }
+
+            auto const semitones = native::ComputerKeyToSemitones(status.ScanCode);
 
             if (semitones < 0)
             {
                 return;
             }
 
-            if (m_computerKeyNotes.find(key) != m_computerKeyNotes.end())
+            if (m_computerKeyNotes.find(status.ScanCode) != m_computerKeyNotes.end())
             {
                 return;
             }
 
             auto const noteNumber = TransposedNote(FirstNoteNumber() + semitones);
 
-            m_computerKeyNotes[key] = noteNumber;
+            m_computerKeyNotes[status.ScanCode] = noteNumber;
 
             auto const& settings = native::AppSettings::Current();
 
@@ -1821,8 +1932,8 @@ namespace winrt::midikeyboard::implementation
     {
         try
         {
-            auto const key = static_cast<uint32_t>(args.Key());
-            auto const entry = m_computerKeyNotes.find(key);
+            auto const scanCode = args.KeyStatus().ScanCode;
+            auto const entry = m_computerKeyNotes.find(scanCode);
 
             if (entry == m_computerKeyNotes.end())
             {
@@ -1838,6 +1949,61 @@ namespace winrt::midikeyboard::implementation
             args.Handled(true);
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to handle the computer key release.")
+    }
+
+    void MainWindow::FocusKeyboard() noexcept
+    {
+        try
+        {
+            KeyboardCanvas().Focus(xaml::FocusState::Programmatic);
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to move the focus to the keyboard.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnRootFocusChanged(
+        foundation::IInspectable const&,
+        xaml::RoutedEventArgs const&)
+    {
+        UpdateComputerKeyState();
+    }
+
+    void MainWindow::UpdateComputerKeyState() noexcept
+    {
+        try
+        {
+            auto const keysPlay = !IsTextInputFocused();
+
+            if (m_keyboardFrameBrush != nullptr && m_keyboardFrameFocusBrush != nullptr)
+            {
+                KeyboardFrame().BorderBrush(keysPlay ? m_keyboardFrameFocusBrush : m_keyboardFrameBrush);
+            }
+
+            ComputerKeysPausedHint().Visibility(
+                keysPlay ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to update the computer key state.")
+    }
+
+    uint32_t MainWindow::ResolveKeyLabelLayout() const noexcept
+    {
+        auto const chosen = native::AppSettings::Current().ComputerKeyboardLayout();
+
+        return chosen != 0 ? chosen : native::ActiveKeyboardLayoutIdentifier();
+    }
+
+    void MainWindow::RefreshKeyLabelsIfLayoutChanged() noexcept
+    {
+        try
+        {
+            if (!m_initialized || ResolveKeyLabelLayout() == m_keyLabelLayout)
+            {
+                return;
+            }
+
+            LayoutKeyboard();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to refresh the computer key labels.")
     }
 
     // ------------------------------------------------------------------------------------
@@ -2820,7 +2986,7 @@ namespace winrt::midikeyboard::implementation
 
             if (!isOn)
             {
-                KeyboardCanvas().Focus(xaml::FocusState::Programmatic);
+                FocusKeyboard();
             }
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to show the settings.")
@@ -3117,6 +3283,44 @@ namespace winrt::midikeyboard::implementation
             LayoutKeyboard();
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the computer key display.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnComputerKeyboardLayoutChanged(
+        foundation::IInspectable const&,
+        controls::SelectionChangedEventArgs const&)
+    {
+        try
+        {
+            if (m_suppressSettingHandlers)
+            {
+                return;
+            }
+
+            auto const index = ComputerKeyboardLayoutComboBox().SelectedIndex();
+
+            if (index < 0)
+            {
+                return;
+            }
+
+            // the first entry is automatic, so the rest are one ahead of the layout list
+            auto const chosen = IsIndexValid(index - 1, m_keyboardLayoutChoices.size())
+                ? m_keyboardLayoutChoices[static_cast<size_t>(index) - 1].Identifier
+                : 0u;
+
+            auto& settings = native::AppSettings::Current();
+
+            if (chosen == settings.ComputerKeyboardLayout())
+            {
+                return;
+            }
+
+            settings.ComputerKeyboardLayout(chosen);
+
+            LayoutKeyboard();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the computer keyboard layout.")
     }
 
     _Use_decl_annotations_

@@ -29,27 +29,149 @@ namespace midikeyboard
 
         struct ComputerKeyMapping
         {
-            uint32_t VirtualKeyCode;
+            // set 1 make code, which is what PhysicalKeyStatus reports and what identifies a
+            // key by where it sits rather than by what it types
+            uint32_t ScanCode;
+
             int32_t Semitones;
-            wchar_t const* Label;
         };
 
         // The layout trackers and DAWs have used for decades: the bottom two rows play one
         // octave from the lowest displayed C, the top two rows play the octave above it.
+        // Positional, so it falls on the same keys on a QWERTZ or AZERTY keyboard as it does
+        // on QWERTY; the letters shown on the keys are read from the layout in use. The
+        // comments name each key by where a US keyboard puts it.
         constexpr ComputerKeyMapping ComputerKeys[]
         {
-            { 'Z',  0, L"Z" },  { 'S',  1, L"S" },  { 'X',  2, L"X" },  { 'D',  3, L"D" },
-            { 'C',  4, L"C" },  { 'V',  5, L"V" },  { 'G',  6, L"G" },  { 'B',  7, L"B" },
-            { 'H',  8, L"H" },  { 'N',  9, L"N" },  { 'J', 10, L"J" },  { 'M', 11, L"M" },
-            { VK_OEM_COMMA, 12, L"," }, { 'L', 13, L"L" }, { VK_OEM_PERIOD, 14, L"." },
-            { VK_OEM_1, 15, L";" }, { VK_OEM_2, 16, L"/" },
+            { 0x2C,  0 },   // Z
+            { 0x1F,  1 },   // S
+            { 0x2D,  2 },   // X
+            { 0x20,  3 },   // D
+            { 0x2E,  4 },   // C
+            { 0x2F,  5 },   // V
+            { 0x22,  6 },   // G
+            { 0x30,  7 },   // B
+            { 0x23,  8 },   // H
+            { 0x31,  9 },   // N
+            { 0x24, 10 },   // J
+            { 0x32, 11 },   // M
+            { 0x33, 12 },   // ,
+            { 0x26, 13 },   // L
+            { 0x34, 14 },   // .
+            { 0x27, 15 },   // ;
+            { 0x35, 16 },   // /
 
-            { 'Q', 12, L"Q" },  { '2', 13, L"2" },  { 'W', 14, L"W" },  { '3', 15, L"3" },
-            { 'E', 16, L"E" },  { 'R', 17, L"R" },  { '5', 18, L"5" },  { 'T', 19, L"T" },
-            { '6', 20, L"6" },  { 'Y', 21, L"Y" },  { '7', 22, L"7" },  { 'U', 23, L"U" },
-            { 'I', 24, L"I" },  { '9', 25, L"9" },  { 'O', 26, L"O" },  { '0', 27, L"0" },
-            { 'P', 28, L"P" },
+            { 0x10, 12 },   // Q
+            { 0x03, 13 },   // 2
+            { 0x11, 14 },   // W
+            { 0x04, 15 },   // 3
+            { 0x12, 16 },   // E
+            { 0x13, 17 },   // R
+            { 0x06, 18 },   // 5
+            { 0x14, 19 },   // T
+            { 0x07, 20 },   // 6
+            { 0x15, 21 },   // Y
+            { 0x08, 22 },   // 7
+            { 0x16, 23 },   // U
+            { 0x17, 24 },   // I
+            { 0x0A, 25 },   // 9
+            { 0x18, 26 },   // O
+            { 0x0B, 27 },   // 0
+            { 0x19, 28 },   // P
         };
+
+        // the first six keys of the top letter row, which is what gives a layout its name
+        constexpr uint32_t SignatureScanCodes[]{ 0x10, 0x11, 0x12, 0x13, 0x14, 0x15 };
+
+        HKL ToKeyboardLayout(uint32_t layoutIdentifier) noexcept
+        {
+            return layoutIdentifier == 0
+                ? GetKeyboardLayout(0)
+                : reinterpret_cast<HKL>(static_cast<ULONG_PTR>(layoutIdentifier));
+        }
+
+        uint32_t FromKeyboardLayout(HKL layout) noexcept
+        {
+            return static_cast<uint32_t>(reinterpret_cast<ULONG_PTR>(layout));
+        }
+
+        std::wstring LabelForScanCode(uint32_t scanCode, HKL layout) noexcept
+        {
+            try
+            {
+                auto const virtualKey = MapVirtualKeyExW(scanCode, MAPVK_VSC_TO_VK_EX, layout);
+
+                if (virtualKey == 0)
+                {
+                    return {};
+                }
+
+                // the top bit marks a dead key, but the character underneath is still what is
+                // printed on the key cap
+                auto const mapped = MapVirtualKeyExW(virtualKey, MAPVK_VK_TO_CHAR, layout) & 0x7FFFFFFF;
+
+                auto character = static_cast<wchar_t>(mapped);
+
+                if (character == 0 || character == L' ')
+                {
+                    // a layout with no character here still has a usable name for the key
+                    if ((virtualKey >= 'A' && virtualKey <= 'Z') || (virtualKey >= '0' && virtualKey <= '9'))
+                    {
+                        character = static_cast<wchar_t>(virtualKey);
+                    }
+                    else
+                    {
+                        return {};
+                    }
+                }
+
+                std::wstring label(1, character);
+
+                CharUpperBuffW(label.data(), 1);
+
+                return label;
+            }
+            catch (...)
+            {
+                return {};
+            }
+        }
+
+        std::wstring LanguageNameForLayout(HKL layout) noexcept
+        {
+            try
+            {
+                wchar_t localeName[LOCALE_NAME_MAX_LENGTH]{};
+
+                auto const languageId = LOWORD(FromKeyboardLayout(layout));
+
+                if (LCIDToLocaleName(
+                    MAKELCID(languageId, SORT_DEFAULT),
+                    localeName,
+                    ARRAYSIZE(localeName),
+                    0) == 0)
+                {
+                    return {};
+                }
+
+                wchar_t displayName[LOCALE_NAME_MAX_LENGTH * 2]{};
+
+                if (GetLocaleInfoEx(
+                    localeName,
+                    LOCALE_SLOCALIZEDDISPLAYNAME,
+                    displayName,
+                    ARRAYSIZE(displayName)) == 0)
+                {
+                    return {};
+                }
+
+                return displayName;
+            }
+            catch (...)
+            {
+                return {};
+            }
+        }
     }
 
     _Use_decl_annotations_
@@ -174,14 +296,87 @@ namespace midikeyboard
         }
     }
 
+    std::vector<InstalledKeyboardLayout> InstalledKeyboardLayouts() noexcept
+    {
+        std::vector<InstalledKeyboardLayout> layouts{};
+
+        try
+        {
+            auto const count = GetKeyboardLayoutList(0, nullptr);
+
+            if (count <= 0)
+            {
+                return layouts;
+            }
+
+            std::vector<HKL> handles(static_cast<size_t>(count), nullptr);
+
+            auto const returned = GetKeyboardLayoutList(count, handles.data());
+
+            if (returned <= 0)
+            {
+                return layouts;
+            }
+
+            handles.resize(static_cast<size_t>(std::min(returned, count)));
+
+            layouts.reserve(handles.size());
+
+            for (auto const handle : handles)
+            {
+                InstalledKeyboardLayout entry{};
+
+                entry.Identifier = FromKeyboardLayout(handle);
+                entry.LanguageName = LanguageNameForLayout(handle);
+
+                for (auto const scanCode : SignatureScanCodes)
+                {
+                    entry.KeySignature += LabelForScanCode(scanCode, handle);
+                }
+
+                layouts.push_back(std::move(entry));
+            }
+        }
+        catch (...)
+        {
+            layouts.clear();
+        }
+
+        return layouts;
+    }
+
+    uint32_t ActiveKeyboardLayoutIdentifier() noexcept
+    {
+        return FromKeyboardLayout(GetKeyboardLayout(0));
+    }
+
     _Use_decl_annotations_
-    std::wstring ComputerKeyLabel(int32_t semitonesFromBottom) noexcept
+    bool IsKeyboardLayoutInstalled(uint32_t layoutIdentifier) noexcept
+    {
+        if (layoutIdentifier == 0)
+        {
+            return false;
+        }
+
+        for (auto const& layout : InstalledKeyboardLayouts())
+        {
+            if (layout.Identifier == layoutIdentifier)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    _Use_decl_annotations_
+    std::wstring ComputerKeyLabel(int32_t semitonesFromBottom, uint32_t layoutIdentifier) noexcept
     {
         for (auto const& mapping : ComputerKeys)
         {
             if (mapping.Semitones == semitonesFromBottom)
             {
-                return mapping.Label;
+                return LabelForScanCode(mapping.ScanCode, ToKeyboardLayout(layoutIdentifier));
             }
         }
 
@@ -189,11 +384,11 @@ namespace midikeyboard
     }
 
     _Use_decl_annotations_
-    int32_t ComputerKeyToSemitones(uint32_t virtualKeyCode) noexcept
+    int32_t ComputerKeyToSemitones(uint32_t scanCode) noexcept
     {
         for (auto const& mapping : ComputerKeys)
         {
-            if (mapping.VirtualKeyCode == virtualKeyCode)
+            if (mapping.ScanCode == scanCode)
             {
                 return mapping.Semitones;
             }

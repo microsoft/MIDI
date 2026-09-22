@@ -14,6 +14,14 @@
     MSI packages must be signed before the bundle is built, because the bundle embeds them. That
     happens automatically here: the bundle project references the package projects, so their
     SignMsi targets run first.
+
+    The managed custom action needs signing of its own. WiX's SignMsi hook signs the .msi, and an
+    Authenticode signature on a .msi does not extend to anything Windows Installer unpacks out of
+    it: the custom action package in the Binary table is written to %TEMP% and loaded as an
+    ordinary DLL, and the managed assembly inside it is then extracted and loaded in turn. Smart
+    App Control blocks both if they are unsigned, and the install fails with 1723 "a DLL required
+    for this install to complete could not be run". So sign the assembly before MakeSfxCA packages
+    it, and sign the package MakeSfxCA produces.
   -->
 
   <PropertyGroup>
@@ -36,6 +44,31 @@
 
   <Target Name="SignBundle" Condition="'$(MidiSigningMetadata)' != ''">
     <Exec Command="$(MidiSignCommand) -Path &quot;%(SignBundle.FullPath)&quot;" />
+  </Target>
+
+  <!-- WixCATargetsImported is set by WixToolset.Dtf.CustomAction.targets, so the three targets
+       below only ever apply to the shared custom action project. -->
+
+  <Target Name="MidiSignCustomActionAssembly"
+          BeforeTargets="PackCustomAction"
+          Condition="'$(MidiSigningMetadata)' != '' and '$(WixCATargetsImported)' == 'true' and Exists('@(IntermediateAssembly)')">
+    <Exec Command="$(MidiSignCommand) -Path &quot;%(IntermediateAssembly.FullPath)&quot;" />
+  </Target>
+
+  <!-- Signs the intermediate copy rather than the one in bin, so the signature survives the copy
+       to the output folder instead of being overwritten by it on the next incremental build. -->
+  <Target Name="MidiSignCustomActionPackage"
+          AfterTargets="PackCustomAction"
+          Condition="'$(MidiSigningMetadata)' != '' and '$(WixCATargetsImported)' == 'true' and Exists('$(ProjectDir)$(IntermediateOutputPath)$(TargetCAFileName)')">
+    <Exec Command="$(MidiSignCommand) -Path &quot;$(ProjectDir)$(IntermediateOutputPath)$(TargetCAFileName)&quot;" />
+  </Target>
+
+  <!-- The wixprojs embed $(var.customactions.TargetDir)...CA.dll, so the copy in bin is the one
+       that actually ships. Already-signed files are skipped, so this is normally a no-op. -->
+  <Target Name="MidiSignCustomActionOutput"
+          AfterTargets="Build"
+          Condition="'$(MidiSigningMetadata)' != '' and '$(WixCATargetsImported)' == 'true' and Exists('$(TargetDir)$(TargetCAFileName)')">
+    <Exec Command="$(MidiSignCommand) -Path &quot;$(TargetDir)$(TargetCAFileName)&quot;" />
   </Target>
 
 </Project>

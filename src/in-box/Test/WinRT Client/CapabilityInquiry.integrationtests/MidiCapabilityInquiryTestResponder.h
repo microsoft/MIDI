@@ -67,6 +67,11 @@ public:
 
     uint32_t RequestCount() const { return m_requestCount; }
 
+    // Every message type this responder was handed, in arrival order, so a test can assert what
+    // the session sent and in what order.
+    std::vector<winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiCapabilityInquiryMessageType>
+        MessageLog() const;
+
 private:
 
     void OnMessageReceived(
@@ -101,6 +106,9 @@ private:
 
     std::vector<winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiProfileId> m_enabledProfiles{};
     std::vector<winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiProfileId> m_disabledProfiles{};
+
+    std::vector<winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiCapabilityInquiryMessageType>
+        m_messageLog{};
 
     std::vector<uint8_t> m_incoming{};
     bool m_incomingIsOpen{ false };

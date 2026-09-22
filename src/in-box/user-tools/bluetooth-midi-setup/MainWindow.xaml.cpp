@@ -385,6 +385,10 @@ namespace winrt::midibluetoothsetup::implementation
 
             midiapp::ApplyPreviewBadgeVisibility(PreviewChiclet());
 
+            midiapp::MakeLiveStatusRegion(DevicesStatusText());
+            midiapp::MakeLiveStatusRegion(PeripheralStatusText());
+            midiapp::MakeLiveStatusRegion(DefaultOfflineRetentionStatusText());
+
             midiapp::WindowChromeElements elements{};
 
             elements.Window = *this;

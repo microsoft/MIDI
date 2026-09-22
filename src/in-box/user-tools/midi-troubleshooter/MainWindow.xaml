@@ -55,7 +55,8 @@
             <!-- One glyph per state rather than a brush built in code, so the colors follow the
                  theme when the customer switches it from the appearance flyout. -->
             <DataTemplate x:Key="RegistryEntryTemplate" x:DataType="local:RegistryEntryItem">
-                <Grid ColumnSpacing="8" Margin="0,2,0,2">
+                <Grid ColumnSpacing="8" Margin="0,2,0,2"
+                      AutomationProperties.Name="{x:Bind Name, Mode=OneWay}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="230" />
@@ -87,7 +88,8 @@
                  for the shared row, and every row is its own Grid, so an Auto column would be
                  measured per item and the values would not line up down the page. -->
             <DataTemplate x:Key="RegistryTransportTemplate" x:DataType="local:RegistryEntryItem">
-                <Grid Margin="0,0,0,14" RowSpacing="2">
+                <Grid Margin="0,0,0,14" RowSpacing="2"
+                      AutomationProperties.Name="{x:Bind Name, Mode=OneWay}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -379,6 +381,7 @@
                 <ScrollViewer x:Name="ApiModePanel" Grid.Row="1" Padding="16,12,16,16" Visibility="Collapsed">
                     <StackPanel Spacing="12" MaxWidth="900" HorizontalAlignment="Left">
                         <TextBlock x:Uid="ApiModePageTitle" Text="API mode"
+                                   AutomationProperties.HeadingLevel="Level1"
                                    Style="{ThemeResource SubtitleTextBlockStyle}" />
                         <TextBlock x:Uid="ApiModePageDescription"
                                    Text="The API mode decides which MIDI stack Windows uses. Changing it needs a restart."
@@ -519,6 +522,7 @@
 
                     <StackPanel Grid.Row="0" Spacing="6">
                         <TextBlock x:Uid="CapturePageTitle" Text="Capture a repro log"
+                                   AutomationProperties.HeadingLevel="Level1"
                                    Style="{ThemeResource SubtitleTextBlockStyle}" />
                         <TextBlock x:Uid="CapturePageDescription"
                                    Text="Start the capture, reproduce the problem, then stop it. Everything is collected into a single zip file to attach to your issue or send to support."
@@ -587,6 +591,7 @@
 
                         <StackPanel Grid.Column="0" Spacing="2">
                             <TextBlock x:Uid="SessionsPageTitle" Text="Active sessions"
+                                       AutomationProperties.HeadingLevel="Level1"
                                        Style="{ThemeResource SubtitleTextBlockStyle}" />
                             <TextBlock x:Name="SessionsStatusText"
                                        Style="{StaticResource PropertyLabelStyle}"
@@ -597,7 +602,7 @@
                                 Content="Refresh" VerticalAlignment="Top" Click="OnRefreshServiceHealthClick" />
                     </Grid>
 
-                    <ListView x:Name="SessionsListView" Grid.Row="1"
+                    <ListView x:Name="SessionsListView" x:Uid="SessionsListView" Grid.Row="1"
                               SelectionMode="None"
                               ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListView.ItemContainerStyle>
@@ -609,6 +614,7 @@
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="local:SessionItem">
                                 <Expander HorizontalAlignment="Stretch"
+                                          AutomationProperties.Name="{x:Bind Title, Mode=OneWay}"
                                           HorizontalContentAlignment="Stretch">
                                     <Expander.Header>
                                         <Grid ColumnSpacing="12" Margin="0,4,0,4">
@@ -639,7 +645,8 @@
                                     <ItemsControl ItemsSource="{x:Bind Connections, Mode=OneWay}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate x:DataType="local:SessionConnectionItem">
-                                                <StackPanel Spacing="1" Margin="0,4,0,8">
+                                                <StackPanel Spacing="1" Margin="0,4,0,8"
+                                                            AutomationProperties.Name="{x:Bind DisplayName, Mode=OneWay}">
                                                     <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
                                                                Style="{ThemeResource BodyTextBlockStyle}"
                                                                TextWrapping="Wrap" />
@@ -682,6 +689,7 @@
 
                         <StackPanel Grid.Column="0" Spacing="2">
                             <TextBlock x:Uid="TransportsPageTitle" Text="Enabled transports"
+                                       AutomationProperties.HeadingLevel="Level1"
                                        Style="{ThemeResource SubtitleTextBlockStyle}" />
                             <TextBlock x:Name="TransportsStatusText"
                                        Style="{StaticResource PropertyLabelStyle}"
@@ -696,7 +704,7 @@
                                 Content="Refresh" VerticalAlignment="Top" Click="OnRefreshServiceHealthClick" />
                     </Grid>
 
-                    <ListView x:Name="TransportsListView" Grid.Row="1"
+                    <ListView x:Name="TransportsListView" x:Uid="TransportsListView" Grid.Row="1"
                               SelectionMode="None"
                               ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListView.ItemContainerStyle>
@@ -709,6 +717,7 @@
                             <DataTemplate x:DataType="local:TransportItem">
                                 <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        AutomationProperties.Name="{x:Bind Name, Mode=OneWay}"
                                         BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,4">
                                     <Grid ColumnSpacing="12">
                                         <Grid.ColumnDefinitions>
@@ -771,6 +780,7 @@
                 <ScrollViewer x:Name="ServicePanel" Grid.Row="1" Padding="16,12,16,16" Visibility="Collapsed">
                     <StackPanel Spacing="12" MaxWidth="900" HorizontalAlignment="Left">
                         <TextBlock x:Uid="ServicePageTitle" Text="MIDI service"
+                                   AutomationProperties.HeadingLevel="Level1"
                                    Style="{ThemeResource SubtitleTextBlockStyle}" />
 
                         <Border Style="{StaticResource CardBorderStyle}">
@@ -872,6 +882,7 @@
 
                         <StackPanel Grid.Column="0" Spacing="2">
                             <TextBlock x:Uid="RegistryPageTitle" Text="Registry"
+                                       AutomationProperties.HeadingLevel="Level1"
                                        Style="{ThemeResource SubtitleTextBlockStyle}" />
                             <HyperlinkButton x:Uid="RegistryLearnMoreLink"
                                              Content="Which registry entries Windows MIDI Services needs"
@@ -959,6 +970,7 @@
 
                         <StackPanel Grid.Column="0" Spacing="2">
                             <TextBlock x:Uid="DriversPageTitle" Text="Drivers"
+                                       AutomationProperties.HeadingLevel="Level1"
                                        Style="{ThemeResource SubtitleTextBlockStyle}" />
                             <HyperlinkButton x:Uid="DriversLearnMoreLink"
                                              Content="How to switch between the MIDI class drivers"
@@ -1057,7 +1069,7 @@
                                  Grid.ColumnSpan="2" Margin="0,8,0,0" IsOpen="False" />
                     </Grid>
 
-                    <ListView x:Name="DriversListView" Grid.Row="3"
+                    <ListView x:Name="DriversListView" x:Uid="DriversListView" Grid.Row="3"
                               SelectionMode="None"
                               ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListView.ItemContainerStyle>
@@ -1070,6 +1082,7 @@
                             <DataTemplate x:DataType="local:DriverDeviceItem">
                                 <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
                                         BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                                        AutomationProperties.Name="{x:Bind Name, Mode=OneWay}"
                                         BorderThickness="1" CornerRadius="8" Padding="12" Margin="0,0,0,4">
                                     <Grid ColumnSpacing="12">
                                         <Grid.ColumnDefinitions>

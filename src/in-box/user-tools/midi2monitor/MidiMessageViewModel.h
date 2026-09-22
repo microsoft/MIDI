@@ -10,6 +10,7 @@
 #include "MidiMessageViewModel.g.h"
 #include "MessageStore.h"
 #include "AppSettings.h"
+#include "StringResources.h"
 
 namespace winrt::midi2monitor::implementation
 {
@@ -52,6 +53,53 @@ namespace winrt::midi2monitor::implementation
         xaml::Visibility Word3Visibility() const noexcept { return VisibleWhen(m_wordCount > 3); }
 
         winrt::hstring MessageName() const noexcept { return m_messageName; }
+
+        // Deliberately leaves out the index, the timestamp and the delta. They change on every
+        // row and are what a listener least needs when arrowing through a capture; they are
+        // still reachable as individual text elements inside the row.
+        winrt::hstring RowAccessibleName() const noexcept
+        {
+            if (m_isNotice)
+            {
+                return m_noticeText;
+            }
+
+            std::wstring text{ m_messageName };
+
+            if (text.empty())
+            {
+                for (uint32_t i = 0; i < m_wordCount && i < m_wordText.size(); i++)
+                {
+                    if (!text.empty()) { text += L' '; }
+                    text += std::wstring{ m_wordText[i] };
+                }
+            }
+
+            if (!m_groupText.empty())
+            {
+                text = ::midi2monitor::resources::FormatString(
+                    L"RowAccessibleGroupFormat", text, std::wstring{ m_groupText });
+            }
+
+            if (!m_channelText.empty())
+            {
+                text = ::midi2monitor::resources::FormatString(
+                    L"RowAccessibleChannelFormat", text, std::wstring{ m_channelText });
+            }
+
+            for (size_t i = 0; i < m_detailValues.size(); i++)
+            {
+                if (m_detailValues[i].empty()) { continue; }
+
+                text = ::midi2monitor::resources::FormatString(
+                    L"RowAccessibleDetailFormat",
+                    text,
+                    std::wstring{ m_detailLabels[i] },
+                    std::wstring{ m_detailValues[i] });
+            }
+
+            return winrt::hstring{ text };
+        }
 
         // ListViewItemPresenter does not propagate font properties to the row content, so the
         // zoomed sizes have to be bound explicitly rather than inherited from the list.

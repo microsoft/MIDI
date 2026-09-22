@@ -33,7 +33,7 @@ Every request returns an `IAsyncOperation`. Each chunk that arrives earns the tr
 | `GetResponder(muid)` | One responder by identifier, or null |
 | `DiscoverAsync()` | Broadcasts Discovery and collects every reply that arrives before the timeout. Unlike the other requests this always waits the whole timeout, because there is no way to know how many devices are out there until they have all had a chance to answer |
 | `SendInvalidateMuid()` | Withdraws this session's identifier. Sent automatically on close, so an application only needs this to release the identifier earlier |
-| `RequestPropertyExchangeCapabilitiesAsync(destinationMuid)` | Asks the responder how many requests it will take at once, and records the answer on the responder |
+| `RequestPropertyExchangeCapabilitiesAsync(destinationMuid)` | Asks the responder how many requests it will take at once, and records the answer on the responder. The session does this by itself before the first property request it makes to a responder, so an application only needs this to ask a second time |
 | `GetPropertyDataAsync(destinationMuid, header)` | The general request. The header names the resource and carries any options. The reply comes back with every chunk already put together |
 | `SetPropertyDataAsync(destinationMuid, header, body)` | Sends a resource to the device, chunked to fit what it said it can receive |
 | `GetResourceListAsync(destinationMuid)` | Asks for `ResourceList` and returns it as a [`MidiResourceList`]({{ site.baseurl }}/sdk-reference/CapabilityInquiry/MidiResourceList) |

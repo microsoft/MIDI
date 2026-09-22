@@ -9,9 +9,9 @@
 
 namespace midisettings
 {
-    // Runs the callable on the thread pool. Awaiting the returned action from the UI thread
-    // restores the apartment context, so the caller carries on back on the UI thread with no
-    // marshaling of its own. Everything this app asks of the MIDI service blocks on an RPC
-    // call, and none of that may happen on the XAML thread.
+    // Runs the callable on the thread pool and then puts the caller back on the thread that
+    // asked for the work, so a continuation which touches XAML is always on the UI thread.
+    // Everything this app asks of the MIDI service blocks on an RPC call, and none of that may
+    // happen on the XAML thread.
     winrt::Windows::Foundation::IAsyncAction RunOnBackgroundAsync(std::function<void()> work) noexcept;
 }

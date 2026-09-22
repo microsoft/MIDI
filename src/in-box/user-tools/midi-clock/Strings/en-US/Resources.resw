@@ -183,6 +183,10 @@
     <value>Include {0} when starting the selected clocks</value>
     <comment>{0} is the name of the clock</comment>
   </data>
+  <data name="TileAccessibleNameFormat" xml:space="preserve">
+    <value>{0}, {1}, {2}, {3}</value>
+    <comment>Spoken by a screen reader for one clock tile. {0} clock name, {1} tempo, {2} where it sends to, {3} whether it is running.</comment>
+  </data>
 
   <!-- ================================ Command bar ================================ -->
   <data name="AddClockButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">

@@ -20,6 +20,7 @@ namespace midisettings
         SysEx,
         ScratchPad,
         Keyboard,
+        Clock,
         Troubleshooter,
         Monitor
     };

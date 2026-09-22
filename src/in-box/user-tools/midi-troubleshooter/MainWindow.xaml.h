@@ -151,7 +151,19 @@ namespace winrt::miditroubleshooter::implementation
         void CopyToClipboard(winrt::hstring const& text) noexcept;
 
         void AppendCaptureLog(std::vector<std::wstring> const& lines) noexcept;
-        void SetCaptureButtonsForState(bool const running) noexcept;
+
+        // Idle: nothing is happening. Working: a step is in flight and nothing on the page may
+        // be touched. Running: tracing is live and the customer is reproducing the problem.
+        // Stop and Cancel are only offered in Running, because until the capture has actually
+        // started they have nothing to act on and do nothing at all when clicked.
+        enum class CaptureUiState
+        {
+            Idle,
+            Working,
+            Running
+        };
+
+        void SetCaptureUiState(CaptureUiState const state) noexcept;
 
         HWND WindowHandle() noexcept;
 
@@ -204,6 +216,9 @@ namespace winrt::miditroubleshooter::implementation
         bool m_loaded{ false };
         bool m_closing{ false };
         bool m_elevated{ false };
+
+        // a capture step is in flight, so another one cannot be started on top of it
+        bool m_captureBusy{ false };
 
         // suppresses the Checked handler while the radio buttons are being set from the registry
         bool m_settingApiModeSelection{ false };

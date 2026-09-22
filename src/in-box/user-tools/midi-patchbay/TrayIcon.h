@@ -53,7 +53,9 @@ namespace midipatchbay
     private:
         static LRESULT CALLBACK WindowProcedure(HWND window, UINT message, WPARAM wParam, LPARAM lParam) noexcept;
 
-        LRESULT HandleMessage(_In_ UINT message, _In_ WPARAM wParam, _In_ LPARAM lParam) noexcept;
+        // Takes the handle rather than reading m_window, which is still null while the window
+        // is being created and would make the default handling of WM_NCCREATE fail the create.
+        LRESULT HandleMessage(_In_ HWND window, _In_ UINT message, _In_ WPARAM wParam, _In_ LPARAM lParam) noexcept;
 
         void ShowContextMenu() noexcept;
 

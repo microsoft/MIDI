@@ -85,6 +85,10 @@ namespace winrt::midisettings::implementation
             return m_canMonitor ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;
         }
 
+        winrt::hstring RowAccessibleName() const noexcept;
+        winrt::hstring MonitorAccessibleName() const noexcept;
+        winrt::hstring PanicAccessibleName() const noexcept;
+
         void Update(
             winrt::hstring const& endpointDeviceId,
             winrt::hstring const& name,
@@ -114,6 +118,8 @@ namespace winrt::midisettings::implementation
         winrt::hstring PortDeviceId() const noexcept { return m_portDeviceId; }
         winrt::hstring Name() const noexcept { return m_name; }
         winrt::hstring DetailText() const noexcept { return m_detailText; }
+
+        winrt::hstring RowAccessibleName() const noexcept;
 
         void Update(
             winrt::hstring const& portDeviceId,

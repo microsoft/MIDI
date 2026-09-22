@@ -37,6 +37,12 @@ The connection indicator at the top left shows what you're connected to. If the 
   Z S X D C V G B H N J M , L . ; /       lower octave
 ```
 
+Those are the letters on a US keyboard. The notes are mapped to the *keys themselves*, not to the letters on them, so on a German QWERTZ keyboard the lowest C is the key marked Y, on a French AZERTY keyboard it's the key marked W, and in both cases the shape under your hands is the same. The labels drawn on the keys follow whichever keyboard layout Windows is using, and change as soon as you switch layouts.
+
+If Windows is set to a different layout from the one printed on your keyboard, the labels won't match your key caps. **Computer keyboard layout** in settings lets you pick which of your installed layouts to take the letters from. It changes the labels only, never which key plays which note.
+
+**When the keys stop playing.** Clicking a text box or a list, such as the tempo or the arpeggiator mode, gives it the keystrokes, and the keyboard says so: the frame around the keys dims and a reminder appears over them. **Press Esc**, or click the keys, to start playing again.
+
 **Octave buttons.** The **Octave** buttons at the top, and **Page Up** and **Page Down**, move the whole keyboard up or down an octave. The range shown between them tells you where you are.
 
 **Panic.** The button at the right of the top strip stops every sounding note and puts the ribbons back to rest. Reach for it when something hangs.
@@ -89,7 +95,7 @@ The gear button at the top right opens the settings panel beside the keys.
 
 **Connection** is where you choose the instrument, the group, and the channel.
 
-**Keyboard** sets the base octave, how many octaves are shown, and transposition in semitones. More octaves means smaller keys, so three is a reasonable default on a normal window. Transposition shifts what's *sent* without moving the keys, which is how you play a part in a key that suits your hands.
+**Keyboard** sets the base octave, how many octaves are shown, and transposition in semitones. More octaves means smaller keys, so three is a reasonable default on a normal window. Transposition shifts what's *sent* without moving the keys, which is how you play a part in a key that suits your hands. **Computer keyboard layout** chooses which layout's letters are drawn on the keys, and is covered under [Playing](#playing).
 
 **Expression** holds the ribbon position, the velocity settings, and what dragging up a key sends, all covered above.
 

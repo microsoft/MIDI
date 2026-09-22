@@ -210,6 +210,9 @@
   <data name="RemoteHostsDescription.Text" xml:space="preserve">
     <value>Devices found on your network, and the ones this PC is connected to.</value>
   </data>
+  <data name="ReassociateDialogList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Devices these settings could be moved to</value>
+  </data>
   <data name="RemoteHostsListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Network MIDI 2.0 devices</value>
   </data>

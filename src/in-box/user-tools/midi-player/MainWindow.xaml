@@ -20,7 +20,8 @@
         <Grid.Resources>
             <!-- =============================== One queued file =============================== -->
             <DataTemplate x:Key="QueueItemTemplate" x:DataType="local:QueueItem">
-                <Grid ColumnSpacing="10" Padding="0,4,0,4" Tag="{x:Bind Id}">
+                <Grid ColumnSpacing="10" Padding="0,4,0,4" Tag="{x:Bind Id}"
+                      AutomationProperties.Name="{x:Bind RowAccessibleName, Mode=OneWay}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="16" />
                         <ColumnDefinition Width="*" />
@@ -32,6 +33,7 @@
                               Glyph="&#xE768;"
                               FontSize="12"
                               VerticalAlignment="Center"
+                              AutomationProperties.AccessibilityView="Raw"
                               Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
                               Visibility="{x:Bind CurrentVisibility, Mode=OneWay}" />
 
@@ -83,6 +85,7 @@
             <DataTemplate x:Key="TrackItemTemplate" x:DataType="local:TrackItem">
                 <Grid ColumnSpacing="6"
                       Opacity="{x:Bind ContentOpacity, Mode=OneWay}"
+                      AutomationProperties.Name="{x:Bind RowAccessibleName, Mode=OneWay}"
                       ToolTipService.ToolTip="{x:Bind DetailText, Mode=OneWay}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="4" />
@@ -149,7 +152,11 @@
 
             <!-- ============================ Endpoint picker rows ============================ -->
             <DataTemplate x:Key="EndpointChoiceTemplate" x:DataType="shared:EndpointChoice">
-                <Grid ColumnSpacing="8" Margin="0,2,0,2">
+                <!-- The name has to be on the template root: a ComboBoxItem holding a data object
+                     derives its accessible name from the content's plain text, which a panel root
+                     does not supply, so without this a screen reader announces nothing. -->
+                <Grid ColumnSpacing="8" Margin="0,2,0,2"
+                      AutomationProperties.Name="{x:Bind DisplayName}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
@@ -159,6 +166,7 @@
                            Width="20"
                            Height="20"
                            VerticalAlignment="Center"
+                           AutomationProperties.AccessibilityView="Raw"
                            Source="{x:Bind ImageSource}"
                            Visibility="{x:Bind ImageVisibility}" />
 
@@ -553,6 +561,7 @@
                 </Grid>
 
                 <ListView x:Name="QueueList"
+                          x:Uid="QueueList"
                           Grid.Row="1"
                           AutomationProperties.AutomationId="QueueList"
                           MaxHeight="216"

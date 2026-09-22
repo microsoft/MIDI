@@ -55,20 +55,29 @@ namespace winrt::miditroubleshooter::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::SetCaptureButtonsForState(bool const running) noexcept
+    void MainWindow::SetCaptureUiState(CaptureUiState const state) noexcept
     {
         try
         {
-            StartCaptureButton().IsEnabled(!running);
+            auto const idle = state == CaptureUiState::Idle;
+            auto const running = state == CaptureUiState::Running;
+
+            StartCaptureButton().IsEnabled(idle);
+
+            // Only offered once tracing is actually live. Offering them while the capture is
+            // still starting looks like the app is ready when it is not, and a click in that
+            // window finds nothing to stop and silently does nothing at all.
             StopCaptureButton().IsEnabled(running);
             CancelCaptureButton().IsEnabled(running);
 
-            CaptureSystemInfoCheck().IsEnabled(!running);
-            CaptureMidiDiagCheck().IsEnabled(!running);
-            CaptureMidiKsInfoCheck().IsEnabled(!running);
+            CaptureSystemInfoCheck().IsEnabled(idle);
+            CaptureMidiDiagCheck().IsEnabled(idle);
+            CaptureMidiKsInfoCheck().IsEnabled(idle);
 
             CaptureTimeTravelCheck().IsEnabled(
-                !running && !native::GetToolLocations().TimeTravelTracer.empty());
+                idle && !native::GetToolLocations().TimeTravelTracer.empty());
+
+            CaptureProgressRing().IsActive(state == CaptureUiState::Working);
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to update the capture buttons.")
     }
@@ -77,6 +86,11 @@ namespace winrt::miditroubleshooter::implementation
     winrt::fire_and_forget MainWindow::OnStartCaptureClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
         auto lifetime = get_strong();
+
+        if (m_captureBusy)
+        {
+            co_return;
+        }
 
         try
         {
@@ -93,9 +107,23 @@ namespace winrt::miditroubleshooter::implementation
             options.IncludeMidiKsInfo = CaptureMidiKsInfoCheck().IsChecked().Value();
             options.IncludeTimeTravelTrace = CaptureTimeTravelCheck().IsChecked().Value();
 
-            SetCaptureButtonsForState(true);
-            CaptureProgressRing().IsActive(true);
+            m_captureBusy = true;
+
+            SetCaptureUiState(CaptureUiState::Working);
             CaptureStatusText().Text(res::GetString(L"CaptureStarting"));
+
+            // Runs on the closing and the exception paths too, so the ring can never be left
+            // spinning over a page whose buttons all say no.
+            auto const restoreUi = wil::scope_exit([this]() noexcept
+                {
+                    m_captureBusy = false;
+
+                    if (!m_closing)
+                    {
+                        SetCaptureUiState(m_capture.IsRunning() ?
+                            CaptureUiState::Running : CaptureUiState::Idle);
+                    }
+                });
 
             native::CaptureStepResult result{};
 
@@ -109,21 +137,12 @@ namespace winrt::miditroubleshooter::implementation
                 co_return;
             }
 
-            CaptureProgressRing().IsActive(false);
-
             AppendCaptureLog(result.Log);
 
-            if (!result.Succeeded)
-            {
-                SetCaptureButtonsForState(false);
-
-                CaptureStatusText().Text(result.ErrorMessage.empty() ?
-                    res::GetString(L"CaptureFailed") : winrt::hstring{ result.ErrorMessage });
-
-                co_return;
-            }
-
-            CaptureStatusText().Text(res::GetString(L"CaptureReproduceNow"));
+            CaptureStatusText().Text(result.Succeeded ?
+                res::GetString(L"CaptureReproduceNow") :
+                (result.ErrorMessage.empty() ?
+                    res::GetString(L"CaptureFailed") : winrt::hstring{ result.ErrorMessage }));
         }
         MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to start the capture.")
     }
@@ -133,13 +152,13 @@ namespace winrt::miditroubleshooter::implementation
     {
         auto lifetime = get_strong();
 
+        if (m_captureBusy || !m_capture.IsRunning())
+        {
+            co_return;
+        }
+
         try
         {
-            if (!m_capture.IsRunning())
-            {
-                co_return;
-            }
-
             // The destination is chosen before anything is collected, so a canceled dialog
             // does not throw away a trace that has already been stopped.
             winrt::Windows::Storage::Pickers::FileSavePicker picker{};
@@ -153,34 +172,46 @@ namespace winrt::miditroubleshooter::implementation
 
             auto const file = co_await picker.PickSaveFileAsync();
 
-            if (file == nullptr)
+            if (file == nullptr || m_closing)
             {
                 co_return;
             }
 
             auto const outputPath = std::wstring{ file.Path() };
 
-            StopCaptureButton().IsEnabled(false);
-            CancelCaptureButton().IsEnabled(false);
-            CaptureProgressRing().IsActive(true);
-            CaptureStatusText().Text(res::GetString(L"CaptureCollecting"));
-
             native::CaptureStepResult result{};
 
-            co_await native::RunOnBackgroundAsync([this, &result, &outputPath]()
-                {
-                    result = m_capture.Finish(outputPath);
-                });
-
-            if (m_closing)
+            // Scoped so the page is released before Explorer is brought up, which is not part
+            // of the capture and should not be shown as one.
             {
-                co_return;
+                m_captureBusy = true;
+
+                SetCaptureUiState(CaptureUiState::Working);
+                CaptureStatusText().Text(res::GetString(L"CaptureCollecting"));
+
+                auto const restoreUi = wil::scope_exit([this]() noexcept
+                    {
+                        m_captureBusy = false;
+
+                        if (!m_closing)
+                        {
+                            SetCaptureUiState(m_capture.IsRunning() ?
+                                CaptureUiState::Running : CaptureUiState::Idle);
+                        }
+                    });
+
+                co_await native::RunOnBackgroundAsync([this, &result, &outputPath]()
+                    {
+                        result = m_capture.Finish(outputPath);
+                    });
+
+                if (m_closing)
+                {
+                    co_return;
+                }
+
+                AppendCaptureLog(result.Log);
             }
-
-            CaptureProgressRing().IsActive(false);
-            SetCaptureButtonsForState(false);
-
-            AppendCaptureLog(result.Log);
 
             if (!result.Succeeded)
             {
@@ -212,24 +243,37 @@ namespace winrt::miditroubleshooter::implementation
     {
         auto lifetime = get_strong();
 
+        if (m_captureBusy || !m_capture.IsRunning())
+        {
+            co_return;
+        }
+
         try
         {
-            if (!m_capture.IsRunning())
-            {
-                co_return;
-            }
-
             auto const confirmed = co_await ConfirmAsync(
                 res::GetString(L"CaptureCancelTitle"),
                 res::GetString(L"CaptureCancelMessage"));
 
-            if (!confirmed)
+            if (!confirmed || m_closing)
             {
                 co_return;
             }
 
-            CaptureProgressRing().IsActive(true);
+            m_captureBusy = true;
+
+            SetCaptureUiState(CaptureUiState::Working);
             CaptureStatusText().Text(res::GetString(L"CaptureCanceling"));
+
+            auto const restoreUi = wil::scope_exit([this]() noexcept
+                {
+                    m_captureBusy = false;
+
+                    if (!m_closing)
+                    {
+                        SetCaptureUiState(m_capture.IsRunning() ?
+                            CaptureUiState::Running : CaptureUiState::Idle);
+                    }
+                });
 
             native::CaptureStepResult result{};
 
@@ -242,9 +286,6 @@ namespace winrt::miditroubleshooter::implementation
             {
                 co_return;
             }
-
-            CaptureProgressRing().IsActive(false);
-            SetCaptureButtonsForState(false);
 
             AppendCaptureLog(result.Log);
 

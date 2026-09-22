@@ -190,6 +190,78 @@ void MidiCapabilityInquirySessionTests::TestGetPropertyDataReturnsTheResource()
     responder.Stop();
 }
 
+void MidiCapabilityInquirySessionTests::TestPropertyExchangeCapabilitiesComeFirst()
+{
+    auto const pair = CreateLoopbackPair(L"TAEF CI Capabilities First");
+
+    MidiCapabilityInquiryTestResponder responder{};
+    responder.SetResource("DeviceInfo", "{\"manufacturer\":\"Contoso\"}");
+    responder.SetResource("ChannelList", "[]");
+    responder.Start(pair->Device, 0x0123456);
+
+    pair->Initiator.Open();
+    pair->Device.Open();
+
+    auto session = MidiCapabilityInquirySession::Create(pair->Initiator);
+    auto const found = DiscoverOne(session, responder);
+
+    // Nothing has asked for a property yet, so the responder has said nothing about its limits.
+    VERIFY_ARE_EQUAL(found.MaximumSimultaneousPropertyRequests(), (uint8_t)0);
+
+    VERIFY_IS_NOT_NULL(session.GetDeviceInfoAsync(found.Muid()).get());
+
+    // The test responder replies with four.
+    VERIFY_ARE_EQUAL(
+        session.GetResponder(found.Muid()).MaximumSimultaneousPropertyRequests(), (uint8_t)4);
+
+    auto const log = responder.MessageLog();
+
+    size_t capabilitiesInquiries{ 0 };
+    size_t firstCapabilitiesInquiry{ log.size() };
+    size_t firstPropertyGet{ log.size() };
+
+    for (size_t i = 0; i < log.size(); i++)
+    {
+        if (log[i] == MidiCapabilityInquiryMessageType::PropertyExchangeCapabilitiesInquiry)
+        {
+            capabilitiesInquiries++;
+
+            if (firstCapabilitiesInquiry == log.size())
+            {
+                firstCapabilitiesInquiry = i;
+            }
+        }
+        else if (log[i] == MidiCapabilityInquiryMessageType::PropertyGetDataInquiry &&
+                 firstPropertyGet == log.size())
+        {
+            firstPropertyGet = i;
+        }
+    }
+
+    VERIFY_ARE_EQUAL(capabilitiesInquiries, (size_t)1);
+    VERIFY_IS_LESS_THAN(firstCapabilitiesInquiry, firstPropertyGet);
+
+    // Asking for a second resource must not repeat the capabilities transaction.
+    VERIFY_IS_NOT_NULL(session.GetChannelListAsync(found.Muid()).get());
+
+    auto const secondLog = responder.MessageLog();
+
+    capabilitiesInquiries = 0;
+
+    for (auto const messageType : secondLog)
+    {
+        if (messageType == MidiCapabilityInquiryMessageType::PropertyExchangeCapabilitiesInquiry)
+        {
+            capabilitiesInquiries++;
+        }
+    }
+
+    VERIFY_ARE_EQUAL(capabilitiesInquiries, (size_t)1);
+
+    session.Close();
+    responder.Stop();
+}
+
 void MidiCapabilityInquirySessionTests::TestLargeResourceIsReassembledFromChunks()
 {
     auto const pair = CreateLoopbackPair(L"TAEF CI Chunked");

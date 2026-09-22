@@ -171,6 +171,46 @@ namespace winrt::midipatchbay::implementation
                 });
             m_refreshTimer.Start();
 
+            // Closing the window is turned into a hide when the customer has asked us to keep
+            // running, so the handler below only ever runs on a real exit.
+            m_closingToken = AppWindow().Closing(
+                [weak](auto&&, windowing::AppWindowClosingEventArgs const& args)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        if (strong->TryHideToNotificationArea())
+                        {
+                            args.Cancel(true);
+                        }
+                    }
+                });
+
+            // Minimizing goes the same way, so the app is in one place rather than two.
+            m_windowChangedToken = AppWindow().Changed(
+                [weak](windowing::AppWindow const& sender, windowing::AppWindowChangedEventArgs const& args)
+                {
+                    if (!args.DidPresenterChange() && !args.DidVisibilityChange())
+                    {
+                        return;
+                    }
+
+                    if (auto strong = weak.get())
+                    {
+                        if (auto const presenter = sender.Presenter().try_as<windowing::OverlappedPresenter>())
+                        {
+                            if (presenter.State() == windowing::OverlappedPresenterState::Minimized)
+                            {
+                                // the live state as well, so a change raised on the way back out
+                                // of the notification area cannot hide the window again
+                                if (::IsIconic(strong->m_chrome.WindowHandle()))
+                                {
+                                    strong->TryHideToNotificationArea();
+                                }
+                            }
+                        }
+                    }
+                });
+
             m_closedToken = this->Closed([weak](auto&&, auto&&)
                 {
                     if (auto strong = weak.get())
@@ -183,7 +223,13 @@ namespace winrt::midipatchbay::implementation
                             strong->m_refreshTimer.Stop();
                         }
 
-                        strong->m_chrome.SavePlacement();
+                        // A window hidden in the notification area reports no useful placement,
+                        // and the one from just before it was hidden is already saved.
+                        if (::IsWindowVisible(strong->m_chrome.WindowHandle()))
+                        {
+                            strong->m_chrome.SavePlacement();
+                        }
+
                         strong->m_chrome.Shutdown();
 
                         patchbay::EndpointCatalog::Current().SetChangedHandler(nullptr);
@@ -201,48 +247,144 @@ namespace winrt::midipatchbay::implementation
                     patchbay::EndpointCatalog::Current().Start();
                 });
 
-            if (patchbay::AppSettings::Current().MinimizeToNotificationArea())
-            {
-                m_tray.SetOpenHandler([weak]()
-                    {
-                        if (auto strong = weak.get())
-                        {
-                            if (auto const handle = strong->m_chrome.WindowHandle())
-                            {
-                                ::ShowWindow(handle, SW_RESTORE);
-                                ::SetForegroundWindow(handle);
-                            }
-                        }
-                    });
-
-                m_tray.SetExitHandler([weak]()
-                    {
-                        if (auto strong = weak.get())
-                        {
-                            strong->Close();
-                        }
-                    });
-
-                m_tray.SetStopAllHandler([weak]()
-                    {
-                        if (auto strong = weak.get())
-                        {
-                            strong->StopAllRouting();
-                        }
-                    });
-
-                m_tray.SetTogglePatchHandler([weak](std::wstring const& key)
-                    {
-                        if (auto strong = weak.get())
-                        {
-                            strong->SetPatchRouting(key, strong->m_routingPatchKeys.count(key) == 0);
-                        }
-                    });
-
-                m_tray.Show();
-            }
+            InitializeNotificationArea();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to finish loading the window.")
+    }
+
+    void MainWindow::InitializeNotificationArea() noexcept
+    {
+        try
+        {
+            auto weak = get_weak();
+
+            // The handlers are wired up whether or not the icon is showing, because the setting
+            // can be turned on later and an icon whose menu does nothing is worse than no icon.
+            m_tray.SetOpenHandler([weak]()
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->RestoreFromNotificationArea();
+                    }
+                });
+
+            m_tray.SetExitHandler([weak]()
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->m_exiting = true;
+                        strong->Close();
+                    }
+                });
+
+            m_tray.SetStopAllHandler([weak]()
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->StopAllRouting();
+                    }
+                });
+
+            m_tray.SetTogglePatchHandler([weak](std::wstring const& key)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->SetPatchRouting(key, strong->m_routingPatchKeys.count(key) == 0);
+                    }
+                });
+
+            if (patchbay::AppSettings::Current().MinimizeToNotificationArea())
+            {
+                m_tray.Show();
+                UpdateTray();
+
+                // a start minimized launch happened before there was an icon to hide behind
+                if (auto const handle = m_chrome.WindowHandle())
+                {
+                    if (::IsIconic(handle))
+                    {
+                        TryHideToNotificationArea();
+                    }
+                }
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to set up the notification area.")
+    }
+
+    bool MainWindow::TryHideToNotificationArea() noexcept
+    {
+        try
+        {
+            if (m_exiting || m_closing || m_restoringFromNotificationArea)
+            {
+                return false;
+            }
+
+            // IsVisible rather than the setting, so a machine where the icon could not be added
+            // never hides the only way back to the app.
+            if (!m_tray.IsVisible())
+            {
+                return false;
+            }
+
+            auto const handle = m_chrome.WindowHandle();
+
+            if (handle == nullptr)
+            {
+                return false;
+            }
+
+            auto const minimized = ::IsIconic(handle) != FALSE;
+
+            // already hidden, so there is nothing to do and nothing to cancel for
+            if (!::IsWindowVisible(handle))
+            {
+                return false;
+            }
+
+            // a minimized window has no placement worth keeping, and the last good one is saved
+            if (!minimized)
+            {
+                m_chrome.SavePlacement();
+            }
+
+            ::ShowWindow(handle, SW_HIDE);
+
+            return true;
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to hide the window to the notification area.")
+
+        return false;
+    }
+
+    void MainWindow::RestoreFromNotificationArea() noexcept
+    {
+        try
+        {
+            auto const handle = m_chrome.WindowHandle();
+
+            if (handle == nullptr)
+            {
+                return;
+            }
+
+            m_restoringFromNotificationArea = true;
+
+            auto const reset = wil::scope_exit([this]() { m_restoringFromNotificationArea = false; });
+
+            // A window hidden while minimized needs both steps, and the flag above is what makes
+            // that safe: it is briefly visible and still minimized in between. Showing a window
+            // hidden while maximized keeps it maximized, so there is no restore in that case.
+            ::ShowWindow(handle, SW_SHOW);
+
+            if (::IsIconic(handle))
+            {
+                ::ShowWindow(handle, SW_RESTORE);
+            }
+
+            ::SetForegroundWindow(handle);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to show the window from the notification area.")
     }
 
     void MainWindow::InitializeWindowChrome() noexcept
@@ -262,6 +404,10 @@ namespace winrt::midipatchbay::implementation
             elements.RightInset = TitleBarRightInsetColumn();
 
             m_chrome.Initialize(elements, patchbay::AppSettings::Current());
+
+            // Now that there is a window, a later launch has something to bring forward.
+            ::midiapp::SingleInstance::PublishMainWindow(m_chrome.WindowHandle());
+
             m_chrome.SetWindowIconFromResource(IDI_APPICON);
 
             Title(resources::GetString(L"AppDisplayName"));

@@ -388,19 +388,14 @@ namespace midiplayer
                     continue;
                 }
 
-                auto visual = TakeNoteVisual(used);
+                auto const note = TakeNoteVisual(used);
 
-                if (visual == nullptr)
+                if (note.Body == nullptr)
                 {
                     break;
                 }
 
                 auto const barHeight = clampedBottom - clampedTop;
-
-                visual.Offset({ static_cast<float>(key.Left), static_cast<float>(clampedTop), 0.0f });
-                visual.Size({
-                    static_cast<float>(key.Width > 2.0 ? key.Width - 1.0 : key.Width),
-                    static_cast<float>(barHeight < 2.0 ? 2.0 : barHeight) });
 
                 auto color = NoteRollRenderer::TrackColor(entry->TrackIndex);
 
@@ -417,8 +412,16 @@ namespace midiplayer
                     color.B = static_cast<uint8_t>(color.B * 0.72);
                 }
 
-                visual.Brush(BrushFor(ArgbFromColor(color)));
-                visual.IsVisible(true);
+                SizeNoteVisuals(
+                    note,
+                    static_cast<float>(key.Left),
+                    static_cast<float>(clampedTop),
+                    static_cast<float>(key.Width > 2.0 ? key.Width - 1.0 : key.Width),
+                    static_cast<float>(barHeight < 2.0 ? 2.0 : barHeight));
+
+                note.Fill.Brush(BrushFor(ArgbFromColor(color)));
+                note.Body.Brush(BrushFor(ArgbFromColor(NoteBorderColor(color))));
+                note.Body.IsVisible(true);
 
                 ++used;
             }
@@ -450,7 +453,7 @@ namespace midiplayer
     }
 
     _Use_decl_annotations_
-    composition::SpriteVisual KeyboardRollRenderer::TakeNoteVisual(size_t index) noexcept
+    NoteVisuals KeyboardRollRenderer::TakeNoteVisual(size_t index) noexcept
     {
         if (index < m_notePool.size())
         {
@@ -459,15 +462,14 @@ namespace midiplayer
 
         if (m_compositor == nullptr || m_noteLayer == nullptr)
         {
-            return nullptr;
+            return {};
         }
 
-        auto visual = m_compositor.CreateSpriteVisual();
+        auto note = CreateNoteVisuals(m_compositor, m_noteLayer);
 
-        m_noteLayer.Children().InsertAtTop(visual);
-        m_notePool.push_back(visual);
+        m_notePool.push_back(note);
 
-        return visual;
+        return note;
     }
 
     _Use_decl_annotations_
@@ -475,7 +477,7 @@ namespace midiplayer
     {
         for (auto entry = index; entry < m_notePool.size(); ++entry)
         {
-            m_notePool[entry].IsVisible(false);
+            m_notePool[entry].Body.IsVisible(false);
         }
     }
 }

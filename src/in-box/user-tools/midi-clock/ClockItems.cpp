@@ -99,6 +99,8 @@ namespace winrt::midiclock::implementation
                 RaisePropertyChanged(L"WarningVisibility");
                 RaisePropertyChanged(L"StatusText");
             }
+
+            RaisePropertyChanged(L"TileAccessibleName");
         }
         MIDI_CLOCK_CATCH_AND_LOG(L"Unable to update a clock tile.")
     }
@@ -111,6 +113,7 @@ namespace winrt::midiclock::implementation
         RaisePropertyChanged(L"StartStopGlyph");
         RaisePropertyChanged(L"StartStopAccessibleName");
         RaisePropertyChanged(L"StatusText");
+        RaisePropertyChanged(L"TileAccessibleName");
     }
 
     _Use_decl_annotations_
@@ -139,6 +142,7 @@ namespace winrt::midiclock::implementation
         RaisePropertyChanged(L"IsBusy");
         RaisePropertyChanged(L"IsStartStopEnabled");
         RaisePropertyChanged(L"StatusText");
+        RaisePropertyChanged(L"TileAccessibleName");
     }
 
     _Use_decl_annotations_
@@ -200,5 +204,15 @@ namespace winrt::midiclock::implementation
     winrt::hstring ClockItem::SelectAccessibleName() const noexcept
     {
         return res::FormatString(L"TileSelectAccessibleNameFormat", m_displayName);
+    }
+
+    winrt::hstring ClockItem::TileAccessibleName() const noexcept
+    {
+        return res::FormatString(
+            L"TileAccessibleNameFormat",
+            std::wstring{ m_displayName },
+            std::wstring{ m_tempoText },
+            std::wstring{ m_destinationText },
+            std::wstring{ StatusText() });
     }
 }

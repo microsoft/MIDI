@@ -147,6 +147,8 @@ namespace winrt::midiscratchpad::implementation
             UpdateWindowTitle();
 
             midiapp::ApplyPreviewBadgeVisibility(PreviewChiclet());
+            midiapp::MakeLiveStatusRegion(StatusText());
+            midiapp::MakeLiveStatusRegion(SendResultText());
 
             midiapp::WindowChromeElements elements{};
 

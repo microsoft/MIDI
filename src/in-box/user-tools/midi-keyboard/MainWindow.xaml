@@ -14,6 +14,8 @@
           Loaded="OnRootLoaded"
           SizeChanged="OnRootSizeChanged"
           Background="Transparent"
+          GotFocus="OnRootFocusChanged"
+          LostFocus="OnRootFocusChanged"
           PreviewKeyDown="OnRootPreviewKeyDown"
           PreviewKeyUp="OnRootPreviewKeyUp">
         <Grid.RowDefinitions>
@@ -473,7 +475,7 @@
                 <Border x:Name="KeyboardFrame"
                         Grid.Row="0"
                         CornerRadius="6"
-                        BorderThickness="1">
+                        BorderThickness="2">
                     <Canvas x:Name="KeyboardCanvas"
                             x:Uid="KeyboardCanvas"
                             AutomationProperties.AutomationId="KeyboardCanvas"
@@ -486,6 +488,29 @@
                             PointerReleased="OnKeyboardPointerReleased"
                             PointerCanceled="OnKeyboardPointerReleased"
                             PointerCaptureLost="OnKeyboardPointerReleased" />
+                </Border>
+
+                <!-- Shown while a text or list control has the focus, because the computer keys
+                     stop playing then and nothing else on screen says so. -->
+                <Border x:Name="ComputerKeysPausedHint"
+                        x:Uid="ComputerKeysPausedHint"
+                        AutomationProperties.AutomationId="ComputerKeysPausedHint"
+                        Grid.Row="0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Top"
+                        Margin="0,10,0,0"
+                        Padding="10,3,10,3"
+                        CornerRadius="10"
+                        IsHitTestVisible="False"
+                        Visibility="Collapsed"
+                        BorderThickness="1"
+                        BorderBrush="{ThemeResource SystemFillColorCautionBrush}"
+                        Background="{ThemeResource SystemFillColorCautionBackgroundBrush}">
+                    <TextBlock x:Name="ComputerKeysPausedHintText"
+                               x:Uid="ComputerKeysPausedHintText"
+                               Text="Press Esc to play with the computer keyboard"
+                               FontSize="12"
+                               Foreground="{ThemeResource SystemFillColorCautionBrush}" />
                 </Border>
 
                 <!-- A bare ScrollBar, not a ScrollViewer wrapped around the keys. A ScrollViewer
@@ -557,7 +582,8 @@
                                     </ComboBox.ItemContainerStyle>
                                     <ComboBox.ItemTemplate>
                                         <DataTemplate x:DataType="shared:EndpointChoice">
-                                            <Grid ColumnSpacing="8">
+                                              <Grid ColumnSpacing="8"
+                                                    AutomationProperties.Name="{x:Bind DisplayName}">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="Auto" />
@@ -694,6 +720,23 @@
                                   AutomationProperties.AutomationId="ShowComputerKeysCheckBox"
                                   Content="Show computer keyboard keys"
                                   Click="OnShowComputerKeysChanged" />
+
+                        <StackPanel Spacing="4">
+                            <TextBlock x:Uid="ComputerKeyboardLayoutLabel"
+                                       Text="Computer keyboard layout"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <ComboBox x:Name="ComputerKeyboardLayoutComboBox"
+                                      x:Uid="ComputerKeyboardLayoutComboBox"
+                                      AutomationProperties.AutomationId="ComputerKeyboardLayoutComboBox"
+                                      HorizontalAlignment="Stretch"
+                                      SelectionChanged="OnComputerKeyboardLayoutChanged" />
+                            <TextBlock x:Uid="ComputerKeyboardLayoutHint"
+                                       Text="The notes always follow the same physical keys. This only changes which letters are printed on them, for when the layout Windows is using is not the one on your keyboard."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
 
                         <Border Height="1" Margin="0,4,0,4" Background="{ThemeResource CardStrokeColorDefaultBrush}" />
 

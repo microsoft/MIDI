@@ -49,6 +49,10 @@ namespace midiclock
         String EditAccessibleName{ get; };
         String SelectAccessibleName{ get; };
 
+        // What a screen reader announces for the whole tile. The tile shows four separate text
+        // elements, but only the container's name is spoken.
+        String TileAccessibleName{ get; };
+
         // included in "start selected"; two way, driven by the tile's check box
         Boolean IsSelected;
     }

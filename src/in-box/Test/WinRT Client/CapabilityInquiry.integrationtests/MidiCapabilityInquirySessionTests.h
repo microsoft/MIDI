@@ -23,6 +23,7 @@ public:
     TEST_METHOD(TestDiscoveryFindsAResponder);
     TEST_METHOD(TestDiscoveryFindsNothingWhenNobodyAnswers);
     TEST_METHOD(TestGetPropertyDataReturnsTheResource);
+    TEST_METHOD(TestPropertyExchangeCapabilitiesComeFirst);
     TEST_METHOD(TestLargeResourceIsReassembledFromChunks);
     TEST_METHOD(TestSilenceIsReportedAsNoResponse);
     TEST_METHOD(TestNegativeAcknowledgmentIsReported);

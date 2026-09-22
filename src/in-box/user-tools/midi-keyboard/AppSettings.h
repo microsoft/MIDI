@@ -163,6 +163,13 @@ namespace midikeyboard
         bool ShowComputerKeys() const noexcept { return m_showComputerKeys; }
         void ShowComputerKeys(bool value) noexcept;
 
+        // Which keyboard layout's letters are drawn on the keys, as an HKL in 32 bits. Zero
+        // means follow whatever layout Windows is using, which is the default. Only the
+        // labels depend on it: the notes are mapped by physical key, so they land in the same
+        // place on every layout.
+        uint32_t ComputerKeyboardLayout() const noexcept { return m_computerKeyboardLayout; }
+        void ComputerKeyboardLayout(uint32_t value) noexcept;
+
         bool ShowNoteNames() const noexcept { return m_showNoteNames; }
         void ShowNoteNames(bool value) noexcept;
 
@@ -231,6 +238,8 @@ namespace midikeyboard
 
         bool m_showComputerKeys{ true };
         bool m_showNoteNames{ true };
+
+        uint32_t m_computerKeyboardLayout{ 0 };
 
         ArpeggiatorMode m_arpeggiator{ ArpeggiatorMode::Off };
         uint32_t m_arpeggiatorBpm{ 120 };

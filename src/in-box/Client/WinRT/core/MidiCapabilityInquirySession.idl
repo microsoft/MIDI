@@ -89,7 +89,8 @@ namespace Windows.Devices.Midi2.CapabilityInquiry
         // ------------------------------------------------------------- property exchange
 
         // Asks the responder how many requests it will take at once, and records the answer on the
-        // responder. Nothing else here requires it to have been called.
+        // responder. The session does this by itself before the first property request it makes to
+        // a responder, so an application only needs this to ask a second time.
         Windows.Foundation.IAsyncOperation<MidiCapabilityInquiryStatus> RequestPropertyExchangeCapabilitiesAsync(
             MidiUniqueId destinationMuid);
 

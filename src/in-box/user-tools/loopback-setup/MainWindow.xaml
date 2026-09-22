@@ -262,7 +262,8 @@
                         </ListView.ItemContainerStyle>
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="local:LoopbackItem">
-                                <Border Style="{StaticResource CardBorderStyle}">
+                                <Border Style="{StaticResource CardBorderStyle}"
+                                        AutomationProperties.Name="{x:Bind DisplayName, Mode=OneWay}">
                                     <Grid ColumnSpacing="12">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
@@ -493,7 +494,8 @@
                         </ListView.ItemContainerStyle>
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="local:LoopbackItem">
-                                <Border Style="{StaticResource CardBorderStyle}">
+                                <Border Style="{StaticResource CardBorderStyle}"
+                                        AutomationProperties.Name="{x:Bind DisplayName, Mode=OneWay}">
                                     <Grid ColumnSpacing="12">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
@@ -1048,7 +1050,8 @@
                     <ItemsControl x:Name="ImportDevicesList">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate x:DataType="local:ImportDeviceItem">
-                                <StackPanel Margin="0,0,0,12" Spacing="4">
+                                <StackPanel Margin="0,0,0,12" Spacing="4"
+                                            AutomationProperties.Name="{x:Bind DeviceName}">
                                     <TextBlock Text="{x:Bind DeviceName}"
                                                TextWrapping="Wrap"
                                                Style="{ThemeResource BodyStrongTextBlockStyle}" />

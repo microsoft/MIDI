@@ -63,20 +63,29 @@
                            Foreground="{ThemeResource SystemFillColorCautionBrush}" />
             </Border>
 
-            <ToggleButton x:Name="AlwaysOnTopToggle" x:Uid="AlwaysOnTopToggle"
-                          Grid.Column="3" Width="46" Height="32"
-                          VerticalAlignment="Top" Padding="0" BorderThickness="0"
-                          Click="OnAlwaysOnTopToggled">
-                <ToggleButton.Resources>
+            <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top">
+                <StackPanel.Resources>
                     <SolidColorBrush x:Key="ToggleButtonBackground" Color="Transparent" />
                     <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
                     <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
                     <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
                     <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
                     <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
-                </ToggleButton.Resources>
-                <FontIcon Glyph="&#xE718;" FontSize="14" />
-            </ToggleButton>
+                </StackPanel.Resources>
+
+                <Button x:Name="SettingsButton" x:Uid="SettingsButton"
+                        Width="46" Height="32" Padding="0" BorderThickness="0"
+                        Background="Transparent"
+                        Click="OnSettingsClick">
+                    <FontIcon Glyph="&#xE713;" FontSize="14" />
+                </Button>
+
+                <ToggleButton x:Name="AlwaysOnTopToggle" x:Uid="AlwaysOnTopToggle"
+                              Width="46" Height="32" Padding="0" BorderThickness="0"
+                              Click="OnAlwaysOnTopToggled">
+                    <FontIcon Glyph="&#xE718;" FontSize="14" />
+                </ToggleButton>
+            </StackPanel>
         </Grid>
 
         <!-- ============================== Destination header ============================= -->
@@ -103,7 +112,8 @@
                         </ComboBox.ItemContainerStyle>
                         <ComboBox.ItemTemplate>
                             <DataTemplate x:DataType="shared:EndpointChoice">
-                                <Grid ColumnSpacing="8" Loaded="OnEndpointChoiceLoaded">
+                                  <Grid ColumnSpacing="8" Loaded="OnEndpointChoiceLoaded"
+                                        AutomationProperties.Name="{x:Bind DisplayName}">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
@@ -227,7 +237,8 @@
                             <DataTemplate x:DataType="local:SysExRow">
                                 <!-- the font goes on each TextBlock: the default ListViewItem
                                      style sets FontFamily, so it never inherits from the ListView -->
-                                <StackPanel Orientation="Horizontal" Spacing="12">
+                                <StackPanel Orientation="Horizontal" Spacing="12"
+                                            AutomationProperties.Name="{x:Bind RowAccessibleName}">
                                     <TextBlock Text="{x:Bind MessageNumber}" FontSize="12" Width="60"
                                                FontFamily="Cascadia Mono, Consolas, Courier New"
                                                TextAlignment="Right"
@@ -253,11 +264,6 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
-
-            <Button x:Name="SettingsButton" x:Uid="SettingsButton" Grid.Column="0"
-                    Width="36" Height="32" Padding="0" TabIndex="20" Click="OnSettingsClick">
-                <FontIcon Glyph="&#xE713;" FontSize="16" />
-            </Button>
 
             <TextBlock x:Name="StatusText" Grid.Column="1" VerticalAlignment="Center"
                        TextTrimming="CharacterEllipsis"

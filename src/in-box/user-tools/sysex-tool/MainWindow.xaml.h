@@ -68,6 +68,7 @@ namespace winrt::midisysextool::implementation
         winrt::fire_and_forget SendFileAsync();
         void CancelSend() noexcept;
         void ShowSendProgress(uint64_t bytesRead, uint64_t messagesSent) noexcept;
+        void ResetSendProgressBar() noexcept;
 
         void StartReceiving() noexcept;
         void StopReceiving() noexcept;

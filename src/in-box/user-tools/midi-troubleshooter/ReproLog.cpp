@@ -35,6 +35,10 @@ namespace miditroubleshooter
         // The profile name inside providers.wprp
         constexpr wchar_t ReproProfileName[] = L"midi";
 
+        // Long enough to see the tracer refuse the attach, short enough that the customer is
+        // not left watching a progress ring. A refusal is reported the moment it happens.
+        constexpr std::chrono::seconds TimeTravelAttachSettleTime{ 5 };
+
         std::wstring Timestamp() noexcept
         {
             SYSTEMTIME now{};
@@ -292,11 +296,13 @@ namespace miditroubleshooter
                     auto const arguments = std::format(
                         L"-ring -out \"{}\" -attach {}", m_workingFolder, service.ProcessId);
 
-                    auto const run = RunCapture(tools.TimeTravelTracer, arguments, std::chrono::seconds{ 60 });
+                    // The tracer keeps running for as long as it is recording, so waiting for it
+                    // to exit would hang the capture before it had even started. Only an early
+                    // exit says anything, and what it says is that the attach was refused.
+                    auto const run = StartAndWatch(
+                        tools.TimeTravelTracer, arguments, TimeTravelAttachSettleTime);
 
-                    WriteTextFile(Combine(m_workingFolder, L"tttracer-start.log"), run.Output);
-
-                    if (run.Started && run.ExitCode == 0)
+                    if (run.Started && (run.StillRunning || run.ExitCode == 0))
                     {
                         m_timeTravelTracingStarted = true;
                         result.Log.push_back(res::GetString(L"CaptureLogTimeTravelStarted"));

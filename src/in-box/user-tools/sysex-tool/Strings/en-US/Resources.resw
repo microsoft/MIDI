@@ -76,10 +76,10 @@
   </data>
 
   <!-- ============================ Title bar ============================== -->
-  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService/ToolTip" xml:space="preserve">
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Keep this window on top of other windows</value>
   </data>
-  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties/Name" xml:space="preserve">
+  <data name="AlwaysOnTopToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Always on top</value>
   </data>
 
@@ -90,13 +90,13 @@
   <data name="EndpointPicker.PlaceholderText" xml:space="preserve">
     <value>Choose a device</value>
   </data>
-  <data name="EndpointPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties/Name" xml:space="preserve">
+  <data name="EndpointPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>MIDI device</value>
   </data>
   <data name="GroupPickerLabel.Text" xml:space="preserve">
     <value>Group</value>
   </data>
-  <data name="GroupPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties/Name" xml:space="preserve">
+  <data name="GroupPicker.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Group</value>
   </data>
   <data name="ModePickerLabel.Text" xml:space="preserve">
@@ -127,19 +127,19 @@
   <data name="BrowseSendFileButton.Content" xml:space="preserve">
     <value>Browse...</value>
   </data>
-  <data name="BrowseSendFileButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties/Name" xml:space="preserve">
+  <data name="BrowseSendFileButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Browse for a System Exclusive file</value>
   </data>
   <data name="MessageCountBox.Header" xml:space="preserve">
     <value>Messages per transfer</value>
   </data>
-  <data name="MessageCountBox.[using:Microsoft.UI.Xaml.Controls]ToolTipService/ToolTip" xml:space="preserve">
+  <data name="MessageCountBox.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>How many messages to send at a time. Lower this if older hardware cannot keep up.</value>
   </data>
   <data name="SpacingBox.Header" xml:space="preserve">
     <value>Delay between transfers (ms)</value>
   </data>
-  <data name="SpacingBox.[using:Microsoft.UI.Xaml.Controls]ToolTipService/ToolTip" xml:space="preserve">
+  <data name="SpacingBox.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>How long to wait between transfers. Raise this if older hardware cannot keep up.</value>
   </data>
   <data name="SendButton" xml:space="preserve">
@@ -185,8 +185,12 @@
   <data name="ColumnHeaderBytes.Text" xml:space="preserve">
     <value>System Exclusive bytes</value>
   </data>
-  <data name="DumpListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties/Name" xml:space="preserve">
+  <data name="DumpListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Received data</value>
+  </data>
+  <data name="DumpRowAccessibleNameFormat" xml:space="preserve">
+    <value>Message {0}, {1}</value>
+    <comment>Spoken by a screen reader for one row of the received dump. {0} message number, {1} the System Exclusive bytes it carries.</comment>
   </data>
   <data name="StartReceivingButton" xml:space="preserve">
     <value>Start receiving</value>
@@ -218,13 +222,13 @@
   <data name="SaveButton.Content" xml:space="preserve">
     <value>Save...</value>
   </data>
-  <data name="SaveButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties/Name" xml:space="preserve">
+  <data name="SaveButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Save the received data to a file</value>
   </data>
   <data name="ClearButton.Content" xml:space="preserve">
     <value>Clear</value>
   </data>
-  <data name="ClearButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties/Name" xml:space="preserve">
+  <data name="ClearButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Clear the received data</value>
   </data>
   <data name="SaveSucceededFormat" xml:space="preserve">
@@ -236,10 +240,10 @@
   </data>
 
   <!-- ============================ Settings =============================== -->
-  <data name="SettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService/ToolTip" xml:space="preserve">
+  <data name="SettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
     <value>Settings</value>
   </data>
-  <data name="SettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties/Name" xml:space="preserve">
+  <data name="SettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Settings</value>
   </data>
   <data name="SettingsTitle" xml:space="preserve">

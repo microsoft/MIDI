@@ -950,11 +950,19 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
         co_await winrt::resume_background();
 
+        co_return RequestPropertyExchangeCapabilities(destinationMuid);
+    }
+
+    _Use_decl_annotations_
+    ci::MidiCapabilityInquiryStatus
+    MidiCapabilityInquirySession::RequestPropertyExchangeCapabilities(
+        ci::MidiUniqueId const& destinationMuid) noexcept
+    {
         try
         {
             if (destinationMuid == nullptr || !m_isOpen)
             {
-                co_return ci::MidiCapabilityInquiryStatus::Failed;
+                return ci::MidiCapabilityInquiryStatus::Failed;
             }
 
             auto const destinationValue = destinationMuid.AsCombined28BitValue();
@@ -986,7 +994,7 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
             if (!sent)
             {
                 RemoveRequest(key);
-                co_return ci::MidiCapabilityInquiryStatus::Failed;
+                return ci::MidiCapabilityInquiryStatus::Failed;
             }
 
             auto const answered = WaitForRequest(key);
@@ -1008,12 +1016,12 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
             if (!answered || reply == nullptr)
             {
-                co_return ci::MidiCapabilityInquiryStatus::NoResponse;
+                return ci::MidiCapabilityInquiryStatus::NoResponse;
             }
 
             if (reply.MessageType() == ci::MidiCapabilityInquiryMessageType::Nak)
             {
-                co_return ci::MidiCapabilityInquiryStatus::NegativeAcknowledgment;
+                return ci::MidiCapabilityInquiryStatus::NegativeAcknowledgment;
             }
 
             // The count is the byte immediately after the common header.
@@ -1032,12 +1040,45 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
                 }
             }
 
-            co_return ci::MidiCapabilityInquiryStatus::Success;
+            return ci::MidiCapabilityInquiryStatus::Success;
         }
         catch (...)
         {
             LOG_CAUGHT_EXCEPTION();
-            co_return ci::MidiCapabilityInquiryStatus::Failed;
+            return ci::MidiCapabilityInquiryStatus::Failed;
+        }
+    }
+
+    _Use_decl_annotations_
+    void MidiCapabilityInquirySession::EnsurePropertyExchangeCapabilities(
+        ci::MidiUniqueId const& destinationMuid) noexcept
+    {
+        try
+        {
+            if (destinationMuid == nullptr || !m_isOpen)
+            {
+                return;
+            }
+
+            auto const destinationValue = destinationMuid.AsCombined28BitValue();
+
+            {
+                std::lock_guard<std::mutex> guard(m_lock);
+
+                if (!m_propertyExchangeCapabilitiesAsked.insert(destinationValue).second)
+                {
+                    return;
+                }
+            }
+
+            // A device which does not answer is still asked only once. Plenty of devices in the
+            // field skip this reply and answer everything else, and refusing to talk to them would
+            // be a worse outcome than a single unanswered inquiry.
+            RequestPropertyExchangeCapabilities(destinationMuid);
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
         }
     }
 
@@ -1153,6 +1194,8 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
                 failed->InternalSetStatus(ci::MidiCapabilityInquiryStatus::Failed);
                 return *failed;
             }
+
+            EnsurePropertyExchangeCapabilities(destinationMuid);
 
             auto const destinationValue = destinationMuid.AsCombined28BitValue();
             auto const requestId = NextRequestId();

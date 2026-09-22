@@ -181,7 +181,8 @@
                         <ItemsControl x:Name="PendingClientsList" Margin="0,8,0,8">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="local:PendingClientItem">
-                                    <StackPanel Margin="0,0,0,10" Spacing="4">
+                                    <StackPanel Margin="0,0,0,10" Spacing="4"
+                                                AutomationProperties.Name="{x:Bind Headline, Mode=OneWay}">
                                         <Grid ColumnSpacing="12">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" MinWidth="120" />
@@ -314,7 +315,8 @@
                             </ListView.ItemContainerStyle>
                             <ListView.ItemTemplate>
                                 <DataTemplate x:DataType="local:BluetoothDeviceItem">
-                                    <Border Style="{StaticResource CardBorderStyle}">
+                                    <Border Style="{StaticResource CardBorderStyle}"
+                                            AutomationProperties.Name="{x:Bind DisplayName, Mode=OneWay}">
                                         <StackPanel Spacing="6">
                                             <Grid ColumnSpacing="12">
                                                 <Grid.ColumnDefinitions>
@@ -532,6 +534,7 @@
                                                                 VerticalAlignment="Center"
                                                                 Visibility="{x:Bind OfflineRetentionVisibility, Mode=OneWay}">
                                                         <ComboBox MinWidth="170"
+                                                                  x:Uid="OfflineRetentionCombo"
                                                                   SelectedIndex="{x:Bind OfflineRetentionIndex, Mode=OneWay}"
                                                                   SelectionChanged="OnOfflineRetentionChanged">
                                                             <ComboBoxItem x:Uid="OfflineRetentionUseDefaultItem" Content="Use default" />
@@ -668,7 +671,8 @@
                             <ItemsControl x:Name="PeripheralClientsList">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="local:PeripheralClientItem">
-                                        <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,8">
+                                        <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,0,8"
+                                                AutomationProperties.Name="{x:Bind DisplayName, Mode=OneWay}">
                                             <StackPanel Spacing="6">
                                                 <Grid ColumnSpacing="12">
                                                     <Grid.ColumnDefinitions>
@@ -766,6 +770,7 @@
                             <Border Style="{StaticResource CardBorderStyle}">
                                 <StackPanel Spacing="10">
                                     <TextBlock x:Uid="DefaultOfflineRetentionHeader"
+                                               x:Name="DefaultOfflineRetentionHeader"
                                                Text="Keep endpoints when a device goes offline"
                                                Style="{ThemeResource BodyStrongTextBlockStyle}" />
 
@@ -779,6 +784,7 @@
                                                Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
 
                                     <ComboBox x:Name="DefaultOfflineRetentionCombo"
+                                              AutomationProperties.LabeledBy="{x:Bind DefaultOfflineRetentionHeader}"
                                               MinWidth="200"
                                               HorizontalAlignment="Left"
                                               SelectionChanged="OnDefaultOfflineRetentionChanged">

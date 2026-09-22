@@ -1838,6 +1838,8 @@ void MidiSynthUmpTests::TestUmpStreamDiscovery()
 
             VERIFY_IS_TRUE((output.Words[i] & 0x8000) != 0, L"the function block is active");
             VERIFY_ARE_EQUAL((output.Words[i] & 0x3), (uint32_t)0x3, L"it is bidirectional");
+            VERIFY_ARE_EQUAL(((output.Words[i] >> 4) & 0x3), (uint32_t)0x1,
+                L"the user interface hint is receiver, because it is a tone generator");
             VERIFY_ARE_EQUAL((output.Words[i + 1] >> 24), (uint32_t)0, L"it starts at group 1");
             VERIFY_ARE_EQUAL(((output.Words[i + 1] >> 16) & 0xFF), (uint32_t)1, L"it spans one group");
         }

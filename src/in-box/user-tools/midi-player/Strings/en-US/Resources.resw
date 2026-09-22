@@ -190,6 +190,18 @@
     <value>Remove {0} from the queue</value>
     <comment>{0} name of the file</comment>
   </data>
+  <data name="QueueRowAccessibleNameFormat" xml:space="preserve">
+    <value>{0}, {1}, {2}</value>
+    <comment>Spoken by a screen reader for one row of the play queue. {0} file name, {1} duration, {2} track and note counts.</comment>
+  </data>
+  <data name="QueueRowAccessibleNameNoDurationFormat" xml:space="preserve">
+    <value>{0}, {1}</value>
+    <comment>Spoken by a screen reader for a queue row with no duration, which means the file could not be read. {0} file name, {1} the reason.</comment>
+  </data>
+  <data name="QueueRowCurrentAccessibleNameFormat" xml:space="preserve">
+    <value>Now playing, {0}</value>
+    <comment>{0} the rest of the spoken description of the row. Wraps it for the file the player is on.</comment>
+  </data>
   <data name="EmptyQueueTitle.Text" xml:space="preserve">
     <value>No files yet</value>
   </data>
@@ -233,8 +245,15 @@
     <value>Stop playing only {0}</value>
     <comment>{0} name of the track</comment>
   </data>
+  <data name="TrackRowAccessibleNameFormat" xml:space="preserve">
+    <value>{0}, {1}, {2}</value>
+    <comment>Spoken by a screen reader for one row of the track list. {0} track name, {1} instrument or patch name, {2} channel and note counts.</comment>
+  </data>
   <data name="TrackList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Tracks</value>
+  </data>
+  <data name="QueueList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Play queue</value>
   </data>
   <data name="NoteRollHost.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Notes</value>

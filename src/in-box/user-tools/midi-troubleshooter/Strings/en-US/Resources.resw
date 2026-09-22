@@ -294,6 +294,15 @@
   <data name="MidiDiagOutputBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>MIDI diagnostics report</value>
   </data>
+  <data name="SessionsListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Applications using MIDI</value>
+  </data>
+  <data name="TransportsListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Transports</value>
+  </data>
+  <data name="DriversListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI devices and their drivers</value>
+  </data>
   <data name="RunMidiKsInfoButton.Content" xml:space="preserve">
     <value>Run midiksinfo</value>
   </data>

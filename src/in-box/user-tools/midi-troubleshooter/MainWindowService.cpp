@@ -559,6 +559,26 @@ namespace winrt::miditroubleshooter::implementation
             ServiceProgressRing().IsActive(true);
             ServiceStatusText().Text(res::GetString(L"ServiceRestarting"));
 
+            // Runs on the closing and the exception paths too, so a restart that goes wrong
+            // cannot leave the page spinning. The refresh is what puts the button back, since
+            // only it knows whether the service is installed at all.
+            auto const clearBusy = wil::scope_exit([this]() noexcept
+                {
+                    try
+                    {
+                        m_busy = false;
+
+                        if (!m_closing)
+                        {
+                            ServiceProgressRing().IsActive(false);
+                            RequestServiceRefreshAsync();
+                        }
+                    }
+                    catch (...)
+                    {
+                    }
+                });
+
             native::ServiceOperationResult result{};
 
             co_await native::RunOnBackgroundAsync([&result]()
@@ -566,14 +586,10 @@ namespace winrt::miditroubleshooter::implementation
                     result = native::RestartMidiService();
                 });
 
-            m_busy = false;
-
             if (m_closing)
             {
                 co_return;
             }
-
-            ServiceProgressRing().IsActive(false);
 
             ServiceStatusText().Text(result.Succeeded ?
                 res::GetString(L"ServiceRestarted") :
@@ -583,15 +599,8 @@ namespace winrt::miditroubleshooter::implementation
             {
                 OnMidiServiceRestarted();
             }
-
-            RequestServiceRefreshAsync();
         }
-        catch (...)
-        {
-            m_busy = false;
-
-            MIDI_TSHOOT_LOG_GENERAL_EXCEPTION(L"Unable to restart the service.");
-        }
+        MIDI_TSHOOT_CATCH_AND_LOG(L"Unable to restart the service.")
     }
 
     _Use_decl_annotations_

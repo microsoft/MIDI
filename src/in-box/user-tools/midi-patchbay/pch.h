@@ -113,6 +113,7 @@ namespace foundation = ::winrt::Windows::Foundation;
 namespace collections = ::winrt::Windows::Foundation::Collections;
 namespace json = ::winrt::Windows::Data::Json;
 namespace xaml = ::winrt::Microsoft::UI::Xaml;
+namespace windowing = ::winrt::Microsoft::UI::Windowing;
 namespace controls = ::winrt::Microsoft::UI::Xaml::Controls;
 namespace primitives = ::winrt::Microsoft::UI::Xaml::Controls::Primitives;
 namespace shapes = ::winrt::Microsoft::UI::Xaml::Shapes;
@@ -132,6 +133,7 @@ namespace appshared = ::winrt::MidiAppShared;
 
 #include "PreviewBuild.h"
 #include "WindowChrome.h"
+#include "SingleInstance.h"
 #include "MidiEndpointHelpers.h"
 #include "EndpointImageAssets.h"
 #include "AppearanceFlyout.h"

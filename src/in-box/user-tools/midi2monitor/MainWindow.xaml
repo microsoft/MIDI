@@ -88,33 +88,52 @@
                            Foreground="{ThemeResource SystemFillColorCautionBrush}" />
             </Border>
 
-            <!-- sized like a caption button; lightweight styling removes the button chrome so
-                 it reads as a bare icon until it is switched on -->
-            <ToggleButton x:Name="AlwaysOnTopToggle"
-                          x:Uid="AlwaysOnTopToggle"
-                          Grid.Column="3"
-                          Width="46"
-                          Height="32"
-                          MinWidth="0"
-                          MinHeight="0"
-                          Padding="0"
-                          CornerRadius="0"
-                          Margin="0,0,8,0"
-                          VerticalAlignment="Top"
-                          Checked="OnAlwaysOnTopToggled"
-                          Unchecked="OnAlwaysOnTopToggled">
-                <ToggleButton.Resources>
+            <!-- sized like caption buttons; lightweight styling removes the button chrome so
+                 they read as bare icons until they are pointed at or switched on -->
+            <StackPanel Grid.Column="3"
+                        Orientation="Horizontal"
+                        Margin="0,0,8,0"
+                        VerticalAlignment="Top">
+                <StackPanel.Resources>
                     <SolidColorBrush x:Key="ToggleButtonBackground" Color="Transparent" />
                     <SolidColorBrush x:Key="ToggleButtonBorderBrush" Color="Transparent" />
                     <SolidColorBrush x:Key="ToggleButtonBorderBrushPointerOver" Color="Transparent" />
                     <SolidColorBrush x:Key="ToggleButtonBorderBrushPressed" Color="Transparent" />
                     <StaticResource x:Key="ToggleButtonBackgroundPointerOver" ResourceKey="SubtleFillColorSecondaryBrush" />
                     <StaticResource x:Key="ToggleButtonBackgroundPressed" ResourceKey="SubtleFillColorTertiaryBrush" />
-                </ToggleButton.Resources>
-                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
-                          Glyph="&#xE718;"
-                          FontSize="14" />
-            </ToggleButton>
+                </StackPanel.Resources>
+
+                <Button x:Name="SettingsButton"
+                        x:Uid="SettingsButton"
+                        Width="46"
+                        Height="32"
+                        MinWidth="0"
+                        MinHeight="0"
+                        Padding="0"
+                        CornerRadius="0"
+                        BorderThickness="0"
+                        Background="Transparent"
+                        Click="OnSettingsClick">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                              Glyph="&#xE713;"
+                              FontSize="14" />
+                </Button>
+
+                <ToggleButton x:Name="AlwaysOnTopToggle"
+                              x:Uid="AlwaysOnTopToggle"
+                              Width="46"
+                              Height="32"
+                              MinWidth="0"
+                              MinHeight="0"
+                              Padding="0"
+                              CornerRadius="0"
+                              Checked="OnAlwaysOnTopToggled"
+                              Unchecked="OnAlwaysOnTopToggled">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}"
+                              Glyph="&#xE718;"
+                              FontSize="14" />
+                </ToggleButton>
+            </StackPanel>
         </Grid>
 
         <!-- ============================ Top: what to listen to ============================ -->
@@ -157,6 +176,7 @@
 
                     <StackPanel Grid.Row="0" Grid.Column="0" Spacing="4">
                         <TextBlock x:Uid="EndpointPickerLabel"
+                                   x:Name="EndpointPickerLabel"
                                    Text="MIDI Device"
                                    TextWrapping="NoWrap"
                                    TextTrimming="CharacterEllipsis"
@@ -164,6 +184,7 @@
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <ComboBox x:Name="EndpointComboBox"
                                   x:Uid="EndpointPicker"
+                                  AutomationProperties.LabeledBy="{x:Bind EndpointPickerLabel}"
                                   TabIndex="1"
                                   HorizontalAlignment="Stretch"
                                   SelectionChanged="OnEndpointSelectionChanged">
@@ -174,7 +195,8 @@
                             </ComboBox.ItemContainerStyle>
                             <ComboBox.ItemTemplate>
                                 <DataTemplate x:DataType="shared:EndpointChoice">
-                                    <Grid ColumnSpacing="8" Loaded="OnEndpointChoiceLoaded">
+                                      <Grid ColumnSpacing="8" Loaded="OnEndpointChoiceLoaded"
+                                            AutomationProperties.Name="{x:Bind DisplayName}">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" />
                                             <ColumnDefinition Width="Auto" />
@@ -200,6 +222,7 @@
 
                     <StackPanel Grid.Row="0" Grid.Column="1" Spacing="4" MaxWidth="230" HorizontalAlignment="Stretch">
                         <TextBlock x:Uid="GroupPickerLabel"
+                                   x:Name="GroupPickerLabel"
                                    Text="Group"
                                    TextWrapping="NoWrap"
                                    TextTrimming="CharacterEllipsis"
@@ -207,6 +230,7 @@
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <ComboBox x:Name="GroupComboBox"
                                   x:Uid="GroupPicker"
+                                  AutomationProperties.LabeledBy="{x:Bind GroupPickerLabel}"
                                   TabIndex="2"
                                   HorizontalAlignment="Stretch"
                                   SelectionChanged="OnGroupSelectionChanged">
@@ -220,6 +244,7 @@
 
                     <StackPanel Grid.Row="0" Grid.Column="2" Spacing="4" Width="120">
                         <TextBlock x:Uid="ChannelPickerLabel"
+                                   x:Name="ChannelPickerLabel"
                                    Text="Channel"
                                    TextWrapping="NoWrap"
                                    TextTrimming="CharacterEllipsis"
@@ -227,6 +252,7 @@
                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         <ComboBox x:Name="ChannelComboBox"
                                   x:Uid="ChannelPicker"
+                                  AutomationProperties.LabeledBy="{x:Bind ChannelPickerLabel}"
                                   TabIndex="3"
                                   HorizontalAlignment="Stretch"
                                   SelectionChanged="OnChannelSelectionChanged">
@@ -311,7 +337,8 @@
                                 <ItemsControl x:Name="ColumnsItemsControl">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate x:DataType="local:MonitorColumn">
-                                            <Grid ColumnSpacing="4" Margin="0,2,0,2">
+                                            <Grid ColumnSpacing="4" Margin="0,2,0,2"
+                                                  AutomationProperties.Name="{x:Bind Header, Mode=OneWay}">
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="Auto" />
@@ -356,11 +383,13 @@
                                 <StackPanel Spacing="12" Width="290">
                                     <StackPanel Spacing="4">
                                         <TextBlock x:Uid="TimestampFormatLabel"
+                                                   x:Name="TimestampFormatLabel"
                                                    Text="Show message time as"
                                                    Style="{ThemeResource CaptionTextBlockStyle}"
                                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                         <ComboBox x:Name="TimestampFormatComboBox"
                                                   x:Uid="TimestampFormatPicker"
+                                                  AutomationProperties.LabeledBy="{x:Bind TimestampFormatLabel}"
                                                   HorizontalAlignment="Stretch"
                                                   SelectionChanged="OnTimestampFormatChanged">
                                             <ComboBoxItem x:Uid="TimestampFormatTicks" Content="Clock Ticks since PC startup" />
@@ -391,6 +420,7 @@
                 </Border>
 
                 <ListView x:Name="MessagesListView"
+                          x:Uid="MessagesListView"
                           Grid.Row="1"
                           TabIndex="5"
                           SelectionMode="Extended"
@@ -477,7 +507,8 @@
 
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="local:MidiMessageViewModel">
-                            <Grid Background="{x:Bind RowBackground}" Padding="0,3,0,3">
+                            <Grid Background="{x:Bind RowBackground}" Padding="0,3,0,3"
+                                  AutomationProperties.Name="{x:Bind RowAccessibleName}">
 
                                 <local:MessageRowPanel Visibility="{x:Bind MessageVisibility}">
                                     <Button Padding="0"
@@ -611,20 +642,6 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
-                <Button x:Name="SettingsButton"
-                        x:Uid="SettingsButton"
-                        TabIndex="6"
-                        Padding="6,0,6,0"
-                        MinWidth="0"
-                        Height="28"
-                        MinHeight="28"
-                        Background="Transparent"
-                        BorderThickness="0"
-                        VerticalAlignment="Center"
-                        Click="OnSettingsClick">
-                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE713;" FontSize="14" />
-                </Button>
-
                 <TextBlock x:Name="TotalCountText"
                            VerticalAlignment="Center"
                            Style="{ThemeResource CaptionTextBlockStyle}"

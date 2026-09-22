@@ -202,7 +202,8 @@
                         <ItemsControl x:Name="PendingInvitationsList" Margin="0,8,0,8">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="local:PendingInvitationItem">
-                                    <Grid Margin="0,0,0,10" ColumnSpacing="12">
+                                    <Grid Margin="0,0,0,10" ColumnSpacing="12"
+                                          AutomationProperties.Name="{x:Bind Headline, Mode=OneWay}">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="*" MinWidth="120" />
                                             <ColumnDefinition Width="Auto" />
@@ -299,7 +300,8 @@
                         </ListView.ItemContainerStyle>
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="local:RemoteHostItem">
-                                <Border Style="{StaticResource CardBorderStyle}">
+                                <Border Style="{StaticResource CardBorderStyle}"
+                                        AutomationProperties.Name="{x:Bind DisplayName, Mode=OneWay}">
                                     <StackPanel Spacing="6">
                                         <Grid ColumnSpacing="12">
                                             <Grid.ColumnDefinitions>
@@ -670,7 +672,8 @@
                         </ListView.ItemContainerStyle>
                         <ListView.ItemTemplate>
                             <DataTemplate x:DataType="local:LocalHostItem">
-                                <Border Style="{StaticResource CardBorderStyle}">
+                                <Border Style="{StaticResource CardBorderStyle}"
+                                        AutomationProperties.Name="{x:Bind DisplayName, Mode=OneWay}">
                                     <StackPanel Spacing="8">
                                         <Grid ColumnSpacing="12">
                                             <Grid.ColumnDefinitions>
@@ -724,6 +727,7 @@
                                                 <ItemsControl.ItemTemplate>
                                                     <DataTemplate x:DataType="local:HostConnectionItem">
                                                         <Border Margin="0,0,0,6"
+                                                                AutomationProperties.Name="{x:Bind DisplayName, Mode=OneWay}"
                                                                 Padding="10,6,10,6"
                                                                 CornerRadius="4"
                                                                 Background="{ThemeResource CardBackgroundFillColorSecondaryBrush}"
@@ -837,7 +841,8 @@
                                                 <ItemsControl ItemsSource="{x:Bind KnownClients, Mode=OneWay}">
                                                     <ItemsControl.ItemTemplate>
                                                         <DataTemplate x:DataType="local:KnownClientItem">
-                                                            <Grid ColumnSpacing="12" Margin="0,4,0,4">
+                                                            <Grid ColumnSpacing="12" Margin="0,4,0,4"
+                                                                  AutomationProperties.Name="{x:Bind DisplayName, Mode=OneWay}">
                                                                 <Grid.ColumnDefinitions>
                                                                     <ColumnDefinition Width="*" MinWidth="120" />
                                                                     <ColumnDefinition Width="Auto" />
@@ -973,6 +978,7 @@
                         <Border Style="{StaticResource CardBorderStyle}">
                             <StackPanel Spacing="10">
                                 <TextBlock x:Uid="SettingMaxHostConnectionsHeader"
+                                           x:Name="SettingMaxHostConnectionsHeader"
                                            Text="Most devices allowed at once"
                                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
                                 <TextBlock x:Name="MaxHostConnectionsDescriptionText"
@@ -982,6 +988,7 @@
                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                 <NumberBox x:Name="MaxHostConnectionsBox"
+                                           AutomationProperties.LabeledBy="{x:Bind SettingMaxHostConnectionsHeader}"
                                            MinWidth="160"
                                            HorizontalAlignment="Left"
                                            SpinButtonPlacementMode="Compact"
@@ -997,6 +1004,7 @@
                         <Border Style="{StaticResource CardBorderStyle}">
                             <StackPanel Spacing="10">
                                 <TextBlock x:Uid="SettingInvitationPendingTimeoutHeader"
+                                           x:Name="SettingInvitationPendingTimeoutHeader"
                                            Text="How long to wait for your permission"
                                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
                                 <TextBlock x:Name="InvitationPendingTimeoutDescriptionText"
@@ -1007,6 +1015,7 @@
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <NumberBox x:Name="InvitationPendingTimeoutBox"
+                                               AutomationProperties.LabeledBy="{x:Bind SettingInvitationPendingTimeoutHeader}"
                                                MinWidth="160"
                                                HorizontalAlignment="Left"
                                                SpinButtonPlacementMode="Compact"
@@ -1029,6 +1038,7 @@
                         <Border Style="{StaticResource CardBorderStyle}">
                             <StackPanel Spacing="10">
                                 <TextBlock x:Uid="SettingScanIntervalHeader"
+                                           x:Name="SettingScanIntervalHeader"
                                            Text="How often to retry a device which is not answering"
                                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
                                 <TextBlock x:Name="DirectConnectionScanIntervalDescriptionText"
@@ -1039,6 +1049,7 @@
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <NumberBox x:Name="DirectConnectionScanIntervalBox"
+                                               AutomationProperties.LabeledBy="{x:Bind SettingScanIntervalHeader}"
                                                MinWidth="160"
                                                HorizontalAlignment="Left"
                                                SpinButtonPlacementMode="Compact"
@@ -1061,6 +1072,7 @@
                         <Border Style="{StaticResource CardBorderStyle}">
                             <StackPanel Spacing="10">
                                 <TextBlock x:Uid="SettingPingIntervalHeader"
+                                           x:Name="SettingPingIntervalHeader"
                                            Text="How often to check a quiet connection"
                                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
                                 <TextBlock x:Name="OutboundPingIntervalDescriptionText"
@@ -1071,6 +1083,7 @@
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                 <StackPanel Orientation="Horizontal" Spacing="12">
                                     <NumberBox x:Name="OutboundPingIntervalBox"
+                                               AutomationProperties.LabeledBy="{x:Bind SettingPingIntervalHeader}"
                                                MinWidth="160"
                                                HorizontalAlignment="Left"
                                                SpinButtonPlacementMode="Compact"
@@ -1093,6 +1106,7 @@
                         <Border Style="{StaticResource CardBorderStyle}">
                             <StackPanel Spacing="10">
                                 <TextBlock x:Uid="SettingFecPacketsHeader"
+                                           x:Name="SettingFecPacketsHeader"
                                            Text="Repeated messages per packet"
                                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
                                 <TextBlock x:Name="MaxFecPacketsDescriptionText"
@@ -1102,6 +1116,7 @@
                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                 <NumberBox x:Name="MaxFecPacketsBox"
+                                           AutomationProperties.LabeledBy="{x:Bind SettingFecPacketsHeader}"
                                            MinWidth="160"
                                            HorizontalAlignment="Left"
                                            SpinButtonPlacementMode="Compact"
@@ -1117,6 +1132,7 @@
                         <Border Style="{StaticResource CardBorderStyle}">
                             <StackPanel Spacing="10">
                                 <TextBlock x:Uid="SettingRetransmitBufferHeader"
+                                           x:Name="SettingRetransmitBufferHeader"
                                            Text="Messages kept for resending"
                                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
                                 <TextBlock x:Name="MaxRetransmitBufferDescriptionText"
@@ -1126,6 +1142,7 @@
                                            Style="{ThemeResource CaptionTextBlockStyle}"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                                 <NumberBox x:Name="MaxRetransmitBufferBox"
+                                           AutomationProperties.LabeledBy="{x:Bind SettingRetransmitBufferHeader}"
                                            MinWidth="160"
                                            HorizontalAlignment="Left"
                                            SpinButtonPlacementMode="Compact"
@@ -1324,12 +1341,14 @@
             <StackPanel Spacing="8" MaxWidth="440">
                 <TextBlock x:Name="ReassociateDialogText" TextWrapping="Wrap" />
                 <ListView x:Name="ReassociateDialogList"
+                          x:Uid="ReassociateDialogList"
                           SelectionMode="Single"
                           MaxHeight="260"
                           SelectionChanged="OnReassociateSelectionChanged">
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="local:RemoteHostItem">
-                            <StackPanel Margin="0,4,0,4">
+                            <StackPanel Margin="0,4,0,4"
+                                        AutomationProperties.Name="{x:Bind DisplayName, Mode=OneWay}">
                                 <TextBlock Text="{x:Bind DisplayName, Mode=OneWay}"
                                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
                                 <TextBlock Text="{x:Bind SubtitleText, Mode=OneWay}"

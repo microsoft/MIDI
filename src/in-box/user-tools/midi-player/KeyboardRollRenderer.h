@@ -8,6 +8,7 @@
 #pragma once
 
 #include "midi_file_sequence.h"
+#include "NoteRollRenderer.h"
 
 namespace midiplayer
 {
@@ -44,7 +45,7 @@ namespace midiplayer
         void LayOutKeyboard(double width) noexcept;
         void DrawKeyboard(double keyboardTop, double keyboardHeight) noexcept;
 
-        winrt::Microsoft::UI::Composition::SpriteVisual TakeNoteVisual(size_t index) noexcept;
+        NoteVisuals TakeNoteVisual(size_t index) noexcept;
         void HideNotesFrom(size_t index) noexcept;
 
         winrt::Microsoft::UI::Composition::CompositionColorBrush BrushFor(uint32_t argb) noexcept;
@@ -55,7 +56,7 @@ namespace midiplayer
         winrt::Microsoft::UI::Composition::ContainerVisual m_whiteKeyLayer{ nullptr };
         winrt::Microsoft::UI::Composition::ContainerVisual m_blackKeyLayer{ nullptr };
 
-        std::vector<winrt::Microsoft::UI::Composition::SpriteVisual> m_notePool{};
+        std::vector<NoteVisuals> m_notePool{};
 
         // One visual per key, held for the life of the view and recolored as keys are played.
         std::vector<winrt::Microsoft::UI::Composition::SpriteVisual> m_keyVisuals{};
