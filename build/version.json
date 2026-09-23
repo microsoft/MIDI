@@ -21,14 +21,14 @@
 
   "major": 0,
   "minor": 99,
-  "patch": 84,
+  "patch": 85,
 
   "channel": "devpreview",
-  "channelNumber": 9,
+  "channelNumber": 10,
 
   "build": 0,
 
-  "versionName": "SDK Dev Preview 9",
+  "versionName": "SDK Dev Preview 10",
 
   "nuGetPackageId": "Windows.Devices.Midi2"
 }

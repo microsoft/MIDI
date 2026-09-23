@@ -33,6 +33,11 @@ namespace midisettings
         EndpointViewMode ViewMode() const noexcept { return m_viewMode; }
         void ViewMode(EndpointViewMode value) noexcept;
 
+        // Whether the toolbar buttons carry their names. Off gives an icon-only toolbar; the
+        // toolbar also drops the labels on its own when the window is too narrow for them.
+        bool ShowToolbarLabels() const noexcept { return m_showToolbarLabels; }
+        void ShowToolbarLabels(bool value) noexcept;
+
         // Transport code the endpoint list is filtered to, or empty for all of them.
         std::wstring TransportFilter() const noexcept { return m_transportFilter; }
         void TransportFilter(std::wstring const& value) noexcept;
@@ -50,6 +55,7 @@ namespace midisettings
         AppSettings() noexcept;
 
         EndpointViewMode m_viewMode{ EndpointViewMode::Cards };
+        bool m_showToolbarLabels{ true };
         std::wstring m_transportFilter{};
         std::wstring m_lastConfigCopyFolder{};
         std::wstring m_dismissedOrphanedCustomizations{};

@@ -17,6 +17,8 @@
 #include "MidiCapabilityInquiryResponder.h"
 #include "MidiCapabilityInquiryMessageReceivedEventArgs.h"
 #include "MidiPropertyExchangeResponse.h"
+#include "MidiPropertySubscription.h"
+#include "MidiPropertySubscriptionUpdatedEventArgs.h"
 #include "MidiProfileInquiryResponse.h"
 #include "MidiDeclaredDeviceIdentity.h"
 #include "MidiGroup.h"
@@ -40,6 +42,19 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         constexpr std::wstring_view TotalCountKey{ L"totalCount" };
         constexpr std::wstring_view MutualEncodingKey{ L"mutualEncoding" };
         constexpr std::wstring_view MessageKey{ L"message" };
+
+        constexpr std::wstring_view CommandKey{ L"command" };
+        constexpr std::wstring_view SubscribeIdKey{ L"subscribeId" };
+
+        constexpr std::wstring_view CommandStart{ L"start" };
+        constexpr std::wstring_view CommandEnd{ L"end" };
+
+        // A device chooses its own subscription identifiers, so two devices can hand out the same
+        // one. The responder is part of the key to keep those apart.
+        std::wstring SubscriptionKey(_In_ uint32_t const muid, _In_ winrt::hstring const& subscribeId)
+        {
+            return std::to_wstring(muid) + L"/" + std::wstring{ subscribeId };
+        }
 
         constexpr std::wstring_view ResourceDeviceInfo{ L"DeviceInfo" };
         constexpr std::wstring_view ResourceResourceList{ L"ResourceList" };
@@ -236,6 +251,10 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
         try
         {
+            // A device holding a subscription would otherwise keep sending updates to an
+            // identifier that is about to go away.
+            EndAllSubscriptions();
+
             // Release the identifier before letting go of the connection, so anything that was
             // talking to this session knows to stop.
             SendInvalidateMuid();
@@ -264,6 +283,7 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         {
             std::lock_guard<std::mutex> guard(m_lock);
             m_pendingRequests.clear();
+            m_incomingUpdates.clear();
         }
 
         m_requestCompleted.notify_all();
@@ -407,6 +427,28 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
             LOG_CAUGHT_EXCEPTION();
             return false;
         }
+    }
+
+    _Use_decl_annotations_
+    uint8_t MidiCapabilityInquirySession::MessageVersionFor(uint32_t const muid) noexcept
+    {
+        try
+        {
+            std::lock_guard<std::mutex> guard(m_lock);
+
+            auto const responder = m_responders.find(muid);
+
+            if (responder != m_responders.end() && responder->second.MessageVersion() != 0)
+            {
+                return responder->second.MessageVersion();
+            }
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+
+        return native::MessageVersionCurrent;
     }
 
     _Use_decl_annotations_
@@ -570,7 +612,22 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
                 RecordResponder(message);
             }
 
+            // A device withdrawing its identifier is telling us it is gone. Holding on to it
+            // leaves an application offering a responder that will never answer again, and a
+            // subscription that looks live.
+            if (message.MessageType() == ci::MidiCapabilityInquiryMessageType::InvalidateMuid)
+            {
+                ForgetResponder(message.TargetMuid());
+            }
+
             if (TryCompleteRequest(message))
+            {
+                return;
+            }
+
+            // A subscription update is the one property exchange message a device starts, so it
+            // matches nothing this session asked for and has to be reassembled separately.
+            if (TryCollectSubscriptionUpdate(message))
             {
                 return;
             }
@@ -622,16 +679,22 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
             auto const data = message.Data();
 
-            // Manufacturer, family, model, revision, categories, size, path and block, in the order
-            // the message table puts them after the thirteen byte common header.
-            if (data == nullptr || data.Size() < 30)
+            // Manufacturer, family, model, revision, categories and receivable size, in the order
+            // the message table puts them after the thirteen byte common header. That is where a
+            // MIDI-CI version 1.1 device stops: the output path id and the function block number
+            // arrived with version 1.2, and requiring them drops every older device on the floor.
+            constexpr uint32_t ThroughReceivableSize{ 29 };
+            constexpr uint32_t ThroughOutputPathId{ 30 };
+            constexpr uint32_t ThroughFunctionBlock{ 31 };
+
+            if (data == nullptr || data.Size() < ThroughReceivableSize)
             {
                 return;
             }
 
             std::array<uint8_t, 32> raw{};
 
-            for (uint32_t i = 0; i < 30 && i < data.Size(); i++)
+            for (uint32_t i = 0; i < ThroughFunctionBlock && i < data.Size(); i++)
             {
                 raw[i] = data.GetAt(i);
             }
@@ -651,11 +714,15 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
                 static_cast<ci::MidiCapabilityInquiryCategories>(raw[24]));
 
             responder->InternalSetMaximumSystemExclusiveSize(native::ReadMuid(raw.data() + 25));
-            responder->InternalSetOutputPathId(raw[29]);
 
-            if (data.Size() >= 31)
+            if (data.Size() >= ThroughOutputPathId)
             {
-                responder->InternalSetFunctionBlockNumber(data.GetAt(30));
+                responder->InternalSetOutputPathId(raw[29]);
+            }
+
+            if (data.Size() >= ThroughFunctionBlock)
+            {
+                responder->InternalSetFunctionBlockNumber(raw[30]);
             }
 
             bool isNew{ false };
@@ -809,6 +876,244 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         {
             LOG_CAUGHT_EXCEPTION();
             return false;
+        }
+    }
+
+    _Use_decl_annotations_
+    void MidiCapabilityInquirySession::ForgetResponder(ci::MidiUniqueId const& muid) noexcept
+    {
+        try
+        {
+            if (muid == nullptr)
+            {
+                return;
+            }
+
+            auto const muidValue = muid.AsCombined28BitValue();
+
+            if (muidValue == m_sourceMuidValue)
+            {
+                return;
+            }
+
+            std::vector<ci::MidiPropertySubscription> orphaned{};
+
+            {
+                std::lock_guard<std::mutex> guard(m_lock);
+
+                m_responders.erase(muidValue);
+                m_propertyExchangeCapabilitiesAsked.erase(muidValue);
+
+                for (auto entry = m_subscriptions.begin(); entry != m_subscriptions.end(); )
+                {
+                    auto const& subscription = entry->second;
+
+                    if (subscription.ResponderMuid() != nullptr &&
+                        subscription.ResponderMuid().AsCombined28BitValue() == muidValue)
+                    {
+                        orphaned.push_back(subscription);
+                        entry = m_subscriptions.erase(entry);
+                    }
+                    else
+                    {
+                        entry = std::next(entry);
+                    }
+                }
+            }
+
+            for (auto const& subscription : orphaned)
+            {
+                winrt::get_self<MidiPropertySubscription>(subscription)->InternalSetIsActive(false);
+
+                auto args = winrt::make_self<MidiPropertySubscriptionUpdatedEventArgs>();
+
+                args->InternalSetSubscription(subscription);
+                args->InternalSetCommand(winrt::hstring{ CommandEnd });
+                args->InternalSetIsSubscriptionEnded(true);
+
+                m_propertySubscriptionUpdatedEvent(*this, *args);
+            }
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+    }
+
+    _Use_decl_annotations_
+    bool MidiCapabilityInquirySession::TryCollectSubscriptionUpdate(
+        ci::MidiCapabilityInquiryMessage const& message) noexcept
+    {
+        try
+        {
+            if (message.MessageType() != ci::MidiCapabilityInquiryMessageType::PropertySubscriptionInquiry ||
+                !message.HasPropertyExchangeFields())
+            {
+                return false;
+            }
+
+            auto const sourceMuid = message.SourceMuid();
+
+            if (sourceMuid == nullptr)
+            {
+                return false;
+            }
+
+            auto const key =
+                (static_cast<uint64_t>(sourceMuid.AsCombined28BitValue()) << 8) | message.RequestId();
+
+            PendingRequest finished{};
+            bool complete{ false };
+
+            {
+                std::lock_guard<std::mutex> guard(m_lock);
+
+                auto& update = m_incomingUpdates[key];
+
+                update.DestinationMuid = sourceMuid.AsCombined28BitValue();
+                update.RequestId = message.RequestId();
+
+                if (update.ChunksReceived == 0)
+                {
+                    update.FirstMessage = message;
+                }
+
+                update.ChunksReceived++;
+
+                if (message.ChunkCount() != 0)
+                {
+                    update.ChunkCount = message.ChunkCount();
+                }
+
+                for (auto const value : message.Body())
+                {
+                    update.Body.push_back(value);
+                }
+
+                // Chunk zero means the device abandoned what it was sending.
+                if (message.ChunkNumber() == 0)
+                {
+                    m_incomingUpdates.erase(key);
+                    return true;
+                }
+
+                if (message.ChunkCount() == 0 || message.ChunkNumber() >= message.ChunkCount())
+                {
+                    finished = update;
+                    complete = true;
+
+                    m_incomingUpdates.erase(key);
+                }
+            }
+
+            if (complete)
+            {
+                CompleteIncomingUpdate(key, finished);
+            }
+
+            return true;
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+            return false;
+        }
+    }
+
+    _Use_decl_annotations_
+    void MidiCapabilityInquirySession::CompleteIncomingUpdate(
+        uint64_t const key,
+        PendingRequest const& update) noexcept
+    {
+        try
+        {
+            UNREFERENCED_PARAMETER(key);
+
+            if (update.FirstMessage == nullptr)
+            {
+                return;
+            }
+
+            auto const response = BuildPropertyResponse(update, false);
+
+            winrt::hstring command{};
+            winrt::hstring subscribeId{};
+
+            if (response.Header() != nullptr)
+            {
+                command = response.Header().GetNamedString(winrt::hstring{ CommandKey }, L"");
+                subscribeId = response.Header().GetNamedString(winrt::hstring{ SubscribeIdKey }, L"");
+            }
+
+            auto const responderMuid = update.FirstMessage.SourceMuid();
+
+            ci::MidiPropertySubscription subscription{ nullptr };
+
+            if (responderMuid != nullptr && !subscribeId.empty())
+            {
+                auto const lookup = SubscriptionKey(responderMuid.AsCombined28BitValue(), subscribeId);
+
+                std::lock_guard<std::mutex> guard(m_lock);
+
+                auto const found = m_subscriptions.find(lookup);
+
+                if (found != m_subscriptions.end())
+                {
+                    subscription = found->second;
+                }
+            }
+
+            // The specification requires a reply to every subscription message, including one for
+            // a subscription this session does not recognize.
+            if (responderMuid != nullptr)
+            {
+                json::JsonObject replyHeader;
+
+                replyHeader.SetNamedValue(
+                    winrt::hstring{ StatusKey },
+                    json::JsonValue::CreateNumberValue(subscription == nullptr ? 404 : 200));
+
+                (void)Send(MidiCapabilityInquiryMessageBuilder::BuildPropertyMessage(
+                    0,
+                    Group(),
+                    ci::MidiCapabilityInquiryMessageType::PropertySubscriptionInquiryReply,
+                    m_sourceMuid,
+                    responderMuid,
+                    update.RequestId,
+                    replyHeader,
+                    nullptr,
+                    MaximumSystemExclusiveSizeFor(responderMuid.AsCombined28BitValue())));
+            }
+
+            if (subscription == nullptr)
+            {
+                return;
+            }
+
+            const bool ended = (command == winrt::hstring{ CommandEnd });
+
+            if (ended)
+            {
+                winrt::get_self<MidiPropertySubscription>(subscription)->InternalSetIsActive(false);
+
+                std::lock_guard<std::mutex> guard(m_lock);
+
+                m_subscriptions.erase(
+                    SubscriptionKey(responderMuid.AsCombined28BitValue(), subscribeId));
+            }
+
+            auto args = winrt::make_self<MidiPropertySubscriptionUpdatedEventArgs>();
+
+            args->InternalSetSubscription(subscription);
+            args->InternalSetCommand(command);
+            args->InternalSetIsSubscriptionEnded(ended);
+            args->InternalSetUpdate(response);
+
+            m_propertySubscriptionUpdatedEvent(*this, *args);
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
         }
     }
 
@@ -989,7 +1294,8 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
             auto const sent = Send(
                 MidiCapabilityInquiryMessageBuilder::BuildPropertyExchangeCapabilitiesInquiry(
-                    0, Group(), m_sourceMuid, destinationMuid, 1));
+                    0, Group(), m_sourceMuid, destinationMuid, 1,
+                    MessageVersionFor(destinationValue)));
 
             if (!sent)
             {
@@ -1289,6 +1595,305 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         co_await winrt::resume_background();
 
         co_return RequestProperty(destinationMuid, header, nullptr, false);
+    }
+
+    _Use_decl_annotations_
+    ci::MidiPropertyExchangeResponse MidiCapabilityInquirySession::SendSubscriptionCommand(
+        ci::MidiUniqueId const& destinationMuid,
+        json::JsonObject const& header) noexcept
+    {
+        try
+        {
+            if (destinationMuid == nullptr || header == nullptr || !m_isOpen)
+            {
+                auto failed = winrt::make_self<MidiPropertyExchangeResponse>();
+                failed->InternalSetStatus(ci::MidiCapabilityInquiryStatus::Failed);
+                return *failed;
+            }
+
+            EnsurePropertyExchangeCapabilities(destinationMuid);
+
+            auto const destinationValue = destinationMuid.AsCombined28BitValue();
+            auto const requestId = NextRequestId();
+
+            PendingRequest request{};
+
+            request.ExpectedReply = ci::MidiCapabilityInquiryMessageType::PropertySubscriptionInquiryReply;
+            request.DestinationMuid = destinationValue;
+            request.RequestId = requestId;
+
+            uint64_t key{};
+
+            {
+                std::lock_guard<std::mutex> guard(m_lock);
+
+                key = (static_cast<uint64_t>(destinationValue) << 8) | requestId;
+
+                while (m_pendingRequests.find(key) != m_pendingRequests.end())
+                {
+                    key += 0x100000000ull;
+                }
+
+                m_pendingRequests[key] = request;
+            }
+
+            auto const messages = MidiCapabilityInquiryMessageBuilder::BuildPropertyMessage(
+                0,
+                Group(),
+                ci::MidiCapabilityInquiryMessageType::PropertySubscriptionInquiry,
+                m_sourceMuid,
+                destinationMuid,
+                requestId,
+                header,
+                nullptr,
+                MaximumSystemExclusiveSizeFor(destinationValue));
+
+            if (!Send(messages))
+            {
+                RemoveRequest(key);
+
+                auto failed = winrt::make_self<MidiPropertyExchangeResponse>();
+                failed->InternalSetStatus(ci::MidiCapabilityInquiryStatus::Failed);
+                failed->InternalSetRequestId(requestId);
+
+                return *failed;
+            }
+
+            auto const answered = WaitForRequest(key);
+
+            PendingRequest completed{};
+
+            {
+                std::lock_guard<std::mutex> guard(m_lock);
+
+                auto const entry = m_pendingRequests.find(key);
+
+                if (entry != m_pendingRequests.end())
+                {
+                    completed = entry->second;
+                }
+            }
+
+            RemoveRequest(key);
+
+            return BuildPropertyResponse(completed, !answered);
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+
+            auto failed = winrt::make_self<MidiPropertyExchangeResponse>();
+            failed->InternalSetStatus(ci::MidiCapabilityInquiryStatus::Failed);
+
+            return *failed;
+        }
+    }
+
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<ci::MidiPropertySubscription>
+    MidiCapabilityInquirySession::SubscribeAsync(
+        ci::MidiUniqueId destinationMuid,
+        winrt::hstring resource,
+        winrt::hstring resourceId)
+    {
+        auto lifetime = get_strong();
+
+        co_await winrt::resume_background();
+
+        auto subscription = winrt::make_self<MidiPropertySubscription>();
+
+        subscription->InternalSetResponderMuid(destinationMuid);
+        subscription->InternalSetResource(resource);
+        subscription->InternalSetResourceId(resourceId);
+
+        try
+        {
+            if (destinationMuid == nullptr || resource.empty())
+            {
+                subscription->InternalSetStatus(ci::MidiCapabilityInquiryStatus::Failed);
+                co_return *subscription;
+            }
+
+            json::JsonObject header;
+
+            header.SetNamedValue(winrt::hstring{ ResourceKey }, json::JsonValue::CreateStringValue(resource));
+
+            if (!resourceId.empty())
+            {
+                header.SetNamedValue(winrt::hstring{ ResourceIdKey }, json::JsonValue::CreateStringValue(resourceId));
+            }
+
+            header.SetNamedValue(
+                winrt::hstring{ CommandKey },
+                json::JsonValue::CreateStringValue(winrt::hstring{ CommandStart }));
+
+            auto const response = SendSubscriptionCommand(destinationMuid, header);
+
+            subscription->InternalSetStatus(response.Status());
+            subscription->InternalSetResourceStatus(response.ResourceStatus());
+
+            if (response.Status() != ci::MidiCapabilityInquiryStatus::Success ||
+                response.ResourceStatus() != 200)
+            {
+                co_return *subscription;
+            }
+
+            // The identifier the device assigned is the only way to match its updates back to
+            // this subscription, so a device that accepted without giving one cannot be tracked.
+            winrt::hstring assigned{};
+
+            if (response.Header() != nullptr)
+            {
+                assigned = response.Header().GetNamedString(winrt::hstring{ SubscribeIdKey }, L"");
+            }
+
+            if (assigned.empty())
+            {
+                subscription->InternalSetStatus(ci::MidiCapabilityInquiryStatus::Failed);
+                co_return *subscription;
+            }
+
+            subscription->InternalSetSubscribeId(assigned);
+            subscription->InternalSetIsActive(true);
+
+            {
+                std::lock_guard<std::mutex> guard(m_lock);
+
+                m_subscriptions.insert_or_assign(
+                    SubscriptionKey(destinationMuid.AsCombined28BitValue(), assigned), *subscription);
+            }
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+            subscription->InternalSetStatus(ci::MidiCapabilityInquiryStatus::Failed);
+        }
+
+        co_return *subscription;
+    }
+
+    _Use_decl_annotations_
+    foundation::IAsyncOperation<bool> MidiCapabilityInquirySession::UnsubscribeAsync(
+        ci::MidiPropertySubscription subscription)
+    {
+        auto lifetime = get_strong();
+
+        co_await winrt::resume_background();
+
+        try
+        {
+            if (subscription == nullptr ||
+                subscription.ResponderMuid() == nullptr ||
+                subscription.SubscribeId().empty())
+            {
+                co_return false;
+            }
+
+            auto const muidValue = subscription.ResponderMuid().AsCombined28BitValue();
+            auto const key = SubscriptionKey(muidValue, subscription.SubscribeId());
+
+            {
+                std::lock_guard<std::mutex> guard(m_lock);
+                m_subscriptions.erase(key);
+            }
+
+            // Marked dead before the exchange rather than after: the application asked for it to
+            // stop, and an update arriving while the end is in flight is no longer wanted.
+            winrt::get_self<MidiPropertySubscription>(subscription)->InternalSetIsActive(false);
+
+            json::JsonObject header;
+
+            header.SetNamedValue(
+                winrt::hstring{ SubscribeIdKey },
+                json::JsonValue::CreateStringValue(subscription.SubscribeId()));
+
+            header.SetNamedValue(
+                winrt::hstring{ CommandKey },
+                json::JsonValue::CreateStringValue(winrt::hstring{ CommandEnd }));
+
+            auto const response = SendSubscriptionCommand(subscription.ResponderMuid(), header);
+
+            co_return response.Status() == ci::MidiCapabilityInquiryStatus::Success;
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+            co_return false;
+        }
+    }
+
+    foundation::Collections::IVectorView<ci::MidiPropertySubscription>
+    MidiCapabilityInquirySession::GetSubscriptions()
+    {
+        auto results = winrt::single_threaded_vector<ci::MidiPropertySubscription>();
+
+        try
+        {
+            std::lock_guard<std::mutex> guard(m_lock);
+
+            for (auto const& entry : m_subscriptions)
+            {
+                results.Append(entry.second);
+            }
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+
+        return results.GetView();
+    }
+
+    void MidiCapabilityInquirySession::EndAllSubscriptions() noexcept
+    {
+        try
+        {
+            std::map<std::wstring, ci::MidiPropertySubscription> held{};
+
+            {
+                std::lock_guard<std::mutex> guard(m_lock);
+                held.swap(m_subscriptions);
+            }
+
+            for (auto const& entry : held)
+            {
+                auto const& subscription = entry.second;
+
+                winrt::get_self<MidiPropertySubscription>(subscription)->InternalSetIsActive(false);
+
+                if (subscription.ResponderMuid() == nullptr || subscription.SubscribeId().empty())
+                {
+                    continue;
+                }
+
+                json::JsonObject header;
+
+                header.SetNamedValue(
+                    winrt::hstring{ SubscribeIdKey },
+                    json::JsonValue::CreateStringValue(subscription.SubscribeId()));
+
+                header.SetNamedValue(
+                    winrt::hstring{ CommandKey },
+                    json::JsonValue::CreateStringValue(winrt::hstring{ CommandEnd }));
+
+                // Sent without waiting for the reply. This runs from Close, and waiting out a
+                // timeout per subscription would stall whatever is shutting the session down.
+                (void)Send(MidiCapabilityInquiryMessageBuilder::BuildPropertyMessage(
+                    0,
+                    Group(),
+                    ci::MidiCapabilityInquiryMessageType::PropertySubscriptionInquiry,
+                    m_sourceMuid,
+                    subscription.ResponderMuid(),
+                    NextRequestId(),
+                    header,
+                    nullptr,
+                    MaximumSystemExclusiveSizeFor(subscription.ResponderMuid().AsCombined28BitValue())));
+            }
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
     }
 
     _Use_decl_annotations_
@@ -1719,6 +2324,19 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
     void MidiCapabilityInquirySession::ResponderFound(winrt::event_token const& token) noexcept
     {
         m_responderFoundEvent.remove(token);
+    }
+
+    _Use_decl_annotations_
+    winrt::event_token MidiCapabilityInquirySession::PropertySubscriptionUpdated(
+        foundation::TypedEventHandler<ci::MidiCapabilityInquirySession, ci::MidiPropertySubscriptionUpdatedEventArgs> const& handler)
+    {
+        return m_propertySubscriptionUpdatedEvent.add(handler);
+    }
+
+    _Use_decl_annotations_
+    void MidiCapabilityInquirySession::PropertySubscriptionUpdated(winrt::event_token const& token) noexcept
+    {
+        m_propertySubscriptionUpdatedEvent.remove(token);
     }
 
     _Use_decl_annotations_

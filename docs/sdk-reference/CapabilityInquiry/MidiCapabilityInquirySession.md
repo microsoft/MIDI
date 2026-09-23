@@ -41,6 +41,9 @@ Every request returns an `IAsyncOperation`. Each chunk that arrives earns the tr
 | `GetChannelListAsync(destinationMuid)` | Asks for `ChannelList` and returns it as a [`MidiChannelList`]({{ site.baseurl }}/sdk-reference/CapabilityInquiry/MidiChannelList) |
 | `GetProgramListAsync(destinationMuid, resourceId)` | Asks for pages of a program list until the device says there are no more, so what comes back is the whole list. Pass an empty resource id for a device with only one list |
 | `GetProgramListPageAsync(destinationMuid, resourceId, offset, limit)` | One page of the same list, for an application which would rather page itself |
+| `SubscribeAsync(destinationMuid, resource, resourceId)` | Asks to be told when a resource changes instead of polling for it. Only worth trying on a resource whose entry in the device's resource list says `CanSubscribe`. Returns a [`MidiPropertySubscription`]({{ site.baseurl }}/sdk-reference/CapabilityInquiry/MidiPropertySubscription) |
+| `UnsubscribeAsync(subscription)` | Ends a subscription. Sent automatically for anything still active when the session is closed |
+| `GetSubscriptions()` | Every subscription this session holds which the device has not ended |
 | `GetProfilesAsync(destinationMuid, deviceId)` | Asks what profiles exist at an address. `deviceId` is `0x00` to `0x0F` for a channel, `0x7E` for a group, or `0x7F` for the whole function block |
 | `SendSetProfileOn(destinationMuid, deviceId, profileId, channelCount)` | Asks a device to enable a profile. A device answers with a broadcast report rather than a direct reply, and may refuse, so this returns once the message has been sent |
 | `SendSetProfileOff(destinationMuid, deviceId, profileId)` | Asks a device to disable a profile |
@@ -52,6 +55,7 @@ Every request returns an `IAsyncOperation`. Each chunk that arrives earns the tr
 | ----- | ----------- |
 | `ProfileStateChanged` | Raised for a profile added, removed, enabled or disabled report. These are broadcast, so they arrive whether or not this session asked for anything |
 | `ResponderFound` | Raised when a responder answers Discovery, including outside a `DiscoverAsync` call |
+| `PropertySubscriptionUpdated` | Raised when a device reports that a subscribed resource changed, and when it ends a subscription. The reply the specification requires is sent before this is raised |
 | `MessageReceived` | Every capability inquiry message which was not matched to an outstanding request. A subscription update, a device's own Discovery, and anything this API has no strong type for all arrive here with their payload intact |
 
 ## Static Methods

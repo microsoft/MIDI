@@ -495,7 +495,8 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         midi2::MidiGroup const& group,
         ci::MidiUniqueId const& sourceMuid,
         ci::MidiUniqueId const& destinationMuid,
-        uint8_t const maximumSimultaneousRequests) noexcept
+        uint8_t const maximumSimultaneousRequests,
+        uint8_t const messageVersion) noexcept
     {
         try
         {
@@ -505,7 +506,7 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
             auto const written = native::BuildPropertyExchangeCapabilitiesReply(
                 MuidValue(sourceMuid), MuidValue(destinationMuid),
-                maximumSimultaneousRequests, buffer, sizeof(buffer));
+                maximumSimultaneousRequests, buffer, sizeof(buffer), messageVersion);
 
             if (written == 0)
             {
@@ -531,7 +532,8 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         midi2::MidiGroup const& group,
         ci::MidiUniqueId const& sourceMuid,
         ci::MidiUniqueId const& destinationMuid,
-        uint8_t const maximumSimultaneousRequests) noexcept
+        uint8_t const maximumSimultaneousRequests,
+        uint8_t const messageVersion) noexcept
     {
         try
         {
@@ -539,7 +541,7 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
             auto const written = native::BuildPropertyExchangeCapabilitiesReply(
                 MuidValue(sourceMuid), MuidValue(destinationMuid),
-                maximumSimultaneousRequests, buffer, sizeof(buffer));
+                maximumSimultaneousRequests, buffer, sizeof(buffer), messageVersion);
 
             return ToUmpMessages(timestamp, group, buffer, written);
         }

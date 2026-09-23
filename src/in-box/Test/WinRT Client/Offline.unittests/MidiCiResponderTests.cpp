@@ -130,10 +130,13 @@ void MidiCiResponderTests::TestInvalidateMuidOnlyWhenItIsOurs()
     message.DestinationMuid = MuidBroadcast;
     message.TargetMuid = 0x0000777;
 
+    // Another device withdrawing its own identifier is reported so a host can drop state it was
+    // holding for it, but it must not disturb ours.
     VERIFY_ARE_EQUAL(
         (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
-        (int)ResponderAction::Ignored);
+        (int)ResponderAction::InitiatorMuidInvalidated);
 
+    VERIFY_ARE_EQUAL(replyBytes, (size_t)0);
     VERIFY_IS_FALSE(responder.MuidNeedsReplacement());
     VERIFY_ARE_EQUAL(responder.Muid(), OurMuid);
 
@@ -272,6 +275,49 @@ void MidiCiResponderTests::TestGetPropertyDataIsHandedToTheCaller()
         (int)ResponderAction::Ignored);
 }
 
+void MidiCiResponderTests::TestSubscriptionIsHandedToTheCaller()
+{
+    ResponderConfig config{};
+
+    config.Muid = OurMuid;
+    config.ManufacturerSysExId[2] = 0x41;
+    config.SupportsPropertyExchange = true;
+
+    Responder responder;
+    responder.Initialize(config);
+
+    ParsedMessage message{};
+
+    message.Type = MessageType::PropertySubscriptionInquiry;
+    message.SourceMuid = TheirMuid;
+    message.DestinationMuid = OurMuid;
+    message.HasPropertyExchangeFields = true;
+    message.PropertyExchange.RequestId = 9;
+
+    uint8_t reply[64]{};
+    size_t replyBytes{ 0 };
+
+    // Same reason as a get: the command and the subscription identifier are both in the header,
+    // and reading JSON is not something this layer may do.
+    VERIFY_ARE_EQUAL(
+        (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::PropertySubscriptionRequested);
+
+    VERIFY_ARE_EQUAL(replyBytes, (size_t)0);
+
+    auto notSupporting = MakeResponder();
+
+    VERIFY_ARE_EQUAL(
+        (int)notSupporting.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Ignored);
+
+    message.HasPropertyExchangeFields = false;
+
+    VERIFY_ARE_EQUAL(
+        (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Ignored);
+}
+
 void MidiCiResponderTests::TestPropertyExchangeCapabilitiesReply()
 {
     ResponderConfig config{};
@@ -320,6 +366,20 @@ void MidiCiResponderTests::TestPropertyExchangeCapabilitiesReply()
 
         VERIFY_ARE_EQUAL(reply[i], expected[i]);
     }
+
+    // The same inquiry from a MIDI-CI 1.1 device. It reads a fixed length, so the reply has to
+    // stop after the request count and be stamped 1.1 rather than carry the two bytes 1.2 added.
+    message.VersionFormat = MessageVersion11;
+
+    VERIFY_ARE_EQUAL(
+        (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Replied);
+
+    VERIFY_ARE_EQUAL(replyBytes, PropertyExchangeCapabilitiesByteCountVersion11);
+    VERIFY_ARE_EQUAL(reply[4], (uint8_t)MessageVersion11);
+    VERIFY_ARE_EQUAL(reply[13], (uint8_t)0x01);
+
+    message.VersionFormat = 0;
 
     // A device that never declared Property Exchange has no capabilities to report.
     auto plain = MakeResponder();

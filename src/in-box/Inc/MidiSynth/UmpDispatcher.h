@@ -144,12 +144,20 @@ namespace MidiSynth
             uint8_t RequestId{ 0 };
             uint16_t HeaderByteCount{ 0 };
             uint8_t Header[MaxPropertyHeaderBytes]{};
+
+            // A subscription start, end or update reply rather than a request for data. The
+            // command is in the header, which only the caller can parse.
+            bool IsSubscription{ false };
         };
 
         // Answering a property request means parsing JSON and building many kilobytes of reply,
         // neither of which belongs on the thread that renders audio. The request is parked here and
         // a worker thread collects it. Returns false when nothing is waiting.
         bool TakePendingPropertyRequest(_Out_ PendingPropertyRequest& request) noexcept;
+
+        // An identifier another device withdrew, so a worker holding state for it can let it go.
+        // Returns false when none is waiting.
+        bool TakeInvalidatedInitiatorMuid(_Out_ uint32_t& muid) noexcept;
 
         // Public because a host answering a property request needs exactly this packing and must
         // not grow a second copy of it.
@@ -194,7 +202,8 @@ namespace MidiSynth
 
         void ParkPropertyRequest(
             _In_ const WindowsMidiServicesCapabilityInquiry::ParsedMessage& parsed,
-            _In_ const uint8_t* message) noexcept;
+            _In_ const uint8_t* message,
+            _In_ bool isSubscription) noexcept;
 
         SynthEngine* m_engine{ nullptr };
         IUmpOutput* m_output{ nullptr };
@@ -212,6 +221,9 @@ namespace MidiSynth
         // only by the worker, so neither can see a half written request.
         PendingPropertyRequest m_propertyRequest{};
         std::atomic<bool> m_propertyRequestPending{ false };
+
+        // Zero means none waiting, which is also not a legal identifier.
+        std::atomic<uint32_t> m_invalidatedInitiatorMuid{ 0 };
 
         // Fixed capacity deliberately. This runs on the audio thread, where allocating is a real
         // time fault, and a throwing allocation inside a noexcept path would terminate the whole

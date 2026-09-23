@@ -134,8 +134,16 @@
     <value>Prog {0}</value>
     <comment>Compact patch display in the performance strip. {0} is the program number, 1 to 128.</comment>
   </data>
+  <data name="PatchButtonNamedFormat" xml:space="preserve">
+    <value>{0}: {1}</value>
+    <comment>Compact patch display when the device supplied a name. {0} is the program number, 1 to 128. {1} is the device's own name for it and is not translated.</comment>
+  </data>
   <data name="PatchButtonToolTipFormat" xml:space="preserve">
     <value>Program {0}, bank MSB {1}, bank LSB {2}</value>
+  </data>
+  <data name="PatchButtonNamedToolTipFormat" xml:space="preserve">
+    <value>{0} - program {1}, bank MSB {2}, bank LSB {3}</value>
+    <comment>{0} is the device's own name for the program and is not translated.</comment>
   </data>
   <data name="PatchFlyoutTitle.Text" xml:space="preserve">
     <value>Bank and program</value>

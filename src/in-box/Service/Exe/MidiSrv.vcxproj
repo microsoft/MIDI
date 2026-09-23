@@ -339,6 +339,12 @@
       <RegisterOutput>false</RegisterOutput>
     </Link>
   </ItemDefinitionGroup>
+  <!-- Applies to every configuration, so the lib is listed once rather than in all eight. -->
+  <ItemDefinitionGroup>
+    <Link>
+      <AdditionalDependencies>$(SolutionDir)vsfiles\$(Platform)\$(Configuration)\midipnplib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="MidiClientManager.cpp" />
     <ClCompile Include="MidiClientPipe.cpp" />

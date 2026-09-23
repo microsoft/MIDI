@@ -228,18 +228,116 @@ void MidiCiProgramListTests::TestDeviceInfoAgreesWithTheOtherIdentityCarriers()
 
 void MidiCiProgramListTests::TestResourceListBytes()
 {
-    char const* const resources[]{ "ResourceList", "DeviceInfo", "ProgramList" };
+    ResourceListEntry resources[3]{};
+
+    resources[0].Resource = "ResourceList";
+    resources[1].Resource = "ChannelList";
+    resources[1].CanSubscribe = true;
+    resources[2].Resource = "ProgramList";
+    resources[2].RequireResourceId = true;
 
     char buffer[256]{};
 
     const auto length = BuildResourceListJson(resources, 3, buffer, sizeof(buffer));
 
+    // Both flags default to false in the specification, so a bare name is a complete entry and
+    // only the true ones are written.
     VERIFY_ARE_EQUAL(
         std::string(buffer, length),
-        std::string("[{\"resource\":\"ResourceList\"},{\"resource\":\"DeviceInfo\"},"
-                    "{\"resource\":\"ProgramList\"}]"));
+        std::string("[{\"resource\":\"ResourceList\"},"
+                    "{\"resource\":\"ChannelList\",\"canSubscribe\":true},"
+                    "{\"resource\":\"ProgramList\",\"requireResId\":true}]"));
 
     // An empty list is still a valid array.
     VERIFY_ARE_EQUAL(BuildResourceListJson(nullptr, 0, buffer, sizeof(buffer)), (size_t)2);
     VERIFY_ARE_EQUAL(std::string(buffer, 2), std::string("[]"));
+}
+
+void MidiCiProgramListTests::TestChannelListWithoutLinksBytes()
+{
+    ChannelListEntry entry{};
+
+    entry.Title = "Channel 1";
+    entry.Channel = 1;
+    entry.ProgramTitle = "Piano 1";
+    entry.BankMsb = 0;
+    entry.BankLsb = 0;
+    entry.Program = 0;
+
+    char buffer[256]{};
+
+    const auto length = BuildChannelListJson(&entry, 1, buffer, sizeof(buffer));
+
+    // No links array at all rather than an empty one, which is what a device with a single
+    // program list sends.
+    VERIFY_ARE_EQUAL(
+        std::string(buffer, length),
+        std::string("[{\"title\":\"Channel 1\",\"channel\":1,\"programTitle\":\"Piano 1\","
+                    "\"bankPC\":[0,0,0]}]"));
+}
+
+void MidiCiProgramListTests::TestChannelListLinksBytes()
+{
+    // Worked out by hand from the drum channel entry in M2-105-UM section 4.5.2, which is what
+    // makes a device with more than one program list usable.
+    ResourceLink link{};
+
+    link.Resource = "ProgramList";
+    link.ResourceId = "gm2drums";
+    link.Title = "GM2 Drum Sets";
+
+    ChannelListEntry entry{};
+
+    entry.Title = "Drums";
+    entry.Channel = 10;
+    entry.ProgramTitle = "GM2 Jazz Drum Set";
+    entry.BankMsb = 0;
+    entry.BankLsb = 0;
+    entry.Program = 33;
+    entry.Links = &link;
+    entry.LinkCount = 1;
+
+    char buffer[512]{};
+
+    const auto length = BuildChannelListJson(&entry, 1, buffer, sizeof(buffer));
+
+    VERIFY_ARE_EQUAL(
+        std::string(buffer, length),
+        std::string("[{\"title\":\"Drums\",\"channel\":10,\"programTitle\":\"GM2 Jazz Drum Set\","
+                    "\"bankPC\":[0,0,33],"
+                    "\"links\":[{\"resource\":\"ProgramList\",\"resId\":\"gm2drums\","
+                    "\"title\":\"GM2 Drum Sets\"}]}]"));
+
+    const auto measured = BuildChannelListJson(&entry, 1, nullptr, 0);
+
+    VERIFY_ARE_EQUAL(measured, length);
+    VERIFY_ARE_EQUAL(BuildChannelListJson(&entry, 1, buffer, measured - 1), (size_t)0);
+}
+
+void MidiCiProgramListTests::TestChannelListLinkOmitsMissingFields()
+{
+    // A link with no resource id is what a device with exactly one collection sends, and it must
+    // not produce "resId":null or an empty string a client would send back.
+    ResourceLink links[2]{};
+
+    links[0].Resource = "ProgramList";
+    links[1].Resource = "X-MidiEffects";
+    links[1].ResourceId = "singch1";
+
+    ChannelListEntry entry{};
+
+    entry.Title = "Lead";
+    entry.Channel = 1;
+    entry.Links = links;
+    entry.LinkCount = 2;
+
+    char buffer[512]{};
+
+    const auto length = BuildChannelListJson(&entry, 1, buffer, sizeof(buffer));
+
+    VERIFY_ARE_EQUAL(
+        std::string(buffer, length),
+        std::string("[{\"title\":\"Lead\",\"channel\":1,\"bankPC\":[0,0,0],"
+                    "\"links\":[{\"resource\":\"ProgramList\"},"
+                    "{\"resource\":\"X-MidiEffects\",\"resId\":\"singch1\"}]}]"));
 }

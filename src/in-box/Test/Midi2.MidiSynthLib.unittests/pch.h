@@ -29,6 +29,8 @@
 // so they can reach code paths no configuration payload can produce.
 #include <MidiSynth/DlsCollection.h>
 #include <MidiSynth/DlsTypes.h>
+#include <MidiSynth/ProgramList.h>
+#include <MidiSynth/PropertyExchangeSource.h>
 #include <MidiSynth/RiffReader.h>
 #include <MidiSynth/SynthConfig.h>
 #include <MidiSynth/SynthEngine.h>

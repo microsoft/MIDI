@@ -11,7 +11,7 @@
 #include <sal.h>
 #include <string>
 
-namespace midiplayer
+namespace midiapp
 {
     // ==============================================================================================
     // THESE STRINGS ARE DELIBERATELY NOT LOCALIZED, AND THEY ARE NOT IN A .resw. THIS IS NOT AN

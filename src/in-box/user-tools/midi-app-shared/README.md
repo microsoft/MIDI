@@ -8,6 +8,10 @@ dependency, and `midi-console` compiles it too so `midi endpoint send-beat-clock
 MIDI Clock app keep identical timing behavior. A console tool taking one file from here only
 needs step 1, 2 and the `$(ProjectDir)` part of step 4 below.
 
+`GeneralMidi` is the same kind of exception: plain C++, no pch, no WinRT. A project that takes it
+must set `<PrecompiledHeader>NotUsing</PrecompiledHeader>` on its `ClCompile` entry. MIDI Player
+and MIDI Patchbay both use it, so the General MIDI names they show agree.
+
 ## What a consuming project has to do
 
 There is no `.props` file and no MSBuild import. Each app's `.vcxproj` lists these files with

@@ -17,6 +17,7 @@
 #include "midi_ksa_usb_strings.h"
 #include "Feature_Servicing_MIDI2CustomOutgoingLatency.h"
 #include "Feature_Servicing_MIDI2PortNamingRework.h"
+#include "Feature_Servicing_MIDI2DuplicateDeviceNaming.h"
 #include "Feature_Servicing_MIDI2KSAShutdownCrash.h"
 
 using namespace wil;
@@ -1623,27 +1624,36 @@ CMidi2KSAggregateMidiEndpointManager3::FindOrCreateParentDeviceDefinitionForFilt
         }
     }
 
-    if (otherParentsWithSameNameExist)
+    if (Feature_Servicing_MIDI2DuplicateDeviceNaming::IsEnabled())
     {
-        TraceLoggingWrite(
-            MidiKSAggregateTransportTelemetryProvider::Provider(),
-            MIDI_TRACE_EVENT_VERBOSE,
-            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-            TraceLoggingPointer(this, "this"),
-            TraceLoggingWideString(L"Found other parents with the same name.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-            TraceLoggingWideString(cleanParentDeviceInstanceId.c_str(), "parent")
-        );
-
-        newParentDeviceDefinition->IndexOfDevicesWithThisSameName = currentMaxIndex + 1;
-
-        if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+        // The service decides this now. It is the only place that sees every endpoint from every
+        // transport, and it remembers which device holds which number across a disconnect.
+        // Leaving the index at zero here means nothing downstream marks a name.
+    }
+    else
+    {
+        if (otherParentsWithSameNameExist)
         {
-            // Mark the endpoint name rather than the individual ports, so a port reads as belonging
-            // to the second device instead of carrying an unexplained suffix.
-            newParentDeviceDefinition->DeviceName = std::format(L"{0} ({1})",
-                newParentDeviceDefinition->BaseDeviceName,
-                newParentDeviceDefinition->IndexOfDevicesWithThisSameName + 1);
+            TraceLoggingWrite(
+                MidiKSAggregateTransportTelemetryProvider::Provider(),
+                MIDI_TRACE_EVENT_VERBOSE,
+                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+                TraceLoggingPointer(this, "this"),
+                TraceLoggingWideString(L"Found other parents with the same name.", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                TraceLoggingWideString(cleanParentDeviceInstanceId.c_str(), "parent")
+            );
+
+            newParentDeviceDefinition->IndexOfDevicesWithThisSameName = currentMaxIndex + 1;
+
+            if (Feature_Servicing_MIDI2PortNamingRework::IsEnabled())
+            {
+                // Mark the endpoint name rather than the individual ports, so a port reads as belonging
+                // to the second device instead of carrying an unexplained suffix.
+                newParentDeviceDefinition->DeviceName = std::format(L"{0} ({1})",
+                    newParentDeviceDefinition->BaseDeviceName,
+                    newParentDeviceDefinition->IndexOfDevicesWithThisSameName + 1);
+            }
         }
     }
 
@@ -3803,18 +3813,31 @@ CMidi2KSAggregateMidiEndpointManager3::Shutdown()
             Sleep(100);
             tries++;
         }
-    }
 
-    TraceLoggingWrite(
-        MidiKSAggregateTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingUInt32(GetWatcherStatusValue(m_watcher), "watcher status"),
-        TraceLoggingUInt32(tries, "watcher stop poll iterations")
-    );
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt32(GetWatcherStatusValue(m_watcher), "watcher status"),
+            TraceLoggingUInt32(tries, "watcher stop poll iterations")
+        );
+
+    }
+    else   
+    {
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+    }
 
     m_midiDeviceManager.reset();
     m_midiProtocolManager.reset();

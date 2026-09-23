@@ -11,6 +11,7 @@
 
 #include <map>
 #include <mutex>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -49,6 +50,13 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
             _In_ winrt::hstring const& jsonData) noexcept;
 
         bool RemoveResource(_In_ winrt::hstring const& resource, _In_ winrt::hstring const& resourceId) noexcept;
+
+        void SetResourceSubscribable(_In_ winrt::hstring const& resource, _In_ bool const canSubscribe) noexcept;
+        bool IsResourceSubscribable(_In_ winrt::hstring const& resource) noexcept;
+
+        uint32_t NotifyResourceChanged(
+            _In_ winrt::hstring const& resource,
+            _In_ winrt::hstring const& resourceId) noexcept;
 
         void SetProfiles(
             _In_ uint8_t const deviceId,
@@ -93,7 +101,14 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
         void HandleDiscovery(_In_ ci::MidiCapabilityInquiryMessage const& message, _In_ midi2::MidiGroup const& group) noexcept;
         void HandlePropertyGet(_In_ ci::MidiCapabilityInquiryMessage const& message, _In_ midi2::MidiGroup const& group) noexcept;
+        void HandleSubscription(_In_ ci::MidiCapabilityInquiryMessage const& message, _In_ midi2::MidiGroup const& group) noexcept;
         void HandleProfileInquiry(_In_ ci::MidiCapabilityInquiryMessage const& message, _In_ midi2::MidiGroup const& group) noexcept;
+
+        // What to chunk an outgoing message against. An initiator we have not heard a Discovery
+        // from gets the minimum every implementation must accept.
+        uint32_t MaximumSystemExclusiveSizeFor(_In_ uint32_t const initiatorMuid) noexcept;
+
+        uint8_t NextRequestId() noexcept;
 
         bool Send(_In_ foundation::Collections::IVector<midi2::MidiMessage64> const& messages) noexcept;
 
@@ -141,6 +156,22 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         };
 
         std::map<uint8_t, ProfileSet> m_profiles{};
+
+        // Resources an application said may be subscribed to, and who is subscribed to what. Keyed
+        // by the identifier this responder assigned, which is what an update carries.
+        std::set<std::wstring> m_subscribableResources{};
+
+        struct DeviceSubscription
+        {
+            uint32_t InitiatorMuid{ 0 };
+            ci::MidiUniqueId InitiatorId{ nullptr };
+            std::wstring Resource{};
+            std::wstring ResourceId{};
+        };
+
+        std::map<std::wstring, DeviceSubscription> m_subscribers{};
+        uint32_t m_nextSubscribeId{ 1 };
+        std::atomic<uint8_t> m_nextRequestId{ 1 };
 
         std::vector<uint8_t> m_incoming{};
         bool m_incomingIsOpen{ false };

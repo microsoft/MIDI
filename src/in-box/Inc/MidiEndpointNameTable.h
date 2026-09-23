@@ -77,6 +77,36 @@ namespace WindowsMidiServicesNamingLib
         std::wstring FilterName{ };
     };
 
+// Long enough for every device string measured so far, the longest being around forty characters.
+// These are inputs, not published names, so a device which somehow exceeds it loses only material
+// the fit ladder would have dropped anyway.
+#define MIDI_NAMING_PORT_NAME_INPUT_MAX_CHARS   64
+
+    // The serialized form of Midi1PortNameInput, for PKEY_MIDI_NamingPortNameInputs. Fixed size so
+    // it can be copied as a block, like Midi1PortNameEntry. This is a new format rather than an
+    // addition to the name table, because the name table's layout is read by binaries which version
+    // separately and must never move.
+    struct Midi1PortNameInputEntry
+    {
+        uint8_t GroupIndex{ 0 };
+        MidiFlow DataFlowFromUserPerspective{ MidiFlow::MidiFlowIn };
+
+        wchar_t PinName[MIDI_NAMING_PORT_NAME_INPUT_MAX_CHARS]{ 0 };
+        wchar_t DriverRegistryName[MIDI_NAMING_PORT_NAME_INPUT_MAX_CHARS]{ 0 };
+        wchar_t FilterName[MIDI_NAMING_PORT_NAME_INPUT_MAX_CHARS]{ 0 };
+    };
+
+    // A number already spoken for, as read back from an endpoint. An endpoint keeps its claim while
+    // the device is unplugged, which is the whole point: that is how a device gets its own number
+    // back rather than being handed a new one every time it returns.
+    struct Midi1DuplicateDeviceClaim
+    {
+        std::wstring DeviceIdentity{ };     // which physical device holds it
+        std::wstring BaseDeviceName{ };     // the name it was claimed against
+        uint32_t Index{ 0 };                // zero-based, so zero is the unit with the plain name
+        bool DeviceIsPresent{ false };      // a number held by a device which is here right now cannot be taken
+    };
+
     struct Midi1PortNameResult
     {
         uint8_t GroupIndex{ 0 };
@@ -135,6 +165,31 @@ namespace WindowsMidiServicesNamingLib
     std::wstring ApplyLegacyDuplicateDeviceMarker(
         _In_ std::wstring const& baseDeviceName,
         _In_ uint32_t const oneBasedIndex) noexcept;
+
+    // Marks a WinMM-compatible port name which was generated without a marker. A legacy name is
+    // either the device name on its own or "MIDIIN2 (device name)", and the marker belongs inside
+    // the parentheses, so this is the exact inverse of the generator rather than a guess at one.
+    std::wstring ApplyLegacyDuplicateDeviceMarkerToPortName(
+        _In_ std::wstring const& portName,
+        _In_ uint32_t const oneBasedIndex) noexcept;
+
+    // Picks the number for a device which is being named right now. Reuses the number the device
+    // already holds when it still fits the name it was claimed against, and otherwise takes the
+    // lowest number no present device is using. Numbers are only ever handed out on arrival, so a
+    // device which is already named keeps what it has.
+    uint32_t AllocateDuplicateDeviceIndex(
+        _In_ std::wstring const& deviceIdentity,
+        _In_ std::wstring const& baseDeviceName,
+        _In_ std::vector<Midi1DuplicateDeviceClaim> const& existingClaims) noexcept;
+
+    // PKEY_MIDI_NamingPortNameInputs round trip. Returns an empty vector for anything malformed.
+    std::vector<Midi1PortNameInput> ReadMidi1PortNameInputsFromPropertyData(
+        _In_reads_bytes_opt_(dataSize) uint8_t* dataPointer,
+        _In_ uint32_t const dataSize) noexcept;
+
+    bool WriteMidi1PortNameInputsToPropertyDataPointer(
+        _In_ std::vector<Midi1PortNameInput> const& inputs,
+        _Inout_ std::vector<std::byte>& propertyData) noexcept;
 
     class MidiEndpointNameTable
     {
@@ -234,6 +289,19 @@ namespace WindowsMidiServicesNamingLib
             _In_ std::wstring const& endpointName,
             _In_ bool const driverRegistryNamesArePerFilter) noexcept;
 
+        // Adds the duplicate device marker to a table which was built without one, for the service
+        // to use once it has decided which unit of a model this endpoint is.
+        //
+        // A WinMM-compatible name is marked in place, which is exact. A new style name cannot be,
+        // because the marker has to be budgeted while the name is composed, so those are rebuilt
+        // from portNameInputs. Pass an empty portNameInputs when the transport published none, and
+        // the new style names are left as they are.
+        HRESULT ApplyDuplicateDeviceMarker(
+            _In_ uint32_t const oneBasedIndex,
+            _In_ std::wstring const& markedEndpointName,
+            _In_ std::vector<Midi1PortNameInput> const& portNameInputs,
+            _In_ bool const driverRegistryNamesArePerFilter) noexcept;
+
         // Call before re-populating an endpoint, so ports belonging to a filter that has gone away
         // cannot affect the numbering of the ports that remain.
         void ResetPortInputs() noexcept;
@@ -279,6 +347,7 @@ namespace WindowsMidiServicesNamingLib
         bool m_hasLegacyEquivalentSet{ false };
 
         std::vector<std::byte> m_nameTablePropertyData{}; // need to retain this here for property writing
+        std::vector<std::byte> m_portNameInputsPropertyData{};
         std::vector<std::byte> m_groupTerminalBlockPropertyData{};
 
 

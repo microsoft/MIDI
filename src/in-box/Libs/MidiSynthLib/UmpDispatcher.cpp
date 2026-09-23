@@ -562,8 +562,19 @@ namespace MidiSynth
             m_stats.MuidInvalidations++;
             return;
 
+        case ci::ResponderAction::InitiatorMuidInvalidated:
+            if (parsed.TargetMuid != 0)
+            {
+                m_invalidatedInitiatorMuid.store(parsed.TargetMuid, std::memory_order_release);
+            }
+            return;
+
         case ci::ResponderAction::PropertyDataRequested:
-            ParkPropertyRequest(parsed, message);
+            ParkPropertyRequest(parsed, message, false);
+            return;
+
+        case ci::ResponderAction::PropertySubscriptionRequested:
+            ParkPropertyRequest(parsed, message, true);
             return;
 
         default:
@@ -575,7 +586,8 @@ namespace MidiSynth
     _Use_decl_annotations_
     void UmpDispatcher::ParkPropertyRequest(
         const WindowsMidiServicesCapabilityInquiry::ParsedMessage& parsed,
-        const uint8_t* message) noexcept
+        const uint8_t* message,
+        bool isSubscription) noexcept
     {
         const auto headerBytes = parsed.PropertyExchange.HeaderByteCount;
 
@@ -596,6 +608,7 @@ namespace MidiSynth
         m_propertyRequest.InitiatorMuid = parsed.SourceMuid;
         m_propertyRequest.RequestId = parsed.PropertyExchange.RequestId;
         m_propertyRequest.HeaderByteCount = headerBytes;
+        m_propertyRequest.IsSubscription = isSubscription;
 
         for (uint16_t i = 0; i < headerBytes; i++)
         {
@@ -620,6 +633,14 @@ namespace MidiSynth
         m_propertyRequestPending.store(false, std::memory_order_release);
 
         return true;
+    }
+
+    _Use_decl_annotations_
+    bool UmpDispatcher::TakeInvalidatedInitiatorMuid(uint32_t& muid) noexcept
+    {
+        muid = m_invalidatedInitiatorMuid.exchange(0, std::memory_order_acq_rel);
+
+        return muid != 0;
     }
 
     _Use_decl_annotations_

@@ -510,7 +510,7 @@ namespace winrt::midiplayer::implementation
                 data.NoteCount = track.NoteCount;
                 data.ChannelMask = track.ChannelMask;
                 data.IsPercussion =
-                    (track.ChannelMask & (1u << native::PercussionChannelIndex)) != 0;
+                    (track.ChannelMask & (1u << midiapp::PercussionChannelIndex)) != 0;
 
                 // Name precedence is: the file's own name, then the device's name for that bank
                 // and program over MIDI-CI Property Exchange, then General MIDI. The middle one
@@ -526,12 +526,12 @@ namespace winrt::midiplayer::implementation
                     if (program != firstProgram.end())
                     {
                         data.PatchName = data.IsPercussion
-                            ? native::GeneralMidiDrumKitName(program->second.Program)
-                            : native::GeneralMidiProgramName(program->second.Program);
+                            ? midiapp::GeneralMidiDrumKitName(program->second.Program)
+                            : midiapp::GeneralMidiProgramName(program->second.Program);
                     }
                     else if (data.IsPercussion)
                     {
-                        data.PatchName = native::GeneralMidiDrumKitName(0);
+                        data.PatchName = midiapp::GeneralMidiDrumKitName(0);
                     }
                 }
 

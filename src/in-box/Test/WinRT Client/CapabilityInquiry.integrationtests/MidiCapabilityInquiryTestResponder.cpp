@@ -110,6 +110,68 @@ void MidiCapabilityInquiryTestResponder::Send(
     m_connection.SendMultipleMessagesPacketList(packets);
 }
 
+void MidiCapabilityInquiryTestResponder::SendRawSystemExclusive(std::vector<uint8_t> const& payload)
+{
+    if (m_connection == nullptr || payload.empty())
+    {
+        return;
+    }
+
+    auto packets = winrt::single_threaded_vector<IMidiUniversalPacket>();
+
+    for (size_t offset = 0; offset < payload.size(); offset += 6)
+    {
+        auto const count = static_cast<uint8_t>((std::min)(size_t{ 6 }, payload.size() - offset));
+
+        const bool isFirst = (offset == 0);
+        const bool isLast = (offset + count >= payload.size());
+        const uint8_t status = (isFirst && isLast) ? 0 : isFirst ? 1 : isLast ? 3 : 2;
+
+        uint8_t bytes[6]{};
+
+        for (uint8_t i = 0; i < count; i++)
+        {
+            bytes[i] = payload[offset + i];
+        }
+
+        uint32_t const word0 =
+            (0x3u << 28) |
+            (static_cast<uint32_t>(status) << 20) |
+            (static_cast<uint32_t>(count) << 16) |
+            (static_cast<uint32_t>(bytes[0]) << 8) |
+            bytes[1];
+
+        uint32_t const word1 =
+            (static_cast<uint32_t>(bytes[2]) << 24) |
+            (static_cast<uint32_t>(bytes[3]) << 16) |
+            (static_cast<uint32_t>(bytes[4]) << 8) |
+            bytes[5];
+
+        packets.Append(MidiMessage64(0, word0, word1));
+    }
+
+    m_connection.SendMultipleMessagesPacketList(packets);
+}
+
+void MidiCapabilityInquiryTestResponder::SendInvalidateMuid()
+{
+    std::vector<uint8_t> payload{ 0x7E, 0x7F, 0x0D, 0x7E, 0x01 };
+
+    auto const appendMuid = [&payload](uint32_t muid)
+    {
+        payload.push_back(static_cast<uint8_t>(muid & 0x7F));
+        payload.push_back(static_cast<uint8_t>((muid >> 7) & 0x7F));
+        payload.push_back(static_cast<uint8_t>((muid >> 14) & 0x7F));
+        payload.push_back(static_cast<uint8_t>((muid >> 21) & 0x7F));
+    };
+
+    appendMuid(m_muid == nullptr ? 0 : m_muid.AsCombined28BitValue());
+    appendMuid(0x0FFFFFFF);
+    appendMuid(m_muid == nullptr ? 0 : m_muid.AsCombined28BitValue());
+
+    SendRawSystemExclusive(payload);
+}
+
 void MidiCapabilityInquiryTestResponder::OnMessageReceived(
     winrt::Windows::Foundation::IInspectable const& /*sender*/,
     MidiMessageReceivedEventArgs const& args)
@@ -224,6 +286,39 @@ void MidiCapabilityInquiryTestResponder::HandleMessage(MidiCapabilityInquiryMess
             return;
         }
 
+        if (m_answerAsVersion11)
+        {
+            // Built by hand because the builder only produces the current version. Stops after the
+            // receivable size: no output path id, no function block number.
+            std::vector<uint8_t> payload{ 0x7E, 0x7F, 0x0D, 0x71, 0x01 };
+
+            auto const appendMuid = [&payload](uint32_t muid)
+            {
+                payload.push_back(static_cast<uint8_t>(muid & 0x7F));
+                payload.push_back(static_cast<uint8_t>((muid >> 7) & 0x7F));
+                payload.push_back(static_cast<uint8_t>((muid >> 14) & 0x7F));
+                payload.push_back(static_cast<uint8_t>((muid >> 21) & 0x7F));
+            };
+
+            appendMuid(m_muid == nullptr ? 0 : m_muid.AsCombined28BitValue());
+            appendMuid(message.SourceMuid() == nullptr ? 0 : message.SourceMuid().AsCombined28BitValue());
+
+            payload.insert(payload.end(), { 0x42, 0x00, 0x00 });    // manufacturer
+            payload.insert(payload.end(), { 0x5B, 0x01 });          // family
+            payload.insert(payload.end(), { 0x05, 0x00 });          // model
+            payload.insert(payload.end(), { 0x01, 0x00, 0x00, 0x00 });
+
+            payload.push_back(0x08);                                // property exchange only
+
+            appendMuid(m_maximumSystemExclusiveSize);
+
+            VERIFY_ARE_EQUAL(payload.size(), (size_t)29);
+
+            SendRawSystemExclusive(payload);
+
+            break;
+        }
+
         auto const identity = MidiDeclaredDeviceIdentity(
             0x00, 0x00, 0x41,
             0x0B, 0x00,
@@ -246,13 +341,26 @@ void MidiCapabilityInquiryTestResponder::HandleMessage(MidiCapabilityInquiryMess
     }
 
     case MidiCapabilityInquiryMessageType::PropertyExchangeCapabilitiesInquiry:
+        // A 1.1 device reads a fixed fourteen bytes and drops anything longer, which is what a
+        // real one was measured doing. Being strict here is the only way a test can tell that we
+        // addressed it in its own version.
+        if (m_answerAsVersion11 &&
+            message.Data() != nullptr && message.Data().Size() != 14)
+        {
+            return;
+        }
+
         Send(MidiCapabilityInquiryMessageBuilder::BuildPropertyExchangeCapabilitiesReply(
-            0, group, m_muid, message.SourceMuid(), 4));
+            0, group, m_muid, message.SourceMuid(), 4, message.SourceVersion()));
         break;
 
     case MidiCapabilityInquiryMessageType::PropertyGetDataInquiry:
         m_requestCount++;
         HandlePropertyGet(message);
+        break;
+
+    case MidiCapabilityInquiryMessageType::PropertySubscriptionInquiry:
+        HandleSubscription(message);
         break;
 
     case MidiCapabilityInquiryMessageType::ProfileInquiry:
@@ -274,6 +382,179 @@ void MidiCapabilityInquiryTestResponder::HandleMessage(MidiCapabilityInquiryMess
     default:
         break;
     }
+}
+
+void MidiCapabilityInquiryTestResponder::HandleSubscription(MidiCapabilityInquiryMessage const& message)
+{
+    if (m_answerNothing)
+    {
+        return;
+    }
+
+    auto const group = MidiGroup((uint8_t)0);
+    auto const header = message.Header();
+
+    std::string command{};
+    std::string resourceName{};
+    std::string subscribeId{};
+
+    if (header != nullptr)
+    {
+        command = ToNarrowString(header.GetNamedString(L"command", L""));
+        resourceName = ToNarrowString(header.GetNamedString(L"resource", L""));
+        subscribeId = ToNarrowString(header.GetNamedString(L"subscribeId", L""));
+    }
+
+    int32_t status{ 400 };
+    std::string assigned{};
+
+    if (command == "start")
+    {
+        if (!m_acceptSubscriptions)
+        {
+            status = 405;
+        }
+        else
+        {
+            std::lock_guard<std::mutex> guard(m_lock);
+
+            assigned = "s" + std::to_string(m_nextSubscribeId++);
+
+            TestSubscription added{};
+            added.InitiatorMuid = message.SourceMuid();
+            added.Resource = resourceName;
+
+            m_subscriptions[assigned] = added;
+
+            status = 200;
+        }
+    }
+    else if (command == "end")
+    {
+        std::lock_guard<std::mutex> guard(m_lock);
+
+        m_subscriptions.erase(subscribeId);
+
+        status = 200;
+    }
+
+    json::JsonObject replyHeader{};
+
+    replyHeader.SetNamedValue(L"status", json::JsonValue::CreateNumberValue(status));
+
+    if (!assigned.empty())
+    {
+        replyHeader.SetNamedValue(
+            L"subscribeId", json::JsonValue::CreateStringValue(winrt::to_hstring(assigned)));
+    }
+
+    Send(MidiCapabilityInquiryMessageBuilder::BuildPropertyMessage(
+        0,
+        group,
+        MidiCapabilityInquiryMessageType::PropertySubscriptionInquiryReply,
+        m_muid,
+        message.SourceMuid(),
+        message.RequestId(),
+        replyHeader,
+        nullptr,
+        m_maximumSystemExclusiveSize));
+}
+
+uint32_t MidiCapabilityInquiryTestResponder::NotifyResourceChanged(std::string const& resource)
+{
+    auto const group = MidiGroup((uint8_t)0);
+
+    std::vector<std::pair<std::string, TestSubscription>> targets{};
+    std::string body{ "[]" };
+
+    {
+        std::lock_guard<std::mutex> guard(m_lock);
+
+        for (auto const& entry : m_subscriptions)
+        {
+            if (entry.second.Resource == resource)
+            {
+                targets.emplace_back(entry.first, entry.second);
+            }
+        }
+
+        auto const found = m_resources.find(resource);
+
+        if (found != m_resources.end())
+        {
+            body = found->second;
+        }
+    }
+
+    for (auto const& target : targets)
+    {
+        json::JsonObject header{};
+
+        header.SetNamedValue(
+            L"subscribeId", json::JsonValue::CreateStringValue(winrt::to_hstring(target.first)));
+        header.SetNamedValue(L"command", json::JsonValue::CreateStringValue(L"full"));
+
+        auto data = winrt::single_threaded_vector<uint8_t>();
+
+        for (auto const character : body)
+        {
+            data.Append(static_cast<uint8_t>(character));
+        }
+
+        Send(MidiCapabilityInquiryMessageBuilder::BuildPropertyMessage(
+            0,
+            group,
+            MidiCapabilityInquiryMessageType::PropertySubscriptionInquiry,
+            m_muid,
+            target.second.InitiatorMuid,
+            m_nextRequestId++,
+            header,
+            data,
+            m_maximumSystemExclusiveSize));
+    }
+
+    return static_cast<uint32_t>(targets.size());
+}
+
+uint32_t MidiCapabilityInquiryTestResponder::EndAllSubscriptions()
+{
+    auto const group = MidiGroup((uint8_t)0);
+
+    std::map<std::string, TestSubscription> held{};
+
+    {
+        std::lock_guard<std::mutex> guard(m_lock);
+        held.swap(m_subscriptions);
+    }
+
+    for (auto const& entry : held)
+    {
+        json::JsonObject header{};
+
+        header.SetNamedValue(
+            L"subscribeId", json::JsonValue::CreateStringValue(winrt::to_hstring(entry.first)));
+        header.SetNamedValue(L"command", json::JsonValue::CreateStringValue(L"end"));
+
+        Send(MidiCapabilityInquiryMessageBuilder::BuildPropertyMessage(
+            0,
+            group,
+            MidiCapabilityInquiryMessageType::PropertySubscriptionInquiry,
+            m_muid,
+            entry.second.InitiatorMuid,
+            m_nextRequestId++,
+            header,
+            nullptr,
+            m_maximumSystemExclusiveSize));
+    }
+
+    return static_cast<uint32_t>(held.size());
+}
+
+uint32_t MidiCapabilityInquiryTestResponder::SubscriptionCount() const
+{
+    std::lock_guard<std::mutex> guard(m_lock);
+
+    return static_cast<uint32_t>(m_subscriptions.size());
 }
 
 void MidiCapabilityInquiryTestResponder::HandlePropertyGet(MidiCapabilityInquiryMessage const& message)

@@ -129,7 +129,7 @@
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="BackgroundWork.h" />
     <ClInclude Include="CommandLineOptions.h" />
-    <ClInclude Include="GeneralMidi.h" />
+    <ClInclude Include="..\midi-app-shared\GeneralMidi.h" />
     <ClInclude Include="InstanceHandoff.h" />
     <ClInclude Include="..\..\Inc\midi_file_sequence.h" />
     <ClInclude Include="NoteRollRenderer.h" />
@@ -175,7 +175,7 @@
     <ClCompile Include="TrackItem.cpp" />
     <!-- The file readers, the sequence model and the General MIDI tables are deliberately free of
          pch.h, WinRT and XAML, so the unit test project can compile the same sources. -->
-    <ClCompile Include="GeneralMidi.cpp">
+    <ClCompile Include="..\midi-app-shared\GeneralMidi.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="..\..\Inc\midi_file_sequence.cpp">

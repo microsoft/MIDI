@@ -61,6 +61,7 @@
 #include <winrt/Windows.Foundation.Numerics.h>
 #include <winrt/Windows.Data.Json.h>
 #include <winrt/Windows.Devices.Enumeration.h>
+#include <winrt/Windows.Globalization.NumberFormatting.h>
 #include <winrt/Windows.Graphics.h>
 #include <winrt/Windows.Storage.h>
 #include <winrt/Windows.Storage.Streams.h>

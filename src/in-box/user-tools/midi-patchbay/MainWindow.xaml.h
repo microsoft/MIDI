@@ -66,6 +66,20 @@ namespace winrt::midipatchbay::implementation
         void OnQuickPatchDestinationChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnQuickPatchGroupChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
+        // Which of the transform dialog's mapping tables a row belongs to. Public only so the
+        // helpers in MainWindowTransforms.cpp can name it; nothing is projected from here.
+        enum class TransformMap : int32_t
+        {
+            Note = 0,
+            Control = 1,
+            Channel = 2,
+            Program = 3,
+            BankMsb = 4,
+            BankLsb = 5,
+        };
+
+        static constexpr size_t TransformMapCount = 6;
+
     private:
         // ---- startup and chrome ----
         void InitializeWindowChrome() noexcept;
@@ -122,11 +136,15 @@ namespace winrt::midipatchbay::implementation
         void UpdateFilterSummary() noexcept;
 
         // ---- transforms, in MainWindowTransforms.cpp ----
+
+        // The mapping tables are edited the same way, so one set of row functions drives them all.
         winrt::fire_and_forget ShowTransformDialogAsync(std::wstring connectionId);
         void BuildTransformDialog() noexcept;
-        void RebuildNoteMapRows() noexcept;
-        void RefreshNoteMapRowLabels() noexcept;
-        void RebuildControlMapRows() noexcept;
+        controls::StackPanel BuildMapSection(_In_ TransformMap which) noexcept;
+        void RebuildMapRows(_In_ TransformMap which) noexcept;
+        void RefreshMapRowLabels(_In_ TransformMap which) noexcept;
+        void ApplyValueScale() noexcept;
+        void RefreshVelocityEnabledState() noexcept;
         void CommitTransformMaps() noexcept;
         void UpdateTransformSummary() noexcept;
         void DrawVelocityCurve() noexcept;
@@ -220,20 +238,27 @@ namespace winrt::midipatchbay::implementation
         controls::Canvas m_noteKeyboard{ nullptr };
         std::vector<std::pair<uint8_t, shapes::Rectangle>> m_noteKeyFills{};
 
-        // The transform dialog also edits a copy. The two tables are edited as row lists and
+        // The transform dialog also edits a copy. The mapping tables are edited as row lists and
         // collected back into the sparse arrays on Apply.
         ::midipatchbay::MessageTransform m_editingTransform{};
         std::wstring m_editingTransformConnectionId{};
 
-        std::vector<std::pair<int32_t, int32_t>> m_noteMapRows{};
-        std::vector<std::pair<int32_t, int32_t>> m_controlMapRows{};
+        std::array<std::vector<std::pair<int32_t, int32_t>>, TransformMapCount> m_mapRows{};
 
-        controls::StackPanel m_noteMapPanel{ nullptr };
-        controls::StackPanel m_controlMapPanel{ nullptr };
-        std::vector<controls::TextBlock> m_noteMapLabels{};
-        std::vector<controls::NumberBox> m_velocityRangeBoxes{};
+        std::array<controls::StackPanel, TransformMapCount> m_mapPanels{
+            nullptr, nullptr, nullptr, nullptr, nullptr, nullptr };
+
+        std::array<std::vector<controls::TextBlock>, TransformMapCount> m_mapLabels{};
+
+        // Every box that shows a fraction of full scale, so switching between 0 to 127 and
+        // percent can retext them all in place.
+        controls::NumberBox m_fixedVelocityBox{ nullptr };
+        controls::NumberBox m_minimumVelocityBox{ nullptr };
+        controls::NumberBox m_maximumVelocityBox{ nullptr };
+        controls::CheckBox m_velocityRescaleCheck{ nullptr };
         controls::TextBlock m_transposeExampleText{ nullptr };
         controls::Canvas m_velocityCurveCanvas{ nullptr };
+        bool m_applyingValueScale{ false };
 
         // Where the audition button plays, captured when the dialog opens.
         std::wstring m_testEndpointDeviceId{};

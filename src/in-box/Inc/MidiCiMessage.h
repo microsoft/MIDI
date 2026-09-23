@@ -587,6 +587,9 @@ namespace WindowsMidiServicesCapabilityInquiry
 
         uint8_t OutputPathId{ 0 };
         uint8_t FunctionBlockNumber{ 0 };
+
+        // Which format to write. Set it from what the peer declared in its own Discovery.
+        uint8_t MessageVersion{ 0x02 };
     };
 
     inline bool AllBytesAreSevenBit(
@@ -616,6 +619,24 @@ namespace WindowsMidiServicesCapabilityInquiry
     // responder can know.
     inline constexpr size_t DiscoveryByteCount{ 30 };
 
+    // The message version byte, which says which format the rest of the message is in rather than
+    // what the sender is capable of. Several messages grew a tail in 1.2, and a 1.1 device reads a
+    // fixed length, so speaking 1.2 at one can leave it with nothing it recognizes. Address a peer
+    // at the version its own Discovery declared; use the current one for anything broadcast, where
+    // there is nobody in particular to match.
+    inline constexpr uint8_t MessageVersion11{ 0x01 };
+    inline constexpr uint8_t MessageVersion12{ 0x02 };
+    inline constexpr uint8_t MessageVersionCurrent{ MessageVersion12 };
+
+    inline constexpr bool MessageVersionHasExtendedFields(_In_ uint8_t const messageVersion) noexcept
+    {
+        return messageVersion >= MessageVersion12;
+    }
+
+    // A 1.1 Discovery stops after the receivable size, and its reply does too.
+    inline constexpr size_t DiscoveryByteCountVersion11{ 29 };
+    inline constexpr size_t DiscoveryReplyByteCountVersion11{ 29 };
+
     // Writes the thirteen bytes every capability inquiry message starts with. Returns the count
     // written, or zero when the buffer is too small.
     inline size_t WriteCommonHeader(
@@ -624,7 +645,8 @@ namespace WindowsMidiServicesCapabilityInquiry
         _In_ uint8_t const deviceId,
         _In_ MessageType const type,
         _In_ uint32_t const sourceMuid,
-        _In_ uint32_t const destinationMuid
+        _In_ uint32_t const destinationMuid,
+        _In_ uint8_t const messageVersion = MessageVersionCurrent
     ) noexcept
     {
         if (buffer == nullptr || capacity < CommonHeaderByteCount)
@@ -638,7 +660,7 @@ namespace WindowsMidiServicesCapabilityInquiry
         buffer[offset++] = deviceId & 0x7F;
         buffer[offset++] = SubId1CapabilityInquiry;
         buffer[offset++] = static_cast<uint8_t>(type);
-        buffer[offset++] = 0x02;
+        buffer[offset++] = messageVersion & 0x7F;
 
         WriteMuid(buffer + offset, sourceMuid);
         offset += 4;
@@ -657,14 +679,17 @@ namespace WindowsMidiServicesCapabilityInquiry
         _In_ size_t const capacity
     ) noexcept
     {
-        if (buffer == nullptr || capacity < DiscoveryByteCount)
+        const bool extended = MessageVersionHasExtendedFields(fields.MessageVersion);
+
+        if (buffer == nullptr ||
+            capacity < (extended ? DiscoveryByteCount : DiscoveryByteCountVersion11))
         {
             return 0;
         }
 
         size_t offset = WriteCommonHeader(
             buffer, capacity, DeviceIdFunctionBlock, MessageType::Discovery,
-            fields.SourceMuid, MuidBroadcast);
+            fields.SourceMuid, MuidBroadcast, fields.MessageVersion);
 
         buffer[offset++] = fields.ManufacturerSysExId[0] & 0x7F;
         buffer[offset++] = fields.ManufacturerSysExId[1] & 0x7F;
@@ -686,7 +711,10 @@ namespace WindowsMidiServicesCapabilityInquiry
         WriteMuid(buffer + offset, fields.ReceivableMaximumSysExSize);
         offset += 4;
 
-        buffer[offset++] = fields.OutputPathId & 0x7F;
+        if (extended)
+        {
+            buffer[offset++] = fields.OutputPathId & 0x7F;
+        }
 
         return offset;
     }
@@ -784,6 +812,10 @@ namespace WindowsMidiServicesCapabilityInquiry
         uint16_t ChannelCount{ 0 };
         uint8_t InquiryTarget{ 0 };
 
+        // Which format to write. The channel count on Set Profile On/Off and the enabled and
+        // disabled reports arrived with 1.2; a 1.1 device stops before it.
+        uint8_t MessageVersion{ 0x02 };
+
         uint8_t const* Data{ nullptr };
         uint32_t DataByteCount{ 0 };
     };
@@ -820,7 +852,10 @@ namespace WindowsMidiServicesCapabilityInquiry
         case MessageType::SetProfileOff:
         case MessageType::ProfileEnabledReport:
         case MessageType::ProfileDisabledReport:
-            required += 2;
+            if (MessageVersionHasExtendedFields(fields.MessageVersion))
+            {
+                required += 2;
+            }
             break;
 
         case MessageType::ProfileDetailsInquiry:
@@ -851,7 +886,7 @@ namespace WindowsMidiServicesCapabilityInquiry
 
         size_t offset = WriteCommonHeader(
             buffer, capacity, fields.DeviceId, fields.Type,
-            fields.SourceMuid, fields.DestinationMuid);
+            fields.SourceMuid, fields.DestinationMuid, fields.MessageVersion);
 
         if (fields.Type != MessageType::ProfileInquiry)
         {
@@ -867,8 +902,11 @@ namespace WindowsMidiServicesCapabilityInquiry
         case MessageType::SetProfileOff:
         case MessageType::ProfileEnabledReport:
         case MessageType::ProfileDisabledReport:
-            WriteFourteenBitValue(buffer + offset, fields.ChannelCount);
-            offset += 2;
+            if (MessageVersionHasExtendedFields(fields.MessageVersion))
+            {
+                WriteFourteenBitValue(buffer + offset, fields.ChannelCount);
+                offset += 2;
+            }
             break;
 
         case MessageType::ProfileDetailsInquiry:
@@ -974,7 +1012,9 @@ namespace WindowsMidiServicesCapabilityInquiry
         _In_ size_t const capacity
     ) noexcept
     {
-        if (buffer == nullptr || capacity < DiscoveryReplyByteCount)
+        if (buffer == nullptr ||
+            capacity < (MessageVersionHasExtendedFields(fields.MessageVersion)
+                ? DiscoveryReplyByteCount : DiscoveryReplyByteCountVersion11))
         {
             return 0;
         }
@@ -985,7 +1025,7 @@ namespace WindowsMidiServicesCapabilityInquiry
         buffer[offset++] = DeviceIdFunctionBlock;
         buffer[offset++] = SubId1CapabilityInquiry;
         buffer[offset++] = static_cast<uint8_t>(MessageType::DiscoveryReply);
-        buffer[offset++] = 0x02;
+        buffer[offset++] = fields.MessageVersion & 0x7F;
 
         WriteMuid(buffer + offset, fields.SourceMuid);
         offset += 4;
@@ -1013,8 +1053,11 @@ namespace WindowsMidiServicesCapabilityInquiry
         WriteMuid(buffer + offset, fields.ReceivableMaximumSysExSize);
         offset += 4;
 
-        buffer[offset++] = fields.OutputPathId & 0x7F;
-        buffer[offset++] = fields.FunctionBlockNumber & 0x7F;
+        if (MessageVersionHasExtendedFields(fields.MessageVersion))
+        {
+            buffer[offset++] = fields.OutputPathId & 0x7F;
+            buffer[offset++] = fields.FunctionBlockNumber & 0x7F;
+        }
 
         return offset;
     }
@@ -1026,6 +1069,7 @@ namespace WindowsMidiServicesCapabilityInquiry
     // Common header, then simultaneous request count and the two version bytes that arrived with
     // MIDI-CI message version 2.
     inline constexpr size_t PropertyExchangeCapabilitiesByteCount{ CommonHeaderByteCount + 3 };
+    inline constexpr size_t PropertyExchangeCapabilitiesByteCountVersion11{ CommonHeaderByteCount + 1 };
 
     // Common Rules for Property Exchange 1.0 and 1.1 both report 0.0.
     inline constexpr uint8_t PropertyExchangeMajorVersion{ 0x00 };
@@ -1036,10 +1080,16 @@ namespace WindowsMidiServicesCapabilityInquiry
         _In_ uint32_t const destinationMuid,
         _In_ uint8_t const simultaneousRequests,
         _Out_writes_to_opt_(capacity, return) uint8_t* const buffer,
-        _In_ size_t const capacity
+        _In_ size_t const capacity,
+        _In_ uint8_t const messageVersion = MessageVersionCurrent
     ) noexcept
     {
-        if (buffer == nullptr || capacity < PropertyExchangeCapabilitiesByteCount)
+        const bool extended = MessageVersionHasExtendedFields(messageVersion);
+
+        if (buffer == nullptr ||
+            capacity < (extended
+                ? PropertyExchangeCapabilitiesByteCount
+                : PropertyExchangeCapabilitiesByteCountVersion11))
         {
             return 0;
         }
@@ -1050,7 +1100,7 @@ namespace WindowsMidiServicesCapabilityInquiry
         buffer[offset++] = DeviceIdFunctionBlock;
         buffer[offset++] = SubId1CapabilityInquiry;
         buffer[offset++] = static_cast<uint8_t>(MessageType::PropertyExchangeCapabilitiesReply);
-        buffer[offset++] = 0x02;
+        buffer[offset++] = messageVersion & 0x7F;
 
         WriteMuid(buffer + offset, sourceMuid);
         offset += 4;
@@ -1059,8 +1109,12 @@ namespace WindowsMidiServicesCapabilityInquiry
         offset += 4;
 
         buffer[offset++] = simultaneousRequests & 0x7F;
-        buffer[offset++] = PropertyExchangeMajorVersion;
-        buffer[offset++] = PropertyExchangeMinorVersion;
+
+        if (extended)
+        {
+            buffer[offset++] = PropertyExchangeMajorVersion;
+            buffer[offset++] = PropertyExchangeMinorVersion;
+        }
 
         return offset;
     }

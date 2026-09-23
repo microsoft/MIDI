@@ -81,6 +81,16 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
             _In_ uint32_t offset,
             _In_ uint32_t limit);
 
+        foundation::IAsyncOperation<ci::MidiPropertySubscription> SubscribeAsync(
+            _In_ ci::MidiUniqueId destinationMuid,
+            _In_ winrt::hstring resource,
+            _In_ winrt::hstring resourceId);
+
+        foundation::IAsyncOperation<bool> UnsubscribeAsync(
+            _In_ ci::MidiPropertySubscription subscription);
+
+        foundation::Collections::IVectorView<ci::MidiPropertySubscription> GetSubscriptions();
+
         foundation::IAsyncOperation<ci::MidiProfileInquiryResponse> GetProfilesAsync(
             _In_ ci::MidiUniqueId destinationMuid,
             _In_ uint8_t deviceId);
@@ -103,6 +113,10 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         winrt::event_token ResponderFound(
             _In_ foundation::TypedEventHandler<ci::MidiCapabilityInquirySession, ci::MidiCapabilityInquiryResponder> const& handler);
         void ResponderFound(_In_ winrt::event_token const& token) noexcept;
+
+        winrt::event_token PropertySubscriptionUpdated(
+            _In_ foundation::TypedEventHandler<ci::MidiCapabilityInquirySession, ci::MidiPropertySubscriptionUpdatedEventArgs> const& handler);
+        void PropertySubscriptionUpdated(_In_ winrt::event_token const& token) noexcept;
 
         winrt::event_token MessageReceived(
             _In_ foundation::TypedEventHandler<ci::MidiCapabilityInquirySession, ci::MidiCapabilityInquiryMessageReceivedEventArgs> const& handler);
@@ -163,6 +177,11 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
         uint32_t MaximumSystemExclusiveSizeFor(_In_ uint32_t const muid) noexcept;
 
+        // Which MIDI-CI format to address a responder in. Several messages grew a tail in 1.2 and
+        // a 1.1 device reads a fixed length, so speaking the newest version at one can leave it
+        // with nothing it recognizes. Falls back to the current version for an unknown responder.
+        uint8_t MessageVersionFor(_In_ uint32_t const muid) noexcept;
+
         // The capabilities transaction, blocking. The projected method and the automatic one below
         // are both this.
         ci::MidiCapabilityInquiryStatus RequestPropertyExchangeCapabilities(
@@ -185,6 +204,27 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
             _In_ foundation::Collections::IIterable<uint8_t> const& body,
             _In_ bool const isSet) noexcept;
 
+        // A subscription start or end. Blocking, like every other request here.
+        ci::MidiPropertyExchangeResponse SendSubscriptionCommand(
+            _In_ ci::MidiUniqueId const& destinationMuid,
+            _In_ json::JsonObject const& header) noexcept;
+
+        // An update a device sent us, reassembled. Raises the event and sends the reply the
+        // specification requires.
+        void CompleteIncomingUpdate(
+            _In_ uint64_t const key,
+            _In_ PendingRequest const& update) noexcept;
+
+        // Collects the chunks of an unsolicited subscription message. Returns true when it was
+        // consumed here, whether or not it finished the transfer.
+        bool TryCollectSubscriptionUpdate(_In_ ci::MidiCapabilityInquiryMessage const& message) noexcept;
+
+        void EndAllSubscriptions() noexcept;
+
+        // Drops everything held for a responder that withdrew its identifier, and tells anything
+        // subscribed to it that the subscription is over.
+        void ForgetResponder(_In_ ci::MidiUniqueId const& muid) noexcept;
+
         std::atomic<bool> m_isOpen{ false };
 
         midi2::MidiEndpointConnection m_connection{ nullptr };
@@ -206,6 +246,14 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         std::map<uint64_t, PendingRequest> m_pendingRequests{};
         std::map<uint32_t, ci::MidiCapabilityInquiryResponder> m_responders{};
 
+        // Live subscriptions, by the identifier the device assigned. A device is free to hand out
+        // the same identifier as another device, so the responder identifier is part of the key.
+        std::map<std::wstring, ci::MidiPropertySubscription> m_subscriptions{};
+
+        // Subscription updates arriving now, keyed the same way as a pending request. A device
+        // owns the request identifier on an update, so these cannot share that map.
+        std::map<uint64_t, PendingRequest> m_incomingUpdates{};
+
         // Responders this session has already run the capabilities transaction with, whatever the
         // outcome was, so a device which does not answer it is asked only once.
         std::set<uint32_t> m_propertyExchangeCapabilitiesAsked{};
@@ -216,6 +264,7 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
         winrt::event<foundation::TypedEventHandler<ci::MidiCapabilityInquirySession, ci::MidiCapabilityInquiryMessageReceivedEventArgs>> m_profileStateChangedEvent;
         winrt::event<foundation::TypedEventHandler<ci::MidiCapabilityInquirySession, ci::MidiCapabilityInquiryResponder>> m_responderFoundEvent;
+        winrt::event<foundation::TypedEventHandler<ci::MidiCapabilityInquirySession, ci::MidiPropertySubscriptionUpdatedEventArgs>> m_propertySubscriptionUpdatedEvent;
         winrt::event<foundation::TypedEventHandler<ci::MidiCapabilityInquirySession, ci::MidiCapabilityInquiryMessageReceivedEventArgs>> m_messageReceivedEvent;
     };
 }

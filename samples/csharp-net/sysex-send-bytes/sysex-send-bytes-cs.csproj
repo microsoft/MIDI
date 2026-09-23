@@ -17,7 +17,7 @@
   
   <ItemGroup>
     <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
-    <PackageReference Include="Windows.Devices.Midi2" Version="0.99.84-devpreview.9" />
+    <PackageReference Include="Windows.Devices.Midi2" Version="0.99.85-devpreview.10" />
   </ItemGroup>
 
     <!-- For versioning info: https://learn.microsoft.com/en-us/nuget/concepts/dependency-resolution#floating-versions -->

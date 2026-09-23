@@ -8,6 +8,7 @@
 #include "MidiCiProgramList.h"
 
 #include <cstdio>
+#include <cstring>
 #include <iterator>
 
 namespace ci = ::WindowsMidiServicesCapabilityInquiry;
@@ -30,22 +31,35 @@ namespace
     // What an initiator declared it can receive. 512 is the smallest seen in practice.
     constexpr size_t AssumedInitiatorMaximumSysExSize = 512;
 
-    constexpr char const* ResourceNameList[]{ "ResourceList", "DeviceInfo", "ChannelList", "ProgramList" };
+    constexpr ci::ResourceListEntry ResourceEntryList[]
+    {
+        { "ResourceList", false, false },
+        { "DeviceInfo", false, false },
+        { "ChannelList", false, true },
+        { "ProgramList", true, false },
+    };
+
+    // Shown to a customer when a client lists the collections a channel can select from. Not
+    // localized: this library has no resource loading, and the program names it sits beside come
+    // out of the sound set file untranslated.
+    constexpr char const* MelodicProgramListTitle = "Melodic Programs";
+    constexpr char const* DrumKitProgramListTitle = "Drum Kits";
 }
 
 namespace MidiSynth
 {
     _Use_decl_annotations_
-    const char* const* PropertyExchangeSource::ResourceNames(size_t& count) noexcept
+    const ci::ResourceListEntry* PropertyExchangeSource::ResourceEntries(size_t& count) noexcept
     {
-        count = std::size(ResourceNameList);
-        return ResourceNameList;
+        count = std::size(ResourceEntryList);
+        return ResourceEntryList;
     }
 
     _Use_decl_annotations_
     void PropertyExchangeSource::Build(const DlsCollection& collection, const SynthIdentity& identity)
     {
-        m_programListJson = BuildProgramListJson(collection);
+        m_melodicProgramListJson = BuildProgramListJson(collection, ProgramListKind::Melodic);
+        m_drumKitProgramListJson = BuildProgramListJson(collection, ProgramListKind::DrumKits);
 
         ci::DeviceInfoFields info{};
 
@@ -67,10 +81,10 @@ namespace MidiSynth
         (void)ci::BuildDeviceInfoJson(info, m_deviceInfoJson.data(), m_deviceInfoJson.size());
 
         size_t nameCount = 0;
-        auto const* const names = ResourceNames(nameCount);
+        auto const* const resources = ResourceEntries(nameCount);
 
-        m_resourceListJson.resize(ci::BuildResourceListJson(names, nameCount, nullptr, 0));
-        (void)ci::BuildResourceListJson(names, nameCount, m_resourceListJson.data(), m_resourceListJson.size());
+        m_resourceListJson.resize(ci::BuildResourceListJson(resources, nameCount, nullptr, 0));
+        (void)ci::BuildResourceListJson(resources, nameCount, m_resourceListJson.data(), m_resourceListJson.size());
     }
 
     _Use_decl_annotations_
@@ -81,6 +95,17 @@ namespace MidiSynth
         ci::ChannelListEntry entries[MidiChannelCount]{};
         char titles[MidiChannelCount][16]{};
         std::string programTitles[MidiChannelCount];
+
+        // One link object per kind, shared by every channel that uses it. They outlive the build.
+        constexpr ci::ResourceLink MelodicLink
+        {
+            "ProgramList", MelodicProgramListResourceId, MelodicProgramListTitle
+        };
+
+        constexpr ci::ResourceLink DrumKitLink
+        {
+            "ProgramList", DrumKitProgramListResourceId, DrumKitProgramListTitle
+        };
 
         for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
         {
@@ -94,16 +119,19 @@ namespace MidiSynth
             entries[channel].BankLsb = state.BankLsb;
             entries[channel].Program = state.Program;
 
-            // Channel 10 is the drum channel by convention, and kits are addressed by a flag in
-            // this sound set rather than by a bank.
+            // Channel 10 is the drum channel by convention, but content can move it with the GS
+            // rhythm part message, so the engine's own flag decides rather than the channel number.
             const auto* instrument = collection.FindInstrument(
-                state.BankMsb, state.BankLsb, state.Program, channel == 9);
+                state.BankMsb, state.BankLsb, state.Program, state.IsDrumChannel);
 
             if (instrument != nullptr)
             {
                 programTitles[channel] = ToNarrow(instrument->Name);
                 entries[channel].ProgramTitle = programTitles[channel].c_str();
             }
+
+            entries[channel].Links = state.IsDrumChannel ? &DrumKitLink : &MelodicLink;
+            entries[channel].LinkCount = 1;
         }
 
         const auto required = ci::BuildChannelListJson(entries, MidiChannelCount, nullptr, 0);
@@ -183,6 +211,208 @@ namespace MidiSynth
         fields.ChunkNumber = 1;
 
         uint8_t buffer[64]{};
+
+        const auto written = ci::BuildPropertyExchangeMessage(fields, buffer, sizeof(buffer));
+
+        if (written > 0)
+        {
+            UmpDispatcher::PacketizeSysEx7(output, group, buffer, written);
+        }
+    }
+
+    _Use_decl_annotations_
+    const char* PropertyExchangeSource::AddChannelListSubscription(uint32_t initiatorMuid) noexcept
+    {
+        for (size_t i = 0; i < m_subscriptionCount; i++)
+        {
+            // Re-subscribing keeps the identifier it already has, so an initiator that asks twice
+            // does not end up holding two subscriptions to the same thing.
+            if (m_subscriptions[i].InitiatorMuid == initiatorMuid)
+            {
+                m_subscriptions[i].NeedsUpdate = false;
+                return m_subscriptions[i].SubscribeId;
+            }
+        }
+
+        if (m_subscriptionCount >= MaxSubscriptions)
+        {
+            return "";
+        }
+
+        auto& added = m_subscriptions[m_subscriptionCount];
+
+        added = {};
+        added.InitiatorMuid = initiatorMuid;
+
+        snprintf(added.SubscribeId, sizeof(added.SubscribeId), "ch%u", m_nextSubscribeId++);
+
+        m_subscriptionCount++;
+
+        return added.SubscribeId;
+    }
+
+    _Use_decl_annotations_
+    bool PropertyExchangeSource::RemoveSubscription(
+        uint32_t initiatorMuid,
+        const std::string& subscribeId) noexcept
+    {
+        bool removed{ false };
+
+        for (size_t i = 0; i < m_subscriptionCount; )
+        {
+            const bool matches =
+                m_subscriptions[i].InitiatorMuid == initiatorMuid &&
+                (subscribeId.empty() || subscribeId == m_subscriptions[i].SubscribeId);
+
+            if (!matches)
+            {
+                i++;
+                continue;
+            }
+
+            m_subscriptions[i] = m_subscriptions[m_subscriptionCount - 1];
+            m_subscriptions[m_subscriptionCount - 1] = {};
+            m_subscriptionCount--;
+
+            removed = true;
+        }
+
+        return removed;
+    }
+
+    _Use_decl_annotations_
+    bool PropertyExchangeSource::ChannelListChanged(const SynthEngine& engine) noexcept
+    {
+        ChannelSnapshot current[MidiChannelCount]{};
+
+        for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
+        {
+            const auto state = engine.ChannelState(channel);
+
+            current[channel].BankMsb = state.BankMsb;
+            current[channel].BankLsb = state.BankLsb;
+            current[channel].Program = state.Program;
+            current[channel].IsDrumChannel = state.IsDrumChannel;
+        }
+
+        const bool changed =
+            !m_haveChannelSnapshot ||
+            memcmp(current, m_lastNotifiedChannels, sizeof(current)) != 0;
+
+        if (!changed)
+        {
+            return false;
+        }
+
+        memcpy(m_lastNotifiedChannels, current, sizeof(current));
+
+        // The first pass only establishes the baseline. Sending an update for a state nobody has
+        // asked about yet would notify a subscriber of a change that did not happen.
+        if (!m_haveChannelSnapshot)
+        {
+            m_haveChannelSnapshot = true;
+            return false;
+        }
+
+        for (size_t i = 0; i < m_subscriptionCount; i++)
+        {
+            m_subscriptions[i].NeedsUpdate = true;
+        }
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool PropertyExchangeSource::BeginNextSubscriptionUpdate(
+        const SynthEngine& engine,
+        const DlsCollection& collection) noexcept
+    {
+        for (size_t i = 0; i < m_subscriptionCount; i++)
+        {
+            if (!m_subscriptions[i].NeedsUpdate)
+            {
+                continue;
+            }
+
+            m_subscriptions[i].NeedsUpdate = false;
+
+            // Rebuilt here rather than when the change was noticed, because the chunker points
+            // into this buffer and a resize while a reply is in flight would move it.
+            const auto& resource = RebuildChannelListJson(engine, collection);
+
+            const auto headerLength = snprintf(
+                m_updateHeader, sizeof(m_updateHeader),
+                "{\"subscribeId\":\"%s\",\"command\":\"full\"}", m_subscriptions[i].SubscribeId);
+
+            if (headerLength <= 0)
+            {
+                continue;
+            }
+
+            m_replyInitiatorMuid = m_subscriptions[i].InitiatorMuid;
+            m_replyRequestId = m_nextUpdateRequestId++;
+
+            if (m_nextUpdateRequestId > 0x7F)
+            {
+                m_nextUpdateRequestId = 1;
+            }
+
+            m_chunker = {};
+            m_chunker.Type = ci::MessageType::PropertySubscriptionInquiry;
+            m_chunker.Resource = reinterpret_cast<const uint8_t*>(resource.data());
+            m_chunker.ResourceByteCount = resource.size();
+            m_chunker.Header = reinterpret_cast<const uint8_t*>(m_updateHeader);
+            m_chunker.HeaderByteCount = static_cast<uint16_t>(headerLength);
+
+            m_nextChunk = m_chunker.Plan(AssumedInitiatorMaximumSysExSize) ? 1 : 0;
+
+            return m_nextChunk != 0;
+        }
+
+        return false;
+    }
+
+    _Use_decl_annotations_
+    void PropertyExchangeSource::SendSubscriptionReply(
+        IUmpOutput& output,
+        uint8_t group,
+        uint32_t sourceMuid,
+        const UmpDispatcher::PendingPropertyRequest& request,
+        uint16_t status,
+        const char* subscribeId) noexcept
+    {
+        char header[80]{};
+
+        int headerLength{ 0 };
+
+        if (subscribeId != nullptr && subscribeId[0] != '\0')
+        {
+            headerLength = snprintf(
+                header, sizeof(header),
+                "{\"status\":%u,\"subscribeId\":\"%s\"}", status, subscribeId);
+        }
+        else
+        {
+            headerLength = snprintf(header, sizeof(header), "{\"status\":%u}", status);
+        }
+
+        if (headerLength <= 0)
+        {
+            return;
+        }
+
+        ci::PropertyExchangeMessageFields fields{};
+
+        fields.Type = ci::MessageType::PropertySubscriptionReply;
+        fields.SourceMuid = sourceMuid;
+        fields.DestinationMuid = request.InitiatorMuid;
+        fields.RequestId = request.RequestId;
+        fields.Header = reinterpret_cast<const uint8_t*>(header);
+        fields.HeaderByteCount = static_cast<uint16_t>(headerLength);
+        fields.ChunkCount = 1;
+        fields.ChunkNumber = 1;
+
+        uint8_t buffer[128]{};
 
         const auto written = ci::BuildPropertyExchangeMessage(fields, buffer, sizeof(buffer));
 

@@ -13,6 +13,8 @@ import "MidiCapabilityInquiryCategoriesEnum.idl";
 import "MidiCapabilityInquiryResponder.idl";
 import "MidiCapabilityInquiryMessageReceivedEventArgs.idl";
 import "MidiPropertyExchangeResponse.idl";
+import "MidiPropertySubscription.idl";
+import "MidiPropertySubscriptionUpdatedEventArgs.idl";
 import "MidiProfileInquiryResponse.idl";
 import "MidiProfileId.idl";
 import "MidiUniqueId.idl";
@@ -128,6 +130,26 @@ namespace Windows.Devices.Midi2.CapabilityInquiry
             UInt32 limit);
 
 
+        // ---------------------------------------------------------------- subscriptions
+
+        // Asks to be told when a resource changes instead of polling for it. Only worth trying on
+        // a resource whose entry in the device's resource list says CanSubscribe; anything else
+        // will be refused, and the refusal comes back in ResourceStatus.
+        //
+        // resourceId may be empty for a resource the device publishes only once.
+        Windows.Foundation.IAsyncOperation<MidiPropertySubscription> SubscribeAsync(
+            MidiUniqueId destinationMuid,
+            String resource,
+            String resourceId);
+
+        // Ends a subscription. Sent automatically for anything still active when the session is
+        // closed, so an application only needs this to stop listening earlier.
+        Windows.Foundation.IAsyncOperation<Boolean> UnsubscribeAsync(MidiPropertySubscription subscription);
+
+        // Every subscription this session holds which the device has not ended.
+        Windows.Foundation.Collections.IVectorView<MidiPropertySubscription> GetSubscriptions();
+
+
         // ------------------------------------------------------------------- profiles
 
         // deviceId addresses a channel with 0x00 to 0x0F, a group with 0x7E, or the whole function
@@ -159,6 +181,10 @@ namespace Windows.Devices.Midi2.CapabilityInquiry
 
         // Raised when a responder answers Discovery, including outside a DiscoverAsync call.
         event Windows.Foundation.TypedEventHandler<MidiCapabilityInquirySession, MidiCapabilityInquiryResponder> ResponderFound;
+
+        // Raised when a device reports that a subscribed resource changed, and when it ends a
+        // subscription. The reply the specification requires is sent before this is raised.
+        event Windows.Foundation.TypedEventHandler<MidiCapabilityInquirySession, MidiPropertySubscriptionUpdatedEventArgs> PropertySubscriptionUpdated;
 
         // Every capability inquiry message which was not matched to an outstanding request. A
         // subscription update, a device's own Discovery, and anything this API has no strong type

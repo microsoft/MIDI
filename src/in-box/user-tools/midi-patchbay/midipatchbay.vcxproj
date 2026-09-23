@@ -156,6 +156,7 @@
     <ClInclude Include="..\midi-app-shared\SingleInstance.h" />
     <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
     <ClInclude Include="..\midi-app-shared\EndpointImageAssets.h" />
+    <ClInclude Include="..\midi-app-shared\GeneralMidi.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
   </ItemGroup>
   <ItemGroup>
@@ -195,6 +196,10 @@
     <ClCompile Include="..\midi-app-shared\SingleInstance.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointImageAssets.cpp" />
+    <!-- Deliberately free of pch.h, WinRT and XAML, like the sequence model it came from. -->
+    <ClCompile Include="..\midi-app-shared\GeneralMidi.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>

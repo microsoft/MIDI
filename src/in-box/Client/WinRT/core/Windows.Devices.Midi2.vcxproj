@@ -660,6 +660,12 @@
     <ClInclude Include="MidiPropertyExchangeResponse.h">
       <DependentUpon>MidiPropertyExchangeResponse.idl</DependentUpon>
     </ClInclude>
+    <ClInclude Include="MidiPropertySubscription.h">
+      <DependentUpon>MidiPropertySubscription.idl</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MidiPropertySubscriptionUpdatedEventArgs.h">
+      <DependentUpon>MidiPropertySubscriptionUpdatedEventArgs.idl</DependentUpon>
+    </ClInclude>
     <ClInclude Include="MidiProfileInquiryResponse.h">
       <DependentUpon>MidiProfileInquiryResponse.idl</DependentUpon>
     </ClInclude>
@@ -1169,6 +1175,12 @@
     <ClCompile Include="MidiPropertyExchangeResponse.cpp">
       <DependentUpon>MidiPropertyExchangeResponse.idl</DependentUpon>
     </ClCompile>
+    <ClCompile Include="MidiPropertySubscription.cpp">
+      <DependentUpon>MidiPropertySubscription.idl</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MidiPropertySubscriptionUpdatedEventArgs.cpp">
+      <DependentUpon>MidiPropertySubscriptionUpdatedEventArgs.idl</DependentUpon>
+    </ClCompile>
     <ClCompile Include="MidiProfileInquiryResponse.cpp">
       <DependentUpon>MidiProfileInquiryResponse.idl</DependentUpon>
     </ClCompile>
@@ -1485,6 +1497,8 @@
     <Midl Include="MidiCapabilityInquiryStatusEnum.idl" />
     <Midl Include="MidiCapabilityInquiryResponder.idl" />
     <Midl Include="MidiPropertyExchangeResponse.idl" />
+    <Midl Include="MidiPropertySubscription.idl" />
+    <Midl Include="MidiPropertySubscriptionUpdatedEventArgs.idl" />
     <Midl Include="MidiProfileInquiryResponse.idl" />
     <Midl Include="MidiCapabilityInquiryMessageReceivedEventArgs.idl" />
     <Midl Include="MidiCapabilityInquirySession.idl" />

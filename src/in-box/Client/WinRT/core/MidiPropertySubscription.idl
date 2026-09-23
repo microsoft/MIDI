@@ -1,0 +1,45 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+import "MidiCapabilityInquiryStatusEnum.idl";
+import "MidiUniqueId.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    // A standing request to be told when a resource on a device changes, so an application does
+    // not have to poll for it. A device declares which of its resources allow this with
+    // "canSubscribe" in its resource list.
+    [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiPropertySubscription", UUID_IMidiPropertySubscription)]
+    runtimeclass MidiPropertySubscription
+    {
+        [noexcept] MidiCapabilityInquiryStatus Status{ get; };
+
+        // The status the device put in its reply header. 200 means it accepted.
+        [noexcept] Int32 ResourceStatus{ get; };
+
+        MidiUniqueId ResponderMuid{ get; };
+
+        // What was subscribed to. ResourceId is empty for a resource the device publishes once.
+        String Resource{ get; };
+        String ResourceId{ get; };
+
+        // The identifier the device assigned. Every update it sends carries this, and it is how an
+        // update is matched back to the subscription that asked for it.
+        String SubscribeId{ get; };
+
+        // False once the subscription has ended, whether the application ended it or the device
+        // did. An ended subscription cannot be restarted; ask for a new one.
+        [noexcept] Boolean IsActive{ get; };
+    };
+}

@@ -13,6 +13,7 @@
 #include "MidiPnpUtilities.h"
 
 #include "Feature_Servicing_MIDI2PortNamingRework.h"
+#include "Feature_Servicing_MIDI2DuplicateDeviceNaming.h"
 
 using namespace wil;
 using namespace winrt::Windows::Devices::Enumeration;
@@ -222,8 +223,18 @@ CMidi2KSMidiEndpointManager::OnDeviceAdded(
         {
             uint32_t indexOfDevicesWithThisSameName{ 0 };
 
-            deviceName = ResolveUniqueHardwareParentDeviceName(hardwareParentName, hardwareParentInstanceId, indexOfDevicesWithThisSameName);
-            legacyDeviceName = WindowsMidiServicesNamingLib::ApplyLegacyDuplicateDeviceMarker(hardwareParentName, indexOfDevicesWithThisSameName + 1);
+            if (Feature_Servicing_MIDI2DuplicateDeviceNaming::IsEnabled())
+            {
+                // The service numbers duplicate devices now, so that a second unit of a model is
+                // recognized even when it arrives on a different transport.
+                deviceName = hardwareParentName;
+                legacyDeviceName = hardwareParentName;
+            }
+            else
+            {
+                deviceName = ResolveUniqueHardwareParentDeviceName(hardwareParentName, hardwareParentInstanceId, indexOfDevicesWithThisSameName);
+                legacyDeviceName = WindowsMidiServicesNamingLib::ApplyLegacyDuplicateDeviceMarker(hardwareParentName, indexOfDevicesWithThisSameName + 1);
+            }
         }
     }
 

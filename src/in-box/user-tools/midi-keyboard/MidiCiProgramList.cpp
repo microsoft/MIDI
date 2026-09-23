@@ -24,6 +24,7 @@ namespace midikeyboard
         constexpr size_t MaximumProgramEntries = 4096;
 
         constexpr wchar_t ProgramListResourceName[] = L"ProgramList";
+        constexpr wchar_t ChannelListResourceName[] = L"ChannelList";
 
         std::wstring JoinTags(_In_ MidiProgramListEntry const& entry) noexcept
         {
@@ -65,7 +66,8 @@ namespace midikeyboard
         MidiEndpointConnection const& connection,
         uint8_t group,
         uint8_t channel,
-        CompletedHandler handler) noexcept
+        CompletedHandler handler,
+        ChangedHandler changed) noexcept
     {
         try
         {
@@ -76,7 +78,7 @@ namespace midikeyboard
 
             auto query = std::make_shared<MidiCiProgramListQuery>();
 
-            query->Begin(connection, group, channel, handler);
+            query->Begin(connection, group, channel, handler, changed);
 
             return query;
         }
@@ -91,7 +93,8 @@ namespace midikeyboard
         MidiEndpointConnection const& connection,
         uint8_t group,
         uint8_t channel,
-        CompletedHandler handler) noexcept
+        CompletedHandler handler,
+        ChangedHandler changed) noexcept
     {
         try
         {
@@ -101,6 +104,7 @@ namespace midikeyboard
                 m_group = group;
                 m_channel = channel;
                 m_handler = handler;
+                m_changedHandler = changed;
 
                 m_session = MidiCapabilityInquirySession::Create(connection);
 
@@ -197,7 +201,10 @@ namespace midikeyboard
 
             auto const muid = responder.Muid();
 
-            auto const channelList = session.GetChannelListAsync(muid).get();
+            // Ask what the device offers before asking for any of it. A device with no ChannelList
+            // would otherwise cost a full timeout to find that out, and this is also where the
+            // device says whether a program list request has to name which list it wants.
+            auto const resourceList = session.GetResourceListAsync(muid).get();
 
             if (m_canceled)
             {
@@ -205,11 +212,50 @@ namespace midikeyboard
                 return;
             }
 
+            // A device that publishes no ResourceList is not saying it has nothing. Only a list
+            // that came back may be used to rule a resource out.
+            bool offersChannelList{ true };
+            bool channelListIsSubscribable{ false };
+
+            if (resourceList != nullptr && resourceList.Entries().Size() > 0)
+            {
+                offersChannelList = resourceList.SupportsResource(ChannelListResourceName);
+
+                if (!resourceList.SupportsResource(ProgramListResourceName))
+                {
+                    Complete(ProgramListResult::NotSupported);
+                    return;
+                }
+
+                auto const channelEntry = resourceList.GetEntry(ChannelListResourceName);
+
+                if (channelEntry != nullptr)
+                {
+                    channelListIsSubscribable = channelEntry.CanSubscribe();
+                }
+            }
+
             std::vector<MidiResourceLink> links{};
 
-            if (channelList != nullptr)
+            if (offersChannelList)
             {
-                links = ProgramListLinksForChannel(channelList);
+                auto const channelList = session.GetChannelListAsync(muid).get();
+
+                if (m_canceled)
+                {
+                    Complete(ProgramListResult::NoResponse);
+                    return;
+                }
+
+                if (channelList != nullptr)
+                {
+                    links = ProgramListLinksForChannel(channelList);
+                }
+            }
+
+            {
+                std::lock_guard<std::mutex> guard(m_lock);
+                m_linkSignature = LinkSignature(links);
             }
 
             // More than one collection is worth labeling; a single one would just be noise.
@@ -221,7 +267,10 @@ namespace midikeyboard
             if (links.empty())
             {
                 // A device with one program list does not need a channel list to point at it, so
-                // ask for the list directly rather than deciding it has none.
+                // ask for the list directly rather than deciding it has none. Worth doing even
+                // when the device declared that a resource id is required: with no link there is
+                // no id to be had, and a refusal costs one exchange where giving up costs the
+                // customer their program list.
                 auto const programList = session.GetProgramListAsync(muid, L"").get();
 
                 if (programList != nullptr)
@@ -263,6 +312,13 @@ namespace midikeyboard
             {
                 Complete(ProgramListResult::NotSupported);
                 return;
+            }
+
+            // Done before completing, because completing hands the session over to whatever is
+            // keeping it open.
+            if (channelListIsSubscribable)
+            {
+                WatchChannelList(session, muid);
             }
 
             Complete(added > 0 ? ProgramListResult::Success : ProgramListResult::Empty);
@@ -310,6 +366,71 @@ namespace midikeyboard
         }
 
         return links;
+    }
+
+    _Use_decl_annotations_
+    std::wstring MidiCiProgramListQuery::LinkSignature(
+        std::vector<MidiResourceLink> const& links) noexcept
+    {
+        std::wstring signature{};
+
+        try
+        {
+            for (auto const& link : links)
+            {
+                signature += std::wstring{ link.ResourceId() } + L"\n";
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return signature;
+    }
+
+    _Use_decl_annotations_
+    bool MidiCiProgramListQuery::ChannelLinksChanged(
+        MidiPropertySubscriptionUpdatedEventArgs const& args) noexcept
+    {
+        try
+        {
+            if (args == nullptr || args.Update() == nullptr)
+            {
+                return true;
+            }
+
+            auto const body = args.Update().BodyAsJson();
+
+            // A "notify" update says only that something changed, and a "partial" one carries a
+            // fragment this cannot read as a channel list. Both mean re-ask.
+            if (body == nullptr || body.ValueType() != winrt::Windows::Data::Json::JsonValueType::Array)
+            {
+                return true;
+            }
+
+            auto const channelList = MidiChannelList::FromJson(body.GetArray());
+
+            if (channelList == nullptr)
+            {
+                return true;
+            }
+
+            auto const signature = LinkSignature(ProgramListLinksForChannel(channelList));
+
+            std::lock_guard<std::mutex> guard(m_lock);
+
+            if (signature == m_linkSignature)
+            {
+                return false;
+            }
+
+            m_linkSignature = signature;
+            return true;
+        }
+        catch (...)
+        {
+            return true;
+        }
     }
 
     _Use_decl_annotations_
@@ -368,21 +489,119 @@ namespace midikeyboard
         try
         {
             MidiCapabilityInquirySession session{ nullptr };
+            winrt::event_token token{};
 
             {
                 std::lock_guard<std::mutex> guard(m_lock);
 
                 session = m_session;
+                token = m_subscriptionToken;
+
                 m_session = nullptr;
+                m_subscriptionToken = {};
                 m_handler = nullptr;
+                m_changedHandler = nullptr;
             }
 
+            m_watching = false;
+
             // Closing wakes anything waiting for a device that is never going to answer, so the
-            // worker does not sit out the rest of its timeout before noticing.
+            // worker does not sit out the rest of its timeout before noticing. It also ends any
+            // subscription this query holds.
             if (session != nullptr)
             {
+                if (token.value != 0)
+                {
+                    session.PropertySubscriptionUpdated(token);
+                }
+
                 session.Close();
             }
+        }
+        catch (...)
+        {
+        }
+
+        // A watching query keeps itself alive, so it has to let go here or nothing ever will.
+        m_self.reset();
+    }
+
+    _Use_decl_annotations_
+    void MidiCiProgramListQuery::WatchChannelList(
+        MidiCapabilityInquirySession const& session,
+        MidiUniqueId const& muid) noexcept
+    {
+        try
+        {
+            {
+                std::lock_guard<std::mutex> guard(m_lock);
+
+                if (m_changedHandler == nullptr)
+                {
+                    return;
+                }
+            }
+
+            // Weak, so the subscription does not keep this object alive by itself. The query owns
+            // its own lifetime through m_self and releases it in Cancel.
+            std::weak_ptr<MidiCiProgramListQuery> weak = weak_from_this();
+
+            auto const token = session.PropertySubscriptionUpdated(
+                [weak](auto&&, MidiPropertySubscriptionUpdatedEventArgs const& args)
+                {
+                    auto const strong = weak.lock();
+
+                    if (strong == nullptr || strong->m_canceled)
+                    {
+                        return;
+                    }
+
+                    ChangedHandler handler{};
+
+                    {
+                        std::lock_guard<std::mutex> guard(strong->m_lock);
+                        handler = strong->m_changedHandler;
+                    }
+
+                    if (handler == nullptr)
+                    {
+                        return;
+                    }
+
+                    if (args != nullptr && args.IsSubscriptionEnded())
+                    {
+                        strong->m_watching = false;
+                        handler();
+                        return;
+                    }
+
+                    // A device sends an update for any change to the channel list, and a bank or
+                    // program change on any channel is one. Almost all of those leave the
+                    // collections this channel can select from alone, including the program change
+                    // this app just sent, so re-fetching on every update would rebuild the list
+                    // under the customer every time they picked a patch.
+                    if (!strong->ChannelLinksChanged(args))
+                    {
+                        return;
+                    }
+
+                    handler();
+                });
+
+            auto const subscription = session.SubscribeAsync(muid, ChannelListResourceName, L"").get();
+
+            if (subscription == nullptr || !subscription.IsActive())
+            {
+                session.PropertySubscriptionUpdated(token);
+                return;
+            }
+
+            {
+                std::lock_guard<std::mutex> guard(m_lock);
+                m_subscriptionToken = token;
+            }
+
+            m_watching = true;
         }
         catch (...)
         {
@@ -403,6 +622,10 @@ namespace midikeyboard
         std::vector<ProgramListEntry> entries{};
         MidiCapabilityInquirySession session{ nullptr };
 
+        // A subscription lives on the session, so a query that is watching cannot close it. The
+        // caller ends it with Cancel instead.
+        const bool watching = m_watching;
+
         try
         {
             {
@@ -413,8 +636,11 @@ namespace midikeyboard
 
                 entries.swap(m_entries);
 
-                session = m_session;
-                m_session = nullptr;
+                if (!watching)
+                {
+                    session = m_session;
+                    m_session = nullptr;
+                }
             }
 
             if (session != nullptr)
@@ -431,7 +657,11 @@ namespace midikeyboard
         {
         }
 
-        // Last thing: this may be the only reference left.
-        m_self.reset();
+        // Last thing: this may be the only reference left. A watching query keeps it until it is
+        // canceled, because the subscription needs both the session and this object alive.
+        if (!watching)
+        {
+            m_self.reset();
+        }
     }
 }

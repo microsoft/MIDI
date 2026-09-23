@@ -11,6 +11,7 @@
 
 #include "MidiEndpointNameTable.h"
 #include "Feature_Servicing_MIDI2PortNamingRework.h"
+#include "Feature_Servicing_MIDI2DuplicateDeviceNaming.h"
 
 using namespace WindowsMidiServicesNamingLib;
 
@@ -24,6 +25,30 @@ namespace
 
         WEX::Logging::Log::Comment(L"Feature_Servicing_MIDI2PortNamingRework is disabled. Skipping.");
         return true;
+    }
+
+    bool SkipUnlessDuplicateDeviceNamingEnabled()
+    {
+        if (Feature_Servicing_MIDI2DuplicateDeviceNaming::IsEnabled()) { return false; }
+
+        WEX::Logging::Log::Comment(L"Feature_Servicing_MIDI2DuplicateDeviceNaming is disabled. Skipping.");
+        return true;
+    }
+
+    Midi1DuplicateDeviceClaim MakeClaim(
+        std::wstring const& identity,
+        std::wstring const& baseName,
+        uint32_t index,
+        bool isPresent)
+    {
+        Midi1DuplicateDeviceClaim claim{ };
+
+        claim.DeviceIdentity = identity;
+        claim.BaseDeviceName = baseName;
+        claim.Index = index;
+        claim.DeviceIsPresent = isPresent;
+
+        return claim;
     }
 }
 
@@ -2054,6 +2079,181 @@ void NamingTests::TestLegacyDuplicateDeviceMarker()
     {
         VERIFY_ARE_EQUAL(Midi1PortNameSource::None, result.Resolved.Source);
     }
+}
+
+
+void NamingTests::TestLegacyPortNameMarkerPlacement()
+{
+    if (SkipUnlessDuplicateDeviceNamingEnabled()) { return; }
+
+    // The service marks a name the transport generated without one, so this has to land in the
+    // same place the generator would have put it.
+    VERIFY_ARE_EQUAL(std::wstring{ L"Some Device" }, ApplyLegacyDuplicateDeviceMarkerToPortName(L"Some Device", 1));
+    VERIFY_ARE_EQUAL(std::wstring{ L"2- Some Device" }, ApplyLegacyDuplicateDeviceMarkerToPortName(L"Some Device", 2));
+
+    // wrapped names take the marker inside the parentheses, beside the device name
+    VERIFY_ARE_EQUAL(std::wstring{ L"MIDIOUT6 (2- Some Device)" },
+        ApplyLegacyDuplicateDeviceMarkerToPortName(L"MIDIOUT6 (Some Device)", 2));
+    VERIFY_ARE_EQUAL(std::wstring{ L"MIDIIN2 (3- Some Device)" },
+        ApplyLegacyDuplicateDeviceMarkerToPortName(L"MIDIIN2 (Some Device)", 3));
+
+    // a device whose own name looks like the decoration is still just a device name
+    VERIFY_ARE_EQUAL(std::wstring{ L"2- MIDIOUTBOARD (Rev A)" },
+        ApplyLegacyDuplicateDeviceMarkerToPortName(L"MIDIOUTBOARD (Rev A)", 2));
+
+    // Marking then truncating has to agree with the generator, which truncates after composing.
+    auto const longName = std::wstring{ L"MIDIOUT2 (Some Very Long Device" };   // already 31
+    auto const marked = ApplyLegacyDuplicateDeviceMarkerToPortName(longName, 2);
+
+    VERIFY_IS_LESS_THAN_OR_EQUAL(marked.length(), (size_t)(MAXPNAMELEN - 1));
+    VERIFY_ARE_EQUAL(std::wstring{ L"MIDIOUT2 (2- Some Very Long Dev" }, marked);
+}
+
+
+void NamingTests::TestDuplicateIndexReturnsToTheSameDevice()
+{
+    if (SkipUnlessDuplicateDeviceNamingEnabled()) { return; }
+
+    // Issue 1224. Two units, one is unplugged and comes back. It must get its own number again,
+    // and the one which never left must not move.
+    std::vector<Midi1DuplicateDeviceClaim> claims{
+        MakeClaim(L"unit-a", L"UM-ONE", 0, false),   // away right now
+        MakeClaim(L"unit-b", L"UM-ONE", 1, true),
+    };
+
+    VERIFY_ARE_EQUAL((uint32_t)0, AllocateDuplicateDeviceIndex(L"unit-a", L"UM-ONE", claims));
+
+    // and again, because the old code climbed on every reconnect
+    claims[0].DeviceIsPresent = true;
+    VERIFY_ARE_EQUAL((uint32_t)0, AllocateDuplicateDeviceIndex(L"unit-a", L"UM-ONE", claims));
+
+    // now the other one leaves and returns
+    claims[1].DeviceIsPresent = false;
+    VERIFY_ARE_EQUAL((uint32_t)1, AllocateDuplicateDeviceIndex(L"unit-b", L"UM-ONE", claims));
+
+    // a device nobody has seen before takes the first free number
+    VERIFY_ARE_EQUAL((uint32_t)1, AllocateDuplicateDeviceIndex(L"unit-c", L"UM-ONE", claims));
+}
+
+
+void NamingTests::TestDuplicateIndexIsReclaimedAfterADeviceIsRetired()
+{
+    if (SkipUnlessDuplicateDeviceNamingEnabled()) { return; }
+
+    // The first unit is gone for good and a replacement arrives. It should take the free number
+    // rather than counting past it, which is what made the numbering climb without end.
+    std::vector<Midi1DuplicateDeviceClaim> claims{
+        MakeClaim(L"retired", L"UM-ONE", 0, false),
+        MakeClaim(L"unit-b", L"UM-ONE", 1, true),
+    };
+
+    VERIFY_ARE_EQUAL((uint32_t)0, AllocateDuplicateDeviceIndex(L"replacement", L"UM-ONE", claims));
+
+    // Once the replacement holds zero, the retired unit's claim is stale. If it ever does come
+    // back it has to take the next free number instead of colliding.
+    claims.push_back(MakeClaim(L"replacement", L"UM-ONE", 0, true));
+
+    VERIFY_ARE_EQUAL((uint32_t)2, AllocateDuplicateDeviceIndex(L"retired", L"UM-ONE", claims));
+}
+
+
+void NamingTests::TestDuplicateIndexCountsEveryTransport()
+{
+    if (SkipUnlessDuplicateDeviceNamingEnabled()) { return; }
+
+    // Issue 1205. One unit on the MIDI 2.0 driver and one on the class driver used to be invisible
+    // to each other, because each transport kept its own tally.
+    std::vector<Midi1DuplicateDeviceClaim> claims{
+        MakeClaim(L"on-ks", L"ESI M8U eX", 0, true),
+    };
+
+    VERIFY_ARE_EQUAL((uint32_t)1, AllocateDuplicateDeviceIndex(L"on-ksa", L"ESI M8U eX", claims));
+
+    claims.push_back(MakeClaim(L"on-ksa", L"ESI M8U eX", 1, true));
+
+    // a third, on a third transport
+    VERIFY_ARE_EQUAL((uint32_t)2, AllocateDuplicateDeviceIndex(L"on-network", L"ESI M8U eX", claims));
+}
+
+
+void NamingTests::TestDuplicateIndexIgnoresAClaimForAnotherName()
+{
+    if (SkipUnlessDuplicateDeviceNamingEnabled()) { return; }
+
+    // A claim is only good for the name it was made against. A device renamed on the device
+    // itself, or by an update which changed how we name it, starts over.
+    std::vector<Midi1DuplicateDeviceClaim> claims{
+        MakeClaim(L"unit-a", L"Ableton Push 3 MIDI", 1, false),
+        MakeClaim(L"unit-b", L"Ableton Push 3", 0, true),
+    };
+
+    VERIFY_ARE_EQUAL((uint32_t)1, AllocateDuplicateDeviceIndex(L"unit-a", L"Ableton Push 3", claims));
+
+    // Different models never compete, so a busy machine cannot push a lone device off zero.
+    std::vector<Midi1DuplicateDeviceClaim> others{
+        MakeClaim(L"other-1", L"Some Other Device", 0, true),
+        MakeClaim(L"other-2", L"Some Other Device", 1, true),
+    };
+
+    VERIFY_ARE_EQUAL((uint32_t)0, AllocateDuplicateDeviceIndex(L"unit-a", L"UM-ONE", others));
+
+    // and an endpoint with no name at all is never numbered
+    VERIFY_ARE_EQUAL((uint32_t)0, AllocateDuplicateDeviceIndex(L"unit-a", L"", others));
+}
+
+
+void NamingTests::TestPortNameInputsRoundTrip()
+{
+    if (SkipUnlessDuplicateDeviceNamingEnabled()) { return; }
+
+    std::vector<Midi1PortNameInput> inputs{
+        { 0, MidiFlow::MidiFlowIn, L"Control Surface", L"", L"SoftStep" },
+        { 1, MidiFlow::MidiFlowOut, L"TRS MIDI Out", L"Steinberg CMC-QC-1", L"Yamaha USB-MIDI-1" },
+        { 2, MidiFlow::MidiFlowOut, L"", L"", L"Express  128: Port 1" },    // the double space is the device's
+    };
+
+    std::vector<std::byte> propertyData{ };
+    VERIFY_IS_TRUE(WriteMidi1PortNameInputsToPropertyDataPointer(inputs, propertyData));
+
+    auto readBack = ReadMidi1PortNameInputsFromPropertyData(
+        reinterpret_cast<uint8_t*>(propertyData.data()),
+        static_cast<uint32_t>(propertyData.size()));
+
+    VERIFY_ARE_EQUAL(inputs.size(), readBack.size());
+
+    for (size_t i = 0; i < inputs.size(); i++)
+    {
+        VERIFY_ARE_EQUAL(inputs[i].GroupIndex, readBack[i].GroupIndex);
+        VERIFY_ARE_EQUAL(inputs[i].DataFlowFromUserPerspective, readBack[i].DataFlowFromUserPerspective);
+        VERIFY_ARE_EQUAL(inputs[i].PinName, readBack[i].PinName);
+        VERIFY_ARE_EQUAL(inputs[i].DriverRegistryName, readBack[i].DriverRegistryName);
+        VERIFY_ARE_EQUAL(inputs[i].FilterName, readBack[i].FilterName);
+    }
+
+    // Stored properties are untrusted, so every malformed shape has to come back empty rather
+    // than reading off the end of the buffer.
+    VERIFY_ARE_EQUAL((size_t)0, ReadMidi1PortNameInputsFromPropertyData(nullptr, 64).size());
+    VERIFY_ARE_EQUAL((size_t)0, ReadMidi1PortNameInputsFromPropertyData(
+        reinterpret_cast<uint8_t*>(propertyData.data()), 8).size());
+
+    // a size header which disagrees with the buffer
+    VERIFY_ARE_EQUAL((size_t)0, ReadMidi1PortNameInputsFromPropertyData(
+        reinterpret_cast<uint8_t*>(propertyData.data()),
+        static_cast<uint32_t>(propertyData.size() - sizeof(Midi1PortNameInputEntry))).size());
+
+    // a string with no terminator must not run past its field
+    auto truncated = propertyData;
+    auto* firstEntry = reinterpret_cast<Midi1PortNameInputEntry*>(truncated.data() + sizeof(size_t));
+    std::fill(std::begin(firstEntry->PinName), std::end(firstEntry->PinName), L'X');
+
+    auto unterminated = ReadMidi1PortNameInputsFromPropertyData(
+        reinterpret_cast<uint8_t*>(truncated.data()),
+        static_cast<uint32_t>(truncated.size()));
+
+    VERIFY_ARE_EQUAL(inputs.size(), unterminated.size());
+    VERIFY_ARE_EQUAL((size_t)MIDI_NAMING_PORT_NAME_INPUT_MAX_CHARS, unterminated[0].PinName.length());
+
+    VERIFY_IS_FALSE(WriteMidi1PortNameInputsToPropertyDataPointer({ }, propertyData));
 }
 
 

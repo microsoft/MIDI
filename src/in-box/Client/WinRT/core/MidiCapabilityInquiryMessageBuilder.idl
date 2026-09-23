@@ -106,19 +106,25 @@ namespace Windows.Devices.Midi2.CapabilityInquiry
 
         // How many requests each end is willing to have outstanding at once. Ask before getting
         // anything: a device which does not answer this does not do property exchange.
+        //
+        // messageVersion says which form to write. This message grew two bytes in MIDI-CI 1.2, and
+        // a 1.1 device reads a fixed length, so pass the version the peer declared in its own
+        // Discovery rather than the newest one we know.
         [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildPropertyExchangeCapabilitiesInquiry(
             UInt64 timestamp,
             Windows.Devices.Midi2.MidiGroup group,
             MidiUniqueId sourceMuid,
             MidiUniqueId destinationMuid,
-            UInt8 maximumSimultaneousRequests);
+            UInt8 maximumSimultaneousRequests,
+            UInt8 messageVersion);
 
         [noexcept] static Windows.Foundation.Collections.IVector<Windows.Devices.Midi2.MidiMessage64> BuildPropertyExchangeCapabilitiesReply(
             UInt64 timestamp,
             Windows.Devices.Midi2.MidiGroup group,
             MidiUniqueId sourceMuid,
             MidiUniqueId destinationMuid,
-            UInt8 maximumSimultaneousRequests);
+            UInt8 maximumSimultaneousRequests,
+            UInt8 messageVersion);
 
         // Asks for a resource. The header names it and carries any options, for example the offset
         // and limit that page through a long list.

@@ -105,6 +105,11 @@ private:
         _Outptr_result_maybenull_ const std::vector<char>** blob,
         _Out_ bool& cacheable);
 
+    // Starting and ending a subscription. The command is in the header JSON, which is why this
+    // does not live in the library alongside the subscription table itself.
+    void HandleSubscriptionRequest(
+        _In_ MidiSynth::UmpDispatcher::PendingPropertyRequest const& request);
+
     HRESULT DeliverToCallback(_In_ MidiSynth::QueuedUmp const& message) noexcept;
 
     MidiSynth::DlsCollection m_collection;

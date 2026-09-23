@@ -730,6 +730,26 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Midi1PortNameSourceFlags, 951);            // DE
 #define MIDI_MIDI1_PORT_NAME_SOURCE_NAMES_ARE_DISTINCT      ((uint32_t)0x00000004)
 #define MIDI_MIDI1_PORT_NAME_SOURCE_NAMES_CONTAIN_DEVICE    ((uint32_t)0x00000008)
 
+// Written by the service. Which unit of this model the endpoint is, zero-based, so zero is the one
+// that keeps the plain name. The endpoint keeps this while it is unplugged, which is how a device
+// gets its own number back instead of being given a new one every time it comes home.
+#define STRING_PKEY_MIDI_NamingDuplicateDeviceIndex MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"952"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NamingDuplicateDeviceIndex, 952);          // DEVPROP_TYPE_UINT32
+
+// Bounds the search for a free number. Nobody has this many of one model, and an unbounded search
+// over untrusted stored values is not something to leave lying around.
+#define MIDI_MAX_DUPLICATE_DEVICE_INDEX                 ((uint32_t)255)
+
+// Written by the service. The endpoint name before any duplicate marker was added. A claim on a
+// number only counts for the name it was made against, so a device that renames itself gives it up.
+#define STRING_PKEY_MIDI_NamingDuplicateDeviceBaseName MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"953"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NamingDuplicateDeviceBaseName, 953);       // DEVPROP_TYPE_STRING
+
+// Written by the service. Which physical device the claim belongs to, so several interfaces of one
+// device share a number and a device that returns is recognized.
+#define STRING_PKEY_MIDI_NamingDuplicateDeviceIdentity MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"954"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NamingDuplicateDeviceIdentity, 954);       // DEVPROP_TYPE_STRING
+
 // this is set at the parent endpoint level, and applies to all WinMM and WinRT MIDI 1.0 ports created from this endpoint
 #define STRING_PKEY_MIDI_Midi1PortNamingSelection MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"955"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Midi1PortNamingSelection, 955);        // DEVPROP_TYPE_UINT32 :  WindowsMidiServicesNamingLib::Midi1PortNameSelection enum
@@ -737,6 +757,14 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Midi1PortNamingSelection, 955);        // DEVPRO
 // this is the name table. We can have up to 32 created ports from a single endpoint
 #define STRING_PKEY_MIDI_Midi1PortNameTable MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"960"
 DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_Midi1PortNameTable, 960);              // DEVPROP_TYPE_BINARY : Midi1PortNameTable
+
+// Written by a transport which wants the service to be able to rebuild its MIDI 1.0 port names.
+// A duplicate marker has to be budgeted while a name is composed, because the composed name is
+// capped, so the service cannot simply paste a marker onto a finished new style name. A transport
+// which does not write this still gets its endpoint name and its WinMM-compatible port names
+// marked, because those are not composed and not capped.
+#define STRING_PKEY_MIDI_NamingPortNameInputs MIDI_STRING_PKEY_GUID MIDI_STRING_PKEY_PID_SEPARATOR L"961"
+DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NamingPortNameInputs, 961);            // DEVPROP_TYPE_BINARY : Midi1PortNameInputTable
 
 
 

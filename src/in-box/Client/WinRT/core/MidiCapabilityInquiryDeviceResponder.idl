@@ -71,6 +71,16 @@ namespace Windows.Devices.Midi2.CapabilityInquiry
         [noexcept] void SetResource(String resource, String resourceId, String jsonData);
         [noexcept] Boolean RemoveResource(String resource, String resourceId);
 
+        // Lets initiators ask to be told when this resource changes instead of polling for it.
+        // Off for everything until set, because a device that accepts a subscription is promising
+        // to send updates and should only promise that if it will.
+        [noexcept] void SetResourceSubscribable(String resource, Boolean canSubscribe);
+        [noexcept] Boolean IsResourceSubscribable(String resource);
+
+        // Sends the resource to everyone subscribed to it. Call it after changing the resource,
+        // not before. Returns how many subscribers were told.
+        [noexcept] UInt32 NotifyResourceChanged(String resource, String resourceId);
+
         // Profiles at one address: 0x00 to 0x0F for a channel, 0x7E for a group, 0x7F for the
         // whole function block. Setting any profile at any address is what makes this responder
         // declare that it does profile configuration.
