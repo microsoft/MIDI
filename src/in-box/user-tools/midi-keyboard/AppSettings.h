@@ -123,6 +123,11 @@ namespace midikeyboard
         bool SendPatchOnStartup() const noexcept { return m_sendPatchOnStartup; }
         void SendPatchOnStartup(bool value) noexcept;
 
+        // show the device's programs grouped by category rather than as one list. Only offered
+        // when the device publishes categories, so this can be true with nothing to group.
+        bool ProgramsByCategory() const noexcept { return m_programsByCategory; }
+        void ProgramsByCategory(bool value) noexcept;
+
         // octave of the leftmost C, in the numbering where note 60 is C3
         int32_t BaseOctave() const noexcept { return m_baseOctave; }
         void BaseOctave(int32_t value) noexcept;
@@ -221,6 +226,7 @@ namespace midikeyboard
         uint32_t m_bankMsb{ 0 };
         uint32_t m_bankLsb{ 0 };
         bool m_sendPatchOnStartup{ false };
+        bool m_programsByCategory{ false };
 
         int32_t m_baseOctave{ 1 };
 

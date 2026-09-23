@@ -161,8 +161,10 @@ MidiSynthDevice::EnsureSoundSetLoaded()
 void
 MidiSynthDevice::PrimeDispatcher() noexcept
 {
-    // The engine is not initialized yet, and will not be until a sample rate is known. Its entry
-    // points all no-op without a sound set, so the dispatcher can be pointed at it safely.
+    // The engine is not initialized yet, and will not be until a sample rate is known. Its channel
+    // map is at power-up defaults from construction and its control entry points all work without
+    // a sound set, so the dispatcher can be pointed at it and MIDI-CI answered before there is any
+    // audio device. Nothing here opens one.
     m_dispatcher.Initialize(&m_engine, MIDI_SYNTH_GROUP_INDEX, m_muid);
     m_dispatcher.SetOutput(&m_output, SynthIdentity{});
 
@@ -248,7 +250,8 @@ MidiSynthDevice::AcquireAudio()
     {
         RETURN_HR_IF(E_FAIL, !m_engine.Initialize(&m_collection, config));
 
-        // Initialize clears the channel map, so the customer's rhythm channels go back afterwards.
+        // The engine keeps its channel map across this, so this only matters for a rhythm channel
+        // chosen before the engine had ever been told about it.
         for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
         {
             if ((m_drumChannelMask & (1u << channel)) != 0)
@@ -646,10 +649,9 @@ MidiSynthDevice::SetDrumChannel(uint8_t channel, bool isDrumChannel) noexcept
         m_drumChannelMask &= ~(1u << channel);
     }
 
-    if (m_engineInitialized)
-    {
-        m_engine.SetDrumChannel(channel, isDrumChannel);
-    }
+    // Told to the engine even with no audio device, so a MIDI-CI ChannelList read before anything
+    // has played links the channel to the right program list.
+    m_engine.SetDrumChannel(channel, isDrumChannel);
 
     return S_OK;
 }

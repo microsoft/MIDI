@@ -1294,6 +1294,81 @@ void MidiSynthUmpTests::TestPropertyExchangeProgramListCategories()
 }
 
 
+// The transport points the dispatcher at the engine before there is a sound set or an audio
+// device, so that MIDI-CI can be answered without waking the device up. Whatever arrives then has
+// to be safe, and has to leave the channel map truthful, or the ChannelList a client reads is a
+// lie about what the synthesizer will play.
+void MidiSynthUmpTests::TestChannelStateIsValidBeforeInitialize()
+{
+    // Deliberately NOT initialized: no sound set, no sample rate, no audio device.
+    SynthEngine engine;
+    UmpDispatcher dispatcher;
+
+    dispatcher.Initialize(&engine, 0, TestMuid);
+
+    VERIFY_IS_TRUE(engine.ChannelState(9).IsDrumChannel,
+        L"channel 10 is the drum channel from the moment the engine exists");
+    VERIFY_IS_FALSE(engine.ChannelState(0).IsDrumChannel, L"and channel 1 is not");
+
+    // Every one of these reaches ResolveInstrument, which had no sound set to resolve against.
+    uint32_t word = MakeMidi1Cv(0, 0xC, 0, 19, 0);
+    dispatcher.ProcessWords(&word, 1);
+
+    VERIFY_ARE_EQUAL(engine.ChannelState(0).Program, (uint8_t)19, L"a program change is remembered");
+
+    word = MakeMidi1Cv(0, 0xB, 0, 0, 8);
+    dispatcher.ProcessWords(&word, 1);
+
+    VERIFY_ARE_EQUAL(engine.ChannelState(0).BankMsb, (uint8_t)8, L"a bank select is remembered");
+
+    // GM1 System On, which is a full reset of every channel.
+    SendSysExPayload(dispatcher, { 0x7E, 0x7F, 0x09, 0x01 });
+
+    VERIFY_ARE_EQUAL(engine.ChannelState(0).Program, (uint8_t)0, L"a GM System On resets the channels");
+    VERIFY_IS_TRUE(engine.ChannelState(9).IsDrumChannel, L"and leaves channel 10 on drums");
+
+    engine.SetDrumChannel(5, true);
+    VERIFY_IS_TRUE(engine.ChannelState(5).IsDrumChannel, L"the rhythm part can still be moved");
+
+    // Nothing can resolve with no sound set, and that has to be a null pointer rather than a
+    // crash or a stale one.
+    VERIFY_IS_NULL(engine.ChannelState(0).Instrument, L"no instrument resolves without a sound set");
+}
+
+
+// A program change commonly arrives before the first note, and the note is what opens the audio
+// device. Initializing the engine at that point must not throw the choice away and leave the
+// note playing on the wrong sound.
+void MidiSynthUmpTests::TestInitializeKeepsChannelState()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    SynthEngine engine;
+    UmpDispatcher dispatcher;
+
+    dispatcher.Initialize(&engine, 0, TestMuid);
+
+    uint32_t word = MakeMidi1Cv(0, 0xC, 0, 19, 0);
+    dispatcher.ProcessWords(&word, 1);
+
+    engine.SetDrumChannel(5, true);
+
+    VERIFY_IS_TRUE(engine.Initialize(collection, TestConfig()));
+
+    VERIFY_ARE_EQUAL(engine.ChannelState(0).Program, (uint8_t)19,
+        L"the program chosen before there was audio survives");
+    VERIFY_IS_TRUE(engine.ChannelState(5).IsDrumChannel,
+        L"so does a rhythm part the content moved");
+    VERIFY_IS_NOT_NULL(engine.ChannelState(0).Instrument,
+        L"and the instrument resolves once the sound set is there");
+}
+
+
 // An Identity Request needs a reply, which means an output path. The in-box synth cannot
 // do this at all, having no MIDI input, so this is new behavior rather than compatibility.
 void MidiSynthUmpTests::TestIdentityReply()

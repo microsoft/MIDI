@@ -53,6 +53,84 @@ namespace midikeyboard
 
             return joined;
         }
+
+        std::vector<std::wstring> CopyCategories(_In_ MidiProgramListEntry const& entry) noexcept
+        {
+            std::vector<std::wstring> categories{};
+
+            try
+            {
+                for (auto const& category : entry.Categories())
+                {
+                    if (!category.empty())
+                    {
+                        categories.emplace_back(category);
+                    }
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return categories;
+        }
+    }
+
+    _Use_decl_annotations_
+    std::vector<ProgramCategoryGroup> GroupProgramsByCategory(
+        std::vector<ProgramListEntry> const& entries,
+        std::wstring const& otherName) noexcept
+    {
+        std::vector<ProgramCategoryGroup> groups{};
+
+        try
+        {
+            std::vector<size_t> uncategorized{};
+
+            for (size_t index = 0; index < entries.size(); index++)
+            {
+                auto const& entry = entries[index];
+
+                if (entry.Categories.empty())
+                {
+                    uncategorized.push_back(index);
+                    continue;
+                }
+
+                for (auto const& category : entry.Categories)
+                {
+                    auto existing = std::find_if(groups.begin(), groups.end(),
+                        [&category](ProgramCategoryGroup const& group) { return group.Name == category; });
+
+                    if (existing == groups.end())
+                    {
+                        groups.push_back(ProgramCategoryGroup{ category, { index } });
+                    }
+                    else
+                    {
+                        existing->EntryIndexes.push_back(index);
+                    }
+                }
+            }
+
+            // A device that categorizes nothing gets no grouped view at all, rather than one
+            // group holding everything, which would be a worse way to show the same list.
+            if (groups.empty())
+            {
+                return {};
+            }
+
+            if (!uncategorized.empty())
+            {
+                groups.push_back(ProgramCategoryGroup{ otherName, std::move(uncategorized) });
+            }
+        }
+        catch (...)
+        {
+            return {};
+        }
+
+        return groups;
     }
 
 
@@ -459,6 +537,7 @@ namespace midikeyboard
 
                 program.Title = entry.Title();
                 program.Tags = JoinTags(entry);
+                program.Categories = CopyCategories(entry);
 
                 // These three go on the wire exactly as they arrive. M2-107-UM section 2.3 gives a
                 // worked example: bankPC [121,2,49] is sent as Program Change 49.

@@ -75,6 +75,9 @@ namespace winrt::midikeyboard::implementation
         void OnSendPatchOnStartupChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSendPatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnProgramListSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnProgramViewChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnProgramCategoryChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnCategoryProgramSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
         void OnArpModeChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnArpRateChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
@@ -157,6 +160,18 @@ namespace winrt::midikeyboard::implementation
 
         // moves the combo to whichever program matches the current bank and program numbers
         void SyncProgramListSelection() noexcept;
+
+        // fills whichever of the two views is showing and hides the other
+        void RefreshProgramViews() noexcept;
+
+        // fills the right hand list with the programs in one category
+        void FillCategoryPrograms(_In_ int32_t categoryIndex) noexcept;
+
+        // takes the patch from one entry of m_programList and sends it
+        void SelectProgram(_In_ size_t index) noexcept;
+
+        // index into m_programList of the current bank and program, or -1
+        int32_t CurrentProgramIndex() const noexcept;
 
         // once per app run, after the first connection to the saved endpoint succeeds
         void SendStartupPatchIfRequested() noexcept;
@@ -319,6 +334,7 @@ namespace winrt::midikeyboard::implementation
 
         std::shared_ptr<::midikeyboard::MidiCiProgramListQuery> m_programListQuery{};
         std::vector<::midikeyboard::ProgramListEntry> m_programList{};
+        std::vector<::midikeyboard::ProgramCategoryGroup> m_programCategories{};
         ::midikeyboard::ProgramListResult m_programListResult{ ::midikeyboard::ProgramListResult::NoResponse };
         bool m_programListQueryRan{ false };
 

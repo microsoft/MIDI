@@ -276,11 +276,46 @@
                                    Text="" />
                     </StackPanel>
                     <Button.Flyout>
-                        <Flyout Opened="OnPatchFlyoutOpened">
-                            <StackPanel Spacing="12" MinWidth="320" MaxWidth="380">
+                        <!-- This button sits at the right hand end of the strip, so a flyout held
+                             inside the window is clipped rather than moved and loses the right of
+                             the grouped view. -->
+                        <Flyout Opened="OnPatchFlyoutOpened"
+                                ShouldConstrainToRootBounds="False">
+                            <!-- the presenter's own theme width is 456, which is narrower than
+                                 two lists side by side and silently squeezes them -->
+                            <Flyout.FlyoutPresenterStyle>
+                                <Style TargetType="FlyoutPresenter">
+                                    <Setter Property="MaxWidth" Value="620" />
+                                </Style>
+                            </Flyout.FlyoutPresenterStyle>
+                            <!-- the grouped view makes this taller than a short window can show,
+                                 and a clipped flyout would hide the Send button entirely -->
+                            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollMode="Disabled"
+                                          HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel Spacing="12" MinWidth="320" MaxWidth="540">
                                 <TextBlock x:Uid="PatchFlyoutTitle"
                                            Text="Bank and program"
                                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                                <!-- only shown when the device published categories, so the
+                                     choice never offers a grouping that has nothing in it -->
+                                <RadioButtons x:Name="ProgramViewRadioButtons"
+                                              x:Uid="ProgramViewRadioButtons"
+                                              AutomationProperties.AutomationId="ProgramViewRadioButtons"
+                                              Header="Show programs"
+                                              MaxColumns="2"
+                                              Visibility="Collapsed"
+                                              SelectionChanged="OnProgramViewChanged">
+                                    <RadioButton x:Name="ProgramViewFlatRadio"
+                                                 x:Uid="ProgramViewFlatRadio"
+                                                 AutomationProperties.AutomationId="ProgramViewFlatRadio"
+                                                 Content="In one list" />
+                                    <RadioButton x:Name="ProgramViewCategoryRadio"
+                                                 x:Uid="ProgramViewCategoryRadio"
+                                                 AutomationProperties.AutomationId="ProgramViewCategoryRadio"
+                                                 Content="By category" />
+                                </RadioButtons>
 
                                 <!-- shown only when the device answered a MIDI-CI ProgramList
                                      query; otherwise the numbers below are the only way in -->
@@ -322,6 +357,68 @@
                                         </DataTemplate>
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
+
+                                <!-- the grouped view. Picking a category on the left fills the
+                                     list on the right; only the right list changes the patch.
+                                     Both lists are sized, because a flyout measures its content
+                                     unconstrained and a starred column would size to the longest
+                                     program name and then be clipped. -->
+                                <Grid x:Name="ProgramCategoryGrid"
+                                      ColumnSpacing="10"
+                                      Height="300"
+                                      Visibility="Collapsed">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <ListView x:Name="ProgramCategoryListView"
+                                              x:Uid="ProgramCategoryListView"
+                                              AutomationProperties.AutomationId="ProgramCategoryListView"
+                                              Grid.Column="0"
+                                              Width="164"
+                                              Header="Categories"
+                                              SelectionMode="Single"
+                                              SelectionChanged="OnProgramCategoryChanged" />
+
+                                    <ListView x:Name="CategoryProgramListView"
+                                              x:Uid="CategoryProgramListView"
+                                              AutomationProperties.AutomationId="CategoryProgramListView"
+                                              Grid.Column="1"
+                                              Width="350"
+                                              Header="Programs"
+                                              SelectionMode="Single"
+                                              SelectionChanged="OnCategoryProgramSelectionChanged">
+                                        <ListView.ItemContainerStyle>
+                                            <Style TargetType="ListViewItem">
+                                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                            </Style>
+                                        </ListView.ItemContainerStyle>
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate x:DataType="local:ProgramChoice">
+                                                <Grid ColumnSpacing="10"
+                                                      AutomationProperties.Name="{x:Bind AutomationName}">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0"
+                                                               Text="{x:Bind DisplayName}"
+                                                               VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               TextWrapping="NoWrap" />
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{x:Bind Tags}"
+                                                               Visibility="{x:Bind TagsVisibility}"
+                                                               VerticalAlignment="Center"
+                                                               TextWrapping="NoWrap"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                </Grid>
 
                                 <TextBlock x:Name="ProgramListStatusText"
                                            AutomationProperties.AutomationId="ProgramListStatusText"
@@ -384,7 +481,8 @@
                                         Click="OnSendPatchClick">
                                     <TextBlock x:Uid="SendPatchButtonText" Text="Send now" />
                                 </Button>
-                            </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
                         </Flyout>
                     </Button.Flyout>
                 </Button>

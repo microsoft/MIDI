@@ -2887,6 +2887,9 @@ namespace winrt::midikeyboard::implementation
             m_programListResult = result;
             m_programListQueryRan = true;
 
+            m_programCategories = native::GroupProgramsByCategory(
+                m_programList, std::wstring{ res::GetString(L"ProgramCategoryOther") });
+
             // The names arrived with the list, so the strip can stop saying just a number.
             UpdatePatchDisplay();
 
@@ -2902,7 +2905,9 @@ namespace winrt::midikeyboard::implementation
 
             if (m_programList.empty())
             {
+                ProgramViewRadioButtons().Visibility(xaml::Visibility::Collapsed);
                 ProgramListComboBox().Visibility(xaml::Visibility::Collapsed);
+                ProgramCategoryGrid().Visibility(xaml::Visibility::Collapsed);
 
                 SetStripText(ProgramListStatusText(),
                     result == native::ProgramListResult::NoResponse
@@ -2912,15 +2917,102 @@ namespace winrt::midikeyboard::implementation
                 return;
             }
 
+            SetStripText(ProgramListStatusText(),
+                res::FormatString(L"ProgramListCountFormat", static_cast<int32_t>(m_programList.size())));
+
+            RefreshProgramViews();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to show the device's program list.")
+    }
+
+    void MainWindow::RefreshProgramViews() noexcept
+    {
+        try
+        {
+            if (!m_patchControlsInitialized || m_programList.empty())
+            {
+                return;
+            }
+
+            // A device that publishes no categories gets no choice at all rather than a disabled
+            // one, because there is nothing it could switch to.
+            auto const canGroup = !m_programCategories.empty();
+            auto const grouped = canGroup && native::AppSettings::Current().ProgramsByCategory();
+
             auto const suppress = m_suppressPatchHandlers;
             m_suppressPatchHandlers = true;
 
-            auto items = ProgramListComboBox().Items();
+            ProgramViewRadioButtons().Visibility(
+                canGroup ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            ProgramViewRadioButtons().SelectedIndex(grouped ? 1 : 0);
+
+            ProgramListComboBox().Visibility(
+                grouped ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+            ProgramCategoryGrid().Visibility(
+                grouped ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            if (grouped)
+            {
+                ProgramListComboBox().Items().Clear();
+
+                auto categories = ProgramCategoryListView().Items();
+                categories.Clear();
+
+                for (auto const& group : m_programCategories)
+                {
+                    categories.Append(winrt::box_value(winrt::hstring{ group.Name }));
+                }
+            }
+            else
+            {
+                ProgramCategoryListView().Items().Clear();
+                CategoryProgramListView().Items().Clear();
+
+                auto items = ProgramListComboBox().Items();
+                items.Clear();
+
+                for (auto const& entry : m_programList)
+                {
+                    // a collection title only appears when the device offered more than one
+                    auto const label = entry.CollectionTitle.empty()
+                        ? entry.Title
+                        : entry.CollectionTitle + L" - " + entry.Title;
+
+                    items.Append(winrt::make<ProgramChoice>(
+                        winrt::hstring{ label }, winrt::hstring{ entry.Tags }));
+                }
+            }
+
+            m_suppressPatchHandlers = suppress;
+
+            SyncProgramListSelection();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to show the device's program list.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::FillCategoryPrograms(int32_t categoryIndex) noexcept
+    {
+        try
+        {
+            auto items = CategoryProgramListView().Items();
             items.Clear();
 
-            for (auto const& entry : m_programList)
+            if (categoryIndex < 0 || static_cast<size_t>(categoryIndex) >= m_programCategories.size())
             {
-                // a collection title only appears when the device offered more than one
+                return;
+            }
+
+            for (auto const index : m_programCategories[static_cast<size_t>(categoryIndex)].EntryIndexes)
+            {
+                if (index >= m_programList.size())
+                {
+                    continue;
+                }
+
+                auto const& entry = m_programList[index];
+
+                // the category is already the heading here, so only the collection is worth adding
                 auto const label = entry.CollectionTitle.empty()
                     ? entry.Title
                     : entry.CollectionTitle + L" - " + entry.Title;
@@ -2928,17 +3020,36 @@ namespace winrt::midikeyboard::implementation
                 items.Append(winrt::make<ProgramChoice>(
                     winrt::hstring{ label }, winrt::hstring{ entry.Tags }));
             }
-
-            ProgramListComboBox().Visibility(xaml::Visibility::Visible);
-
-            SetStripText(ProgramListStatusText(),
-                res::FormatString(L"ProgramListCountFormat", static_cast<int32_t>(m_programList.size())));
-
-            m_suppressPatchHandlers = suppress;
-
-            SyncProgramListSelection();
         }
-        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to show the device's program list.")
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to show the programs in that category.")
+    }
+
+    int32_t MainWindow::CurrentProgramIndex() const noexcept
+    {
+        try
+        {
+            auto const& settings = native::AppSettings::Current();
+
+            // the stored program is the 1-128 display value; the list holds wire values
+            auto const program = static_cast<uint8_t>(settings.ProgramNumber() - 1);
+            auto const bankMsb = static_cast<uint8_t>(settings.BankMsb());
+            auto const bankLsb = static_cast<uint8_t>(settings.BankLsb());
+
+            for (size_t i = 0; i < m_programList.size(); i++)
+            {
+                auto const& entry = m_programList[i];
+
+                if (entry.ProgramChange == program && entry.BankMsb == bankMsb && entry.BankLsb == bankLsb)
+                {
+                    return static_cast<int32_t>(i);
+                }
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return -1;
     }
 
     void MainWindow::SyncProgramListSelection() noexcept
@@ -2950,30 +3061,59 @@ namespace winrt::midikeyboard::implementation
                 return;
             }
 
-            auto const& settings = native::AppSettings::Current();
-
-            // the stored program is the 1-128 display value; the list holds wire values
-            auto const program = static_cast<uint8_t>(settings.ProgramNumber() - 1);
-            auto const bankMsb = static_cast<uint8_t>(settings.BankMsb());
-            auto const bankLsb = static_cast<uint8_t>(settings.BankLsb());
-
-            int32_t match{ -1 };
-
-            for (size_t i = 0; i < m_programList.size(); i++)
-            {
-                auto const& entry = m_programList[i];
-
-                if (entry.ProgramChange == program && entry.BankMsb == bankMsb && entry.BankLsb == bankLsb)
-                {
-                    match = static_cast<int32_t>(i);
-                    break;
-                }
-            }
+            auto const match = CurrentProgramIndex();
 
             auto const suppress = m_suppressPatchHandlers;
             m_suppressPatchHandlers = true;
 
-            ProgramListComboBox().SelectedIndex(match);
+            if (ProgramCategoryGrid().Visibility() == xaml::Visibility::Visible)
+            {
+                int32_t categoryIndex{ -1 };
+                int32_t withinIndex{ -1 };
+
+                if (match >= 0)
+                {
+                    for (size_t group = 0; group < m_programCategories.size() && categoryIndex < 0; group++)
+                    {
+                        auto const& indexes = m_programCategories[group].EntryIndexes;
+
+                        for (size_t position = 0; position < indexes.size(); position++)
+                        {
+                            if (indexes[position] == static_cast<size_t>(match))
+                            {
+                                categoryIndex = static_cast<int32_t>(group);
+                                withinIndex = static_cast<int32_t>(position);
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                // Something has to be showing on the right, so a program the device does not list
+                // still leaves the first category open rather than two empty panes.
+                if (categoryIndex < 0)
+                {
+                    categoryIndex = 0;
+                }
+
+                ProgramCategoryListView().SelectedIndex(categoryIndex);
+                ProgramCategoryListView().ScrollIntoView(
+                    ProgramCategoryListView().SelectedItem());
+
+                FillCategoryPrograms(categoryIndex);
+
+                CategoryProgramListView().SelectedIndex(withinIndex);
+
+                if (withinIndex >= 0)
+                {
+                    CategoryProgramListView().ScrollIntoView(
+                        CategoryProgramListView().SelectedItem());
+                }
+            }
+            else
+            {
+                ProgramListComboBox().SelectedIndex(match);
+            }
 
             m_suppressPatchHandlers = suppress;
         }
@@ -2981,25 +3121,16 @@ namespace winrt::midikeyboard::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::OnProgramListSelectionChanged(
-        foundation::IInspectable const&,
-        controls::SelectionChangedEventArgs const&)
+    void MainWindow::SelectProgram(size_t index) noexcept
     {
         try
         {
-            if (m_suppressPatchHandlers)
+            if (index >= m_programList.size())
             {
                 return;
             }
 
-            auto const index = ProgramListComboBox().SelectedIndex();
-
-            if (index < 0 || static_cast<size_t>(index) >= m_programList.size())
-            {
-                return;
-            }
-
-            auto const& entry = m_programList[static_cast<size_t>(index)];
+            auto const& entry = m_programList[index];
 
             auto& settings = native::AppSettings::Current();
 
@@ -3019,6 +3150,140 @@ namespace winrt::midikeyboard::implementation
 
             UpdatePatchDisplay();
             SendPatchNow();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to select that program.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnProgramListSelectionChanged(
+        foundation::IInspectable const&,
+        controls::SelectionChangedEventArgs const&)
+    {
+        try
+        {
+            if (m_suppressPatchHandlers)
+            {
+                return;
+            }
+
+            auto const index = ProgramListComboBox().SelectedIndex();
+
+            if (index >= 0)
+            {
+                SelectProgram(static_cast<size_t>(index));
+            }
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to select that program.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnProgramViewChanged(
+        foundation::IInspectable const&,
+        controls::SelectionChangedEventArgs const&)
+    {
+        try
+        {
+            if (m_suppressPatchHandlers)
+            {
+                return;
+            }
+
+            auto const index = ProgramViewRadioButtons().SelectedIndex();
+
+            // A radio group raises this with nothing selected while it is still being built, and
+            // acting on that would write the flat view back over the customer's choice.
+            if (index < 0)
+            {
+                return;
+            }
+
+            native::AppSettings::Current().ProgramsByCategory(index == 1);
+
+            RefreshProgramViews();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change how the programs are shown.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnProgramCategoryChanged(
+        foundation::IInspectable const&,
+        controls::SelectionChangedEventArgs const&)
+    {
+        try
+        {
+            if (m_suppressPatchHandlers)
+            {
+                return;
+            }
+
+            auto const categoryIndex = ProgramCategoryListView().SelectedIndex();
+            auto const current = CurrentProgramIndex();
+
+            auto const suppress = m_suppressPatchHandlers;
+            m_suppressPatchHandlers = true;
+
+            FillCategoryPrograms(categoryIndex);
+
+            // Browsing a category must not change the patch, so the current program is only
+            // highlighted when it happens to live in the one just opened.
+            int32_t withinIndex{ -1 };
+
+            if (categoryIndex >= 0 && current >= 0 &&
+                static_cast<size_t>(categoryIndex) < m_programCategories.size())
+            {
+                auto const& indexes = m_programCategories[static_cast<size_t>(categoryIndex)].EntryIndexes;
+
+                for (size_t position = 0; position < indexes.size(); position++)
+                {
+                    if (indexes[position] == static_cast<size_t>(current))
+                    {
+                        withinIndex = static_cast<int32_t>(position);
+                        break;
+                    }
+                }
+            }
+
+            CategoryProgramListView().SelectedIndex(withinIndex);
+
+            if (withinIndex >= 0)
+            {
+                CategoryProgramListView().ScrollIntoView(CategoryProgramListView().SelectedItem());
+            }
+
+            m_suppressPatchHandlers = suppress;
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to show the programs in that category.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnCategoryProgramSelectionChanged(
+        foundation::IInspectable const&,
+        controls::SelectionChangedEventArgs const&)
+    {
+        try
+        {
+            if (m_suppressPatchHandlers)
+            {
+                return;
+            }
+
+            auto const categoryIndex = ProgramCategoryListView().SelectedIndex();
+            auto const withinIndex = CategoryProgramListView().SelectedIndex();
+
+            if (categoryIndex < 0 || withinIndex < 0 ||
+                static_cast<size_t>(categoryIndex) >= m_programCategories.size())
+            {
+                return;
+            }
+
+            auto const& indexes = m_programCategories[static_cast<size_t>(categoryIndex)].EntryIndexes;
+
+            if (static_cast<size_t>(withinIndex) >= indexes.size())
+            {
+                return;
+            }
+
+            SelectProgram(indexes[static_cast<size_t>(withinIndex)]);
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to select that program.")
     }

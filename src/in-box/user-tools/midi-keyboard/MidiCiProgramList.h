@@ -24,10 +24,29 @@ namespace midikeyboard
         // its bank variation the same title, so this is often the only thing telling them apart.
         std::wstring Tags{};
 
+        // "category" from the entry. M2-107-UM Appendix A suggests names but says a device is not
+        // limited to them, so these are shown as they arrive rather than matched against a list.
+        std::vector<std::wstring> Categories{};
+
         // "Factory Presets", "GM2 Programs" and so on, from the ChannelList link that led here.
         // Empty when the device only offers one collection.
         std::wstring CollectionTitle{};
     };
+
+    // The programs that share one category, in the order the device first mentioned it. A program
+    // declaring several categories appears under each of them, which is what the resource means.
+    struct ProgramCategoryGroup
+    {
+        std::wstring Name{};
+        std::vector<size_t> EntryIndexes{};
+    };
+
+    // Groups a program list by category. Comes back empty when no program carried one, which is
+    // how a caller knows not to offer the grouped view at all. Programs with no category of their
+    // own are collected under otherName, but only when some other program did have one.
+    std::vector<ProgramCategoryGroup> GroupProgramsByCategory(
+        _In_ std::vector<ProgramListEntry> const& entries,
+        _In_ std::wstring const& otherName) noexcept;
 
     enum class ProgramListResult : int32_t
     {
