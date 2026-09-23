@@ -215,7 +215,6 @@ namespace midikeyboard
             // A device that publishes no ResourceList is not saying it has nothing. Only a list
             // that came back may be used to rule a resource out.
             bool offersChannelList{ true };
-            bool programListNeedsResourceId{ false };
             bool channelListIsSubscribable{ false };
 
             if (resourceList != nullptr && resourceList.Entries().Size() > 0)
@@ -226,13 +225,6 @@ namespace midikeyboard
                 {
                     Complete(ProgramListResult::NotSupported);
                     return;
-                }
-
-                auto const entry = resourceList.GetEntry(ProgramListResourceName);
-
-                if (entry != nullptr)
-                {
-                    programListNeedsResourceId = entry.RequireResourceId();
                 }
 
                 auto const channelEntry = resourceList.GetEntry(ChannelListResourceName);
@@ -261,6 +253,11 @@ namespace midikeyboard
                 }
             }
 
+            {
+                std::lock_guard<std::mutex> guard(m_lock);
+                m_linkSignature = LinkSignature(links);
+            }
+
             // More than one collection is worth labeling; a single one would just be noise.
             auto const labelWithCollection = links.size() > 1;
 
@@ -270,18 +267,16 @@ namespace midikeyboard
             if (links.empty())
             {
                 // A device with one program list does not need a channel list to point at it, so
-                // ask for the list directly rather than deciding it has none. A device that said
-                // it requires a resource id is the exception: there is no id to send, and guessing
-                // one would fetch the wrong collection.
-                if (!programListNeedsResourceId)
-                {
-                    auto const programList = session.GetProgramListAsync(muid, L"").get();
+                // ask for the list directly rather than deciding it has none. Worth doing even
+                // when the device declared that a resource id is required: with no link there is
+                // no id to be had, and a refusal costs one exchange where giving up costs the
+                // customer their program list.
+                auto const programList = session.GetProgramListAsync(muid, L"").get();
 
-                    if (programList != nullptr)
-                    {
-                        offeredAList = true;
-                        added += CollectPrograms(programList, L"", false);
-                    }
+                if (programList != nullptr)
+                {
+                    offeredAList = true;
+                    added += CollectPrograms(programList, L"", false);
                 }
             }
             else
@@ -371,6 +366,71 @@ namespace midikeyboard
         }
 
         return links;
+    }
+
+    _Use_decl_annotations_
+    std::wstring MidiCiProgramListQuery::LinkSignature(
+        std::vector<MidiResourceLink> const& links) noexcept
+    {
+        std::wstring signature{};
+
+        try
+        {
+            for (auto const& link : links)
+            {
+                signature += std::wstring{ link.ResourceId() } + L"\n";
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return signature;
+    }
+
+    _Use_decl_annotations_
+    bool MidiCiProgramListQuery::ChannelLinksChanged(
+        MidiPropertySubscriptionUpdatedEventArgs const& args) noexcept
+    {
+        try
+        {
+            if (args == nullptr || args.Update() == nullptr)
+            {
+                return true;
+            }
+
+            auto const body = args.Update().BodyAsJson();
+
+            // A "notify" update says only that something changed, and a "partial" one carries a
+            // fragment this cannot read as a channel list. Both mean re-ask.
+            if (body == nullptr || body.ValueType() != winrt::Windows::Data::Json::JsonValueType::Array)
+            {
+                return true;
+            }
+
+            auto const channelList = MidiChannelList::FromJson(body.GetArray());
+
+            if (channelList == nullptr)
+            {
+                return true;
+            }
+
+            auto const signature = LinkSignature(ProgramListLinksForChannel(channelList));
+
+            std::lock_guard<std::mutex> guard(m_lock);
+
+            if (signature == m_linkSignature)
+            {
+                return false;
+            }
+
+            m_linkSignature = signature;
+            return true;
+        }
+        catch (...)
+        {
+            return true;
+        }
     }
 
     _Use_decl_annotations_
@@ -503,18 +563,29 @@ namespace midikeyboard
                         handler = strong->m_changedHandler;
                     }
 
+                    if (handler == nullptr)
+                    {
+                        return;
+                    }
+
                     if (args != nullptr && args.IsSubscriptionEnded())
                     {
                         strong->m_watching = false;
+                        handler();
+                        return;
                     }
 
-                    // The programs a channel offers come from the channel list, so any update to
-                    // it means the answer this query gave may no longer be true. Re-asking is
-                    // simpler and more robust than trying to patch the list in place.
-                    if (handler != nullptr)
+                    // A device sends an update for any change to the channel list, and a bank or
+                    // program change on any channel is one. Almost all of those leave the
+                    // collections this channel can select from alone, including the program change
+                    // this app just sent, so re-fetching on every update would rebuild the list
+                    // under the customer every time they picked a patch.
+                    if (!strong->ChannelLinksChanged(args))
                     {
-                        handler();
+                        return;
                     }
+
+                    handler();
                 });
 
             auto const subscription = session.SubscribeAsync(muid, ChannelListResourceName, L"").get();

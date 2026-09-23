@@ -1058,6 +1058,12 @@ namespace winrt::Windows::Devices::Midi2::Enumeration::Legacy::implementation
             props.Append(STRING_PKEY_MIDI_AssociatedUMP);
             props.Append(STRING_PKEY_MIDI_ServiceAssignedPortNumber);
 
+            // Not projected. These are here so the value a port's name was built from shows up in
+            // the property map, which is where anyone chasing a naming problem looks first.
+            props.Append(STRING_PKEY_MIDI_NamingDuplicateDeviceIndex);
+            props.Append(STRING_PKEY_MIDI_NamingDuplicateDeviceBaseName);
+            props.Append(STRING_PKEY_MIDI_NamingDuplicateDeviceIdentity);
+
             return props.GetView();
         }
         catch (winrt::hresult_error const& ex)

@@ -72,14 +72,16 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
             _In_ midi2::MidiGroup const& group,
             _In_ ci::MidiUniqueId const& sourceMuid,
             _In_ ci::MidiUniqueId const& destinationMuid,
-            _In_ uint8_t const maximumSimultaneousRequests) noexcept;
+            _In_ uint8_t const maximumSimultaneousRequests,
+            _In_ uint8_t const messageVersion) noexcept;
 
         static foundation::Collections::IVector<midi2::MidiMessage64> BuildPropertyExchangeCapabilitiesReply(
             _In_ internal::MidiTimestamp const timestamp,
             _In_ midi2::MidiGroup const& group,
             _In_ ci::MidiUniqueId const& sourceMuid,
             _In_ ci::MidiUniqueId const& destinationMuid,
-            _In_ uint8_t const maximumSimultaneousRequests) noexcept;
+            _In_ uint8_t const maximumSimultaneousRequests,
+            _In_ uint8_t const messageVersion) noexcept;
 
         static foundation::Collections::IVector<midi2::MidiMessage64> BuildPropertyGetDataInquiry(
             _In_ internal::MidiTimestamp const timestamp,

@@ -141,6 +141,10 @@ namespace winrt::midikeyboard::implementation
         void UpdateOctaveDisplay() noexcept;
 
         void UpdatePatchDisplay() noexcept;
+
+        // The device's name for whatever bank and program are selected, or empty when it has not
+        // been asked yet, would not answer, or does not list this combination.
+        std::wstring CurrentProgramTitle() const noexcept;
         void SendPatchNow() noexcept;
 
         // Asks the connected device for its programs over MIDI-CI. Quietly does nothing when

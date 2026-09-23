@@ -65,6 +65,14 @@ public:
         winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiProfileId const& profileId,
         uint16_t channelCount);
 
+    // Answer Discovery as a MIDI-CI version 1.1 device: version byte 0x01 and a reply that stops
+    // after the receivable size, with no output path id and no function block number. That is what
+    // most shipping capability inquiry hardware sends.
+    void AnswerAsVersion11(bool value) { m_answerAsVersion11 = value; }
+
+    // Sends Invalidate MUID for its own identifier, as a device does when it shuts down.
+    void SendInvalidateMuid();
+
     // Refuse every subscription, which is what a device that does not support them does.
     void AcceptSubscriptions(bool value) { m_acceptSubscriptions = value; }
 
@@ -102,12 +110,16 @@ private:
     void Send(
         winrt::Windows::Foundation::Collections::IVector<winrt::Windows::Devices::Midi2::MidiMessage64> const& messages);
 
+    // Packs raw seven bit system exclusive bytes, for a message the builder cannot produce.
+    void SendRawSystemExclusive(std::vector<uint8_t> const& payload);
+
     winrt::Windows::Devices::Midi2::MidiEndpointConnection m_connection{ nullptr };
     winrt::event_token m_token{};
 
     winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiUniqueId m_muid{ nullptr };
 
     std::atomic<bool> m_answerDiscovery{ true };
+    std::atomic<bool> m_answerAsVersion11{ false };
     std::atomic<bool> m_answerWithNak{ false };
     std::atomic<bool> m_answerNothing{ false };
     std::atomic<int32_t> m_resourceStatus{ 200 };

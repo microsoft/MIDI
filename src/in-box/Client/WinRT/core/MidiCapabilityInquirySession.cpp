@@ -430,6 +430,28 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
     }
 
     _Use_decl_annotations_
+    uint8_t MidiCapabilityInquirySession::MessageVersionFor(uint32_t const muid) noexcept
+    {
+        try
+        {
+            std::lock_guard<std::mutex> guard(m_lock);
+
+            auto const responder = m_responders.find(muid);
+
+            if (responder != m_responders.end() && responder->second.MessageVersion() != 0)
+            {
+                return responder->second.MessageVersion();
+            }
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+
+        return native::MessageVersionCurrent;
+    }
+
+    _Use_decl_annotations_
     uint32_t MidiCapabilityInquirySession::MaximumSystemExclusiveSizeFor(uint32_t const muid) noexcept
     {
         std::lock_guard<std::mutex> guard(m_lock);
@@ -590,6 +612,14 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
                 RecordResponder(message);
             }
 
+            // A device withdrawing its identifier is telling us it is gone. Holding on to it
+            // leaves an application offering a responder that will never answer again, and a
+            // subscription that looks live.
+            if (message.MessageType() == ci::MidiCapabilityInquiryMessageType::InvalidateMuid)
+            {
+                ForgetResponder(message.TargetMuid());
+            }
+
             if (TryCompleteRequest(message))
             {
                 return;
@@ -649,16 +679,22 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
             auto const data = message.Data();
 
-            // Manufacturer, family, model, revision, categories, size, path and block, in the order
-            // the message table puts them after the thirteen byte common header.
-            if (data == nullptr || data.Size() < 30)
+            // Manufacturer, family, model, revision, categories and receivable size, in the order
+            // the message table puts them after the thirteen byte common header. That is where a
+            // MIDI-CI version 1.1 device stops: the output path id and the function block number
+            // arrived with version 1.2, and requiring them drops every older device on the floor.
+            constexpr uint32_t ThroughReceivableSize{ 29 };
+            constexpr uint32_t ThroughOutputPathId{ 30 };
+            constexpr uint32_t ThroughFunctionBlock{ 31 };
+
+            if (data == nullptr || data.Size() < ThroughReceivableSize)
             {
                 return;
             }
 
             std::array<uint8_t, 32> raw{};
 
-            for (uint32_t i = 0; i < 30 && i < data.Size(); i++)
+            for (uint32_t i = 0; i < ThroughFunctionBlock && i < data.Size(); i++)
             {
                 raw[i] = data.GetAt(i);
             }
@@ -678,11 +714,15 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
                 static_cast<ci::MidiCapabilityInquiryCategories>(raw[24]));
 
             responder->InternalSetMaximumSystemExclusiveSize(native::ReadMuid(raw.data() + 25));
-            responder->InternalSetOutputPathId(raw[29]);
 
-            if (data.Size() >= 31)
+            if (data.Size() >= ThroughOutputPathId)
             {
-                responder->InternalSetFunctionBlockNumber(data.GetAt(30));
+                responder->InternalSetOutputPathId(raw[29]);
+            }
+
+            if (data.Size() >= ThroughFunctionBlock)
+            {
+                responder->InternalSetFunctionBlockNumber(raw[30]);
             }
 
             bool isNew{ false };
@@ -836,6 +876,67 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         {
             LOG_CAUGHT_EXCEPTION();
             return false;
+        }
+    }
+
+    _Use_decl_annotations_
+    void MidiCapabilityInquirySession::ForgetResponder(ci::MidiUniqueId const& muid) noexcept
+    {
+        try
+        {
+            if (muid == nullptr)
+            {
+                return;
+            }
+
+            auto const muidValue = muid.AsCombined28BitValue();
+
+            if (muidValue == m_sourceMuidValue)
+            {
+                return;
+            }
+
+            std::vector<ci::MidiPropertySubscription> orphaned{};
+
+            {
+                std::lock_guard<std::mutex> guard(m_lock);
+
+                m_responders.erase(muidValue);
+                m_propertyExchangeCapabilitiesAsked.erase(muidValue);
+
+                for (auto entry = m_subscriptions.begin(); entry != m_subscriptions.end(); )
+                {
+                    auto const& subscription = entry->second;
+
+                    if (subscription.ResponderMuid() != nullptr &&
+                        subscription.ResponderMuid().AsCombined28BitValue() == muidValue)
+                    {
+                        orphaned.push_back(subscription);
+                        entry = m_subscriptions.erase(entry);
+                    }
+                    else
+                    {
+                        entry = std::next(entry);
+                    }
+                }
+            }
+
+            for (auto const& subscription : orphaned)
+            {
+                winrt::get_self<MidiPropertySubscription>(subscription)->InternalSetIsActive(false);
+
+                auto args = winrt::make_self<MidiPropertySubscriptionUpdatedEventArgs>();
+
+                args->InternalSetSubscription(subscription);
+                args->InternalSetCommand(winrt::hstring{ CommandEnd });
+                args->InternalSetIsSubscriptionEnded(true);
+
+                m_propertySubscriptionUpdatedEvent(*this, *args);
+            }
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
         }
     }
 
@@ -1193,7 +1294,8 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
             auto const sent = Send(
                 MidiCapabilityInquiryMessageBuilder::BuildPropertyExchangeCapabilitiesInquiry(
-                    0, Group(), m_sourceMuid, destinationMuid, 1));
+                    0, Group(), m_sourceMuid, destinationMuid, 1,
+                    MessageVersionFor(destinationValue)));
 
             if (!sent)
             {

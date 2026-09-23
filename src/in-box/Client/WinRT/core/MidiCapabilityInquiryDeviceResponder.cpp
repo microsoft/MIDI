@@ -649,8 +649,10 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
                 break;
 
             case ci::MidiCapabilityInquiryMessageType::PropertyExchangeCapabilitiesInquiry:
+                // Answered in the version it asked in. This message grew two bytes in 1.2 and a
+                // 1.1 initiator reads a fixed length.
                 Send(MidiCapabilityInquiryMessageBuilder::BuildPropertyExchangeCapabilitiesReply(
-                    0, group, MuidForReply(), message.SourceMuid(), 1));
+                    0, group, MuidForReply(), message.SourceMuid(), 1, message.SourceVersion()));
                 handled = true;
                 break;
 

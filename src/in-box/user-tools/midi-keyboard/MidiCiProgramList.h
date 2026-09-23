@@ -103,6 +103,17 @@ namespace midikeyboard
             ProgramListLinksForChannel(
                 _In_ winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiChannelList const& channelList) noexcept;
 
+        // The same links reduced to one comparable string. A channel list update that leaves this
+        // alone changed something the program list does not depend on.
+        static std::wstring LinkSignature(
+            _In_ std::vector<winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiResourceLink> const& links) noexcept;
+
+        // True when an update changed which collections this channel can select from, and so the
+        // fetched list has to be thrown away. An update carrying no data is treated as a change,
+        // because there is nothing to compare and guessing wrong loses the customer's list.
+        bool ChannelLinksChanged(
+            _In_ winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiPropertySubscriptionUpdatedEventArgs const& args) noexcept;
+
         // Returns how many usable rows this list added.
         int32_t CollectPrograms(
             _In_ winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiProgramList const& programList,
@@ -131,6 +142,10 @@ namespace midikeyboard
         // the result goes out, because closing it would end the subscription.
         winrt::event_token m_subscriptionToken{};
         std::atomic<bool> m_watching{ false };
+
+        // What the fetched list was built from, so an update can be ignored when it does not
+        // change it. A device sends one for every bank or program change on any channel.
+        std::wstring m_linkSignature{};
 
         std::atomic<bool> m_canceled{ false };
         std::atomic<bool> m_completed{ false };

@@ -367,6 +367,20 @@ void MidiCiResponderTests::TestPropertyExchangeCapabilitiesReply()
         VERIFY_ARE_EQUAL(reply[i], expected[i]);
     }
 
+    // The same inquiry from a MIDI-CI 1.1 device. It reads a fixed length, so the reply has to
+    // stop after the request count and be stamped 1.1 rather than carry the two bytes 1.2 added.
+    message.VersionFormat = MessageVersion11;
+
+    VERIFY_ARE_EQUAL(
+        (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Replied);
+
+    VERIFY_ARE_EQUAL(replyBytes, PropertyExchangeCapabilitiesByteCountVersion11);
+    VERIFY_ARE_EQUAL(reply[4], (uint8_t)MessageVersion11);
+    VERIFY_ARE_EQUAL(reply[13], (uint8_t)0x01);
+
+    message.VersionFormat = 0;
+
     // A device that never declared Property Exchange has no capabilities to report.
     auto plain = MakeResponder();
 

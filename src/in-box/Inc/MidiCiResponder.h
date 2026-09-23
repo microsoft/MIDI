@@ -39,6 +39,13 @@ namespace WindowsMidiServicesCapabilityInquiry
 
     inline constexpr uint8_t CapabilityBitPropertyExchange{ 0x08 };
 
+    // Zero is not a MIDI-CI version, so a message that carries one tells us nothing and echoing it
+    // back would be worse than answering in the newest form we know.
+    inline constexpr uint8_t ReplyVersionFor(_In_ uint8_t const requestVersion) noexcept
+    {
+        return requestVersion == 0 ? MessageVersionCurrent : requestVersion;
+    }
+
     enum class ResponderAction
     {
         Ignored = 0,
@@ -156,6 +163,10 @@ namespace WindowsMidiServicesCapabilityInquiry
                 fields.OutputPathId = message.OutputPathId;
                 fields.FunctionBlockNumber = m_config.FunctionBlockNumber;
 
+                // Replied to in the version it asked in. A 1.1 initiator reads a fixed length and
+                // has no room for the output path id or the function block number.
+                fields.MessageVersion = ReplyVersionFor(message.VersionFormat);
+
                 const auto written = BuildDiscoveryReply(fields, replyBuffer, replyCapacity);
 
                 if (written == 0)
@@ -217,7 +228,8 @@ namespace WindowsMidiServicesCapabilityInquiry
                     message.SourceMuid,
                     m_config.SimultaneousPropertyRequests,
                     replyBuffer,
-                    replyCapacity);
+                    replyCapacity,
+                    ReplyVersionFor(message.VersionFormat));
 
                 if (written == 0)
                 {

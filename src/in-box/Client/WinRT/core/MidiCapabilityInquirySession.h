@@ -177,6 +177,11 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
         uint32_t MaximumSystemExclusiveSizeFor(_In_ uint32_t const muid) noexcept;
 
+        // Which MIDI-CI format to address a responder in. Several messages grew a tail in 1.2 and
+        // a 1.1 device reads a fixed length, so speaking the newest version at one can leave it
+        // with nothing it recognizes. Falls back to the current version for an unknown responder.
+        uint8_t MessageVersionFor(_In_ uint32_t const muid) noexcept;
+
         // The capabilities transaction, blocking. The projected method and the automatic one below
         // are both this.
         ci::MidiCapabilityInquiryStatus RequestPropertyExchangeCapabilities(
@@ -215,6 +220,10 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         bool TryCollectSubscriptionUpdate(_In_ ci::MidiCapabilityInquiryMessage const& message) noexcept;
 
         void EndAllSubscriptions() noexcept;
+
+        // Drops everything held for a responder that withdrew its identifier, and tells anything
+        // subscribed to it that the subscription is over.
+        void ForgetResponder(_In_ ci::MidiUniqueId const& muid) noexcept;
 
         std::atomic<bool> m_isOpen{ false };
 

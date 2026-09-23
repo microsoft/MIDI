@@ -254,6 +254,9 @@
                         <FontIcon Glyph="&#xE90B;" FontSize="12" />
                         <TextBlock x:Name="PatchButtonText"
                                    AutomationProperties.AutomationId="PatchButtonText"
+                                   MaxWidth="180"
+                                   TextTrimming="CharacterEllipsis"
+                                   TextWrapping="NoWrap"
                                    Text="" />
                     </StackPanel>
                     <Button.Flyout>

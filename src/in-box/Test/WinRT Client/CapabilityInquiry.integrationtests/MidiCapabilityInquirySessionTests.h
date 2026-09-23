@@ -38,6 +38,9 @@ public:
     TEST_METHOD(TestUnsubscribeStopsUpdates);
     TEST_METHOD(TestResponderCanEndASubscription);
 
+    TEST_METHOD(TestVersion11ResponderIsFoundAndUsable);
+    TEST_METHOD(TestInvalidateMuidForgetsTheResponder);
+
     TEST_METHOD(TestVirtualDeviceAnswersDiscoveryAndResources);
     TEST_METHOD(TestVirtualDeviceSaysNothingUntilEnabled);
     TEST_METHOD(TestVirtualDeviceAnswersProfilesAndUnknownResources);

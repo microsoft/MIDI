@@ -110,6 +110,68 @@ void MidiCapabilityInquiryTestResponder::Send(
     m_connection.SendMultipleMessagesPacketList(packets);
 }
 
+void MidiCapabilityInquiryTestResponder::SendRawSystemExclusive(std::vector<uint8_t> const& payload)
+{
+    if (m_connection == nullptr || payload.empty())
+    {
+        return;
+    }
+
+    auto packets = winrt::single_threaded_vector<IMidiUniversalPacket>();
+
+    for (size_t offset = 0; offset < payload.size(); offset += 6)
+    {
+        auto const count = static_cast<uint8_t>((std::min)(size_t{ 6 }, payload.size() - offset));
+
+        const bool isFirst = (offset == 0);
+        const bool isLast = (offset + count >= payload.size());
+        const uint8_t status = (isFirst && isLast) ? 0 : isFirst ? 1 : isLast ? 3 : 2;
+
+        uint8_t bytes[6]{};
+
+        for (uint8_t i = 0; i < count; i++)
+        {
+            bytes[i] = payload[offset + i];
+        }
+
+        uint32_t const word0 =
+            (0x3u << 28) |
+            (static_cast<uint32_t>(status) << 20) |
+            (static_cast<uint32_t>(count) << 16) |
+            (static_cast<uint32_t>(bytes[0]) << 8) |
+            bytes[1];
+
+        uint32_t const word1 =
+            (static_cast<uint32_t>(bytes[2]) << 24) |
+            (static_cast<uint32_t>(bytes[3]) << 16) |
+            (static_cast<uint32_t>(bytes[4]) << 8) |
+            bytes[5];
+
+        packets.Append(MidiMessage64(0, word0, word1));
+    }
+
+    m_connection.SendMultipleMessagesPacketList(packets);
+}
+
+void MidiCapabilityInquiryTestResponder::SendInvalidateMuid()
+{
+    std::vector<uint8_t> payload{ 0x7E, 0x7F, 0x0D, 0x7E, 0x01 };
+
+    auto const appendMuid = [&payload](uint32_t muid)
+    {
+        payload.push_back(static_cast<uint8_t>(muid & 0x7F));
+        payload.push_back(static_cast<uint8_t>((muid >> 7) & 0x7F));
+        payload.push_back(static_cast<uint8_t>((muid >> 14) & 0x7F));
+        payload.push_back(static_cast<uint8_t>((muid >> 21) & 0x7F));
+    };
+
+    appendMuid(m_muid == nullptr ? 0 : m_muid.AsCombined28BitValue());
+    appendMuid(0x0FFFFFFF);
+    appendMuid(m_muid == nullptr ? 0 : m_muid.AsCombined28BitValue());
+
+    SendRawSystemExclusive(payload);
+}
+
 void MidiCapabilityInquiryTestResponder::OnMessageReceived(
     winrt::Windows::Foundation::IInspectable const& /*sender*/,
     MidiMessageReceivedEventArgs const& args)
@@ -224,6 +286,39 @@ void MidiCapabilityInquiryTestResponder::HandleMessage(MidiCapabilityInquiryMess
             return;
         }
 
+        if (m_answerAsVersion11)
+        {
+            // Built by hand because the builder only produces the current version. Stops after the
+            // receivable size: no output path id, no function block number.
+            std::vector<uint8_t> payload{ 0x7E, 0x7F, 0x0D, 0x71, 0x01 };
+
+            auto const appendMuid = [&payload](uint32_t muid)
+            {
+                payload.push_back(static_cast<uint8_t>(muid & 0x7F));
+                payload.push_back(static_cast<uint8_t>((muid >> 7) & 0x7F));
+                payload.push_back(static_cast<uint8_t>((muid >> 14) & 0x7F));
+                payload.push_back(static_cast<uint8_t>((muid >> 21) & 0x7F));
+            };
+
+            appendMuid(m_muid == nullptr ? 0 : m_muid.AsCombined28BitValue());
+            appendMuid(message.SourceMuid() == nullptr ? 0 : message.SourceMuid().AsCombined28BitValue());
+
+            payload.insert(payload.end(), { 0x42, 0x00, 0x00 });    // manufacturer
+            payload.insert(payload.end(), { 0x5B, 0x01 });          // family
+            payload.insert(payload.end(), { 0x05, 0x00 });          // model
+            payload.insert(payload.end(), { 0x01, 0x00, 0x00, 0x00 });
+
+            payload.push_back(0x08);                                // property exchange only
+
+            appendMuid(m_maximumSystemExclusiveSize);
+
+            VERIFY_ARE_EQUAL(payload.size(), (size_t)29);
+
+            SendRawSystemExclusive(payload);
+
+            break;
+        }
+
         auto const identity = MidiDeclaredDeviceIdentity(
             0x00, 0x00, 0x41,
             0x0B, 0x00,
@@ -246,8 +341,17 @@ void MidiCapabilityInquiryTestResponder::HandleMessage(MidiCapabilityInquiryMess
     }
 
     case MidiCapabilityInquiryMessageType::PropertyExchangeCapabilitiesInquiry:
+        // A 1.1 device reads a fixed fourteen bytes and drops anything longer, which is what a
+        // real one was measured doing. Being strict here is the only way a test can tell that we
+        // addressed it in its own version.
+        if (m_answerAsVersion11 &&
+            message.Data() != nullptr && message.Data().Size() != 14)
+        {
+            return;
+        }
+
         Send(MidiCapabilityInquiryMessageBuilder::BuildPropertyExchangeCapabilitiesReply(
-            0, group, m_muid, message.SourceMuid(), 4));
+            0, group, m_muid, message.SourceMuid(), 4, message.SourceVersion()));
         break;
 
     case MidiCapabilityInquiryMessageType::PropertyGetDataInquiry:

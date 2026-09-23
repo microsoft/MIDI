@@ -621,6 +621,100 @@ void MidiCapabilityInquirySessionTests::TestResponderCanEndASubscription()
     responder.Stop();
 }
 
+void MidiCapabilityInquirySessionTests::TestVersion11ResponderIsFoundAndUsable()
+{
+    auto const pair = CreateLoopbackPair(L"TAEF CI Version 1.1");
+
+    // Most shipping capability inquiry hardware is version 1.1, and its Discovery Reply stops two
+    // bytes short of a current one. Dropping it would make every such device invisible.
+    MidiCapabilityInquiryTestResponder responder{};
+    responder.AnswerAsVersion11(true);
+    responder.SetResource("DeviceInfo", "{\"manufacturer\":\"KORG\",\"model\":\"wavestate\"}");
+    responder.Start(pair->Device, 0x0123456);
+
+    pair->Initiator.Open();
+    pair->Device.Open();
+
+    auto session = MidiCapabilityInquirySession::Create(pair->Initiator);
+    auto const found = DiscoverOne(session, responder);
+
+    VERIFY_IS_NOT_NULL(found);
+    VERIFY_ARE_EQUAL(found.MessageVersion(), (uint8_t)0x01);
+    VERIFY_IS_TRUE(found.SupportsPropertyExchange());
+
+    // The identity still has to come through, because that is what names the device on screen.
+    VERIFY_IS_NOT_NULL(found.Identity());
+    VERIFY_ARE_EQUAL(found.Identity().SystemExclusiveId().at(0), (uint8_t)0x42);
+    VERIFY_ARE_EQUAL(found.Identity().DeviceFamilyLsb(), (uint8_t)0x5B);
+    VERIFY_ARE_EQUAL(found.Identity().DeviceFamilyModelNumberLsb(), (uint8_t)0x05);
+
+    // Fields that only exist from version 1.2 read as zero rather than as garbage.
+    VERIFY_ARE_EQUAL(found.OutputPathId(), (uint8_t)0);
+    VERIFY_ARE_EQUAL(found.FunctionBlockNumber(), (uint8_t)0);
+
+    // And it must be usable, not merely listed.
+    auto const deviceInfo = session.GetDeviceInfoAsync(found.Muid()).get();
+
+    VERIFY_IS_NOT_NULL(deviceInfo);
+    VERIFY_ARE_EQUAL(deviceInfo.Model(), winrt::hstring{ L"wavestate" });
+
+    // The capabilities inquiry grew two bytes in 1.2 and this responder drops anything that is not
+    // the 1.1 length, which is what a real 1.1 device was measured doing. Getting the declared
+    // limit back is what proves we addressed it in its own version.
+    VERIFY_ARE_EQUAL(
+        session.GetResponder(found.Muid()).MaximumSimultaneousPropertyRequests(), (uint8_t)4);
+
+    session.Close();
+    responder.Stop();
+}
+
+void MidiCapabilityInquirySessionTests::TestInvalidateMuidForgetsTheResponder()
+{
+    auto const pair = CreateLoopbackPair(L"TAEF CI Invalidate");
+
+    MidiCapabilityInquiryTestResponder responder{};
+    responder.SetResource("ChannelList", "[]");
+    responder.Start(pair->Device, 0x0123456);
+
+    pair->Initiator.Open();
+    pair->Device.Open();
+
+    auto session = MidiCapabilityInquirySession::Create(pair->Initiator);
+    auto const found = DiscoverOne(session, responder);
+
+    wil::unique_event ended{ wil::EventOptions::ManualReset };
+
+    auto const token = session.PropertySubscriptionUpdated(
+        [&](auto&&, MidiPropertySubscriptionUpdatedEventArgs const& args)
+        {
+            if (args.IsSubscriptionEnded())
+            {
+                ended.SetEvent();
+            }
+        });
+
+    auto const subscription = session.SubscribeAsync(found.Muid(), L"ChannelList", L"").get();
+
+    VERIFY_IS_TRUE(subscription.IsActive());
+    VERIFY_ARE_EQUAL(session.GetResponders().Size(), (uint32_t)1);
+
+    // A device sends this when it is switched off or unplugged.
+    responder.SendInvalidateMuid();
+
+    VERIFY_IS_TRUE(ended.wait(5000), L"the subscription is reported as ended");
+
+    VERIFY_IS_FALSE(subscription.IsActive());
+    VERIFY_ARE_EQUAL(session.GetSubscriptions().Size(), (uint32_t)0);
+
+    // The responder itself goes too, or an application keeps offering a device that is gone.
+    VERIFY_ARE_EQUAL(session.GetResponders().Size(), (uint32_t)0);
+    VERIFY_IS_NULL(session.GetResponder(found.Muid()));
+
+    session.PropertySubscriptionUpdated(token);
+    session.Close();
+    responder.Stop();
+}
+
 void MidiCapabilityInquirySessionTests::TestProgramListPagesUntilItIsComplete()
 {    auto const pair = CreateLoopbackPair(L"TAEF CI Paging");
 

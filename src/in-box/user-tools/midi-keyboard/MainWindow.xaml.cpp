@@ -2458,16 +2458,57 @@ namespace winrt::midikeyboard::implementation
         {
             auto const& settings = native::AppSettings::Current();
 
-            PatchButtonText().Text(res::FormatString(L"PatchButtonFormat",
-                static_cast<int32_t>(settings.ProgramNumber())));
+            auto const title = CurrentProgramTitle();
 
-            controls::ToolTipService::SetToolTip(PatchButton(), winrt::box_value(
-                res::FormatString(L"PatchButtonToolTipFormat",
+            PatchButtonText().Text(title.empty()
+                ? res::FormatString(L"PatchButtonFormat",
+                    static_cast<int32_t>(settings.ProgramNumber()))
+                : res::FormatString(L"PatchButtonNamedFormat",
                     static_cast<int32_t>(settings.ProgramNumber()),
-                    static_cast<int32_t>(settings.BankMsb()),
-                    static_cast<int32_t>(settings.BankLsb()))));
+                    title));
+
+            // The strip is narrow enough to trim a long name, so the tooltip carries it in full.
+            controls::ToolTipService::SetToolTip(PatchButton(), winrt::box_value(
+                title.empty()
+                    ? res::FormatString(L"PatchButtonToolTipFormat",
+                        static_cast<int32_t>(settings.ProgramNumber()),
+                        static_cast<int32_t>(settings.BankMsb()),
+                        static_cast<int32_t>(settings.BankLsb()))
+                    : res::FormatString(L"PatchButtonNamedToolTipFormat",
+                        title,
+                        static_cast<int32_t>(settings.ProgramNumber()),
+                        static_cast<int32_t>(settings.BankMsb()),
+                        static_cast<int32_t>(settings.BankLsb()))));
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to show the bank and program.")
+    }
+
+    std::wstring MainWindow::CurrentProgramTitle() const noexcept
+    {
+        try
+        {
+            auto const& settings = native::AppSettings::Current();
+
+            // the stored program is the 1-128 display value; the list holds wire values
+            auto const program = static_cast<uint8_t>(settings.ProgramNumber() - 1);
+            auto const bankMsb = static_cast<uint8_t>(settings.BankMsb());
+            auto const bankLsb = static_cast<uint8_t>(settings.BankLsb());
+
+            for (auto const& entry : m_programList)
+            {
+                if (entry.ProgramChange == program &&
+                    entry.BankMsb == bankMsb &&
+                    entry.BankLsb == bankLsb)
+                {
+                    return entry.Title;
+                }
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return {};
     }
 
     void MainWindow::SendPatchNow() noexcept
@@ -2687,6 +2728,9 @@ namespace winrt::midikeyboard::implementation
             m_programListQueryRan = false;
             m_programListResult = native::ProgramListResult::NoResponse;
 
+            // Whatever name was showing belonged to the list just thrown away.
+            UpdatePatchDisplay();
+
             auto const connection = m_output.Connection();
 
             if (connection == nullptr)
@@ -2762,6 +2806,9 @@ namespace winrt::midikeyboard::implementation
             m_programList = std::move(entries);
             m_programListResult = result;
             m_programListQueryRan = true;
+
+            // The names arrived with the list, so the strip can stop saying just a number.
+            UpdatePatchDisplay();
 
             // The query is deliberately kept: it may be holding a subscription, and letting go of
             // it here would leave nothing able to cancel that. StartProgramListQuery cancels the
