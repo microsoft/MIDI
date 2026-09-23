@@ -121,6 +121,16 @@
   <data name="ArpRateComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Arpeggiator note length</value>
   </data>
+  <data name="LatchToggleText.Text" xml:space="preserve">
+    <value>Latch</value>
+    <comment>Label on the button that keeps notes sounding after the keys are released. Keep it brief.</comment>
+  </data>
+  <data name="LatchToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Latch notes on</value>
+  </data>
+  <data name="LatchToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keep notes sounding after you let go of the keys. Press a latched key again to release it.</value>
+  </data>
   <data name="PanicButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>All notes off</value>
   </data>

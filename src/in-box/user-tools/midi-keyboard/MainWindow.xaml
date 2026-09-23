@@ -136,6 +136,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <!-- where the notes are going. A Grid rather than a StackPanel so the name is
@@ -243,12 +244,27 @@
                               SelectionChanged="OnArpRateChanged" />
                 </StackPanel>
 
+                <!-- next to the arpeggiator because that is what it is most often used with,
+                     but it holds the keys down whether or not a pattern is running -->
+                <ToggleButton x:Name="LatchToggle"
+                              x:Uid="LatchToggle"
+                              AutomationProperties.AutomationId="LatchToggle"
+                              Grid.Column="3"
+                              VerticalAlignment="Center"
+                              Padding="10,4,10,4"
+                              Click="OnLatchToggled">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE72E;" FontSize="12" />
+                        <TextBlock x:Uid="LatchToggleText" Text="Latch" />
+                    </StackPanel>
+                </ToggleButton>
+
                 <!-- bank and program. The values live behind a flyout because the strip has no
                      room for three spinners at the default window size. -->
                 <Button x:Name="PatchButton"
                         x:Uid="PatchButton"
                         AutomationProperties.AutomationId="PatchButton"
-                        Grid.Column="3"
+                        Grid.Column="4"
                         VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <FontIcon Glyph="&#xE90B;" FontSize="12" />
@@ -376,7 +392,7 @@
                 <Button x:Name="PanicButton"
                         x:Uid="PanicButton"
                         AutomationProperties.AutomationId="PanicButton"
-                        Grid.Column="4"
+                        Grid.Column="5"
                         VerticalAlignment="Center"
                         Click="OnPanicClick">
                     <!-- icon only: the strip has no room for the caption once bank and program

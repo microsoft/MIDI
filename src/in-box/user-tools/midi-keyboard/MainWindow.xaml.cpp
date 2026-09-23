@@ -424,6 +424,8 @@ namespace winrt::midikeyboard::implementation
             ArpRateComboBox().SelectedIndex(static_cast<int32_t>(settings.ArpeggiatorRate()));
             ArpBpmBox().Value(settings.ArpeggiatorBpm());
 
+            LatchToggle().IsChecked(settings.Latch());
+
             AlwaysOnTopToggle().IsChecked(settings.AlwaysOnTop());
 
             ReleaseFlagWhenIdle(&MainWindow::m_suppressArpHandlers);
@@ -1362,16 +1364,13 @@ namespace winrt::midikeyboard::implementation
 
             auto& key = m_keys[static_cast<size_t>(index)];
 
-            auto const held = noteNumber >= 0 && noteNumber <= 127 &&
-                m_noteHoldCount[static_cast<size_t>(noteNumber)] > 0;
-
             if (m_arpeggiatorSoundingNote == noteNumber)
             {
                 SetKeyGlow(key, HeldKeyGlowOpacity, false);
                 return;
             }
 
-            if (held)
+            if (IsNoteSounding(noteNumber))
             {
                 SetKeyGlow(key,
                     m_arpeggiator.IsEnabled() ? ChordKeyGlowOpacity : HeldKeyGlowOpacity, false);
@@ -1446,11 +1445,20 @@ namespace winrt::midikeyboard::implementation
                 return;
             }
 
-            auto& count = m_noteHoldCount[static_cast<size_t>(noteNumber)];
+            auto const wasSounding = IsNoteSounding(noteNumber);
 
-            count++;
+            m_noteHoldCount[static_cast<size_t>(noteNumber)]++;
 
-            if (count == 1)
+            // With the latch on, pressing a key puts it in the latch and pressing it again
+            // takes it out, which is how a single latched note is let go.
+            if (native::AppSettings::Current().Latch())
+            {
+                auto& latched = m_latchedNotes[static_cast<size_t>(noteNumber)];
+
+                latched = !latched;
+            }
+
+            if (!wasSounding)
             {
                 if (m_arpeggiator.IsEnabled())
                 {
@@ -1486,7 +1494,7 @@ namespace winrt::midikeyboard::implementation
 
             count--;
 
-            if (count == 0)
+            if (!IsNoteSounding(noteNumber))
             {
                 if (m_arpeggiator.IsEnabled())
                 {
@@ -1497,33 +1505,104 @@ namespace winrt::midikeyboard::implementation
                     SendNoteOffNow(noteNumber);
                 }
 
-                // Both of these are channel wide, so they have to be released when the last
-                // note goes, or the sound stays modulated with nothing held down.
-                auto const pressureMode = native::AppSettings::Current().KeyPressure();
-
-                if (pressureMode == native::KeyPressureMode::ChannelPressure ||
-                    pressureMode == native::KeyPressureMode::ModWheel)
-                {
-                    auto const anyHeld = std::any_of(m_noteHoldCount.begin(), m_noteHoldCount.end(),
-                        [](int32_t value) { return value > 0; });
-
-                    if (!anyHeld)
-                    {
-                        if (pressureMode == native::KeyPressureMode::ChannelPressure)
-                        {
-                            m_output.SendChannelPressure(TransmitGroupIndex(), TransmitChannelIndex(), 0);
-                        }
-                        else
-                        {
-                            ApplyModValue(0.0, true);
-                        }
-                    }
-                }
+                ReleaseChannelExpressionIfIdle();
             }
 
             RefreshKeyGlow(noteNumber);
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to stop the note.")
+    }
+
+    _Use_decl_annotations_
+    bool MainWindow::IsNoteSounding(int32_t noteNumber) const noexcept
+    {
+        if (noteNumber < 0 || noteNumber > 127)
+        {
+            return false;
+        }
+
+        auto const index = static_cast<size_t>(noteNumber);
+
+        return m_noteHoldCount[index] > 0 || m_latchedNotes[index];
+    }
+
+    bool MainWindow::AnyNoteSounding() const noexcept
+    {
+        for (size_t note = 0; note < m_noteHoldCount.size(); note++)
+        {
+            if (m_noteHoldCount[note] > 0 || m_latchedNotes[note])
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    void MainWindow::ReleaseChannelExpressionIfIdle() noexcept
+    {
+        try
+        {
+            auto const pressureMode = native::AppSettings::Current().KeyPressure();
+
+            if (pressureMode != native::KeyPressureMode::ChannelPressure &&
+                pressureMode != native::KeyPressureMode::ModWheel)
+            {
+                return;
+            }
+
+            if (AnyNoteSounding())
+            {
+                return;
+            }
+
+            if (pressureMode == native::KeyPressureMode::ChannelPressure)
+            {
+                m_output.SendChannelPressure(TransmitGroupIndex(), TransmitChannelIndex(), 0);
+            }
+            else
+            {
+                ApplyModValue(0.0, true);
+            }
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to reset the channel expression.")
+    }
+
+    void MainWindow::ReleaseLatchedNotes() noexcept
+    {
+        try
+        {
+            for (size_t note = 0; note < m_latchedNotes.size(); note++)
+            {
+                if (!m_latchedNotes[note])
+                {
+                    continue;
+                }
+
+                m_latchedNotes[note] = false;
+
+                if (m_noteHoldCount[note] > 0)
+                {
+                    continue;
+                }
+
+                auto const noteNumber = static_cast<int32_t>(note);
+
+                if (m_arpeggiator.IsEnabled())
+                {
+                    m_arpeggiator.ReleaseNote(noteNumber);
+                }
+                else
+                {
+                    SendNoteOffNow(noteNumber);
+                }
+
+                RefreshKeyGlow(noteNumber);
+            }
+
+            ReleaseChannelExpressionIfIdle();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to release the latched notes.")
     }
 
     void MainWindow::EndAllNotes() noexcept
@@ -1535,12 +1614,13 @@ namespace winrt::midikeyboard::implementation
 
             for (size_t note = 0; note < m_noteHoldCount.size(); note++)
             {
-                if (m_noteHoldCount[note] <= 0)
+                if (m_noteHoldCount[note] <= 0 && !m_latchedNotes[note])
                 {
                     continue;
                 }
 
                 m_noteHoldCount[note] = 0;
+                m_latchedNotes[note] = false;
 
                 SendNoteOffNow(static_cast<int32_t>(note));
                 RefreshKeyGlow(static_cast<int32_t>(note));
@@ -3030,6 +3110,35 @@ namespace winrt::midikeyboard::implementation
             m_arpeggiator.Rate(settings.ArpeggiatorBpm(), settings.ArpeggiatorRate());
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the arpeggiator tempo.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnLatchToggled(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            auto const checked = LatchToggle().IsChecked();
+            auto const isOn = checked != nullptr && checked.Value();
+
+            native::AppSettings::Current().Latch(isOn);
+
+            if (isOn)
+            {
+                // a chord already under the player's hands becomes the latched chord
+                for (size_t note = 0; note < m_noteHoldCount.size(); note++)
+                {
+                    if (m_noteHoldCount[note] > 0)
+                    {
+                        m_latchedNotes[note] = true;
+                    }
+                }
+
+                return;
+            }
+
+            ReleaseLatchedNotes();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the latch.")
     }
 
     // ------------------------------------------------------------------------------------

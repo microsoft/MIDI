@@ -75,6 +75,14 @@ The **Arp** controls in the top strip turn held notes into a pattern. Choose a d
 
 It's useful well beyond making arpeggios: it gives you a steady, repeatable stream of notes for testing an instrument, a connection, or a latency measurement, without having to keep playing by hand.
 
+## Latch
+
+**Latch**, next to the arpeggiator, keeps notes sounding after you let go of the keys. Turn it on, play a key, and the note stays on. Play more keys and they stack up into a chord you aren't holding, which is the only way to build a chord when you're playing with a mouse.
+
+Press a latched key a second time to drop that one note. Switch **Latch** off to drop all of them at once, and Panic still clears everything.
+
+With the arpeggiator running, the pattern keeps playing the latched notes, so you can set a chord going and use both hands for the tempo, the pattern, or the sound. It works just as well with the arpeggiator off, when it simply holds the keys down for you.
+
 ## Bank and program
 
 The **Prog** button in the top strip is where you choose the sound.

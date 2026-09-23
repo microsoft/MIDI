@@ -182,6 +182,12 @@ namespace midikeyboard
         ArpeggiatorDivision ArpeggiatorRate() const noexcept { return m_arpeggiatorRate; }
         void ArpeggiatorRate(ArpeggiatorDivision value) noexcept;
 
+        // Keys keep sounding after they are released. Pressing a latched key again lets it go,
+        // and turning the latch off releases everything it is holding. It applies with or
+        // without the arpeggiator running.
+        bool Latch() const noexcept { return m_latch; }
+        void Latch(bool value) noexcept;
+
         static constexpr int32_t MinimumBaseOctave = -2;
         static constexpr int32_t MaximumBaseOctave = 8;
         static constexpr uint32_t MinimumOctaveCount = 1;
@@ -244,5 +250,7 @@ namespace midikeyboard
         ArpeggiatorMode m_arpeggiator{ ArpeggiatorMode::Off };
         uint32_t m_arpeggiatorBpm{ 120 };
         ArpeggiatorDivision m_arpeggiatorRate{ ArpeggiatorDivision::Sixteenth };
+
+        bool m_latch{ false };
     };
 }

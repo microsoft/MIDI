@@ -41,6 +41,7 @@ namespace midikeyboard
         constexpr wchar_t ValueArpeggiator[] = L"Arpeggiator";
         constexpr wchar_t ValueArpeggiatorBpm[] = L"ArpeggiatorBpm";
         constexpr wchar_t ValueArpeggiatorRate[] = L"ArpeggiatorRate";
+        constexpr wchar_t ValueLatch[] = L"Latch";
 
         template <typename TEnum>
         TEnum ReadEnum(uint32_t stored, TEnum maximum, TEnum fallback) noexcept
@@ -145,6 +146,8 @@ namespace midikeyboard
         m_arpeggiatorRate = ReadEnum(
             ReadDword(ValueArpeggiatorRate, static_cast<uint32_t>(ArpeggiatorDivision::Sixteenth)),
             ArpeggiatorDivision::ThirtySecond, ArpeggiatorDivision::Sixteenth);
+
+        m_latch = ReadDword(ValueLatch, 0u) != 0;
     }
 
     void AppSettings::Connection(ConnectionMode value) noexcept
@@ -294,5 +297,11 @@ namespace midikeyboard
     {
         m_arpeggiatorRate = value;
         WriteDword(ValueArpeggiatorRate, static_cast<uint32_t>(value));
+    }
+
+    void AppSettings::Latch(bool value) noexcept
+    {
+        m_latch = value;
+        WriteDword(ValueLatch, value ? 1u : 0u);
     }
 }

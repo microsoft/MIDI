@@ -79,6 +79,7 @@ namespace winrt::midikeyboard::implementation
         void OnArpModeChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnArpRateChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnArpBpmChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnLatchToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         void OnConnectionModeChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnEndpointSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
@@ -184,6 +185,18 @@ namespace winrt::midikeyboard::implementation
         void EndNote(int32_t noteNumber) noexcept;
         void EndAllNotes() noexcept;
 
+        // A note sounds while an input is holding it down or the latch is keeping it on.
+        bool IsNoteSounding(int32_t noteNumber) const noexcept;
+        bool AnyNoteSounding() const noexcept;
+
+        // Stops the notes the latch is holding. One still under a finger keeps sounding until
+        // that finger lets go.
+        void ReleaseLatchedNotes() noexcept;
+
+        // Channel pressure and the mod wheel belong to the whole channel, so they go back to
+        // zero once nothing at all is sounding.
+        void ReleaseChannelExpressionIfIdle() noexcept;
+
         void SendNoteOnNow(int32_t noteNumber, uint16_t velocity) noexcept;
         void SendNoteOffNow(int32_t noteNumber) noexcept;
         void SendKeyPressure(int32_t noteNumber, uint32_t pressure, double normalized) noexcept;
@@ -242,6 +255,9 @@ namespace winrt::midikeyboard::implementation
 
         // how many separate inputs are holding each note down
         std::array<int32_t, 128> m_noteHoldCount{};
+
+        // notes the latch is keeping on after the key that started them was released
+        std::array<bool, 128> m_latchedNotes{};
 
         std::unordered_map<uint32_t, ActivePointer> m_activePointers{};
         std::unordered_map<uint32_t, int32_t> m_computerKeyNotes{};
