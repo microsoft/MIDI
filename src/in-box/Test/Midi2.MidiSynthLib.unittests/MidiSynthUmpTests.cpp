@@ -1267,11 +1267,30 @@ void MidiSynthUmpTests::TestPropertyExchangeProgramListCategories()
     VERIFY_ARE_EQUAL(wrong, (size_t)0, L"each program carries its own instrument group");
     VERIFY_ARE_EQUAL(groups, (size_t)16, L"all sixteen instrument groups are represented");
 
-    // RP-003 gives channel 10 a key map, not an instrument group, so there is nothing to publish.
+    // General MIDI names no group for a kit, but a client filtering on category must still find
+    // them, so every kit carries one of our own and none is left uncategorized.
     const auto& drumsJson = source.ProgramListJson(DrumKitProgramListResourceId);
     const std::string drums(drumsJson.data(), drumsJson.size());
 
-    VERIFY_ARE_EQUAL(drums.find("\"category\""), std::string::npos, L"drum kits carry no category");
+    const std::string kitCategory{ opening + "Drum Kit\"]" };
+
+    size_t kits = 0;
+    size_t categorized = 0;
+
+    for (auto at = drums.find("\"bankPC\":["); at != std::string::npos; at = drums.find("\"bankPC\":[", at + 1))
+    {
+        kits++;
+
+        const auto close = drums.find(']', at);
+
+        if (close != std::string::npos && drums.compare(close, kitCategory.size(), kitCategory) == 0)
+        {
+            categorized++;
+        }
+    }
+
+    VERIFY_IS_GREATER_THAN(kits, (size_t)0, L"the drum kit list is not empty");
+    VERIFY_ARE_EQUAL(categorized, kits, L"every drum kit is categorized");
 }
 
 

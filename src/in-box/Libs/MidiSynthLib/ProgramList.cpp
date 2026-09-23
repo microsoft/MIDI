@@ -15,8 +15,7 @@ namespace MidiSynth
     {
         // RP-003 Table 1 "Instrument Group", one per block of eight programs. These are the
         // categories this sound set actually has, so they are published verbatim rather than
-        // translated into the vocabulary M2-107-UM suggests. RP-003 defines groups only for the
-        // melodic set, which is why the drum kit list carries no category at all.
+        // translated into the vocabulary M2-107-UM suggests.
         constexpr char const* GeneralMidiInstrumentGroups[]
         {
             "Piano",
@@ -42,6 +41,10 @@ namespace MidiSynth
         static_assert(
             std::size(GeneralMidiInstrumentGroups) * GeneralMidiProgramsPerGroup == 128,
             "The instrument groups must cover every program number exactly once.");
+
+        // Table 1 covers every channel but 10, so General MIDI names no group for a kit. A client
+        // filtering on category would drop these entirely, so they get one of our own.
+        constexpr char const* DrumKitGroup[]{ "Drum Kit" };
 
         std::string ToUtf8(_In_ const std::wstring& text)
         {
@@ -115,6 +118,11 @@ namespace MidiSynth
 
                 entry.Categories = &GeneralMidiInstrumentGroups[entry.Program / GeneralMidiProgramsPerGroup];
                 entry.CategoryCount = 1;
+            }
+            else
+            {
+                entry.Categories = DrumKitGroup;
+                entry.CategoryCount = std::size(DrumKitGroup);
             }
 
             entries.push_back(entry);
