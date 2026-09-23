@@ -1457,6 +1457,7 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2SessionNameLimit.h"
 #include "Feature_Servicing_MIDI2ComponentSignatureCache.h"
 #include "Feature_Servicing_MIDI2CustomOutgoingLatency.h"
+#include "Feature_Servicing_MIDI2DuplicateDeviceNaming.h"
 #include "Feature_Servicing_MIDI2EndpointCustomizationEnhancements.h"
 #include "Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit.h"
 #include "Feature_Servicing_MIDI2EndpointUniqueIdValidation.h"
@@ -1482,6 +1483,7 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2WinMMPortHandleSlotWidth.h"
 #include "Feature_Servicing_MIDI2WinMMShortMessageNoSendWait.h"
 #include "Feature_Servicing_MIDI2XProcBatchedReads.h"
+#include "Feature_Servicing_MIDI2KSAShutdownCrash.h"
 
 void OutputSingleFeatureEnablement(_In_ bool enabled, _In_ std::wstring const& featureName)
 {
@@ -1519,6 +1521,7 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2SessionNameLimit::IsEnabled(),                     L"MIDI2SessionNameLimit (bound the session name a client may register or update)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2ComponentSignatureCache::IsEnabled(),              L"MIDI2ComponentSignatureCache (cache transport and transform signature checks, which cost about a second per dll)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2CustomOutgoingLatency::IsEnabled(),                L"MIDI2CustomOutgoingLatency (user-supplied outgoing latency compensation for an endpoint)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2DuplicateDeviceNaming::IsEnabled(),                 L"MIDI2DuplicateDeviceNaming (service assigns the number for a second or later unit of a model, and remembers it)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled(),    L"MIDI2EndpointCustomizationEnhancements (rework of how endpoint customizations are matched and applied)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2EndpointNameUtf8ByteLimit::IsEnabled(),            L"MIDI2EndpointNameUtf8ByteLimit (enforce the ump spec utf-8 byte limit on endpoint names)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2EndpointUniqueIdValidation::IsEnabled(),           L"MIDI2EndpointUniqueIdValidation (reject a unique id which is not usable in a device id)");
@@ -1544,6 +1547,7 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMPortHandleSlotWidth::IsEnabled(),             L"MIDI2WinMMPortHandleSlotWidth (fix winmm port handle corruption in 32 bit clients)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMShortMessageNoSendWait::IsEnabled(),          L"MIDI2WinMMShortMessageNoSendWait (stop winmm waiting for send completion on short messages)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2XProcBatchedReads::IsEnabled(),                    L"MIDI2XProcBatchedReads (batch cross-process reads to reduce per-message overhead)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSAShutdownCrash::IsEnabled(),                     L"MIDI2KSAShutdownCrash (shutdown race)");
 
     
 #endif    
