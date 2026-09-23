@@ -68,6 +68,22 @@ namespace midiplayer
         PlaybackState State{ PlaybackState::Empty };
     };
 
+    // Where one track's messages go. A route that names nothing is the connection and group the
+    // engine was loaded with, which is what every track gets until an application says otherwise.
+    struct TrackRoute
+    {
+        // Null to use the engine's own connection.
+        winrt::Windows::Devices::Midi2::MidiEndpointConnection Connection{ nullptr };
+
+        int32_t GroupIndex{ -1 };        // -1 to use the group the sequence was loaded for
+        int32_t ChannelOverride{ -1 };   // -1 to leave the channel the file wrote alone
+
+        bool IsDefault() const noexcept
+        {
+            return Connection == nullptr && GroupIndex < 0 && ChannelOverride < 0;
+        }
+    };
+
     // Plays a sequence to one endpoint.
     //
     // The service does the fine timing: every message is sent with the timestamp it is due at,
@@ -123,6 +139,13 @@ namespace midiplayer
         void SetTrackMuted(uint16_t trackIndex, bool muted) noexcept;
         void SetSoloTrack(int32_t trackIndex) noexcept;    // -1 for no solo
 
+        // Sends a track somewhere other than the engine's own connection and group. Safe to call
+        // at any time, including while playing: the route is read as each message goes out, so
+        // nothing has to be prepared again.
+        void SetTrackRoute(uint16_t trackIndex, TrackRoute const& route) noexcept;
+        void ClearTrackRoute(uint16_t trackIndex) noexcept;
+        TrackRoute GetTrackRoute(uint16_t trackIndex) const noexcept;
+
         bool IsTrackMuted(uint16_t trackIndex) const noexcept;
         int32_t SoloTrack() const noexcept;
 
@@ -160,6 +183,25 @@ namespace midiplayer
             uint16_t TrackIndex{ 0 };
         };
 
+        // One entry per track is one entry per event in m_prepared, and the largest files in the
+        // corpus reach the two million event cap, so nothing about routing is allowed to grow
+        // this. The destination is looked up from TrackIndex instead, which also means a routing
+        // change does not have to prepare the sequence again.
+        static_assert(sizeof(PreparedEvent) == 32, "PreparedEvent grew; check the cost at two million events first.");
+
+        // A distinct place messages go. Entry zero is always the engine's own connection and
+        // group, so a sequence with no routing set resolves every track to it and pays nothing.
+        struct Destination
+        {
+            winrt::Windows::Devices::Midi2::MidiEndpointConnection Connection{ nullptr };
+            uint8_t GroupIndex{ 0 };
+            int32_t ChannelOverride{ -1 };
+
+            // True only when the group or the channel differs from what the words already carry.
+            // A different connection on its own needs no rewriting.
+            bool RewritesMessages{ false };
+        };
+
         // caller holds m_lock
         bool IsTrackAudibleUnderLock(uint16_t trackIndex) const noexcept;
 
@@ -171,8 +213,13 @@ namespace midiplayer
         void ScheduleDueEventsUnderLock(uint64_t nowTimestamp) noexcept;
         void RebaseClockUnderLock() noexcept;
         void SendPanicUnderLock(bool includeScheduledSweep) noexcept;
+        void SendPanicToDestinationUnderLock(size_t destinationIndex, bool includeScheduledSweep) noexcept;
         void SendChaseStateUnderLock(size_t eventIndex) noexcept;
-        void SendWordsUnderLock(uint64_t timestamp, uint32_t wordOffset, uint32_t wordCount) noexcept;
+        void SendChaseStateToDestinationUnderLock(size_t eventIndex, size_t destinationIndex) noexcept;
+        void SendWordsUnderLock(uint64_t timestamp, uint32_t wordOffset, uint32_t wordCount, size_t destinationIndex) noexcept;
+        void RebuildDestinationsUnderLock() noexcept;
+        size_t DestinationForTrackUnderLock(uint16_t trackIndex) const noexcept;
+        winrt::Windows::Devices::Midi2::MidiEndpointConnection ConnectionForDestinationUnderLock(size_t destinationIndex) const noexcept;
         uint64_t TimestampForMicrosecondsUnderLock(uint64_t microseconds) const noexcept;
         uint64_t CurrentMicrosecondsUnderLock(uint64_t nowTimestamp) const noexcept;
 
@@ -199,6 +246,17 @@ namespace midiplayer
 
         std::vector<bool> m_mutedTracks{};
         int32_t m_soloTrack{ -1 };
+
+        // Routing. m_trackRoutes is what the application asked for; m_destinations and
+        // m_trackDestination are derived from it and rebuilt whenever either changes.
+        std::vector<TrackRoute> m_trackRoutes{};
+        std::vector<Destination> m_destinations{};
+        std::vector<uint16_t> m_trackDestination{};
+        bool m_hasCustomRoutes{ false };
+
+        // Only used when a destination has to rewrite a message. Sized at load so a send never
+        // allocates.
+        std::vector<uint32_t> m_sendScratch{};
 
         // What the player believes is sounding, so a stop can turn exactly those off rather than
         // relying on a device honoring all notes off.

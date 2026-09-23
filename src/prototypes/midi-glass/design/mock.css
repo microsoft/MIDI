@@ -1,0 +1,1065 @@
+/* ============================================================================
+   MIDI Glass - design mockups.
+
+   TWO visual languages live in this file on purpose:
+
+   1. .win-*  the APP chrome. Plain WinUI 3 dark theme, matching the rest of
+              the Windows MIDI Services tool family (same tokens the Patchbay
+              mockups used).
+   2. .surf-* / .ctl-* the SURFACE. This is the customer's performance deck and
+              it deliberately looks nothing like WinUI: dark smoked glass
+              plates, a hairline rim in the control's hue, and a "light pipe"
+              that carries the value. Everything at rest is dark; only value
+              and activity glow.
+   ========================================================================= */
+
+:root {
+    /* ---- WinUI 3 dark theme tokens (same as the Patchbay mockups) -------- */
+    --bg-top: #262626;
+    --bg-bottom: #1F1F1F;
+    --card: #2B2B2B;
+    --card-alt: #313131;
+    --subtle: rgba(255, 255, 255, 0.0605);
+    --stroke: rgba(255, 255, 255, 0.0698);
+    --stroke-strong: rgba(255, 255, 255, 0.14);
+    --divider: rgba(255, 255, 255, 0.0837);
+    --text: #FFFFFF;
+    --text2: rgba(255, 255, 255, 0.786);
+    --text3: rgba(255, 255, 255, 0.5442);
+    --text-disabled: rgba(255, 255, 255, 0.3628);
+    --accent: #60CDFF;
+    --accent-deep: #4CC2FF;
+    --on-accent: #000000;
+    --critical: #FF99A4;
+    --critical-bg: rgba(255, 153, 164, 0.14);
+    --caution: #FCE100;
+    --caution-bg: rgba(252, 225, 0, 0.11);
+    --success: #6CCB5F;
+    --nav-selected: rgba(255, 255, 255, 0.0837);
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.52);
+
+    /* ---- Surface theme "Studio Dark": six hue slots ---------------------- */
+    --h1: 76, 224, 255;    /* cyan    */
+    --h2: 91, 232, 181;    /* mint    */
+    --h3: 255, 194, 71;    /* amber   */
+    --h4: 255, 107, 214;   /* magenta */
+    --h5: 155, 140, 255;   /* violet  */
+    --h6: 255, 107, 107;   /* red     */
+    --deck-ink: rgba(255, 255, 255, 0.88);
+    --deck-ink2: rgba(255, 255, 255, 0.50);
+    --plate: rgba(17, 20, 26, 0.86);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+    margin: 0;
+    padding: 0;
+    background: #0A0A0A;
+    font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+}
+
+.page {
+    width: 1024px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    align-items: flex-start;
+}
+
+.caption-above {
+    font-size: 12px;
+    color: var(--text3);
+    margin: 0 0 -10px 2px;
+}
+
+.mono { font-family: "Cascadia Mono", "Consolas", monospace; }
+.gl { font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets"; }
+
+/* =========================================================== window chrome */
+
+.window {
+    width: 1000px;
+    height: 740px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+.titlebar {
+    height: 40px;
+    flex: 0 0 40px;
+    display: flex;
+    align-items: center;
+    padding-left: 12px;
+    gap: 10px;
+    position: relative;
+    z-index: 6;
+}
+
+.titlebar .appmark {
+    width: 16px; height: 16px; border-radius: 4px;
+    background: linear-gradient(145deg, rgba(var(--h1), .95), rgba(var(--h5), .85));
+    box-shadow: 0 0 10px rgba(var(--h1), .45);
+    flex: 0 0 16px;
+}
+
+.titlebar .title { font-size: 12px; color: var(--text2); }
+.titlebar .spacer { flex: 1; }
+
+.preview-chiclet {
+    position: absolute;
+    left: 0; right: 0; top: 9px;
+    margin: 0 auto;
+    width: 74px;
+    height: 20px;
+    border-radius: 10px;
+    border: 1px solid rgba(252, 225, 0, .42);
+    background: var(--caution-bg);
+    color: var(--caution);
+    font-size: 10px;
+    letter-spacing: .10em;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.caption-btn {
+    width: 46px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text2);
+    font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    font-size: 14px;
+    border-radius: 4px;
+}
+
+.caption-btn.hover { background: rgba(255, 255, 255, 0.06); }
+
+.sys-btns { display: flex; height: 40px; align-self: flex-start; }
+
+.sys-btns div {
+    width: 46px; height: 40px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text2);
+    font-family: "Segoe Fluent Icons", "Segoe MDL2 Assets";
+    font-size: 10px;
+}
+
+/* ================================================================ app bits */
+
+.shell { flex: 1; display: flex; min-height: 0; }
+
+.btn {
+    height: 32px; padding: 0 12px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.0605);
+    border: 1px solid var(--stroke-strong);
+    border-bottom-color: rgba(0, 0, 0, .28);
+    color: var(--text);
+    font-size: 13px;
+    display: inline-flex; align-items: center; gap: 8px;
+    white-space: nowrap;
+}
+
+.btn .gl { font-size: 14px; color: var(--text2); }
+.btn.accent { background: var(--accent-deep); color: var(--on-accent); border-color: rgba(255,255,255,.08); }
+.btn.accent .gl { color: var(--on-accent); }
+.btn.subtle { background: transparent; border-color: transparent; }
+.btn.icon { width: 32px; padding: 0; justify-content: center; }
+.btn.small { height: 28px; font-size: 12px; padding: 0 10px; }
+.btn.tiny { height: 24px; font-size: 11px; padding: 0 8px; border-radius: 3px; }
+.btn.disabled { color: var(--text-disabled); }
+.btn.disabled .gl { color: var(--text-disabled); }
+.btn.on { background: rgba(96, 205, 255, .18); border-color: rgba(96, 205, 255, .45); }
+
+.seg { display: inline-flex; border: 1px solid var(--stroke-strong); border-radius: 4px; overflow: hidden; height: 28px; }
+.seg div { padding: 0 11px; display: flex; align-items: center; font-size: 12px; color: var(--text2); border-right: 1px solid var(--stroke); }
+.seg div:last-child { border-right: none; }
+.seg div.sel { background: rgba(96, 205, 255, .22); color: #fff; }
+
+.chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 22px; padding: 0 9px; border-radius: 11px;
+    font-size: 11px; border: 1px solid var(--stroke-strong);
+    color: var(--text2); background: rgba(255,255,255,.04); white-space: nowrap;
+}
+.chip .gl { font-size: 11px; }
+.chip.on { color: var(--success); border-color: rgba(108,203,95,.45); background: rgba(108,203,95,.12); }
+.chip.warn { color: var(--caution); border-color: rgba(252,225,0,.4); background: var(--caution-bg); }
+.chip.err { color: var(--critical); border-color: rgba(255,153,164,.42); background: var(--critical-bg); }
+.chip.info { color: var(--accent); border-color: rgba(96,205,255,.4); background: rgba(96,205,255,.10); }
+
+.toolbar {
+    height: 44px; flex: 0 0 44px;
+    display: flex; align-items: center; gap: 8px; padding: 0 12px;
+    border-bottom: 1px solid var(--divider);
+}
+.toolbar .sep { width: 1px; height: 20px; background: var(--divider); margin: 0 3px; }
+.toolbar .spacer { flex: 1; }
+
+.field {
+    height: 30px; border-radius: 4px;
+    background: rgba(255,255,255,.0605);
+    border: 1px solid var(--stroke-strong);
+    border-bottom-color: rgba(255,255,255,.55);
+    display: flex; align-items: center; padding: 0 9px; gap: 8px;
+    font-size: 12px; color: var(--text);
+}
+.field .gl { color: var(--text3); font-size: 13px; }
+.field .ph { color: var(--text3); }
+.field.combo::after { content: "\E70D"; font-family: "Segoe Fluent Icons"; font-size: 10px; color: var(--text3); margin-left: auto; }
+.field.flat { border-bottom-color: var(--stroke-strong); }
+
+.switch { width: 40px; height: 20px; border-radius: 10px; background: var(--accent-deep); position: relative; flex: 0 0 40px; }
+.switch::after { content:""; position:absolute; width:12px; height:12px; border-radius:6px; background:#000; top:4px; right:4px; }
+.switch.off { background: rgba(255,255,255,.10); border: 1px solid var(--stroke-strong); }
+.switch.off::after { background: var(--text2); left: 4px; right: auto; top: 3px; }
+
+.tooltip {
+    position: absolute; background: #2D2D2D;
+    border: 1px solid var(--stroke-strong); border-radius: 6px;
+    padding: 7px 11px; font-size: 11.5px; color: var(--text2);
+    max-width: 300px; line-height: 1.45;
+    box-shadow: 0 4px 14px rgba(0,0,0,.5); z-index: 60;
+}
+.tooltip b { color: var(--text); font-weight: 600; display: block; margin-bottom: 2px; }
+
+/* ================================================== THE SURFACE (the deck) */
+
+.surf {
+    position: relative;
+    overflow: hidden;
+    background:
+        radial-gradient(130% 100% at 50% -10%, #171B22 0%, #0C0E13 58%, #08090D 100%);
+    color: var(--deck-ink);
+}
+
+/* dot grid - shown while editing, fades out in run mode */
+.surf.grid::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image:
+        radial-gradient(rgba(255,255,255,.16) 1px, transparent 1px),
+        radial-gradient(rgba(255,255,255,.055) 1px, transparent 1px);
+    background-size: 64px 64px, 16px 16px;
+    background-position: 0 0, 0 0;
+    pointer-events: none;
+}
+
+/* a faint top sheen so the deck reads as glass, not paper */
+.surf::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(255,255,255,.035), transparent 22%);
+    pointer-events: none;
+}
+
+.ctl {
+    position: absolute;
+    border-radius: 7px;
+    background:
+        linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,0) 42%),
+        var(--plate);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.075),
+        inset 0 0 0 1px rgba(var(--hue), .28),
+        0 1px 3px rgba(0,0,0,.55);
+    color: var(--deck-ink);
+    --hue: var(--h1);
+    font-size: 11px;
+    display: flex; flex-direction: column;
+    user-select: none;
+}
+
+/* "on" = the plate itself blooms */
+.ctl.on {
+    background: linear-gradient(180deg, rgba(var(--hue), .34), rgba(var(--hue), .17));
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.16),
+        inset 0 0 0 1px rgba(var(--hue), .90),
+        0 0 16px rgba(var(--hue), .38),
+        0 0 44px rgba(var(--hue), .16);
+    color: #fff;
+}
+
+.ctl.held {
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.16),
+        inset 0 0 0 2px rgba(var(--hue), 1),
+        0 0 22px rgba(var(--hue), .55),
+        0 0 60px rgba(var(--hue), .22);
+}
+
+.ctl.dim { opacity: .55; }
+.ctl.offline {
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
+    background: repeating-linear-gradient(135deg, rgba(255,255,255,.035) 0 6px, transparent 6px 12px), var(--plate);
+}
+
+.hue1 { --hue: var(--h1); } .hue2 { --hue: var(--h2); } .hue3 { --hue: var(--h3); }
+.hue4 { --hue: var(--h4); } .hue5 { --hue: var(--h5); } .hue6 { --hue: var(--h6); }
+
+/* --------------------------------------------------------------- labels */
+
+.ctl .cap {
+    font-size: 10.5px;
+    letter-spacing: .01em;
+    color: var(--deck-ink2);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ctl.on .cap { color: rgba(255,255,255,.82); }
+
+.ctl .val {
+    font-family: "Cascadia Mono", "Consolas", monospace;
+    font-size: 10px;
+    color: rgba(var(--hue), .95);
+    text-align: center;
+}
+
+/* outside label, the default placement */
+.outlabel {
+    position: absolute;
+    font-size: 10.5px;
+    color: var(--deck-ink2);
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* ------------------------------------------------------------- buttons */
+
+.ctl.btn-ctl { align-items: center; justify-content: center; gap: 3px; }
+.ctl.btn-ctl .glyph { font-size: 15px; line-height: 1; color: rgba(var(--hue), .92); }
+.ctl.btn-ctl.on .glyph { color: #fff; }
+.ctl.btn-ctl .name { font-size: 11px; font-weight: 600; letter-spacing: .01em; }
+
+/* the "light pipe": a bar of hue along the bottom edge of a button */
+.pipe {
+    position: absolute; left: 9px; right: 9px; bottom: 6px; height: 2px;
+    border-radius: 1px;
+    background: rgba(var(--hue), .22);
+}
+.pipe.lit { background: rgb(var(--hue)); box-shadow: 0 0 9px rgba(var(--hue), .9); }
+
+/* --------------------------------------------------------------- knobs */
+
+.knob { background: none; box-shadow: none; border-radius: 50%; align-items: center; }
+.knob .dial {
+    position: relative; border-radius: 50%;
+    width: 100%; aspect-ratio: 1;
+    background:
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0) 46%),
+        var(--plate);
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,.08),
+        inset 0 0 0 1px rgba(var(--hue), .26),
+        0 1px 3px rgba(0,0,0,.55);
+}
+.knob .arc {
+    position: absolute; inset: -6px; border-radius: 50%;
+    background: conic-gradient(from 215deg,
+        rgb(var(--hue)) 0turn var(--pct, .35turn),
+        rgba(255,255,255,.10) var(--pct, .35turn) .805turn,
+        transparent .805turn 1turn);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+    filter: drop-shadow(0 0 5px rgba(var(--hue), .55));
+}
+.knob .ptr {
+    position: absolute; left: 50%; top: 9%;
+    width: 2px; height: 30%;
+    margin-left: -1px;
+    border-radius: 1px;
+    background: rgb(var(--hue));
+    box-shadow: 0 0 7px rgba(var(--hue), .85);
+    transform-origin: 50% 137%;
+}
+.knob .dotmark {
+    position: absolute; left: 50%; top: 50%;
+    width: 4px; height: 4px; margin: -2px 0 0 -2px;
+    border-radius: 50%; background: rgba(255,255,255,.22);
+}
+.knob .kval {
+    position: absolute; left: 0; right: 0; top: 50%; transform: translateY(-50%);
+    text-align: center; font-family: "Cascadia Mono","Consolas",monospace;
+    font-size: 11px; color: rgba(255,255,255,.90);
+}
+.knob.detent .dial::after {
+    content: ""; position: absolute; left: 50%; top: -9px;
+    width: 1px; height: 5px; margin-left: -.5px; background: rgba(255,255,255,.35);
+}
+
+/* -------------------------------------------------------------- faders */
+
+.fader { padding: 8px 0 6px 0; align-items: center; }
+.fader .slot {
+    position: relative; flex: 1; width: 8px; border-radius: 4px;
+    background: rgba(0,0,0,.55);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+}
+.fader .fill {
+    position: absolute; left: 0; right: 0; bottom: 0; border-radius: 4px;
+    background: linear-gradient(180deg, rgb(var(--hue)), rgba(var(--hue), .35));
+    box-shadow: 0 0 10px rgba(var(--hue), .55);
+}
+.fader .capbar {
+    position: absolute; left: -11px; right: -11px; height: 16px;
+    border-radius: 4px;
+    background: linear-gradient(180deg, #313945, #161A21);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.20), 0 3px 7px rgba(0,0,0,.65);
+}
+.fader .capbar::after {
+    content: ""; position: absolute; left: 5px; right: 5px; top: 50%; height: 2px; margin-top: -1px;
+    background: rgb(var(--hue)); border-radius: 1px;
+    box-shadow: 0 0 9px rgba(var(--hue), .95);
+}
+.fader .ticks { position: absolute; inset: 0; }
+.fader .ticks i { position: absolute; left: 50%; width: 22px; margin-left: -11px; height: 1px; background: rgba(255,255,255,.07); }
+
+.fader.horiz { flex-direction: row; padding: 0 8px; }
+.fader.horiz .slot { width: auto; height: 8px; flex: 1; }
+.fader.horiz .fill { top: 0; bottom: 0; right: auto; }
+.fader.horiz .capbar { top: -11px; bottom: -11px; left: auto; right: auto; width: 16px; height: auto; }
+.fader.horiz .capbar::after { left: 50%; right: auto; top: 5px; bottom: 5px; height: auto; width: 2px; margin: 0 0 0 -1px; }
+
+/* ------------------------------------------------------------- xy / pad */
+
+.xy { padding: 0; }
+.xy .field2 { position: absolute; inset: 0; border-radius: 7px; overflow: hidden; }
+.xy .field2::before {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+        linear-gradient(rgba(255,255,255,.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.055) 1px, transparent 1px);
+    background-size: 25% 25%, 25% 25%;
+}
+.xy .cross { position: absolute; background: rgba(var(--hue), .38); box-shadow: 0 0 8px rgba(var(--hue),.45); }
+.xy .cross.h { left: 0; right: 0; height: 1px; }
+.xy .cross.v { top: 0; bottom: 0; width: 1px; }
+.xy .puck {
+    position: absolute; width: 16px; height: 16px; margin: -8px 0 0 -8px; border-radius: 50%;
+    background: rgb(var(--hue));
+    box-shadow: 0 0 14px rgba(var(--hue), .95), 0 0 34px rgba(var(--hue), .45);
+}
+.xy .trail {
+    position: absolute; width: 10px; height: 10px; margin: -5px 0 0 -5px; border-radius: 50%;
+    background: rgba(var(--hue), .28);
+}
+
+/* ------------------------------------------------------------ joystick */
+
+.joy { border-radius: 50%; }
+.joy .ring { position: absolute; inset: 9px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255,255,255,.07); }
+.joy .ring2 { position: absolute; inset: 22px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); }
+.joy .spring { position: absolute; inset: 9px; border-radius: 50%; box-shadow: inset 0 0 0 1px rgba(var(--hue), .30); }
+.joy .puck {
+    position: absolute; width: 30px; height: 30px; margin: -15px 0 0 -15px; border-radius: 50%;
+    background: linear-gradient(180deg, #333C49, #161A21);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 4px 10px rgba(0,0,0,.7), 0 0 16px rgba(var(--hue),.45);
+}
+.joy .puck::after {
+    content: ""; position: absolute; inset: 11px; border-radius: 50%;
+    background: rgb(var(--hue)); box-shadow: 0 0 10px rgba(var(--hue), .9);
+}
+
+/* --------------------------------------------------------------- wheel */
+
+.wheel { padding: 6px 0; }
+.wheel .body {
+    position: relative; flex: 1; margin: 0 7px; border-radius: 5px;
+    background: linear-gradient(90deg, #0C0F14, #1C222B 42%, #0C0F14);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    overflow: hidden;
+}
+.wheel .ridges { position: absolute; inset: 0; background: repeating-linear-gradient(180deg, rgba(255,255,255,.055) 0 1px, transparent 1px 7px); }
+.wheel .ind { position: absolute; left: 3px; right: 3px; height: 3px; border-radius: 2px; background: rgb(var(--hue)); box-shadow: 0 0 10px rgba(var(--hue),.95); }
+.wheel .center { position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: rgba(255,255,255,.22); }
+
+/* ------------------------------------------------------------- meters  */
+
+.meter { padding: 5px 6px; gap: 2px; justify-content: flex-end; }
+.meter i { display: block; height: 4px; border-radius: 1px; background: rgba(255,255,255,.07); }
+.meter i.lit { background: rgb(var(--h2)); box-shadow: 0 0 7px rgba(var(--h2), .7); }
+.meter i.lit.warn { background: rgb(var(--h3)); box-shadow: 0 0 7px rgba(var(--h3), .7); }
+.meter i.lit.hot { background: rgb(var(--h6)); box-shadow: 0 0 7px rgba(var(--h6), .7); }
+
+/* --------------------------------------------------------- generators  */
+
+.clockctl { align-items: center; justify-content: center; }
+.clockctl .ringwrap { position: relative; width: 52px; height: 52px; }
+.clockctl .sweep {
+    position: absolute; inset: 0; border-radius: 50%;
+    background: conic-gradient(rgb(var(--hue)) 0turn var(--pct,.25turn), rgba(255,255,255,.08) var(--pct,.25turn) 1turn);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+}
+.clockctl .beat {
+    position: absolute; inset: 9px; border-radius: 50%;
+    background: rgba(var(--hue), .16);
+    box-shadow: 0 0 20px rgba(var(--hue), .55), inset 0 0 0 1px rgba(var(--hue), .55);
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Cascadia Mono","Consolas",monospace; font-size: 13px; color: #fff;
+}
+.clockctl .pips { display: flex; gap: 5px; margin-top: 6px; }
+.clockctl .pips i { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,.14); }
+.clockctl .pips i.lit { background: rgb(var(--hue)); box-shadow: 0 0 9px rgba(var(--hue),.9); }
+
+.lfo { padding: 6px 7px; gap: 4px; }
+.lfo svg { flex: 1; width: 100%; }
+.lfo .head { display: flex; justify-content: space-between; font-size: 10px; color: var(--deck-ink2); }
+
+.steps { padding: 6px; gap: 4px; }
+.steps .row { display: flex; gap: 4px; flex: 1; }
+.steps .row i { flex: 1; border-radius: 3px; background: rgba(255,255,255,.055); box-shadow: inset 0 0 0 1px rgba(255,255,255,.05); }
+.steps .row i.on { background: rgba(var(--hue), .32); box-shadow: inset 0 0 0 1px rgba(var(--hue), .8), 0 0 10px rgba(var(--hue), .35); }
+.steps .row i.cur { box-shadow: inset 0 0 0 2px rgb(var(--hue)), 0 0 14px rgba(var(--hue), .6); }
+
+/* --------------------------------------------------- panels, text, tabs */
+
+.ctlpanel {
+    position: absolute; border-radius: 10px;
+    background: rgba(255,255,255,.022);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.055);
+}
+.ctlpanel > .ptitle {
+    position: absolute; top: -8px; left: 12px;
+    padding: 0 7px; font-size: 10px; letter-spacing: .06em;
+    color: var(--deck-ink2);
+    background: #0F1217;
+}
+
+.surftext { position: absolute; white-space: nowrap; }
+.surftext.h1 { font-family: "Segoe UI Variable Display","Segoe UI",sans-serif; font-size: 21px; font-weight: 700; letter-spacing: -.01em; }
+.surftext.h2 { font-size: 13px; font-weight: 600; letter-spacing: .10em; color: var(--deck-ink2); }
+.surftext.readout { font-family: "Cascadia Mono","Consolas",monospace; font-size: 19px; color: rgb(var(--h3)); text-shadow: 0 0 14px rgba(var(--h3),.5); }
+.surftext.small { font-size: 11px; color: var(--deck-ink2); }
+
+.pagetabs { position: absolute; display: flex; gap: 6px; }
+.pagetabs .tab {
+    height: 30px; padding: 0 15px; border-radius: 6px;
+    display: flex; align-items: center; font-size: 12px;
+    color: var(--deck-ink2);
+    background: rgba(255,255,255,.028);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.055);
+}
+.pagetabs .tab.sel {
+    color: #fff;
+    background: linear-gradient(180deg, rgba(var(--h1),.26), rgba(var(--h1),.12));
+    box-shadow: inset 0 0 0 1px rgba(var(--h1), .8), 0 0 16px rgba(var(--h1), .28);
+}
+
+.surfrule { position: absolute; height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,.16), transparent); }
+
+/* ============================================ editor overlays on the deck */
+
+.sel-box {
+    position: absolute;
+    box-shadow: 0 0 0 1px var(--accent);
+    border-radius: 8px;
+    pointer-events: none;
+}
+.sel-box i {
+    position: absolute; width: 8px; height: 8px;
+    background: #fff; border: 1px solid var(--accent-deep); border-radius: 2px;
+}
+.sel-box i.nw { left: -4px; top: -4px; } .sel-box i.n { left: 50%; margin-left: -4px; top: -4px; }
+.sel-box i.ne { right: -4px; top: -4px; } .sel-box i.e { right: -4px; top: 50%; margin-top: -4px; }
+.sel-box i.se { right: -4px; bottom: -4px; } .sel-box i.s { left: 50%; margin-left: -4px; bottom: -4px; }
+.sel-box i.sw { left: -4px; bottom: -4px; } .sel-box i.w { left: -4px; top: 50%; margin-top: -4px; }
+
+.sel-box.multi { box-shadow: 0 0 0 1px rgba(96,205,255,.55); border-radius: 4px; }
+.sel-tag {
+    position: absolute; top: -21px; left: 0;
+    height: 17px; padding: 0 6px; border-radius: 3px;
+    background: var(--accent-deep); color: #000;
+    font-size: 10px; display: flex; align-items: center; white-space: nowrap;
+}
+
+.guide { position: absolute; background: rgb(255, 107, 214); pointer-events: none; }
+.guide.v { width: 1px; } .guide.h { height: 1px; }
+.gap-pill {
+    position: absolute; height: 15px; padding: 0 5px; border-radius: 3px;
+    background: rgb(255,107,214); color: #16000F;
+    font-size: 9.5px; font-family: "Cascadia Mono","Consolas",monospace;
+    display: flex; align-items: center; white-space: nowrap;
+}
+.gap-bar { position: absolute; height: 1px; background: rgba(255,107,214,.85); }
+.gap-bar::before, .gap-bar::after {
+    content: ""; position: absolute; top: -3px; width: 1px; height: 7px; background: rgb(255,107,214);
+}
+.gap-bar::before { left: 0; } .gap-bar::after { right: 0; }
+
+.marquee {
+    position: absolute;
+    border: 1px solid var(--accent);
+    background: rgba(96,205,255,.10);
+    border-radius: 2px;
+}
+
+.ghost { opacity: .40; box-shadow: inset 0 0 0 1px rgba(96,205,255,.7) !important; background: rgba(96,205,255,.07) !important; }
+
+.cursor {
+    position: absolute; width: 18px; height: 22px; z-index: 55;
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,.8));
+}
+
+/* ================================================================ cards  */
+
+.libgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+.libcard {
+    border-radius: 8px;
+    background: var(--card);
+    box-shadow: inset 0 0 0 1px var(--stroke);
+    overflow: hidden;
+    position: relative;
+    display: flex; flex-direction: column;
+}
+.libcard.sel { box-shadow: inset 0 0 0 1px rgba(96,205,255,.7), 0 0 0 1px rgba(96,205,255,.35); }
+.libcard .thumb {
+    height: 112px; position: relative; overflow: hidden;
+    border-bottom: 1px solid var(--divider);
+}
+.libcard .meta { padding: 9px 11px 11px 11px; }
+.libcard .lname { font-size: 13px; font-weight: 600; }
+.libcard .ldesc { font-size: 11px; color: var(--text3); margin-top: 2px; line-height: 1.4; height: 30px; overflow: hidden; }
+.libcard .lfoot { display: flex; align-items: center; gap: 6px; margin-top: 9px; }
+.libcard .star { position: absolute; right: 8px; top: 8px; font-family: "Segoe Fluent Icons"; font-size: 13px; color: var(--caution); }
+.libcard .hoverbar {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 40px;
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,.80));
+    display: flex; align-items: center; gap: 6px; padding: 0 8px;
+}
+
+.sectionhead { display: flex; align-items: center; gap: 8px; margin: 2px 0 10px 0; }
+.sectionhead h2 { font-size: 14px; font-weight: 600; margin: 0; }
+.sectionhead .spacer { flex: 1; }
+.sectionhead .count { font-size: 11px; color: var(--text3); }
+
+/* ============================================================== inspector */
+
+.inspector {
+    width: 288px; flex: 0 0 288px;
+    border-left: 1px solid var(--divider);
+    display: flex; flex-direction: column; min-height: 0;
+    background: rgba(255,255,255,.012);
+}
+.inspector .ihead { padding: 11px 13px 8px 13px; display: flex; align-items: center; gap: 8px; }
+.inspector .ihead .itype { font-size: 10.5px; color: var(--text3); }
+.inspector .ihead .iname { font-size: 14px; font-weight: 600; }
+.pivot { display: flex; gap: 14px; padding: 0 13px; border-bottom: 1px solid var(--divider); }
+.pivot div { font-size: 13px; color: var(--text3); padding: 4px 0 8px 0; position: relative; }
+.pivot div.sel { color: var(--text); }
+.pivot div.sel::after { content:""; position:absolute; left:0; right:0; bottom:0; height:2px; border-radius:1px; background: var(--accent); }
+
+.iscroll { flex: 1; overflow: hidden; padding: 11px 13px; }
+.igroup { margin-bottom: 14px; }
+.igroup > h3 { font-size: 11px; color: var(--text3); font-weight: 600; margin: 0 0 7px 0; letter-spacing: .01em; }
+.irow { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
+.irow .lbl { font-size: 12px; color: var(--text2); width: 74px; flex: 0 0 74px; }
+.irow .field { flex: 1; }
+
+.swatches { display: flex; gap: 6px; }
+.swatches i {
+    width: 26px; height: 26px; border-radius: 5px; position: relative;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+}
+.swatches i.sel { box-shadow: inset 0 0 0 2px #fff, 0 0 0 1px rgba(0,0,0,.6); }
+
+.bindrow {
+    border-radius: 6px; background: rgba(255,255,255,.035);
+    box-shadow: inset 0 0 0 1px var(--stroke);
+    padding: 8px 9px; margin-bottom: 7px;
+}
+.bindrow .bh { display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--text2); margin-bottom: 6px; }
+.bindrow .bh .when { color: var(--accent); }
+.bindrow .bh .spacer { flex: 1; }
+.bindrow .bmsg { font-family: "Cascadia Mono","Consolas",monospace; font-size: 11px; color: var(--text); }
+.bindrow .bdest { font-size: 10.5px; color: var(--text3); margin-top: 3px; display: flex; align-items: center; gap: 5px; }
+
+/* ============================================================== palette  */
+
+.palette {
+    width: 182px; flex: 0 0 182px;
+    border-right: 1px solid var(--divider);
+    display: flex; flex-direction: column; min-height: 0;
+}
+.palette .psearch { padding: 9px 9px 6px 9px; }
+.palette .pscroll { flex: 1; overflow: hidden; padding: 0 9px 9px 9px; }
+.palette h3 {
+    font-size: 11px; color: var(--text3); font-weight: 600;
+    margin: 10px 0 6px 2px;
+}
+.palette .pgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.ptile {
+    height: 50px; border-radius: 5px;
+    background: rgba(255,255,255,.035);
+    box-shadow: inset 0 0 0 1px var(--stroke);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+    font-size: 9px; color: var(--text3); text-align: center; line-height: 1.15; padding: 0 2px;
+}
+.ptile .pico { color: var(--accent); }
+.ptile.hover { background: rgba(96,205,255,.12); box-shadow: inset 0 0 0 1px rgba(96,205,255,.5); color: var(--text2); }
+
+/* =============================================================== monitor */
+
+.monitor {
+    height: 104px; flex: 0 0 104px;
+    border-top: 1px solid var(--divider);
+    display: flex; flex-direction: column;
+    background: rgba(0,0,0,.18);
+}
+.monitor .mh { height: 27px; display: flex; align-items: center; gap: 8px; padding: 0 11px; font-size: 11px; color: var(--text3); }
+.monitor .mh .spacer { flex: 1; }
+.monitor table { width: 100%; border-collapse: collapse; font-family: "Cascadia Mono","Consolas",monospace; font-size: 10.5px; }
+.monitor td { padding: 2px 11px; color: var(--text2); white-space: nowrap; }
+.monitor td.t { color: var(--text3); }
+.monitor td.w { color: var(--accent); }
+.monitor td.n { color: var(--success); }
+
+/* ================================================================ dialog */
+
+.scrim { position: absolute; inset: 0; background: rgba(0,0,0,.55); z-index: 30; }
+
+.dialog {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+    background: #2C2C2C; border: 1px solid var(--stroke-strong);
+    border-radius: 8px; box-shadow: 0 16px 48px rgba(0,0,0,.7);
+    z-index: 31; display: flex; flex-direction: column; overflow: hidden;
+}
+.dialog .dh { padding: 18px 22px 8px 22px; font-size: 18px; font-weight: 600; }
+.dialog .db { padding: 4px 22px 16px 22px; flex: 1; overflow: hidden; }
+.dialog .df { padding: 16px 22px; display: flex; gap: 8px; background: rgba(0,0,0,.14); border-top: 1px solid var(--divider); }
+.dialog .df .btn { flex: 1; justify-content: center; }
+
+/* ============================================================ full screen */
+
+.fs-toast {
+    position: absolute; left: 50%; top: 22px; transform: translateX(-50%);
+    padding: 9px 16px; border-radius: 18px;
+    background: rgba(12,14,18,.86);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.12), 0 8px 26px rgba(0,0,0,.6);
+    font-size: 12.5px; color: rgba(255,255,255,.90);
+    display: flex; align-items: center; gap: 9px;
+    z-index: 20;
+}
+.fs-toast kbd {
+    font-family: "Segoe UI Variable Text","Segoe UI",sans-serif;
+    font-size: 11px; padding: 2px 7px; border-radius: 4px;
+    background: rgba(255,255,255,.12);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.18);
+}
+
+.fs-bar {
+    position: absolute; left: 0; right: 0; top: 0; height: 44px;
+    background: linear-gradient(180deg, rgba(10,12,16,.94), rgba(10,12,16,.55));
+    box-shadow: 0 1px 0 rgba(255,255,255,.07);
+    display: flex; align-items: center; gap: 8px; padding: 0 12px;
+    z-index: 21;
+}
+.fs-bar .spacer { flex: 1; }
+.fs-bar .fbtn {
+    height: 28px; padding: 0 11px; border-radius: 5px; font-size: 12px;
+    display: inline-flex; align-items: center; gap: 7px;
+    color: rgba(255,255,255,.84);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+}
+.fs-bar .fbtn.panic { color: #FFB3BB; box-shadow: inset 0 0 0 1px rgba(255,107,107,.5); background: rgba(255,107,107,.12); }
+
+/* =============================================================== helpers */
+
+.note {
+    font-size: 11.5px; color: var(--text3); line-height: 1.5;
+    max-width: 1000px;
+}
+.note b { color: var(--text2); font-weight: 600; }
+
+.callout {
+    position: absolute; z-index: 58;
+    background: rgba(96,205,255,.96); color: #00131C;
+    font-size: 10.5px; font-weight: 600;
+    padding: 4px 8px; border-radius: 4px; white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,.5);
+}
+.callout::after {
+    content: ""; position: absolute; width: 8px; height: 8px;
+    background: rgba(96,205,255,.96); transform: rotate(45deg);
+}
+.callout.down::after { left: 14px; bottom: -3px; }
+.callout.up::after { left: 14px; top: -3px; }
+.callout.left::after { left: -3px; top: 8px; }
+.callout.right::after { right: -3px; top: 8px; }
+
+/* A control that has ended up outside the page rectangle. Still selectable, still draggable,
+   but it will never be seen at run time until it is brought back in. */
+.ctl.offpage {
+    opacity: .48;
+    box-shadow: inset 0 0 0 1px rgba(255, 107, 107, .8);
+    outline: 1px dashed rgba(255, 107, 107, .6);
+    outline-offset: 2px;
+}
+.ctl.offpage .pipe { background: rgba(255, 107, 107, .35); }
+
+
+/* =========================================================================
+   TWO TONAL THEMES (screen 11) - "Pigment Light" and "Pigment Dark"
+
+   Everything below is THEME DATA scoped to a class on the deck. No new
+   elements, no new rendering layers, no per-control drop shadows. Depth is
+   carried by a tonal wash of the control's own hue, which is a background
+   color, so a page of eighty controls costs exactly what it costs today.
+
+   Reuses the existing theme properties: corner rounding, glass tint (here
+   set to fully opaque), glow strength (here zero) and the six hue slots.
+   Adds two: whether a control is FILLED or OUTLINED at rest, and a "track"
+   color for the empty part of a fader slot or knob arc, which the dark
+   themes currently get away with hardcoding.
+   ========================================================================= */
+
+.surf.tonal { background: var(--deck); color: var(--deck-ink); }
+.surf.tonal::after { display: none; }                   /* no glass sheen */
+
+.surf.tonal.grid::before {
+    background-image:
+        radial-gradient(var(--grid1) 1px, transparent 1px),
+        radial-gradient(var(--grid2) 1px, transparent 1px);
+}
+
+/* the tonal container: a flat wash of the control's own hue over the plate */
+.surf.tonal .ctl {
+    border-radius: var(--tonal-radius, 12px);
+    background:
+        linear-gradient(0deg, rgba(var(--hue), var(--tonal-rest)), rgba(var(--hue), var(--tonal-rest))),
+        var(--plate);
+    box-shadow: inset 0 0 0 1px rgba(var(--hue), var(--rim-rest));
+    color: var(--deck-ink);
+}
+.surf.tonal .ctl.on {
+    background: rgb(var(--hue));
+    box-shadow: inset 0 0 0 1px rgb(var(--hue));
+    color: var(--on-hue);
+}
+
+/* the state layer replaces the bloom: more of the same wash, never a glow */
+.surf.tonal .ctl.held {
+    background:
+        linear-gradient(0deg, rgba(var(--hue), var(--tonal-held)), rgba(var(--hue), var(--tonal-held))),
+        var(--plate);
+    box-shadow: inset 0 0 0 1px rgba(var(--hue), .78);
+}
+/* reduced opacity disappears on a light deck, so disabled is a neutral fill here */
+.surf.tonal .ctl.dim {
+    opacity: 1;
+    background: linear-gradient(0deg, var(--track), var(--track)), var(--plate);
+    box-shadow: inset 0 0 0 1px var(--track);
+    color: var(--deck-ink2);
+}
+.surf.tonal .ctl.dim .pipe { background: var(--track); }
+.surf.tonal .ctl.offline {
+    background:
+        repeating-linear-gradient(135deg, var(--track) 0 6px, transparent 6px 12px),
+        var(--plate);
+    box-shadow: inset 0 0 0 1px var(--track);
+}
+.surf.tonal .ctl.btn-ctl .glyph { color: rgb(var(--hue)); }
+.surf.tonal .ctl.btn-ctl.on .glyph { color: var(--on-hue); }
+
+.surf.tonal .pipe { background: rgba(var(--hue), .30); }
+.surf.tonal .pipe.lit { background: rgb(var(--hue)); box-shadow: none; }
+.surf.tonal .ctl.on .pipe.lit { background: var(--on-hue); box-shadow: none; opacity: .8; }
+
+.surf.tonal .knob { background: none; box-shadow: none; }
+.surf.tonal .knob .dial {
+    background:
+        linear-gradient(0deg, rgba(var(--hue), var(--tonal-rest)), rgba(var(--hue), var(--tonal-rest))),
+        var(--plate);
+    box-shadow: inset 0 0 0 1px rgba(var(--hue), var(--rim-rest));
+}
+.surf.tonal .knob .arc {
+    background: conic-gradient(from 215deg,
+        rgb(var(--hue)) 0turn var(--pct, .35turn),
+        var(--track) var(--pct, .35turn) .805turn,
+        transparent .805turn 1turn);
+    filter: none;
+}
+.surf.tonal .knob .ptr { box-shadow: none; }
+.surf.tonal .knob .kval { color: var(--deck-ink); }
+.surf.tonal .knob .dotmark { background: var(--track); }
+.surf.tonal .knob.detent .dial::after { background: var(--deck-ink2); }
+
+.surf.tonal .fader .slot { background: var(--track); box-shadow: none; }
+.surf.tonal .fader .fill { background: rgb(var(--hue)); box-shadow: none; }
+.surf.tonal .fader .capbar {
+    background: rgb(var(--hue));
+    border-radius: 8px;
+    box-shadow: var(--cap-shadow);
+}
+.surf.tonal .fader .capbar::after { background: var(--on-hue); box-shadow: none; opacity: .7; }
+.surf.tonal .fader .ticks i { background: var(--track); }
+
+.surf.tonal .xy .field2::before {
+    background-image:
+        linear-gradient(var(--track) 1px, transparent 1px),
+        linear-gradient(90deg, var(--track) 1px, transparent 1px);
+}
+.surf.tonal .xy .cross { background: rgba(var(--hue), .55); box-shadow: none; }
+.surf.tonal .xy .puck { background: rgb(var(--hue)); box-shadow: var(--cap-shadow); }
+.surf.tonal .xy .trail { background: rgba(var(--hue), .24); }
+.surf.tonal .joy .ring { box-shadow: inset 0 0 0 1px var(--track); }
+.surf.tonal .joy .puck { background: rgb(var(--hue)); box-shadow: var(--cap-shadow); }
+
+.surf.tonal .surftext.readout { text-shadow: none; }
+.surf.tonal .pagetabs .tab {
+    border-radius: 999px;
+    background: var(--plate);
+    box-shadow: inset 0 0 0 1px var(--track);
+    color: var(--deck-ink2);
+}
+.surf.tonal .pagetabs .tab.sel {
+    background: rgba(var(--h1), var(--tonal-held));
+    box-shadow: none;
+    color: var(--deck-ink);
+}
+
+/* ---------------------------------------------------------- Pigment Light */
+.surf.tonal-light {
+    --deck: linear-gradient(168deg, #FCF9FE 0%, #F2EDF7 100%);
+    --plate: #FFFFFF;
+    --track: rgba(28, 27, 34, .13);
+    --on-hue: #FFFFFF;
+    --deck-ink: #1B1A20;
+    --deck-ink2: rgba(27, 26, 32, .58);
+    --grid1: rgba(28, 27, 34, .16);
+    --grid2: rgba(28, 27, 34, .06);
+    --tonal-rest: .14;
+    --tonal-held: .27;
+    --rim-rest: .30;
+    --cap-shadow: 0 1px 2px rgba(28, 27, 34, .30);
+
+    --h1: 12, 86, 168;      /* blue    */
+    --h2: 14, 110, 84;      /* green   */
+    --h3: 176, 82, 0;       /* amber   */
+    --h4: 160, 40, 118;     /* pink    */
+    --h5: 82, 64, 172;      /* violet  */
+    --h6: 175, 50, 44;      /* red     */
+}
+
+/* ----------------------------------------------------------- Pigment Dark */
+.surf.tonal-dark {
+    --deck: linear-gradient(168deg, #17151C 0%, #110F15 100%);
+    --plate: #201E26;
+    --track: rgba(231, 224, 236, .17);
+    --on-hue: #191A20;
+    --deck-ink: #E8E1ED;
+    --deck-ink2: rgba(232, 225, 237, .60);
+    --grid1: rgba(232, 225, 237, .17);
+    --grid2: rgba(232, 225, 237, .065);
+    --tonal-rest: .17;
+    --tonal-held: .32;
+    --rim-rest: .30;
+    --cap-shadow: 0 1px 3px rgba(0, 0, 0, .55);
+
+    --h1: 152, 204, 255;    /* blue    */
+    --h2: 124, 219, 176;    /* green   */
+    --h3: 240, 195, 120;    /* amber   */
+    --h4: 241, 176, 220;    /* pink    */
+    --h5: 197, 187, 250;    /* violet  */
+    --h6: 246, 178, 169;    /* red     */
+}
+
+/* tonal themes drive meters and step strips from the same tokens */
+.surf.tonal .meter i { background: var(--track); }
+.surf.tonal .meter i.lit,
+.surf.tonal .meter i.lit.warn,
+.surf.tonal .meter i.lit.hot { box-shadow: none; }
+.surf.tonal .steps .row i { background: var(--track); box-shadow: none; }
+.surf.tonal .steps .row i.on { background: rgba(var(--hue), .55); box-shadow: none; }
+.surf.tonal .steps .row i.cur { box-shadow: inset 0 0 0 2px rgb(var(--hue)); }
+.surf.tonal .clockctl .sweep {
+    background: conic-gradient(rgb(var(--hue)) 0turn var(--pct, .25turn), var(--track) var(--pct, .25turn) 1turn);
+}
+
+
+/* =========================================================================
+   "BIGWIG" - raised mid-gray panels on a near-black deck, one strong orange.
+
+   Built on the same tonal machinery with the hue wash turned OFF, so the
+   plate stays neutral and color appears only in the indicator, the header
+   strip and the filled state. Two things it needs that the others do not:
+   the rim is a NEUTRAL edge rather than the control's hue, and the value
+   strip runs along the top edge instead of the bottom.
+   ========================================================================= */
+
+.surf.bigwig {
+    --deck: linear-gradient(180deg, #1F1F1F 0%, #151515 100%);
+    --plate: #3A3A3A;
+    --track: rgba(0, 0, 0, .46);
+    --on-hue: #17120D;
+    --deck-ink: #E6E6E6;
+    --deck-ink2: rgba(230, 230, 230, .52);
+    --grid1: rgba(255, 255, 255, .13);
+    --grid2: rgba(255, 255, 255, .048);
+    --tonal-rest: 0;                    /* the plate is neutral gray, never tinted */
+    --tonal-held: .26;
+    --rim-rest: 0;
+    --tonal-radius: 3px;
+    --cap-shadow: 0 1px 3px rgba(0, 0, 0, .6);
+    --edge: rgba(0, 0, 0, .55);
+
+    --h1: 245, 106, 26;     /* orange - the one that does the work */
+    --h2: 74, 158, 214;     /* blue   */
+    --h3: 232, 193, 64;     /* yellow */
+    --h4: 166, 108, 214;    /* purple */
+    --h5: 109, 191, 75;     /* green  */
+    --h6: 224, 72, 60;      /* red    */
+}
+
+.surf.bigwig .ctl,
+.surf.bigwig .ctl.on,
+.surf.bigwig .ctl.held,
+.surf.bigwig .ctl.dim { box-shadow: inset 0 0 0 1px var(--edge); }
+.surf.bigwig .knob { box-shadow: none; }         /* the dial carries the edge, not the box */
+.surf.bigwig .knob .dial { box-shadow: inset 0 0 0 1px var(--edge); }
+.surf.bigwig .ctl.dim { background: linear-gradient(0deg, var(--track), var(--track)), var(--plate); }
+.surf.bigwig .xy .field2 { background: var(--track); }
+.surf.bigwig .meter i.lit { background: rgb(var(--h5)); }
+.surf.bigwig .meter i.lit.warn { background: rgb(var(--h3)); }
+.surf.bigwig .meter i.lit.hot { background: rgb(var(--h6)); }
+
+/* the value strip runs along the top edge, the way a Bitwig panel header does */
+.surf.bigwig .pipe {
+    left: 0; right: 0; top: 0; bottom: auto;
+    height: 3px; border-radius: 0;
+    background: var(--track);
+}
+.surf.bigwig .pipe.lit { background: rgb(var(--hue)); }
+.surf.bigwig .ctl.on .pipe.lit { background: var(--on-hue); opacity: .5; }
+
+.surf.bigwig .knob .ptr { background: var(--deck-ink); width: 2px; }
+.surf.bigwig .fader .capbar { border-radius: 2px; }
+.surf.bigwig .xy .cross { background: rgba(var(--hue), .45); }
+.surf.bigwig .pagetabs .tab { border-radius: 2px; }
+.surf.bigwig .pagetabs .tab.sel { background: rgb(var(--h1)); color: var(--on-hue); }
+
+/* Segmented LED ring. ONE element, exactly like the solid arc it replaces:
+   the dots are a repeating mask over the same conic gradient, not N shapes.
+   Below roughly 48 px the segments stop resolving, so a control this size or
+   smaller falls back to the solid arc. */
+.surf.bigwig .knob.leds .arc {
+    -webkit-mask:
+        repeating-conic-gradient(from 215deg, #000 0 5.2deg, transparent 5.2deg 10.4deg),
+        radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+    -webkit-mask-composite: source-in;
+    mask:
+        repeating-conic-gradient(from 215deg, #000 0 5.2deg, transparent 5.2deg 10.4deg),
+        radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+    mask-composite: intersect;
+}

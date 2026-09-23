@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - what a control sends</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    .canvasarea { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .canvaswrap { flex: 1; position: relative; overflow: hidden; background: #0A0B0E; }
+    .pagerect {
+        position: absolute; left: 14px; top: 12px; right: 14px; bottom: 12px;
+        border-radius: 6px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255,255,255,.10);
+    }
+    .window { height: 796px; }
+    .inspector { width: 420px; flex: 0 0 420px; }
+    .railcollapsed {
+        width: 34px; flex: 0 0 34px; border-right: 1px solid var(--divider);
+        display: flex; flex-direction: column; align-items: center; padding-top: 10px; gap: 14px;
+        color: var(--text3);
+    }
+    .railcollapsed .vtext { writing-mode: vertical-rl; font-size: 11px; color: var(--text3); }
+    .bindcard {
+        border-radius: 7px; background: rgba(255,255,255,.035);
+        box-shadow: inset 0 0 0 1px var(--stroke);
+        padding: 9px 10px; margin-bottom: 8px;
+    }
+    .bindcard.open { background: rgba(96,205,255,.07); box-shadow: inset 0 0 0 1px rgba(96,205,255,.38); }
+    .bindcard .bh { display: flex; align-items: center; gap: 7px; font-size: 11.5px; color: var(--text2); }
+    .bindcard .bh .num {
+        width: 17px; height: 17px; border-radius: 4px; font-size: 10px;
+        background: rgba(255,255,255,.08); color: var(--text3);
+        display: flex; align-items: center; justify-content: center; flex: 0 0 17px;
+    }
+    .bindcard.open .bh .num { background: var(--accent-deep); color: #00131C; }
+    .bindcard .bh .spacer { flex: 1; }
+    .bindcard .bsum { font-size: 11px; color: var(--text3); margin-top: 4px; margin-left: 24px; }
+    .bindcard .bsum b { color: var(--text2); font-weight: 600; font-family: "Cascadia Mono","Consolas",monospace; }
+    .bindbody { margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--divider); }
+    .irow .lbl { width: 66px; flex: 0 0 66px; }
+    .learnstrip {
+        margin-top: 8px; padding: 8px 10px; border-radius: 6px;
+        background: rgba(252,225,0,.10); box-shadow: inset 0 0 0 1px rgba(252,225,0,.35);
+        font-size: 11px; color: var(--caution); display: flex; align-items: center; gap: 8px;
+    }
+</style>
+</head>
+<body>
+<div class="page">
+<p class="caption-above">Screen 6 &mdash; the <b>MIDI</b> tab of the inspector. One control, three messages, two different devices. This is the part that has to be obvious, because it is the part every other control surface app gets wrong.</p>
+
+<div class="window">
+
+    <div class="titlebar">
+        <div class="appmark"></div>
+        <div class="title">Live Rig &mdash; Windows MIDI Glass</div>
+        <div class="preview-chiclet">PREVIEW</div>
+        <div class="spacer"></div>
+        <div class="caption-btn gl">&#xE713;</div>
+        <div class="caption-btn gl">&#xE840;</div>
+        <div class="sys-btns"><div class="gl">&#xE921;</div><div class="gl">&#xE922;</div><div class="gl">&#xE8BB;</div></div>
+    </div>
+
+    <div class="toolbar">
+        <div class="btn subtle small"><span class="gl">&#xE72B;</span>Library</div>
+        <div class="seg"><div class="sel gl" style="font-size:12px">&#xE70F;&nbsp; Edit</div><div>&#9654;&nbsp; Try</div></div>
+        <div class="sep"></div>
+        <div class="btn icon small gl">&#xE7A7;</div>
+        <div class="btn icon small gl">&#xE7A6;</div>
+        <div class="sep"></div>
+        <div class="btn small on"><span class="gl">&#xE80A;</span>Snap</div>
+        <div class="spacer"></div>
+        <div class="chip info"><span class="gl">&#xE9D9;</span>Devices: Iridium, Loopback A, Push</div>
+        <div class="chip on"><span class="gl">&#xE73E;</span>Saved</div>
+    </div>
+
+    <div class="shell">
+
+        <div class="railcollapsed">
+            <span class="gl" style="font-size:12px">&#xE76C;</span>
+            <span class="vtext">Palette</span>
+        </div>
+
+        <!-- ================================================== CANVAS -->
+        <div class="canvasarea">
+            <div class="canvaswrap">
+                <div class="pagerect surf grid">
+                    <div class="surftext h2" style="left:300px; top:12px; font-size:10px;">CLIPS</div>
+
+                    <div class="ctl btn-ctl hue1 on" style="left:26px;  top:44px; width:104px; height:60px;"><div class="name">Cue A</div><div class="pipe lit" style="background:#fff; box-shadow:0 0 8px #fff"></div></div>
+                    <div class="ctl btn-ctl hue1" style="left:148px; top:44px; width:104px; height:60px;"><div class="name">Cue B</div><div class="pipe"></div></div>
+                    <div class="ctl btn-ctl hue1" style="left:270px; top:44px; width:104px; height:60px;"><div class="name">Cue C</div><div class="pipe"></div></div>
+
+                    <div class="sel-box" style="left:24px; top:42px; width:108px; height:64px;">
+                        <i class="nw"></i><i class="n"></i><i class="ne"></i><i class="e"></i>
+                        <i class="se"></i><i class="s"></i><i class="sw"></i><i class="w"></i>
+                        <div class="sel-tag">Button &middot; Cue A</div>
+                    </div>
+
+                    <div class="ctl knob hue5" style="left:26px; top:146px; width:56px; height:56px;">
+                        <div class="dial"><div class="arc" style="--pct:.58turn; background:conic-gradient(from 215deg, rgb(var(--h5)) 0 .58turn, rgba(255,255,255,.10) .58turn .805turn, transparent .805turn);"></div><div class="ptr" style="transform:rotate(64deg)"></div></div>
+                    </div>
+                    <div class="ctl knob hue5" style="left:110px; top:146px; width:56px; height:56px;">
+                        <div class="dial"><div class="arc" style="--pct:.34turn; background:conic-gradient(from 215deg, rgb(var(--h5)) 0 .34turn, rgba(255,255,255,.10) .34turn .805turn, transparent .805turn);"></div><div class="ptr" style="transform:rotate(-23deg)"></div></div>
+                    </div>
+                    <div class="ctl xy hue2" style="left:194px; top:146px; width:180px; height:140px;">
+                        <div class="field2">
+                            <div class="cross h" style="top:40%"></div><div class="cross v" style="left:52%"></div>
+                            <div class="puck" style="left:52%; top:40%"></div>
+                        </div>
+                    </div>
+
+                    <div class="ctl fader hue3" style="left:26px; top:224px; width:36px; height:120px;">
+                        <div class="slot"><div class="fill" style="height:62%"></div><div class="capbar" style="bottom:calc(62% - 8px)"></div></div>
+                    </div>
+                    <div class="ctl fader hue3" style="left:74px; top:224px; width:36px; height:120px;">
+                        <div class="slot"><div class="fill" style="height:44%"></div><div class="capbar" style="bottom:calc(44% - 8px)"></div></div>
+                    </div>
+                    <div class="ctl fader hue3" style="left:122px; top:224px; width:36px; height:120px;">
+                        <div class="slot"><div class="fill" style="height:80%"></div><div class="capbar" style="bottom:calc(80% - 8px)"></div></div>
+                    </div>
+
+                    <div class="ctl steps hue4" style="left:194px; top:300px; width:180px; height:44px;">
+                        <div class="row" style="position:relative;"><i class="on"></i><i></i><i class="on cur"></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i></div>
+                    </div>
+
+                    <div class="ctl btn-ctl hue6 offline" style="left:26px; top:368px; width:104px; height:52px;">
+                        <div class="name" style="font-size:10px; color:rgba(255,255,255,.5)">Kit 2</div>
+                        <div class="cap" style="font-size:8.5px; color:rgba(255,153,164,.85)">Push is offline</div>
+                    </div>
+                    <div class="callout up" style="left:26px; top:430px; max-width:230px; white-space:normal;">
+                        A control whose device is gone says so, and the rest of the layout keeps working
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================== INSPECTOR -->
+        <div class="inspector">
+            <div class="ihead">
+                <div style="flex:1">
+                    <div class="itype">Button &middot; toggle</div>
+                    <div class="iname">Cue A</div>
+                </div>
+                <div class="btn small"><span class="gl">&#xE768;</span>Test</div>
+                <div class="btn icon small gl">&#xE712;</div>
+            </div>
+
+            <div class="pivot">
+                <div>Look</div><div class="sel">MIDI</div><div>Behavior</div>
+            </div>
+
+            <div class="iscroll" style="padding-top:12px">
+
+                <div class="igroup">
+                    <h3 style="display:flex; align-items:center">
+                        Sends
+                        <span style="margin-left:auto; font-weight:400; color:var(--text3)">3 messages</span>
+                    </h3>
+
+                    <!-- ---------------------------------------- binding 1, open -->
+                    <div class="bindcard open">
+                        <div class="bh">
+                            <span class="num">1</span>
+                            <span>When</span>
+                            <div class="field combo" style="width:124px; height:26px; font-size:11.5px">It turns on</div>
+                            <div class="spacer"></div>
+                            <span class="gl" style="font-size:11px; color:var(--text3)">&#xE70E;</span>
+                        </div>
+
+                        <div class="bindbody">
+                            <div class="irow">
+                                <span class="lbl">Send</span>
+                                <div class="field combo" style="flex:1">Note on</div>
+                            </div>
+                            <div class="irow">
+                                <span class="lbl">Note</span>
+                                <div class="field combo" style="width:104px">C3 &nbsp;(48)</div>
+                                <span class="lbl" style="width:56px; flex:0 0 56px; text-align:right">Velocity</span>
+                                <div class="field" style="flex:1">100&nbsp;%</div>
+                            </div>
+                            <div class="irow">
+                                <span class="lbl">To</span>
+                                <div class="field combo" style="flex:1">Synth</div>
+                                <div class="field combo" style="width:84px">Group 1</div>
+                                <div class="field combo" style="width:82px">Ch 1</div>
+                            </div>
+
+                            <div style="display:flex; gap:6px; margin-top:9px; align-items:center">
+                                <span class="chip info" style="height:20px; font-size:10px"><span class="gl">&#xE9D9;</span>MIDI 2.0 &middot; 16-bit velocity</span>
+                                <span class="chip" style="height:20px; font-size:10px">Iridium, USB</span>
+                                <div style="flex:1"></div>
+                                <span class="btn tiny gl">&#xE74D;</span>
+                            </div>
+                            <div style="font-size:10.5px; color:var(--text3); margin-top:7px; line-height:1.45">
+                                Wire: <span class="mono" style="color:var(--text2)">40&nbsp;90&nbsp;30&nbsp;00&nbsp;&nbsp;FF&nbsp;FF&nbsp;00&nbsp;00</span>.
+                                On a MIDI 1.0 device this becomes <span class="mono">90&nbsp;30&nbsp;7F</span> automatically.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ---------------------------------------- binding 2 -->
+                    <div class="bindcard">
+                        <div class="bh">
+                            <span class="num">2</span>
+                            <span style="color:var(--accent)">When it turns off</span>
+                            <div class="spacer"></div>
+                            <span class="gl" style="font-size:11px; color:var(--text3)">&#xE70D;</span>
+                        </div>
+                        <div class="bsum">Note off <b>C3</b> &nbsp;&rarr;&nbsp; Synth, group 1, channel 1</div>
+                    </div>
+
+                    <!-- ---------------------------------------- binding 3 -->
+                    <div class="bindcard">
+                        <div class="bh">
+                            <span class="num">3</span>
+                            <span style="color:var(--accent)">When it turns on</span>
+                            <div class="spacer"></div>
+                            <span class="gl" style="font-size:11px; color:var(--text3)">&#xE70D;</span>
+                        </div>
+                        <div class="bsum">Control change <b>64 = 127</b> &nbsp;&rarr;&nbsp; DAW, group 1, channel 16</div>
+                    </div>
+
+                    <div style="display:flex; gap:7px; margin-top:2px">
+                        <div class="btn small"><span class="gl">&#xE710;</span>Add a message</div>
+                        <div class="btn small"><span class="gl">&#xE8C8;</span>Add a sequence&hellip;</div>
+                        <div style="flex:1"></div>
+                        <div class="btn small on"><span class="gl">&#xE7C1;</span>Learn</div>
+                    </div>
+
+                    <div class="learnstrip">
+                        <span class="gl">&#xE7C1;</span>
+                        <span style="flex:1">Listening&hellip; press a pad on your controller and it will fill this in.</span>
+                        <span class="btn tiny">Stop</span>
+                    </div>
+                </div>
+
+                <div class="igroup" style="margin-top:16px">
+                    <h3>Light it up from the device</h3>
+                    <div class="bindcard">
+                        <div class="bh">
+                            <span class="num gl" style="font-size:10px">&#xE896;</span>
+                            <span>On</span>
+                            <div class="field combo" style="flex:1; height:26px; font-size:11.5px">Note on C3 from Synth</div>
+                        </div>
+                        <div class="bsum" style="margin-left:0">
+                            The control follows the device instead of its own state.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p class="note">
+<b>Destinations are named, not wired.</b> "Synth" and "DAW" are entries in the layout's own output table, so one
+control can send to several devices, and moving the whole layout to different hardware is one edit in one place
+instead of a hunt through two hundred controls. Group and channel stay per message, because it is completely
+normal to send the same control to two channels of one endpoint.
+<br><br>
+<b>Resolution is handled for the customer.</b> A value is stored once, as a fraction of full scale. If the
+endpoint speaks MIDI 2.0 it goes out at full 16 or 32-bit resolution; if it speaks MIDI 1.0 it is folded down to
+7 bits on the way out. Nobody has to know which, and the same layout file works on both.
+</p>
+
+</div>
+</body>
+</html>

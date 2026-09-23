@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - running: scale and the corner button</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    .board {
+        width: 1000px; border-radius: 8px; position: relative; overflow: hidden;
+        border: 1px solid rgba(255,255,255,.08);
+        background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+        box-shadow: var(--shadow);
+    }
+    .bhead { position: absolute; left: 16px; top: 14px; font-size: 11px; letter-spacing: .10em; color: rgba(255,255,255,.34); }
+
+    .mini { position: absolute; top: 44px; width: 314px; }
+    .minibar {
+        height: 24px; border-radius: 5px 5px 0 0; display: flex; align-items: center; gap: 7px;
+        padding: 0 8px; background: #262626; box-shadow: inset 0 0 0 1px var(--stroke);
+        font-size: 10.5px; color: var(--text3);
+    }
+    .minibar .dots { display: flex; gap: 3px; }
+    .minibar .dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.16); }
+    .viewport {
+        position: relative; width: 314px; height: 200px; overflow: hidden;
+        background: #050608; border-radius: 0 0 5px 5px;
+        box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    .scaler { position: absolute; left: 0; top: 0; width: 560px; height: 400px; transform-origin: 0 0; }
+    .vscroll { position: absolute; right: 2px; top: 4px; bottom: 12px; width: 5px; border-radius: 3px; background: rgba(255,255,255,.07); }
+    .vscroll i { position: absolute; left: 0; right: 0; border-radius: 3px; background: rgba(255,255,255,.34); }
+    .hscroll { position: absolute; left: 4px; right: 12px; bottom: 2px; height: 5px; border-radius: 3px; background: rgba(255,255,255,.07); }
+    .hscroll i { position: absolute; top: 0; bottom: 0; border-radius: 3px; background: rgba(255,255,255,.34); }
+    .pillar { position: absolute; top: 0; bottom: 0; width: 17px; background: #050608; }
+    .pillar.l { left: 0; border-right: 1px solid rgba(255,255,255,.10); }
+    .pillar.r { right: 0; border-left: 1px solid rgba(255,255,255,.10); }
+    .minicap { margin-top: 9px; font-size: 11px; color: var(--text3); line-height: 1.5; }
+    .minicap b { display: block; color: var(--text); font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+    .minicap .tag {
+        display: inline-block; font-size: 9.5px; padding: 1px 6px; border-radius: 8px; margin-left: 6px;
+        background: rgba(108,203,95,.16); color: var(--success); vertical-align: 1px;
+    }
+
+    /* ---- full screen ---- */
+    .fs { position: absolute; inset: 0; }
+    .cornerbtn {
+        position: absolute; width: 34px; height: 34px; border-radius: 8px;
+        background: rgba(12,14,19,.72); box-shadow: inset 0 0 0 1px rgba(255,255,255,.16);
+        display: grid; grid-template-columns: repeat(3, 4px); grid-template-rows: repeat(3, 4px);
+        gap: 3px; align-content: center; justify-content: center;
+    }
+    .cornerbtn i { width: 4px; height: 4px; border-radius: 1px; background: rgba(255,255,255,.62); }
+    .ghostcorner {
+        position: absolute; width: 34px; height: 34px; border-radius: 8px;
+        border: 1px dashed rgba(255,255,255,.20);
+    }
+    .fsflyout {
+        position: absolute; width: 274px; border-radius: 9px; padding: 9px;
+        background: rgba(24,26,32,.97); box-shadow: inset 0 0 0 1px rgba(255,255,255,.13), 0 14px 40px rgba(0,0,0,.6);
+    }
+    .fsflyout .grp { font-size: 10px; letter-spacing: .08em; color: var(--text3); margin: 6px 4px 5px 4px; }
+    .fsrow {
+        height: 32px; border-radius: 5px; display: flex; align-items: center; gap: 9px; padding: 0 9px;
+        font-size: 12px; color: var(--text2);
+    }
+    .fsrow:hover, .fsrow.hot { background: rgba(255,255,255,.07); }
+    .fsrow .sp { flex: 1; }
+    .fsrow .kbd { font-size: 10px; color: var(--text3); font-family: "Cascadia Mono","Consolas",monospace; }
+    .fsrow.danger { color: #FF9BA4; background: rgba(255,153,164,.10); box-shadow: inset 0 0 0 1px rgba(255,153,164,.30); }
+    .fsseg { display: flex; gap: 3px; padding: 0 4px; }
+    .fsseg div {
+        flex: 1; height: 28px; border-radius: 4px; display: flex; align-items: center; justify-content: center;
+        font-size: 11px; color: var(--text2); background: rgba(255,255,255,.045);
+        box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    .fsseg div.sel { background: rgba(96,205,255,.22); color: #fff; box-shadow: inset 0 0 0 1px rgba(96,205,255,.55); }
+    .fsdiv { height: 1px; background: rgba(255,255,255,.08); margin: 6px 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="caption-above">Screen 14 &mdash; <b>running</b>. A layout opens at the size it was designed at and scrolls if the window is smaller, because that is the only mode where a control is exactly the size the person who built it intended. <b>Fit to screen</b> is one press away and scales 1:1 on both axes, letterboxed. Whichever of the three a layout was last left in is what it opens in next time. Full screen carries no bar at all &mdash; just one small button, in the corner the customer picked.</p>
+
+<!-- ======================================================= THREE MODES -->
+<div class="board" style="height:330px;">
+    <div class="bhead">THREE SCALE MODES, SAVED PER LAYOUT</div>
+
+    <div class="mini" style="left:16px;">
+        <div class="minibar"><div class="dots"><i></i><i></i><i></i></div>Live Rig</div>
+        <div class="viewport">
+            <div class="scaler surf" style="transform:scale(1);">
+                <div class="surftext h1" style="left:16px; top:12px; font-size:17px;">Live Rig</div>
+                <div class="ctl knob hue2" style="left:22px; top:52px; width:44px; height:44px;"><div class="dial"><div class="arc" style="--pct:.52turn"></div><div class="ptr" style="transform:rotate(46deg)"></div></div></div>
+                <div class="ctl knob hue2" style="left:82px; top:52px; width:44px; height:44px;"><div class="dial"><div class="arc" style="--pct:.40turn"></div><div class="ptr" style="transform:rotate(0deg)"></div></div></div>
+                <div class="ctl knob hue2" style="left:142px; top:52px; width:44px; height:44px;"><div class="dial"><div class="arc" style="--pct:.63turn"></div><div class="ptr" style="transform:rotate(82deg)"></div></div></div>
+                <div class="ctl fader hue2" style="left:20px; top:108px; width:48px; height:150px;"><div class="slot"><div class="fill" style="height:74%"></div><div class="capbar" style="bottom:calc(74% - 8px);"></div></div></div>
+                <div class="ctl fader hue2" style="left:80px; top:108px; width:48px; height:150px;"><div class="slot"><div class="fill" style="height:58%"></div><div class="capbar" style="bottom:calc(58% - 8px);"></div></div></div>
+                <div class="ctl fader hue2" style="left:140px; top:108px; width:48px; height:150px;"><div class="slot"><div class="fill" style="height:88%"></div><div class="capbar" style="bottom:calc(88% - 8px);"></div></div></div>
+                <div class="ctl xy hue1" style="left:212px; top:52px; width:160px; height:160px;"><div class="field2"><div class="cross h" style="top:34%"></div><div class="cross v" style="left:58%"></div><div class="puck" style="left:58%; top:34%"></div></div></div>
+                <div class="ctl btn-ctl hue4" style="left:396px; top:52px; width:74px; height:48px;"><div class="name">Intro</div><div class="pipe"></div></div>
+                <div class="ctl btn-ctl hue4 on" style="left:478px; top:52px; width:74px; height:48px;"><div class="name">Build</div><div class="pipe lit"></div></div>
+                <div class="ctl btn-ctl hue4" style="left:396px; top:108px; width:74px; height:48px;"><div class="name">Drop</div><div class="pipe"></div></div>
+                <div class="ctl btn-ctl hue4" style="left:478px; top:108px; width:74px; height:48px;"><div class="name">Outro</div><div class="pipe"></div></div>
+                <div class="ctl fader hue3 horiz" style="left:212px; top:238px; width:340px; height:28px;"><div class="slot"><div class="fill" style="width:46%"></div><div class="capbar" style="left:calc(46% - 5px); width:10px; top:-7px; bottom:-7px; height:auto"></div></div></div>
+                <div class="ctl btn-ctl hue6" style="left:212px; top:290px; width:110px; height:46px;"><div class="name">Panic</div></div>
+                <div class="ctl btn-ctl hue5" style="left:334px; top:290px; width:110px; height:46px;"><div class="name">Tap</div><div class="pipe"></div></div>
+            </div>
+            <div class="vscroll"><i style="top:0; height:50%"></i></div>
+            <div class="hscroll"><i style="left:0; width:56%"></i></div>
+        </div>
+        <div class="minicap"><b>Actual size &mdash; 100&nbsp;%<span class="tag">default</span></b>Every control is exactly the size it was drawn. Scroll to reach the rest.</div>
+    </div>
+
+    <div class="mini" style="left:343px;">
+        <div class="minibar"><div class="dots"><i></i><i></i><i></i></div>Live Rig</div>
+        <div class="viewport">
+            <div class="scaler surf" style="transform:scale(.5); left:17px;">
+                <div class="surftext h1" style="left:16px; top:12px; font-size:17px;">Live Rig</div>
+                <div class="ctl knob hue2" style="left:22px; top:52px; width:44px; height:44px;"><div class="dial"><div class="arc" style="--pct:.52turn"></div><div class="ptr" style="transform:rotate(46deg)"></div></div></div>
+                <div class="ctl knob hue2" style="left:82px; top:52px; width:44px; height:44px;"><div class="dial"><div class="arc" style="--pct:.40turn"></div><div class="ptr" style="transform:rotate(0deg)"></div></div></div>
+                <div class="ctl knob hue2" style="left:142px; top:52px; width:44px; height:44px;"><div class="dial"><div class="arc" style="--pct:.63turn"></div><div class="ptr" style="transform:rotate(82deg)"></div></div></div>
+                <div class="ctl fader hue2" style="left:20px; top:108px; width:48px; height:150px;"><div class="slot"><div class="fill" style="height:74%"></div><div class="capbar" style="bottom:calc(74% - 8px);"></div></div></div>
+                <div class="ctl fader hue2" style="left:80px; top:108px; width:48px; height:150px;"><div class="slot"><div class="fill" style="height:58%"></div><div class="capbar" style="bottom:calc(58% - 8px);"></div></div></div>
+                <div class="ctl fader hue2" style="left:140px; top:108px; width:48px; height:150px;"><div class="slot"><div class="fill" style="height:88%"></div><div class="capbar" style="bottom:calc(88% - 8px);"></div></div></div>
+                <div class="ctl xy hue1" style="left:212px; top:52px; width:160px; height:160px;"><div class="field2"><div class="cross h" style="top:34%"></div><div class="cross v" style="left:58%"></div><div class="puck" style="left:58%; top:34%"></div></div></div>
+                <div class="ctl btn-ctl hue4" style="left:396px; top:52px; width:74px; height:48px;"><div class="name">Intro</div><div class="pipe"></div></div>
+                <div class="ctl btn-ctl hue4 on" style="left:478px; top:52px; width:74px; height:48px;"><div class="name">Build</div><div class="pipe lit"></div></div>
+                <div class="ctl btn-ctl hue4" style="left:396px; top:108px; width:74px; height:48px;"><div class="name">Drop</div><div class="pipe"></div></div>
+                <div class="ctl btn-ctl hue4" style="left:478px; top:108px; width:74px; height:48px;"><div class="name">Outro</div><div class="pipe"></div></div>
+                <div class="ctl fader hue3 horiz" style="left:212px; top:238px; width:340px; height:28px;"><div class="slot"><div class="fill" style="width:46%"></div><div class="capbar" style="left:calc(46% - 5px); width:10px; top:-7px; bottom:-7px; height:auto"></div></div></div>
+                <div class="ctl btn-ctl hue6" style="left:212px; top:290px; width:110px; height:46px;"><div class="name">Panic</div></div>
+                <div class="ctl btn-ctl hue5" style="left:334px; top:290px; width:110px; height:46px;"><div class="name">Tap</div><div class="pipe"></div></div>
+            </div>
+            <div class="pillar l"></div>
+            <div class="pillar r"></div>
+        </div>
+        <div class="minicap"><b>Fit to screen &mdash; 50&nbsp;%</b>Whole page, aspect kept, bars where it does not fill. One press, and it is the same on any machine.</div>
+    </div>
+
+    <div class="mini" style="left:670px;">
+        <div class="minibar"><div class="dots"><i></i><i></i><i></i></div>Live Rig</div>
+        <div class="viewport">
+            <div class="scaler surf" style="transform:scale(.72);">
+                <div class="surftext h1" style="left:16px; top:12px; font-size:17px;">Live Rig</div>
+                <div class="ctl knob hue2" style="left:22px; top:52px; width:44px; height:44px;"><div class="dial"><div class="arc" style="--pct:.52turn"></div><div class="ptr" style="transform:rotate(46deg)"></div></div></div>
+                <div class="ctl knob hue2" style="left:82px; top:52px; width:44px; height:44px;"><div class="dial"><div class="arc" style="--pct:.40turn"></div><div class="ptr" style="transform:rotate(0deg)"></div></div></div>
+                <div class="ctl knob hue2" style="left:142px; top:52px; width:44px; height:44px;"><div class="dial"><div class="arc" style="--pct:.63turn"></div><div class="ptr" style="transform:rotate(82deg)"></div></div></div>
+                <div class="ctl fader hue2" style="left:20px; top:108px; width:48px; height:150px;"><div class="slot"><div class="fill" style="height:74%"></div><div class="capbar" style="bottom:calc(74% - 8px);"></div></div></div>
+                <div class="ctl fader hue2" style="left:80px; top:108px; width:48px; height:150px;"><div class="slot"><div class="fill" style="height:58%"></div><div class="capbar" style="bottom:calc(58% - 8px);"></div></div></div>
+                <div class="ctl fader hue2" style="left:140px; top:108px; width:48px; height:150px;"><div class="slot"><div class="fill" style="height:88%"></div><div class="capbar" style="bottom:calc(88% - 8px);"></div></div></div>
+                <div class="ctl xy hue1" style="left:212px; top:52px; width:160px; height:160px;"><div class="field2"><div class="cross h" style="top:34%"></div><div class="cross v" style="left:58%"></div><div class="puck" style="left:58%; top:34%"></div></div></div>
+                <div class="ctl btn-ctl hue4" style="left:396px; top:52px; width:74px; height:48px;"><div class="name">Intro</div><div class="pipe"></div></div>
+                <div class="ctl btn-ctl hue4 on" style="left:478px; top:52px; width:74px; height:48px;"><div class="name">Build</div><div class="pipe lit"></div></div>
+                <div class="ctl btn-ctl hue4" style="left:396px; top:108px; width:74px; height:48px;"><div class="name">Drop</div><div class="pipe"></div></div>
+                <div class="ctl btn-ctl hue4" style="left:478px; top:108px; width:74px; height:48px;"><div class="name">Outro</div><div class="pipe"></div></div>
+                <div class="ctl fader hue3 horiz" style="left:212px; top:238px; width:340px; height:28px;"><div class="slot"><div class="fill" style="width:46%"></div><div class="capbar" style="left:calc(46% - 5px); width:10px; top:-7px; bottom:-7px; height:auto"></div></div></div>
+                <div class="ctl btn-ctl hue6" style="left:212px; top:290px; width:110px; height:46px;"><div class="name">Panic</div></div>
+                <div class="ctl btn-ctl hue5" style="left:334px; top:290px; width:110px; height:46px;"><div class="name">Tap</div><div class="pipe"></div></div>
+            </div>
+            <div class="vscroll"><i style="top:0; height:70%"></i></div>
+            <div class="hscroll"><i style="left:0; width:78%"></i></div>
+        </div>
+        <div class="minicap"><b>Custom &mdash; 72&nbsp;%</b>Anything in between, typed or stepped. Also saved, so a rig that always runs on the same screen stays put.</div>
+    </div>
+</div>
+
+<!-- ======================================================= FULL SCREEN -->
+<div class="board" style="height:462px; margin-top:12px;">
+    <div class="fs surf">
+        <div class="surftext h1" style="left:28px; top:20px; font-size:22px;">Club Deck</div>
+        <div class="surftext h2" style="left:28px; top:52px;">DECK A</div>
+        <div class="surftext readout" style="left:210px; top:20px; font-size:22px;">128.0</div>
+
+        <div class="ctl knob hue1" style="left:28px; top:76px; width:62px; height:62px;"><div class="dial"><div class="arc" style="--pct:.52turn"></div><div class="ptr" style="transform:rotate(46deg)"></div></div></div>
+        <div class="ctl knob hue1" style="left:104px; top:76px; width:62px; height:62px;"><div class="dial"><div class="arc" style="--pct:.40turn"></div><div class="ptr" style="transform:rotate(0deg)"></div></div></div>
+        <div class="ctl knob hue1" style="left:180px; top:76px; width:62px; height:62px;"><div class="dial"><div class="arc" style="--pct:.66turn"></div><div class="ptr" style="transform:rotate(92deg)"></div></div></div>
+        <div class="outlabel" style="left:28px; top:142px; width:62px; font-size:10px;">Low</div>
+        <div class="outlabel" style="left:104px; top:142px; width:62px; font-size:10px;">Mid</div>
+        <div class="outlabel" style="left:180px; top:142px; width:62px; font-size:10px;">High</div>
+
+        <div class="ctl fader hue1" style="left:28px; top:176px; width:52px; height:168px;"><div class="slot"><div class="fill" style="height:78%"></div><div class="capbar" style="bottom:calc(78% - 8px);"></div></div></div>
+        <div class="ctl fader hue1" style="left:92px; top:176px; width:52px; height:168px;"><div class="slot"><div class="fill" style="height:62%"></div><div class="capbar" style="bottom:calc(62% - 8px);"></div></div></div>
+        <div class="ctl fader hue1" style="left:156px; top:176px; width:52px; height:168px;"><div class="slot"><div class="fill" style="height:90%"></div><div class="capbar" style="bottom:calc(90% - 8px);"></div></div></div>
+
+        <div class="ctl xy hue4" style="left:268px; top:76px; width:190px; height:190px;"><div class="field2"><div class="cross h" style="top:40%"></div><div class="cross v" style="left:55%"></div><div class="trail" style="left:46%; top:52%"></div><div class="puck" style="left:55%; top:40%"></div></div></div>
+        <div class="outlabel" style="left:268px; top:270px; width:190px; font-size:10px;">Filter &middot; Resonance</div>
+
+        <div class="ctl btn-ctl hue3" style="left:268px; top:302px; width:90px; height:42px;"><div class="name">Kill LO</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue3 on" style="left:368px; top:302px; width:90px; height:42px;"><div class="name">Kill MID</div><div class="pipe lit"></div></div>
+
+        <div class="ctl fader hue2 horiz" style="left:28px; top:372px; width:430px; height:30px;"><div class="slot"><div class="fill" style="width:50%"></div><div class="capbar" style="left:calc(50% - 6px); width:12px; top:-8px; bottom:-8px; height:auto"></div></div></div>
+        <div class="outlabel" style="left:28px; top:408px; width:430px; font-size:10px;">Crossfader</div>
+
+        <div class="ctl steps hue5" style="left:492px; top:302px; width:300px; height:100px;">
+            <div class="row"><i class="on cur"></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i></div>
+            <div class="row"><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i></div>
+        </div>
+
+        <div class="ctl btn-ctl hue2 on" style="left:492px; top:76px; width:96px; height:60px;"><div class="glyph" style="font-size:18px">&#9654;</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue1" style="left:598px; top:76px; width:96px; height:60px;"><div class="name">Cue A</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1" style="left:704px; top:76px; width:96px; height:60px;"><div class="name">Cue B</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue5 held" style="left:492px; top:148px; width:96px; height:60px;"><div class="name">Loop 4</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue5" style="left:598px; top:148px; width:96px; height:60px;"><div class="name">Loop 8</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue6" style="left:704px; top:148px; width:96px; height:60px;"><div class="name">FX</div><div class="pipe"></div></div>
+
+        <!-- the only chrome in full screen -->
+        <div class="cornerbtn" style="right:14px; top:14px;"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="ghostcorner" style="left:14px; top:14px;"></div>
+        <div class="ghostcorner" style="left:14px; bottom:14px;"></div>
+        <div class="ghostcorner" style="right:14px; bottom:14px;"></div>
+
+        <div class="fsflyout" style="right:14px; top:56px;">
+            <div class="grp">SCALE</div>
+            <div class="fsseg"><div>Actual</div><div class="sel">Fit</div><div>72&nbsp;%</div></div>
+            <div class="fsdiv"></div>
+            <div class="grp">PAGE</div>
+            <div class="fsrow hot"><span class="gl" style="font-size:12px; color:rgb(var(--h1))">&#xE73E;</span>Decks<span class="sp"></span><span class="kbd">1</span></div>
+            <div class="fsrow">Mixer<span class="sp"></span><span class="kbd">2</span></div>
+            <div class="fsrow">Pads<span class="sp"></span><span class="kbd">3</span></div>
+            <div class="fsdiv"></div>
+            <div class="fsrow"><span class="gl" style="font-size:12px">&#xE7C4;</span>Move this button&hellip;</div>
+            <div class="fsrow"><span class="gl" style="font-size:12px">&#xE713;</span>Layout settings&hellip;</div>
+            <div class="fsrow"><span class="gl" style="font-size:12px">&#xE73F;</span>Leave full screen<span class="sp"></span><span class="kbd">Esc</span></div>
+            <div class="fsdiv"></div>
+            <div class="fsrow danger"><span class="gl" style="font-size:13px">&#xE7BA;</span>Panic &mdash; silence everything<span class="sp"></span><span class="kbd">F12</span></div>
+        </div>
+    </div>
+</div>
+
+<p class="note" style="margin-top:12px;">
+<b>One button, and it can move.</b> Full screen has no bar, no strip and no reserved edge &mdash; the deck runs to all four sides. The only chrome is a 34&nbsp;px button that sits in whichever corner the layout says, so it can be put where that particular rig has nothing important. It fades to about a quarter opacity a few seconds after the last touch and comes back on any pointer movement or a tap in that corner. The three dotted squares here are the other corners, shown only to make the setting obvious in this mockup. <b>Panic is also on a hardware key</b> and is the one item in the flyout that is always at the bottom, always the same color, and never moves &mdash; muscle memory matters more than tidiness for that one.
+</p>
+
+</div>
+</body>
+</html>

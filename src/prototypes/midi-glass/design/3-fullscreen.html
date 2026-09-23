@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - full screen</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    /* borderless, no title bar, no runbar - this is the whole display */
+    .fullscreen {
+        width: 1000px; height: 740px; border-radius: 4px; overflow: hidden;
+        position: relative; box-shadow: var(--shadow);
+        border: 1px solid rgba(255,255,255,.06);
+    }
+    /* "Neon Booth" theme - same language, different six colors and a hotter deck */
+    .neon {
+        --h1: 255, 62, 165;   /* hot pink  */
+        --h2: 0, 229, 255;    /* electric  */
+        --h3: 190, 255, 60;   /* lime      */
+        --h4: 255, 143, 28;   /* orange    */
+        --h5: 138, 99, 255;   /* ultra     */
+        --h6: 255, 60, 60;    /* red       */
+        --plate: rgba(13, 10, 18, 0.88);
+        background:
+            radial-gradient(90% 70% at 18% 8%, rgba(255,62,165,.10), transparent 60%),
+            radial-gradient(90% 70% at 84% 8%, rgba(0,229,255,.10), transparent 60%),
+            radial-gradient(120% 100% at 50% 110%, #16101E 0%, #0A070E 62%, #060409 100%);
+    }
+    .deckname {
+        position: absolute; font-family: "Segoe UI Variable Display","Segoe UI",sans-serif;
+        font-size: 15px; font-weight: 700; letter-spacing: .14em;
+    }
+    .platter { }
+    .platter .disc {
+        position: absolute; inset: 0; border-radius: 50%;
+        background:
+            repeating-conic-gradient(from 0deg, rgba(255,255,255,.028) 0deg 6deg, transparent 6deg 12deg),
+            radial-gradient(circle at 50% 42%, #1E1A28, #0C0912 72%);
+        box-shadow: inset 0 0 0 1px rgba(var(--hue), .30), inset 0 2px 0 rgba(255,255,255,.06);
+    }
+    .platter .marker {
+        position: absolute; left: 50%; top: 7%; width: 3px; height: 26%;
+        margin-left: -1.5px; border-radius: 2px;
+        background: rgb(var(--hue)); box-shadow: 0 0 12px rgba(var(--hue), .95);
+        transform-origin: 50% 165%;
+    }
+    .platter .hub {
+        position: absolute; inset: 31%; border-radius: 50%;
+        background: linear-gradient(180deg, #221C2E, #0D0A13);
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 0 22px rgba(var(--hue), .30);
+        display: flex; align-items: center; justify-content: center;
+        font-family: "Cascadia Mono","Consolas",monospace; font-size: 12px; color: rgba(255,255,255,.88);
+    }
+</style>
+</head>
+<body>
+<div class="page">
+<p class="caption-above">Screen 3 &mdash; full screen (F11). No title bar, no borders, the deck runs to every edge. A different layout and a different theme, to show that the language holds up with six other colors.</p>
+
+<div class="fullscreen surf neon">
+
+    <!-- ------------------------------------------------ auto-hide top bar -->
+    <div class="fs-bar">
+        <div class="fbtn"><span class="gl">&#xE72B;</span>Library</div>
+        <div class="fbtn"><span class="gl">&#xE70F;</span>Edit</div>
+        <div style="width:1px; height:18px; background:rgba(255,255,255,.12); margin:0 4px"></div>
+        <div class="fbtn" style="box-shadow:inset 0 0 0 1px rgba(0,229,255,.55); color:#9FF3FF">Deck view</div>
+        <div class="fbtn">Pads</div>
+        <div class="fbtn">FX</div>
+        <div class="spacer"></div>
+        <div class="fbtn"><span class="gl">&#xE73E;</span>2 outputs</div>
+        <div class="fbtn panic"><span class="gl">&#xE711;</span>Panic</div>
+        <div class="fbtn"><span class="gl">&#xE73F;</span>Leave full screen</div>
+    </div>
+
+    <div class="fs-toast" style="top:58px;">
+        Press <kbd>Esc</kbd> to leave full screen
+        <span style="color:rgba(255,255,255,.45); font-size:11.5px">&middot;&nbsp; pointer to the top edge for the bar</span>
+    </div>
+
+    <!-- ================================================== DECK A (left) -->
+    <div class="deckname" style="left:34px; top:96px; color:rgba(255,62,165,.85)">DECK A</div>
+    <div class="surftext readout" style="left:34px; top:118px; color:rgb(190,255,60); text-shadow:0 0 14px rgba(190,255,60,.5)">128.0</div>
+    <div class="surftext small" style="left:132px; top:128px; color:rgba(255,255,255,.35)">+0.4&nbsp;%</div>
+
+    <div class="ctl platter hue1" style="left:34px; top:156px; width:196px; height:196px; border-radius:50%; background:none; box-shadow:none;">
+        <div class="disc"></div>
+        <div class="marker" style="transform:rotate(38deg)"></div>
+        <div class="hub">A</div>
+    </div>
+
+    <div class="ctl knob hue1" style="left:250px; top:162px; width:56px; height:56px;">
+        <div class="dial"><div class="arc" style="--pct:.60turn; background:conic-gradient(from 215deg, rgb(var(--h1)) 0 .60turn, rgba(255,255,255,.10) .60turn .805turn, transparent .805turn);"></div><div class="ptr" style="transform:rotate(69deg)"></div></div>
+    </div>
+    <div class="outlabel" style="left:246px; top:222px; width:64px;">HIGH</div>
+
+    <div class="ctl knob hue1" style="left:250px; top:244px; width:56px; height:56px;">
+        <div class="dial"><div class="arc" style="--pct:.40turn; background:conic-gradient(from 215deg, rgb(var(--h1)) 0 .40turn, rgba(255,255,255,.10) .40turn .805turn, transparent .805turn);"></div><div class="ptr" style="transform:rotate(-1deg)"></div></div>
+    </div>
+    <div class="outlabel" style="left:246px; top:304px; width:64px;">MID</div>
+
+    <div class="ctl knob hue1" style="left:250px; top:326px; width:56px; height:56px;">
+        <div class="dial"><div class="arc" style="--pct:.22turn; background:conic-gradient(from 215deg, rgb(var(--h1)) 0 .22turn, rgba(255,255,255,.10) .22turn .805turn, transparent .805turn);"></div><div class="ptr" style="transform:rotate(-66deg)"></div></div>
+    </div>
+    <div class="outlabel" style="left:246px; top:386px; width:64px;">LOW</div>
+
+    <div class="ctl fader hue3" style="left:330px; top:156px; width:38px; height:230px;">
+        <div class="slot"><div class="ticks"><i style="top:10%"></i><i style="top:30%"></i><i style="top:50%"></i><i style="top:70%"></i><i style="top:90%"></i></div>
+            <div class="fill" style="height:53%"></div><div class="capbar" style="bottom:calc(53% - 8px)"></div></div>
+    </div>
+    <div class="outlabel" style="left:322px; top:390px; width:54px;">TEMPO</div>
+
+    <div class="ctl btn-ctl hue2 on" style="left:34px; top:372px; width:92px; height:52px;">
+        <div class="glyph" style="font-size:17px">&#9654;</div>
+        <div class="pipe lit" style="background:#fff; box-shadow:0 0 9px #fff"></div>
+    </div>
+    <div class="ctl btn-ctl hue3" style="left:138px; top:372px; width:92px; height:52px;">
+        <div class="name" style="font-size:11px">CUE</div><div class="pipe"></div>
+    </div>
+    <div class="ctl btn-ctl hue5" style="left:34px; top:436px; width:60px; height:44px;"><div class="name" style="font-size:10px">SYNC</div></div>
+    <div class="ctl btn-ctl hue5" style="left:102px; top:436px; width:60px; height:44px;"><div class="name" style="font-size:10px">LOOP</div></div>
+    <div class="ctl btn-ctl hue5" style="left:170px; top:436px; width:60px; height:44px;"><div class="name" style="font-size:10px">FX</div></div>
+
+    <!-- hot cues A -->
+    <div class="ctl btn-ctl hue4" style="left:34px;  top:500px; width:92px; height:52px;"><div class="name" style="font-size:10px">CUE 1</div><div class="pipe lit"></div></div>
+    <div class="ctl btn-ctl hue4" style="left:138px; top:500px; width:92px; height:52px;"><div class="name" style="font-size:10px">CUE 2</div><div class="pipe lit"></div></div>
+    <div class="ctl btn-ctl hue4" style="left:242px; top:500px; width:92px; height:52px;"><div class="name" style="font-size:10px">CUE 3</div><div class="pipe"></div></div>
+    <div class="ctl btn-ctl hue4" style="left:34px;  top:564px; width:92px; height:52px;"><div class="name" style="font-size:10px">ROLL 1/4</div></div>
+    <div class="ctl btn-ctl hue4" style="left:138px; top:564px; width:92px; height:52px;"><div class="name" style="font-size:10px">ROLL 1/8</div></div>
+    <div class="ctl btn-ctl hue4 held" style="left:242px; top:564px; width:92px; height:52px;"><div class="name" style="font-size:10px">ROLL 1/16</div></div>
+
+    <!-- ================================================== CENTER column -->
+    <div class="surfrule" style="left:390px; top:112px; width:220px;"></div>
+    <div class="surftext h2" style="left:466px; top:124px; color:rgba(255,255,255,.35)">MIXER</div>
+
+    <div class="ctl knob hue6" style="left:472px; top:150px; width:56px; height:56px;">
+        <div class="dial"><div class="arc" style="--pct:.66turn; background:conic-gradient(from 215deg, rgb(var(--h6)) 0 .66turn, rgba(255,255,255,.10) .66turn .805turn, transparent .805turn);"></div><div class="ptr" style="transform:rotate(90deg)"></div></div>
+    </div>
+    <div class="outlabel" style="left:468px; top:210px; width:64px;">MASTER</div>
+
+    <div class="ctl clockctl hue3" style="left:466px; top:232px; width:68px; height:96px;">
+        <div class="ringwrap" style="width:46px; height:46px;">
+            <div class="sweep" style="--pct:.38turn"></div>
+            <div class="beat" style="font-size:13px">2</div>
+        </div>
+        <div class="pips"><i class="lit"></i><i class="lit"></i><i></i><i></i></div>
+    </div>
+
+    <div class="ctl fader hue2" style="left:396px; top:150px; width:42px; height:226px;">
+        <div class="slot"><div class="fill" style="height:82%"></div><div class="capbar" style="bottom:calc(82% - 8px)"></div></div>
+    </div>
+    <div class="ctl meter hue3" style="left:442px; top:150px; width:16px; height:226px; padding:5px 4px;">
+        <i class="hot"></i><i class="warn"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i>
+        <i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i>
+    </div>
+    <div class="ctl meter hue3" style="left:542px; top:150px; width:16px; height:226px; padding:5px 4px;">
+        <i class="hot"></i><i class="warn"></i><i class="warn"></i><i></i><i class="lit"></i><i class="lit"></i>
+        <i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i>
+    </div>
+    <div class="ctl fader hue2" style="left:562px; top:150px; width:42px; height:226px;">
+        <div class="slot"><div class="fill" style="height:64%"></div><div class="capbar" style="bottom:calc(64% - 8px)"></div></div>
+    </div>
+    <div class="outlabel" style="left:390px; top:382px; width:54px;">A</div>
+    <div class="outlabel" style="left:556px; top:382px; width:54px;">B</div>
+
+    <div class="ctl fader horiz hue1" style="left:398px; top:424px; width:204px; height:48px;">
+        <div class="slot" style="height:10px"><div class="fill" style="width:38%"></div><div class="capbar" style="left:calc(38% - 9px); width:18px"></div></div>
+    </div>
+    <div class="outlabel" style="left:398px; top:478px; width:204px;">CROSSFADER</div>
+
+    <div class="ctl xy hue5" style="left:398px; top:506px; width:204px; height:110px;">
+        <div class="field2">
+            <div class="cross h" style="top:30%"></div>
+            <div class="cross v" style="left:44%"></div>
+            <div class="trail" style="left:34%; top:52%; opacity:.25"></div>
+            <div class="trail" style="left:39%; top:40%; opacity:.5"></div>
+            <div class="puck" style="left:44%; top:30%"></div>
+        </div>
+    </div>
+    <div class="outlabel" style="left:398px; top:620px; width:204px;">FILTER &nbsp;/&nbsp; ECHO</div>
+
+    <!-- ================================================== DECK B (right) -->
+    <div class="deckname" style="right:34px; top:96px; color:rgba(0,229,255,.85); text-align:right">DECK B</div>
+    <div class="surftext readout" style="right:34px; top:118px; color:rgb(190,255,60); text-shadow:0 0 14px rgba(190,255,60,.5)">127.6</div>
+    <div class="surftext small" style="right:132px; top:128px; color:rgba(255,255,255,.35)">&minus;0.2&nbsp;%</div>
+
+    <div class="ctl platter hue2" style="right:34px; top:156px; width:196px; height:196px; border-radius:50%; background:none; box-shadow:none;">
+        <div class="disc"></div>
+        <div class="marker" style="transform:rotate(-104deg)"></div>
+        <div class="hub">B</div>
+    </div>
+
+    <div class="ctl knob hue2" style="right:250px; top:162px; width:56px; height:56px;">
+        <div class="dial"><div class="arc" style="--pct:.52turn; background:conic-gradient(from 215deg, rgb(var(--h2)) 0 .52turn, rgba(255,255,255,.10) .52turn .805turn, transparent .805turn);"></div><div class="ptr" style="transform:rotate(44deg)"></div></div>
+    </div>
+    <div class="outlabel" style="right:246px; top:222px; width:64px;">HIGH</div>
+
+    <div class="ctl knob hue2" style="right:250px; top:244px; width:56px; height:56px;">
+        <div class="dial"><div class="arc" style="--pct:.44turn; background:conic-gradient(from 215deg, rgb(var(--h2)) 0 .44turn, rgba(255,255,255,.10) .44turn .805turn, transparent .805turn);"></div><div class="ptr" style="transform:rotate(14deg)"></div></div>
+    </div>
+    <div class="outlabel" style="right:246px; top:304px; width:64px;">MID</div>
+
+    <div class="ctl knob hue2" style="right:250px; top:326px; width:56px; height:56px;">
+        <div class="dial"><div class="arc" style="--pct:.50turn; background:conic-gradient(from 215deg, rgb(var(--h2)) 0 .50turn, rgba(255,255,255,.10) .50turn .805turn, transparent .805turn);"></div><div class="ptr" style="transform:rotate(35deg)"></div></div>
+    </div>
+    <div class="outlabel" style="right:246px; top:386px; width:64px;">LOW</div>
+
+    <div class="ctl fader hue3" style="right:330px; top:156px; width:38px; height:230px;">
+        <div class="slot"><div class="ticks"><i style="top:10%"></i><i style="top:30%"></i><i style="top:50%"></i><i style="top:70%"></i><i style="top:90%"></i></div>
+            <div class="fill" style="height:47%"></div><div class="capbar" style="bottom:calc(47% - 8px)"></div></div>
+    </div>
+    <div class="outlabel" style="right:322px; top:390px; width:54px;">TEMPO</div>
+
+    <div class="ctl btn-ctl hue2" style="right:138px; top:372px; width:92px; height:52px;">
+        <div class="glyph" style="font-size:17px">&#9654;</div><div class="pipe"></div>
+    </div>
+    <div class="ctl btn-ctl hue3 on" style="right:34px; top:372px; width:92px; height:52px;">
+        <div class="name" style="font-size:11px">CUE</div><div class="pipe lit" style="background:#fff; box-shadow:0 0 9px #fff"></div>
+    </div>
+    <div class="ctl btn-ctl hue5" style="right:170px; top:436px; width:60px; height:44px;"><div class="name" style="font-size:10px">SYNC</div></div>
+    <div class="ctl btn-ctl hue5" style="right:102px; top:436px; width:60px; height:44px;"><div class="name" style="font-size:10px">LOOP</div></div>
+    <div class="ctl btn-ctl hue5" style="right:34px;  top:436px; width:60px; height:44px;"><div class="name" style="font-size:10px">FX</div></div>
+
+    <div class="ctl btn-ctl hue4" style="right:242px; top:500px; width:92px; height:52px;"><div class="name" style="font-size:10px">CUE 1</div><div class="pipe lit"></div></div>
+    <div class="ctl btn-ctl hue4" style="right:138px; top:500px; width:92px; height:52px;"><div class="name" style="font-size:10px">CUE 2</div><div class="pipe"></div></div>
+    <div class="ctl btn-ctl hue4" style="right:34px;  top:500px; width:92px; height:52px;"><div class="name" style="font-size:10px">CUE 3</div><div class="pipe"></div></div>
+    <div class="ctl btn-ctl hue4" style="right:242px; top:564px; width:92px; height:52px;"><div class="name" style="font-size:10px">ROLL 1/4</div></div>
+    <div class="ctl btn-ctl hue4" style="right:138px; top:564px; width:92px; height:52px;"><div class="name" style="font-size:10px">ROLL 1/8</div></div>
+    <div class="ctl btn-ctl hue4" style="right:34px;  top:564px; width:92px; height:52px;"><div class="name" style="font-size:10px">ROLL 1/16</div></div>
+
+    <!-- --------------------------------------------------- bottom strip -->
+    <div class="ctl steps hue3" style="left:34px; top:640px; width:300px; height:66px;">
+        <div class="row" style="position:relative;"><i class="on"></i><i></i><i class="on cur"></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i></div>
+    </div>
+    <div class="ctl lfo hue1" style="left:398px; top:640px; width:204px; height:66px;">
+        <div class="head"><span style="color:rgba(255,255,255,.45)">LFO &middot; ramp</span><span class="mono" style="color:rgba(255,62,165,.9)">1/4</span></div>
+        <svg viewBox="0 0 190 26" preserveAspectRatio="none">
+            <path d="M0,24 L46,3 L46,24 L92,3 L92,24 L138,3 L138,24 L184,3" fill="none" stroke="rgba(255,62,165,.9)" stroke-width="2"/>
+            <circle cx="115" cy="13" r="3.5" fill="rgb(255,62,165)"/>
+        </svg>
+    </div>
+    <div class="ctl joy hue2" style="right:242px; top:634px; width:76px; height:76px;">
+        <div class="ring"></div><div class="spring"></div>
+        <div class="puck" style="left:50%; top:50%; width:22px; height:22px; margin:-11px 0 0 -11px;"></div>
+    </div>
+    <div class="ctl hue3" style="right:34px; top:640px; width:190px; height:66px; align-items:center; justify-content:center; gap:2px;">
+        <div class="mono" style="font-size:19px; color:rgb(190,255,60); text-shadow:0 0 14px rgba(190,255,60,.5)">03:41.8</div>
+        <div style="font-size:9.5px; color:rgba(255,255,255,.35); letter-spacing:.10em">REMAINING</div>
+    </div>
+
+</div>
+
+<p class="note">
+<b>Full screen is a presentation mode, not a different app.</b> F11 or the button flips it; the surface keeps
+running and nothing reconnects. The toast fades after about two and a half seconds and never comes back unless
+the pointer leaves and returns. On a tablet there is no Esc key, so the same bar slides down from the top edge on
+a swipe or a tap in the top strip, and it carries Panic. While a layout is running full screen the app holds a
+<span class="mono">display required</span> request, so a performer's screen never blanks mid-set. Which display
+it opens on is remembered per layout.
+</p>
+
+</div>
+</body>
+</html>

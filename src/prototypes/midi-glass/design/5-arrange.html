@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - arranging controls</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    .canvasarea { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .canvaswrap { flex: 1; position: relative; overflow: hidden; background: #0A0B0E; }
+    .pagerect {
+        position: absolute; left: 14px; top: 12px; right: 14px; bottom: 12px;
+        border-radius: 6px; overflow: hidden;
+        box-shadow: 0 0 0 1px rgba(255,255,255,.10);
+    }
+    .railcollapsed {
+        width: 34px; flex: 0 0 34px; border-left: 1px solid var(--divider);
+        display: flex; flex-direction: column; align-items: center; padding-top: 10px; gap: 14px;
+        color: var(--text3);
+    }
+    .railcollapsed .vtext {
+        writing-mode: vertical-rl; font-size: 11px; color: var(--text3); letter-spacing: .02em;
+    }
+    .flyout {
+        position: absolute; right: 44px; top: 48px; width: 292px;
+        background: #2C2C2C; border: 1px solid var(--stroke-strong);
+        border-radius: 8px; box-shadow: 0 14px 40px rgba(0,0,0,.66);
+        z-index: 40; overflow: hidden;
+    }
+    .flyout .fh { padding: 13px 16px 4px 16px; font-size: 15px; font-weight: 600; }
+    .flyout .fb { padding: 4px 16px 12px 16px; }
+    .flyout .ff { padding: 12px 16px; display: flex; gap: 8px; background: rgba(0,0,0,.16); border-top: 1px solid var(--divider); }
+    .flyout .ff .btn { flex: 1; justify-content: center; }
+    .menu {
+        position: absolute; background: #2C2C2C; border: 1px solid var(--stroke-strong);
+        border-radius: 7px; box-shadow: 0 10px 28px rgba(0,0,0,.6);
+        padding: 4px; z-index: 41; font-size: 12.5px; width: 208px;
+    }
+    .menu div.mi { height: 29px; display: flex; align-items: center; gap: 10px; padding: 0 10px; color: var(--text2); }
+    .menu div.mi .gl { font-size: 13px; }
+    .menu div.mi .k { margin-left: auto; font-size: 10.5px; color: var(--text3); }
+    .menu .msep { height: 1px; background: var(--divider); margin: 4px 8px; }
+    .taborder {
+        position: absolute; width: 16px; height: 16px; border-radius: 8px;
+        background: rgba(252,225,0,.92); color: #241F00;
+        font-size: 9.5px; font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,.6); z-index: 12;
+    }
+    .pagerail {
+        height: 34px; flex: 0 0 34px; display: flex; align-items: center; gap: 5px;
+        padding: 0 10px; border-top: 1px solid var(--divider);
+    }
+    .prtab {
+        height: 23px; padding: 0 10px; border-radius: 4px; font-size: 11.5px;
+        color: var(--text3); display: flex; align-items: center; gap: 6px;
+        box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    .prtab.sel { color: var(--text); background: rgba(96,205,255,.16); box-shadow: inset 0 0 0 1px rgba(96,205,255,.5); }
+    .prtab .dot { width: 6px; height: 6px; border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="page">
+<p class="caption-above">Screen 5 &mdash; positioning, snapping and building a bank. Top half: magnetic guides and equal-spacing pills. Bottom half: <b>Repeat</b>, which builds a whole fader bank <i>and</i> increments the MIDI binding as it goes.</p>
+
+<div class="window">
+
+    <div class="titlebar">
+        <div class="appmark"></div>
+        <div class="title">Live Rig &mdash; Windows MIDI Glass</div>
+        <div class="preview-chiclet">PREVIEW</div>
+        <div class="spacer"></div>
+        <div class="caption-btn gl">&#xE713;</div>
+        <div class="caption-btn gl">&#xE840;</div>
+        <div class="sys-btns"><div class="gl">&#xE921;</div><div class="gl">&#xE922;</div><div class="gl">&#xE8BB;</div></div>
+    </div>
+
+    <div class="toolbar">
+        <div class="btn subtle small"><span class="gl">&#xE72B;</span>Library</div>
+        <div class="seg"><div class="sel gl" style="font-size:12px">&#xE70F;&nbsp; Edit</div><div>&#9654;&nbsp; Try</div></div>
+        <div class="sep"></div>
+        <div class="btn icon small gl">&#xE7A7;</div>
+        <div class="btn icon small gl">&#xE7A6;</div>
+        <div class="sep"></div>
+        <div class="btn small on"><span class="gl">&#xE80A;</span>Snap</div>
+        <div class="field combo flat" style="width:82px; height:28px; font-size:11.5px">8 px grid</div>
+        <div class="sep"></div>
+        <div class="btn small on"><span class="gl">&#xE8E4;</span>Arrange<span class="gl" style="font-size:9px">&#xE70D;</span></div>
+        <div class="btn small"><span class="gl">&#xE71D;</span>Group</div>
+        <div class="spacer"></div>
+        <div class="chip info"><span class="gl">&#xE70F;</span>3 selected</div>
+        <div class="chip warn"><span class="gl">&#xE8AB;</span>Not saved</div>
+    </div>
+
+    <div class="shell">
+
+        <!-- =============================================== palette (narrow) -->
+        <div class="palette" style="width:150px; flex:0 0 150px;">
+            <div class="psearch"><div class="field" style="height:28px"><span class="gl">&#xE721;</span><span class="ph">Find</span></div></div>
+            <div class="pscroll">
+                <h3>My snippets</h3>
+                <div class="pgrid" style="grid-template-columns:repeat(2,1fr)">
+                    <div class="ptile" style="height:58px"><span class="pico" style="display:block; width:20px; height:22px; background:linear-gradient(90deg, rgba(96,205,255,.75) 0 4px, transparent 4px 8px, rgba(96,205,255,.75) 8px 12px)"></span>Channel strip</div>
+                    <div class="ptile" style="height:58px"><span class="pico gl" style="font-size:15px">&#xE768;</span>Transport</div>
+                </div>
+                <div style="font-size:10px; color:var(--text3); line-height:1.5; margin:9px 2px 0 2px">
+                    Select anything, right-click and <b style="color:var(--text2)">Save as a snippet</b> to reuse it in
+                    any layout.
+                </div>
+
+                <h3>Recently used</h3>
+                <div class="pgrid" style="grid-template-columns:repeat(2,1fr)">
+                    <div class="ptile" style="height:50px"><span class="pico" style="display:block; width:5px; height:19px; border-radius:3px; background:rgba(96,205,255,.7)"></span>Fader</div>
+                    <div class="ptile" style="height:50px"><span class="pico" style="display:block; width:17px; height:17px; border-radius:50%; box-shadow:inset 0 0 0 2px rgba(96,205,255,.85)"></span>Knob</div>
+                    <div class="ptile" style="height:50px"><span class="pico" style="display:block; width:22px; height:14px; border-radius:3px; box-shadow:inset 0 0 0 1px rgba(96,205,255,.8)"></span>Button</div>
+                    <div class="ptile" style="height:50px"><span class="pico mono" style="font-size:11px">Aa</span>Text</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================== CANVAS -->
+        <div class="canvasarea">
+            <div class="canvaswrap">
+                <div class="pagerect surf grid">
+
+                    <!-- ======================= TOP: three pads being aligned ==== -->
+                    <div class="surftext h2" style="left:18px; top:12px; font-size:10px;">CLIP ROW</div>
+
+                    <div class="ctl btn-ctl hue1" style="left:24px;  top:44px; width:80px; height:58px;"><div class="name" style="font-size:10px">Intro</div><div class="pipe"></div></div>
+                    <div class="ctl btn-ctl hue1" style="left:120px; top:44px; width:80px; height:58px;"><div class="name" style="font-size:10px">Verse</div><div class="pipe"></div></div>
+                    <div class="ctl btn-ctl hue1" style="left:216px; top:44px; width:80px; height:58px;"><div class="name" style="font-size:10px">Build</div><div class="pipe"></div></div>
+                    <div class="ctl btn-ctl hue1" style="left:312px; top:52px; width:80px; height:58px;"><div class="name" style="font-size:10px">Drop</div><div class="pipe"></div></div>
+
+                    <!-- selection on the first three -->
+                    <div class="sel-box multi" style="left:22px;  top:42px; width:84px; height:62px;"></div>
+                    <div class="sel-box multi" style="left:118px; top:42px; width:84px; height:62px;"></div>
+                    <div class="sel-box multi" style="left:214px; top:42px; width:84px; height:62px;">
+                        <i class="nw"></i><i class="n"></i><i class="ne"></i><i class="e"></i>
+                        <i class="se"></i><i class="s"></i><i class="sw"></i><i class="w"></i>
+                    </div>
+
+                    <!-- the fourth is being dragged, so guides light up -->
+                    <div class="guide h" style="left:14px; top:44px; width:396px;"></div>
+                    <div class="gap-pill" style="left:300px; top:14px;">top edges line up</div>
+
+                    <div class="gap-bar" style="left:104px; top:118px; width:16px;"></div>
+                    <div class="gap-pill" style="left:100px; top:124px;">16</div>
+                    <div class="gap-bar" style="left:200px; top:118px; width:16px;"></div>
+                    <div class="gap-pill" style="left:196px; top:124px;">16</div>
+                    <div class="gap-bar" style="left:296px; top:118px; width:16px;"></div>
+                    <div class="gap-pill" style="left:292px; top:124px;">16</div>
+                    <div class="gap-pill" style="left:330px; top:124px; background:rgba(255,107,214,.20); color:rgb(255,107,214)">spacing is equal</div>
+
+                    <!-- ======================= MIDDLE: the repeat / array ======= -->
+                    <div class="surfrule" style="left:18px; top:164px; width:430px;"></div>
+                    <div class="surftext h2" style="left:18px; top:176px; font-size:10px;">FADER BANK &mdash; BEING GENERATED</div>
+
+                    <!-- the source, selected -->
+                    <div class="ctl fader hue2" style="left:24px; top:208px; width:40px; height:172px;">
+                        <div class="slot"><div class="fill" style="height:68%"></div><div class="capbar" style="bottom:calc(68% - 8px)"></div></div>
+                    </div>
+                    <div class="outlabel" style="left:18px; top:384px; width:52px; font-size:9px;">Ch 1</div>
+                    <div class="sel-box" style="left:22px; top:206px; width:44px; height:176px;">
+                        <i class="nw"></i><i class="n"></i><i class="ne"></i><i class="e"></i>
+                        <i class="se"></i><i class="s"></i><i class="sw"></i><i class="w"></i>
+                        <div class="sel-tag">Source</div>
+                    </div>
+
+                    <!-- the generated ghosts -->
+                    <div class="ctl fader hue2 ghost" style="left:80px;  top:208px; width:40px; height:172px;"><div class="slot"><div class="fill" style="height:68%"></div></div></div>
+                    <div class="ctl fader hue2 ghost" style="left:136px; top:208px; width:40px; height:172px;"><div class="slot"><div class="fill" style="height:68%"></div></div></div>
+                    <div class="ctl fader hue2 ghost" style="left:192px; top:208px; width:40px; height:172px;"><div class="slot"><div class="fill" style="height:68%"></div></div></div>
+                    <div class="ctl fader hue2 ghost" style="left:248px; top:208px; width:40px; height:172px;"><div class="slot"><div class="fill" style="height:68%"></div></div></div>
+                    <div class="ctl fader hue2 ghost" style="left:304px; top:208px; width:40px; height:172px;"><div class="slot"><div class="fill" style="height:68%"></div></div></div>
+                    <div class="ctl fader hue2 ghost" style="left:360px; top:208px; width:40px; height:172px;"><div class="slot"><div class="fill" style="height:68%"></div></div></div>
+                    <div class="ctl fader hue2 ghost" style="left:416px; top:208px; width:40px; height:172px;"><div class="slot"><div class="fill" style="height:68%"></div></div></div>
+
+                    <div class="outlabel" style="left:74px;  top:384px; width:52px; font-size:9px; color:rgba(96,205,255,.75)">Ch 2</div>
+                    <div class="outlabel" style="left:130px; top:384px; width:52px; font-size:9px; color:rgba(96,205,255,.75)">Ch 3</div>
+                    <div class="outlabel" style="left:186px; top:384px; width:52px; font-size:9px; color:rgba(96,205,255,.75)">Ch 4</div>
+                    <div class="outlabel" style="left:242px; top:384px; width:52px; font-size:9px; color:rgba(96,205,255,.75)">Ch 5</div>
+                    <div class="outlabel" style="left:298px; top:384px; width:52px; font-size:9px; color:rgba(96,205,255,.75)">Ch 6</div>
+                    <div class="outlabel" style="left:354px; top:384px; width:52px; font-size:9px; color:rgba(96,205,255,.75)">Ch 7</div>
+                    <div class="outlabel" style="left:410px; top:384px; width:52px; font-size:9px; color:rgba(96,205,255,.75)">Ch 8</div>
+
+                    <div class="gap-bar" style="left:64px; top:402px; width:16px;"></div>
+                    <div class="gap-pill" style="left:60px; top:408px;">16</div>
+
+                    <!-- a marquee being dragged over the source and the ghosts -->
+                    <div class="marquee" style="left:14px; top:198px; width:450px; height:200px;"></div>
+
+                    <!-- ======================= BOTTOM: tab order overlay ========= -->
+                    <div class="surfrule" style="left:18px; top:440px; width:430px;"></div>
+                    <div class="surftext h2" style="left:18px; top:452px; font-size:10px;">KEYBOARD ORDER &mdash; DRAG A BADGE TO REORDER</div>
+
+                    <div class="ctl btn-ctl hue3" style="left:24px; top:482px; width:76px; height:46px;"><div class="name" style="font-size:9px">Play</div></div>
+                    <div class="taborder" style="left:18px; top:476px;">1</div>
+                    <div class="ctl btn-ctl hue3" style="left:112px; top:482px; width:76px; height:46px;"><div class="name" style="font-size:9px">Stop</div></div>
+                    <div class="taborder" style="left:106px; top:476px;">2</div>
+                    <div class="ctl knob hue5" style="left:208px; top:480px; width:48px; height:48px;">
+                        <div class="dial"><div class="arc" style="--pct:.45turn; background:conic-gradient(from 215deg, rgb(var(--h5)) 0 .45turn, rgba(255,255,255,.10) .45turn .805turn, transparent .805turn);"></div><div class="ptr" style="transform:rotate(18deg)"></div></div>
+                    </div>
+                    <div class="taborder" style="left:202px; top:474px;">3</div>
+                    <div class="ctl fader horiz hue2" style="left:276px; top:486px; width:120px; height:38px;">
+                        <div class="slot"><div class="fill" style="width:60%"></div><div class="capbar" style="left:calc(60% - 8px)"></div></div>
+                    </div>
+                    <div class="taborder" style="left:270px; top:478px;">4</div>
+                    <div class="ctl btn-ctl hue1" style="left:408px; top:482px; width:56px; height:46px;"><div class="name" style="font-size:9px">Next</div></div>
+                    <div class="taborder" style="left:402px; top:476px;">5</div>
+                </div>
+
+                <!-- ------------------------------------------------ Repeat flyout -->
+                <div class="flyout">
+                    <div class="fh">Repeat</div>
+                    <div class="fb">
+                        <div style="font-size:11.5px; color:var(--text3); line-height:1.5; margin-bottom:11px">
+                            Makes copies of the selection and steps the binding on each one.
+                        </div>
+                        <div class="irow"><span class="lbl">Copies</span><div class="field" style="flex:1">7</div></div>
+                        <div class="irow"><span class="lbl">Direction</span><div class="field combo" style="flex:1">To the right</div></div>
+                        <div class="irow"><span class="lbl">Gap</span><div class="field" style="flex:1">16 px</div>
+                            <div class="btn tiny on">Match</div></div>
+
+                        <div style="height:1px; background:var(--divider); margin:11px 0"></div>
+
+                        <h3 style="font-size:11px; color:var(--text3); font-weight:600; margin:0 0 7px 0">Step the binding by</h3>
+                        <div class="irow"><span class="lbl">Field</span><div class="field combo" style="flex:1">Channel</div></div>
+                        <div class="irow"><span class="lbl">Step</span><div class="field" style="flex:1">+1</div>
+                            <span style="font-size:11px; color:var(--text3)">wrap at 16</span></div>
+                        <div class="irow"><span class="lbl">Label</span><div class="field" style="flex:1">Ch {n}</div></div>
+
+                        <div style="margin-top:10px; padding:9px 10px; border-radius:6px;
+                                    background:rgba(96,205,255,.09); box-shadow:inset 0 0 0 1px rgba(96,205,255,.28);
+                                    font-size:11px; color:var(--text2); line-height:1.5">
+                            Result: <span class="mono">CC&nbsp;7</span> on channels
+                            <span class="mono">1&ndash;8</span>, group 1, to <b>Iridium</b>.
+                        </div>
+                    </div>
+                    <div class="ff">
+                        <div class="btn accent">Repeat</div>
+                        <div class="btn">Cancel</div>
+                    </div>
+                </div>
+
+                <div class="callout up" style="left:60px; top:558px; max-width:230px; white-space:normal;">
+                    Keyboard order is editable, and it is what a screen reader follows
+                </div>
+            </div>
+
+            <div class="pagerail">
+                <div class="prtab sel"><span class="dot" style="background:rgb(var(--h1))"></span>Mixer</div>
+                <div class="prtab"><span class="dot" style="background:rgb(var(--h2))"></span>Decks</div>
+                <div class="prtab"><span class="dot" style="background:rgb(var(--h4))"></span>Clips</div>
+                <div class="prtab"><span class="gl" style="font-size:10px">&#xE710;</span>Page</div>
+                <div style="flex:1"></div>
+                <div class="prtab"><span class="gl" style="font-size:10px">&#xE7B3;</span>Keyboard order</div>
+                <div class="prtab"><span class="gl" style="font-size:10px">&#xE713;</span>Grid&hellip;</div>
+            </div>
+        </div>
+
+        <!-- inspector collapsed to a rail -->
+        <div class="railcollapsed">
+            <span class="gl" style="font-size:12px">&#xE76B;</span>
+            <span class="vtext">Inspector</span>
+        </div>
+    </div>
+</div>
+
+<p class="note">
+<b>Repeat is the single biggest time saver in the whole app.</b> Building a sixteen channel mixer by hand means
+sixteen copies and sixteen hand-edited channel numbers, and one of them will be wrong. Here you build one strip,
+say what should step &mdash; channel, controller number, note, group or nothing &mdash; and the bank comes out
+correct. The same rule fills the label from <span class="mono">{n}</span>.
+<br><br>
+<b>Snapping rules.</b> Controls snap to the grid, to each other's edges and centers, and to the page margins.
+Holding <b>Alt</b> suspends snapping while you drag. Arrow keys nudge by one pixel, Shift+arrow by one grid cell.
+There is deliberately <b>no free rotation</b> on a control: a rotated fader is hard to hit and impossible to
+describe to a screen reader. Text and images can be turned in 90&deg; steps, which is all a vertical strip label
+needs.
+</p>
+
+</div>
+</body>
+</html>

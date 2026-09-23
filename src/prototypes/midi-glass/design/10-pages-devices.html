@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - pages, layers and devices</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    .lnav { width: 194px; flex: 0 0 194px; padding: 8px 4px; border-right: 1px solid var(--divider); }
+    .lnav .nav-item {
+        height: 34px; margin: 2px 4px; border-radius: 5px;
+        display: flex; align-items: center; gap: 11px; padding: 0 11px;
+        color: var(--text2); font-size: 13px; position: relative;
+    }
+    .lnav .nav-item .gl { font-size: 15px; width: 16px; text-align: center; color: var(--text3); }
+    .lnav .nav-item.sel { background: var(--nav-selected); color: var(--text); }
+    .lnav .nav-item.sel::before {
+        content: ""; position: absolute; left: -4px; top: 8px; bottom: 8px;
+        width: 3px; border-radius: 2px; background: var(--accent);
+    }
+    .lnav h4 { font-size: 11px; color: var(--text3); margin: 12px 0 4px 14px; font-weight: 600; }
+
+    .settings { flex: 1; display: flex; min-width: 0; }
+    .lcol { width: 318px; flex: 0 0 318px; padding: 14px 16px; border-right: 1px solid var(--divider); }
+    .rcol { flex: 1; padding: 14px 18px; min-width: 0; }
+
+    .sh { font-size: 13.5px; font-weight: 600; margin: 0 0 4px 0; display: flex; align-items: center; gap: 8px; }
+    .sh .spacer { flex: 1; }
+    .sh.later { margin-top: 18px; }
+    .sub { font-size: 11px; color: var(--text3); margin: 0 0 9px 0; line-height: 1.45; }
+
+    .listrow {
+        display: flex; align-items: center; gap: 9px;
+        height: 40px; padding: 0 10px 0 4px; margin-bottom: 5px;
+        border-radius: 6px; background: rgba(255,255,255,.032);
+        box-shadow: inset 0 0 0 1px var(--stroke); font-size: 12.5px;
+    }
+    .listrow.sel { background: rgba(96,205,255,.10); box-shadow: inset 0 0 0 1px rgba(96,205,255,.42); }
+    .listrow .grip { color: var(--text-disabled); font-family: "Segoe Fluent Icons"; font-size: 13px; width: 16px; text-align: center; }
+    .listrow .dot { width: 8px; height: 8px; border-radius: 4px; flex: 0 0 8px; }
+    .listrow .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .listrow .ct { font-size: 10.5px; color: var(--text3); white-space: nowrap; }
+    .listrow .gl.act { color: var(--text3); font-size: 13px; }
+    .addrow {
+        height: 36px; border-radius: 6px; margin-bottom: 5px;
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+        font-size: 12px; color: var(--text3);
+        box-shadow: inset 0 0 0 1px var(--stroke-strong);
+        border-style: dashed;
+    }
+
+    .devrow {
+        border-radius: 7px; background: rgba(255,255,255,.032);
+        box-shadow: inset 0 0 0 1px var(--stroke);
+        padding: 9px 11px; margin-bottom: 7px;
+    }
+    .devrow.bad { background: rgba(255,153,164,.07); box-shadow: inset 0 0 0 1px rgba(255,153,164,.35); }
+    .devrow .dh1 { display: flex; align-items: center; gap: 9px; }
+    .devrow .alias {
+        font-size: 12.5px; font-weight: 600; min-width: 62px;
+    }
+    .devrow .dev { font-size: 12px; color: var(--text2); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .devrow .d2 { font-size: 10.5px; color: var(--text3); margin-top: 4px; display: flex; gap: 12px; }
+    .devrow .d2 .mono { color: var(--text2); }
+
+    .picklist { margin-top: 9px; border-top: 1px solid var(--divider); padding-top: 9px; }
+    .pick {
+        display: flex; align-items: center; gap: 9px; height: 34px;
+        padding: 0 9px; border-radius: 5px; font-size: 12px; color: var(--text2);
+    }
+    .pick.sel { background: rgba(96,205,255,.13); box-shadow: inset 0 0 0 1px rgba(96,205,255,.4); color: #fff; }
+    .pick .tag { font-size: 10px; color: var(--text3); margin-left: auto; }
+    .radio { width: 15px; height: 15px; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--text3); flex: 0 0 15px; position: relative; }
+    .radio.on { box-shadow: inset 0 0 0 1px var(--accent-deep); }
+    .radio.on::after { content: ""; position: absolute; inset: 4px; border-radius: 4px; background: var(--accent-deep); }
+</style>
+</head>
+<body>
+<div class="page">
+<p class="caption-above">Screen 10 &mdash; pages, layers and the device table. This is the screen that makes a layout portable: everything that names real hardware lives here, in one place.</p>
+
+<div class="window">
+
+    <div class="titlebar">
+        <div class="appmark"></div>
+        <div class="title">Live Rig &mdash; Windows MIDI Glass</div>
+        <div class="preview-chiclet">PREVIEW</div>
+        <div class="spacer"></div>
+        <div class="caption-btn gl">&#xE713;</div>
+        <div class="caption-btn gl">&#xE840;</div>
+        <div class="sys-btns"><div class="gl">&#xE921;</div><div class="gl">&#xE922;</div><div class="gl">&#xE8BB;</div></div>
+    </div>
+
+    <div class="toolbar">
+        <div class="btn subtle small"><span class="gl">&#xE72B;</span>Back to the editor</div>
+        <div class="sep"></div>
+        <div style="font-size:14px; font-weight:600">Layout settings</div>
+        <div class="spacer"></div>
+        <div class="chip warn"><span class="gl">&#xE7BA;</span>1 device is not here</div>
+        <div class="chip on"><span class="gl">&#xE73E;</span>Saved</div>
+    </div>
+
+    <div class="shell">
+
+        <div class="lnav">
+            <div class="nav-item"><span class="gl">&#xE790;</span>Appearance</div>
+            <div class="nav-item sel"><span class="gl">&#xE8A9;</span>Pages and layers</div>
+            <div class="nav-item"><span class="gl">&#xE9D9;</span>Devices</div>
+            <div class="nav-item"><span class="gl">&#xE713;</span>Behavior</div>
+            <h4>This layout</h4>
+            <div class="nav-item"><span class="gl">&#xE8A5;</span>Name and description</div>
+            <div class="nav-item"><span class="gl">&#xE7B3;</span>Accessibility check</div>
+            <div class="nav-item"><span class="gl">&#xEDE1;</span>Export&hellip;</div>
+        </div>
+
+        <div class="settings">
+
+            <!-- ------------------------------------------- pages and layers -->
+            <div class="lcol">
+                <h3 class="sh">Pages<div class="spacer"></div><span class="btn tiny"><span class="gl" style="font-size:10px">&#xE710;</span>Page</span></h3>
+                <p class="sub">Drag to reorder. The order is the order of the tab strip on the surface.</p>
+
+                <div class="listrow sel">
+                    <span class="grip">&#xE76F;</span>
+                    <span class="dot" style="background:rgb(var(--h1))"></span>
+                    <span class="nm">Mixer</span>
+                    <span class="ct">28 controls</span>
+                    <span class="gl act">&#xE712;</span>
+                </div>
+                <div class="listrow">
+                    <span class="grip">&#xE76F;</span>
+                    <span class="dot" style="background:rgb(var(--h2))"></span>
+                    <span class="nm">Decks</span>
+                    <span class="ct">34 controls</span>
+                    <span class="gl act">&#xE712;</span>
+                </div>
+                <div class="listrow">
+                    <span class="grip">&#xE76F;</span>
+                    <span class="dot" style="background:rgb(var(--h4))"></span>
+                    <span class="nm">Clips</span>
+                    <span class="ct">18 controls</span>
+                    <span class="gl act">&#xE712;</span>
+                </div>
+                <div class="listrow">
+                    <span class="grip">&#xE76F;</span>
+                    <span class="dot" style="background:rgb(var(--h5))"></span>
+                    <span class="nm">FX</span>
+                    <span class="ct">12 controls</span>
+                    <span class="gl act">&#xE712;</span>
+                </div>
+                <div class="addrow"><span class="gl">&#xE710;</span>Add a page</div>
+
+                <h3 class="sh later">Always on screen</h3>
+                <div class="listrow">
+                    <span class="grip" style="color:var(--text-disabled)">&#xE718;</span>
+                    <span class="dot" style="background:rgb(var(--h3))"></span>
+                    <span class="nm">Transport band</span>
+                    <span class="ct">6 controls</span>
+                    <div class="switch" style="width:34px; height:18px; flex:0 0 34px"></div>
+                </div>
+                <p class="sub" style="margin-top:6px">
+                    A band is pinned to every page, so transport and panic do not have to be rebuilt four times.
+                </p>
+
+                <h3 class="sh later">Layers</h3>
+                <p class="sub">A layer key swaps the bindings on the controls that have an alternative.</p>
+                <div class="listrow">
+                    <span class="grip" style="color:var(--text-disabled)">&#xE72E;</span>
+                    <span class="dot" style="background:rgba(255,255,255,.3)"></span>
+                    <span class="nm">Base</span>
+                    <span class="ct">all controls</span>
+                </div>
+                <div class="listrow">
+                    <span class="grip" style="color:var(--text-disabled)">&#xE72E;</span>
+                    <span class="dot" style="background:rgb(var(--h3))"></span>
+                    <span class="nm">Shift</span>
+                    <span class="ct">12 differ</span>
+                    <span class="gl act">&#xE712;</span>
+                </div>
+                <div class="addrow"><span class="gl">&#xE710;</span>Add a layer</div>
+            </div>
+
+            <!-- ------------------------------------------------- devices -->
+            <div class="rcol">
+                <h3 class="sh">Devices this layout uses<div class="spacer"></div><span class="btn tiny"><span class="gl" style="font-size:10px">&#xE710;</span>Device</span></h3>
+                <p class="sub">
+                    Controls point at the <b>name</b> on the left, never at the hardware. Change the device here and
+                    every control that used it follows. The same entry carries feedback back in.
+                </p>
+
+                <div class="devrow">
+                    <div class="dh1">
+                        <span class="alias" style="color:rgb(var(--h1))">Synth</span>
+                        <span class="dev">Waldorf Iridium</span>
+                        <span class="chip on" style="height:20px; font-size:10px"><span class="gl">&#xE73E;</span>Ready</span>
+                        <span class="chip info" style="height:20px; font-size:10px">MIDI 2.0</span>
+                        <span class="gl" style="color:var(--text3); font-size:13px">&#xE712;</span>
+                    </div>
+                    <div class="d2">
+                        <span>Found by <span class="mono">device id</span></span>
+                        <span>USB &middot; 4 groups</span>
+                        <span>42 controls use it</span>
+                    </div>
+                </div>
+
+                <div class="devrow">
+                    <div class="dh1">
+                        <span class="alias" style="color:rgb(var(--h2))">DAW</span>
+                        <span class="dev">Default App Loopback (A)</span>
+                        <span class="chip on" style="height:20px; font-size:10px"><span class="gl">&#xE73E;</span>Ready</span>
+                        <span class="chip" style="height:20px; font-size:10px">In and out</span>
+                        <span class="gl" style="color:var(--text3); font-size:13px">&#xE712;</span>
+                    </div>
+                    <div class="d2">
+                        <span>Found by <span class="mono">name</span></span>
+                        <span>Loopback &middot; 1 group</span>
+                        <span>31 controls use it</span>
+                    </div>
+                </div>
+
+                <!-- the offline one, with the replace flow open -->
+                <div class="devrow bad">
+                    <div class="dh1">
+                        <span class="alias" style="color:rgb(var(--h6))">Push</span>
+                        <span class="dev">Ableton Push 2</span>
+                        <span class="chip err" style="height:20px; font-size:10px"><span class="gl">&#xE711;</span>Not here right now</span>
+                        <span class="gl" style="color:var(--text3); font-size:13px">&#xE712;</span>
+                    </div>
+                    <div class="d2">
+                        <span>Looked for <span class="mono">USB 2982:1967</span></span>
+                        <span>9 controls use it</span>
+                    </div>
+
+                    <div class="picklist">
+                        <div style="font-size:11.5px; color:var(--text2); margin-bottom:7px">
+                            Point <b>Push</b> at something else, or leave it and those nine controls stay dark until it comes back.
+                        </div>
+                        <div class="pick sel">
+                            <span class="gl" style="font-size:13px">&#xE7F8;</span>
+                            <span>KOMPLETE KONTROL M32</span>
+                            <span class="tag">USB &middot; 1 group &middot; MIDI 1.0</span>
+                        </div>
+                        <div class="pick">
+                            <span class="gl" style="font-size:13px">&#xE7F8;</span>
+                            <span>Midi Fighter Twister</span>
+                            <span class="tag">USB &middot; 1 group &middot; MIDI 1.0</span>
+                        </div>
+                        <div class="pick">
+                            <span class="gl" style="font-size:13px">&#xE701;</span>
+                            <span>LUMI Keys Studio Edition</span>
+                            <span class="tag">Bluetooth &middot; 1 group</span>
+                        </div>
+
+                        <div style="display:flex; align-items:center; gap:16px; margin:10px 0 2px 0; font-size:11.5px; color:var(--text2)">
+                            <span style="color:var(--text3)">Find it next time by</span>
+                            <span style="display:flex; align-items:center; gap:6px"><span class="radio on"></span>this exact device</span>
+                            <span style="display:flex; align-items:center; gap:6px"><span class="radio"></span>its name</span>
+                            <span style="display:flex; align-items:center; gap:6px"><span class="radio"></span>USB model</span>
+                            <span style="display:flex; align-items:center; gap:6px"><span class="radio"></span>serial number</span>
+                        </div>
+                        <div style="display:flex; gap:7px; margin-top:10px">
+                            <div class="btn accent small">Use this device</div>
+                            <div class="btn small">Keep waiting for the Push</div>
+                            <div style="flex:1"></div>
+                            <div class="btn small"><span class="gl">&#xE72C;</span>Look again</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="addrow" style="margin-top:8px"><span class="gl">&#xE710;</span>Add a device</div>
+
+                <div style="display:flex; align-items:flex-start; gap:9px; margin-top:14px; padding:10px 12px;
+                            border-radius:6px; background:rgba(96,205,255,.07); box-shadow:inset 0 0 0 1px rgba(96,205,255,.22);">
+                    <span class="gl" style="color:var(--accent); font-size:14px">&#xE946;</span>
+                    <span style="font-size:11px; color:var(--text2); line-height:1.55">
+                        <b>How connections are handled.</b> One connection is opened per device when the layout
+                        loads, shared by every control and every page, and closed when the layout closes. Group and
+                        channel travel in the message, so hundreds of controls on four groups of one device still
+                        cost exactly one connection.
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p class="note">
+<b>The matching rules are the ones Windows MIDI Services already ships.</b> Exact device id, name, USB model or
+serial number &mdash; the same criteria the service configuration and MIDI Patchbay use, so a layout built on one
+PC has a real chance of finding the right hardware on another. Exact device id is the default because it is
+unambiguous; the looser rules exist for the day a customer plugs the same keyboard into a different port.
+<br><br>
+<b>Nothing here blocks playing.</b> A device that is not present does not stop the layout loading, does not stop
+the other devices working, and does not need to be repaired before the show. The controls that need it say so,
+and the moment it appears they come back on their own.
+</p>
+
+</div>
+</body>
+</html>

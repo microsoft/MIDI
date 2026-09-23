@@ -49,6 +49,27 @@ namespace midiplayer
                 | static_cast<uint32_t>(data2 & 0x7F);
         }
 
+        // Word count for each Universal MIDI Packet message type, from the specification. Worked
+        // out here rather than called across the ABI, because this runs per packet on the way out.
+        constexpr std::array<uint8_t, 16> PacketWordCounts{ 1, 1, 1, 2, 2, 4, 1, 1, 2, 2, 2, 3, 3, 4, 4, 4 };
+
+        constexpr uint8_t MessageTypeOf(uint32_t word) noexcept
+        {
+            return static_cast<uint8_t>((word >> 28) & 0x0F);
+        }
+
+        // Utility and UMP Stream messages have no group field; everything else carries it in the
+        // same four bits.
+        constexpr bool MessageTypeCarriesGroup(uint8_t messageType) noexcept
+        {
+            return messageType != 0x0 && messageType != 0xF;
+        }
+
+        constexpr bool MessageTypeCarriesChannel(uint8_t messageType) noexcept
+        {
+            return messageType == 0x2 || messageType == 0x4;
+        }
+
         uint64_t TicksFromMilliseconds(uint32_t milliseconds) noexcept
         {
             return static_cast<uint64_t>(milliseconds) * midi2::MidiClock::TimestampFrequency() / 1000;
@@ -220,6 +241,7 @@ namespace midiplayer
             // thousands of messages and the sweep runs while music is playing.
             std::vector<PreparedEvent> prepared{};
             std::vector<uint32_t> words{};
+            uint32_t widestEvent = 1;
 
             prepared.reserve(sequence->Events.size());
             words.reserve(sequence->Events.size() * 2);
@@ -274,6 +296,11 @@ namespace midiplayer
                     0,
                     winrt::array_view<uint32_t>{ words.data() + entry.WordOffset, words.data() + words.size() });
 
+                if (entry.WordCount > widestEvent)
+                {
+                    widestEvent = entry.WordCount;
+                }
+
                 prepared.push_back(entry);
             }
 
@@ -298,6 +325,15 @@ namespace midiplayer
 
                 m_mutedTracks.assign(sequence->Tracks.size(), false);
                 m_soloTrack = -1;
+
+                // Routes survive a new sequence where the track still exists, because an
+                // application sets them up once for a rig rather than once per file.
+                m_trackRoutes.resize(sequence->Tracks.size());
+                RebuildDestinationsUnderLock();
+
+                // Sized once so a rewritten send never allocates on the sweep.
+                m_sendScratch.clear();
+                m_sendScratch.reserve(widestEvent);
 
                 m_state = PlaybackState::Stopped;
                 m_pausedMicroseconds = 0;
@@ -695,7 +731,8 @@ namespace midiplayer
                 SendWordsUnderLock(
                     timestamp <= nowTimestamp ? midi2::MidiClock::TimestampConstantSendImmediately() : timestamp,
                     entry.WordOffset,
-                    entry.WordCount);
+                    entry.WordCount,
+                    DestinationForTrackUnderLock(entry.TrackIndex));
 
                 if (entry.Action == NoteAction::Start)
                 {
@@ -756,27 +793,245 @@ namespace midiplayer
         return m_originMicroseconds + ((nowTimestamp - m_originTimestamp) * MicrosecondsPerSecond / frequency);
     }
 
-    void PlaybackEngine::SendWordsUnderLock(uint64_t timestamp, uint32_t wordOffset, uint32_t wordCount) noexcept
+    void PlaybackEngine::SendWordsUnderLock(
+        uint64_t timestamp,
+        uint32_t wordOffset,
+        uint32_t wordCount,
+        size_t destinationIndex) noexcept
     {
-        if (m_connection == nullptr || wordCount == 0 ||
-            static_cast<size_t>(wordOffset) + wordCount > m_words.size())
+        if (wordCount == 0 || static_cast<size_t>(wordOffset) + wordCount > m_words.size() ||
+            destinationIndex >= m_destinations.size())
         {
             return;
         }
 
-        m_connection.SendMultipleMessagesWordArray(
+        auto const& destination = m_destinations[destinationIndex];
+        auto const connection = ConnectionForDestinationUnderLock(destinationIndex);
+
+        if (connection == nullptr)
+        {
+            return;
+        }
+
+        if (!destination.RewritesMessages)
+        {
+            connection.SendMultipleMessagesWordArray(
+                timestamp,
+                wordOffset,
+                wordCount,
+                winrt::array_view<uint32_t const>{ m_words.data(), m_words.data() + m_words.size() });
+
+            return;
+        }
+
+        // The group is baked into the words at load time, so a track sent to a different group or
+        // channel gets a rewritten copy. The scratch buffer was sized at load; this does not
+        // allocate.
+        m_sendScratch.assign(
+            m_words.begin() + wordOffset,
+            m_words.begin() + wordOffset + wordCount);
+
+        size_t index = 0;
+
+        while (index < m_sendScratch.size())
+        {
+            auto const messageType = MessageTypeOf(m_sendScratch[index]);
+            auto const packetWords = PacketWordCounts[messageType];
+
+            if (index + packetWords > m_sendScratch.size())
+            {
+                break;
+            }
+
+            if (MessageTypeCarriesGroup(messageType))
+            {
+                m_sendScratch[index] = (m_sendScratch[index] & 0xF0FFFFFFu)
+                    | (static_cast<uint32_t>(destination.GroupIndex & 0x0F) << 24);
+            }
+
+            if (destination.ChannelOverride >= 0 && MessageTypeCarriesChannel(messageType))
+            {
+                m_sendScratch[index] = (m_sendScratch[index] & 0xFFF0FFFFu)
+                    | (static_cast<uint32_t>(destination.ChannelOverride & 0x0F) << 16);
+            }
+
+            index += packetWords;
+        }
+
+        connection.SendMultipleMessagesWordArray(
             timestamp,
-            wordOffset,
+            0,
             wordCount,
-            winrt::array_view<uint32_t const>{ m_words.data(), m_words.data() + m_words.size() });
+            winrt::array_view<uint32_t const>{ m_sendScratch.data(), m_sendScratch.data() + m_sendScratch.size() });
+    }
+
+    winrt::Windows::Devices::Midi2::MidiEndpointConnection PlaybackEngine::ConnectionForDestinationUnderLock(
+        size_t destinationIndex) const noexcept
+    {
+        if (destinationIndex >= m_destinations.size())
+        {
+            return m_connection;
+        }
+
+        auto const& destination = m_destinations[destinationIndex];
+
+        return destination.Connection != nullptr ? destination.Connection : m_connection;
+    }
+
+    size_t PlaybackEngine::DestinationForTrackUnderLock(uint16_t trackIndex) const noexcept
+    {
+        if (!m_hasCustomRoutes || trackIndex >= m_trackDestination.size())
+        {
+            return 0;
+        }
+
+        return m_trackDestination[trackIndex];
+    }
+
+    void PlaybackEngine::RebuildDestinationsUnderLock() noexcept
+    {
+        try
+        {
+            m_destinations.clear();
+            m_destinations.push_back(Destination{ nullptr, m_groupIndex, -1, false });
+
+            m_trackDestination.assign(m_trackRoutes.size(), uint16_t{ 0 });
+
+            m_hasCustomRoutes = false;
+
+            for (size_t track = 0; track < m_trackRoutes.size(); ++track)
+            {
+                auto const& route = m_trackRoutes[track];
+
+                if (route.IsDefault())
+                {
+                    continue;
+                }
+
+                m_hasCustomRoutes = true;
+
+                Destination wanted{};
+
+                wanted.Connection = route.Connection;
+                wanted.GroupIndex = route.GroupIndex >= 0
+                    ? static_cast<uint8_t>(route.GroupIndex & 0x0F)
+                    : m_groupIndex;
+                wanted.ChannelOverride = route.ChannelOverride >= 0 ? (route.ChannelOverride & 0x0F) : -1;
+                wanted.RewritesMessages = wanted.GroupIndex != m_groupIndex || wanted.ChannelOverride >= 0;
+
+                size_t found = m_destinations.size();
+
+                for (size_t candidate = 0; candidate < m_destinations.size(); ++candidate)
+                {
+                    auto const& existing = m_destinations[candidate];
+
+                    if (existing.Connection == wanted.Connection &&
+                        existing.GroupIndex == wanted.GroupIndex &&
+                        existing.ChannelOverride == wanted.ChannelOverride)
+                    {
+                        found = candidate;
+                        break;
+                    }
+                }
+
+                if (found == m_destinations.size())
+                {
+                    m_destinations.push_back(wanted);
+                }
+
+                m_trackDestination[track] = static_cast<uint16_t>(found);
+            }
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to work out where the tracks should be sent.")
+    }
+
+    _Use_decl_annotations_
+    void PlaybackEngine::SetTrackRoute(uint16_t trackIndex, TrackRoute const& route) noexcept
+    {
+        try
+        {
+            std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+
+            if (trackIndex >= m_trackRoutes.size())
+            {
+                m_trackRoutes.resize(static_cast<size_t>(trackIndex) + 1);
+            }
+
+            m_trackRoutes[trackIndex] = route;
+
+            RebuildDestinationsUnderLock();
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to set the track route.")
+    }
+
+    void PlaybackEngine::ClearTrackRoute(uint16_t trackIndex) noexcept
+    {
+        try
+        {
+            std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+
+            if (trackIndex >= m_trackRoutes.size())
+            {
+                return;
+            }
+
+            m_trackRoutes[trackIndex] = TrackRoute{};
+
+            RebuildDestinationsUnderLock();
+        }
+        MIDI_PLAYER_CATCH_AND_LOG(L"Unable to clear the track route.")
+    }
+
+    TrackRoute PlaybackEngine::GetTrackRoute(uint16_t trackIndex) const noexcept
+    {
+        std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+
+        if (trackIndex >= m_trackRoutes.size())
+        {
+            return TrackRoute{};
+        }
+
+        return m_trackRoutes[trackIndex];
     }
 
     void PlaybackEngine::SendPanicUnderLock(bool includeScheduledSweep) noexcept
     {
-        if (m_connection == nullptr)
+        // A panic can be asked for before anything has been loaded, and entry zero is what makes
+        // it reach the engine's own connection.
+        if (m_destinations.empty())
+        {
+            RebuildDestinationsUnderLock();
+        }
+
+        // Every destination, not just the default one. A note left sounding on an endpoint the
+        // panic skipped is exactly the failure a panic exists to prevent, and sending a note off
+        // to a device that was not playing it costs nothing.
+        for (size_t destination = 0; destination < m_destinations.size(); ++destination)
+        {
+            SendPanicToDestinationUnderLock(destination, includeScheduledSweep);
+        }
+
+        m_soundingNotes.fill(0);
+    }
+
+    void PlaybackEngine::SendPanicToDestinationUnderLock(size_t destinationIndex, bool includeScheduledSweep) noexcept
+    {
+        auto const connection = ConnectionForDestinationUnderLock(destinationIndex);
+
+        if (connection == nullptr || destinationIndex >= m_destinations.size())
         {
             return;
         }
+
+        auto const& destination = m_destinations[destinationIndex];
+        auto const groupIndex = destination.GroupIndex;
+
+        auto const effectiveChannel = [&destination](uint8_t channel) noexcept
+            {
+                return destination.ChannelOverride >= 0
+                    ? static_cast<uint8_t>(destination.ChannelOverride & 0x0F)
+                    : channel;
+            };
 
         // Two passes. The first silences the instrument now; the second lands after anything the
         // service has already been handed, because there is no way to recall a scheduled message.
@@ -809,9 +1064,13 @@ namespace midiplayer
 
                     mask &= static_cast<uint16_t>(~(1u << channel));
 
-                    m_connection.SendSingleMessageWords(
+                    connection.SendSingleMessageWords(
                         timestamp,
-                        BuildMidi1Word(m_groupIndex, static_cast<uint8_t>(StatusNoteOff | channel), note, 0));
+                        BuildMidi1Word(
+                            groupIndex,
+                            static_cast<uint8_t>(StatusNoteOff | effectiveChannel(channel)),
+                            note,
+                            0));
                 }
             }
 
@@ -824,29 +1083,41 @@ namespace midiplayer
                     continue;
                 }
 
-                auto const status = static_cast<uint8_t>(StatusControlChange | channel);
+                auto const outgoing = effectiveChannel(channel);
+                auto const status = static_cast<uint8_t>(StatusControlChange | outgoing);
 
-                m_connection.SendSingleMessageWords(
-                    timestamp, BuildMidi1Word(m_groupIndex, status, ControllerSustainPedal, 0));
+                connection.SendSingleMessageWords(
+                    timestamp, BuildMidi1Word(groupIndex, status, ControllerSustainPedal, 0));
 
-                m_connection.SendSingleMessageWords(
-                    timestamp, BuildMidi1Word(m_groupIndex, status, ControllerAllNotesOff, 0));
+                connection.SendSingleMessageWords(
+                    timestamp, BuildMidi1Word(groupIndex, status, ControllerAllNotesOff, 0));
 
-                m_connection.SendSingleMessageWords(
-                    timestamp, BuildMidi1Word(m_groupIndex, status, ControllerAllSoundOff, 0));
+                connection.SendSingleMessageWords(
+                    timestamp, BuildMidi1Word(groupIndex, status, ControllerAllSoundOff, 0));
 
-                m_connection.SendSingleMessageWords(
+                connection.SendSingleMessageWords(
                     timestamp,
-                    BuildMidi1Word(m_groupIndex, static_cast<uint8_t>(StatusPitchBend | channel), 0, 0x40));
+                    BuildMidi1Word(groupIndex, static_cast<uint8_t>(StatusPitchBend | outgoing), 0, 0x40));
             }
         }
-
-        m_soundingNotes.fill(0);
     }
 
     void PlaybackEngine::SendChaseStateUnderLock(size_t eventIndex) noexcept
     {
-        if (m_connection == nullptr || m_sequence == nullptr)
+        // Once per destination. Each pass keeps only the tracks that go there, so a rack of
+        // instruments is each left in the state its own tracks put it in rather than in whatever
+        // state the last track to be walked happened to leave.
+        for (size_t destination = 0; destination < m_destinations.size(); ++destination)
+        {
+            SendChaseStateToDestinationUnderLock(eventIndex, destination);
+        }
+    }
+
+    void PlaybackEngine::SendChaseStateToDestinationUnderLock(size_t eventIndex, size_t destinationIndex) noexcept
+    {
+        auto const connection = ConnectionForDestinationUnderLock(destinationIndex);
+
+        if (connection == nullptr || m_sequence == nullptr || destinationIndex >= m_destinations.size())
         {
             return;
         }
@@ -855,6 +1126,16 @@ namespace midiplayer
         {
             return;
         }
+
+        auto const& destination = m_destinations[destinationIndex];
+        auto const groupIndex = destination.GroupIndex;
+
+        auto const effectiveChannel = [&destination](uint8_t channel) noexcept
+            {
+                return destination.ChannelOverride >= 0
+                    ? static_cast<uint8_t>(destination.ChannelOverride & 0x0F)
+                    : channel;
+            };
 
         // Walk everything before the starting point and keep only what a receiver needs to sound
         // correct: the selected sound, the controllers that were set, and the pitch bend.
@@ -875,6 +1156,11 @@ namespace midiplayer
             auto const& event = m_sequence->Events[index];
 
             if (event.Channel == midifile::ChannelNone || event.Channel > 15)
+            {
+                continue;
+            }
+
+            if (DestinationForTrackUnderLock(event.TrackIndex) != destinationIndex)
             {
                 continue;
             }
@@ -930,7 +1216,8 @@ namespace midiplayer
 
         for (uint8_t channel = 0; channel < 16; ++channel)
         {
-            auto const controlStatus = static_cast<uint8_t>(StatusControlChange | channel);
+            auto const outgoing = effectiveChannel(channel);
+            auto const controlStatus = static_cast<uint8_t>(StatusControlChange | outgoing);
 
             for (uint16_t controller = 0; controller < 128; ++controller)
             {
@@ -939,10 +1226,10 @@ namespace midiplayer
                     continue;
                 }
 
-                m_connection.SendSingleMessageWords(
+                connection.SendSingleMessageWords(
                     immediately,
                     BuildMidi1Word(
-                        m_groupIndex,
+                        groupIndex,
                         controlStatus,
                         static_cast<uint8_t>(controller),
                         controllers[channel][controller]));
@@ -951,28 +1238,28 @@ namespace midiplayer
             if (program[channel] >= 0)
             {
                 // Bank first, then program, or the program lands in the previous bank.
-                m_connection.SendSingleMessageWords(
-                    immediately, BuildMidi1Word(m_groupIndex, controlStatus, ControllerBankSelectMsb, bankMsb[channel]));
+                connection.SendSingleMessageWords(
+                    immediately, BuildMidi1Word(groupIndex, controlStatus, ControllerBankSelectMsb, bankMsb[channel]));
 
-                m_connection.SendSingleMessageWords(
-                    immediately, BuildMidi1Word(m_groupIndex, controlStatus, ControllerBankSelectLsb, bankLsb[channel]));
+                connection.SendSingleMessageWords(
+                    immediately, BuildMidi1Word(groupIndex, controlStatus, ControllerBankSelectLsb, bankLsb[channel]));
 
-                m_connection.SendSingleMessageWords(
+                connection.SendSingleMessageWords(
                     immediately,
                     BuildMidi1Word(
-                        m_groupIndex,
-                        static_cast<uint8_t>(0xC0 | channel),
+                        groupIndex,
+                        static_cast<uint8_t>(0xC0 | outgoing),
                         static_cast<uint8_t>(program[channel]),
                         0));
             }
 
             if (pitchBendSet[channel])
             {
-                m_connection.SendSingleMessageWords(
+                connection.SendSingleMessageWords(
                     immediately,
                     BuildMidi1Word(
-                        m_groupIndex,
-                        static_cast<uint8_t>(StatusPitchBend | channel),
+                        groupIndex,
+                        static_cast<uint8_t>(StatusPitchBend | outgoing),
                         static_cast<uint8_t>(pitchBend[channel] & 0x7F),
                         static_cast<uint8_t>((pitchBend[channel] >> 7) & 0x7F)));
             }

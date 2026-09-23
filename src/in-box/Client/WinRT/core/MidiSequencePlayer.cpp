@@ -203,11 +203,29 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Sequencing::implementation
         if (routing == nullptr)
         {
             m_routing.erase(trackIndex);
+            m_engine.ClearTrackRoute(trackIndex);
+            m_engine.SetTrackMuted(trackIndex, false);
+
             return;
         }
 
         m_routing.insert_or_assign(trackIndex, routing);
 
+        ::midiplayer::TrackRoute route{};
+
+        route.Connection = routing.Connection();
+
+        if (auto const group = routing.Group())
+        {
+            route.GroupIndex = static_cast<int32_t>(group.Index());
+        }
+
+        if (auto const channel = routing.ChannelOverride())
+        {
+            route.ChannelOverride = static_cast<int32_t>(channel.Index());
+        }
+
+        m_engine.SetTrackRoute(trackIndex, route);
         m_engine.SetTrackMuted(trackIndex, routing.IsMuted());
     }
 

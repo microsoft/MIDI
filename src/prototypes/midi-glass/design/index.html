@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - design mockups</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    body { padding: 26px 30px; }
+    h1 { font-family: "Segoe UI Variable Display","Segoe UI",sans-serif; font-size: 26px; margin: 0 0 4px 0; }
+    .lede { font-size: 13px; color: var(--text3); max-width: 780px; line-height: 1.6; margin: 0 0 22px 0; }
+    .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; max-width: 900px; }
+    a.card {
+        display: block; text-decoration: none; color: inherit;
+        border-radius: 8px; padding: 13px 15px;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    a.card .n { font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 9px; }
+    a.card .n .num {
+        width: 22px; height: 22px; border-radius: 6px; flex: 0 0 22px;
+        background: linear-gradient(145deg, rgba(var(--h1),.9), rgba(var(--h5),.85));
+        color: #001018; font-size: 11px; font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+    }
+    a.card .d { font-size: 11.5px; color: var(--text3); margin-top: 6px; line-height: 1.5; }
+    .foot { font-size: 11.5px; color: var(--text3); margin-top: 22px; max-width: 900px; line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<h1>MIDI Glass &mdash; design mockups</h1>
+<p class="lede">
+A customizable MIDI control surface for Windows, in the Windows MIDI Services tool family.
+Fourteen screens, plus the design notes in
+<span class="mono">MIDI-Glass-design.md</span> and the sequenced build plan in
+<span class="mono">MIDI-Glass-implementation-plan.md</span>. Start with screen 9 if you want the
+visual language first, or screen 1 if you want the customer journey.
+</p>
+
+<div class="grid">
+    <a class="card" href="1-library.html"><div class="n"><span class="num">1</span>Library</div>
+        <div class="d">What opens when the app starts. Favorites, recents, thumbnails drawn from the layout, Run as the primary action.</div></a>
+    <a class="card" href="2-run.html"><div class="n"><span class="num">2</span>Running a layout, windowed</div>
+        <div class="d">A six channel mixer, clip pads, XY pad, beat clock and FX, live. WinUI chrome above, the customer's deck below.</div></a>
+    <a class="card" href="3-fullscreen.html"><div class="n"><span class="num">3</span>Full screen</div>
+        <div class="d">Borderless, the fading "press Esc" toast, and a DJ layout in a second theme. Its auto-hide bar is superseded by the corner button on screen 14.</div></a>
+    <a class="card" href="4-editor.html"><div class="n"><span class="num">4</span>The editor</div>
+        <div class="d">Palette, page, inspector, page rail and a live message monitor. Edit and Try are one keystroke apart.</div></a>
+    <a class="card" href="5-arrange.html"><div class="n"><span class="num">5</span>Arranging and Repeat</div>
+        <div class="d">Magnetic guides, spacing pills, and the Repeat tool that builds a bank and steps the binding as it goes.</div></a>
+    <a class="card" href="6-bindings.html"><div class="n"><span class="num">6</span>What a control sends</div>
+        <div class="d">Three messages, two devices, one control. Learn, feedback binding, and automatic MIDI 2.0 to 1.0 fold-down.</div></a>
+    <a class="card" href="7-sequence.html"><div class="n"><span class="num">7</span>Sequences</div>
+        <div class="d">SysEx, notes with a length, waits and a repeat block. Why this is a list and not a script engine.</div></a>
+    <a class="card" href="8-theme.html"><div class="n"><span class="num">8</span>Themes</div>
+        <div class="d">Six hue slots, a deck, control defaults, measured contrast, and a live preview.</div></a>
+    <a class="card" href="9-language.html"><div class="n"><span class="num">9</span>The surface control language</div>
+        <div class="d">Every control type at rest and in use. The plate, the rim, the light pipe and the bloom.</div></a>
+    <a class="card" href="10-pages-devices.html"><div class="n"><span class="num">10</span>Pages, layers and devices</div>
+        <div class="d">Page order, a shared band, layer keys, and the device table that makes a layout portable.</div></a>
+    <a class="card" href="11-tonal-themes.html"><div class="n"><span class="num">11</span>Two tonal themes</div>
+        <div class="d">Pigment Light and Pigment Dark. Flat opaque plates, color carried by a tonal wash instead of a glow. No new rendering layers.</div></a>
+    <a class="card" href="12-bigwig.html"><div class="n"><span class="num">12</span>Bigwig</div>
+        <div class="d">Raised gray panels, one strong orange, header strips, and a segmented LED ring that costs one element per knob.</div></a>
+    <a class="card" href="13-canvas.html"><div class="n"><span class="num">13</span>The canvas</div>
+        <div class="d">Page size templates, the virtual canvas bigger than the page, off-page controls, and the two resize paths.</div></a>
+    <a class="card" href="14-running-scale.html"><div class="n"><span class="num">14</span>Running: scale and chrome</div>
+        <div class="d">Actual size, fit to screen and custom, saved per layout. Full screen with one corner button instead of a bar.</div></a>
+</div>
+
+<p class="foot">
+Serve with <span class="mono">pwsh -File serve.ps1</span> and open
+<span class="mono">http://127.0.0.1:8742/</span>. These files live in
+<span class="mono">src/prototypes/midi-glass/design/</span> so the design record is versioned.
+Nothing in that folder ships.
+</p>
+
+</body>
+</html>

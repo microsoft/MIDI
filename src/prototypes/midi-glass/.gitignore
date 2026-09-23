@@ -1,0 +1,7 @@
+out/
+*.obj
+*.exe
+*.log
+*.pdb
+*.ilk
+.vs/
