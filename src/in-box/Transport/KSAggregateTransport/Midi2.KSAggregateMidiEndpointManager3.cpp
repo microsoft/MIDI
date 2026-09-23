@@ -3803,18 +3803,31 @@ CMidi2KSAggregateMidiEndpointManager3::Shutdown()
             Sleep(100);
             tries++;
         }
-    }
 
-    TraceLoggingWrite(
-        MidiKSAggregateTransportTelemetryProvider::Provider(),
-        MIDI_TRACE_EVENT_INFO,
-        TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-        TraceLoggingLevel(WINEVENT_LEVEL_INFO),
-        TraceLoggingPointer(this, "this"),
-        TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
-        TraceLoggingUInt32(GetWatcherStatusValue(m_watcher), "watcher status"),
-        TraceLoggingUInt32(tries, "watcher stop poll iterations")
-    );
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingUInt32(GetWatcherStatusValue(m_watcher), "watcher status"),
+            TraceLoggingUInt32(tries, "watcher stop poll iterations")
+        );
+
+    }
+    else   
+    {
+        TraceLoggingWrite(
+            MidiKSAggregateTransportTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Exit", MIDI_TRACE_EVENT_MESSAGE_FIELD)
+        );
+
+    }
 
     m_midiDeviceManager.reset();
     m_midiProtocolManager.reset();
