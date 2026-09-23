@@ -38,16 +38,52 @@ void MidiCiProgramListTests::TestSingleEntryBytes()
 {
     ProgramListEntry entry{};
 
+    char const* const categories[]{ "Piano" };
+
     entry.Title = "Acoustic Grand Piano";
     entry.BankMsb = 0;
     entry.BankLsb = 0;
     entry.Program = 0;
-    entry.Category = "Piano";
+    entry.Categories = categories;
+    entry.CategoryCount = 1;
 
     // Compared against text written out by hand, not against whatever the builder happens to emit.
     VERIFY_ARE_EQUAL(
         BuildToString(&entry, 1),
         std::string("[{\"title\":\"Acoustic Grand Piano\",\"bankPC\":[0,0,0],\"category\":[\"Piano\"]}]"));
+}
+
+void MidiCiProgramListTests::TestMultipleCategoriesBytes()
+{
+    // M2-107-UM's own example carries more than one, so a single value must not be assumed.
+    ProgramListEntry entry{};
+
+    char const* const categories[]{ "Piano", "Keys" };
+
+    entry.Title = "Electric Piano 1";
+    entry.Program = 4;
+    entry.Categories = categories;
+    entry.CategoryCount = 2;
+
+    VERIFY_ARE_EQUAL(
+        BuildToString(&entry, 1),
+        std::string("[{\"title\":\"Electric Piano 1\",\"bankPC\":[0,0,4],\"category\":[\"Piano\",\"Keys\"]}]"));
+}
+
+void MidiCiProgramListTests::TestCategoryIsOmittedWhenCountIsZero()
+{
+    // A caller that fills in the pointer but leaves the count at zero must not produce "category":[].
+    ProgramListEntry entry{};
+
+    char const* const categories[]{ "Piano" };
+
+    entry.Title = "Acoustic Grand Piano";
+    entry.Categories = categories;
+    entry.CategoryCount = 0;
+
+    VERIFY_ARE_EQUAL(
+        BuildToString(&entry, 1),
+        std::string("[{\"title\":\"Acoustic Grand Piano\",\"bankPC\":[0,0,0]}]"));
 }
 
 void MidiCiProgramListTests::TestBankProgramAreZeroBased()

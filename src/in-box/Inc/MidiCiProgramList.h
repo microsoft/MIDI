@@ -28,8 +28,10 @@ namespace WindowsMidiServicesCapabilityInquiry
         uint8_t BankLsb{ 0 };
         uint8_t Program{ 0 };
 
-        // One of the Appendix A categories, or null to omit.
-        char const* Category{ nullptr };
+        // Category names, or an empty list to omit. M2-107-UM suggests a vocabulary in Appendix A
+        // but says a device is not limited to it, so nothing here is checked against that list.
+        char const* const* Categories{ nullptr };
+        size_t CategoryCount{ 0 };
 
         // A single free form tag, or null to omit. Sound sets routinely give the same name to a
         // program and its variation, and this is the field that tells them apart without inventing
@@ -210,10 +212,20 @@ namespace WindowsMidiServicesCapabilityInquiry
             ok = ok && Details::AppendNumber(buffer, limit, length, entry.Program & 0x7F);
             ok = ok && Details::AppendCharacter(buffer, limit, length, ']');
 
-            if (entry.Category != nullptr)
+            if (entry.Categories != nullptr && entry.CategoryCount > 0)
             {
                 ok = ok && Details::AppendText(buffer, limit, length, ",\"category\":[");
-                ok = ok && Details::AppendJsonString(buffer, limit, length, entry.Category);
+
+                for (size_t category = 0; ok && category < entry.CategoryCount; category++)
+                {
+                    if (category > 0)
+                    {
+                        ok = ok && Details::AppendCharacter(buffer, limit, length, ',');
+                    }
+
+                    ok = ok && Details::AppendJsonString(buffer, limit, length, entry.Categories[category]);
+                }
+
                 ok = ok && Details::AppendCharacter(buffer, limit, length, ']');
             }
 

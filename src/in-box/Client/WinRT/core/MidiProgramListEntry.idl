@@ -37,7 +37,8 @@ namespace Windows.Devices.Midi2.CapabilityInquiry
         // are often the only thing telling them apart.
         Windows.Foundation.Collections.IVector<String> Tags{ get; };
 
-        // Appendix A category names, from the entry's "category".
+        // The entry's "category". M2-107-UM Appendix A suggests names but a device may publish its
+        // own, so do not expect these to come from that list.
         Windows.Foundation.Collections.IVector<String> Categories{ get; };
 
         // Which collection this program came from, when the device offers more than one. Not part

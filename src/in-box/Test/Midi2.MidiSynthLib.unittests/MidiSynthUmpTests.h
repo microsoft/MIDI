@@ -26,6 +26,7 @@ public:
     TEST_METHOD(TestResetAllControllersScope);
     TEST_METHOD(TestPropertyRequestParking);
     TEST_METHOD(TestPropertyExchangeProgramListLinks);
+    TEST_METHOD(TestPropertyExchangeProgramListCategories);
     TEST_METHOD(TestIdentityReply);
     TEST_METHOD(TestMidiCiDiscovery);
     TEST_METHOD(TestMasterVolume);

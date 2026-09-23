@@ -1194,6 +1194,87 @@ void MidiSynthUmpTests::TestPropertyExchangeProgramListLinks()
 }
 
 
+// This is a General MIDI sound set, so the category a client reads has to be the instrument group
+// RP-003 Table 1 gives that program rather than something close to it.
+void MidiSynthUmpTests::TestPropertyExchangeProgramListCategories()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    PropertyExchangeSource source;
+    source.Build(*collection, SynthIdentity{});
+
+    static constexpr char const* expected[]
+    {
+        "Piano", "Chromatic Percussion", "Organ", "Guitar",
+        "Bass", "Strings", "Ensemble", "Brass",
+        "Reed", "Pipe", "Synth Lead", "Synth Pad",
+        "Synth Effects", "Ethnic", "Percussive", "Sound Effects",
+    };
+
+    const auto& melodicJson = source.ProgramListJson(MelodicProgramListResourceId);
+    const std::string melodic(melodicJson.data(), melodicJson.size());
+
+    const std::string opening{ "],\"category\":[\"" };
+
+    size_t examined = 0;
+    size_t wrong = 0;
+    bool groupSeen[16]{};
+
+    for (auto at = melodic.find("\"bankPC\":["); at != std::string::npos; at = melodic.find("\"bankPC\":[", at + 1))
+    {
+        const auto close = melodic.find(']', at);
+
+        VERIFY_ARE_NOT_EQUAL(close, std::string::npos, L"every entry has a complete bankPC");
+
+        const auto program = atoi(melodic.c_str() + melodic.rfind(',', close) + 1);
+
+        VERIFY_IS_LESS_THAN(program, 128);
+
+        examined++;
+        groupSeen[program / 8] = true;
+
+        if (melodic.compare(close, opening.size(), opening) != 0)
+        {
+            wrong++;
+            continue;
+        }
+
+        const auto nameStart = close + opening.size();
+        const auto nameEnd = melodic.find('"', nameStart);
+
+        // RP-003 puts every program in exactly one group, so a second name here would be invented.
+        if (nameEnd == std::string::npos ||
+            melodic[nameEnd + 1] != ']' ||
+            melodic.compare(nameStart, nameEnd - nameStart, expected[program / 8]) != 0)
+        {
+            wrong++;
+        }
+    }
+
+    size_t groups = 0;
+
+    for (const auto seen : groupSeen)
+    {
+        groups += seen ? 1 : 0;
+    }
+
+    VERIFY_IS_GREATER_THAN(examined, (size_t)127, L"every melodic program was examined");
+    VERIFY_ARE_EQUAL(wrong, (size_t)0, L"each program carries its own instrument group");
+    VERIFY_ARE_EQUAL(groups, (size_t)16, L"all sixteen instrument groups are represented");
+
+    // RP-003 gives channel 10 a key map, not an instrument group, so there is nothing to publish.
+    const auto& drumsJson = source.ProgramListJson(DrumKitProgramListResourceId);
+    const std::string drums(drumsJson.data(), drumsJson.size());
+
+    VERIFY_ARE_EQUAL(drums.find("\"category\""), std::string::npos, L"drum kits carry no category");
+}
+
+
 // An Identity Request needs a reply, which means an output path. The in-box synth cannot
 // do this at all, having no MIDI input, so this is new behavior rather than compatibility.
 void MidiSynthUmpTests::TestIdentityReply()

@@ -22,6 +22,8 @@ public:
 
     TEST_METHOD(TestEmptyListIsStillValidJson);
     TEST_METHOD(TestSingleEntryBytes);
+    TEST_METHOD(TestMultipleCategoriesBytes);
+    TEST_METHOD(TestCategoryIsOmittedWhenCountIsZero);
     TEST_METHOD(TestBankProgramAreZeroBased);
     TEST_METHOD(TestTitleIsEscaped);
     TEST_METHOD(TestOutputIsAlwaysSevenBit);

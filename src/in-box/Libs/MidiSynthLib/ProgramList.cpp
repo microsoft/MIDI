@@ -3,6 +3,8 @@
 
 #include "MidiSynth/ProgramList.h"
 
+#include <iterator>
+
 #include <windows.h>
 
 #include "MidiCiProgramList.h"
@@ -11,6 +13,36 @@ namespace MidiSynth
 {
     namespace
     {
+        // RP-003 Table 1 "Instrument Group", one per block of eight programs. These are the
+        // categories this sound set actually has, so they are published verbatim rather than
+        // translated into the vocabulary M2-107-UM suggests. RP-003 defines groups only for the
+        // melodic set, which is why the drum kit list carries no category at all.
+        constexpr char const* GeneralMidiInstrumentGroups[]
+        {
+            "Piano",
+            "Chromatic Percussion",
+            "Organ",
+            "Guitar",
+            "Bass",
+            "Strings",
+            "Ensemble",
+            "Brass",
+            "Reed",
+            "Pipe",
+            "Synth Lead",
+            "Synth Pad",
+            "Synth Effects",
+            "Ethnic",
+            "Percussive",
+            "Sound Effects",
+        };
+
+        constexpr size_t GeneralMidiProgramsPerGroup = 8;
+
+        static_assert(
+            std::size(GeneralMidiInstrumentGroups) * GeneralMidiProgramsPerGroup == 128,
+            "The instrument groups must cover every program number exactly once.");
+
         std::string ToUtf8(_In_ const std::wstring& text)
         {
             if (text.empty())
@@ -80,6 +112,9 @@ namespace MidiSynth
             if (!wantDrumKits)
             {
                 entry.Tag = (instrument.BankMsb == 0) ? "GM" : "GS variation";
+
+                entry.Categories = &GeneralMidiInstrumentGroups[entry.Program / GeneralMidiProgramsPerGroup];
+                entry.CategoryCount = 1;
             }
 
             entries.push_back(entry);
