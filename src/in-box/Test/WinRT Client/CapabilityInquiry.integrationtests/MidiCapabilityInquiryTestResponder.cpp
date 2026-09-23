@@ -281,6 +281,21 @@ void MidiCapabilityInquiryTestResponder::HandleMessage(MidiCapabilityInquiryMess
     {
     case MidiCapabilityInquiryMessageType::Discovery:
     {
+        // Payload offsets from M2-101-UM: manufacturer at 13, then family, model and revision,
+        // which puts the capability categories at 24 and the receivable size right after it.
+        auto const data = message.Data();
+
+        if (data != nullptr && data.Size() >= 29)
+        {
+            m_lastInitiatorCategories = data.GetAt(24);
+
+            m_lastInitiatorReceivableSize =
+                static_cast<uint32_t>(data.GetAt(25) & 0x7F) |
+                (static_cast<uint32_t>(data.GetAt(26) & 0x7F) << 7) |
+                (static_cast<uint32_t>(data.GetAt(27) & 0x7F) << 14) |
+                (static_cast<uint32_t>(data.GetAt(28) & 0x7F) << 21);
+        }
+
         if (!m_answerDiscovery)
         {
             return;

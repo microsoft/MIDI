@@ -12,6 +12,7 @@
 #include "AppSettings.h"
 #include "Arpeggiator.h"
 #include "KeyboardLayout.h"
+#include "MidiCiPresence.h"
 #include "MidiCiProgramList.h"
 #include "MidiOutput.h"
 
@@ -94,6 +95,7 @@ namespace winrt::midikeyboard::implementation
         void OnMinimumKeyWidthChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnTransposeChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnShowNoteNamesChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnRetryProgramListChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnShowComputerKeysChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnComputerKeyboardLayoutChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
@@ -160,6 +162,13 @@ namespace winrt::midikeyboard::implementation
 
         // moves the combo to whichever program matches the current bank and program numbers
         void SyncProgramListSelection() noexcept;
+
+        // hides both ways of showing the list, for while there is nothing to show
+        void HideProgramLists() noexcept;
+
+        // Starts or stops asking again for a program list. Only runs while nothing has answered
+        // at all, so a device that replied and simply has no programs is never asked twice.
+        void UpdateProgramListRetry() noexcept;
 
         // fills whichever of the two views is showing and hides the other
         void RefreshProgramViews() noexcept;
@@ -333,10 +342,19 @@ namespace winrt::midikeyboard::implementation
         bool m_startupPatchSendPending{ true };
 
         std::shared_ptr<::midikeyboard::MidiCiProgramListQuery> m_programListQuery{};
+
+        // One session for as long as a connection lasts, so the identifier this app is known by
+        // on the wire does not change every time it asks a question.
+        ::midikeyboard::MidiCiPresence m_ciPresence{};
         std::vector<::midikeyboard::ProgramListEntry> m_programList{};
         std::vector<::midikeyboard::ProgramCategoryGroup> m_programCategories{};
         ::midikeyboard::ProgramListResult m_programListResult{ ::midikeyboard::ProgramListResult::NoResponse };
         bool m_programListQueryRan{ false };
+
+        // Runs only while nothing has answered a capability inquiry, and stops the moment
+        // something does. MIDI-CI is rare enough today that this is a setting.
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_programListRetryTimer{ nullptr };
+        static constexpr int32_t ProgramListRetrySeconds = 8;
 
         bool m_startupOptionsApplied{ false };
         bool m_reconnectInProgress{ false };

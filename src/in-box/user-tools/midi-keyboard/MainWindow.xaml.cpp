@@ -237,6 +237,23 @@ namespace winrt::midikeyboard::implementation
                         strong->EndAllNotes();
                         strong->m_arpeggiator.Shutdown();
                         strong->StopEndpointWatcher();
+
+                        if (strong->m_programListRetryTimer != nullptr)
+                        {
+                            strong->m_programListRetryTimer.Stop();
+                            strong->m_programListRetryTimer = nullptr;
+                        }
+
+                        if (strong->m_programListQuery != nullptr)
+                        {
+                            strong->m_programListQuery->Cancel();
+                            strong->m_programListQuery = nullptr;
+                        }
+
+                        // Withdraws this app's identifier, which is how anything watching learns
+                        // it has gone rather than waiting for it to time out.
+                        strong->m_ciPresence.Close();
+
                         strong->m_chrome.SavePlacement();
                         strong->m_chrome.Shutdown();
                         strong->ShutdownAsync();
@@ -471,6 +488,7 @@ namespace winrt::midikeyboard::implementation
 
             ShowNoteNamesCheckBox().IsChecked(settings.ShowNoteNames());
             ShowComputerKeysCheckBox().IsChecked(settings.ShowComputerKeys());
+            RetryProgramListCheckBox().IsChecked(settings.RetryProgramListQuery());
 
             auto layoutChoices = winrt::single_threaded_vector<foundation::IInspectable>();
             AppendChoice(layoutChoices, L"ComputerKeyboardLayoutAutomatic");
@@ -844,6 +862,29 @@ namespace winrt::midikeyboard::implementation
             if (result == native::ConnectResult::Success)
             {
                 SendStartupPatchIfRequested();
+
+                // Opened before anything is asked, because this is what answers a device that
+                // discovers this app rather than the other way round.
+                auto const weak = get_weak();
+                auto const queue = m_dispatcherQueue;
+
+                m_ciPresence.Open(m_output.Connection(), TransmitGroupIndex(),
+                    [weak, queue]()
+                    {
+                        if (queue == nullptr)
+                        {
+                            return;
+                        }
+
+                        queue.TryEnqueue([weak]()
+                            {
+                                if (auto strong = weak.get())
+                                {
+                                    strong->StartProgramListQuery();
+                                }
+                            });
+                    });
+
                 StartProgramListQuery();
             }
 
@@ -2798,6 +2839,11 @@ namespace winrt::midikeyboard::implementation
     {
         try
         {
+            if (m_programListRetryTimer != nullptr)
+            {
+                m_programListRetryTimer.Stop();
+            }
+
             if (m_programListQuery != nullptr)
             {
                 m_programListQuery->Cancel();
@@ -2805,19 +2851,20 @@ namespace winrt::midikeyboard::implementation
             }
 
             m_programList.clear();
+            m_programCategories.clear();
             m_programListQueryRan = false;
             m_programListResult = native::ProgramListResult::NoResponse;
 
             // Whatever name was showing belonged to the list just thrown away.
             UpdatePatchDisplay();
 
-            auto const connection = m_output.Connection();
+            auto const session = m_ciPresence.Session();
 
-            if (connection == nullptr)
+            if (session == nullptr)
             {
                 if (m_patchControlsInitialized)
                 {
-                    ProgramListComboBox().Visibility(xaml::Visibility::Collapsed);
+                    HideProgramLists();
                     SetStripText(ProgramListStatusText(), L"");
                 }
 
@@ -2826,16 +2873,19 @@ namespace winrt::midikeyboard::implementation
 
             if (m_patchControlsInitialized)
             {
-                ProgramListComboBox().Visibility(xaml::Visibility::Collapsed);
+                HideProgramLists();
                 SetStripText(ProgramListStatusText(), res::GetString(L"ProgramListSearching"));
             }
 
             auto const queue = m_dispatcherQueue;
             auto const weak = get_weak();
 
+            // Devices answering this query are not arrivals, they are answering what was just
+            // asked. Lifted again when the result comes back.
+            m_ciPresence.SuppressAppeared(true);
+
             m_programListQuery = native::MidiCiProgramListQuery::Start(
-                connection,
-                TransmitGroupIndex(),
+                session,
                 TransmitChannelIndex(),
                 [weak, queue](native::ProgramListResult result, std::vector<native::ProgramListEntry> entries)
                 {
@@ -2887,11 +2937,19 @@ namespace winrt::midikeyboard::implementation
             m_programListResult = result;
             m_programListQueryRan = true;
 
+            // Whoever answered is now known, so if any of them goes away and comes back it counts
+            // as an arrival again.
+            m_ciPresence.SuppressAppeared(false);
+
             m_programCategories = native::GroupProgramsByCategory(
                 m_programList, std::wstring{ res::GetString(L"ProgramCategoryOther") });
 
             // The names arrived with the list, so the strip can stop saying just a number.
             UpdatePatchDisplay();
+
+            // Decided here rather than in the flyout, because the patch button caption wants the
+            // names whether or not the customer has ever opened it.
+            UpdateProgramListRetry();
 
             // The query is deliberately kept: it may be holding a subscription, and letting go of
             // it here would leave nothing able to cancel that. StartProgramListQuery cancels the
@@ -2905,9 +2963,7 @@ namespace winrt::midikeyboard::implementation
 
             if (m_programList.empty())
             {
-                ProgramViewRadioButtons().Visibility(xaml::Visibility::Collapsed);
-                ProgramListComboBox().Visibility(xaml::Visibility::Collapsed);
-                ProgramCategoryGrid().Visibility(xaml::Visibility::Collapsed);
+                HideProgramLists();
 
                 SetStripText(ProgramListStatusText(),
                     result == native::ProgramListResult::NoResponse
@@ -2923,6 +2979,69 @@ namespace winrt::midikeyboard::implementation
             RefreshProgramViews();
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to show the device's program list.")
+    }
+
+    void MainWindow::UpdateProgramListRetry() noexcept
+    {
+        try
+        {
+            // Only while nothing answered Discovery at all. A device that answered and has no
+            // programs is a settled answer, and asking it again would be noise on the wire.
+            auto const wanted =
+                native::AppSettings::Current().RetryProgramListQuery() &&
+                m_output.Connection() != nullptr &&
+                m_programListQueryRan &&
+                m_programList.empty() &&
+                m_programListResult == native::ProgramListResult::NoResponse;
+
+            if (!wanted)
+            {
+                if (m_programListRetryTimer != nullptr)
+                {
+                    m_programListRetryTimer.Stop();
+                }
+
+                return;
+            }
+
+            if (m_programListRetryTimer == nullptr)
+            {
+                if (m_dispatcherQueue == nullptr)
+                {
+                    return;
+                }
+
+                m_programListRetryTimer = m_dispatcherQueue.CreateTimer();
+                m_programListRetryTimer.IsRepeating(false);
+                m_programListRetryTimer.Interval(std::chrono::seconds(ProgramListRetrySeconds));
+
+                auto const weak = get_weak();
+
+                m_programListRetryTimer.Tick([weak](auto&&, auto&&)
+                    {
+                        if (auto strong = weak.get())
+                        {
+                            // The session is not recreated, so asking again costs nothing but the
+                            // question and does not change this app's identifier.
+                            strong->StartProgramListQuery();
+                        }
+                    });
+            }
+
+            m_programListRetryTimer.Start();
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to schedule another look for the device's programs.")
+    }
+
+    void MainWindow::HideProgramLists() noexcept
+    {
+        try
+        {
+            ProgramViewRadioButtons().Visibility(xaml::Visibility::Collapsed);
+            ProgramListComboBox().Visibility(xaml::Visibility::Collapsed);
+            ProgramCategoryGrid().Visibility(xaml::Visibility::Collapsed);
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to hide the program list.")
     }
 
     void MainWindow::RefreshProgramViews() noexcept
@@ -3699,6 +3818,39 @@ namespace winrt::midikeyboard::implementation
             LayoutKeyboard();
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change the note name display.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnRetryProgramListChanged(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        try
+        {
+            if (m_suppressSettingHandlers)
+            {
+                return;
+            }
+
+            auto const checked = RetryProgramListCheckBox().IsChecked();
+            auto const retry = checked != nullptr && checked.Value();
+
+            if (retry == native::AppSettings::Current().RetryProgramListQuery())
+            {
+                return;
+            }
+
+            native::AppSettings::Current().RetryProgramListQuery(retry);
+
+            // Turning it on while nothing has answered should not wait for the next connection.
+            if (retry)
+            {
+                StartProgramListQuery();
+            }
+            else
+            {
+                UpdateProgramListRetry();
+            }
+        }
+        MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to change how the programs are looked for.")
     }
 
     _Use_decl_annotations_

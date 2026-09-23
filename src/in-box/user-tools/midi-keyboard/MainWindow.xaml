@@ -826,6 +826,19 @@
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
                         </StackPanel>
 
+                        <StackPanel Spacing="4">
+                            <CheckBox x:Name="RetryProgramListCheckBox"
+                                      x:Uid="RetryProgramListCheckBox"
+                                      AutomationProperties.AutomationId="RetryProgramListCheckBox"
+                                      Content="Keep looking for the device's programs"
+                                      Click="OnRetryProgramListChanged" />
+                            <TextBlock x:Uid="RetryProgramListHint"
+                                       Text="Asks again every few seconds until something answers, so a synthesizer or DAW you start after this app is still found. Turn it off to ask only once each time you pick a destination."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
                         <CheckBox x:Name="ShowNoteNamesCheckBox"
                                   x:Uid="ShowNoteNamesCheckBox"
                                   AutomationProperties.AutomationId="ShowNoteNamesCheckBox"

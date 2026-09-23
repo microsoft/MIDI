@@ -150,11 +150,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="MidiSequenceReaderTests.cpp" />
+    <ClCompile Include="MidiSequenceBuilderTests.cpp" />
     <ClCompile Include="MidiSequencePlayerTests.cpp" />
     <ClCompile Include="MidiSequenceStressTests.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MidiSequenceReaderTests.h" />
+    <ClInclude Include="MidiSequenceBuilderTests.h" />
     <ClInclude Include="MidiSequencePlayerTests.h" />
     <ClInclude Include="MidiSequenceStressTests.h" />
     <ClInclude Include="SequencingTestHelpers.h" />

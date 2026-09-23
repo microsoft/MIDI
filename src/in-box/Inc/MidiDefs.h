@@ -783,6 +783,7 @@ DEFINE_MIDIDEVPROPKEY(PKEY_MIDI_NamingPortNameInputs, 961);            // DEVPRO
 
 // Device family model numbers. 14 bits, reported LSB first, unique within the family above.
 #define MIDI_DEVICE_FAMILY_MODEL_NUMBER_GM_SYNTH            ((uint16_t)1)
+#define MIDI_DEVICE_FAMILY_MODEL_NUMBER_MIDI_KEYBOARD       ((uint16_t)2)
 
 
 // for PKEY_MIDI_DeviceIdentification

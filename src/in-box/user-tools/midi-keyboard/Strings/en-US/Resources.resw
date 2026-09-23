@@ -173,6 +173,15 @@
   <data name="ConnectionEndpointUnavailableToolTip" xml:space="preserve">
     <value>This device is no longer connected. The keyboard will start playing it again as soon as it comes back.</value>
   </data>
+  <data name="RetryProgramListCheckBox.Content" xml:space="preserve">
+    <value>Keep looking for the device's programs</value>
+  </data>
+  <data name="RetryProgramListCheckBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Keep looking for the device's programs</value>
+  </data>
+  <data name="RetryProgramListHint.Text" xml:space="preserve">
+    <value>Asks again every few seconds until something answers, so a synthesizer or DAW you start after this app is still found. Turn it off to ask only once each time you pick a destination.</value>
+  </data>
   <data name="ProgramViewRadioButtons.Header" xml:space="preserve">
     <value>Show programs</value>
   </data>

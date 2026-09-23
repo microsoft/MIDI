@@ -128,6 +128,11 @@ namespace midikeyboard
         bool ProgramsByCategory() const noexcept { return m_programsByCategory; }
         void ProgramsByCategory(bool value) noexcept;
 
+        // Keep asking for programs over MIDI-CI while nothing has answered, so a device started
+        // after this app is still found. Off means the question is asked once per connection.
+        bool RetryProgramListQuery() const noexcept { return m_retryProgramListQuery; }
+        void RetryProgramListQuery(bool value) noexcept;
+
         // octave of the leftmost C, in the numbering where note 60 is C3
         int32_t BaseOctave() const noexcept { return m_baseOctave; }
         void BaseOctave(int32_t value) noexcept;
@@ -227,6 +232,11 @@ namespace midikeyboard
         uint32_t m_bankLsb{ 0 };
         bool m_sendPatchOnStartup{ false };
         bool m_programsByCategory{ false };
+
+        // Off until this app owns one capability inquiry session for the life of a connection.
+        // Today each query owns its own, so repeated asking changes the identifier this app is
+        // known by on the wire.
+        bool m_retryProgramListQuery{ false };
 
         int32_t m_baseOctave{ 1 };
 
