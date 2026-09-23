@@ -30,6 +30,9 @@ public:
     TEST_METHOD(TestDeviceInfoBytes);
     TEST_METHOD(TestDeviceInfoAgreesWithTheOtherIdentityCarriers);
     TEST_METHOD(TestResourceListBytes);
+    TEST_METHOD(TestChannelListWithoutLinksBytes);
+    TEST_METHOD(TestChannelListLinksBytes);
+    TEST_METHOD(TestChannelListLinkOmitsMissingFields);
 
 private:
 

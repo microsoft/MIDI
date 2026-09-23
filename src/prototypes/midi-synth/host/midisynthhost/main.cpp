@@ -145,10 +145,11 @@ namespace
         {
             m_propertyExchange.Build(m_collection, SynthIdentity{});
 
-            wprintf(L"Property Exchange: ResourceList %zu, DeviceInfo %zu, ProgramList %zu bytes\n",
+            wprintf(L"Property Exchange: ResourceList %zu, DeviceInfo %zu, ProgramList %zu melodic / %zu drum bytes\n",
                 m_propertyExchange.ResourceListJson().size(),
                 m_propertyExchange.DeviceInfoJson().size(),
-                m_propertyExchange.ProgramListJson().size());
+                m_propertyExchange.ProgramListJson(MelodicProgramListResourceId).size(),
+                m_propertyExchange.ProgramListJson(DrumKitProgramListResourceId).size());
         }
 
         // Called from the sender thread. Emits at most one chunk per call, because a full program
@@ -418,7 +419,26 @@ namespace
 
             if (resource == L"ResourceList") { *blob = &m_propertyExchange.ResourceListJson(); return ResourceLookup::Found; }
             if (resource == L"DeviceInfo") { *blob = &m_propertyExchange.DeviceInfoJson(); return ResourceLookup::Found; }
-            if (resource == L"ProgramList") { *blob = &m_propertyExchange.ProgramListJson(); return ResourceLookup::Found; }
+
+            if (resource == L"ProgramList")
+            {
+                const auto wide = std::wstring{ parsed.GetNamedString(L"resId", L"") };
+
+                std::string resourceId;
+
+                for (const auto character : wide)
+                {
+                    resourceId += (character > 0 && character < 0x80) ? static_cast<char>(character) : '?';
+                }
+
+                if (!PropertyExchangeSource::IsKnownProgramListResourceId(resourceId))
+                {
+                    return ResourceLookup::UnknownResource;
+                }
+
+                *blob = &m_propertyExchange.ProgramListJson(resourceId);
+                return ResourceLookup::Found;
+            }
 
             // Rebuilt per request: unlike the others this reflects what is selected right now.
             if (resource == L"ChannelList")

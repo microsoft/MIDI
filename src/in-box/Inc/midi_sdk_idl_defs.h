@@ -250,6 +250,10 @@
 
 #define UUID_IMidiCapabilityInquiryDeviceResponder                          8087b303-0519-c0de-31d1-dd0070018000
 
+#define UUID_IMidiPropertySubscription                                      8087b303-0519-c0de-31d1-dd0070019000
+
+#define UUID_IMidiPropertySubscriptionUpdatedEventArgs                      8087b303-0519-c0de-31d1-dd007001a000
+
 
 // ========== Utilities : Interface number 0E ========================================================================
 

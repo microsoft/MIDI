@@ -509,7 +509,7 @@ int wmain(int argc, wchar_t** argv)
 
     if (showProgramList)
     {
-        const auto json = BuildProgramListJson(collection);
+        const auto json = BuildProgramListJson(collection, ProgramListKind::Melodic);
 
         printf("\nProperty Exchange ProgramList\n");
         printf("  bytes                 %zu\n", json.size());

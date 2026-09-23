@@ -1114,6 +1114,86 @@ void MidiSynthUmpTests::TestPropertyRequestParking()
 }
 
 
+// A channel entry has to link to the program list that channel can actually select from, or a
+// client is left guessing which of the device's collections applies. M2-105-UM section 4.5.2.
+void MidiSynthUmpTests::TestPropertyExchangeProgramListLinks()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    SynthEngine engine;
+    UmpDispatcher dispatcher;
+    FreshEngine(*collection, engine, dispatcher, 0);
+
+    PropertyExchangeSource source;
+    source.Build(*collection, SynthIdentity{});
+
+    const auto& melodic = source.ProgramListJson(MelodicProgramListResourceId);
+    const auto& drums = source.ProgramListJson(DrumKitProgramListResourceId);
+
+    VERIFY_IS_GREATER_THAN(melodic.size(), (size_t)2, L"the melodic list is not empty");
+    VERIFY_IS_GREATER_THAN(drums.size(), (size_t)2, L"the drum kit list is not empty");
+    VERIFY_ARE_NOT_EQUAL(melodic.size(), drums.size(), L"the two lists are different");
+
+    // A request with no resource id still gets an answer, because refusing one is worse than
+    // answering the collection almost every client wants.
+    VERIFY_ARE_EQUAL(source.ProgramListJson("").size(), melodic.size());
+    VERIFY_IS_FALSE(PropertyExchangeSource::IsKnownProgramListResourceId("nonesuch"));
+
+    const auto contains = [](const std::vector<char>& json, const char* text)
+    {
+        return std::string(json.data(), json.size()).find(text) != std::string::npos;
+    };
+
+    const auto channelListText = [&]()
+    {
+        const auto& json = source.RebuildChannelListJson(engine, *collection);
+        return std::string(json.data(), json.size());
+    };
+
+    // Channel 10 is the drum channel out of a reset, so it is the one entry pointing at the kits.
+    const auto atReset = channelListText();
+
+    VERIFY_IS_TRUE(
+        atReset.find("\"channel\":10,\"programTitle\":\"Standard\",\"bankPC\":[0,0,0],"
+                     "\"links\":[{\"resource\":\"ProgramList\",\"resId\":\"drums\"") != std::string::npos,
+        L"channel 10 links to the drum kits");
+
+    VERIFY_IS_TRUE(
+        atReset.find("\"channel\":1,\"programTitle\":") != std::string::npos &&
+        atReset.find("\"channel\":1,\"programTitle\":\"Piano 1\",\"bankPC\":[0,0,0],"
+                     "\"links\":[{\"resource\":\"ProgramList\",\"resId\":\"melodic\"") != std::string::npos,
+        L"channel 1 links to the melodic programs");
+
+    // Content can move the drum part with the GS rhythm message, and the links have to follow it
+    // rather than the channel number.
+    engine.SetDrumChannel(9, false);
+    engine.SetDrumChannel(5, true);
+
+    const auto moved = channelListText();
+
+    VERIFY_IS_TRUE(
+        moved.find("\"channel\":6,\"programTitle\":\"Standard\",\"bankPC\":[0,0,0],"
+                   "\"links\":[{\"resource\":\"ProgramList\",\"resId\":\"drums\"") != std::string::npos,
+        L"the drum link moves with the drum channel");
+
+    VERIFY_IS_TRUE(
+        moved.find("\"channel\":10,\"programTitle\":\"Piano 1\",\"bankPC\":[0,0,0],"
+                   "\"links\":[{\"resource\":\"ProgramList\",\"resId\":\"melodic\"") != std::string::npos,
+        L"the channel it left goes back to the melodic programs");
+
+    // The resource list has to declare that a resource id is required, or a client is entitled to
+    // ask for the program list without one.
+    VERIFY_IS_TRUE(
+        contains(source.ResourceListJson(), "{\"resource\":\"ProgramList\",\"requireResId\":true}"),
+        L"ProgramList declares requireResId");
+}
+
+
 // An Identity Request needs a reply, which means an output path. The in-box synth cannot
 // do this at all, having no MIDI input, so this is new behavior rather than compatibility.
 void MidiSynthUmpTests::TestIdentityReply()

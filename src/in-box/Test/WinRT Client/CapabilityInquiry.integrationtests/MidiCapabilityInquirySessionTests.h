@@ -33,6 +33,11 @@ public:
     TEST_METHOD(TestProfileInquiryReturnsBothLists);
     TEST_METHOD(TestUnsolicitedProfileReportRaisesAnEvent);
 
+    TEST_METHOD(TestSubscriptionDeliversUpdates);
+    TEST_METHOD(TestSubscriptionRefusalIsReported);
+    TEST_METHOD(TestUnsubscribeStopsUpdates);
+    TEST_METHOD(TestResponderCanEndASubscription);
+
     TEST_METHOD(TestVirtualDeviceAnswersDiscoveryAndResources);
     TEST_METHOD(TestVirtualDeviceSaysNothingUntilEnabled);
     TEST_METHOD(TestVirtualDeviceAnswersProfilesAndUnknownResources);

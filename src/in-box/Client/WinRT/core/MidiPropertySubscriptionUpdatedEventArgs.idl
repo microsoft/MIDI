@@ -1,0 +1,38 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services App WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+import "MidiPropertyExchangeResponse.idl";
+import "MidiPropertySubscription.idl";
+
+
+
+namespace Windows.Devices.Midi2.CapabilityInquiry
+{
+    [contract(MidiCapabilityInquiryApiContract,1)]
+
+    // A device telling a subscriber that a resource it asked about has changed.
+    [interface_name("Windows.Devices.Midi2.CapabilityInquiry.IMidiPropertySubscriptionUpdatedEventArgs", UUID_IMidiPropertySubscriptionUpdatedEventArgs)]
+    runtimeclass MidiPropertySubscriptionUpdatedEventArgs
+    {
+        MidiPropertySubscription Subscription{ get; };
+
+        // What the device did. "full" and "partial" carry data, "notify" says only that something
+        // changed, and "end" means the device dropped the subscription.
+        String Command{ get; };
+
+        // True when the device ended the subscription. The subscription object is no longer
+        // active, and an application which still needs the resource has to subscribe again.
+        [noexcept] Boolean IsSubscriptionEnded{ get; };
+
+        // The new data, when the update carried any. A "partial" update holds only what changed,
+        // in the form the specification defines for a partial set.
+        MidiPropertyExchangeResponse Update{ get; };
+    };
+}

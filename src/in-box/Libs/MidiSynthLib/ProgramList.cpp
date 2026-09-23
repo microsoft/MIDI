@@ -37,9 +37,11 @@ namespace MidiSynth
     }
 
     _Use_decl_annotations_
-    std::vector<char> BuildProgramListJson(const DlsCollection& collection)
+    std::vector<char> BuildProgramListJson(const DlsCollection& collection, ProgramListKind kind)
     {
         namespace ci = WindowsMidiServicesCapabilityInquiry;
+
+        const bool wantDrumKits = (kind == ProgramListKind::DrumKits);
 
         std::vector<std::string> titles;
         std::vector<ci::ProgramListEntry> entries;
@@ -49,7 +51,7 @@ namespace MidiSynth
 
         for (const auto& instrument : collection.Instruments())
         {
-            if (instrument.IsDrumKit)
+            if (instrument.IsDrumKit != wantDrumKits)
             {
                 continue;
             }
@@ -61,7 +63,7 @@ namespace MidiSynth
 
         for (const auto& instrument : collection.Instruments())
         {
-            if (instrument.IsDrumKit)
+            if (instrument.IsDrumKit != wantDrumKits)
             {
                 continue;
             }
@@ -75,7 +77,10 @@ namespace MidiSynth
 
             // This sound set gives a program and its GS variation the same name, so without a tag
             // a client shows two identical entries and cannot tell which bank it is choosing.
-            entry.Tag = (instrument.BankMsb == 0) ? "GM" : "GS variation";
+            if (!wantDrumKits)
+            {
+                entry.Tag = (instrument.BankMsb == 0) ? "GM" : "GS variation";
+            }
 
             entries.push_back(entry);
         }

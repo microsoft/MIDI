@@ -404,6 +404,12 @@
     <Midl Include="MidiPropertyExchangeResponse.idl">
       <Filter>SDK\CapabilityInquiry</Filter>
     </Midl>
+    <Midl Include="MidiPropertySubscription.idl">
+      <Filter>SDK\CapabilityInquiry</Filter>
+    </Midl>
+    <Midl Include="MidiPropertySubscriptionUpdatedEventArgs.idl">
+      <Filter>SDK\CapabilityInquiry</Filter>
+    </Midl>
     <Midl Include="MidiProfileInquiryResponse.idl">
       <Filter>SDK\CapabilityInquiry</Filter>
     </Midl>

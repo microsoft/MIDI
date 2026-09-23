@@ -926,48 +926,160 @@ MidiSynthDevice::ServicePropertyRequestsInner()
 {
     if (!m_propertyExchange.ReplyInProgress())
     {
+        uint32_t withdrawn{ 0 };
+
+        if (m_dispatcher.TakeInvalidatedInitiatorMuid(withdrawn))
+        {
+            (void)m_propertyExchange.RemoveSubscription(withdrawn, {});
+        }
+
         UmpDispatcher::PendingPropertyRequest request{};
 
-        if (!m_dispatcher.TakePendingPropertyRequest(request))
+        if (m_dispatcher.TakePendingPropertyRequest(request))
+        {
+            if (request.IsSubscription)
+            {
+                HandleSubscriptionRequest(request);
+                return;
+            }
+
+            const std::vector<char>* blob = nullptr;
+            bool cacheable{ true };
+
+            auto const lookup = ResourceForHeader(request.Header, request.HeaderByteCount, &blob, cacheable);
+
+            if (lookup != ResourceLookup::Found || blob == nullptr)
+            {
+                std::string const asked(
+                    reinterpret_cast<const char*>(request.Header), request.HeaderByteCount);
+
+                TraceLoggingWrite(
+                    MidiSynthTransportTelemetryProvider::Provider(),
+                    MIDI_TRACE_EVENT_WARNING,
+                    TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+                    TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
+                    TraceLoggingPointer(this, "this"),
+                    TraceLoggingWideString(
+                        lookup == ResourceLookup::HeaderNotJson
+                            ? L"Property request header was not JSON"
+                            : L"Property request for a resource we do not have",
+                        MIDI_TRACE_EVENT_MESSAGE_FIELD),
+                    TraceLoggingString(asked.c_str(), "header")
+                );
+
+                m_propertyExchange.SendNotFound(m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request);
+
+                return;
+            }
+
+            m_propertyExchange.BeginReply(request, *blob, cacheable);
+        }
+        else if (m_propertyExchange.HasSubscriptions())
+        {
+            // Nothing was asked for, so this is the moment to tell subscribers what moved. Both
+            // calls are cheap when nothing has: the first compares a snapshot and the second walks
+            // a list of at most eight.
+            (void)m_propertyExchange.ChannelListChanged(m_engine);
+
+            if (!m_propertyExchange.BeginNextSubscriptionUpdate(m_engine, m_collection))
+            {
+                return;
+            }
+        }
+        else
         {
             return;
         }
-
-        const std::vector<char>* blob = nullptr;
-        bool cacheable{ true };
-
-        auto const lookup = ResourceForHeader(request.Header, request.HeaderByteCount, &blob, cacheable);
-
-        if (lookup != ResourceLookup::Found || blob == nullptr)
-        {
-            std::string const asked(
-                reinterpret_cast<const char*>(request.Header), request.HeaderByteCount);
-
-            TraceLoggingWrite(
-                MidiSynthTransportTelemetryProvider::Provider(),
-                MIDI_TRACE_EVENT_WARNING,
-                TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
-                TraceLoggingLevel(WINEVENT_LEVEL_WARNING),
-                TraceLoggingPointer(this, "this"),
-                TraceLoggingWideString(
-                    lookup == ResourceLookup::HeaderNotJson
-                        ? L"Property request header was not JSON"
-                        : L"Property request for a resource we do not have",
-                    MIDI_TRACE_EVENT_MESSAGE_FIELD),
-                TraceLoggingString(asked.c_str(), "header")
-            );
-
-            m_propertyExchange.SendNotFound(m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request);
-
-            return;
-        }
-
-        m_propertyExchange.BeginReply(request, *blob, cacheable);
     }
 
     // One chunk per pass. A full program list is far more system exclusive packets than the
     // outbound queue holds at once.
     (void)m_propertyExchange.SendNextChunk(m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid());
+}
+
+
+void
+MidiSynthDevice::HandleSubscriptionRequest(
+    MidiSynth::UmpDispatcher::PendingPropertyRequest const& request)
+{
+    std::string const text(reinterpret_cast<const char*>(request.Header), request.HeaderByteCount);
+
+    json::JsonObject parsed{ nullptr };
+
+    if (!json::JsonObject::TryParse(winrt::to_hstring(text), parsed))
+    {
+        m_propertyExchange.SendSubscriptionReply(
+            m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 400, nullptr);
+
+        return;
+    }
+
+    auto const readString = [&parsed](std::wstring_view key) -> std::wstring
+    {
+        winrt::hstring const name{ key };
+
+        if (!parsed.HasKey(name))
+        {
+            return {};
+        }
+
+        auto const found = parsed.Lookup(name);
+
+        if (found == nullptr || found.ValueType() != json::JsonValueType::String)
+        {
+            return {};
+        }
+
+        return std::wstring{ found.GetString() };
+    };
+
+    auto const command = readString(L"command");
+    auto const resource = readString(L"resource");
+
+    std::string subscribeId;
+
+    for (auto const character : readString(L"subscribeId"))
+    {
+        subscribeId += (character > 0 && character < 0x80) ? static_cast<char>(character) : '?';
+    }
+
+    if (command == L"start")
+    {
+        // ChannelList is the only resource here that changes while the device is running, so it is
+        // the only one the resource list declares as subscribable.
+        if (resource != L"ChannelList")
+        {
+            m_propertyExchange.SendSubscriptionReply(
+                m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 405, nullptr);
+
+            return;
+        }
+
+        auto const* const assigned = m_propertyExchange.AddChannelListSubscription(request.InitiatorMuid);
+
+        // Out of room. 507 is what the specification uses for a responder that cannot take on
+        // any more, and it tells the initiator to keep polling instead.
+        m_propertyExchange.SendSubscriptionReply(
+            m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request,
+            (assigned[0] == '\0') ? 507 : 200, assigned);
+
+        return;
+    }
+
+    if (command == L"end")
+    {
+        (void)m_propertyExchange.RemoveSubscription(request.InitiatorMuid, subscribeId);
+
+        m_propertyExchange.SendSubscriptionReply(
+            m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 200, nullptr);
+
+        return;
+    }
+
+    // An initiator does not send full, partial or notify to a responder. Answering rather than
+    // ignoring keeps it from waiting out a timeout.
+    m_propertyExchange.SendSubscriptionReply(
+        m_output, MIDI_SYNTH_GROUP_INDEX, m_dispatcher.Muid(), request, 400, nullptr);
 }
 
 
@@ -991,11 +1103,52 @@ MidiSynthDevice::ResourceForHeader(
         return ResourceLookup::HeaderNotJson;
     }
 
-    auto const resource = parsed.GetNamedString(L"resource", L"");
+    // The header comes off the wire, so a key present with the wrong type is expected rather than
+    // exceptional. GetNamedString(key, default) throws on that, and the catch upstream abandons
+    // the reply, which leaves the initiator waiting out a timeout instead of getting an answer.
+    auto const readString = [&parsed](std::wstring_view key) -> std::wstring
+    {
+        winrt::hstring const name{ key };
+
+        if (!parsed.HasKey(name))
+        {
+            return {};
+        }
+
+        auto const found = parsed.Lookup(name);
+
+        if (found == nullptr || found.ValueType() != json::JsonValueType::String)
+        {
+            return {};
+        }
+
+        return std::wstring{ found.GetString() };
+    };
+
+    auto const resource = readString(L"resource");
 
     if (resource == L"ResourceList") { *blob = &m_propertyExchange.ResourceListJson(); return ResourceLookup::Found; }
     if (resource == L"DeviceInfo") { *blob = &m_propertyExchange.DeviceInfoJson(); return ResourceLookup::Found; }
-    if (resource == L"ProgramList") { *blob = &m_propertyExchange.ProgramListJson(); return ResourceLookup::Found; }
+
+    if (resource == L"ProgramList")
+    {
+        auto const wide = readString(L"resId");
+
+        std::string resourceId;
+
+        for (auto const character : wide)
+        {
+            resourceId += (character > 0 && character < 0x80) ? static_cast<char>(character) : '?';
+        }
+
+        if (!MidiSynth::PropertyExchangeSource::IsKnownProgramListResourceId(resourceId))
+        {
+            return ResourceLookup::UnknownResource;
+        }
+
+        *blob = &m_propertyExchange.ProgramListJson(resourceId);
+        return ResourceLookup::Found;
+    }
 
     // Rebuilt per request: unlike the others this reflects what is selected right now, which is
     // also why it is the one resource sent without a cache time.

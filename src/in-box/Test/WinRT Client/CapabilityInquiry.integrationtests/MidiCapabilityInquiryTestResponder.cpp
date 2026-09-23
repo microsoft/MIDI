@@ -255,6 +255,10 @@ void MidiCapabilityInquiryTestResponder::HandleMessage(MidiCapabilityInquiryMess
         HandlePropertyGet(message);
         break;
 
+    case MidiCapabilityInquiryMessageType::PropertySubscriptionInquiry:
+        HandleSubscription(message);
+        break;
+
     case MidiCapabilityInquiryMessageType::ProfileInquiry:
     {
         std::lock_guard<std::mutex> guard(m_lock);
@@ -274,6 +278,179 @@ void MidiCapabilityInquiryTestResponder::HandleMessage(MidiCapabilityInquiryMess
     default:
         break;
     }
+}
+
+void MidiCapabilityInquiryTestResponder::HandleSubscription(MidiCapabilityInquiryMessage const& message)
+{
+    if (m_answerNothing)
+    {
+        return;
+    }
+
+    auto const group = MidiGroup((uint8_t)0);
+    auto const header = message.Header();
+
+    std::string command{};
+    std::string resourceName{};
+    std::string subscribeId{};
+
+    if (header != nullptr)
+    {
+        command = ToNarrowString(header.GetNamedString(L"command", L""));
+        resourceName = ToNarrowString(header.GetNamedString(L"resource", L""));
+        subscribeId = ToNarrowString(header.GetNamedString(L"subscribeId", L""));
+    }
+
+    int32_t status{ 400 };
+    std::string assigned{};
+
+    if (command == "start")
+    {
+        if (!m_acceptSubscriptions)
+        {
+            status = 405;
+        }
+        else
+        {
+            std::lock_guard<std::mutex> guard(m_lock);
+
+            assigned = "s" + std::to_string(m_nextSubscribeId++);
+
+            TestSubscription added{};
+            added.InitiatorMuid = message.SourceMuid();
+            added.Resource = resourceName;
+
+            m_subscriptions[assigned] = added;
+
+            status = 200;
+        }
+    }
+    else if (command == "end")
+    {
+        std::lock_guard<std::mutex> guard(m_lock);
+
+        m_subscriptions.erase(subscribeId);
+
+        status = 200;
+    }
+
+    json::JsonObject replyHeader{};
+
+    replyHeader.SetNamedValue(L"status", json::JsonValue::CreateNumberValue(status));
+
+    if (!assigned.empty())
+    {
+        replyHeader.SetNamedValue(
+            L"subscribeId", json::JsonValue::CreateStringValue(winrt::to_hstring(assigned)));
+    }
+
+    Send(MidiCapabilityInquiryMessageBuilder::BuildPropertyMessage(
+        0,
+        group,
+        MidiCapabilityInquiryMessageType::PropertySubscriptionInquiryReply,
+        m_muid,
+        message.SourceMuid(),
+        message.RequestId(),
+        replyHeader,
+        nullptr,
+        m_maximumSystemExclusiveSize));
+}
+
+uint32_t MidiCapabilityInquiryTestResponder::NotifyResourceChanged(std::string const& resource)
+{
+    auto const group = MidiGroup((uint8_t)0);
+
+    std::vector<std::pair<std::string, TestSubscription>> targets{};
+    std::string body{ "[]" };
+
+    {
+        std::lock_guard<std::mutex> guard(m_lock);
+
+        for (auto const& entry : m_subscriptions)
+        {
+            if (entry.second.Resource == resource)
+            {
+                targets.emplace_back(entry.first, entry.second);
+            }
+        }
+
+        auto const found = m_resources.find(resource);
+
+        if (found != m_resources.end())
+        {
+            body = found->second;
+        }
+    }
+
+    for (auto const& target : targets)
+    {
+        json::JsonObject header{};
+
+        header.SetNamedValue(
+            L"subscribeId", json::JsonValue::CreateStringValue(winrt::to_hstring(target.first)));
+        header.SetNamedValue(L"command", json::JsonValue::CreateStringValue(L"full"));
+
+        auto data = winrt::single_threaded_vector<uint8_t>();
+
+        for (auto const character : body)
+        {
+            data.Append(static_cast<uint8_t>(character));
+        }
+
+        Send(MidiCapabilityInquiryMessageBuilder::BuildPropertyMessage(
+            0,
+            group,
+            MidiCapabilityInquiryMessageType::PropertySubscriptionInquiry,
+            m_muid,
+            target.second.InitiatorMuid,
+            m_nextRequestId++,
+            header,
+            data,
+            m_maximumSystemExclusiveSize));
+    }
+
+    return static_cast<uint32_t>(targets.size());
+}
+
+uint32_t MidiCapabilityInquiryTestResponder::EndAllSubscriptions()
+{
+    auto const group = MidiGroup((uint8_t)0);
+
+    std::map<std::string, TestSubscription> held{};
+
+    {
+        std::lock_guard<std::mutex> guard(m_lock);
+        held.swap(m_subscriptions);
+    }
+
+    for (auto const& entry : held)
+    {
+        json::JsonObject header{};
+
+        header.SetNamedValue(
+            L"subscribeId", json::JsonValue::CreateStringValue(winrt::to_hstring(entry.first)));
+        header.SetNamedValue(L"command", json::JsonValue::CreateStringValue(L"end"));
+
+        Send(MidiCapabilityInquiryMessageBuilder::BuildPropertyMessage(
+            0,
+            group,
+            MidiCapabilityInquiryMessageType::PropertySubscriptionInquiry,
+            m_muid,
+            entry.second.InitiatorMuid,
+            m_nextRequestId++,
+            header,
+            nullptr,
+            m_maximumSystemExclusiveSize));
+    }
+
+    return static_cast<uint32_t>(held.size());
+}
+
+uint32_t MidiCapabilityInquiryTestResponder::SubscriptionCount() const
+{
+    std::lock_guard<std::mutex> guard(m_lock);
+
+    return static_cast<uint32_t>(m_subscriptions.size());
 }
 
 void MidiCapabilityInquiryTestResponder::HandlePropertyGet(MidiCapabilityInquiryMessage const& message)

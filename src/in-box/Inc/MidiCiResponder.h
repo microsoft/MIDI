@@ -46,9 +46,17 @@ namespace WindowsMidiServicesCapabilityInquiry
         MuidInvalidated,
         ReplyBufferTooSmall,
 
+        // Another device withdrew its identifier. Nothing to send; the host drops whatever it was
+        // holding for that initiator. ParsedMessage::TargetMuid says whose.
+        InitiatorMuidInvalidated,
+
         // The caller owns the answer from here: it parses the header JSON with Windows.Data.Json,
         // which cannot be done at this layer, then drives a PropertyReplyChunker.
         PropertyDataRequested,
+
+        // A subscription start, end or update reply. Same reason the caller owns it: the command
+        // and the subscription identifier are both in the header JSON.
+        PropertySubscriptionRequested,
     };
 
     // Produces replies into a buffer the caller owns. It never sends, never allocates and holds no
@@ -102,7 +110,9 @@ namespace WindowsMidiServicesCapabilityInquiry
                     return ResponderAction::MuidInvalidated;
                 }
 
-                return ResponderAction::Ignored;
+                // Somebody else's identifier went away. Nothing to reply to, but a host holding
+                // state for that initiator needs to know it is dead.
+                return ResponderAction::InitiatorMuidInvalidated;
             }
 
             if (message.Type == MessageType::Discovery)
@@ -173,6 +183,21 @@ namespace WindowsMidiServicesCapabilityInquiry
                 }
 
                 return ResponderAction::PropertyDataRequested;
+            }
+
+            if (message.Type == MessageType::PropertySubscriptionInquiry)
+            {
+                if (!m_config.SupportsPropertyExchange || m_config.Muid == 0)
+                {
+                    return ResponderAction::Ignored;
+                }
+
+                if (!message.HasPropertyExchangeFields)
+                {
+                    return ResponderAction::Ignored;
+                }
+
+                return ResponderAction::PropertySubscriptionRequested;
             }
 
             if (message.Type == MessageType::PropertyExchangeCapabilitiesInquiry)

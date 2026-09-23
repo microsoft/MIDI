@@ -456,9 +456,173 @@ void MidiCapabilityInquirySessionTests::TestNamedResourcesAreParsed()
     responder.Stop();
 }
 
-void MidiCapabilityInquirySessionTests::TestProgramListPagesUntilItIsComplete()
+void MidiCapabilityInquirySessionTests::TestSubscriptionDeliversUpdates()
 {
-    auto const pair = CreateLoopbackPair(L"TAEF CI Paging");
+    auto const pair = CreateLoopbackPair(L"TAEF CI Subscribe");
+
+    MidiCapabilityInquiryTestResponder responder{};
+    responder.SetResource("ChannelList", "[{\"title\":\"Part 1\",\"channel\":1}]");
+    responder.Start(pair->Device, 0x0123456);
+
+    pair->Initiator.Open();
+    pair->Device.Open();
+
+    auto session = MidiCapabilityInquirySession::Create(pair->Initiator);
+    auto const found = DiscoverOne(session, responder);
+
+    wil::unique_event updated{ wil::EventOptions::ManualReset };
+
+    winrt::hstring seenCommand{};
+    winrt::hstring seenBody{};
+
+    auto const token = session.PropertySubscriptionUpdated(
+        [&](auto&&, MidiPropertySubscriptionUpdatedEventArgs const& args)
+        {
+            seenCommand = args.Command();
+
+            if (args.Update() != nullptr)
+            {
+                seenBody = args.Update().BodyAsText();
+            }
+
+            updated.SetEvent();
+        });
+
+    auto const subscription = session.SubscribeAsync(found.Muid(), L"ChannelList", L"").get();
+
+    VERIFY_IS_NOT_NULL(subscription);
+    VERIFY_ARE_EQUAL((int)subscription.Status(), (int)MidiCapabilityInquiryStatus::Success);
+    VERIFY_ARE_EQUAL(subscription.ResourceStatus(), 200);
+    VERIFY_IS_TRUE(subscription.IsActive());
+    VERIFY_IS_FALSE(subscription.SubscribeId().empty());
+    VERIFY_ARE_EQUAL(subscription.Resource(), winrt::hstring{ L"ChannelList" });
+
+    VERIFY_ARE_EQUAL(session.GetSubscriptions().Size(), (uint32_t)1);
+    VERIFY_ARE_EQUAL(responder.SubscriptionCount(), (uint32_t)1);
+
+    // Now the device changes and tells everyone who asked.
+    responder.SetResource("ChannelList", "[{\"title\":\"Part 1\",\"channel\":1,\"programTitle\":\"Strings\"}]");
+
+    VERIFY_ARE_EQUAL(responder.NotifyResourceChanged("ChannelList"), (uint32_t)1);
+
+    VERIFY_IS_TRUE(updated.wait(5000), L"a subscription update arrives");
+
+    VERIFY_ARE_EQUAL(seenCommand, winrt::hstring{ L"full" });
+    VERIFY_IS_TRUE(std::wstring{ seenBody }.find(L"Strings") != std::wstring::npos,
+        L"the update carries the new value, not the old one");
+
+    session.PropertySubscriptionUpdated(token);
+    session.Close();
+    responder.Stop();
+}
+
+void MidiCapabilityInquirySessionTests::TestSubscriptionRefusalIsReported()
+{
+    auto const pair = CreateLoopbackPair(L"TAEF CI Subscribe Refused");
+
+    MidiCapabilityInquiryTestResponder responder{};
+    responder.SetResource("ChannelList", "[]");
+    responder.AcceptSubscriptions(false);
+    responder.Start(pair->Device, 0x0123456);
+
+    pair->Initiator.Open();
+    pair->Device.Open();
+
+    auto session = MidiCapabilityInquirySession::Create(pair->Initiator);
+    auto const found = DiscoverOne(session, responder);
+
+    auto const subscription = session.SubscribeAsync(found.Muid(), L"ChannelList", L"").get();
+
+    // The device answered, so this is not a failure to communicate. It said no, and 405 is how.
+    VERIFY_IS_NOT_NULL(subscription);
+    VERIFY_ARE_EQUAL((int)subscription.Status(), (int)MidiCapabilityInquiryStatus::NegativeAcknowledgment);
+    VERIFY_ARE_EQUAL(subscription.ResourceStatus(), 405);
+    VERIFY_IS_FALSE(subscription.IsActive());
+    VERIFY_IS_TRUE(subscription.SubscribeId().empty());
+
+    VERIFY_ARE_EQUAL(session.GetSubscriptions().Size(), (uint32_t)0);
+
+    session.Close();
+    responder.Stop();
+}
+
+void MidiCapabilityInquirySessionTests::TestUnsubscribeStopsUpdates()
+{
+    auto const pair = CreateLoopbackPair(L"TAEF CI Unsubscribe");
+
+    MidiCapabilityInquiryTestResponder responder{};
+    responder.SetResource("ChannelList", "[]");
+    responder.Start(pair->Device, 0x0123456);
+
+    pair->Initiator.Open();
+    pair->Device.Open();
+
+    auto session = MidiCapabilityInquirySession::Create(pair->Initiator);
+    auto const found = DiscoverOne(session, responder);
+
+    auto const subscription = session.SubscribeAsync(found.Muid(), L"ChannelList", L"").get();
+
+    VERIFY_IS_TRUE(subscription.IsActive());
+    VERIFY_ARE_EQUAL(responder.SubscriptionCount(), (uint32_t)1);
+
+    VERIFY_IS_TRUE(session.UnsubscribeAsync(subscription).get());
+
+    VERIFY_IS_FALSE(subscription.IsActive());
+    VERIFY_ARE_EQUAL(session.GetSubscriptions().Size(), (uint32_t)0);
+
+    // The device has to have let go too, or it keeps sending to a subscriber that stopped
+    // listening. This is what proves the end reached it rather than being dropped locally.
+    VERIFY_ARE_EQUAL(responder.SubscriptionCount(), (uint32_t)0);
+    VERIFY_ARE_EQUAL(responder.NotifyResourceChanged("ChannelList"), (uint32_t)0);
+
+    session.Close();
+    responder.Stop();
+}
+
+void MidiCapabilityInquirySessionTests::TestResponderCanEndASubscription()
+{
+    auto const pair = CreateLoopbackPair(L"TAEF CI Responder Ends");
+
+    MidiCapabilityInquiryTestResponder responder{};
+    responder.SetResource("ChannelList", "[]");
+    responder.Start(pair->Device, 0x0123456);
+
+    pair->Initiator.Open();
+    pair->Device.Open();
+
+    auto session = MidiCapabilityInquirySession::Create(pair->Initiator);
+    auto const found = DiscoverOne(session, responder);
+
+    wil::unique_event ended{ wil::EventOptions::ManualReset };
+
+    bool sawEnded{ false };
+
+    auto const token = session.PropertySubscriptionUpdated(
+        [&](auto&&, MidiPropertySubscriptionUpdatedEventArgs const& args)
+        {
+            sawEnded = args.IsSubscriptionEnded();
+            ended.SetEvent();
+        });
+
+    auto const subscription = session.SubscribeAsync(found.Muid(), L"ChannelList", L"").get();
+
+    VERIFY_IS_TRUE(subscription.IsActive());
+
+    VERIFY_ARE_EQUAL(responder.EndAllSubscriptions(), (uint32_t)1);
+
+    VERIFY_IS_TRUE(ended.wait(5000), L"the end reaches the initiator");
+
+    VERIFY_IS_TRUE(sawEnded);
+    VERIFY_IS_FALSE(subscription.IsActive());
+    VERIFY_ARE_EQUAL(session.GetSubscriptions().Size(), (uint32_t)0);
+
+    session.PropertySubscriptionUpdated(token);
+    session.Close();
+    responder.Stop();
+}
+
+void MidiCapabilityInquirySessionTests::TestProgramListPagesUntilItIsComplete()
+{    auto const pair = CreateLoopbackPair(L"TAEF CI Paging");
 
     // More entries than one page holds, so the session has to ask more than once.
     std::vector<std::string> entries{};

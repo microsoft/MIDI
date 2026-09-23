@@ -59,13 +59,22 @@ namespace midikeyboard
     public:
         using CompletedHandler = std::function<void(ProgramListResult, std::vector<ProgramListEntry>)>;
 
+        // Raised when the device says the programs available on this channel have changed, which
+        // happens on a workstation or a DAW when a different instrument is selected. Runs on a
+        // background thread. Only ever called when the device supports being subscribed to.
+        using ChangedHandler = std::function<void()>;
+
         // channel is the 0-15 index the app transmits on; the ChannelList is filtered by it so
         // the programs offered are the ones that channel can actually select
+        //
+        // Pass a changed handler to be told when the answer stops being true. Doing so keeps the
+        // query alive after its result arrives, so the caller must hold on to it and Cancel it.
         static std::shared_ptr<MidiCiProgramListQuery> Start(
             _In_ winrt::Windows::Devices::Midi2::MidiEndpointConnection const& connection,
             _In_ uint8_t group,
             _In_ uint8_t channel,
-            _In_ CompletedHandler handler) noexcept;
+            _In_ CompletedHandler handler,
+            _In_ ChangedHandler changed) noexcept;
 
         // Safe to call from any thread and more than once. The handler will not run afterwards.
         void Cancel() noexcept;
@@ -80,7 +89,8 @@ namespace midikeyboard
             _In_ winrt::Windows::Devices::Midi2::MidiEndpointConnection const& connection,
             _In_ uint8_t group,
             _In_ uint8_t channel,
-            _In_ CompletedHandler handler) noexcept;
+            _In_ CompletedHandler handler,
+            _In_ ChangedHandler changed) noexcept;
 
         // The whole exchange, start to finish, on a background thread. Every step waits for the
         // device's answer, so none of this may run on the user interface thread.
@@ -101,6 +111,12 @@ namespace midikeyboard
 
         void Complete(_In_ ProgramListResult result) noexcept;
 
+        // Asks the device to tell us when the channel list changes. Does nothing unless the
+        // caller wants to know and the device says it can.
+        void WatchChannelList(
+            _In_ winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiCapabilityInquirySession const& session,
+            _In_ winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiUniqueId const& muid) noexcept;
+
         std::mutex m_lock{};
 
         winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiCapabilityInquirySession m_session{ nullptr };
@@ -109,6 +125,12 @@ namespace midikeyboard
         uint8_t m_channel{ 0 };
 
         CompletedHandler m_handler{};
+        ChangedHandler m_changedHandler{};
+
+        // Set once the device has accepted a subscription. The session is then kept open after
+        // the result goes out, because closing it would end the subscription.
+        winrt::event_token m_subscriptionToken{};
+        std::atomic<bool> m_watching{ false };
 
         std::atomic<bool> m_canceled{ false };
         std::atomic<bool> m_completed{ false };

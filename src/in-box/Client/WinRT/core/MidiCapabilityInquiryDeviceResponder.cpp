@@ -39,6 +39,13 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         constexpr std::wstring_view StatusKey{ L"status" };
         constexpr std::wstring_view TotalCountKey{ L"totalCount" };
 
+        constexpr std::wstring_view CommandKey{ L"command" };
+        constexpr std::wstring_view SubscribeIdKey{ L"subscribeId" };
+
+        constexpr std::wstring_view CommandStart{ L"start" };
+        constexpr std::wstring_view CommandEnd{ L"end" };
+        constexpr std::wstring_view CommandFull{ L"full" };
+
         constexpr std::wstring_view ResourceDeviceInfo{ L"DeviceInfo" };
         constexpr std::wstring_view ResourceResourceList{ L"ResourceList" };
         constexpr std::wstring_view ResourceChannelList{ L"ChannelList" };
@@ -652,6 +659,29 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
                 handled = true;
                 break;
 
+            case ci::MidiCapabilityInquiryMessageType::PropertySubscriptionInquiry:
+                HandleSubscription(message, group);
+                handled = true;
+                break;
+
+            case ci::MidiCapabilityInquiryMessageType::InvalidateMuid:
+                // An initiator withdrawing its identifier takes its subscriptions with it, or this
+                // responder would keep sending updates to a device that is no longer there.
+                if (message.SourceMuid() != nullptr)
+                {
+                    auto const gone = message.SourceMuid().AsCombined28BitValue();
+
+                    std::lock_guard<std::mutex> guard(m_lock);
+
+                    for (auto entry = m_subscribers.begin(); entry != m_subscribers.end(); )
+                    {
+                        entry = (entry->second.InitiatorMuid == gone)
+                            ? m_subscribers.erase(entry)
+                            : std::next(entry);
+                    }
+                }
+                break;
+
             case ci::MidiCapabilityInquiryMessageType::ProfileInquiry:
                 HandleProfileInquiry(message, group);
                 handled = true;
@@ -804,6 +834,14 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
                 if (m_deviceInfo != nullptr) { addEntry(ResourceDeviceInfo, false); }
                 if (m_channelList != nullptr) { addEntry(ResourceChannelList, false); }
                 if (!m_programLists.empty()) { addEntry(ResourceProgramList, true); }
+
+                for (auto const& entry : list.Entries())
+                {
+                    if (m_subscribableResources.count(std::wstring{ entry.Resource() }) > 0)
+                    {
+                        entry.CanSubscribe(true);
+                    }
+                }
             }
 
             return ToNarrowString(list.GetJson().Stringify());
@@ -1016,6 +1054,262 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         }
     }
 
+    uint8_t MidiCapabilityInquiryDeviceResponder::NextRequestId() noexcept
+    {
+        // Zero is legal but is what an implementation that never set one sends, so it is skipped.
+        auto const value = m_nextRequestId.fetch_add(1);
+
+        return (value == 0 || value > 0x7F) ? (m_nextRequestId = 1, (uint8_t)1) : value;
+    }
+
+    _Use_decl_annotations_
+    uint32_t MidiCapabilityInquiryDeviceResponder::MaximumSystemExclusiveSizeFor(
+        uint32_t const initiatorMuid) noexcept
+    {
+        auto maximum = MidiCapabilityInquiryMessageBuilder::MinimumReceivableSystemExclusiveSize();
+
+        try
+        {
+            std::lock_guard<std::mutex> guard(m_lock);
+
+            auto const entry = m_initiatorMaximumSystemExclusiveSizes.find(initiatorMuid);
+
+            if (entry != m_initiatorMaximumSystemExclusiveSizes.end() && entry->second > maximum)
+            {
+                maximum = entry->second;
+            }
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+
+        return maximum;
+    }
+
+    _Use_decl_annotations_
+    void MidiCapabilityInquiryDeviceResponder::SetResourceSubscribable(
+        winrt::hstring const& resource,
+        bool const canSubscribe) noexcept
+    {
+        try
+        {
+            std::lock_guard<std::mutex> guard(m_lock);
+
+            if (canSubscribe)
+            {
+                m_subscribableResources.insert(std::wstring{ resource });
+                return;
+            }
+
+            m_subscribableResources.erase(std::wstring{ resource });
+
+            // Anyone already subscribed is dropped with it. They are told the next time an update
+            // would have gone out, which is the only moment the responder speaks unprompted.
+            for (auto entry = m_subscribers.begin(); entry != m_subscribers.end(); )
+            {
+                entry = (entry->second.Resource == std::wstring{ resource })
+                    ? m_subscribers.erase(entry)
+                    : std::next(entry);
+            }
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+    }
+
+    _Use_decl_annotations_
+    bool MidiCapabilityInquiryDeviceResponder::IsResourceSubscribable(
+        winrt::hstring const& resource) noexcept
+    {
+        try
+        {
+            std::lock_guard<std::mutex> guard(m_lock);
+
+            return m_subscribableResources.count(std::wstring{ resource }) > 0;
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+            return false;
+        }
+    }
+
+    _Use_decl_annotations_
+    void MidiCapabilityInquiryDeviceResponder::HandleSubscription(
+        ci::MidiCapabilityInquiryMessage const& message,
+        midi2::MidiGroup const& group) noexcept
+    {
+        try
+        {
+            auto const header = message.Header();
+
+            auto const command = SafeGetNamedString(header, CommandKey);
+            auto const resource = SafeGetNamedString(header, ResourceNameKey);
+            auto const resourceId = SafeGetNamedString(header, ResourceIdKey);
+            auto const subscribeId = SafeGetNamedString(header, SubscribeIdKey);
+
+            int32_t status{ 400 };
+            winrt::hstring assigned{};
+
+            if (command == winrt::hstring{ CommandStart })
+            {
+                int32_t totalCount{ -1 };
+
+                const bool haveData = !resource.empty() &&
+                    !ResourceDataFor(resource, resourceId, -1, -1, totalCount).empty();
+
+                std::lock_guard<std::mutex> guard(m_lock);
+
+                if (!haveData || m_subscribableResources.count(std::wstring{ resource }) == 0)
+                {
+                    // 405 is the specification's "this device does not do that with this
+                    // resource", which is what an initiator needs to know to fall back to polling.
+                    status = 405;
+                }
+                else
+                {
+                    assigned = winrt::hstring{ L"s" + std::to_wstring(m_nextSubscribeId++) };
+
+                    DeviceSubscription added{};
+
+                    added.InitiatorMuid = message.SourceMuid() == nullptr
+                        ? 0 : message.SourceMuid().AsCombined28BitValue();
+                    added.InitiatorId = message.SourceMuid();
+                    added.Resource = resource;
+                    added.ResourceId = resourceId;
+
+                    m_subscribers.insert_or_assign(std::wstring{ assigned }, added);
+
+                    status = 200;
+                }
+            }
+            else if (command == winrt::hstring{ CommandEnd })
+            {
+                std::lock_guard<std::mutex> guard(m_lock);
+
+                m_subscribers.erase(std::wstring{ subscribeId });
+
+                status = 200;
+            }
+
+            json::JsonObject replyHeader{};
+
+            replyHeader.SetNamedValue(
+                winrt::hstring{ StatusKey }, json::JsonValue::CreateNumberValue(status));
+
+            if (!assigned.empty())
+            {
+                replyHeader.SetNamedValue(
+                    winrt::hstring{ SubscribeIdKey }, json::JsonValue::CreateStringValue(assigned));
+            }
+
+            Send(MidiCapabilityInquiryMessageBuilder::BuildPropertyMessage(
+                0,
+                group,
+                ci::MidiCapabilityInquiryMessageType::PropertySubscriptionInquiryReply,
+                MuidForReply(),
+                message.SourceMuid(),
+                message.RequestId(),
+                replyHeader,
+                nullptr,
+                message.SourceMuid() == nullptr
+                    ? MidiCapabilityInquiryMessageBuilder::MinimumReceivableSystemExclusiveSize()
+                    : MaximumSystemExclusiveSizeFor(message.SourceMuid().AsCombined28BitValue())));
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+    }
+
+    _Use_decl_annotations_
+    uint32_t MidiCapabilityInquiryDeviceResponder::NotifyResourceChanged(
+        winrt::hstring const& resource,
+        winrt::hstring const& resourceId) noexcept
+    {
+        uint32_t told{ 0 };
+
+        try
+        {
+            if (!m_isEnabled || resource.empty())
+            {
+                return 0;
+            }
+
+            std::vector<std::pair<std::wstring, DeviceSubscription>> targets{};
+
+            {
+                std::lock_guard<std::mutex> guard(m_lock);
+
+                for (auto const& entry : m_subscribers)
+                {
+                    if (entry.second.Resource != std::wstring{ resource })
+                    {
+                        continue;
+                    }
+
+                    // A subscriber that named no resource id wants whichever one it subscribed
+                    // to, so an update for a different one is not theirs.
+                    if (entry.second.ResourceId != std::wstring{ resourceId })
+                    {
+                        continue;
+                    }
+
+                    targets.emplace_back(entry.first, entry.second);
+                }
+            }
+
+            if (targets.empty())
+            {
+                return 0;
+            }
+
+            int32_t totalCount{ -1 };
+
+            auto const data = ResourceDataFor(resource, resourceId, -1, -1, totalCount);
+
+            if (data.empty())
+            {
+                return 0;
+            }
+
+            for (auto const& target : targets)
+            {
+                json::JsonObject header{};
+
+                header.SetNamedValue(
+                    winrt::hstring{ SubscribeIdKey },
+                    json::JsonValue::CreateStringValue(winrt::hstring{ target.first }));
+
+                header.SetNamedValue(
+                    winrt::hstring{ CommandKey },
+                    json::JsonValue::CreateStringValue(winrt::hstring{ CommandFull }));
+
+                if (Send(MidiCapabilityInquiryMessageBuilder::BuildPropertyMessage(
+                    0,
+                    midi2::MidiGroup((uint8_t)0),
+                    ci::MidiCapabilityInquiryMessageType::PropertySubscriptionInquiry,
+                    MuidForReply(),
+                    target.second.InitiatorId,
+                    NextRequestId(),
+                    header,
+                    ToByteVector(data),
+                    MaximumSystemExclusiveSizeFor(target.second.InitiatorMuid))))
+                {
+                    told++;
+                }
+            }
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+
+        return told;
+    }
+
     _Use_decl_annotations_
     bool MidiCapabilityInquiryDeviceResponder::SendProfileEnabledReport(
         uint8_t const functionBlockNumber,
@@ -1026,7 +1320,6 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         return Send(MidiCapabilityInquiryMessageBuilder::BuildProfileEnabledReport(
             0, midi2::MidiGroup((uint8_t)0), deviceId, GetMuid(functionBlockNumber), profileId, channelCount));
     }
-
     _Use_decl_annotations_
     bool MidiCapabilityInquiryDeviceResponder::SendProfileDisabledReport(
         uint8_t const functionBlockNumber,

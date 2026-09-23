@@ -2730,6 +2730,23 @@ namespace winrt::midikeyboard::implementation
                                 strong->ApplyProgramList(result, std::move(*shared));
                             }
                         });
+                },
+                [weak, queue]()
+                {
+                    // The device says its channel list moved, so what it told us about this
+                    // channel's programs may no longer be true. Arrives on a background thread.
+                    if (queue == nullptr)
+                    {
+                        return;
+                    }
+
+                    queue.TryEnqueue([weak]()
+                        {
+                            if (auto strong = weak.get())
+                            {
+                                strong->StartProgramListQuery();
+                            }
+                        });
                 });
         }
         MIDI_KEYBOARD_CATCH_AND_LOG(L"Unable to ask the device for its program list.")
@@ -2745,7 +2762,10 @@ namespace winrt::midikeyboard::implementation
             m_programList = std::move(entries);
             m_programListResult = result;
             m_programListQueryRan = true;
-            m_programListQuery = nullptr;
+
+            // The query is deliberately kept: it may be holding a subscription, and letting go of
+            // it here would leave nothing able to cancel that. StartProgramListQuery cancels the
+            // previous one before starting another.
 
             if (!m_patchControlsInitialized)
             {

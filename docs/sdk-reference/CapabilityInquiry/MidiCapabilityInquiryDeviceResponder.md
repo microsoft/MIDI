@@ -35,6 +35,9 @@ Identifiers belong to function blocks rather than to devices, so a device with s
 | `GetProgramList(resourceId)` | The program list published under that resource id, or null |
 | `SetResource(resource, resourceId, jsonData)` | Publishes anything this API has no type for, as the JSON text of the resource. This is also how an application publishes a resource from a specification the API does not model |
 | `RemoveResource(resource, resourceId)` | Removes a resource published that way |
+| `SetResourceSubscribable(resource, canSubscribe)` | Lets initiators ask to be told when this resource changes instead of polling for it. Off for everything until set, because a device that accepts a subscription is promising to send updates and should only promise that if it will |
+| `IsResourceSubscribable(resource)` | Whether subscriptions to this resource are accepted |
+| `NotifyResourceChanged(resource, resourceId)` | Sends the resource to everyone subscribed to it. Call it after changing the resource, not before. Returns how many subscribers were told |
 | `SetProfiles(deviceId, enabledProfiles, disabledProfiles)` | The profiles at one address. `deviceId` is `0x00` to `0x0F` for a channel, `0x7E` for a group, or `0x7F` for the whole function block |
 | `SendProfileEnabledReport(functionBlockNumber, deviceId, profileId, channelCount)` | Broadcasts that a profile became enabled |
 | `SendProfileDisabledReport(functionBlockNumber, deviceId, profileId, channelCount)` | Broadcasts that a profile became disabled |

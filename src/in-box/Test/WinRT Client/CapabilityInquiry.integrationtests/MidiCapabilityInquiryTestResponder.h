@@ -65,6 +65,18 @@ public:
         winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiProfileId const& profileId,
         uint16_t channelCount);
 
+    // Refuse every subscription, which is what a device that does not support them does.
+    void AcceptSubscriptions(bool value) { m_acceptSubscriptions = value; }
+
+    // Pushes the current value of a resource to everyone subscribed to it, as a device would
+    // after something on it changed. Returns how many subscribers were told.
+    uint32_t NotifyResourceChanged(std::string const& resource);
+
+    // Ends every subscription from the responder's side.
+    uint32_t EndAllSubscriptions();
+
+    uint32_t SubscriptionCount() const;
+
     uint32_t RequestCount() const { return m_requestCount; }
 
     // Every message type this responder was handed, in arrival order, so a test can assert what
@@ -82,6 +94,9 @@ private:
         winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiCapabilityInquiryMessage const& message);
 
     void HandlePropertyGet(
+        winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiCapabilityInquiryMessage const& message);
+
+    void HandleSubscription(
         winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiCapabilityInquiryMessage const& message);
 
     void Send(
@@ -103,6 +118,18 @@ private:
 
     std::map<std::string, std::string> m_resources{};
     std::vector<std::string> m_pagedEntries{};
+
+    std::atomic<bool> m_acceptSubscriptions{ true };
+
+    struct TestSubscription
+    {
+        winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiUniqueId InitiatorMuid{ nullptr };
+        std::string Resource{};
+    };
+
+    std::map<std::string, TestSubscription> m_subscriptions{};
+    uint32_t m_nextSubscribeId{ 1 };
+    uint8_t m_nextRequestId{ 1 };
 
     std::vector<winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiProfileId> m_enabledProfiles{};
     std::vector<winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiProfileId> m_disabledProfiles{};

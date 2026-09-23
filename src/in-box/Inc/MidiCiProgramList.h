@@ -37,6 +37,17 @@ namespace WindowsMidiServicesCapabilityInquiry
         char const* Tag{ nullptr };
     };
 
+    // One entry of a "links" array. M2-105-UM section 4.5.2 is what makes a device with more than
+    // one program list usable: a channel entry lists the collections that channel can select from,
+    // and the resource id is how a client asks for one of them.
+    struct ResourceLink
+    {
+        // UTF-8, owned by the caller and only read during the call.
+        char const* Resource{ nullptr };
+        char const* ResourceId{ nullptr };
+        char const* Title{ nullptr };
+    };
+
     namespace Details
     {
         inline bool AppendCharacter(
@@ -289,13 +300,25 @@ namespace WindowsMidiServicesCapabilityInquiry
     }
 
     // Advertises which resources this device will answer for.
-    inline size_t BuildResourceListJson(        _In_reads_(count) char const* const* const resourceNames,
+    struct ResourceListEntry
+    {
+        char const* Resource{ nullptr };
+
+        // A resource published more than once, told apart by resource id, has to say so or a
+        // client is entitled to ask for it without one.
+        bool RequireResourceId{ false };
+
+        bool CanSubscribe{ false };
+    };
+
+    inline size_t BuildResourceListJson(
+        _In_reads_(count) ResourceListEntry const* const entries,
         _In_ size_t const count,
         _Out_writes_opt_(capacity) char* const buffer,
         _In_ size_t const capacity
     ) noexcept
     {
-        if (resourceNames == nullptr && count > 0)
+        if (entries == nullptr && count > 0)
         {
             return 0;
         }
@@ -312,7 +335,20 @@ namespace WindowsMidiServicesCapabilityInquiry
             if (i > 0) { ok = ok && Details::AppendCharacter(buffer, limit, length, ','); }
 
             ok = ok && Details::AppendText(buffer, limit, length, "{\"resource\":");
-            ok = ok && Details::AppendJsonString(buffer, limit, length, resourceNames[i]);
+            ok = ok && Details::AppendJsonString(buffer, limit, length, entries[i].Resource);
+
+            // Both default to false, so they are written only when they are true. M2-105-UM
+            // section 4.7 shows a bare resource name as a complete entry.
+            if (entries[i].RequireResourceId)
+            {
+                ok = ok && Details::AppendText(buffer, limit, length, ",\"requireResId\":true");
+            }
+
+            if (entries[i].CanSubscribe)
+            {
+                ok = ok && Details::AppendText(buffer, limit, length, ",\"canSubscribe\":true");
+            }
+
             ok = ok && Details::AppendCharacter(buffer, limit, length, '}');
         }
 
@@ -335,6 +371,10 @@ namespace WindowsMidiServicesCapabilityInquiry
         uint8_t BankMsb{ 0 };
         uint8_t BankLsb{ 0 };
         uint8_t Program{ 0 };
+
+        // The program collections, and anything else, reachable from this channel.
+        ResourceLink const* Links{ nullptr };
+        size_t LinkCount{ 0 };
     };
 
     inline size_t BuildChannelListJson(
@@ -401,6 +441,38 @@ namespace WindowsMidiServicesCapabilityInquiry
             ok = ok && Details::AppendCharacter(buffer, limit, length, ',');
             ok = ok && Details::AppendNumber(buffer, limit, length, entry.Program & 0x7F);
             ok = ok && Details::AppendCharacter(buffer, limit, length, ']');
+
+            if (entry.Links != nullptr && entry.LinkCount > 0)
+            {
+                ok = ok && Details::AppendText(buffer, limit, length, ",\"links\":[");
+
+                for (size_t link = 0; ok && link < entry.LinkCount; link++)
+                {
+                    if (link > 0)
+                    {
+                        ok = ok && Details::AppendCharacter(buffer, limit, length, ',');
+                    }
+
+                    ok = ok && Details::AppendText(buffer, limit, length, "{\"resource\":");
+                    ok = ok && Details::AppendJsonString(buffer, limit, length, entry.Links[link].Resource);
+
+                    if (entry.Links[link].ResourceId != nullptr)
+                    {
+                        ok = ok && Details::AppendText(buffer, limit, length, ",\"resId\":");
+                        ok = ok && Details::AppendJsonString(buffer, limit, length, entry.Links[link].ResourceId);
+                    }
+
+                    if (entry.Links[link].Title != nullptr)
+                    {
+                        ok = ok && Details::AppendText(buffer, limit, length, ",\"title\":");
+                        ok = ok && Details::AppendJsonString(buffer, limit, length, entry.Links[link].Title);
+                    }
+
+                    ok = ok && Details::AppendCharacter(buffer, limit, length, '}');
+                }
+
+                ok = ok && Details::AppendCharacter(buffer, limit, length, ']');
+            }
 
             ok = ok && Details::AppendCharacter(buffer, limit, length, '}');
         }
