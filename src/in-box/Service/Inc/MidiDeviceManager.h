@@ -18,6 +18,7 @@
 namespace WindowsMidiServicesNamingLib
 {
     class MidiEndpointNameTable;
+    struct Midi1DuplicateDeviceClaim;
 }
 
 // ----------------------------------------------------------------------
@@ -252,6 +253,30 @@ private:
     HRESULT SyncMidi1Ports(
         _In_ PMIDIPORT umpMidiPort
     );
+
+    // Everything the rewritten duplicate naming properties point at has to outlive the DEVPROPERTY
+    // array they are pushed into, so the caller owns one of these for the length of the activation.
+    struct DuplicateDeviceNamingStorage
+    {
+        std::wstring MarkedEndpointName{ };
+        std::wstring BaseDeviceName{ };
+        std::wstring DeviceIdentity{ };
+        uint32_t DuplicateIndex{ 0 };
+        std::vector<std::byte> NameTablePropertyData{ };
+    };
+
+    HRESULT ReadDuplicateDeviceNameClaims(
+        _In_ std::wstring const& baseDeviceName,
+        _Inout_ std::vector<WindowsMidiServicesNamingLib::Midi1DuplicateDeviceClaim>& claims
+    ) noexcept;
+
+    // Assigns the number for this endpoint and rewrites the names which carry it. Called while
+    // m_midiPortsLock is held and before the software device exists, so no published name moves.
+    HRESULT ApplyDuplicateDeviceNaming(
+        _In_ PCWSTR endpointInstanceId,
+        _Inout_ std::vector<DEVPROPERTY>& interfaceProperties,
+        _Inout_ DuplicateDeviceNamingStorage& storage
+    ) noexcept;
 
     std::shared_ptr<CMidiClientManager> m_clientManager;
 

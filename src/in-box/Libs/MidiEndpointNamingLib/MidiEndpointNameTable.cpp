@@ -33,6 +33,7 @@
 #include "Feature_Servicing_MIDIPortDisambiguators.h"
 #include "Feature_Servicing_MIDI2UnicodeConversion.h"
 #include "Feature_Servicing_MIDI2PortNamingRework.h"
+#include "Feature_Servicing_MIDI2DuplicateDeviceNaming.h"
 
 namespace WindowsMidiServicesNamingLib
 {
@@ -54,6 +55,17 @@ static_assert(offsetof(Midi1PortNameEntry, DataFlowFromUserPerspective) == 4, "M
 static_assert(offsetof(Midi1PortNameEntry, CustomName) == 8, "Midi1PortNameEntry is a persisted binary layout");
 static_assert(offsetof(Midi1PortNameEntry, LegacyWinMMName) == 72, "Midi1PortNameEntry is a persisted binary layout");
 static_assert(offsetof(Midi1PortNameEntry, NewStyleName) == 136, "Midi1PortNameEntry is a persisted binary layout");
+
+// Same shape for the naming inputs, and the same rule: once it ships, the layout is a contract.
+#define MAX_PORT_NAME_INPUT_TABLE_SIZE  (sizeof(Midi1PortNameInputEntry) * 32 + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE)
+#define MIN_PORT_NAME_INPUT_TABLE_SIZE  (sizeof(Midi1PortNameInputEntry) + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE)
+
+static_assert(sizeof(Midi1PortNameInputEntry) == 392, "Midi1PortNameInputEntry is a persisted binary layout");
+static_assert(offsetof(Midi1PortNameInputEntry, GroupIndex) == 0, "Midi1PortNameInputEntry is a persisted binary layout");
+static_assert(offsetof(Midi1PortNameInputEntry, DataFlowFromUserPerspective) == 4, "Midi1PortNameInputEntry is a persisted binary layout");
+static_assert(offsetof(Midi1PortNameInputEntry, PinName) == 8, "Midi1PortNameInputEntry is a persisted binary layout");
+static_assert(offsetof(Midi1PortNameInputEntry, DriverRegistryName) == 136, "Midi1PortNameInputEntry is a persisted binary layout");
+static_assert(offsetof(Midi1PortNameInputEntry, FilterName) == 264, "Midi1PortNameInputEntry is a persisted binary layout");
 
 // Default WinMM naming for MIDI 1 device using a MIDI 1 driver
 #define MIDI_MIDI1_PORT_NAMING_DEFAULT_REG_VALUE_NAME    L"DefaultMidi1PortNaming"
@@ -726,6 +738,24 @@ MidiEndpointNameTable::WriteProperties(
         }
     }
 
+    if (Feature_Servicing_MIDI2DuplicateDeviceNaming::IsEnabled())
+    {
+        // The service needs the raw material to rebuild these names if it has to add a duplicate
+        // device marker, because a marker has to be budgeted while a name is composed.
+        std::vector<Midi1PortNameInput> inputs{ };
+
+        for (auto const& input : m_sourcePortInputs) { inputs.push_back(input.second); }
+        for (auto const& input : m_destinationPortInputs) { inputs.push_back(input.second); }
+
+        m_portNameInputsPropertyData.clear();
+
+        if (WriteMidi1PortNameInputsToPropertyDataPointer(inputs, m_portNameInputsPropertyData))
+        {
+            destination.push_back({ { PKEY_MIDI_NamingPortNameInputs, DEVPROP_STORE_SYSTEM, nullptr },
+                DEVPROP_TYPE_BINARY, (ULONG)m_portNameInputsPropertyData.size(), (PVOID)m_portNameInputsPropertyData.data() });
+        }
+    }
+
     m_nameTablePropertyData.clear();
 
     if (WriteMidi1PortNameTableToPropertyDataPointer(entries, m_nameTablePropertyData))
@@ -1095,6 +1125,58 @@ MidiEndpointNameTable::RebuildNewStyleNames(
         m_nameSourceFlagsValid = true;
 
         return S_OK;
+    }
+    CATCH_LOG();
+
+    return E_FAIL;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+MidiEndpointNameTable::ApplyDuplicateDeviceMarker(
+    uint32_t const oneBasedIndex,
+    std::wstring const& markedEndpointName,
+    std::vector<Midi1PortNameInput> const& portNameInputs,
+    bool const driverRegistryNamesArePerFilter) noexcept
+{
+    try
+    {
+        if (oneBasedIndex < 2) return S_OK;
+
+        // The WinMM-compatible name is not composed and not capped, so the marker can be put where
+        // the generator would have put it.
+        for (auto& entries : { &m_sourceEntries, &m_destinationEntries })
+        {
+            for (auto& entry : *entries)
+            {
+                if (entry.second == nullptr) continue;
+
+                auto const marked = ApplyLegacyDuplicateDeviceMarkerToPortName(
+                    std::wstring{ entry.second->LegacyWinMMName }, oneBasedIndex);
+
+                internal::SafeCopyWStringToFixedArray(entry.second->LegacyWinMMName, MAXPNAMELEN, marked);
+            }
+        }
+
+        // A new style name has to be composed with the marker rather than given one afterwards,
+        // because the fit ladder reserves room for it. Without the raw material there is nothing
+        // to recompose from, so the names are left alone rather than corrupted.
+        if (portNameInputs.empty()) return S_OK;
+
+        ResetPortInputs();
+
+        for (auto const& input : portNameInputs)
+        {
+            RecordPortInput(
+                input.GroupIndex,
+                input.DataFlowFromUserPerspective,
+                input.PinName,
+                input.DriverRegistryName,
+                input.FilterName);
+        }
+
+        return RebuildNewStyleNames(markedEndpointName, driverRegistryNamesArePerFilter);
     }
     CATCH_LOG();
 
@@ -1525,6 +1607,248 @@ std::wstring ApplyLegacyDuplicateDeviceMarker(
     CATCH_LOG();
 
     return baseDeviceName;
+}
+
+_Use_decl_annotations_
+std::wstring ApplyLegacyDuplicateDeviceMarkerToPortName(
+    std::wstring const& portName,
+    uint32_t const oneBasedIndex) noexcept
+{
+    try
+    {
+        auto trimmed = WindowsMidiServicesInternal::TrimmedWStringCopy(portName);
+
+        if (oneBasedIndex < 2 || trimmed.empty()) { return trimmed; }
+
+        std::wstring marked{ };
+
+        // GenerateLegacyMidi1PortName produces either the device name alone, or the device name
+        // wrapped as "MIDIIN2 (name)". The marker goes on the device name either way, so a wrapped
+        // name has to be opened up rather than prefixed. The decoration is recognized by its
+        // prefix alone: a long name is truncated after it is composed, so the closing parenthesis
+        // is often already gone.
+        size_t const openParen = trimmed.find(L" (");
+
+        bool wrapped{ false };
+
+        if (openParen != std::wstring::npos)
+        {
+            auto const prefix = trimmed.substr(0, openParen);
+
+            size_t const digitsStart =
+                prefix.starts_with(L"MIDIIN") ? 6 :
+                prefix.starts_with(L"MIDIOUT") ? 7 : std::wstring::npos;
+
+            if (digitsStart != std::wstring::npos)
+            {
+                auto const digits = prefix.substr(digitsStart);
+
+                if (!digits.empty() && std::all_of(digits.begin(), digits.end(), [](wchar_t c) { return c >= L'0' && c <= L'9'; }))
+                {
+                    marked = std::format(L"{0} ({1}- {2}",
+                        prefix,
+                        oneBasedIndex,
+                        trimmed.substr(openParen + 2));
+
+                    wrapped = true;
+                }
+            }
+        }
+
+        if (!wrapped)
+        {
+            marked = std::format(L"{0}- {1}", oneBasedIndex, trimmed);
+        }
+
+        // The generator truncates after it composes, and truncation keeps a prefix, so inserting
+        // the marker and truncating again lands on the same characters it would have produced.
+        if (marked.length() > MAXPNAMELEN - 1)
+        {
+            marked.resize(MAXPNAMELEN - 1);
+
+            if (!marked.empty() && IS_HIGH_SURROGATE(marked.back()))
+            {
+                marked.pop_back();
+            }
+        }
+
+        return WindowsMidiServicesInternal::TrimmedWStringCopy(marked);
+    }
+    CATCH_LOG();
+
+    return portName;
+}
+
+_Use_decl_annotations_
+uint32_t AllocateDuplicateDeviceIndex(
+    std::wstring const& deviceIdentity,
+    std::wstring const& baseDeviceName,
+    std::vector<Midi1DuplicateDeviceClaim> const& existingClaims) noexcept
+{
+    try
+    {
+        if (baseDeviceName.empty()) { return 0; }
+
+        // Only claims against this same name compete for numbers.
+        std::vector<Midi1DuplicateDeviceClaim> relevant{ };
+
+        for (auto const& claim : existingClaims)
+        {
+            if (claim.BaseDeviceName != baseDeviceName) { continue; }
+            if (claim.DeviceIdentity.empty()) { continue; }
+
+            relevant.push_back(claim);
+        }
+
+        auto const numberIsTakenByAnotherPresentDevice = [&relevant, &deviceIdentity](uint32_t index)
+            {
+                return std::any_of(relevant.begin(), relevant.end(),
+                    [index, &deviceIdentity](Midi1DuplicateDeviceClaim const& claim)
+                    {
+                        return claim.DeviceIsPresent && claim.Index == index && claim.DeviceIdentity != deviceIdentity;
+                    });
+            };
+
+        if (!deviceIdentity.empty())
+        {
+            for (auto const& claim : relevant)
+            {
+                if (claim.DeviceIdentity != deviceIdentity) { continue; }
+
+                // Somebody else moved in while this device was away, so the claim is stale.
+                if (numberIsTakenByAnotherPresentDevice(claim.Index)) { break; }
+
+                return claim.Index;
+            }
+        }
+
+        // Nothing held, so take the lowest number no present device is using. A number remembered
+        // by a device which is not here loses it, which is what stops the numbering climbing when
+        // a unit is retired and replaced.
+        uint32_t candidate{ 0 };
+
+        while (numberIsTakenByAnotherPresentDevice(candidate) && candidate < MIDI_MAX_DUPLICATE_DEVICE_INDEX)
+        {
+            candidate++;
+        }
+
+        return candidate;
+    }
+    CATCH_LOG();
+
+    return 0;
+}
+
+_Use_decl_annotations_
+std::vector<Midi1PortNameInput> ReadMidi1PortNameInputsFromPropertyData(
+    uint8_t* dataPointer,
+    uint32_t const dataSize) noexcept
+{
+    std::vector<Midi1PortNameInput> inputs{ };
+
+    try
+    {
+        if (dataPointer == nullptr) { return inputs; }
+
+        if (dataSize < MIN_PORT_NAME_INPUT_TABLE_SIZE || dataSize > MAX_PORT_NAME_INPUT_TABLE_SIZE)
+        {
+            return inputs;
+        }
+
+        size_t totalSizeBytes{ 0 };
+        memcpy(&totalSizeBytes, dataPointer, sizeof(size_t));
+
+        if (totalSizeBytes != dataSize) { return inputs; }
+
+        size_t const payloadBytes = totalSizeBytes - MIDI1_PORT_NAME_ENTRY_HEADER_SIZE;
+        size_t const entryCount = payloadBytes / sizeof(Midi1PortNameInputEntry);
+
+        if (entryCount == 0 || entryCount * sizeof(Midi1PortNameInputEntry) != payloadBytes)
+        {
+            return inputs;
+        }
+
+        std::vector<Midi1PortNameInputEntry> entries(entryCount);
+        memcpy(entries.data(), dataPointer + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE, payloadBytes);
+
+        // The strings come from a stored property, so they are untrusted. Bound every read by the
+        // field rather than trusting a terminator to be there.
+        auto const boundedCopy = [](wchar_t const* field)
+            {
+                size_t const length = ::wcsnlen(field, MIDI_NAMING_PORT_NAME_INPUT_MAX_CHARS);
+                return std::wstring{ field, length };
+            };
+
+        for (auto const& entry : entries)
+        {
+            Midi1PortNameInput input{ };
+
+            input.GroupIndex = entry.GroupIndex;
+            input.DataFlowFromUserPerspective = entry.DataFlowFromUserPerspective;
+            input.PinName = boundedCopy(entry.PinName);
+            input.DriverRegistryName = boundedCopy(entry.DriverRegistryName);
+            input.FilterName = boundedCopy(entry.FilterName);
+
+            inputs.push_back(input);
+        }
+    }
+    CATCH_LOG();
+
+    return inputs;
+}
+
+_Use_decl_annotations_
+bool WriteMidi1PortNameInputsToPropertyDataPointer(
+    std::vector<Midi1PortNameInput> const& inputs,
+    std::vector<std::byte>& propertyData) noexcept
+{
+    try
+    {
+        if (inputs.empty() || inputs.size() > 32) { return false; }
+
+        std::vector<Midi1PortNameInputEntry> entries{ };
+
+        auto const boundedStore = [](wchar_t* field, std::wstring const& value)
+            {
+                size_t const length = min(value.length(), (size_t)(MIDI_NAMING_PORT_NAME_INPUT_MAX_CHARS - 1));
+
+                if (length > 0)
+                {
+                    memcpy(field, value.data(), length * sizeof(wchar_t));
+                }
+
+                field[length] = L'\0';
+            };
+
+        for (auto const& input : inputs)
+        {
+            Midi1PortNameInputEntry entry{ };
+
+            entry.GroupIndex = input.GroupIndex;
+            entry.DataFlowFromUserPerspective = input.DataFlowFromUserPerspective;
+
+            boundedStore(entry.PinName, input.PinName);
+            boundedStore(entry.DriverRegistryName, input.DriverRegistryName);
+            boundedStore(entry.FilterName, input.FilterName);
+
+            entries.push_back(entry);
+        }
+
+        size_t const payloadBytes = entries.size() * sizeof(Midi1PortNameInputEntry);
+        size_t const totalSizeBytes = payloadBytes + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE;
+
+        propertyData.resize(totalSizeBytes, (std::byte)0);
+
+        if (propertyData.size() != totalSizeBytes) { return false; }
+
+        memcpy(propertyData.data(), &totalSizeBytes, MIDI1_PORT_NAME_ENTRY_HEADER_SIZE);
+        memcpy(propertyData.data() + MIDI1_PORT_NAME_ENTRY_HEADER_SIZE, entries.data(), payloadBytes);
+
+        return true;
+    }
+    CATCH_LOG();
+
+    return false;
 }
 
 _Use_decl_annotations_

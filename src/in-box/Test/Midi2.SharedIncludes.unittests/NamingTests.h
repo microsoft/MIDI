@@ -66,6 +66,12 @@ public:
         TEST_METHOD(TestModelNameRecovery);
         TEST_METHOD(TestRederiveAgainstInProtocolEndpointName);
         TEST_METHOD(TestLegacyDuplicateDeviceMarker);
+        TEST_METHOD(TestLegacyPortNameMarkerPlacement);
+        TEST_METHOD(TestDuplicateIndexReturnsToTheSameDevice);
+        TEST_METHOD(TestDuplicateIndexIsReclaimedAfterADeviceIsRetired);
+        TEST_METHOD(TestDuplicateIndexCountsEveryTransport);
+        TEST_METHOD(TestDuplicateIndexIgnoresAClaimForAnotherName);
+        TEST_METHOD(TestPortNameInputsRoundTrip);
         TEST_METHOD(TestGroupWordGivesWayToTheName);
         TEST_METHOD(TestCustomPortNamesArePublishedVerbatim);
     TEST_METHOD(TestPopulateEntryForNativeUmpDevice);

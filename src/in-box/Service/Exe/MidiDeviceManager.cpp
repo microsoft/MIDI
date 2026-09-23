@@ -16,10 +16,13 @@
 
 #include "midi_ksa_pin_map_property.h"
 
+#include "MidiPnpDeviceInfo.h"
+
 #include "Feature_Servicing_MIDI2SynchronizedStart.h"
 #include "Feature_Servicing_MIDI2PortNumberCache.h"
 #include "Feature_Servicing_MIDI2ComponentSignatureCache.h"
 #include "Feature_Servicing_MIDI2PortNamingRework.h"
+#include "Feature_Servicing_MIDI2DuplicateDeviceNaming.h"
 
 using namespace winrt::Windows::Devices::Enumeration;
 
@@ -1538,6 +1541,20 @@ CMidiDeviceManager::ActivateEndpoint
 
         std::wstring deviceInterfaceId{ };
         PMIDIPORT createdMidiPort {};
+
+        // Which unit of a model this is, decided here rather than in each transport so that a
+        // device on any transport is counted and a returning device keeps its number. This is the
+        // last word before the software device exists, so nothing already published is renamed.
+        // The storage has to outlive the property array, which is why it is declared out here.
+        DuplicateDeviceNamingStorage duplicateNamingStorage{ };
+
+        if (Feature_Servicing_MIDI2DuplicateDeviceNaming::IsEnabled())
+        {
+            LOG_IF_FAILED(ApplyDuplicateDeviceNaming(
+                ((SW_DEVICE_CREATE_INFO*)createInfo)->pszInstanceId,
+                allInterfaceProperties,
+                duplicateNamingStorage));
+        }
 
         auto cleanupOnFailure = wil::scope_exit([&]()
         {
@@ -3711,6 +3728,243 @@ std::wstring CMidiDeviceManager::GetWinMMDeviceInterfaceIdForGroupFromParentEndp
 // TODO: If any of the ports in play here are actually in-use by WinMM or WinRT MIDI 1.0
 // we need to leave them alone for now. Otherwise, tearing down and rebuilding a port
 // like that just because a function block came through will end up being a problem.
+namespace
+{
+    DEVPROPERTY* FindInterfaceProperty(
+        _In_ std::vector<DEVPROPERTY>& properties,
+        _In_ DEVPROPKEY const& key) noexcept
+    {
+        for (auto& prop : properties)
+        {
+            if (prop.CompKey.Key.pid == key.pid && IsEqualGUID(prop.CompKey.Key.fmtid, key.fmtid))
+            {
+                return &prop;
+            }
+        }
+
+        return nullptr;
+    }
+
+    std::wstring ReadStringProperty(_In_opt_ DEVPROPERTY const* prop) noexcept
+    {
+        if (prop == nullptr || prop->Buffer == nullptr) return L"";
+        if (prop->Type != DEVPROP_TYPE_STRING) return L"";
+        if (prop->BufferSize < sizeof(wchar_t)) return L"";
+
+        auto const* text = static_cast<wchar_t const*>(prop->Buffer);
+        size_t const maxCharacters = prop->BufferSize / sizeof(wchar_t);
+
+        return std::wstring{ text, ::wcsnlen(text, maxCharacters) };
+    }
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::ReadDuplicateDeviceNameClaims(
+    std::wstring const& baseDeviceName,
+    std::vector<WindowsMidiServicesNamingLib::Midi1DuplicateDeviceClaim>& claims
+) noexcept
+{
+    try
+    {
+        if (baseDeviceName.empty()) return S_OK;
+
+        // Every MIDI endpoint from every transport, whether or not the device is plugged in. An
+        // endpoint is deactivated rather than deleted when its device goes away, and it keeps the
+        // properties written to it, which is how an absent device still holds its number.
+        //
+        // This is cfgmgr32 rather than DeviceInformation on purpose: it is synchronous and cannot
+        // deadlock, and this runs with m_midiPortsLock held.
+        auto const endpoints = WindowsMidiServicesInternal::MidiPnpDeviceInfo::FindAllByInterfaceClass(
+            DEVINTERFACE_UNIVERSALMIDIPACKET_BIDI, false);
+
+        for (auto const& endpoint : endpoints)
+        {
+            auto const claimedName = endpoint.GetInterfaceString(PKEY_MIDI_NamingDuplicateDeviceBaseName);
+
+            if (claimedName.empty()) continue;
+            if (std::wstring{ claimedName } != baseDeviceName) continue;
+
+            auto const index = endpoint.GetInterfaceUInt32(PKEY_MIDI_NamingDuplicateDeviceIndex);
+
+            if (!index.has_value()) continue;
+
+            WindowsMidiServicesNamingLib::Midi1DuplicateDeviceClaim claim{ };
+
+            claim.BaseDeviceName = claimedName;
+            claim.DeviceIdentity = endpoint.GetInterfaceString(PKEY_MIDI_NamingDuplicateDeviceIdentity);
+            claim.Index = index.value();
+            claim.DeviceIsPresent = endpoint.IsInterfaceEnabled();
+
+            claims.push_back(claim);
+        }
+
+        return S_OK;
+    }
+    CATCH_RETURN();
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidiDeviceManager::ApplyDuplicateDeviceNaming(
+    PCWSTR endpointInstanceId,
+    std::vector<DEVPROPERTY>& interfaceProperties,
+    DuplicateDeviceNamingStorage& storage
+) noexcept
+{
+    try
+    {
+        auto* endpointNameProperty = FindInterfaceProperty(interfaceProperties, PKEY_MIDI_EndpointName);
+        auto* friendlyNameProperty = FindInterfaceProperty(interfaceProperties, DEVPKEY_DeviceInterface_FriendlyName);
+
+        storage.BaseDeviceName = ReadStringProperty(endpointNameProperty);
+
+        if (storage.BaseDeviceName.empty())
+        {
+            storage.BaseDeviceName = ReadStringProperty(friendlyNameProperty);
+        }
+
+        if (storage.BaseDeviceName.empty()) return S_OK;
+
+        // What the claim belongs to. The endpoint's own instance id, because it is unique per
+        // endpoint and a transport derives it from something stable about the device, so the same
+        // device asks for the same id when it comes back.
+        //
+        // Deliberately NOT the parent devnode: every endpoint of a software transport shares one,
+        // so two Bluetooth or network devices of the same model would claim the same number.
+        // Deliberately NOT the serial the device reports either: Windows already folds a usable
+        // serial into the instance id and leaves out one it found to be duplicated.
+        if (endpointInstanceId != nullptr)
+        {
+            storage.DeviceIdentity = WindowsMidiServicesInternal::NormalizeDeviceInstanceIdWStringCopy(endpointInstanceId);
+        }
+
+        std::vector<WindowsMidiServicesNamingLib::Midi1DuplicateDeviceClaim> claims{ };
+        LOG_IF_FAILED(ReadDuplicateDeviceNameClaims(storage.BaseDeviceName, claims));
+
+        storage.DuplicateIndex = WindowsMidiServicesNamingLib::AllocateDuplicateDeviceIndex(
+            storage.DeviceIdentity,
+            storage.BaseDeviceName,
+            claims);
+
+        uint32_t const oneBasedIndex = storage.DuplicateIndex + 1;
+
+        TraceLoggingWrite(
+            MidiSrvTelemetryProvider::Provider(),
+            MIDI_TRACE_EVENT_INFO,
+            TraceLoggingString(__FUNCTION__, MIDI_TRACE_EVENT_LOCATION_FIELD),
+            TraceLoggingLevel(WINEVENT_LEVEL_INFO),
+            TraceLoggingPointer(this, "this"),
+            TraceLoggingWideString(L"Duplicate device number assigned", MIDI_TRACE_EVENT_MESSAGE_FIELD),
+            TraceLoggingWideString(storage.BaseDeviceName.c_str(), "base device name"),
+            TraceLoggingWideString(storage.DeviceIdentity.c_str(), "device identity"),
+            TraceLoggingUInt32(storage.DuplicateIndex, "index"),
+            TraceLoggingUInt32(static_cast<uint32_t>(claims.size()), "existing claims for this name")
+        );
+
+        // The claim is recorded even for the first unit, so the endpoint which holds the plain name
+        // is just as recognizable when it comes back as the ones which carry a marker.
+        interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NamingDuplicateDeviceIndex, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_UINT32, (ULONG)sizeof(UINT32), (PVOID)&storage.DuplicateIndex });
+
+        interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NamingDuplicateDeviceBaseName, DEVPROP_STORE_SYSTEM, nullptr},
+            DEVPROP_TYPE_STRING, (ULONG)((storage.BaseDeviceName.length() + 1) * sizeof(wchar_t)), (PVOID)storage.BaseDeviceName.c_str() });
+
+        if (!storage.DeviceIdentity.empty())
+        {
+            interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NamingDuplicateDeviceIdentity, DEVPROP_STORE_SYSTEM, nullptr},
+                DEVPROP_TYPE_STRING, (ULONG)((storage.DeviceIdentity.length() + 1) * sizeof(wchar_t)), (PVOID)storage.DeviceIdentity.c_str() });
+        }
+
+        if (oneBasedIndex < 2) return S_OK;
+
+        // New style marks the endpoint name, and every port name composes from it.
+        storage.MarkedEndpointName = std::format(L"{0} ({1})", storage.BaseDeviceName, oneBasedIndex);
+
+        if (endpointNameProperty != nullptr)
+        {
+            endpointNameProperty->Type = DEVPROP_TYPE_STRING;
+            endpointNameProperty->Buffer = (PVOID)storage.MarkedEndpointName.c_str();
+            endpointNameProperty->BufferSize = (ULONG)((storage.MarkedEndpointName.length() + 1) * sizeof(wchar_t));
+        }
+
+        if (friendlyNameProperty != nullptr)
+        {
+            friendlyNameProperty->Type = DEVPROP_TYPE_STRING;
+            friendlyNameProperty->Buffer = (PVOID)storage.MarkedEndpointName.c_str();
+            friendlyNameProperty->BufferSize = (ULONG)((storage.MarkedEndpointName.length() + 1) * sizeof(wchar_t));
+        }
+
+        auto* nameTableProperty = FindInterfaceProperty(interfaceProperties, PKEY_MIDI_Midi1PortNameTable);
+
+        if (nameTableProperty == nullptr || nameTableProperty->Buffer == nullptr || nameTableProperty->BufferSize == 0)
+        {
+            return S_OK;
+        }
+
+        auto const* tableBytes = static_cast<uint8_t const*>(nameTableProperty->Buffer);
+
+        auto nameTable = WindowsMidiServicesNamingLib::MidiEndpointNameTable::FromPropertyData(
+            winrt::com_array<uint8_t>(tableBytes, tableBytes + nameTableProperty->BufferSize));
+
+        if (nameTable == nullptr) return S_OK;
+
+        // Raw material, when the transport published any. A transport which does not still gets its
+        // WinMM-compatible names marked, because those are not composed.
+        std::vector<WindowsMidiServicesNamingLib::Midi1PortNameInput> portNameInputs{ };
+
+        if (auto* inputsProperty = FindInterfaceProperty(interfaceProperties, PKEY_MIDI_NamingPortNameInputs);
+            inputsProperty != nullptr && inputsProperty->Buffer != nullptr)
+        {
+            portNameInputs = WindowsMidiServicesNamingLib::ReadMidi1PortNameInputsFromPropertyData(
+                static_cast<uint8_t*>(inputsProperty->Buffer),
+                inputsProperty->BufferSize);
+        }
+
+        // The MediaCategories entry lives in a per-model location, so it only says something about
+        // an individual port when the device gives each of its filters a different one.
+        std::vector<std::wstring> distinctRegistryNames{ };
+
+        for (auto const& input : portNameInputs)
+        {
+            if (input.DriverRegistryName.empty()) continue;
+
+            if (std::find(distinctRegistryNames.begin(), distinctRegistryNames.end(), input.DriverRegistryName) == distinctRegistryNames.end())
+            {
+                distinctRegistryNames.push_back(input.DriverRegistryName);
+            }
+        }
+
+        RETURN_IF_FAILED(nameTable->ApplyDuplicateDeviceMarker(
+            oneBasedIndex,
+            storage.MarkedEndpointName,
+            portNameInputs,
+            distinctRegistryNames.size() > 1));
+
+        std::vector<DEVPROPERTY> rebuiltProperties{ };
+        RETURN_IF_FAILED(nameTable->WriteProperties(rebuiltProperties));
+
+        if (auto* rebuiltTable = FindInterfaceProperty(rebuiltProperties, PKEY_MIDI_Midi1PortNameTable);
+            rebuiltTable != nullptr && rebuiltTable->Buffer != nullptr && rebuiltTable->BufferSize > 0)
+        {
+            // Copied out, because the table which owns those bytes does not outlive this function.
+            auto const* rebuiltBytes = static_cast<std::byte const*>(rebuiltTable->Buffer);
+
+            storage.NameTablePropertyData.assign(rebuiltBytes, rebuiltBytes + rebuiltTable->BufferSize);
+
+            nameTableProperty->Type = DEVPROP_TYPE_BINARY;
+            nameTableProperty->Buffer = (PVOID)storage.NameTablePropertyData.data();
+            nameTableProperty->BufferSize = (ULONG)storage.NameTablePropertyData.size();
+        }
+
+        return S_OK;
+    }
+    CATCH_RETURN();
+}
+
+
 _Use_decl_annotations_
 HRESULT
 CMidiDeviceManager::SyncMidi1Ports(
@@ -3778,6 +4032,15 @@ CMidiDeviceManager::SyncMidi1Ports(
         additionalProperties.Append(STRING_PKEY_MIDI_Midi1PortNameSourceFlags);
 
         additionalProperties.Append(STRING_PKEY_MIDI_EndpointProvidedName);
+    }
+
+    if (Feature_Servicing_MIDI2DuplicateDeviceNaming::IsEnabled())
+    {
+        // Copied onto each port below. A port name is where a duplicate device is noticed, so the
+        // number it was built from belongs where somebody looking at the port can see it.
+        additionalProperties.Append(STRING_PKEY_MIDI_NamingDuplicateDeviceIndex);
+        additionalProperties.Append(STRING_PKEY_MIDI_NamingDuplicateDeviceBaseName);
+        additionalProperties.Append(STRING_PKEY_MIDI_NamingDuplicateDeviceIdentity);
     }
     
     additionalProperties.Append(STRING_DEVPKEY_KsAggMidiGroupPinMap);       // need this pin map to find filter id
@@ -3911,6 +4174,11 @@ CMidiDeviceManager::SyncMidi1Ports(
     SW_DEVICE_CREATE_INFO createInfo{};
     GUID transportGUID{};
     MidiDataFormats dataFormats{};
+
+    // Outlive the property array below, like the other values pushed into it.
+    uint32_t duplicateDeviceIndex{ 0 };
+    std::wstring duplicateDeviceBaseName{ };
+    std::wstring duplicateDeviceIdentity{ };
     createInfo.cbSize = sizeof(createInfo);
     createInfo.pszInstanceId = umpMidiPort->InstanceId.c_str();
     createInfo.CapabilityFlags = SWDeviceCapabilitiesNone;
@@ -3950,6 +4218,31 @@ CMidiDeviceManager::SyncMidi1Ports(
                         dataFormats = (MidiDataFormats) winrt::unbox_value<uint8_t>(prop);
                         interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_SupportedDataFormats, DEVPROP_STORE_SYSTEM, nullptr},
                             DEVPROP_TYPE_BYTE, (ULONG)(sizeof(BYTE)), (PVOID)(&(dataFormats)) });
+                    }
+
+                    if (Feature_Servicing_MIDI2DuplicateDeviceNaming::IsEnabled())
+                    {
+                        duplicateDeviceIndex = internal::SafeGetSwdPropertyFromDeviceInformation<uint32_t>(
+                            STRING_PKEY_MIDI_NamingDuplicateDeviceIndex, deviceInfo, 0);
+                        duplicateDeviceBaseName = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(
+                            STRING_PKEY_MIDI_NamingDuplicateDeviceBaseName, deviceInfo, L"").c_str();
+                        duplicateDeviceIdentity = internal::SafeGetSwdPropertyFromDeviceInformation<winrt::hstring>(
+                            STRING_PKEY_MIDI_NamingDuplicateDeviceIdentity, deviceInfo, L"").c_str();
+
+                        if (!duplicateDeviceBaseName.empty())
+                        {
+                            interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NamingDuplicateDeviceIndex, DEVPROP_STORE_SYSTEM, nullptr},
+                                DEVPROP_TYPE_UINT32, (ULONG)sizeof(UINT32), (PVOID)&duplicateDeviceIndex });
+
+                            interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NamingDuplicateDeviceBaseName, DEVPROP_STORE_SYSTEM, nullptr},
+                                DEVPROP_TYPE_STRING, (ULONG)((duplicateDeviceBaseName.length() + 1) * sizeof(wchar_t)), (PVOID)duplicateDeviceBaseName.c_str() });
+                        }
+
+                        if (!duplicateDeviceIdentity.empty())
+                        {
+                            interfaceProperties.push_back(DEVPROPERTY{ {PKEY_MIDI_NamingDuplicateDeviceIdentity, DEVPROP_STORE_SYSTEM, nullptr},
+                                DEVPROP_TYPE_STRING, (ULONG)((duplicateDeviceIdentity.length() + 1) * sizeof(wchar_t)), (PVOID)duplicateDeviceIdentity.c_str() });
+                        }
                     }
                 }
 
