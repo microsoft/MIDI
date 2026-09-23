@@ -791,6 +791,7 @@
     </ClCompile>
     <ClCompile Include="$(SolutionDir)inc\midi_sequence_playback_engine.cpp" />
     <ClCompile Include="MidiSequence.cpp" />
+    <ClCompile Include="MidiSequenceBuilder.cpp" />
     <ClCompile Include="MidiSequenceTextEvent.cpp" />
     <ClCompile Include="MidiSequenceLyricLine.cpp" />
     <ClCompile Include="MidiSequenceTrack.cpp" />
@@ -1339,6 +1340,7 @@
     <Midl Include="MidiSystemTimerSettings.idl" />
     <Midl Include="MidiSequenceFormatEnum.idl" />
     <Midl Include="MidiSequenceTextKindEnum.idl" />
+    <Midl Include="MidiSequenceTimingModeEnum.idl" />
     <Midl Include="MidiSequencePlayerStateEnum.idl" />
     <Midl Include="MidiSequenceNote.idl" />
     <Midl Include="MidiSequenceBarPosition.idl" />
@@ -1349,6 +1351,7 @@
     <Midl Include="MidiSequenceLyricLine.idl" />
     <Midl Include="MidiSequenceTrack.idl" />
     <Midl Include="MidiSequence.idl" />
+    <Midl Include="MidiSequenceBuilder.idl" />
     <Midl Include="MidiSequenceTrackRouting.idl" />
     <Midl Include="MidiSequencePlayer.idl" />
     <Midl Include="MidiFileReadStatusEnum.idl" />

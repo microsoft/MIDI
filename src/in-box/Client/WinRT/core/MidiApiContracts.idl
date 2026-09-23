@@ -116,7 +116,7 @@ namespace Windows.Devices.Midi2
 
         namespace Sequencing
         {
-            [contractversion(1)]
+            [contractversion(2)]
             apicontract MidiSequencingUtilityApiContract { };
         }
 

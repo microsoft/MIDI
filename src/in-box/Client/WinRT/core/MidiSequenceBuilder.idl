@@ -1,0 +1,62 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiChannel.idl";
+import "MidiSequence.idl";
+import "MidiSequenceTimingModeEnum.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Sequencing
+{
+    // Builds a sequence in memory. Until this existed the only way to get a MidiSequence was to
+    // read a file, which left an application with nothing to hand the player when what it wanted
+    // to play was a handful of messages it had just decided on.
+    //
+    // What comes out is the same MidiSequence a file produces, so the player, the position maps
+    // and a piano roll all work on it unchanged.
+    [contract(MidiSequencingUtilityApiContract,2)]
+    [interface_name("Windows.Devices.Midi2.Utilities.Sequencing.IMidiSequenceBuilder", UUID_IMidiSequenceBuilder)]
+    runtimeclass MidiSequenceBuilder
+    {
+        MidiSequenceBuilder();
+
+        // Ignored when the timing mode is Absolute, because then a tick is a microsecond.
+        UInt16 TicksPerQuarterNote;
+
+        MidiSequenceTimingMode TimingMode;
+
+        // Returns the index to pass to the Add methods below. A sequence needs at least one.
+        UInt16 AddTrack(String name);
+
+        void AddTempoChange(UInt32 tick, Double beatsPerMinute);
+        void AddTimeSignature(UInt32 tick, UInt8 numerator, UInt8 denominator);
+
+        // Universal MIDI Packet words, stored and played exactly as given except for the group,
+        // which is stamped with the group the sequence is played on. This is the only way to put
+        // a message in a sequence that MIDI 1.0 cannot express.
+        void AddMessages(UInt16 trackIndex, UInt32 tick, UInt32[] words);
+
+        // The whole message including the leading F0 and trailing F7.
+        void AddSystemExclusive(UInt16 trackIndex, UInt32 tick, UInt8[] data);
+
+        // Writes both halves of the note at once. A hand built sequence with a note that never
+        // ends is the most common way this goes wrong, and a builder that cannot express one
+        // removes the whole class of mistake.
+        void AddNote(UInt32 tick, UInt32 durationTicks, UInt16 trackIndex, Windows.Devices.Midi2.MidiChannel channel, UInt8 noteNumber, UInt8 velocity);
+
+        // Everything added so far, ready to play. Calling this again after adding more is fine;
+        // each call produces a new sequence and leaves the builder alone.
+        MidiSequence GetSequence();
+
+        void Clear();
+    };
+}

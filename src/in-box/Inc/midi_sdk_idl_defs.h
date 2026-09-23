@@ -303,6 +303,8 @@
 #define UUID_IMidiSequencePlayerStatics                                     8087b303-0519-c0de-31d1-ee00E0406000
 #define UUID_IMidiSequencePlayerFactory                                     8087b303-0519-c0de-31d1-ff00E0406000
 
+#define UUID_IMidiSequenceBuilder                                           8087b303-0519-c0de-31d1-dd00E0407000
+
 // ============================================================================
 // Windows.Devices.Midi2.Utilities.Files : Interface number 00E05
 

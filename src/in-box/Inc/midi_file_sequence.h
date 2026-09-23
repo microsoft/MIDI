@@ -58,7 +58,16 @@ namespace midifile
         PitchBend = 6,
         SystemExclusive = 7,
         SystemCommon = 8,
-        SystemRealTime = 9
+        SystemRealTime = 9,
+
+        // The bytes are already Universal MIDI Packet words in native byte order, not MIDI 1.0
+        // bytes, so nothing converts them on the way out. This is how a sequence carries a
+        // message MIDI 1.0 cannot express - a 32 bit controller, a 16 bit velocity, a per note
+        // controller - and it is what an SMF2 clip file needs somewhere to put.
+        //
+        // A standard MIDI file never produces one: the reader has no way to make one, so every
+        // existing file behaves exactly as it did.
+        UniversalPacket = 10
     };
 
     enum class TextKind : uint8_t
@@ -90,6 +99,20 @@ namespace midifile
         uint8_t TicksPerFrame{ 0 };
 
         double TicksPerSecond() const noexcept;
+    };
+
+    enum class TimingMode : uint8_t
+    {
+        // Ticks against the tempo map. Every standard MIDI file is this.
+        Musical = 0,
+
+        // A tick is a microsecond and tempo does not apply. This is what makes "wait 250
+        // milliseconds" a step a sequence can hold, and what a system exclusive dump needs when
+        // the gap between packets has to be a real gap rather than a musical one.
+        //
+        // A tick is 32 bits, so an absolutely timed sequence runs out at about 71 minutes. That
+        // is not a limit a step list will meet.
+        Absolute = 1
     };
 
     struct TempoChange
@@ -175,6 +198,11 @@ namespace midifile
         uint8_t Channel{ ChannelNone };
     };
 
+    // The largest files in the corpus reach the two million event cap, so anything added here is
+    // paid for two million times. Kind already had room for a new value, which is why carrying
+    // Universal MIDI Packets needed no new field.
+    static_assert(sizeof(SequenceEvent) == 16, "SequenceEvent grew; check the cost at two million events first.");
+
     struct Track
     {
         std::string Name{};                     // UTF-8
@@ -205,6 +233,9 @@ namespace midifile
     public:
         SequenceFormat Format{ SequenceFormat::MultiTrack };
         TimeDivision Division{};
+
+        // A file reader never changes this. Only a sequence built in memory does.
+        TimingMode Timing{ TimingMode::Musical };
 
         std::vector<Track> Tracks{};
 

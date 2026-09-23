@@ -259,24 +259,74 @@ namespace midiplayer
                     continue;
                 }
 
-                scratch.ReplaceAll(winrt::array_view<uint8_t const>{ bytes.data(), bytes.data() + bytes.size() });
-
-                // Stored messages always carry an explicit status byte, so running status is off.
-                auto const converted = midi2msg::MidiMessageConverter::ConvertMidi1CompleteMessageBytesToUmpWords(
-                    group, scratch, false);
-
-                if (converted == nullptr || converted.Size() == 0)
-                {
-                    continue;
-                }
-
                 PreparedEvent entry{};
 
                 entry.Microseconds = sequence->MicrosecondsAtTick(event.Tick);
                 entry.Tick = event.Tick;
                 entry.WordOffset = static_cast<uint32_t>(words.size());
-                entry.WordCount = converted.Size();
                 entry.TrackIndex = event.TrackIndex;
+
+                if (event.Kind == midifile::EventKind::UniversalPacket)
+                {
+                    // Already Universal MIDI Packet words. Nothing converts them; they are copied
+                    // through and only the group is stamped, because the group belongs to where
+                    // the sequence is being played rather than to what was written.
+                    if (bytes.size() < sizeof(uint32_t) || (bytes.size() % sizeof(uint32_t)) != 0)
+                    {
+                        continue;
+                    }
+
+                    auto const wordCount = static_cast<uint32_t>(bytes.size() / sizeof(uint32_t));
+
+                    words.resize(words.size() + wordCount);
+
+                    // memcpy because the blob packs events end to end and a word can land on any
+                    // byte offset.
+                    std::memcpy(words.data() + entry.WordOffset, bytes.data(), bytes.size());
+
+                    for (uint32_t index = 0; index < wordCount; )
+                    {
+                        auto& word = words[static_cast<size_t>(entry.WordOffset) + index];
+                        auto const messageType = MessageTypeOf(word);
+
+                        if (MessageTypeCarriesGroup(messageType))
+                        {
+                            word = (word & 0xF0FFFFFFu) | (static_cast<uint32_t>(groupIndex & 0x0F) << 24);
+                        }
+
+                        auto const packetWords = PacketWordCounts[messageType];
+
+                        if (packetWords == 0 || index + packetWords > wordCount)
+                        {
+                            break;
+                        }
+
+                        index += packetWords;
+                    }
+
+                    entry.WordCount = wordCount;
+                }
+                else
+                {
+                    scratch.ReplaceAll(winrt::array_view<uint8_t const>{ bytes.data(), bytes.data() + bytes.size() });
+
+                    // Stored messages always carry an explicit status byte, so running status is off.
+                    auto const converted = midi2msg::MidiMessageConverter::ConvertMidi1CompleteMessageBytesToUmpWords(
+                        group, scratch, false);
+
+                    if (converted == nullptr || converted.Size() == 0)
+                    {
+                        continue;
+                    }
+
+                    entry.WordCount = converted.Size();
+
+                    words.resize(words.size() + converted.Size());
+
+                    converted.GetMany(
+                        0,
+                        winrt::array_view<uint32_t>{ words.data() + entry.WordOffset, words.data() + words.size() });
+                }
 
                 if (event.Kind == midifile::EventKind::NoteOn || event.Kind == midifile::EventKind::NoteOff)
                 {
@@ -289,12 +339,6 @@ namespace midiplayer
                         ? NoteAction::Start
                         : NoteAction::End;
                 }
-
-                words.resize(words.size() + converted.Size());
-
-                converted.GetMany(
-                    0,
-                    winrt::array_view<uint32_t>{ words.data() + entry.WordOffset, words.data() + words.size() });
 
                 if (entry.WordCount > widestEvent)
                 {

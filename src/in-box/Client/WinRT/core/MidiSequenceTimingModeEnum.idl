@@ -1,0 +1,31 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Sequencing
+{
+    // How the ticks in a sequence are meant to be read.
+    [contract(MidiSequencingUtilityApiContract,2)]
+    enum MidiSequenceTimingMode
+    {
+        // Ticks are musical, measured against the sequence's tempo map. Every standard MIDI file
+        // is this, and so is anything that should follow a tempo change.
+        Musical = 0,
+
+        // A tick is a microsecond, and tempo does not apply. Use this when a gap has to be a real
+        // gap: a pause between steps, or a system exclusive dump whose packets a device needs
+        // spaced out in real time rather than in beats.
+        //
+        // A tick is 32 bits, so a sequence timed this way runs out at about 71 minutes.
+        Absolute = 1
+    };
+}
