@@ -1484,6 +1484,7 @@ bool DoSectionSystemInfo(_In_ bool verbose)
 #include "Feature_Servicing_MIDI2WinMMShortMessageNoSendWait.h"
 #include "Feature_Servicing_MIDI2XProcBatchedReads.h"
 #include "Feature_Servicing_MIDI2KSAShutdownCrash.h"
+#include "Feature_Servicing_MIDI2DuplicateDeviceNaming.h"
 
 void OutputSingleFeatureEnablement(_In_ bool enabled, _In_ std::wstring const& featureName)
 {
@@ -1548,6 +1549,7 @@ bool DoSectionFeatureEnablement(_In_ bool verbose)
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2WinMMShortMessageNoSendWait::IsEnabled(),          L"MIDI2WinMMShortMessageNoSendWait (stop winmm waiting for send completion on short messages)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2XProcBatchedReads::IsEnabled(),                    L"MIDI2XProcBatchedReads (batch cross-process reads to reduce per-message overhead)");
     OutputSingleFeatureEnablement(Feature_Servicing_MIDI2KSAShutdownCrash::IsEnabled(),                     L"MIDI2KSAShutdownCrash (shutdown race)");
+    OutputSingleFeatureEnablement(Feature_Servicing_MIDI2DuplicateDeviceNaming::IsEnabled(),                L"MIDI2DuplicateDeviceNaming (service assigns the number for a second or later unit of a model, and remembers it)");
 
     
 #endif    
