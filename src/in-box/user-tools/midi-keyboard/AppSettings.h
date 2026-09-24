@@ -232,11 +232,7 @@ namespace midikeyboard
         uint32_t m_bankLsb{ 0 };
         bool m_sendPatchOnStartup{ false };
         bool m_programsByCategory{ false };
-
-        // Off until this app owns one capability inquiry session for the life of a connection.
-        // Today each query owns its own, so repeated asking changes the identifier this app is
-        // known by on the wire.
-        bool m_retryProgramListQuery{ false };
+        bool m_retryProgramListQuery{ true };
 
         int32_t m_baseOctave{ 1 };
 

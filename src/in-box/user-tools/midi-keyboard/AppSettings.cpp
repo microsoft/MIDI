@@ -90,7 +90,7 @@ namespace midikeyboard
         m_bankLsb = std::clamp(ReadDword(ValueBankLsb, 0u), 0u, MaximumBankByte);
         m_sendPatchOnStartup = ReadDword(ValueSendPatchOnStartup, 0u) != 0;
         m_programsByCategory = ReadDword(ValueProgramsByCategory, 0u) != 0;
-        m_retryProgramListQuery = ReadDword(ValueRetryProgramListQuery, 0u) != 0;
+        m_retryProgramListQuery = ReadDword(ValueRetryProgramListQuery, 1u) != 0;
 
         m_baseOctave = std::clamp(
             static_cast<int32_t>(ReadDword(ValueBaseOctave, static_cast<uint32_t>(1))),

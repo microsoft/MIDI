@@ -49,14 +49,28 @@ namespace midikeyboard
         uint8_t group,
         ResponderAppearedHandler responderAppeared) noexcept
     {
-        Close();
-
         try
         {
             if (connection == nullptr)
             {
+                Close();
                 return;
             }
+
+            // Reconnecting to the same endpoint reaches here more than once, and drawing a new
+            // identifier each time would make this app look like a different device each time.
+            {
+                std::lock_guard<std::mutex> guard(m_lock);
+
+                if (m_session != nullptr && m_connection == connection)
+                {
+                    m_session.Group(MidiGroup(group));
+                    m_responderAppeared = responderAppeared;
+                    return;
+                }
+            }
+
+            Close();
 
             auto session = MidiCapabilityInquirySession::Create(connection);
 
