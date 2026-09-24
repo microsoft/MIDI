@@ -8,10 +8,30 @@
 #include "pch.h"
 #include "App.xaml.h"
 
+#include "CommandLine.h"
 #include "LayoutStore.h"
 #include "ThemeModel.h"
 #include "ThumbnailLayout.h"
 #include "ThumbnailRenderer.h"
+
+namespace midiglass
+{
+    namespace
+    {
+        std::wstring g_pendingRunLayoutPath{};
+    }
+
+    std::wstring const& PendingRunLayoutPath() noexcept
+    {
+        return g_pendingRunLayoutPath;
+    }
+
+    _Use_decl_annotations_
+    void SetPendingRunLayoutPath(std::wstring path) noexcept
+    {
+        g_pendingRunLayoutPath = std::move(path);
+    }
+}
 
 namespace
 {
@@ -102,6 +122,13 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
     if (!::midiapp::SingleInstance::AcquireOrActivateExisting(L"Glass"))
     {
         return 0;
+    }
+
+    // midiglass --run "<layout file>" opens the layout beside the library.
+    if (arguments.size() > 2 && ::CompareStringOrdinal(
+        arguments[1].c_str(), -1, L"--run", -1, TRUE) == CSTR_EQUAL)
+    {
+        ::midiglass::SetPendingRunLayoutPath(arguments[2]);
     }
 
     ::winrt::Microsoft::UI::Xaml::Application::Start([](auto&&)

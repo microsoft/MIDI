@@ -106,28 +106,143 @@
             </ToggleButton>
         </Grid>
 
-        <!-- The library and the surface come in later phases. Until then this says so plainly
-             rather than showing an empty window that looks broken. -->
-        <StackPanel Grid.Row="1"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    MaxWidth="560"
-                    Spacing="12">
-            <FontIcon Glyph="&#xE7F4;" FontSize="40" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+        <!-- The library: every layout in Documents\MIDI Layouts, with a card drawn from the
+             layout itself rather than captured from a window, so it is right for one that has
+             never been opened on this PC. -->
+        <Grid Grid.Row="1" Padding="16,0,16,16" RowSpacing="12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
 
-            <TextBlock x:Name="ComingSoonHeading"
-                       x:Uid="ComingSoonHeading"
-                       Text="MIDI Glass is not finished yet"
-                       HorizontalAlignment="Center"
-                       Style="{ThemeResource SubtitleTextBlockStyle}" />
+            <Grid Grid.Row="0" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
 
-            <TextBlock x:Name="ComingSoonBody"
-                       x:Uid="ComingSoonBody"
-                       Text="This is the shell. Building a control surface, running one and sending MIDI from it all arrive in later updates."
-                       HorizontalAlignment="Center"
-                       TextAlignment="Center"
-                       TextWrapping="Wrap"
-                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-        </StackPanel>
+                <TextBlock x:Name="LibraryHeading"
+                           x:Uid="LibraryHeading"
+                           Grid.Column="0"
+                           Text="Layouts"
+                           VerticalAlignment="Center"
+                           Style="{ThemeResource SubtitleTextBlockStyle}" />
+
+                <Button x:Name="NewLayoutButton"
+                        x:Uid="NewLayoutButton"
+                        Grid.Column="1"
+                        Click="OnNewLayoutClick">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                        <FontIcon Glyph="&#xE710;" FontSize="14" />
+                        <TextBlock x:Name="NewLayoutLabel" x:Uid="NewLayoutLabel" Text="New starter layout" />
+                    </StackPanel>
+                </Button>
+
+                <Button x:Name="OpenFolderButton"
+                        x:Uid="OpenFolderButton"
+                        Grid.Column="2"
+                        Click="OnOpenFolderClick">
+                    <FontIcon Glyph="&#xE838;" FontSize="14" />
+                </Button>
+
+                <Button x:Name="RefreshButton"
+                        x:Uid="RefreshButton"
+                        Grid.Column="3"
+                        Click="OnRefreshClick">
+                    <FontIcon Glyph="&#xE72C;" FontSize="14" />
+                </Button>
+            </Grid>
+
+            <GridView x:Name="LayoutGrid"
+                      x:Uid="LayoutGrid"
+                      Grid.Row="1"
+                      IsItemClickEnabled="True"
+                      ItemClick="OnLayoutItemClick"
+                      SelectionMode="Single">
+                <GridView.ItemTemplate>
+                    <DataTemplate x:DataType="local:LayoutCard">
+                        <Grid Width="272"
+                              Padding="0,0,0,10"
+                              AutomationProperties.Name="{x:Bind CardAccessibleName}">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <Border Grid.Row="0"
+                                    Height="170"
+                                    CornerRadius="6"
+                                    Background="{ThemeResource ControlAltFillColorSecondaryBrush}">
+                                <Image Source="{x:Bind Thumbnail}" Stretch="Uniform" />
+                            </Border>
+
+                            <TextBlock Grid.Row="1"
+                                       Margin="0,8,0,0"
+                                       Text="{x:Bind DisplayName}"
+                                       TextTrimming="CharacterEllipsis"
+                                       Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                            <TextBlock Grid.Row="2"
+                                       Text="{x:Bind Description}"
+                                       Visibility="{x:Bind DescriptionVisibility}"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                            <TextBlock Grid.Row="3"
+                                       Text="{x:Bind DetailText}"
+                                       TextTrimming="CharacterEllipsis"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                            <StackPanel Grid.Row="4" Orientation="Horizontal" Margin="0,8,0,0" Spacing="8">
+                                <Button Click="OnRunLayoutClick"
+                                        Tag="{x:Bind FilePath}"
+                                        AutomationProperties.Name="{x:Bind RunAccessibleName}">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE768;" FontSize="14" />
+                                        <TextBlock x:Uid="LibraryRunLabel" Text="Run" />
+                                    </StackPanel>
+                                </Button>
+
+                                <FontIcon Glyph="&#xE7BA;"
+                                          FontSize="14"
+                                          VerticalAlignment="Center"
+                                          Visibility="{x:Bind ImportedVisibility}"
+                                          Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                            </StackPanel>
+                        </Grid>
+                    </DataTemplate>
+                </GridView.ItemTemplate>
+            </GridView>
+
+            <StackPanel x:Name="EmptyLibraryPanel"
+                        Grid.Row="1"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        MaxWidth="520"
+                        Spacing="12"
+                        Visibility="Collapsed">
+                <FontIcon Glyph="&#xE7F4;" FontSize="40" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                <TextBlock x:Name="EmptyHeading"
+                           x:Uid="EmptyHeading"
+                           Text="No layouts yet"
+                           HorizontalAlignment="Center"
+                           Style="{ThemeResource SubtitleTextBlockStyle}" />
+
+                <TextBlock x:Name="EmptyBody"
+                           x:Uid="EmptyBody"
+                           Text="Pick a device and make a starter layout. It gives you eight faders, eight knobs and eight pads, ready to run."
+                           HorizontalAlignment="Center"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+            </StackPanel>
+        </Grid>
     </Grid>
 </Window>

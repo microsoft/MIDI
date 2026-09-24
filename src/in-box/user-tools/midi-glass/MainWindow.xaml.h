@@ -10,6 +10,7 @@
 #include "MainWindow.g.h"
 
 #include "WindowChrome.h"
+#include "LibraryItems.h"
 
 namespace winrt::midiglass::implementation
 {
@@ -32,12 +33,46 @@ namespace winrt::midiglass::implementation
             foundation::IInspectable const& sender,
             xaml::RoutedEventArgs const& args);
 
+        // ---- the library ----
+
+        void OnNewLayoutClick(
+            foundation::IInspectable const& sender,
+            xaml::RoutedEventArgs const& args);
+
+        void OnOpenFolderClick(
+            foundation::IInspectable const& sender,
+            xaml::RoutedEventArgs const& args);
+
+        void OnRefreshClick(
+            foundation::IInspectable const& sender,
+            xaml::RoutedEventArgs const& args);
+
+        void OnLayoutItemClick(
+            foundation::IInspectable const& sender,
+            controls::ItemClickEventArgs const& args);
+
+        void OnRunLayoutClick(
+            foundation::IInspectable const& sender,
+            xaml::RoutedEventArgs const& args);
+
     private:
         void OnWindowClosed(
             foundation::IInspectable const& sender,
             xaml::WindowEventArgs const& args);
 
+        void RefreshLibrary();
+        void ApplyCards(_In_ std::vector<::midiglass::LayoutCardData> const& cards);
+
+        foundation::IAsyncAction ShowNewLayoutDialogAsync();
+
         midiapp::WindowChrome m_chrome{};
+
+        collections::IObservableVector<foundation::IInspectable> m_cards{
+            winrt::single_threaded_observable_vector<foundation::IInspectable>() };
+
+        winrt::Microsoft::UI::Dispatching::DispatcherQueue m_dispatcher{ nullptr };
+
+        bool m_refreshing{ false };
     };
 }
 

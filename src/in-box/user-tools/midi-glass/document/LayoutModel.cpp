@@ -344,4 +344,71 @@ namespace glass
 
         return issues;
     }
+
+    _Use_decl_annotations_
+    std::vector<uint16_t> CollectGroupMasks(LayoutDocument const& document) noexcept
+    {
+        std::vector<uint16_t> masks(document.Devices.size(), uint16_t{ 0 });
+
+        auto const indexOf = [&document](std::wstring const& name) noexcept -> int32_t
+            {
+                for (size_t i = 0; i < document.Devices.size(); ++i)
+                {
+                    if (document.Devices[i].Name == name)
+                    {
+                        return static_cast<int32_t>(i);
+                    }
+                }
+
+                return -1;
+            };
+
+        auto const addMessage = [&](ControlMessage const& message) noexcept
+            {
+                auto const index = indexOf(message.DeviceName);
+
+                if (index < 0)
+                {
+                    return;
+                }
+
+                // A message that names every group drives every group, which is the one case
+                // where a panic has to be wide rather than precise.
+                if (message.GroupIndex == AllGroups)
+                {
+                    masks[index] = 0xFFFF;
+                }
+                else
+                {
+                    masks[index] |= static_cast<uint16_t>(1u << (message.GroupIndex & 0x0F));
+                }
+            };
+
+        for (auto const& page : document.Pages)
+        {
+            for (auto const& control : page.Controls)
+            {
+                for (auto const& message : control.Messages)
+                {
+                    addMessage(message);
+                }
+            }
+        }
+
+        // A sequence is a way of sending, not a different kind of destination, so the groups it
+        // reaches count the same as a control's.
+        for (auto const& sequence : document.Sequences)
+        {
+            for (auto const& step : sequence.Steps)
+            {
+                if (step.Kind == SequenceStepKind::SendMidiMessage ||
+                    step.Kind == SequenceStepKind::SendSystemExclusive)
+                {
+                    addMessage(step.Message);
+                }
+            }
+        }
+
+        return masks;
+    }
 }

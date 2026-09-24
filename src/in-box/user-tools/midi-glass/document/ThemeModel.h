@@ -113,6 +113,12 @@ namespace glass
         // the first customer to build a light theme of their own would have hit it.
         ThemeColor TrackColor{ 0, 0, 0, 255 };
 
+        // The control plate itself. Alpha 0 means work it out from the two properties above it:
+        // black at the glass tint, washed with the control's own hue where the theme is tonal.
+        // Every theme but one wants that. Bigwig does not - its plate is a neutral raised grey,
+        // because its whole idea is that orange only ever means "this is the value".
+        ThemeColor PlateColor{ 0, 0, 0, 0 };
+
         // Bigwig.
         RimSource Rim{ RimSource::ControlHue };
         ThemeColor NeutralRimColor{ 90, 90, 90, 255 };

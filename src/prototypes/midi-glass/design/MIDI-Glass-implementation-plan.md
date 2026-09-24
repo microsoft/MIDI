@@ -6,7 +6,7 @@ Companion to `MIDI-Glass-design.md` and the twelve mockup screens. This is the *
 
 ## Where this stands — read this first
 
-**As of 23 September 2026. Phases 0, 1, 2 and 3 are done. Phase 4 is part done.**
+**As of 24 September 2026. Phases 0, 1, 2, 3 and 4 are done. Phase 5 has not started.**
 
 | Phase | State | Where the code is |
 |---|---|---|
@@ -14,36 +14,34 @@ Companion to `MIDI-Glass-design.md` and the twelve mockup screens. This is the *
 | 1 SDK work | **Done** | `src/in-box/Inc/midi_sequence_*`, `src/in-box/Client/WinRT/core/MidiSequence*` |
 | 2 Shell | **Done** | `src/in-box/user-tools/midi-glass/` |
 | 3 Document, themes, thumbnails | **Done** | `midi-glass/document/`, `midi-glass/thumbnail/` |
-| 4 Runtime surface | **Binding layer done; the rest open** | `midi-glass/binding/` |
-| 5–9 | Not started | — |
+| 4 Runtime surface | **Done** | `midi-glass/binding/`, `runtime/`, `surface/`, `RuntimeWindow.*` |
+| 5 Editor | Not started | — |
+| 6–9 | Not started | — |
 
-**Tests: 98, all passing, none needing a window or a device.** `src/in-box/Test/Tools/Midi2.MidiGlass.unittests`.
+**Tests: 134, all passing, none needing a window or a device.** `src/in-box/Test/Tools/Midi2.MidiGlass.unittests`.
 
 ```
 build  msbuild <proj> /t:Build /p:Configuration=Release /p:Platform=x64 "/p:SolutionDir=<repo>\src\in-box\\" /v:minimal /nologo /nodeReuse:false
 run    "C:\Program Files (x86)\Windows Kits\10\Testing\Runtimes\TAEF\x64\TE.exe" <out>\tests\x64\Release\Midi2.MidiGlass.unittests.dll /logOutput:Low
 spell  pwsh build\check_en_us_spelling.ps1 -Path src\in-box\user-tools\midi-glass
 card   midiglass --thumbnail <layout.midilayout.json> <out.png> [width]
+run    midiglass --run "<layout.midilayout.json>"
 ```
 
-### What is left in phase 4, in the order it should be done
+### What the app does today
 
-1. **`DeviceCatalog`** — wrap `midiapp::EndpointCatalog`, resolve each layout device entry to a live endpoint through its match criteria, and report present/absent so `BindingEngine::Prepare` can be handed a fresh destination table. The matching already exists and is shared; this is the layer that feeds it.
-2. **`OutputRouter`** — one connection per endpoint **per process**, opened when a layout loads, shared by every control and every page, closed when the last layout using it closes. Group and channel travel inside the message, so hundreds of controls over four groups of one device still cost one connection. This is the piece that turns a `PreparedSend` into something actually sent.
-3. **The runtime window** — a window per running layout, in the one process. The three scale modes, actual size as the default, the last mode saved per layout.
-4. **`SurfaceRenderer`** — the hybrid from phase 0: a light XAML element per control for identity and hit testing, custom-drawn content. Re-read the phase 0 findings before starting; the numbers there are the budget.
-5. **`InputRouter`** — pointer, pen and touch to control to `BindingEngine`, sending **from the pointer handler**, one finger per control, several fingers at once. Snap to detents here, using `DetentCount` and `DetentPosition`.
-6. **Panic** — in the chrome, never on the surface. All notes off, all sound off, sustain off, pitch bend center, on every group and channel the process is driving.
-7. **Device loss and return**, startup values, feedback in. The engine already handles all three; this is wiring them to something real.
-8. **The end-to-end capture** — a hand-authored eight-fader layout, run, and the wire proved by capture. Write the layout file before launching, so the probe never has to drive an editor that does not exist yet.
+Launch it and the **library** lists every layout in `Documents\MIDI Layouts`, each with a card drawn from the layout itself rather than captured from a window. **New starter layout** asks which device to send to and writes an eight fader, eight knob, eight pad layout that runs immediately. **Run** opens a runtime window: the surface, the three scale modes, a device status line, View mode, full screen and Panic.
 
-### Things that will bite, learned the hard way today
+Not there yet: the editor, sequences, generators, learn, the per-layout virtual device, and the full screen corner button. Everything in that list is phase 5 or later.
 
-- **`GetObject` and `SendMessage` are windows.h macros.** They break `IJsonValue::GetObject()` and any enum value named `SendMessage`. `#undef` right after the include, or do not use the name. The document layer's `.cpp` files already do this where needed.
+### Things that will bite, learned the hard way
+
+- **`GetObject` and `SendMessage` are windows.h macros.** They break `IJsonValue::GetObject()` and any enum value named `SendMessage`. `#undef` right after the include, or do not use the name.
+- **The app has a plain C++ namespace called `midiglass` as well as the projected WinRT one.** Inside `namespace glass`, `midiglass::GlassControl` resolves to the C++ one and fails. `surface/SurfaceRenderer.h` declares `namespace projected = ::winrt::midiglass;` and an alias for the control type; use them.
 - **The service does the downscaling, both protocol and byte format.** Never fold to MIDI 1.0 in this app. See phase 4 below for the whole story.
 - **A UMP monitor cannot see the MIDI 1.0 translation** — both ends are UMP. Use `midi1monitor.exe <portIndex>`, and **do not run it in a background terminal**; it is full-screen interactive and will lock the terminal.
 - **Two agents cannot build the SDK at once.** Check `Get-Process MSBuild,cl,midlrt,midl,link` first and wait rather than killing.
-- The document and binding layers are **free of `pch.h`, XAML and the MIDI SDK** on purpose, so the unit tests compile them unchanged. Both the app and the test project mark them `PrecompiledHeader NotUsing`. Keep it that way.
+- The document and binding layers, and the pure parts of the runtime and surface layers, are **free of `pch.h`, XAML and the MIDI SDK** on purpose, so the unit tests compile them unchanged. Both the app and the test project mark them `PrecompiledHeader NotUsing`. Keep it that way.
 
 ---
 
@@ -339,6 +337,34 @@ Test it the way Patchbay was tested: **write a layout file before launching**, s
 > **A continuous control can have stops, and the crowded case decides the design.** `Detents` on a message is `Continuous`, `EvenSteps` (a step in the same units as the ends — 0 to 100 % in tenths, or 27 to 127 in fives) or `ExplicitValues` (stops at 10, 17, 38, 39, 40, 57). **A listed stop gets an equal share of the travel** rather than sitting where its value falls between the ends. That is the whole design, not a detail: a version spaced by value was built and measured, and it reaches `10 17 57 57 57 57` — three of the six stops cannot be selected at all, because 38, 39 and 40 are a fortieth of the travel apart. `EvenSteps` is measured from the minimum so a range that does not start at zero still has a stop on its own bottom end. `DetentCount` and `DetentPosition` exist for the surface, which has to snap a finger and draw the notches; the engine produces the right value either way.
 >
 > Still open in phase 4: `DeviceCatalog`, `OutputRouter`, the runtime window, `SurfaceRenderer`, `InputRouter` and multi-touch, Panic, and the end-to-end capture. **The ordered list is at the top of this document**, under "What is left in phase 4".
+
+> **Finished, 24 September 2026.** `runtime/` (`DeviceCatalog`, `OutputRouter`, `SurfaceScale`, `PanicMessages`), `surface/` (`GlassControl`, `SurfaceAutomationPeer`, `SurfaceRenderer`, `InputRouter`, `InputRules`, `SurfaceColors`), `RuntimeWindow.*`, and the library in `MainWindow`. 134 tests, still no window and no device. Both folders have a README stating their contract and, explicitly, what they do not do.
+>
+> **Proven on the wire, not by reasoning.** A layout written by hand before launching, run, and driven through UI Automation while the far end of a loopback was captured:
+>
+> | What was driven | What arrived |
+> |---|---|
+> | A fader to the top | `40B00700 FFFFFFFF` — control change 7 at full 32 bit scale, not one short |
+> | A fader to the middle | `40B00800 80000000` — exactly half |
+> | A fader limited to 0–127, MIDI 1.0 protocol, to the top | `20B00B7F` — 127 |
+> | The same fader to the middle | `20B00C40` — 64 |
+> | A pad | `2090247F` then `20802400` — note on, note off |
+> | A control marked to send its value on load | `20B01440` once, and only once |
+> | Panic | 64 messages: sustain off, all notes off, all sound off and pitch bend center on all sixteen channels of the **one group the layout drives**, and nothing on the other fifteen groups |
+>
+> Feedback in was proven the same way, sending into the far end: `40B01E00 FFFFFFFF` moved a fader to 1.0, `40B02000 80000000` moved another to 0.5, and a MIDI 1.0 `20B01F40` moved a third to 64/127. Controls the messages did not address stayed where they were.
+>
+> **Two layouts ran at once in one process and shared one connection**, proven by both appearing on the same capture. Closing the library window left both running, which is the behavior somebody mid set needs.
+>
+> **The probe found two real defects, and that is the argument for driving the thing rather than reading it.** Setting a value through automation sent nothing at all, because the code treated it as the end of a gesture and a gesture that never started has nothing held back to release; a discrete set is now a whole gesture — touched, moved, released. And the startup values were replayed every time the device watcher fired, which is once per endpoint on the machine at launch and again whenever anything is plugged in: a layout would have pushed a whole desk back to its opening positions because somebody connected a webcam. Connections are now only rebuilt when what this layout resolved to actually changed.
+>
+> **A review of the diff found a third, which never reached the wire.** The shared endpoint catalog takes exactly one changed handler, so a second runtime window silently replaced the first window's, and a closed window never removed its own — a device arriving after that would have called into freed memory. One process-wide subscriber now fans out to every open catalog, and closing one removes it.
+>
+> **The theme model could not describe one of its own shipped themes.** Bigwig's plate is a neutral raised grey and every other theme's is derived from the glass tint or the fill at rest, so there was nothing to put it in. `Theme` gained a `PlateColor` whose alpha of zero means "work it out", which is what the other eight do.
+>
+> **A per control send interval was added to the document**, because the throttle the plan called for had nothing to read. Zero is no limit, which is what buttons, notes, sequences and system exclusive use.
+>
+> **Not verified**: touch, pen and multi-touch (no touch hardware on this machine — the per-pointer capture that makes it work is XAML's, and the code takes one pointer per control, but it has not been driven with two fingers); pulling a device out mid performance and putting it back; ARM64 at run time, though it builds clean; low end hardware; a screen reader end to end, though every control is exposed as a named slider, button or check box and both the range value and invoke patterns were driven through automation.
 
 ### Phase 5 — The editor.
 

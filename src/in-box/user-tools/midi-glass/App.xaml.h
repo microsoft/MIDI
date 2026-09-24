@@ -17,6 +17,14 @@ namespace winrt::midiglass::implementation
 
         void OnLaunched(xaml::LaunchActivatedEventArgs const& args);
 
+        // One process, however many windows. Two copies would each open their own connection to
+        // the same instrument and neither would know what the other had sent, so a running layout
+        // and a Panic have to mean the same thing across all of them.
+        //
+        // Not projected. Opening a layout that is already running brings its window forward
+        // rather than starting a second copy of it.
+        static void OpenRuntimeWindow(_In_ std::wstring const& filePath);
+
     private:
         void OnUnhandledException(
             foundation::IInspectable const& sender,

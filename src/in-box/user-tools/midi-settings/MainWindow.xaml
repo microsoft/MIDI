@@ -550,6 +550,19 @@
                             </StackPanel>
                         </Button>
 
+                        <Button x:Name="GlassButton"
+                                x:Uid="GlassButton"
+                                Style="{StaticResource ToolButtonStyle}"
+                                Click="OnGlassClick">
+                            <StackPanel Spacing="4" HorizontalAlignment="Center">
+                                <Image x:Name="GlassIcon" Width="24" Height="24" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="GlassLabel"
+                                           x:Uid="GlassButtonText"
+                                           Text="MIDI Glass"
+                                           Style="{StaticResource ToolButtonTextStyle}" />
+                            </StackPanel>
+                        </Button>
+
                         <Rectangle x:Name="UtilityToolsSeparator" Style="{StaticResource ToolSeparatorStyle}" />
 
                         <Button x:Name="TroubleshooterButton"

@@ -173,6 +173,7 @@ namespace glass
                     bigwig.GlowStrength = 0;
                     bigwig.FillAtRest = 0.0;
                     bigwig.TrackColor = Rgb(0x2E2E2E);
+                    bigwig.PlateColor = Rgb(0x3A3A3A);
                     bigwig.Rim = RimSource::NeutralEdge;
                     bigwig.NeutralRimColor = Rgb(0x5A5A5A);
                     bigwig.ValueStrip = ValueStripPlacement::Top;

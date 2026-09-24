@@ -12,6 +12,7 @@
 #include "AppSettings.h"
 #include "StringResources.h"
 #include "AppearanceFlyout.h"
+#include "EndpointCatalog.h"
 #include "SingleInstance.h"
 #include "PreviewBuild.h"
 #include "resource.h"
@@ -69,6 +70,23 @@ namespace winrt::midiglass::implementation
             }
 
             AlwaysOnTopToggle().IsChecked(::midiglass::AppSettings::Current().AlwaysOnTop());
+
+            LayoutGrid().ItemsSource(m_cards);
+
+            m_dispatcher = DispatcherQueue();
+
+            // The watcher blocks on the service, so it is started off the UI thread. Nothing in
+            // the library needs it until somebody makes a layout.
+            std::thread([]()
+                {
+                    winrt::init_apartment(winrt::apartment_type::multi_threaded);
+
+                    midiapp::EndpointCatalog::Current().Start();
+
+                    winrt::uninit_apartment();
+                }).detach();
+
+            RefreshLibrary();
 
             Closed({ this, &MainWindow::OnWindowClosed });
         }

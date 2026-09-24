@@ -290,6 +290,13 @@ namespace glass
         // The global override in the layout can suppress every one of these at once.
         bool SendsValueOnStart{ false };
 
+        // The least time between two sends while this control is being moved. Zero is no limit.
+        //
+        // A DIN cable carries about 350 three byte messages a second, shared with everything else
+        // on that wire, and a fader dragged across a high rate digitizer will out-run it. Only a
+        // continuous control is ever limited; rate limiting a note on would be a defect.
+        int32_t SendIntervalMilliseconds{ 0 };
+
         std::vector<ControlMessage> Messages{};
         FeedbackBinding Feedback{};
 
@@ -439,4 +446,10 @@ namespace glass
     };
 
     std::vector<ValidationIssue> Validate(_In_ LayoutDocument const& document) noexcept;
+
+    // Which groups this layout sends on, one bit per group, per entry in the device table and in
+    // the same order. Panic uses it: a panic that covers the wrong groups is silent at exactly
+    // the moment it matters, so which groups a layout drives is worth deriving rather than
+    // guessing, and worth a test.
+    std::vector<uint16_t> CollectGroupMasks(_In_ LayoutDocument const& document) noexcept;
 }

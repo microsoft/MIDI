@@ -8,14 +8,77 @@
 #include "pch.h"
 #include "App.xaml.h"
 #include "MainWindow.xaml.h"
+#include "RuntimeWindow.xaml.h"
 
 #include "AppSettings.h"
 #include "StringResources.h"
+#include "CommandLine.h"
+#include "OutputRouter.h"
 
 using namespace winrt::Microsoft::UI::Xaml;
 
 namespace winrt::midiglass::implementation
 {
+    namespace
+    {
+        // Strong references, released when a window closes. A runtime window is not owned by the
+        // library window: closing the library must not silently stop a layout somebody is
+        // playing through.
+        std::vector<midiglass::RuntimeWindow> g_runtimeWindows{};
+
+        bool SamePath(_In_ std::wstring_view left, _In_ std::wstring_view right) noexcept
+        {
+            return ::CompareStringOrdinal(
+                left.data(), static_cast<int32_t>(left.size()),
+                right.data(), static_cast<int32_t>(right.size()),
+                TRUE) == CSTR_EQUAL;
+        }
+    }
+
+    _Use_decl_annotations_
+    void App::OpenRuntimeWindow(std::wstring const& filePath)
+    {
+        try
+        {
+            if (filePath.empty())
+            {
+                return;
+            }
+
+            for (auto const& existing : g_runtimeWindows)
+            {
+                auto* const implementation = winrt::get_self<RuntimeWindow>(existing);
+
+                if (implementation != nullptr && SamePath(implementation->LayoutFilePath(), filePath))
+                {
+                    existing.Activate();
+                    return;
+                }
+            }
+
+            auto window = winrt::make_self<RuntimeWindow>();
+
+            if (!window->LoadLayout(filePath))
+            {
+                return;
+            }
+
+            auto projected = window.as<midiglass::RuntimeWindow>();
+
+            g_runtimeWindows.push_back(projected);
+
+            projected.Closed([projected](auto&&, auto&&)
+                {
+                    g_runtimeWindows.erase(
+                        std::remove(g_runtimeWindows.begin(), g_runtimeWindows.end(), projected),
+                        g_runtimeWindows.end());
+                });
+
+            projected.Activate();
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to open a runtime window.")
+    }
+
     App::App()
     {
         // XAML objects must not call InitializeComponent during construction; winrt::make does it
@@ -64,6 +127,14 @@ namespace winrt::midiglass::implementation
 
             m_window = window.as<xaml::Window>();
             m_window.Activate();
+
+            // midiglass --run "<layout file>" opens a runtime window beside the library.
+            auto const command = ::midiglass::PendingRunLayoutPath();
+
+            if (!command.empty())
+            {
+                OpenRuntimeWindow(command);
+            }
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to create the main window.")
     }

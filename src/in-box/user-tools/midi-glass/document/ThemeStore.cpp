@@ -46,6 +46,7 @@ namespace glass
         constexpr wchar_t KeyLabels[] = L"labels";
         constexpr wchar_t KeyFillAtRest[] = L"fillAtRest";
         constexpr wchar_t KeyTrackColor[] = L"trackColor";
+        constexpr wchar_t KeyPlateColor[] = L"plateColor";
         constexpr wchar_t KeyRim[] = L"rim";
         constexpr wchar_t KeyNeutralRim[] = L"neutralRimColor";
         constexpr wchar_t KeyValueStrip[] = L"valueStrip";
@@ -383,6 +384,7 @@ namespace glass
             theme.Labels = ValueOf(LabelNames, ReadString(root, KeyLabels), base.Labels);
             theme.FillAtRest = ReadNumber(root, KeyFillAtRest, base.FillAtRest, 0.0, 1.0);
             theme.TrackColor = ReadColor(root, KeyTrackColor, base.TrackColor);
+            theme.PlateColor = ReadColor(root, KeyPlateColor, base.PlateColor);
             theme.Rim = ValueOf(RimNames, ReadString(root, KeyRim), base.Rim);
             theme.NeutralRimColor = ReadColor(root, KeyNeutralRim, base.NeutralRimColor);
             theme.ValueStrip = ValueOf(StripNames, ReadString(root, KeyValueStrip), base.ValueStrip);
@@ -437,6 +439,7 @@ namespace glass
             writer.Write(KeyLabels, NameOf(LabelNames, theme.Labels));
             writer.Write(KeyFillAtRest, theme.FillAtRest);
             writer.Write(KeyTrackColor, ColorToText(theme.TrackColor));
+            writer.Write(KeyPlateColor, ColorToText(theme.PlateColor));
             writer.Write(KeyRim, NameOf(RimNames, theme.Rim));
             writer.Write(KeyNeutralRim, ColorToText(theme.NeutralRimColor));
             writer.Write(KeyValueStrip, NameOf(StripNames, theme.ValueStrip));

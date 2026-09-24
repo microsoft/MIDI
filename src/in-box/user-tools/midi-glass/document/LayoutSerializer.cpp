@@ -60,6 +60,7 @@ namespace glass
         constexpr wchar_t KeyPickup[] = L"pickup";
         constexpr wchar_t KeyDefaultValue[] = L"defaultValue";
         constexpr wchar_t KeySendsValueOnStart[] = L"sendsValueOnStart";
+        constexpr wchar_t KeySendInterval[] = L"sendIntervalMilliseconds";
         constexpr wchar_t KeyMessages[] = L"messages";
         constexpr wchar_t KeyFeedback[] = L"feedback";
 
@@ -643,6 +644,7 @@ namespace glass
             control.Pickup = ValueOf(PickupNames, ReadString(object, KeyPickup), PickupMode::Jump);
             control.DefaultValue = std::clamp(ReadNumber(object, KeyDefaultValue, 0.0), 0.0, 1.0);
             control.SendsValueOnStart = ReadBool(object, KeySendsValueOnStart, false);
+            control.SendIntervalMilliseconds = ReadInt(object, KeySendInterval, 0, 0, 10000);
 
             if (auto const messages = ReadArray(object, KeyMessages))
             {
@@ -665,7 +667,7 @@ namespace glass
             control.Unknown = CaptureUnknown(object,
                 { KeyId, KeyKind, KeyLabel, KeyX, KeyY, KeyWidth, KeyHeight, KeyHueSlot,
                   KeyLiteralColor, KeyAspectLocked, KeyKeyboardOrder, KeyPickup, KeyDefaultValue,
-                  KeySendsValueOnStart, KeyMessages, KeyFeedback });
+                  KeySendsValueOnStart, KeySendInterval, KeyMessages, KeyFeedback });
 
             return control;
         }
@@ -956,6 +958,7 @@ namespace glass
             writer.Write(KeyPickup, NameOf(PickupNames, control.Pickup));
             writer.Write(KeyDefaultValue, control.DefaultValue);
             writer.Write(KeySendsValueOnStart, control.SendsValueOnStart);
+            writer.Write(KeySendInterval, static_cast<int64_t>(control.SendIntervalMilliseconds));
 
             writer.BeginArray(KeyMessages);
 

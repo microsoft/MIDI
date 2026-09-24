@@ -131,6 +131,14 @@ namespace glass
             _Out_ size_t& controlIndex,
             _Out_ double& value) const noexcept;
 
+        // How many stops this control has, so the surface can snap a finger to them and draw the
+        // notches. 0 means it is smooth. Where a control sends several messages the widest set of
+        // stops wins, because a finger has one position and the messages have to agree on it.
+        uint32_t DetentCountForControl(_In_ size_t controlIndex) const noexcept;
+
+        // The nearest stop to this position, or the position unchanged where there are none.
+        double SnapToDetent(_In_ size_t controlIndex, _In_ double position) const noexcept;
+
     private:
         struct PreparedFeedback
         {
@@ -179,6 +187,10 @@ namespace glass
 
     // The position, 0 to 1, of one stop. Stops are evenly spaced in travel.
     double DetentPosition(_In_ uint32_t index, _In_ uint32_t count) noexcept;
+
+    // How wide the field this message lands in is, which is what the two ends and the stops are
+    // measured against. MIDI 2.0 protocol unless the message asked for MIDI 1.0.
+    uint32_t FieldBitsFor(_In_ PreparedMessage const& message) noexcept;
 
     // MIDI 1.0 channel voice, message type 2. One word.
     uint32_t BuildMidi1ChannelVoice(

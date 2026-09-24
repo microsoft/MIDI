@@ -171,6 +171,17 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    uint32_t FieldBitsFor(PreparedMessage const& message) noexcept
+    {
+        if (message.UseMidi1Protocol)
+        {
+            return message.Kind == MessageKind::PitchBend ? 14u : 7u;
+        }
+
+        return message.Kind == MessageKind::Note ? 16u : 32u;
+    }
+
+    _Use_decl_annotations_
     uint32_t InterpolateValue(PreparedMessage const& message, double position, uint32_t bits) noexcept
     {
         if (!std::isfinite(position))
@@ -537,6 +548,44 @@ namespace glass
         }
 
         return written;
+    }
+
+    _Use_decl_annotations_
+    uint32_t BindingEngine::DetentCountForControl(size_t controlIndex) const noexcept
+    {
+        if (controlIndex >= m_controls.size())
+        {
+            return 0;
+        }
+
+        auto const& control = m_controls[controlIndex];
+
+        uint32_t count{ 0 };
+
+        for (uint32_t i = 0; i < control.MessageCount; ++i)
+        {
+            auto const& message = m_messages[control.FirstMessage + i];
+
+            count = (std::max)(count, DetentCount(message, FieldBitsFor(message)));
+        }
+
+        return count;
+    }
+
+    _Use_decl_annotations_
+    double BindingEngine::SnapToDetent(size_t controlIndex, double position) const noexcept
+    {
+        auto const count = DetentCountForControl(controlIndex);
+
+        if (count < 2)
+        {
+            return std::clamp(position, 0.0, 1.0);
+        }
+
+        auto const clamped = std::clamp(position, 0.0, 1.0);
+        auto const index = static_cast<uint32_t>(std::llround(clamped * (count - 1)));
+
+        return DetentPosition(index, count);
     }
 
     _Use_decl_annotations_

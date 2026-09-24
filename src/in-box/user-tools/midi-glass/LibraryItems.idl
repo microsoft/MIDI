@@ -1,0 +1,36 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+// One card in the library. The library is rebuilt whole on a refresh rather than patched, so
+// there is nothing here to notify about.
+namespace midiglass
+{
+    [default_interface]
+    runtimeclass LayoutCard
+    {
+        LayoutCard();
+
+        String FilePath{ get; };
+        String DisplayName{ get; };
+        String Description{ get; };
+
+        // "12 controls  ·  1280 x 800  ·  Studio Dark"
+        String DetailText{ get; };
+
+        // Drawn from the layout rather than captured from a window, so it is right for a layout
+        // that has never been opened on this PC.
+        Microsoft.UI.Xaml.Media.ImageSource Thumbnail{ get; };
+
+        Microsoft.UI.Xaml.Visibility DescriptionVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility ImportedVisibility{ get; };
+
+        // Every card carries the same two buttons, so the visible label alone would give a screen
+        // reader the same name over and over. These name the layout as well.
+        String RunAccessibleName{ get; };
+        String CardAccessibleName{ get; };
+    }
+}

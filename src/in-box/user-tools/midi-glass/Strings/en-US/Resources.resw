@@ -109,10 +109,140 @@
   <data name="AppearanceColorPicker" xml:space="preserve">
     <value>Window color</value>
   </data>
-  <data name="ComingSoonHeading.Text" xml:space="preserve">
-    <value>MIDI Glass is not finished yet</value>
+  <data name="LibraryHeading.Text" xml:space="preserve">
+    <value>Layouts</value>
   </data>
-  <data name="ComingSoonBody.Text" xml:space="preserve">
-    <value>This is the shell. Building a control surface, running one and sending MIDI from it all arrive in later updates.</value>
+  <data name="NewLayoutButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>New starter layout</value>
+  </data>
+  <data name="NewLayoutLabel.Text" xml:space="preserve">
+    <value>New starter layout</value>
+  </data>
+  <data name="OpenFolderButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Open the layouts folder</value>
+  </data>
+  <data name="OpenFolderButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Open the layouts folder</value>
+  </data>
+  <data name="RefreshButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Refresh the list</value>
+  </data>
+  <data name="RefreshButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Refresh the list</value>
+  </data>
+  <data name="LayoutGrid.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Layouts</value>
+  </data>
+  <data name="LibraryRunLabel.Text" xml:space="preserve">
+    <value>Run</value>
+  </data>
+  <data name="LibraryRunAccessibleFormat" xml:space="preserve">
+    <value>Run {0}</value>
+    <comment>{0} is the layout name</comment>
+  </data>
+  <data name="LibraryCardAccessibleFormat" xml:space="preserve">
+    <value>{0}. {1}</value>
+    <comment>{0} is the layout name, {1} is the detail line</comment>
+  </data>
+  <data name="LibraryCardWithDescriptionAccessibleFormat" xml:space="preserve">
+    <value>{0}. {1}. {2}</value>
+    <comment>{0} is the layout name, {1} is its description, {2} is the detail line</comment>
+  </data>
+  <data name="LibraryDetailFormat" xml:space="preserve">
+    <value>{0} controls · {1} × {2} · {3}</value>
+    <comment>{0} is a control count, {1} and {2} are the page size in pixels, {3} is the theme name</comment>
+  </data>
+  <data name="LibraryUnreadable" xml:space="preserve">
+    <value>This file could not be read.</value>
+  </data>
+  <data name="EmptyHeading.Text" xml:space="preserve">
+    <value>No layouts yet</value>
+  </data>
+  <data name="EmptyBody.Text" xml:space="preserve">
+    <value>Pick a device and make a starter layout. It gives you eight faders, eight knobs and eight pads, ready to run.</value>
+  </data>
+  <data name="NewLayoutTitle" xml:space="preserve">
+    <value>New starter layout</value>
+  </data>
+  <data name="NewLayoutNameLabel" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="NewLayoutDeviceLabel" xml:space="preserve">
+    <value>Send to</value>
+  </data>
+  <data name="NewLayoutDefaultName" xml:space="preserve">
+    <value>My control surface</value>
+  </data>
+  <data name="NewLayoutCreate" xml:space="preserve">
+    <value>Create</value>
+  </data>
+  <data name="NewLayoutNoDevices" xml:space="preserve">
+    <value>No MIDI devices were found, so there is nothing for a layout to send to yet. Plug something in, or create a loopback, and try again.</value>
+  </data>
+  <data name="CommonCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="RuntimeWindowTitleFormat" xml:space="preserve">
+    <value>{0} — MIDI Glass</value>
+    <comment>{0} is the layout name</comment>
+  </data>
+  <data name="RuntimeNoPages" xml:space="preserve">
+    <value>This layout has no pages, so there is nothing to show.</value>
+  </data>
+  <data name="RuntimeNoDevices" xml:space="preserve">
+    <value>This layout does not name any devices, so nothing it sends has anywhere to go.</value>
+  </data>
+  <data name="RuntimeAllDevicesFormat" xml:space="preserve">
+    <value>{0} device(s) connected</value>
+    <comment>{0} is a count of devices</comment>
+  </data>
+  <data name="RuntimeMissingDevicesFormat" xml:space="preserve">
+    <value>Waiting for: {0}</value>
+    <comment>{0} is a comma separated list of device names</comment>
+  </data>
+  <data name="PageSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Page</value>
+  </data>
+  <data name="ScaleSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Size on screen</value>
+  </data>
+  <data name="ScaleActualSize" xml:space="preserve">
+    <value>Actual size</value>
+  </data>
+  <data name="ScaleFitToScreen" xml:space="preserve">
+    <value>Fit to window</value>
+  </data>
+  <data name="ScaleCustom" xml:space="preserve">
+    <value>Custom size</value>
+  </data>
+  <data name="ViewModeToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>View mode. The surface sends nothing while this is on</value>
+  </data>
+  <data name="ViewModeLabel.Text" xml:space="preserve">
+    <value>View</value>
+  </data>
+  <data name="FullScreenButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Full screen</value>
+  </data>
+  <data name="FullScreenButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Full screen</value>
+  </data>
+  <data name="PanicButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Panic. Stops every note on every device this app is driving</value>
+  </data>
+  <data name="PanicLabel.Text" xml:space="preserve">
+    <value>Panic</value>
+  </data>
+  <data name="SurfaceControlUnnamed" xml:space="preserve">
+    <value>Unnamed control</value>
+  </data>
+  <data name="ErrorServiceUnavailable" xml:space="preserve">
+    <value>Windows MIDI Services is not running, so nothing can be sent.</value>
+  </data>
+  <data name="ErrorSessionFailed" xml:space="preserve">
+    <value>A MIDI session could not be created.</value>
+  </data>
+  <data name="ErrorNoComExtensions" xml:space="preserve">
+    <value>This build of the MIDI SDK does not have the fast send path MIDI Glass needs.</value>
   </data>
 </root>

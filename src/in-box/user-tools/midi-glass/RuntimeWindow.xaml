@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="midiglass.RuntimeWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:midiglass"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid" Loaded="OnRootLoaded">
+        <!-- Panic has to be reachable without finding a button, because the moment it is needed
+             is the moment nobody wants to go looking. Escape leaves full screen the way a
+             browser does. -->
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator Key="F11" Invoked="OnFullScreenAccelerator" />
+            <KeyboardAccelerator Key="Escape" Invoked="OnEscapeAccelerator" />
+            <KeyboardAccelerator Key="P" Modifiers="Control,Shift" Invoked="OnPanicAccelerator" />
+        </Grid.KeyboardAccelerators>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border x:Name="WindowFill"
+                Grid.Row="0"
+                Grid.RowSpan="3"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
+
+        <Border x:Name="WindowTint" Grid.Row="0" Grid.RowSpan="3" Visibility="Collapsed" />
+
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+
+            <Image x:Name="AppTitleBarIcon"
+                   Grid.Column="1"
+                   Width="16"
+                   Height="16"
+                   Margin="12,0,0,0"
+                   VerticalAlignment="Center" />
+
+            <TextBlock x:Name="AppTitleTextBlock"
+                       Grid.Column="2"
+                       Text="Windows MIDI Glass"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+        </Grid>
+
+        <!-- The chrome. Panic lives here and never on the surface, so it cannot be themed into
+             invisibility, covered by a control or lost on a page change. -->
+        <Grid x:Name="ChromeBar" Grid.Row="1" Padding="12,0,12,8" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <ComboBox x:Name="PageSelector"
+                      x:Uid="PageSelector"
+                      Grid.Column="0"
+                      MinWidth="140"
+                      Visibility="Collapsed"
+                      SelectionChanged="OnPageSelectionChanged" />
+
+            <ComboBox x:Name="ScaleSelector"
+                      x:Uid="ScaleSelector"
+                      Grid.Column="1"
+                      MinWidth="150"
+                      SelectionChanged="OnScaleSelectionChanged" />
+
+            <TextBlock x:Name="DeviceStatusText"
+                       Grid.Column="2"
+                       VerticalAlignment="Center"
+                       Margin="8,0,0,0"
+                       TextTrimming="CharacterEllipsis"
+                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+            <ToggleButton x:Name="ViewModeToggle"
+                          x:Uid="ViewModeToggle"
+                          Grid.Column="3"
+                          Click="OnViewModeToggled">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE7B3;" FontSize="14" />
+                    <TextBlock x:Name="ViewModeLabel" x:Uid="ViewModeLabel" Text="View" />
+                </StackPanel>
+            </ToggleButton>
+
+            <Button x:Name="FullScreenButton"
+                    x:Uid="FullScreenButton"
+                    Grid.Column="4"
+                    Click="OnFullScreenClick">
+                <FontIcon Glyph="&#xE740;" FontSize="14" />
+            </Button>
+
+            <Button x:Name="PanicButton"
+                    x:Uid="PanicButton"
+                    Grid.Column="5"
+                    Click="OnPanicClick"
+                    Background="{ThemeResource SystemFillColorCriticalBackgroundBrush}"
+                    BorderBrush="{ThemeResource SystemFillColorCriticalBrush}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon Glyph="&#xE7BA;" FontSize="14"
+                              Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                    <TextBlock x:Name="PanicLabel" x:Uid="PanicLabel" Text="Panic" />
+                </StackPanel>
+            </Button>
+        </Grid>
+
+        <!-- Actual size with scrolling is the default. A control surface is muscle memory, so it
+             is never stretched: fitting scales both axes by the same number and letterboxes. -->
+        <ScrollViewer x:Name="SurfaceScroll"
+                      Grid.Row="2"
+                      ZoomMode="Disabled"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollMode="Auto"
+                      VerticalScrollMode="Auto"
+                      SizeChanged="OnSurfaceSizeChanged">
+            <Border x:Name="SurfaceDeck"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center">
+                <Canvas x:Name="SurfaceCanvas">
+                    <Canvas.RenderTransform>
+                        <ScaleTransform x:Name="SurfaceScale" ScaleX="1" ScaleY="1" />
+                    </Canvas.RenderTransform>
+                </Canvas>
+            </Border>
+        </ScrollViewer>
+
+        <TextBlock x:Name="LoadProblemText"
+                   Grid.Row="2"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   TextWrapping="Wrap"
+                   MaxWidth="480"
+                   TextAlignment="Center"
+                   Visibility="Collapsed"
+                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+    </Grid>
+</Window>
