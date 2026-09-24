@@ -1,0 +1,296 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+// Deliberately free of pch.h and XAML, like the rest of the document layer.
+
+#include "LayoutStore.h"
+
+#include <windows.h>
+#include <shlobj_core.h>
+
+#include <algorithm>
+#include <filesystem>
+#include <fstream>
+
+namespace glass
+{
+    namespace
+    {
+        constexpr uint8_t Utf8Bom[] = { 0xEF, 0xBB, 0xBF };
+
+        std::wstring FromUtf8(_In_ std::string const& text) noexcept
+        {
+            if (text.empty())
+            {
+                return {};
+            }
+
+            auto const needed = ::MultiByteToWideChar(
+                CP_UTF8, MB_ERR_INVALID_CHARS, text.data(), static_cast<int>(text.size()), nullptr, 0);
+
+            if (needed <= 0)
+            {
+                return {};
+            }
+
+            std::wstring result(static_cast<size_t>(needed), L'\0');
+
+            ::MultiByteToWideChar(
+                CP_UTF8, MB_ERR_INVALID_CHARS, text.data(), static_cast<int>(text.size()), result.data(), needed);
+
+            return result;
+        }
+
+        std::string ToUtf8(_In_ std::wstring const& text) noexcept
+        {
+            if (text.empty())
+            {
+                return {};
+            }
+
+            auto const needed = ::WideCharToMultiByte(
+                CP_UTF8, 0, text.data(), static_cast<int>(text.size()), nullptr, 0, nullptr, nullptr);
+
+            if (needed <= 0)
+            {
+                return {};
+            }
+
+            std::string result(static_cast<size_t>(needed), '\0');
+
+            ::WideCharToMultiByte(
+                CP_UTF8, 0, text.data(), static_cast<int>(text.size()), result.data(), needed, nullptr, nullptr);
+
+            return result;
+        }
+    }
+
+    std::wstring LayoutsFolder() noexcept
+    {
+        try
+        {
+            PWSTR raw{ nullptr };
+
+            if (FAILED(::SHGetKnownFolderPath(FOLDERID_Documents, KF_FLAG_DEFAULT, nullptr, &raw)))
+            {
+                return {};
+            }
+
+            std::filesystem::path folder{ raw };
+            ::CoTaskMemFree(raw);
+
+            folder /= LayoutFolderName;
+
+            std::error_code ignored{};
+            std::filesystem::create_directories(folder, ignored);
+
+            return folder.wstring();
+        }
+        catch (...)
+        {
+            return {};
+        }
+    }
+
+    _Use_decl_annotations_
+    bool IsInLayoutsFolder(std::wstring const& filePath) noexcept
+    {
+        try
+        {
+            auto const folder = LayoutsFolder();
+
+            if (folder.empty() || filePath.empty())
+            {
+                return false;
+            }
+
+            std::error_code ignored{};
+
+            auto const parent = std::filesystem::weakly_canonical(
+                std::filesystem::path{ filePath }.parent_path(), ignored);
+
+            auto const expected = std::filesystem::weakly_canonical(
+                std::filesystem::path{ folder }, ignored);
+
+            return !parent.empty() && parent == expected;
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+    _Use_decl_annotations_
+    ReadResult ReadLayoutFile(std::wstring const& filePath) noexcept
+    {
+        ReadResult result{};
+
+        try
+        {
+            std::error_code ec{};
+
+            auto const size = std::filesystem::file_size(std::filesystem::path{ filePath }, ec);
+
+            if (ec)
+            {
+                result.Detail = L"The file could not be opened.";
+                return result;
+            }
+
+            // Bounded before a single byte is read into memory. A layout can arrive from a
+            // stranger, and a multi-gigabyte "layout" is the cheapest attack there is.
+            if (size > MaximumLayoutFileBytes)
+            {
+                result.Detail = L"The file is larger than a layout is allowed to be.";
+                return result;
+            }
+
+            std::ifstream stream{ std::filesystem::path{ filePath }, std::ios::binary };
+
+            if (!stream.is_open())
+            {
+                result.Detail = L"The file could not be opened.";
+                return result;
+            }
+
+            std::string bytes(static_cast<size_t>(size), '\0');
+            stream.read(bytes.data(), static_cast<std::streamsize>(size));
+            stream.close();
+
+            if (bytes.size() >= sizeof(Utf8Bom) &&
+                static_cast<uint8_t>(bytes[0]) == Utf8Bom[0] &&
+                static_cast<uint8_t>(bytes[1]) == Utf8Bom[1] &&
+                static_cast<uint8_t>(bytes[2]) == Utf8Bom[2])
+            {
+                bytes.erase(0, sizeof(Utf8Bom));
+            }
+
+            result = ReadLayoutFromJson(FromUtf8(bytes));
+
+            if (result.Succeeded)
+            {
+                result.Document.FilePath = filePath;
+                result.Document.IsImported = !IsInLayoutsFolder(filePath);
+            }
+        }
+        catch (...)
+        {
+            result.Succeeded = false;
+            result.Detail = L"The file could not be read.";
+        }
+
+        return result;
+    }
+
+    _Use_decl_annotations_
+    bool WriteLayoutFile(LayoutDocument const& document, std::wstring const& filePath) noexcept
+    {
+        try
+        {
+            auto const text = WriteLayoutToJson(document);
+
+            if (text.empty() || filePath.empty())
+            {
+                return false;
+            }
+
+            auto const folder = std::filesystem::path{ filePath }.parent_path();
+
+            if (!folder.empty())
+            {
+                std::error_code ignored{};
+                std::filesystem::create_directories(folder, ignored);
+            }
+
+            // Written beside the target and moved into place, so a failure half way through
+            // leaves the previous layout intact rather than a truncated one.
+            auto temporary = std::filesystem::path{ filePath };
+            temporary += L".writing";
+
+            {
+                std::ofstream stream{ temporary, std::ios::binary | std::ios::trunc };
+
+                if (!stream.is_open())
+                {
+                    return false;
+                }
+
+                auto const bytes = ToUtf8(text);
+                stream.write(bytes.data(), static_cast<std::streamsize>(bytes.size()));
+
+                if (!stream.good())
+                {
+                    stream.close();
+                    std::error_code ignored{};
+                    std::filesystem::remove(temporary, ignored);
+                    return false;
+                }
+            }
+
+            std::error_code ec{};
+            std::filesystem::rename(temporary, std::filesystem::path{ filePath }, ec);
+
+            if (ec)
+            {
+                std::filesystem::remove(temporary, ec);
+                return false;
+            }
+
+            return true;
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+    std::vector<std::wstring> ListLayoutFiles() noexcept
+    {
+        std::vector<std::wstring> files{};
+
+        try
+        {
+            auto const folder = LayoutsFolder();
+
+            if (folder.empty())
+            {
+                return files;
+            }
+
+            std::error_code ec{};
+
+            for (auto const& entry : std::filesystem::directory_iterator{ folder, ec })
+            {
+                if (!entry.is_regular_file(ec))
+                {
+                    continue;
+                }
+
+                auto const name = entry.path().filename().wstring();
+
+                if (name.size() <= std::size(LayoutFileExtension) - 1)
+                {
+                    continue;
+                }
+
+                auto const tail = name.substr(name.size() - (std::size(LayoutFileExtension) - 1));
+
+                if (::CompareStringOrdinal(tail.c_str(), -1, LayoutFileExtension, -1, TRUE) == CSTR_EQUAL)
+                {
+                    files.push_back(entry.path().wstring());
+                }
+            }
+
+            std::sort(files.begin(), files.end());
+        }
+        catch (...)
+        {
+        }
+
+        return files;
+    }
+}
