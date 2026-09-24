@@ -23,7 +23,7 @@ namespace Windows.Devices.Midi2.Utilities.Sequencing
     //
     // What comes out is the same MidiSequence a file produces, so the player, the position maps
     // and a piano roll all work on it unchanged.
-    [contract(MidiSequencingUtilityApiContract,2)]
+    [contract(MidiSequencingUtilityApiContract,1)]
     [interface_name("Windows.Devices.Midi2.Utilities.Sequencing.IMidiSequenceBuilder", UUID_IMidiSequenceBuilder)]
     runtimeclass MidiSequenceBuilder
     {

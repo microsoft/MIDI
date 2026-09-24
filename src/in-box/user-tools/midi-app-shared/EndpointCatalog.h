@@ -7,13 +7,55 @@
 
 #pragma once
 
-#include "PatchModel.h"
-
-namespace midipatchbay
+namespace midiapp
 {
-    // A snapshot of one endpoint that is present right now. Everything the canvas, the graph
-    // checker and the routing engine need, copied out of the watcher so nothing on the UI thread
-    // iterates a collection the watcher is rewriting.
+    constexpr int32_t MaximumGroupCount = 16;
+
+    // Untrusted input guard. Names reach these tools from files other software can write and from
+    // devices that supply whatever they like, so everything stored or displayed is bounded first.
+    constexpr size_t MaximumStringLength = 1024;
+
+    // Trims, bounds and strips control characters.
+    std::wstring SanitizeStoredString(_In_ std::wstring value) noexcept;
+
+    // Where a swallowed exception goes. Shared code cannot reach any one app's telemetry, so the
+    // app supplies the sink it already logs to. Set it before starting the catalog.
+    void SetEndpointErrorHandler(_In_ std::function<void(std::wstring_view)> handler) noexcept;
+    void ReportEndpointError(_In_ std::wstring_view message) noexcept;
+
+    // How a saved endpoint is matched back to a live one. The default is the exact device id,
+    // matching what endpoint customization does; the other two only apply after the customer
+    // has confirmed them for that endpoint.
+    enum class EndpointMatchMode
+    {
+        EndpointDeviceId = 0,
+        UsbVendorAndProduct = 1,
+        EndpointName = 2,
+    };
+
+    // The same fields, and the same JSON keys, that the service configuration uses for its
+    // "match" object. Serialized through MidiServiceConfigEndpointMatchCriteria so the two can
+    // never drift, which is what makes folding this into the configuration later a copy rather
+    // than a translation.
+    struct EndpointMatch
+    {
+        std::wstring EndpointDeviceId{};
+        std::wstring DeviceInstanceId{};
+        uint16_t UsbVendorId{ 0 };
+        uint16_t UsbProductId{ 0 };
+        std::wstring UsbSerialNumber{};
+        std::wstring TransportSuppliedEndpointName{};
+        std::wstring ParentDeviceName{};
+
+        bool HasUsbIdentity() const noexcept { return UsbVendorId != 0 || UsbProductId != 0; }
+    };
+
+    winrt::Windows::Data::Json::JsonObject MatchToJson(_In_ EndpointMatch const& match) noexcept;
+    EndpointMatch MatchFromJson(_In_ winrt::Windows::Data::Json::JsonObject const& value) noexcept;
+
+    // A snapshot of one endpoint that is present right now. Everything a canvas, a graph checker
+    // or a routing engine needs, copied out of the watcher so nothing on the UI thread iterates a
+    // collection the watcher is rewriting.
     struct LiveEndpoint
     {
         std::wstring EndpointDeviceId{};
@@ -38,7 +80,7 @@ namespace midipatchbay
         std::array<std::wstring, MaximumGroupCount> SourcePortNames{};
         std::array<std::wstring, MaximumGroupCount> DestinationPortNames{};
 
-        // Loopbacks are the only endpoints this app knows for certain will echo what it sends,
+        // Loopbacks are the only endpoints an app knows for certain will echo what it sends,
         // which is what makes a loop provable rather than merely possible.
         bool IsLoopback{ false };
 
@@ -71,13 +113,21 @@ namespace midipatchbay
 
         std::optional<LiveEndpoint> Find(_In_ std::wstring const& endpointDeviceId) const noexcept;
 
-        // The endpoint a saved entry resolves to under its own match mode, or nothing.
-        std::optional<LiveEndpoint> Resolve(_In_ PatchEndpoint const& endpoint) const noexcept;
+        // The endpoint a saved match resolves to under its mode, or nothing. The fallback name is
+        // used for a name match when the match itself carries no transport supplied name, which is
+        // how a caller offers the display name it last saw.
+        std::optional<LiveEndpoint> Resolve(
+            _In_ EndpointMatch const& match,
+            _In_ EndpointMatchMode mode,
+            _In_ std::wstring const& fallbackName = {}) const noexcept;
 
         // A live endpoint that is probably the saved one but does not match under the current
         // mode, so it can be offered rather than bound silently. Only returns something when
         // the endpoint is not already resolved.
-        std::optional<LiveEndpoint> SuggestReplacement(_In_ PatchEndpoint const& endpoint) const noexcept;
+        std::optional<LiveEndpoint> SuggestReplacement(
+            _In_ EndpointMatch const& match,
+            _In_ EndpointMatchMode mode,
+            _In_ std::wstring const& fallbackName = {}) const noexcept;
 
         bool IsServiceAvailable() const noexcept { return m_serviceAvailable.load(std::memory_order_relaxed); }
 
@@ -96,7 +146,7 @@ namespace midipatchbay
 
         std::function<void()> m_changedHandler{};
 
-        midi2enum::MidiEndpointDeviceWatcher m_watcher{ nullptr };
+        winrt::Windows::Devices::Midi2::Enumeration::MidiEndpointDeviceWatcher m_watcher{ nullptr };
 
         winrt::event_token m_addedToken{};
         winrt::event_token m_removedToken{};

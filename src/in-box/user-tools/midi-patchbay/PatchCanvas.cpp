@@ -291,14 +291,12 @@ namespace midipatchbay
                 return;
             }
 
-            auto& catalog = EndpointCatalog::Current();
-
             for (auto const& endpoint : patch->Endpoints)
             {
-                auto const resolved = catalog.Resolve(endpoint);
+                auto const resolved = ResolveEndpoint(endpoint);
                 auto const suggestion = resolved.has_value()
                     ? std::nullopt
-                    : catalog.SuggestReplacement(endpoint);
+                    : SuggestReplacementFor(endpoint);
 
                 BuildNode(endpoint, resolved.has_value() ? &resolved.value() : nullptr, suggestion);
             }

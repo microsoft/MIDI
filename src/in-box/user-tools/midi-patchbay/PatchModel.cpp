@@ -105,29 +105,6 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
-    std::wstring SanitizeStoredString(std::wstring value) noexcept
-    {
-        if (value.size() > MaximumStringLength)
-        {
-            value.resize(MaximumStringLength);
-        }
-
-        // a control character in a name corrupts the display rather than saying anything
-        std::erase_if(value, [](wchar_t ch) { return ch < L' '; });
-
-        auto const first = value.find_first_not_of(L' ');
-
-        if (first == std::wstring::npos)
-        {
-            return {};
-        }
-
-        auto const last = value.find_last_not_of(L' ');
-
-        return value.substr(first, last - first + 1);
-    }
-
-    _Use_decl_annotations_
     winrt::hstring DescribeGroupIndex(int32_t groupIndex, std::wstring const& portName) noexcept
     {
         try
@@ -152,74 +129,15 @@ namespace midipatchbay
         }
     }
 
-    namespace
+    _Use_decl_annotations_
+    std::optional<LiveEndpoint> ResolveEndpoint(PatchEndpoint const& endpoint) noexcept
     {
-        // Key names come from the shipped criteria type rather than being spelled here, so the
-        // patch file cannot drift from the service configuration.
-        midi2config::MidiServiceConfigEndpointMatchCriteria ToCriteria(_In_ EndpointMatch const& match) noexcept
-        {
-            midi2config::MidiServiceConfigEndpointMatchCriteria criteria{};
-
-            criteria.EndpointDeviceId(winrt::hstring{ match.EndpointDeviceId });
-            criteria.DeviceInstanceId(winrt::hstring{ match.DeviceInstanceId });
-            criteria.UsbVendorId(match.UsbVendorId);
-            criteria.UsbProductId(match.UsbProductId);
-            criteria.UsbSerialNumber(winrt::hstring{ match.UsbSerialNumber });
-            criteria.TransportSuppliedEndpointName(winrt::hstring{ match.TransportSuppliedEndpointName });
-            criteria.ParentDeviceName(winrt::hstring{ match.ParentDeviceName });
-
-            return criteria;
-        }
+        return EndpointCatalog::Current().Resolve(endpoint.Match, endpoint.MatchMode, endpoint.DisplayName);
     }
 
     _Use_decl_annotations_
-    json::JsonObject MatchToJson(EndpointMatch const& match) noexcept
+    std::optional<LiveEndpoint> SuggestReplacementFor(PatchEndpoint const& endpoint) noexcept
     {
-        try
-        {
-            auto const criteria = ToCriteria(match);
-
-            json::JsonObject parsed{ nullptr };
-
-            if (json::JsonObject::TryParse(criteria.GetConfigJson(), parsed) && parsed != nullptr)
-            {
-                return parsed;
-            }
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to build the endpoint match object.")
-
-        return json::JsonObject{};
-    }
-
-    _Use_decl_annotations_
-    EndpointMatch MatchFromJson(json::JsonObject const& value) noexcept
-    {
-        EndpointMatch result{};
-
-        try
-        {
-            if (value == nullptr)
-            {
-                return result;
-            }
-
-            auto const criteria = midi2config::MidiServiceConfigEndpointMatchCriteria::FromJson(value.Stringify());
-
-            if (criteria == nullptr)
-            {
-                return result;
-            }
-
-            result.EndpointDeviceId = SanitizeStoredString(std::wstring{ criteria.EndpointDeviceId() });
-            result.DeviceInstanceId = SanitizeStoredString(std::wstring{ criteria.DeviceInstanceId() });
-            result.UsbVendorId = criteria.UsbVendorId();
-            result.UsbProductId = criteria.UsbProductId();
-            result.UsbSerialNumber = SanitizeStoredString(std::wstring{ criteria.UsbSerialNumber() });
-            result.TransportSuppliedEndpointName = SanitizeStoredString(std::wstring{ criteria.TransportSuppliedEndpointName() });
-            result.ParentDeviceName = SanitizeStoredString(std::wstring{ criteria.ParentDeviceName() });
-        }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to read the endpoint match object.")
-
-        return result;
+        return EndpointCatalog::Current().SuggestReplacement(endpoint.Match, endpoint.MatchMode, endpoint.DisplayName);
     }
 }

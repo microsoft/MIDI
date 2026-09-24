@@ -178,8 +178,6 @@ namespace winrt::midipatchbay::implementation
         {
             std::vector<patchbay::RoutePlanEntry> plan{};
 
-            auto& catalog = patchbay::EndpointCatalog::Current();
-
             for (auto const& patch : m_patches)
             {
                 if (m_routingPatchKeys.count(PatchKey(patch)) == 0)
@@ -206,8 +204,8 @@ namespace winrt::midipatchbay::implementation
                         continue;
                     }
 
-                    auto const liveSource = catalog.Resolve(*source);
-                    auto const liveDestination = catalog.Resolve(*destination);
+                    auto const liveSource = patchbay::ResolveEndpoint(*source);
+                    auto const liveDestination = patchbay::ResolveEndpoint(*destination);
 
                     // A connection whose endpoints are not both here is not an error; it simply
                     // waits, and is wired up by the next pass when the device comes back.
@@ -393,7 +391,7 @@ namespace winrt::midipatchbay::implementation
 
             for (auto const& endpoint : patch->Endpoints)
             {
-                if (!patchbay::EndpointCatalog::Current().Resolve(endpoint).has_value())
+                if (!patchbay::ResolveEndpoint(endpoint).has_value())
                 {
                     missing.push_back(endpoint.DisplayName);
                 }
@@ -454,7 +452,7 @@ namespace winrt::midipatchbay::implementation
 
                 item.HasWarning = std::any_of(patch.Endpoints.begin(), patch.Endpoints.end(),
                     [](patchbay::PatchEndpoint const& e)
-                    { return !patchbay::EndpointCatalog::Current().Resolve(e).has_value(); });
+                    { return !patchbay::ResolveEndpoint(e).has_value(); });
 
                 if (item.HasWarning)
                 {

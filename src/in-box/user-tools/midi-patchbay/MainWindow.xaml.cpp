@@ -241,6 +241,13 @@ namespace winrt::midipatchbay::implementation
                     }
                 });
 
+            // The catalog is shared with the other MIDI tools, so it cannot reach this app's
+            // telemetry by itself. Give it the same sink everything else here logs to.
+            midiapp::SetEndpointErrorHandler([](std::wstring_view message)
+                {
+                    MIDI_PATCHBAY_LOG_GENERAL_EXCEPTION(std::wstring{ message }.c_str());
+                });
+
             // Starting the watcher blocks on the service, so it never happens on this thread.
             patchbay::RunOnBackgroundAsync([]()
                 {
@@ -703,7 +710,7 @@ namespace winrt::midipatchbay::implementation
         {
             auto const offline = std::any_of(patch.Endpoints.begin(), patch.Endpoints.end(),
                 [](patchbay::PatchEndpoint const& e)
-                { return !patchbay::EndpointCatalog::Current().Resolve(e).has_value(); });
+                { return !patchbay::ResolveEndpoint(e).has_value(); });
 
             signature += offline ? L"1" : L"0";
         }
@@ -797,7 +804,7 @@ namespace winrt::midipatchbay::implementation
 
                 auto const offline = std::any_of(patch->Endpoints.begin(), patch->Endpoints.end(),
                     [](patchbay::PatchEndpoint const& e)
-                    { return !patchbay::EndpointCatalog::Current().Resolve(e).has_value(); });
+                    { return !patchbay::ResolveEndpoint(e).has_value(); });
 
                 if (patch->IsTemporary)
                 {

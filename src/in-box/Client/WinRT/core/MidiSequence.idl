@@ -18,6 +18,7 @@ import "MidiSequenceTimeSignature.idl";
 import "MidiSequenceTextEvent.idl";
 import "MidiSequenceLyricLine.idl";
 import "MidiSequenceTrack.idl";
+import "MidiSequenceTimingModeEnum.idl";
 
 
 namespace Windows.Devices.Midi2.Utilities.Sequencing
@@ -40,6 +41,10 @@ namespace Windows.Devices.Midi2.Utilities.Sequencing
         // tick is an absolute division of a second and tempo does not apply.
         UInt16 TicksPerQuarterNote{ get; };
         Boolean UsesSmpteTiming{ get; };
+
+        // Whether the ticks above are musical or are plain microseconds. A file always reads back
+        // as Musical; only a sequence built in memory can be Absolute.
+        MidiSequenceTimingMode TimingMode{ get; };
 
         UInt64 DurationMicroseconds{ get; };
         UInt32 LastTick{ get; };

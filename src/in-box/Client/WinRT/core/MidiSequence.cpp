@@ -84,6 +84,13 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Sequencing::implementation
         return m_sequence != nullptr && m_sequence->Division.IsSmpte;
     }
 
+    Sequencing::MidiSequenceTimingMode MidiSequence::TimingMode() const noexcept
+    {
+        return m_sequence == nullptr
+            ? Sequencing::MidiSequenceTimingMode::Musical
+            : static_cast<Sequencing::MidiSequenceTimingMode>(m_sequence->Timing);
+    }
+
     uint64_t MidiSequence::DurationMicroseconds() const noexcept
     {
         return m_sequence == nullptr ? 0 : m_sequence->DurationMicroseconds;

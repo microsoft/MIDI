@@ -129,7 +129,6 @@
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="BackgroundWork.h" />
     <ClInclude Include="CommandLineOptions.h" />
-    <ClInclude Include="EndpointCatalog.h" />
     <ClInclude Include="MessageFilter.h" />
     <ClInclude Include="MessageTransform.h" />
     <ClInclude Include="PatchCanvas.h" />
@@ -155,6 +154,7 @@
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
     <ClInclude Include="..\midi-app-shared\SingleInstance.h" />
     <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
+    <ClInclude Include="..\midi-app-shared\EndpointCatalog.h" />
     <ClInclude Include="..\midi-app-shared\EndpointImageAssets.h" />
     <ClInclude Include="..\midi-app-shared\GeneralMidi.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
@@ -167,7 +167,6 @@
     <ClCompile Include="AppSettings.cpp" />
     <ClCompile Include="BackgroundWork.cpp" />
     <ClCompile Include="CommandLineOptions.cpp" />
-    <ClCompile Include="EndpointCatalog.cpp" />
     <ClCompile Include="MessageFilter.cpp" />
     <ClCompile Include="MessageTransform.cpp" />
     <ClCompile Include="PatchCanvas.cpp" />
@@ -195,6 +194,7 @@
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
     <ClCompile Include="..\midi-app-shared\SingleInstance.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
+    <ClCompile Include="..\midi-app-shared\EndpointCatalog.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointImageAssets.cpp" />
     <!-- Deliberately free of pch.h, WinRT and XAML, like the sequence model it came from. -->
     <ClCompile Include="..\midi-app-shared\GeneralMidi.cpp">

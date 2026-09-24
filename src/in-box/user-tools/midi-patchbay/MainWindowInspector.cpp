@@ -193,9 +193,7 @@ namespace winrt::midipatchbay::implementation
             auto const endpointId = endpoint.Id;
             auto weak = get_weak();
 
-            auto& catalog = patchbay::EndpointCatalog::Current();
-
-            auto const live = catalog.Resolve(endpoint);
+            auto const live = patchbay::ResolveEndpoint(endpoint);
 
             // ------------------------------------------------------- identity
             {
@@ -307,7 +305,7 @@ namespace winrt::midipatchbay::implementation
             // --------------------------------------------------- replacement
             if (!live.has_value())
             {
-                auto const suggestion = catalog.SuggestReplacement(endpoint);
+                auto const suggestion = patchbay::SuggestReplacementFor(endpoint);
 
                 if (suggestion.has_value())
                 {
@@ -470,10 +468,8 @@ namespace winrt::midipatchbay::implementation
             auto const* source = patch->FindEndpoint(connection.SourceEndpointId);
             auto const* destination = patch->FindEndpoint(connection.DestinationEndpointId);
 
-            auto& catalog = patchbay::EndpointCatalog::Current();
-
-            auto const liveSource = source == nullptr ? std::nullopt : catalog.Resolve(*source);
-            auto const liveDestination = destination == nullptr ? std::nullopt : catalog.Resolve(*destination);
+            auto const liveSource = source == nullptr ? std::nullopt : patchbay::ResolveEndpoint(*source);
+            auto const liveDestination = destination == nullptr ? std::nullopt : patchbay::ResolveEndpoint(*destination);
 
             // ----------------------------------------------------- from / to
             {

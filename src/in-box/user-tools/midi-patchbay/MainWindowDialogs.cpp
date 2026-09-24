@@ -344,13 +344,11 @@ namespace winrt::midipatchbay::implementation
 
         try
         {
-            auto& catalog = patchbay::EndpointCatalog::Current();
-
             for (auto const& patch : m_patches)
             {
                 for (auto const& endpoint : patch.Endpoints)
                 {
-                    if (catalog.Resolve(endpoint).has_value())
+                    if (patchbay::ResolveEndpoint(endpoint).has_value())
                     {
                         continue;
                     }
@@ -1181,7 +1179,7 @@ namespace winrt::midipatchbay::implementation
 
             for (auto const& endpoint : patch->Endpoints)
             {
-                auto const live = patchbay::EndpointCatalog::Current().Resolve(endpoint);
+                auto const live = patchbay::ResolveEndpoint(endpoint);
 
                 if (!live.has_value())
                 {
@@ -1253,7 +1251,7 @@ namespace winrt::midipatchbay::implementation
             controls::MenuFlyout menu{};
             auto weak = get_weak();
 
-            auto const live = patchbay::EndpointCatalog::Current().Resolve(*endpoint);
+            auto const live = patchbay::ResolveEndpoint(*endpoint);
 
             if (live.has_value())
             {

@@ -7,13 +7,26 @@
 
 #include "pch.h"
 #include "EndpointCatalog.h"
+#include "MidiEndpointHelpers.h"
 
-namespace midipatchbay
+namespace midiapp
 {
+    // Spelled here rather than taken from the consuming app's pch, so a project can pick this
+    // file up without also having to match another app's alias list.
+    namespace mdm2 = winrt::Windows::Devices::Midi2;
+    namespace mdm2enum = winrt::Windows::Devices::Midi2::Enumeration;
+    namespace mdm2config = winrt::Windows::Devices::Midi2::ServiceConfig;
+    namespace mdm2legacy = winrt::Windows::Devices::Midi2::Enumeration::Legacy;
+    namespace mdm2loop = winrt::Windows::Devices::Midi2::Transports::Loopback;
+    namespace mjson = winrt::Windows::Data::Json;
+
     namespace
     {
         constexpr wchar_t TransportCodeLoopback[] = L"LOOP";
         constexpr wchar_t TransportCodeBasicLoopback[] = L"BLOOP";
+
+        std::mutex g_errorHandlerLock{};
+        std::function<void(std::wstring_view)> g_errorHandler{};
 
         bool EqualsIgnoringCase(_In_ std::wstring const& left, _In_ std::wstring const& right) noexcept
         {
@@ -29,6 +42,132 @@ namespace midipatchbay
         {
             return SanitizeStoredString(std::wstring{ value });
         }
+
+        // Key names come from the shipped criteria type rather than being spelled here, so a
+        // stored match cannot drift from the service configuration.
+        mdm2config::MidiServiceConfigEndpointMatchCriteria ToCriteria(_In_ EndpointMatch const& match) noexcept
+        {
+            mdm2config::MidiServiceConfigEndpointMatchCriteria criteria{};
+
+            criteria.EndpointDeviceId(winrt::hstring{ match.EndpointDeviceId });
+            criteria.DeviceInstanceId(winrt::hstring{ match.DeviceInstanceId });
+            criteria.UsbVendorId(match.UsbVendorId);
+            criteria.UsbProductId(match.UsbProductId);
+            criteria.UsbSerialNumber(winrt::hstring{ match.UsbSerialNumber });
+            criteria.TransportSuppliedEndpointName(winrt::hstring{ match.TransportSuppliedEndpointName });
+            criteria.ParentDeviceName(winrt::hstring{ match.ParentDeviceName });
+
+            return criteria;
+        }
+    }
+
+    _Use_decl_annotations_
+    void SetEndpointErrorHandler(std::function<void(std::wstring_view)> handler) noexcept
+    {
+        std::scoped_lock guard{ g_errorHandlerLock };
+        g_errorHandler = std::move(handler);
+    }
+
+    _Use_decl_annotations_
+    void ReportEndpointError(std::wstring_view message) noexcept
+    {
+        std::function<void(std::wstring_view)> handler{};
+
+        {
+            std::scoped_lock guard{ g_errorHandlerLock };
+            handler = g_errorHandler;
+        }
+
+        if (handler)
+        {
+            try
+            {
+                handler(message);
+            }
+            catch (...)
+            {
+            }
+        }
+    }
+
+    _Use_decl_annotations_
+    std::wstring SanitizeStoredString(std::wstring value) noexcept
+    {
+        if (value.size() > MaximumStringLength)
+        {
+            value.resize(MaximumStringLength);
+        }
+
+        // a control character in a name corrupts the display rather than saying anything
+        std::erase_if(value, [](wchar_t ch) { return ch < L' '; });
+
+        auto const first = value.find_first_not_of(L' ');
+
+        if (first == std::wstring::npos)
+        {
+            return {};
+        }
+
+        auto const last = value.find_last_not_of(L' ');
+
+        return value.substr(first, last - first + 1);
+    }
+
+    _Use_decl_annotations_
+    mjson::JsonObject MatchToJson(EndpointMatch const& match) noexcept
+    {
+        try
+        {
+            auto const criteria = ToCriteria(match);
+
+            mjson::JsonObject parsed{ nullptr };
+
+            if (mjson::JsonObject::TryParse(criteria.GetConfigJson(), parsed) && parsed != nullptr)
+            {
+                return parsed;
+            }
+        }
+        catch (...)
+        {
+            ReportEndpointError(L"Unable to build the endpoint match object.");
+        }
+
+        return mjson::JsonObject{};
+    }
+
+    _Use_decl_annotations_
+    EndpointMatch MatchFromJson(mjson::JsonObject const& value) noexcept
+    {
+        EndpointMatch result{};
+
+        try
+        {
+            if (value == nullptr)
+            {
+                return result;
+            }
+
+            auto const criteria = mdm2config::MidiServiceConfigEndpointMatchCriteria::FromJson(value.Stringify());
+
+            if (criteria == nullptr)
+            {
+                return result;
+            }
+
+            result.EndpointDeviceId = SanitizeStoredString(std::wstring{ criteria.EndpointDeviceId() });
+            result.DeviceInstanceId = SanitizeStoredString(std::wstring{ criteria.DeviceInstanceId() });
+            result.UsbVendorId = criteria.UsbVendorId();
+            result.UsbProductId = criteria.UsbProductId();
+            result.UsbSerialNumber = SanitizeStoredString(std::wstring{ criteria.UsbSerialNumber() });
+            result.TransportSuppliedEndpointName = SanitizeStoredString(std::wstring{ criteria.TransportSuppliedEndpointName() });
+            result.ParentDeviceName = SanitizeStoredString(std::wstring{ criteria.ParentDeviceName() });
+        }
+        catch (...)
+        {
+            ReportEndpointError(L"Unable to read the endpoint match object.");
+        }
+
+        return result;
     }
 
     _Use_decl_annotations_
@@ -83,10 +222,10 @@ namespace midipatchbay
                 return true;
             }
 
-            m_serviceAvailable.store(midi2::MidiApi::EnsureServiceAvailable(), std::memory_order_relaxed);
+            m_serviceAvailable.store(mdm2::MidiApi::EnsureServiceAvailable(), std::memory_order_relaxed);
 
-            m_watcher = midi2enum::MidiEndpointDeviceWatcher::Create(
-                midi2enum::MidiEndpointDeviceInformationFilters::AllStandardEndpoints);
+            m_watcher = mdm2enum::MidiEndpointDeviceWatcher::Create(
+                mdm2enum::MidiEndpointDeviceInformationFilters::AllStandardEndpoints);
 
             if (m_watcher == nullptr)
             {
@@ -101,7 +240,10 @@ namespace midipatchbay
                         Rebuild();
                         NotifyChanged();
                     }
-                    MIDI_PATCHBAY_CATCH_AND_LOG(L"Endpoint watcher notification failed.")
+                    catch (...)
+                    {
+                        ReportEndpointError(L"Endpoint watcher notification failed.");
+                    }
                 };
 
             m_addedToken = m_watcher.Added(onChanged);
@@ -114,7 +256,10 @@ namespace midipatchbay
 
             return true;
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to start the endpoint watcher.")
+        catch (...)
+        {
+            ReportEndpointError(L"Unable to start the endpoint watcher.");
+        }
 
         m_running.store(false);
         return false;
@@ -139,7 +284,10 @@ namespace midipatchbay
                 m_watcher = nullptr;
             }
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to stop the endpoint watcher.")
+        catch (...)
+        {
+            ReportEndpointError(L"Unable to stop the endpoint watcher.");
+        }
     }
 
     void EndpointCatalog::Refresh() noexcept
@@ -163,7 +311,10 @@ namespace midipatchbay
             {
                 handler();
             }
-            MIDI_PATCHBAY_CATCH_AND_LOG(L"An endpoint change handler failed.")
+            catch (...)
+            {
+                ReportEndpointError(L"An endpoint change handler failed.");
+            }
         }
     }
 
@@ -173,9 +324,9 @@ namespace midipatchbay
 
         try
         {
-            auto const all = midi2enum::MidiEndpointDeviceInformation::FindAll(
-                midi2enum::MidiEndpointDeviceInformationSortOrder::Name,
-                midi2enum::MidiEndpointDeviceInformationFilters::AllStandardEndpoints);
+            auto const all = mdm2enum::MidiEndpointDeviceInformation::FindAll(
+                mdm2enum::MidiEndpointDeviceInformationSortOrder::Name,
+                mdm2enum::MidiEndpointDeviceInformationFilters::AllStandardEndpoints);
 
             if (all != nullptr)
             {
@@ -217,17 +368,16 @@ namespace midipatchbay
 
                     if (auto const userInfo = device.GetUserSuppliedInfo())
                     {
-                        endpoint.ImagePath = SafeString(
-                            midiapp::ResolveEndpointImagePath(userInfo.ImageFileName()));
+                        endpoint.ImagePath = SafeString(ResolveEndpointImagePath(userInfo.ImageFileName()));
                     }
 
-                    endpoint.DeclaredGroups = midiapp::DeclaredGroups(device);
+                    endpoint.DeclaredGroups = DeclaredGroups(device);
 
                     // The MIDI 1.0 port names are what the customer already sees everywhere
                     // else, so they are the labels on the connection points.
-                    auto const sourcePorts = midi2legacy::MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(
+                    auto const sourcePorts = mdm2legacy::MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(
                         winrt::hstring{ endpoint.EndpointDeviceId },
-                        midi2enum::Midi1PortFlow::MidiMessageSource);
+                        mdm2enum::Midi1PortFlow::MidiMessageSource);
 
                     if (sourcePorts != nullptr)
                     {
@@ -247,9 +397,9 @@ namespace midipatchbay
                         }
                     }
 
-                    auto const destinationPorts = midi2legacy::MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(
+                    auto const destinationPorts = mdm2legacy::MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(
                         winrt::hstring{ endpoint.EndpointDeviceId },
-                        midi2enum::Midi1PortFlow::MidiMessageDestination);
+                        mdm2enum::Midi1PortFlow::MidiMessageDestination);
 
                     if (destinationPorts != nullptr)
                     {
@@ -277,7 +427,7 @@ namespace midipatchbay
                     {
                         endpoint.IsLoopback = true;
 
-                        auto const partner = midi2loop::MidiLoopbackManager::GetAssociatedLoopbackEndpoint(device);
+                        auto const partner = mdm2loop::MidiLoopbackManager::GetAssociatedLoopbackEndpoint(device);
 
                         if (partner != nullptr)
                         {
@@ -291,15 +441,9 @@ namespace midipatchbay
 
             m_serviceAvailable.store(true, std::memory_order_relaxed);
         }
-        catch (winrt::hresult_error const& ex)
-        {
-            MIDI_PATCHBAY_LOG_HRESULT_EXCEPTION(ex, L"Unable to enumerate endpoints.");
-            m_serviceAvailable.store(false, std::memory_order_relaxed);
-            return;
-        }
         catch (...)
         {
-            MIDI_PATCHBAY_LOG_GENERAL_EXCEPTION(L"Unable to enumerate endpoints.");
+            ReportEndpointError(L"Unable to enumerate endpoints.");
             m_serviceAvailable.store(false, std::memory_order_relaxed);
             return;
         }
@@ -332,17 +476,20 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
-    std::optional<LiveEndpoint> EndpointCatalog::Resolve(PatchEndpoint const& endpoint) const noexcept
+    std::optional<LiveEndpoint> EndpointCatalog::Resolve(
+        EndpointMatch const& match,
+        EndpointMatchMode mode,
+        std::wstring const& fallbackName) const noexcept
     {
         std::scoped_lock guard{ m_lock };
 
         // The device id is always tried first, whatever the mode, because when it is still there
         // it is unambiguous and the broader modes only exist for when it is not.
-        if (!endpoint.Match.EndpointDeviceId.empty())
+        if (!match.EndpointDeviceId.empty())
         {
             auto it = std::find_if(m_endpoints.begin(), m_endpoints.end(),
-                [&endpoint](LiveEndpoint const& e)
-                { return EqualsIgnoringCase(e.EndpointDeviceId, endpoint.Match.EndpointDeviceId); });
+                [&match](LiveEndpoint const& e)
+                { return EqualsIgnoringCase(e.EndpointDeviceId, match.EndpointDeviceId); });
 
             if (it != m_endpoints.end())
             {
@@ -350,20 +497,20 @@ namespace midipatchbay
             }
         }
 
-        if (endpoint.MatchMode == EndpointMatchMode::UsbVendorAndProduct && endpoint.Match.HasUsbIdentity())
+        if (mode == EndpointMatchMode::UsbVendorAndProduct && match.HasUsbIdentity())
         {
             auto it = std::find_if(m_endpoints.begin(), m_endpoints.end(),
-                [&endpoint](LiveEndpoint const& e)
+                [&match](LiveEndpoint const& e)
                 {
-                    if (e.UsbVendorId != endpoint.Match.UsbVendorId || e.UsbProductId != endpoint.Match.UsbProductId)
+                    if (e.UsbVendorId != match.UsbVendorId || e.UsbProductId != match.UsbProductId)
                     {
                         return false;
                     }
 
                     // a serial number makes the match exact, so honor it when both sides have one
-                    if (!endpoint.Match.UsbSerialNumber.empty() && !e.UsbSerialNumber.empty())
+                    if (!match.UsbSerialNumber.empty() && !e.UsbSerialNumber.empty())
                     {
-                        return EqualsIgnoringCase(e.UsbSerialNumber, endpoint.Match.UsbSerialNumber);
+                        return EqualsIgnoringCase(e.UsbSerialNumber, match.UsbSerialNumber);
                     }
 
                     return true;
@@ -375,11 +522,11 @@ namespace midipatchbay
             }
         }
 
-        if (endpoint.MatchMode == EndpointMatchMode::EndpointName)
+        if (mode == EndpointMatchMode::EndpointName)
         {
-            auto const& wanted = endpoint.Match.TransportSuppliedEndpointName.empty()
-                ? endpoint.DisplayName
-                : endpoint.Match.TransportSuppliedEndpointName;
+            auto const& wanted = match.TransportSuppliedEndpointName.empty()
+                ? fallbackName
+                : match.TransportSuppliedEndpointName;
 
             auto it = std::find_if(m_endpoints.begin(), m_endpoints.end(),
                 [&wanted](LiveEndpoint const& e)
@@ -398,9 +545,12 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
-    std::optional<LiveEndpoint> EndpointCatalog::SuggestReplacement(PatchEndpoint const& endpoint) const noexcept
+    std::optional<LiveEndpoint> EndpointCatalog::SuggestReplacement(
+        EndpointMatch const& match,
+        EndpointMatchMode mode,
+        std::wstring const& fallbackName) const noexcept
     {
-        if (Resolve(endpoint).has_value())
+        if (Resolve(match, mode, fallbackName).has_value())
         {
             return std::nullopt;
         }
@@ -409,13 +559,13 @@ namespace midipatchbay
 
         // USB identity first: the same model in a different port is by far the most common
         // reason a device id stops resolving.
-        if (endpoint.Match.HasUsbIdentity())
+        if (match.HasUsbIdentity())
         {
             auto it = std::find_if(m_endpoints.begin(), m_endpoints.end(),
-                [&endpoint](LiveEndpoint const& e)
+                [&match](LiveEndpoint const& e)
                 {
-                    return e.UsbVendorId == endpoint.Match.UsbVendorId &&
-                        e.UsbProductId == endpoint.Match.UsbProductId;
+                    return e.UsbVendorId == match.UsbVendorId &&
+                        e.UsbProductId == match.UsbProductId;
                 });
 
             if (it != m_endpoints.end())
@@ -424,9 +574,9 @@ namespace midipatchbay
             }
         }
 
-        auto const& wanted = endpoint.Match.TransportSuppliedEndpointName.empty()
-            ? endpoint.DisplayName
-            : endpoint.Match.TransportSuppliedEndpointName;
+        auto const& wanted = match.TransportSuppliedEndpointName.empty()
+            ? fallbackName
+            : match.TransportSuppliedEndpointName;
 
         auto it = std::find_if(m_endpoints.begin(), m_endpoints.end(),
             [&wanted](LiveEndpoint const& e)

@@ -205,6 +205,27 @@ void MidiSequenceBuilderTests::CarriesTempoAndTimeSignature()
     VERIFY_IS_LESS_THAN(atOneBeat, uint64_t{ 460000 });
 }
 
+void MidiSequenceBuilderTests::ReportsTheTimingModeItWasBuiltWith()
+{
+    MidiSequenceBuilder builder{};
+
+    auto const track = builder.AddTrack(L"Track");
+    builder.AddNote(0, 100, track, ChannelOf(0), 60, 100);
+
+    VERIFY_IS_TRUE(builder.TimingMode() == MidiSequenceTimingMode::Musical);
+    VERIFY_IS_TRUE(builder.GetSequence().TimingMode() == MidiSequenceTimingMode::Musical);
+
+    builder.TimingMode(MidiSequenceTimingMode::Absolute);
+
+    auto const absolute = builder.GetSequence();
+
+    VERIFY_IS_TRUE(absolute.TimingMode() == MidiSequenceTimingMode::Absolute);
+
+    // The mode is the only thing that says these ticks are microseconds, so a caller that reads
+    // it back has to get the same answer the position map is already using.
+    VERIFY_ARE_EQUAL(uint64_t{ 100 }, absolute.ConvertTickToMicroseconds(100));
+}
+
 void MidiSequenceBuilderTests::RejectsMalformedInput()
 {
     MidiSequenceBuilder builder{};

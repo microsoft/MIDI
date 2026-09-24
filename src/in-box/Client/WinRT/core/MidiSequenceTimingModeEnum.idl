@@ -14,7 +14,7 @@ import "MidiApiContracts.idl";
 namespace Windows.Devices.Midi2.Utilities.Sequencing
 {
     // How the ticks in a sequence are meant to be read.
-    [contract(MidiSequencingUtilityApiContract,2)]
+    [contract(MidiSequencingUtilityApiContract,1)]
     enum MidiSequenceTimingMode
     {
         // Ticks are musical, measured against the sequence's tempo map. Every standard MIDI file

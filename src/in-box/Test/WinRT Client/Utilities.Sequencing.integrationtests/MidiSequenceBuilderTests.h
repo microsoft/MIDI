@@ -21,6 +21,7 @@ class MidiSequenceBuilderTests
     TEST_METHOD(AddNoteWritesBothHalves);
     TEST_METHOD(AddNoteWithNoDurationStillEnds);
     TEST_METHOD(CarriesTempoAndTimeSignature);
+    TEST_METHOD(ReportsTheTimingModeItWasBuiltWith);
     TEST_METHOD(RejectsMalformedInput);
     TEST_METHOD(ClearEmptiesTheBuilder);
 
