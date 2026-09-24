@@ -70,6 +70,27 @@ extern "C" {
 #define SYSEX_BS_RB_SIZE    UMPTOBS_BUFFER + 4  // size coming in plus at least one USB MIDI1.0 SYSEX Packet
 
 //
+// Device quirks, looked up by VID/PID in the quirk table in Device.cpp
+//
+// USBMIDI_QUIRK_VENDOR_CLASS_IS_MIDI1
+//      Accept the alternate setting 0 of the vendor specific (class 0xFF)
+//      interface as a USB MIDI 1.0 MIDI Streaming interface. The device is
+//      expected to have only one class 0xFF interface; if it has more, the
+//      last one found is used.
+//
+// USBMIDI_QUIRK_JACKS_HOST_RELATIVE
+//      Every MIDI IN jack is a host input and every MIDI OUT jack a host output,
+//      whatever the jack type; each jack is one cable. For interfaces with one jack
+//      per cable in each direction, no EMBEDDED/EXTERNAL jack pairs and no
+//      class-specific MS endpoint (0x25) descriptors. The output cables are also
+//      added to UsbInMask, as USBMIDI2DriverIoWrite checks UsbInMask as well as
+//      UsbOutMask (writes to output cables past the input count would fail); this
+//      also widens the read-side check to those cables.
+//
+#define USBMIDI_QUIRK_VENDOR_CLASS_IS_MIDI1    0x00000001
+#define USBMIDI_QUIRK_JACKS_HOST_RELATIVE      0x00000002
+
+//
 // Structure to aid in UMP SYSEX to USB MIDI 1.0
 //
 typedef struct UMP_TO_MIDI1_SYSEX_t
@@ -210,6 +231,17 @@ SetPowerPolicy(
     );
 
 // Forward Declartion of helper functions
+//
+// Function to look up the quirk flags for a device in the quirk table
+//
+__drv_maxIRQL(PASSIVE_LEVEL)
+PAGED_CODE_SEG
+ULONG
+USBMIDI2DriverGetDeviceQuirks(
+    _In_ USHORT     Vid,
+    _In_ USHORT     Pid
+);
+
 //
 // Function to parse descriptors and select usb Interface
 //
