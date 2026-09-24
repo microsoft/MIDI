@@ -738,14 +738,6 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
             auto userInfo = device.GetUserSuppliedInfo();
             auto endpointInfo = device.GetDeclaredEndpointInfo();
 
-
-            if (device.EndpointPurpose() == midi2enum::MidiEndpointDevicePurpose::DiagnosticLoopback ||
-                device.EndpointPurpose() == midi2enum::MidiEndpointDevicePurpose::DiagnosticPing)
-            {
-                // skip diagnostic endpoints
-                continue;
-            }
-
             // These names should not be localized because customers may parse these output fields
 
             OutputEntityIdentifierField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_ID, device.EndpointDeviceId());
@@ -761,6 +753,13 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
                 OutputStringField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_TRANSPORT_SUPPLIED_DESC, transportInfo.Description());
             }
 
+
+            if (device.EndpointPurpose() == midi2enum::MidiEndpointDevicePurpose::DiagnosticLoopback ||
+                device.EndpointPurpose() == midi2enum::MidiEndpointDevicePurpose::DiagnosticPing)
+            {
+                // skip diagnostic endpoints
+                continue;
+            }
 
             // show any GTBs. This is needed to help debug some winmm enumeration issues
 
