@@ -71,12 +71,46 @@ namespace winrt::midiglass::implementation
 
             AlwaysOnTopToggle().IsChecked(::midiglass::AppSettings::Current().AlwaysOnTop());
 
-            LayoutGrid().ItemsSource(m_cards);
-
             m_dispatcher = DispatcherQueue();
 
-            // The watcher blocks on the service, so it is started off the UI thread. Nothing in
-            // the library needs it until somebody makes a layout.
+            m_updatingChrome = true;
+
+            SortSelector().Items().Append(box_value(resources::GetString(L"SortByLastUsed")));
+            SortSelector().Items().Append(box_value(resources::GetString(L"SortByName")));
+            SortSelector().Items().Append(box_value(resources::GetString(L"SortByLastChanged")));
+            SortSelector().SelectedIndex(
+                static_cast<int32_t>(::midiglass::AppSettings::Current().LibrarySortOrder()));
+
+            m_updatingChrome = false;
+
+            FavoritesGrid().ItemsSource(m_favorites);
+            RecentGrid().ItemsSource(m_recent);
+
+            ApplyViewMode();
+
+            // A device arriving or leaving changes what every card says about itself, so the
+            // library is rebuilt rather than left claiming a synth is still there.
+            auto weak = get_weak();
+
+            midiapp::EndpointCatalog::Current().SetChangedHandler([weak]()
+                {
+                    auto strong = weak.get();
+
+                    if (strong == nullptr || strong->m_dispatcher == nullptr)
+                    {
+                        return;
+                    }
+
+                    strong->m_dispatcher.TryEnqueue([weak]()
+                        {
+                            if (auto inner = weak.get())
+                            {
+                                inner->RefreshLibrary();
+                            }
+                        });
+                });
+
+            // The watcher blocks on the service, so it is started off the UI thread.
             std::thread([]()
                 {
                     winrt::init_apartment(winrt::apartment_type::multi_threaded);
@@ -101,6 +135,10 @@ namespace winrt::midiglass::implementation
 
         try
         {
+            // A handler left pointing at a closed window is a use after free waiting for
+            // somebody to plug something in.
+            midiapp::EndpointCatalog::Current().SetChangedHandler(nullptr);
+
             m_chrome.SavePlacement();
             m_chrome.Shutdown();
         }
@@ -161,5 +199,14 @@ namespace winrt::midiglass::implementation
             m_chrome.ApplyAlwaysOnTop();
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to change the always on top setting.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnNewLayoutClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ShowNewLayoutDialogAsync();
     }
 }

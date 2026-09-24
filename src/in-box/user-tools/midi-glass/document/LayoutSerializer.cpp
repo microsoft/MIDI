@@ -38,6 +38,7 @@ namespace glass
         constexpr wchar_t KeyPreferredDisplay[] = L"preferredDisplayId";
         constexpr wchar_t KeySuppressStartup[] = L"suppressAllStartupValues";
         constexpr wchar_t KeyVirtualDevice[] = L"publishesVirtualDevice";
+        constexpr wchar_t KeyFavorite[] = L"isFavorite";
         constexpr wchar_t KeyTempo[] = L"tempo";
         constexpr wchar_t KeyDevices[] = L"devices";
         constexpr wchar_t KeyPages[] = L"pages";
@@ -818,6 +819,7 @@ namespace glass
             document.PreferredDisplayId = ReadString(root, KeyPreferredDisplay);
             document.SuppressAllStartupValues = ReadBool(root, KeySuppressStartup, false);
             document.PublishesVirtualDevice = ReadBool(root, KeyVirtualDevice, false);
+            document.IsFavorite = ReadBool(root, KeyFavorite, false);
 
             if (auto const tempo = ReadObject(root, KeyTempo))
             {
@@ -870,7 +872,7 @@ namespace glass
                 { KeyComment, KeyFileVersion, KeyName, KeyDescription, KeyCreated, KeyModified,
                   KeyPageWidth, KeyPageHeight, KeyCanvasWidth, KeyCanvasHeight, KeyTheme,
                   KeyScaleMode, KeyCustomScalePercent, KeyCornerButton, KeyPreferredDisplay,
-                  KeySuppressStartup, KeyVirtualDevice, KeyTempo, KeyDevices, KeyPages, KeySequences });
+                  KeySuppressStartup, KeyVirtualDevice, KeyFavorite, KeyTempo, KeyDevices, KeyPages, KeySequences });
 
             result.Succeeded = true;
         }
@@ -1016,6 +1018,7 @@ namespace glass
             writer.Write(KeyPreferredDisplay, document.PreferredDisplayId);
             writer.Write(KeySuppressStartup, document.SuppressAllStartupValues);
             writer.Write(KeyVirtualDevice, document.PublishesVirtualDevice);
+            writer.Write(KeyFavorite, document.IsFavorite);
 
             writer.BeginObject(KeyTempo);
             writer.Write(KeyKind, NameOf(TempoKindNames, document.Tempo.Kind));

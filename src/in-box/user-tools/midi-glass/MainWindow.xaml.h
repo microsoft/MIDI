@@ -11,6 +11,7 @@
 
 #include "WindowChrome.h"
 #include "LibraryItems.h"
+#include "LayoutModel.h"
 
 namespace winrt::midiglass::implementation
 {
@@ -33,19 +34,37 @@ namespace winrt::midiglass::implementation
             foundation::IInspectable const& sender,
             xaml::RoutedEventArgs const& args);
 
-        // ---- the library ----
+        // ---- the toolbar ----
 
         void OnNewLayoutClick(
             foundation::IInspectable const& sender,
             xaml::RoutedEventArgs const& args);
 
-        void OnOpenFolderClick(
+        void OnOpenFileClick(
             foundation::IInspectable const& sender,
             xaml::RoutedEventArgs const& args);
 
-        void OnRefreshClick(
+        void OnSearchTextChanged(
+            controls::AutoSuggestBox const& sender,
+            controls::AutoSuggestBoxTextChangedEventArgs const& args);
+
+        void OnSortSelectionChanged(
+            foundation::IInspectable const& sender,
+            controls::SelectionChangedEventArgs const& args);
+
+        void OnGridViewToggled(
             foundation::IInspectable const& sender,
             xaml::RoutedEventArgs const& args);
+
+        void OnListViewToggled(
+            foundation::IInspectable const& sender,
+            xaml::RoutedEventArgs const& args);
+
+        void OnLibrarySizeChanged(
+            foundation::IInspectable const& sender,
+            xaml::SizeChangedEventArgs const& args);
+
+        // ---- the cards ----
 
         void OnLayoutItemClick(
             foundation::IInspectable const& sender,
@@ -55,6 +74,53 @@ namespace winrt::midiglass::implementation
             foundation::IInspectable const& sender,
             xaml::RoutedEventArgs const& args);
 
+        void OnEditLayoutClick(
+            foundation::IInspectable const& sender,
+            xaml::RoutedEventArgs const& args);
+
+        void OnCardMoreClick(
+            foundation::IInspectable const& sender,
+            xaml::RoutedEventArgs const& args);
+
+        void OnCardPointerEntered(
+            foundation::IInspectable const& sender,
+            xaml::Input::PointerRoutedEventArgs const& args);
+
+        void OnCardPointerExited(
+            foundation::IInspectable const& sender,
+            xaml::Input::PointerRoutedEventArgs const& args);
+
+        void OnCardGotFocus(
+            foundation::IInspectable const& sender,
+            xaml::RoutedEventArgs const& args);
+
+        void OnCardLostFocus(
+            foundation::IInspectable const& sender,
+            xaml::RoutedEventArgs const& args);
+
+        void OnGridGotFocus(
+            foundation::IInspectable const& sender,
+            xaml::RoutedEventArgs const& args);
+
+        void OnGridLostFocus(
+            foundation::IInspectable const& sender,
+            xaml::RoutedEventArgs const& args);
+
+        // ---- the card menu ----
+
+        void OnCardMenuOpening(
+            foundation::IInspectable const& sender,
+            foundation::IInspectable const& args);
+
+        void OnCardMenuRun(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCardMenuEdit(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCardMenuDuplicate(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCardMenuRename(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCardMenuDescribe(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCardMenuFavorite(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCardMenuShowInFolder(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCardMenuDelete(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
     private:
         void OnWindowClosed(
             foundation::IInspectable const& sender,
@@ -62,17 +128,50 @@ namespace winrt::midiglass::implementation
 
         void RefreshLibrary();
         void ApplyCards(_In_ std::vector<::midiglass::LayoutCardData> const& cards);
+        void RebuildSections();
+        void ApplyViewMode();
+        void ApplyItemWidths();
+        void UpdateStatusBar();
+
+        void RunCard(_In_ midiglass::LayoutCard const& card);
+
+        // Reads, changes and writes one layout, then refreshes. Everything the card menu does to
+        // a file goes through here, so there is one place that knows a save can fail.
+        bool EditLayoutFile(
+            _In_ std::wstring const& filePath,
+            _In_ std::function<void(glass::LayoutDocument&)> const& change);
 
         foundation::IAsyncAction ShowNewLayoutDialogAsync();
+        foundation::IAsyncAction RenameCardAsync(_In_ midiglass::LayoutCard card);
+        foundation::IAsyncAction DescribeCardAsync(_In_ midiglass::LayoutCard card);
+        foundation::IAsyncAction DeleteCardAsync(_In_ midiglass::LayoutCard card);
 
         midiapp::WindowChrome m_chrome{};
 
-        collections::IObservableVector<foundation::IInspectable> m_cards{
+        // Everything read from disk, before the search and the sort are applied.
+        std::vector<::midiglass::LayoutCardData> m_allCards{};
+
+        // What the last read produced. The endpoint watcher fires once per endpoint on the
+        // machine at startup and again whenever anything is plugged in, so a rebuild only
+        // happens when something a card actually shows has changed.
+        std::wstring m_cardSignature{};
+
+        collections::IObservableVector<foundation::IInspectable> m_favorites{
             winrt::single_threaded_observable_vector<foundation::IInspectable>() };
+
+        collections::IObservableVector<foundation::IInspectable> m_recent{
+            winrt::single_threaded_observable_vector<foundation::IInspectable>() };
+
+        // Which card the context menu was opened on. One menu is shared by every card, so this
+        // is what tells the handlers which layout they are acting on.
+        midiglass::LayoutCard m_menuCard{ nullptr };
+
+        std::wstring m_searchText{};
 
         winrt::Microsoft::UI::Dispatching::DispatcherQueue m_dispatcher{ nullptr };
 
         bool m_refreshing{ false };
+        bool m_updatingChrome{ false };
     };
 }
 

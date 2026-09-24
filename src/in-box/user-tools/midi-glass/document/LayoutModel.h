@@ -401,6 +401,11 @@ namespace glass
         // sending system exclusive, because arbitrary SysEx can damage a device.
         bool IsImported{ false };
 
+        // Pinned to the top of the library. It travels with the file rather than living in this
+        // PC's settings, because the customer who made the layout is the one who cares about it
+        // and a layout carried to another machine should arrive where they left it.
+        bool IsFavorite{ false };
+
         // Appears to other apps while the layout runs, and goes away with it. Off unless asked
         // for, and it is a virtual device rather than a loopback so nothing is left behind.
         bool PublishesVirtualDevice{ false };

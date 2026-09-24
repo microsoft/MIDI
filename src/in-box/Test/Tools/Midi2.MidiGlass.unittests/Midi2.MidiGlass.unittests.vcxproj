@@ -110,7 +110,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\ThemeModel.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\ThemeStore.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutStore.h" />
-    <ClInclude Include="..\..\..\user-tools\midi-glass\document\StarterLayout.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutTemplates.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\runtime\PanicMessages.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\runtime\SurfaceScale.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\surface\SurfaceColors.h" />
@@ -138,7 +138,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\ThemeModel.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\ThemeStore.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutStore.cpp" />
-    <ClCompile Include="..\..\..\user-tools\midi-glass\document\StarterLayout.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutTemplates.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\runtime\PanicMessages.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\runtime\SurfaceScale.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\surface\SurfaceColors.cpp" />

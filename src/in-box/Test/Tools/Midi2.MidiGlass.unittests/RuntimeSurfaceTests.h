@@ -73,4 +73,11 @@ public:
     TEST_METHOD(TheStarterLayoutFitsOnItsPage);
     TEST_METHOD(TheStarterLayoutPointsAtOneDevice);
     TEST_METHOD(TheStarterLayoutHasAKeyboardOrder);
+
+    // ---- every template the New layout picker offers ----
+
+    TEST_METHOD(EveryTemplateIsValid);
+    TEST_METHOD(EveryTemplateFitsOnItsPage);
+    TEST_METHOD(EveryTemplateDrivesTheOneDevice);
+    TEST_METHOD(TheBlankTemplateHasAPageAndADeviceAndNothingElse);
 };

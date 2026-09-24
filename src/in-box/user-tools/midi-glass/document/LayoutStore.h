@@ -40,4 +40,12 @@ namespace glass
 
     // True when this path is inside the layouts folder.
     bool IsInLayoutsFolder(_In_ std::wstring const& filePath) noexcept;
+
+    // A path in that folder for a layout with this name, with a number added if the name is
+    // taken. Anything Windows will not accept in a file name is replaced rather than refused,
+    // because a layout name is prose and nobody should have to guess which character was the
+    // problem.
+    std::wstring MakeUnusedLayoutPath(
+        _In_ std::wstring const& folder,
+        _In_ std::wstring const& layoutName) noexcept;
 }

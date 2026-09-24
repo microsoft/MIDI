@@ -109,60 +109,240 @@
   <data name="AppearanceColorPicker" xml:space="preserve">
     <value>Window color</value>
   </data>
-  <data name="LibraryHeading.Text" xml:space="preserve">
-    <value>Layouts</value>
-  </data>
   <data name="NewLayoutButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>New starter layout</value>
+    <value>New layout</value>
   </data>
   <data name="NewLayoutLabel.Text" xml:space="preserve">
-    <value>New starter layout</value>
+    <value>New layout</value>
   </data>
-  <data name="OpenFolderButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Open the layouts folder</value>
+  <data name="NewLayoutLabel2.Text" xml:space="preserve">
+    <value>New layout</value>
   </data>
-  <data name="OpenFolderButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Open the layouts folder</value>
+  <data name="EmptyNewLayoutButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>New layout</value>
   </data>
-  <data name="RefreshButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Refresh the list</value>
+  <data name="SearchBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Search layouts</value>
   </data>
-  <data name="RefreshButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
-    <value>Refresh the list</value>
+  <data name="SearchBox.PlaceholderText" xml:space="preserve">
+    <value>Search layouts</value>
   </data>
-  <data name="LayoutGrid.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>Layouts</value>
+  <data name="SortSelector.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Sort order</value>
+  </data>
+  <data name="SortByLastUsed" xml:space="preserve">
+    <value>Sorted by last used</value>
+  </data>
+  <data name="SortByName" xml:space="preserve">
+    <value>Sorted by name</value>
+  </data>
+  <data name="SortByLastChanged" xml:space="preserve">
+    <value>Sorted by last changed</value>
+  </data>
+  <data name="GridViewToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show layouts as cards</value>
+  </data>
+  <data name="GridViewToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Show layouts as cards</value>
+  </data>
+  <data name="ListViewToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show layouts as a list</value>
+  </data>
+  <data name="ListViewToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Show layouts as a list</value>
+  </data>
+  <data name="OpenFileButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Open a layout file</value>
+  </data>
+  <data name="OpenFileLabel.Text" xml:space="preserve">
+    <value>Open a file…</value>
+  </data>
+  <data name="OpenFileTitle" xml:space="preserve">
+    <value>Open a layout</value>
+  </data>
+  <data name="FavoritesHeading.Text" xml:space="preserve">
+    <value>Favorites</value>
+  </data>
+  <data name="RecentHeading.Text" xml:space="preserve">
+    <value>Recent</value>
+  </data>
+  <data name="RecentHeadingText" xml:space="preserve">
+    <value>Recent</value>
+    <comment>The same word as RecentHeading.Text. Looked up in code when a search is cleared, and a key ending in .Text is a markup target rather than a lookup key.</comment>
+  </data>
+  <data name="SearchResultsHeading" xml:space="preserve">
+    <value>Search results</value>
+  </data>
+  <data name="FavoritesGrid.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Favorite layouts</value>
+  </data>
+  <data name="RecentGrid.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Recent layouts</value>
   </data>
   <data name="LibraryRunLabel.Text" xml:space="preserve">
     <value>Run</value>
+  </data>
+  <data name="LibraryRunLabel2.Text" xml:space="preserve">
+    <value>Run</value>
+  </data>
+  <data name="LibraryEditLabel.Text" xml:space="preserve">
+    <value>Edit</value>
   </data>
   <data name="LibraryRunAccessibleFormat" xml:space="preserve">
     <value>Run {0}</value>
     <comment>{0} is the layout name</comment>
   </data>
+  <data name="LibraryEditAccessibleFormat" xml:space="preserve">
+    <value>Edit {0}</value>
+    <comment>{0} is the layout name</comment>
+  </data>
+  <data name="LibraryMoreAccessibleFormat" xml:space="preserve">
+    <value>More options for {0}</value>
+    <comment>{0} is the layout name</comment>
+  </data>
   <data name="LibraryCardAccessibleFormat" xml:space="preserve">
-    <value>{0}. {1}</value>
-    <comment>{0} is the layout name, {1} is the detail line</comment>
+    <value>{0}. {1}. Last used {2}. {3}</value>
+    <comment>{0} is the layout name, {1} is its device status, {2} is a relative date, {3} is the detail line</comment>
   </data>
   <data name="LibraryCardWithDescriptionAccessibleFormat" xml:space="preserve">
-    <value>{0}. {1}. {2}</value>
-    <comment>{0} is the layout name, {1} is its description, {2} is the detail line</comment>
+    <value>{0}. {1}. {2}. Last used {3}. {4}</value>
+    <comment>{0} is the layout name, {1} is its description, {2} is its device status, {3} is a relative date, {4} is the detail line</comment>
   </data>
   <data name="LibraryDetailFormat" xml:space="preserve">
     <value>{0} controls · {1} × {2} · {3}</value>
     <comment>{0} is a control count, {1} and {2} are the page size in pixels, {3} is the theme name</comment>
   </data>
-  <data name="LibraryUnreadable" xml:space="preserve">
-    <value>This file could not be read.</value>
+  <data name="NewTileHeading.Text" xml:space="preserve">
+    <value>New layout</value>
+  </data>
+  <data name="NewTileBody.Text" xml:space="preserve">
+    <value>Start blank, or from a mixer, DJ deck, drum pad or transport template</value>
+  </data>
+  <data name="NewTileAccessibleName" xml:space="preserve">
+    <value>New layout. Start blank, or from a mixer, DJ deck, drum pad or transport template</value>
+  </data>
+  <data name="CardStatusAllReady" xml:space="preserve">
+    <value>{0} devices ready</value>
+    <comment>{0} is a count of devices, always two or more</comment>
+  </data>
+  <data name="CardStatusOneReady" xml:space="preserve">
+    <value>1 device ready</value>
+  </data>
+  <data name="CardStatusOneMissing" xml:space="preserve">
+    <value>1 device missing</value>
+  </data>
+  <data name="CardStatusSomeMissing" xml:space="preserve">
+    <value>{0} devices missing</value>
+    <comment>{0} is a count of devices, always two or more</comment>
+  </data>
+  <data name="CardStatusNoDevices" xml:space="preserve">
+    <value>No devices named yet</value>
+  </data>
+  <data name="CardStatusUnreadable" xml:space="preserve">
+    <value>This file could not be read</value>
+  </data>
+  <data name="DateJustNow" xml:space="preserve">
+    <value>Just now</value>
+  </data>
+  <data name="DateMinuteAgo" xml:space="preserve">
+    <value>A minute ago</value>
+  </data>
+  <data name="DateMinutesAgo" xml:space="preserve">
+    <value>{0} minutes ago</value>
+    <comment>{0} is a count of minutes, always two or more</comment>
+  </data>
+  <data name="DateHourAgo" xml:space="preserve">
+    <value>An hour ago</value>
+  </data>
+  <data name="DateHoursAgo" xml:space="preserve">
+    <value>{0} hours ago</value>
+    <comment>{0} is a count of hours, always two or more</comment>
+  </data>
+  <data name="DateYesterday" xml:space="preserve">
+    <value>Yesterday</value>
+  </data>
+  <data name="DateNeverOpened" xml:space="preserve">
+    <value>Never opened</value>
+  </data>
+  <data name="CardMenuRun.Text" xml:space="preserve">
+    <value>Run</value>
+  </data>
+  <data name="CardMenuEdit.Text" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="CardMenuDuplicate.Text" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="CardMenuRename.Text" xml:space="preserve">
+    <value>Rename…</value>
+  </data>
+  <data name="CardMenuDescribe.Text" xml:space="preserve">
+    <value>Edit description…</value>
+  </data>
+  <data name="CardMenuAddFavorite" xml:space="preserve">
+    <value>Add to favorites</value>
+  </data>
+  <data name="CardMenuRemoveFavorite" xml:space="preserve">
+    <value>Remove from favorites</value>
+  </data>
+  <data name="CardMenuShowInFolder.Text" xml:space="preserve">
+    <value>Show in folder</value>
+  </data>
+  <data name="CardMenuDelete.Text" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="DuplicateNameFormat" xml:space="preserve">
+    <value>{0} copy</value>
+    <comment>{0} is the layout name being copied</comment>
+  </data>
+  <data name="RenameTitle" xml:space="preserve">
+    <value>Rename layout</value>
+  </data>
+  <data name="DescribeTitleFormat" xml:space="preserve">
+    <value>Describe {0}</value>
+    <comment>{0} is the layout name</comment>
+  </data>
+  <data name="DescribeLabel" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="DescribePlaceholder" xml:space="preserve">
+    <value>What this layout is for, and what it expects to be plugged into</value>
+  </data>
+  <data name="DeleteTitleFormat" xml:space="preserve">
+    <value>Delete {0}?</value>
+    <comment>{0} is the layout name</comment>
+  </data>
+  <data name="DeleteBody" xml:space="preserve">
+    <value>This deletes the layout file. You cannot undo it from here.</value>
+  </data>
+  <data name="DeleteConfirm" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="CommonSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="StatusLayoutCountFormat" xml:space="preserve">
+    <value>{0} layouts in Documents › MIDI Layouts</value>
+    <comment>{0} is a count of layouts, and is never 1</comment>
+  </data>
+  <data name="StatusOneLayoutFormat" xml:space="preserve">
+    <value>1 layout in Documents › MIDI Layouts</value>
+    <comment>{0} is a count of layouts, always 1 here</comment>
+  </data>
+  <data name="StatusServiceRunning" xml:space="preserve">
+    <value>MIDI service running</value>
+  </data>
+  <data name="StatusServiceStopped" xml:space="preserve">
+    <value>MIDI service not running</value>
   </data>
   <data name="EmptyHeading.Text" xml:space="preserve">
     <value>No layouts yet</value>
   </data>
   <data name="EmptyBody.Text" xml:space="preserve">
-    <value>Pick a device and make a starter layout. It gives you eight faders, eight knobs and eight pads, ready to run.</value>
+    <value>Make one from a template and it is ready to play. Pick the device it should send to and MIDI Glass builds the rest.</value>
   </data>
   <data name="NewLayoutTitle" xml:space="preserve">
-    <value>New starter layout</value>
+    <value>New layout</value>
   </data>
   <data name="NewLayoutNameLabel" xml:space="preserve">
     <value>Name</value>
@@ -170,14 +350,50 @@
   <data name="NewLayoutDeviceLabel" xml:space="preserve">
     <value>Send to</value>
   </data>
+  <data name="NewLayoutTemplateLabel" xml:space="preserve">
+    <value>Start from</value>
+  </data>
   <data name="NewLayoutDefaultName" xml:space="preserve">
     <value>My control surface</value>
   </data>
   <data name="NewLayoutCreate" xml:space="preserve">
     <value>Create</value>
   </data>
+  <data name="NewLayoutNoDevicesTitle" xml:space="preserve">
+    <value>No MIDI devices found</value>
+  </data>
   <data name="NewLayoutNoDevices" xml:space="preserve">
-    <value>No MIDI devices were found, so there is nothing for a layout to send to yet. Plug something in, or create a loopback, and try again.</value>
+    <value>There is nothing for a layout to send to yet. Plug something in, or make a loopback, and try again.</value>
+  </data>
+  <data name="TemplateMixerName" xml:space="preserve">
+    <value>Mixer</value>
+  </data>
+  <data name="TemplateMixerDescription" xml:space="preserve">
+    <value>Eight faders, eight knobs and eight pads on one page</value>
+  </data>
+  <data name="TemplateDjDeckName" xml:space="preserve">
+    <value>DJ deck</value>
+  </data>
+  <data name="TemplateDjDeckDescription" xml:space="preserve">
+    <value>Two decks with filters, three band EQ, cue pads and a crossfader</value>
+  </data>
+  <data name="TemplateDrumPadsName" xml:space="preserve">
+    <value>Drum pads</value>
+  </data>
+  <data name="TemplateDrumPadsDescription" xml:space="preserve">
+    <value>A four by four grid on channel 10, lowest note at the bottom left</value>
+  </data>
+  <data name="TemplateTransportName" xml:space="preserve">
+    <value>Transport</value>
+  </data>
+  <data name="TemplateTransportDescription" xml:space="preserve">
+    <value>Play, stop, record and loop, plus eight track faders</value>
+  </data>
+  <data name="TemplateBlankName" xml:space="preserve">
+    <value>Blank</value>
+  </data>
+  <data name="TemplateBlankDescription" xml:space="preserve">
+    <value>An empty page, ready for you to build on</value>
   </data>
   <data name="CommonCancel" xml:space="preserve">
     <value>Cancel</value>

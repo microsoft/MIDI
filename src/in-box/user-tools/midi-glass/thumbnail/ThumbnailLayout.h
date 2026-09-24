@@ -48,6 +48,12 @@ namespace glass
 
         ThemeColor DeckColor{};
 
+        // The deck is lit from just above its top edge rather than filled flat, which is what
+        // makes a surface read as glass instead of paper. Both ends are derived from the deck,
+        // so a light theme stays light.
+        ThemeColor DeckTopColor{};
+        ThemeColor DeckBottomColor{};
+
         // The bars either side of a letterboxed page. Darker than the deck so the page reads as
         // the object and the bar reads as nothing.
         ThemeColor SurroundColor{};

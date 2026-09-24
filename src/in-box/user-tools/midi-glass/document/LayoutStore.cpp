@@ -125,6 +125,58 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    std::wstring MakeUnusedLayoutPath(
+        std::wstring const& folder,
+        std::wstring const& layoutName) noexcept
+    {
+        try
+        {
+            if (folder.empty())
+            {
+                return {};
+            }
+
+            std::wstring fileName{};
+
+            for (auto const character : layoutName)
+            {
+                fileName += (character < 32 || ::wcschr(L"\\/:*?\"<>|", character) != nullptr)
+                    ? L'-'
+                    : character;
+            }
+
+            // Windows will not keep a trailing space or dot on a file name, so trimming here
+            // means the name on disk is the name that was asked for.
+            while (!fileName.empty() && (fileName.back() == L' ' || fileName.back() == L'.'))
+            {
+                fileName.pop_back();
+            }
+
+            if (fileName.empty())
+            {
+                fileName = L"Layout";
+            }
+
+            auto path = folder + L"\\" + fileName + LayoutFileExtension;
+
+            std::error_code ignored{};
+
+            for (int32_t attempt = 2;
+                std::filesystem::exists(path, ignored) && attempt < 1000;
+                ++attempt)
+            {
+                path = folder + L"\\" + fileName + L" " + std::to_wstring(attempt) + LayoutFileExtension;
+            }
+
+            return path;
+        }
+        catch (...)
+        {
+            return {};
+        }
+    }
+
+    _Use_decl_annotations_
     ReadResult ReadLayoutFile(std::wstring const& filePath) noexcept
     {
         ReadResult result{};

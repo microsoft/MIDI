@@ -18,19 +18,53 @@ namespace midiglass
         String DisplayName{ get; };
         String Description{ get; };
 
-        // "12 controls  ·  1280 x 800  ·  Studio Dark"
+        // "10 controls  ·  1280 × 800  ·  Studio Dark"
         String DetailText{ get; };
+
+        // "2 hours ago", "Yesterday", "Sunday", "Sep 18". Never a file path: a customer should
+        // not have to think about where their layouts live.
+        String RelativeDate{ get; };
+
+        // "3 devices ready", "1 device missing", "No devices named yet"
+        String StatusText{ get; };
 
         // Drawn from the layout rather than captured from a window, so it is right for a layout
         // that has never been opened on this PC.
         Microsoft.UI.Xaml.Media.ImageSource Thumbnail{ get; };
 
-        Microsoft.UI.Xaml.Visibility DescriptionVisibility{ get; };
-        Microsoft.UI.Xaml.Visibility ImportedVisibility{ get; };
+        Boolean IsFavorite{ get; };
 
-        // Every card carries the same two buttons, so the visible label alone would give a screen
-        // reader the same name over and over. These name the layout as well.
+        // The tile that starts a new layout, drawn dashed at the end of the grid. It is a card so
+        // that it flows with the others and is reachable by keyboard in the same pass.
+        Boolean IsNewTile{ get; };
+
+        Microsoft.UI.Xaml.Visibility FavoriteVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility DescriptionVisibility{ get; };
+
+        // One of these three shows. Which one carries the meaning, so the color is never the
+        // only thing saying it.
+        Microsoft.UI.Xaml.Visibility ReadyVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility WarningVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility InfoVisibility{ get; };
+
+        // "Add to favorites" or "Remove from favorites", so the menu says what it will do.
+        String FavoriteMenuText{ get; };
+
+        // Every card carries the same three buttons, so the visible label alone would give a
+        // screen reader the same name over and over. These name the layout as well.
         String RunAccessibleName{ get; };
+        String EditAccessibleName{ get; };
+        String MoreAccessibleName{ get; };
         String CardAccessibleName{ get; };
+    }
+
+    // Picks the dashed new-layout tile out of the ordinary cards.
+    [default_interface]
+    runtimeclass LayoutCardTemplateSelector : Microsoft.UI.Xaml.Controls.DataTemplateSelector
+    {
+        LayoutCardTemplateSelector();
+
+        Microsoft.UI.Xaml.DataTemplate CardTemplate;
+        Microsoft.UI.Xaml.DataTemplate NewTileTemplate;
     }
 }

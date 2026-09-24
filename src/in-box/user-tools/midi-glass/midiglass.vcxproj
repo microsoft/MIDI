@@ -158,7 +158,7 @@
     <ClInclude Include="document\LayoutSerializer.h" />
     <ClInclude Include="document\LayoutStore.h" />
     <ClInclude Include="document\PageTemplates.h" />
-    <ClInclude Include="document\StarterLayout.h" />
+    <ClInclude Include="document\LayoutTemplates.h" />
     <ClInclude Include="document\ThemeModel.h" />
     <ClInclude Include="document\ThemeStore.h" />
     <ClInclude Include="thumbnail\ThumbnailLayout.h" />
@@ -192,6 +192,7 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="MainWindowLibrary.cpp" />
+    <ClCompile Include="MainWindowDialogs.cpp" />
     <ClCompile Include="RuntimeWindow.xaml.cpp">
       <DependentUpon>RuntimeWindow.xaml</DependentUpon>
     </ClCompile>
@@ -222,7 +223,7 @@
     <ClCompile Include="document\PageTemplates.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="document\StarterLayout.cpp">
+    <ClCompile Include="document\LayoutTemplates.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="document\ThemeModel.cpp">

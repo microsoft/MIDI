@@ -11,7 +11,7 @@
 #include "PanicMessages.h"
 #include "SurfaceColors.h"
 #include "InputRules.h"
-#include "StarterLayout.h"
+#include "LayoutTemplates.h"
 #include "BindingEngine.h"
 #include "ThemeModel.h"
 
@@ -613,4 +613,90 @@ void RuntimeSurfaceTests::TheStarterLayoutHasAKeyboardOrder()
     }
 
     VERIFY_IS_TRUE(expected > 1);
+}
+
+// ---- every template the New layout picker offers ----
+
+void RuntimeSurfaceTests::EveryTemplateIsValid()
+{
+    midiapp::EndpointMatch match{};
+    match.EndpointDeviceId = L"\\\\?\\swd#midisrv#test";
+
+    for (auto const& info : glass::LayoutTemplates())
+    {
+        auto const document = glass::BuildLayoutFromTemplate(
+            info.Kind, L"Template test", L"Loopback A", match,
+            midiapp::EndpointMatchMode::EndpointDeviceId);
+
+        auto const issues = glass::Validate(document);
+
+        for (auto const& issue : issues)
+        {
+            Log::Error(String().Format(L"template %d: %s: %s",
+                static_cast<int32_t>(info.Kind), issue.ObjectId.c_str(), issue.Detail.c_str()));
+        }
+
+        VERIFY_ARE_EQUAL(size_t{ 0 }, issues.size());
+    }
+}
+
+void RuntimeSurfaceTests::EveryTemplateFitsOnItsPage()
+{
+    midiapp::EndpointMatch match{};
+
+    for (auto const& info : glass::LayoutTemplates())
+    {
+        auto const document = glass::BuildLayoutFromTemplate(
+            info.Kind, L"Template test", L"Loopback A", match,
+            midiapp::EndpointMatchMode::EndpointName);
+
+        // A template with controls hanging off the page is a poor first impression and would not
+        // be drawn on its own card.
+        auto const outside = document.ControlsOutsidePage();
+
+        if (!outside.empty())
+        {
+            Log::Error(String().Format(L"template %d has %u controls off the page",
+                static_cast<int32_t>(info.Kind), static_cast<uint32_t>(outside.size())));
+        }
+
+        VERIFY_ARE_EQUAL(size_t{ 0 }, outside.size());
+    }
+}
+
+void RuntimeSurfaceTests::EveryTemplateDrivesTheOneDevice()
+{
+    midiapp::EndpointMatch match{};
+
+    for (auto const& info : glass::LayoutTemplates())
+    {
+        auto const document = glass::BuildLayoutFromTemplate(
+            info.Kind, L"Template test", L"Loopback A", match,
+            midiapp::EndpointMatchMode::EndpointName);
+
+        VERIFY_ARE_EQUAL(size_t{ 1 }, document.Devices.size());
+
+        // Every template but the blank one sends on group 0 of that one device, so a panic knows
+        // where to be loud.
+        auto const masks = glass::CollectGroupMasks(document);
+
+        VERIFY_ARE_EQUAL(
+            info.Kind == glass::LayoutTemplateKind::Blank ? uint16_t{ 0 } : uint16_t{ 0x0001 },
+            masks[0]);
+    }
+}
+
+void RuntimeSurfaceTests::TheBlankTemplateHasAPageAndADeviceAndNothingElse()
+{
+    midiapp::EndpointMatch match{};
+
+    auto const document = glass::BuildLayoutFromTemplate(
+        glass::LayoutTemplateKind::Blank, L"Empty", L"Loopback A", match,
+        midiapp::EndpointMatchMode::EndpointName);
+
+    // Blank still has to be runnable, so it is a page and a device, not an empty document.
+    VERIFY_ARE_EQUAL(size_t{ 1 }, document.Pages.size());
+    VERIFY_ARE_EQUAL(size_t{ 1 }, document.Devices.size());
+    VERIFY_ARE_EQUAL(size_t{ 0 }, document.ControlCount());
+    VERIFY_ARE_EQUAL(size_t{ 0 }, glass::Validate(document).size());
 }

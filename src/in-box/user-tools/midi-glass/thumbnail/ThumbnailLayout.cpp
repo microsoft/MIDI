@@ -34,6 +34,19 @@ namespace glass
             };
         }
 
+        ThemeColor Lighten(_In_ ThemeColor const& color, _In_ double amount) noexcept
+        {
+            auto const weight = std::clamp(amount, 0.0, 1.0);
+
+            auto const mix = [weight](uint8_t channel)
+                {
+                    return static_cast<uint8_t>(std::clamp(
+                        std::lround(channel + (255 - channel) * weight), 0L, 255L));
+                };
+
+            return { mix(color.R), mix(color.G), mix(color.B), color.A };
+        }
+
         ThemeColor HueForControl(_In_ Control const& control, _In_ Theme const& theme) noexcept
         {
             if (control.HueSlot >= 0 && control.HueSlot < ThemeHueSlotCount)
@@ -62,6 +75,8 @@ namespace glass
         plan.Width = (std::max)(imageWidth, 1);
         plan.Height = (std::max)(imageHeight, 1);
         plan.DeckColor = theme.Deck.Color;
+        plan.DeckTopColor = Lighten(theme.Deck.Color, 0.08);
+        plan.DeckBottomColor = Darken(theme.Deck.Color, 0.22);
         plan.SurroundColor = Darken(theme.Deck.Color, 0.45);
         plan.PlateOpacity = std::clamp(theme.GlassTintPercent / 100.0, 0.0, 1.0);
 

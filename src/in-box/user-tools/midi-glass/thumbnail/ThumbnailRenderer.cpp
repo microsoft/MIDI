@@ -9,9 +9,11 @@
 #include "ThumbnailRenderer.h"
 
 #include <winrt/Microsoft.Graphics.Canvas.h>
+#include <winrt/Microsoft.Graphics.Canvas.Brushes.h>
 
 #include <shlobj_core.h>
 
+#include <array>
 #include <cwctype>
 #include <filesystem>
 
@@ -127,7 +129,25 @@ namespace glass
                 auto session = target.CreateDrawingSession();
 
                 session.Clear(ToColor(plan.SurroundColor));
-                session.FillRectangle(ToRect(plan.PageBounds), ToColor(plan.DeckColor));
+
+                // Lit from just above the top edge, the way the surface itself is, so a card
+                // reads as glass rather than a flat rectangle.
+                std::array<canvas::Brushes::CanvasGradientStop, 3> stops
+                {
+                    canvas::Brushes::CanvasGradientStop{ 0.0f, ToColor(plan.DeckTopColor) },
+                    canvas::Brushes::CanvasGradientStop{ 0.58f, ToColor(plan.DeckColor) },
+                    canvas::Brushes::CanvasGradientStop{ 1.0f, ToColor(plan.DeckBottomColor) },
+                };
+
+                canvas::Brushes::CanvasRadialGradientBrush deck{ device, stops };
+
+                auto const bounds = ToRect(plan.PageBounds);
+
+                deck.Center({ bounds.X + bounds.Width / 2.0f, bounds.Y - bounds.Height * 0.10f });
+                deck.RadiusX(bounds.Width * 0.65f);
+                deck.RadiusY(bounds.Height);
+
+                session.FillRectangle(bounds, deck);
 
                 for (auto const& item : plan.Items)
                 {
