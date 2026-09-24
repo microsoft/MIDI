@@ -474,6 +474,15 @@ bool DoSectionDrivers32RegistryEntries(_In_ bool const verbose)
                         OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_DRIVERS32_ENTRY, valueData.name + L" = " + std::to_wstring(val.value()));
                     }
                 }
+                else if (valueData.name == L"UseLegacyMidi")
+                {
+                    auto val = wil::reg::try_get_value_dword(drivers32Key.get(), valueData.name.c_str());
+
+                    if (val.has_value())
+                    {
+                        OutputStringField(MIDIDIAG_FIELD_LABEL_REGISTRY_DRIVERS32_ENTRY, valueData.name + L" = " + std::to_wstring(val.value()));
+                    }
+                }
             }
 
             if (!wdmaud2drvFound)
