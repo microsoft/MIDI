@@ -738,6 +738,14 @@ bool DoSectionMidi2ApiEndpoints(_In_ bool const verbose)
             auto userInfo = device.GetUserSuppliedInfo();
             auto endpointInfo = device.GetDeclaredEndpointInfo();
 
+
+            if (device.EndpointPurpose() == midi2enum::MidiEndpointDevicePurpose::DiagnosticLoopback ||
+                device.EndpointPurpose() == midi2enum::MidiEndpointDevicePurpose::DiagnosticPing)
+            {
+                // skip diagnostic endpoints
+                continue;
+            }
+
             // These names should not be localized because customers may parse these output fields
 
             OutputEntityIdentifierField(MIDIDIAG_FIELD_LABEL_MIDI2_ENDPOINT_ID, device.EndpointDeviceId());
