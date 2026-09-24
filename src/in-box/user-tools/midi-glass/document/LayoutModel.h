@@ -103,6 +103,32 @@ namespace glass
         Relative = 2,
     };
 
+    // How the numbers on a message row are meant to be read.
+    //
+    // Most of the time a value is a position and a percentage is the right way to hold it, because
+    // it then lands correctly on any device whatever the wire can carry. But device documentation
+    // does not talk in percentages. The APC40 Mk2 manual says a clip LED is a note on where
+    // velocity 5 is red and 21 is green, on channel 0 for a solid color or channel 9 to pulse.
+    // A customer copying that table has to be able to type 5, and to see 5 afterwards.
+    enum class ValueScaling
+    {
+        // 0 to 1 of full scale, folded to whatever the destination field can carry.
+        Fraction = 0,
+
+        // The exact number the documentation gave, written into the field as it stands. Clamped
+        // to the field, never scaled, so it is as true of a 16 bit MIDI 2.0 velocity as of a
+        // 7 bit MIDI 1.0 one.
+        Absolute = 1,
+    };
+
+    // One end of a message's range. Either end can be a percentage or an exact number, and they
+    // do not have to agree.
+    struct MessageValue
+    {
+        double Value{ 0.0 };
+        ValueScaling Scaling{ ValueScaling::Fraction };
+    };
+
     enum class ScaleMode
     {
         ActualSize = 0,
@@ -156,14 +182,29 @@ namespace glass
         // Controller, note or bank number, depending on Kind. Ignored where it has no meaning.
         uint32_t Number{ 0 };
 
-        // Sent when the control turns on, and when it turns off, as a fraction of full scale.
-        // Stored once at full resolution and folded down on the way out to a MIDI 1.0 device, so
-        // the same file is correct on both.
-        double OnValue{ 1.0 };
-        double OffValue{ 0.0 };
+        // The two ends of what this message sends. A control at rest sends the minimum and a
+        // control at full travel sends the maximum; anything between is interpolated.
+        //
+        // This is one idea rather than two, which is why there is no separate on and off pair. A
+        // button only ever sits at one end or the other, so "off is 0 and on is 127" and "off is
+        // 17 and on is 13005" and "0 % to 100 %" are all the same setting. A fader limited to
+        // 0 to 127 falls out of the same arithmetic, quantized because the ends are whole numbers.
+        //
+        // A minimum above a maximum is allowed and inverts the control, which is what somebody
+        // wants for a fader that reads top to bottom.
+        MessageValue Minimum{ 0.0, ValueScaling::Fraction };
+        MessageValue Maximum{ 1.0, ValueScaling::Fraction };
 
         std::vector<uint8_t> SystemExclusive{};
         std::vector<uint32_t> RawWords{};
+
+        // Send this one as MIDI 1.0 protocol rather than MIDI 2.0, so the seven bit value on the
+        // wire is exactly the one the customer typed.
+        //
+        // The default is MIDI 2.0 and the service downscales, which is right for anything that is
+        // a position. It is wrong for anything that is a code: a pad that sets its color from the
+        // velocity of a note on has 127 discrete colors, and "nearly 37" is a different color.
+        bool UseMidi1Protocol{ false };
 
         std::wstring SequenceName{};
         std::wstring TargetPageId{};

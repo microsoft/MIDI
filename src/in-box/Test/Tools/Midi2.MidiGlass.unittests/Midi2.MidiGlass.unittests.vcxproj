@@ -69,7 +69,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(ProjectDir);$(ProjectDir)..\..\..\user-tools\midi-glass\document;$(ProjectDir)..\..\..\user-tools\midi-glass\thumbnail;$(ProjectDir)..\..\..\user-tools\midi-app-shared;$(GeneratedFilesDir);$(WindowsSdkDir)Testing\Development\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(ProjectDir);$(ProjectDir)..\..\..\user-tools\midi-glass\document;$(ProjectDir)..\..\..\user-tools\midi-glass\thumbnail;$(ProjectDir)..\..\..\user-tools\midi-glass\binding;$(ProjectDir)..\..\..\user-tools\midi-app-shared;$(GeneratedFilesDir);$(WindowsSdkDir)Testing\Development\inc</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /utf-8</AdditionalOptions>
     </ClCompile>
     <Link>
@@ -98,6 +98,8 @@
     <ClInclude Include="ThemeTests.h" />
     <ClInclude Include="ThemeFileTests.h" />
     <ClInclude Include="ThumbnailLayoutTests.h" />
+    <ClInclude Include="BindingEngineTests.h" />
+    <ClInclude Include="ValueThrottleTests.h" />
     <ClInclude Include="TestLayoutFiles.h" />
     <!-- shared by source with midiglass, so the document layer is tested exactly as it ships -->
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\JsonText.h" />
@@ -108,6 +110,8 @@
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\ThemeStore.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutStore.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\thumbnail\ThumbnailLayout.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\binding\BindingEngine.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\binding\ValueThrottle.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\EndpointMatch.h" />
   </ItemGroup>
   <ItemGroup>
@@ -117,6 +121,8 @@
     <ClCompile Include="ThemeTests.cpp" />
     <ClCompile Include="ThemeFileTests.cpp" />
     <ClCompile Include="ThumbnailLayoutTests.cpp" />
+    <ClCompile Include="BindingEngineTests.cpp" />
+    <ClCompile Include="ValueThrottleTests.cpp" />
     <ClCompile Include="TestLayoutFiles.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\JsonText.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutModel.cpp" />
@@ -126,6 +132,8 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\ThemeStore.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutStore.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\thumbnail\ThumbnailLayout.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\binding\BindingEngine.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\binding\ValueThrottle.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\EndpointMatch.cpp" />
   </ItemGroup>
   <ItemGroup>

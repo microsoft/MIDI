@@ -70,7 +70,12 @@ namespace glass
         constexpr wchar_t KeyNumber[] = L"number";
         constexpr wchar_t KeyOnValue[] = L"onValue";
         constexpr wchar_t KeyOffValue[] = L"offValue";
+        constexpr wchar_t KeyMinimum[] = L"minimum";
+        constexpr wchar_t KeyMaximum[] = L"maximum";
+        constexpr wchar_t KeyValue[] = L"value";
         constexpr wchar_t KeySystemExclusive[] = L"systemExclusive";
+        constexpr wchar_t KeyMidi1Protocol[] = L"midi1Protocol";
+        constexpr wchar_t KeyScaling[] = L"scaling";
         constexpr wchar_t KeyWords[] = L"words";
         constexpr wchar_t KeySequence[] = L"sequence";
         constexpr wchar_t KeyTargetPage[] = L"targetPage";
@@ -146,6 +151,12 @@ namespace glass
             { PickupMode::Jump, L"jump" },
             { PickupMode::Catch, L"catch" },
             { PickupMode::Relative, L"relative" },
+        };
+
+        constexpr EnumName<ValueScaling> ScalingNames[]
+        {
+            { ValueScaling::Fraction, L"fraction" },
+            { ValueScaling::Absolute, L"absolute" },
         };
 
         constexpr EnumName<ScaleMode> ScaleModeNames[]
@@ -376,6 +387,42 @@ namespace glass
             }
         }
 
+        // One end of a message's range. An absolute end is whatever the device documentation
+        // said, up to the widest field anything here has; a fraction is a fraction.
+        MessageValue ReadMessageValue(
+            _In_ mjson::JsonObject const& object,
+            _In_ std::wstring_view key,
+            _In_ MessageValue const& fallback) noexcept
+        {
+            auto const nested = ReadObject(object, key);
+
+            if (nested == nullptr)
+            {
+                return fallback;
+            }
+
+            MessageValue result{};
+
+            result.Scaling = ValueOf(ScalingNames, ReadString(nested, KeyScaling), ValueScaling::Fraction);
+
+            auto const highest = result.Scaling == ValueScaling::Absolute ? 4294967295.0 : 1.0;
+
+            result.Value = std::clamp(ReadNumber(nested, KeyValue, fallback.Value), 0.0, highest);
+
+            return result;
+        }
+
+        void WriteMessageValue(
+            _Inout_ JsonTextWriter& writer,
+            _In_ std::wstring_view key,
+            _In_ MessageValue const& value) noexcept
+        {
+            writer.BeginObject(key);
+            writer.Write(KeyValue, value.Value);
+            writer.Write(KeyScaling, NameOf(ScalingNames, value.Scaling));
+            writer.EndObject();
+        }
+
         // System exclusive travels as hex rather than an array of numbers. A firmware dump is
         // tens of thousands of bytes, and one number per line would make the file unreadable and
         // enormous for no gain.
@@ -446,9 +493,10 @@ namespace glass
             message.GroupIndex = ReadInt(object, KeyGroup, 0, AllGroups, MaximumGroupCount - 1);
             message.ChannelIndex = ReadInt(object, KeyChannel, 0, 0, 15);
             message.Number = static_cast<uint32_t>(ReadInt(object, KeyNumber, 0, 0, 0x7FFFFFFF));
-            message.OnValue = std::clamp(ReadNumber(object, KeyOnValue, 1.0), 0.0, 1.0);
-            message.OffValue = std::clamp(ReadNumber(object, KeyOffValue, 0.0), 0.0, 1.0);
+            message.Minimum = ReadMessageValue(object, KeyMinimum, { 0.0, ValueScaling::Fraction });
+            message.Maximum = ReadMessageValue(object, KeyMaximum, { 1.0, ValueScaling::Fraction });
             message.SystemExclusive = FromHex(ReadString(object, KeySystemExclusive));
+            message.UseMidi1Protocol = ReadBool(object, KeyMidi1Protocol, false);
             message.SequenceName = ReadString(object, KeySequence);
             message.TargetPageId = ReadString(object, KeyTargetPage);
             message.TargetLayerId = ReadString(object, KeyTargetLayer);
@@ -472,8 +520,9 @@ namespace glass
             }
 
             message.Unknown = CaptureUnknown(object,
-                { KeyTrigger, KeyKind, KeyDevice, KeyGroup, KeyChannel, KeyNumber, KeyOnValue,
-                  KeyOffValue, KeySystemExclusive, KeyWords, KeySequence, KeyTargetPage, KeyTargetLayer });
+                { KeyTrigger, KeyKind, KeyDevice, KeyGroup, KeyChannel, KeyNumber, KeyMinimum,
+                  KeyMaximum, KeySystemExclusive, KeyWords, KeySequence, KeyTargetPage,
+                  KeyTargetLayer, KeyMidi1Protocol });
 
             return message;
         }
@@ -763,8 +812,9 @@ namespace glass
             writer.Write(KeyGroup, static_cast<int64_t>(message.GroupIndex));
             writer.Write(KeyChannel, static_cast<int64_t>(message.ChannelIndex));
             writer.Write(KeyNumber, static_cast<int64_t>(message.Number));
-            writer.Write(KeyOnValue, message.OnValue);
-            writer.Write(KeyOffValue, message.OffValue);
+            WriteMessageValue(writer, KeyMinimum, message.Minimum);
+            WriteMessageValue(writer, KeyMaximum, message.Maximum);
+            writer.Write(KeyMidi1Protocol, message.UseMidi1Protocol);
 
             if (!message.SystemExclusive.empty())
             {
