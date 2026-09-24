@@ -48,8 +48,68 @@ Environment:
 #include "Device.tmh"
 
 #include "Feature_Servicing_MIDI2USBSystemRealTimeUmpSize.h"
+#include "Feature_Servicing_MIDI2USBYamahaVendorClassMidi.h"
 
 UNICODE_STRING g_RegistryPath = {0};      // This is used to store the registry settings path for the driver
+
+//
+// Device quirk table, matched on VID and PID. The flags are defined in Device.h.
+// Each entry needs a matching USB\VID_xxxx&PID_xxxx line in USBMidi2.inf, and vice versa.
+//
+typedef struct
+{
+    USHORT      Vid;
+    USHORT      Pid;
+    ULONG       Quirks;     // USBMIDI_QUIRK_* flags
+} USBMIDI_DEVICE_QUIRK;
+
+static const USBMIDI_DEVICE_QUIRK g_DeviceQuirks[] =
+{
+    // Port layouts produced by these flags match the ones Yamaha's own driver reports.
+    { 0x0499, 0x1001, USBMIDI_QUIRK_VENDOR_CLASS_IS_MIDI1 | USBMIDI_QUIRK_JACKS_HOST_RELATIVE },  // YAMAHA MU1000 (EMBEDDED jacks)
+    { 0x0499, 0x1008, USBMIDI_QUIRK_VENDOR_CLASS_IS_MIDI1 | USBMIDI_QUIRK_JACKS_HOST_RELATIVE },  // YAMAHA UX96 (EXTERNAL jacks)
+};
+
+_Use_decl_annotations_
+PAGED_CODE_SEG
+ULONG
+USBMIDI2DriverGetDeviceQuirks(
+    USHORT      Vid,
+    USHORT      Pid
+)
+/*++
+
+Routine Description:
+
+    Looks up the quirk flags for a device in the device quirk table.
+
+Arguments:
+
+    Vid - idVendor from the device descriptor
+
+    Pid - idProduct from the device descriptor
+
+Return Value:
+
+    USBMIDI_QUIRK_* flags, 0 if the device has no entry
+
+--*/
+{
+    PAGED_CODE();
+
+    for (ULONG index = 0; index < SIZEOF_ARRAY(g_DeviceQuirks); index++)
+    {
+        if (g_DeviceQuirks[index].Vid == Vid && g_DeviceQuirks[index].Pid == Pid)
+        {
+            TraceEvents(TRACE_LEVEL_INFORMATION, TRACE_DEVICE,
+                "Device quirks 0x%x for idVendor 0x%04x idProduct 0x%04x\n",
+                g_DeviceQuirks[index].Quirks, Vid, Pid);
+            return g_DeviceQuirks[index].Quirks;
+        }
+    }
+
+    return 0;
+}
 
 _Use_decl_annotations_
 PAGED_CODE_SEG
@@ -943,10 +1003,28 @@ Return Value:
                 0,  // MIDI 1.0 Interface?
                 &interfaceDescriptor
             );
+            BOOLEAN isVendorClassMidi1 = FALSE;
+            if (Feature_Servicing_MIDI2USBYamahaVendorClassMidi_IsEnabled())
+            {
+                if (interfaceDescriptor.bLength
+                    && interfaceDescriptor.bInterfaceClass == 0xFF /*VENDOR SPECIFIC*/
+                    && (USBMIDI2DriverGetDeviceQuirks(pDeviceContext->DeviceVID, pDeviceContext->DevicePID)
+                        & USBMIDI_QUIRK_VENDOR_CLASS_IS_MIDI1)
+                    )
+                {
+                    isVendorClassMidi1 = TRUE;
+                }
+            }
             if (interfaceDescriptor.bLength && interfaceDescriptor.bInterfaceClass == 1 /*AUDIO*/
                 && interfaceDescriptor.bInterfaceSubClass == 3 /*MIDI STREAMING*/
                 )
             {
+                pDeviceContext->UsbMIDIStreamingAlt = 0;    // MIDI 1.0 Interface
+                pDeviceContext->UsbMIDIInterfaceNumber = interfaceDescriptor.bInterfaceNumber;
+            }
+            else if (isVendorClassMidi1)
+            {
+                // The vendor specific interface is a USB MIDI 1.0 interface
                 pDeviceContext->UsbMIDIStreamingAlt = 0;    // MIDI 1.0 Interface
                 pDeviceContext->UsbMIDIInterfaceNumber = interfaceDescriptor.bInterfaceNumber;
             }
@@ -1601,6 +1679,7 @@ Return Value:
     UINT8                           numGrpTermBlocks = 0;
     USHORT                          numChars = 0;
     WDF_REQUEST_SEND_OPTIONS        reqOptions;
+    BOOLEAN                         countAllJacks = FALSE;
 
     ASSERT(Device);
     pDevCtx = GetDeviceContext(Device);
@@ -1640,6 +1719,15 @@ Return Value:
         TraceEvents(TRACE_LEVEL_ERROR, TRACE_DEVICE, "Could not find interface descriptor for selected device.");
         goto exit;
     }
+
+    // With USBMIDI_QUIRK_JACKS_HOST_RELATIVE every jack is one cable, whatever its type:
+    // an IN jack is a host input and an OUT jack is a host output.
+    if (Feature_Servicing_MIDI2USBYamahaVendorClassMidi_IsEnabled())
+    {
+        countAllJacks = (USBMIDI2DriverGetDeviceQuirks(pDevCtx->DeviceVID, pDevCtx->DevicePID)
+            & USBMIDI_QUIRK_JACKS_HOST_RELATIVE) != 0;
+    }
+
     // Set current search possition
     pCurrent = (PUCHAR)pInterfaceDescriptor + sizeof(USB_INTERFACE_DESCRIPTOR);
 
@@ -1709,7 +1797,7 @@ Return Value:
                 goto exit;
             }
             pInJack = (midi_desc_in_jack_t*)pNextDescriptor;
-            if (pInJack->bJackType == MIDI_JACK_EMBEDDED)
+            if (pInJack->bJackType == MIDI_JACK_EMBEDDED || countAllJacks)
             {
                 // Make sure we have space to add more In GTBs
                 if (numGrpTermBlocks >= 32)
@@ -1740,7 +1828,7 @@ Return Value:
                 goto exit;
             }
             pOutJack = (midi_desc_out_jack_t*)pNextDescriptor;
-            if (pOutJack->bJackType == MIDI_JACK_EMBEDDED)
+            if (pOutJack->bJackType == MIDI_JACK_EMBEDDED || countAllJacks)
             {
                 // Make sure we have space to add more Out GTBs
                 if (numGrpTermBlocks >= 32)
@@ -1766,6 +1854,16 @@ Return Value:
 
         default :
             continue;
+        }
+
+        // USBMIDI_QUIRK_JACKS_HOST_RELATIVE: an IN jack is a host input and an OUT jack
+        // is a host output, whatever the jack type. This is the reverse of the EMBEDDED
+        // mapping above.
+        if (countAllJacks)
+        {
+            grpTermBlockDirection[numGrpTermBlocks] =
+                (grpTermBlockDirection[numGrpTermBlocks] == (UINT8)MIDI_CS_INTERFACE_IN_JACK) ?
+                (UINT8)MIDI_CS_INTERFACE_OUT_JACK : (UINT8)MIDI_CS_INTERFACE_IN_JACK;
         }
 
         // Account for size if adding a GTB
@@ -1809,6 +1907,14 @@ Return Value:
 
         // successfully defined a group terminal block
         numGrpTermBlocks++;
+    }
+
+    // USBMIDI2DriverIoWrite checks a cable number against UsbInMask as well as
+    // UsbOutMask, so add the output cables to UsbInMask. This also lets the read
+    // path accept those cable numbers, although the device does not send on them.
+    if (countAllJacks)
+    {
+        pDevCtx->UsbInMask |= pDevCtx->UsbOutMask;
     }
 
     // Create memory to store GTB Parameters
