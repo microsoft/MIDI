@@ -11,6 +11,8 @@
 #include <cstring>
 #include <iterator>
 
+#include <windows.h>
+
 namespace ci = ::WindowsMidiServicesCapabilityInquiry;
 
 namespace
@@ -31,12 +33,13 @@ namespace
     // What an initiator declared it can receive. 512 is the smallest seen in practice.
     constexpr size_t AssumedInitiatorMaximumSysExSize = 512;
 
+    // M2-103-UM section 14 is explicit that a reply to a ResourceList inquiry does not list
+    // ResourceList itself. The resource is still answered by name; it just does not advertise.
     constexpr ci::ResourceListEntry ResourceEntryList[]
     {
-        { "ResourceList", false, false },
-        { "DeviceInfo", false, false },
-        { "ChannelList", false, true },
-        { "ProgramList", true, false },
+        { "DeviceInfo", false, false, false },
+        { "ChannelList", false, true, false },
+        { "ProgramList", true, false, true },
     };
 
     // Shown to a customer when a client lists the collections a channel can select from. Not
@@ -76,6 +79,21 @@ namespace MidiSynth
         info.ModelId[0] = static_cast<uint8_t>(identity.FamilyMemberCode & 0x7F);
         info.ModelId[1] = static_cast<uint8_t>((identity.FamilyMemberCode >> 7) & 0x7F);
         info.Model = "General MIDI Synth";
+
+        // The same four bytes the identity reply and the discovery reply carry, because M2-105-UM
+        // requires them to match. The string is built from them so the two cannot drift apart.
+        info.VersionId[0] = identity.SoftwareRevision[0];
+        info.VersionId[1] = identity.SoftwareRevision[1];
+        info.VersionId[2] = identity.SoftwareRevision[2];
+        info.VersionId[3] = identity.SoftwareRevision[3];
+
+        char versionText[20]{};
+
+        (void)snprintf(versionText, sizeof(versionText), "%u.%u.%u.%u",
+            identity.SoftwareRevision[0], identity.SoftwareRevision[1],
+            identity.SoftwareRevision[2], identity.SoftwareRevision[3]);
+
+        info.Version = versionText;
 
         m_deviceInfoJson.resize(ci::BuildDeviceInfoJson(info, nullptr, 0));
         (void)ci::BuildDeviceInfoJson(info, m_deviceInfoJson.data(), m_deviceInfoJson.size());
@@ -164,6 +182,55 @@ namespace MidiSynth
     }
 
     _Use_decl_annotations_
+    void PropertyExchangeSource::BeginProgramListReply(
+        const DlsCollection& collection,
+        const UmpDispatcher::PendingPropertyRequest& request,
+        const std::string& resourceId,
+        size_t offset,
+        size_t limit) noexcept
+    {
+        auto const kind = (resourceId == DrumKitProgramListResourceId)
+            ? ProgramListKind::DrumKits
+            : ProgramListKind::Melodic;
+
+        // The whole point of totalCount is that it does not depend on the page, so it is the count
+        // of the list rather than the number of entries about to go out.
+        auto const total = CountPrograms(collection, kind);
+
+        // An initiator that did not paginate gets the list built at startup. Only a real page
+        // costs a serialization, and either buffer outlives the reply that points into it.
+        auto const wholeList = (offset == 0 && limit >= total);
+
+        if (!wholeList)
+        {
+            m_programPageJson = BuildProgramListPageJson(collection, kind, offset, limit);
+        }
+
+        auto const& resource = wholeList ? ProgramListJson(resourceId) : m_programPageJson;
+
+        auto const headerLength = snprintf(
+            m_replyHeader, sizeof(m_replyHeader),
+            "{\"status\":200,\"cacheTime\":3600,\"totalCount\":%zu}", total);
+
+        if (headerLength <= 0 || static_cast<size_t>(headerLength) >= sizeof(m_replyHeader))
+        {
+            m_nextChunk = 0;
+            return;
+        }
+
+        m_replyInitiatorMuid = request.InitiatorMuid;
+        m_replyRequestId = request.RequestId;
+
+        m_chunker = {};
+        m_chunker.Resource = reinterpret_cast<const uint8_t*>(resource.data());
+        m_chunker.ResourceByteCount = resource.size();
+        m_chunker.Header = reinterpret_cast<const uint8_t*>(m_replyHeader);
+        m_chunker.HeaderByteCount = static_cast<uint16_t>(headerLength);
+
+        m_nextChunk = m_chunker.Plan(AssumedInitiatorMaximumSysExSize) ? 1 : 0;
+    }
+
+    _Use_decl_annotations_
     bool PropertyExchangeSource::SendNextChunk(
         IUmpOutput& output,
         uint8_t group,
@@ -244,6 +311,13 @@ namespace MidiSynth
         added = {};
         added.InitiatorMuid = initiatorMuid;
 
+        // M2-103-UM caps a subscribeId at eight characters, so the counter wraps before the text
+        // would need a sixth digit. Truncating instead would let two subscribers share an id.
+        if (m_nextSubscribeId > 99999)
+        {
+            m_nextSubscribeId = 1;
+        }
+
         snprintf(added.SubscribeId, sizeof(added.SubscribeId), "ch%u", m_nextSubscribeId++);
 
         m_subscriptionCount++;
@@ -323,9 +397,7 @@ namespace MidiSynth
     }
 
     _Use_decl_annotations_
-    bool PropertyExchangeSource::BeginNextSubscriptionUpdate(
-        const SynthEngine& engine,
-        const DlsCollection& collection) noexcept
+    bool PropertyExchangeSource::BeginNextSubscriptionNotification() noexcept
     {
         for (size_t i = 0; i < m_subscriptionCount; i++)
         {
@@ -336,15 +408,13 @@ namespace MidiSynth
 
             m_subscriptions[i].NeedsUpdate = false;
 
-            // Rebuilt here rather than when the change was noticed, because the chunker points
-            // into this buffer and a resize while a reply is in flight would move it.
-            const auto& resource = RebuildChannelListJson(engine, collection);
-
+            // The command comes first: M2-103-UM section 7.1 requires it of every subscription
+            // message, and every example in the specification is written that way.
             const auto headerLength = snprintf(
                 m_updateHeader, sizeof(m_updateHeader),
-                "{\"subscribeId\":\"%s\",\"command\":\"full\"}", m_subscriptions[i].SubscribeId);
+                "{\"command\":\"notify\",\"subscribeId\":\"%s\"}", m_subscriptions[i].SubscribeId);
 
-            if (headerLength <= 0)
+            if (headerLength <= 0 || static_cast<size_t>(headerLength) >= sizeof(m_updateHeader))
             {
                 continue;
             }
@@ -359,11 +429,10 @@ namespace MidiSynth
 
             m_chunker = {};
             m_chunker.Type = ci::MessageType::PropertySubscriptionInquiry;
-            m_chunker.Resource = reinterpret_cast<const uint8_t*>(resource.data());
-            m_chunker.ResourceByteCount = resource.size();
             m_chunker.Header = reinterpret_cast<const uint8_t*>(m_updateHeader);
             m_chunker.HeaderByteCount = static_cast<uint16_t>(headerLength);
 
+            // A notify carries no body, so this is one message however large the resource is.
             m_nextChunk = m_chunker.Plan(AssumedInitiatorMaximumSysExSize) ? 1 : 0;
 
             return m_nextChunk != 0;
@@ -425,12 +494,27 @@ namespace MidiSynth
     _Use_decl_annotations_
     std::string PropertyExchangeSource::ToNarrow(const std::wstring& text)
     {
-        std::string result;
-
-        for (const auto character : text)
+        if (text.empty())
         {
-            result += (character > 0 && character < 0x80) ? static_cast<char>(character) : '?';
+            return {};
         }
+
+        // UTF-8, because the JSON writer escapes anything outside seven bit ASCII into the "\u"
+        // form the specification asks for. Substituting a question mark here would throw the
+        // character away before it ever got the chance.
+        const auto required = WideCharToMultiByte(
+            CP_UTF8, 0, text.c_str(), static_cast<int>(text.size()), nullptr, 0, nullptr, nullptr);
+
+        if (required <= 0)
+        {
+            return {};
+        }
+
+        std::string result(static_cast<size_t>(required), '\0');
+
+        (void)WideCharToMultiByte(
+            CP_UTF8, 0, text.c_str(), static_cast<int>(text.size()),
+            result.data(), required, nullptr, nullptr);
 
         return result;
     }

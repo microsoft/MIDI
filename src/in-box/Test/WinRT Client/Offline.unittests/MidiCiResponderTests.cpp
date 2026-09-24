@@ -54,6 +54,21 @@ namespace
 
         return message;
     }
+
+    // A NAK names the message it is refusing and why, which is what lets an initiator stop waiting
+    // instead of running out its timeout. Offsets are from the message format table: sub id 2 at
+    // byte 3, then the original message type and the status code after the two identifiers.
+    bool IsNakFor(
+        _In_reads_(byteCount) uint8_t const* const reply,
+        _In_ size_t const byteCount,
+        _In_ MessageType const refused)
+    {
+        return byteCount == AcknowledgmentFixedByteCount &&
+            reply[3] == static_cast<uint8_t>(MessageType::Nak) &&
+            reply[13] == static_cast<uint8_t>(refused) &&
+            reply[14] == NakStatusMessageNotSupported &&
+            reply[15] == 0x00;
+    }
 }
 
 
@@ -260,19 +275,26 @@ void MidiCiResponderTests::TestGetPropertyDataIsHandedToTheCaller()
 
     VERIFY_ARE_EQUAL(replyBytes, (size_t)0);
 
-    // A device that never declared Property Exchange must not accept a property request.
+    // A device that never declared Property Exchange must not accept a property request, but it
+    // still owes the initiator an answer.
     auto notSupporting = MakeResponder();
 
     VERIFY_ARE_EQUAL(
         (int)notSupporting.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
-        (int)ResponderAction::Ignored);
+        (int)ResponderAction::Replied);
+
+    VERIFY_IS_TRUE(IsNakFor(reply, replyBytes, MessageType::PropertyGetDataInquiry),
+        L"a device without property exchange refuses the request out loud");
 
     // Framing that never parsed cannot be trusted to describe a request.
     message.HasPropertyExchangeFields = false;
 
     VERIFY_ARE_EQUAL(
         (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
-        (int)ResponderAction::Ignored);
+        (int)ResponderAction::Replied);
+
+    VERIFY_IS_TRUE(IsNakFor(reply, replyBytes, MessageType::PropertyGetDataInquiry),
+        L"a malformed request is refused rather than dropped");
 }
 
 void MidiCiResponderTests::TestSubscriptionIsHandedToTheCaller()
@@ -309,13 +331,17 @@ void MidiCiResponderTests::TestSubscriptionIsHandedToTheCaller()
 
     VERIFY_ARE_EQUAL(
         (int)notSupporting.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
-        (int)ResponderAction::Ignored);
+        (int)ResponderAction::Replied);
+
+    VERIFY_IS_TRUE(IsNakFor(reply, replyBytes, MessageType::PropertySubscriptionInquiry));
 
     message.HasPropertyExchangeFields = false;
 
     VERIFY_ARE_EQUAL(
         (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
-        (int)ResponderAction::Ignored);
+        (int)ResponderAction::Replied);
+
+    VERIFY_IS_TRUE(IsNakFor(reply, replyBytes, MessageType::PropertySubscriptionInquiry));
 }
 
 void MidiCiResponderTests::TestPropertyExchangeCapabilitiesReply()
@@ -381,10 +407,100 @@ void MidiCiResponderTests::TestPropertyExchangeCapabilitiesReply()
 
     message.VersionFormat = 0;
 
-    // A device that never declared Property Exchange has no capabilities to report.
+    // A device that never declared Property Exchange has no capabilities to report, and says so.
     auto plain = MakeResponder();
 
     VERIFY_ARE_EQUAL(
         (int)plain.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Replied);
+
+    VERIFY_IS_TRUE(IsNakFor(reply, replyBytes, MessageType::PropertyExchangeCapabilitiesInquiry));
+}
+
+
+// Two devices can pick the same identifier. M2-101-UM section 5.9.1 makes resolving that the
+// responder's job, and the way out taken here withdraws the duplicate for everyone holding it.
+void MidiCiResponderTests::TestMuidCollisionIsResolved()
+{
+    auto responder = MakeResponder();
+
+    uint8_t reply[64]{};
+    size_t replyBytes{ 0 };
+
+    auto message = MakeDiscovery(MuidBroadcast, 0);
+    message.SourceMuid = OurMuid;
+
+    VERIFY_ARE_EQUAL(
+        (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::MuidCollision);
+
+    VERIFY_ARE_EQUAL(replyBytes, InvalidateMuidByteCount);
+
+    ParsedMessage parsed{};
+
+    VERIFY_ARE_EQUAL((int)Parse(reply, replyBytes, parsed), (int)ParseStatus::Ok);
+    VERIFY_ARE_EQUAL((int)parsed.Type, (int)MessageType::InvalidateMuid);
+    VERIFY_ARE_EQUAL(parsed.TargetMuid, OurMuid, L"the duplicated identifier is the one withdrawn");
+    VERIFY_ARE_EQUAL(parsed.DestinationMuid, MuidBroadcast, L"every device holding it has to hear");
+
+    // Ours is gone too, so the host has to make a new one before anything is answered again.
+    VERIFY_IS_TRUE(responder.MuidNeedsReplacement());
+    VERIFY_ARE_EQUAL(responder.Muid(), (uint32_t)0);
+
+    responder.SetMuid(0x0000ABC);
+
+    // A discovery from a device that is not us is answered normally again.
+    VERIFY_ARE_EQUAL(
+        (int)responder.ProcessMessage(MakeDiscovery(MuidBroadcast, 0), reply, sizeof(reply), &replyBytes),
+        (int)ResponderAction::Replied);
+}
+
+
+// Being able to refuse a message is one of the three things asked of every MIDI-CI device.
+void MidiCiResponderTests::TestUnsupportedInquiryIsRefused()
+{
+    auto responder = MakeResponder();
+
+    uint8_t reply[64]{};
+    size_t replyBytes{ 0 };
+
+    ParsedMessage message{};
+
+    message.DeviceId = DeviceIdFunctionBlock;
+    message.VersionFormat = 0x02;
+    message.SourceMuid = TheirMuid;
+    message.DestinationMuid = OurMuid;
+
+    // This synthesizer declares no profiles and no process inquiry, so both are refused.
+    for (const auto type : { MessageType::ProfileInquiry, MessageType::ProcessInquiryCapabilities })
+    {
+        message.Type = type;
+
+        VERIFY_ARE_EQUAL(
+            (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+            (int)ResponderAction::Replied);
+
+        VERIFY_IS_TRUE(IsNakFor(reply, replyBytes, type));
+    }
+
+    // A reply is not an inquiry. Refusing one nobody is waiting on can start a loop, so these stay
+    // silent.
+    for (const auto type : { MessageType::DiscoveryReply, MessageType::Nak, MessageType::Ack })
+    {
+        message.Type = type;
+
+        VERIFY_ARE_EQUAL(
+            (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
+            (int)ResponderAction::Ignored);
+
+        VERIFY_ARE_EQUAL(replyBytes, (size_t)0);
+    }
+
+    // And a message meant for somebody else is still none of our business.
+    message.Type = MessageType::ProfileInquiry;
+    message.DestinationMuid = 0x0000099;
+
+    VERIFY_ARE_EQUAL(
+        (int)responder.ProcessMessage(message, reply, sizeof(reply), &replyBytes),
         (int)ResponderAction::Ignored);
 }

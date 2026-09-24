@@ -29,4 +29,18 @@ namespace MidiSynth
     std::vector<char> BuildProgramListJson(
         _In_ const DlsCollection& collection,
         _In_ ProgramListKind kind);
+
+    // One page of the same list. M2-103-UM section 8.6.2: an offset past the end is not an error,
+    // it is an empty array, which is how an initiator paging forward knows to stop.
+    std::vector<char> BuildProgramListPageJson(
+        _In_ const DlsCollection& collection,
+        _In_ ProgramListKind kind,
+        _In_ size_t offset,
+        _In_ size_t limit);
+
+    // How many programs of one kind there are, for the "totalCount" a paginated resource must
+    // report in every reply regardless of the page asked for.
+    size_t CountPrograms(
+        _In_ const DlsCollection& collection,
+        _In_ ProgramListKind kind) noexcept;
 }

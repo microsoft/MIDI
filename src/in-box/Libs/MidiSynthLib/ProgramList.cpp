@@ -72,7 +72,35 @@ namespace MidiSynth
     }
 
     _Use_decl_annotations_
+    size_t CountPrograms(const DlsCollection& collection, ProgramListKind kind) noexcept
+    {
+        const bool wantDrumKits = (kind == ProgramListKind::DrumKits);
+
+        size_t count = 0;
+
+        for (const auto& instrument : collection.Instruments())
+        {
+            if (instrument.IsDrumKit == wantDrumKits)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    _Use_decl_annotations_
     std::vector<char> BuildProgramListJson(const DlsCollection& collection, ProgramListKind kind)
+    {
+        return BuildProgramListPageJson(collection, kind, 0, SIZE_MAX);
+    }
+
+    _Use_decl_annotations_
+    std::vector<char> BuildProgramListPageJson(
+        const DlsCollection& collection,
+        ProgramListKind kind,
+        size_t offset,
+        size_t limit)
     {
         namespace ci = WindowsMidiServicesCapabilityInquiry;
 
@@ -84,6 +112,8 @@ namespace MidiSynth
         titles.reserve(collection.Instruments().size());
         entries.reserve(collection.Instruments().size());
 
+        size_t position = 0;
+
         for (const auto& instrument : collection.Instruments())
         {
             if (instrument.IsDrumKit != wantDrumKits)
@@ -91,16 +121,37 @@ namespace MidiSynth
                 continue;
             }
 
+            if (position++ < offset)
+            {
+                continue;
+            }
+
+            if (titles.size() >= limit)
+            {
+                break;
+            }
+
             titles.push_back(ToUtf8(instrument.Name));
         }
 
         size_t titleIndex = 0;
+        position = 0;
 
         for (const auto& instrument : collection.Instruments())
         {
             if (instrument.IsDrumKit != wantDrumKits)
             {
                 continue;
+            }
+
+            if (position++ < offset)
+            {
+                continue;
+            }
+
+            if (titleIndex >= titles.size())
+            {
+                break;
             }
 
             ci::ProgramListEntry entry{};

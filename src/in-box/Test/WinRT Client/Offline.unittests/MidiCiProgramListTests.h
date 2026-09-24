@@ -27,6 +27,7 @@ public:
     TEST_METHOD(TestBankProgramAreZeroBased);
     TEST_METHOD(TestTitleIsEscaped);
     TEST_METHOD(TestOutputIsAlwaysSevenBit);
+    TEST_METHOD(TestLongerUtf8SequencesAreEscaped);
     TEST_METHOD(TestMeasureThenBuild);
     TEST_METHOD(TestShortBufferProducesNothing);
     TEST_METHOD(TestDeviceInfoBytes);

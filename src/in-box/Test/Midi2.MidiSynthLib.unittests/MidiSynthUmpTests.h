@@ -27,6 +27,8 @@ public:
     TEST_METHOD(TestPropertyRequestParking);
     TEST_METHOD(TestPropertyExchangeProgramListLinks);
     TEST_METHOD(TestPropertyExchangeProgramListCategories);
+    TEST_METHOD(TestPropertyExchangeProgramListPagination);
+    TEST_METHOD(TestChannelListSubscriptionNotification);
     TEST_METHOD(TestChannelStateIsValidBeforeInitialize);
     TEST_METHOD(TestInitializeKeepsChannelState);
     TEST_METHOD(TestIdentityReply);

@@ -123,6 +123,36 @@ namespace WindowsMidiServicesCapabilityInquiry
         return type == MessageType::Ack || type == MessageType::Nak;
     }
 
+    // NAK status codes from M2-101-UM section 5.11. 0x01 is the one a responder owes for anything
+    // it does not implement.
+    inline constexpr uint8_t NakStatusMessageNotSupported{ 0x01 };
+
+    // The messages an initiator sends expecting an answer. A responder that does not implement one
+    // of these still owes a NAK, because silence costs the initiator a three second timeout per
+    // message. Replies, reports, ACK, NAK and Invalidate MUID are not in the list: nothing is
+    // waiting on an answer to those, and answering them can start a loop.
+    inline bool MessageTypeExpectsAResponderAnswer(_In_ MessageType const type) noexcept
+    {
+        switch (type)
+        {
+        case MessageType::ProfileInquiry:
+        case MessageType::SetProfileOn:
+        case MessageType::SetProfileOff:
+        case MessageType::ProfileDetailsInquiry:
+        case MessageType::PropertyExchangeCapabilitiesInquiry:
+        case MessageType::PropertyGetDataInquiry:
+        case MessageType::PropertySetDataInquiry:
+        case MessageType::PropertySubscriptionInquiry:
+        case MessageType::ProcessInquiryCapabilities:
+        case MessageType::MidiMessageReport:
+        case MessageType::EndpointInquiry:
+            return true;
+
+        default:
+            return false;
+        }
+    }
+
     inline bool MuidIsUsable(_In_ uint32_t const muid) noexcept
     {
         return muid < MuidReservedStart;

@@ -1187,10 +1187,72 @@ void MidiSynthUmpTests::TestPropertyExchangeProgramListLinks()
         L"the channel it left goes back to the melodic programs");
 
     // The resource list has to declare that a resource id is required, or a client is entitled to
-    // ask for the program list without one.
+    // ask for the program list without one. Declaring pagination is what obliges every reply for
+    // the resource to carry a total count, so the two travel together.
     VERIFY_IS_TRUE(
-        contains(source.ResourceListJson(), "{\"resource\":\"ProgramList\",\"requireResId\":true}"),
-        L"ProgramList declares requireResId");
+        contains(source.ResourceListJson(),
+            "{\"resource\":\"ProgramList\",\"requireResId\":true,\"canPaginate\":true}"),
+        L"ProgramList declares requireResId and canPaginate");
+
+    // M2-103-UM section 14 is explicit that the reply to a ResourceList inquiry does not list
+    // ResourceList itself, and none of the examples in the specification do.
+    VERIFY_IS_FALSE(
+        contains(source.ResourceListJson(), "\"ResourceList\""),
+        L"the resource list does not list itself");
+}
+
+
+// A subscriber is told that the channel list moved with a "notify", not by having the list
+// pushed at it. M2-103-UM section 11.1.1 limits "full" to data that fits in a single chunk, and
+// section 7.1 requires the command to be the first Property of a subscription message.
+void MidiSynthUmpTests::TestChannelListSubscriptionNotification()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    SynthEngine engine;
+    UmpDispatcher dispatcher;
+    FreshEngine(*collection, engine, dispatcher, 0);
+
+    PropertyExchangeSource source;
+    source.Build(*collection, SynthIdentity{});
+
+    const std::string subscribeId = source.AddChannelListSubscription(0x0000001);
+
+    VERIFY_IS_FALSE(subscribeId.empty(), L"a subscription is accepted");
+    VERIFY_IS_LESS_THAN_OR_EQUAL(subscribeId.size(), (size_t)8, L"the identifier fits the eight character limit");
+
+    // The first pass only establishes a baseline, so nothing is owed to anybody yet.
+    VERIFY_IS_FALSE(source.ChannelListChanged(engine));
+    VERIFY_IS_FALSE(source.BeginNextSubscriptionNotification(), L"an unchanged list notifies nobody");
+
+    engine.ProgramChange(0, 19);
+
+    VERIFY_IS_TRUE(source.ChannelListChanged(engine), L"a program change moves the channel list");
+    VERIFY_IS_TRUE(source.BeginNextSubscriptionNotification(), L"the subscriber is owed a message");
+
+    CaptureOutput output;
+
+    // One message, so this reports that no more follow.
+    VERIFY_IS_FALSE(source.SendNextChunk(output, 0, 0x0000002), L"a notify is a single message");
+
+    const auto payload = DecodeSysEx7(output.Words);
+    const std::string text(payload.begin(), payload.end());
+
+    const std::string expected = "{\"command\":\"notify\",\"subscribeId\":\"" + subscribeId + "\"}";
+
+    // Sub-id 2 at byte 3 identifies the message. 0x38 is Subscription, and the header starts
+    // after the two muids, the request id and the two byte header length.
+    VERIFY_IS_GREATER_THAN(payload.size(), (size_t)16);
+    VERIFY_ARE_EQUAL((int)payload[3], 0x38, L"this is a subscription message");
+    VERIFY_ARE_EQUAL(text.substr(16, expected.size()), expected, L"the command comes first");
+
+    // Header, then two bytes each of chunk count, chunk number and data length, and nothing else.
+    VERIFY_ARE_EQUAL(payload.size(), 16 + expected.size() + 6, L"a notify carries no body");
 }
 
 
@@ -1291,6 +1353,90 @@ void MidiSynthUmpTests::TestPropertyExchangeProgramListCategories()
 
     VERIFY_IS_GREATER_THAN(kits, (size_t)0, L"the drum kit list is not empty");
     VERIFY_ARE_EQUAL(categorized, kits, L"every drum kit is categorized");
+}
+
+
+// The ResourceList declares the program list paginated, and M2-103-UM section 8.6.2 then obliges
+// every reply for it to carry "totalCount" and to honor the offset and limit that were asked for.
+void MidiSynthUmpTests::TestPropertyExchangeProgramListPagination()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    const auto countEntries = [](const std::vector<char>& json)
+    {
+        const std::string text(json.data(), json.size());
+
+        size_t entries = 0;
+
+        for (auto at = text.find("\"bankPC\":["); at != std::string::npos; at = text.find("\"bankPC\":[", at + 1))
+        {
+            entries++;
+        }
+
+        return entries;
+    };
+
+    const auto total = CountPrograms(*collection, ProgramListKind::Melodic);
+
+    VERIFY_IS_GREATER_THAN(total, (size_t)127, L"the melodic list covers at least all of General MIDI");
+    VERIFY_ARE_EQUAL(countEntries(BuildProgramListJson(*collection, ProgramListKind::Melodic)), total,
+        L"the count reported matches the list that gets built");
+
+    const auto first = BuildProgramListPageJson(*collection, ProgramListKind::Melodic, 0, 5);
+    const auto second = BuildProgramListPageJson(*collection, ProgramListKind::Melodic, 5, 5);
+
+    VERIFY_ARE_EQUAL(countEntries(first), (size_t)5, L"a limit of five returns five entries");
+    VERIFY_ARE_EQUAL(countEntries(second), (size_t)5);
+    VERIFY_ARE_NOT_EQUAL(
+        std::string(first.data(), first.size()),
+        std::string(second.data(), second.size()),
+        L"the second page is not the first page again");
+
+    // Asking for more than is left is not an error, and neither is starting past the end: an
+    // initiator paging forward finds out it is done by getting fewer entries, then none.
+    VERIFY_ARE_EQUAL(countEntries(BuildProgramListPageJson(*collection, ProgramListKind::Melodic, total - 2, 10)),
+        (size_t)2, L"a page running off the end stops at the end");
+
+    const auto past = BuildProgramListPageJson(*collection, ProgramListKind::Melodic, total + 10, 5);
+
+    VERIFY_ARE_EQUAL(countEntries(past), (size_t)0);
+    VERIFY_ARE_EQUAL(std::string(past.data(), past.size()), std::string("[]"),
+        L"an offset past the end is an empty list, not an empty reply");
+
+    // And the reply that goes on the wire carries the total, whichever page was asked for.
+    PropertyExchangeSource source;
+    source.Build(*collection, SynthIdentity{});
+
+    char expected[64]{};
+    (void)snprintf(expected, sizeof(expected), "\"totalCount\":%zu", total);
+
+    for (const size_t limit : { (size_t)3, SIZE_MAX })
+    {
+        UmpDispatcher::PendingPropertyRequest request{};
+        request.InitiatorMuid = 0x0000001;
+        request.RequestId = 0x11;
+
+        source.BeginProgramListReply(*collection, request, MelodicProgramListResourceId, 0, limit);
+
+        CaptureOutput output;
+
+        // The return value says whether more chunks follow, so it is false for a page small
+        // enough to fit in one. What matters here is that a first chunk went out.
+        (void)source.SendNextChunk(output, 0, 0x0000002);
+
+        VERIFY_IS_GREATER_THAN(output.Words.size(), (size_t)0, L"the reply has a first chunk");
+
+        const auto payload = DecodeSysEx7(output.Words);
+        const std::string text(payload.begin(), payload.end());
+
+        VERIFY_ARE_NOT_EQUAL(text.find(expected), std::string::npos,
+            L"the reply header reports the whole list, not the page");
+    }
 }
 
 

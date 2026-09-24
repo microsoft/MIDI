@@ -91,9 +91,79 @@ namespace WindowsMidiServicesCapabilityInquiry
             return true;
         }
 
+        inline bool AppendUnicodeEscape(
+            _Out_writes_opt_(capacity) char* const buffer,
+            _In_ size_t const capacity,
+            _Inout_ size_t& length,
+            _In_ uint16_t const value
+        ) noexcept
+        {
+            static constexpr char digits[] = "0123456789ABCDEF";
+
+            if (!AppendText(buffer, capacity, length, "\\u"))
+            {
+                return false;
+            }
+
+            for (int shift = 12; shift >= 0; shift -= 4)
+            {
+                if (!AppendCharacter(buffer, capacity, length, digits[(value >> shift) & 0x0F]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // One UTF-8 sequence from a NUL terminated string. Refuses anything malformed, including an
+        // overlong form, a surrogate half and a value past the last code point, none of which can
+        // be written as a JSON escape. A continuation byte test also fails on the NUL, so a
+        // truncated sequence at the end of the string is refused rather than read past.
+        inline bool DecodeUtf8(
+            _In_z_ uint8_t const* const text,
+            _Out_ uint32_t& codePoint,
+            _Out_ size_t& consumed
+        ) noexcept
+        {
+            codePoint = 0;
+            consumed = 0;
+
+            const auto lead = text[0];
+
+            size_t following = 0;
+            uint32_t value = 0;
+
+            if (lead >= 0xC2 && lead <= 0xDF) { following = 1; value = lead & 0x1Fu; }
+            else if (lead >= 0xE0 && lead <= 0xEF) { following = 2; value = lead & 0x0Fu; }
+            else if (lead >= 0xF0 && lead <= 0xF4) { following = 3; value = lead & 0x07u; }
+            else { return false; }
+
+            for (size_t i = 1; i <= following; i++)
+            {
+                if ((text[i] & 0xC0) != 0x80)
+                {
+                    return false;
+                }
+
+                value = (value << 6) | (text[i] & 0x3Fu);
+            }
+
+            if (following == 2 && value < 0x800) { return false; }
+            if (following == 3 && value < 0x10000) { return false; }
+            if (value >= 0xD800 && value <= 0xDFFF) { return false; }
+            if (value > 0x10FFFF) { return false; }
+
+            codePoint = value;
+            consumed = following + 1;
+
+            return true;
+        }
+
         // A name comes out of a sound set file, so it may contain anything. An unescaped quote
         // produces malformed JSON, and a byte with the high bit set cannot travel inside a system
-        // exclusive message at all.
+        // exclusive message at all. M2-103-UM section 7.6 settles what to do instead: everything
+        // outside seven bit ASCII is converted to UTF-16 and escaped with "\u".
         inline bool AppendJsonString(
             _Out_writes_opt_(capacity) char* const buffer,
             _In_ size_t const capacity,
@@ -108,30 +178,69 @@ namespace WindowsMidiServicesCapabilityInquiry
 
             if (text != nullptr)
             {
-                for (; *text != '\0'; text++)
+                auto const* cursor = reinterpret_cast<uint8_t const*>(text);
+
+                while (*cursor != '\0')
                 {
-                    const auto value = static_cast<uint8_t>(*text);
+                    const auto value = *cursor;
 
                     if (value == '"' || value == '\\')
                     {
                         if (!AppendCharacter(buffer, capacity, length, '\\')) { return false; }
                         if (!AppendCharacter(buffer, capacity, length, static_cast<char>(value))) { return false; }
+
+                        cursor++;
                         continue;
                     }
 
-                    if (value < 0x20 || value > 0x7E)
+                    if (value >= 0x20 && value <= 0x7E)
                     {
-                        // Control characters and anything outside seven bit ASCII become an escape,
-                        // which keeps the payload legal both as JSON and as system exclusive data.
-                        static constexpr char digits[] = "0123456789ABCDEF";
+                        if (!AppendCharacter(buffer, capacity, length, static_cast<char>(value))) { return false; }
 
-                        if (!AppendText(buffer, capacity, length, "\\u00")) { return false; }
-                        if (!AppendCharacter(buffer, capacity, length, digits[(value >> 4) & 0x0F])) { return false; }
-                        if (!AppendCharacter(buffer, capacity, length, digits[value & 0x0F])) { return false; }
+                        cursor++;
                         continue;
                     }
 
-                    if (!AppendCharacter(buffer, capacity, length, static_cast<char>(value)))
+                    if (value < 0x80)
+                    {
+                        // A control character, or delete. It is already one character, so it is
+                        // escaped as itself rather than run through the UTF-8 decoder.
+                        if (!AppendUnicodeEscape(buffer, capacity, length, value)) { return false; }
+
+                        cursor++;
+                        continue;
+                    }
+
+                    // Everything else is escaped. The text is UTF-8, so a multi byte sequence has
+                    // to be decoded first: escaping its bytes one at a time would arrive as
+                    // mojibake rather than the character the sound set actually named.
+                    uint32_t codePoint = 0;
+                    size_t consumed = 0;
+
+                    if (!DecodeUtf8(cursor, codePoint, consumed))
+                    {
+                        // One replacement character and one byte forward, so a bad byte cannot
+                        // throw the rest of the name out of step.
+                        codePoint = 0xFFFD;
+                        consumed = 1;
+                    }
+
+                    cursor += consumed;
+
+                    if (codePoint > 0xFFFF)
+                    {
+                        const auto remainder = codePoint - 0x10000;
+
+                        if (!AppendUnicodeEscape(buffer, capacity, length,
+                            static_cast<uint16_t>(0xD800 + (remainder >> 10)))) { return false; }
+
+                        if (!AppendUnicodeEscape(buffer, capacity, length,
+                            static_cast<uint16_t>(0xDC00 + (remainder & 0x3FF)))) { return false; }
+
+                        continue;
+                    }
+
+                    if (!AppendUnicodeEscape(buffer, capacity, length, static_cast<uint16_t>(codePoint)))
                     {
                         return false;
                     }
@@ -257,6 +366,11 @@ namespace WindowsMidiServicesCapabilityInquiry
 
         uint8_t ModelId[2]{};
         char const* Model{ nullptr };
+
+        // M2-105-UM makes both of these required, and says versionId shall match the software
+        // revision in the MIDI-CI Discovery message.
+        uint8_t VersionId[4]{};
+        char const* Version{ nullptr };
     };
 
     inline size_t BuildDeviceInfoJson(
@@ -306,6 +420,10 @@ namespace WindowsMidiServicesCapabilityInquiry
         appendByteArray("modelId", fields.ModelId, 2);
         appendString("model", fields.Model);
 
+        ok = ok && Details::AppendCharacter(buffer, limit, length, ',');
+        appendByteArray("versionId", fields.VersionId, 4);
+        appendString("version", fields.Version);
+
         ok = ok && Details::AppendCharacter(buffer, limit, length, '}');
 
         return ok ? length : 0;
@@ -321,6 +439,10 @@ namespace WindowsMidiServicesCapabilityInquiry
         bool RequireResourceId{ false };
 
         bool CanSubscribe{ false };
+
+        // Declaring this obliges every reply for the resource to carry "totalCount", per
+        // M2-103-UM section 8.6.2.
+        bool CanPaginate{ false };
     };
 
     inline size_t BuildResourceListJson(
@@ -359,6 +481,11 @@ namespace WindowsMidiServicesCapabilityInquiry
             if (entries[i].CanSubscribe)
             {
                 ok = ok && Details::AppendText(buffer, limit, length, ",\"canSubscribe\":true");
+            }
+
+            if (entries[i].CanPaginate)
+            {
+                ok = ok && Details::AppendText(buffer, limit, length, ",\"canPaginate\":true");
             }
 
             ok = ok && Details::AppendCharacter(buffer, limit, length, '}');
