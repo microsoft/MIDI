@@ -1,8 +1,49 @@
 # MIDI Glass — implementation plan
 
-Companion to `MIDI-Glass-design.md` and the twelve mockup screens. This is the *how*, sequenced. No code yet.
+Companion to `MIDI-Glass-design.md` and the twelve mockup screens. This is the *how*, sequenced.
 
-Working name still. Everything below assumes the visual language, the control set and the theme model in the design document, which the three extra themes have now exercised.
+---
+
+## Where this stands — read this first
+
+**As of 23 September 2026. Phases 0, 1, 2 and 3 are done. Phase 4 is part done.**
+
+| Phase | State | Where the code is |
+|---|---|---|
+| 0 Spikes | **Done** | `src/prototypes/midi-glass/spikes/`, findings in `MIDI-Glass-phase-0-findings.md` |
+| 1 SDK work | **Done** | `src/in-box/Inc/midi_sequence_*`, `src/in-box/Client/WinRT/core/MidiSequence*` |
+| 2 Shell | **Done** | `src/in-box/user-tools/midi-glass/` |
+| 3 Document, themes, thumbnails | **Done** | `midi-glass/document/`, `midi-glass/thumbnail/` |
+| 4 Runtime surface | **Binding layer done; the rest open** | `midi-glass/binding/` |
+| 5–9 | Not started | — |
+
+**Tests: 98, all passing, none needing a window or a device.** `src/in-box/Test/Tools/Midi2.MidiGlass.unittests`.
+
+```
+build  msbuild <proj> /t:Build /p:Configuration=Release /p:Platform=x64 "/p:SolutionDir=<repo>\src\in-box\\" /v:minimal /nologo /nodeReuse:false
+run    "C:\Program Files (x86)\Windows Kits\10\Testing\Runtimes\TAEF\x64\TE.exe" <out>\tests\x64\Release\Midi2.MidiGlass.unittests.dll /logOutput:Low
+spell  pwsh build\check_en_us_spelling.ps1 -Path src\in-box\user-tools\midi-glass
+card   midiglass --thumbnail <layout.midilayout.json> <out.png> [width]
+```
+
+### What is left in phase 4, in the order it should be done
+
+1. **`DeviceCatalog`** — wrap `midiapp::EndpointCatalog`, resolve each layout device entry to a live endpoint through its match criteria, and report present/absent so `BindingEngine::Prepare` can be handed a fresh destination table. The matching already exists and is shared; this is the layer that feeds it.
+2. **`OutputRouter`** — one connection per endpoint **per process**, opened when a layout loads, shared by every control and every page, closed when the last layout using it closes. Group and channel travel inside the message, so hundreds of controls over four groups of one device still cost one connection. This is the piece that turns a `PreparedSend` into something actually sent.
+3. **The runtime window** — a window per running layout, in the one process. The three scale modes, actual size as the default, the last mode saved per layout.
+4. **`SurfaceRenderer`** — the hybrid from phase 0: a light XAML element per control for identity and hit testing, custom-drawn content. Re-read the phase 0 findings before starting; the numbers there are the budget.
+5. **`InputRouter`** — pointer, pen and touch to control to `BindingEngine`, sending **from the pointer handler**, one finger per control, several fingers at once. Snap to detents here, using `DetentCount` and `DetentPosition`.
+6. **Panic** — in the chrome, never on the surface. All notes off, all sound off, sustain off, pitch bend center, on every group and channel the process is driving.
+7. **Device loss and return**, startup values, feedback in. The engine already handles all three; this is wiring them to something real.
+8. **The end-to-end capture** — a hand-authored eight-fader layout, run, and the wire proved by capture. Write the layout file before launching, so the probe never has to drive an editor that does not exist yet.
+
+### Things that will bite, learned the hard way today
+
+- **`GetObject` and `SendMessage` are windows.h macros.** They break `IJsonValue::GetObject()` and any enum value named `SendMessage`. `#undef` right after the include, or do not use the name. The document layer's `.cpp` files already do this where needed.
+- **The service does the downscaling, both protocol and byte format.** Never fold to MIDI 1.0 in this app. See phase 4 below for the whole story.
+- **A UMP monitor cannot see the MIDI 1.0 translation** — both ends are UMP. Use `midi1monitor.exe <portIndex>`, and **do not run it in a background terminal**; it is full-screen interactive and will lock the terminal.
+- **Two agents cannot build the SDK at once.** Check `Get-Process MSBuild,cl,midlrt,midl,link` first and wait rather than killing.
+- The document and binding layers are **free of `pch.h`, XAML and the MIDI SDK** on purpose, so the unit tests compile them unchanged. Both the app and the test project mark them `PrecompiledHeader NotUsing`. Keep it that way.
 
 ---
 
@@ -249,11 +290,15 @@ C1 through C4, the docs, the tests, the before-and-after prepare-time measuremen
 
 **Exit:** all four landed, 65+ TAEF tests green, MIDI Player builds and plays with measured prepare time no worse than before, docs published, `MidiSequenceTrackRouting` no longer documents something that does not work. Patchbay builds, routes and saves exactly as it did before the catalog moved.
 
+> **Done, 23 September 2026.** C1 through C4 landed, 83 TAEF tests green, docs published, prepare time 7946–8200 µs against 7856–7889 before. **Contracts in this namespace stay at version 1** — Pete's call, because the ABI is not locked yet, so a new type or member goes *into* contract 1 rather than being versioned. `MidiSequenceBuilder` is a new activatable class and needs an in-box manifest entry, which is outside this repository. The shared endpoint catalog moved to `midi-app-shared` and Patchbay was re-driven through UI Automation: endpoints enumerate, two added, connected, routed on the wire, saved, reloaded after a restart, routed again, and with a device id deliberately broken the offline bar appeared and the replacement was still offered by name.
+
 ### Phase 2 — The shell. Make it a member of the family.
 
 Project scaffold copied from `midiscratchpad` per the family checklist, `WindowChrome`, `MidiAppSettings`, appearance flyout with the gear in the title bar, PREVIEW chiclet, single instance, icon, version resource, installer entry, `.resw` from the first string onward.
 
 **Exit:** it launches, it looks like the family, it builds clean x64 and ARM64, it is in the installer, and the resw sweep is clean.
+
+> **Done, 23 September 2026.** `src/in-box/user-tools/midi-glass/`, exe `midiglass`, title bar "Windows MIDI Glass". Builds clean x64 and ARM64 with zero warnings, verified through UI Automation, in the installer and the solution. The body is a deliberate "not finished yet" panel until phase 4 gives it a surface.
 
 ### Phase 3 — Document and themes. The data layer, with no surface yet.
 
@@ -291,7 +336,9 @@ Test it the way Patchbay was tested: **write a layout file before launching**, s
 >
 > **Values are a range, not an on/off pair, and either end can be a percentage or an exact number.** Device documentation does not talk in percentages: the APC40 Mk2 protocol says a clip LED is a note on where the note number picks the LED, the **channel** picks the display type and the **velocity** picks the color — channel 0 for a solid primary color, channel 9 to pulse at a quarter note, velocity 5 for `#FF0000`, 21 for `#00FF00`. A customer copying that table types 5 and must see 5 afterwards, not 3.9 %. So every message carries a `Minimum` and a `Maximum`, each independently `Fraction` or `Absolute`, and the control's position is interpolated between them. That one idea covers an ordinary fader (0 % to 100 %), a fader limited to MIDI 1.0 range (0 to 127 absolute, quantized onto whole numbers by the rounding), a button (off 0, on 127), a button on a MIDI 2.0 device (off 17, on 13005), a pad color, and an inverted fader — a minimum above a maximum falls out of the arithmetic with no extra switch. `UseMidi1Protocol` is separate again, because the need for exact values will arrive with 16-bit MIDI 2.0 velocities too. Verified on the wire: `20900005` is note 0 velocity 5 on channel 1, `20990015` is velocity 21 on channel 10, `40903C00 75300000` is a MIDI 2.0 note on at velocity 30000.
 >
-> Still open in phase 4: `OutputRouter` and `DeviceCatalog`, the runtime window, `SurfaceRenderer`, `InputRouter` and multi-touch, Panic, and the end-to-end capture with a real eight-fader layout. Snapping the *control* to its quantized detents is an input concern and belongs with the surface, not here.
+> **A continuous control can have stops, and the crowded case decides the design.** `Detents` on a message is `Continuous`, `EvenSteps` (a step in the same units as the ends — 0 to 100 % in tenths, or 27 to 127 in fives) or `ExplicitValues` (stops at 10, 17, 38, 39, 40, 57). **A listed stop gets an equal share of the travel** rather than sitting where its value falls between the ends. That is the whole design, not a detail: a version spaced by value was built and measured, and it reaches `10 17 57 57 57 57` — three of the six stops cannot be selected at all, because 38, 39 and 40 are a fortieth of the travel apart. `EvenSteps` is measured from the minimum so a range that does not start at zero still has a stop on its own bottom end. `DetentCount` and `DetentPosition` exist for the surface, which has to snap a finger and draw the notches; the engine produces the right value either way.
+>
+> Still open in phase 4: `DeviceCatalog`, `OutputRouter`, the runtime window, `SurfaceRenderer`, `InputRouter` and multi-touch, Panic, and the end-to-end capture. **The ordered list is at the top of this document**, under "What is left in phase 4".
 
 ### Phase 5 — The editor.
 

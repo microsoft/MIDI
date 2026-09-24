@@ -61,6 +61,8 @@ namespace glass
         MessageValue Minimum{ 0.0, ValueScaling::Fraction };
         MessageValue Maximum{ 1.0, ValueScaling::Fraction };
 
+        MessageDetents Detents{};
+
         // Send as MIDI 1.0 protocol so the seven bit value is exactly what was typed.
         bool UseMidi1Protocol{ false };
     };
@@ -169,6 +171,14 @@ namespace glass
         _In_ PreparedMessage const& message,
         _In_ double position,
         _In_ uint32_t bits) noexcept;
+
+    // How many stops this message has, so the surface can snap a finger to them and draw them.
+    // 0 means it is smooth. The engine produces the right value either way; this is only needed
+    // by whatever moves the control.
+    uint32_t DetentCount(_In_ PreparedMessage const& message, _In_ uint32_t bits) noexcept;
+
+    // The position, 0 to 1, of one stop. Stops are evenly spaced in travel.
+    double DetentPosition(_In_ uint32_t index, _In_ uint32_t count) noexcept;
 
     // MIDI 1.0 channel voice, message type 2. One word.
     uint32_t BuildMidi1ChannelVoice(

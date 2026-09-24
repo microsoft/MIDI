@@ -73,6 +73,10 @@ namespace glass
         constexpr wchar_t KeyMinimum[] = L"minimum";
         constexpr wchar_t KeyMaximum[] = L"maximum";
         constexpr wchar_t KeyValue[] = L"value";
+        constexpr wchar_t KeyDetents[] = L"detents";
+        constexpr wchar_t KeyMode[] = L"mode";
+        constexpr wchar_t KeyStep[] = L"step";
+        constexpr wchar_t KeyStops[] = L"stops";
         constexpr wchar_t KeySystemExclusive[] = L"systemExclusive";
         constexpr wchar_t KeyMidi1Protocol[] = L"midi1Protocol";
         constexpr wchar_t KeyScaling[] = L"scaling";
@@ -157,6 +161,13 @@ namespace glass
         {
             { ValueScaling::Fraction, L"fraction" },
             { ValueScaling::Absolute, L"absolute" },
+        };
+
+        constexpr EnumName<DetentMode> DetentModeNames[]
+        {
+            { DetentMode::Continuous, L"continuous" },
+            { DetentMode::EvenSteps, L"evenSteps" },
+            { DetentMode::ExplicitValues, L"explicitValues" },
         };
 
         constexpr EnumName<ScaleMode> ScaleModeNames[]
@@ -423,6 +434,75 @@ namespace glass
             writer.EndObject();
         }
 
+        MessageDetents ReadDetents(_In_ mjson::JsonObject const& object) noexcept
+        {
+            MessageDetents detents{};
+
+            auto const nested = ReadObject(object, KeyDetents);
+
+            if (nested == nullptr)
+            {
+                return detents;
+            }
+
+            detents.Mode = ValueOf(DetentModeNames, ReadString(nested, KeyMode), DetentMode::Continuous);
+            detents.Scaling = ValueOf(ScalingNames, ReadString(nested, KeyScaling), ValueScaling::Fraction);
+
+            auto const highest = detents.Scaling == ValueScaling::Absolute ? 4294967295.0 : 1.0;
+
+            detents.Step = std::clamp(ReadNumber(nested, KeyStep, 0.0), 0.0, highest);
+
+            if (auto const stops = ReadArray(nested, KeyStops))
+            {
+                for (uint32_t i = 0; i < stops.Size() && detents.Stops.size() < MaximumDetentStops; ++i)
+                {
+                    auto const value = stops.GetAt(i);
+
+                    if (value != nullptr && value.ValueType() == mjson::JsonValueType::Number)
+                    {
+                        auto const number = value.GetNumber();
+
+                        if (std::isfinite(number))
+                        {
+                            detents.Stops.push_back(std::clamp(number, 0.0, highest));
+                        }
+                    }
+                }
+            }
+
+            return detents;
+        }
+
+        void WriteDetents(_Inout_ JsonTextWriter& writer, _In_ MessageDetents const& detents) noexcept
+        {
+            if (detents.Mode == DetentMode::Continuous)
+            {
+                return;
+            }
+
+            writer.BeginObject(KeyDetents);
+            writer.Write(KeyMode, NameOf(DetentModeNames, detents.Mode));
+            writer.Write(KeyScaling, NameOf(ScalingNames, detents.Scaling));
+
+            if (detents.Mode == DetentMode::EvenSteps)
+            {
+                writer.Write(KeyStep, detents.Step);
+            }
+            else
+            {
+                writer.BeginArray(KeyStops);
+
+                for (auto const stop : detents.Stops)
+                {
+                    writer.WriteArrayNumber(stop);
+                }
+
+                writer.EndArray();
+            }
+
+            writer.EndObject();
+        }
+
         // System exclusive travels as hex rather than an array of numbers. A firmware dump is
         // tens of thousands of bytes, and one number per line would make the file unreadable and
         // enormous for no gain.
@@ -495,6 +575,7 @@ namespace glass
             message.Number = static_cast<uint32_t>(ReadInt(object, KeyNumber, 0, 0, 0x7FFFFFFF));
             message.Minimum = ReadMessageValue(object, KeyMinimum, { 0.0, ValueScaling::Fraction });
             message.Maximum = ReadMessageValue(object, KeyMaximum, { 1.0, ValueScaling::Fraction });
+            message.Detents = ReadDetents(object);
             message.SystemExclusive = FromHex(ReadString(object, KeySystemExclusive));
             message.UseMidi1Protocol = ReadBool(object, KeyMidi1Protocol, false);
             message.SequenceName = ReadString(object, KeySequence);
@@ -522,7 +603,7 @@ namespace glass
             message.Unknown = CaptureUnknown(object,
                 { KeyTrigger, KeyKind, KeyDevice, KeyGroup, KeyChannel, KeyNumber, KeyMinimum,
                   KeyMaximum, KeySystemExclusive, KeyWords, KeySequence, KeyTargetPage,
-                  KeyTargetLayer, KeyMidi1Protocol });
+                  KeyTargetLayer, KeyMidi1Protocol, KeyDetents });
 
             return message;
         }
@@ -814,6 +895,7 @@ namespace glass
             writer.Write(KeyNumber, static_cast<int64_t>(message.Number));
             WriteMessageValue(writer, KeyMinimum, message.Minimum);
             WriteMessageValue(writer, KeyMaximum, message.Maximum);
+            WriteDetents(writer, message.Detents);
             writer.Write(KeyMidi1Protocol, message.UseMidi1Protocol);
 
             if (!message.SystemExclusive.empty())

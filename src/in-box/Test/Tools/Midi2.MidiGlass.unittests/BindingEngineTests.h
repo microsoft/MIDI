@@ -44,6 +44,14 @@ public:
     TEST_METHOD(TheTwoEndsCanUseDifferentUnits);
     TEST_METHOD(AMinimumAboveAMaximumInvertsTheControl);
 
+    // ---- detents: a continuous control with stops ----
+    TEST_METHOD(StopsAtEvenPercentages);
+    TEST_METHOD(StopsAtEvenAbsoluteSteps);
+    TEST_METHOD(StopsAtAnArbitraryListOfValues);
+    TEST_METHOD(CrowdedStopsAreStillEachReachable);
+    TEST_METHOD(ReportsHowManyStopsThereAreForTheSurface);
+    TEST_METHOD(SurvivesNonsenseDetents);
+
     // ---- the editor's preview of what a MIDI 1.0 device receives ----
     TEST_METHOD(PreviewsPitchBendWithTheLowByteFirst);
     TEST_METHOD(DoesNotPretendToPreviewAnRpnExpansion);

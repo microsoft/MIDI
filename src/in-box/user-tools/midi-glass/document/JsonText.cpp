@@ -182,6 +182,13 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    void JsonTextWriter::WriteArrayNumber(double value) noexcept
+    {
+        Separate();
+        m_text += FormatJsonNumber(value);
+    }
+
+    _Use_decl_annotations_
     std::wstring CanonicalJson(mjson::IJsonValue const& value, int32_t indentDepth) noexcept
     {
         try

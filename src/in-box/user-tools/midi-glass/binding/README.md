@@ -46,6 +46,22 @@ Device documentation does not talk in percentages. The APC40 Mk2 protocol says a
 
 Verified on the wire: `20900005` decodes as note 0 velocity 5 on channel 1, `20990015` as note 0 velocity 21 on channel 10, and `40903C00 75300000` as a MIDI 2.0 note on at velocity 30000.
 
+### Detents — a continuous control with stops
+
+A control does not have to be smooth. `Detents` on a message gives it stops, in one of three shapes:
+
+| Mode | What it means | Example |
+|---|---|---|
+| `Continuous` | No stops. The default. | A volume fader |
+| `EvenSteps` | A step in the same units as the ends | 0 to 100 % in steps of 10 %, or 27 to 127 in steps of 5 |
+| `ExplicitValues` | An arbitrary list | Stops at 10, 17, 38, 39, 40 and 57 |
+
+**A listed stop gets an equal share of the travel**, rather than sitting where its value falls between the ends. That is not a detail — it is the only way the third example works. Spaced by value, 38, 39 and 40 are a fortieth of the travel apart, and a test of that version reaches `10 17 57 57 57 57`: three of the six stops cannot be selected at all.
+
+`EvenSteps` is measured from the **minimum**, so a range that does not start at zero still has a stop exactly on its own bottom end. A zero step or an empty list falls back to smooth rather than dividing by zero or sending nothing.
+
+`DetentCount` and `DetentPosition` are there for whatever moves the control: the engine produces the right value either way, but the surface needs to know where to snap a finger and where to draw the notches.
+
 ## Resolution folding
 
 A value is stored once as a fraction of full scale, so the same layout file is correct on a MIDI 1.0 device and a MIDI 2.0 one and nobody has to know which they have.

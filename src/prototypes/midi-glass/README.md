@@ -2,13 +2,15 @@
 
 Exploratory work toward **MIDI Glass**, a customizable MIDI control surface for Windows in the Windows MIDI Services tool family. Think TouchOSC or TouchDAW, but the app itself looks like the rest of the family and the surface the customer builds does not.
 
-**Nothing here ships. Nothing here is wired into the service or the installer.** When the app is real it will live in `src/in-box/user-tools/midi-glass/` like every other tool.
+**Nothing in this folder ships.** The design record and the spikes live here; **the app itself is real and lives in `src/in-box/user-tools/midi-glass/`.**
 
 ## Status
 
-**Design is complete and approved. Phase 0 is done.** The rendering approach is settled — a hybrid of a light XAML element per control with composition-drawn content — and the hot path has a measured latency budget. See `design/MIDI-Glass-phase-0-findings.md`.
+**Phases 0, 1, 2 and 3 are done. Phase 4 is part done.** The full state of play, the build and test commands, and the ordered list of what is left are at the **top of `design/MIDI-Glass-implementation-plan.md`** — start there, not here.
 
-The next piece of work is phase 1, the sequencing API changes, and phase 2, the application shell. They touch nothing in common and can run at the same time.
+In short: the rendering approach is settled (a hybrid of a light XAML element per control with custom-drawn content, with a measured latency budget), the SDK sequencing work landed, the app shell exists, the document, theme and thumbnail layers are built, and the binding layer that decides what goes on the wire is built and tested. What remains in phase 4 is the device catalog, the output router, the runtime window, the renderer, input and multi-touch, Panic, and an end-to-end capture.
+
+**98 unit tests, none of which need a window or a device**, in `src/in-box/Test/Tools/Midi2.MidiGlass.unittests`.
 
 ## Layout
 
@@ -18,11 +20,21 @@ The next piece of work is phase 1, the sequencing API changes, and phase 2, the 
 | `design/shots/` | PNG captures of all 14 screens, so they can be reviewed without running anything. |
 | `spikes/` | Console and WinUI spikes, and the raw measurements they produced. |
 
+## Where the code actually is
+
+| Path | What it is |
+| --- | --- |
+| `src/in-box/user-tools/midi-glass/` | The app. Each engine folder has its own `README.md` stating its contract, its invariants and **what it does not do**. |
+| `midi-glass/document/` | The layout document, its file format, page templates, the theme model and the theme store. |
+| `midi-glass/thumbnail/` | Drawing a library card with no window, via Win2D. |
+| `midi-glass/binding/` | What a control puts on the wire, and how often. |
+| `src/in-box/Test/Tools/Midi2.MidiGlass.unittests` | All of the above, tested without a window or a device. |
+
 ## The design record
 
 Start with the three documents:
 
-- **`design/MIDI-Glass-implementation-plan.md`** — the phases, the engine layering, the WinRT API work, and how each phase is verified. This is the work order.
+- **`design/MIDI-Glass-implementation-plan.md`** — the phases, the engine layering, the WinRT API work, and how each phase is verified. **This is the work order, and its first section is the current state.**
 - **`design/MIDI-Glass-phase-0-findings.md`** — how a control gets painted and why, the latency budget, and what was not tested.
 - **`design/MIDI-Glass-design.md`** — what the app is and why. Section 14 holds the settled decisions, section 12 holds the sequencing API analysis.
 

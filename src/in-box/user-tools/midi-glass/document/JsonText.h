@@ -49,6 +49,7 @@ namespace glass
         void WriteRaw(_In_ std::wstring_view key, _In_ std::wstring_view json) noexcept;
 
         void WriteArrayValue(_In_ int64_t value) noexcept;
+        void WriteArrayNumber(_In_ double value) noexcept;
         void WriteArrayString(_In_ std::wstring_view value) noexcept;
 
         int32_t Depth() const noexcept { return m_depth; }

@@ -92,12 +92,82 @@ namespace glass
         return static_cast<uint32_t>(std::llround((std::min)(value, maximum)));
     }
 
+    namespace
+    {
+        double FieldMaximum(_In_ uint32_t bits) noexcept
+        {
+            return (bits >= 32) ? 4294967295.0 : static_cast<double>((1u << bits) - 1u);
+        }
+
+        // A value in field units, without the final rounding, so step arithmetic does not
+        // accumulate the error twice.
+        double InFieldUnits(_In_ MessageValue const& value, _In_ uint32_t bits) noexcept
+        {
+            auto const maximum = FieldMaximum(bits);
+
+            if (!std::isfinite(value.Value))
+            {
+                return 0.0;
+            }
+
+            return value.Scaling == ValueScaling::Absolute
+                ? std::clamp(value.Value, 0.0, maximum)
+                : std::clamp(value.Value, 0.0, 1.0) * maximum;
+        }
+
+        double StepInFieldUnits(_In_ MessageDetents const& detents, _In_ uint32_t bits) noexcept
+        {
+            return InFieldUnits({ detents.Step, detents.Scaling }, bits);
+        }
+    }
+
     _Use_decl_annotations_
     uint32_t ResolveEnd(MessageValue const& end, uint32_t bits) noexcept
     {
         return end.Scaling == ValueScaling::Absolute
             ? ClampToBits(end.Value, bits)
             : ScaleToBits(end.Value, bits);
+    }
+
+    _Use_decl_annotations_
+    double DetentPosition(uint32_t index, uint32_t count) noexcept
+    {
+        if (count < 2)
+        {
+            return 0.0;
+        }
+
+        return std::clamp(static_cast<double>(index) / (count - 1), 0.0, 1.0);
+    }
+
+    _Use_decl_annotations_
+    uint32_t DetentCount(PreparedMessage const& message, uint32_t bits) noexcept
+    {
+        switch (message.Detents.Mode)
+        {
+        case DetentMode::ExplicitValues:
+            return static_cast<uint32_t>((std::min)(message.Detents.Stops.size(), MaximumDetentStops));
+
+        case DetentMode::EvenSteps:
+        {
+            auto const step = StepInFieldUnits(message.Detents, bits);
+
+            if (step <= 0.0)
+            {
+                return 0;
+            }
+
+            auto const span = std::fabs(
+                InFieldUnits(message.Maximum, bits) - InFieldUnits(message.Minimum, bits));
+
+            return static_cast<uint32_t>((std::min)(
+                static_cast<double>(MaximumDetentStops),
+                std::floor(span / step) + 1.0));
+        }
+
+        default:
+            return 0;
+        }
     }
 
     _Use_decl_annotations_
@@ -110,13 +180,39 @@ namespace glass
 
         position = std::clamp(position, 0.0, 1.0);
 
-        auto const low = static_cast<double>(ResolveEnd(message.Minimum, bits));
-        auto const high = static_cast<double>(ResolveEnd(message.Maximum, bits));
+        auto const maximum = FieldMaximum(bits);
+        auto const low = InFieldUnits(message.Minimum, bits);
+        auto const high = InFieldUnits(message.Maximum, bits);
 
-        auto const maximum = (bits >= 32) ? 4294967295.0 : static_cast<double>((1u << bits) - 1u);
-        auto const result = std::clamp(low + position * (high - low), 0.0, maximum);
+        if (message.Detents.Mode == DetentMode::ExplicitValues && !message.Detents.Stops.empty())
+        {
+            auto const count = (std::min)(message.Detents.Stops.size(), MaximumDetentStops);
+            auto const index = static_cast<size_t>(std::llround(position * (count - 1)));
 
-        return static_cast<uint32_t>(std::llround(result));
+            auto const stop = InFieldUnits(
+                { message.Detents.Stops[(std::min)(index, count - 1)], message.Detents.Scaling }, bits);
+
+            return static_cast<uint32_t>(std::llround(std::clamp(stop, 0.0, maximum)));
+        }
+
+        auto raw = low + position * (high - low);
+
+        if (message.Detents.Mode == DetentMode::EvenSteps)
+        {
+            auto const step = StepInFieldUnits(message.Detents, bits);
+
+            if (step > 0.0)
+            {
+                // Measured from the minimum, so a range that does not start at zero still has a
+                // stop exactly on its own bottom end.
+                auto const steps = std::llround((raw - low) / (high >= low ? step : -step));
+
+                raw = low + static_cast<double>(steps) * (high >= low ? step : -step);
+                raw = std::clamp(raw, (std::min)(low, high), (std::max)(low, high));
+            }
+        }
+
+        return static_cast<uint32_t>(std::llround(std::clamp(raw, 0.0, maximum)));
     }
 
     _Use_decl_annotations_
@@ -340,6 +436,7 @@ namespace glass
                         entry.Number = static_cast<uint16_t>(message.Number);
                         entry.Minimum = message.Minimum;
                         entry.Maximum = message.Maximum;
+                        entry.Detents = message.Detents;
                         entry.UseMidi1Protocol = message.UseMidi1Protocol;
 
                         m_messages.push_back(entry);

@@ -129,6 +129,38 @@ namespace glass
         ValueScaling Scaling{ ValueScaling::Fraction };
     };
 
+    // Whether a continuous control has stops, and where they are.
+    enum class DetentMode
+    {
+        // Smooth all the way. The default, and what a volume fader wants.
+        Continuous = 0,
+
+        // Evenly spaced, by a step in the same units as the ends: 0 to 100 % in steps of 10 %,
+        // or 27 to 127 in steps of 5.
+        EvenSteps = 1,
+
+        // An arbitrary list: stops at 10, 17, 38, 39, 40 and 57.
+        ExplicitValues = 2,
+    };
+
+    constexpr size_t MaximumDetentStops = 512;
+
+    struct MessageDetents
+    {
+        DetentMode Mode{ DetentMode::Continuous };
+
+        // Units for Step and for every entry in Stops.
+        ValueScaling Scaling{ ValueScaling::Fraction };
+
+        double Step{ 0.0 };
+
+        // Each stop gets an equal share of the travel, rather than sitting where its value falls
+        // between the ends. That is the only way a list like 10, 17, 38, 39, 40, 57 is usable:
+        // spaced by value, the three in the middle would be a fortieth of the travel apart and
+        // nobody could pick one on purpose.
+        std::vector<double> Stops{};
+    };
+
     enum class ScaleMode
     {
         ActualSize = 0,
@@ -194,6 +226,8 @@ namespace glass
         // wants for a fader that reads top to bottom.
         MessageValue Minimum{ 0.0, ValueScaling::Fraction };
         MessageValue Maximum{ 1.0, ValueScaling::Fraction };
+
+        MessageDetents Detents{};
 
         std::vector<uint8_t> SystemExclusive{};
         std::vector<uint32_t> RawWords{};
