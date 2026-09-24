@@ -19,6 +19,7 @@
 #include "ThumbnailLayout.h"
 #include "ThumbnailRenderer.h"
 #include "EndpointCatalog.h"
+#include "MidiServiceStatus.h"
 
 #include <shlobj_core.h>
 #include <filesystem>
@@ -631,38 +632,59 @@ namespace winrt::midiglass::implementation
     {
         try
         {
-            auto const folder = glass::LayoutsFolder();
             auto const count = static_cast<int32_t>(m_allCards.size());
 
             // The folder is named the way the customer would say it, not as a path.
             FolderStatusText().Text(resources::FormatString(
                 count == 1 ? L"StatusOneLayoutFormat" : L"StatusLayoutCountFormat", count));
 
-            auto const running = midiapp::EndpointCatalog::Current().IsServiceAvailable();
-
             ServiceChipText().Text(resources::GetString(
-                running ? L"StatusServiceRunning" : L"StatusServiceStopped"));
+                m_serviceRunning ? L"StatusServiceRunning" : L"StatusServiceStopped"));
 
-            ServiceChipIcon().Glyph(running ? L"\uE73E" : L"\uE7BA");
+            ServiceChipIcon().Glyph(m_serviceRunning ? L"\uE73E" : L"\uE7BA");
 
-            auto const brushKey = running ? L"SystemFillColorSuccessBrush" : L"SystemFillColorCautionBrush";
-            auto const backgroundKey = running
+            auto const& appResources = xaml::Application::Current().Resources();
+
+            auto const foreground = appResources.Lookup(box_value(m_serviceRunning
+                ? L"SystemFillColorSuccessBrush"
+                : L"SystemFillColorCriticalBrush")).as<media::Brush>();
+
+            ServiceChipShape().Stroke(foreground);
+            ServiceChipShape().Fill(appResources.Lookup(box_value(m_serviceRunning
                 ? L"SystemFillColorSuccessBackgroundBrush"
-                : L"SystemFillColorCautionBackgroundBrush";
-
-            auto const foreground = xaml::Application::Current().Resources()
-                .Lookup(box_value(brushKey)).as<media::Brush>();
-
-            ServiceChip().BorderBrush(foreground);
-            ServiceChip().Background(xaml::Application::Current().Resources()
-                .Lookup(box_value(backgroundKey)).as<media::Brush>());
+                : L"SystemFillColorCriticalBackgroundBrush")).as<media::Brush>());
 
             ServiceChipIcon().Foreground(foreground);
             ServiceChipText().Foreground(foreground);
-
-            UNREFERENCED_PARAMETER(folder);
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the status bar.")
+    }
+
+    bool MainWindow::CheckServiceState()
+    {
+        try
+        {
+            auto const running = midiapp::IsMidiServiceRunning();
+
+            if (running == m_serviceRunning)
+            {
+                return false;
+            }
+
+            m_serviceRunning = running;
+
+            UpdateStatusBar();
+
+            // Every card's device status is wrong the moment the service state changes, so the
+            // signature is dropped and they are re-resolved rather than left claiming a synth
+            // is still reachable.
+            m_cardSignature.clear();
+
+            return true;
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to check the MIDI service state.")
+
+        return false;
     }
 
     // =============================================================== the toolbar

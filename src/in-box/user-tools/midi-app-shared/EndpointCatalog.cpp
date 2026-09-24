@@ -187,6 +187,12 @@ namespace midiapp
 
     void EndpointCatalog::Rebuild() noexcept
     {
+        // Every rebuild is driven by a device arriving, leaving or changing, which is exactly
+        // when the service may have gone away, so the flag is refreshed here rather than left as
+        // whatever it was when the watcher started. Read only: asking with
+        // EnsureServiceAvailable would start the service and the answer would always be yes.
+        m_serviceAvailable.store(IsMidiServiceRunning(), std::memory_order_relaxed);
+
         std::vector<LiveEndpoint> rebuilt{};
 
         try

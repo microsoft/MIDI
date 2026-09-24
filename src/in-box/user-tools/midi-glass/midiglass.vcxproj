@@ -151,6 +151,7 @@
     <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
     <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
+    <ClInclude Include="..\midi-app-shared\MidiServiceStatus.h" />
     <ClInclude Include="..\midi-app-shared\EndpointMatch.h" />
     <ClInclude Include="..\midi-app-shared\EndpointCatalog.h" />
     <ClInclude Include="document\JsonText.h" />
@@ -203,6 +204,7 @@
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiServiceStatus.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointMatch.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

@@ -13,6 +13,7 @@
 #include "StringResources.h"
 #include "AppearanceFlyout.h"
 #include "EndpointCatalog.h"
+#include "MidiServiceStatus.h"
 #include "SingleInstance.h"
 #include "PreviewBuild.h"
 #include "resource.h"
@@ -89,7 +90,9 @@ namespace winrt::midiglass::implementation
             ApplyViewMode();
 
             // A device arriving or leaving changes what every card says about itself, so the
-            // library is rebuilt rather than left claiming a synth is still there.
+            // library is rebuilt rather than left claiming a synth is still there. It is also
+            // the moment to look at the service, because a service that stopped takes every
+            // device with it and says nothing else about itself.
             auto weak = get_weak();
 
             midiapp::EndpointCatalog::Current().SetChangedHandler([weak]()
@@ -105,10 +108,31 @@ namespace winrt::midiglass::implementation
                         {
                             if (auto inner = weak.get())
                             {
+                                inner->CheckServiceState();
                                 inner->RefreshLibrary();
                             }
                         });
                 });
+
+            // A device event is not the only way the service can go away: somebody can stop it
+            // while nothing is plugged in, and then no watcher fires at all. Querying the
+            // service control manager costs microseconds, so it is also polled.
+            m_serviceRunning = midiapp::IsMidiServiceRunning();
+
+            m_serviceTimer = xaml::DispatcherTimer();
+            m_serviceTimer.Interval(std::chrono::seconds{ 3 });
+            m_serviceTimer.Tick([weak](auto&&, auto&&)
+                {
+                    if (auto strong = weak.get())
+                    {
+                        if (strong->CheckServiceState())
+                        {
+                            strong->RefreshLibrary();
+                        }
+                    }
+                });
+
+            m_serviceTimer.Start();
 
             // The watcher blocks on the service, so it is started off the UI thread.
             std::thread([]()
@@ -138,6 +162,12 @@ namespace winrt::midiglass::implementation
             // A handler left pointing at a closed window is a use after free waiting for
             // somebody to plug something in.
             midiapp::EndpointCatalog::Current().SetChangedHandler(nullptr);
+
+            if (m_serviceTimer != nullptr)
+            {
+                m_serviceTimer.Stop();
+                m_serviceTimer = nullptr;
+            }
 
             m_chrome.SavePlacement();
             m_chrome.Shutdown();

@@ -133,6 +133,12 @@ namespace winrt::midiglass::implementation
         void ApplyItemWidths();
         void UpdateStatusBar();
 
+        // The service can stop while the library is open, and a device watcher says nothing
+        // about that on its own. This both polls and is called whenever a device arrives or
+        // leaves, because a stopping service takes every device with it. Returns true when the
+        // state changed, so the caller can decide whether the cards need re-reading.
+        bool CheckServiceState();
+
         void RunCard(_In_ midiglass::LayoutCard const& card);
 
         // Reads, changes and writes one layout, then refreshes. Everything the card menu does to
@@ -169,6 +175,9 @@ namespace winrt::midiglass::implementation
         std::wstring m_searchText{};
 
         winrt::Microsoft::UI::Dispatching::DispatcherQueue m_dispatcher{ nullptr };
+
+        xaml::DispatcherTimer m_serviceTimer{ nullptr };
+        bool m_serviceRunning{ false };
 
         bool m_refreshing{ false };
         bool m_updatingChrome{ false };

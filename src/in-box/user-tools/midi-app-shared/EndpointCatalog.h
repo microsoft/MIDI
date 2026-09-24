@@ -8,6 +8,7 @@
 #pragma once
 
 #include "EndpointMatch.h"
+#include "MidiServiceStatus.h"
 
 namespace midiapp
 {

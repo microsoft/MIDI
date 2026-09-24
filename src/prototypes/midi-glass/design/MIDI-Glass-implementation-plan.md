@@ -18,7 +18,7 @@ Companion to `MIDI-Glass-design.md` and the twelve mockup screens. This is the *
 | 5 Editor | Not started | — |
 | 6–9 | Not started | — |
 
-**Tests: 134, all passing, none needing a window or a device.** `src/in-box/Test/Tools/Midi2.MidiGlass.unittests`.
+**Tests: 138, all passing, none needing a window or a device.** `src/in-box/Test/Tools/Midi2.MidiGlass.unittests`. Builds clean x64 and ARM64 Release; spelling and accessibility checks clean.
 
 ```
 build  msbuild <proj> /t:Build /p:Configuration=Release /p:Platform=x64 "/p:SolutionDir=<repo>\src\in-box\\" /v:minimal /nologo /nodeReuse:false
@@ -30,9 +30,14 @@ run    midiglass --run "<layout.midilayout.json>"
 
 ### What the app does today
 
-Launch it and the **library** lists every layout in `Documents\MIDI Layouts`, each with a card drawn from the layout itself rather than captured from a window. **New starter layout** asks which device to send to and writes an eight fader, eight knob, eight pad layout that runs immediately. **Run** opens a runtime window: the surface, the three scale modes, a device status line, View mode, full screen and Panic.
+Launch it and the **library** lists every layout in `Documents\MIDI Layouts`, each with a card drawn from the layout itself rather than captured from a window. It matches mockup screen 1: a toolbar with New layout, search, sort and a grid/list toggle; Favorites and Recent sections; a hover bar with Run, Edit and a context menu on every card; and a status bar that names the folder and reports whether the MIDI service is running. **New layout** asks which device to send to and offers five templates. **Run** opens a runtime window: the surface, the three scale modes, a device status line, View mode, full screen and Panic.
 
-Not there yet: the editor, sequences, generators, learn, the per-layout virtual device, and the full screen corner button. Everything in that list is phase 5 or later.
+Not there yet: the editor, sequences, generators, learn, the per-layout virtual device, and the full screen corner button. Everything in that list is phase 5 or later. Edit is present everywhere but disabled until the editor exists.
+
+### Two things learned here that apply to every tool in the family
+
+- **A `Border` with a `CornerRadius` is aliased at fractional display scaling.** A `Border` is laid out, so its bounds and its radius are both snapped to whole pixels and the corner renders as steps at 125%. A `Rectangle` with `RadiusX`/`RadiusY` and `UseLayoutRounding="False"` goes through the shape rasterizer and stays smooth. Every pill and rounded outline in this app is a shape, and the `PREVIEW` badge in all thirteen in-box apps was converted to match.
+- **`MidiApi::EnsureServiceAvailable()` starts the service**, so it can never back a status display — asking the question changes the answer. `midiapp::IsMidiServiceRunning()` in `midi-app-shared` is the read-only answer, and the library both polls it and re-checks it whenever a device arrives or leaves.
 
 ### Things that will bite, learned the hard way
 

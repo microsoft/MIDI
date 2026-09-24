@@ -191,10 +191,11 @@
                                   Opacity="0"
                                   ColumnSpacing="6">
                                 <Grid.Resources>
-                                    <SolidColorBrush x:Key="ButtonBackground" Color="#38000000" />
-                                    <SolidColorBrush x:Key="ButtonBackgroundPointerOver" Color="#55000000" />
-                                    <SolidColorBrush x:Key="ButtonBackgroundPressed" Color="#70000000" />
-                                    <SolidColorBrush x:Key="ButtonBackgroundDisabled" Color="#20000000" />
+                                    <!-- Edit is not here yet, but it is a real button that is
+                                         coming, not a broken one, so it keeps a readable label
+                                         rather than the barely visible disabled ink. -->
+                                    <StaticResource x:Key="ButtonForegroundDisabled"
+                                                    ResourceKey="TextFillColorSecondaryBrush" />
                                 </Grid.Resources>
                                 <Grid.OpacityTransition>
                                     <ScalarTransition Duration="0:0:0.1" />
@@ -483,27 +484,31 @@
 
             <!-- Spans every column so it sits in the middle of the window rather than the middle
                  of the stretchy column. Not hit testable, so it stays part of the drag region.
-                 Hidden when this is not a preview build; see midi-app-shared\PreviewBuild.h. -->
-            <Border x:Name="PreviewChiclet"
-                    Grid.Column="0"
-                    Grid.ColumnSpan="6"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Height="18"
-                    Padding="9,0,9,0"
-                    CornerRadius="9"
-                    IsHitTestVisible="False"
-                    BorderThickness="1"
-                    BorderBrush="{ThemeResource SystemFillColorCautionBrush}"
-                    Background="{ThemeResource SystemFillColorCautionBackgroundBrush}">
+                 Hidden when this is not a preview build; see midi-app-shared\PreviewBuild.h.
+                 The pill is a shape, not a Border: a Border snaps its corner radius to whole
+                 pixels along with its bounds and the arc comes out stepped. -->
+            <Grid x:Name="PreviewChiclet"
+                  Grid.Column="0"
+                  Grid.ColumnSpan="6"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Height="18"
+                  IsHitTestVisible="False">
+                <Rectangle RadiusX="9"
+                           RadiusY="9"
+                           StrokeThickness="1"
+                           UseLayoutRounding="False"
+                           Stroke="{ThemeResource SystemFillColorCautionBrush}"
+                           Fill="{ThemeResource SystemFillColorCautionBackgroundBrush}" />
                 <TextBlock x:Name="PreviewChicletText"
                            x:Uid="PreviewChicletText"
                            Text="PREVIEW"
                            FontSize="10"
                            FontWeight="SemiBold"
+                           Margin="9,0,9,0"
                            VerticalAlignment="Center"
                            Foreground="{ThemeResource SystemFillColorCautionBrush}" />
-            </Border>
+            </Grid>
 
             <Button x:Name="AppearanceButton"
                     x:Uid="AppearanceButton"
@@ -798,27 +803,22 @@
                            TextTrimming="CharacterEllipsis"
                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
-                <Border x:Name="ServiceChip"
-                        Grid.Column="2"
-                        Height="19"
-                        CornerRadius="10"
-                        Padding="8,0,8,0"
-                        BorderThickness="1"
-                        VerticalAlignment="Center"
-                        Background="{ThemeResource SystemFillColorSuccessBackgroundBrush}"
-                        BorderBrush="{ThemeResource SystemFillColorSuccessBrush}">
-                    <StackPanel Orientation="Horizontal" Spacing="6">
+                <Grid Grid.Column="2" Height="19" VerticalAlignment="Center">
+                    <Rectangle x:Name="ServiceChipShape"
+                               RadiusX="9.5"
+                               RadiusY="9.5"
+                               StrokeThickness="1"
+                               UseLayoutRounding="False" />
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="8,0,8,0">
                         <FontIcon x:Name="ServiceChipIcon"
                                   Glyph="&#xE73E;"
                                   FontSize="10"
-                                  VerticalAlignment="Center"
-                                  Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
+                                  VerticalAlignment="Center" />
                         <TextBlock x:Name="ServiceChipText"
                                    FontSize="10"
-                                   VerticalAlignment="Center"
-                                   Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
+                                   VerticalAlignment="Center" />
                     </StackPanel>
-                </Border>
+                </Grid>
             </Grid>
         </Border>
     </Grid>
