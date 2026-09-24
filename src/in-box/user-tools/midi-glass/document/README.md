@@ -8,9 +8,11 @@ The layout document, its file format, the page size templates and the theme mode
 |---|---|
 | `LayoutModel.*` | `LayoutDocument` and everything under it: pages, controls, messages, devices, sequences. Plain data, plus `Validate`. |
 | `LayoutSerializer.*` | The document to and from `.midilayout.json` text. |
+| `LayoutStore.*` | The layouts folder, reading, writing and listing. The only part of this layer that touches a disk. |
 | `JsonText.*` | The deterministic writer, and the machinery that keeps fields this build does not understand. |
 | `PageTemplates.*` | The page sizes a new layout starts from, and the control sizes derived from them. |
 | `ThemeModel.*` | The theme property table, the nine shipped themes, and measured contrast. |
+| `ThemeStore.*` | Themes as their own shareable `.miditheme.json` files. |
 
 ## The contract
 
@@ -24,6 +26,8 @@ The layout document, its file format, the page size templates and the theme mode
 
 **Devices are matched on the same criteria the service configuration uses**, through `midiapp::EndpointMatch`, so the keys cannot drift from the service and a layout has a real chance of finding the right hardware on another PC.
 
+**A theme that came from a file is never built in**, whatever the file says, and its deck image is a bare file name rather than a path. A theme is the thing people swap on a forum, so it is the one document here most likely to have come from a stranger.
+
 ## Invariants
 
 - `sizeof` nothing here is on a hot path. This layer runs when a file is opened or saved, never per frame.
@@ -33,8 +37,9 @@ The layout document, its file format, the page size templates and the theme mode
 
 ## What this does not do
 
-- **It does not draw anything.** No thumbnail, no preview, no color resolution beyond the contrast measurement. Rendering is the surface layer's job and it does not live here.
-- **It does not read or write files.** It converts between a document and text. Choosing a folder, watching for changes, auto-saving and marking a layout as imported belong to the store above it.
+- **It does not draw anything.** No thumbnail, no preview, no color resolution beyond the contrast measurement. Rendering is the surface layer's job and it does not live here. The card is next door in `thumbnail/`.
+- **Only the two stores touch a disk.** The model and the serializers convert between a document and a string and never open a file, which is what lets them be tested without one.
+- **Nothing here auto-saves.** Deciding when a document is dirty and when to write it belongs with the editor, which does not exist yet.
 - **It does not talk to the MIDI service, open a connection or resolve a device to real hardware.** It holds the criteria; `midiapp::EndpointCatalog` resolves them.
 - **It does not know what a control looks like.** `ControlKind` is an identity, not an appearance.
 - **It does not enforce validity.** A document can be built and saved with problems in it, because an editor has to let somebody be half way through. `Validate` reports; it does not repair.

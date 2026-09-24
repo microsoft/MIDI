@@ -75,7 +75,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>%(AdditionalDependencies);windowsapp.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>%(AdditionalDependencies);windowsapp.lib;shell32.lib;ole32.lib;$(CoreLibraryDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
@@ -96,6 +96,7 @@
     <ClInclude Include="LayoutDocumentTests.h" />
     <ClInclude Include="PageTemplateTests.h" />
     <ClInclude Include="ThemeTests.h" />
+    <ClInclude Include="ThemeFileTests.h" />
     <ClInclude Include="ThumbnailLayoutTests.h" />
     <ClInclude Include="TestLayoutFiles.h" />
     <!-- shared by source with midiglass, so the document layer is tested exactly as it ships -->
@@ -104,6 +105,8 @@
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutSerializer.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\PageTemplates.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\ThemeModel.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\document\ThemeStore.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutStore.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\thumbnail\ThumbnailLayout.h" />
     <ClInclude Include="..\..\..\user-tools\midi-app-shared\EndpointMatch.h" />
   </ItemGroup>
@@ -112,6 +115,7 @@
     <ClCompile Include="LayoutDocumentTests.cpp" />
     <ClCompile Include="PageTemplateTests.cpp" />
     <ClCompile Include="ThemeTests.cpp" />
+    <ClCompile Include="ThemeFileTests.cpp" />
     <ClCompile Include="ThumbnailLayoutTests.cpp" />
     <ClCompile Include="TestLayoutFiles.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\JsonText.cpp" />
@@ -119,6 +123,8 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutSerializer.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\PageTemplates.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\ThemeModel.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\document\ThemeStore.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutStore.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\thumbnail\ThumbnailLayout.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-app-shared\EndpointMatch.cpp" />
   </ItemGroup>

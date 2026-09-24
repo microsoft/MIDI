@@ -154,6 +154,7 @@
     <ClInclude Include="document\LayoutStore.h" />
     <ClInclude Include="document\PageTemplates.h" />
     <ClInclude Include="document\ThemeModel.h" />
+    <ClInclude Include="document\ThemeStore.h" />
     <ClInclude Include="thumbnail\ThumbnailLayout.h" />
     <ClInclude Include="thumbnail\ThumbnailRenderer.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
@@ -198,6 +199,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="document\ThemeModel.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\ThemeStore.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="thumbnail\ThumbnailLayout.cpp">
