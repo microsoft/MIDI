@@ -177,6 +177,48 @@ namespace winrt::midiglass::implementation
         void OnPickupChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnKeyboardOrderChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
 
+        // ---- per-kind properties (EditorControlProperties.cpp) ----
+
+        void OnTicksShowChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnTickCountChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnShowDetentValuesChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        void OnChoosePictureClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnRemovePictureClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnPictureFitChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnPictureOpacityChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
+        void OnPictureLoopsChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        void OnKeyCountChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnLowestNoteChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnKeyColorChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnKeyVelocityChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        void OnSpringTargetChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnDragAxisChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+
+        void OnClockBpmChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnClockRangeChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnClockSourceChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnClockFlagChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        // ---- what a control listens for (EditorControlProperties.cpp) ----
+
+        void OnFeedbackEnabledToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnFeedbackModeChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnFeedbackDeviceChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnFeedbackGroupChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnFeedbackChannelChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnFeedbackKindChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnFeedbackTempoChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnFeedbackMatchChannelChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnFeedbackNumberChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnFeedbackHoldChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+
+        void OnDetentModeChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnDetentStepChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnDetentStopsChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
     private:
         void OnWindowClosed(foundation::IInspectable const& sender, xaml::WindowEventArgs const& args);
 
@@ -291,6 +333,36 @@ namespace winrt::midiglass::implementation
 
         void SelectInspectorTab(_In_ int32_t index);
         void SelectLeftTab(_In_ int32_t index);
+
+        // ---- per-kind properties (EditorControlProperties.cpp, EditorControlEdits.cpp) ----
+
+        void BuildControlPropertyChoices();
+
+        // The panels only some kinds of control have. A page of settings that do nothing for
+        // the control in front of you is worse than a shorter page.
+        void RefreshKindPanels(_In_ glass::Control const& control);
+        void RefreshFeedbackPanel(_In_ glass::Control const& control);
+
+        // The knobs and faders a clock can take its tempo from, and the clocks a lamp can
+        // follow. Both map a combo index back to a control id.
+        void RefreshTempoSourceChoices(_In_ glass::Control const& control);
+        void RefreshBeatSourceChoices(_In_ glass::Control const& control);
+
+        void RefreshFeedbackDeviceChoices(_In_ std::wstring const& selectedName);
+        void RefreshFeedbackGroupChoices(_In_ int32_t selectedGroup);
+
+        // One path for every per-kind edit, so none of them can forget to redraw the surface or
+        // mark the layout changed.
+        void ApplyControlEdit(
+            _In_ std::wstring const& id,
+            _In_ std::function<bool(std::wstring const&)> const& edit);
+
+        void ApplyKeyboardEdit();
+        void ApplyClockEdit();
+        void ApplyFeedbackEdit();
+
+        // The full path of a picture or video the customer chose, or empty. Does not copy it.
+        std::wstring PickControlPictureFile();
 
         // What the armed palette tool is called, for the status bar.
         std::wstring NameForArmedKind() const;
@@ -469,6 +541,14 @@ namespace winrt::midiglass::implementation
 
         int32_t m_inspectorTab{ 0 };
         int32_t m_leftTab{ 0 };
+
+        // Combo index to control id, for the two pickers that offer other controls on the
+        // layout: the tempo a clock follows, and the clock a lamp follows.
+        std::vector<std::wstring> m_tempoSourceIds{};
+        std::vector<std::wstring> m_beatSourceIds{};
+
+        // The same, for the devices a control can listen to. The first entry is "any device".
+        std::vector<std::wstring> m_feedbackDeviceNames{};
 
         // ---- pane dividers ----
 

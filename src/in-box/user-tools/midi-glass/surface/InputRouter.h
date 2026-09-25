@@ -32,6 +32,14 @@ namespace glass
         // A button or a pad went down or came up, and a toggle changed state.
         std::function<void(size_t itemIndex, bool isOn)> Switched{};
 
+        // The other axis of a two axis control. Separate from ValueChanged so every control
+        // that only has one value pays nothing for the ones that have two.
+        std::function<void(size_t itemIndex, double value, bool isFinal)> ValueYChanged{};
+
+        // A key on a piano keyboard went down or came up, with how hard it was hit. Key is
+        // counted from the leftmost drawn, not from note zero.
+        std::function<void(size_t itemIndex, int32_t key, double velocity, bool isDown)> KeyChanged{};
+
         // Where the nearest stop is, or the position unchanged. The engine owns the stops; the
         // surface only has to put the finger on one.
         std::function<double(size_t itemIndex, double position)> Snap{};
@@ -77,10 +85,22 @@ namespace glass
             // Where it goes when the finger comes off, and whether it goes there at all.
             bool ReturnsToRest{ false };
             double RestValue{ 0.0 };
+            double RestValueY{ 0.0 };
 
             double StartValue{ 0.0 };
             double StartY{ 0.0 };
+            double StartX{ 0.0 };
             double Value{ 0.0 };
+            double ValueY{ 0.0 };
+
+            // Which way a finger drags this control up. Knobs and encoders only.
+            DragAxis Drag{ DragAxis::Vertical };
+
+            // A copy rather than a pointer into the document, because the document can be
+            // edited underneath a gesture and a keyboard has to keep playing the key it started.
+            KeyboardSpec Keyboard{};
+
+            int32_t PressedKey{ -1 };
         };
 
         void OnPressed(_In_ size_t index, _In_ xaml::Input::PointerRoutedEventArgs const& args);
@@ -89,8 +109,19 @@ namespace glass
         void OnCaptureLost(_In_ size_t index);
 
         void Publish(_In_ Binding& binding, _In_ double value, _In_ bool isFinal);
+        void PublishY(_In_ Binding& binding, _In_ double value, _In_ bool isFinal);
+
+        // A touch anywhere on a keyboard, and the same when it moves: sliding off one key and
+        // onto the next releases the first and plays the second, the way a finger dragged along
+        // a real keyboard does.
+        void TouchKeyboard(
+            _In_ Binding& binding,
+            _In_ double x,
+            _In_ double y,
+            _In_ bool down);
 
         std::vector<Binding> m_bindings{};
+        SurfaceRenderer* m_renderer{ nullptr };
         int32_t m_heldCount{ 0 };
         bool m_viewMode{ false };
     };

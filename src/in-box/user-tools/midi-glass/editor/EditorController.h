@@ -224,6 +224,23 @@ namespace glass
         bool SetControlSendInterval(_In_ std::wstring const& id, _In_ int32_t milliseconds);
         bool SetControlPickup(_In_ std::wstring const& id, _In_ PickupMode pickup);
 
+        // Which way a finger drags a knob or an encoder up.
+        bool SetControlDrag(_In_ std::wstring const& id, _In_ DragAxis drag);
+
+        // The marks across the travel, and whether the value at each stop is printed beside
+        // them.
+        bool SetControlTicks(_In_ std::wstring const& id, _In_ TickMarks const& ticks);
+        bool SetControlShowDetentValues(_In_ std::wstring const& id, _In_ bool show);
+
+        // The picture or video an image control shows, and the fill behind a grouping panel.
+        bool SetControlPicture(_In_ std::wstring const& id, _In_ Picture const& picture);
+
+        bool SetControlKeyboard(_In_ std::wstring const& id, _In_ KeyboardSpec const& keyboard);
+        bool SetControlClock(_In_ std::wstring const& id, _In_ ClockSpec const& clock);
+
+        // The second axis's starting value, for an XY pad and a joystick.
+        bool SetControlDefaultValueY(_In_ std::wstring const& id, _In_ double value);
+
         // ------------------------------------------------------------------ what a control sends
 
         bool AddMessage(_In_ std::wstring const& id);

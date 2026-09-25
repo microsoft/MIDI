@@ -226,6 +226,61 @@ namespace winrt::midiglass::implementation
                 return path;
             }
 
+            case glass::PaletteArtShape::Keys:
+            {
+                controls::Grid grid{};
+
+                grid.Width(art.Width);
+                grid.Height(art.Height);
+
+                controls::StackPanel whites{};
+
+                whites.Orientation(controls::Orientation::Horizontal);
+                whites.Spacing(1.0);
+
+                constexpr int32_t whiteCount = 7;
+
+                auto const whiteWidth = (art.Width - (whiteCount - 1)) / whiteCount;
+
+                for (int32_t i = 0; i < whiteCount; ++i)
+                {
+                    shapes::Rectangle key{};
+
+                    key.Width(whiteWidth);
+                    key.Height(art.Height);
+                    key.RadiusX(art.CornerRadius);
+                    key.RadiusY(art.CornerRadius);
+                    key.UseLayoutRounding(false);
+                    key.Fill(AccentAt(0.55));
+
+                    whites.Children().Append(key);
+                }
+
+                controls::Canvas blacks{};
+
+                // Where the black keys fall in an octave: after the first, second, fourth,
+                // fifth and sixth white key.
+                for (auto const after : { 1, 2, 4, 5, 6 })
+                {
+                    shapes::Rectangle key{};
+
+                    key.Width(whiteWidth * 0.6);
+                    key.Height(art.Height * 0.6);
+                    key.UseLayoutRounding(false);
+                    key.Fill(AccentAt(1.0));
+
+                    controls::Canvas::SetLeft(key, after * (whiteWidth + 1.0) - whiteWidth * 0.3);
+                    controls::Canvas::SetTop(key, 0.0);
+
+                    blacks.Children().Append(key);
+                }
+
+                grid.Children().Append(whites);
+                grid.Children().Append(blacks);
+
+                return grid;
+            }
+
             case glass::PaletteArtShape::Rectangle:
             default:
             {

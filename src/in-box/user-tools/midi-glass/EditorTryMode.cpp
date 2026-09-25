@@ -90,6 +90,40 @@ namespace winrt::midiglass::implementation
                 }
             };
 
+        m_player->ActivitySeen = [weak](uint32_t controlIndex)
+            {
+                auto strong = weak.get();
+
+                if (strong == nullptr || !strong->m_tryMode)
+                {
+                    return;
+                }
+
+                size_t itemIndex{ 0 };
+
+                if (strong->m_renderer.TryFindItem(controlIndex, itemIndex))
+                {
+                    strong->m_renderer.Bloom(itemIndex);
+                }
+            };
+
+        m_player->BeatMoved = [weak](uint32_t controlIndex, int32_t beatInBar, double phase, bool running)
+            {
+                auto strong = weak.get();
+
+                if (strong == nullptr)
+                {
+                    return;
+                }
+
+                size_t itemIndex{ 0 };
+
+                if (strong->m_renderer.TryFindItem(controlIndex, itemIndex))
+                {
+                    strong->m_renderer.SetBeat(itemIndex, beatInBar, phase, running);
+                }
+            };
+
         m_player->Sent = [weak](glass::SentMessage const& message)
             {
                 if (auto strong = weak.get())
@@ -233,6 +267,45 @@ namespace winrt::midiglass::implementation
                     if (auto strong = weak.get())
                     {
                         strong->OnTryValueChanged(itemIndex, value, isFinal);
+                    }
+                };
+
+            m_input.ValueYChanged = [weak](size_t itemIndex, double value, bool isFinal)
+                {
+                    auto strong = weak.get();
+
+                    if (strong == nullptr)
+                    {
+                        return;
+                    }
+
+                    strong->m_renderer.SetValueY(itemIndex, value);
+
+                    if (strong->m_tryMode && strong->m_player != nullptr)
+                    {
+                        strong->m_player->ValueYChanged(
+                            strong->m_renderer.ControlIndexOf(itemIndex), value, isFinal);
+                    }
+                };
+
+            m_input.KeyChanged = [weak](size_t itemIndex, int32_t key, double velocity, bool isDown)
+                {
+                    auto strong = weak.get();
+
+                    if (strong == nullptr)
+                    {
+                        return;
+                    }
+
+                    if (isDown)
+                    {
+                        strong->m_renderer.Bloom(itemIndex);
+                    }
+
+                    if (strong->m_tryMode && strong->m_player != nullptr)
+                    {
+                        strong->m_player->KeyChanged(
+                            strong->m_renderer.ControlIndexOf(itemIndex), key, velocity, isDown);
                     }
                 };
 

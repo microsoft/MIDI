@@ -983,6 +983,12 @@
   <data name="PaletteGroupLayout" xml:space="preserve">
     <value>Grouping</value>
   </data>
+  <data name="PaletteGroupKeys" xml:space="preserve">
+    <value>Keys</value>
+  </data>
+  <data name="PaletteKeyboard" xml:space="preserve">
+    <value>Keyboard</value>
+  </data>
   <data name="PalettePanel" xml:space="preserve">
     <value>Group</value>
   </data>
@@ -1080,10 +1086,265 @@
     <value>Look</value>
   </data>
   <data name="InspectorMidiItem.Content" xml:space="preserve">
-    <value>MIDI</value>
+    <value>Sends</value>
+  </data>
+  <data name="InspectorMidiInItem.Content" xml:space="preserve">
+    <value>Listens</value>
   </data>
   <data name="InspectorBehaviorItem.Content" xml:space="preserve">
     <value>Behavior</value>
+  </data>
+  <data name="InspectorMarksHeading.Text" xml:space="preserve">
+    <value>Marks</value>
+  </data>
+  <data name="TicksShowCheck.Content" xml:space="preserve">
+    <value>Show marks</value>
+  </data>
+  <data name="TickCountBox.Header" xml:space="preserve">
+    <value>How many</value>
+  </data>
+  <data name="TicksGridCaption" xml:space="preserve">
+    <value>Marks give a hand somewhere to be other than the two ends. A two axis control draws the same number both ways, as a grid.</value>
+  </data>
+  <data name="TicksFollowStopsFormat" xml:space="preserve">
+    <value>This control has {0} stops, so it draws a mark at each of them instead.</value>
+  </data>
+  <data name="ShowDetentValuesCheck.Content" xml:space="preserve">
+    <value>Print the value at each stop</value>
+  </data>
+  <data name="InspectorPictureHeading.Text" xml:space="preserve">
+    <value>Picture</value>
+  </data>
+  <data name="ChoosePictureButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Choose a picture</value>
+  </data>
+  <data name="ChoosePictureLabel.Text" xml:space="preserve">
+    <value>Choose…</value>
+  </data>
+  <data name="RemovePictureButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Remove the picture</value>
+  </data>
+  <data name="RemovePictureLabel.Text" xml:space="preserve">
+    <value>Remove</value>
+  </data>
+  <data name="PictureNoneCaption" xml:space="preserve">
+    <value>No picture yet. A picture you choose is copied next to the layout, so the two travel together.</value>
+  </data>
+  <data name="PictureOpenTitle" xml:space="preserve">
+    <value>Choose a picture or a video</value>
+  </data>
+  <data name="PictureFitCombo.Header" xml:space="preserve">
+    <value>How it fits</value>
+  </data>
+  <data name="PictureOpacitySlider.Header" xml:space="preserve">
+    <value>How strongly it shows</value>
+  </data>
+  <data name="PictureLoopsCheck.Content" xml:space="preserve">
+    <value>Play a video on a loop</value>
+  </data>
+  <data name="InspectorKeysHeading.Text" xml:space="preserve">
+    <value>Keys</value>
+  </data>
+  <data name="KeyCountLabel.Text" xml:space="preserve">
+    <value>How many keys</value>
+  </data>
+  <data name="KeyCountBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>How many keys</value>
+  </data>
+  <data name="LowestNoteLabel.Text" xml:space="preserve">
+    <value>Lowest key plays</value>
+  </data>
+  <data name="LowestNoteBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Note the lowest key plays</value>
+  </data>
+  <data name="KeyboardRangeFormat" xml:space="preserve">
+    <value>{0} up to {1}.</value>
+  </data>
+  <data name="KeyColorsLabel.Text" xml:space="preserve">
+    <value>Key colors</value>
+  </data>
+  <data name="WhiteKeyColorBox.Header" xml:space="preserve">
+    <value>White keys</value>
+  </data>
+  <data name="BlackKeyColorBox.Header" xml:space="preserve">
+    <value>Black keys</value>
+  </data>
+  <data name="PressedKeyColorBox.Header" xml:space="preserve">
+    <value>Key being played</value>
+  </data>
+  <data name="KeyVelocityCheck.Content" xml:space="preserve">
+    <value>Velocity from where the key is touched</value>
+  </data>
+  <data name="InspectorDragHeading.Text" xml:space="preserve">
+    <value>Which way to drag</value>
+  </data>
+  <data name="DragAxisCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Which way to drag</value>
+  </data>
+  <data name="DragAxisVertical" xml:space="preserve">
+    <value>Up and down</value>
+  </data>
+  <data name="DragAxisHorizontal" xml:space="preserve">
+    <value>Left and right</value>
+  </data>
+  <data name="DragAxisCaption.Text" xml:space="preserve">
+    <value>A circle is hard to trace on glass, so a knob is dragged in a straight line instead. Up is more, or right is more for a row of knobs in a narrow strip.</value>
+  </data>
+  <data name="SpringTargetCombo.Header" xml:space="preserve">
+    <value>Springs back to</value>
+  </data>
+  <data name="SpringTargetLowest" xml:space="preserve">
+    <value>The bottom</value>
+  </data>
+  <data name="SpringTargetCenter" xml:space="preserve">
+    <value>The middle</value>
+  </data>
+  <data name="SpringTargetHighest" xml:space="preserve">
+    <value>The top</value>
+  </data>
+  <data name="SpringTargetCustom" xml:space="preserve">
+    <value>Wherever the starting value is</value>
+  </data>
+  <data name="InspectorClockHeading.Text" xml:space="preserve">
+    <value>Tempo</value>
+  </data>
+  <data name="ClockBpmBox.Header" xml:space="preserve">
+    <value>Beats per minute</value>
+  </data>
+  <data name="ClockSourceLabel.Text" xml:space="preserve">
+    <value>Take the tempo from</value>
+  </data>
+  <data name="ClockSourceCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Take the tempo from</value>
+  </data>
+  <data name="ClockSourceNone" xml:space="preserve">
+    <value>The number above</value>
+  </data>
+  <data name="ClockSourceCaption.Text" xml:space="preserve">
+    <value>A knob or a fader on this layout can set the tempo while it runs. The two numbers below say what its ends mean.</value>
+  </data>
+  <data name="ClockLowestBpmBox.Header" xml:space="preserve">
+    <value>At the bottom</value>
+  </data>
+  <data name="ClockHighestBpmBox.Header" xml:space="preserve">
+    <value>At the top</value>
+  </data>
+  <data name="ClockStartsRunningCheck.Content" xml:space="preserve">
+    <value>Running when the layout opens</value>
+  </data>
+  <data name="ClockSendsTransportCheck.Content" xml:space="preserve">
+    <value>Send start and stop as well</value>
+  </data>
+  <data name="FeedbackEnabledSwitch.Header" xml:space="preserve">
+    <value>Follow what arrives</value>
+  </data>
+  <data name="FeedbackEnabledCaption.Text" xml:space="preserve">
+    <value>The control moves or lights when the device sends, instead of only when a finger does.</value>
+  </data>
+  <data name="FeedbackModeHeading.Text" xml:space="preserve">
+    <value>What to listen for</value>
+  </data>
+  <data name="FeedbackModeCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>What to listen for</value>
+  </data>
+  <data name="FeedbackModeMessage" xml:space="preserve">
+    <value>One message</value>
+  </data>
+  <data name="FeedbackModeActivity" xml:space="preserve">
+    <value>Anything at all</value>
+  </data>
+  <data name="FeedbackModeTempo" xml:space="preserve">
+    <value>The beat</value>
+  </data>
+  <data name="FeedbackModeMessageCaption" xml:space="preserve">
+    <value>The control follows one controller, note or bend, and shows the value it carries.</value>
+  </data>
+  <data name="FeedbackModeActivityCaption" xml:space="preserve">
+    <value>The control lights whenever anything arrives. This is what an activity light does.</value>
+  </data>
+  <data name="FeedbackModeTempoCaption" xml:space="preserve">
+    <value>The control flashes on the beat, from incoming MIDI clock or from a clock generator on this layout.</value>
+  </data>
+  <data name="FeedbackDeviceHeading.Text" xml:space="preserve">
+    <value>From</value>
+  </data>
+  <data name="FeedbackDeviceCombo.Header" xml:space="preserve">
+    <value>Device</value>
+  </data>
+  <data name="FeedbackAnyDevice" xml:space="preserve">
+    <value>Any device</value>
+  </data>
+  <data name="FeedbackGroupCombo.Header" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="FeedbackChannelCombo.Header" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="FeedbackMatchChannelCheck.Content" xml:space="preserve">
+    <value>Only that channel</value>
+  </data>
+  <data name="FeedbackKindHeading.Text" xml:space="preserve">
+    <value>Which message</value>
+  </data>
+  <data name="FeedbackKindCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Which message</value>
+  </data>
+  <data name="FeedbackNumberBox.Header" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="FeedbackTempoHeading.Text" xml:space="preserve">
+    <value>Whose beat</value>
+  </data>
+  <data name="FeedbackTempoCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Whose beat</value>
+  </data>
+  <data name="FeedbackTempoCaption.Text" xml:space="preserve">
+    <value>Either the clock arriving from the device above, or a clock generator on this layout.</value>
+  </data>
+  <data name="BeatSourceIncoming" xml:space="preserve">
+    <value>Clock arriving from the device</value>
+  </data>
+  <data name="FeedbackHoldHeading.Text" xml:space="preserve">
+    <value>Stays lit for</value>
+  </data>
+  <data name="FeedbackHoldBox.Header" xml:space="preserve">
+    <value>Milliseconds</value>
+  </data>
+  <data name="FeedbackHoldCaption.Text" xml:space="preserve">
+    <value>Long enough to see across a room, short enough not to smear into the next hit.</value>
+  </data>
+  <data name="GroupAny" xml:space="preserve">
+    <value>Any group</value>
+  </data>
+  <data name="DetentHeading.Text" xml:space="preserve">
+    <value>Stops</value>
+  </data>
+  <data name="DetentModeCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Stops</value>
+  </data>
+  <data name="DetentModeContinuous" xml:space="preserve">
+    <value>Smooth all the way</value>
+  </data>
+  <data name="DetentModeEvenSteps" xml:space="preserve">
+    <value>Evenly spaced</value>
+  </data>
+  <data name="DetentModeList" xml:space="preserve">
+    <value>A list of values</value>
+  </data>
+  <data name="DetentStepBox.Header" xml:space="preserve">
+    <value>Step, in the same units as the ends</value>
+  </data>
+  <data name="DetentStopsBox.Header" xml:space="preserve">
+    <value>The values, separated by commas</value>
+  </data>
+  <data name="DetentContinuousCaption" xml:space="preserve">
+    <value>The control moves smoothly, which is what a volume fader wants.</value>
+  </data>
+  <data name="DetentStepCaption" xml:space="preserve">
+    <value>The control clicks onto each step. The step is measured from the bottom end, so a range that does not start at zero still has a stop on its own bottom end.</value>
+  </data>
+  <data name="DetentListCaption" xml:space="preserve">
+    <value>Each value gets an equal share of the travel, not its position between the ends. That is what makes a list like 10, 17, 38, 39, 40 usable with a finger.</value>
   </data>
   <data name="InspectorPageKind" xml:space="preserve">
     <value>Page</value>

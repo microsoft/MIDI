@@ -11,6 +11,7 @@
 #include <combaseapi.h>
 
 #include <algorithm>
+#include <cmath>
 #include <unordered_set>
 
 namespace glass
@@ -95,6 +96,242 @@ namespace glass
         }
 
         return total;
+    }
+
+    _Use_decl_annotations_
+    Control const* LayoutDocument::ControlAtIndex(size_t controlIndex) const noexcept
+    {
+        for (auto const& page : Pages)
+        {
+            if (controlIndex < page.Controls.size())
+            {
+                return &page.Controls[controlIndex];
+            }
+
+            controlIndex -= page.Controls.size();
+        }
+
+        return nullptr;
+    }
+
+    _Use_decl_annotations_
+    int32_t DetentStopCount(Control const& control) noexcept
+    {
+        int32_t highest{ 0 };
+
+        for (auto const& message : control.Messages)
+        {
+            auto const& detents = message.Detents;
+
+            if (detents.Mode == DetentMode::ExplicitValues)
+            {
+                highest = std::max(
+                    highest,
+                    static_cast<int32_t>(std::min(detents.Stops.size(), MaximumDetentStops)));
+            }
+            else if (detents.Mode == DetentMode::EvenSteps && detents.Step > 0.0)
+            {
+                auto const span = std::abs(message.Maximum.Value - message.Minimum.Value);
+
+                if (span > 0.0)
+                {
+                    auto const steps =
+                        static_cast<int32_t>(std::floor(span / detents.Step)) + 1;
+
+                    highest = std::max(
+                        highest,
+                        std::clamp(steps, 0, static_cast<int32_t>(MaximumDetentStops)));
+                }
+            }
+        }
+
+        return highest;
+    }
+
+    _Use_decl_annotations_
+    std::vector<double> ParseStopList(std::wstring const& text) noexcept
+    {
+        std::vector<double> stops{};
+
+        try
+        {
+            std::wstring token{};
+
+            auto const flush = [&stops, &token]()
+                {
+                    if (token.empty() || stops.size() >= MaximumDetentStops)
+                    {
+                        token.clear();
+                        return;
+                    }
+
+                    try
+                    {
+                        size_t consumed{ 0 };
+                        auto const value = std::stod(token, &consumed);
+
+                        if (consumed == token.size() && std::isfinite(value))
+                        {
+                            stops.push_back(value);
+                        }
+                    }
+                    catch (...)
+                    {
+                    }
+
+                    token.clear();
+                };
+
+            for (auto const character : text)
+            {
+                if (character == L',' || character == L';' || character == L' ' ||
+                    character == L'\t' || character == L'\r' || character == L'\n')
+                {
+                    flush();
+                }
+                else
+                {
+                    token += character;
+                }
+            }
+
+            flush();
+        }
+        catch (...)
+        {
+        }
+
+        return stops;
+    }
+
+    _Use_decl_annotations_
+    std::wstring FormatStopList(std::vector<double> const& stops) noexcept
+    {
+        try
+        {
+            std::wstring text{};
+
+            for (auto const stop : stops)
+            {
+                if (!text.empty())
+                {
+                    text += L", ";
+                }
+
+                // Whole numbers without a decimal point, because a stop list is usually a row
+                // of values out of a manual and "10.000000" is unreadable.
+                if (stop == std::floor(stop) && std::abs(stop) < 1e15)
+                {
+                    text += std::to_wstring(static_cast<int64_t>(stop));
+                }
+                else
+                {
+                    auto number = std::to_wstring(stop);
+
+                    while (number.size() > 1 && number.back() == L'0')
+                    {
+                        number.pop_back();
+                    }
+
+                    if (!number.empty() && number.back() == L'.')
+                    {
+                        number.pop_back();
+                    }
+
+                    text += number;
+                }
+            }
+
+            return text;
+        }
+        catch (...)
+        {
+            return {};
+        }
+    }
+
+    _Use_decl_annotations_
+    std::vector<std::wstring> DetentStopLabels(Control const& control) noexcept
+    {
+        std::vector<std::wstring> labels{};
+
+        try
+        {
+            // The message with the most stops is the one the control actually snaps to, so it
+            // is the one whose numbers get printed.
+            ControlMessage const* chosen{ nullptr };
+            size_t most{ 0 };
+
+            for (auto const& message : control.Messages)
+            {
+                size_t count{ 0 };
+
+                if (message.Detents.Mode == DetentMode::ExplicitValues)
+                {
+                    count = std::min(message.Detents.Stops.size(), MaximumDetentStops);
+                }
+                else if (message.Detents.Mode == DetentMode::EvenSteps && message.Detents.Step > 0.0)
+                {
+                    auto const span = std::abs(message.Maximum.Value - message.Minimum.Value);
+
+                    count = span > 0.0
+                        ? static_cast<size_t>(std::floor(span / message.Detents.Step)) + 1
+                        : 0;
+                }
+
+                if (count > most)
+                {
+                    most = count;
+                    chosen = &message;
+                }
+            }
+
+            if (chosen == nullptr || most < 2 || most > static_cast<size_t>(MaximumLabeledStops))
+            {
+                return labels;
+            }
+
+            auto const absolute =
+                chosen->Detents.Scaling == ValueScaling::Absolute ||
+                chosen->Minimum.Scaling == ValueScaling::Absolute ||
+                chosen->Maximum.Scaling == ValueScaling::Absolute;
+
+            auto const describe = [absolute](double value)
+                {
+                    if (absolute)
+                    {
+                        return FormatStopList({ value });
+                    }
+
+                    return std::to_wstring(static_cast<int32_t>(std::lround(value * 100.0))) + L" %";
+                };
+
+            if (chosen->Detents.Mode == DetentMode::ExplicitValues)
+            {
+                for (size_t index = 0; index < most; ++index)
+                {
+                    labels.push_back(describe(chosen->Detents.Stops[index]));
+                }
+
+                return labels;
+            }
+
+            // Measured from the minimum, so a range that does not start at zero still has a
+            // stop on its own bottom end.
+            auto const ascending = chosen->Maximum.Value >= chosen->Minimum.Value;
+            auto const step = ascending ? chosen->Detents.Step : -chosen->Detents.Step;
+
+            for (size_t index = 0; index < most; ++index)
+            {
+                labels.push_back(describe(chosen->Minimum.Value + step * static_cast<double>(index)));
+            }
+        }
+        catch (...)
+        {
+            labels.clear();
+        }
+
+        return labels;
     }
 
     std::vector<Control const*> LayoutDocument::ControlsOutsidePage() const noexcept

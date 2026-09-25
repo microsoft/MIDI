@@ -94,6 +94,50 @@ namespace glass
         float ThumbLineThickness{ 0.0f };
 
         bool Vertical{ false };
+
+        // ---- two axis: the XY pad and the joystick ----
+
+        comp::CompositionEllipseGeometry PuckGeometry{ nullptr };
+        comp::CompositionRoundedRectangleGeometry CrossAcross{ nullptr };
+        comp::CompositionRoundedRectangleGeometry CrossDown{ nullptr };
+
+        // The grid behind a two axis field. Its own visual because it has to be clipped to the
+        // shape of the field, which a round one does not share with its bounding box. Kept here
+        // so a resize replaces it instead of stacking another one behind it.
+        comp::ShapeVisual Grid{ nullptr };
+
+        // The rectangle the puck may sit in, already inset by its own radius so it never hangs
+        // off the edge of the field.
+        float FieldX{ 0.0f };
+        float FieldY{ 0.0f };
+        float FieldWidth{ 0.0f };
+        float FieldHeight{ 0.0f };
+        float PuckRadius{ 0.0f };
+
+        // ---- ribbon: light under the finger rather than a bar that grows ----
+
+        std::vector<comp::CompositionRoundedRectangleGeometry> RibbonGlow{};
+        float RibbonSpan{ 0.0f };
+
+        // ---- piano keyboard ----
+
+        std::vector<comp::CompositionSpriteShape> KeyShapes{};
+        std::vector<comp::CompositionBrush> KeyRestBrushes{};
+        comp::CompositionBrush KeyPressedBrush{ nullptr };
+        int32_t PressedKey{ -1 };
+
+        // ---- beat clock ----
+
+        comp::CompositionEllipseGeometry SweepGeometry{ nullptr };
+        comp::CompositionSpriteShape BeatShape{ nullptr };
+        std::vector<comp::CompositionSpriteShape> PipShapes{};
+        comp::CompositionBrush PipLitBrush{ nullptr };
+        comp::CompositionBrush PipDimBrush{ nullptr };
+        comp::CompositionBrush BeatOnBrush{ nullptr };
+        comp::CompositionBrush BeatOffBrush{ nullptr };
+
+        // The beat count inside the ring. A XAML text block, because composition has no text.
+        controls::TextBlock BeatText{ nullptr };
     };
 
     // Draws one page of a layout, the way phase 0 decided: a light XAML element per control for
@@ -137,14 +181,39 @@ namespace glass
 
         ControlKind KindAt(_In_ size_t itemIndex) const noexcept;
 
+        // Which way a finger drags this control up, and what keys it draws. Both live here
+        // rather than being looked up in the document, because input runs on the hot path and
+        // the document can be edited underneath a gesture.
+        DragAxis DragAxisAt(_In_ size_t itemIndex) const noexcept;
+        KeyboardSpec const& KeyboardAt(_In_ size_t itemIndex) const noexcept;
+
         // Where this control sits when nothing is holding it, and whether it goes back there on
         // its own. A pitch wheel does; a volume fader had better not.
         bool ReturnsToRestAt(_In_ size_t itemIndex) const noexcept;
         double RestValueAt(_In_ size_t itemIndex) const noexcept;
+        double RestValueYAt(_In_ size_t itemIndex) const noexcept;
 
         // Moves the drawing. Does not send anything and does not touch the XAML element's value,
         // which the caller owns.
         void SetValue(_In_ size_t itemIndex, _In_ double value) noexcept;
+
+        // The other axis of an XY pad or a joystick. Bottom is zero, which is the way every
+        // joystick and every plug-in reads and the opposite of the way the screen counts.
+        void SetValueY(_In_ size_t itemIndex, _In_ double value) noexcept;
+
+        double ValueYAt(_In_ size_t itemIndex) const noexcept;
+
+        // Which key on a piano keyboard is down, counted from the leftmost. -1 is none.
+        void SetPressedKey(_In_ size_t itemIndex, _In_ int32_t key) noexcept;
+
+        // The beat a clock generator is on, and how far through it. Drawn by the compositor
+        // from two numbers rather than animated, so the picture can never disagree with the
+        // clock that is actually sending.
+        void SetBeat(
+            _In_ size_t itemIndex,
+            _In_ int32_t beatInBar,
+            _In_ double phase,
+            _In_ bool running) noexcept;
 
         // The device this control sends to is not here. It is struck through rather than hidden
         // or disabled: a layout with a missing device still has to be editable, and the person
@@ -209,6 +278,67 @@ namespace glass
             _In_ Control const& control,
             _In_ Theme const& theme);
 
+        // The picture or video a control shows, and the fill behind a grouping panel. A XAML
+        // sibling rather than a composition brush, because that is the one way png, jpg, svg
+        // and video are all the same amount of work.
+        void LayoutPicture(
+            _In_ size_t itemIndex,
+            _In_ Control const& control);
+
+        // The beat count inside a clock's ring, and where it sits. A XAML sibling like the
+        // label, because composition has no text.
+        void LayoutBeatText(
+            _In_ size_t itemIndex,
+            _In_ Control const& control,
+            _In_ Theme const& theme);
+
+        // The number at each stop, for a control asked to show them. One canvas per control
+        // holding one text block per stop, so moving the control moves them all at once.
+        void LayoutDetentValues(
+            _In_ size_t itemIndex,
+            _In_ Control const& control,
+            _In_ Theme const& theme);
+
+        // The two axis field, for the XY pad and the joystick.
+        void LayoutTwoAxis(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Control const& control,
+            _In_ ControlColors const& colors,
+            _In_ Theme const& theme,
+            _In_ float width,
+            _In_ float height);
+
+        void LayoutRibbon(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Control const& control,
+            _In_ ControlColors const& colors,
+            _In_ Theme const& theme,
+            _In_ float width,
+            _In_ float height);
+
+        void LayoutKeyboard(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Control const& control,
+            _In_ ControlColors const& colors,
+            _In_ float width,
+            _In_ float height);
+
+        void LayoutClock(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Control const& control,
+            _In_ ControlColors const& colors,
+            _In_ float width,
+            _In_ float height);
+
+        // Puts a two axis control's puck and crosshair where its two values say, and a ribbon's
+        // light where its one value says.
+        void MovePuck(_In_ size_t itemIndex) noexcept;
+        void MoveRibbonLight(_In_ size_t itemIndex) noexcept;
+
         // The number inside the control, for the controls that show one.
         void LayoutValueText(
             _In_ size_t itemIndex,
@@ -256,7 +386,22 @@ namespace glass
         // Parallel to m_kinds: where a spring-return control goes when it is let go, and which
         // controls do that at all.
         std::vector<double> m_restValues{};
+        std::vector<double> m_restValuesY{};
         std::vector<bool> m_returnsToRest{};
+        std::vector<DragAxis> m_dragAxes{};
+        std::vector<KeyboardSpec> m_keyboards{};
+
+        // The picture or video a control shows, and the fill behind a grouping panel. A XAML
+        // child of the host like the label, so it has to be carried when the control moves.
+        std::vector<xaml::FrameworkElement> m_pictures{};
+
+        // The numbers beside a stepped control's marks, one canvas per control.
+        std::vector<controls::Canvas> m_detentTexts{};
+
+        // The beat count a clock generator shows. One text block per clock, null everywhere
+        // else, so a page with no clock on it pays nothing.
+        std::vector<controls::TextBlock> m_beatTexts{};
+        std::vector<double> m_beatTextOffsets{};
 
         // The number drawn inside a control, for the few that show one. Null everywhere else,
         // so a page of two hundred pays nothing for a feature four of them use.
@@ -287,6 +432,7 @@ namespace glass
 
         // What each control is showing, so a re-layout can put the pipe back where it was.
         std::vector<double> m_values{};
+        std::vector<double> m_valuesY{};
 
         // One brush per distinct color for the whole page. A control never owns a brush, which is
         // what keeps a theme swap a handful of objects rather than a walk of two hundred.
@@ -300,5 +446,8 @@ namespace glass
 
         ThemeColor m_deck{};
         bool m_reducedMotion{ false };
+
+        // Where the layout file is, so a control's picture resolves against its own folder.
+        std::wstring m_layoutFilePath{};
     };
 }

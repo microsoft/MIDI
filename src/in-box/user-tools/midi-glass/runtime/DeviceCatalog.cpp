@@ -280,6 +280,33 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    int32_t DeviceCatalog::IndexOfEndpoint(std::wstring const& endpointDeviceId) const noexcept
+    {
+        try
+        {
+            if (endpointDeviceId.empty())
+            {
+                return -1;
+            }
+
+            std::scoped_lock guard{ m_lock };
+
+            for (size_t index = 0; index < m_resolved.size(); ++index)
+            {
+                if (m_resolved[index].EndpointDeviceId == endpointDeviceId)
+                {
+                    return static_cast<int32_t>(index);
+                }
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return -1;
+    }
+
+    _Use_decl_annotations_
     std::wstring DeviceCatalog::NameForEndpoint(std::wstring const& endpointDeviceId) const noexcept
     {
         try

@@ -102,6 +102,10 @@ namespace glass
         // binding is written in terms of a name.
         std::wstring NameForEndpoint(_In_ std::wstring const& endpointDeviceId) const noexcept;
 
+        // Which entry of the layout's device table this endpoint is, or -1. The same index
+        // every destination in the binding engine refers to.
+        int32_t IndexOfEndpoint(_In_ std::wstring const& endpointDeviceId) const noexcept;
+
         // Leaves the list of catalogs the watcher notifies. Called by the destructor as well,
         // because a handler left behind pointing at a closed window is a use after free waiting
         // for somebody to plug something in.

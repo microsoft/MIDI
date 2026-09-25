@@ -78,18 +78,22 @@ namespace glass
             // ---- Two axis ----
             { ControlKind::XYPad,   L"PaletteXYPad",   L"PaletteGroupTwoAxis", L'\uE80A',
                 { PaletteArtShape::Rectangle, 18, 18, 3, 0.80, 0.00 } },
-            { ControlKind::XYPad,   L"PaletteJoystick", L"PaletteGroupTwoAxis", L'\uE80A',
-                { PaletteArtShape::Ellipse, 18, 18, 0, 0.80, 0.00 }, true },
-            { ControlKind::XYPad,   L"PaletteRibbon",  L"PaletteGroupTwoAxis", L'\uE80A',
-                { PaletteArtShape::Rectangle, 20, 8, 4, 0.00, 0.30 }, true },
+            { ControlKind::Joystick, L"PaletteJoystick", L"PaletteGroupTwoAxis", L'\uE80A',
+                { PaletteArtShape::Ellipse, 18, 18, 0, 0.80, 0.00 } },
+            { ControlKind::Ribbon,  L"PaletteRibbon",  L"PaletteGroupTwoAxis", L'\uE80A',
+                { PaletteArtShape::Rectangle, 20, 8, 4, 0.00, 0.30 } },
 
             // ---- Generators ----
-            { ControlKind::Knob,    L"PaletteBeatClock", L"PaletteGroupGenerators", L'\uE916',
-                { PaletteArtShape::Glyph, 18, 18, 0, 0.00, 0.00, L"\uE916" }, true },
+            { ControlKind::BeatClock, L"PaletteBeatClock", L"PaletteGroupGenerators", L'\uE916',
+                { PaletteArtShape::Glyph, 18, 18, 0, 0.00, 0.00, L"\uE916" } },
             { ControlKind::Knob,    L"PaletteLfo",     L"PaletteGroupGenerators", L'\uE9E9',
                 { PaletteArtShape::Wave, 20, 12, 0, 0.85, 0.00 }, true },
             { ControlKind::Knob,    L"PaletteSteps",   L"PaletteGroupGenerators", L'\uE8FD',
                 { PaletteArtShape::HorizontalBars, 20, 10, 0, 0.00, 0.80 }, true },
+
+            // ---- Keys ----
+            { ControlKind::PianoKeyboard, L"PaletteKeyboard", L"PaletteGroupKeys", L'\uEC4F',
+                { PaletteArtShape::Keys, 26, 14, 1, 0.00, 0.00 } },
 
             // ---- Feedback and text ----
             { ControlKind::Meter,   L"PaletteMeter",   L"PaletteGroupDisplay", L'\uE9D9',
@@ -151,7 +155,8 @@ namespace glass
         return kind == ControlKind::Knob ||
             kind == ControlKind::Encoder ||
             kind == ControlKind::Pad ||
-            kind == ControlKind::XYPad;
+            kind == ControlKind::XYPad ||
+            kind == ControlKind::Joystick;
     }
 
     _Use_decl_annotations_
@@ -213,6 +218,37 @@ namespace glass
             control.LabelPlaced = LabelPlacementOverride::Inside;
         }
 
+        // Text on the deck, with no plate and no rim. A caption that arrives inside a smoked
+        // glass box is a caption somebody has to undo before they can use it; a border and a
+        // background are one click away for anybody who wants them.
+        if (kind == ControlKind::Label)
+        {
+            control.Style = ControlStyleOverride::Bare;
+            control.LabelPlaced = LabelPlacementOverride::InsideCenter;
+        }
+
+        // A joystick that does not recenter is an XY pad drawn as a circle, so the spring is on
+        // from the start and the middle is where it sits.
+        if (kind == ControlKind::Joystick)
+        {
+            control.ReturnsToDefault = true;
+            control.DefaultValue = 0.5;
+            control.DefaultValueY = 0.5;
+        }
+
+        // Nothing rides a ribbon, so where it goes when the finger lifts is the first question
+        // anybody asks about one. It holds its value until told otherwise.
+        if (kind == ControlKind::Ribbon)
+        {
+            control.Ticks.Show = false;
+        }
+
+        if (kind == ControlKind::PianoKeyboard)
+        {
+            control.Ticks.Show = false;
+            control.LabelPlaced = LabelPlacementOverride::None;
+        }
+
         if (!SendsAnything(kind))
         {
             return control;
@@ -239,6 +275,46 @@ namespace glass
 
             control.Messages.push_back(std::move(message));
             control.Messages.push_back(std::move(off));
+            break;
+        }
+
+        // A keyboard plays whatever key was pressed, so the note number comes from the key
+        // rather than from a row. One row says which device and channel, and that is all.
+        case ControlKind::PianoKeyboard:
+        {
+            message.Trigger = MessageTrigger::Changes;
+            message.Kind = MessageKind::Note;
+
+            control.Messages.push_back(std::move(message));
+            break;
+        }
+
+        // The clock generates its own stream. It carries a row only so it knows where to send.
+        case ControlKind::BeatClock:
+        {
+            message.Trigger = MessageTrigger::Changes;
+            message.Kind = MessageKind::RawUmp;
+
+            control.Messages.push_back(std::move(message));
+            break;
+        }
+
+        // Two axes, two rows, out of the box. A pad that only sends one is a pad somebody has
+        // to finish wiring before it does what its name says.
+        case ControlKind::XYPad:
+        case ControlKind::Joystick:
+        {
+            message.Trigger = MessageTrigger::Changes;
+            message.Kind = MessageKind::ControlChange;
+            message.Number = NextFreeNumber(page, MessageKind::ControlChange, FirstController);
+            message.Axis = ValueAxis::X;
+
+            auto vertical = message;
+            vertical.Axis = ValueAxis::Y;
+            vertical.Number = message.Number + 1;
+
+            control.Messages.push_back(std::move(message));
+            control.Messages.push_back(std::move(vertical));
             break;
         }
 

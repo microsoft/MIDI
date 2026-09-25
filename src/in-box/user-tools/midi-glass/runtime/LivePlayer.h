@@ -24,6 +24,7 @@
 #include "DeviceCatalog.h"
 #include "OutputRouter.h"
 #include "SequenceRunner.h"
+#include "ClockGenerator.h"
 
 namespace glass
 {
@@ -73,6 +74,13 @@ namespace glass
         // because the editor and the runtime window draw the same control differently.
         std::function<void(uint32_t controlIndex, double value)> FeedbackMoved{};
 
+        // A device sent something a control is only watching for as traffic, so there is no
+        // value to carry. What an activity lamp lights on.
+        std::function<void(uint32_t controlIndex)> ActivitySeen{};
+
+        // A clock generator moved on. The owner draws the sweep and the pips.
+        std::function<void(uint32_t controlIndex, int32_t beatInBar, double phase, bool running)> BeatMoved{};
+
         // Every message that actually went out. Left empty by the runtime window, which pays
         // nothing for it; the editor's monitor rail sets it.
         std::function<void(SentMessage const& message)> Sent{};
@@ -119,6 +127,17 @@ namespace glass
 
         void ValueChanged(_In_ uint32_t controlIndex, _In_ double value, _In_ bool isFinal);
 
+        // The other axis of a two axis control. Throttled on its own, because a pad dragged in
+        // a circle is two streams of values and limiting them together would halve both.
+        void ValueYChanged(_In_ uint32_t controlIndex, _In_ double value, _In_ bool isFinal);
+
+        // A key on a piano keyboard, counted from the leftmost drawn.
+        void KeyChanged(
+            _In_ uint32_t controlIndex,
+            _In_ int32_t key,
+            _In_ double velocity,
+            _In_ bool isDown);
+
         // Assistive technology setting a value is one discrete change, not a drag, so it is a
         // whole gesture. Going straight to the release would find nothing held back.
         void SetDirectly(_In_ uint32_t controlIndex, _In_ double value);
@@ -149,6 +168,15 @@ namespace glass
         bool RunSequenceNow(_In_ Sequence const& sequence, _In_ uint32_t controlIndex);
 
         void StopSequenceNow(_In_ uint32_t controlIndex) noexcept;
+
+        // Clock generators. Starting one is what pressing it does; a layout can also ask for it
+        // to be running the moment it opens.
+        void StartClocks();
+        bool IsClockRunning(_In_ uint32_t controlIndex) const noexcept;
+
+        // A control feeding a clock its tempo moved. Does nothing unless some clock on this
+        // layout named that control.
+        void TempoSourceMoved(_In_ uint32_t controlIndex, _In_ double value);
 
         // Everything this process is driving, not just this player. Blocking work is detached.
         static void Panic();
@@ -193,9 +221,31 @@ namespace glass
         DeviceCatalog m_devices{};
 
         std::shared_ptr<SequenceRunner> m_runner{};
+        std::shared_ptr<ClockGenerator> m_clocks{};
+
+        // Which control index each clock generator is, so the page can be walked once at load
+        // rather than on every tick.
+        struct ClockEntry
+        {
+            uint32_t ControlIndex{ 0 };
+            std::wstring ControlId{};
+            ClockSpec Spec{};
+
+            // The control whose value sets the tempo, already resolved. -1 for none.
+            int32_t TempoSourceIndex{ -1 };
+        };
+
+        std::vector<ClockEntry> m_clockControls{};
 
         // One per control, so a fader on a DIN cable can be limited without touching a note on.
         std::vector<ValueThrottle> m_throttles{};
+
+        // The second axis has its own limiter for the same reason it has its own messages.
+        std::vector<ValueThrottle> m_throttlesY{};
+
+        // What each keyboard is playing, so releasing a key sends the note it started rather
+        // than whatever the key would be after an edit.
+        std::vector<uint16_t> m_soundingNotes{};
 
         // Rebuilt when the device table changes, read only on the UI thread, so the path a finger
         // takes never waits on a lock. Swapped whole rather than edited.

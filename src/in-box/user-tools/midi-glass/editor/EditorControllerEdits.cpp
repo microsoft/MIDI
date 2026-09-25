@@ -63,17 +63,22 @@ namespace glass
                 left.UseMidi1Protocol == right.UseMidi1Protocol &&
                 left.SequenceName == right.SequenceName &&
                 left.TargetPageId == right.TargetPageId &&
-                left.TargetLayerId == right.TargetLayerId;
+                left.TargetLayerId == right.TargetLayerId &&
+                left.Axis == right.Axis;
         }
 
         bool SameFeedback(_In_ FeedbackBinding const& left, _In_ FeedbackBinding const& right) noexcept
         {
             return left.Enabled == right.Enabled &&
+                left.Mode == right.Mode &&
                 left.Kind == right.Kind &&
                 left.DeviceName == right.DeviceName &&
                 left.GroupIndex == right.GroupIndex &&
                 left.ChannelIndex == right.ChannelIndex &&
-                left.Number == right.Number;
+                left.Number == right.Number &&
+                left.MatchesChannel == right.MatchesChannel &&
+                left.TempoControlId == right.TempoControlId &&
+                left.HoldMilliseconds == right.HoldMilliseconds;
         }
     }
 
@@ -415,6 +420,211 @@ namespace glass
     }
 
     // ---------------------------------------------------------------- what a control sends
+
+    _Use_decl_annotations_
+    bool EditorController::SetControlDrag(std::wstring const& id, DragAxis drag)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr || control->Drag == drag)
+        {
+            return false;
+        }
+
+        control->Drag = drag;
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetControlTicks(std::wstring const& id, TickMarks const& ticks)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr)
+        {
+            return false;
+        }
+
+        auto const count = std::clamp(ticks.Count, MinimumTickCount, MaximumTickCount);
+
+        if (control->Ticks.Show == ticks.Show && control->Ticks.Count == count)
+        {
+            return false;
+        }
+
+        control->Ticks.Show = ticks.Show;
+        control->Ticks.Count = count;
+
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetControlShowDetentValues(std::wstring const& id, bool show)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr || control->ShowDetentValues == show)
+        {
+            return false;
+        }
+
+        control->ShowDetentValues = show;
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetControlPicture(std::wstring const& id, Picture const& picture)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr)
+        {
+            return false;
+        }
+
+        // A name that is a path is refused rather than trimmed into something that looks safe.
+        // The picture travels beside the layout or it does not travel at all.
+        auto safe = picture;
+        safe.FileName = SanitizeFileName(picture.FileName);
+        safe.Opacity = std::clamp(picture.Opacity, 0.0, 1.0);
+
+        if (control->Image.FileName == safe.FileName &&
+            control->Image.Fit == safe.Fit &&
+            control->Image.Opacity == safe.Opacity &&
+            control->Image.Loops == safe.Loops)
+        {
+            return false;
+        }
+
+        control->Image.FileName = safe.FileName;
+        control->Image.Fit = safe.Fit;
+        control->Image.Opacity = safe.Opacity;
+        control->Image.Loops = safe.Loops;
+
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetControlKeyboard(std::wstring const& id, KeyboardSpec const& keyboard)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr)
+        {
+            return false;
+        }
+
+        auto wanted = keyboard;
+
+        wanted.KeyCount = std::clamp(keyboard.KeyCount, MinimumKeyboardKeys, MaximumKeyboardKeys);
+        wanted.LowestNote = std::clamp(keyboard.LowestNote, 0, 127);
+
+        auto const& current = control->Keyboard;
+
+        if (current.KeyCount == wanted.KeyCount &&
+            current.LowestNote == wanted.LowestNote &&
+            current.WhiteKeyColor == wanted.WhiteKeyColor &&
+            current.BlackKeyColor == wanted.BlackKeyColor &&
+            current.PressedKeyColor == wanted.PressedKeyColor &&
+            current.ShowNoteNames == wanted.ShowNoteNames &&
+            current.VelocityFromKeyPosition == wanted.VelocityFromKeyPosition)
+        {
+            return false;
+        }
+
+        control->Keyboard.KeyCount = wanted.KeyCount;
+        control->Keyboard.LowestNote = wanted.LowestNote;
+        control->Keyboard.WhiteKeyColor = wanted.WhiteKeyColor;
+        control->Keyboard.BlackKeyColor = wanted.BlackKeyColor;
+        control->Keyboard.PressedKeyColor = wanted.PressedKeyColor;
+        control->Keyboard.ShowNoteNames = wanted.ShowNoteNames;
+        control->Keyboard.VelocityFromKeyPosition = wanted.VelocityFromKeyPosition;
+
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetControlClock(std::wstring const& id, ClockSpec const& clock)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr)
+        {
+            return false;
+        }
+
+        auto wanted = clock;
+
+        wanted.BeatsPerMinute = std::clamp(
+            clock.BeatsPerMinute, MinimumBeatsPerMinute, MaximumBeatsPerMinute);
+        wanted.LowestBeatsPerMinute = std::clamp(
+            clock.LowestBeatsPerMinute, MinimumBeatsPerMinute, MaximumBeatsPerMinute);
+        wanted.HighestBeatsPerMinute = std::clamp(
+            clock.HighestBeatsPerMinute, MinimumBeatsPerMinute, MaximumBeatsPerMinute);
+
+        // A clock taking its tempo from itself would feed back, so it is refused rather than
+        // quietly producing a control that behaves differently from what the picker showed.
+        if (wanted.TempoControlId == id)
+        {
+            wanted.TempoControlId.clear();
+        }
+
+        auto const& current = control->Clock;
+
+        if (current.BeatsPerMinute == wanted.BeatsPerMinute &&
+            current.TempoControlId == wanted.TempoControlId &&
+            current.LowestBeatsPerMinute == wanted.LowestBeatsPerMinute &&
+            current.HighestBeatsPerMinute == wanted.HighestBeatsPerMinute &&
+            current.StartsRunning == wanted.StartsRunning &&
+            current.SendsTransport == wanted.SendsTransport)
+        {
+            return false;
+        }
+
+        control->Clock.BeatsPerMinute = wanted.BeatsPerMinute;
+        control->Clock.TempoControlId = wanted.TempoControlId;
+        control->Clock.LowestBeatsPerMinute = wanted.LowestBeatsPerMinute;
+        control->Clock.HighestBeatsPerMinute = wanted.HighestBeatsPerMinute;
+        control->Clock.StartsRunning = wanted.StartsRunning;
+        control->Clock.SendsTransport = wanted.SendsTransport;
+
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetControlDefaultValueY(std::wstring const& id, double value)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr)
+        {
+            return false;
+        }
+
+        auto const wanted = std::clamp(value, 0.0, 1.0);
+
+        if (control->DefaultValueY == wanted)
+        {
+            return false;
+        }
+
+        control->DefaultValueY = wanted;
+        CommitCoalesced(EditNames::Properties, L"defaultY:" + id);
+
+        return true;
+    }
 
     _Use_decl_annotations_
     bool EditorController::AddMessage(std::wstring const& id)

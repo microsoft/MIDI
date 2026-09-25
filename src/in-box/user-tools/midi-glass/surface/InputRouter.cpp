@@ -20,6 +20,7 @@ namespace glass
     {
         Detach();
 
+        m_renderer = &renderer;
         m_bindings.reserve(renderer.ItemCount());
 
         for (size_t i = 0; i < renderer.ItemCount(); ++i)
@@ -44,8 +45,12 @@ namespace glass
             binding.ItemIndex = i;
             binding.Kind = kind;
             binding.Value = element.SurfaceValue();
+            binding.ValueY = renderer.ValueYAt(i);
             binding.ReturnsToRest = renderer.ReturnsToRestAt(i);
             binding.RestValue = renderer.RestValueAt(i);
+            binding.RestValueY = renderer.RestValueYAt(i);
+            binding.Drag = renderer.DragAxisAt(i);
+            binding.Keyboard = renderer.KeyboardAt(i);
 
             m_bindings.push_back(std::move(binding));
         }
@@ -102,6 +107,7 @@ namespace glass
 
         m_bindings.clear();
         m_heldCount = 0;
+        m_renderer = nullptr;
     }
 
     void InputRouter::ReleaseAll()
@@ -152,6 +158,70 @@ namespace glass
         if (ValueChanged)
         {
             ValueChanged(binding.ItemIndex, snapped, isFinal);
+        }
+    }
+
+    _Use_decl_annotations_
+    void InputRouter::PublishY(Binding& binding, double value, bool isFinal)
+    {
+        auto const clamped = std::clamp(value, 0.0, 1.0);
+
+        binding.ValueY = clamped;
+
+        if (m_renderer != nullptr)
+        {
+            m_renderer->SetValueY(binding.ItemIndex, clamped);
+        }
+
+        if (ValueYChanged)
+        {
+            ValueYChanged(binding.ItemIndex, clamped, isFinal);
+        }
+    }
+
+    _Use_decl_annotations_
+    void InputRouter::TouchKeyboard(Binding& binding, double x, double y, bool down)
+    {
+        if (binding.Element == nullptr)
+        {
+            return;
+        }
+
+        auto const key = down
+            ? KeyAtPosition(
+                binding.Keyboard,
+                binding.Element.ActualWidth(),
+                binding.Element.ActualHeight(),
+                x,
+                y)
+            : -1;
+
+        if (key == binding.PressedKey)
+        {
+            return;
+        }
+
+        // Off before on, so sliding along the keyboard never leaves a note sounding behind the
+        // finger.
+        if (binding.PressedKey >= 0 && KeyChanged)
+        {
+            KeyChanged(binding.ItemIndex, binding.PressedKey, 0.0, false);
+        }
+
+        binding.PressedKey = key;
+
+        if (m_renderer != nullptr)
+        {
+            m_renderer->SetPressedKey(binding.ItemIndex, key);
+        }
+
+        if (key >= 0 && KeyChanged)
+        {
+            auto const velocity = binding.Keyboard.VelocityFromKeyPosition
+                ? KeyVelocityFromPosition(binding.Keyboard, key, binding.Element.ActualHeight(), y)
+                : 1.0;
+
+            KeyChanged(binding.ItemIndex, key, velocity, true);
         }
     }
 
@@ -235,8 +305,15 @@ namespace glass
             return;
         }
 
+        if (PlaysKeys(binding.Kind))
+        {
+            TouchKeyboard(binding, point.Position().X, point.Position().Y, true);
+            return;
+        }
+
         binding.StartValue = binding.Value;
         binding.StartY = point.Position().Y;
+        binding.StartX = point.Position().X;
 
         if (UsesAbsolutePosition(binding.Kind))
         {
@@ -246,6 +323,12 @@ namespace glass
                 binding.Element.ActualHeight(),
                 point.Position().X,
                 point.Position().Y), false);
+
+            if (UsesTwoAxes(binding.Kind))
+            {
+                PublishY(binding, PositionToValueY(
+                    binding.Element.ActualHeight(), point.Position().Y), false);
+            }
         }
     }
 
@@ -273,6 +356,12 @@ namespace glass
 
         args.Handled(true);
 
+        if (PlaysKeys(binding.Kind))
+        {
+            TouchKeyboard(binding, point.Position().X, point.Position().Y, true);
+            return;
+        }
+
         if (UsesAbsolutePosition(binding.Kind))
         {
             Publish(binding, PositionToValue(
@@ -282,12 +371,21 @@ namespace glass
                 point.Position().X,
                 point.Position().Y), false);
 
+            if (UsesTwoAxes(binding.Kind))
+            {
+                PublishY(binding, PositionToValueY(
+                    binding.Element.ActualHeight(), point.Position().Y), false);
+            }
+
             return;
         }
 
         // A knob has no travel under the finger, so it is nudged rather than set. Up is more,
-        // which is what every plug-in does.
-        auto const delta = (binding.StartY - point.Position().Y) / KnobDragPixels;
+        // which is what every plug-in does, and a circle is hard to trace on glass. A row of
+        // knobs in a narrow strip can be set to drag sideways instead.
+        auto const delta = binding.Drag == DragAxis::Horizontal
+            ? (point.Position().X - binding.StartX) / KnobDragPixels
+            : (binding.StartY - point.Position().Y) / KnobDragPixels;
 
         Publish(binding, binding.StartValue + delta, false);
     }
@@ -363,12 +461,24 @@ namespace glass
             return;
         }
 
+        if (PlaysKeys(binding.Kind))
+        {
+            TouchKeyboard(binding, 0.0, 0.0, false);
+            return;
+        }
+
         // A pitch wheel springs back the moment the finger leaves it. It is published as the end
         // of the same gesture rather than as a new one, so the throttle's trailing send carries
         // the rest value and the desk cannot be left holding a bend.
         if (binding.ReturnsToRest)
         {
             binding.Value = binding.RestValue;
+            binding.ValueY = binding.RestValueY;
+        }
+
+        if (UsesTwoAxes(binding.Kind))
+        {
+            PublishY(binding, binding.ValueY, true);
         }
 
         // The last value is always sent. Without this a throttled fader settles a few units from

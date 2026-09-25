@@ -49,6 +49,9 @@ namespace glass
 
         // A sine, for an LFO.
         Wave = 7,
+
+        // White keys with a few black ones on top, for the piano keyboard.
+        Keys = 8,
     };
 
     struct PaletteArt

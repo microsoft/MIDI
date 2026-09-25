@@ -42,6 +42,22 @@ namespace winrt::midiglass::implementation
                 }
             };
 
+        m_player->ActivitySeen = [weak](uint32_t controlIndex)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->OnActivitySeen(controlIndex);
+                }
+            };
+
+        m_player->BeatMoved = [weak](uint32_t controlIndex, int32_t beatInBar, double phase, bool running)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->OnBeatMoved(controlIndex, beatInBar, phase, running);
+                }
+            };
+
         // A sequence step moving a control looks exactly like a device moving one: the surface
         // follows, and nothing is sent a second time.
         m_player->ControlValueSet = [weak](uint32_t controlIndex, double value)
@@ -177,6 +193,35 @@ namespace winrt::midiglass::implementation
     }
 
     _Use_decl_annotations_
+    void RuntimeWindow::OnControlValueYChanged(size_t itemIndex, double value, bool isFinal)
+    {
+        m_renderer.SetValueY(itemIndex, value);
+
+        if (m_player != nullptr)
+        {
+            m_player->ValueYChanged(m_renderer.ControlIndexOf(itemIndex), value, isFinal);
+        }
+    }
+
+    _Use_decl_annotations_
+    void RuntimeWindow::OnControlKeyChanged(
+        size_t itemIndex,
+        int32_t key,
+        double velocity,
+        bool isDown)
+    {
+        if (isDown)
+        {
+            m_renderer.Bloom(itemIndex);
+        }
+
+        if (m_player != nullptr)
+        {
+            m_player->KeyChanged(m_renderer.ControlIndexOf(itemIndex), key, velocity, isDown);
+        }
+    }
+
+    _Use_decl_annotations_
     void RuntimeWindow::OnControlSetDirectly(size_t itemIndex, double value)
     {
         // Assistive technology setting a value is one discrete change, not a drag, so it is a
@@ -237,5 +282,47 @@ namespace winrt::midiglass::implementation
         {
             winrt::get_self<implementation::GlassControl>(element)->SetValueDirect(value);
         }
+    }
+
+    _Use_decl_annotations_
+    void RuntimeWindow::OnActivitySeen(uint32_t controlIndex)
+    {
+        if (m_closing)
+        {
+            return;
+        }
+
+        size_t itemIndex{ 0 };
+
+        if (!m_renderer.TryFindItem(controlIndex, itemIndex))
+        {
+            return;
+        }
+
+        // An activity lamp has no value to carry, so the glow is the whole message. It decays
+        // on its own, which is what makes it read as a blink rather than as a light left on.
+        m_renderer.Bloom(itemIndex);
+    }
+
+    _Use_decl_annotations_
+    void RuntimeWindow::OnBeatMoved(
+        uint32_t controlIndex,
+        int32_t beatInBar,
+        double phase,
+        bool running)
+    {
+        if (m_closing)
+        {
+            return;
+        }
+
+        size_t itemIndex{ 0 };
+
+        if (!m_renderer.TryFindItem(controlIndex, itemIndex))
+        {
+            return;
+        }
+
+        m_renderer.SetBeat(itemIndex, beatInBar, phase, running);
     }
 }

@@ -255,6 +255,22 @@ namespace winrt::midiglass::implementation
                 }
             };
 
+        m_input.ValueYChanged = [weak](size_t itemIndex, double value, bool isFinal)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->OnControlValueYChanged(itemIndex, value, isFinal);
+                }
+            };
+
+        m_input.KeyChanged = [weak](size_t itemIndex, int32_t key, double velocity, bool isDown)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->OnControlKeyChanged(itemIndex, key, velocity, isDown);
+                }
+            };
+
         m_input.Switched = [weak](size_t itemIndex, bool isOn)
             {
                 if (auto strong = weak.get())

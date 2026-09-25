@@ -31,6 +31,9 @@ namespace glass
         constexpr uint32_t MessageTypeMidi1ChannelVoice = 0x2;
         constexpr uint32_t MessageTypeMidi2ChannelVoice = 0x4;
 
+        // System common and system real time. A clock generator's whole output is this type.
+        constexpr uint32_t MessageTypeSystem = 0x1;
+
         bool IsChannelVoice(_In_ MessageKind kind) noexcept
         {
             switch (kind)
@@ -404,6 +407,7 @@ namespace glass
             m_controls.clear();
             m_messages.clear();
             m_feedback.clear();
+            m_tempoWatchers.clear();
             m_startupOrder.clear();
 
             m_controls.reserve(document.ControlCount());
@@ -448,6 +452,7 @@ namespace glass
                         entry.Minimum = message.Minimum;
                         entry.Maximum = message.Maximum;
                         entry.Detents = message.Detents;
+                        entry.Axis = message.Axis;
                         entry.UseMidi1Protocol = message.UseMidi1Protocol;
 
                         m_messages.push_back(entry);
@@ -461,13 +466,26 @@ namespace glass
 
                         feedback.ControlIndex = m_controls.size();
                         feedback.DestinationIndex = indexOf(control.Feedback.DeviceName);
+                        feedback.Mode = control.Feedback.Mode;
                         feedback.Kind = control.Feedback.Kind;
                         feedback.GroupIndex = static_cast<uint8_t>(
                             control.Feedback.GroupIndex == AllGroups ? 0 : (control.Feedback.GroupIndex & 0x0F));
                         feedback.ChannelIndex = static_cast<uint8_t>(control.Feedback.ChannelIndex & 0x0F);
                         feedback.Number = static_cast<uint16_t>(control.Feedback.Number);
+                        feedback.AnyGroup = control.Feedback.GroupIndex == AllGroups;
+                        feedback.AnyChannel = !control.Feedback.MatchesChannel;
 
                         m_feedback.push_back(feedback);
+
+                        if (control.Feedback.Mode == FeedbackMode::Tempo)
+                        {
+                            TempoWatcher watcher{};
+
+                            watcher.ControlIndex = m_controls.size();
+                            watcher.ClockControlId = control.Feedback.TempoControlId;
+
+                            m_tempoWatchers.push_back(watcher);
+                        }
                     }
 
                     keyboardOrder.push_back(control.KeyboardOrder);
@@ -489,6 +507,7 @@ namespace glass
             m_controls.clear();
             m_messages.clear();
             m_feedback.clear();
+            m_tempoWatchers.clear();
             m_startupOrder.clear();
         }
     }
@@ -498,6 +517,17 @@ namespace glass
         size_t controlIndex,
         MessageTrigger trigger,
         double value,
+        std::span<PreparedSend> sends) const noexcept
+    {
+        return EvaluateAxis(controlIndex, trigger, value, ValueAxis::X, sends);
+    }
+
+    _Use_decl_annotations_
+    uint32_t BindingEngine::EvaluateAxis(
+        size_t controlIndex,
+        MessageTrigger trigger,
+        double value,
+        ValueAxis axis,
         std::span<PreparedSend> sends) const noexcept
     {
         if (controlIndex >= m_controls.size() || sends.empty())
@@ -514,6 +544,11 @@ namespace glass
             auto const& message = m_messages[control.FirstMessage + i];
 
             if (message.Trigger != trigger)
+            {
+                continue;
+            }
+
+            if (message.Axis != axis)
             {
                 continue;
             }
@@ -544,6 +579,124 @@ namespace glass
             }
 
             send.DestinationIndex = message.DestinationIndex;
+            ++written;
+        }
+
+        return written;
+    }
+
+    _Use_decl_annotations_
+    uint32_t BindingEngine::EvaluateNote(
+        size_t controlIndex,
+        uint16_t note,
+        double velocity,
+        bool isOn,
+        std::span<PreparedSend> sends) const noexcept
+    {
+        if (controlIndex >= m_controls.size() || sends.empty())
+        {
+            return 0;
+        }
+
+        auto const& control = m_controls[controlIndex];
+
+        uint32_t written{ 0 };
+
+        for (uint32_t i = 0; i < control.MessageCount && written < sends.size(); ++i)
+        {
+            auto entry = m_messages[control.FirstMessage + i];
+
+            if (entry.Kind != MessageKind::Note)
+            {
+                continue;
+            }
+
+            if (entry.DestinationIndex < 0 ||
+                static_cast<size_t>(entry.DestinationIndex) >= m_destinations.size())
+            {
+                continue;
+            }
+
+            if (!m_destinations[static_cast<size_t>(entry.DestinationIndex)].IsAvailable)
+            {
+                continue;
+            }
+
+            // The key decides the note. Everything else about the row still applies, so a
+            // keyboard pointed at two devices on two channels still sends to both.
+            entry.Number = note;
+
+            auto& send = sends[written];
+
+            // A note off is the same row at the bottom of its range, which is how the note
+            // builder already tells the two apart.
+            send.WordCount = BuildMessageWords(entry, isOn ? std::clamp(velocity, 0.0, 1.0) : 0.0, send.Words);
+
+            if (send.WordCount == 0)
+            {
+                continue;
+            }
+
+            send.DestinationIndex = entry.DestinationIndex;
+            ++written;
+        }
+
+        return written;
+    }
+
+    _Use_decl_annotations_
+    uint32_t BindingEngine::EvaluateSystemRealTime(
+        size_t controlIndex,
+        uint8_t status,
+        std::span<PreparedSend> sends) const noexcept
+    {
+        if (controlIndex >= m_controls.size() || sends.empty())
+        {
+            return 0;
+        }
+
+        auto const& control = m_controls[controlIndex];
+
+        uint32_t written{ 0 };
+
+        // One send per destination, not per row. A clock pointed at the same device twice would
+        // otherwise run that device at double speed.
+        bool alreadySent[MaximumDevicesPerLayout]{};
+
+        for (uint32_t i = 0; i < control.MessageCount && written < sends.size(); ++i)
+        {
+            auto const& entry = m_messages[control.FirstMessage + i];
+
+            if (entry.DestinationIndex < 0 ||
+                static_cast<size_t>(entry.DestinationIndex) >= m_destinations.size())
+            {
+                continue;
+            }
+
+            auto const slot = static_cast<size_t>(entry.DestinationIndex);
+
+            if (slot >= MaximumDevicesPerLayout || alreadySent[slot])
+            {
+                continue;
+            }
+
+            if (!m_destinations[slot].IsAvailable)
+            {
+                continue;
+            }
+
+            alreadySent[slot] = true;
+
+            auto& send = sends[written];
+
+            // A system real time message is one word: type 1, group, then the status byte.
+            // It carries no channel and nothing to scale.
+            send.Words[0] = (MessageTypeSystem << 28)
+                | (static_cast<uint32_t>(entry.GroupIndex & 0x0F) << 24)
+                | (static_cast<uint32_t>(status) << 16);
+
+            send.WordCount = 1;
+            send.DestinationIndex = entry.DestinationIndex;
             ++written;
         }
 
@@ -759,6 +912,13 @@ namespace glass
 
         for (auto const& feedback : m_feedback)
         {
+            // Only a control watching for one particular message. An activity light and a
+            // tempo light are answered somewhere else, and neither carries a value.
+            if (feedback.Mode != FeedbackMode::Message)
+            {
+                continue;
+            }
+
             if (feedback.Kind != kind ||
                 feedback.GroupIndex != group ||
                 feedback.ChannelIndex != channel)
@@ -781,5 +941,66 @@ namespace glass
         }
 
         return false;
+    }
+
+    _Use_decl_annotations_
+    uint32_t BindingEngine::CollectActivityLit(
+        uint32_t const* words,
+        uint32_t wordCount,
+        int32_t destinationIndex,
+        std::span<size_t> lit) const noexcept
+    {
+        if (words == nullptr || wordCount == 0 || lit.empty())
+        {
+            return 0;
+        }
+
+        auto const messageType = (words[0] >> 28) & 0x0F;
+
+        // Only the types that carry a group and a channel can be narrowed. Anything else counts
+        // as traffic and nothing more, which is exactly what an activity light is for.
+        auto const channelVoice =
+            messageType == MessageTypeMidi1ChannelVoice ||
+            messageType == MessageTypeMidi2ChannelVoice;
+
+        auto const group = static_cast<uint8_t>((words[0] >> 24) & 0x0F);
+        auto const channel = static_cast<uint8_t>((words[0] >> 16) & 0x0F);
+
+        uint32_t written{ 0 };
+
+        for (auto const& feedback : m_feedback)
+        {
+            if (written >= lit.size())
+            {
+                break;
+            }
+
+            if (feedback.Mode != FeedbackMode::AnyActivity)
+            {
+                continue;
+            }
+
+            // A control naming no device takes traffic from anything on the layout, which is
+            // what somebody dropping one lamp on a page expects it to do.
+            if (feedback.DestinationIndex >= 0 && feedback.DestinationIndex != destinationIndex)
+            {
+                continue;
+            }
+
+            if (!feedback.AnyGroup && channelVoice && feedback.GroupIndex != group)
+            {
+                continue;
+            }
+
+            if (!feedback.AnyChannel && channelVoice && feedback.ChannelIndex != channel)
+            {
+                continue;
+            }
+
+            lit[written] = feedback.ControlIndex;
+            ++written;
+        }
+
+        return written;
     }
 }

@@ -65,4 +65,16 @@ namespace glass
     bool BackgroundImageNeedsCopying(
         _In_ std::wstring const& sourcePath,
         _In_ std::wstring const& layoutFilePath) noexcept;
+
+    // The same resolution as BackgroundImagePath, for a picture named by one control rather
+    // than by the document. Empty when the name is not a plain file name or the file is not
+    // beside the layout.
+    std::wstring ControlPicturePath(
+        _In_ std::wstring const& layoutFilePath,
+        _In_ std::wstring const& fileName) noexcept;
+
+    // The picture and video file types a layout may point at. Anything else is refused at the
+    // picker, so a layout from a stranger cannot name a file type this app was not expecting.
+    bool IsSupportedPictureFileName(_In_ std::wstring const& fileName) noexcept;
+    bool IsVideoFileName(_In_ std::wstring const& fileName) noexcept;
 }

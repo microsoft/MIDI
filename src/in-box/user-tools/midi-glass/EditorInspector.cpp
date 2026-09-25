@@ -37,6 +37,10 @@ namespace winrt::midiglass::implementation
             glass::ControlKind::Button,
             glass::ControlKind::Toggle,
             glass::ControlKind::XYPad,
+            glass::ControlKind::Joystick,
+            glass::ControlKind::Ribbon,
+            glass::ControlKind::PianoKeyboard,
+            glass::ControlKind::BeatClock,
             glass::ControlKind::Meter,
             glass::ControlKind::Lamp,
             glass::ControlKind::Readout,
@@ -49,7 +53,9 @@ namespace winrt::midiglass::implementation
         constexpr wchar_t const* KindResourceKeys[]
         {
             L"PaletteKnob", L"PaletteEncoder", L"PaletteFader", L"PalettePad", L"PaletteButton",
-            L"PaletteToggle", L"PaletteXYPad", L"PaletteMeter", L"PaletteLamp", L"PaletteReadout",
+            L"PaletteToggle", L"PaletteXYPad", L"PaletteJoystick", L"PaletteRibbon",
+            L"PaletteKeyboard", L"PaletteBeatClock",
+            L"PaletteMeter", L"PaletteLamp", L"PaletteReadout",
             L"PaletteLabel", L"PaletteImage", L"PalettePageTab", L"PalettePanel",
         };
 
@@ -220,6 +226,8 @@ namespace winrt::midiglass::implementation
     {
         try
         {
+            BuildControlPropertyChoices();
+
             for (auto const* const key : KindResourceKeys)
             {
                 KindCombo().Items().Append(box_value(resources::GetString(key)));
@@ -384,6 +392,7 @@ namespace winrt::midiglass::implementation
             LookTab().IsEnabled(control != nullptr);
             BehaviorTab().IsEnabled(control != nullptr);
             MidiTab().IsEnabled(control != nullptr);
+            MidiInTab().IsEnabled(control != nullptr);
 
             if (control == nullptr)
             {
@@ -413,6 +422,7 @@ namespace winrt::midiglass::implementation
 
                 LookPane().IsEnabled(false);
                 MidiPane().IsEnabled(false);
+                MidiInPane().IsEnabled(false);
                 BehaviorPane().IsEnabled(false);
 
                 m_preview.Teardown();
@@ -426,6 +436,7 @@ namespace winrt::midiglass::implementation
 
             LookPane().IsEnabled(true);
             MidiPane().IsEnabled(true);
+            MidiInPane().IsEnabled(true);
             BehaviorPane().IsEnabled(true);
 
             auto const kindIndex = IndexOf(KindOrder, control->Kind);
@@ -473,6 +484,28 @@ namespace winrt::midiglass::implementation
             // of controls that do nothing. It is disabled rather than hidden, because a tab that
             // comes and goes is harder to find than one that is visibly not for this control.
             MidiTab().IsEnabled(glass::SendsAnything(control->Kind));
+
+            // The mirror of that: text, a picture and a frame are not driven by anything, and
+            // nothing about them changes over time either.
+            auto const passive =
+                control->Kind == glass::ControlKind::Label ||
+                control->Kind == glass::ControlKind::Image ||
+                control->Kind == glass::ControlKind::Panel;
+
+            MidiInTab().IsEnabled(!passive);
+            BehaviorTab().IsEnabled(!passive);
+
+            // A disabled tab cannot be left showing, or the pane reads as broken rather than as
+            // not applicable.
+            if ((m_inspectorTab == 1 && !MidiTab().IsEnabled()) ||
+                (m_inspectorTab == 2 && !MidiInTab().IsEnabled()) ||
+                (m_inspectorTab == 3 && !BehaviorTab().IsEnabled()))
+            {
+                SelectInspectorTab(0);
+            }
+
+            RefreshKindPanels(*control);
+            RefreshFeedbackPanel(*control);
 
             RefreshMessageList();
 
@@ -710,6 +743,26 @@ namespace winrt::midiglass::implementation
         }
 
         RefreshMessageKindFields(control.Messages[static_cast<size_t>(m_messageIndex)]);
+
+        // A clock generates its own stream. Its row is there so it knows where to send, and
+        // asking somebody to type the words it will send would be a question with no answer.
+        if (control.Kind == glass::ControlKind::BeatClock)
+        {
+            RawWordsPanel().Visibility(xaml::Visibility::Collapsed);
+            DetentPanel().Visibility(xaml::Visibility::Collapsed);
+            MessageChannelLabel().Visibility(xaml::Visibility::Collapsed);
+            ChannelCombo().Visibility(xaml::Visibility::Collapsed);
+            MessageNumberLabel().Visibility(xaml::Visibility::Collapsed);
+            MessageNumberBox().Visibility(xaml::Visibility::Collapsed);
+        }
+
+        // Same for a keyboard: the key decides the note, so the number on the row is not a
+        // question anybody can answer.
+        if (control.Kind == glass::ControlKind::PianoKeyboard)
+        {
+            MessageNumberLabel().Visibility(xaml::Visibility::Collapsed);
+            MessageNumberBox().Visibility(xaml::Visibility::Collapsed);
+        }
     }
 
     _Use_decl_annotations_
@@ -744,6 +797,36 @@ namespace winrt::midiglass::implementation
         show(RawWordsPanel(), kind == glass::MessageKind::RawUmp);
         show(SequencePanel(), kind == glass::MessageKind::Sequence);
         show(TargetPagePanel(), kind == glass::MessageKind::GoToPage);
+
+        // Stops only mean something on a message that carries a position. There is nothing to
+        // step through on a page change or a dump.
+        auto const stepping =
+            kind == glass::MessageKind::ControlChange ||
+            kind == glass::MessageKind::PitchBend ||
+            kind == glass::MessageKind::ChannelPressure ||
+            kind == glass::MessageKind::PerNoteController ||
+            kind == glass::MessageKind::RegisteredController ||
+            kind == glass::MessageKind::AssignedController;
+
+        show(DetentPanel(), stepping);
+
+        if (stepping)
+        {
+            DetentModeCombo().SelectedIndex(static_cast<int32_t>(message.Detents.Mode));
+
+            show(DetentStepBox(), message.Detents.Mode == glass::DetentMode::EvenSteps);
+            show(DetentStopsBox(), message.Detents.Mode == glass::DetentMode::ExplicitValues);
+
+            DetentStepBox().Value(message.Detents.Step);
+            DetentStopsBox().Text(winrt::hstring{ glass::FormatStopList(message.Detents.Stops) });
+
+            DetentCaption().Text(
+                message.Detents.Mode == glass::DetentMode::Continuous
+                    ? resources::GetString(L"DetentContinuousCaption")
+                    : message.Detents.Mode == glass::DetentMode::EvenSteps
+                        ? resources::GetString(L"DetentStepCaption")
+                        : resources::GetString(L"DetentListCaption"));
+        }
 
         if (kind == glass::MessageKind::SystemExclusive)
         {
@@ -1229,7 +1312,8 @@ namespace winrt::midiglass::implementation
 
             LookTab().IsChecked(index == 0);
             MidiTab().IsChecked(index == 1);
-            BehaviorTab().IsChecked(index == 2);
+            MidiInTab().IsChecked(index == 2);
+            BehaviorTab().IsChecked(index == 3);
 
             auto const show = [](xaml::UIElement const& element, bool visible)
                 {
@@ -1238,11 +1322,13 @@ namespace winrt::midiglass::implementation
 
             show(LookTabLine(), index == 0);
             show(MidiTabLine(), index == 1);
-            show(BehaviorTabLine(), index == 2);
+            show(MidiInTabLine(), index == 2);
+            show(BehaviorTabLine(), index == 3);
 
             show(LookPane(), index == 0);
             show(MidiPane(), index == 1);
-            show(BehaviorPane(), index == 2);
+            show(MidiInPane(), index == 2);
+            show(BehaviorPane(), index == 3);
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to change the inspector tab.")
     }

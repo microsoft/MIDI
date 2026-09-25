@@ -70,6 +70,10 @@ namespace glass
         // and dimmed, never hidden: a layout with a missing device still has to be editable.
         constexpr float UnavailableOpacity = 0.55f;
 
+        // A ribbon's light when nobody is touching it. Still readable as a position, clearly
+        // not the same thing as a finger being on the control.
+        constexpr float RibbonRestOpacity = 0.45f;
+
         // How much of each lamp's slice is lamp rather than gap. Too low and the ring reads as a
         // dotted line rather than a row of lamps.
         constexpr float LampDutyCycle = 0.66f;
@@ -86,8 +90,7 @@ namespace glass
         // authored pointing straight up, which is the middle of that range.
         constexpr float KnobStartAngle = -135.0f;
 
-        // Tick marks beside a fader's slot, and how far across the control they reach.
-        constexpr int32_t FaderTickCount = 5;
+        // How far across the control a fader's tick marks reach.
         constexpr float FaderTickSpan = 0.55f;
 
         // The halo around a value bar. Measured off the comp: at the bar's edge it is a little
@@ -120,7 +123,26 @@ namespace glass
 
         bool IsRoundControl(_In_ ControlKind kind) noexcept
         {
-            return kind == ControlKind::Knob || kind == ControlKind::Encoder;
+            return kind == ControlKind::Knob ||
+                kind == ControlKind::Encoder ||
+                kind == ControlKind::Joystick;
+        }
+
+        // A control that draws its own thing inside the plate rather than a track and a bar.
+        bool DrawsItsOwnValue(_In_ ControlKind kind) noexcept
+        {
+            switch (kind)
+            {
+            case ControlKind::XYPad:
+            case ControlKind::Joystick:
+            case ControlKind::Ribbon:
+            case ControlKind::PianoKeyboard:
+            case ControlKind::BeatClock:
+                return true;
+
+            default:
+                return false;
+            }
         }
 
         bool IsTallControl(_In_ ControlKind kind, _In_ double width, _In_ double height) noexcept
@@ -145,7 +167,7 @@ namespace glass
                 return false;
 
             default:
-                return true;
+                return !DrawsItsOwnValue(kind);
             }
         }
 
@@ -182,19 +204,24 @@ namespace glass
             }
         }
 
-        // Stops live on a message rather than on the control, because one control can send two
-        // things and only one of them steps.
-        bool HasDetents(_In_ Control const& control) noexcept
+        // How many marks this control draws across its travel, and whether it draws any. Zero
+        // means none.
+        int32_t TickCountFor(_In_ Control const& control) noexcept
         {
-            for (auto const& message : control.Messages)
+            if (!control.Ticks.Show)
             {
-                if (message.Detents.Mode != DetentMode::Continuous)
-                {
-                    return true;
-                }
+                return 0;
             }
 
-            return false;
+            return std::clamp(control.Ticks.Count, MinimumTickCount, MaximumTickCount);
+        }
+
+        // How many stops this control snaps to, or zero when it is smooth. The arithmetic that
+        // turns a step or a list into a count lives in the document layer, so the marks drawn
+        // here and the count the inspector shows can never disagree.
+        int32_t DetentCountForControl(_In_ Control const& control) noexcept
+        {
+            return DetentStopCount(control);
         }
 
         projected::SurfaceControlRole RoleFor(_In_ ControlKind kind) noexcept
@@ -204,9 +231,11 @@ namespace glass
             case ControlKind::Pad:
             case ControlKind::Button:
             case ControlKind::PageTab:
+            case ControlKind::PianoKeyboard:
                 return projected::SurfaceControlRole::Button;
 
             case ControlKind::Toggle:
+            case ControlKind::BeatClock:
                 return projected::SurfaceControlRole::Toggle;
 
             case ControlKind::Label:
@@ -405,6 +434,9 @@ namespace glass
         m_host = host;
         m_deck = theme.Deck.Color;
 
+        // Kept so a control's own picture resolves against the same folder the background does.
+        m_layoutFilePath = document.FilePath;
+
         if (host == nullptr || pageIndex >= document.Pages.size())
         {
             return;
@@ -573,7 +605,14 @@ namespace glass
         m_controlIndexes.push_back(controlIndex);
         m_kinds.push_back(control.Kind);
         m_restValues.push_back(control.DefaultValue);
+        m_restValuesY.push_back(control.DefaultValueY);
         m_returnsToRest.push_back(control.ReturnsToDefault);
+        m_dragAxes.push_back(control.Drag);
+        m_keyboards.push_back(control.Keyboard);
+        m_pictures.push_back(nullptr);
+        m_detentTexts.push_back(nullptr);
+        m_beatTexts.push_back(nullptr);
+        m_beatTextOffsets.push_back(0.0);
         m_valueTexts.push_back(nullptr);
         m_valueOffsets.push_back(0.0);
         m_showValues.push_back(control.ShowValue);
@@ -586,15 +625,20 @@ namespace glass
         m_labelBoxWidths.push_back(0.0);
         m_labelBoxHeights.push_back(0.0);
         m_values.push_back(control.DefaultValue);
+        m_valuesY.push_back(control.DefaultValueY);
 
         auto const itemIndex = m_visuals.size() - 1;
 
         SetValue(itemIndex, control.DefaultValue);
+        SetValueY(itemIndex, control.DefaultValueY);
         winrt::get_self<winrt::midiglass::implementation::GlassControl>(element)
             ->SetValueDirect(control.DefaultValue);
 
         LayoutLabel(itemIndex, control, theme);
         LayoutValueText(itemIndex, control, theme);
+        LayoutPicture(itemIndex, control);
+        LayoutDetentValues(itemIndex, control, theme);
+        LayoutBeatText(itemIndex, control, theme);
     }
 
     // The number inside the control. There is no comp for this, so it follows the design sheet's
@@ -717,6 +761,18 @@ namespace glass
 
         m_touched[itemIndex] = touched;
 
+        // A ribbon has nothing riding it, so the light is the only thing that says where the
+        // value is. It stays visible at rest and comes right up under a finger.
+        if (itemIndex < m_visuals.size())
+        {
+            auto const& visual = m_visuals[itemIndex];
+
+            if (!visual.RibbonGlow.empty() && visual.ValueShape != nullptr)
+            {
+                visual.ValueShape.Opacity(touched ? 1.0f : RibbonRestOpacity);
+            }
+        }
+
         RefreshValueText(itemIndex);
     }
 
@@ -781,6 +837,14 @@ namespace glass
             visual.Shape.Shapes().Clear();
             visual.ValueShape.Shapes().Clear();
             visual.Unavailable.Shapes().Clear();
+
+            // Not a shape but a whole visual, so clearing the shape collections does not reach
+            // it. Without this a resize stacks a second grid behind the first.
+            if (visual.Grid != nullptr)
+            {
+                visual.Root.Children().Remove(visual.Grid);
+                visual.Grid = nullptr;
+            }
         }
 
         visual.Root.Size(float2{ width, height });
@@ -940,6 +1004,34 @@ namespace glass
             }
         }
 
+        if (DrawsItsOwnValue(control.Kind))
+        {
+            switch (control.Kind)
+            {
+            case ControlKind::XYPad:
+            case ControlKind::Joystick:
+                LayoutTwoAxis(compositor, visual, control, colors, theme, width, height);
+                break;
+
+            case ControlKind::Ribbon:
+                LayoutRibbon(compositor, visual, control, colors, theme, width, height);
+                break;
+
+            case ControlKind::PianoKeyboard:
+                LayoutKeyboard(compositor, visual, control, colors, width, height);
+                break;
+
+            case ControlKind::BeatClock:
+                LayoutClock(compositor, visual, control, colors, width, height);
+                break;
+
+            default:
+                break;
+            }
+
+            return;
+        }
+
         if (DrawsAPipe(control.Kind))
         {
             if (round)
@@ -1027,18 +1119,43 @@ namespace glass
 
                 visual.ValueShape.Shapes().Append(dotShape);
 
-                // A knob with stops gets a mark at twelve o'clock, so the middle one can be
-                // found without watching the readout.
-                if (HasDetents(control))
+                // A knob with stops gets a mark at every one of them, so the middle position on
+                // a six way switch can be found without watching the readout. A knob with no
+                // stops gets whatever marks the customer asked for around its arc.
+                auto const detents = DetentCountForControl(control);
+                auto const marks = detents > 1 ? detents : TickCountFor(control);
+
+                if (marks > 1)
                 {
-                    auto detentGeometry = compositor.CreateRoundedRectangleGeometry();
-                    detentGeometry.Size(float2{ 1.0f, DetentTickLength });
-                    detentGeometry.Offset(float2{ center.x - 0.5f, (height - dial) * 0.5f + 1.0f });
+                    auto const outer = radius + KnobArcThickness * 0.5f + 1.0f;
+                    auto const sweep = KnobSweepDegrees * 3.14159265f / 180.0f;
+                    auto const start = (KnobStartAngle - 90.0f) * 3.14159265f / 180.0f;
 
-                    auto detentShape = compositor.CreateSpriteShape(detentGeometry);
-                    detentShape.FillBrush(BrushFor(compositor, colors.Label));
+                    for (int32_t mark = 0; mark < marks; ++mark)
+                    {
+                        auto const fraction =
+                            static_cast<float>(mark) / static_cast<float>(marks - 1);
 
-                    visual.Shape.Shapes().Append(detentShape);
+                        auto const angle = start + sweep * fraction;
+
+                        auto const from = float2{
+                            center.x + std::cos(angle) * outer,
+                            center.y + std::sin(angle) * outer };
+
+                        auto const to = float2{
+                            center.x + std::cos(angle) * (outer + DetentTickLength),
+                            center.y + std::sin(angle) * (outer + DetentTickLength) };
+
+                        auto line = compositor.CreateLineGeometry();
+                        line.Start(from);
+                        line.End(to);
+
+                        auto markShape = compositor.CreateSpriteShape(line);
+                        markShape.StrokeBrush(BrushFor(compositor, colors.Marks));
+                        markShape.StrokeThickness(1.0f);
+
+                        visual.Shape.Shapes().Append(markShape);
+                    }
                 }
             }
             else
@@ -1105,7 +1222,13 @@ namespace glass
                 // Tick marks across the travel, so a fader has somewhere to be other than the
                 // two ends. Two short marks either side of the slot rather than one line across
                 // it: a line through the value bar reads as a defect in the bar.
-                if (travels)
+                //
+                // Stops win over marks where a control has both. Somebody who set six positions
+                // wants to see six, not five evenly spaced ones that do not line up with them.
+                auto const detents = DetentCountForControl(control);
+                auto const tickCount = detents > 1 ? detents : TickCountFor(control);
+
+                if (travels && tickCount > 1)
                 {
                     auto const cross = vertical ? width : height;
                     auto const markLength = (cross * FaderTickSpan - slot) * 0.5f;
@@ -1119,11 +1242,11 @@ namespace glass
                         auto const leading = (cross - cross * FaderTickSpan) * 0.5f;
                         auto const trailing = (cross + slot) * 0.5f;
 
-                        for (int32_t tick = 0; tick < FaderTickCount; ++tick)
+                        for (int32_t tick = 0; tick < tickCount; ++tick)
                         {
                             auto const along = std::clamp(
                                 trackStart + trackRun * static_cast<float>(tick) /
-                                    static_cast<float>(FaderTickCount - 1),
+                                    static_cast<float>(tickCount - 1),
                                 0.0f,
                                 (vertical ? height : width) - 1.0f);
 
@@ -1556,8 +1679,12 @@ namespace glass
 
             LayoutVisual(compositor, m_visuals[itemIndex], control, theme);
             SetValue(itemIndex, m_values[itemIndex]);
+            SetValueY(itemIndex, m_valuesY[itemIndex]);
             LayoutLabel(itemIndex, control, theme);
             LayoutValueText(itemIndex, control, theme);
+            LayoutPicture(itemIndex, control);
+            LayoutDetentValues(itemIndex, control, theme);
+            LayoutBeatText(itemIndex, control, theme);
         }
         catch (...)
         {
@@ -1584,7 +1711,14 @@ namespace glass
         m_controlIndexes.clear();
         m_kinds.clear();
         m_restValues.clear();
+        m_restValuesY.clear();
         m_returnsToRest.clear();
+        m_dragAxes.clear();
+        m_keyboards.clear();
+        m_pictures.clear();
+        m_detentTexts.clear();
+        m_beatTexts.clear();
+        m_beatTextOffsets.clear();
         m_valueTexts.clear();
         m_valueOffsets.clear();
         m_showValues.clear();
@@ -1598,6 +1732,7 @@ namespace glass
         m_labelBoxHeights.clear();
         m_background = nullptr;
         m_values.clear();
+        m_valuesY.clear();
         m_brushes.clear();
         m_gradients.clear();
         m_shadowMasks.clear();
@@ -1641,6 +1776,20 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    DragAxis SurfaceRenderer::DragAxisAt(size_t itemIndex) const noexcept
+    {
+        return itemIndex < m_dragAxes.size() ? m_dragAxes[itemIndex] : DragAxis::Vertical;
+    }
+
+    _Use_decl_annotations_
+    KeyboardSpec const& SurfaceRenderer::KeyboardAt(size_t itemIndex) const noexcept
+    {
+        static KeyboardSpec const none{};
+
+        return itemIndex < m_keyboards.size() ? m_keyboards[itemIndex] : none;
+    }
+
+    _Use_decl_annotations_
     bool SurfaceRenderer::ReturnsToRestAt(size_t itemIndex) const noexcept
     {
         return itemIndex < m_returnsToRest.size() && m_returnsToRest[itemIndex];
@@ -1650,6 +1799,18 @@ namespace glass
     double SurfaceRenderer::RestValueAt(size_t itemIndex) const noexcept
     {
         return itemIndex < m_restValues.size() ? m_restValues[itemIndex] : 0.0;
+    }
+
+    _Use_decl_annotations_
+    double SurfaceRenderer::RestValueYAt(size_t itemIndex) const noexcept
+    {
+        return itemIndex < m_restValuesY.size() ? m_restValuesY[itemIndex] : 0.0;
+    }
+
+    _Use_decl_annotations_
+    double SurfaceRenderer::ValueYAt(size_t itemIndex) const noexcept
+    {
+        return itemIndex < m_valuesY.size() ? m_valuesY[itemIndex] : 0.0;
     }
 
     _Use_decl_annotations_
@@ -1676,6 +1837,24 @@ namespace glass
         {
             controls::Canvas::SetLeft(m_valueTexts[itemIndex], x);
             controls::Canvas::SetTop(m_valueTexts[itemIndex], y + m_valueOffsets[itemIndex]);
+        }
+
+        if (itemIndex < m_pictures.size() && m_pictures[itemIndex] != nullptr)
+        {
+            controls::Canvas::SetLeft(m_pictures[itemIndex], x);
+            controls::Canvas::SetTop(m_pictures[itemIndex], y);
+        }
+
+        if (itemIndex < m_detentTexts.size() && m_detentTexts[itemIndex] != nullptr)
+        {
+            controls::Canvas::SetLeft(m_detentTexts[itemIndex], x);
+            controls::Canvas::SetTop(m_detentTexts[itemIndex], y);
+        }
+
+        if (itemIndex < m_beatTexts.size() && m_beatTexts[itemIndex] != nullptr)
+        {
+            controls::Canvas::SetLeft(m_beatTexts[itemIndex], x);
+            controls::Canvas::SetTop(m_beatTexts[itemIndex], y + m_beatTextOffsets[itemIndex]);
         }
     }
 
@@ -1745,6 +1924,14 @@ namespace glass
                     visual.PointerShape.RotationAngleInDegrees(
                         KnobStartAngle + clamped * KnobSweepDegrees);
                 }
+            }
+            else if (visual.PuckGeometry != nullptr)
+            {
+                MovePuck(itemIndex);
+            }
+            else if (!visual.RibbonGlow.empty())
+            {
+                MoveRibbonLight(itemIndex);
             }
             else if (visual.PipeGeometry != nullptr)
             {

@@ -63,6 +63,10 @@ namespace glass
 
         MessageDetents Detents{};
 
+        // Which of a two axis control's values drives this. Every other control only ever has
+        // the one, so everything that does not ask leaves this at X and behaves as before.
+        ValueAxis Axis{ ValueAxis::X };
+
         // Send as MIDI 1.0 protocol so the seven bit value is exactly what was typed.
         bool UseMidi1Protocol{ false };
     };
@@ -119,6 +123,31 @@ namespace glass
             _In_ double value,
             _Inout_ std::span<PreparedSend> sends) const noexcept;
 
+        // The same, for one axis of a two axis control. A message says which axis it follows,
+        // so an XY pad moving sideways sends only the rows bound to sideways.
+        uint32_t EvaluateAxis(
+            _In_ size_t controlIndex,
+            _In_ MessageTrigger trigger,
+            _In_ double value,
+            _In_ ValueAxis axis,
+            _Inout_ std::span<PreparedSend> sends) const noexcept;
+
+        // A key on a piano keyboard. The note number comes from the key rather than from the
+        // message's own number, which is the whole difference between a keyboard and a pad.
+        uint32_t EvaluateNote(
+            _In_ size_t controlIndex,
+            _In_ uint16_t note,
+            _In_ double velocity,
+            _In_ bool isOn,
+            _Inout_ std::span<PreparedSend> sends) const noexcept;
+
+        // A system real time byte from a clock generator, to every device this control names.
+        // Real time messages carry no channel and no value, so there is nothing to interpolate.
+        uint32_t EvaluateSystemRealTime(
+            _In_ size_t controlIndex,
+            _In_ uint8_t status,
+            _Inout_ std::span<PreparedSend> sends) const noexcept;
+
         // The initialization pass a layout runs when it opens, in keyboard order, so a synth can
         // be put into a known state. Returns how many sends were written.
         uint32_t EvaluateStartupValues(_Inout_ std::span<PreparedSend> sends) const noexcept;
@@ -130,6 +159,29 @@ namespace glass
             _In_ uint32_t wordCount,
             _Out_ size_t& controlIndex,
             _Out_ double& value) const noexcept;
+
+        // The controls that light up on any traffic at all rather than on one message. Fills
+        // the caller's span with their indexes and returns how many were written.
+        //
+        // Separate from TryResolveFeedback because one arriving message can light several of
+        // them at once, and because an activity light has no value to carry.
+        uint32_t CollectActivityLit(
+            _In_ uint32_t const* words,
+            _In_ uint32_t wordCount,
+            _In_ int32_t destinationIndex,
+            _Inout_ std::span<size_t> lit) const noexcept;
+
+        // Which controls follow a tempo, and where each one gets it from. Empty when nothing
+        // on the layout is watching the beat.
+        struct TempoWatcher
+        {
+            size_t ControlIndex{ 0 };
+
+            // Empty means whatever clock is arriving from the device it names.
+            std::wstring ClockControlId{};
+        };
+
+        std::vector<TempoWatcher> const& TempoWatchers() const noexcept { return m_tempoWatchers; }
 
         // How many stops this control has, so the surface can snap a finger to them and draw the
         // notches. 0 means it is smooth. Where a control sends several messages the widest set of
@@ -157,16 +209,23 @@ namespace glass
         {
             size_t ControlIndex{ 0 };
             int32_t DestinationIndex{ -1 };
+            FeedbackMode Mode{ FeedbackMode::Message };
             MessageKind Kind{ MessageKind::ControlChange };
             uint8_t GroupIndex{ 0 };
             uint8_t ChannelIndex{ 0 };
             uint16_t Number{ 0 };
+
+            // Activity mode: whether the group and the channel narrow it, or any traffic from
+            // the device counts.
+            bool AnyGroup{ false };
+            bool AnyChannel{ true };
         };
 
         std::vector<PreparedDestination> m_destinations{};
         std::vector<PreparedControl> m_controls{};
         std::vector<PreparedMessage> m_messages{};
         std::vector<PreparedFeedback> m_feedback{};
+        std::vector<TempoWatcher> m_tempoWatchers{};
 
         // Keyboard order, resolved once, so the startup pass does not sort on every run.
         std::vector<size_t> m_startupOrder{};

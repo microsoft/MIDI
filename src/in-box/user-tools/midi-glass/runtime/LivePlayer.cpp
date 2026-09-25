@@ -91,6 +91,34 @@ namespace glass
 
         m_runner->Start(dispatcher);
 
+        m_clocks = ClockGenerator::Create();
+
+        m_clocks->SendRealTime = [weak](uint32_t controlIndex, uint8_t status)
+            {
+                auto strong = weak.lock();
+
+                if (strong == nullptr)
+                {
+                    return;
+                }
+
+                strong->SendPrepared(
+                    controlIndex,
+                    strong->m_engine.EvaluateSystemRealTime(controlIndex, status, strong->m_sends));
+            };
+
+        m_clocks->BeatMoved = [weak](uint32_t controlIndex, int32_t beatInBar, double phase, bool running)
+            {
+                auto strong = weak.lock();
+
+                if (strong != nullptr && strong->BeatMoved)
+                {
+                    strong->BeatMoved(controlIndex, beatInBar, phase, running);
+                }
+            };
+
+        m_clocks->Start(dispatcher);
+
         m_devices.SetChangedHandler([weak]()
             {
                 auto strong = weak.lock();
@@ -166,6 +194,14 @@ namespace glass
 
         m_stopping = true;
 
+        // Before the send table goes away. A drum machine left running after the layout that
+        // started it has closed is the worst thing this control could do.
+        if (m_clocks != nullptr)
+        {
+            m_clocks->CancelAll();
+            m_clocks->Stop();
+        }
+
         m_sendTable.clear();
 
         if (m_runner != nullptr)
@@ -194,8 +230,15 @@ namespace glass
     void LivePlayer::RebuildThrottles()
     {
         m_throttles.assign(m_document.ControlCount(), ValueThrottle{});
+        m_throttlesY.assign(m_document.ControlCount(), ValueThrottle{});
+        m_soundingNotes.assign(m_document.ControlCount(), 0xFFFF);
+        m_clockControls.clear();
 
         size_t index{ 0 };
+
+        // Every clock on the layout, and the control each one takes its tempo from, worked out
+        // once here rather than on every tick.
+        std::vector<std::pair<std::wstring, uint32_t>> idsByIndex{};
 
         for (auto const& page : m_document.Pages)
         {
@@ -203,12 +246,121 @@ namespace glass
             {
                 if (index < m_throttles.size())
                 {
-                    m_throttles[index].SetMinimumInterval(
-                        static_cast<uint32_t>(std::max(0, control.SendIntervalMilliseconds)));
+                    auto const interval =
+                        static_cast<uint32_t>(std::max(0, control.SendIntervalMilliseconds));
+
+                    m_throttles[index].SetMinimumInterval(interval);
+                    m_throttlesY[index].SetMinimumInterval(interval);
+                }
+
+                idsByIndex.emplace_back(control.Id, static_cast<uint32_t>(index));
+
+                if (control.Kind == ControlKind::BeatClock)
+                {
+                    ClockEntry entry{};
+
+                    entry.ControlIndex = static_cast<uint32_t>(index);
+                    entry.ControlId = control.Id;
+                    entry.Spec = control.Clock;
+
+                    m_clockControls.push_back(std::move(entry));
                 }
 
                 index++;
             }
+        }
+
+        for (auto& clock : m_clockControls)
+        {
+            clock.TempoSourceIndex = -1;
+
+            if (clock.Spec.TempoControlId.empty())
+            {
+                continue;
+            }
+
+            for (auto const& [id, at] : idsByIndex)
+            {
+                if (id == clock.Spec.TempoControlId)
+                {
+                    clock.TempoSourceIndex = static_cast<int32_t>(at);
+                    break;
+                }
+            }
+        }
+    }
+
+    void LivePlayer::StartClocks()
+    {
+        // Connections come up in two steps that do not land together: the engine is prepared on
+        // this thread from whatever the device watcher had resolved at that moment, and the
+        // send table arrives from a background thread afterwards. Either can be ready first.
+        //
+        // A clock's start message is a one shot, so starting before both are ready burns it on
+        // nothing and leaves the clock running, which makes every later pass skip it. Waiting
+        // for both costs a second at launch and is the difference between a drum machine that
+        // follows and one that never does.
+        if (m_clocks == nullptr || m_sendTable.empty())
+        {
+            return;
+        }
+
+        auto reachable = false;
+
+        for (auto const& destination : m_engine.Destinations())
+        {
+            if (destination.IsAvailable)
+            {
+                reachable = true;
+                break;
+            }
+        }
+
+        if (!reachable)
+        {
+            return;
+        }
+
+        for (auto const& clock : m_clockControls)
+        {
+            if (!clock.Spec.StartsRunning || m_clocks->IsRunning(clock.ControlIndex))
+            {
+                continue;
+            }
+
+            m_clocks->Run(clock.ControlIndex, clock.Spec.BeatsPerMinute, clock.Spec.SendsTransport);
+        }
+    }
+
+    _Use_decl_annotations_
+    bool LivePlayer::IsClockRunning(uint32_t controlIndex) const noexcept
+    {
+        return m_clocks != nullptr && m_clocks->IsRunning(controlIndex);
+    }
+
+    _Use_decl_annotations_
+    void LivePlayer::TempoSourceMoved(uint32_t controlIndex, double value)
+    {
+        if (m_clocks == nullptr)
+        {
+            return;
+        }
+
+        for (auto const& clock : m_clockControls)
+        {
+            if (clock.TempoSourceIndex != static_cast<int32_t>(controlIndex))
+            {
+                continue;
+            }
+
+            // A fader's value is a position, so the clock says what its two ends mean. Somebody
+            // wanting 60 to 180 gets exactly that rather than the whole legal range.
+            auto const lowest = clock.Spec.LowestBeatsPerMinute;
+            auto const highest = clock.Spec.HighestBeatsPerMinute;
+
+            m_clocks->SetTempo(
+                clock.ControlIndex,
+                lowest + std::clamp(value, 0.0, 1.0) * (highest - lowest));
         }
     }
 
@@ -310,6 +462,12 @@ namespace glass
                                 }
 
                                 inner->SendStartupValues();
+
+                                // A clock marked to run on its own starts here rather than when
+                                // the window opened: the device table resolves on this thread a
+                                // moment later, and a start message sent before that goes
+                                // nowhere at all.
+                                inner->StartClocks();
                             });
                     }
                 }
@@ -328,7 +486,6 @@ namespace glass
         {
             return;
         }
-
         for (uint32_t i = 0; i < count; ++i)
         {
             auto const& send = m_sends[i];
@@ -400,6 +557,92 @@ namespace glass
         SendPrepared(
             controlIndex,
             m_engine.Evaluate(controlIndex, MessageTrigger::Changes, value, m_sends));
+
+        // A knob or a fader can be a tempo control. Nothing happens unless some clock on this
+        // layout named it, so every other control pays one loop over an empty list.
+        TempoSourceMoved(controlIndex, value);
+    }
+
+    _Use_decl_annotations_
+    void LivePlayer::ValueYChanged(uint32_t controlIndex, double value, bool isFinal)
+    {
+        if (controlIndex >= m_throttlesY.size())
+        {
+            return;
+        }
+
+        auto& throttle = m_throttlesY[controlIndex];
+
+        if (isFinal)
+        {
+            double pending{ 0.0 };
+
+            if (!throttle.Release(pending))
+            {
+                return;
+            }
+
+            value = pending;
+        }
+        else if (!throttle.ShouldSend(value, NowMilliseconds()))
+        {
+            return;
+        }
+
+        SendPrepared(
+            controlIndex,
+            m_engine.EvaluateAxis(
+                controlIndex, MessageTrigger::Changes, value, ValueAxis::Y, m_sends));
+    }
+
+    _Use_decl_annotations_
+    void LivePlayer::KeyChanged(uint32_t controlIndex, int32_t key, double velocity, bool isDown)
+    {
+        if (controlIndex >= m_soundingNotes.size())
+        {
+            return;
+        }
+
+        auto const* const control = m_document.ControlAtIndex(controlIndex);
+
+        if (control == nullptr)
+        {
+            return;
+        }
+
+        if (!isDown)
+        {
+            // The note that was actually started, not whatever the key maps to now. A keyboard
+            // edited mid gesture must not leave a note sounding.
+            auto const sounding = m_soundingNotes[controlIndex];
+
+            if (sounding == 0xFFFF)
+            {
+                return;
+            }
+
+            m_soundingNotes[controlIndex] = 0xFFFF;
+
+            SendPrepared(
+                controlIndex,
+                m_engine.EvaluateNote(controlIndex, sounding, 0.0, false, m_sends));
+
+            return;
+        }
+
+        if (key < 0)
+        {
+            return;
+        }
+
+        auto const note = std::clamp(control->Keyboard.LowestNote + key, 0, 127);
+
+        m_soundingNotes[controlIndex] = static_cast<uint16_t>(note);
+
+        SendPrepared(
+            controlIndex,
+            m_engine.EvaluateNote(
+                controlIndex, static_cast<uint16_t>(note), velocity, true, m_sends));
     }
 
     _Use_decl_annotations_
@@ -412,6 +655,30 @@ namespace glass
     _Use_decl_annotations_
     void LivePlayer::Switched(uint32_t controlIndex, bool isOn)
     {
+        // A clock is running or it is not, and pressing it is what changes which.
+        if (m_clocks != nullptr)
+        {
+            for (auto const& clock : m_clockControls)
+            {
+                if (clock.ControlIndex != controlIndex)
+                {
+                    continue;
+                }
+
+                if (isOn)
+                {
+                    m_clocks->Run(
+                        controlIndex, clock.Spec.BeatsPerMinute, clock.Spec.SendsTransport);
+                }
+                else
+                {
+                    m_clocks->CancelFor(controlIndex);
+                }
+
+                return;
+            }
+        }
+
         // Nothing but a continuous control is ever throttled. Rate limiting a note on would be a
         // defect, not a feature.
         SendPrepared(
@@ -688,15 +955,20 @@ namespace glass
 
         auto const learning = m_learning.load();
 
-        if (!learning && !FeedbackMoved)
+        if (!learning && !FeedbackMoved && !ActivitySeen)
         {
             return;
         }
+
+        // Which entry of this layout's device table the message came in on, so an activity lamp
+        // can be narrowed to one device.
+        auto const destinationIndex = m_devices.IndexOfEndpoint(endpointDeviceId);
 
         // This is a service callback thread and the buffer belongs to the caller, so what is
         // wanted is resolved here and only the answer is marshalled.
         std::vector<std::pair<uint32_t, double>> moves{};
         std::vector<LearnedBinding> captures{};
+        std::vector<uint32_t> lit{};
 
         uint32_t position{ 0 };
 
@@ -717,6 +989,26 @@ namespace glass
                 moves.emplace_back(static_cast<uint32_t>(controlIndex), value);
             }
 
+            if (ActivitySeen)
+            {
+                std::array<size_t, 32> watching{};
+
+                auto const count = m_engine.CollectActivityLit(
+                    words + position, length, destinationIndex, watching);
+
+                for (uint32_t i = 0; i < count; ++i)
+                {
+                    auto const index = static_cast<uint32_t>(watching[i]);
+
+                    // One message can light several lamps, but a burst of a hundred must not
+                    // queue a hundred hits at the same one.
+                    if (std::find(lit.begin(), lit.end(), index) == lit.end())
+                    {
+                        lit.push_back(index);
+                    }
+                }
+            }
+
             if (learning)
             {
                 LearnedBinding learned{};
@@ -732,14 +1024,14 @@ namespace glass
             position += length;
         }
 
-        if (moves.empty() && captures.empty())
+        if (moves.empty() && captures.empty() && lit.empty())
         {
             return;
         }
 
         std::weak_ptr<LivePlayer> weak{ weak_from_this() };
 
-        m_dispatcher.TryEnqueue([weak, moves, captures]()
+        m_dispatcher.TryEnqueue([weak, moves, captures, lit]()
             {
                 auto strong = weak.lock();
 
@@ -753,6 +1045,14 @@ namespace glass
                     for (auto const& [controlIndex, value] : moves)
                     {
                         strong->FeedbackMoved(controlIndex, value);
+                    }
+                }
+
+                if (strong->ActivitySeen)
+                {
+                    for (auto const controlIndex : lit)
+                    {
+                        strong->ActivitySeen(controlIndex);
                     }
                 }
 

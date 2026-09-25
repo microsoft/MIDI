@@ -1098,7 +1098,7 @@
                         </Grid.RowDefinitions>
 
                         <Border Grid.Row="0" Style="{StaticResource TabStripStyle}" Padding="13,0,13,0">
-                            <StackPanel Orientation="Horizontal" Spacing="14">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
                                 <Grid>
                                     <ToggleButton x:Name="LookTab" x:Uid="InspectorLookItem"
                                                   Style="{StaticResource TabButtonStyle}"
@@ -1111,14 +1111,22 @@
                                     <ToggleButton x:Name="MidiTab" x:Uid="InspectorMidiItem"
                                                   Style="{StaticResource TabButtonStyle}"
                                                   Tag="1"
-                                                  Content="MIDI"
+                                                  Content="Sends"
                                                   Checked="OnInspectorTabChecked" Unchecked="OnInspectorTabUnchecked" />
                                     <Rectangle x:Name="MidiTabLine" Style="{StaticResource TabUnderlineStyle}" Visibility="Collapsed" />
                                 </Grid>
                                 <Grid>
-                                    <ToggleButton x:Name="BehaviorTab" x:Uid="InspectorBehaviorItem"
+                                    <ToggleButton x:Name="MidiInTab" x:Uid="InspectorMidiInItem"
                                                   Style="{StaticResource TabButtonStyle}"
                                                   Tag="2"
+                                                  Content="Listens"
+                                                  Checked="OnInspectorTabChecked" Unchecked="OnInspectorTabUnchecked" />
+                                    <Rectangle x:Name="MidiInTabLine" Style="{StaticResource TabUnderlineStyle}" Visibility="Collapsed" />
+                                </Grid>
+                                <Grid>
+                                    <ToggleButton x:Name="BehaviorTab" x:Uid="InspectorBehaviorItem"
+                                                  Style="{StaticResource TabButtonStyle}"
+                                                  Tag="3"
                                                   Content="Behavior"
                                                   Checked="OnInspectorTabChecked" Unchecked="OnInspectorTabUnchecked" />
                                     <Rectangle x:Name="BehaviorTabLine" Style="{StaticResource TabUnderlineStyle}" Visibility="Collapsed" />
@@ -1298,6 +1306,135 @@
                                                TextWrapping="Wrap"
                                                Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
+                                    <!-- Marks across the travel. A knob, a fader, a meter and a
+                                         ribbon draw them along one axis; a pad and a joystick
+                                         draw the same numbers as a grid. -->
+                                    <StackPanel x:Name="TicksPanel" Visibility="Collapsed">
+                                        <TextBlock x:Uid="InspectorMarksHeading" Text="Marks" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+
+                                        <CheckBox x:Name="TicksShowCheck"
+                                                  x:Uid="TicksShowCheck"
+                                                  Content="Show marks"
+                                                  Checked="OnTicksShowChanged"
+                                                  Unchecked="OnTicksShowChanged" />
+
+                                        <NumberBox x:Name="TickCountBox"
+                                                   x:Uid="TickCountBox"
+                                                   Minimum="2"
+                                                   Maximum="64"
+                                                   Margin="0,4,0,0"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnTickCountChanged" />
+
+                                        <TextBlock x:Name="TicksCaption"
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <CheckBox x:Name="ShowDetentValuesCheck"
+                                                  x:Uid="ShowDetentValuesCheck"
+                                                  Content="Print the value at each stop"
+                                                  Margin="0,6,0,0"
+                                                  Checked="OnShowDetentValuesChanged"
+                                                  Unchecked="OnShowDetentValuesChanged" />
+                                    </StackPanel>
+
+                                    <!-- A picture or a video, for an image control and for the
+                                         fill behind a grouping panel. -->
+                                    <StackPanel x:Name="PicturePanel" Visibility="Collapsed">
+                                        <TextBlock x:Uid="InspectorPictureHeading" Text="Picture" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <Button x:Name="ChoosePictureButton" x:Uid="ChoosePictureButton" FontSize="11" Click="OnChoosePictureClick">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon Glyph="&#xEB9F;" FontSize="11" />
+                                                    <TextBlock x:Uid="ChoosePictureLabel" Text="Choose…" FontSize="11" />
+                                                </StackPanel>
+                                            </Button>
+                                            <Button x:Name="RemovePictureButton" x:Uid="RemovePictureButton" FontSize="11" Click="OnRemovePictureClick">
+                                                <TextBlock x:Uid="RemovePictureLabel" Text="Remove" FontSize="11" />
+                                            </Button>
+                                        </StackPanel>
+
+                                        <TextBlock x:Name="PictureCaption"
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <ComboBox x:Name="PictureFitCombo"
+                                                  x:Uid="PictureFitCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,6,0,0"
+                                                  SelectionChanged="OnPictureFitChanged" />
+
+                                        <Slider x:Name="PictureOpacitySlider"
+                                                x:Uid="PictureOpacitySlider"
+                                                Minimum="0"
+                                                Maximum="100"
+                                                StepFrequency="1"
+                                                Margin="0,4,0,0"
+                                                ValueChanged="OnPictureOpacityChanged" />
+
+                                        <CheckBox x:Name="PictureLoopsCheck"
+                                                  x:Uid="PictureLoopsCheck"
+                                                  Content="Play a video on a loop"
+                                                  Checked="OnPictureLoopsChanged"
+                                                  Unchecked="OnPictureLoopsChanged" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="KeyboardPanel" Visibility="Collapsed">
+                                        <TextBlock x:Uid="InspectorKeysHeading" Text="Keys" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+
+                                        <TextBlock x:Uid="KeyCountLabel" Text="How many keys" Style="{StaticResource InspectorLabelStyle}" />
+                                        <NumberBox x:Name="KeyCountBox"
+                                                   x:Uid="KeyCountBox"
+                                                   Minimum="5"
+                                                   Maximum="128"
+                                                   Margin="0,2,0,0"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnKeyCountChanged" />
+
+                                        <TextBlock x:Uid="LowestNoteLabel" Text="Lowest key plays" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
+                                        <NumberBox x:Name="LowestNoteBox"
+                                                   x:Uid="LowestNoteBox"
+                                                   Minimum="0"
+                                                   Maximum="127"
+                                                   Margin="0,2,0,0"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnLowestNoteChanged" />
+                                        <TextBlock x:Name="KeyboardRangeCaption"
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <TextBlock x:Uid="KeyColorsLabel" Text="Key colors" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
+                                        <TextBox x:Name="WhiteKeyColorBox"
+                                                 x:Uid="WhiteKeyColorBox"
+                                                 PlaceholderText="#E8EAEE"
+                                                 Margin="0,2,0,0"
+                                                 LostFocus="OnKeyColorChanged" />
+                                        <TextBox x:Name="BlackKeyColorBox"
+                                                 x:Uid="BlackKeyColorBox"
+                                                 PlaceholderText="#16191F"
+                                                 Margin="0,4,0,0"
+                                                 LostFocus="OnKeyColorChanged" />
+                                        <TextBox x:Name="PressedKeyColorBox"
+                                                 x:Uid="PressedKeyColorBox"
+                                                 PlaceholderText="the control's own color"
+                                                 Margin="0,4,0,0"
+                                                 LostFocus="OnKeyColorChanged" />
+
+                                        <CheckBox x:Name="KeyVelocityCheck"
+                                                  x:Uid="KeyVelocityCheck"
+                                                  Content="Velocity from where the key is touched"
+                                                  Margin="0,6,0,0"
+                                                  Checked="OnKeyVelocityChanged"
+                                                  Unchecked="OnKeyVelocityChanged" />
+                                    </StackPanel>
+
                                     <!-- The control itself, drawn the way it will actually look,
                                          so a style or a color is judged rather than imagined. -->
                                     <TextBlock x:Uid="InspectorPreviewHeading" Text="Preview" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
@@ -1453,6 +1590,35 @@
                                                    ValueChanged="OnMessageNumberChanged" />
                                     </Grid>
 
+                                    <!-- Stops, so a control does not have to be smooth. A six
+                                         position mode switch and a volume fader are the same
+                                         control with different answers here. -->
+                                    <StackPanel x:Name="DetentPanel" Visibility="Collapsed" Spacing="4" Margin="0,10,0,0">
+                                        <TextBlock x:Uid="DetentHeading" Text="Stops" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <ComboBox x:Name="DetentModeCombo"
+                                                  x:Uid="DetentModeCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnDetentModeChanged" />
+
+                                        <NumberBox x:Name="DetentStepBox"
+                                                   x:Uid="DetentStepBox"
+                                                   Minimum="0"
+                                                   Maximum="100"
+                                                   Visibility="Collapsed"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnDetentStepChanged" />
+
+                                        <TextBox x:Name="DetentStopsBox"
+                                                 x:Uid="DetentStopsBox"
+                                                 Visibility="Collapsed"
+                                                 LostFocus="OnDetentStopsChanged" />
+
+                                        <TextBlock x:Name="DetentCaption"
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+
                                     <!-- Only one of these is ever shown, and only when the row
                                          above it is that kind. A control change has no bytes and
                                          a dump has no controller number, so showing both at once
@@ -1538,6 +1704,109 @@
                                 </StackPanel>
                             </ScrollViewer>
 
+                            <!-- What the control listens for. A meter and a lamp do nothing else;
+                                 a fader can both lead and follow, which is why this is its own
+                                 tab rather than a section at the bottom of the sends one. -->
+                            <ScrollViewer x:Name="MidiInPane" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                                <StackPanel x:Name="MidiInPanel" Margin="8,0,16,16" Spacing="4">
+
+                                    <ToggleSwitch x:Name="FeedbackEnabledSwitch"
+                                                  x:Uid="FeedbackEnabledSwitch"
+                                                  Header="Follow what arrives"
+                                                  Toggled="OnFeedbackEnabledToggled" />
+                                    <TextBlock x:Uid="FeedbackEnabledCaption"
+                                               Text="The control moves or lights when the device sends, instead of only when a finger does."
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                    <!-- A Grid rather than a StackPanel, because only a Control
+                                         carries IsEnabled and the whole block is greyed at once
+                                         while the switch above it is off. -->
+                                    <ContentControl x:Name="FeedbackFieldsPanel" IsEnabled="False"
+                                                    HorizontalContentAlignment="Stretch"
+                                                    HorizontalAlignment="Stretch">
+                                        <StackPanel Spacing="4">
+
+                                        <TextBlock x:Uid="FeedbackModeHeading" Text="What to listen for" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <ComboBox x:Name="FeedbackModeCombo"
+                                                  x:Uid="FeedbackModeCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnFeedbackModeChanged" />
+                                        <TextBlock x:Name="FeedbackModeCaption"
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <TextBlock x:Uid="FeedbackDeviceHeading" Text="From" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <ComboBox x:Name="FeedbackDeviceCombo"
+                                                  x:Uid="FeedbackDeviceCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnFeedbackDeviceChanged" />
+
+                                        <ComboBox x:Name="FeedbackGroupCombo"
+                                                  x:Uid="FeedbackGroupCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,4,0,0"
+                                                  SelectionChanged="OnFeedbackGroupChanged" />
+
+                                        <ComboBox x:Name="FeedbackChannelCombo"
+                                                  x:Uid="FeedbackChannelCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,4,0,0"
+                                                  SelectionChanged="OnFeedbackChannelChanged" />
+
+                                        <CheckBox x:Name="FeedbackMatchChannelCheck"
+                                                  x:Uid="FeedbackMatchChannelCheck"
+                                                  Content="Only that channel"
+                                                  Margin="0,4,0,0"
+                                                  Checked="OnFeedbackMatchChannelChanged"
+                                                  Unchecked="OnFeedbackMatchChannelChanged" />
+
+                                        <StackPanel x:Name="FeedbackMessagePanel" Spacing="4">
+                                            <TextBlock x:Uid="FeedbackKindHeading" Text="Which message" Style="{StaticResource InspectorHeadingStyle}" />
+                                            <ComboBox x:Name="FeedbackKindCombo"
+                                                      x:Uid="FeedbackKindCombo"
+                                                      HorizontalAlignment="Stretch"
+                                                      SelectionChanged="OnFeedbackKindChanged" />
+                                            <NumberBox x:Name="FeedbackNumberBox"
+                                                       x:Uid="FeedbackNumberBox"
+                                                       Minimum="0"
+                                                       Maximum="16383"
+                                                       SpinButtonPlacementMode="Compact"
+                                                       ValueChanged="OnFeedbackNumberChanged" />
+                                        </StackPanel>
+
+                                        <StackPanel x:Name="FeedbackTempoPanel" Spacing="4" Visibility="Collapsed">
+                                            <TextBlock x:Uid="FeedbackTempoHeading" Text="Whose beat" Style="{StaticResource InspectorHeadingStyle}" />
+                                            <ComboBox x:Name="FeedbackTempoCombo"
+                                                      x:Uid="FeedbackTempoCombo"
+                                                      HorizontalAlignment="Stretch"
+                                                      SelectionChanged="OnFeedbackTempoChanged" />
+                                            <TextBlock x:Uid="FeedbackTempoCaption"
+                                                       Text="Either the clock arriving from the device above, or a clock generator on this layout."
+                                                       FontSize="11"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                        </StackPanel>
+
+                                        <TextBlock x:Uid="FeedbackHoldHeading" Text="Stays lit for" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <NumberBox x:Name="FeedbackHoldBox"
+                                                   x:Uid="FeedbackHoldBox"
+                                                   Minimum="0"
+                                                   Maximum="5000"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnFeedbackHoldChanged" />
+                                        <TextBlock x:Uid="FeedbackHoldCaption"
+                                                   Text="Milliseconds. Long enough to see across a room, short enough not to smear into the next hit."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                        </StackPanel>
+                                    </ContentControl>
+                                </StackPanel>
+                            </ScrollViewer>
+
                             <ScrollViewer x:Name="BehaviorPane" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
                                 <StackPanel x:Name="BehaviorPanel" Margin="8,0,16,16" Spacing="4">
 
@@ -1569,6 +1838,75 @@
                                                FontSize="11"
                                                TextWrapping="Wrap"
                                                Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                    <ComboBox x:Name="SpringTargetCombo"
+                                              x:Uid="SpringTargetCombo"
+                                              HorizontalAlignment="Stretch"
+                                              Margin="0,4,0,0"
+                                              SelectionChanged="OnSpringTargetChanged" />
+
+                                    <StackPanel x:Name="DragAxisPanel" Visibility="Collapsed">
+                                        <TextBlock x:Uid="InspectorDragHeading" Text="Which way to drag" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <ComboBox x:Name="DragAxisCombo"
+                                                  x:Uid="DragAxisCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnDragAxisChanged" />
+                                        <TextBlock x:Uid="DragAxisCaption"
+                                                   Text="A circle is hard to trace on glass, so a knob is dragged in a straight line instead. Up is more, or right is more for a row of knobs in a narrow strip."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="ClockPanel" Visibility="Collapsed">
+                                        <TextBlock x:Uid="InspectorClockHeading" Text="Tempo" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <NumberBox x:Name="ClockBpmBox"
+                                                   x:Uid="ClockBpmBox"
+                                                   Minimum="20"
+                                                   Maximum="300"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnClockBpmChanged" />
+
+                                        <TextBlock x:Uid="ClockSourceLabel" Text="Take the tempo from" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
+                                        <ComboBox x:Name="ClockSourceCombo"
+                                                  x:Uid="ClockSourceCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,2,0,0"
+                                                  SelectionChanged="OnClockSourceChanged" />
+                                        <TextBlock x:Uid="ClockSourceCaption"
+                                                   Text="A knob or a fader on this layout can set the tempo while it runs. The two numbers below say what its ends mean."
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <NumberBox x:Name="ClockLowestBpmBox"
+                                                   x:Uid="ClockLowestBpmBox"
+                                                   Minimum="20"
+                                                   Maximum="300"
+                                                   Margin="0,4,0,0"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnClockRangeChanged" />
+                                        <NumberBox x:Name="ClockHighestBpmBox"
+                                                   x:Uid="ClockHighestBpmBox"
+                                                   Minimum="20"
+                                                   Maximum="300"
+                                                   Margin="0,4,0,0"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnClockRangeChanged" />
+
+                                        <CheckBox x:Name="ClockStartsRunningCheck"
+                                                  x:Uid="ClockStartsRunningCheck"
+                                                  Content="Running when the layout opens"
+                                                  Margin="0,6,0,0"
+                                                  Checked="OnClockFlagChanged"
+                                                  Unchecked="OnClockFlagChanged" />
+                                        <CheckBox x:Name="ClockSendsTransportCheck"
+                                                  x:Uid="ClockSendsTransportCheck"
+                                                  Content="Send start and stop as well"
+                                                  Checked="OnClockFlagChanged"
+                                                  Unchecked="OnClockFlagChanged" />
+                                    </StackPanel>
 
                                     <TextBlock x:Uid="InspectorThrottleHeading" Text="Least time between sends" Style="{StaticResource InspectorHeadingStyle}" />
                                     <NumberBox x:Name="SendIntervalBox"

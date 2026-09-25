@@ -182,6 +182,7 @@
     <ClInclude Include="surface\SurfaceAutomationPeer.h" />
     <ClInclude Include="surface\SurfaceColors.h" />
     <ClInclude Include="surface\SurfaceRenderer.h" />
+    <ClInclude Include="runtime\ClockGenerator.h" />
     <ClInclude Include="binding\BindingEngine.h" />
     <ClInclude Include="binding\ActionPlan.h" />
     <ClInclude Include="binding\LearnCapture.h" />
@@ -222,6 +223,8 @@
       <DependentUpon>EditorWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="EditorCanvas.cpp" />
+    <ClCompile Include="EditorControlProperties.cpp" />
+    <ClCompile Include="EditorControlEdits.cpp" />
     <ClCompile Include="EditorInspector.cpp" />
     <ClCompile Include="EditorOutline.cpp" />
     <ClCompile Include="EditorDialogs.cpp" />
@@ -328,6 +331,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="runtime\DeviceCatalog.cpp" />
+    <ClCompile Include="runtime\ClockGenerator.cpp" />
     <ClCompile Include="surface\DeckBrush.cpp" />
     <ClCompile Include="runtime\LivePlayer.cpp" />
     <ClCompile Include="runtime\SequenceRunner.cpp" />
@@ -335,6 +339,7 @@
     <ClCompile Include="surface\GlassControl.cpp" />
     <ClCompile Include="surface\InputRouter.cpp" />
     <ClCompile Include="surface\SurfaceAutomationPeer.cpp" />
+    <ClCompile Include="surface\SurfaceControls.cpp" />
     <ClCompile Include="surface\SurfaceRenderer.cpp" />
     <ClCompile Include="thumbnail\ThumbnailRenderer.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />

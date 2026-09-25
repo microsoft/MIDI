@@ -38,6 +38,15 @@ namespace glass
             // Big enough to hold a row of four faders and their labels, which is the smallest
             // thing anybody draws a box around.
             case ControlKind::Panel:    return { 280, 220 };
+
+            case ControlKind::Joystick: return { 180, 180 };
+            case ControlKind::Ribbon:   return { 280, 48 };
+
+            // Two octaves at a width a finger can hit. A keyboard narrower than this is a row
+            // of slivers.
+            case ControlKind::PianoKeyboard: return { 420, 120 };
+
+            case ControlKind::BeatClock: return { 100, 120 };
             }
 
             return { 56, 56 };

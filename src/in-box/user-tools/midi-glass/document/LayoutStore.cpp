@@ -295,6 +295,96 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    std::wstring ControlPicturePath(
+        std::wstring const& layoutFilePath,
+        std::wstring const& fileName) noexcept
+    {
+        try
+        {
+            if (fileName.empty() || layoutFilePath.empty())
+            {
+                return {};
+            }
+
+            // Only a plain file name is ever accepted. A layout is untrusted input, so a name
+            // that is a path is a way to make this app open a file somewhere else on the PC.
+            std::filesystem::path const name{ fileName };
+
+            if (name.has_parent_path() || name.has_root_name() || !name.has_filename())
+            {
+                return {};
+            }
+
+            if (!IsSupportedPictureFileName(fileName))
+            {
+                return {};
+            }
+
+            auto const folder = std::filesystem::path{ layoutFilePath }.parent_path();
+            auto const full = folder / name;
+
+            std::error_code ignored{};
+
+            if (!std::filesystem::is_regular_file(full, ignored))
+            {
+                return {};
+            }
+
+            return full.wstring();
+        }
+        catch (...)
+        {
+            return {};
+        }
+    }
+
+    _Use_decl_annotations_
+    bool IsSupportedPictureFileName(std::wstring const& fileName) noexcept
+    {
+        try
+        {
+            auto const extension = std::filesystem::path{ fileName }.extension().wstring();
+
+            for (auto const* const known : { L".png", L".jpg", L".jpeg", L".svg" })
+            {
+                if (_wcsicmp(extension.c_str(), known) == 0)
+                {
+                    return true;
+                }
+            }
+
+            return IsVideoFileName(fileName);
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+    _Use_decl_annotations_
+    bool IsVideoFileName(std::wstring const& fileName) noexcept
+    {
+        try
+        {
+            auto const extension = std::filesystem::path{ fileName }.extension().wstring();
+
+            for (auto const* const known : { L".mp4", L".m4v", L".mkv", L".webm", L".wmv" })
+            {
+                if (_wcsicmp(extension.c_str(), known) == 0)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+    _Use_decl_annotations_
     ReadResult ReadLayoutFile(std::wstring const& filePath) noexcept
     {
         ReadResult result{};

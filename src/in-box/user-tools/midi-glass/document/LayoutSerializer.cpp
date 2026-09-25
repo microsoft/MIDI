@@ -78,7 +78,35 @@ namespace glass
         constexpr wchar_t KeyShowValue[] = L"showValue";
         constexpr wchar_t KeyKeyboardOrder[] = L"keyboardOrder";
         constexpr wchar_t KeyPickup[] = L"pickup";
+        constexpr wchar_t KeyDrag[] = L"drag";
+        constexpr wchar_t KeyTicks[] = L"ticks";
+        constexpr wchar_t KeyShow[] = L"show";
+        constexpr wchar_t KeyCount[] = L"count";
+        constexpr wchar_t KeyShowDetentValues[] = L"showDetentValues";
+        constexpr wchar_t KeyPicture[] = L"picture";
+        constexpr wchar_t KeyFile[] = L"file";
+        constexpr wchar_t KeyFit[] = L"fit";
+        constexpr wchar_t KeyOpacity[] = L"opacity";
+        constexpr wchar_t KeyLoops[] = L"loops";
+        constexpr wchar_t KeyKeyboard[] = L"keyboard";
+        constexpr wchar_t KeyKeyCount[] = L"keyCount";
+        constexpr wchar_t KeyLowestNote[] = L"lowestNote";
+        constexpr wchar_t KeyWhiteKeyColor[] = L"whiteKeyColor";
+        constexpr wchar_t KeyBlackKeyColor[] = L"blackKeyColor";
+        constexpr wchar_t KeyPressedKeyColor[] = L"pressedKeyColor";
+        constexpr wchar_t KeyShowNoteNames[] = L"showNoteNames";
+        constexpr wchar_t KeyVelocityFromKeyPosition[] = L"velocityFromKeyPosition";
+        constexpr wchar_t KeyClock[] = L"clock";
+        constexpr wchar_t KeyTempoControl[] = L"tempoControl";
+        constexpr wchar_t KeyLowestBeatsPerMinute[] = L"lowestBeatsPerMinute";
+        constexpr wchar_t KeyHighestBeatsPerMinute[] = L"highestBeatsPerMinute";
+        constexpr wchar_t KeyStartsRunning[] = L"startsRunning";
+        constexpr wchar_t KeySendsTransport[] = L"sendsTransport";
+        constexpr wchar_t KeyMatchesChannel[] = L"matchesChannel";
+        constexpr wchar_t KeyHoldMilliseconds[] = L"holdMilliseconds";
+        constexpr wchar_t KeyAxis[] = L"axis";
         constexpr wchar_t KeyDefaultValue[] = L"defaultValue";
+        constexpr wchar_t KeyDefaultValueY[] = L"defaultValueY";
         constexpr wchar_t KeyReturnsToDefault[] = L"returnsToDefault";
         constexpr wchar_t KeySendsValueOnStart[] = L"sendsValueOnStart";
         constexpr wchar_t KeySendInterval[] = L"sendIntervalMilliseconds";
@@ -146,6 +174,29 @@ namespace glass
             { ControlKind::Image, L"image" },
             { ControlKind::PageTab, L"pageTab" },
             { ControlKind::Panel, L"panel" },
+            { ControlKind::Joystick, L"joystick" },
+            { ControlKind::Ribbon, L"ribbon" },
+            { ControlKind::PianoKeyboard, L"pianoKeyboard" },
+            { ControlKind::BeatClock, L"beatClock" },
+        };
+
+        constexpr EnumName<ValueAxis> AxisNames[]
+        {
+            { ValueAxis::X, L"x" },
+            { ValueAxis::Y, L"y" },
+        };
+
+        constexpr EnumName<DragAxis> DragNames[]
+        {
+            { DragAxis::Vertical, L"vertical" },
+            { DragAxis::Horizontal, L"horizontal" },
+        };
+
+        constexpr EnumName<FeedbackMode> FeedbackModeNames[]
+        {
+            { FeedbackMode::Message, L"message" },
+            { FeedbackMode::AnyActivity, L"anyActivity" },
+            { FeedbackMode::Tempo, L"tempo" },
         };
 
         constexpr EnumName<SequenceRunMode> RunModeNames[]
@@ -649,6 +700,7 @@ namespace glass
             message.Minimum = ReadMessageValue(object, KeyMinimum, { 0.0, ValueScaling::Fraction });
             message.Maximum = ReadMessageValue(object, KeyMaximum, { 1.0, ValueScaling::Fraction });
             message.Detents = ReadDetents(object);
+            message.Axis = ValueOf(AxisNames, ReadString(object, KeyAxis), ValueAxis::X);
             message.SystemExclusive = FromHex(ReadString(object, KeySystemExclusive));
             message.UseMidi1Protocol = ReadBool(object, KeyMidi1Protocol, false);
             message.SequenceName = ReadString(object, KeySequence);
@@ -676,7 +728,7 @@ namespace glass
             message.Unknown = CaptureUnknown(object,
                 { KeyTrigger, KeyKind, KeyDevice, KeyGroup, KeyChannel, KeyNumber, KeyMinimum,
                   KeyMaximum, KeySystemExclusive, KeyWords, KeySequence, KeyTargetPage,
-                  KeyTargetLayer, KeyMidi1Protocol, KeyDetents });
+                  KeyTargetLayer, KeyMidi1Protocol, KeyDetents, KeyAxis });
 
             return message;
         }
@@ -686,16 +738,117 @@ namespace glass
             FeedbackBinding feedback{};
 
             feedback.Enabled = ReadBool(object, KeyEnabled, false);
+            feedback.Mode = ValueOf(FeedbackModeNames, ReadString(object, KeyMode), FeedbackMode::Message);
             feedback.Kind = ValueOf(MessageKindNames, ReadString(object, KeyKind), MessageKind::ControlChange);
             feedback.DeviceName = ReadString(object, KeyDevice);
             feedback.GroupIndex = ReadInt(object, KeyGroup, 0, AllGroups, MaximumGroupCount - 1);
             feedback.ChannelIndex = ReadInt(object, KeyChannel, 0, 0, 15);
             feedback.Number = static_cast<uint32_t>(ReadInt(object, KeyNumber, 0, 0, 0x7FFFFFFF));
+            feedback.MatchesChannel = ReadBool(object, KeyMatchesChannel, false);
+            feedback.TempoControlId = ReadString(object, KeyTempoControl);
+            feedback.HoldMilliseconds = ReadInt(object, KeyHoldMilliseconds, 120, 0, 10000);
 
             feedback.Unknown = CaptureUnknown(object,
-                { KeyEnabled, KeyKind, KeyDevice, KeyGroup, KeyChannel, KeyNumber });
+                { KeyEnabled, KeyMode, KeyKind, KeyDevice, KeyGroup, KeyChannel, KeyNumber,
+                  KeyMatchesChannel, KeyTempoControl, KeyHoldMilliseconds });
 
             return feedback;
+        }
+
+        TickMarks ReadTicks(_In_ mjson::JsonObject const& object) noexcept
+        {
+            TickMarks ticks{};
+
+            auto const nested = ReadObject(object, KeyTicks);
+
+            if (nested == nullptr)
+            {
+                return ticks;
+            }
+
+            ticks.Show = ReadBool(nested, KeyShow, true);
+            ticks.Count = ReadInt(nested, KeyCount, 5, MinimumTickCount, MaximumTickCount);
+
+            ticks.Unknown = CaptureUnknown(nested, { KeyShow, KeyCount });
+
+            return ticks;
+        }
+
+        Picture ReadPicture(_In_ mjson::JsonObject const& object) noexcept
+        {
+            Picture picture{};
+
+            auto const nested = ReadObject(object, KeyPicture);
+
+            if (nested == nullptr)
+            {
+                return picture;
+            }
+
+            // A bare file name or nothing. A name that is a path is how a layout from a
+            // stranger would get this app to open a file somewhere else on the PC.
+            picture.FileName = SanitizeFileName(ReadString(nested, KeyFile));
+            picture.Fit = ValueOf(BackgroundFitNames, ReadString(nested, KeyFit), BackgroundFit::Uniform);
+            picture.Opacity = std::clamp(ReadNumber(nested, KeyOpacity, 1.0), 0.0, 1.0);
+            picture.Loops = ReadBool(nested, KeyLoops, true);
+
+            picture.Unknown = CaptureUnknown(nested, { KeyFile, KeyFit, KeyOpacity, KeyLoops });
+
+            return picture;
+        }
+
+        KeyboardSpec ReadKeyboard(_In_ mjson::JsonObject const& object) noexcept
+        {
+            KeyboardSpec keyboard{};
+
+            auto const nested = ReadObject(object, KeyKeyboard);
+
+            if (nested == nullptr)
+            {
+                return keyboard;
+            }
+
+            keyboard.KeyCount = ReadInt(nested, KeyKeyCount, 25, MinimumKeyboardKeys, MaximumKeyboardKeys);
+            keyboard.LowestNote = ReadInt(nested, KeyLowestNote, 48, 0, 127);
+            keyboard.WhiteKeyColor = ReadString(nested, KeyWhiteKeyColor);
+            keyboard.BlackKeyColor = ReadString(nested, KeyBlackKeyColor);
+            keyboard.PressedKeyColor = ReadString(nested, KeyPressedKeyColor);
+            keyboard.ShowNoteNames = ReadBool(nested, KeyShowNoteNames, false);
+            keyboard.VelocityFromKeyPosition = ReadBool(nested, KeyVelocityFromKeyPosition, false);
+
+            keyboard.Unknown = CaptureUnknown(nested,
+                { KeyKeyCount, KeyLowestNote, KeyWhiteKeyColor, KeyBlackKeyColor,
+                  KeyPressedKeyColor, KeyShowNoteNames, KeyVelocityFromKeyPosition });
+
+            return keyboard;
+        }
+
+        ClockSpec ReadClock(_In_ mjson::JsonObject const& object) noexcept
+        {
+            ClockSpec clock{};
+
+            auto const nested = ReadObject(object, KeyClock);
+
+            if (nested == nullptr)
+            {
+                return clock;
+            }
+
+            clock.BeatsPerMinute = std::clamp(
+                ReadNumber(nested, KeyBeatsPerMinute, 120.0), MinimumBeatsPerMinute, MaximumBeatsPerMinute);
+            clock.TempoControlId = ReadString(nested, KeyTempoControl);
+            clock.LowestBeatsPerMinute = std::clamp(
+                ReadNumber(nested, KeyLowestBeatsPerMinute, 40.0), MinimumBeatsPerMinute, MaximumBeatsPerMinute);
+            clock.HighestBeatsPerMinute = std::clamp(
+                ReadNumber(nested, KeyHighestBeatsPerMinute, 240.0), MinimumBeatsPerMinute, MaximumBeatsPerMinute);
+            clock.StartsRunning = ReadBool(nested, KeyStartsRunning, false);
+            clock.SendsTransport = ReadBool(nested, KeySendsTransport, true);
+
+            clock.Unknown = CaptureUnknown(nested,
+                { KeyBeatsPerMinute, KeyTempoControl, KeyLowestBeatsPerMinute,
+                  KeyHighestBeatsPerMinute, KeyStartsRunning, KeySendsTransport });
+
+            return clock;
         }
 
         Control ReadControl(_In_ mjson::JsonObject const& object) noexcept
@@ -748,7 +901,14 @@ namespace glass
             control.ShowValue = ValueOf(ShowValueNames, ReadString(object, KeyShowValue), ShowValueOverride::UseTheme);
             control.KeyboardOrder = ReadInt(object, KeyKeyboardOrder, 0, 0, 0x7FFFFFFF);
             control.Pickup = ValueOf(PickupNames, ReadString(object, KeyPickup), PickupMode::Jump);
+            control.Drag = ValueOf(DragNames, ReadString(object, KeyDrag), DragAxis::Vertical);
+            control.Ticks = ReadTicks(object);
+            control.ShowDetentValues = ReadBool(object, KeyShowDetentValues, false);
+            control.Image = ReadPicture(object);
+            control.Keyboard = ReadKeyboard(object);
+            control.Clock = ReadClock(object);
             control.DefaultValue = std::clamp(ReadNumber(object, KeyDefaultValue, 0.0), 0.0, 1.0);
+            control.DefaultValueY = std::clamp(ReadNumber(object, KeyDefaultValueY, 0.0), 0.0, 1.0);
             control.ReturnsToDefault = ReadBool(object, KeyReturnsToDefault, false);
             control.SendsValueOnStart = ReadBool(object, KeySendsValueOnStart, false);
             control.SendIntervalMilliseconds = ReadInt(object, KeySendInterval, 0, 0, 10000);
@@ -774,7 +934,8 @@ namespace glass
             control.Unknown = CaptureUnknown(object,
                 { KeyId, KeyKind, KeyLabel, KeyX, KeyY, KeyWidth, KeyHeight, KeyHueSlot,
                   KeyLiteralColor, KeyAspectLocked, KeyKeyboardOrder, KeyPickup, KeyDefaultValue,
-                  KeyReturnsToDefault,
+                  KeyReturnsToDefault, KeyDrag, KeyTicks, KeyShowDetentValues, KeyPicture,
+                  KeyKeyboard, KeyClock, KeyDefaultValueY,
                   KeySendsValueOnStart, KeySendInterval, KeyMessages, KeyFeedback,
                   KeyStyle, KeyLabelPlaced, KeyLabelStyle, KeyShowValue });
 
@@ -1071,6 +1232,13 @@ namespace glass
             WriteDetents(writer, message.Detents);
             writer.Write(KeyMidi1Protocol, message.UseMidi1Protocol);
 
+            // Only a two axis control has a second one, and writing "x" on every message in
+            // every layout is a dead key on thousands of lines.
+            if (message.Axis != ValueAxis::X)
+            {
+                writer.Write(KeyAxis, NameOf(AxisNames, message.Axis));
+            }
+
             if (!message.SystemExclusive.empty())
             {
                 writer.Write(KeySystemExclusive, ToHex(message.SystemExclusive));
@@ -1180,6 +1348,68 @@ namespace glass
             writer.Write(KeySendsValueOnStart, control.SendsValueOnStart);
             writer.Write(KeySendInterval, static_cast<int64_t>(control.SendIntervalMilliseconds));
 
+            if (control.Drag != DragAxis::Vertical)
+            {
+                writer.Write(KeyDrag, NameOf(DragNames, control.Drag));
+            }
+
+            if (control.DefaultValueY != 0.0)
+            {
+                writer.Write(KeyDefaultValueY, control.DefaultValueY);
+            }
+
+            if (control.ShowDetentValues)
+            {
+                writer.Write(KeyShowDetentValues, control.ShowDetentValues);
+            }
+
+            if (!control.Ticks.Show || control.Ticks.Count != 5 || control.Ticks.Unknown != nullptr)
+            {
+                writer.BeginObject(KeyTicks);
+                writer.Write(KeyShow, control.Ticks.Show);
+                writer.Write(KeyCount, static_cast<int64_t>(control.Ticks.Count));
+                WriteUnknown(writer, control.Ticks.Unknown);
+                writer.EndObject();
+            }
+
+            if (!control.Image.IsEmpty() || control.Image.Unknown != nullptr)
+            {
+                writer.BeginObject(KeyPicture);
+                writer.Write(KeyFile, control.Image.FileName);
+                writer.Write(KeyFit, NameOf(BackgroundFitNames, control.Image.Fit));
+                writer.Write(KeyOpacity, control.Image.Opacity);
+                writer.Write(KeyLoops, control.Image.Loops);
+                WriteUnknown(writer, control.Image.Unknown);
+                writer.EndObject();
+            }
+
+            if (control.Kind == ControlKind::PianoKeyboard || control.Keyboard.Unknown != nullptr)
+            {
+                writer.BeginObject(KeyKeyboard);
+                writer.Write(KeyKeyCount, static_cast<int64_t>(control.Keyboard.KeyCount));
+                writer.Write(KeyLowestNote, static_cast<int64_t>(control.Keyboard.LowestNote));
+                writer.Write(KeyWhiteKeyColor, control.Keyboard.WhiteKeyColor);
+                writer.Write(KeyBlackKeyColor, control.Keyboard.BlackKeyColor);
+                writer.Write(KeyPressedKeyColor, control.Keyboard.PressedKeyColor);
+                writer.Write(KeyShowNoteNames, control.Keyboard.ShowNoteNames);
+                writer.Write(KeyVelocityFromKeyPosition, control.Keyboard.VelocityFromKeyPosition);
+                WriteUnknown(writer, control.Keyboard.Unknown);
+                writer.EndObject();
+            }
+
+            if (control.Kind == ControlKind::BeatClock || control.Clock.Unknown != nullptr)
+            {
+                writer.BeginObject(KeyClock);
+                writer.Write(KeyBeatsPerMinute, control.Clock.BeatsPerMinute);
+                writer.Write(KeyTempoControl, control.Clock.TempoControlId);
+                writer.Write(KeyLowestBeatsPerMinute, control.Clock.LowestBeatsPerMinute);
+                writer.Write(KeyHighestBeatsPerMinute, control.Clock.HighestBeatsPerMinute);
+                writer.Write(KeyStartsRunning, control.Clock.StartsRunning);
+                writer.Write(KeySendsTransport, control.Clock.SendsTransport);
+                WriteUnknown(writer, control.Clock.Unknown);
+                writer.EndObject();
+            }
+
             writer.BeginArray(KeyMessages);
 
             for (auto const& message : control.Messages)
@@ -1195,11 +1425,15 @@ namespace glass
             {
                 writer.BeginObject(KeyFeedback);
                 writer.Write(KeyEnabled, control.Feedback.Enabled);
+                writer.Write(KeyMode, NameOf(FeedbackModeNames, control.Feedback.Mode));
                 writer.Write(KeyKind, NameOf(MessageKindNames, control.Feedback.Kind));
                 writer.Write(KeyDevice, control.Feedback.DeviceName);
                 writer.Write(KeyGroup, static_cast<int64_t>(control.Feedback.GroupIndex));
                 writer.Write(KeyChannel, static_cast<int64_t>(control.Feedback.ChannelIndex));
                 writer.Write(KeyNumber, static_cast<int64_t>(control.Feedback.Number));
+                writer.Write(KeyMatchesChannel, control.Feedback.MatchesChannel);
+                writer.Write(KeyTempoControl, control.Feedback.TempoControlId);
+                writer.Write(KeyHoldMilliseconds, static_cast<int64_t>(control.Feedback.HoldMilliseconds));
                 WriteUnknown(writer, control.Feedback.Unknown);
                 writer.EndObject();
             }

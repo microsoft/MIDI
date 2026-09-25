@@ -50,6 +50,10 @@ namespace glass
     constexpr int32_t HueSlotCount = 6;
     constexpr int32_t LiteralHue = -1;
 
+    // Keys this build did not understand, kept so an older build can open a newer file and write
+    // it back without quietly throwing away the parts it could not edit.
+    using UnknownFields = winrt::Windows::Data::Json::JsonObject;
+
     enum class ControlKind
     {
         Knob = 0,
@@ -70,6 +74,24 @@ namespace glass
         // that belong together. It sends nothing and takes no input; it is there so a page of
         // sixty controls reads as six groups of ten.
         Panel = 13,
+
+        // Two axes on a round field, with the puck springing back to the middle when the finger
+        // comes off if the customer asks for that. Same idea as the XY pad; the shape is the
+        // difference, and a round field is what tells somebody it recenters.
+        Joystick = 14,
+
+        // A strip with nothing riding it. The value follows wherever the finger is and the light
+        // follows the finger, so there is no cap to hunt for and no groove to aim at.
+        Ribbon = 15,
+
+        // Keys. One control rather than sixty, because a piano is a piano and nobody wants to
+        // place and wire eighty-eight pads.
+        PianoKeyboard = 16,
+
+        // Generates MIDI clock at a tempo, and shows the beat while it does. The tempo can come
+        // from another control on the same page, which is the whole reason it is a control and
+        // not a layout setting.
+        BeatClock = 17,
     };
 
     // When a control sends. A control has a list of messages, not one, so a single button can
@@ -220,6 +242,155 @@ namespace glass
         std::vector<double> Stops{};
     };
 
+    // Which way a two axis control's message is driven. Most controls have one value and leave
+    // this alone; an XY pad and a joystick have two, so each message has to say which one it
+    // follows.
+    enum class ValueAxis
+    {
+        // Left to right on a two axis control, and the only value everything else has.
+        X = 0,
+
+        // Bottom to top. Screen coordinates run the other way, and every hardware joystick and
+        // every plug-in treats up as more, so the surface flips it rather than the customer.
+        Y = 1,
+    };
+
+    // The marks across a control's travel, so a fader has somewhere to be other than the two
+    // ends. A pad and a joystick draw the same numbers as a grid.
+    struct TickMarks
+    {
+        bool Show{ true };
+
+        // Marks, not gaps. Five means both ends and three between them.
+        int32_t Count{ 5 };
+
+        UnknownFields Unknown{ nullptr };
+    };
+
+    constexpr int32_t MinimumTickCount = 2;
+    constexpr int32_t MaximumTickCount = 64;
+
+    // Which way a finger moves to turn a knob up. A circle is hard to trace on glass, so every
+    // plug-in on the market is dragged in a straight line instead; which line is a preference.
+    enum class DragAxis
+    {
+        // Up is more. The default, and what a plug-in does.
+        Vertical = 0,
+
+        // Right is more, for a row of knobs under a narrow strip of screen.
+        Horizontal = 1,
+    };
+
+    // How a picture fills the rectangle it is drawn into, whether that is the whole page or one
+    // control.
+    enum class BackgroundFit
+    {
+        // The picture at its own size, in the middle.
+        Centered = 0,
+
+        // As large as fits without changing its shape. Nothing is cut off, and there may be
+        // empty space either side of it.
+        Uniform = 1,
+
+        // Filled corner to corner, changing the picture's shape to do it.
+        Stretch = 2,
+
+        // Repeated at its own size from the top left.
+        Tiled = 3,
+    };
+
+    // A picture or a video shown by an image control, or filling a grouping panel. Stored as a
+    // bare file name resolved against the layout's own folder, so the two travel together and a
+    // layout from a stranger cannot point this app at a file somewhere else on the PC.
+    struct Picture
+    {
+        std::wstring FileName{};
+        BackgroundFit Fit{ BackgroundFit::Uniform };
+        double Opacity{ 1.0 };
+
+        // A video plays on a loop unless it is asked not to. A one shot clip on a control
+        // surface is a control that looks broken four seconds in.
+        bool Loops{ true };
+
+        // Nothing at all to draw.
+        bool IsEmpty() const noexcept { return FileName.empty(); }
+
+        UnknownFields Unknown{ nullptr };
+    };
+
+    // The keys on a piano keyboard control. Width and height come from the control's own
+    // rectangle; this is only what is drawn inside it.
+    struct KeyboardSpec
+    {
+        // White and black together, counted the way a keyboard is sold: 25, 49, 61, 88.
+        int32_t KeyCount{ 25 };
+
+        // The note the leftmost key plays. 48 is C3 in the naming this app uses everywhere else.
+        int32_t LowestNote{ 48 };
+
+        // Empty means the theme decides. A keyboard is the one control where the two colors are
+        // the whole point, so they are named here rather than derived from a hue.
+        std::wstring WhiteKeyColor{};
+        std::wstring BlackKeyColor{};
+
+        // The key under the finger. Empty means the control's own hue.
+        std::wstring PressedKeyColor{};
+
+        // The C keys carry their octave number, so a wide keyboard can be read at a glance.
+        bool ShowNoteNames{ false };
+
+        // Harder on a touch screen than on a keyboard, and not every layout wants it.
+        bool VelocityFromKeyPosition{ false };
+
+        UnknownFields Unknown{ nullptr };
+    };
+
+    constexpr int32_t MinimumKeyboardKeys = 5;
+    constexpr int32_t MaximumKeyboardKeys = 128;
+
+    // The clock generator. Tempo is either a number typed here or whatever another control on
+    // the layout is sitting at, which is what makes a tempo knob a tempo knob.
+    struct ClockSpec
+    {
+        double BeatsPerMinute{ 120.0 };
+
+        // The id of a control on this layout whose value sets the tempo. Empty means the number
+        // above is used as it stands.
+        std::wstring TempoControlId{};
+
+        // What that control's ends mean, since a fader's value is a position rather than a
+        // tempo.
+        double LowestBeatsPerMinute{ 40.0 };
+        double HighestBeatsPerMinute{ 240.0 };
+
+        // Running the moment the layout opens, rather than waiting to be pressed.
+        bool StartsRunning{ false };
+
+        // Sends start and stop around the clock, so a drum machine follows rather than only
+        // keeping time.
+        bool SendsTransport{ true };
+
+        UnknownFields Unknown{ nullptr };
+    };
+
+    constexpr double MinimumBeatsPerMinute = 20.0;
+    constexpr double MaximumBeatsPerMinute = 300.0;
+
+    // What lights a lamp or moves a meter. A meter following one controller is the ordinary
+    // case; a lamp is more often "is anything coming from this device at all".
+    enum class FeedbackMode
+    {
+        // One message: this controller, on this channel, from this device.
+        Message = 0,
+
+        // Any message at all from the device, optionally narrowed to a group and a channel.
+        // This is what somebody means by an activity light.
+        AnyActivity = 1,
+
+        // The beat. Either incoming MIDI clock or a clock generator control on this layout.
+        Tempo = 2,
+    };
+
     enum class ScaleMode
     {
         ActualSize = 0,
@@ -254,10 +425,6 @@ namespace glass
         RepeatBlockStart = 6,
         RepeatBlockEnd = 7,
     };
-
-    // Keys this build did not understand, kept so an older build can open a newer file and write
-    // it back without quietly throwing away the parts it could not edit.
-    using UnknownFields = winrt::Windows::Data::Json::JsonObject;
 
     // Everything about how a label is drawn that is not where it sits. Every field defaults to
     // "the theme decides", so a layout that has not been fiddled with carries none of it and a
@@ -342,6 +509,9 @@ namespace glass
 
         MessageDetents Detents{};
 
+        // Which of a two axis control's values drives this message. Ignored everywhere else.
+        ValueAxis Axis{ ValueAxis::X };
+
         std::vector<uint8_t> SystemExclusive{};
         std::vector<uint32_t> RawWords{};
 
@@ -364,11 +534,24 @@ namespace glass
     struct FeedbackBinding
     {
         bool Enabled{ false };
+        FeedbackMode Mode{ FeedbackMode::Message };
         MessageKind Kind{ MessageKind::ControlChange };
         std::wstring DeviceName{};
         int32_t GroupIndex{ 0 };
         int32_t ChannelIndex{ 0 };
         uint32_t Number{ 0 };
+
+        // Activity mode only. Off means any channel counts, which is what an activity light on
+        // a whole device wants; on narrows it to the channel above.
+        bool MatchesChannel{ false };
+
+        // Tempo mode only. The id of a clock generator control on this layout to follow. Empty
+        // means whatever clock is arriving from the device named above.
+        std::wstring TempoControlId{};
+
+        // How long the lamp stays lit after something arrives. Short enough to read as a blink,
+        // long enough to see across a room.
+        int32_t HoldMilliseconds{ 120 };
 
         UnknownFields Unknown{ nullptr };
     };
@@ -403,8 +586,32 @@ namespace glass
 
         PickupMode Pickup{ PickupMode::Jump };
 
+        // Which way a finger drags to turn this control up. Knobs and encoders only.
+        DragAxis Drag{ DragAxis::Vertical };
+
+        // The marks across the travel. A grid on a two axis control, notches beside a slot on
+        // a fader, and ticks around the arc on a knob.
+        TickMarks Ticks{};
+
+        // Print the number at each stop beside the marks. Off by default: it is what somebody
+        // building a six position mode switch wants and what nobody building a volume fader
+        // wants.
+        bool ShowDetentValues{ false };
+
+        // A picture or a video, for an image control and for a grouping panel's fill.
+        Picture Image{};
+
+        // Only read when the kind is PianoKeyboard.
+        KeyboardSpec Keyboard{};
+
+        // Only read when the kind is BeatClock.
+        ClockSpec Clock{};
+
         // A layout always starts from its own defaults; this is the value it starts at.
         double DefaultValue{ 0.0 };
+
+        // The same, for the second axis of an XY pad or a joystick. Ignored everywhere else.
+        double DefaultValueY{ 0.0 };
 
         // Springs back to DefaultValue the moment the finger comes off. A pitch wheel does; a
         // volume fader had better not. It is a property of the control rather than of its kind
@@ -427,6 +634,31 @@ namespace glass
 
         UnknownFields Unknown{ nullptr };
     };
+
+    // How many stops a control snaps to, or zero when it is smooth all the way.
+    //
+    // Stops live on a message rather than on the control, because one control can send two
+    // things and only one of them steps. A finger has one position, so where the messages
+    // disagree the widest set wins.
+    int32_t DetentStopCount(_In_ Control const& control) noexcept;
+
+    // A list of stops as somebody types it, and back again. Separators are forgiving because a
+    // customer copying "10, 17, 38" out of a manual should not have to think about commas.
+    // Anything that is not a number is dropped rather than turning the whole list into nothing:
+    // a stray character at the end of a long list should not empty it.
+    std::vector<double> ParseStopList(_In_ std::wstring const& text) noexcept;
+    std::wstring FormatStopList(_In_ std::vector<double> const& stops) noexcept;
+
+    // What to print beside each mark when a control is asked to show its stop values, bottom
+    // end first. Empty when the control is smooth or has too many stops to label.
+    //
+    // A stop typed as an exact number is printed as itself, because somebody working from a
+    // device manual wants to see the number they typed. A stop typed as a fraction is printed
+    // as a percentage.
+    std::vector<std::wstring> DetentStopLabels(_In_ Control const& control) noexcept;
+
+    // More than this and the numbers run into each other whatever size the control is.
+    constexpr int32_t MaximumLabeledStops = 16;
 
     struct Page
     {
@@ -510,23 +742,6 @@ namespace glass
         UnknownFields Unknown{ nullptr };
     };
 
-    // How a background picture fills the page.
-    enum class BackgroundFit
-    {
-        // The picture at its own size, in the middle of the page.
-        Centered = 0,
-
-        // As large as fits without changing its shape. Nothing is cut off, and there may be
-        // page either side of it.
-        Uniform = 1,
-
-        // Filled corner to corner, changing the picture's shape to do it.
-        Stretch = 2,
-
-        // Repeated at its own size from the top left.
-        Tiled = 3,
-    };
-
     struct LayoutDocument
     {
         // What wrote this file. An older build keeps a higher number as it found it.
@@ -599,6 +814,10 @@ namespace glass
 
         Control* FindControl(_In_ std::wstring const& id) noexcept;
         Control const* FindControl(_In_ std::wstring const& id) const noexcept;
+
+        // By the index the binding engine counts with: page order, then control order within
+        // the page. Null when the index is past the end.
+        Control const* ControlAtIndex(_In_ size_t controlIndex) const noexcept;
 
         DeviceEntry const* FindDevice(_In_ std::wstring const& name) const noexcept;
         Sequence const* FindSequence(_In_ std::wstring const& name) const noexcept;

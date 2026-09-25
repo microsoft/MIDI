@@ -120,11 +120,23 @@ namespace winrt::midiglass::implementation
         void MarkUnreachableControls(_In_ std::vector<glass::ResolvedDevice> const& devices);
 
         void OnControlValueChanged(_In_ size_t itemIndex, _In_ double value, _In_ bool isFinal);
+        void OnControlValueYChanged(_In_ size_t itemIndex, _In_ double value, _In_ bool isFinal);
         void OnControlSetDirectly(_In_ size_t itemIndex, _In_ double value);
         void OnControlSwitched(_In_ size_t itemIndex, _In_ bool isOn);
         void OnControlTouched(_In_ size_t itemIndex, _In_ bool isTouched);
+        void OnControlKeyChanged(
+            _In_ size_t itemIndex,
+            _In_ int32_t key,
+            _In_ double velocity,
+            _In_ bool isDown);
 
         void OnFeedbackMoved(_In_ uint32_t controlIndex, _In_ double value);
+        void OnActivitySeen(_In_ uint32_t controlIndex);
+        void OnBeatMoved(
+            _In_ uint32_t controlIndex,
+            _In_ int32_t beatInBar,
+            _In_ double phase,
+            _In_ bool running);
 
         midiapp::WindowChrome m_chrome{};
 
