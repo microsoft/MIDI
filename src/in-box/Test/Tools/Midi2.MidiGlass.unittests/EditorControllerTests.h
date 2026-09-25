@@ -97,6 +97,14 @@ public:
     TEST_METHOD(RepeatGivesEveryCopyItsOwnIdentity);
     TEST_METHOD(RepeatIsOneUndoEntry);
 
+    // ---- the label's own box ----
+
+    TEST_METHOD(SettingALabelBoxMakesThePlacementCustom);
+    TEST_METHOD(ALabelBoxIsBounded);
+    TEST_METHOD(ClearingALabelBoxGoesBackToTheTheme);
+    TEST_METHOD(ChangingTheFontLeavesTheLabelBoxAlone);
+    TEST_METHOD(ALabelDragIsOneUndoEntry);
+
     // ---- keyboard order ----
 
     TEST_METHOD(KeyboardOrderShiftsRatherThanDuplicating);

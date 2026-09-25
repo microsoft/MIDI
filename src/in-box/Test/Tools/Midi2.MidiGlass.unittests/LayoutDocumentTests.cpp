@@ -247,6 +247,87 @@ void LayoutDocumentTests::OverridesOfTheThemeSurviveARoundTrip()
     VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(reread.Document));
 }
 
+void LayoutDocumentTests::ALabelBoxSurvivesARoundTrip()
+{
+    auto document = LoadHandAuthored();
+
+    auto& control = document.Pages[0].Controls[0];
+
+    control.LabelPlaced = glass::LabelPlacementOverride::Custom;
+    control.LabelLook.BoxX = -12.5;
+    control.LabelLook.BoxY = 70.0;
+    control.LabelLook.BoxWidth = 96.0;
+    control.LabelLook.BoxHeight = 34.0;
+
+    auto const text = glass::WriteLayoutToJson(document);
+
+    VERIFY_IS_TRUE(text.find(L"\"labelPlaced\": \"custom\"") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"boxWidth\": 96") != std::wstring::npos);
+
+    auto const reread = glass::ReadLayoutFromJson(text);
+    VERIFY_IS_TRUE(reread.Succeeded);
+
+    auto const& back = reread.Document.Pages[0].Controls[0];
+
+    VERIFY_IS_TRUE(back.LabelPlaced == glass::LabelPlacementOverride::Custom);
+    VERIFY_IS_TRUE(back.LabelLook.HasBox());
+    VERIFY_ARE_EQUAL(-12.5, back.LabelLook.BoxX);
+    VERIFY_ARE_EQUAL(70.0, back.LabelLook.BoxY);
+    VERIFY_ARE_EQUAL(96.0, back.LabelLook.BoxWidth);
+    VERIFY_ARE_EQUAL(34.0, back.LabelLook.BoxHeight);
+
+    VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(reread.Document));
+}
+
+void LayoutDocumentTests::ALabelWithNoBoxWritesNoBox()
+{
+    auto document = LoadHandAuthored();
+
+    // A box of nothing is the absence of a box. Writing four zeroes on every control would put
+    // dead weight in every file and make a real edit impossible to find in a diff.
+    document.Pages[0].Controls[0].LabelLook.Italic = true;
+
+    auto const text = glass::WriteLayoutToJson(document);
+
+    VERIFY_IS_TRUE(text.find(L"\"italic\": true") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"boxWidth\"") == std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"boxX\"") == std::wstring::npos);
+}
+
+void LayoutDocumentTests::ACustomPlacementWithNoBoxFallsBackToTheTheme()
+{
+    // A file that says the label is where the customer put it, but does not say where, is a file
+    // that says one thing and carries another. Drawing nothing would be worse than deferring.
+    auto const result = glass::ReadLayoutFromJson(
+        LR"({ "fileVersion": 1, "name": "T", "pages": [ { "id": "p", "name": "P", "controls": [
+            { "id": "c", "kind": "knob", "label": "Knob", "labelPlaced": "custom" } ] } ] })");
+
+    VERIFY_IS_TRUE(result.Succeeded);
+
+    auto const& control = result.Document.Pages[0].Controls[0];
+
+    VERIFY_IS_TRUE(control.LabelPlaced == glass::LabelPlacementOverride::UseTheme);
+    VERIFY_IS_FALSE(control.LabelLook.HasBox());
+}
+
+void LayoutDocumentTests::ALabelBoxFromAFileIsBounded()
+{
+    // A stranger's file must not be able to ask for a text block the size of a wall.
+    auto const result = glass::ReadLayoutFromJson(
+        LR"({ "fileVersion": 1, "name": "T", "pages": [ { "id": "p", "name": "P", "controls": [
+            { "id": "c", "kind": "knob", "label": "Knob", "labelPlaced": "custom",
+              "labelStyle": { "boxX": -1e12, "boxY": 1e12, "boxWidth": 1e12, "boxHeight": 1e12 } } ] } ] })");
+
+    VERIFY_IS_TRUE(result.Succeeded);
+
+    auto const& look = result.Document.Pages[0].Controls[0].LabelLook;
+
+    VERIFY_ARE_EQUAL(-glass::MaximumLabelBoxExtent, look.BoxX);
+    VERIFY_ARE_EQUAL(glass::MaximumLabelBoxExtent, look.BoxY);
+    VERIFY_ARE_EQUAL(glass::MaximumLabelBoxExtent, look.BoxWidth);
+    VERIFY_ARE_EQUAL(glass::MaximumLabelBoxExtent, look.BoxHeight);
+}
+
 void LayoutDocumentTests::KeepsFieldsFromANewerVersion()
 {
     auto const result = glass::ReadLayoutFromJson(glasstests::LayoutFromANewerVersion());
@@ -369,6 +450,86 @@ void LayoutDocumentTests::RejectsSystemExclusiveThatIsNotHex()
     // whole blob is dropped rather than partly believed, because a truncated system exclusive
     // message sent to a synth is how a device gets bricked.
     VERIFY_ARE_EQUAL(size_t{ 0 }, control->Messages[0].SystemExclusive.size());
+}
+
+// ---- the background picture ----
+
+void LayoutDocumentTests::ABackgroundPictureSurvivesARoundTrip()
+{
+    auto document = LoadHandAuthored();
+
+    document.BackgroundImage = L"desk photo.png";
+    document.BackgroundFitMode = glass::BackgroundFit::Tiled;
+
+    auto const text = glass::WriteLayoutToJson(document);
+
+    VERIFY_IS_TRUE(text.find(L"\"backgroundImage\": \"desk photo.png\"") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"backgroundFit\": \"tiled\"") != std::wstring::npos);
+
+    auto const reread = glass::ReadLayoutFromJson(text);
+    VERIFY_IS_TRUE(reread.Succeeded);
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"desk photo.png" }, reread.Document.BackgroundImage);
+    VERIFY_IS_TRUE(reread.Document.BackgroundFitMode == glass::BackgroundFit::Tiled);
+
+    VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(reread.Document));
+}
+
+void LayoutDocumentTests::ABackgroundPictureThatIsAPathIsRefused()
+{
+    // A layout arrives from a stranger. A background that names a path is a way to make this app
+    // read a file somewhere else on the PC, so anything that is not a bare file name is dropped
+    // whole rather than trimmed into something that looks safe.
+    wchar_t const* const hostile[]
+    {
+        LR"(..\..\Windows\System32\config\SAM)",
+        LR"(C:\Users\Someone\secret.png)",
+        LR"(\\server\share\thing.png)",
+        LR"(sub/dir/thing.png)",
+        LR"(..)",
+        LR"(nice..name.png)",
+    };
+
+    for (auto const* const name : hostile)
+    {
+        // A backslash has to reach the reader as a backslash, so it is escaped for JSON here.
+        // Without this the parser refuses the file and the sanitizer never gets a look, which
+        // would make this test pass for the wrong reason.
+        std::wstring escaped{};
+
+        for (auto const character : std::wstring{ name })
+        {
+            if (character == L'\\') { escaped += L'\\'; }
+            escaped += character;
+        }
+
+        std::wstring json{ LR"({ "fileVersion": 1, "name": "T", "backgroundImage": ")" };
+        json += escaped;
+        json += LR"(", "pages": [ { "id": "p", "name": "P", "controls": [] } ] })";
+
+        auto const result = glass::ReadLayoutFromJson(json);
+
+        VERIFY_IS_TRUE(result.Succeeded);
+        VERIFY_IS_TRUE(result.Document.BackgroundImage.empty());
+    }
+
+    // and a plain name still gets through
+    auto const good = glass::ReadLayoutFromJson(
+        LR"({ "fileVersion": 1, "name": "T", "backgroundImage": "wood.jpg",
+              "pages": [ { "id": "p", "name": "P", "controls": [] } ] })");
+
+    VERIFY_IS_TRUE(good.Succeeded);
+    VERIFY_ARE_EQUAL(std::wstring{ L"wood.jpg" }, good.Document.BackgroundImage);
+}
+
+void LayoutDocumentTests::NoBackgroundPictureWritesNothing()
+{
+    auto const text = glass::WriteLayoutToJson(LoadHandAuthored());
+
+    // The absence of a picture is the absence of the key, not an empty string and a fit mode
+    // nobody chose.
+    VERIFY_IS_TRUE(text.find(L"\"backgroundImage\"") == std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"backgroundFit\"") == std::wstring::npos);
 }
 
 void LayoutDocumentTests::AcceptsAValidDocument()

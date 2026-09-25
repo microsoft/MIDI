@@ -31,6 +31,11 @@ namespace winrt::midiglass::implementation
         namespace shapes = ::winrt::Microsoft::UI::Xaml::Shapes;
 
         constexpr double HandleSize = 8.0;
+
+        // Smaller than a control's, so the two sets are never mistaken for each other when a
+        // label sits right against the control it belongs to.
+        constexpr double LabelHandleSize = 6.0;
+
         constexpr double MinimumCanvasScale = 0.1;
         constexpr double MaximumCanvasScale = 2.0;
 
@@ -513,21 +518,58 @@ namespace winrt::midiglass::implementation
             }
 
             // Badges say what the Tab key will do, because a hidden ordering is one nobody can
-            // fix. Drawn for the selection only, so a page of two hundred is not a wall of them.
-            for (auto const* const control : m_editor.SelectedControls())
+            // fix. Drawn for the selection only, so a page of two hundred is not a wall of them —
+            // except while the order is being set, when every one of them is the point.
+            std::vector<glass::Control const*> badged{};
+
+            if (m_keyboardOrderMode)
             {
+                for (auto const& control : page->Controls)
+                {
+                    badged.push_back(&control);
+                }
+            }
+            else
+            {
+                badged = m_editor.SelectedControls();
+            }
+
+            for (auto const* const control : badged)
+            {
+                auto number = control->KeyboardOrder;
+                auto picked = true;
+
+                if (m_keyboardOrderMode)
+                {
+                    picked = KeyboardOrderNumberFor(control->Id, number);
+
+                    if (!picked)
+                    {
+                        number = control->KeyboardOrder;
+                    }
+                }
+
                 controls::Border badge{};
-                badge.Background(accent);
+                badge.Background(picked ? accent : BrushNamed(L"ControlFillColorSecondaryBrush"));
                 badge.CornerRadius({ 8, 8, 8, 8 });
                 badge.Padding({ 5, 0, 5, 0 });
                 badge.Height(16);
                 badge.IsHitTestVisible(false);
 
                 controls::TextBlock text{};
-                text.Text(winrt::hstring{ std::to_wstring(control->KeyboardOrder) });
-                text.FontSize(10);
+
+                // The number alone answers "what does Tab do"; the name answers "which one is
+                // this", which is the question somebody looking at a badge usually has.
+                text.Text(winrt::hstring{ control->Label.empty() || m_keyboardOrderMode
+                    ? std::to_wstring(number)
+                    : std::to_wstring(number) + L": " + control->Label });
+
+                text.FontSize(control->Label.empty() || m_keyboardOrderMode ? 10 : 9);
                 text.VerticalAlignment(xaml::VerticalAlignment::Center);
-                text.Foreground(BrushNamed(L"TextOnAccentFillColorPrimaryBrush"));
+
+                text.Foreground(picked
+                    ? BrushNamed(L"TextOnAccentFillColorPrimaryBrush")
+                    : BrushNamed(L"TextFillColorTertiaryBrush"));
 
                 badge.Child(text);
 
@@ -535,6 +577,12 @@ namespace winrt::midiglass::implementation
                 controls::Canvas::SetTop(badge, control->Y - m_workArea.Y - 19.0);
 
                 OverlayCanvas().Children().Append(badge);
+            }
+
+            // Nothing is selected while the order is being set, so there are no handles to draw.
+            if (m_keyboardOrderMode)
+            {
+                return;
             }
 
             // Eight handles, on a single selection only. Sizing several controls at once happens
@@ -574,9 +622,85 @@ namespace winrt::midiglass::implementation
                         m_handleShapes.push_back(handle);
                     }
                 }
+
+                // The label gets its own outline and its own four corners, in a lighter weight
+                // so it is never mistaken for the control's. Dragging them is how a caption is
+                // given room a narrow control does not have.
+                glass::EditRect labelRect{};
+
+                if (TryGetLabelRect(*selected[0], labelRect))
+                {
+                    auto dashed = addRectangle(labelRect, tertiary, 1.0, true);
+                    dashed.Fill(nullptr);
+
+                    double const labelXs[]{ labelRect.X, labelRect.Right() };
+                    double const labelYs[]{ labelRect.Y, labelRect.Bottom() };
+
+                    for (auto const y : labelYs)
+                    {
+                        for (auto const x : labelXs)
+                        {
+                            shapes::Rectangle handle{};
+
+                            handle.Width(LabelHandleSize);
+                            handle.Height(LabelHandleSize);
+                            handle.Fill(BrushNamed(L"SolidBackgroundFillColorBaseBrush"));
+                            handle.Stroke(tertiary);
+                            handle.StrokeThickness(1.0);
+                            handle.UseLayoutRounding(false);
+                            handle.IsHitTestVisible(false);
+
+                            controls::Canvas::SetLeft(handle, x - m_workArea.X - LabelHandleSize / 2.0);
+                            controls::Canvas::SetTop(handle, y - m_workArea.Y - LabelHandleSize / 2.0);
+
+                            OverlayCanvas().Children().Append(handle);
+                        }
+                    }
+                }
             }
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to draw the overlay.")
+    }
+
+    // Where the selected control's label is painting, in page coordinates. The renderer is the
+    // only thing that knows, because it is the one that resolved the placement.
+    _Use_decl_annotations_
+    bool EditorWindow::TryGetLabelRect(glass::Control const& control, glass::EditRect& rect) const
+    {
+        rect = {};
+
+        if (control.Label.empty() || control.LabelPlaced == glass::LabelPlacementOverride::None)
+        {
+            return false;
+        }
+
+        auto const index = m_editor.ControlIndexOf(control.Id);
+
+        if (index < 0)
+        {
+            return false;
+        }
+
+        size_t itemIndex{ 0 };
+
+        if (!m_renderer.TryFindItem(static_cast<uint32_t>(index), itemIndex))
+        {
+            return false;
+        }
+
+        double x{ 0.0 };
+        double y{ 0.0 };
+        double width{ 0.0 };
+        double height{ 0.0 };
+
+        if (!m_renderer.TryGetLabelBox(itemIndex, x, y, width, height))
+        {
+            return false;
+        }
+
+        rect = { control.X + x, control.Y + y, width, height };
+
+        return true;
     }
 
     // Follows a move drag without rebuilding the page.
@@ -629,6 +753,15 @@ namespace winrt::midiglass::implementation
     {
         try
         {
+            // Not while something is being dragged. A control dropped from the palette arrives
+            // centered under the pointer, so it straddles the edge for as long as the pointer is
+            // near one, and a warning strip that opens and closes under the hand is noise. The
+            // release path asks again.
+            if (m_editor.IsDragging() || m_paletteDragPressed)
+            {
+                return;
+            }
+
             auto const outside = m_editor.ControlsOutsidePage().size();
 
             OffPageBar().IsOpen(outside > 0);
@@ -671,8 +804,10 @@ namespace winrt::midiglass::implementation
     }
 
     _Use_decl_annotations_
-    glass::ResizeHandle EditorWindow::HitTestHandle(double pageX, double pageY) const
+    glass::ResizeHandle EditorWindow::HitTestHandle(double pageX, double pageY, double& distance) const
     {
+        distance = std::numeric_limits<double>::max();
+
         auto const selected = m_editor.SelectedControls();
 
         if (selected.size() != 1)
@@ -697,6 +832,8 @@ namespace winrt::midiglass::implementation
             { glass::ResizeHandle::BottomLeft, glass::ResizeHandle::Bottom, glass::ResizeHandle::BottomRight },
         };
 
+        auto best = glass::ResizeHandle::None;
+
         for (int32_t row = 0; row < 3; ++row)
         {
             for (int32_t column = 0; column < 3; ++column)
@@ -706,14 +843,160 @@ namespace winrt::midiglass::implementation
                     continue;
                 }
 
-                if (std::abs(pageX - xs[column]) <= reach && std::abs(pageY - ys[row]) <= reach)
+                auto const away = std::max(std::abs(pageX - xs[column]), std::abs(pageY - ys[row]));
+
+                if (away <= reach && away < distance)
                 {
-                    return handles[row][column];
+                    distance = away;
+                    best = handles[row][column];
                 }
             }
         }
 
-        return glass::ResizeHandle::None;
+        return best;
+    }
+
+    _Use_decl_annotations_
+    glass::ResizeHandle EditorWindow::HitTestHandle(double pageX, double pageY) const
+    {
+        double distance{ 0.0 };
+
+        return HitTestHandle(pageX, pageY, distance);
+    }
+
+    // The label's four corners. A label sitting right under its control shares an edge with it,
+    // so this reports how far away the corner was and the caller takes whichever set is nearer.
+    // Testing one set before the other would mean the control always swallowed the label's top
+    // two corners, which is the most common layout there is.
+    _Use_decl_annotations_
+    glass::ResizeHandle EditorWindow::HitTestLabelHandle(double pageX, double pageY, double& distance) const
+    {
+        distance = std::numeric_limits<double>::max();
+
+        auto const selected = m_editor.SelectedControls();
+
+        glass::EditRect rect{};
+
+        if (selected.size() != 1 || !TryGetLabelRect(*selected[0], rect))
+        {
+            return glass::ResizeHandle::None;
+        }
+
+        auto const reach = (LabelHandleSize / std::max(m_canvasScale, MinimumCanvasScale));
+
+        constexpr glass::ResizeHandle corners[2][2]
+        {
+            { glass::ResizeHandle::TopLeft,    glass::ResizeHandle::TopRight },
+            { glass::ResizeHandle::BottomLeft, glass::ResizeHandle::BottomRight },
+        };
+
+        double const xs[]{ rect.X, rect.Right() };
+        double const ys[]{ rect.Y, rect.Bottom() };
+
+        auto best = glass::ResizeHandle::None;
+
+        for (int32_t row = 0; row < 2; ++row)
+        {
+            for (int32_t column = 0; column < 2; ++column)
+            {
+                auto const away = std::max(std::abs(pageX - xs[column]), std::abs(pageY - ys[row]));
+
+                if (away <= reach && away < distance)
+                {
+                    distance = away;
+                    best = corners[row][column];
+                }
+            }
+        }
+
+        return best;
+    }
+
+    _Use_decl_annotations_
+    bool EditorWindow::HitTestLabelBody(double pageX, double pageY) const
+    {
+        auto const selected = m_editor.SelectedControls();
+
+        glass::EditRect rect{};
+
+        if (selected.size() != 1 || !TryGetLabelRect(*selected[0], rect))
+        {
+            return false;
+        }
+
+        // A label that sits on top of its own control would swallow every press on the control,
+        // so only the part hanging outside it can start a label drag.
+        if (glass::ContainsPoint(RectOf(*selected[0]), pageX, pageY))
+        {
+            return false;
+        }
+
+        return glass::ContainsPoint(rect, pageX, pageY);
+    }
+
+    // ---------------------------------------------------------------- dragging a label
+
+    // Records where the box started, so every update is measured from there rather than
+    // accumulating rounding across a hundred pointer moves.
+    _Use_decl_annotations_
+    bool EditorWindow::BeginLabelDrag(glass::ResizeHandle handle)
+    {
+        auto const selected = m_editor.SelectedControls();
+
+        glass::EditRect rect{};
+
+        if (selected.size() != 1 || !TryGetLabelRect(*selected[0], rect))
+        {
+            return false;
+        }
+
+        // Page coordinates come back from the renderer; the box is stored relative to the
+        // control, so that moving the control takes its label with it.
+        m_labelDragStart =
+        {
+            rect.X - selected[0]->X,
+            rect.Y - selected[0]->Y,
+            rect.Width,
+            rect.Height,
+        };
+
+        m_labelDragHandle = handle;
+        m_labelDragId = selected[0]->Id;
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::UpdateLabelDrag(double deltaX, double deltaY)
+    {
+        if (m_labelDragId.empty())
+        {
+            return;
+        }
+
+        auto box = m_labelDragStart;
+
+        if (m_dragMode == DragMode::LabelResize)
+        {
+            box = glass::ApplyResize(m_labelDragStart, m_labelDragHandle, deltaX, deltaY, false);
+        }
+        else
+        {
+            box.X += deltaX;
+            box.Y += deltaY;
+        }
+
+        box.Width = std::max(box.Width, glass::MinimumLabelBoxSize);
+        box.Height = std::max(box.Height, glass::MinimumLabelBoxSize);
+
+        if (m_editor.SetControlLabelBox(m_labelDragId, box.X, box.Y, box.Width, box.Height))
+        {
+            // The label is a XAML child beside the control, so a rebuild of the one item is
+            // enough. A full page rebuild on every pointer move is what makes a drag stutter.
+            RebuildSurface();
+            UpdateOverlay();
+            MarkChanged();
+        }
     }
 
     // ---------------------------------------------------------------- pointer
@@ -740,6 +1023,14 @@ namespace winrt::midiglass::implementation
             m_dragStartPageY = pageY;
             m_dragMoved = false;
             m_pendingSelectId.clear();
+
+            // While the order is being set, a press numbers a control rather than selecting or
+            // moving it.
+            if (HandleKeyboardOrderPress(pageX, pageY))
+            {
+                m_dragMode = DragMode::None;
+                return;
+            }
 
             // An armed tool drops its control right here, snapped, and then stays under the
             // pointer so it can be nudged into place before the button comes up. One press is
@@ -776,12 +1067,42 @@ namespace winrt::midiglass::implementation
                 return;
             }
 
-            auto const handle = HitTestHandle(pageX, pageY);
+            double controlAway{ 0.0 };
+            double labelAway{ 0.0 };
+
+            auto const handle = HitTestHandle(pageX, pageY, controlAway);
+            auto const labelHandle = HitTestLabelHandle(pageX, pageY, labelAway);
+
+            // Both sets are in reach where a label sits against its control, so the nearer one
+            // wins. Order alone would always give the control the label's top two corners.
+            if (labelHandle != glass::ResizeHandle::None && labelAway < controlAway)
+            {
+                if (BeginLabelDrag(labelHandle))
+                {
+                    m_dragMode = DragMode::LabelResize;
+                    OverlayCanvas().CapturePointer(args.Pointer());
+                    return;
+                }
+            }
 
             if (handle != glass::ResizeHandle::None)
             {
                 m_dragMode = DragMode::Resize;
                 m_editor.BeginResize(handle);
+                OverlayCanvas().CapturePointer(args.Pointer());
+                return;
+            }
+
+            if (labelHandle != glass::ResizeHandle::None && BeginLabelDrag(labelHandle))
+            {
+                m_dragMode = DragMode::LabelResize;
+                OverlayCanvas().CapturePointer(args.Pointer());
+                return;
+            }
+
+            if (HitTestLabelBody(pageX, pageY) && BeginLabelDrag(glass::ResizeHandle::None))
+            {
+                m_dragMode = DragMode::LabelMove;
                 OverlayCanvas().CapturePointer(args.Pointer());
                 return;
             }
@@ -900,6 +1221,11 @@ namespace winrt::midiglass::implementation
                 break;
             }
 
+            case DragMode::LabelMove:
+            case DragMode::LabelResize:
+                UpdateLabelDrag(deltaX, deltaY);
+                break;
+
             case DragMode::RubberBand:
             {
                 glass::EditRect band
@@ -981,6 +1307,10 @@ namespace winrt::midiglass::implementation
             else if (m_dragMode == DragMode::Resize)
             {
                 m_editor.EndResize();
+            }
+            else if (m_dragMode == DragMode::LabelMove || m_dragMode == DragMode::LabelResize)
+            {
+                m_editor.EndCoalescing();
             }
 
             m_hasBand = false;

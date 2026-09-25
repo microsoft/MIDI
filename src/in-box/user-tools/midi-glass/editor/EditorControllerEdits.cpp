@@ -13,6 +13,7 @@
 #include "EditorController.h"
 #include "ControlFactory.h"
 #include "PageTemplates.h"
+#include "LayoutSerializer.h"
 
 #include <algorithm>
 #include <cmath>
@@ -180,6 +181,126 @@ namespace glass
         }
 
         control->LabelPlaced = placement;
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetControlLabelStyle(std::wstring const& id, LabelStyle const& style)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr)
+        {
+            return false;
+        }
+
+        auto const& current = control->LabelLook;
+
+        if (current.FontFamily == style.FontFamily &&
+            current.FontSize == style.FontSize &&
+            current.FontWeight == style.FontWeight &&
+            current.Italic == style.Italic &&
+            current.Underline == style.Underline &&
+            current.Color == style.Color &&
+            current.Wrap == style.Wrap &&
+            current.WidthPercent == style.WidthPercent)
+        {
+            return false;
+        }
+
+        auto const unknown = current.Unknown;
+
+        // The box has its own setter and its own gesture, so a change of font never moves the
+        // label somebody dragged into place.
+        auto const boxX = current.BoxX;
+        auto const boxY = current.BoxY;
+        auto const boxWidth = current.BoxWidth;
+        auto const boxHeight = current.BoxHeight;
+
+        control->LabelLook = style;
+        control->LabelLook.FontSize = std::clamp(style.FontSize, 0.0, 200.0);
+        control->LabelLook.FontWeight = std::clamp(style.FontWeight, 0, 1000);
+        control->LabelLook.WidthPercent = std::clamp(style.WidthPercent, 10.0, 400.0);
+        control->LabelLook.Color = SanitizeStoredString(style.Color);
+        control->LabelLook.Unknown = unknown;
+
+        control->LabelLook.BoxX = boxX;
+        control->LabelLook.BoxY = boxY;
+        control->LabelLook.BoxWidth = boxWidth;
+        control->LabelLook.BoxHeight = boxHeight;
+
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetControlLabelBox(
+        std::wstring const& id,
+        double x,
+        double y,
+        double width,
+        double height)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr ||
+            !std::isfinite(x) || !std::isfinite(y) ||
+            !std::isfinite(width) || !std::isfinite(height))
+        {
+            return false;
+        }
+
+        auto const newX = std::clamp(x, -MaximumLabelBoxExtent, MaximumLabelBoxExtent);
+        auto const newY = std::clamp(y, -MaximumLabelBoxExtent, MaximumLabelBoxExtent);
+        auto const newWidth = std::clamp(width, MinimumLabelBoxSize, MaximumLabelBoxExtent);
+        auto const newHeight = std::clamp(height, MinimumLabelBoxSize, MaximumLabelBoxExtent);
+
+        auto& look = control->LabelLook;
+
+        if (look.BoxX == newX && look.BoxY == newY &&
+            look.BoxWidth == newWidth && look.BoxHeight == newHeight &&
+            control->LabelPlaced == LabelPlacementOverride::Custom)
+        {
+            return false;
+        }
+
+        look.BoxX = newX;
+        look.BoxY = newY;
+        look.BoxWidth = newWidth;
+        look.BoxHeight = newHeight;
+
+        // The box and the placement say the same thing, so they move together. A file with one
+        // and not the other would read as two answers to one question.
+        control->LabelPlaced = LabelPlacementOverride::Custom;
+
+        CommitCoalesced(EditNames::Properties, L"labelbox:" + id);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::ClearControlLabelBox(std::wstring const& id)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr || !control->LabelLook.HasBox())
+        {
+            return false;
+        }
+
+        control->LabelLook.BoxX = 0.0;
+        control->LabelLook.BoxY = 0.0;
+        control->LabelLook.BoxWidth = 0.0;
+        control->LabelLook.BoxHeight = 0.0;
+
+        if (control->LabelPlaced == LabelPlacementOverride::Custom)
+        {
+            control->LabelPlaced = LabelPlacementOverride::UseTheme;
+        }
+
         Commit(EditNames::Properties);
 
         return true;
@@ -523,6 +644,77 @@ namespace glass
         return true;
     }
 
+    _Use_decl_annotations_
+    bool EditorController::SetKeyboardOrderFromList(std::vector<std::wstring> const& idsInOrder)
+    {
+        auto* const page = MutablePage();
+
+        if (page == nullptr || page->Controls.empty() || idsInOrder.empty())
+        {
+            return false;
+        }
+
+        auto next = 0;
+        auto changed = false;
+
+        for (auto const& id : idsInOrder)
+        {
+            auto const found = std::find_if(
+                page->Controls.begin(),
+                page->Controls.end(),
+                [&id](Control const& control) { return control.Id == id; });
+
+            if (found == page->Controls.end())
+            {
+                continue;
+            }
+
+            auto const wanted = ++next;
+
+            changed = changed || found->KeyboardOrder != wanted;
+            found->KeyboardOrder = wanted;
+        }
+
+        if (next == 0)
+        {
+            return false;
+        }
+
+        // Whatever was never clicked follows, keeping the order it already had among itself.
+        std::vector<Control*> remaining{};
+
+        for (auto& control : page->Controls)
+        {
+            if (std::find(idsInOrder.begin(), idsInOrder.end(), control.Id) == idsInOrder.end())
+            {
+                remaining.push_back(&control);
+            }
+        }
+
+        std::stable_sort(
+            remaining.begin(),
+            remaining.end(),
+            [](Control const* left, Control const* right)
+            { return left->KeyboardOrder < right->KeyboardOrder; });
+
+        for (auto* const control : remaining)
+        {
+            auto const wanted = ++next;
+
+            changed = changed || control->KeyboardOrder != wanted;
+            control->KeyboardOrder = wanted;
+        }
+
+        if (!changed)
+        {
+            return false;
+        }
+
+        Commit(EditNames::KeyboardOrder);
+
+        return true;
+    }
+
     // ---------------------------------------------------------------- pages
 
     _Use_decl_annotations_
@@ -570,6 +762,62 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    bool EditorController::MoveControlsAndRemovePage(size_t index, size_t destinationIndex)
+    {
+        if (index >= m_document.Pages.size() ||
+            destinationIndex >= m_document.Pages.size() ||
+            index == destinationIndex ||
+            m_document.Pages.size() < 2)
+        {
+            return false;
+        }
+
+        auto moved = std::move(m_document.Pages[index].Controls);
+
+        // A page holds a bounded number of controls, so a move that would overflow the
+        // destination takes as many as fit rather than silently making an unloadable file.
+        auto& destination = m_document.Pages[destinationIndex].Controls;
+
+        auto const room = MaximumControlsPerPage > destination.size()
+            ? MaximumControlsPerPage - destination.size()
+            : size_t{ 0 };
+
+        if (moved.size() > room)
+        {
+            moved.resize(room);
+        }
+
+        // Keyboard order is per page, so the arrivals go after whatever is already there rather
+        // than interleaving with it.
+        auto highest = 0;
+
+        for (auto const& existing : destination)
+        {
+            highest = std::max(highest, existing.KeyboardOrder);
+        }
+
+        for (auto& control : moved)
+        {
+            control.KeyboardOrder = ++highest;
+        }
+
+        destination.insert(destination.end(),
+            std::make_move_iterator(moved.begin()),
+            std::make_move_iterator(moved.end()));
+
+        m_document.Pages.erase(m_document.Pages.begin() + static_cast<ptrdiff_t>(index));
+
+        // The page the controls landed on is the one worth looking at, and its index shifts when
+        // the removed page was before it.
+        m_pageIndex = destinationIndex > index ? destinationIndex - 1 : destinationIndex;
+
+        m_selection.clear();
+        Commit(EditNames::PageRemove);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
     bool EditorController::RenamePage(size_t index, std::wstring const& name)
     {
         if (index >= m_document.Pages.size() || name.size() > MaximumStringLength)
@@ -584,6 +832,39 @@ namespace glass
 
         m_document.Pages[index].Name = name;
         CommitCoalesced(EditNames::PageProperties, L"pagename:" + std::to_wstring(index));
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::MovePage(size_t index, bool up)
+    {
+        if (index >= m_document.Pages.size())
+        {
+            return false;
+        }
+
+        auto const target = up ? index - 1 : index + 1;
+
+        if ((up && index == 0) || target >= m_document.Pages.size())
+        {
+            return false;
+        }
+
+        std::swap(m_document.Pages[index], m_document.Pages[target]);
+
+        // The page being edited follows its contents rather than staying on a slot number, or
+        // reordering would silently switch which page is on the canvas.
+        if (m_pageIndex == index)
+        {
+            m_pageIndex = target;
+        }
+        else if (m_pageIndex == target)
+        {
+            m_pageIndex = index;
+        }
+
+        Commit(EditNames::PageProperties);
 
         return true;
     }
@@ -641,6 +922,26 @@ namespace glass
         }
 
         m_document.ThemeName = themeName;
+        Commit(EditNames::LayoutProperties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetBackgroundImage(std::wstring const& fileName, BackgroundFit fit)
+    {
+        // Only a bare file name is ever stored, so that a layout from a stranger cannot point
+        // this at a file elsewhere on the PC.
+        auto const safe = SanitizeFileName(fileName);
+
+        if (m_document.BackgroundImage == safe && m_document.BackgroundFitMode == fit)
+        {
+            return false;
+        }
+
+        m_document.BackgroundImage = safe;
+        m_document.BackgroundFitMode = fit;
+
         Commit(EditNames::LayoutProperties);
 
         return true;
@@ -867,6 +1168,76 @@ namespace glass
         Commit(EditNames::Devices);
 
         return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetDeviceMatch(
+        std::wstring const& name,
+        midiapp::EndpointMatch const& match,
+        midiapp::EndpointMatchMode mode)
+    {
+        auto const found = std::find_if(
+            m_document.Devices.begin(),
+            m_document.Devices.end(),
+            [&name](DeviceEntry const& entry) { return entry.Name == name; });
+
+        if (found == m_document.Devices.end())
+        {
+            return false;
+        }
+
+        found->Match = match;
+        found->MatchMode = mode;
+
+        Commit(EditNames::Devices);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetDeviceMatchMode(std::wstring const& name, midiapp::EndpointMatchMode mode)
+    {
+        auto const found = std::find_if(
+            m_document.Devices.begin(),
+            m_document.Devices.end(),
+            [&name](DeviceEntry const& entry) { return entry.Name == name; });
+
+        if (found == m_document.Devices.end() || found->MatchMode == mode)
+        {
+            return false;
+        }
+
+        found->MatchMode = mode;
+
+        Commit(EditNames::Devices);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    size_t EditorController::CountControlsUsingDevice(std::wstring const& name) const
+    {
+        size_t count{ 0 };
+
+        for (auto const& page : m_document.Pages)
+        {
+            for (auto const& control : page.Controls)
+            {
+                auto used = control.Feedback.DeviceName == name;
+
+                for (auto const& message : control.Messages)
+                {
+                    used = used || message.DeviceName == name;
+                }
+
+                if (used)
+                {
+                    ++count;
+                }
+            }
+        }
+
+        return count;
     }
 
     // ---------------------------------------------------------------- sequences

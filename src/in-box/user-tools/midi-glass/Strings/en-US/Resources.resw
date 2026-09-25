@@ -654,7 +654,7 @@
     <value>Rename layout…</value>
   </data>
   <data name="LayoutMenuKeyboardOrder.Text" xml:space="preserve">
-    <value>Set keyboard order from position</value>
+    <value>Set the keyboard order…</value>
   </data>
   <data name="LayoutMenuRun.Text" xml:space="preserve">
     <value>Save and run</value>
@@ -842,11 +842,110 @@
   <data name="LabelPlacedTheme" xml:space="preserve">
     <value>Same as the theme</value>
   </data>
+  <data name="LabelPlacedAbove" xml:space="preserve">
+    <value>Above the control</value>
+  </data>
   <data name="LabelPlacedBelow" xml:space="preserve">
     <value>Below the control</value>
   </data>
   <data name="LabelPlacedInside" xml:space="preserve">
     <value>Inside the control</value>
+  </data>
+  <data name="LabelPlacedInsideTop" xml:space="preserve">
+    <value>Inside, at the top</value>
+  </data>
+  <data name="LabelPlacedInsideCenter" xml:space="preserve">
+    <value>Inside, in the middle</value>
+  </data>
+  <data name="LabelPlacedInsideBottom" xml:space="preserve">
+    <value>Inside, at the bottom</value>
+  </data>
+  <data name="LabelPlacedVerticalLeft" xml:space="preserve">
+    <value>Up the left side</value>
+  </data>
+  <data name="LabelPlacedVerticalRight" xml:space="preserve">
+    <value>Down the right side</value>
+  </data>
+  <data name="LabelPlacedCustom" xml:space="preserve">
+    <value>Where I dragged it</value>
+  </data>
+  <data name="FontCustomBox" xml:space="preserve">
+    <value>dragged into place</value>
+  </data>
+  <data name="InspectorLabelWidthLabel.Text" xml:space="preserve">
+    <value>Width</value>
+  </data>
+  <data name="LabelWidthBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>How wide the label may be, as a percentage of the control</value>
+  </data>
+  <data name="LabelFontButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Choose the label font</value>
+  </data>
+  <data name="LabelFontLabel.Text" xml:space="preserve">
+    <value>Font…</value>
+  </data>
+  <data name="InspectorTitleText.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>What this control is called</value>
+  </data>
+  <data name="FontDialogTitle" xml:space="preserve">
+    <value>Label font</value>
+  </data>
+  <data name="FontDialogReset" xml:space="preserve">
+    <value>Back to the theme</value>
+  </data>
+  <data name="FontFamilyHeader" xml:space="preserve">
+    <value>Font</value>
+  </data>
+  <data name="FontFamilyTheme" xml:space="preserve">
+    <value>Same as the theme</value>
+  </data>
+  <data name="FontSizeHeader" xml:space="preserve">
+    <value>Size</value>
+  </data>
+  <data name="FontSizeTheme" xml:space="preserve">
+    <value>Same as the theme</value>
+  </data>
+  <data name="FontWeightHeader" xml:space="preserve">
+    <value>Weight</value>
+  </data>
+  <data name="FontWeightTheme" xml:space="preserve">
+    <value>Same as the theme</value>
+  </data>
+  <data name="FontWeightLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="FontWeightNormal" xml:space="preserve">
+    <value>Normal</value>
+  </data>
+  <data name="FontWeightSemiBold" xml:space="preserve">
+    <value>Semi-bold</value>
+  </data>
+  <data name="FontWeightBold" xml:space="preserve">
+    <value>Bold</value>
+  </data>
+  <data name="FontItalic" xml:space="preserve">
+    <value>Italic</value>
+  </data>
+  <data name="FontUnderline" xml:space="preserve">
+    <value>Underline</value>
+  </data>
+  <data name="FontWrap" xml:space="preserve">
+    <value>Wrap long text</value>
+  </data>
+  <data name="FontNoWrap" xml:space="preserve">
+    <value>no wrapping</value>
+  </data>
+  <data name="FontColorHeader" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="FontColorPlaceholder" xml:space="preserve">
+    <value>Same as the theme, or #RRGGBB</value>
+  </data>
+  <data name="FontPreviewFallback" xml:space="preserve">
+    <value>Label</value>
+  </data>
+  <data name="FontAllFromTheme" xml:space="preserve">
+    <value>Everything from the theme.</value>
   </data>
   <data name="LabelPlacedNone" xml:space="preserve">
     <value>No label</value>
@@ -1486,6 +1585,306 @@
   </data>
   <data name="DialogSave" xml:space="preserve">
     <value>Save</value>
+  </data>
+  <data name="LayoutMenuBackground" xml:space="preserve">
+    <value>Background picture…</value>
+  </data>
+  <data name="BackgroundDialogTitle" xml:space="preserve">
+    <value>Background picture</value>
+  </data>
+  <data name="BackgroundOpenTitle" xml:space="preserve">
+    <value>Choose a background picture</value>
+  </data>
+  <data name="BackgroundChoose" xml:space="preserve">
+    <value>Choose a picture…</value>
+  </data>
+  <data name="BackgroundClear" xml:space="preserve">
+    <value>Take it away</value>
+  </data>
+  <data name="BackgroundNone" xml:space="preserve">
+    <value>No picture. The surface uses the theme's own background.</value>
+  </data>
+  <data name="BackgroundFitHeader" xml:space="preserve">
+    <value>How it fits</value>
+  </data>
+  <data name="BackgroundFitUniform" xml:space="preserve">
+    <value>Scale to fit, keeping its shape</value>
+  </data>
+  <data name="BackgroundFitStretch" xml:space="preserve">
+    <value>Stretch to fill the page</value>
+  </data>
+  <data name="BackgroundFitCentered" xml:space="preserve">
+    <value>Centered, at its own size</value>
+  </data>
+  <data name="BackgroundFitTiled" xml:space="preserve">
+    <value>Tiled</value>
+  </data>
+  <data name="BackgroundWillCopyFormat" xml:space="preserve">
+    <value>This picture will be copied to {0}, so that the layout and the picture travel together.</value>
+  </data>
+  <data name="LayoutMenuPagesDevices" xml:space="preserve">
+    <value>Pages and devices…</value>
+  </data>
+  <data name="LayoutSettingsBack.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Back to the editor</value>
+  </data>
+  <data name="LayoutSettingsBackLabel.Text" xml:space="preserve">
+    <value>Back to the editor</value>
+  </data>
+  <data name="LayoutSettingsTitle.Text" xml:space="preserve">
+    <value>Layout settings</value>
+  </data>
+  <data name="LayoutSettingsPagesHeader.Text" xml:space="preserve">
+    <value>Pages</value>
+  </data>
+  <data name="LayoutSettingsAddPage.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Add a page</value>
+  </data>
+  <data name="LayoutSettingsAddPageLabel.Text" xml:space="preserve">
+    <value>Page</value>
+  </data>
+  <data name="LayoutSettingsPagesCaption.Text" xml:space="preserve">
+    <value>The order here is the order of the tabs on the surface. Use the … menu to move a page.</value>
+  </data>
+  <data name="LayoutSettingsBandHeader.Text" xml:space="preserve">
+    <value>Always on screen</value>
+  </data>
+  <data name="LayoutSettingsBandCaption.Text" xml:space="preserve">
+    <value>A band is pinned to every page, so transport and panic do not have to be rebuilt four times. Turn one on from a page's … menu.</value>
+  </data>
+  <data name="LayoutSettingsDevicesHeader.Text" xml:space="preserve">
+    <value>Devices this layout uses</value>
+  </data>
+  <data name="LayoutSettingsAddDevice.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Add a device</value>
+  </data>
+  <data name="LayoutSettingsAddDeviceLabel.Text" xml:space="preserve">
+    <value>Device</value>
+  </data>
+  <data name="LayoutSettingsLookAgain.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Refresh the device list</value>
+  </data>
+  <data name="LayoutSettingsLookAgainLabel.Text" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+  <data name="LayoutSettingsDevicesCaption.Text" xml:space="preserve">
+    <value>Controls point at the name on the left, never at the hardware. Change the device here and every control that used it follows.</value>
+  </data>
+  <data name="LayoutSettingsConnectionNote.Text" xml:space="preserve">
+    <value>One connection is opened per device when the layout loads, shared by every control and every page, and closed when the layout closes. Group and channel travel in the message, so hundreds of controls on four groups of one device still cost exactly one connection.</value>
+  </data>
+  <data name="MoreActions" xml:space="preserve">
+    <value>More actions</value>
+  </data>
+  <data name="UntitledPage" xml:space="preserve">
+    <value>Page with no name</value>
+  </data>
+  <data name="NewPageNameFormat" xml:space="preserve">
+    <value>Page {0}</value>
+  </data>
+  <data name="ControlCountFormat" xml:space="preserve">
+    <value>{0} controls</value>
+  </data>
+  <data name="OneControlFormat" xml:space="preserve">
+    <value>1 control</value>
+  </data>
+  <data name="PageMenuRename" xml:space="preserve">
+    <value>Rename…</value>
+  </data>
+  <data name="PageMenuMoveUp" xml:space="preserve">
+    <value>Move up</value>
+  </data>
+  <data name="PageMenuMoveDown" xml:space="preserve">
+    <value>Move down</value>
+  </data>
+  <data name="PageMenuAlwaysOnScreen" xml:space="preserve">
+    <value>Always on screen</value>
+  </data>
+  <data name="PageMenuDelete" xml:space="preserve">
+    <value>Delete this page</value>
+  </data>
+  <data name="RenamePageDialogTitle" xml:space="preserve">
+    <value>Rename the page</value>
+  </data>
+  <data name="RenamePageNameLabel" xml:space="preserve">
+    <value>Page name</value>
+  </data>
+  <data name="RemovePageTitle" xml:space="preserve">
+    <value>Delete this page?</value>
+  </data>
+  <data name="RemovePageAccept" xml:space="preserve">
+    <value>Delete the page</value>
+  </data>
+  <data name="RemovePageControlsFormat" xml:space="preserve">
+    <value>"{0}" has {1} controls on it. What should happen to them?</value>
+  </data>
+  <data name="RemovePageOneControlFormat" xml:space="preserve">
+    <value>"{0}" has 1 control on it. What should happen to it?</value>
+  </data>
+  <data name="RemovePageMoveThem" xml:space="preserve">
+    <value>Move them to</value>
+  </data>
+  <data name="RemovePageDestinationName" xml:space="preserve">
+    <value>Which page the controls move to</value>
+  </data>
+  <data name="RemovePageMoveToFormat" xml:space="preserve">
+    <value>Move them to "{0}"</value>
+  </data>
+  <data name="RemovePageDeleteThem" xml:space="preserve">
+    <value>Delete them with the page</value>
+  </data>
+  <data name="DeviceReady" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="DeviceNotHere" xml:space="preserve">
+    <value>Not here right now</value>
+  </data>
+  <data name="DeviceMenuRename" xml:space="preserve">
+    <value>Rename…</value>
+  </data>
+  <data name="DeviceMenuRepoint" xml:space="preserve">
+    <value>Point at another device…</value>
+  </data>
+  <data name="DeviceMenuRemove" xml:space="preserve">
+    <value>Remove from this layout</value>
+  </data>
+  <data name="DeviceFoundByFormat" xml:space="preserve">
+    <value>Found by {0}</value>
+  </data>
+  <data name="DeviceControlsUseFormat" xml:space="preserve">
+    <value>{0} controls use it</value>
+  </data>
+  <data name="DeviceOneControlUsesFormat" xml:space="preserve">
+    <value>1 control uses it</value>
+  </data>
+  <data name="DeviceFindItNextTime" xml:space="preserve">
+    <value>Find it next time by</value>
+  </data>
+  <data name="MatchModeExactDevice" xml:space="preserve">
+    <value>this exact device</value>
+  </data>
+  <data name="MatchModeName" xml:space="preserve">
+    <value>its name</value>
+  </data>
+  <data name="MatchModeUsbModel" xml:space="preserve">
+    <value>USB model</value>
+  </data>
+  <data name="NoDevicesYet" xml:space="preserve">
+    <value>This layout has no devices yet. Add one, then point your controls at it from the MIDI tab.</value>
+  </data>
+  <data name="OneDeviceMissingFormat" xml:space="preserve">
+    <value>1 device is not here</value>
+  </data>
+  <data name="DevicesMissingFormat" xml:space="preserve">
+    <value>{0} devices are not here</value>
+  </data>
+  <data name="DevicePickerAddTitle" xml:space="preserve">
+    <value>Add a device</value>
+  </data>
+  <data name="DevicePickerRepointTitle" xml:space="preserve">
+    <value>Point at another device</value>
+  </data>
+  <data name="DevicePickerNameLabel" xml:space="preserve">
+    <value>What this layout calls it</value>
+  </data>
+  <data name="DevicePickerEndpointLabel" xml:space="preserve">
+    <value>Endpoints on this PC</value>
+  </data>
+  <data name="DevicePickerMatchLabel" xml:space="preserve">
+    <value>Find it next time by</value>
+  </data>
+  <data name="DevicePickerNothingHere" xml:space="preserve">
+    <value>No MIDI endpoints are present right now. Plug something in, or start the Windows MIDI Services service, then try again.</value>
+  </data>
+  <data name="DeviceRenameTitle" xml:space="preserve">
+    <value>Rename the device</value>
+  </data>
+  <data name="DeviceRenameNote" xml:space="preserve">
+    <value>Every control that points at this name follows the change.</value>
+  </data>
+  <data name="EndpointGroupCountFormat" xml:space="preserve">
+    <value>{0} groups</value>
+  </data>
+  <data name="EndpointOneGroupFormat" xml:space="preserve">
+    <value>1 group</value>
+  </data>
+  <data name="EndpointSourceGroupsFormat" xml:space="preserve">
+    <value>{0} source groups</value>
+  </data>
+  <data name="EndpointOneSourceGroupFormat" xml:space="preserve">
+    <value>1 source group</value>
+  </data>
+  <data name="EndpointDestinationGroupsFormat" xml:space="preserve">
+    <value>{0} destination groups</value>
+  </data>
+  <data name="EndpointOneDestinationGroupFormat" xml:space="preserve">
+    <value>1 destination group</value>
+  </data>
+  <data name="DialogAdd" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="KeyboardOrderBarTitle" xml:space="preserve">
+    <value>Setting the keyboard order</value>
+  </data>
+  <data name="KeyboardOrderBarStart" xml:space="preserve">
+    <value>Click the controls in the order you want the Tab key to walk them. Click one again to go back to it.</value>
+  </data>
+  <data name="KeyboardOrderBarProgressFormat" xml:space="preserve">
+    <value>{0} of {1} numbered. Click one again to go back to it. Anything you skip keeps its order and follows.</value>
+  </data>
+  <data name="KeyboardOrderDoneButton.Content" xml:space="preserve">
+    <value>Done</value>
+  </data>
+  <data name="KeyboardOrderRestartButton.Content" xml:space="preserve">
+    <value>Start over</value>
+  </data>
+  <data name="KeyboardOrderCancelButton.Content" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="AllGroupsCheck.Content" xml:space="preserve">
+    <value>Show all 16 groups</value>
+  </data>
+  <data name="GroupsFromDeviceFormat" xml:space="preserve">
+    <value>Showing the {0} groups this device takes messages on.</value>
+  </data>
+  <data name="RemoveDeviceTitle" xml:space="preserve">
+    <value>Remove this device?</value>
+  </data>
+  <data name="RemoveDeviceAccept" xml:space="preserve">
+    <value>Remove it</value>
+  </data>
+  <data name="RemoveDeviceInUseFormat" xml:space="preserve">
+    <value>{1} controls send to "{0}". They will keep the name and stop sending until you add a device called "{0}" again, or point them somewhere else.</value>
+  </data>
+  <data name="RemoveDeviceOneInUseFormat" xml:space="preserve">
+    <value>1 control sends to "{0}". It will keep the name and stop sending until you add a device called "{0}" again, or point it somewhere else.</value>
+  </data>
+  <data name="DeviceNotInTable" xml:space="preserve">
+    <value>This name is not in the layout's device list.</value>
+  </data>
+  <data name="DeviceNotHereLong" xml:space="preserve">
+    <value>Nothing matching it is plugged in right now.</value>
+  </data>
+  <data name="DeviceResolvedFormat" xml:space="preserve">
+    <value>On this PC: {0}</value>
+  </data>
+  <data name="EditDevicesLink.Content" xml:space="preserve">
+    <value>Set up devices…</value>
+  </data>
+  <data name="StepDuplicate" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="StepAddHoldLayer" xml:space="preserve">
+    <value>Hold a layer</value>
+  </data>
+  <data name="StepHoldLayerText" xml:space="preserve">
+    <value>Hold a layer</value>
+  </data>
+  <data name="SequenceWaitsDoNotBlock" xml:space="preserve">
+    <value>Waits do not block the surface</value>
+  </data>
+  <data name="SequenceTestIt" xml:space="preserve">
+    <value>Test it</value>
   </data>
   <data name="RepeatDialogTitle" xml:space="preserve">
     <value>Repeat</value>

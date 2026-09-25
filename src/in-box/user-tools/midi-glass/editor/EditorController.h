@@ -80,8 +80,17 @@ namespace glass
 
         bool AddPage(_In_ std::wstring const& name);
         bool RemovePage(_In_ size_t index);
+
+        // Moves everything on one page to the end of another, then removes the page it emptied.
+        // A page full of work should never be a choice between keeping the page and keeping the
+        // controls.
+        bool MoveControlsAndRemovePage(_In_ size_t index, _In_ size_t destinationIndex);
         bool RenamePage(_In_ size_t index, _In_ std::wstring const& name);
         bool SetPageIsSharedBand(_In_ size_t index, _In_ bool shared);
+
+        // The order of the pages is the order of the tab strip on the surface, so reordering
+        // them here is how somebody puts the page they reach for first at the front.
+        bool MovePage(_In_ size_t index, _In_ bool up);
 
         // ------------------------------------------------------------------ selection
 
@@ -151,6 +160,10 @@ namespace glass
         SnapOutcome UpdateResize(_In_ double deltaX, _In_ double deltaY, _In_ bool preserveAspect);
         void EndResize();
 
+        // Closes whatever run of coalesced edits is open. A label drag has no Begin of its own,
+        // because nothing needs recording: the box it started at is held by the caller.
+        void EndCoalescing() noexcept;
+
         bool IsDragging() const noexcept { return m_dragging; }
 
         // Arrow keys. One pixel, or one grid cell with shift, is the caller's arithmetic.
@@ -191,6 +204,19 @@ namespace glass
         // which is what keeps a theme change a six color operation rather than a redesign.
         bool SetControlStyle(_In_ std::wstring const& id, _In_ ControlStyleOverride style);
         bool SetControlLabelPlacement(_In_ std::wstring const& id, _In_ LabelPlacementOverride placement);
+        bool SetControlLabelStyle(_In_ std::wstring const& id, _In_ LabelStyle const& style);
+
+        // The label's own rectangle, dragged with handles on the canvas. Coalesced, so a drag is
+        // one undo entry rather than one per pointer move.
+        bool SetControlLabelBox(
+            _In_ std::wstring const& id,
+            _In_ double x,
+            _In_ double y,
+            _In_ double width,
+            _In_ double height);
+
+        // Back to whatever the placement rule says. Not coalesced: this is a decision, not a drag.
+        bool ClearControlLabelBox(_In_ std::wstring const& id);
         bool SetControlShowValue(_In_ std::wstring const& id, _In_ ShowValueOverride showValue);
         bool SetControlDefaultValue(_In_ std::wstring const& id, _In_ double value);
         bool SetControlReturnsToDefault(_In_ std::wstring const& id, _In_ bool returns);
@@ -217,12 +243,22 @@ namespace glass
         // Reading order: left to right, top to bottom, in bands a control's height deep.
         bool SortKeyboardOrderByPosition();
 
+        // The order the customer clicked, applied in one go. Controls that were never clicked
+        // keep their relative order and follow the ones that were, so leaving the job half done
+        // is a partial answer rather than a wrecked one.
+        bool SetKeyboardOrderFromList(_In_ std::vector<std::wstring> const& idsInOrder);
+
         // ------------------------------------------------------------------ layout properties
 
         bool SetLayoutName(_In_ std::wstring const& name);
         bool SetLayoutDescription(_In_ std::wstring const& description);
         bool SetThemeName(_In_ std::wstring const& themeName);
         bool SetSuppressAllStartupValues(_In_ bool suppress);
+
+        // The picture behind the whole surface. The name is a bare file name beside the layout,
+        // never a path: a layout is untrusted input, and a path in it is a way to make this app
+        // open a file somewhere else on the PC. Pass an empty name to take the picture away.
+        bool SetBackgroundImage(_In_ std::wstring const& fileName, _In_ BackgroundFit fit);
 
         // Growing asks where the existing controls should sit; shrinking offers to scale them.
         // Neither ever clamps a control inside the page, because clamping makes a resize
@@ -242,6 +278,19 @@ namespace glass
         bool AddDevice(_In_ DeviceEntry const& device);
         bool RemoveDevice(_In_ std::wstring const& name);
         bool RenameDevice(_In_ std::wstring const& oldName, _In_ std::wstring const& newName);
+
+        // Points an entry that is already in the table at different hardware, without touching
+        // the name, so every control that used it follows.
+        bool SetDeviceMatch(
+            _In_ std::wstring const& name,
+            _In_ midiapp::EndpointMatch const& match,
+            _In_ midiapp::EndpointMatchMode mode);
+
+        bool SetDeviceMatchMode(_In_ std::wstring const& name, _In_ midiapp::EndpointMatchMode mode);
+
+        // How many controls, across every page, send to this entry. The device list shows it so
+        // that removing an entry is not a guess.
+        size_t CountControlsUsingDevice(_In_ std::wstring const& name) const;
 
         // ------------------------------------------------------------------ sequences
 

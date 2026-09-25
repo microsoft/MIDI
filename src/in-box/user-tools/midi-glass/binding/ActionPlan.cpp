@@ -502,6 +502,29 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    ActionPlan BuildPlanForSequence(
+        LayoutDocument const& document,
+        std::vector<PreparedDestination> const& destinations,
+        Sequence const& sequence) noexcept
+    {
+        ActionPlan plan{};
+
+        try
+        {
+            AppendSequenceActions(document, destinations, sequence, plan.Actions, 0);
+
+            plan.Loops = sequence.Mode != SequenceRunMode::Once;
+            plan.StopsOnRelease = sequence.Mode == SequenceRunMode::WhileHeld;
+        }
+        catch (...)
+        {
+            plan = ActionPlan{};
+        }
+
+        return plan;
+    }
+
+    _Use_decl_annotations_
     void ActionPlanSet::Prepare(
         LayoutDocument const& document,
         std::vector<PreparedDestination> const& destinations) noexcept

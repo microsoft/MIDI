@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "SurfaceRenderer.h"
+#include "LayoutStore.h"
 #include "GlassControl.h"
 
 using namespace winrt;
@@ -411,6 +412,8 @@ namespace glass
 
         auto const compositor = ElementCompositionPreview::GetElementVisual(host).Compositor();
 
+        BuildBackground(document);
+
         // The engine counts every control in the document, page by page. The surface shows one
         // page, so it has to start counting from where that page begins.
         uint32_t controlIndex{ 0 };
@@ -431,6 +434,94 @@ namespace glass
         {
             BuildControl(compositor, control, theme, controlIndex);
             controlIndex++;
+        }
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::BuildBackground(LayoutDocument const& document)
+    {
+        m_background = nullptr;
+
+        if (m_host == nullptr || document.BackgroundImage.empty())
+        {
+            return;
+        }
+
+        try
+        {
+            auto const path = BackgroundImagePath(document);
+
+            if (path.empty())
+            {
+                return;
+            }
+
+            foundation::Uri const uri{ L"file:///" + winrt::hstring{ path } };
+
+            media::Imaging::BitmapImage bitmap{};
+            bitmap.UriSource(uri);
+
+            // Tiling is a brush on a rectangle rather than an Image, because an Image has one
+            // copy of the picture in it and no way to repeat it.
+            if (document.BackgroundFitMode == BackgroundFit::Tiled)
+            {
+                winrt::Microsoft::UI::Xaml::Shapes::Rectangle tile{};
+
+                tile.Width(document.PageWidth);
+                tile.Height(document.PageHeight);
+                tile.IsHitTestVisible(false);
+                tile.Opacity(std::clamp(document.BackgroundOpacity, 0.0, 1.0));
+
+                media::ImageBrush brush{};
+                brush.ImageSource(bitmap);
+                brush.Stretch(media::Stretch::None);
+                brush.AlignmentX(media::AlignmentX::Left);
+                brush.AlignmentY(media::AlignmentY::Top);
+
+                tile.Fill(brush);
+
+                controls::Canvas::SetLeft(tile, 0.0);
+                controls::Canvas::SetTop(tile, 0.0);
+                controls::Canvas::SetZIndex(tile, -1);
+
+                m_host.Children().InsertAt(0, tile);
+                m_background = tile;
+
+                return;
+            }
+
+            controls::Image image{};
+
+            image.Source(bitmap);
+            image.IsHitTestVisible(false);
+            image.Opacity(std::clamp(document.BackgroundOpacity, 0.0, 1.0));
+            image.Width(document.PageWidth);
+            image.Height(document.PageHeight);
+
+            switch (document.BackgroundFitMode)
+            {
+            case BackgroundFit::Centered:
+                image.Stretch(media::Stretch::None);
+                break;
+
+            case BackgroundFit::Stretch:
+                image.Stretch(media::Stretch::Fill);
+                break;
+
+            default:
+                image.Stretch(media::Stretch::Uniform);
+                break;
+            }
+
+            controls::Canvas::SetLeft(image, 0.0);
+            controls::Canvas::SetTop(image, 0.0);
+            controls::Canvas::SetZIndex(image, -1);
+
+            m_host.Children().InsertAt(0, image);
+            m_background = image;
+        }
+        catch (...)
+        {
         }
     }
 
@@ -489,6 +580,11 @@ namespace glass
         m_touched.push_back(false);
         m_labels.push_back(nullptr);
         m_labelOffsets.push_back(0.0);
+        m_labelInsets.push_back(0.0);
+        m_labelBoxInsets.push_back(0.0);
+        m_labelBoxOffsets.push_back(0.0);
+        m_labelBoxWidths.push_back(0.0);
+        m_labelBoxHeights.push_back(0.0);
         m_values.push_back(control.DefaultValue);
 
         auto const itemIndex = m_visuals.size() - 1;
@@ -1185,17 +1281,26 @@ namespace glass
             return;
         }
 
-        auto const height = static_cast<float>(std::max(control.Height, 4.0));
-        auto const width = static_cast<float>(std::max(control.Width, 4.0));
+        auto const height = std::max(control.Height, 4.0);
+        auto const width = std::max(control.Width, 4.0);
 
-        // The theme says where labels go; one control can disagree with it.
-        auto const placement =
-            control.LabelPlaced == LabelPlacementOverride::Inside ? LabelPlacement::Inside :
-            control.LabelPlaced == LabelPlacementOverride::Below ? LabelPlacement::Below :
-            control.LabelPlaced == LabelPlacementOverride::None ? LabelPlacement::None :
-            theme.Labels;
+        // The theme says where labels go; one control can disagree with it. A theme only knows
+        // the three original answers, so an override that is one of the newer ones stands on
+        // its own rather than being folded back into them.
+        auto placed = control.LabelPlaced;
 
-        auto const wanted = placement != LabelPlacement::None && !control.Label.empty();
+        if (placed == LabelPlacementOverride::UseTheme)
+        {
+            placed = theme.Labels == LabelPlacement::Inside ? LabelPlacementOverride::Inside
+                : theme.Labels == LabelPlacement::Below ? LabelPlacementOverride::Below
+                : LabelPlacementOverride::None;
+        }
+
+        // A group's caption belongs at the top of the frame, the way every group box in every
+        // application puts it.
+        auto const isPanel = control.Kind == ControlKind::Panel;
+
+        auto const wanted = placed != LabelPlacementOverride::None && !control.Label.empty();
 
         if (!wanted)
         {
@@ -1218,9 +1323,6 @@ namespace glass
         {
             controls::TextBlock label{};
 
-            label.FontSize(12);
-            label.TextAlignment(xaml::TextAlignment::Center);
-            label.TextTrimming(xaml::TextTrimming::CharacterEllipsis);
             label.IsHitTestVisible(false);
 
             // The control beside it already carries the name, so a screen reader reading this as
@@ -1234,24 +1336,203 @@ namespace glass
 
         auto const colors = ResolveControlColors(control, theme);
         auto const& label = m_labels[itemIndex];
-
-        // A group's caption belongs at the top of the frame, the way every group box in every
-        // application puts it. Everywhere else the label sits under the value it describes.
-        auto const isPanel = control.Kind == ControlKind::Panel;
+        auto const& look = control.LabelLook;
 
         label.Text(winrt::hstring{ control.Label });
-        label.Width(isPanel ? std::max(width - 16.0f, 4.0f) : width);
+
+        // ---- type ----
+
+        label.FontSize(look.FontSize > 0.0 ? look.FontSize : 12.0);
+
+        label.FontFamily(look.FontFamily.empty()
+            ? media::FontFamily{ L"Segoe UI Variable Text" }
+            : media::FontFamily{ look.FontFamily });
+
+        label.FontWeight(winrt::Windows::UI::Text::FontWeight{
+            static_cast<uint16_t>(look.FontWeight > 0 ? look.FontWeight : 400) });
+
+        label.FontStyle(look.Italic
+            ? winrt::Windows::UI::Text::FontStyle::Italic
+            : winrt::Windows::UI::Text::FontStyle::Normal);
+
+        label.TextDecorations(look.Underline
+            ? winrt::Windows::UI::Text::TextDecorations::Underline
+            : winrt::Windows::UI::Text::TextDecorations::None);
+
+        // Wrapping on by default: a fader is narrower than most of the words people put under
+        // one, and a word cut off in the middle is worse than a second line.
+        label.TextWrapping(look.Wrap ? xaml::TextWrapping::Wrap : xaml::TextWrapping::NoWrap);
+        label.TextTrimming(xaml::TextTrimming::CharacterEllipsis);
+
+        ThemeColor ink{ colors.Label };
+
+        if (!look.Color.empty())
+        {
+            ThemeColor parsed{};
+
+            if (TryParseColor(look.Color, parsed))
+            {
+                ink = parsed;
+            }
+        }
+
+        label.Foreground(media::SolidColorBrush(ToColor(ink)));
+
+        // ---- the box the text sits in ----
+
+        // An explicit box wins over everything: the customer dragged the handles, so the text
+        // goes where they put it and anything that does not fit is trimmed rather than moved.
+        auto const custom = look.HasBox();
+
+        auto const vertical = !custom &&
+            (placed == LabelPlacementOverride::VerticalLeft ||
+             placed == LabelPlacementOverride::VerticalRight);
+
+        // Above 100 the label is centered on the control and spills either side, which is what
+        // makes a readable caption possible under a forty pixel fader. Along the side of a
+        // control the percentage governs its length instead.
+        auto const along = vertical ? height : width;
+        auto const boxLength = std::max(along * std::clamp(look.WidthPercent, 10.0, 400.0) / 100.0, 4.0);
+
+        label.Width(custom ? look.BoxWidth : (isPanel ? std::max(width - 16.0, 4.0) : boxLength));
+
         label.TextAlignment(isPanel ? xaml::TextAlignment::Left : xaml::TextAlignment::Center);
-        label.Foreground(media::SolidColorBrush(ToColor(colors.Label)));
 
-        m_labelOffsets[itemIndex] = isPanel
-            ? 5.0
-            : placement == LabelPlacement::Below
-                ? static_cast<double>(height) + 2.0
-                : static_cast<double>(height) - 18.0;
+        // ---- where it sits ----
 
-        controls::Canvas::SetLeft(label, control.X + (isPanel ? 8.0 : 0.0));
-        controls::Canvas::SetTop(label, control.Y + m_labelOffsets[itemIndex]);
+        auto const lineHeight = (look.FontSize > 0.0 ? look.FontSize : 12.0) + 5.0;
+
+        double offsetX{ 0.0 };
+        double offsetY{ 0.0 };
+
+        if (custom)
+        {
+            label.RenderTransform(nullptr);
+            label.Height(look.BoxHeight);
+
+            // An ellipsis needs a line budget: a text block given a height clips at it silently,
+            // which leaves a word cut in half across the bottom and no sign that anything is
+            // missing. Counting the lines that fit is what turns that into "Lead Synth Vol…".
+            label.MaxLines(std::max(1, static_cast<int32_t>(look.BoxHeight / lineHeight)));
+
+            offsetX = look.BoxX;
+            offsetY = look.BoxY;
+        }
+        else if (isPanel)
+        {
+            label.Height(std::numeric_limits<double>::quiet_NaN());
+            label.MaxLines(0);
+
+            offsetX = 8.0;
+            offsetY = 5.0;
+        }
+        else if (vertical)
+        {
+            // Rotated about its own center, then nudged so the resulting strip lands beside the
+            // control rather than across it. Left reads bottom to top, right reads top to
+            // bottom, which is how the words on a mixer's channel strip run.
+            media::RotateTransform rotate{};
+            rotate.Angle(placed == LabelPlacementOverride::VerticalLeft ? -90.0 : 90.0);
+            rotate.CenterX(boxLength * 0.5);
+            rotate.CenterY(lineHeight * 0.5);
+
+            label.RenderTransform(rotate);
+            label.Height(std::numeric_limits<double>::quiet_NaN());
+            label.MaxLines(0);
+
+            offsetX = placed == LabelPlacementOverride::VerticalLeft
+                ? -(boxLength * 0.5) - (lineHeight * 0.5)
+                : width - (boxLength * 0.5) + (lineHeight * 0.5);
+
+            offsetY = (height - boxLength) * 0.5 + (boxLength - lineHeight) * 0.5;
+        }
+        else
+        {
+            label.RenderTransform(nullptr);
+            label.Height(std::numeric_limits<double>::quiet_NaN());
+            label.MaxLines(0);
+
+            offsetX = (width - boxLength) * 0.5;
+
+            switch (placed)
+            {
+            case LabelPlacementOverride::Above:
+                offsetY = -lineHeight - 2.0;
+                break;
+
+            case LabelPlacementOverride::Below:
+                offsetY = height + 2.0;
+                break;
+
+            case LabelPlacementOverride::InsideTop:
+                offsetY = 4.0;
+                break;
+
+            case LabelPlacementOverride::InsideCenter:
+                offsetY = (height - lineHeight) * 0.5;
+                break;
+
+            default:
+                // Inside and InsideBottom are the same thing, and the one the themes mean.
+                offsetY = height - lineHeight - 4.0;
+                break;
+            }
+        }
+
+        m_labelOffsets[itemIndex] = offsetY;
+        m_labelInsets[itemIndex] = offsetX;
+
+        // What the editor draws handles around. A rotated label occupies the strip its rotation
+        // lands on, not the unrotated run of text, so the two are swapped for a vertical one.
+        if (itemIndex < m_labelBoxWidths.size())
+        {
+            m_labelBoxWidths[itemIndex] = custom ? look.BoxWidth : (vertical ? lineHeight : label.Width());
+            m_labelBoxHeights[itemIndex] = custom ? look.BoxHeight : (vertical ? boxLength : lineHeight);
+
+            if (vertical)
+            {
+                // The rotation moves the painted strip away from the offset the text block was
+                // placed at, so the box the customer sees starts somewhere else.
+                m_labelBoxInsets[itemIndex] = offsetX + (boxLength - lineHeight) * 0.5;
+                m_labelBoxOffsets[itemIndex] = offsetY - (boxLength - lineHeight) * 0.5;
+            }
+            else
+            {
+                m_labelBoxInsets[itemIndex] = offsetX;
+                m_labelBoxOffsets[itemIndex] = offsetY;
+            }
+        }
+
+        controls::Canvas::SetLeft(label, control.X + offsetX);
+        controls::Canvas::SetTop(label, control.Y + offsetY);
+    }
+
+    _Use_decl_annotations_
+    bool SurfaceRenderer::TryGetLabelBox(
+        size_t itemIndex,
+        double& x,
+        double& y,
+        double& width,
+        double& height) const noexcept
+    {
+        x = 0.0;
+        y = 0.0;
+        width = 0.0;
+        height = 0.0;
+
+        if (itemIndex >= m_labels.size() ||
+            m_labels[itemIndex] == nullptr ||
+            itemIndex >= m_labelBoxWidths.size())
+        {
+            return false;
+        }
+
+        x = m_labelBoxInsets[itemIndex];
+        y = m_labelBoxOffsets[itemIndex];
+        width = m_labelBoxWidths[itemIndex];
+        height = m_labelBoxHeights[itemIndex];
+
+        return width > 0.0 && height > 0.0;
     }
 
     _Use_decl_annotations_
@@ -1310,6 +1591,12 @@ namespace glass
         m_touched.clear();
         m_labels.clear();
         m_labelOffsets.clear();
+        m_labelInsets.clear();
+        m_labelBoxInsets.clear();
+        m_labelBoxOffsets.clear();
+        m_labelBoxWidths.clear();
+        m_labelBoxHeights.clear();
+        m_background = nullptr;
         m_values.clear();
         m_brushes.clear();
         m_gradients.clear();
@@ -1381,9 +1668,7 @@ namespace glass
 
         if (itemIndex < m_labels.size() && m_labels[itemIndex] != nullptr)
         {
-            auto const inset = KindAt(itemIndex) == ControlKind::Panel ? 8.0 : 0.0;
-
-            controls::Canvas::SetLeft(m_labels[itemIndex], x + inset);
+            controls::Canvas::SetLeft(m_labels[itemIndex], x + m_labelInsets[itemIndex]);
             controls::Canvas::SetTop(m_labels[itemIndex], y + m_labelOffsets[itemIndex]);
         }
 

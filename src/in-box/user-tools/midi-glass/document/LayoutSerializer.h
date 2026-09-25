@@ -43,4 +43,9 @@ namespace glass
     ReadResult ReadLayoutFromJson(_In_ std::wstring_view json) noexcept;
 
     std::wstring WriteLayoutToJson(_In_ LayoutDocument const& document) noexcept;
+
+    // A bare file name, or nothing. A layout is untrusted input, so a name that carries a path
+    // is a way to make this app read a file somewhere else on the PC. Shared with the editor so
+    // that what gets written can never be something the reader would refuse.
+    std::wstring SanitizeFileName(_In_ std::wstring name) noexcept;
 }

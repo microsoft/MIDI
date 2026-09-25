@@ -140,6 +140,16 @@ namespace glass
         // the layout is not marked initialized before it actually was.
         void SendStartupValues();
 
+        // One sequence, right now, without a control pressing it. The sequence is passed in
+        // rather than named so the editor can test the edit on screen rather than the copy that
+        // is already in the document. False when nothing was connected or it built to nothing.
+        //
+        // The control index is only used to label what the monitor shows, so passing the control
+        // the sequence is being edited from makes the rows land under the right filter.
+        bool RunSequenceNow(_In_ Sequence const& sequence, _In_ uint32_t controlIndex);
+
+        void StopSequenceNow(_In_ uint32_t controlIndex) noexcept;
+
         // Everything this process is driving, not just this player. Blocking work is detached.
         static void Panic();
 

@@ -9,6 +9,7 @@
 
 #include "LayoutModel.h"
 #include "ThemeModel.h"
+#include "ThemeStore.h"
 #include "SurfaceColors.h"
 #include "GlassControl.h"
 
@@ -122,6 +123,16 @@ namespace glass
         // control is not on the page being shown.
         bool TryFindItem(_In_ uint32_t controlIndex, _Out_ size_t& itemIndex) const noexcept;
 
+        // The rectangle this item's label paints into, relative to its control's top-left, in
+        // page units. False when the control has no label drawn. The editor's label handles are
+        // drawn from this, so that dragging them starts from where the text actually is.
+        bool TryGetLabelBox(
+            _In_ size_t itemIndex,
+            _Out_ double& x,
+            _Out_ double& y,
+            _Out_ double& width,
+            _Out_ double& height) const noexcept;
+
         GlassControlElement ElementAt(_In_ size_t itemIndex) const noexcept;
 
         ControlKind KindAt(_In_ size_t itemIndex) const noexcept;
@@ -177,6 +188,8 @@ namespace glass
         ThemeColor DeckColor() const noexcept { return m_deck; }
 
     private:
+        void BuildBackground(_In_ LayoutDocument const& document);
+
         void BuildControl(
             _In_ comp::Compositor const& compositor,
             _In_ Control const& control,
@@ -256,6 +269,21 @@ namespace glass
         // be carried along by hand when the control moves.
         std::vector<controls::TextBlock> m_labels{};
         std::vector<double> m_labelOffsets{};
+
+        // Across, the way m_labelOffsets is down. A label wider than its control, or rotated
+        // down one side of it, does not start at the control's own left edge.
+        std::vector<double> m_labelInsets{};
+
+        // The rectangle the label actually paints into, relative to its control. Not the same as
+        // the offsets above for a rotated label, whose painted strip lands somewhere its text
+        // block was never placed. This is what the editor draws handles around.
+        std::vector<double> m_labelBoxInsets{};
+        std::vector<double> m_labelBoxOffsets{};
+        std::vector<double> m_labelBoxWidths{};
+        std::vector<double> m_labelBoxHeights{};
+
+        // The page's background picture, behind everything, hit test invisible.
+        xaml::FrameworkElement m_background{ nullptr };
 
         // What each control is showing, so a re-layout can put the pipe back where it was.
         std::vector<double> m_values{};

@@ -27,8 +27,11 @@ namespace winrt::midiglass::implementation
         // playing through.
         std::vector<midiglass::RuntimeWindow> g_runtimeWindows{};
 
-        // The editor is one at a time, so this is one window rather than a list.
-        midiglass::EditorWindow g_editorWindow{ nullptr };
+        // Every editor carries its own controller, document and undo stack, and its player owns
+        // its endpoints under a key built from the file path, so two designers open at once are
+        // independent. Opening a second layout used to close the first, which lost the place
+        // somebody was working from.
+        std::vector<midiglass::EditorWindow> g_editorWindows{};
 
         xaml::Window g_libraryWindow{ nullptr };
 
@@ -39,6 +42,10 @@ namespace winrt::midiglass::implementation
                 right.data(), static_cast<int32_t>(right.size()),
                 TRUE) == CSTR_EQUAL;
         }
+
+        // Each new designer is nudged down and across from the last, so a second one does not
+        // land exactly on top of the first and look like nothing happened.
+        constexpr int32_t EditorCascadeStep = 28;
     }
 
     void App::ActivateLibraryWindow()
@@ -63,19 +70,15 @@ namespace winrt::midiglass::implementation
                 return;
             }
 
-            if (g_editorWindow != nullptr)
+            for (auto const& existing : g_editorWindows)
             {
-                auto* const existing = winrt::get_self<EditorWindow>(g_editorWindow);
+                auto* const implementation = winrt::get_self<EditorWindow>(existing);
 
-                if (existing != nullptr && SamePath(existing->LayoutFilePath(), filePath))
+                if (implementation != nullptr && SamePath(implementation->LayoutFilePath(), filePath))
                 {
-                    g_editorWindow.Activate();
+                    existing.Activate();
                     return;
                 }
-
-                // A different layout. The open one closes, which saves whatever was pending.
-                g_editorWindow.Close();
-                g_editorWindow = nullptr;
             }
 
             auto window = winrt::make_self<EditorWindow>();
@@ -85,18 +88,23 @@ namespace winrt::midiglass::implementation
                 return;
             }
 
-            g_editorWindow = window.as<midiglass::EditorWindow>();
+            auto const cascade = static_cast<int32_t>(g_editorWindows.size()) * EditorCascadeStep;
 
-            g_editorWindow.Closed([](auto&& sender, auto&&)
+            // Sized and positioned before the first paint, so it does not visibly jump.
+            window->RestoreWindowPlacement(cascade);
+
+            auto projected = window.as<midiglass::EditorWindow>();
+
+            g_editorWindows.push_back(projected);
+
+            projected.Closed([projected](auto&&, auto&&)
                 {
-                    if (g_editorWindow != nullptr &&
-                        sender.template try_as<midiglass::EditorWindow>() == g_editorWindow)
-                    {
-                        g_editorWindow = nullptr;
-                    }
+                    g_editorWindows.erase(
+                        std::remove(g_editorWindows.begin(), g_editorWindows.end(), projected),
+                        g_editorWindows.end());
                 });
 
-            g_editorWindow.Activate();
+            projected.Activate();
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to open the editor.")
     }

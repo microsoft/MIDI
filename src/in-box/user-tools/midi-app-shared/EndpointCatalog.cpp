@@ -52,6 +52,16 @@ namespace midiapp
             : DestinationPortNames[static_cast<size_t>(groupIndex)];
     }
 
+    int32_t LiveEndpoint::SourceGroupCount() const noexcept
+    {
+        return static_cast<int32_t>(std::count(SourceGroups.begin(), SourceGroups.end(), true));
+    }
+
+    int32_t LiveEndpoint::DestinationGroupCount() const noexcept
+    {
+        return static_cast<int32_t>(std::count(DestinationGroups.begin(), DestinationGroups.end(), true));
+    }
+
     EndpointMatch LiveEndpoint::BuildMatch() const noexcept
     {
         EndpointMatch match{};
@@ -231,6 +241,7 @@ namespace midiapp
                     endpoint.UsbVendorId = transportInfo.VendorId();
                     endpoint.UsbProductId = transportInfo.ProductId();
                     endpoint.UsbSerialNumber = SafeString(transportInfo.SerialNumber());
+                    endpoint.Description = SafeString(transportInfo.Description());
 
                     auto const parent = device.GetParentDeviceInformation();
 
@@ -242,9 +253,21 @@ namespace midiapp
                     if (auto const userInfo = device.GetUserSuppliedInfo())
                     {
                         endpoint.ImagePath = SafeString(ResolveEndpointImagePath(userInfo.ImageFileName()));
+
+                        // The customer's own words win, because they are the ones who will be
+                        // reading them back.
+                        if (auto const described = SafeString(userInfo.Description()); !described.empty())
+                        {
+                            endpoint.Description = described;
+                        }
                     }
 
                     endpoint.DeclaredGroups = DeclaredGroups(device);
+
+                    auto const directions = DeclaredGroupDirections(device);
+
+                    endpoint.SourceGroups = directions.Sources;
+                    endpoint.DestinationGroups = directions.Destinations;
 
                     // The MIDI 1.0 port names are what the customer already sees everywhere
                     // else, so they are the labels on the connection points.

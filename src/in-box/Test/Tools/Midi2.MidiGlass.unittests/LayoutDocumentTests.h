@@ -32,6 +32,10 @@ public:
 
     TEST_METHOD(AControlThatAgreesWithItsThemeWritesNoOverrides);
     TEST_METHOD(OverridesOfTheThemeSurviveARoundTrip);
+    TEST_METHOD(ALabelBoxSurvivesARoundTrip);
+    TEST_METHOD(ALabelWithNoBoxWritesNoBox);
+    TEST_METHOD(ACustomPlacementWithNoBoxFallsBackToTheTheme);
+    TEST_METHOD(ALabelBoxFromAFileIsBounded);
 
     // ---- the forward rule ----
     TEST_METHOD(KeepsFieldsFromANewerVersion);
@@ -43,6 +47,12 @@ public:
     TEST_METHOD(SurvivesAHostileFile);
     TEST_METHOD(BoundsStringsFromAFile);
     TEST_METHOD(RejectsSystemExclusiveThatIsNotHex);
+
+    // ---- the background picture ----
+
+    TEST_METHOD(ABackgroundPictureSurvivesARoundTrip);
+    TEST_METHOD(ABackgroundPictureThatIsAPathIsRefused);
+    TEST_METHOD(NoBackgroundPictureWritesNothing);
 
     // ---- validation ----
     TEST_METHOD(AcceptsAValidDocument);

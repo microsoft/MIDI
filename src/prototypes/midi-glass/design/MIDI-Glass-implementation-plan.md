@@ -16,11 +16,11 @@ Companion to `MIDI-Glass-design.md` and the twelve mockup screens. This is the *
 | 3 Document, themes, thumbnails | **Done** | `midi-glass/document/`, `midi-glass/thumbnail/` |
 | 4 Runtime surface | **Done** | `midi-glass/binding/`, `runtime/`, `surface/`, `RuntimeWindow.*` |
 | 5 Editor | **Done** | `midi-glass/editor/`, `EditorWindow.*`, `EditorCanvas/Inspector/Outline/Dialogs/TryMode.cpp` |
-| 6 Sequences, generators, learn | **Sequences and learn done. Generators not started.** | `binding/ActionPlan.*`, `binding/LearnCapture.*`, `runtime/SequenceRunner.*`, `EditorSequenceDialog.cpp`, `EditorLearn.cpp` |
-| 7 Full screen, windows, displays | **The corner button, its flyout and display-required are done.** Per-layout display memory and the virtual device are not. | `RuntimeWindowFullScreen.cpp` |
+| 6 Sequences, generators, learn | **Sequences and learn done, including Test it in the sequence editor. Generators not started.** | `binding/ActionPlan.*`, `binding/LearnCapture.*`, `runtime/SequenceRunner.*`, `EditorSequenceDialog.cpp`, `EditorLearn.cpp` |
+| 7 Full screen, windows, displays | **The corner button, its flyout and display-required are done. The designer now remembers its window placement, pane widths and zoom, and several layouts can be open at once.** Per-layout display memory and the virtual device are not. | `RuntimeWindowFullScreen.cpp`, `EditorPanes.cpp`, `App.xaml.cpp` |
 | 8–9 | Not started | — |
 
-**Tests: 305, all passing, none needing a window or a device.** `src/in-box/Test/Tools/Midi2.MidiGlass.unittests`. Builds clean x64 and ARM64 Release; spelling and accessibility checks clean.
+**Tests: 317, all passing, none needing a window or a device.** `src/in-box/Test/Tools/Midi2.MidiGlass.unittests`. Builds clean x64 and ARM64 Release; spelling and accessibility checks clean.
 
 ```
 build  msbuild <proj> /t:Build /p:Configuration=Release /p:Platform=x64 "/p:SolutionDir=<repo>\src\in-box\\" /v:minimal /nologo /nodeReuse:false
@@ -40,7 +40,19 @@ A control can send a note, a control change, a program change, pitch bend, chann
 
 A control with travel can **show its number inside itself**, while it is held or all the time. It shows the figure that would go on the wire when the customer is working in a device's own units, and a percentage when they are not — a customer who typed 0 to 127 out of a manual wants to see 64, and showing them 50 % would be the same complaint the ranges exist to answer.
 
+**Layout settings** (Layout… → Pages and devices) is the screen that makes a layout portable, and it is where mockup screen 10 lands. The Pages column renames, reorders, deletes and adds pages, and turns the always-on-screen band on and off. The Devices column lists what the layout asks for beside what it found on this PC, with a Ready or Not here right now chip, how many controls would notice if the entry went, and the rule to find it by next time — this exact device, its name, or its USB model. A device can be added from whatever is plugged in, pointed at different hardware, renamed so every control follows, or removed.
+
+**A label is a thing you lay out, not just a string.** It wraps by default; it can be given its own font, size, weight, italic, underline and color, all defaulting to the theme; it can be allowed to spill either side of its control by a percentage, which is what makes a readable caption possible under a forty pixel fader; and it can sit above, below, inside at the top, middle or bottom, or rotated up the left side or down the right the way the words on a mixer's channel strip run. **It can also be dragged into place with its own handles**, the same way a control is sized, in which case the text is trimmed with an ellipsis when it no longer fits what the customer laid out. Picking a placement from the list throws the dragged box away, because a rule and a hand-placed box are two answers to one question.
+
+**A layout can carry a background picture** — centered, scaled to fit keeping its shape, stretched, or tiled. It is stored as a bare file name beside the layout, never a path, so the two files travel together and a layout from a stranger cannot point the app at a file elsewhere on the PC. Choosing one that lives somewhere else says, before saving, that it will be copied next to the layout.
+
+**The keyboard order is set by clicking.** Every control shows its number, and clicking them in the order you want the Tab key to walk them renumbers as you go; clicking one again goes back to it. That replaced a menu command that sorted by position and gave no way to see or fix the result.
+
 Not there yet: generators (beat clock and LFO), the per-layout virtual device, per-layout display memory, the XY pad's second axis, and meters fed by something other than their own value. Everything in that list is the rest of phase 6, phase 7, or later.
+
+### What is next
+
+The controls and the skins. Everything below the control-drawing layer is settled; what is open is the control vocabulary itself and how a theme paints it.
 
 ### Two things learned here that apply to every tool in the family
 

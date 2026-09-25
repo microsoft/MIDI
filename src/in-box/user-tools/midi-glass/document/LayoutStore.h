@@ -48,4 +48,21 @@ namespace glass
     std::wstring MakeUnusedLayoutPath(
         _In_ std::wstring const& folder,
         _In_ std::wstring const& layoutName) noexcept;
+
+    // Full path of a layout's background picture, or empty when there is none, the name is not
+    // a plain file name, or the file is not beside the layout. Only the layout's own folder is
+    // ever read from, so a name that tries to climb out of it resolves to nothing.
+    std::wstring BackgroundImagePath(_In_ LayoutDocument const& document) noexcept;
+
+    // Copies a chosen picture next to the layout and hands back the bare file name to store.
+    // Empty on any failure. A picture that is already beside the layout is used where it is.
+    std::wstring CopyBackgroundImageBeside(
+        _In_ std::wstring const& sourcePath,
+        _In_ std::wstring const& layoutFilePath) noexcept;
+
+    // True when this picture is not already beside that layout, so the customer can be told it
+    // is about to be copied before it happens.
+    bool BackgroundImageNeedsCopying(
+        _In_ std::wstring const& sourcePath,
+        _In_ std::wstring const& layoutFilePath) noexcept;
 }

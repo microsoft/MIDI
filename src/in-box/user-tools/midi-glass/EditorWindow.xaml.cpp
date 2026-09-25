@@ -134,6 +134,7 @@ namespace winrt::midiglass::implementation
             BuildInspectorChoices();
             BuildPalette();
             InitializeSplitters();
+            RestoreEditorPanes();
             AddZOrderAccelerators();
 
             m_updatingInspector = false;
@@ -172,6 +173,11 @@ namespace winrt::midiglass::implementation
 
         try
         {
+            // Where the window and its dividers were, before anything is torn down. A designer
+            // that reopens somewhere else every time is a designer somebody has to rearrange
+            // before they can start.
+            SaveEditorPlacement();
+
             // Whatever was still pending goes to disk now. Closing a window is not a reason to
             // lose the last edit somebody made.
             if (m_saveTimer != nullptr)
@@ -679,21 +685,6 @@ namespace winrt::midiglass::implementation
         UNREFERENCED_PARAMETER(args);
 
         ShowRenameDialog();
-    }
-
-    _Use_decl_annotations_
-    void EditorWindow::OnSortKeyboardOrderClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
-    {
-        UNREFERENCED_PARAMETER(sender);
-        UNREFERENCED_PARAMETER(args);
-
-        if (m_editor.SortKeyboardOrderByPosition())
-        {
-            RebuildOutline();
-            UpdateOverlay();
-            RefreshInspector();
-            MarkChanged();
-        }
     }
 
     _Use_decl_annotations_

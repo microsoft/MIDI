@@ -311,6 +311,125 @@ namespace midiapp
         return declared;
     }
 
+    int32_t GroupDirections::SourceCount() const noexcept
+    {
+        return static_cast<int32_t>(std::count(Sources.begin(), Sources.end(), true));
+    }
+
+    int32_t GroupDirections::DestinationCount() const noexcept
+    {
+        return static_cast<int32_t>(std::count(Destinations.begin(), Destinations.end(), true));
+    }
+
+    _Use_decl_annotations_
+    GroupDirections DeclaredGroupDirections(
+        midi2enum::MidiEndpointDeviceInformation const& endpoint) noexcept
+    {
+        GroupDirections directions{};
+
+        try
+        {
+            if (endpoint != nullptr)
+            {
+                auto const cover =
+                    [&directions](uint8_t firstGroupIndex, uint8_t groupCount, bool source, bool destination) noexcept
+                    {
+                        auto const last = static_cast<uint32_t>(firstGroupIndex) + groupCount;
+
+                        for (uint32_t i = firstGroupIndex; i < last && i < directions.Sources.size(); i++)
+                        {
+                            directions.Sources[i] = directions.Sources[i] || source;
+                            directions.Destinations[i] = directions.Destinations[i] || destination;
+                        }
+                    };
+
+                for (auto const& functionBlock : endpoint.GetDeclaredFunctionBlocks())
+                {
+                    auto const direction = functionBlock.Direction();
+
+                    auto const source = direction == midi2enum::MidiFunctionBlockDirection::BlockOutput ||
+                        direction == midi2enum::MidiFunctionBlockDirection::Bidirectional;
+
+                    auto const destination = direction == midi2enum::MidiFunctionBlockDirection::BlockInput ||
+                        direction == midi2enum::MidiFunctionBlockDirection::Bidirectional;
+
+                    if (auto const first = functionBlock.FirstGroup())
+                    {
+                        cover(first.Index(), functionBlock.GroupCount(), source, destination);
+                    }
+                }
+
+                for (auto const& terminalBlock : endpoint.GetGroupTerminalBlocks())
+                {
+                    auto const direction = terminalBlock.Direction();
+
+                    auto const source = direction == midi2enum::MidiGroupTerminalBlockDirection::BlockOutput ||
+                        direction == midi2enum::MidiGroupTerminalBlockDirection::Bidirectional;
+
+                    auto const destination = direction == midi2enum::MidiGroupTerminalBlockDirection::BlockInput ||
+                        direction == midi2enum::MidiGroupTerminalBlockDirection::Bidirectional;
+
+                    if (auto const first = terminalBlock.FirstGroup())
+                    {
+                        cover(first.Index(), terminalBlock.GroupCount(), source, destination);
+                    }
+                }
+            }
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+
+        // A device that declares nothing still has to be usable, so it is treated as capable of
+        // both on every group rather than as capable of nothing.
+        if (directions.SourceCount() == 0 && directions.DestinationCount() == 0)
+        {
+            directions.Sources.fill(true);
+            directions.Destinations.fill(true);
+        }
+
+        return directions;
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring ResolveEndpointImageOrDefault(
+        winrt::hstring const& customImagePath,
+        std::wstring const& transportCode) noexcept
+    {
+        try
+        {
+            if (!customImagePath.empty())
+            {
+                return customImagePath;
+            }
+
+            if (!transportCode.empty())
+            {
+                std::wstring lowered{ transportCode };
+
+                std::transform(lowered.begin(), lowered.end(), lowered.begin(),
+                    [](wchar_t const ch) { return static_cast<wchar_t>(::towlower(ch)); });
+
+                auto const byTransport = ResolveEndpointImagePath(
+                    winrt::hstring{ L"default-" + lowered + L"-small.svg" });
+
+                if (!byTransport.empty())
+                {
+                    return byTransport;
+                }
+            }
+
+            return ResolveEndpointImagePath(L"default-small.svg");
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+
+        return {};
+    }
+
     std::vector<midi2enum::MidiEndpointDeviceInformation> SortedEndpoints(
         midi2enum::MidiEndpointDeviceWatcher const& watcher) noexcept
     {

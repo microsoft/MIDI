@@ -805,6 +805,11 @@ namespace glass
         m_undo.EndCoalescing();
     }
 
+    void EditorController::EndCoalescing() noexcept
+    {
+        m_undo.EndCoalescing();
+    }
+
     _Use_decl_annotations_
     bool EditorController::NudgeSelection(double deltaX, double deltaY)
     {

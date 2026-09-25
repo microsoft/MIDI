@@ -131,12 +131,27 @@ namespace glass
         Bare = 4,
     };
 
+    // Where a control's label sits. The theme picks a default and one control can disagree.
+    //
+    // The two vertical placements exist for a wall of narrow faders, where the only room left is
+    // beside the control. They read the way the words on a mixer's channel strip do: up the left
+    // side, down the right.
     enum class LabelPlacementOverride
     {
         UseTheme = 0,
         Inside = 1,
         Below = 2,
         None = 3,
+        Above = 4,
+        InsideTop = 5,
+        InsideCenter = 6,
+        InsideBottom = 7,
+        VerticalLeft = 8,
+        VerticalRight = 9,
+
+        // Wherever the customer dragged the label's own handles to. Set by the canvas rather
+        // than chosen from the list, and paired with the box in LabelStyle.
+        Custom = 10,
     };
 
     enum class ShowValueOverride
@@ -244,6 +259,60 @@ namespace glass
     // it back without quietly throwing away the parts it could not edit.
     using UnknownFields = winrt::Windows::Data::Json::JsonObject;
 
+    // Everything about how a label is drawn that is not where it sits. Every field defaults to
+    // "the theme decides", so a layout that has not been fiddled with carries none of it and a
+    // theme change still reaches every control.
+    struct LabelStyle
+    {
+        // Empty means the theme's font.
+        std::wstring FontFamily{};
+
+        // 0 means the theme's size.
+        double FontSize{ 0.0 };
+
+        // 0 means the theme's weight. Otherwise a normal OpenType weight: 400, 600, 700.
+        int32_t FontWeight{ 0 };
+
+        bool Italic{ false };
+        bool Underline{ false };
+
+        // Empty means the theme's label color.
+        std::wstring Color{};
+
+        // Long words break to the next line instead of being cut off. On by default: a fader is
+        // narrower than most of the words people put under one.
+        bool Wrap{ true };
+
+        // How wide the label is allowed to be, as a percentage of the control. Above 100 the
+        // text is centered on the control and spills either side, which is what makes a readable
+        // caption possible under a 40 px fader.
+        double WidthPercent{ 100.0 };
+
+        // An explicit rectangle for the label, in page units, measured from the control's own
+        // top-left corner. Dragged with handles on the canvas, the same way a control is sized.
+        //
+        // Zero width or height means there is no explicit box and the placement rule decides,
+        // which is where every control starts. Once a box is set it wins over the placement and
+        // over WidthPercent: the customer has said where the text goes, so anything that does
+        // not fit is trimmed with an ellipsis rather than moved.
+        double BoxX{ 0.0 };
+        double BoxY{ 0.0 };
+        double BoxWidth{ 0.0 };
+        double BoxHeight{ 0.0 };
+
+        bool HasBox() const noexcept { return BoxWidth > 0.0 && BoxHeight > 0.0; }
+
+        UnknownFields Unknown{ nullptr };
+    };
+
+    // The smallest a dragged label box may get. Smaller than a control's minimum, because a
+    // label reading "1" beside a knob is a reasonable thing to want.
+    constexpr double MinimumLabelBoxSize = 8.0;
+
+    // How far a label box may reach from its control. A box from a stranger's file must not be
+    // able to ask for a text block the size of a wall.
+    constexpr double MaximumLabelBoxExtent = 8192.0;
+
     // One row of "what this control sends". Destination is a name from the layout's own device
     // table, never a device id, which is what makes a layout portable.
     struct ControlMessage
@@ -325,6 +394,7 @@ namespace glass
         // control stays there, which is what makes switching theme a six color operation.
         ControlStyleOverride Style{ ControlStyleOverride::UseTheme };
         LabelPlacementOverride LabelPlaced{ LabelPlacementOverride::UseTheme };
+        LabelStyle LabelLook{};
         ShowValueOverride ShowValue{ ShowValueOverride::UseTheme };
 
         // The order a screen reader walks, and the order a bank learn fills. Visible in the
@@ -440,6 +510,23 @@ namespace glass
         UnknownFields Unknown{ nullptr };
     };
 
+    // How a background picture fills the page.
+    enum class BackgroundFit
+    {
+        // The picture at its own size, in the middle of the page.
+        Centered = 0,
+
+        // As large as fits without changing its shape. Nothing is cut off, and there may be
+        // page either side of it.
+        Uniform = 1,
+
+        // Filled corner to corner, changing the picture's shape to do it.
+        Stretch = 2,
+
+        // Repeated at its own size from the top left.
+        Tiled = 3,
+    };
+
     struct LayoutDocument
     {
         // What wrote this file. An older build keeps a higher number as it found it.
@@ -462,6 +549,15 @@ namespace glass
         int32_t CanvasHeight{ 800 };
 
         std::wstring ThemeName{};
+
+        // A picture behind the controls. Stored as a bare file name, resolved against the folder
+        // the layout file is in, so a layout and its artwork move together. Empty means none.
+        std::wstring BackgroundImage{};
+        BackgroundFit BackgroundFitMode{ BackgroundFit::Uniform };
+
+        // How strongly it shows through. The deck is still what the controls are read against,
+        // so a picture at full strength is usually the wrong answer.
+        double BackgroundOpacity{ 1.0 };
 
         ScaleMode Scale{ ScaleMode::ActualSize };
         double CustomScalePercent{ 100.0 };

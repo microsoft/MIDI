@@ -25,6 +25,10 @@ namespace midiapp
         std::wstring ParentDeviceName{};
         std::wstring TransportSuppliedName{};
 
+        // What the customer or the transport says this thing is, for a picker that has room for
+        // a second line. A transport code tells nobody anything.
+        std::wstring Description{};
+
         // Full path of the picture the customer gave this endpoint, if there is one.
         std::wstring ImagePath{};
 
@@ -33,6 +37,14 @@ namespace midiapp
         std::wstring UsbSerialNumber{};
 
         std::array<bool, MaximumGroupCount> DeclaredGroups{};
+
+        // The same, split by which way the messages go, so a picker can say "1 source group,
+        // 3 destination groups" rather than a count that does not say what it is for.
+        std::array<bool, MaximumGroupCount> SourceGroups{};
+        std::array<bool, MaximumGroupCount> DestinationGroups{};
+
+        int32_t SourceGroupCount() const noexcept;
+        int32_t DestinationGroupCount() const noexcept;
 
         // The names these groups carry as MIDI 1.0 ports, which is what the customer already
         // sees in every other app. Empty where the endpoint has no MIDI 1.0 port for the group.

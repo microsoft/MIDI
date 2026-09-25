@@ -56,6 +56,8 @@ namespace winrt::midiglass::implementation
                 L"StepAddSetControl", L'\uE8AB' },
             { glass::SequenceStepKind::GoToPage, glass::MessageKind::GoToPage,
                 L"StepAddGoToPage", L'\uE80A' },
+            { glass::SequenceStepKind::HoldLayer, glass::MessageKind::ControlChange,
+                L"StepAddHoldLayer", L'\uE72E' },
         };
 
         wchar_t const* GlyphKeyForStep(_In_ glass::SequenceStep const& step) noexcept
@@ -66,6 +68,7 @@ namespace winrt::midiglass::implementation
             case glass::SequenceStepKind::SendSystemExclusive: return L"StepAddSystemExclusive";
             case glass::SequenceStepKind::SetControlValue:  return L"StepAddSetControl";
             case glass::SequenceStepKind::GoToPage:         return L"StepAddGoToPage";
+            case glass::SequenceStepKind::HoldLayer:        return L"StepAddHoldLayer";
             case glass::SequenceStepKind::RepeatBlockStart: return L"StepAddRepeat";
             case glass::SequenceStepKind::RepeatBlockEnd:   return L"StepAddRepeat";
             default:
@@ -93,6 +96,9 @@ namespace winrt::midiglass::implementation
 
             case glass::SequenceStepKind::RepeatBlockEnd:
                 return std::wstring{ resources::GetString(L"StepRepeatEnd") };
+
+            case glass::SequenceStepKind::HoldLayer:
+                return std::wstring{ resources::GetString(L"StepHoldLayerText") };
 
             case glass::SequenceStepKind::SetControlValue:
             {
@@ -224,8 +230,11 @@ namespace winrt::midiglass::implementation
             controls::TextBlock addHeading{};
             addHeading.Text(resources::GetString(L"SequenceAddHeading"));
             addHeading.FontSize(11);
+            addHeading.VerticalAlignment(xaml::VerticalAlignment::Center);
             addHeading.Foreground(SequenceBrushNamed(L"TextFillColorTertiaryBrush"));
 
+            // The design wraps these onto a second line rather than scrolling them sideways.
+            // A chip nobody can see is a step kind nobody knows exists.
             controls::StackPanel addChips{};
             addChips.Orientation(controls::Orientation::Horizontal);
             addChips.Spacing(6);
@@ -248,13 +257,65 @@ namespace winrt::midiglass::implementation
 
             // ---- what pressing the button does ----
 
-            controls::ComboBox modeCombo{};
-            modeCombo.Header(box_value(resources::GetString(L"SequenceModeHeader")));
-            modeCombo.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
-            modeCombo.Items().Append(box_value(resources::GetString(L"SequenceModeOnce")));
-            modeCombo.Items().Append(box_value(resources::GetString(L"SequenceModeWhileHeld")));
-            modeCombo.Items().Append(box_value(resources::GetString(L"SequenceModeToggle")));
-            modeCombo.SelectedIndex(static_cast<int32_t>(working->Mode));
+            // Three named choices rather than a drop-down, because the difference between them
+            // is the difference between a one-shot and something that keeps going, and that is
+            // worth reading without opening anything.
+            controls::RadioButtons modeChoices{};
+            modeChoices.Header(box_value(resources::GetString(L"SequenceModeHeader")));
+            modeChoices.MaxColumns(3);
+            modeChoices.Items().Append(box_value(resources::GetString(L"SequenceModeOnce")));
+            modeChoices.Items().Append(box_value(resources::GetString(L"SequenceModeWhileHeld")));
+            modeChoices.Items().Append(box_value(resources::GetString(L"SequenceModeToggle")));
+            modeChoices.SelectedIndex(static_cast<int32_t>(working->Mode));
+
+            // A wait is a scheduled state machine on the MIDI clock, not a sleeping thread, so
+            // twenty buttons can be mid-sequence while a fader still moves at full rate. Saying
+            // so here is what stops somebody avoiding waits out of caution.
+            controls::Border waitNote{};
+            waitNote.CornerRadius(xaml::CornerRadiusHelper::FromUniformRadius(9.0));
+            waitNote.Padding(xaml::ThicknessHelper::FromLengths(9.0, 2.0, 10.0, 3.0));
+            waitNote.VerticalAlignment(xaml::VerticalAlignment::Bottom);
+            waitNote.Background(SequenceBrushNamed(L"SystemFillColorCautionBackgroundBrush"));
+
+            {
+                controls::StackPanel noteRow{};
+                noteRow.Orientation(controls::Orientation::Horizontal);
+                noteRow.Spacing(6.0);
+
+                controls::FontIcon noteGlyph{};
+                noteGlyph.Glyph(L"\uE7BA");
+                noteGlyph.FontSize(11.0);
+                noteGlyph.Foreground(SequenceBrushNamed(L"SystemFillColorCautionBrush"));
+
+                controls::TextBlock noteText{};
+                noteText.Text(resources::GetString(L"SequenceWaitsDoNotBlock"));
+                noteText.FontSize(11.0);
+                noteText.Foreground(SequenceBrushNamed(L"SystemFillColorCautionBrush"));
+
+                noteRow.Children().Append(noteGlyph);
+                noteRow.Children().Append(noteText);
+                waitNote.Child(noteRow);
+            }
+
+            controls::Grid modeRow{};
+            modeRow.ColumnSpacing(10.0);
+
+            {
+                controls::ColumnDefinition stretch{};
+                stretch.Width(xaml::GridLengthHelper::FromValueAndType(1.0, xaml::GridUnitType::Star));
+
+                controls::ColumnDefinition fit{};
+                fit.Width(xaml::GridLengthHelper::FromValueAndType(0.0, xaml::GridUnitType::Auto));
+
+                modeRow.ColumnDefinitions().Append(stretch);
+                modeRow.ColumnDefinitions().Append(fit);
+
+                controls::Grid::SetColumn(modeChoices, 0);
+                controls::Grid::SetColumn(waitNote, 1);
+
+                modeRow.Children().Append(modeChoices);
+                modeRow.Children().Append(waitNote);
+            }
 
             // ---- the fields for the selected step ----
 
@@ -388,17 +449,116 @@ namespace winrt::midiglass::implementation
             auto downButton = iconButton(L'\uE74B', resources::GetString(L"StepMoveDown"));
             auto deleteButton = iconButton(L'\uE74D', resources::GetString(L"StepDelete"));
 
+            controls::Button duplicateButton{};
+            {
+                controls::StackPanel duplicateRow{};
+                duplicateRow.Orientation(controls::Orientation::Horizontal);
+                duplicateRow.Spacing(7.0);
+
+                controls::FontIcon duplicateGlyph{};
+                duplicateGlyph.Glyph(L"\uE8C8");
+                duplicateGlyph.FontSize(12.0);
+
+                controls::TextBlock duplicateText{};
+                duplicateText.Text(resources::GetString(L"StepDuplicate"));
+                duplicateText.FontSize(12.0);
+
+                duplicateRow.Children().Append(duplicateGlyph);
+                duplicateRow.Children().Append(duplicateText);
+
+                duplicateButton.Content(duplicateRow);
+
+                xaml::Automation::AutomationProperties::SetName(
+                    duplicateButton, resources::GetString(L"StepDuplicate"));
+            }
+
+            // The comp puts these above the list, because they act on the row that is selected
+            // in it and a toolbar below the thing it edits reads as belonging to what follows.
+            tools.Children().Append(duplicateButton);
             tools.Children().Append(upButton);
             tools.Children().Append(downButton);
             tools.Children().Append(deleteButton);
-            tools.Children().Append(summary);
 
-            root.Children().Append(addHeading);
-            root.Children().Append(addScroll);
+            controls::Grid toolbar{};
+            toolbar.ColumnSpacing(10.0);
+
+            controls::Button testButton{};
+            {
+                controls::StackPanel testRow{};
+                testRow.Orientation(controls::Orientation::Horizontal);
+                testRow.Spacing(7.0);
+
+                controls::FontIcon testGlyph{};
+                testGlyph.Glyph(L"\uE768");
+                testGlyph.FontSize(12.0);
+
+                controls::TextBlock testText{};
+                testText.Text(resources::GetString(L"SequenceTestIt"));
+                testText.FontSize(12.0);
+
+                testRow.Children().Append(testGlyph);
+                testRow.Children().Append(testText);
+
+                testButton.Content(testRow);
+
+                xaml::Automation::AutomationProperties::SetName(
+                    testButton, resources::GetString(L"SequenceTestIt"));
+            }
+
+            {
+                controls::ColumnDefinition left{};
+                left.Width(xaml::GridLengthHelper::FromValueAndType(0.0, xaml::GridUnitType::Auto));
+
+                controls::ColumnDefinition gap{};
+                gap.Width(xaml::GridLengthHelper::FromValueAndType(1.0, xaml::GridUnitType::Star));
+
+                controls::ColumnDefinition middle{};
+                middle.Width(xaml::GridLengthHelper::FromValueAndType(0.0, xaml::GridUnitType::Auto));
+
+                controls::ColumnDefinition right{};
+                right.Width(xaml::GridLengthHelper::FromValueAndType(0.0, xaml::GridUnitType::Auto));
+
+                toolbar.ColumnDefinitions().Append(left);
+                toolbar.ColumnDefinitions().Append(gap);
+                toolbar.ColumnDefinitions().Append(middle);
+                toolbar.ColumnDefinitions().Append(right);
+
+                summary.VerticalAlignment(xaml::VerticalAlignment::Center);
+
+                controls::Grid::SetColumn(tools, 0);
+                controls::Grid::SetColumn(summary, 2);
+                controls::Grid::SetColumn(testButton, 3);
+
+                toolbar.Children().Append(tools);
+                toolbar.Children().Append(summary);
+                toolbar.Children().Append(testButton);
+            }
+
+            controls::Grid addRow{};
+            addRow.ColumnSpacing(9.0);
+
+            {
+                controls::ColumnDefinition left{};
+                left.Width(xaml::GridLengthHelper::FromValueAndType(0.0, xaml::GridUnitType::Auto));
+
+                controls::ColumnDefinition rest{};
+                rest.Width(xaml::GridLengthHelper::FromValueAndType(1.0, xaml::GridUnitType::Star));
+
+                addRow.ColumnDefinitions().Append(left);
+                addRow.ColumnDefinitions().Append(rest);
+
+                controls::Grid::SetColumn(addHeading, 0);
+                controls::Grid::SetColumn(addScroll, 1);
+
+                addRow.Children().Append(addHeading);
+                addRow.Children().Append(addScroll);
+            }
+
+            root.Children().Append(toolbar);
+            root.Children().Append(addRow);
             root.Children().Append(list);
-            root.Children().Append(tools);
             root.Children().Append(fields);
-            root.Children().Append(modeCombo);
+            root.Children().Append(modeRow);
 
             dialog.Content(root);
 
@@ -878,9 +1038,32 @@ namespace winrt::midiglass::implementation
                     }
                 });
 
-            modeCombo.SelectionChanged([=](auto&&, auto&&)
+            duplicateButton.Click([=](auto&&, auto&&)
                 {
-                    auto const index = modeCombo.SelectedIndex();
+                    auto const index = *selected;
+
+                    if (index < 0 ||
+                        index >= static_cast<int32_t>(working->Steps.size()) ||
+                        working->Steps.size() >= glass::MaximumStepsPerSequence)
+                    {
+                        return;
+                    }
+
+                    // The copy lands directly under the original, which is what makes this the
+                    // fast way to build a run of similar steps.
+                    auto const copy = working->Steps[static_cast<size_t>(index)];
+
+                    working->Steps.insert(
+                        working->Steps.begin() + static_cast<ptrdiff_t>(index) + 1, copy);
+
+                    *selected = index + 1;
+
+                    refreshList();
+                });
+
+            modeChoices.SelectionChanged([=](auto&&, auto&&)
+                {
+                    auto const index = modeChoices.SelectedIndex();
 
                     if (index >= 0 && index <= 2)
                     {
@@ -888,9 +1071,64 @@ namespace winrt::midiglass::implementation
                     }
                 });
 
+            // Test it plays the copy on screen, not the one in the document, so what runs is the
+            // edit being judged. It borrows the editor's player and hands output back when the
+            // dialog closes, so leaving the dialog cannot leave the gate open.
+            auto const monitoredIndex = [this]() -> uint32_t
+                {
+                    if (auto const* const control = SingleSelectedControl())
+                    {
+                        if (auto const index = m_editor.ControlIndexOf(control->Id); index >= 0)
+                        {
+                            return static_cast<uint32_t>(index);
+                        }
+                    }
+
+                    return 0;
+                }();
+
+            auto testing = std::make_shared<bool>(false);
+
+            testButton.Click([=](auto&&, auto&&)
+                {
+                    StartPlayerForLearning();
+
+                    if (m_player == nullptr)
+                    {
+                        return;
+                    }
+
+                    if (*testing)
+                    {
+                        m_player->StopSequenceNow(monitoredIndex);
+                        m_player->SetOutputEnabled(m_tryMode);
+                        *testing = false;
+                        return;
+                    }
+
+                    m_player->SetOutputEnabled(true);
+
+                    if (m_player->RunSequenceNow(*working, monitoredIndex))
+                    {
+                        *testing = true;
+                    }
+                    else
+                    {
+                        m_player->SetOutputEnabled(m_tryMode);
+                    }
+                });
+
             refreshList();
 
             auto const result = co_await dialog.ShowAsync();
+
+            // Whatever the dialog is closed with, nothing is left running and the output gate
+            // goes back to whatever the mode says it should be.
+            if (m_player != nullptr)
+            {
+                m_player->StopSequenceNow(monitoredIndex);
+                m_player->SetOutputEnabled(m_tryMode);
+            }
 
             if (result != controls::ContentDialogResult::Primary)
             {

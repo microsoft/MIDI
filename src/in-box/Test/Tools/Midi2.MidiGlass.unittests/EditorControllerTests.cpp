@@ -1135,6 +1135,111 @@ void EditorControllerTests::RepeatIsOneUndoEntry()
     VERIFY_ARE_EQUAL(size_t{ 1 }, ControlCount(controller));
 }
 
+// ---- the label's own box ----
+
+void EditorControllerTests::SettingALabelBoxMakesThePlacementCustom()
+{
+    auto controller = LoadedController();
+
+    auto const id = PlaceExactly(controller, glass::ControlKind::Fader, 100, 100, 40, 180);
+
+    VERIFY_IS_TRUE(controller.SetControlLabelBox(id, -20.0, 185.0, 80.0, 32.0));
+
+    auto const* const control = ControlAt(controller, 0);
+
+    // The box and the placement say the same thing, so they move together.
+    VERIFY_IS_TRUE(control->LabelPlaced == glass::LabelPlacementOverride::Custom);
+    VERIFY_IS_TRUE(control->LabelLook.HasBox());
+    VERIFY_ARE_EQUAL(-20.0, control->LabelLook.BoxX);
+    VERIFY_ARE_EQUAL(80.0, control->LabelLook.BoxWidth);
+}
+
+void EditorControllerTests::ALabelBoxIsBounded()
+{
+    auto controller = LoadedController();
+
+    auto const id = PlaceExactly(controller, glass::ControlKind::Knob, 100, 100, 56, 56);
+
+    // Dragging a corner past its opposite must not leave a box of nothing, and nothing may ask
+    // for a text block the size of a wall.
+    VERIFY_IS_TRUE(controller.SetControlLabelBox(id, 0.0, 0.0, -50.0, 1.0e9));
+
+    auto const& look = ControlAt(controller, 0)->LabelLook;
+
+    VERIFY_ARE_EQUAL(glass::MinimumLabelBoxSize, look.BoxWidth);
+    VERIFY_ARE_EQUAL(glass::MaximumLabelBoxExtent, look.BoxHeight);
+
+    // Something that is not a number never reaches the document.
+    VERIFY_IS_FALSE(controller.SetControlLabelBox(
+        id, std::numeric_limits<double>::quiet_NaN(), 0.0, 40.0, 20.0));
+
+    VERIFY_ARE_EQUAL(glass::MinimumLabelBoxSize, ControlAt(controller, 0)->LabelLook.BoxWidth);
+}
+
+void EditorControllerTests::ClearingALabelBoxGoesBackToTheTheme()
+{
+    auto controller = LoadedController();
+
+    auto const id = PlaceExactly(controller, glass::ControlKind::Fader, 100, 100, 40, 180);
+
+    VERIFY_IS_TRUE(controller.SetControlLabelBox(id, -20.0, 185.0, 80.0, 32.0));
+    VERIFY_IS_TRUE(controller.ClearControlLabelBox(id));
+
+    auto const* const control = ControlAt(controller, 0);
+
+    VERIFY_IS_FALSE(control->LabelLook.HasBox());
+    VERIFY_IS_TRUE(control->LabelPlaced == glass::LabelPlacementOverride::UseTheme);
+
+    // Clearing what is already clear changes nothing, so it does not spend an undo entry.
+    VERIFY_IS_FALSE(controller.ClearControlLabelBox(id));
+}
+
+void EditorControllerTests::ChangingTheFontLeavesTheLabelBoxAlone()
+{
+    auto controller = LoadedController();
+
+    auto const id = PlaceExactly(controller, glass::ControlKind::Fader, 100, 100, 40, 180);
+
+    VERIFY_IS_TRUE(controller.SetControlLabelBox(id, -20.0, 185.0, 80.0, 32.0));
+
+    glass::LabelStyle style{};
+    style.FontSize = 18.0;
+    style.Italic = true;
+
+    VERIFY_IS_TRUE(controller.SetControlLabelStyle(id, style));
+
+    auto const& look = ControlAt(controller, 0)->LabelLook;
+
+    // The box has its own gesture. A change of font must never move the label somebody dragged.
+    VERIFY_ARE_EQUAL(18.0, look.FontSize);
+    VERIFY_IS_TRUE(look.Italic);
+    VERIFY_ARE_EQUAL(-20.0, look.BoxX);
+    VERIFY_ARE_EQUAL(80.0, look.BoxWidth);
+}
+
+void EditorControllerTests::ALabelDragIsOneUndoEntry()
+{
+    auto controller = LoadedController();
+
+    auto const id = PlaceExactly(controller, glass::ControlKind::Fader, 100, 100, 40, 180);
+
+    auto const depth = controller.UndoDepth();
+
+    // A drag is a run of pointer moves. Each one is a real edit, and together they are one
+    // thing somebody did, so Ctrl+Z takes the whole drag back rather than one pixel of it.
+    for (double width = 60.0; width <= 100.0; width += 10.0)
+    {
+        VERIFY_IS_TRUE(controller.SetControlLabelBox(id, -20.0, 185.0, width, 32.0));
+    }
+
+    controller.EndCoalescing();
+
+    VERIFY_ARE_EQUAL(depth + 1, controller.UndoDepth());
+
+    VERIFY_IS_TRUE(controller.Undo());
+    VERIFY_IS_FALSE(ControlAt(controller, 0)->LabelLook.HasBox());
+}
+
 // ---- keyboard order ----
 
 void EditorControllerTests::KeyboardOrderShiftsRatherThanDuplicating()

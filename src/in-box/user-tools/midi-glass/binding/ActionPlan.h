@@ -98,6 +98,13 @@ namespace glass
         _In_ uint8_t groupIndex,
         _Out_ std::vector<uint32_t>& words) noexcept;
 
+    // One sequence on its own, not hung off a control. The sequence editor's Test it uses this
+    // so that what runs is the edit on screen rather than the copy in the document.
+    ActionPlan BuildPlanForSequence(
+        _In_ LayoutDocument const& document,
+        _In_ std::vector<PreparedDestination> const& destinations,
+        _In_ Sequence const& sequence) noexcept;
+
     // Everything a layout's controls do that is not an immediate channel voice message, resolved
     // to indexes once at load. Looked up by control and trigger on the hot path.
     class ActionPlanSet

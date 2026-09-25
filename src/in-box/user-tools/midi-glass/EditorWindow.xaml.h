@@ -51,7 +51,25 @@ namespace winrt::midiglass::implementation
         void OnArrangeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnRepeatClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnPageSizeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnBackgroundClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnRenameLayoutClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        // Where this designer was when it was last closed, nudged along by the cascade offset
+        // so a second one does not land exactly on the first. Called before Activate.
+        void RestoreWindowPlacement(_In_ int32_t cascadeOffset);
+
+        void OnLayoutSettingsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCloseLayoutSettingsClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnSettingsAddPageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnSettingsAddDeviceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnSettingsLookAgainClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnShowAllGroupsChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        // ---- setting the keyboard order by clicking (EditorKeyboardOrder.cpp) ----
+
+        void OnKeyboardOrderDoneClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnKeyboardOrderRestartClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnKeyboardOrderCancelClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSortKeyboardOrderClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnRunClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
@@ -126,6 +144,8 @@ namespace winrt::midiglass::implementation
         void OnStyleChecked(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnStyleUnchecked(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnLabelPlacedChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnLabelWidthChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnLabelFontClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnShowValueChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
         void OnDuplicateSelectionClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -192,6 +212,11 @@ namespace winrt::midiglass::implementation
 
         void InitializeSplitters();
 
+        // The pane widths, the monitor height and the zoom, so the designer opens where it was
+        // left. The window's own position and size go with them.
+        void RestoreEditorPanes();
+        void SaveEditorPlacement();
+
         // Work area coordinates to page coordinates. The work area starts at a negative offset,
         // so this is not a no-op even at a scale of one.
         glass::EditRect WorkArea() const noexcept { return m_workArea; }
@@ -200,6 +225,25 @@ namespace winrt::midiglass::implementation
 
         std::wstring HitTest(_In_ double pageX, _In_ double pageY) const;
         glass::ResizeHandle HitTestHandle(_In_ double pageX, _In_ double pageY) const;
+
+        // The selected control's label gets its own outline and its own four corners, so a
+        // caption can be given room a narrow control does not have.
+        //
+        // A label under a control shares an edge with it, so both hit tests report how far away
+        // the handle was and the caller takes the nearer set.
+        glass::ResizeHandle HitTestHandle(_In_ double pageX, _In_ double pageY, _Out_ double& distance) const;
+        glass::ResizeHandle HitTestLabelHandle(_In_ double pageX, _In_ double pageY, _Out_ double& distance) const;
+
+        bool TryGetLabelRect(_In_ glass::Control const& control, _Out_ glass::EditRect& rect) const;
+        bool HitTestLabelBody(_In_ double pageX, _In_ double pageY) const;
+
+        bool BeginLabelDrag(_In_ glass::ResizeHandle handle);
+        void UpdateLabelDrag(_In_ double deltaX, _In_ double deltaY);
+
+        void SetKeyboardOrderMode(_In_ bool active);
+        void UpdateKeyboardOrderBar();
+        bool KeyboardOrderNumberFor(_In_ std::wstring const& id, _Out_ int32_t& number) const;
+        bool HandleKeyboardOrderPress(_In_ double pageX, _In_ double pageY);
 
         // ---- palette and outline (EditorOutline.cpp) ----
 
@@ -234,6 +278,10 @@ namespace winrt::midiglass::implementation
         void RefreshMessageKindFields(_In_ glass::ControlMessage const& message);
         void RefreshSequenceChoices(_In_ std::wstring const& selectedName);
 
+        // The groups the chosen device actually declares, so a control cannot be pointed at one
+        // that goes nowhere. m_groupChoices maps a combo index back to a group number.
+        void RefreshGroupChoices(_In_ std::wstring const& deviceName, _In_ int32_t selectedGroup);
+
         // Reads the selected message, hands it to the caller to change, and writes it back if
         // the caller says something changed. One path, so every payload field is saved the same
         // way and none of them can forget to mark the layout dirty.
@@ -260,11 +308,50 @@ namespace winrt::midiglass::implementation
 
         winrt::fire_and_forget ShowRepeatDialog();
         winrt::fire_and_forget ShowPageSizeDialog();
+
+        // The picture behind the whole surface, and how it fits. Choosing one that lives
+        // somewhere else says so first, because it gets copied beside the layout.
+        winrt::fire_and_forget ShowBackgroundDialog();
+
+        // The full path of a picture the customer chose, or empty. Does not copy anything.
+        std::wstring PickBackgroundImageFile();
         winrt::fire_and_forget ShowRenameDialog();
 
         // ---- the sequence editor (EditorSequenceDialog.cpp) ----
 
         winrt::fire_and_forget ShowSequenceDialog(_In_ std::wstring sequenceName);
+
+        // ---- the label font dialog (EditorFontDialog.cpp) ----
+
+        winrt::fire_and_forget ShowLabelFontDialog(_In_ std::wstring controlId);
+
+        // ---- layout settings: pages and the device table (EditorLayoutSettings.cpp) ----
+
+        void ShowLayoutSettings(_In_ bool show);
+        void RefreshLayoutSettings();
+        void RefreshSettingsPages();
+        void RefreshSettingsDevices();
+
+        // Runs an edit, then rebuilds the list it came from on the next tick.
+        void ApplyPageEdit(_In_ std::function<bool(glass::EditorController&)> edit);
+        void ApplyDeviceEdit(_In_ std::function<bool(glass::EditorController&)> edit);
+
+        // "Test MIDI 2.0 Loopback (A)" for a table entry called "Loopback A", or a line saying
+        // it is not here. The layout's own name is not an endpoint name, so without this nobody
+        // can tell what to point a monitor at.
+        winrt::hstring DescribeResolvedDevice(_In_ std::wstring const& deviceName) const;
+
+        // A picker over the endpoints that are present right now. Returns false when the
+        // customer backed out. The name is what the layout will call the device.
+        winrt::fire_and_forget ShowDevicePickerDialog(_In_ std::wstring existingName);
+
+        winrt::fire_and_forget ShowRenamePageDialog(_In_ size_t index);
+        winrt::fire_and_forget RemovePageWithConfirmation(_In_ size_t index);
+        winrt::fire_and_forget ShowRenameDeviceDialog(_In_ std::wstring deviceName);
+
+        // Asks first only when controls would be left pointing at a name that is no longer in
+        // the table.
+        winrt::fire_and_forget RemoveDeviceWithConfirmation(_In_ std::wstring deviceName);
 
         // A .syx file, read whole. False when nothing was chosen or the file is not usable.
         bool TryReadSystemExclusiveFile(_Out_ std::vector<uint8_t>& bytes);
@@ -318,6 +405,10 @@ namespace winrt::midiglass::implementation
             Move = 1,
             Resize = 2,
             RubberBand = 3,
+
+            // The label's own box, which moves and sizes independently of its control.
+            LabelMove = 4,
+            LabelResize = 5,
         };
 
         DragMode m_dragMode{ DragMode::None };
@@ -336,6 +427,18 @@ namespace winrt::midiglass::implementation
         // until the pointer comes up without having moved, or a drag of a multiple selection
         // would collapse it on the first press.
         std::wstring m_pendingSelectId{};
+
+        // Where the label box was when a label drag started, relative to its control.
+        glass::EditRect m_labelDragStart{};
+        glass::ResizeHandle m_labelDragHandle{ glass::ResizeHandle::None };
+        std::wstring m_labelDragId{};
+
+        std::vector<int32_t> m_groupChoices{};
+        bool m_showAllGroups{ false };
+
+        // The ids clicked so far while the keyboard order mode is up, in click order.
+        bool m_keyboardOrderMode{ false };
+        std::vector<std::wstring> m_keyboardOrderPicked{};
 
         // Click a palette entry, then click the page. Better with a pen or a finger, and it is
         // the path a keyboard user can take.

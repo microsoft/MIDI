@@ -609,6 +609,15 @@ namespace midiapp
         int32_t defaultWidth,
         int32_t defaultHeight) noexcept
     {
+        RestorePlacement(window, settings.WindowPlacement(), defaultWidth, defaultHeight);
+    }
+
+    void WindowChrome::RestorePlacement(
+        wux::Window const& window,
+        WindowPlacementInfo const& saved,
+        int32_t defaultWidth,
+        int32_t defaultHeight) noexcept
+    {
         try
         {
             if (window == nullptr)
@@ -622,8 +631,6 @@ namespace midiapp
             {
                 return;
             }
-
-            auto const& saved = settings.WindowPlacement();
 
             if (!saved.Valid)
             {
@@ -663,6 +670,53 @@ namespace midiapp
         }
     }
 
+    WindowPlacementInfo WindowChrome::CapturePlacement(wux::Window const& window) noexcept
+    {
+        WindowPlacementInfo info{};
+
+        try
+        {
+            if (window == nullptr)
+            {
+                return info;
+            }
+
+            HWND handle{ nullptr };
+
+            if (auto const native = window.try_as<::IWindowNative>())
+            {
+                LOG_IF_FAILED(native->get_WindowHandle(&handle));
+            }
+
+            if (handle == nullptr)
+            {
+                return info;
+            }
+
+            WINDOWPLACEMENT placement{};
+            placement.length = sizeof(placement);
+
+            if (!::GetWindowPlacement(handle, &placement))
+            {
+                return info;
+            }
+
+            // restore bounds, so a maximized window still reopens at its previous size
+            info.X = placement.rcNormalPosition.left;
+            info.Y = placement.rcNormalPosition.top;
+            info.Width = placement.rcNormalPosition.right - placement.rcNormalPosition.left;
+            info.Height = placement.rcNormalPosition.bottom - placement.rcNormalPosition.top;
+            info.Maximized = placement.showCmd == SW_SHOWMAXIMIZED;
+            info.Valid = true;
+        }
+        catch (...)
+        {
+            LOG_CAUGHT_EXCEPTION();
+        }
+
+        return info;
+    }
+
     void WindowChrome::SavePlacement() noexcept
     {
         try
@@ -672,36 +726,12 @@ namespace midiapp
                 return;
             }
 
-            HWND handle{ nullptr };
+            auto const info = CapturePlacement(m_elements.Window);
 
-            if (auto const native = m_elements.Window.try_as<::IWindowNative>())
+            if (info.Valid)
             {
-                LOG_IF_FAILED(native->get_WindowHandle(&handle));
+                m_settings->WindowPlacement(info);
             }
-
-            if (handle == nullptr)
-            {
-                return;
-            }
-
-            WINDOWPLACEMENT placement{};
-            placement.length = sizeof(placement);
-
-            if (!::GetWindowPlacement(handle, &placement))
-            {
-                return;
-            }
-
-            WindowPlacementInfo info{};
-
-            // restore bounds, so a maximized window still reopens at its previous size
-            info.X = placement.rcNormalPosition.left;
-            info.Y = placement.rcNormalPosition.top;
-            info.Width = placement.rcNormalPosition.right - placement.rcNormalPosition.left;
-            info.Height = placement.rcNormalPosition.bottom - placement.rcNormalPosition.top;
-            info.Maximized = placement.showCmd == SW_SHOWMAXIMIZED;
-
-            m_settings->WindowPlacement(info);
         }
         catch (...)
         {

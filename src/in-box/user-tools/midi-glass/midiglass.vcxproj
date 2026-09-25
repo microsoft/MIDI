@@ -155,6 +155,7 @@
     <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
     <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
     <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
+    <ClInclude Include="..\midi-app-shared\EndpointImageAssets.h" />
     <ClInclude Include="..\midi-app-shared\MidiServiceStatus.h" />
     <ClInclude Include="..\midi-app-shared\EndpointMatch.h" />
     <ClInclude Include="..\midi-app-shared\EndpointCatalog.h" />
@@ -224,6 +225,10 @@
     <ClCompile Include="EditorInspector.cpp" />
     <ClCompile Include="EditorOutline.cpp" />
     <ClCompile Include="EditorDialogs.cpp" />
+    <ClCompile Include="EditorBackgroundDialog.cpp" />
+    <ClCompile Include="EditorFontDialog.cpp" />
+    <ClCompile Include="EditorLayoutSettings.cpp" />
+    <ClCompile Include="EditorKeyboardOrder.cpp" />
     <ClCompile Include="EditorLearn.cpp" />
     <ClCompile Include="EditorSequenceDialog.cpp" />
     <ClCompile Include="EditorPanes.cpp" />
@@ -234,6 +239,7 @@
     <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
     <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
+    <ClCompile Include="..\midi-app-shared\EndpointImageAssets.cpp" />
     <ClCompile Include="..\midi-app-shared\MidiServiceStatus.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointMatch.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>

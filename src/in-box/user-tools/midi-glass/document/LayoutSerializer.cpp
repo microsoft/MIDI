@@ -32,6 +32,9 @@ namespace glass
         constexpr wchar_t KeyCanvasWidth[] = L"canvasWidth";
         constexpr wchar_t KeyCanvasHeight[] = L"canvasHeight";
         constexpr wchar_t KeyTheme[] = L"theme";
+        constexpr wchar_t KeyBackgroundImage[] = L"backgroundImage";
+        constexpr wchar_t KeyBackgroundFit[] = L"backgroundFit";
+        constexpr wchar_t KeyBackgroundOpacity[] = L"backgroundOpacity";
         constexpr wchar_t KeyScaleMode[] = L"scaleMode";
         constexpr wchar_t KeyCustomScalePercent[] = L"customScalePercent";
         constexpr wchar_t KeyCornerButton[] = L"fullScreenButtonCorner";
@@ -59,6 +62,19 @@ namespace glass
         constexpr wchar_t KeyAspectLocked[] = L"aspectLocked";
         constexpr wchar_t KeyStyle[] = L"style";
         constexpr wchar_t KeyLabelPlaced[] = L"labelPlaced";
+        constexpr wchar_t KeyLabelStyle[] = L"labelStyle";
+        constexpr wchar_t KeyFontFamily[] = L"fontFamily";
+        constexpr wchar_t KeyFontSize[] = L"fontSize";
+        constexpr wchar_t KeyFontWeight[] = L"fontWeight";
+        constexpr wchar_t KeyItalic[] = L"italic";
+        constexpr wchar_t KeyUnderline[] = L"underline";
+        constexpr wchar_t KeyColor[] = L"color";
+        constexpr wchar_t KeyWrap[] = L"wrap";
+        constexpr wchar_t KeyWidthPercent[] = L"widthPercent";
+        constexpr wchar_t KeyBoxX[] = L"boxX";
+        constexpr wchar_t KeyBoxY[] = L"boxY";
+        constexpr wchar_t KeyBoxWidth[] = L"boxWidth";
+        constexpr wchar_t KeyBoxHeight[] = L"boxHeight";
         constexpr wchar_t KeyShowValue[] = L"showValue";
         constexpr wchar_t KeyKeyboardOrder[] = L"keyboardOrder";
         constexpr wchar_t KeyPickup[] = L"pickup";
@@ -189,6 +205,13 @@ namespace glass
             { LabelPlacementOverride::Inside, L"inside" },
             { LabelPlacementOverride::Below, L"below" },
             { LabelPlacementOverride::None, L"none" },
+            { LabelPlacementOverride::Above, L"above" },
+            { LabelPlacementOverride::InsideTop, L"insideTop" },
+            { LabelPlacementOverride::InsideCenter, L"insideCenter" },
+            { LabelPlacementOverride::InsideBottom, L"insideBottom" },
+            { LabelPlacementOverride::VerticalLeft, L"verticalLeft" },
+            { LabelPlacementOverride::VerticalRight, L"verticalRight" },
+            { LabelPlacementOverride::Custom, L"custom" },
         };
 
         constexpr EnumName<ShowValueOverride> ShowValueNames[]
@@ -217,6 +240,14 @@ namespace glass
             { ScaleMode::ActualSize, L"actualSize" },
             { ScaleMode::FitToScreen, L"fitToScreen" },
             { ScaleMode::Custom, L"custom" },
+        };
+
+        constexpr EnumName<BackgroundFit> BackgroundFitNames[]
+        {
+            { BackgroundFit::Centered, L"centered" },
+            { BackgroundFit::Uniform, L"uniform" },
+            { BackgroundFit::Stretch, L"stretch" },
+            { BackgroundFit::Tiled, L"tiled" },
         };
 
         constexpr EnumName<ScreenCorner> CornerNames[]
@@ -683,6 +714,37 @@ namespace glass
             control.AspectLocked = ReadBool(object, KeyAspectLocked, false);
             control.Style = ValueOf(StyleNames, ReadString(object, KeyStyle), ControlStyleOverride::UseTheme);
             control.LabelPlaced = ValueOf(LabelPlacedNames, ReadString(object, KeyLabelPlaced), LabelPlacementOverride::UseTheme);
+
+            if (auto const style = ReadObject(object, KeyLabelStyle))
+            {
+                control.LabelLook.FontFamily = ReadString(style, KeyFontFamily);
+                control.LabelLook.FontSize = std::clamp(ReadNumber(style, KeyFontSize, 0.0), 0.0, 200.0);
+                control.LabelLook.FontWeight = ReadInt(style, KeyFontWeight, 0, 0, 1000);
+                control.LabelLook.Italic = ReadBool(style, KeyItalic, false);
+                control.LabelLook.Underline = ReadBool(style, KeyUnderline, false);
+                control.LabelLook.Color = ReadString(style, KeyColor);
+                control.LabelLook.Wrap = ReadBool(style, KeyWrap, true);
+                control.LabelLook.WidthPercent = std::clamp(ReadNumber(style, KeyWidthPercent, 100.0), 10.0, 400.0);
+
+                // Bounded the way a control's bounds are. A box from a stranger's file must not
+                // be able to ask for a text block the size of a wall.
+                control.LabelLook.BoxX = std::clamp(ReadNumber(style, KeyBoxX, 0.0), -MaximumLabelBoxExtent, MaximumLabelBoxExtent);
+                control.LabelLook.BoxY = std::clamp(ReadNumber(style, KeyBoxY, 0.0), -MaximumLabelBoxExtent, MaximumLabelBoxExtent);
+                control.LabelLook.BoxWidth = std::clamp(ReadNumber(style, KeyBoxWidth, 0.0), 0.0, MaximumLabelBoxExtent);
+                control.LabelLook.BoxHeight = std::clamp(ReadNumber(style, KeyBoxHeight, 0.0), 0.0, MaximumLabelBoxExtent);
+
+                control.LabelLook.Unknown = CaptureUnknown(style,
+                    { KeyFontFamily, KeyFontSize, KeyFontWeight, KeyItalic, KeyUnderline,
+                      KeyColor, KeyWrap, KeyWidthPercent,
+                      KeyBoxX, KeyBoxY, KeyBoxWidth, KeyBoxHeight });
+            }
+
+            // A custom placement with no box is a file that says one thing and carries another,
+            // so it falls back to the theme rather than drawing nothing.
+            if (control.LabelPlaced == LabelPlacementOverride::Custom && !control.LabelLook.HasBox())
+            {
+                control.LabelPlaced = LabelPlacementOverride::UseTheme;
+            }
             control.ShowValue = ValueOf(ShowValueNames, ReadString(object, KeyShowValue), ShowValueOverride::UseTheme);
             control.KeyboardOrder = ReadInt(object, KeyKeyboardOrder, 0, 0, 0x7FFFFFFF);
             control.Pickup = ValueOf(PickupNames, ReadString(object, KeyPickup), PickupMode::Jump);
@@ -714,7 +776,7 @@ namespace glass
                   KeyLiteralColor, KeyAspectLocked, KeyKeyboardOrder, KeyPickup, KeyDefaultValue,
                   KeyReturnsToDefault,
                   KeySendsValueOnStart, KeySendInterval, KeyMessages, KeyFeedback,
-                  KeyStyle, KeyLabelPlaced, KeyShowValue });
+                  KeyStyle, KeyLabelPlaced, KeyLabelStyle, KeyShowValue });
 
             return control;
         }
@@ -838,6 +900,36 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    std::wstring SanitizeFileName(std::wstring name) noexcept
+    {
+        if (name.empty() || name.size() > 260)
+        {
+            return {};
+        }
+
+        // Refused whole rather than trimmed into something that looks safe.
+        if (name.find_first_of(LR"(\/:*?"<>|)") != std::wstring::npos)
+        {
+            return {};
+        }
+
+        if (name == L"." || name == L".." || name.find(L"..") != std::wstring::npos)
+        {
+            return {};
+        }
+
+        for (auto const character : name)
+        {
+            if (character < L' ')
+            {
+                return {};
+            }
+        }
+
+        return name;
+    }
+
+    _Use_decl_annotations_
     ReadResult ReadLayoutFromJson(std::wstring_view json) noexcept
     {
         ReadResult result{};
@@ -882,6 +974,12 @@ namespace glass
             document.CanvasHeight = ReadInt(root, KeyCanvasHeight, document.PageHeight, 1, 32768);
 
             document.ThemeName = ReadString(root, KeyTheme);
+
+            // A bare file name only. A path from a stranger's file is how a layout turns into a
+            // way to read something off this PC, so anything with a separator in it is refused.
+            document.BackgroundImage = SanitizeFileName(ReadString(root, KeyBackgroundImage));
+            document.BackgroundFitMode = ValueOf(BackgroundFitNames, ReadString(root, KeyBackgroundFit), BackgroundFit::Uniform);
+            document.BackgroundOpacity = std::clamp(ReadNumber(root, KeyBackgroundOpacity, 1.0), 0.0, 1.0);
 
             document.Scale = ValueOf(ScaleModeNames, ReadString(root, KeyScaleMode), ScaleMode::ActualSize);
             document.CustomScalePercent = std::clamp(ReadNumber(root, KeyCustomScalePercent, 100.0), 10.0, 400.0);
@@ -941,6 +1039,7 @@ namespace glass
             document.Unknown = CaptureUnknown(root,
                 { KeyComment, KeyFileVersion, KeyName, KeyDescription, KeyCreated, KeyModified,
                   KeyPageWidth, KeyPageHeight, KeyCanvasWidth, KeyCanvasHeight, KeyTheme,
+                  KeyBackgroundImage, KeyBackgroundFit, KeyBackgroundOpacity,
                   KeyScaleMode, KeyCustomScalePercent, KeyCornerButton, KeyPreferredDisplay,
                   KeySuppressStartup, KeyVirtualDevice, KeyFavorite, KeyTempo, KeyDevices, KeyPages, KeySequences });
 
@@ -1038,6 +1137,37 @@ namespace glass
                 writer.Write(KeyLabelPlaced, NameOf(LabelPlacedNames, control.LabelPlaced));
             }
 
+            // Written only when something differs from the plain default, so a layout nobody
+            // has styled carries none of it and a theme change still reaches every control.
+            auto const& look = control.LabelLook;
+
+            if (!look.FontFamily.empty() || look.FontSize != 0.0 || look.FontWeight != 0 ||
+                look.Italic || look.Underline || !look.Color.empty() || !look.Wrap ||
+                look.WidthPercent != 100.0 || look.HasBox() || look.Unknown != nullptr)
+            {
+                writer.BeginObject(KeyLabelStyle);
+
+                writer.Write(KeyFontFamily, look.FontFamily);
+                writer.Write(KeyFontSize, look.FontSize);
+                writer.Write(KeyFontWeight, static_cast<int64_t>(look.FontWeight));
+                writer.Write(KeyItalic, look.Italic);
+                writer.Write(KeyUnderline, look.Underline);
+                writer.Write(KeyColor, look.Color);
+                writer.Write(KeyWrap, look.Wrap);
+                writer.Write(KeyWidthPercent, look.WidthPercent);
+
+                if (look.HasBox())
+                {
+                    writer.Write(KeyBoxX, look.BoxX);
+                    writer.Write(KeyBoxY, look.BoxY);
+                    writer.Write(KeyBoxWidth, look.BoxWidth);
+                    writer.Write(KeyBoxHeight, look.BoxHeight);
+                }
+
+                WriteUnknown(writer, look.Unknown);
+                writer.EndObject();
+            }
+
             if (control.ShowValue != ShowValueOverride::UseTheme)
             {
                 writer.Write(KeyShowValue, NameOf(ShowValueNames, control.ShowValue));
@@ -1100,6 +1230,13 @@ namespace glass
             writer.Write(KeyCanvasWidth, static_cast<int64_t>(document.CanvasWidth));
             writer.Write(KeyCanvasHeight, static_cast<int64_t>(document.CanvasHeight));
             writer.Write(KeyTheme, document.ThemeName);
+
+            if (!document.BackgroundImage.empty())
+            {
+                writer.Write(KeyBackgroundImage, document.BackgroundImage);
+                writer.Write(KeyBackgroundFit, NameOf(BackgroundFitNames, document.BackgroundFitMode));
+                writer.Write(KeyBackgroundOpacity, document.BackgroundOpacity);
+            }
             writer.Write(KeyScaleMode, NameOf(ScaleModeNames, document.Scale));
             writer.Write(KeyCustomScalePercent, document.CustomScalePercent);
             writer.Write(KeyCornerButton, NameOf(CornerNames, document.FullScreenButtonCorner));

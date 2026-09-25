@@ -45,6 +45,23 @@ namespace midiglass
         int64_t LayoutLastUsed(_In_ std::wstring const& layoutFilePath) const noexcept;
         void RecordLayoutUse(_In_ std::wstring const& layoutFilePath) noexcept;
 
+        // The designer keeps its own window placement and its own pane sizes. It is a different
+        // window doing a different job, so sharing the library's would make opening one move the
+        // other.
+        WindowPlacementInfo const& EditorPlacement() const noexcept { return m_editorPlacement; }
+        void EditorPlacement(_In_ WindowPlacementInfo const& value) noexcept;
+
+        int32_t EditorLeftPaneWidth() const noexcept { return m_editorLeftPaneWidth; }
+        int32_t EditorInspectorWidth() const noexcept { return m_editorInspectorWidth; }
+        int32_t EditorMonitorHeight() const noexcept { return m_editorMonitorHeight; }
+        int32_t EditorZoomPercent() const noexcept { return m_editorZoomPercent; }
+
+        void EditorPaneSizes(
+            _In_ int32_t leftPaneWidth,
+            _In_ int32_t inspectorWidth,
+            _In_ int32_t monitorHeight,
+            _In_ int32_t zoomPercent) noexcept;
+
     private:
         AppSettings() noexcept;
 
@@ -56,6 +73,15 @@ namespace midiglass
 
         LibrarySort m_librarySort{ LibrarySort::LastUsed };
         bool m_libraryShowsList{ false };
+
+        WindowPlacementInfo m_editorPlacement{};
+
+        // Zero means "never set", so the first run uses what the XAML says rather than a number
+        // invented here that would then be wrong in two places.
+        int32_t m_editorLeftPaneWidth{ 0 };
+        int32_t m_editorInspectorWidth{ 0 };
+        int32_t m_editorMonitorHeight{ 0 };
+        int32_t m_editorZoomPercent{ 0 };
 
         std::vector<std::pair<std::wstring, int64_t>> m_recentLayouts{};
     };

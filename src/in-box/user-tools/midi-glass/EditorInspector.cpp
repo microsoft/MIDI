@@ -100,14 +100,23 @@ namespace winrt::midiglass::implementation
         constexpr glass::LabelPlacementOverride LabelPlacedOrder[]
         {
             glass::LabelPlacementOverride::UseTheme,
+            glass::LabelPlacementOverride::Above,
             glass::LabelPlacementOverride::Below,
-            glass::LabelPlacementOverride::Inside,
+            glass::LabelPlacementOverride::InsideTop,
+            glass::LabelPlacementOverride::InsideCenter,
+            glass::LabelPlacementOverride::InsideBottom,
+            glass::LabelPlacementOverride::VerticalLeft,
+            glass::LabelPlacementOverride::VerticalRight,
+            glass::LabelPlacementOverride::Custom,
             glass::LabelPlacementOverride::None,
         };
 
         constexpr wchar_t const* LabelPlacedResourceKeys[]
         {
-            L"LabelPlacedTheme", L"LabelPlacedBelow", L"LabelPlacedInside", L"LabelPlacedNone",
+            L"LabelPlacedTheme", L"LabelPlacedAbove", L"LabelPlacedBelow",
+            L"LabelPlacedInsideTop", L"LabelPlacedInsideCenter", L"LabelPlacedInsideBottom",
+            L"LabelPlacedVerticalLeft", L"LabelPlacedVerticalRight",
+            L"LabelPlacedCustom", L"LabelPlacedNone",
         };
 
         static_assert(std::size(LabelPlacedOrder) == std::size(LabelPlacedResourceKeys));
@@ -147,6 +156,38 @@ namespace winrt::midiglass::implementation
             }
 
             return 0;
+        }
+
+        // What the Font button has been set to, in one line. Everything left at the theme's
+        // value says so rather than being listed, because a caption that always reads the same
+        // tells nobody anything.
+        winrt::hstring DescribeLabelFont(_In_ glass::LabelStyle const& style)
+        {
+            std::vector<std::wstring> parts{};
+
+            if (!style.FontFamily.empty()) { parts.push_back(style.FontFamily); }
+            if (style.FontSize > 0.0) { parts.push_back(std::to_wstring(static_cast<int32_t>(style.FontSize)) + L" px"); }
+            if (style.FontWeight > 0) { parts.push_back(std::to_wstring(style.FontWeight)); }
+            if (style.Italic) { parts.push_back(std::wstring{ resources::GetString(L"FontItalic") }); }
+            if (style.Underline) { parts.push_back(std::wstring{ resources::GetString(L"FontUnderline") }); }
+            if (!style.Color.empty()) { parts.push_back(style.Color); }
+            if (!style.Wrap) { parts.push_back(std::wstring{ resources::GetString(L"FontNoWrap") }); }
+            if (style.HasBox()) { parts.push_back(std::wstring{ resources::GetString(L"FontCustomBox") }); }
+
+            if (parts.empty())
+            {
+                return resources::GetString(L"FontAllFromTheme");
+            }
+
+            std::wstring text{};
+
+            for (auto const& part : parts)
+            {
+                if (!text.empty()) { text += L" · "; }
+                text += part;
+            }
+
+            return winrt::hstring{ text };
         }
 
         winrt::Windows::UI::Color ToColor(_In_ glass::ThemeColor const& color) noexcept
@@ -205,12 +246,6 @@ namespace winrt::midiglass::implementation
             }
 
             GroupCombo().Items().Append(box_value(resources::GetString(L"GroupAll")));
-
-            for (int32_t group = 1; group <= glass::MaximumGroupCount; ++group)
-            {
-                GroupCombo().Items().Append(box_value(
-                    resources::FormatString(L"GroupNumberFormat", std::to_wstring(group))));
-            }
 
             for (int32_t channel = 1; channel <= 16; ++channel)
             {
@@ -363,6 +398,9 @@ namespace winrt::midiglass::implementation
                         ? std::wstring{ m_editor.Document().Name }
                         : page->Name });
 
+                // "11 selected" is a count, not a name. Nothing to rename, so nothing to type in.
+                InspectorTitleText().IsReadOnly(selectedCount > 1 || page == nullptr);
+
                 // Emptied and greyed, not left as they were. Leaving the last control's numbers
                 // under a heading that says "Page" is what made three disabled tabs look like
                 // three broken ones.
@@ -371,6 +409,7 @@ namespace winrt::midiglass::implementation
                 BoundsWidth().Text(L"");
                 BoundsHeight().Text(L"");
                 LabelBox().Text(L"");
+                LabelFontCaption().Text(L"");
 
                 LookPane().IsEnabled(false);
                 MidiPane().IsEnabled(false);
@@ -398,6 +437,8 @@ namespace winrt::midiglass::implementation
                     ? std::wstring{ resources::GetString(L"InspectorUnnamedControl") }
                     : control->Label });
 
+            InspectorTitleText().IsReadOnly(false);
+
             BoundsX().Text(winrt::hstring{ FormatNumber(control->X) });
             BoundsY().Text(winrt::hstring{ FormatNumber(control->Y) });
             BoundsWidth().Text(winrt::hstring{ FormatNumber(control->Width) });
@@ -409,8 +450,15 @@ namespace winrt::midiglass::implementation
             KindCombo().SelectedIndex(kindIndex);
             PickupCombo().SelectedIndex(static_cast<int32_t>(control->Pickup));
 
-            LabelPlacedCombo().SelectedIndex(IndexOf(LabelPlacedOrder, control->LabelPlaced));
+            LabelPlacedCombo().SelectedIndex(IndexOf(LabelPlacedOrder,
+                control->LabelPlaced == glass::LabelPlacementOverride::Inside
+                    ? glass::LabelPlacementOverride::InsideBottom
+                    : control->LabelPlaced));
+
             ShowValueCombo().SelectedIndex(IndexOf(ShowValueOrder, control->ShowValue));
+
+            LabelWidthBox().Value(control->LabelLook.WidthPercent);
+            LabelFontCaption().Text(DescribeLabelFont(control->LabelLook));
 
             SyncStyleSegments(control->Style);
             RefreshPreview(*control);
@@ -549,8 +597,10 @@ namespace winrt::midiglass::implementation
             }
 
             DeviceCombo().SelectedIndex(deviceIndex);
+            DeviceResolvedText().Text(DescribeResolvedDevice(message.DeviceName));
 
-            GroupCombo().SelectedIndex(message.GroupIndex == glass::AllGroups ? 0 : message.GroupIndex + 1);
+            RefreshGroupChoices(message.DeviceName, message.GroupIndex);
+
             ChannelCombo().SelectedIndex(std::clamp(message.ChannelIndex, 0, 15));
             MessageNumberBox().Value(message.Number);
 
@@ -559,6 +609,93 @@ namespace winrt::midiglass::implementation
             m_updatingInspector = previous;
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to refresh the message fields.")
+    }
+
+    // The groups this message could sensibly go to. A device that declares four of them has
+    // twelve that go nowhere, and a control pointed at one of those is a control that silently
+    // does nothing. The group the message already uses is always offered, so opening a layout
+    // built against other hardware never quietly rewrites it.
+    _Use_decl_annotations_
+    void EditorWindow::RefreshGroupChoices(std::wstring const& deviceName, int32_t selectedGroup)
+    {
+        auto const previous = m_updatingInspector;
+        m_updatingInspector = true;
+
+        std::array<bool, glass::MaximumGroupCount> offered{};
+        offered.fill(true);
+
+        auto declared = false;
+
+        if (!m_showAllGroups)
+        {
+            if (auto const* const device = m_editor.Document().FindDevice(deviceName))
+            {
+                auto const resolved = midiapp::EndpointCatalog::Current().Resolve(
+                    device->Match, device->MatchMode, device->Match.TransportSuppliedEndpointName);
+
+                if (resolved.has_value() && resolved->DestinationGroupCount() > 0)
+                {
+                    offered = resolved->DestinationGroups;
+                    declared = true;
+                }
+            }
+        }
+
+        GroupCombo().Items().Clear();
+        m_groupChoices.clear();
+
+        GroupCombo().Items().Append(box_value(resources::GetString(L"GroupAll")));
+        m_groupChoices.push_back(glass::AllGroups);
+
+        auto chosen = 0;
+
+        for (int32_t group = 0; group < glass::MaximumGroupCount; ++group)
+        {
+            if (!offered[static_cast<size_t>(group)] && group != selectedGroup)
+            {
+                continue;
+            }
+
+            GroupCombo().Items().Append(box_value(
+                resources::FormatString(L"GroupNumberFormat", std::to_wstring(group + 1))));
+
+            m_groupChoices.push_back(group);
+
+            if (group == selectedGroup)
+            {
+                chosen = static_cast<int32_t>(m_groupChoices.size()) - 1;
+            }
+        }
+
+        GroupCombo().SelectedIndex(chosen);
+
+        AllGroupsCheck().IsChecked(m_showAllGroups);
+
+        GroupSourceText().Text(declared
+            ? resources::FormatString(
+                L"GroupsFromDeviceFormat",
+                std::to_wstring(static_cast<int32_t>(m_groupChoices.size()) - 1))
+            : winrt::hstring{});
+
+        m_updatingInspector = previous;
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnShowAllGroupsChanged(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector || !m_loaded)
+        {
+            return;
+        }
+
+        m_showAllGroups = AllGroupsCheck().IsChecked().GetBoolean();
+
+        RefreshMessageFields();
     }
 
     // Which of the message rows make sense for this kind. A dump has no controller number and a
@@ -595,9 +732,9 @@ namespace winrt::midiglass::implementation
         auto const usesGroup = usesDevice;
 
         show(MessageDeviceLabel(), usesDevice);
-        show(DeviceCombo(), usesDevice);
+        show(DevicePanel(), usesDevice);
         show(MessageGroupLabel(), usesGroup);
-        show(GroupCombo(), usesGroup);
+        show(GroupPanel(), usesGroup);
         show(MessageChannelLabel(), isChannelVoice);
         show(ChannelCombo(), isChannelVoice);
         show(MessageNumberLabel(), isChannelVoice);
@@ -744,6 +881,68 @@ namespace winrt::midiglass::implementation
     _Use_decl_annotations_
     void EditorWindow::OnLabelChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args)
     {
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        // The name is edited in two places — the heading and the Label row — and they have to
+        // stay in step without setting each other off.
+        auto const fromTitle = sender.try_as<controls::TextBox>() == InspectorTitleText();
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control == nullptr)
+        {
+            // With nothing selected the heading is the PAGE's name, so typing in it renames the
+            // page. Doing nothing here is what made a rename look as though it had taken and
+            // then vanish the moment anything refreshed the box.
+            if (fromTitle && m_editor.Selection().empty())
+            {
+                if (m_editor.RenamePage(m_editor.PageIndex(), std::wstring{ InspectorTitleText().Text() }))
+                {
+                    RebuildPageRail();
+                    MarkChanged();
+                }
+            }
+
+            return;
+        }
+
+        auto const text = std::wstring{ fromTitle ? InspectorTitleText().Text() : LabelBox().Text() };
+
+        auto const id = control->Id;
+
+        if (m_editor.SetControlLabel(id, text))
+        {
+            RebuildSurface();
+            RebuildOutline();
+
+            auto const previous = m_updatingInspector;
+            m_updatingInspector = true;
+
+            if (fromTitle)
+            {
+                LabelBox().Text(winrt::hstring{ text });
+            }
+            else
+            {
+                InspectorTitleText().Text(winrt::hstring{ text });
+            }
+
+            m_updatingInspector = previous;
+
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLabelWidthChanged(
+        controls::NumberBox const& sender,
+        controls::NumberBoxValueChangedEventArgs const& args)
+    {
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
 
@@ -753,22 +952,32 @@ namespace winrt::midiglass::implementation
         }
 
         auto const* const control = SingleSelectedControl();
+        auto const value = LabelWidthBox().Value();
 
-        if (control == nullptr)
+        if (control == nullptr || !std::isfinite(value))
         {
             return;
         }
 
-        auto const id = control->Id;
+        auto style = control->LabelLook;
+        style.WidthPercent = value;
 
-        if (m_editor.SetControlLabel(id, std::wstring{ LabelBox().Text() }))
+        if (m_editor.SetControlLabelStyle(control->Id, style))
         {
             RebuildSurface();
-            RebuildOutline();
-
-            InspectorTitleText().Text(LabelBox().Text());
-
             MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLabelFontClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (auto const* const control = SingleSelectedControl())
+        {
+            ShowLabelFontDialog(control->Id);
         }
     }
 
@@ -923,10 +1132,33 @@ namespace winrt::midiglass::implementation
             return;
         }
 
-        if (m_editor.SetControlLabelPlacement(control->Id, LabelPlacedOrder[index]))
+        auto const placement = LabelPlacedOrder[index];
+
+        auto const id = control->Id;
+
+        // Choosing a placement from the list is choosing a rule, so it throws away the box that
+        // was dragged by hand. Custom itself is not choosable from here: it only means "wherever
+        // the handles were dragged to", and with no box there is nothing for it to mean.
+        auto changed = placement == glass::LabelPlacementOverride::Custom
+            ? false
+            : m_editor.ClearControlLabelBox(id);
+
+        if (placement != glass::LabelPlacementOverride::Custom)
+        {
+            changed = m_editor.SetControlLabelPlacement(id, placement) || changed;
+        }
+
+        if (changed)
         {
             RebuildSurface();
+            RefreshInspector();
             MarkChanged();
+        }
+        else
+        {
+            // Picking Custom with nothing dragged leaves the list saying something the control
+            // is not doing, so it snaps back to what is true.
+            RefreshInspector();
         }
     }
 
@@ -1323,9 +1555,11 @@ namespace winrt::midiglass::implementation
                 message.DeviceName = m_editor.Document().Devices[static_cast<size_t>(deviceIndex)].Name;
             }
 
-            if (groupIndex >= 0)
+            // The list only holds the groups the device declares, so its index is not the group
+            // number. m_groupChoices is what turns one into the other.
+            if (groupIndex >= 0 && groupIndex < static_cast<int32_t>(m_groupChoices.size()))
             {
-                message.GroupIndex = groupIndex == 0 ? glass::AllGroups : groupIndex - 1;
+                message.GroupIndex = m_groupChoices[static_cast<size_t>(groupIndex)];
             }
 
             if (channelIndex >= 0)

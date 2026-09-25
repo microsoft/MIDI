@@ -18,6 +18,17 @@ namespace midiglass
         constexpr wchar_t ValueLibraryShowsList[] = L"LibraryShowsList";
         constexpr wchar_t ValueRecentLayouts[] = L"RecentLayouts";
 
+        constexpr wchar_t ValueEditorX[] = L"EditorWindowX";
+        constexpr wchar_t ValueEditorY[] = L"EditorWindowY";
+        constexpr wchar_t ValueEditorWidth[] = L"EditorWindowWidth";
+        constexpr wchar_t ValueEditorHeight[] = L"EditorWindowHeight";
+        constexpr wchar_t ValueEditorMaximized[] = L"EditorWindowMaximized";
+
+        constexpr wchar_t ValueEditorLeftPane[] = L"EditorLeftPaneWidth";
+        constexpr wchar_t ValueEditorInspector[] = L"EditorInspectorWidth";
+        constexpr wchar_t ValueEditorMonitor[] = L"EditorMonitorHeight";
+        constexpr wchar_t ValueEditorZoom[] = L"EditorZoomPercent";
+
         // One value holding "path<tab>ticks" a line at a time, rather than a value per layout.
         // A folder of layouts should not leave a registry key nobody can read.
         constexpr wchar_t FieldSeparator = L'\t';
@@ -55,7 +66,53 @@ namespace midiglass
 
         m_libraryShowsList = ReadDword(ValueLibraryShowsList, 0) != 0;
 
+        m_editorPlacement.X = static_cast<int32_t>(ReadDword(ValueEditorX, 0));
+        m_editorPlacement.Y = static_cast<int32_t>(ReadDword(ValueEditorY, 0));
+        m_editorPlacement.Width = static_cast<int32_t>(ReadDword(ValueEditorWidth, 0));
+        m_editorPlacement.Height = static_cast<int32_t>(ReadDword(ValueEditorHeight, 0));
+        m_editorPlacement.Maximized = ReadDword(ValueEditorMaximized, 0) != 0;
+
+        m_editorPlacement.Valid =
+            m_editorPlacement.Width >= MinimumWindowWidth &&
+            m_editorPlacement.Height >= MinimumWindowHeight;
+
+        m_editorLeftPaneWidth = static_cast<int32_t>(ReadDword(ValueEditorLeftPane, 0));
+        m_editorInspectorWidth = static_cast<int32_t>(ReadDword(ValueEditorInspector, 0));
+        m_editorMonitorHeight = static_cast<int32_t>(ReadDword(ValueEditorMonitor, 0));
+        m_editorZoomPercent = static_cast<int32_t>(ReadDword(ValueEditorZoom, 0));
+
         LoadRecentLayouts();
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::EditorPlacement(WindowPlacementInfo const& value) noexcept
+    {
+        m_editorPlacement = value;
+        m_editorPlacement.Valid = true;
+
+        WriteDword(ValueEditorX, static_cast<uint32_t>(value.X));
+        WriteDword(ValueEditorY, static_cast<uint32_t>(value.Y));
+        WriteDword(ValueEditorWidth, static_cast<uint32_t>(value.Width));
+        WriteDword(ValueEditorHeight, static_cast<uint32_t>(value.Height));
+        WriteDword(ValueEditorMaximized, value.Maximized ? 1u : 0u);
+    }
+
+    _Use_decl_annotations_
+    void AppSettings::EditorPaneSizes(
+        int32_t leftPaneWidth,
+        int32_t inspectorWidth,
+        int32_t monitorHeight,
+        int32_t zoomPercent) noexcept
+    {
+        m_editorLeftPaneWidth = leftPaneWidth;
+        m_editorInspectorWidth = inspectorWidth;
+        m_editorMonitorHeight = monitorHeight;
+        m_editorZoomPercent = zoomPercent;
+
+        WriteDword(ValueEditorLeftPane, static_cast<uint32_t>(leftPaneWidth));
+        WriteDword(ValueEditorInspector, static_cast<uint32_t>(inspectorWidth));
+        WriteDword(ValueEditorMonitor, static_cast<uint32_t>(monitorHeight));
+        WriteDword(ValueEditorZoom, static_cast<uint32_t>(zoomPercent));
     }
 
     _Use_decl_annotations_

@@ -15,6 +15,8 @@
 #include "pch.h"
 #include "EditorWindow.xaml.h"
 
+#include "AppSettings.h"
+
 namespace winrt::midiglass::implementation
 {
     namespace
@@ -25,6 +27,15 @@ namespace winrt::midiglass::implementation
 
         constexpr double MinimumMonitorHeight = 28.0;
         constexpr double MaximumMonitorHeight = 420.0;
+
+        // The same bounds the canvas enforces, so a remembered zoom cannot come back as one the
+        // zoom buttons would refuse.
+        constexpr double MinimumRememberedScale = 0.1;
+        constexpr double MaximumRememberedScale = 2.0;
+
+        // What the designer opens at the very first time, before there is anything to remember.
+        constexpr int32_t DefaultEditorWidth = 1500;
+        constexpr int32_t DefaultEditorHeight = 950;
 
         // The width the left pane folds down to: one column of icon buttons.
         constexpr double CollapsedRailWidth = 40.0;
@@ -187,6 +198,96 @@ namespace winrt::midiglass::implementation
             apply(MonitorSplitter(), false);
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to give the dividers a resize cursor.")
+    }
+
+    // ---------------------------------------------------------------- remembering the place
+
+    _Use_decl_annotations_
+    void EditorWindow::RestoreWindowPlacement(int32_t cascadeOffset)
+    {
+        try
+        {
+            auto saved = ::midiglass::AppSettings::Current().EditorPlacement();
+
+            // A cascade is only worth anything on a window that is not maximized, and only when
+            // there is a saved position to move away from.
+            if (saved.Valid && cascadeOffset > 0 && !saved.Maximized)
+            {
+                saved.X += cascadeOffset;
+                saved.Y += cascadeOffset;
+            }
+
+            midiapp::WindowChrome::RestorePlacement(
+                *this, saved, DefaultEditorWidth, DefaultEditorHeight);
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to restore the editor window placement.")
+    }
+
+    // The dividers and the zoom are part of where somebody left off, the same as the window
+    // position. Restoring one without the other still means rearranging before starting.
+    void EditorWindow::RestoreEditorPanes()
+    {
+        try
+        {
+            auto const& settings = ::midiglass::AppSettings::Current();
+
+            if (auto const width = settings.EditorLeftPaneWidth(); width > 0)
+            {
+                LeftColumn().Width(xaml::GridLengthHelper::FromPixels(
+                    std::clamp(static_cast<double>(width), MinimumPaneWidth, MaximumPaneWidth)));
+            }
+
+            if (auto const width = settings.EditorInspectorWidth(); width > 0)
+            {
+                InspectorColumn().Width(xaml::GridLengthHelper::FromPixels(
+                    std::clamp(static_cast<double>(width), MinimumPaneWidth, MaximumPaneWidth)));
+            }
+
+            if (auto const height = settings.EditorMonitorHeight(); height > 0)
+            {
+                m_monitorHeight = std::clamp(
+                    static_cast<double>(height), MinimumMonitorHeight, MaximumMonitorHeight);
+
+                MonitorRow().Height(xaml::GridLengthHelper::FromPixels(m_monitorHeight));
+            }
+
+            // Zero means Fit, which is what a layout opens at unless somebody chose otherwise.
+            if (auto const zoom = settings.EditorZoomPercent(); zoom > 0)
+            {
+                m_zoomIsFit = false;
+                m_canvasScale = std::clamp(zoom / 100.0, MinimumRememberedScale, MaximumRememberedScale);
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to restore the editor panes.")
+    }
+
+    void EditorWindow::SaveEditorPlacement()
+    {
+        try
+        {
+            auto& settings = ::midiglass::AppSettings::Current();
+
+            auto const placement = midiapp::WindowChrome::CapturePlacement(*this);
+
+            if (placement.Valid)
+            {
+                settings.EditorPlacement(placement);
+            }
+
+            // The left pane may be folded away right now, so the width it folds back to is what
+            // gets kept, not the rail.
+            auto const folded = LeftRail() != nullptr &&
+                LeftRail().Visibility() == xaml::Visibility::Visible;
+
+            auto const leftWidth = folded ? m_leftPaneWidth : LeftColumn().ActualWidth();
+
+            settings.EditorPaneSizes(
+                static_cast<int32_t>(std::lround(leftWidth)),
+                static_cast<int32_t>(std::lround(InspectorColumn().ActualWidth())),
+                static_cast<int32_t>(std::lround(m_monitorHeight)),
+                m_zoomIsFit ? 0 : static_cast<int32_t>(std::lround(m_canvasScale * 100.0)));
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to remember where the editor was.")
     }
 
     namespace

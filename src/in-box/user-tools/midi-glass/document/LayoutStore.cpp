@@ -177,6 +177,124 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    std::wstring BackgroundImagePath(LayoutDocument const& document) noexcept
+    {
+        try
+        {
+            if (document.BackgroundImage.empty() || document.FilePath.empty())
+            {
+                return {};
+            }
+
+            // Only a plain file name is ever accepted. A layout is untrusted input, so a name
+            // that is a path is a way to make this app open a file somewhere else on the PC.
+            std::filesystem::path const name{ document.BackgroundImage };
+
+            if (name.has_parent_path() || name.has_root_name() || !name.has_filename())
+            {
+                return {};
+            }
+
+            auto const folder = std::filesystem::path{ document.FilePath }.parent_path();
+            auto const full = folder / name;
+
+            std::error_code ignored{};
+
+            if (!std::filesystem::is_regular_file(full, ignored))
+            {
+                return {};
+            }
+
+            return full.wstring();
+        }
+        catch (...)
+        {
+            return {};
+        }
+    }
+
+    _Use_decl_annotations_
+    bool BackgroundImageNeedsCopying(
+        std::wstring const& sourcePath,
+        std::wstring const& layoutFilePath) noexcept
+    {
+        try
+        {
+            if (sourcePath.empty() || layoutFilePath.empty())
+            {
+                return false;
+            }
+
+            auto const source = std::filesystem::path{ sourcePath }.parent_path();
+            auto const layout = std::filesystem::path{ layoutFilePath }.parent_path();
+
+            std::error_code ignored{};
+
+            return !std::filesystem::equivalent(source, layout, ignored);
+        }
+        catch (...)
+        {
+            return true;
+        }
+    }
+
+    _Use_decl_annotations_
+    std::wstring CopyBackgroundImageBeside(
+        std::wstring const& sourcePath,
+        std::wstring const& layoutFilePath) noexcept
+    {
+        try
+        {
+            if (sourcePath.empty() || layoutFilePath.empty())
+            {
+                return {};
+            }
+
+            std::filesystem::path const source{ sourcePath };
+
+            std::error_code ignored{};
+
+            if (!std::filesystem::is_regular_file(source, ignored))
+            {
+                return {};
+            }
+
+            auto const folder = std::filesystem::path{ layoutFilePath }.parent_path();
+
+            if (!BackgroundImageNeedsCopying(sourcePath, layoutFilePath))
+            {
+                return source.filename().wstring();
+            }
+
+            auto target = folder / source.filename();
+
+            // A different picture that wants a taken name gets a new one rather than writing
+            // over something the customer put there.
+            for (int32_t attempt = 2;
+                std::filesystem::exists(target, ignored) && attempt < 1000;
+                ++attempt)
+            {
+                auto stem = source.stem().wstring() + L" " + std::to_wstring(attempt);
+                target = folder / (stem + source.extension().wstring());
+            }
+
+            std::filesystem::copy_file(
+                source, target, std::filesystem::copy_options::overwrite_existing, ignored);
+
+            if (ignored)
+            {
+                return {};
+            }
+
+            return target.filename().wstring();
+        }
+        catch (...)
+        {
+            return {};
+        }
+    }
+
+    _Use_decl_annotations_
     ReadResult ReadLayoutFile(std::wstring const& filePath) noexcept
     {
         ReadResult result{};

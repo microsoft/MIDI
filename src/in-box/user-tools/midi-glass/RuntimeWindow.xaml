@@ -8,7 +8,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid x:Name="RootGrid" Loaded="OnRootLoaded">
+    <Grid x:Name="RootGrid" Loaded="OnRootLoaded" KeyboardAcceleratorPlacementMode="Hidden">
         <!-- Panic has to be reachable without finding a button, because the moment it is needed
              is the moment nobody wants to go looking. Escape leaves full screen the way a
              browser does. -->

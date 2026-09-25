@@ -8,7 +8,9 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid x:Name="RootGrid" Loaded="OnRootLoaded">
+    <!-- Hidden, because the accelerators below belong to this grid and the grid is the whole
+         window: without it, hovering anywhere that has no tool tip of its own pops "Ctrl+Z". -->
+    <Grid x:Name="RootGrid" Loaded="OnRootLoaded" KeyboardAcceleratorPlacementMode="Hidden">
         <Grid.Resources>
 
             <!-- Every brush comes from the theme, so the customer's choice of light, dark or
@@ -409,14 +411,21 @@
                         </StackPanel>
                         <Button.Flyout>
                             <MenuFlyout>
+                                <MenuFlyoutItem x:Uid="LayoutMenuPagesDevices" Text="Pages and devices…" Click="OnLayoutSettingsClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE964;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutSeparator />
                                 <MenuFlyoutItem x:Uid="LayoutMenuPageSize" Text="Page size…" Click="OnPageSizeClick">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE740;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem x:Uid="LayoutMenuBackground" Text="Background picture…" Click="OnBackgroundClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xEB9F;" /></MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutItem x:Uid="LayoutMenuRename" Text="Rename layout…" Click="OnRenameLayoutClick">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutSeparator />
-                                <MenuFlyoutItem x:Uid="LayoutMenuKeyboardOrder" Text="Set keyboard order from position" Click="OnSortKeyboardOrderClick">
+                                <MenuFlyoutItem x:Uid="LayoutMenuKeyboardOrder" Text="Set the keyboard order…" Click="OnSortKeyboardOrderClick">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8FD;" /></MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutSeparator />
@@ -758,6 +767,34 @@
                     </InfoBar.ActionButton>
                 </InfoBar>
 
+                <!-- Setting the keyboard order by clicking through the page. An order somebody
+                     cannot see is one they cannot fix, so every control wears its number for as
+                     long as this is up. -->
+                <InfoBar x:Name="KeyboardOrderBar"
+                         x:Uid="KeyboardOrderBar"
+                         Grid.Row="1"
+                         IsOpen="False"
+                         IsClosable="False"
+                         Severity="Informational"
+                         Margin="8,0,8,8">
+                    <!-- ActionButton takes one button, so the three live in the content. -->
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,4,0,4">
+                        <Button x:Name="KeyboardOrderDoneButton"
+                                x:Uid="KeyboardOrderDoneButton"
+                                Content="Done"
+                                Style="{StaticResource AccentButtonStyle}"
+                                Click="OnKeyboardOrderDoneClick" />
+                        <Button x:Name="KeyboardOrderRestartButton"
+                                x:Uid="KeyboardOrderRestartButton"
+                                Content="Start over"
+                                Click="OnKeyboardOrderRestartClick" />
+                        <Button x:Name="KeyboardOrderCancelButton"
+                                x:Uid="KeyboardOrderCancelButton"
+                                Content="Cancel"
+                                Click="OnKeyboardOrderCancelClick" />
+                    </StackPanel>
+                </InfoBar>
+
                 <!-- The page rail: one tab per page in that page's own hue, then the tools that
                      act on the page rather than on a control. -->
                 <Border Grid.Row="2"
@@ -1016,10 +1053,18 @@
                             <TextBlock x:Name="InspectorKindText"
                                        FontSize="11"
                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                            <TextBlock x:Name="InspectorTitleText"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       TextTrimming="CharacterEllipsis" />
+
+                            <!-- The name is the heading and the heading is editable: clicking
+                                 what a thing is called is where everybody tries to rename it. -->
+                            <TextBox x:Name="InspectorTitleText"
+                                     x:Uid="InspectorTitleText"
+                                     FontSize="14"
+                                     FontWeight="SemiBold"
+                                     Padding="4,1,4,1"
+                                     Margin="-5,0,0,0"
+                                     BorderThickness="0"
+                                     Background="Transparent"
+                                     TextChanged="OnLabelChanged" />
                         </StackPanel>
 
                         <Button x:Name="InspectorMoreButton"
@@ -1197,6 +1242,7 @@
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
                                             <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
                                         </Grid.RowDefinitions>
 
                                         <TextBlock x:Uid="InspectorLabelTextLabel" Grid.Row="0" Grid.Column="0" Text="Text" Style="{StaticResource RowLabelStyle}" />
@@ -1207,14 +1253,50 @@
                                         <ComboBox x:Name="LabelPlacedCombo" x:Uid="LabelPlacedCombo" Grid.Row="1" Grid.Column="1"
                                                   Style="{StaticResource RowComboStyle}" SelectionChanged="OnLabelPlacedChanged" />
 
-                                        <TextBlock x:Uid="InspectorShowValueLabel" Grid.Row="2" Grid.Column="0" Text="Show value" Style="{StaticResource RowLabelStyle}" />
-                                        <ComboBox x:Name="ShowValueCombo" x:Uid="ShowValueCombo" Grid.Row="2" Grid.Column="1"
+                                        <TextBlock x:Uid="InspectorLabelWidthLabel" Grid.Row="2" Grid.Column="0" Text="Width" Style="{StaticResource RowLabelStyle}" />
+                                        <Grid Grid.Row="2" Grid.Column="1" ColumnSpacing="6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <NumberBox x:Name="LabelWidthBox"
+                                                       x:Uid="LabelWidthBox"
+                                                       Grid.Column="0"
+                                                       Minimum="10"
+                                                       Maximum="400"
+                                                       SmallChange="10"
+                                                       SpinButtonPlacementMode="Compact"
+                                                       ValueChanged="OnLabelWidthChanged" />
+
+                                            <Button x:Name="LabelFontButton"
+                                                    x:Uid="LabelFontButton"
+                                                    Grid.Column="1"
+                                                    Height="30"
+                                                    Padding="8,0,8,0"
+                                                    FontSize="11"
+                                                    Click="OnLabelFontClick">
+                                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                                    <FontIcon Glyph="&#xE8D2;" FontSize="11" />
+                                                    <TextBlock x:Uid="LabelFontLabel" Text="Font…" FontSize="11" />
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+
+                                        <TextBlock x:Uid="InspectorShowValueLabel" Grid.Row="3" Grid.Column="0" Text="Show value" Style="{StaticResource RowLabelStyle}" />
+                                        <ComboBox x:Name="ShowValueCombo" x:Uid="ShowValueCombo" Grid.Row="3" Grid.Column="1"
                                                   Style="{StaticResource RowComboStyle}" SelectionChanged="OnShowValueChanged" />
 
-                                        <TextBlock x:Uid="InspectorKindLabel" Grid.Row="3" Grid.Column="0" Text="Kind" Style="{StaticResource RowLabelStyle}" />
-                                        <ComboBox x:Name="KindCombo" x:Uid="KindCombo" Grid.Row="3" Grid.Column="1"
+                                        <TextBlock x:Uid="InspectorKindLabel" Grid.Row="4" Grid.Column="0" Text="Kind" Style="{StaticResource RowLabelStyle}" />
+                                        <ComboBox x:Name="KindCombo" x:Uid="KindCombo" Grid.Row="4" Grid.Column="1"
                                                   Style="{StaticResource RowComboStyle}" SelectionChanged="OnKindChanged" />
                                     </Grid>
+
+                                    <TextBlock x:Name="LabelFontCaption"
+                                               FontSize="11"
+                                               Margin="0,6,0,0"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
                                     <!-- The control itself, drawn the way it will actually look,
                                          so a style or a color is judged rather than imagined. -->
@@ -1317,12 +1399,49 @@
                                                   HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
 
                                         <TextBlock x:Name="MessageDeviceLabel" x:Uid="MessageDeviceLabel" Grid.Row="2" Grid.Column="0" Text="To" Style="{StaticResource InspectorLabelStyle}" />
-                                        <ComboBox x:Name="DeviceCombo" x:Uid="DeviceCombo" Grid.Row="2" Grid.Column="1"
-                                                  HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
+                                        <StackPanel x:Name="DevicePanel" Grid.Row="2" Grid.Column="1" Spacing="3">
+                                            <ComboBox x:Name="DeviceCombo" x:Uid="DeviceCombo"
+                                                      HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
+
+                                            <!-- The name on the left is the layout's own, which is
+                                                 the whole point of the table, so this says what it
+                                                 found on this PC. Without it nobody can tell which
+                                                 endpoint to open a monitor on. -->
+                                            <TextBlock x:Name="DeviceResolvedText"
+                                                       FontSize="11"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                            <HyperlinkButton x:Name="EditDevicesLink"
+                                                             x:Uid="EditDevicesLink"
+                                                             Padding="0"
+                                                             FontSize="11"
+                                                             Content="Set up devices…"
+                                                             Click="OnLayoutSettingsClick" />
+                                        </StackPanel>
 
                                         <TextBlock x:Name="MessageGroupLabel" x:Uid="MessageGroupLabel" Grid.Row="3" Grid.Column="0" Text="Group" Style="{StaticResource InspectorLabelStyle}" />
-                                        <ComboBox x:Name="GroupCombo" x:Uid="GroupCombo" Grid.Row="3" Grid.Column="1"
-                                                  HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
+                                        <StackPanel x:Name="GroupPanel" Grid.Row="3" Grid.Column="1" Spacing="3">
+                                            <ComboBox x:Name="GroupCombo" x:Uid="GroupCombo"
+                                                      HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
+
+                                            <!-- A device that declares four groups has twelve
+                                                 that go nowhere, and picking one of those is a
+                                                 control that silently does nothing. -->
+                                            <CheckBox x:Name="AllGroupsCheck"
+                                                      x:Uid="AllGroupsCheck"
+                                                      Content="Show all 16 groups"
+                                                      FontSize="11"
+                                                      MinHeight="0"
+                                                      Margin="0,1,0,0"
+                                                      Checked="OnShowAllGroupsChanged"
+                                                      Unchecked="OnShowAllGroupsChanged" />
+
+                                            <TextBlock x:Name="GroupSourceText"
+                                                       FontSize="11"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                        </StackPanel>
 
                                         <TextBlock x:Name="MessageChannelLabel" x:Uid="MessageChannelLabel" Grid.Row="4" Grid.Column="0" Text="Channel" Style="{StaticResource InspectorLabelStyle}" />
                                         <ComboBox x:Name="ChannelCombo" x:Uid="ChannelCombo" Grid.Row="4" Grid.Column="1"
@@ -1513,5 +1632,191 @@
                            Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
             </Grid>
         </Border>
+
+        <!-- Layout settings. Everything in a layout that names real hardware lives here, in one
+             place, which is what makes a layout portable. It covers the editor rather than
+             opening a window, because it is a place in the app, not a question to answer. -->
+        <Grid x:Name="LayoutSettingsPanel"
+              Grid.Row="1"
+              Grid.RowSpan="3"
+              Visibility="Collapsed"
+              Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0"
+                    Height="44"
+                    Padding="10,0,12,0"
+                    BorderThickness="0,0,0,1"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                <Grid ColumnSpacing="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button x:Name="LayoutSettingsBackButton"
+                            x:Uid="LayoutSettingsBack"
+                            Grid.Column="0"
+                            Style="{StaticResource EditorSmallButtonStyle}"
+                            Click="OnCloseLayoutSettingsClick">
+                        <StackPanel Orientation="Horizontal" Spacing="7">
+                            <FontIcon Glyph="&#xE72B;" FontSize="13" />
+                            <TextBlock x:Uid="LayoutSettingsBackLabel" Text="Back to the editor" />
+                        </StackPanel>
+                    </Button>
+
+                    <TextBlock x:Uid="LayoutSettingsTitle"
+                               Grid.Column="1"
+                               Text="Layout settings"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center" />
+
+                    <TextBlock x:Name="LayoutSettingsWarningText"
+                               Grid.Column="3"
+                               FontSize="12"
+                               VerticalAlignment="Center"
+                               Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1" ColumnSpacing="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="330" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Pages -->
+                <Border Grid.Column="0"
+                        BorderThickness="0,0,1,0"
+                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="14,12,14,16">
+                        <StackPanel Spacing="8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock x:Uid="LayoutSettingsPagesHeader"
+                                           Grid.Column="0"
+                                           Text="Pages"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center" />
+
+                                <Button x:Name="SettingsAddPageButton"
+                                        x:Uid="LayoutSettingsAddPage"
+                                        Grid.Column="1"
+                                        Style="{StaticResource EditorSmallButtonStyle}"
+                                        Click="OnSettingsAddPageClick">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE710;" FontSize="12" />
+                                        <TextBlock x:Uid="LayoutSettingsAddPageLabel" Text="Page" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <TextBlock x:Uid="LayoutSettingsPagesCaption"
+                                       Text="The order here is the order of the tabs on the surface. Use the … menu to move a page."
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                            <StackPanel x:Name="SettingsPageList" Spacing="5" />
+
+                            <TextBlock x:Uid="LayoutSettingsBandHeader"
+                                       Text="Always on screen"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Margin="0,8,0,0" />
+
+                            <TextBlock x:Uid="LayoutSettingsBandCaption"
+                                       Text="A band is pinned to every page, so transport and panic do not have to be rebuilt four times. Turn one on from a page's … menu."
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <!-- Devices -->
+                <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Padding="16,12,16,16">
+                    <StackPanel Spacing="8" MaxWidth="560" HorizontalAlignment="Left">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock x:Uid="LayoutSettingsDevicesHeader"
+                                       Grid.Column="0"
+                                       Text="Devices this layout uses"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                <Button x:Name="SettingsLookAgainButton"
+                                        x:Uid="LayoutSettingsLookAgain"
+                                        Style="{StaticResource EditorSmallButtonStyle}"
+                                        Click="OnSettingsLookAgainClick">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE72C;" FontSize="12" />
+                                        <TextBlock x:Uid="LayoutSettingsLookAgainLabel" Text="Look again" />
+                                    </StackPanel>
+                                </Button>
+
+                                <Button x:Name="SettingsAddDeviceButton"
+                                        x:Uid="LayoutSettingsAddDevice"
+                                        Style="{StaticResource EditorSmallButtonStyle}"
+                                        Click="OnSettingsAddDeviceClick">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE710;" FontSize="12" />
+                                        <TextBlock x:Uid="LayoutSettingsAddDeviceLabel" Text="Device" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock x:Uid="LayoutSettingsDevicesCaption"
+                                   Text="Controls point at the name on the left, never at the hardware. Change the device here and every control that used it follows."
+                                   FontSize="11"
+                                   TextWrapping="Wrap"
+                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                        <StackPanel x:Name="SettingsDeviceList" Spacing="7" />
+
+                        <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                CornerRadius="6"
+                                Padding="12,10,12,11"
+                                Margin="0,8,0,0">
+                            <!-- A Grid, not a horizontal StackPanel: a stack hands its children
+                                 infinite width, so TextWrapping never takes effect in one. -->
+                            <Grid ColumnSpacing="10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+
+                                <FontIcon Grid.Column="0" Glyph="&#xE946;" FontSize="14" VerticalAlignment="Top"
+                                          Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                <TextBlock x:Uid="LayoutSettingsConnectionNote"
+                                           Grid.Column="1"
+                                           Text="One connection is opened per device when the layout loads, shared by every control and every page, and closed when the layout closes. Group and channel travel in the message, so hundreds of controls on four groups of one device still cost exactly one connection."
+                                           FontSize="11"
+                                           TextWrapping="Wrap"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </Grid>
+                        </Border>
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Grid>
     </Grid>
 </Window>

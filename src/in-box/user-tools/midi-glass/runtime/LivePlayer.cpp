@@ -484,6 +484,37 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    bool LivePlayer::RunSequenceNow(Sequence const& sequence, uint32_t controlIndex)
+    {
+        if (!m_outputEnabled || m_runner == nullptr || m_sendTable.empty())
+        {
+            return false;
+        }
+
+        auto const plan = BuildPlanForSequence(m_document, m_engine.Destinations(), sequence);
+
+        if (plan.Actions.empty())
+        {
+            return false;
+        }
+
+        // A second press restarts it rather than layering a second copy over the first.
+        m_runner->CancelFor(controlIndex);
+        m_runner->Run(controlIndex, plan);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    void LivePlayer::StopSequenceNow(uint32_t controlIndex) noexcept
+    {
+        if (m_runner != nullptr)
+        {
+            m_runner->CancelFor(controlIndex);
+        }
+    }
+
+    _Use_decl_annotations_
     void LivePlayer::SendWords(
         uint32_t controlIndex,
         int32_t destinationIndex,
