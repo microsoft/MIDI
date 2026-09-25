@@ -42,6 +42,7 @@ namespace glass
         constexpr wchar_t KeyImage[] = L"image";
         constexpr wchar_t KeyCornerRadius[] = L"cornerRadius";
         constexpr wchar_t KeyGlassTint[] = L"glassTintPercent";
+        constexpr wchar_t KeyGlassColor[] = L"glassColor";
         constexpr wchar_t KeyGlowStrength[] = L"glowStrength";
         constexpr wchar_t KeyLabels[] = L"labels";
         constexpr wchar_t KeyFillAtRest[] = L"fillAtRest";
@@ -53,6 +54,12 @@ namespace glass
         constexpr wchar_t KeyValueIndicator[] = L"valueIndicator";
         constexpr wchar_t KeyLampCount[] = L"lampCount";
         constexpr wchar_t KeyMinimumLampRing[] = L"minimumLampRingSize";
+        constexpr wchar_t KeyPlateSheen[] = L"plateSheenPercent";
+        constexpr wchar_t KeyPlateElevation[] = L"plateElevation";
+        constexpr wchar_t KeyPipeFalloff[] = L"pipeFalloff";
+        constexpr wchar_t KeyThumb[] = L"thumb";
+        constexpr wchar_t KeyThumbColor[] = L"thumbColor";
+        constexpr wchar_t KeyThumbEnd[] = L"thumbEndColor";
 
         template <typename TEnum>
         struct EnumName
@@ -93,6 +100,13 @@ namespace glass
         {
             { ValueIndicatorStyle::SolidArc, L"solidArc" },
             { ValueIndicatorStyle::SegmentedLamps, L"segmentedLamps" },
+        };
+
+        constexpr EnumName<ThumbStyle> ThumbNames[]
+        {
+            { ThumbStyle::None, L"none" },
+            { ThumbStyle::Neutral, L"neutral" },
+            { ThumbStyle::Hue, L"hue" },
         };
 
         template <typename TEnum, size_t N>
@@ -393,6 +407,16 @@ namespace glass
             theme.MinimumLampRingSize = static_cast<int32_t>(
                 ReadNumber(root, KeyMinimumLampRing, base.MinimumLampRingSize, 8, 512));
 
+            theme.PlateSheenPercent = static_cast<int32_t>(
+                ReadNumber(root, KeyPlateSheen, base.PlateSheenPercent, 0, 100));
+            theme.PlateElevation = static_cast<int32_t>(
+                ReadNumber(root, KeyPlateElevation, base.PlateElevation, 0, 100));
+            theme.PipeFalloff = ReadNumber(root, KeyPipeFalloff, base.PipeFalloff, 0.0, 1.0);
+            theme.Thumb = ValueOf(ThumbNames, ReadString(root, KeyThumb), base.Thumb);
+            theme.ThumbColor = ReadColor(root, KeyThumbColor, base.ThumbColor);
+            theme.ThumbEndColor = ReadColor(root, KeyThumbEnd, base.ThumbEndColor);
+            theme.GlassColor = ReadColor(root, KeyGlassColor, base.GlassColor);
+
             result.Succeeded = true;
         }
         catch (...)
@@ -446,6 +470,13 @@ namespace glass
             writer.Write(KeyValueIndicator, NameOf(IndicatorNames, theme.ValueIndicator));
             writer.Write(KeyLampCount, static_cast<int64_t>(theme.LampCount));
             writer.Write(KeyMinimumLampRing, static_cast<int64_t>(theme.MinimumLampRingSize));
+            writer.Write(KeyPlateSheen, static_cast<int64_t>(theme.PlateSheenPercent));
+            writer.Write(KeyPlateElevation, static_cast<int64_t>(theme.PlateElevation));
+            writer.Write(KeyPipeFalloff, theme.PipeFalloff);
+            writer.Write(KeyThumb, NameOf(ThumbNames, theme.Thumb));
+            writer.Write(KeyThumbColor, ColorToText(theme.ThumbColor));
+            writer.Write(KeyThumbEnd, ColorToText(theme.ThumbEndColor));
+            writer.Write(KeyGlassColor, ColorToText(theme.GlassColor));
 
             writer.EndObject();
 

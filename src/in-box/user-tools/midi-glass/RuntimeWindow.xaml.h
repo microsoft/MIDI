@@ -89,6 +89,7 @@ namespace winrt::midiglass::implementation
 
         void StartDevices();
         void UpdateDeviceStatus();
+        void MarkUnreachableControls(_In_ std::vector<glass::ResolvedDevice> const& devices);
 
         void OnControlValueChanged(_In_ size_t itemIndex, _In_ double value, _In_ bool isFinal);
         void OnControlSetDirectly(_In_ size_t itemIndex, _In_ double value);

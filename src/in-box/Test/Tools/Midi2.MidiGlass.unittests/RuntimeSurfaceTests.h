@@ -56,6 +56,9 @@ public:
 
     TEST_METHOD(ATonalThemeTintsThePlateWithTheControlHue);
     TEST_METHOD(AGlassThemeLeavesTheDeckShowingThrough);
+    TEST_METHOD(NothingIsSaturatedAtRest);
+    TEST_METHOD(AFaderCapCarriesTheHueWhenItIsNotTheHue);
+    TEST_METHOD(AFlatThemeAsksForAFlatValueBar);
     TEST_METHOD(ANamedPlateColorWins);
     TEST_METHOD(ALiteralColorThatDoesNotParseFallsBackToTheSlot);
     TEST_METHOD(TheLampRingFallsBackToASolidArcWhenSmall);

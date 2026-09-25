@@ -33,14 +33,43 @@ namespace glass
         // The value, as a bar or an arc.
         ThemeColor Pipe{};
 
+        // The far end of that bar. The same hue at a lower alpha on the glass themes, the same
+        // color again on the flat ones.
+        ThemeColor PipeEnd{};
+
         // The part of the travel the value has not reached.
         ThemeColor Track{};
+
+        // The two ends of the cap on a fader, already resolved from the theme's thumb style.
+        // Both transparent when the theme draws no cap.
+        ThemeColor Thumb{};
+        ThemeColor ThumbEnd{};
+
+        // The hairline of hue through a neutral cap. Transparent when the cap is the hue
+        // itself, because a hue line on a hue cap is invisible.
+        ThemeColor ThumbLine{};
+
+        // The sheen down the top of the plate. Alpha 0 on a flat theme.
+        ThemeColor Sheen{};
 
         // Lifts on touch and on incoming activity, and decays. Activity is the only thing that
         // blooms.
         ThemeColor Bloom{};
 
+        // The line on a knob that says which way it is pointing. Usually the hue; on a theme
+        // with a neutral edge it is the deck's own ink, because on those the hue is reserved
+        // for the value and a pointer is not the value.
+        ThemeColor Pointer{};
+
+        // Tick marks beside a fader, and the center dot on a knob. Barely there on purpose.
+        ThemeColor Marks{};
+
         ThemeColor Label{};
+
+        // What the plate becomes while the control is on, and the rim that goes with it.
+        ThemeColor OnPlate{};
+        ThemeColor OnPlateEnd{};
+        ThemeColor OnRim{};
     };
 
     // The control's own hue. A slot unless the control asked for a literal color and gave one

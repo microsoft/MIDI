@@ -84,6 +84,21 @@ namespace glass
             return ShadeBy(lit, 0.55);
         }
 
+        // The glass a plate is cut from: the deck's own color lifted toward the light, far
+        // enough to still separate from it where the deck gradient is at its brightest. A plate
+        // DARKER than the deck reads as a hole cut in the surface rather than an object sitting
+        // on it, and that is what the whole language rests on.
+        ThemeColor GlassFrom(_In_ ThemeColor const& base) noexcept
+        {
+            auto const lift = [](uint8_t c) noexcept
+                {
+                    return static_cast<uint8_t>(std::clamp(
+                        std::lround(c + std::max(6.0, (255.0 - c) * 0.045)), 0L, 255L));
+                };
+
+            return { lift(base.R), lift(base.G), lift(base.B), 255 };
+        }
+
         Theme MakeDarkTheme(
             _In_ std::wstring name,
             _In_ uint32_t deck,
@@ -106,6 +121,10 @@ namespace glass
 
             // A theme can still name its own track; this is what it gets if it does not.
             theme.TrackColor = DeckGroove(theme.Deck.Color);
+
+            // The glass a plate is cut from: the deck's own color taken well down, so it keeps
+            // the theme's cast instead of going neutral black.
+            theme.GlassColor = GlassFrom(Rgb(deck));
 
             for (size_t i = 0; i < hues.size(); ++i)
             {
@@ -151,6 +170,10 @@ namespace glass
                     daylight.TrackColor = Rgb(0xD5D7DB);
                     daylight.GlowStrength = 35;
                     daylight.GlassTintPercent = 92;
+                    daylight.PlateSheenPercent = 0;
+                    daylight.PlateElevation = 25;
+                    daylight.ThumbColor = Rgb(0xFFFFFF);
+                    daylight.ThumbEndColor = Rgb(0xD8DADE);
 
                     list.push_back(daylight);
                 }
@@ -185,6 +208,13 @@ namespace glass
                     contrast.Labels = LabelPlacement::Below;
                     contrast.TrackColor = Rgb(0x767676);
 
+                    // Nothing soft. Every edge on this theme is a hard line, because a blur is
+                    // exactly what the person who turned high contrast on cannot resolve.
+                    contrast.PlateSheenPercent = 0;
+                    contrast.PlateElevation = 0;
+                    contrast.PipeFalloff = 1.0;
+                    contrast.Thumb = ThumbStyle::Hue;
+
                     list.push_back(contrast);
                 }
 
@@ -205,6 +235,13 @@ namespace glass
                     pigment.TrackColor = Rgb(0xE3DFD9);
                     pigment.CornerRadius = 14;
 
+                    // Flat and tonal. Depth is the wash of the control's own color, so a sheen
+                    // and a shadow would both be saying it a second time.
+                    pigment.PlateSheenPercent = 0;
+                    pigment.PlateElevation = 0;
+                    pigment.PipeFalloff = 1.0;
+                    pigment.Thumb = ThumbStyle::Hue;
+
                     list.push_back(pigment);
                 }
 
@@ -216,6 +253,11 @@ namespace glass
                     pigment.GlowStrength = 0;
                     pigment.FillAtRest = 0.18;
                     pigment.CornerRadius = 14;
+
+                    pigment.PlateSheenPercent = 0;
+                    pigment.PlateElevation = 0;
+                    pigment.PipeFalloff = 1.0;
+                    pigment.Thumb = ThumbStyle::Hue;
 
                     list.push_back(pigment);
                 }
@@ -238,6 +280,13 @@ namespace glass
                     bigwig.ValueIndicator = ValueIndicatorStyle::SegmentedLamps;
                     bigwig.LampCount = 24;
                     bigwig.CornerRadius = 4;
+
+                    // A raised neutral panel, so the plate still has a lit top edge, but no
+                    // glow and no fade on the value: orange means the value and nothing else.
+                    bigwig.PlateSheenPercent = 4;
+                    bigwig.PlateElevation = 40;
+                    bigwig.PipeFalloff = 1.0;
+                    bigwig.Thumb = ThumbStyle::Hue;
 
                     list.push_back(bigwig);
                 }

@@ -20,6 +20,13 @@ namespace glass
             return static_cast<uint8_t>(std::clamp(
                 std::lround(base + (over - base) * amount), 0L, 255L));
         }
+
+        // How strong a control's rim is when nothing is happening to it.
+        constexpr double RestingRimAlpha = 0.28;
+
+        // Tick marks and center dots are orientation, not information. They have to be findable
+        // when looked for and invisible when not.
+        constexpr uint8_t MarkAlpha = 46;
     }
 
     _Use_decl_annotations_
@@ -92,10 +99,12 @@ namespace glass
         }
         else
         {
-            // Glass: near black at the theme's tint, laid over whatever the deck is. A tint of
-            // zero means the deck shows through untouched, which High contrast asks for.
-            colors.Plate = { 0, 0, 0, static_cast<uint8_t>(
-                std::clamp(std::lround(255.0 * theme.GlassTintPercent / 100.0), 0L, 255L)) };
+            // Glass: the theme's own smoked tint at whatever opacity it asked for, laid over
+            // whatever the deck is. A tint of zero means the deck shows through untouched,
+            // which High contrast asks for.
+            colors.Plate = theme.GlassColor;
+            colors.Plate.A = static_cast<uint8_t>(
+                std::clamp(std::lround(255.0 * theme.GlassTintPercent / 100.0), 0L, 255L));
         }
 
         switch (theme.Rim)
@@ -110,7 +119,12 @@ namespace glass
 
         case RimSource::ControlHue:
         default:
+            // A quarter strength, not the full hue. Nothing is saturated at rest - the rim is
+            // there to say which control this is, and the value and the activity are the only
+            // things allowed to be bright. A full-strength rim on every control turns a busy
+            // page into a grid of neon rectangles and nothing stands out at all.
             colors.Rim = hue;
+            colors.Rim.A = static_cast<uint8_t>(std::clamp(std::lround(hue.A * RestingRimAlpha), 0L, 255L));
             break;
         }
 
@@ -118,11 +132,58 @@ namespace glass
         colors.Bloom.A = static_cast<uint8_t>(
             std::clamp(std::lround(255.0 * theme.GlowStrength / 100.0), 0L, 255L));
 
+        // The bar is brightest where the value is and falls away behind it. A falloff of one
+        // means the theme wants a flat bar, which is what the tonal themes and Bigwig ask for.
+        colors.PipeEnd = hue;
+        colors.PipeEnd.A = static_cast<uint8_t>(
+            std::clamp(std::lround(hue.A * theme.PipeFalloff), 0L, 255L));
+
+        colors.Sheen = { 255, 255, 255, static_cast<uint8_t>(
+            std::clamp(std::lround(255.0 * theme.PlateSheenPercent / 100.0), 0L, 255L)) };
+
+        switch (theme.Thumb)
+        {
+        case ThumbStyle::Hue:
+            colors.Thumb = hue;
+            colors.ThumbEnd = hue;
+            colors.ThumbLine = { hue.R, hue.G, hue.B, 0 };
+            break;
+
+        case ThumbStyle::Neutral:
+            colors.Thumb = theme.ThumbColor;
+            colors.ThumbEnd = theme.ThumbEndColor;
+            colors.ThumbLine = hue;
+            break;
+
+        case ThumbStyle::None:
+        default:
+            colors.Thumb = { 0, 0, 0, 0 };
+            colors.ThumbEnd = { 0, 0, 0, 0 };
+            colors.ThumbLine = { 0, 0, 0, 0 };
+            break;
+        }
+
+        // On is the plate itself carrying the hue, top brighter than bottom. The same two
+        // numbers on every theme: what changes between them is the hue and whether it glows.
+        colors.OnPlate = hue;
+        colors.OnPlate.A = static_cast<uint8_t>(std::clamp(std::lround(hue.A * 0.34), 0L, 255L));
+
+        colors.OnPlateEnd = hue;
+        colors.OnPlateEnd.A = static_cast<uint8_t>(std::clamp(std::lround(hue.A * 0.17), 0L, 255L));
+
+        colors.OnRim = hue;
+        colors.OnRim.A = static_cast<uint8_t>(std::clamp(std::lround(hue.A * 0.90), 0L, 255L));
+
         // The label sits on the plate where there is one, and on the deck where there is not.
         colors.Label = ReadableInk(
             colors.Plate.A >= 128
             ? BlendOver(theme.Deck.Color, colors.Plate, 1.0)
             : theme.Deck.Color);
+
+        colors.Pointer = theme.Rim == RimSource::NeutralEdge ? colors.Label : hue;
+
+        colors.Marks = colors.Label;
+        colors.Marks.A = MarkAlpha;
 
         return colors;
     }

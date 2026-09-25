@@ -391,13 +391,78 @@ void RuntimeSurfaceTests::AGlassThemeLeavesTheDeckShowingThrough()
 
     auto const colors = glass::ResolveControlColors(control, studio);
 
-    VERIFY_ARE_EQUAL(uint8_t{ 0 }, colors.Plate.R);
     VERIFY_IS_TRUE(colors.Plate.A > 0 && colors.Plate.A < 255);
+
+    // Smoked, not black. A plate of black at this opacity over a near-black deck composites to
+    // almost nothing, and the control stops reading as a piece of glass sitting on the surface
+    // and starts reading as a hole cut out of it.
+    auto const onDeck = glass::BlendOver(studio.Deck.Color, colors.Plate, 1.0);
+
+    VERIFY_IS_TRUE(onDeck.R > 8 || onDeck.G > 8 || onDeck.B > 8);
+
+    // Still darker than what it sits on, or it is not glass.
+    VERIFY_IS_TRUE(glass::RelativeLuminance(onDeck) < glass::RelativeLuminance(studio.Deck.Color));
 
     // High contrast asks for no plate at all, so the deck is untouched behind the rim.
     auto const contrast = ThemeNamed(L"High contrast");
 
     VERIFY_ARE_EQUAL(uint8_t{ 0 }, glass::ResolveControlColors(control, contrast).Plate.A);
+}
+
+void RuntimeSurfaceTests::NothingIsSaturatedAtRest()
+{
+    // The rule the whole surface language rests on: a control's resting rim says which control
+    // it is, and the value and the activity are the only things allowed to be bright. A full
+    // strength rim on every control turns a busy page into a grid of neon rectangles.
+    for (auto const& theme : glass::BuiltInThemes())
+    {
+        if (theme.Rim != glass::RimSource::ControlHue)
+        {
+            continue;
+        }
+
+        auto const control = MakeControl(glass::ControlKind::Fader, 0);
+        auto const colors = glass::ResolveControlColors(control, theme);
+
+        VERIFY_IS_LESS_THAN(colors.Rim.A, colors.Pipe.A);
+    }
+}
+
+void RuntimeSurfaceTests::AFaderCapCarriesTheHueWhenItIsNotTheHue()
+{
+    auto const studio = ThemeNamed(L"Studio Dark");
+    auto const control = MakeControl(glass::ControlKind::Fader, 2);
+    auto const colors = glass::ResolveControlColors(control, studio);
+
+    // Studio Dark's cap is a neutral machined bar, so the hue has to arrive as a line through
+    // it. Six of them side by side are told apart by that line and nothing else.
+    VERIFY_ARE_EQUAL(glass::ThumbStyle::Neutral, studio.Thumb);
+    VERIFY_IS_TRUE(colors.ThumbLine.A > 0);
+    VERIFY_IS_TRUE(colors.Thumb != colors.ThumbEnd);
+
+    // Bigwig's cap is the hue itself, so a line of the same color would be invisible.
+    auto const bigwig = ThemeNamed(L"Bigwig");
+    auto const orange = glass::ResolveControlColors(control, bigwig);
+
+    VERIFY_ARE_EQUAL(glass::ThumbStyle::Hue, bigwig.Thumb);
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, orange.ThumbLine.A);
+}
+
+void RuntimeSurfaceTests::AFlatThemeAsksForAFlatValueBar()
+{
+    auto const control = MakeControl(glass::ControlKind::Fader, 0);
+
+    // The glass themes fade the bar behind the value; the flat ones do not, because a fade on a
+    // theme with no glow reads as the bar being the wrong length.
+    auto const studio = glass::ResolveControlColors(control, ThemeNamed(L"Studio Dark"));
+    VERIFY_IS_LESS_THAN(studio.PipeEnd.A, studio.Pipe.A);
+
+    for (auto const* name : { L"Pigment Light", L"Pigment Dark", L"Bigwig", L"High contrast" })
+    {
+        auto const colors = glass::ResolveControlColors(control, ThemeNamed(name));
+
+        VERIFY_ARE_EQUAL(colors.Pipe.A, colors.PipeEnd.A);
+    }
 }
 
 void RuntimeSurfaceTests::ANamedPlateColorWins()

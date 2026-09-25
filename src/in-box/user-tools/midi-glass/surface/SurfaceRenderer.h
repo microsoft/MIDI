@@ -25,11 +25,29 @@ namespace glass
     // Everything drawn for one control. The XAML element beside it owns identity, hit testing,
     // focus and automation; nothing in here is a XAML element, because changing a value must not
     // invalidate a layout pass.
+    //
+    // Bottom to top: the elevation shadow, the glow, the plate and its track, the glow under the
+    // value, then the value itself. Five visuals, because a shadow has to be cast by a visual
+    // and a glow has to sit between two things a single ShapeVisual would draw in one pass.
     struct SurfaceVisual
     {
         comp::ContainerVisual Root{ nullptr };
+
+        // Casts the plate's drop shadow. Paints nothing itself: the shadow is shaped by a mask.
+        comp::SpriteVisual Elevation{ nullptr };
+
+        // The soft light around a lit or active control. This is a real blurred shadow in the
+        // control's own hue, not a rectangle of color.
         comp::SpriteVisual Bloom{ nullptr };
+        comp::DropShadow BloomShadow{ nullptr };
+
         comp::ShapeVisual Shape{ nullptr };
+
+        // Struck through when the device this control sends to is not here. Built once and
+        // hidden, because a device coming and going must not rebuild a page.
+        comp::ShapeVisual Unavailable{ nullptr };
+
+        comp::ShapeVisual ValueShape{ nullptr };
 
         // Fader, pad and meter: a rectangle that grows.
         comp::CompositionRoundedRectangleGeometry PipeGeometry{ nullptr };
@@ -37,8 +55,24 @@ namespace glass
         // Knob and encoder: an arc that sweeps.
         comp::CompositionEllipseGeometry ArcGeometry{ nullptr };
 
+        // The cap on a fader, and the hairline of hue through it.
+        comp::CompositionRoundedRectangleGeometry ThumbGeometry{ nullptr };
+        comp::CompositionRoundedRectangleGeometry ThumbLineGeometry{ nullptr };
+
         comp::CompositionSpriteShape PlateShape{ nullptr };
         comp::CompositionSpriteShape PipeShape{ nullptr };
+
+        // The line on a knob that says which way it is pointing. Rotated rather than rebuilt.
+        comp::CompositionSpriteShape PointerShape{ nullptr };
+
+        // A switch changes what its plate and rim are painted with rather than being rebuilt,
+        // so turning one on costs two property sets.
+        comp::CompositionBrush PlateOffBrush{ nullptr };
+        comp::CompositionBrush PlateOnBrush{ nullptr };
+        comp::CompositionBrush RimOffBrush{ nullptr };
+        comp::CompositionBrush RimOnBrush{ nullptr };
+
+        bool IsSwitch{ false };
 
         ControlKind Kind{ ControlKind::Knob };
 
@@ -49,6 +83,16 @@ namespace glass
 
         float Width{ 0.0f };
         float Height{ 0.0f };
+
+        // Set when the control carries a cap, so a value change knows to move it.
+        bool HasThumb{ false };
+        float ThumbLength{ 0.0f };
+        float ThumbSpan{ 0.0f };
+        float ThumbInset{ 0.0f };
+        float ThumbLineLength{ 0.0f };
+        float ThumbLineThickness{ 0.0f };
+
+        bool Vertical{ false };
     };
 
     // Draws one page of a layout, the way phase 0 decided: a light XAML element per control for
@@ -85,6 +129,11 @@ namespace glass
         // Moves the drawing. Does not send anything and does not touch the XAML element's value,
         // which the caller owns.
         void SetValue(_In_ size_t itemIndex, _In_ double value) noexcept;
+
+        // The device this control sends to is not here. It is struck through rather than hidden
+        // or disabled: a layout with a missing device still has to be editable, and the person
+        // looking at it has to be able to see which controls have gone quiet.
+        void SetUnavailable(_In_ size_t itemIndex, _In_ bool unavailable) noexcept;
 
         // Activity, and the only thing that blooms. Decayed by the compositor rather than by a
         // timer on the UI thread, so a wall of blinking controls costs the app nothing.
@@ -134,6 +183,31 @@ namespace glass
             _In_ comp::Compositor const& compositor,
             _In_ ThemeColor const& color);
 
+        // Top to bottom, for a plate sheen or a value bar. Cached the same way solid colors are.
+        comp::CompositionLinearGradientBrush VerticalBrush(
+            _In_ comp::Compositor const& compositor,
+            _In_ ThemeColor const& top,
+            _In_ ThemeColor const& bottom,
+            _In_ bool horizontal);
+
+        // White at the top, gone before the middle. Painted with the plate's OWN geometry, so a
+        // round control's sheen follows its edge instead of being a rectangle laid over it.
+        comp::CompositionLinearGradientBrush SheenBrush(
+            _In_ comp::Compositor const& compositor,
+            _In_ ThemeColor const& color);
+
+        // A brush whose alpha is the shape of a control, for a drop shadow to be cast through.
+        // Without one, a shadow is the visual's rectangle, which is how a knob ended up with a
+        // square of light behind it. Shared across every control of the same corner radius, so
+        // a page of two hundred builds one of these rather than two hundred.
+        comp::CompositionBrush ShadowMaskFor(
+            _In_ comp::Compositor const& compositor,
+            _In_ float width,
+            _In_ float height,
+            _In_ float cornerRadius,
+            _In_ bool round);
+
+
         controls::Canvas m_host{ nullptr };
 
         std::vector<SurfaceVisual> m_visuals{};
@@ -152,6 +226,12 @@ namespace glass
         // One brush per distinct color for the whole page. A control never owns a brush, which is
         // what keeps a theme swap a handful of objects rather than a walk of two hundred.
         std::unordered_map<uint32_t, comp::CompositionColorBrush> m_brushes{};
+        std::unordered_map<uint64_t, comp::CompositionLinearGradientBrush> m_gradients{};
+
+        // Shadow masks, and the offscreen visuals they are rendered from, which have to stay
+        // alive for as long as the brush does.
+        std::unordered_map<uint64_t, comp::CompositionBrush> m_shadowMasks{};
+        std::vector<comp::Visual> m_maskSources{};
 
         ThemeColor m_deck{};
         bool m_reducedMotion{ false };

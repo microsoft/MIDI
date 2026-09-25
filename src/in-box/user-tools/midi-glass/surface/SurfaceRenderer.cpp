@@ -29,6 +29,78 @@ namespace glass
 
         constexpr float BloomSpread = 6.0f;
 
+        // How far the light around a lit control carries. Two radii, because the plate glows
+        // wider and softer than the thin bar that is carrying the value.
+        constexpr float GlowBlurRadius = 16.0f;
+
+        // A button's value strip: a bar along one edge rather than a slot through the middle.
+        constexpr float StripThickness = 2.5f;
+        constexpr float StripEdgeInset = 6.0f;
+
+        // The cap on a fader. The comp draws it 30 x 16 on a 37.5 px fader: eight tenths of the
+        // control across, and a little over half that again thick. All of it is proportional -
+        // a fixed thickness turns into a thin strip the moment somebody draws a wider fader.
+        constexpr float ThumbSpanFraction = 0.80f;
+        constexpr float ThumbAspect = 16.0f / 30.0f;
+        constexpr float ThumbCornerFraction = 4.0f / 16.0f;
+
+        // The hairline of hue through the cap, against the cap's own size.
+        constexpr float ThumbLineSpanFraction = 20.0f / 30.0f;
+        constexpr float ThumbLineAspect = 2.0f / 16.0f;
+
+        // A cap may not eat the travel it is supposed to ride.
+        constexpr float MaximumThumbShareOfTravel = 0.34f;
+
+        // Below this a cap is bigger than the control it sits on, so the fader draws its fill
+        // alone rather than a cap with a sliver of slot behind it.
+        constexpr float MinimumThumbSize = 34.0f;
+
+        // Where the sheen has finished falling off, as a fraction of the plate's height.
+        constexpr float SheenFalloff = 0.42f;
+
+        // A switch that is on stays lit rather than decaying, but not at the full strength a
+        // fresh hit gets, or a page of latched buttons is the brightest thing in the room.
+        constexpr float SwitchOnGlowOpacity = 0.55f;
+
+        constexpr float HatchSpacing = 9.0f;
+        constexpr float HatchThickness = 2.0f;
+
+        // How far down a control goes when the device it sends to is not here. Struck through
+        // and dimmed, never hidden: a layout with a missing device still has to be editable.
+        constexpr float UnavailableOpacity = 0.55f;
+
+        // How much of each lamp's slice is lamp rather than gap. Too low and the ring reads as a
+        // dotted line rather than a row of lamps.
+        constexpr float LampDutyCycle = 0.66f;
+
+        // The pointer on a knob, against the dial's diameter. The comp draws it 2 px wide and
+        // three tenths of the dial long, starting a tenth of the way in from the top.
+        constexpr float PointerWidthFraction = 0.025f;
+        constexpr float PointerLengthFraction = 0.30f;
+        constexpr float PointerClearance = 2.0f;
+        constexpr float CenterDotFraction = 0.045f;
+        constexpr float DetentTickLength = 5.0f;
+
+        // A knob's travel: three quarters of a turn, starting at seven o'clock. The pointer is
+        // authored pointing straight up, which is the middle of that range.
+        constexpr float KnobStartAngle = -135.0f;
+
+        // Tick marks beside a fader's slot, and how far across the control they reach.
+        constexpr int32_t FaderTickCount = 5;
+        constexpr float FaderTickSpan = 0.55f;
+
+        // The halo around a value bar. Measured off the comp: at the bar's edge it is a little
+        // under half the bar's own strength, and it has fallen to nothing about one slot width
+        // out, on a gaussian curve.
+        constexpr int32_t GlowRingCount = 12;
+        constexpr float GlowReachFraction = 1.10f;
+        constexpr double GlowPeakAlpha = 0.58;
+        constexpr double GlowTightness = 5.0;
+
+        // A ring fainter than this is a step of one in eight bits. Drawing it costs a shape and
+        // changes nothing.
+        constexpr double GlowMinimumStep = 0.004;
+
         // Long enough to see across a room, short enough not to smear into the next hit.
         constexpr int64_t BloomDecayMilliseconds = 220;
 
@@ -75,6 +147,54 @@ namespace glass
             }
         }
 
+        // A control with travel: the value moves along a slot and a cap can ride it. Everything
+        // else shows its value as a strip along an edge.
+        bool DrawsATrack(_In_ ControlKind kind) noexcept
+        {
+            switch (kind)
+            {
+            case ControlKind::Fader:
+            case ControlKind::Meter:
+                return true;
+
+            default:
+                return false;
+            }
+        }
+
+        // A control that is on or off rather than somewhere along a travel. Its plate is what
+        // carries the state, which is the one place a hue is allowed to fill an area.
+        bool IsSwitchKind(_In_ ControlKind kind) noexcept
+        {
+            switch (kind)
+            {
+            case ControlKind::Button:
+            case ControlKind::Toggle:
+            case ControlKind::Pad:
+            case ControlKind::PageTab:
+            case ControlKind::Lamp:
+                return true;
+
+            default:
+                return false;
+            }
+        }
+
+        // Stops live on a message rather than on the control, because one control can send two
+        // things and only one of them steps.
+        bool HasDetents(_In_ Control const& control) noexcept
+        {
+            for (auto const& message : control.Messages)
+            {
+                if (message.Detents.Mode != DetentMode::Continuous)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         projected::SurfaceControlRole RoleFor(_In_ ControlKind kind) noexcept
         {
             switch (kind)
@@ -118,6 +238,156 @@ namespace glass
         m_brushes.emplace(key, brush);
 
         return brush;
+    }
+
+    _Use_decl_annotations_
+    CompositionLinearGradientBrush SurfaceRenderer::VerticalBrush(
+        Compositor const& compositor,
+        ThemeColor const& top,
+        ThemeColor const& bottom,
+        bool horizontal)
+    {
+        auto const key = (static_cast<uint64_t>(ColorKey(top)) << 32) |
+            static_cast<uint64_t>(ColorKey(bottom)) | (horizontal ? 0x1ull : 0ull);
+
+        auto const existing = m_gradients.find(key);
+
+        if (existing != m_gradients.end())
+        {
+            return existing->second;
+        }
+
+        auto brush = compositor.CreateLinearGradientBrush();
+
+        brush.StartPoint(horizontal ? float2{ 0.0f, 0.5f } : float2{ 0.5f, 0.0f });
+        brush.EndPoint(horizontal ? float2{ 1.0f, 0.5f } : float2{ 0.5f, 1.0f });
+
+        auto first = compositor.CreateColorGradientStop();
+        first.Offset(0.0f);
+        first.Color(ToColor(top));
+
+        auto last = compositor.CreateColorGradientStop();
+        last.Offset(1.0f);
+        last.Color(ToColor(bottom));
+
+        brush.ColorStops().Append(first);
+        brush.ColorStops().Append(last);
+
+        m_gradients.emplace(key, brush);
+
+        return brush;
+    }
+
+    _Use_decl_annotations_
+    CompositionLinearGradientBrush SurfaceRenderer::SheenBrush(
+        Compositor const& compositor,
+        ThemeColor const& color)
+    {
+        auto const key = 0x4000000000000000ull | static_cast<uint64_t>(ColorKey(color));
+
+        auto const existing = m_gradients.find(key);
+
+        if (existing != m_gradients.end())
+        {
+            return existing->second;
+        }
+
+        auto clear = color;
+        clear.A = 0;
+
+        auto brush = compositor.CreateLinearGradientBrush();
+
+        brush.StartPoint(float2{ 0.5f, 0.0f });
+        brush.EndPoint(float2{ 0.5f, 1.0f });
+
+        auto top = compositor.CreateColorGradientStop();
+        top.Offset(0.0f);
+        top.Color(ToColor(color));
+
+        // Gone before the middle, the way light falls off a curved edge. Past that it is the
+        // plate's own color, so the bottom of the control is not lifted at all.
+        auto knee = compositor.CreateColorGradientStop();
+        knee.Offset(SheenFalloff);
+        knee.Color(ToColor(clear));
+
+        auto bottom = compositor.CreateColorGradientStop();
+        bottom.Offset(1.0f);
+        bottom.Color(ToColor(clear));
+
+        brush.ColorStops().Append(top);
+        brush.ColorStops().Append(knee);
+        brush.ColorStops().Append(bottom);
+
+        m_gradients.emplace(key, brush);
+
+        return brush;
+    }
+
+    _Use_decl_annotations_
+    CompositionBrush SurfaceRenderer::ShadowMaskFor(
+        Compositor const& compositor,
+        float width,
+        float height,
+        float cornerRadius,
+        bool round)
+    {
+        // A rounded rectangle stretches through a nine grid, so every control that shares a
+        // corner radius shares one offscreen. A circle cannot, because its corners are half its
+        // size, so those are cached by size instead.
+        auto const radius = round
+            ? std::max(2.0f, std::min(width, height) / 2.0f)
+            : std::max(0.5f, cornerRadius);
+
+        auto const key = round
+            ? (0x8000000000000000ull |
+                (static_cast<uint64_t>(std::lround(width)) << 20) |
+                static_cast<uint64_t>(std::lround(height)))
+            : static_cast<uint64_t>(std::lround(radius * 4.0f));
+
+        auto const existing = m_shadowMasks.find(key);
+
+        if (existing != m_shadowMasks.end())
+        {
+            return existing->second;
+        }
+
+        auto const sourceWidth = round ? width : radius * 4.0f + 4.0f;
+        auto const sourceHeight = round ? height : radius * 4.0f + 4.0f;
+
+        auto source = compositor.CreateShapeVisual();
+        source.Size(float2{ sourceWidth, sourceHeight });
+
+        auto geometry = compositor.CreateRoundedRectangleGeometry();
+        geometry.Size(float2{ sourceWidth, sourceHeight });
+        geometry.CornerRadius(float2{ radius, radius });
+
+        auto shape = compositor.CreateSpriteShape(geometry);
+        shape.FillBrush(compositor.CreateColorBrush(winrt::Windows::UI::Colors::White()));
+
+        source.Shapes().Append(shape);
+
+        auto surface = compositor.CreateVisualSurface();
+        surface.SourceVisual(source);
+        surface.SourceSize(float2{ sourceWidth, sourceHeight });
+
+        auto surfaceBrush = compositor.CreateSurfaceBrush(surface);
+
+        CompositionBrush mask{ surfaceBrush };
+
+        if (!round)
+        {
+            auto nine = compositor.CreateNineGridBrush();
+            nine.Source(surfaceBrush);
+            nine.SetInsets(radius + 1.0f);
+
+            mask = nine;
+        }
+
+        // The offscreen is only rendered while the visual it reads from is alive.
+        m_maskSources.push_back(source);
+        m_shadowMasks.emplace(key, mask);
+
+        return mask;
     }
 
     _Use_decl_annotations_
@@ -233,16 +503,30 @@ namespace glass
         visual.Kind = control.Kind;
         visual.Width = width;
         visual.Height = height;
+        visual.HasThumb = false;
+        visual.ThumbLength = 0.0f;
 
         // Rebuilt rather than reused: the track, the pipe and the arc all have their size baked
         // into their geometry, and there is nothing to tune once they exist.
         visual.PipeGeometry = nullptr;
         visual.ArcGeometry = nullptr;
         visual.PipeShape = nullptr;
+        visual.ThumbGeometry = nullptr;
+        visual.ThumbLineGeometry = nullptr;
+
+        auto const round = IsRoundControl(control.Kind);
+
+        auto const corner = round
+            ? std::min(width, height) * 0.5f
+            : static_cast<float>(std::min(
+                static_cast<double>(theme.CornerRadius), std::min(width, height) / 2.0));
 
         if (visual.Root == nullptr)
         {
             visual.Root = compositor.CreateContainerVisual();
+
+            visual.Elevation = compositor.CreateSpriteVisual();
+            visual.Root.Children().InsertAtTop(visual.Elevation);
 
             // The bloom sits behind the plate. Changing a visual's opacity invalidates no layout,
             // which is what makes a page of blinking controls free.
@@ -252,29 +536,25 @@ namespace glass
 
             visual.Shape = compositor.CreateShapeVisual();
             visual.Root.Children().InsertAtTop(visual.Shape);
+
+            visual.ValueShape = compositor.CreateShapeVisual();
+            visual.Root.Children().InsertAtTop(visual.ValueShape);
+
+            visual.Unavailable = compositor.CreateShapeVisual();
+            visual.Unavailable.IsVisible(false);
+            visual.Root.Children().InsertAtTop(visual.Unavailable);
         }
         else
         {
             visual.Shape.Shapes().Clear();
+            visual.ValueShape.Shapes().Clear();
+            visual.Unavailable.Shapes().Clear();
         }
 
         visual.Root.Size(float2{ width, height });
-
-        visual.Bloom.Brush(BrushFor(compositor, colors.Bloom));
-        visual.Bloom.Offset(float3{ -BloomSpread, -BloomSpread, 0.0f });
-        visual.Bloom.Size(float2{ width + BloomSpread * 2, height + BloomSpread * 2 });
-
         visual.Shape.Size(float2{ width, height });
-
-        auto const corner = static_cast<float>(std::min(
-            static_cast<double>(theme.CornerRadius), std::min(width, height) / 2.0));
-
-        auto plateGeometry = compositor.CreateRoundedRectangleGeometry();
-        plateGeometry.Size(float2{ width - 1.0f, height - 1.0f });
-        plateGeometry.Offset(float2{ 0.5f, 0.5f });
-        plateGeometry.CornerRadius(float2{ corner, corner });
-
-        visual.PlateShape = compositor.CreateSpriteShape(plateGeometry);
+        visual.ValueShape.Size(float2{ width, height });
+        visual.Unavailable.Size(float2{ width, height });
 
         // The theme decides how a surface looks; one control can disagree with it. Outline drops
         // the plate, Solid fills it in the control's own hue, Bare drops both.
@@ -298,7 +578,78 @@ namespace glass
             rimColor.A = 0;
         }
 
+        // ---- the elevation shadow, cast through a mask so it is the shape of the control ----
+
+        if (theme.PlateElevation > 0 && plateColor.A > 0)
+        {
+            auto shadow = compositor.CreateDropShadow();
+
+            shadow.BlurRadius(3.0f);
+            shadow.Offset(float3{ 0.0f, 1.0f, 0.0f });
+            shadow.Color(winrt::Windows::UI::Colors::Black());
+            shadow.Opacity(static_cast<float>(theme.PlateElevation) / 100.0f);
+            shadow.Mask(ShadowMaskFor(compositor, width, height, corner, round));
+
+            visual.Elevation.Size(float2{ width, height });
+            visual.Elevation.Shadow(shadow);
+            visual.Elevation.IsVisible(true);
+        }
+        else
+        {
+            visual.Elevation.Shadow(nullptr);
+            visual.Elevation.IsVisible(false);
+        }
+
+        // ---- the glow: a real blur in the control's hue, shaped by the same mask ----
+
+        if (colors.Bloom.A > 0)
+        {
+            visual.BloomShadow = compositor.CreateDropShadow();
+
+            visual.BloomShadow.BlurRadius(GlowBlurRadius);
+            visual.BloomShadow.Offset(float3{ 0.0f, 0.0f, 0.0f });
+            visual.BloomShadow.Color(ToColor(colors.Bloom));
+            visual.BloomShadow.Opacity(1.0f);
+            visual.BloomShadow.Mask(ShadowMaskFor(compositor, width, height, corner, round));
+
+            visual.Bloom.Size(float2{ width, height });
+            visual.Bloom.Offset(float3{ 0.0f, 0.0f, 0.0f });
+            visual.Bloom.Shadow(visual.BloomShadow);
+        }
+        else
+        {
+            visual.BloomShadow = nullptr;
+            visual.Bloom.Shadow(nullptr);
+            visual.Bloom.Size(float2{ width, height });
+        }
+
+        // ---- the plate, its sheen and its rim ----
+
+        auto plateGeometry = compositor.CreateRoundedRectangleGeometry();
+        plateGeometry.Size(float2{ width - 1.0f, height - 1.0f });
+        plateGeometry.Offset(float2{ 0.5f, 0.5f });
+        plateGeometry.CornerRadius(float2{ corner, corner });
+
+        visual.PlateShape = compositor.CreateSpriteShape(plateGeometry);
         visual.PlateShape.FillBrush(BrushFor(compositor, plateColor));
+
+        visual.IsSwitch = IsSwitchKind(control.Kind);
+        visual.PlateOffBrush = BrushFor(compositor, plateColor);
+        visual.RimOffBrush = rimColor.A != 0 ? BrushFor(compositor, rimColor).as<CompositionBrush>() : nullptr;
+
+        // What the plate becomes while it is on: the hue carried by the plate itself, top
+        // brighter than bottom, with the rim coming right up. Built once so a switch changing
+        // state is two property sets rather than a rebuild.
+        if (visual.IsSwitch && plateColor.A > 0)
+        {
+            visual.PlateOnBrush = VerticalBrush(compositor, colors.OnPlate, colors.OnPlateEnd, false);
+            visual.RimOnBrush = BrushFor(compositor, colors.OnRim);
+        }
+        else
+        {
+            visual.PlateOnBrush = nullptr;
+            visual.RimOnBrush = nullptr;
+        }
 
         if (rimColor.A != 0)
         {
@@ -308,9 +659,58 @@ namespace glass
 
         visual.Shape.Shapes().Append(visual.PlateShape);
 
+        // A wash of light down the top of the plate, fading out before the middle. It is the
+        // one thing that makes a plate read as a raised piece of glass rather than a filled
+        // rectangle, and it costs one shape.
+        if (colors.Sheen.A > 0 && plateColor.A > 0)
+        {
+            // The plate's own geometry, not a rectangle laid over it: a round control's sheen
+            // has to follow its edge, and a rectangle spills out of a circle at the corners.
+            auto sheenGeometry = compositor.CreateRoundedRectangleGeometry();
+            sheenGeometry.Size(float2{ width - 1.0f, height - 1.0f });
+            sheenGeometry.Offset(float2{ 0.5f, 0.5f });
+            sheenGeometry.CornerRadius(float2{ corner, corner });
+
+            auto sheenShape = compositor.CreateSpriteShape(sheenGeometry);
+            sheenShape.FillBrush(SheenBrush(compositor, colors.Sheen));
+
+            visual.Shape.Shapes().Append(sheenShape);
+        }
+
+        // ---- struck through, for when the device is not here ----
+
+        {
+            auto hatchClip = compositor.CreateRoundedRectangleGeometry();
+            hatchClip.Size(float2{ width, height });
+            hatchClip.CornerRadius(float2{ corner, corner });
+
+            visual.Unavailable.Clip(compositor.CreateGeometricClip(hatchClip));
+
+            auto const ink = ReadableInk(m_deck);
+
+            auto stripe = ink;
+            stripe.A = 26;
+
+            // Diagonals at 45 degrees, drawn past both ends so the clip does the shaping.
+            auto const reach = width + height;
+
+            for (float offset = -height; offset < width; offset += HatchSpacing)
+            {
+                auto line = compositor.CreateLineGeometry();
+                line.Start(float2{ offset, height });
+                line.End(float2{ offset + reach, height - reach });
+
+                auto lineShape = compositor.CreateSpriteShape(line);
+                lineShape.StrokeBrush(BrushFor(compositor, stripe));
+                lineShape.StrokeThickness(HatchThickness);
+
+                visual.Unavailable.Shapes().Append(lineShape);
+            }
+        }
+
         if (DrawsAPipe(control.Kind))
         {
-            if (IsRoundControl(control.Kind))
+            if (round)
             {
                 auto const radius = std::min(width, height) * 0.5f - PipeInset;
 
@@ -324,7 +724,6 @@ namespace glass
                 auto trackShape = compositor.CreateSpriteShape(trackGeometry);
                 trackShape.StrokeBrush(BrushFor(compositor, colors.Track));
                 trackShape.StrokeThickness(KnobArcThickness);
-                visual.Shape.Shapes().Append(trackShape);
 
                 visual.ArcGeometry = compositor.CreateEllipseGeometry();
                 visual.ArcGeometry.Radius(float2{ radius, radius });
@@ -336,16 +735,110 @@ namespace glass
                 visual.PipeShape = compositor.CreateSpriteShape(visual.ArcGeometry);
                 visual.PipeShape.StrokeBrush(BrushFor(compositor, colors.Pipe));
                 visual.PipeShape.StrokeThickness(KnobArcThickness);
-                visual.Shape.Shapes().Append(visual.PipeShape);
+
+                // Bigwig's ring of lamps is the same arc with a repeating gap laid over it, so a
+                // ringed knob is still one shape rather than thirty. Below the theme's own floor
+                // the lamps stop separating and it falls back to the solid arc on its own.
+                if (UsesLampRing(theme, control.Width, control.Height))
+                {
+                    auto const circumference = 2.0f * 3.14159265f * radius * (KnobSweepDegrees / 360.0f);
+                    auto const lamps = static_cast<float>(std::max(2, theme.LampCount));
+                    auto const period = circumference / lamps / KnobArcThickness;
+
+                    auto const dash = std::max(0.2f, period * LampDutyCycle);
+                    auto const gap = std::max(0.1f, period - dash);
+
+                    for (auto const& shape : { trackShape, visual.PipeShape })
+                    {
+                        shape.StrokeDashArray().Append(dash);
+                        shape.StrokeDashArray().Append(gap);
+                        shape.StrokeDashCap(CompositionStrokeCap::Flat);
+                    }
+                }
+
+                visual.Shape.Shapes().Append(trackShape);
+                visual.ValueShape.Shapes().Append(visual.PipeShape);
+
+                // ---- the pointer, the center dot and the detent mark ----
+
+                auto const center = float2{ width * 0.5f, height * 0.5f };
+                auto const dial = std::min(width, height);
+
+                auto const pointerWidth = std::max(2.0f, dial * PointerWidthFraction);
+                auto const pointerLength = dial * PointerLengthFraction;
+
+                // Starts just inside the track rather than at a fixed fraction: the comp hangs
+                // its arc outside the dial and this one runs inside it, so a fixed inset puts
+                // the pointer straight through the arc.
+                auto const pointerTop =
+                    center.y - (radius - KnobArcThickness * 0.5f - PointerClearance);
+
+                auto pointerGeometry = compositor.CreateRoundedRectangleGeometry();
+                pointerGeometry.Size(float2{ pointerWidth, pointerLength });
+                pointerGeometry.Offset(float2{ center.x - pointerWidth * 0.5f, pointerTop });
+                pointerGeometry.CornerRadius(float2{ pointerWidth * 0.5f, pointerWidth * 0.5f });
+
+                visual.PointerShape = compositor.CreateSpriteShape(pointerGeometry);
+                visual.PointerShape.FillBrush(BrushFor(compositor, colors.Pointer));
+                visual.PointerShape.CenterPoint(center);
+
+                visual.ValueShape.Shapes().Append(visual.PointerShape);
+
+                auto const dotSize = std::max(3.0f, dial * CenterDotFraction);
+
+                auto dotGeometry = compositor.CreateEllipseGeometry();
+                dotGeometry.Radius(float2{ dotSize * 0.5f, dotSize * 0.5f });
+                dotGeometry.Center(center);
+
+                auto dotShape = compositor.CreateSpriteShape(dotGeometry);
+                dotShape.FillBrush(BrushFor(compositor, colors.Marks));
+
+                visual.ValueShape.Shapes().Append(dotShape);
+
+                // A knob with stops gets a mark at twelve o'clock, so the middle one can be
+                // found without watching the readout.
+                if (HasDetents(control))
+                {
+                    auto detentGeometry = compositor.CreateRoundedRectangleGeometry();
+                    detentGeometry.Size(float2{ 1.0f, DetentTickLength });
+                    detentGeometry.Offset(float2{ center.x - 0.5f, (height - dial) * 0.5f + 1.0f });
+
+                    auto detentShape = compositor.CreateSpriteShape(detentGeometry);
+                    detentShape.FillBrush(BrushFor(compositor, colors.Label));
+
+                    visual.Shape.Shapes().Append(detentShape);
+                }
             }
             else
             {
                 auto const vertical = IsTallControl(control.Kind, control.Width, control.Height);
 
-                auto const slot = std::max(6.0f, std::min(width, height) * 0.2f);
+                visual.Vertical = vertical;
+
+                auto const travels = DrawsATrack(control.Kind);
+
+                // A button has no travel, so its value is a strip along one edge rather than a
+                // slot through the middle. The theme says which edge.
+                auto const strip = !travels;
+
+                if (strip && theme.ValueStrip == ValueStripPlacement::None)
+                {
+                    return;
+                }
+
+                auto const slot = travels
+                    ? std::max(6.0f, std::min(width, height) * 0.2f)
+                    : StripThickness;
+
+                auto const stripTop = theme.ValueStrip == ValueStripPlacement::Top;
 
                 auto const trackX = vertical ? (width * 0.5f - slot * 0.5f) : PipeInset;
-                auto const trackY = vertical ? PipeInset : (height - PipeInset - slot);
+                auto const trackY = vertical
+                    ? PipeInset
+                    : (strip
+                        ? (stripTop ? StripEdgeInset : height - StripEdgeInset - slot)
+                        : height - PipeInset - slot);
+
                 auto const trackW = vertical ? slot : (width - PipeInset * 2);
                 auto const trackH = vertical ? (height - PipeInset * 2) : slot;
 
@@ -355,22 +848,194 @@ namespace glass
                 trackGeometry.CornerRadius(float2{ slot * 0.5f, slot * 0.5f });
 
                 auto trackShape = compositor.CreateSpriteShape(trackGeometry);
-                trackShape.FillBrush(BrushFor(compositor, colors.Track));
+
+                // The unlit part of a button's strip is its own hue turned right down, the way
+                // an unlit lamp still shows you where the lamp is. A fader's is the theme's
+                // track color, because a fader slot is a groove in the surface.
+                if (strip)
+                {
+                    auto dim = colors.Pipe;
+                    dim.A = static_cast<uint8_t>(std::lround(dim.A * 0.22));
+                    trackShape.FillBrush(BrushFor(compositor, dim));
+                }
+                else
+                {
+                    trackShape.FillBrush(BrushFor(compositor, colors.Track));
+
+                    // The groove has a hairline down its lit edge, which is what stops it
+                    // reading as a painted stripe.
+                    trackShape.StrokeBrush(BrushFor(compositor, colors.Sheen));
+                    trackShape.StrokeThickness(1.0f);
+                }
+
                 visual.Shape.Shapes().Append(trackShape);
+
+                // Tick marks across the travel, so a fader has somewhere to be other than the
+                // two ends. Two short marks either side of the slot rather than one line across
+                // it: a line through the value bar reads as a defect in the bar.
+                if (travels)
+                {
+                    auto const cross = vertical ? width : height;
+                    auto const markLength = (cross * FaderTickSpan - slot) * 0.5f;
+
+                    auto const trackStart = vertical ? trackY : trackX;
+                    auto const trackRun = vertical ? trackH : trackW;
+
+                    if (markLength >= 2.0f)
+                    {
+                        // Not "near" and "far": both are macros out of windows.h.
+                        auto const leading = (cross - cross * FaderTickSpan) * 0.5f;
+                        auto const trailing = (cross + slot) * 0.5f;
+
+                        for (int32_t tick = 0; tick < FaderTickCount; ++tick)
+                        {
+                            auto const along = std::clamp(
+                                trackStart + trackRun * static_cast<float>(tick) /
+                                    static_cast<float>(FaderTickCount - 1),
+                                0.0f,
+                                (vertical ? height : width) - 1.0f);
+
+                            for (auto const side : { leading, trailing })
+                            {
+                                auto tickGeometry = compositor.CreateRoundedRectangleGeometry();
+                                tickGeometry.Size(vertical
+                                    ? float2{ markLength, 1.0f }
+                                    : float2{ 1.0f, markLength });
+                                tickGeometry.Offset(vertical
+                                    ? float2{ side, along }
+                                    : float2{ along, side });
+
+                                auto tickShape = compositor.CreateSpriteShape(tickGeometry);
+                                tickShape.FillBrush(BrushFor(compositor, colors.Marks));
+
+                                visual.Shape.Shapes().Append(tickShape);
+                            }
+                        }
+                    }
+                }
 
                 visual.PipeGeometry = compositor.CreateRoundedRectangleGeometry();
                 visual.PipeGeometry.CornerRadius(float2{ slot * 0.5f, slot * 0.5f });
                 visual.PipeGeometry.Size(float2{ vertical ? trackW : 0.0f, vertical ? 0.0f : trackH });
                 visual.PipeGeometry.Offset(float2{ trackX, vertical ? (trackY + trackH) : trackY });
 
+                // The light around the bar: concentric strokes of the bar's OWN geometry, each
+                // one the step between two points on a gaussian, widest and faintest first. A
+                // blurred drop shadow was the obvious way to do this and it came out as a bright
+                // knuckle halfway down the bar with no light at all along the rest of it.
+                // Strokes also track the value for free, because they share the bar's geometry.
+                //
+                // The curve is measured off the comp rather than guessed: at the bar's edge the
+                // halo is a little under half the bar's own strength, and it is gone by about
+                // one slot width out. Evenly spaced rings of similar weight instead give a flat
+                // plateau with a cliff at the end of it, which reads as a hard edge.
+                if (colors.Bloom.A > 0)
+                {
+                    auto const reach = slot * GlowReachFraction;
+                    auto const peak = GlowPeakAlpha * theme.GlowStrength / 100.0;
+
+                    auto previous = 0.0;
+
+                    for (int32_t ring = 0; ring < GlowRingCount; ++ring)
+                    {
+                        // Outside in: 1 at the far edge of the halo, 0 at the bar.
+                        auto const t = 1.0 - static_cast<double>(ring) / GlowRingCount;
+                        auto const cumulative = peak * std::exp(-GlowTightness * t * t);
+                        auto const step = cumulative - previous;
+
+                        previous = cumulative;
+
+                        if (step < GlowMinimumStep)
+                        {
+                            continue;
+                        }
+
+                        auto glow = colors.Pipe;
+                        glow.A = static_cast<uint8_t>(std::clamp(std::lround(255.0 * step), 0L, 255L));
+
+                        auto glowShape = compositor.CreateSpriteShape(visual.PipeGeometry);
+                        glowShape.StrokeBrush(BrushFor(compositor, glow));
+
+                        // A stroke straddles the path, so half of it is the reach. Adding the
+                        // slot width here as well put every ring the same six pixels clear of
+                        // the bar, which is what made the halo a flat plateau with a cliff.
+                        glowShape.StrokeThickness(static_cast<float>(reach * t * 2.0));
+
+                        visual.ValueShape.Shapes().Append(glowShape);
+                    }
+                }
+
                 visual.PipeShape = compositor.CreateSpriteShape(visual.PipeGeometry);
-                visual.PipeShape.FillBrush(BrushFor(compositor, colors.Pipe));
-                visual.Shape.Shapes().Append(visual.PipeShape);
+
+                // Brightest where the value is, falling away behind it. On a vertical fader the
+                // value is at the top of the fill, so the gradient runs the other way.
+                visual.PipeShape.FillBrush(colors.PipeEnd == colors.Pipe
+                    ? BrushFor(compositor, colors.Pipe).as<CompositionBrush>()
+                    : VerticalBrush(
+                        compositor,
+                        vertical ? colors.Pipe : colors.PipeEnd,
+                        vertical ? colors.PipeEnd : colors.Pipe,
+                        !vertical).as<CompositionBrush>());
+
+                visual.ValueShape.Shapes().Append(visual.PipeShape);
 
                 visual.TrackOrigin = vertical ? trackY : trackX;
                 visual.TrackLength = vertical ? trackH : trackW;
                 visual.PipeThickness = vertical ? trackW : trackH;
                 visual.PipeCrossOffset = vertical ? trackX : trackY;
+                // ---- the cap ----
+
+                if (travels && theme.Thumb != ThumbStyle::None && std::min(width, height) >= MinimumThumbSize)
+                {
+                    auto const cross = vertical ? width : height;
+
+                    auto const thumbSpan = cross * ThumbSpanFraction;
+                    auto const thumbThickness = std::min(
+                        thumbSpan * ThumbAspect,
+                        visual.TrackLength * MaximumThumbShareOfTravel);
+
+                    visual.HasThumb = true;
+                    visual.ThumbLength = thumbThickness;
+                    visual.ThumbSpan = thumbSpan;
+                    visual.ThumbInset = (cross - thumbSpan) * 0.5f;
+                    visual.ThumbLineLength = thumbSpan * ThumbLineSpanFraction;
+                    visual.ThumbLineThickness = std::max(1.0f, thumbThickness * ThumbLineAspect);
+
+                    auto const thumbCorner = thumbThickness * ThumbCornerFraction;
+
+                    visual.ThumbGeometry = compositor.CreateRoundedRectangleGeometry();
+                    visual.ThumbGeometry.CornerRadius(float2{ thumbCorner, thumbCorner });
+                    visual.ThumbGeometry.Size(vertical
+                        ? float2{ thumbSpan, thumbThickness }
+                        : float2{ thumbThickness, thumbSpan });
+
+                    auto thumbShape = compositor.CreateSpriteShape(visual.ThumbGeometry);
+
+                    thumbShape.FillBrush(colors.Thumb == colors.ThumbEnd
+                        ? BrushFor(compositor, colors.Thumb).as<CompositionBrush>()
+                        : VerticalBrush(compositor, colors.Thumb, colors.ThumbEnd, !vertical)
+                            .as<CompositionBrush>());
+
+                    visual.ValueShape.Shapes().Append(thumbShape);
+
+                    // The hairline of hue through a neutral cap, which is what tells you which
+                    // control you are holding when six of them are side by side.
+                    if (colors.ThumbLine.A > 0)
+                    {
+                        auto const lineCorner = visual.ThumbLineThickness * 0.5f;
+
+                        visual.ThumbLineGeometry = compositor.CreateRoundedRectangleGeometry();
+                        visual.ThumbLineGeometry.CornerRadius(float2{ lineCorner, lineCorner });
+                        visual.ThumbLineGeometry.Size(vertical
+                            ? float2{ visual.ThumbLineLength, visual.ThumbLineThickness }
+                            : float2{ visual.ThumbLineThickness, visual.ThumbLineLength });
+
+                        auto lineShape = compositor.CreateSpriteShape(visual.ThumbLineGeometry);
+                        lineShape.FillBrush(BrushFor(compositor, colors.ThumbLine));
+
+                        visual.ValueShape.Shapes().Append(lineShape);
+                    }
+                }
             }
         }
     }
@@ -497,6 +1162,9 @@ namespace glass
         m_labelOffsets.clear();
         m_values.clear();
         m_brushes.clear();
+        m_gradients.clear();
+        m_shadowMasks.clear();
+        m_maskSources.clear();
         m_host = nullptr;
     }
 
@@ -571,28 +1239,122 @@ namespace glass
 
         try
         {
+            // A switch says what it is by what its plate is painted with. Nothing else on the
+            // surface is allowed to fill an area with a hue, which is why "on" reads across a
+            // room on a page of two hundred.
+            if (visual.IsSwitch && visual.PlateShape != nullptr)
+            {
+                auto const on = clamped >= 0.5f;
+
+                if (on && visual.PlateOnBrush != nullptr)
+                {
+                    visual.PlateShape.FillBrush(visual.PlateOnBrush);
+
+                    if (visual.RimOnBrush != nullptr)
+                    {
+                        visual.PlateShape.StrokeBrush(visual.RimOnBrush);
+                    }
+                }
+                else if (visual.PlateOffBrush != nullptr)
+                {
+                    visual.PlateShape.FillBrush(visual.PlateOffBrush);
+
+                    if (visual.RimOffBrush != nullptr)
+                    {
+                        visual.PlateShape.StrokeBrush(visual.RimOffBrush);
+                    }
+                }
+
+                // The light around it stays up for as long as it is on, rather than decaying
+                // the way a single hit does.
+                if (visual.Bloom != nullptr && visual.BloomShadow != nullptr)
+                {
+                    visual.Bloom.StopAnimation(L"Opacity");
+                    visual.Bloom.Opacity(on ? SwitchOnGlowOpacity : 0.0f);
+                }
+            }
+
             if (visual.ArcGeometry != nullptr)
             {
                 visual.ArcGeometry.TrimEnd(clamped * (KnobSweepDegrees / 360.0f));
+
+                if (visual.PointerShape != nullptr)
+                {
+                    visual.PointerShape.RotationAngleInDegrees(
+                        KnobStartAngle + clamped * KnobSweepDegrees);
+                }
             }
             else if (visual.PipeGeometry != nullptr)
             {
-                auto const vertical = IsTallControl(visual.Kind, visual.Width, visual.Height);
+                auto const vertical = visual.Vertical;
                 auto const filled = visual.TrackLength * clamped;
 
-                if (vertical)
+                auto const fillX = vertical ? visual.PipeCrossOffset : visual.TrackOrigin;
+                auto const fillY = vertical
+                    ? visual.TrackOrigin + visual.TrackLength - filled
+                    : visual.PipeCrossOffset;
+
+                auto const fillW = vertical ? visual.PipeThickness : filled;
+                auto const fillH = vertical ? filled : visual.PipeThickness;
+
+                visual.PipeGeometry.Size(float2{ fillW, fillH });
+                visual.PipeGeometry.Offset(float2{ fillX, fillY });
+
+                // The cap rides the top of the fill, clamped inside the slot at both ends so it
+                // never hangs off the control.
+                if (visual.HasThumb && visual.ThumbGeometry != nullptr)
                 {
-                    visual.PipeGeometry.Size(float2{ visual.PipeThickness, filled });
-                    visual.PipeGeometry.Offset(float2{
-                        visual.PipeCrossOffset,
-                        visual.TrackOrigin + visual.TrackLength - filled });
-                }
-                else
-                {
-                    visual.PipeGeometry.Size(float2{ filled, visual.PipeThickness });
-                    visual.PipeGeometry.Offset(float2{ visual.TrackOrigin, visual.PipeCrossOffset });
+                    auto const half = visual.ThumbLength * 0.5f;
+
+                    auto const travel = std::clamp(
+                        vertical
+                            ? visual.TrackOrigin + visual.TrackLength - filled
+                            : visual.TrackOrigin + filled,
+                        visual.TrackOrigin + half,
+                        visual.TrackOrigin + visual.TrackLength - half);
+
+                    visual.ThumbGeometry.Offset(vertical
+                        ? float2{ visual.ThumbInset, travel - half }
+                        : float2{ travel - half, visual.ThumbInset });
+
+                    if (visual.ThumbLineGeometry != nullptr)
+                    {
+                        auto const lineAcross =
+                            visual.ThumbInset + (visual.ThumbSpan - visual.ThumbLineLength) * 0.5f;
+
+                        auto const lineAlong = travel - visual.ThumbLineThickness * 0.5f;
+
+                        visual.ThumbLineGeometry.Offset(vertical
+                            ? float2{ lineAcross, lineAlong }
+                            : float2{ lineAlong, lineAcross });
+                    }
                 }
             }
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::SetUnavailable(size_t itemIndex, bool unavailable) noexcept
+    {
+        if (itemIndex >= m_visuals.size())
+        {
+            return;
+        }
+
+        auto const& visual = m_visuals[itemIndex];
+
+        if (visual.Unavailable == nullptr || visual.Root == nullptr)
+        {
+            return;
+        }
+
+        try
+        {
+            visual.Unavailable.IsVisible(unavailable);
+            visual.Root.Opacity(unavailable ? UnavailableOpacity : 1.0f);
         }
         catch (...)
         {

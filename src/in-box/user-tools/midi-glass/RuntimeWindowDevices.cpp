@@ -94,8 +94,57 @@ namespace winrt::midiglass::implementation
                 // Named, because "a device is missing" is not something anybody can act on.
                 DeviceStatusText().Text(resources::FormatString(L"RuntimeMissingDevicesFormat", missing));
             }
+
+            MarkUnreachableControls(devices);
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the device status.")
+    }
+
+    // A control whose device is not here is struck through on the surface. The status line says
+    // which device went; this says which controls have gone quiet because of it, which is the
+    // part somebody can act on mid set.
+    _Use_decl_annotations_
+    void RuntimeWindow::MarkUnreachableControls(std::vector<glass::ResolvedDevice> const& devices)
+    {
+        try
+        {
+            if (m_pageIndex >= m_document.Pages.size())
+            {
+                return;
+            }
+
+            std::vector<std::wstring> gone{};
+
+            for (auto const& device : devices)
+            {
+                if (!device.IsAvailable)
+                {
+                    gone.push_back(device.Name);
+                }
+            }
+
+            auto const& page = m_document.Pages[m_pageIndex];
+
+            for (size_t index = 0; index < page.Controls.size() && index < m_renderer.ItemCount(); ++index)
+            {
+                auto const& control = page.Controls[index];
+
+                auto unreachable = false;
+
+                for (auto const& message : control.Messages)
+                {
+                    if (!message.DeviceName.empty() &&
+                        std::find(gone.begin(), gone.end(), message.DeviceName) != gone.end())
+                    {
+                        unreachable = true;
+                        break;
+                    }
+                }
+
+                m_renderer.SetUnavailable(index, unreachable);
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to mark the controls whose device is missing.")
     }
 
     _Use_decl_annotations_
