@@ -49,7 +49,7 @@ Two things follow from that, and both are deliberate:
 
 ## Settings
 
-All of these are in the MIDI Settings app under global settings, and in MIDI Console under `midi synth configure`. Apps can read them through the [Windows.Devices.Midi2.Transports.Synth]({{ site.baseurl }}/sdk-reference/Transports/Synth/) namespace. Do not change the user's settings without their explicit permission. We prefer that the MIDI Setup app be the primary way a customer manages the synth settings.
+All of these are in the MIDI Settings app under global settings, and in MIDI Console under `midi synth configure`. Apps can read them through the [Windows.Devices.Midi2.Transports.Synth]({{ site.baseurl }}/sdk-reference/Transports/Synth/) namespace. Do not change the user's settings without their explicit permission. We prefer that the MIDI Settings app be the primary way a customer manages the synth settings.
 
 | Setting | What it does |
 | --- | --- |
