@@ -190,19 +190,11 @@ namespace winrt::midiglass::implementation
             m_input.ReleaseAll();
             m_input.Detach();
 
-            m_devices.Stop();
-
-            auto const ownerId = m_ownerId;
-
-            // Blocking calls, so they leave the UI thread. The router outlives the window.
-            std::thread([ownerId]()
-                {
-                    winrt::init_apartment(winrt::apartment_type::multi_threaded);
-
-                    glass::OutputRouter::Current().Close(ownerId);
-
-                    winrt::uninit_apartment();
-                }).detach();
+            if (m_player != nullptr)
+            {
+                // Blocking calls, so they leave the UI thread. The router outlives the window.
+                m_player->Stop();
+            }
 
             m_renderer.Teardown();
 
@@ -215,7 +207,7 @@ namespace winrt::midiglass::implementation
     {
         try
         {
-            SurfaceDeck().Background(media::SolidColorBrush(ToColor(m_theme.Deck.Color)));
+            SurfaceDeck().Background(glass::MakeDeckBrush(m_theme.Deck));
 
             // Everything outside the page is deliberately not the deck, so the page reads as the
             // object and the surround reads as nothing.
@@ -264,9 +256,11 @@ namespace winrt::midiglass::implementation
 
         m_input.Snap = [weak](size_t itemIndex, double position) -> double
             {
-                if (auto strong = weak.get())
+                auto strong = weak.get();
+
+                if (strong != nullptr && strong->m_player != nullptr)
                 {
-                    return strong->m_engine.SnapToDetent(
+                    return strong->m_player->SnapToDetent(
                         strong->m_renderer.ControlIndexOf(itemIndex), position);
                 }
 
@@ -525,15 +519,6 @@ namespace winrt::midiglass::implementation
     {
         m_input.ReleaseAll();
 
-        // Everything this process is driving, not just this window. Blocking, so it leaves the
-        // UI thread rather than making the button feel stuck.
-        std::thread([]()
-            {
-                winrt::init_apartment(winrt::apartment_type::multi_threaded);
-
-                glass::OutputRouter::Current().Panic();
-
-                winrt::uninit_apartment();
-            }).detach();
+        glass::LivePlayer::Panic();
     }
 }

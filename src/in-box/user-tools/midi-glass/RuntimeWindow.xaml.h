@@ -12,11 +12,9 @@
 #include "WindowChrome.h"
 #include "LayoutModel.h"
 #include "ThemeModel.h"
-#include "BindingEngine.h"
-#include "ValueThrottle.h"
-#include "DeviceCatalog.h"
-#include "OutputRouter.h"
+#include "LivePlayer.h"
 #include "SurfaceRenderer.h"
+#include "DeckBrush.h"
 #include "InputRouter.h"
 
 namespace winrt::midiglass::implementation
@@ -90,21 +88,13 @@ namespace winrt::midiglass::implementation
         // ---- devices and sending ----
 
         void StartDevices();
-        void ReopenConnections();
         void UpdateDeviceStatus();
-
-        // Every send goes through here, on the UI thread, straight out of the pointer handler.
-        void SendPrepared(_In_ uint32_t count) noexcept;
 
         void OnControlValueChanged(_In_ size_t itemIndex, _In_ double value, _In_ bool isFinal);
         void OnControlSetDirectly(_In_ size_t itemIndex, _In_ double value);
         void OnControlSwitched(_In_ size_t itemIndex, _In_ bool isOn);
 
-        void SendStartupValues();
-        void OnFeedbackWords(
-            _In_ uint64_t timestamp,
-            _In_ uint32_t wordCount,
-            _In_reads_(wordCount) uint32_t const* words);
+        void OnFeedbackMoved(_In_ uint32_t controlIndex, _In_ double value);
 
         midiapp::WindowChrome m_chrome{};
 
@@ -116,29 +106,12 @@ namespace winrt::midiglass::implementation
 
         glass::SurfaceRenderer m_renderer{};
         glass::InputRouter m_input{};
-        glass::BindingEngine m_engine{};
-        glass::DeviceCatalog m_devices{};
 
-        // One throttle per control, so a fader on a DIN cable can be limited without touching a
-        // note on. Indexed the same way the engine indexes controls.
-        std::vector<glass::ValueThrottle> m_throttles{};
-
-        // Rebuilt whenever the device table changes, and only ever read on the UI thread, so the
-        // path a finger takes never waits on a lock.
-        std::vector<winrt::com_ptr<IMidiEndpointConnectionRaw>> m_sendTable{};
-
-        // Caller-owned, reused, never resized on the hot path.
-        std::array<glass::PreparedSend, glass::MaximumSendsPerEvent> m_sends{};
+        // The device table, the connections and the binding engine. Shared with the editor's
+        // Try mode, which drives one of these too.
+        std::shared_ptr<glass::LivePlayer> m_player{};
 
         std::wstring m_ownerId{};
-
-        // What the device table resolved to last time. An unrelated device arriving must not
-        // rebuild connections that did not change, and must not replay the startup values.
-        std::wstring m_destinationSignature{};
-
-        // A layout initializes once per run. Replaying it because a webcam was plugged in would
-        // push a whole desk back to its opening positions in the middle of a set.
-        bool m_startupValuesSent{ false };
 
         winrt::Microsoft::UI::Dispatching::DispatcherQueue m_dispatcher{ nullptr };
 

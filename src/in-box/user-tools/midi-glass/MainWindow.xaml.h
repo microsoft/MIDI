@@ -140,6 +140,7 @@ namespace winrt::midiglass::implementation
         bool CheckServiceState();
 
         void RunCard(_In_ midiglass::LayoutCard const& card);
+        void EditCard(_In_ midiglass::LayoutCard const& card);
 
         // Reads, changes and writes one layout, then refreshes. Everything the card menu does to
         // a file goes through here, so there is one place that knows a save can fail.

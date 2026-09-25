@@ -13,7 +13,12 @@ namespace winrt::midiglass::implementation
 {
     struct GlassControl : GlassControlT<GlassControl>
     {
-        GlassControl() = default;
+        GlassControl()
+        {
+            // Without this the control has no template, renders nothing, and cannot be hit by a
+            // pointer. See Themes/Generic.xaml.
+            DefaultStyleKey(winrt::box_value(L"midiglass.GlassControl"));
+        }
 
         double SurfaceValue() const noexcept { return m_value; }
 

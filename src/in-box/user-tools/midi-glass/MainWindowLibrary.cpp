@@ -876,13 +876,37 @@ namespace winrt::midiglass::implementation
     }
 
     _Use_decl_annotations_
+    void MainWindow::EditCard(midiglass::LayoutCard const& card)
+    {
+        if (card == nullptr || card.IsNewTile())
+        {
+            return;
+        }
+
+        auto const path = std::wstring{ card.FilePath() };
+
+        ::midiglass::AppSettings::Current().RecordLayoutUse(path);
+
+        App::OpenEditorWindow(path);
+
+        m_cardSignature.clear();
+
+        RefreshLibrary();
+    }
+
+    _Use_decl_annotations_
     void MainWindow::OnEditLayoutClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
     {
-        UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
 
-        // The editor arrives in the next phase. The button is disabled rather than missing, so
-        // the card reads the same now as it will then.
+        try
+        {
+            if (auto const element = sender.try_as<xaml::FrameworkElement>())
+            {
+                EditCard(element.DataContext().try_as<midiglass::LayoutCard>());
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to open the layout for editing.")
     }
 
     namespace
@@ -1098,6 +1122,8 @@ namespace winrt::midiglass::implementation
     {
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
+
+        EditCard(m_menuCard);
     }
 
     _Use_decl_annotations_

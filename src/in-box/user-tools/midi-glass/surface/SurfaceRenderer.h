@@ -95,6 +95,19 @@ namespace glass
         // wall of animation by design, which is exactly why honoring this is not optional.
         void SetReducedMotion(_In_ bool reduced) noexcept { m_reducedMotion = reduced; }
 
+        // Moves a control without rebuilding anything. The editor drags with this, because
+        // rebuilding a page of two hundred on every pointer move costs about five milliseconds
+        // and a drag has one frame to spend. The label beside it moves too.
+        void MoveItem(_In_ size_t itemIndex, _In_ double x, _In_ double y) noexcept;
+
+        // The same for a size change. The track length and the pipe thickness are baked into the
+        // geometry, so this re-lays the one control rather than moving it, but it still touches
+        // nothing else on the page.
+        void ResizeItem(
+            _In_ size_t itemIndex,
+            _In_ Control const& control,
+            _In_ Theme const& theme) noexcept;
+
         ThemeColor DeckColor() const noexcept { return m_deck; }
 
     private:
@@ -103,6 +116,19 @@ namespace glass
             _In_ Control const& control,
             _In_ Theme const& theme,
             _In_ uint32_t controlIndex);
+
+        // Everything about a control's drawing that depends on its size. Called once when the
+        // page is built and again on every frame of a resize drag.
+        void LayoutVisual(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Control const& control,
+            _In_ Theme const& theme);
+
+        void LayoutLabel(
+            _In_ size_t itemIndex,
+            _In_ Control const& control,
+            _In_ Theme const& theme);
 
         comp::CompositionColorBrush BrushFor(
             _In_ comp::Compositor const& compositor,
@@ -114,6 +140,14 @@ namespace glass
         std::vector<GlassControlElement> m_elements{};
         std::vector<uint32_t> m_controlIndexes{};
         std::vector<ControlKind> m_kinds{};
+
+        // The label is a XAML child of the host beside the control, not inside it, so it has to
+        // be carried along by hand when the control moves.
+        std::vector<controls::TextBlock> m_labels{};
+        std::vector<double> m_labelOffsets{};
+
+        // What each control is showing, so a re-layout can put the pipe back where it was.
+        std::vector<double> m_values{};
 
         // One brush per distinct color for the whole page. A control never owns a brush, which is
         // what keeps a theme swap a handful of objects rather than a walk of two hundred.

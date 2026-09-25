@@ -1,0 +1,1377 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+// The inspector. Nothing here is modal: it always reflects the selection, and an empty
+// selection shows the page's own properties rather than going blank.
+
+#include "pch.h"
+#include "EditorWindow.xaml.h"
+
+#include "StringResources.h"
+#include "ControlFactory.h"
+#include "SurfaceColors.h"
+
+#include <format>
+
+namespace resources = ::midiglass::resources;
+
+namespace winrt::midiglass::implementation
+{
+    namespace
+    {
+        namespace shapes = ::winrt::Microsoft::UI::Xaml::Shapes;
+
+        // The order the two combo boxes offer, and what each index means. Written once so the
+        // index a combo hands back is never guessed at.
+        constexpr glass::ControlKind KindOrder[]
+        {
+            glass::ControlKind::Knob,
+            glass::ControlKind::Encoder,
+            glass::ControlKind::Fader,
+            glass::ControlKind::Pad,
+            glass::ControlKind::Button,
+            glass::ControlKind::Toggle,
+            glass::ControlKind::XYPad,
+            glass::ControlKind::Meter,
+            glass::ControlKind::Lamp,
+            glass::ControlKind::Readout,
+            glass::ControlKind::Label,
+            glass::ControlKind::Image,
+            glass::ControlKind::PageTab,
+        };
+
+        constexpr wchar_t const* KindResourceKeys[]
+        {
+            L"PaletteKnob", L"PaletteEncoder", L"PaletteFader", L"PalettePad", L"PaletteButton",
+            L"PaletteToggle", L"PaletteXYPad", L"PaletteMeter", L"PaletteLamp", L"PaletteReadout",
+            L"PaletteLabel", L"PaletteImage", L"PalettePageTab",
+        };
+
+        static_assert(std::size(KindOrder) == std::size(KindResourceKeys));
+
+        constexpr glass::MessageTrigger TriggerOrder[]
+        {
+            glass::MessageTrigger::Changes,
+            glass::MessageTrigger::TurnsOn,
+            glass::MessageTrigger::TurnsOff,
+            glass::MessageTrigger::Touched,
+            glass::MessageTrigger::Released,
+        };
+
+        constexpr wchar_t const* TriggerResourceKeys[]
+        {
+            L"TriggerChanges", L"TriggerTurnsOn", L"TriggerTurnsOff", L"TriggerTouched", L"TriggerReleased",
+        };
+
+        constexpr glass::MessageKind MessageKindOrder[]
+        {
+            glass::MessageKind::ControlChange,
+            glass::MessageKind::Note,
+            glass::MessageKind::ProgramChange,
+            glass::MessageKind::PitchBend,
+            glass::MessageKind::ChannelPressure,
+            glass::MessageKind::PerNoteController,
+            glass::MessageKind::RegisteredController,
+            glass::MessageKind::AssignedController,
+        };
+
+        constexpr wchar_t const* MessageKindResourceKeys[]
+        {
+            L"MessageControlChange", L"MessageNote", L"MessageProgramChange", L"MessagePitchBend",
+            L"MessageChannelPressure", L"MessagePerNoteController", L"MessageRegisteredController",
+            L"MessageAssignedController",
+        };
+
+        static_assert(std::size(MessageKindOrder) == std::size(MessageKindResourceKeys));
+
+        // The overrides, in the order the comp lists them. "Use the theme" is first, because it
+        // is what almost every control stays at.
+        constexpr glass::LabelPlacementOverride LabelPlacedOrder[]
+        {
+            glass::LabelPlacementOverride::UseTheme,
+            glass::LabelPlacementOverride::Below,
+            glass::LabelPlacementOverride::Inside,
+            glass::LabelPlacementOverride::None,
+        };
+
+        constexpr wchar_t const* LabelPlacedResourceKeys[]
+        {
+            L"LabelPlacedTheme", L"LabelPlacedBelow", L"LabelPlacedInside", L"LabelPlacedNone",
+        };
+
+        static_assert(std::size(LabelPlacedOrder) == std::size(LabelPlacedResourceKeys));
+
+        constexpr glass::ShowValueOverride ShowValueOrder[]
+        {
+            glass::ShowValueOverride::UseTheme,
+            glass::ShowValueOverride::WhileTouched,
+            glass::ShowValueOverride::Always,
+            glass::ShowValueOverride::Never,
+        };
+
+        constexpr wchar_t const* ShowValueResourceKeys[]
+        {
+            L"ShowValueTheme", L"ShowValueWhileTouched", L"ShowValueAlways", L"ShowValueNever",
+        };
+
+        static_assert(std::size(ShowValueOrder) == std::size(ShowValueResourceKeys));
+
+        constexpr glass::ControlStyleOverride StyleOrder[]
+        {
+            glass::ControlStyleOverride::Plate,
+            glass::ControlStyleOverride::Outline,
+            glass::ControlStyleOverride::Solid,
+            glass::ControlStyleOverride::Bare,
+        };
+
+        template <typename T, size_t N>
+        int32_t IndexOf(T const (&values)[N], _In_ T value) noexcept
+        {
+            for (size_t index = 0; index < N; ++index)
+            {
+                if (values[index] == value)
+                {
+                    return static_cast<int32_t>(index);
+                }
+            }
+
+            return 0;
+        }
+
+        winrt::Windows::UI::Color ToColor(_In_ glass::ThemeColor const& color) noexcept
+        {
+            return winrt::Windows::UI::ColorHelper::FromArgb(255, color.R, color.G, color.B);
+        }
+
+        std::wstring FormatNumber(_In_ double value)
+        {
+            return std::to_wstring(static_cast<int32_t>(std::lround(value)));
+        }
+
+        double ParseNumber(_In_ winrt::hstring const& text, _In_ double fallback) noexcept
+        {
+            try
+            {
+                size_t consumed{ 0 };
+                auto const parsed = std::stod(std::wstring{ text }, &consumed);
+
+                return consumed == 0 ? fallback : parsed;
+            }
+            catch (...)
+            {
+                return fallback;
+            }
+        }
+    }
+
+    void EditorWindow::BuildInspectorChoices()
+    {
+        try
+        {
+            for (auto const* const key : KindResourceKeys)
+            {
+                KindCombo().Items().Append(box_value(resources::GetString(key)));
+            }
+
+            for (auto const* const key : LabelPlacedResourceKeys)
+            {
+                LabelPlacedCombo().Items().Append(box_value(resources::GetString(key)));
+            }
+
+            for (auto const* const key : ShowValueResourceKeys)
+            {
+                ShowValueCombo().Items().Append(box_value(resources::GetString(key)));
+            }
+
+            for (auto const* const key : TriggerResourceKeys)
+            {
+                TriggerCombo().Items().Append(box_value(resources::GetString(key)));
+            }
+
+            for (auto const* const key : MessageKindResourceKeys)
+            {
+                KindMessageCombo().Items().Append(box_value(resources::GetString(key)));
+            }
+
+            GroupCombo().Items().Append(box_value(resources::GetString(L"GroupAll")));
+
+            for (int32_t group = 1; group <= glass::MaximumGroupCount; ++group)
+            {
+                GroupCombo().Items().Append(box_value(
+                    resources::FormatString(L"GroupNumberFormat", std::to_wstring(group))));
+            }
+
+            for (int32_t channel = 1; channel <= 16; ++channel)
+            {
+                ChannelCombo().Items().Append(box_value(
+                    resources::FormatString(L"ChannelNumberFormat", std::to_wstring(channel))));
+            }
+
+            for (auto const* const key : { L"PickupJump", L"PickupCatch", L"PickupRelative" })
+            {
+                PickupCombo().Items().Append(box_value(resources::GetString(key)));
+            }
+
+            // Six hue slots and nothing else. A control stores a slot rather than a color, which
+            // is what makes changing theme a six color operation instead of a redesign.
+            //
+            // The swatch is the whole tile rather than a small square inside a button, because
+            // the comp's row of color is the thing being chosen; a button around it is chrome
+            // that pushes six swatches wider than the pane.
+            for (int32_t slot = 0; slot < glass::HueSlotCount; ++slot)
+            {
+                controls::Button swatch{};
+
+                swatch.Width(26);
+                swatch.Height(26);
+                swatch.MinWidth(0);
+                swatch.Padding({ 0, 0, 0, 0 });
+                swatch.CornerRadius({ 5, 5, 5, 5 });
+                swatch.BorderThickness({ 0, 0, 0, 0 });
+                swatch.Background(media::SolidColorBrush(
+                    ToColor(m_theme.HueSlots[static_cast<size_t>(slot)])));
+                swatch.Tag(box_value(slot));
+
+                xaml::Automation::AutomationProperties::SetName(swatch, resources::FormatString(
+                    L"HueSlotAccessibleFormat", std::to_wstring(slot + 1)));
+
+                swatch.Click({ this, &EditorWindow::OnHueSlotClick });
+
+                HueSlotHost().Items().Append(swatch);
+            }
+
+            // A color of this control's own, outside the theme. Last, and drawn as a spectrum,
+            // because it is the one choice that will not move when the theme changes.
+            {
+                controls::Button custom{};
+
+                custom.Width(26);
+                custom.Height(26);
+                custom.MinWidth(0);
+                custom.Padding({ 0, 0, 0, 0 });
+                custom.CornerRadius({ 5, 5, 5, 5 });
+                custom.BorderThickness({ 0, 0, 0, 0 });
+                custom.Tag(box_value(glass::LiteralHue));
+                custom.IsEnabled(false);
+
+                media::LinearGradientBrush spectrum{};
+
+                spectrum.StartPoint({ 0.0, 0.0 });
+                spectrum.EndPoint({ 1.0, 1.0 });
+
+                constexpr uint32_t wheel[]{ 0xFF4D4D, 0xFFE04D, 0x5BE87F, 0x4CE0FF, 0x6B7BFF, 0xFF6BD6 };
+
+                for (size_t i = 0; i < std::size(wheel); ++i)
+                {
+                    media::GradientStop stop{};
+
+                    stop.Offset(static_cast<double>(i) / (std::size(wheel) - 1));
+                    stop.Color(winrt::Windows::UI::ColorHelper::FromArgb(
+                        255,
+                        static_cast<uint8_t>((wheel[i] >> 16) & 0xFF),
+                        static_cast<uint8_t>((wheel[i] >> 8) & 0xFF),
+                        static_cast<uint8_t>(wheel[i] & 0xFF)));
+
+                    spectrum.GradientStops().Append(stop);
+                }
+
+                custom.Background(spectrum);
+
+                xaml::Automation::AutomationProperties::SetName(
+                    custom, resources::GetString(L"HueSlotCustomName"));
+
+                controls::ToolTipService::SetToolTip(
+                    custom, box_value(resources::GetString(L"HueSlotCustomName")));
+
+                HueSlotHost().Items().Append(custom);
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to build the inspector choices.")
+    }
+
+    glass::Control const* EditorWindow::SingleSelectedControl() const
+    {
+        auto const selected = m_editor.SelectedControls();
+
+        return selected.size() == 1 ? selected[0] : nullptr;
+    }
+
+    // The position and size boxes and nothing else, for the pointer-move path.
+    void EditorWindow::RefreshInspectorGeometry()
+    {
+        try
+        {
+            auto const* const control = SingleSelectedControl();
+
+            if (control == nullptr)
+            {
+                return;
+            }
+
+            auto const previous = m_updatingInspector;
+            m_updatingInspector = true;
+
+            BoundsX().Text(winrt::hstring{ FormatNumber(control->X) });
+            BoundsY().Text(winrt::hstring{ FormatNumber(control->Y) });
+            BoundsWidth().Text(winrt::hstring{ FormatNumber(control->Width) });
+            BoundsHeight().Text(winrt::hstring{ FormatNumber(control->Height) });
+
+            m_updatingInspector = previous;
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to refresh the position and size.")
+    }
+
+    void EditorWindow::RefreshInspector()
+    {
+        try
+        {
+            auto const previous = m_updatingInspector;
+            m_updatingInspector = true;
+
+            // The monitor rail follows the selection, because "is this thing sending what I
+            // think it is" is a question about one control.
+            RebuildMonitorList();
+
+            auto const* const control = SingleSelectedControl();
+            auto const selectedCount = m_editor.Selection().size();
+
+            LookTab().IsEnabled(control != nullptr);
+            BehaviorTab().IsEnabled(control != nullptr);
+            MidiTab().IsEnabled(control != nullptr);
+
+            if (control == nullptr)
+            {
+                auto const* const page = m_editor.CurrentPage();
+
+                InspectorKindText().Text(resources::GetString(
+                    selectedCount > 1 ? L"InspectorManySelected" : L"InspectorPageKind"));
+
+                InspectorTitleText().Text(selectedCount > 1
+                    ? resources::FormatString(L"EditorSelectedFormat", std::to_wstring(selectedCount))
+                    : winrt::hstring{ page == nullptr || page->Name.empty()
+                        ? std::wstring{ m_editor.Document().Name }
+                        : page->Name });
+
+                // Emptied and greyed, not left as they were. Leaving the last control's numbers
+                // under a heading that says "Page" is what made three disabled tabs look like
+                // three broken ones.
+                BoundsX().Text(L"");
+                BoundsY().Text(L"");
+                BoundsWidth().Text(L"");
+                BoundsHeight().Text(L"");
+                LabelBox().Text(L"");
+
+                LookPane().IsEnabled(false);
+                MidiPane().IsEnabled(false);
+                BehaviorPane().IsEnabled(false);
+
+                m_preview.Teardown();
+
+                m_messageIndex = -1;
+                MessageList().Items().Clear();
+
+                m_updatingInspector = previous;
+                return;
+            }
+
+            LookPane().IsEnabled(true);
+            MidiPane().IsEnabled(true);
+            BehaviorPane().IsEnabled(true);
+
+            auto const kindIndex = IndexOf(KindOrder, control->Kind);
+
+            InspectorKindText().Text(resources::GetString(KindResourceKeys[kindIndex]));
+
+            InspectorTitleText().Text(winrt::hstring{
+                control->Label.empty()
+                    ? std::wstring{ resources::GetString(L"InspectorUnnamedControl") }
+                    : control->Label });
+
+            BoundsX().Text(winrt::hstring{ FormatNumber(control->X) });
+            BoundsY().Text(winrt::hstring{ FormatNumber(control->Y) });
+            BoundsWidth().Text(winrt::hstring{ FormatNumber(control->Width) });
+            BoundsHeight().Text(winrt::hstring{ FormatNumber(control->Height) });
+
+            AspectLockToggle().IsChecked(control->AspectLocked);
+
+            LabelBox().Text(winrt::hstring{ control->Label });
+            KindCombo().SelectedIndex(kindIndex);
+            PickupCombo().SelectedIndex(static_cast<int32_t>(control->Pickup));
+
+            LabelPlacedCombo().SelectedIndex(IndexOf(LabelPlacedOrder, control->LabelPlaced));
+            ShowValueCombo().SelectedIndex(IndexOf(ShowValueOrder, control->ShowValue));
+
+            // Stored and round-tripped, but the surface has no value readout yet, so offering
+            // to change it would be a promise the app cannot keep.
+            ShowValueCombo().IsEnabled(false);
+
+            SyncStyleSegments(control->Style);
+            RefreshPreview(*control);
+
+            SendOnStartSwitch().IsOn(control->SendsValueOnStart);
+            DefaultValueSlider().Value(control->DefaultValue * 100.0);
+            SendIntervalBox().Value(control->SendIntervalMilliseconds);
+            KeyboardOrderBox().Value(control->KeyboardOrder);
+
+            // A control that only displays has nothing to send, so the MIDI tab would be a page
+            // of controls that do nothing. It is disabled rather than hidden, because a tab that
+            // comes and goes is harder to find than one that is visibly not for this control.
+            MidiTab().IsEnabled(glass::SendsAnything(control->Kind));
+
+            RefreshMessageList();
+
+            m_updatingInspector = previous;
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to refresh the inspector.")
+    }
+
+    void EditorWindow::RefreshMessageList()
+    {
+        try
+        {
+            MessageList().Items().Clear();
+
+            auto const* const control = SingleSelectedControl();
+
+            if (control == nullptr)
+            {
+                m_messageIndex = -1;
+                RefreshMessageFields();
+                return;
+            }
+
+            for (size_t index = 0; index < control->Messages.size(); ++index)
+            {
+                auto const& message = control->Messages[index];
+
+                auto const text = resources::FormatString(
+                    L"MessageRowFormat",
+                    resources::GetString(TriggerResourceKeys[IndexOf(TriggerOrder, message.Trigger)]),
+                    resources::GetString(MessageKindResourceKeys[IndexOf(MessageKindOrder, message.Kind)]),
+                    std::to_wstring(message.Number),
+                    message.DeviceName.empty()
+                        ? std::wstring{ resources::GetString(L"MessageNoDevice") }
+                        : message.DeviceName);
+
+                controls::ListViewItem item{};
+
+                item.Content(box_value(text));
+                item.Tag(box_value(static_cast<int32_t>(index)));
+
+                xaml::Automation::AutomationProperties::SetName(item, text);
+
+                MessageList().Items().Append(item);
+            }
+
+            if (control->Messages.empty())
+            {
+                m_messageIndex = -1;
+            }
+            else
+            {
+                if (m_messageIndex < 0 || m_messageIndex >= static_cast<int32_t>(control->Messages.size()))
+                {
+                    m_messageIndex = 0;
+                }
+
+                MessageList().SelectedIndex(m_messageIndex);
+            }
+
+            RemoveMessageButton().IsEnabled(m_messageIndex >= 0);
+
+            RefreshMessageFields();
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to refresh the message list.")
+    }
+
+    void EditorWindow::RefreshMessageFields()
+    {
+        try
+        {
+            auto const previous = m_updatingInspector;
+            m_updatingInspector = true;
+
+            // The device list is rebuilt here rather than once at startup, because renaming a
+            // destination is a one place edit and every row has to follow it.
+            DeviceCombo().Items().Clear();
+
+            for (auto const& device : m_editor.Document().Devices)
+            {
+                DeviceCombo().Items().Append(box_value(winrt::hstring{ device.Name }));
+            }
+
+            auto const* const control = SingleSelectedControl();
+
+            auto const valid = control != nullptr &&
+                m_messageIndex >= 0 &&
+                m_messageIndex < static_cast<int32_t>(control->Messages.size());
+
+            TriggerCombo().IsEnabled(valid);
+            KindMessageCombo().IsEnabled(valid);
+            DeviceCombo().IsEnabled(valid);
+            GroupCombo().IsEnabled(valid);
+            ChannelCombo().IsEnabled(valid);
+            MessageNumberBox().IsEnabled(valid);
+
+            if (!valid)
+            {
+                m_updatingInspector = previous;
+                return;
+            }
+
+            auto const& message = control->Messages[static_cast<size_t>(m_messageIndex)];
+
+            TriggerCombo().SelectedIndex(IndexOf(TriggerOrder, message.Trigger));
+            KindMessageCombo().SelectedIndex(IndexOf(MessageKindOrder, message.Kind));
+
+            auto deviceIndex = -1;
+
+            for (size_t index = 0; index < m_editor.Document().Devices.size(); ++index)
+            {
+                if (m_editor.Document().Devices[index].Name == message.DeviceName)
+                {
+                    deviceIndex = static_cast<int32_t>(index);
+                    break;
+                }
+            }
+
+            DeviceCombo().SelectedIndex(deviceIndex);
+
+            GroupCombo().SelectedIndex(message.GroupIndex == glass::AllGroups ? 0 : message.GroupIndex + 1);
+            ChannelCombo().SelectedIndex(std::clamp(message.ChannelIndex, 0, 15));
+            MessageNumberBox().Value(message.Number);
+
+            m_updatingInspector = previous;
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to refresh the message fields.")
+    }
+
+    // ---------------------------------------------------------------- look
+
+    _Use_decl_annotations_
+    void EditorWindow::OnBoundsChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const* const control = SingleSelectedControl();
+
+            if (control == nullptr)
+            {
+                return;
+            }
+
+            auto const id = control->Id;
+
+            // Typed in, so it is exact and never snapped. The grid is for dragging.
+            auto const x = ParseNumber(BoundsX().Text(), control->X);
+            auto const y = ParseNumber(BoundsY().Text(), control->Y);
+            auto const width = ParseNumber(BoundsWidth().Text(), control->Width);
+            auto const height = ParseNumber(BoundsHeight().Text(), control->Height);
+
+            // The inspector is deliberately not refreshed here. Rewriting the box somebody is
+            // typing in would move their caret, and a half-typed number would be rounded under
+            // their hands.
+            if (m_editor.SetControlBounds(id, x, y, width, height))
+            {
+                RebuildSurface();
+                UpdateStatusBar();
+                MarkChanged();
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to set the control bounds.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnAspectLockToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control != nullptr &&
+            m_editor.SetControlAspectLocked(control->Id, AspectLockToggle().IsChecked().GetBoolean()))
+        {
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLabelChanged(foundation::IInspectable const& sender, controls::TextChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control == nullptr)
+        {
+            return;
+        }
+
+        auto const id = control->Id;
+
+        if (m_editor.SetControlLabel(id, std::wstring{ LabelBox().Text() }))
+        {
+            RebuildSurface();
+            RebuildOutline();
+
+            InspectorTitleText().Text(LabelBox().Text());
+
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnKindChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+        auto const index = KindCombo().SelectedIndex();
+
+        if (control == nullptr || index < 0 || index >= static_cast<int32_t>(std::size(KindOrder)))
+        {
+            return;
+        }
+
+        if (m_editor.SetControlKind(control->Id, KindOrder[index]))
+        {
+            RebuildSurface();
+            RebuildOutline();
+            RefreshInspector();
+            MarkChanged();
+        }
+    }
+
+    // ---------------------------------------------------------------- theme overrides
+
+    _Use_decl_annotations_
+    void EditorWindow::SyncStyleSegments(glass::ControlStyleOverride style)
+    {
+        StyleThemeSegment().IsChecked(style == glass::ControlStyleOverride::UseTheme);
+        StylePlateSegment().IsChecked(style == glass::ControlStyleOverride::Plate);
+        StyleOutlineSegment().IsChecked(style == glass::ControlStyleOverride::Outline);
+        StyleSolidSegment().IsChecked(style == glass::ControlStyleOverride::Solid);
+        StyleBareSegment().IsChecked(style == glass::ControlStyleOverride::Bare);
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnStyleChecked(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector || !m_loaded)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const toggle = sender.try_as<controls::Primitives::ToggleButton>();
+            auto const* const control = SingleSelectedControl();
+
+            if (toggle == nullptr || control == nullptr)
+            {
+                return;
+            }
+
+            auto const tag = std::wstring{ winrt::unbox_value_or<winrt::hstring>(toggle.Tag(), L"") };
+
+            auto const style =
+                tag == L"theme" ? glass::ControlStyleOverride::UseTheme :
+                tag == L"plate" ? glass::ControlStyleOverride::Plate :
+                tag == L"outline" ? glass::ControlStyleOverride::Outline :
+                tag == L"solid" ? glass::ControlStyleOverride::Solid :
+                glass::ControlStyleOverride::Bare;
+
+            auto const id = control->Id;
+
+            // One group, so picking a segment turns the others off. Nothing else does that for
+            // a row of ToggleButtons.
+            auto const previous = m_updatingInspector;
+            m_updatingInspector = true;
+            SyncStyleSegments(style);
+            m_updatingInspector = previous;
+
+            if (m_editor.SetControlStyle(id, style))
+            {
+                RebuildSurface();
+                RefreshInspector();
+                MarkChanged();
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to change the control style.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnStyleUnchecked(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector || !m_loaded)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const toggle = sender.try_as<controls::Primitives::ToggleButton>();
+            auto const* const control = SingleSelectedControl();
+
+            if (toggle == nullptr || control == nullptr)
+            {
+                return;
+            }
+
+            // Clicking the segment that is already on leaves it on. Turning the last one off
+            // would show a style group that claims the control is drawn no way at all.
+            auto const tag = std::wstring{ winrt::unbox_value_or<winrt::hstring>(toggle.Tag(), L"") };
+
+            auto const style =
+                tag == L"theme" ? glass::ControlStyleOverride::UseTheme :
+                tag == L"plate" ? glass::ControlStyleOverride::Plate :
+                tag == L"outline" ? glass::ControlStyleOverride::Outline :
+                tag == L"solid" ? glass::ControlStyleOverride::Solid :
+                glass::ControlStyleOverride::Bare;
+
+            if (style == control->Style)
+            {
+                auto const previous = m_updatingInspector;
+                m_updatingInspector = true;
+                toggle.IsChecked(true);
+                m_updatingInspector = previous;
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to return the control style to the theme.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLabelPlacedChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+        auto const index = LabelPlacedCombo().SelectedIndex();
+
+        if (control == nullptr || index < 0 || index >= static_cast<int32_t>(std::size(LabelPlacedOrder)))
+        {
+            return;
+        }
+
+        if (m_editor.SetControlLabelPlacement(control->Id, LabelPlacedOrder[index]))
+        {
+            RebuildSurface();
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnShowValueChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+        auto const index = ShowValueCombo().SelectedIndex();
+
+        if (control == nullptr || index < 0 || index >= static_cast<int32_t>(std::size(ShowValueOrder)))
+        {
+            return;
+        }
+
+        if (m_editor.SetControlShowValue(control->Id, ShowValueOrder[index]))
+        {
+            MarkChanged();
+        }
+    }
+
+    // ---------------------------------------------------------------- the tabs
+
+    namespace
+    {
+        // A Tag set in XAML is a string, whatever it looks like. Unboxing one as an int gives
+        // the fallback silently, which turned the tab handlers into a pair that called each
+        // other until the stack ran out.
+        int32_t TagIndex(_In_ foundation::IInspectable const& sender) noexcept
+        {
+            try
+            {
+                auto const element = sender.try_as<xaml::FrameworkElement>();
+
+                if (element == nullptr)
+                {
+                    return 0;
+                }
+
+                auto const tag = std::wstring{ winrt::unbox_value_or<winrt::hstring>(element.Tag(), L"0") };
+
+                return tag.empty() ? 0 : std::stoi(tag);
+            }
+            catch (...)
+            {
+                return 0;
+            }
+        }
+    }
+
+    // Underline tabs behave like radio buttons: exactly one is on, and unpicking the one that is
+    // on puts it straight back rather than leaving the strip showing none.
+    _Use_decl_annotations_
+    void EditorWindow::SelectInspectorTab(int32_t index)
+    {
+        try
+        {
+            m_inspectorTab = index;
+
+            LookTab().IsChecked(index == 0);
+            MidiTab().IsChecked(index == 1);
+            BehaviorTab().IsChecked(index == 2);
+
+            auto const show = [](xaml::UIElement const& element, bool visible)
+                {
+                    element.Visibility(visible ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+                };
+
+            show(LookTabLine(), index == 0);
+            show(MidiTabLine(), index == 1);
+            show(BehaviorTabLine(), index == 2);
+
+            show(LookPane(), index == 0);
+            show(MidiPane(), index == 1);
+            show(BehaviorPane(), index == 2);
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to change the inspector tab.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnInspectorTabChecked(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(args);
+
+        if (!m_loaded)
+        {
+            return;
+        }
+
+        if (auto const toggle = sender.try_as<controls::Primitives::ToggleButton>())
+        {
+            SelectInspectorTab(TagIndex(sender));
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnInspectorTabUnchecked(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(args);
+
+        if (!m_loaded)
+        {
+            return;
+        }
+
+        if (auto const toggle = sender.try_as<controls::Primitives::ToggleButton>())
+        {
+            if (TagIndex(sender) == m_inspectorTab)
+            {
+                toggle.IsChecked(true);
+            }
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::SelectLeftTab(int32_t index)
+    {
+        try
+        {
+            m_leftTab = index;
+
+            PaletteTab().IsChecked(index == 0);
+            OutlineTab().IsChecked(index == 1);
+
+            auto const show = [](xaml::UIElement const& element, bool visible)
+                {
+                    element.Visibility(visible ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+                };
+
+            show(PaletteTabLine(), index == 0);
+            show(OutlineTabLine(), index == 1);
+
+            show(PalettePane(), index == 0);
+            show(OutlinePane(), index == 1);
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to change the left pane tab.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLeftTabChecked(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(args);
+
+        if (!m_loaded)
+        {
+            return;
+        }
+
+        if (auto const toggle = sender.try_as<controls::Primitives::ToggleButton>())
+        {
+            SelectLeftTab(TagIndex(sender));
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLeftTabUnchecked(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(args);
+
+        if (!m_loaded)
+        {
+            return;
+        }
+
+        if (auto const toggle = sender.try_as<controls::Primitives::ToggleButton>())
+        {
+            if (TagIndex(sender) == m_leftTab)
+            {
+                toggle.IsChecked(true);
+            }
+        }
+    }
+
+    // ---------------------------------------------------------------- the header menu
+
+    _Use_decl_annotations_
+    void EditorWindow::OnDuplicateSelectionClick(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_editor.DuplicateSelection())
+        {
+            RebuildSurface();
+            RebuildOutline();
+            RefreshInspector();
+            UpdateStatusBar();
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnDeleteSelectionClick(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_editor.DeleteSelection())
+        {
+            RebuildSurface();
+            RebuildOutline();
+            RefreshInspector();
+            UpdateStatusBar();
+            MarkChanged();
+        }
+    }
+
+    // The control drawn the way it will actually look, so a style or a color is judged rather
+    // than imagined. One control on its own deck, at whatever size fits the box.
+    _Use_decl_annotations_
+    void EditorWindow::RefreshPreview(glass::Control const& control)
+    {
+        try
+        {
+            PreviewDeck().Fill(glass::MakeDeckBrush(m_theme.Deck));
+
+            glass::LayoutDocument single{};
+
+            single.PageWidth = 244;
+            single.PageHeight = 92;
+
+            glass::Page page{};
+
+            auto copy = control;
+
+            // Centered at its own size, unless it is bigger than the box.
+            auto const scale = std::min(1.0,
+                std::min(200.0 / std::max(1.0, control.Width), 64.0 / std::max(1.0, control.Height)));
+
+            copy.Width = std::max(8.0, control.Width * scale);
+            copy.Height = std::max(8.0, control.Height * scale);
+            copy.X = (single.PageWidth - copy.Width) / 2.0;
+            copy.Y = (single.PageHeight - copy.Height) / 2.0 - 6.0;
+
+            page.Controls.push_back(copy);
+            single.Pages.push_back(std::move(page));
+
+            PreviewCanvas().Width(single.PageWidth);
+            PreviewCanvas().Height(single.PageHeight);
+
+            m_preview.Teardown();
+            m_preview.Build(PreviewCanvas(), single, m_theme, 0);
+            m_preview.SetValue(0, control.DefaultValue > 0.0 ? control.DefaultValue : 0.62);
+
+            if (auto const element = m_preview.ElementAt(0))
+            {
+                element.IsHitTestVisible(false);
+
+                // The inspector above already names the control; a screen reader reading the
+                // preview too would say everything twice.
+                xaml::Automation::AutomationProperties::SetAccessibilityView(
+                    element, xaml::Automation::Peers::AccessibilityView::Raw);
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to draw the preview.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnHueSlotClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(args);
+
+        auto const* const control = SingleSelectedControl();
+        auto const button = sender.try_as<controls::Button>();
+
+        if (control == nullptr || button == nullptr)
+        {
+            return;
+        }
+
+        auto const slot = winrt::unbox_value_or<int32_t>(button.Tag(), 0);
+
+        if (m_editor.SetControlHueSlot(control->Id, slot))
+        {
+            RebuildSurface();
+            MarkChanged();
+        }
+    }
+
+    // ---------------------------------------------------------------- what it sends
+
+    _Use_decl_annotations_
+    void EditorWindow::OnMessageSelectionChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        m_messageIndex = MessageList().SelectedIndex();
+
+        RemoveMessageButton().IsEnabled(m_messageIndex >= 0);
+
+        RefreshMessageFields();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnAddMessageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control != nullptr && m_editor.AddMessage(control->Id))
+        {
+            m_messageIndex = static_cast<int32_t>(SingleSelectedControl()->Messages.size()) - 1;
+
+            RefreshMessageList();
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnRemoveMessageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control != nullptr && m_messageIndex >= 0 &&
+            m_editor.RemoveMessage(control->Id, static_cast<size_t>(m_messageIndex)))
+        {
+            m_messageIndex = -1;
+
+            RefreshMessageList();
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnMessageFieldChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const* const control = SingleSelectedControl();
+
+            if (control == nullptr ||
+                m_messageIndex < 0 ||
+                m_messageIndex >= static_cast<int32_t>(control->Messages.size()))
+            {
+                return;
+            }
+
+            auto message = control->Messages[static_cast<size_t>(m_messageIndex)];
+
+            auto const triggerIndex = TriggerCombo().SelectedIndex();
+            auto const kindIndex = KindMessageCombo().SelectedIndex();
+            auto const deviceIndex = DeviceCombo().SelectedIndex();
+            auto const groupIndex = GroupCombo().SelectedIndex();
+            auto const channelIndex = ChannelCombo().SelectedIndex();
+
+            if (triggerIndex >= 0 && triggerIndex < static_cast<int32_t>(std::size(TriggerOrder)))
+            {
+                message.Trigger = TriggerOrder[triggerIndex];
+            }
+
+            if (kindIndex >= 0 && kindIndex < static_cast<int32_t>(std::size(MessageKindOrder)))
+            {
+                message.Kind = MessageKindOrder[kindIndex];
+            }
+
+            if (deviceIndex >= 0 && deviceIndex < static_cast<int32_t>(m_editor.Document().Devices.size()))
+            {
+                message.DeviceName = m_editor.Document().Devices[static_cast<size_t>(deviceIndex)].Name;
+            }
+
+            if (groupIndex >= 0)
+            {
+                message.GroupIndex = groupIndex == 0 ? glass::AllGroups : groupIndex - 1;
+            }
+
+            if (channelIndex >= 0)
+            {
+                message.ChannelIndex = channelIndex;
+            }
+
+            auto const id = control->Id;
+            auto const index = static_cast<size_t>(m_messageIndex);
+
+            if (m_editor.SetMessage(id, index, message))
+            {
+                RefreshMessageList();
+                MarkChanged();
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to change the message.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnMessageNumberChanged(
+        controls::NumberBox const& sender,
+        controls::NumberBoxValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control == nullptr ||
+            m_messageIndex < 0 ||
+            m_messageIndex >= static_cast<int32_t>(control->Messages.size()))
+        {
+            return;
+        }
+
+        auto const value = MessageNumberBox().Value();
+
+        if (!std::isfinite(value))
+        {
+            return;
+        }
+
+        auto message = control->Messages[static_cast<size_t>(m_messageIndex)];
+
+        message.Number = static_cast<uint32_t>(std::clamp(std::lround(value), 0L, 127L));
+
+        auto const id = control->Id;
+        auto const index = static_cast<size_t>(m_messageIndex);
+
+        if (m_editor.SetMessage(id, index, message))
+        {
+            RefreshMessageList();
+            MarkChanged();
+        }
+    }
+
+    // ---------------------------------------------------------------- behavior
+
+    _Use_decl_annotations_
+    void EditorWindow::OnSendOnStartToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control != nullptr &&
+            m_editor.SetControlSendsValueOnStart(control->Id, SendOnStartSwitch().IsOn()))
+        {
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnDefaultValueChanged(
+        foundation::IInspectable const& sender,
+        controls::Primitives::RangeBaseValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control != nullptr &&
+            m_editor.SetControlDefaultValue(control->Id, DefaultValueSlider().Value() / 100.0))
+        {
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnSendIntervalChanged(
+        controls::NumberBox const& sender,
+        controls::NumberBoxValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const value = SendIntervalBox().Value();
+        auto const* const control = SingleSelectedControl();
+
+        if (control != nullptr && std::isfinite(value) &&
+            m_editor.SetControlSendInterval(control->Id, static_cast<int32_t>(std::lround(value))))
+        {
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnPickupChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const index = PickupCombo().SelectedIndex();
+        auto const* const control = SingleSelectedControl();
+
+        if (control != nullptr && index >= 0 && index <= 2 &&
+            m_editor.SetControlPickup(control->Id, static_cast<glass::PickupMode>(index)))
+        {
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnKeyboardOrderChanged(
+        controls::NumberBox const& sender,
+        controls::NumberBoxValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const value = KeyboardOrderBox().Value();
+        auto const* const control = SingleSelectedControl();
+
+        if (control != nullptr && std::isfinite(value) &&
+            m_editor.SetKeyboardOrder(control->Id, static_cast<int32_t>(std::lround(value))))
+        {
+            RebuildOutline();
+            UpdateOverlay();
+            MarkChanged();
+        }
+    }
+}

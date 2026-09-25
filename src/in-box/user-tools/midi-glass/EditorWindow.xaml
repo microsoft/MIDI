@@ -1,0 +1,1363 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="midiglass.EditorWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:midiglass"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid x:Name="RootGrid" Loaded="OnRootLoaded">
+        <Grid.Resources>
+
+            <!-- Every brush comes from the theme, so the customer's choice of light, dark or
+                 system decides what the editor chrome looks like. Only the surface inside the
+                 page belongs to the layout's own theme. -->
+
+            <Style x:Key="ChipShapeStyle" TargetType="Rectangle">
+                <Setter Property="RadiusX" Value="11" />
+                <Setter Property="RadiusY" Value="11" />
+                <Setter Property="StrokeThickness" Value="1" />
+                <Setter Property="UseLayoutRounding" Value="False" />
+            </Style>
+
+            <Style x:Key="ChipPanelStyle" TargetType="StackPanel">
+                <Setter Property="Orientation" Value="Horizontal" />
+                <Setter Property="Spacing" Value="6" />
+                <Setter Property="Height" Value="22" />
+                <Setter Property="Padding" Value="9,0,9,0" />
+            </Style>
+
+            <Style x:Key="ChipTextStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="InspectorLabelStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            </Style>
+
+            <Style x:Key="InspectorHeadingStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Margin" Value="0,8,0,4" />
+            </Style>
+
+            <Style x:Key="InspectorNumberStyle" TargetType="TextBox">
+                <Setter Property="Height" Value="32" />
+                <Setter Property="MinWidth" Value="72" />
+            </Style>
+
+            <!-- One outline row. This is how somebody using a screen reader builds a layout, and
+                 it is also just useful on a page with two hundred controls. -->
+            <DataTemplate x:Key="OutlineTemplate" x:DataType="local:EditorItem">
+                <Grid Height="32"
+                      Margin="{x:Bind Indent}"
+                      ColumnSpacing="8"
+                      AutomationProperties.Name="{x:Bind DisplayName}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                               Text="{x:Bind Badge}"
+                               Visibility="{x:Bind BadgeVisibility}"
+                               FontSize="10"
+                               MinWidth="18"
+                               TextAlignment="Center"
+                               VerticalAlignment="Center"
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                    <Grid Grid.Column="1" Width="22" Height="20">
+                        <ContentPresenter Content="{x:Bind Art}"
+                                          IsHitTestVisible="False"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
+                    </Grid>
+
+                    <TextBlock Grid.Column="2"
+                               Text="{x:Bind DisplayName}"
+                               FontSize="12"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" />
+
+                    <FontIcon Grid.Column="3"
+                              Glyph="&#xE7BA;"
+                              FontSize="12"
+                              VerticalAlignment="Center"
+                              Visibility="{x:Bind OutsideVisibility}"
+                              Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                </Grid>
+            </DataTemplate>
+        </Grid.Resources>
+
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator Key="Z" Modifiers="Control" Invoked="OnUndoAccelerator" />
+            <KeyboardAccelerator Key="Y" Modifiers="Control" Invoked="OnRedoAccelerator" />
+            <KeyboardAccelerator Key="S" Modifiers="Control" Invoked="OnSaveAccelerator" />
+            <KeyboardAccelerator Key="D" Modifiers="Control" Invoked="OnDuplicateAccelerator" />
+            <KeyboardAccelerator Key="A" Modifiers="Control" Invoked="OnSelectAllAccelerator" />
+            <KeyboardAccelerator Key="Delete" Invoked="OnDeleteAccelerator" />
+
+            <!-- Puts the palette tool away, the way Esc does in a drawing app. -->
+            <KeyboardAccelerator Key="Escape" Invoked="OnEscapeAccelerator" />
+
+            <!-- Edit and Try, one keystroke apart. -->
+            <KeyboardAccelerator Key="Enter" Modifiers="Control" Invoked="OnTryAccelerator" />
+        </Grid.KeyboardAccelerators>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border x:Name="WindowFill"
+                Grid.Row="0"
+                Grid.RowSpan="4"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
+
+        <Border x:Name="WindowTint" Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed" />
+
+        <!-- title bar -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+
+            <Image x:Name="AppTitleBarIcon"
+                   Grid.Column="1"
+                   Width="16"
+                   Height="16"
+                   Margin="12,0,0,0"
+                   VerticalAlignment="Center" />
+
+            <TextBlock x:Name="AppTitleTextBlock"
+                       Grid.Column="2"
+                       Text="Windows MIDI Glass"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+
+            <Grid x:Name="PreviewChiclet"
+                  Grid.Column="0"
+                  Grid.ColumnSpan="6"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Height="18"
+                  IsHitTestVisible="False">
+                <Rectangle RadiusX="9"
+                           RadiusY="9"
+                           StrokeThickness="1"
+                           UseLayoutRounding="False"
+                           Stroke="{ThemeResource SystemFillColorCautionBrush}"
+                           Fill="{ThemeResource SystemFillColorCautionBackgroundBrush}" />
+                <TextBlock x:Name="PreviewChicletText"
+                           x:Uid="PreviewChicletText"
+                           Text="PREVIEW"
+                           FontSize="10"
+                           FontWeight="SemiBold"
+                           Margin="9,0,9,0"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+            </Grid>
+
+            <Button x:Name="AppearanceButton"
+                    x:Uid="AppearanceButton"
+                    Grid.Column="3"
+                    Width="46"
+                    Height="32"
+                    VerticalAlignment="Top"
+                    Padding="0"
+                    BorderThickness="0"
+                    Background="Transparent"
+                    Click="OnAppearanceButtonClick">
+                <FontIcon Glyph="&#xE713;" FontSize="14" />
+            </Button>
+        </Grid>
+
+        <!-- toolbar -->
+        <Border Grid.Row="1"
+                Height="44"
+                Padding="12,0,12,0"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Tools, grouped by what they do, with a rule between groups. -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+
+                    <Button x:Name="LibraryButton"
+                            x:Uid="EditorLibraryButton"
+                            Style="{StaticResource EditorSubtleButtonStyle}"
+                            Click="OnLibraryClick">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE72B;" FontSize="14" />
+                            <TextBlock x:Uid="EditorLibraryLabel" Text="Library" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Edit and Try are one keystroke apart, Ctrl+Enter, so somebody can feel a
+                         fader and then nudge it two pixels without leaving the editor. Two
+                         toggles rather than one, so the mode you are not in is still on screen
+                         and still has a name a screen reader can read.
+
+                         Checked and Unchecked rather than Click: a ToggleButton raises Click
+                         only for a pointer or a key, so a screen reader toggling it would move
+                         the highlight and change nothing else. -->
+                    <Border Style="{StaticResource SegmentHostStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <ToggleButton x:Name="EditModeToggle"
+                                          x:Uid="EditorEditModeToggle"
+                                          Style="{StaticResource SegmentStyle}"
+                                          IsChecked="True"
+                                          Checked="OnEditModeChecked"
+                                          Unchecked="OnEditModeUnchecked">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE70F;" FontSize="12" />
+                                    <TextBlock x:Uid="EditorEditModeLabel" Text="Edit" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <Rectangle Style="{StaticResource SegmentDividerStyle}" />
+
+                            <ToggleButton x:Name="TryModeToggle"
+                                          x:Uid="EditorTryModeToggle"
+                                          Style="{StaticResource SegmentStyle}"
+                                          Checked="OnTryModeChecked"
+                                          Unchecked="OnTryModeUnchecked">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE768;" FontSize="11" />
+                                    <TextBlock x:Uid="EditorTryModeLabel" Text="Try" />
+                                </StackPanel>
+                            </ToggleButton>
+                        </StackPanel>
+                    </Border>
+
+                    <Rectangle Style="{StaticResource ToolbarSeparatorStyle}" />
+
+                    <Button x:Name="UndoButton"
+                            x:Uid="EditorUndoButton"
+                            Style="{StaticResource EditorIconButtonStyle}"
+                            Click="OnUndoClick">
+                        <FontIcon Glyph="&#xE7A7;" FontSize="14" />
+                    </Button>
+
+                    <Button x:Name="RedoButton"
+                            x:Uid="EditorRedoButton"
+                            Style="{StaticResource EditorIconButtonStyle}"
+                            Click="OnRedoClick">
+                        <FontIcon Glyph="&#xE7A6;" FontSize="14" />
+                    </Button>
+
+                    <Rectangle Style="{StaticResource ToolbarSeparatorStyle}" />
+
+                    <ToggleButton x:Name="SnapToggle"
+                                  x:Uid="EditorSnapToggle"
+                                  Height="28"
+                                  Padding="10,0,10,0"
+                                  CornerRadius="4"
+                                  FontSize="12"
+                                  VerticalAlignment="Center"
+                                  IsChecked="True"
+                                  Checked="OnSnapToggled"
+                                  Unchecked="OnSnapToggled">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE80A;" FontSize="13" />
+                            <TextBlock x:Uid="EditorSnapLabel" Text="Snap" />
+                        </StackPanel>
+                    </ToggleButton>
+
+                    <ComboBox x:Name="GridSizeCombo"
+                              x:Uid="EditorGridSizeCombo"
+                              Height="28"
+                              MinWidth="0"
+                              Width="108"
+                              FontSize="12"
+                              CornerRadius="4"
+                              VerticalAlignment="Center"
+                              SelectionChanged="OnGridSizeChanged" />
+
+                    <Rectangle Style="{StaticResource ToolbarSeparatorStyle}" />
+
+                    <!-- The three arrange operations that get used constantly, direct rather
+                         than two clicks down a menu. The rest are on the chevron. -->
+                    <Button x:Name="AlignLeftButton"
+                            x:Uid="EditorAlignLeftButton"
+                            Style="{StaticResource EditorIconButtonStyle}"
+                            Tag="alignleft"
+                            Click="OnArrangeClick">
+                        <FontIcon Glyph="&#xE8E4;" FontSize="14" />
+                    </Button>
+
+                    <Button x:Name="AlignCenterButton"
+                            x:Uid="EditorAlignCenterButton"
+                            Style="{StaticResource EditorIconButtonStyle}"
+                            Tag="aligncenterx"
+                            Click="OnArrangeClick">
+                        <FontIcon Glyph="&#xE8E3;" FontSize="14" />
+                    </Button>
+
+                    <Button x:Name="ArrangeButton"
+                            x:Uid="EditorArrangeButton"
+                            Style="{StaticResource EditorIconButtonStyle}"
+                            Width="44">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <FontIcon Glyph="&#xE8A1;" FontSize="14" />
+                            <FontIcon Glyph="&#xE70D;" FontSize="9" />
+                        </StackPanel>                        <Button.Flyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem x:Uid="ArrangeAlignLeft" Text="Align left edges" Tag="alignleft" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Uid="ArrangeAlignCenterX" Text="Align centers across" Tag="aligncenterx" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Uid="ArrangeAlignRight" Text="Align right edges" Tag="alignright" Click="OnArrangeClick" />
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem x:Uid="ArrangeAlignTop" Text="Align top edges" Tag="aligntop" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Uid="ArrangeAlignCenterY" Text="Align centers down" Tag="aligncentery" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Uid="ArrangeAlignBottom" Text="Align bottom edges" Tag="alignbottom" Click="OnArrangeClick" />
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem x:Uid="ArrangeSpreadAcross" Text="Equal gaps across" Tag="spreadx" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Uid="ArrangeSpreadDown" Text="Equal gaps down" Tag="spready" Click="OnArrangeClick" />
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+
+                    <Rectangle Style="{StaticResource ToolbarSeparatorStyle}" />
+
+                    <Button x:Name="RepeatButton"
+                            x:Uid="EditorRepeatButton"
+                            Style="{StaticResource EditorSmallButtonStyle}"
+                            Click="OnRepeatClick">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE8C8;" FontSize="13" />
+                            <TextBlock x:Uid="EditorRepeatLabel" Text="Repeat" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- In the comp and not built yet. Shown so the shape of the toolbar is the
+                         shape that was agreed, and disabled so it is not a promise. -->
+                    <Button x:Name="GroupButton"
+                            x:Uid="EditorGroupButton"
+                            Style="{StaticResource EditorIconButtonStyle}"
+                            IsEnabled="False">
+                        <FontIcon Glyph="&#xE71D;" FontSize="14" />
+                    </Button>
+
+                    <Button x:Name="LockButton"
+                            x:Uid="EditorLockButton"
+                            Style="{StaticResource EditorIconButtonStyle}"
+                            IsEnabled="False">
+                        <FontIcon Glyph="&#xE72E;" FontSize="14" />
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+
+                    <!-- How many controls the next arrange or repeat will act on. -->
+                    <Grid x:Name="SelectionChip" Height="22" VerticalAlignment="Center" Visibility="Collapsed">
+                        <Rectangle x:Name="SelectionChipShape" Style="{StaticResource ChipShapeStyle}" />
+                        <StackPanel Style="{StaticResource ChipPanelStyle}">
+                            <FontIcon Glyph="&#xE70F;" FontSize="11" VerticalAlignment="Center"
+                                      Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                            <TextBlock x:Name="SelectionChipText"
+                                       Style="{StaticResource ChipTextStyle}"
+                                       Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Saved or not saved, the way MIDI Patchbay says it. Written about a second
+                         and a half after the last edit, so nobody has to remember to save. -->
+                    <Grid x:Name="SavedChip" Height="22" VerticalAlignment="Center">
+                        <Rectangle x:Name="SavedChipShape" Style="{StaticResource ChipShapeStyle}" />
+                        <StackPanel Style="{StaticResource ChipPanelStyle}">
+                            <FontIcon x:Name="SavedChipGlyph" Glyph="&#xE73E;" FontSize="11" VerticalAlignment="Center" />
+                            <TextBlock x:Name="SavedChipText" Style="{StaticResource ChipTextStyle}" Text="Saved" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Button x:Name="LayoutSettingsButton"
+                            x:Uid="EditorLayoutSettingsButton"
+                            Style="{StaticResource EditorSmallButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE713;" FontSize="13" />
+                            <TextBlock x:Uid="EditorLayoutSettingsLabel" Text="Layout…" />
+                        </StackPanel>
+                        <Button.Flyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem x:Uid="LayoutMenuPageSize" Text="Page size…" Click="OnPageSizeClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE740;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem x:Uid="LayoutMenuRename" Text="Rename layout…" Click="OnRenameLayoutClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem x:Uid="LayoutMenuKeyboardOrder" Text="Set keyboard order from position" Click="OnSortKeyboardOrderClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8FD;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem x:Uid="LayoutMenuRun" Text="Save and run" Click="OnRunClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE768;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- body -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="LeftColumn" Width="190" MinWidth="40" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" MinWidth="240" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="InspectorColumn" Width="300" MinWidth="40" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Every divider on this screen can be dragged. The instinct to grab one and give
+                 the monitor more room, or the palette less, is the right instinct. WinUI has no
+                 splitter, so these are plain borders with pointer handlers: a transparent grab
+                 area wide enough to hit, with a hairline down the middle of it. -->
+            <Border x:Name="LeftSplitter"
+                    x:Uid="LeftSplitter"
+                    Grid.Column="1"
+                    Width="6"
+                    Background="Transparent"
+                    Tag="left"
+                    PointerPressed="OnSplitterPressed"
+                    PointerMoved="OnSplitterMoved"
+                    PointerReleased="OnSplitterReleased"
+                    PointerCaptureLost="OnSplitterReleased"
+                    PointerEntered="OnSplitterEntered"
+                    PointerExited="OnSplitterExited">
+                <Rectangle Width="2" HorizontalAlignment="Center"
+                           Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+            </Border>
+
+            <Border x:Name="InspectorSplitter"
+                    x:Uid="InspectorSplitter"
+                    Grid.Column="3"
+                    Width="6"
+                    Background="Transparent"
+                    Tag="inspector"
+                    PointerPressed="OnSplitterPressed"
+                    PointerMoved="OnSplitterMoved"
+                    PointerReleased="OnSplitterReleased"
+                    PointerCaptureLost="OnSplitterReleased"
+                    PointerEntered="OnSplitterEntered"
+                    PointerExited="OnSplitterExited">
+                <Rectangle Width="2" HorizontalAlignment="Center"
+                           Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+            </Border>
+
+            <!-- palette and outline -->
+            <Border Grid.Column="0"
+                    BorderThickness="0,0,1,0"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                <Grid RowSpacing="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Collapsed: a rail of two buttons. Clicking one opens the pane on that
+                         tab, so getting back is one click rather than a hunt. -->
+                    <StackPanel x:Name="LeftRail"
+                                Grid.Row="0" Grid.RowSpan="2"
+                                Orientation="Vertical"
+                                Spacing="4"
+                                Margin="4,8,4,0"
+                                Visibility="Collapsed">
+                        <Button x:Name="RailPaletteButton"
+                                x:Uid="RailPaletteButton"
+                                Style="{StaticResource EditorIconButtonStyle}"
+                                Width="32"
+                                Tag="0"
+                                Click="OnExpandLeftPaneClick">
+                            <FontIcon Glyph="&#xE710;" FontSize="14" />
+                        </Button>
+                        <Button x:Name="RailOutlineButton"
+                                x:Uid="RailOutlineButton"
+                                Style="{StaticResource EditorIconButtonStyle}"
+                                Width="32"
+                                Tag="1"
+                                Click="OnExpandLeftPaneClick">
+                            <FontIcon Glyph="&#xE8FD;" FontSize="14" />
+                        </Button>
+                    </StackPanel>
+
+                    <Grid x:Name="LeftPaneBody" Grid.Row="0" Grid.RowSpan="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" Style="{StaticResource TabStripStyle}" Padding="9,0,4,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Button x:Name="CollapseLeftButton"
+                                        x:Uid="CollapseLeftButton"
+                                        Grid.Column="1"
+                                        Style="{StaticResource EditorTinyButtonStyle}"
+                                        Width="22" Height="22" Padding="0"
+                                        VerticalAlignment="Center"
+                                        Click="OnCollapseLeftPaneClick">
+                                    <FontIcon Glyph="&#xE76B;" FontSize="10" />
+                                </Button>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="14">
+                                <Grid>
+                                    <ToggleButton x:Name="PaletteTab" x:Uid="PalettePivotItem"
+                                                  Style="{StaticResource TabButtonStyle}"
+                                                  IsChecked="True" Tag="0"
+                                                  Content="Add"
+                                                  Checked="OnLeftTabChecked" Unchecked="OnLeftTabUnchecked" />
+                                    <Rectangle x:Name="PaletteTabLine" Style="{StaticResource TabUnderlineStyle}" />
+                                </Grid>
+                                <Grid>
+                                    <ToggleButton x:Name="OutlineTab" x:Uid="OutlinePivotItem"
+                                                  Style="{StaticResource TabButtonStyle}"
+                                                  Tag="1"
+                                                  Content="Outline"
+                                                  Checked="OnLeftTabChecked" Unchecked="OnLeftTabUnchecked" />
+                                    <Rectangle x:Name="OutlineTabLine" Style="{StaticResource TabUnderlineStyle}" Visibility="Collapsed" />
+                                </Grid>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <Grid Grid.Row="1">
+                            <Grid x:Name="PalettePane" Margin="9,6,9,0" RowSpacing="6">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <AutoSuggestBox x:Name="PaletteSearch"
+                                                x:Uid="PaletteSearch"
+                                                Grid.Row="0"
+                                                Height="28"
+                                                FontSize="12"
+                                                QueryIcon="Find"
+                                                TextChanged="OnPaletteSearchChanged" />
+
+                                <!-- Grouped and drawn in code: a tile shows a miniature of the
+                                     control, and a font glyph cannot tell a fader from a fader
+                                     bank. -->
+                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                    <StackPanel x:Name="PaletteHost"
+                                                x:Uid="PaletteHost"
+                                                Margin="0,0,4,8" />
+                                </ScrollViewer>
+
+                                <!-- Not in the comp, which places by clicking the page. Kept
+                                     because that is a pointer-only path and this is not. -->
+                                <Button x:Name="AddToPageButton"
+                                        x:Uid="AddToPageButton"
+                                        Grid.Row="2"
+                                        Margin="0,0,0,8"
+                                        HorizontalAlignment="Stretch"
+                                        Style="{StaticResource EditorSmallButtonStyle}"
+                                        Click="OnAddToPageClick">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE710;" FontSize="12" />
+                                        <TextBlock x:Uid="AddToPageLabel" Text="Add to page" FontSize="12" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <Grid x:Name="OutlinePane" Margin="9,6,9,0" RowSpacing="6" Visibility="Collapsed">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <ListView x:Name="OutlineList"
+                                          x:Uid="OutlineList"
+                                          Grid.Row="0"
+                                          SelectionMode="Single"
+                                          ItemTemplate="{StaticResource OutlineTemplate}"
+                                          SelectionChanged="OnOutlineSelectionChanged">
+                                    <ListView.ItemContainerTransitions>
+                                        <TransitionCollection />
+                                    </ListView.ItemContainerTransitions>
+                                </ListView>
+
+                                <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6" Margin="0,0,0,8">
+                                    <Button x:Name="OutlineUpButton"
+                                            x:Uid="OutlineUpButton"
+                                            Style="{StaticResource EditorIconButtonStyle}"
+                                            Click="OnOutlineMoveUp">
+                                        <FontIcon Glyph="&#xE74A;" FontSize="12" />
+                                    </Button>
+                                    <Button x:Name="OutlineDownButton"
+                                            x:Uid="OutlineDownButton"
+                                            Style="{StaticResource EditorIconButtonStyle}"
+                                            Click="OnOutlineMoveDown">
+                                        <FontIcon Glyph="&#xE74B;" FontSize="12" />
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- canvas -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" MinHeight="120" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition x:Name="MonitorRow" Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <!-- The work area fills the whole middle. Only the PAGE keeps its aspect ratio;
+                     letting the work area do it left a band of window chrome down both sides
+                     that read as part of the layout. -->
+                <Grid Grid.Row="0" Background="#0A0B0E">
+                    <ScrollViewer x:Name="CanvasScroll"
+                                  ZoomMode="Disabled"
+                                  IsTabStop="True"
+                                  UseSystemFocusVisuals="False"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollMode="Auto"
+                                  VerticalScrollMode="Auto"
+                                  SizeChanged="OnCanvasSizeChanged">
+                        <!-- The page is the bright rectangle and everything else is working
+                             space. The host carries the scaled size so the scroll viewer knows
+                             how much there is; the transform paints it. -->
+                        <Border x:Name="CanvasHost" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Grid x:Name="WorkAreaHost" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                <Grid.RenderTransform>
+                                    <ScaleTransform x:Name="CanvasScale" ScaleX="1" ScaleY="1" />
+                                </Grid.RenderTransform>
+
+                                <Border x:Name="WorkAreaFill" />
+
+                                <!-- A shape, not a Border: a Border's bounds and its corner
+                                     radius are both snapped to whole pixels, so the corner steps
+                                     at fractional display scaling. -->
+                                <Rectangle x:Name="PageDeck"
+                                           RadiusX="6"
+                                           RadiusY="6"
+                                           StrokeThickness="1"
+                                           UseLayoutRounding="False"
+                                           HorizontalAlignment="Left"
+                                           VerticalAlignment="Top" />
+
+                                <!-- The snap grid, drawn only where the eye can resolve it. -->
+                                <Canvas x:Name="GridCanvas" IsHitTestVisible="False" />
+
+                                <Canvas x:Name="SurfaceCanvas" />
+
+                                <Canvas x:Name="OverlayCanvas"
+                                        Background="Transparent"
+                                        PointerPressed="OnCanvasPointerPressed"
+                                        PointerMoved="OnCanvasPointerMoved"
+                                        PointerReleased="OnCanvasPointerReleased"
+                                        PointerCaptureLost="OnCanvasPointerCaptureLost" />
+                            </Grid>
+                        </Border>
+                    </ScrollViewer>
+
+                    <!-- Which page, how big it is, and the zoom, over the canvas in the corner
+                         rather than in a rail: it describes what is being looked at. On its own
+                         plate, because the page's edge can end up running straight through it. -->
+                    <Border HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Margin="0,0,10,8"
+                            Padding="8,3,6,3"
+                            CornerRadius="5"
+                            Background="#B2000000">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock x:Name="CanvasStatusText"
+                                       FontFamily="Cascadia Mono, Consolas"
+                                       FontSize="10"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,4,0"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                            <Button x:Name="ZoomOutButton"
+                                    x:Uid="ZoomOutButton"
+                                    Style="{StaticResource EditorTinyButtonStyle}"
+                                    Width="24" Padding="0"
+                                    Click="OnZoomOutClick">
+                                <FontIcon Glyph="&#xE71F;" FontSize="10" />
+                            </Button>
+
+                            <Button x:Name="ZoomInButton"
+                                    x:Uid="ZoomInButton"
+                                    Style="{StaticResource EditorTinyButtonStyle}"
+                                    Width="24" Padding="0"
+                                    Click="OnZoomInClick">
+                                <FontIcon Glyph="&#xE8A3;" FontSize="10" />
+                            </Button>
+
+                            <Button x:Name="ZoomFitButton"
+                                    x:Uid="ZoomFitButton"
+                                    Style="{StaticResource EditorTinyButtonStyle}"
+                                    Click="OnZoomFitClick">
+                                <TextBlock x:Uid="ZoomFitLabel" Text="Fit" FontSize="11" />
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Counted rather than hidden, and never moved back on their own: clamping is
+                     what would make a page resize unrecoverable. -->
+                <InfoBar x:Name="OffPageBar"
+                         x:Uid="OffPageBar"
+                         Grid.Row="1"
+                         IsOpen="False"
+                         IsClosable="False"
+                         Severity="Warning"
+                         Margin="8,0,8,8">
+                    <InfoBar.ActionButton>
+                        <Button x:Name="SelectOffPageButton"
+                                x:Uid="SelectOffPageButton"
+                                Content="Select them"
+                                Click="OnSelectOffPageClick" />
+                    </InfoBar.ActionButton>
+                </InfoBar>
+
+                <!-- The page rail: one tab per page in that page's own hue, then the tools that
+                     act on the page rather than on a control. -->
+                <Border Grid.Row="2"
+                        Height="34"
+                        Padding="10,0,10,0"
+                        BorderThickness="0,1,0,0"
+                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                    <Grid ColumnSpacing="6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <ScrollViewer Grid.Column="0"
+                                      HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollMode="Disabled"
+                                      VerticalScrollBarVisibility="Disabled">
+                            <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                <StackPanel x:Name="PageRail" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center" />
+
+                                <Button x:Name="AddPageButton"
+                                        x:Uid="AddPageButton"
+                                        Height="23"
+                                        Padding="10,0,10,0"
+                                        CornerRadius="4"
+                                        FontSize="11"
+                                        VerticalAlignment="Center"
+                                        Click="OnAddPageClick">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE710;" FontSize="10" />
+                                        <TextBlock x:Uid="AddPageLabel" Text="Page" FontSize="11" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <Button x:Name="KeyboardOrderButton"
+                                    x:Uid="KeyboardOrderButton"
+                                    Height="23"
+                                    Padding="10,0,10,0"
+                                    CornerRadius="4"
+                                    FontSize="11"
+                                    Click="OnSortKeyboardOrderClick">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE8FD;" FontSize="10" />
+                                    <TextBlock x:Uid="KeyboardOrderLabel" Text="Keyboard order" FontSize="11" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button x:Name="GridSettingsButton"
+                                    x:Uid="GridSettingsButton"
+                                    Height="23"
+                                    Padding="10,0,10,0"
+                                    CornerRadius="4"
+                                    FontSize="11"
+                                    Click="OnPageSizeClick">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE740;" FontSize="10" />
+                                    <TextBlock x:Uid="GridSettingsLabel" Text="Page size…" FontSize="11" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- The monitor rail: what actually went out, filtered to the selected control
+                     by default. It answers "is this thing sending what I think it is" in about a
+                     second, which is the reason nobody has to open a second app to find out. -->
+                <Border x:Name="MonitorSplitter"
+                        x:Uid="MonitorSplitter"
+                        Grid.Row="3"
+                        Height="6"
+                        Background="Transparent"
+                        Tag="monitor"
+                        PointerPressed="OnSplitterPressed"
+                        PointerMoved="OnSplitterMoved"
+                        PointerReleased="OnSplitterReleased"
+                        PointerCaptureLost="OnSplitterReleased"
+                        PointerEntered="OnSplitterEntered"
+                        PointerExited="OnSplitterExited">
+                    <Rectangle Height="2" VerticalAlignment="Center"
+                               Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                </Border>
+
+                <Border Grid.Row="4"
+                        BorderThickness="0"
+                        Background="#2E000000">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Height="27" Padding="11,0,11,0" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE9D9;" FontSize="12"
+                                          Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                <TextBlock x:Uid="MonitorHeading"
+                                           Text="Sending"
+                                           FontSize="11"
+                                           VerticalAlignment="Center"
+                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            </StackPanel>
+
+                            <!-- A chip, not a check box: it is a filter that is on, which is the
+                                 same thing the Saved chip beside it is saying. -->
+                            <ToggleButton x:Name="MonitorSelectedOnlyCheck"
+                                          x:Uid="MonitorSelectedOnlyCheck"
+                                          Grid.Column="1"
+                                          Style="{StaticResource FilterChipStyle}"
+                                          IsChecked="True"
+                                          Checked="OnMonitorSelectedOnlyToggled"
+                                          Unchecked="OnMonitorSelectedOnlyToggled">
+                                <TextBlock x:Uid="MonitorSelectedOnlyLabel"
+                                           Text="Selected control only"
+                                           FontSize="11" />
+                            </ToggleButton>
+
+                            <TextBlock x:Name="MonitorEmptyText"
+                                       Grid.Column="2"
+                                       FontSize="11"
+                                       Margin="8,0,8,0"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Right"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                            <ToggleButton x:Name="MonitorPauseToggle"
+                                          x:Uid="MonitorPauseToggle"
+                                          Grid.Column="3"
+                                          Height="22"
+                                          Padding="8,0,8,0"
+                                          CornerRadius="3"
+                                          FontSize="11"
+                                          VerticalAlignment="Center"
+                                          Checked="OnMonitorPauseToggled"
+                                          Unchecked="OnMonitorPauseToggled">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <FontIcon Glyph="&#xE769;" FontSize="10" />
+                                    <TextBlock x:Uid="MonitorPauseLabel" Text="Pause" FontSize="11" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <Button x:Name="MonitorClearButton"
+                                    x:Uid="MonitorClearButton"
+                                    Grid.Column="4"
+                                    Style="{StaticResource EditorTinyButtonStyle}"
+                                    Height="22"
+                                    Click="OnMonitorClearClick">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <FontIcon Glyph="&#xE74D;" FontSize="10" />
+                                    <TextBlock x:Uid="MonitorClearLabel" Text="Clear" FontSize="11" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button x:Name="MonitorExpandButton"
+                                    x:Uid="MonitorExpandButton"
+                                    Grid.Column="5"
+                                    Style="{StaticResource EditorTinyButtonStyle}"
+                                    Height="22"
+                                    Width="26"
+                                    Padding="0"
+                                    Click="OnMonitorExpandClick">
+                                <FontIcon x:Name="MonitorExpandGlyph" Glyph="&#xE70D;" FontSize="10" />
+                            </Button>
+                        </Grid>
+
+                        <ListView x:Name="MonitorList"
+                                  x:Uid="MonitorList"
+                                  Grid.Row="1"
+                                  Padding="0,0,0,4"
+                                  SelectionMode="None"
+                                  IsItemClickEnabled="False"
+                                  ScrollViewer.HorizontalScrollMode="Auto"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                                    <Setter Property="MinHeight" Value="18" />
+                                    <Setter Property="Height" Value="18" />
+                                    <Setter Property="Padding" Value="11,0,11,0" />
+                                    <Setter Property="Margin" Value="0" />
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="local:MonitorItem">
+                                    <!-- The color IS the column: dim for when, cyan for what went
+                                         out, green for what it means, plain for where it went.
+                                         Eight bytes of hex in one color is unreadable. -->
+                                    <Grid ColumnSpacing="12"
+                                          AutomationProperties.Name="{x:Bind AutomationName}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="52" />
+                                            <ColumnDefinition Width="196" />
+                                            <ColumnDefinition Width="140" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0"
+                                                   Style="{StaticResource MonitorCellStyle}"
+                                                   Text="{x:Bind Elapsed}"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <TextBlock Grid.Column="1"
+                                                   Style="{StaticResource MonitorCellStyle}"
+                                                   Text="{x:Bind Words}"
+                                                   Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+
+                                        <TextBlock Grid.Column="2"
+                                                   Style="{StaticResource MonitorCellStyle}"
+                                                   Text="{x:Bind Meaning}"
+                                                   Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
+
+                                        <TextBlock Grid.Column="3"
+                                                   Style="{StaticResource MonitorCellStyle}"
+                                                   Text="{x:Bind Destination}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- inspector -->
+            <Border Grid.Column="4"
+                    BorderThickness="1,0,0,0"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="13,11,13,8" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Spacing="1">
+                            <TextBlock x:Name="InspectorKindText"
+                                       FontSize="11"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            <TextBlock x:Name="InspectorTitleText"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       TextTrimming="CharacterEllipsis" />
+                        </StackPanel>
+
+                        <Button x:Name="InspectorMoreButton"
+                                x:Uid="InspectorMoreButton"
+                                Grid.Column="1"
+                                Style="{StaticResource EditorIconButtonStyle}"
+                                Width="28"
+                                Height="26">
+                            <FontIcon Glyph="&#xE712;" FontSize="13" />
+                            <Button.Flyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem x:Uid="InspectorMenuDuplicate" Text="Duplicate" Click="OnDuplicateSelectionClick">
+                                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
+                                    <MenuFlyoutItem x:Uid="InspectorMenuDelete" Text="Delete" Click="OnDeleteSelectionClick">
+                                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" /></MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
+                                </MenuFlyout>
+                            </Button.Flyout>
+                        </Button>
+                    </Grid>
+
+                    <!-- Nothing here is modal: the inspector always reflects the selection, and
+                         an empty selection shows the page's own properties. -->
+                    <!-- Underline tabs, not a Pivot. A Pivot header is more than twice this
+                         tall and carries side padding a 288 px pane cannot spare. -->
+                    <Grid Grid.Row="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" Style="{StaticResource TabStripStyle}" Padding="13,0,13,0">
+                            <StackPanel Orientation="Horizontal" Spacing="14">
+                                <Grid>
+                                    <ToggleButton x:Name="LookTab" x:Uid="InspectorLookItem"
+                                                  Style="{StaticResource TabButtonStyle}"
+                                                  IsChecked="True" Tag="0"
+                                                  Content="Look"
+                                                  Checked="OnInspectorTabChecked" Unchecked="OnInspectorTabUnchecked" />
+                                    <Rectangle x:Name="LookTabLine" Style="{StaticResource TabUnderlineStyle}" />
+                                </Grid>
+                                <Grid>
+                                    <ToggleButton x:Name="MidiTab" x:Uid="InspectorMidiItem"
+                                                  Style="{StaticResource TabButtonStyle}"
+                                                  Tag="1"
+                                                  Content="MIDI"
+                                                  Checked="OnInspectorTabChecked" Unchecked="OnInspectorTabUnchecked" />
+                                    <Rectangle x:Name="MidiTabLine" Style="{StaticResource TabUnderlineStyle}" Visibility="Collapsed" />
+                                </Grid>
+                                <Grid>
+                                    <ToggleButton x:Name="BehaviorTab" x:Uid="InspectorBehaviorItem"
+                                                  Style="{StaticResource TabButtonStyle}"
+                                                  Tag="2"
+                                                  Content="Behavior"
+                                                  Checked="OnInspectorTabChecked" Unchecked="OnInspectorTabUnchecked" />
+                                    <Rectangle x:Name="BehaviorTabLine" Style="{StaticResource TabUnderlineStyle}" Visibility="Collapsed" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Grid Grid.Row="1">
+                            <ScrollViewer x:Name="LookPane" VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="LookPanel" Margin="8,0,13,16">
+
+                                    <TextBlock x:Uid="InspectorColorHeading" Text="Color" Style="{StaticResource GroupHeadingStyle}" Margin="0,4,0,7" />
+                                    <ItemsControl x:Name="HueSlotHost">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal" Spacing="6" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                    </ItemsControl>
+                                    <TextBlock x:Name="HueSlotCaption"
+                                               x:Uid="HueSlotCaption"
+                                               Style="{StaticResource CaptionTextStyle}"
+                                               Margin="0,6,0,0" />
+
+                                    <!-- How the control is drawn. "Theme" is a segment of its own
+                                         rather than the absence of one: exactly one is always on,
+                                         and handing the decision back to the theme is a thing you
+                                         pick, not a thing you undo. -->
+                                    <TextBlock x:Uid="InspectorStyleHeading" Text="Style" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+                                    <Border Style="{StaticResource SegmentHostStyle}" HorizontalAlignment="Stretch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <ToggleButton x:Name="StyleThemeSegment" x:Uid="StyleThemeSegment" Grid.Column="0"
+                                                          Style="{StaticResource SegmentStyle}" Padding="0" Tag="theme"
+                                                          Checked="OnStyleChecked" Unchecked="OnStyleUnchecked">
+                                                <TextBlock x:Uid="StyleThemeLabel" Text="Theme" />
+                                            </ToggleButton>
+                                            <Rectangle Grid.Column="1" Style="{StaticResource SegmentDividerStyle}" />
+                                            <ToggleButton x:Name="StylePlateSegment" x:Uid="StylePlateSegment" Grid.Column="2"
+                                                          Style="{StaticResource SegmentStyle}" Padding="0" Tag="plate"
+                                                          Checked="OnStyleChecked" Unchecked="OnStyleUnchecked">
+                                                <TextBlock x:Uid="StylePlateLabel" Text="Plate" />
+                                            </ToggleButton>
+                                            <Rectangle Grid.Column="3" Style="{StaticResource SegmentDividerStyle}" />
+                                            <ToggleButton x:Name="StyleOutlineSegment" x:Uid="StyleOutlineSegment" Grid.Column="4"
+                                                          Style="{StaticResource SegmentStyle}" Padding="0" Tag="outline"
+                                                          Checked="OnStyleChecked" Unchecked="OnStyleUnchecked">
+                                                <TextBlock x:Uid="StyleOutlineLabel" Text="Outline" />
+                                            </ToggleButton>
+                                            <Rectangle Grid.Column="5" Style="{StaticResource SegmentDividerStyle}" />
+                                            <ToggleButton x:Name="StyleSolidSegment" x:Uid="StyleSolidSegment" Grid.Column="6"
+                                                          Style="{StaticResource SegmentStyle}" Padding="0" Tag="solid"
+                                                          Checked="OnStyleChecked" Unchecked="OnStyleUnchecked">
+                                                <TextBlock x:Uid="StyleSolidLabel" Text="Solid" />
+                                            </ToggleButton>
+                                            <Rectangle Grid.Column="7" Style="{StaticResource SegmentDividerStyle}" />
+                                            <ToggleButton x:Name="StyleBareSegment" x:Uid="StyleBareSegment" Grid.Column="8"
+                                                          Style="{StaticResource SegmentStyle}" Padding="0" Tag="bare"
+                                                          Checked="OnStyleChecked" Unchecked="OnStyleUnchecked">
+                                                <TextBlock x:Uid="StyleBareLabel" Text="Bare" />
+                                            </ToggleButton>
+                                        </Grid>
+                                    </Border>
+
+                                    <TextBlock x:Uid="InspectorPositionHeading" Text="Position and size" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+
+                                    <!-- Label left at a fixed width, fields filling the rest, so
+                                         every row in the pane lines up into one column. -->
+                                    <Grid ColumnSpacing="8" RowSpacing="7">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock x:Uid="InspectorXYLabel" Grid.Row="0" Grid.Column="0" Text="X, Y" Style="{StaticResource RowLabelStyle}" />
+                                        <TextBox x:Name="BoundsX" x:Uid="BoundsX" Grid.Row="0" Grid.Column="1"
+                                                 Style="{StaticResource RowFieldStyle}" TextChanged="OnBoundsChanged" />
+                                        <TextBox x:Name="BoundsY" x:Uid="BoundsY" Grid.Row="0" Grid.Column="2"
+                                                 Style="{StaticResource RowFieldStyle}" TextChanged="OnBoundsChanged" />
+
+                                        <TextBlock x:Uid="InspectorSizeLabel" Grid.Row="1" Grid.Column="0" Text="Width, height" Style="{StaticResource RowLabelStyle}" />
+                                        <TextBox x:Name="BoundsWidth" x:Uid="BoundsWidth" Grid.Row="1" Grid.Column="1"
+                                                 Style="{StaticResource RowFieldStyle}" TextChanged="OnBoundsChanged" />
+                                        <TextBox x:Name="BoundsHeight" x:Uid="BoundsHeight" Grid.Row="1" Grid.Column="2"
+                                                 Style="{StaticResource RowFieldStyle}" TextChanged="OnBoundsChanged" />
+
+                                        <ToggleButton x:Name="AspectLockToggle" x:Uid="AspectLockToggle"
+                                                      Grid.Row="1" Grid.Column="3" Height="30" Width="34" Padding="0"
+                                                      CornerRadius="4"
+                                                      Click="OnAspectLockToggled">
+                                            <FontIcon Glyph="&#xE72E;" FontSize="12" />
+                                        </ToggleButton>
+                                    </Grid>
+
+                                    <TextBlock x:Uid="InspectorLabelHeading" Text="Label" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+
+                                    <Grid ColumnSpacing="8" RowSpacing="7">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock x:Uid="InspectorLabelTextLabel" Grid.Row="0" Grid.Column="0" Text="Text" Style="{StaticResource RowLabelStyle}" />
+                                        <TextBox x:Name="LabelBox" x:Uid="LabelBox" Grid.Row="0" Grid.Column="1"
+                                                 Style="{StaticResource RowFieldStyle}" TextChanged="OnLabelChanged" />
+
+                                        <TextBlock x:Uid="InspectorLabelPlacedLabel" Grid.Row="1" Grid.Column="0" Text="Placed" Style="{StaticResource RowLabelStyle}" />
+                                        <ComboBox x:Name="LabelPlacedCombo" x:Uid="LabelPlacedCombo" Grid.Row="1" Grid.Column="1"
+                                                  Style="{StaticResource RowComboStyle}" SelectionChanged="OnLabelPlacedChanged" />
+
+                                        <TextBlock x:Uid="InspectorShowValueLabel" Grid.Row="2" Grid.Column="0" Text="Show value" Style="{StaticResource RowLabelStyle}" />
+                                        <ComboBox x:Name="ShowValueCombo" x:Uid="ShowValueCombo" Grid.Row="2" Grid.Column="1"
+                                                  Style="{StaticResource RowComboStyle}" SelectionChanged="OnShowValueChanged" />
+
+                                        <TextBlock x:Uid="InspectorKindLabel" Grid.Row="3" Grid.Column="0" Text="Kind" Style="{StaticResource RowLabelStyle}" />
+                                        <ComboBox x:Name="KindCombo" x:Uid="KindCombo" Grid.Row="3" Grid.Column="1"
+                                                  Style="{StaticResource RowComboStyle}" SelectionChanged="OnKindChanged" />
+                                    </Grid>
+
+                                    <!-- The control itself, drawn the way it will actually look,
+                                         so a style or a color is judged rather than imagined. -->
+                                    <TextBlock x:Uid="InspectorPreviewHeading" Text="Preview" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+                                    <Grid x:Name="PreviewHost" Height="92">
+                                        <Rectangle x:Name="PreviewDeck"
+                                                   RadiusX="6"
+                                                   RadiusY="6"
+                                                   UseLayoutRounding="False" />
+                                        <Canvas x:Name="PreviewCanvas" IsHitTestVisible="False" />
+                                    </Grid>
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <ScrollViewer x:Name="MidiPane" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                                <StackPanel x:Name="MidiPanel" Margin="8,0,16,16" Spacing="4">
+
+                                    <TextBlock x:Uid="InspectorMessagesHeading" Text="What it sends" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <ListView x:Name="MessageList"
+                                              x:Uid="MessageList"
+                                              SelectionMode="Single"
+                                              MaxHeight="150"
+                                              SelectionChanged="OnMessageSelectionChanged" />
+
+                                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,4,0,0">
+                                        <Button x:Name="AddMessageButton" x:Uid="AddMessageButton" Height="30" Click="OnAddMessageClick">
+                                            <FontIcon Glyph="&#xE710;" FontSize="12" />
+                                        </Button>
+                                        <Button x:Name="RemoveMessageButton" x:Uid="RemoveMessageButton" Height="30" Click="OnRemoveMessageClick">
+                                            <FontIcon Glyph="&#xE738;" FontSize="12" />
+                                        </Button>
+                                    </StackPanel>
+
+                                    <Grid ColumnSpacing="8" RowSpacing="6" Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock x:Uid="MessageWhenLabel" Grid.Row="0" Grid.Column="0" Text="When" Style="{StaticResource InspectorLabelStyle}" />
+                                        <ComboBox x:Name="TriggerCombo" x:Uid="TriggerCombo" Grid.Row="0" Grid.Column="1"
+                                                  HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
+
+                                        <TextBlock x:Uid="MessageWhatLabel" Grid.Row="1" Grid.Column="0" Text="What" Style="{StaticResource InspectorLabelStyle}" />
+                                        <ComboBox x:Name="KindMessageCombo" x:Uid="KindMessageCombo" Grid.Row="1" Grid.Column="1"
+                                                  HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
+
+                                        <TextBlock x:Uid="MessageDeviceLabel" Grid.Row="2" Grid.Column="0" Text="To" Style="{StaticResource InspectorLabelStyle}" />
+                                        <ComboBox x:Name="DeviceCombo" x:Uid="DeviceCombo" Grid.Row="2" Grid.Column="1"
+                                                  HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
+
+                                        <TextBlock x:Uid="MessageGroupLabel" Grid.Row="3" Grid.Column="0" Text="Group" Style="{StaticResource InspectorLabelStyle}" />
+                                        <ComboBox x:Name="GroupCombo" x:Uid="GroupCombo" Grid.Row="3" Grid.Column="1"
+                                                  HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
+
+                                        <TextBlock x:Uid="MessageChannelLabel" Grid.Row="4" Grid.Column="0" Text="Channel" Style="{StaticResource InspectorLabelStyle}" />
+                                        <ComboBox x:Name="ChannelCombo" x:Uid="ChannelCombo" Grid.Row="4" Grid.Column="1"
+                                                  HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
+
+                                        <TextBlock x:Uid="MessageNumberLabel" Grid.Row="5" Grid.Column="0" Text="Number" Style="{StaticResource InspectorLabelStyle}" />
+                                        <NumberBox x:Name="MessageNumberBox" x:Uid="MessageNumberBox" Grid.Row="5" Grid.Column="1"
+                                                   Minimum="0" Maximum="127" SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnMessageNumberChanged" />
+                                    </Grid>
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <ScrollViewer x:Name="BehaviorPane" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                                <StackPanel x:Name="BehaviorPanel" Margin="8,0,16,16" Spacing="4">
+
+                                    <TextBlock x:Uid="InspectorStartHeading" Text="When the layout opens" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <ToggleSwitch x:Name="SendOnStartSwitch"
+                                                  x:Uid="SendOnStartSwitch"
+                                                  Header="Send this control's value"
+                                                  Toggled="OnSendOnStartToggled" />
+                                    <TextBlock x:Uid="SendOnStartCaption"
+                                               Text="A layout whose faders sit at zero, pushed to a live desk on load, mutes the show. Off unless this control genuinely has to put something into a known state."
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                    <TextBlock x:Uid="InspectorDefaultHeading" Text="Starting value" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <Slider x:Name="DefaultValueSlider"
+                                            x:Uid="DefaultValueSlider"
+                                            Minimum="0"
+                                            Maximum="100"
+                                            StepFrequency="1"
+                                            ValueChanged="OnDefaultValueChanged" />
+
+                                    <TextBlock x:Uid="InspectorThrottleHeading" Text="Least time between sends" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <NumberBox x:Name="SendIntervalBox"
+                                               x:Uid="SendIntervalBox"
+                                               Minimum="0"
+                                               Maximum="1000"
+                                               SpinButtonPlacementMode="Compact"
+                                               ValueChanged="OnSendIntervalChanged" />
+                                    <TextBlock x:Uid="SendIntervalCaption"
+                                               Text="Milliseconds. Zero is no limit. A DIN cable carries about 350 three byte messages a second, so a fader dragged quickly can out-run it."
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                    <TextBlock x:Uid="InspectorPickupHeading" Text="Pickup" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <ComboBox x:Name="PickupCombo" x:Uid="PickupCombo" HorizontalAlignment="Stretch" SelectionChanged="OnPickupChanged" />
+
+                                    <TextBlock x:Uid="InspectorKeyboardOrderHeading" Text="Keyboard order" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <NumberBox x:Name="KeyboardOrderBox"
+                                               x:Uid="KeyboardOrderBox"
+                                               Minimum="1"
+                                               Maximum="1024"
+                                               SpinButtonPlacementMode="Compact"
+                                               ValueChanged="OnKeyboardOrderChanged" />
+                                    <TextBlock x:Uid="KeyboardOrderCaption"
+                                               Text="The order the Tab key walks, and the order a screen reader reads. A hidden ordering is one nobody can fix."
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- status bar -->
+        <Border Grid.Row="3"
+                Height="30"
+                Padding="12,0,12,0"
+                BorderThickness="0,1,0,0"
+                BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock x:Name="StatusText"
+                           Grid.Column="0"
+                           FontSize="11"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                <TextBlock x:Name="SelectionText"
+                           Grid.Column="1"
+                           FontSize="11"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

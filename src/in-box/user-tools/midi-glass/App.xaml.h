@@ -25,6 +25,12 @@ namespace winrt::midiglass::implementation
         // rather than starting a second copy of it.
         static void OpenRuntimeWindow(_In_ std::wstring const& filePath);
 
+        // The editor is one window at a time. Editing the same layout in two windows is a
+        // conflict nobody needs, and a second request focuses the first.
+        static void OpenEditorWindow(_In_ std::wstring const& filePath);
+
+        static void ActivateLibraryWindow();
+
     private:
         void OnUnhandledException(
             foundation::IInspectable const& sender,

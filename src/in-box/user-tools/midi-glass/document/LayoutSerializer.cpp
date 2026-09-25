@@ -57,6 +57,9 @@ namespace glass
         constexpr wchar_t KeyHeight[] = L"height";
         constexpr wchar_t KeyLiteralColor[] = L"literalColor";
         constexpr wchar_t KeyAspectLocked[] = L"aspectLocked";
+        constexpr wchar_t KeyStyle[] = L"style";
+        constexpr wchar_t KeyLabelPlaced[] = L"labelPlaced";
+        constexpr wchar_t KeyShowValue[] = L"showValue";
         constexpr wchar_t KeyKeyboardOrder[] = L"keyboardOrder";
         constexpr wchar_t KeyPickup[] = L"pickup";
         constexpr wchar_t KeyDefaultValue[] = L"defaultValue";
@@ -157,6 +160,33 @@ namespace glass
             { PickupMode::Jump, L"jump" },
             { PickupMode::Catch, L"catch" },
             { PickupMode::Relative, L"relative" },
+        };
+
+        // "useTheme" is never written: an override that defers to the theme is the absence of
+        // an override, and writing it would put three dead keys on every control in the file.
+        constexpr EnumName<ControlStyleOverride> StyleNames[]
+        {
+            { ControlStyleOverride::UseTheme, L"useTheme" },
+            { ControlStyleOverride::Plate, L"plate" },
+            { ControlStyleOverride::Outline, L"outline" },
+            { ControlStyleOverride::Solid, L"solid" },
+            { ControlStyleOverride::Bare, L"bare" },
+        };
+
+        constexpr EnumName<LabelPlacementOverride> LabelPlacedNames[]
+        {
+            { LabelPlacementOverride::UseTheme, L"useTheme" },
+            { LabelPlacementOverride::Inside, L"inside" },
+            { LabelPlacementOverride::Below, L"below" },
+            { LabelPlacementOverride::None, L"none" },
+        };
+
+        constexpr EnumName<ShowValueOverride> ShowValueNames[]
+        {
+            { ShowValueOverride::UseTheme, L"useTheme" },
+            { ShowValueOverride::Always, L"always" },
+            { ShowValueOverride::WhileTouched, L"whileTouched" },
+            { ShowValueOverride::Never, L"never" },
         };
 
         constexpr EnumName<ValueScaling> ScalingNames[]
@@ -641,6 +671,9 @@ namespace glass
             control.HueSlot = ReadInt(object, KeyHueSlot, 0, LiteralHue, HueSlotCount - 1);
             control.LiteralColor = ReadString(object, KeyLiteralColor);
             control.AspectLocked = ReadBool(object, KeyAspectLocked, false);
+            control.Style = ValueOf(StyleNames, ReadString(object, KeyStyle), ControlStyleOverride::UseTheme);
+            control.LabelPlaced = ValueOf(LabelPlacedNames, ReadString(object, KeyLabelPlaced), LabelPlacementOverride::UseTheme);
+            control.ShowValue = ValueOf(ShowValueNames, ReadString(object, KeyShowValue), ShowValueOverride::UseTheme);
             control.KeyboardOrder = ReadInt(object, KeyKeyboardOrder, 0, 0, 0x7FFFFFFF);
             control.Pickup = ValueOf(PickupNames, ReadString(object, KeyPickup), PickupMode::Jump);
             control.DefaultValue = std::clamp(ReadNumber(object, KeyDefaultValue, 0.0), 0.0, 1.0);
@@ -668,7 +701,8 @@ namespace glass
             control.Unknown = CaptureUnknown(object,
                 { KeyId, KeyKind, KeyLabel, KeyX, KeyY, KeyWidth, KeyHeight, KeyHueSlot,
                   KeyLiteralColor, KeyAspectLocked, KeyKeyboardOrder, KeyPickup, KeyDefaultValue,
-                  KeySendsValueOnStart, KeySendInterval, KeyMessages, KeyFeedback });
+                  KeySendsValueOnStart, KeySendInterval, KeyMessages, KeyFeedback,
+                  KeyStyle, KeyLabelPlaced, KeyShowValue });
 
             return control;
         }
@@ -956,6 +990,23 @@ namespace glass
             }
 
             writer.Write(KeyAspectLocked, control.AspectLocked);
+
+            // Written only when the control actually disagrees with its theme.
+            if (control.Style != ControlStyleOverride::UseTheme)
+            {
+                writer.Write(KeyStyle, NameOf(StyleNames, control.Style));
+            }
+
+            if (control.LabelPlaced != LabelPlacementOverride::UseTheme)
+            {
+                writer.Write(KeyLabelPlaced, NameOf(LabelPlacedNames, control.LabelPlaced));
+            }
+
+            if (control.ShowValue != ShowValueOverride::UseTheme)
+            {
+                writer.Write(KeyShowValue, NameOf(ShowValueNames, control.ShowValue));
+            }
+
             writer.Write(KeyKeyboardOrder, static_cast<int64_t>(control.KeyboardOrder));
             writer.Write(KeyPickup, NameOf(PickupNames, control.Pickup));
             writer.Write(KeyDefaultValue, control.DefaultValue);

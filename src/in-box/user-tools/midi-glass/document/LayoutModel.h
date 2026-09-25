@@ -103,6 +103,45 @@ namespace glass
         Relative = 2,
     };
 
+    // How one control is drawn, where it disagrees with its theme.
+    //
+    // A theme decides how a surface looks, and almost every control should leave this alone -
+    // that is the whole point of having themes. But one control sometimes has to stand apart: a
+    // panic button that must not be a plate like everything around it, or a label that should
+    // carry no chrome at all. UseTheme is the default and stays out of the file.
+    enum class ControlStyleOverride
+    {
+        UseTheme = 0,
+
+        // Smoked glass plate, hairline rim. What the themes draw.
+        Plate = 1,
+
+        // The rim only, no plate behind it.
+        Outline = 2,
+
+        // Filled in the control's own hue.
+        Solid = 3,
+
+        // No plate, no rim. Only the value and the label.
+        Bare = 4,
+    };
+
+    enum class LabelPlacementOverride
+    {
+        UseTheme = 0,
+        Inside = 1,
+        Below = 2,
+        None = 3,
+    };
+
+    enum class ShowValueOverride
+    {
+        UseTheme = 0,
+        Always = 1,
+        WhileTouched = 2,
+        Never = 3,
+    };
+
     // How the numbers on a message row are meant to be read.
     //
     // Most of the time a value is a position and a percentage is the right way to hold it, because
@@ -276,6 +315,12 @@ namespace glass
         std::wstring LiteralColor{};
 
         bool AspectLocked{ false };
+
+        // Where this control disagrees with its theme. UseTheme is the default and almost every
+        // control stays there, which is what makes switching theme a six color operation.
+        ControlStyleOverride Style{ ControlStyleOverride::UseTheme };
+        LabelPlacementOverride LabelPlaced{ LabelPlacementOverride::UseTheme };
+        ShowValueOverride ShowValue{ ShowValueOverride::UseTheme };
 
         // The order a screen reader walks, and the order a bank learn fills. Visible in the
         // editor as a badge, because a hidden ordering is one nobody can fix.

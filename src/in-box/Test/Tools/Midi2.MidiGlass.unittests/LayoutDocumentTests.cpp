@@ -197,6 +197,55 @@ void LayoutDocumentTests::WholeNumbersDoNotGrowADecimalPoint()
     VERIFY_IS_TRUE(text.find(L"0.25") != std::wstring::npos);
 }
 
+// ---- overrides of the theme ----
+
+void LayoutDocumentTests::AControlThatAgreesWithItsThemeWritesNoOverrides()
+{
+    auto const document = LoadHandAuthored();
+    auto const text = glass::WriteLayoutToJson(document);
+
+    // An override that defers to the theme is the absence of an override. Writing "useTheme"
+    // three times on every control would put dead weight in every file for no reader's benefit,
+    // and would make a diff of a real edit impossible to find.
+    VERIFY_IS_TRUE(text.find(L"\"style\"") == std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"labelPlaced\"") == std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"showValue\"") == std::wstring::npos);
+}
+
+void LayoutDocumentTests::OverridesOfTheThemeSurviveARoundTrip()
+{
+    auto document = LoadHandAuthored();
+
+    VERIFY_IS_GREATER_THAN(document.Pages.size(), size_t{ 0 });
+    VERIFY_IS_GREATER_THAN(document.Pages[0].Controls.size(), size_t{ 0 });
+
+    auto& control = document.Pages[0].Controls[0];
+
+    control.Style = glass::ControlStyleOverride::Outline;
+    control.LabelPlaced = glass::LabelPlacementOverride::None;
+    control.ShowValue = glass::ShowValueOverride::Always;
+
+    auto const text = glass::WriteLayoutToJson(document);
+
+    VERIFY_IS_TRUE(text.find(L"\"style\": \"outline\"") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"labelPlaced\": \"none\"") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"showValue\": \"always\"") != std::wstring::npos);
+
+    auto const reread = glass::ReadLayoutFromJson(text);
+
+    VERIFY_IS_TRUE(reread.Succeeded);
+
+    auto const& back = reread.Document.Pages[0].Controls[0];
+
+    VERIFY_IS_TRUE(back.Style == glass::ControlStyleOverride::Outline);
+    VERIFY_IS_TRUE(back.LabelPlaced == glass::LabelPlacementOverride::None);
+    VERIFY_IS_TRUE(back.ShowValue == glass::ShowValueOverride::Always);
+
+    // Writing what was read produces the same bytes, which is what keeps a save from looking
+    // like an edit.
+    VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(reread.Document));
+}
+
 void LayoutDocumentTests::KeepsFieldsFromANewerVersion()
 {
     auto const result = glass::ReadLayoutFromJson(glasstests::LayoutFromANewerVersion());

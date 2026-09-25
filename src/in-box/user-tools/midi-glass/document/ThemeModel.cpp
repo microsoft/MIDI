@@ -27,6 +27,63 @@ namespace glass
             };
         }
 
+        // A deck is lit from above. The theme names ONE color and gets both ends of that: a
+        // lifted top and a shaded floor.
+        //
+        // Deriving the top upward matters. Deriving only downward leaves the lit end at the
+        // color the theme named, and for a near-black deck that puts the whole page within a few
+        // values of the editor's work area - the page stops reading as an object at all, which
+        // is exactly what the first attempt at this looked like.
+        //
+        // Both ends move by a fraction of the room they have rather than by a fixed step,
+        // because a near-white deck that fell as far as a near-black one would look dirty.
+        ThemeColor DeckLit(_In_ ThemeColor const& base) noexcept
+        {
+            auto const lift = [](uint8_t channel) noexcept
+                {
+                    auto const value = static_cast<int32_t>(std::lround(
+                        channel + (255.0 - channel) * 0.07));
+
+                    return static_cast<uint8_t>(std::clamp(value, 0, 255));
+                };
+
+            return { lift(base.R), lift(base.G), lift(base.B), base.A };
+        }
+
+        // How far a deck falls from its lit end to its floor. A dark deck absorbs and falls a
+        // long way; a light one only shades.
+        double DeckFallOff(_In_ ThemeColor const& base) noexcept
+        {
+            auto const brightness = (base.R * 0.299 + base.G * 0.587 + base.B * 0.114) / 255.0;
+
+            return 0.06 + 0.35 * (1.0 - brightness);
+        }
+
+        ThemeColor ShadeBy(_In_ ThemeColor const& base, _In_ double amount) noexcept
+        {
+            auto const drop = [amount](uint8_t channel) noexcept
+                {
+                    auto const value = static_cast<int32_t>(std::lround(channel * (1.0 - amount)));
+
+                    return static_cast<uint8_t>(std::clamp(value, 0, 255));
+                };
+
+            return { drop(base.R), drop(base.G), drop(base.B), base.A };
+        }
+
+        ThemeColor DeckFloor(_In_ ThemeColor const& base) noexcept
+        {
+            return ShadeBy(base, DeckFallOff(base));
+        }
+
+        // The empty part of a slot, which is a groove: below the surface it is cut into. Derived
+        // rather than authored so it can never drift away from its deck the way six hand-picked
+        // track colors did the moment the decks were lit.
+        ThemeColor DeckGroove(_In_ ThemeColor const& lit) noexcept
+        {
+            return ShadeBy(lit, 0.55);
+        }
+
         Theme MakeDarkTheme(
             _In_ std::wstring name,
             _In_ uint32_t deck,
@@ -36,8 +93,19 @@ namespace glass
 
             theme.Name = std::move(name);
             theme.IsBuiltIn = true;
-            theme.Deck.Kind = DeckKind::SolidColor;
-            theme.Deck.Color = Rgb(deck);
+
+            // A deck is lit from above: lighter at the top, darker at the floor. A flat color
+            // over a large area reads as a hole rather than as a surface, which is the single
+            // biggest difference between the design comps and a first pass at them.
+            //
+            // The theme names the color it is recognized by; both ends are derived from it, so
+            // a theme file still only has to name one.
+            theme.Deck.Kind = DeckKind::Gradient;
+            theme.Deck.Color = DeckLit(Rgb(deck));
+            theme.Deck.GradientEndColor = DeckFloor(Rgb(deck));
+
+            // A theme can still name its own track; this is what it gets if it does not.
+            theme.TrackColor = DeckGroove(theme.Deck.Color);
 
             for (size_t i = 0; i < hues.size(); ++i)
             {
@@ -64,16 +132,12 @@ namespace glass
                     auto studio = MakeDarkTheme(L"Studio Dark", 0x0C0D10,
                         { 0x4FC3F7, 0x81C784, 0xFFC247, 0xFF7043, 0xBA68C8, 0x4DD0E1 });
 
-                    studio.TrackColor = Rgb(0x1E2026);
-
                     list.push_back(studio);
                 }
 
                 {
                     auto neon = MakeDarkTheme(L"Neon Booth", 0x08040F,
                         { 0x00E5FF, 0x76FF03, 0xFFEA00, 0xFF1744, 0xD500F9, 0x1DE9B6 });
-
-                    neon.TrackColor = Rgb(0x1E1430);
 
                     list.push_back(neon);
                 }
@@ -95,16 +159,12 @@ namespace glass
                     auto amber = MakeDarkTheme(L"Amber Console", 0x120D06,
                         { 0xFFB300, 0xFFCC80, 0xFF8F00, 0xFFE082, 0xE65100, 0xFFF3E0 });
 
-                    amber.TrackColor = Rgb(0x2C2010);
-
                     list.push_back(amber);
                 }
 
                 {
                     auto blueprint = MakeDarkTheme(L"Blueprint", 0x0A1929,
                         { 0x90CAF9, 0x64B5F6, 0xE3F2FD, 0x42A5F5, 0xB3E5FC, 0x1E88E5 });
-
-                    blueprint.TrackColor = Rgb(0x16304D);
 
                     list.push_back(blueprint);
                 }
@@ -155,7 +215,6 @@ namespace glass
                     pigment.GlassTintPercent = 0;
                     pigment.GlowStrength = 0;
                     pigment.FillAtRest = 0.18;
-                    pigment.TrackColor = Rgb(0x2A2830);
                     pigment.CornerRadius = 14;
 
                     list.push_back(pigment);
@@ -172,7 +231,6 @@ namespace glass
                     bigwig.GlassTintPercent = 0;
                     bigwig.GlowStrength = 0;
                     bigwig.FillAtRest = 0.0;
-                    bigwig.TrackColor = Rgb(0x2E2E2E);
                     bigwig.PlateColor = Rgb(0x3A3A3A);
                     bigwig.Rim = RimSource::NeutralEdge;
                     bigwig.NeutralRimColor = Rgb(0x5A5A5A);

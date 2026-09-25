@@ -114,7 +114,7 @@
                 <MenuFlyoutItem x:Uid="CardMenuRun" Text="Run" Click="OnCardMenuRun">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE768;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
-                <MenuFlyoutItem x:Uid="CardMenuEdit" Text="Edit" Click="OnCardMenuEdit" IsEnabled="False">
+                <MenuFlyoutItem x:Uid="CardMenuEdit" Text="Edit" Click="OnCardMenuEdit">
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE70F;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
                 <MenuFlyoutSeparator />
@@ -145,7 +145,11 @@
 
             <!-- ===================================================== a layout card -->
             <DataTemplate x:Key="GridCardTemplate" x:DataType="local:LayoutCard">
+                <!-- Fixed height, not Auto. A layout with no description collapses that block
+                     and the card ends up shorter than the ones beside it, which makes a tidy
+                     grid look broken. -->
                 <Grid Width="232"
+                      Height="246"
                       PointerEntered="OnCardPointerEntered"
                       PointerExited="OnCardPointerExited"
                       GotFocus="OnCardGotFocus"
@@ -154,7 +158,7 @@
                       AutomationProperties.Name="{x:Bind CardAccessibleName}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
                     <!-- The surface the card is drawn on. It carries no border of its own: the
@@ -222,7 +226,6 @@
                                 <Button Grid.Column="1"
                                         Height="28"
                                         Padding="10,0,10,0"
-                                        IsEnabled="False"
                                         Click="OnEditLayoutClick"
                                         AutomationProperties.Name="{x:Bind EditAccessibleName}">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
@@ -248,23 +251,32 @@
                     </Border>
 
                     <!-- name, description, status -->
-                    <StackPanel Grid.Row="1" Padding="11,9,11,11">
-                        <TextBlock Text="{x:Bind DisplayName}"
+                    <Grid Grid.Row="1" Padding="11,9,11,11">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Text="{x:Bind DisplayName}"
                                    FontSize="13"
                                    FontWeight="SemiBold"
                                    TextTrimming="CharacterEllipsis" />
 
-                        <TextBlock Text="{x:Bind Description}"
+                        <TextBlock Grid.Row="1"
+                                   Text="{x:Bind Description}"
                                    Visibility="{x:Bind DescriptionVisibility}"
                                    FontSize="11"
                                    Margin="0,2,0,0"
-                                   Height="30"
+                                   VerticalAlignment="Top"
+                                   MaxHeight="30"
                                    LineHeight="15"
                                    TextWrapping="Wrap"
                                    TextTrimming="CharacterEllipsis"
                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
-                        <Grid Margin="0,9,0,0">
+                        <Grid Grid.Row="2" Margin="0,9,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
@@ -283,7 +295,7 @@
                                        VerticalAlignment="Center"
                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                         </Grid>
-                    </StackPanel>
+                    </Grid>
 
                     <Rectangle Grid.Row="0"
                                Grid.RowSpan="2"

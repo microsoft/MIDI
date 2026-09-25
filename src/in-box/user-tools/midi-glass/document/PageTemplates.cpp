@@ -49,11 +49,11 @@ namespace glass
     {
         static std::vector<PageTemplate> const templates
         {
-            { L"PageTemplateLaptop", 1280, 800 },
+            { L"PageTemplateTablet", 1280, 800 },
             { L"PageTemplateFullHd", 1920, 1080 },
             { L"PageTemplateQuadHd", 2560, 1440 },
-            { L"PageTemplateSurfaceStudio", 2736, 1824 },
-            { L"PageTemplateTablet", 1024, 768 },
+            { L"PageTemplateSurface", 2736, 1824 },
+            { L"PageTemplateClassic", 1024, 768 },
             { L"PageTemplatePortrait", 1080, 1920 },
         };
 

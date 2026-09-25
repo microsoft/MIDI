@@ -92,7 +92,7 @@
       <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;WINRT_LEAN_AND_MEAN;NOMINMAX;DISABLE_XAML_GENERATED_MAIN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level4</WarningLevel>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)Inc;$(GeneratedFilesDir);$(ProjectDir);$(ProjectDir)..\midi-app-shared;$(ProjectDir)document;$(ProjectDir)thumbnail;$(ProjectDir)binding;$(ProjectDir)runtime;$(ProjectDir)surface</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)Inc;$(GeneratedFilesDir);$(ProjectDir);$(ProjectDir)..\midi-app-shared;$(ProjectDir)document;$(ProjectDir)thumbnail;$(ProjectDir)binding;$(ProjectDir)runtime;$(ProjectDir)surface;$(ProjectDir)editor</AdditionalIncludeDirectories>
       <AdditionalOptions>%(AdditionalOptions) /permissive- /bigobj /utf-8</AdditionalOptions>
       <ConformanceMode>true</ConformanceMode>
     </ClCompile>
@@ -129,6 +129,7 @@
     <ClInclude Include="AppSettings.h" />
     <ClInclude Include="CommandLine.h" />
     <ClInclude Include="LibraryItems.h" />
+    <ClInclude Include="EditorItems.h" />
     <ClInclude Include="StringResources.h" />
     <ClInclude Include="Telemetry.h" />
     <ClInclude Include="App.xaml.h">
@@ -139,6 +140,9 @@
     </ClInclude>
     <ClInclude Include="RuntimeWindow.xaml.h">
       <DependentUpon>RuntimeWindow.xaml</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="EditorWindow.xaml.h">
+      <DependentUpon>EditorWindow.xaml</DependentUpon>
     </ClInclude>
     <!-- shared with the other Windows MIDI Services user tools; see midi-app-shared\README.md.
          The ones this app does not use yet are still here because MidiAppShared.idl declares the
@@ -165,17 +169,26 @@
     <ClInclude Include="thumbnail\ThumbnailLayout.h" />
     <ClInclude Include="thumbnail\ThumbnailRenderer.h" />
     <ClInclude Include="runtime\DeviceCatalog.h" />
+    <ClInclude Include="runtime\LivePlayer.h" />
     <ClInclude Include="runtime\OutputRouter.h" />
     <ClInclude Include="runtime\PanicMessages.h" />
     <ClInclude Include="runtime\SurfaceScale.h" />
     <ClInclude Include="surface\GlassControl.h" />
+    <ClInclude Include="surface\DeckBrush.h" />
     <ClInclude Include="surface\InputRouter.h" />
     <ClInclude Include="surface\InputRules.h" />
     <ClInclude Include="surface\SurfaceAutomationPeer.h" />
     <ClInclude Include="surface\SurfaceColors.h" />
     <ClInclude Include="surface\SurfaceRenderer.h" />
     <ClInclude Include="binding\BindingEngine.h" />
+    <ClInclude Include="binding\MonitorFormat.h" />
     <ClInclude Include="binding\ValueThrottle.h" />
+    <ClInclude Include="editor\ArrangeOps.h" />
+    <ClInclude Include="editor\ControlFactory.h" />
+    <ClInclude Include="editor\EditGeometry.h" />
+    <ClInclude Include="editor\EditorController.h" />
+    <ClInclude Include="editor\RepeatPlan.h" />
+    <ClInclude Include="editor\UndoStack.h" />
     <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
   </ItemGroup>
   <ItemGroup>
@@ -185,6 +198,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="AppSettings.cpp" />
     <ClCompile Include="LibraryItems.cpp" />
+    <ClCompile Include="EditorItems.cpp" />
     <ClCompile Include="StringResources.cpp" />
     <ClCompile Include="App.xaml.cpp">
       <DependentUpon>App.xaml</DependentUpon>
@@ -198,6 +212,15 @@
       <DependentUpon>RuntimeWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="RuntimeWindowDevices.cpp" />
+    <ClCompile Include="EditorWindow.xaml.cpp">
+      <DependentUpon>EditorWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="EditorCanvas.cpp" />
+    <ClCompile Include="EditorInspector.cpp" />
+    <ClCompile Include="EditorOutline.cpp" />
+    <ClCompile Include="EditorDialogs.cpp" />
+    <ClCompile Include="EditorPanes.cpp" />
+    <ClCompile Include="EditorTryMode.cpp" />
     <ClCompile Include="..\midi-app-shared\SingleInstance.cpp" />
     <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
     <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
@@ -243,6 +266,9 @@
     <ClCompile Include="binding\ValueThrottle.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="binding\MonitorFormat.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <!-- the pure parts of the runtime and surface layers follow the same rule as the document
          layer: no pch, no XAML, so the unit tests compile them unchanged -->
     <ClCompile Include="runtime\PanicMessages.cpp">
@@ -257,7 +283,31 @@
     <ClCompile Include="surface\InputRules.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <!-- the editor's engines follow the same rule: pure, testable, no window -->
+    <ClCompile Include="editor\ArrangeOps.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="editor\ControlFactory.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="editor\EditGeometry.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="editor\EditorController.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="editor\EditorControllerEdits.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="editor\RepeatPlan.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="editor\UndoStack.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="runtime\DeviceCatalog.cpp" />
+    <ClCompile Include="surface\DeckBrush.cpp" />
+    <ClCompile Include="runtime\LivePlayer.cpp" />
     <ClCompile Include="runtime\OutputRouter.cpp" />
     <ClCompile Include="surface\GlassControl.cpp" />
     <ClCompile Include="surface\InputRouter.cpp" />
@@ -270,12 +320,16 @@
   <ItemGroup>
     <Midl Include="..\midi-app-shared\MidiAppShared.idl" />
     <Midl Include="LibraryItems.idl" />
+    <Midl Include="EditorItems.idl" />
     <Midl Include="surface\SurfaceTypes.idl" />
     <Midl Include="MainWindow.idl">
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </Midl>
     <Midl Include="RuntimeWindow.idl">
       <DependentUpon>RuntimeWindow.xaml</DependentUpon>
+    </Midl>
+    <Midl Include="EditorWindow.idl">
+      <DependentUpon>EditorWindow.xaml</DependentUpon>
     </Midl>
   </ItemGroup>
   <ItemGroup>
@@ -286,6 +340,15 @@
       <SubType>Designer</SubType>
     </Page>
     <Page Include="RuntimeWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="EditorWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="EditorStyles.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\Generic.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>

@@ -1,0 +1,729 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Copyright (c) Microsoft Corporation and Contributors.
+    Licensed under the MIT License
+    ============================================================================
+    This is part of Windows MIDI Services
+    Further information: https://aka.ms/midi
+    ============================================================================
+-->
+
+<!--
+    The editor's chrome, taken from the design comps rather than from stock WinUI.
+
+    Most of it IS stock WinUI: the comp's plain button is ControlFillColorDefaultBrush over
+    ControlElevationBorderBrush, which is what DefaultButtonStyle already draws. What is in here
+    is the handful of things WinUI has no control for - the segmented switch, the underline tabs,
+    the palette tile, the status chips - plus the smaller sizes the comp uses.
+
+    Every brush is a theme resource, so the editor follows the customer's light, dark or system
+    choice. Only the surface inside the page belongs to the layout's own theme.
+-->
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ================================================================ sizes -->
+
+    <!-- The comp's three button heights. 32 is the default, 28 is small, 24 is tiny. -->
+    <Style x:Key="EditorButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="12,0,12,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="FontSize" Value="13" />
+    </Style>
+
+    <Style x:Key="EditorSmallButtonStyle" TargetType="Button" BasedOn="{StaticResource EditorButtonStyle}">
+        <Setter Property="Height" Value="28" />
+        <Setter Property="Padding" Value="10,0,10,0" />
+        <Setter Property="FontSize" Value="12" />
+    </Style>
+
+    <Style x:Key="EditorTinyButtonStyle" TargetType="Button" BasedOn="{StaticResource EditorButtonStyle}">
+        <Setter Property="Height" Value="24" />
+        <Setter Property="Padding" Value="8,0,8,0" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="CornerRadius" Value="3" />
+    </Style>
+
+    <!-- Icon only, square, so a row of them reads as one group of tools. -->
+    <Style x:Key="EditorIconButtonStyle" TargetType="Button" BasedOn="{StaticResource EditorSmallButtonStyle}">
+        <Setter Property="Width" Value="32" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+    </Style>
+
+    <!-- Back to Library, and anything else that is a destination rather than an action. -->
+    <Style x:Key="EditorSubtleButtonStyle" TargetType="Button" BasedOn="{StaticResource EditorSmallButtonStyle}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="Transparent" />
+    </Style>
+
+    <Style x:Key="EditorToggleIconStyle" TargetType="ToggleButton">
+        <Setter Property="Height" Value="28" />
+        <Setter Property="Width" Value="32" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- The 1px rule between groups of tools. Without it the row reads as one long strip. -->
+    <Style x:Key="ToolbarSeparatorStyle" TargetType="Rectangle">
+        <Setter Property="Width" Value="1" />
+        <Setter Property="Height" Value="20" />
+        <Setter Property="Margin" Value="3,0,3,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Fill" Value="{ThemeResource DividerStrokeColorDefaultBrush}" />
+    </Style>
+
+    <!-- ================================================================ chips -->
+
+    <!--
+        A pill, not a Border: a Border with a CornerRadius is aliased at fractional display
+        scaling because its bounds and its radius are both snapped to whole pixels. A shape goes
+        through the rasterizer and stays smooth.
+    -->
+    <Style x:Key="ChipShapeStyle" TargetType="Rectangle">
+        <Setter Property="RadiusX" Value="11" />
+        <Setter Property="RadiusY" Value="11" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="UseLayoutRounding" Value="False" />
+    </Style>
+
+    <Style x:Key="ChipPanelStyle" TargetType="StackPanel">
+        <Setter Property="Orientation" Value="Horizontal" />
+        <Setter Property="Spacing" Value="6" />
+        <Setter Property="Height" Value="22" />
+        <Setter Property="Padding" Value="9,0,9,0" />
+    </Style>
+
+    <Style x:Key="ChipTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!-- A filter that is either on or off, said the way the status chips beside it are said. A
+         check box next to a row of pills reads as a different kind of thing. -->
+    <Style x:Key="FilterChipStyle" TargetType="ToggleButton">
+        <Setter Property="Height" Value="20" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="9,0,9,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Grid Background="Transparent">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="0.5" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="0.8" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="Body.Opacity" Value="0.38" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Checked">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="1" />
+                                        <Setter Target="Edge.Opacity" Value="1" />
+                                        <Setter Target="Body.Foreground" Value="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedPointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="1" />
+                                        <Setter Target="Edge.Opacity" Value="1" />
+                                        <Setter Target="Body.Foreground" Value="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedPressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="1" />
+                                        <Setter Target="Edge.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedDisabled" />
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+
+                        <Rectangle x:Name="Rest"
+                                   RadiusX="10" RadiusY="10"
+                                   StrokeThickness="1"
+                                   UseLayoutRounding="False"
+                                   Stroke="{ThemeResource ControlStrokeColorDefaultBrush}" />
+
+                        <Rectangle x:Name="Wash"
+                                   RadiusX="10" RadiusY="10"
+                                   Opacity="0"
+                                   UseLayoutRounding="False"
+                                   Fill="{ThemeResource AccentFillColorSelectedTextBackgroundBrush}" />
+
+                        <Rectangle x:Name="Edge"
+                                   RadiusX="10" RadiusY="10"
+                                   Opacity="0"
+                                   StrokeThickness="1"
+                                   UseLayoutRounding="False"
+                                   Stroke="{ThemeResource AccentFillColorDefaultBrush}" />
+
+                        <ContentPresenter x:Name="Body"
+                                          Content="{TemplateBinding Content}"
+                                          Padding="{TemplateBinding Padding}"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ======================================================== group headings -->
+
+    <!-- The 11px semibold dim heading above every group, in the palette and the inspector. -->
+    <Style x:Key="GroupHeadingStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Margin" Value="2,10,0,6" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
+    </Style>
+
+    <Style x:Key="CaptionTextStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
+    </Style>
+
+    <!-- ====================================================== inspector rows -->
+
+    <!--
+        Label on the left at a fixed width, fields filling the rest. The fixed width is what makes
+        rows of different fields line up into one column, which is the whole reason the comp reads
+        as a form rather than as a pile of boxes.
+    -->
+    <Style x:Key="RowLabelStyle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Width" Value="74" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+    </Style>
+
+    <Style x:Key="RowFieldStyle" TargetType="TextBox">
+        <Setter Property="Height" Value="30" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="CornerRadius" Value="4" />
+    </Style>
+
+    <Style x:Key="RowComboStyle" TargetType="ComboBox">
+        <Setter Property="Height" Value="30" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+
+    <!-- ================================================== segmented control -->
+
+    <!--
+        Edit / Try, and Plate / Outline / Solid / Bare. WinUI has no segmented control, so the
+        container draws the rounded outline and the dividers and the segments sit inside it flat.
+
+        Each segment is a ToggleButton so the selected one exposes a toggle state to a screen
+        reader. Checked and Unchecked are wired, never Click: UI Automation's Toggle raises those
+        and never raises Click.
+    -->
+    <Style x:Key="SegmentStyle" TargetType="ToggleButton">
+        <Setter Property="Height" Value="26" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="11,0,11,0" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="HorizontalContentAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+    </Style>
+
+    <Style x:Key="SegmentHostStyle" TargetType="Border">
+        <Setter Property="Height" Value="28" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="BorderBrush" Value="{ThemeResource ControlStrongStrokeColorDefaultBrush}" />
+    </Style>
+
+    <Style x:Key="SegmentDividerStyle" TargetType="Rectangle">
+        <Setter Property="Width" Value="1" />
+        <Setter Property="VerticalAlignment" Value="Stretch" />
+        <Setter Property="Fill" Value="{ThemeResource DividerStrokeColorDefaultBrush}" />
+    </Style>
+
+    <!-- ======================================================== palette tile -->
+
+    <!--
+        A 52px square with a drawn miniature of the control above its name. A font glyph cannot
+        say "this is a fader and that is a fader bank", and those two are one tile apart.
+    -->
+    <Style x:Key="PaletteTileShapeStyle" TargetType="Rectangle">
+        <Setter Property="RadiusX" Value="5" />
+        <Setter Property="RadiusY" Value="5" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="UseLayoutRounding" Value="False" />
+    </Style>
+
+    <!--
+        The palette is a set of tools, one of which is armed - so the armed one is marked by its
+        edge and a faint wash of the accent, not by a filled button. A ToggleButton's own checked
+        visual is a solid accent block, which reads as chrome and drowns the miniature inside it.
+    -->
+    <Style x:Key="PaletteTileStyle" TargetType="ToggleButton">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Grid Background="Transparent" CornerRadius="5">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="0.45" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="0.8" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="Body.Opacity" Value="0.38" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Checked">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="1" />
+                                        <Setter Target="Edge.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedPointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="1" />
+                                        <Setter Target="Edge.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedPressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="1" />
+                                        <Setter Target="Edge.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedDisabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="Body.Opacity" Value="0.38" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+
+                        <Rectangle x:Name="Wash"
+                                   RadiusX="5" RadiusY="5"
+                                   Opacity="0"
+                                   UseLayoutRounding="False"
+                                   Fill="{ThemeResource AccentFillColorSelectedTextBackgroundBrush}" />
+
+                        <Rectangle x:Name="Edge"
+                                   RadiusX="5" RadiusY="5"
+                                   Opacity="0"
+                                   StrokeThickness="1"
+                                   UseLayoutRounding="False"
+                                   Stroke="{ThemeResource AccentFillColorDefaultBrush}" />
+
+                        <ContentPresenter x:Name="Body"
+                                          Content="{TemplateBinding Content}"
+                                          Padding="{TemplateBinding Padding}"
+                                          HorizontalContentAlignment="Stretch"
+                                          VerticalContentAlignment="Stretch" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ======================================================= underline tabs -->
+
+    <!--
+        Look / MIDI / Behavior. A WinUI Pivot header is far taller than the comp's, and a Pivot
+        inside a 288px pane spends a quarter of it on chrome.
+    -->
+    <!--
+        Look / MIDI / Behavior, and Add / Outline. A WinUI Pivot header is more than twice this
+        tall and spends a quarter of a 288 px pane on chrome.
+
+        The template is bare on purpose. A ToggleButton's checked state paints a filled box, and
+        a filled box is not a tab - the accent rule underneath it is. It stays a ToggleButton so
+        the selected tab still reports a toggle state to a screen reader.
+    -->
+    <Style x:Key="TabButtonStyle" TargetType="ToggleButton">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0,4,0,8" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="UseSystemFocusVisuals" Value="True" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Grid Background="Transparent">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Text.Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Text.Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="Text.Foreground" Value="{ThemeResource TextFillColorDisabledBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Checked">
+                                    <VisualState.Setters>
+                                        <Setter Target="Text.Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedPointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Text.Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedPressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Text.Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedDisabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="Text.Foreground" Value="{ThemeResource TextFillColorDisabledBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+
+                        <ContentPresenter x:Name="Text"
+                                          Content="{TemplateBinding Content}"
+                                          Padding="{TemplateBinding Padding}"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          FontSize="{TemplateBinding FontSize}"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- The 2px accent rule under the selected tab. -->
+    <Style x:Key="TabUnderlineStyle" TargetType="Rectangle">
+        <Setter Property="Height" Value="2" />
+        <Setter Property="RadiusX" Value="1" />
+        <Setter Property="RadiusY" Value="1" />
+        <Setter Property="UseLayoutRounding" Value="False" />
+        <Setter Property="VerticalAlignment" Value="Bottom" />
+        <Setter Property="Fill" Value="{ThemeResource AccentFillColorDefaultBrush}" />
+    </Style>
+
+    <Style x:Key="TabStripStyle" TargetType="Border">
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="BorderBrush" Value="{ThemeResource DividerStrokeColorDefaultBrush}" />
+    </Style>
+
+    <!-- =========================================================== page rail -->
+
+    <Style x:Key="PageTabShapeStyle" TargetType="Rectangle">
+        <Setter Property="RadiusX" Value="4" />
+        <Setter Property="RadiusY" Value="4" />
+        <Setter Property="StrokeThickness" Value="1" />
+        <Setter Property="UseLayoutRounding" Value="False" />
+    </Style>
+
+    <!-- The selected page is marked by an accent edge and a faint wash, the same way an armed
+         palette tool is, rather than by a solid accent block. -->
+    <Style x:Key="PageTabStyle" TargetType="ToggleButton">
+        <Setter Property="Height" Value="23" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="10,0,10,0" />
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Grid Background="Transparent" CornerRadius="4">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="0.45" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="0.8" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled">
+                                    <VisualState.Setters>
+                                        <Setter Target="Body.Opacity" Value="0.38" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Checked">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="1" />
+                                        <Setter Target="Edge.Opacity" Value="1" />
+                                        <Setter Target="Body.Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedPointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="1" />
+                                        <Setter Target="Edge.Opacity" Value="1" />
+                                        <Setter Target="Body.Foreground" Value="{ThemeResource TextFillColorPrimaryBrush}" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedPressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="1" />
+                                        <Setter Target="Edge.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedDisabled" />
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+
+                        <Rectangle x:Name="Rest"
+                                   RadiusX="4" RadiusY="4"
+                                   StrokeThickness="1"
+                                   UseLayoutRounding="False"
+                                   Stroke="{ThemeResource ControlStrokeColorDefaultBrush}" />
+
+                        <Rectangle x:Name="Wash"
+                                   RadiusX="4" RadiusY="4"
+                                   Opacity="0"
+                                   UseLayoutRounding="False"
+                                   Fill="{ThemeResource AccentFillColorSelectedTextBackgroundBrush}" />
+
+                        <Rectangle x:Name="Edge"
+                                   RadiusX="4" RadiusY="4"
+                                   Opacity="0"
+                                   StrokeThickness="1"
+                                   UseLayoutRounding="False"
+                                   Stroke="{ThemeResource AccentFillColorDefaultBrush}" />
+
+                        <ContentPresenter x:Name="Body"
+                                          Content="{TemplateBinding Content}"
+                                          Padding="{TemplateBinding Padding}"
+                                          Foreground="{TemplateBinding Foreground}"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ======================================================= page size dialog -->
+
+    <!-- One cell of the nine-position anchor: where the controls already on the page sit inside
+         a page that just got bigger. -->
+    <Style x:Key="AnchorCellStyle" TargetType="ToggleButton">
+        <Setter Property="Width" Value="26" />
+        <Setter Property="Height" Value="22" />
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Grid Background="Transparent">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="0.5" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="0.8" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled" />
+                                <VisualState x:Name="Checked">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="1" />
+                                        <Setter Target="Edge.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedPointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="1" />
+                                        <Setter Target="Edge.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedPressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="1" />
+                                        <Setter Target="Edge.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedDisabled" />
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+
+                        <Rectangle RadiusX="3" RadiusY="3"
+                                   StrokeThickness="1"
+                                   UseLayoutRounding="False"
+                                   Fill="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                   Stroke="{ThemeResource ControlStrokeColorDefaultBrush}" />
+
+                        <Rectangle x:Name="Wash"
+                                   RadiusX="3" RadiusY="3"
+                                   Opacity="0"
+                                   UseLayoutRounding="False"
+                                   Fill="{ThemeResource AccentFillColorSelectedTextBackgroundBrush}" />
+
+                        <Rectangle x:Name="Edge"
+                                   RadiusX="3" RadiusY="3"
+                                   Opacity="0"
+                                   StrokeThickness="1"
+                                   UseLayoutRounding="False"
+                                   Stroke="{ThemeResource AccentFillColorDefaultBrush}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- One of two choices, each carrying what it costs. Big enough to read, because the whole
+         point of the card is the sentence underneath the title. -->
+    <Style x:Key="ChoiceCardStyle" TargetType="ToggleButton">
+        <Setter Property="MinWidth" Value="0" />
+        <Setter Property="MinHeight" Value="0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Grid Background="Transparent">
+                        <VisualStateManager.VisualStateGroups>
+                            <VisualStateGroup x:Name="CommonStates">
+                                <VisualState x:Name="Normal" />
+                                <VisualState x:Name="PointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="0.5" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Pressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="0.8" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="Disabled" />
+                                <VisualState x:Name="Checked">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="1" />
+                                        <Setter Target="Edge.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedPointerOver">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="1" />
+                                        <Setter Target="Edge.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedPressed">
+                                    <VisualState.Setters>
+                                        <Setter Target="Wash.Opacity" Value="1" />
+                                        <Setter Target="Edge.Opacity" Value="1" />
+                                    </VisualState.Setters>
+                                </VisualState>
+                                <VisualState x:Name="CheckedDisabled" />
+                            </VisualStateGroup>
+                        </VisualStateManager.VisualStateGroups>
+
+                        <Rectangle RadiusX="6" RadiusY="6"
+                                   StrokeThickness="1"
+                                   UseLayoutRounding="False"
+                                   Fill="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                   Stroke="{ThemeResource ControlStrokeColorDefaultBrush}" />
+
+                        <Rectangle x:Name="Wash"
+                                   RadiusX="6" RadiusY="6"
+                                   Opacity="0"
+                                   UseLayoutRounding="False"
+                                   Fill="{ThemeResource AccentFillColorSelectedTextBackgroundBrush}" />
+
+                        <Rectangle x:Name="Edge"
+                                   RadiusX="6" RadiusY="6"
+                                   Opacity="0"
+                                   StrokeThickness="1"
+                                   UseLayoutRounding="False"
+                                   Stroke="{ThemeResource AccentFillColorDefaultBrush}" />
+
+                        <ContentPresenter Content="{TemplateBinding Content}"
+                                          Padding="{TemplateBinding Padding}"
+                                          HorizontalAlignment="Left"
+                                          VerticalAlignment="Center" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- ============================================================= monitor -->
+
+    <!--
+        The monitor is read as four columns of numbers, and the color IS the column: dim for when,
+        cyan for what went out, green for what it means, plain for where it went. Eight bytes of
+        hex in a wall of one color is what makes a message view useless.
+    -->
+    <Style x:Key="MonitorCellStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Cascadia Mono, Consolas, Courier New" />
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+</ResourceDictionary>

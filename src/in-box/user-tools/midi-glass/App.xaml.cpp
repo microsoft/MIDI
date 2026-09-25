@@ -9,6 +9,7 @@
 #include "App.xaml.h"
 #include "MainWindow.xaml.h"
 #include "RuntimeWindow.xaml.h"
+#include "EditorWindow.xaml.h"
 
 #include "AppSettings.h"
 #include "StringResources.h"
@@ -26,6 +27,11 @@ namespace winrt::midiglass::implementation
         // playing through.
         std::vector<midiglass::RuntimeWindow> g_runtimeWindows{};
 
+        // The editor is one at a time, so this is one window rather than a list.
+        midiglass::EditorWindow g_editorWindow{ nullptr };
+
+        xaml::Window g_libraryWindow{ nullptr };
+
         bool SamePath(_In_ std::wstring_view left, _In_ std::wstring_view right) noexcept
         {
             return ::CompareStringOrdinal(
@@ -33,6 +39,66 @@ namespace winrt::midiglass::implementation
                 right.data(), static_cast<int32_t>(right.size()),
                 TRUE) == CSTR_EQUAL;
         }
+    }
+
+    void App::ActivateLibraryWindow()
+    {
+        try
+        {
+            if (g_libraryWindow != nullptr)
+            {
+                g_libraryWindow.Activate();
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to bring the library forward.")
+    }
+
+    _Use_decl_annotations_
+    void App::OpenEditorWindow(std::wstring const& filePath)
+    {
+        try
+        {
+            if (filePath.empty())
+            {
+                return;
+            }
+
+            if (g_editorWindow != nullptr)
+            {
+                auto* const existing = winrt::get_self<EditorWindow>(g_editorWindow);
+
+                if (existing != nullptr && SamePath(existing->LayoutFilePath(), filePath))
+                {
+                    g_editorWindow.Activate();
+                    return;
+                }
+
+                // A different layout. The open one closes, which saves whatever was pending.
+                g_editorWindow.Close();
+                g_editorWindow = nullptr;
+            }
+
+            auto window = winrt::make_self<EditorWindow>();
+
+            if (!window->LoadLayout(filePath))
+            {
+                return;
+            }
+
+            g_editorWindow = window.as<midiglass::EditorWindow>();
+
+            g_editorWindow.Closed([](auto&& sender, auto&&)
+                {
+                    if (g_editorWindow != nullptr &&
+                        sender.template try_as<midiglass::EditorWindow>() == g_editorWindow)
+                    {
+                        g_editorWindow = nullptr;
+                    }
+                });
+
+            g_editorWindow.Activate();
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to open the editor.")
     }
 
     _Use_decl_annotations_
@@ -126,6 +192,7 @@ namespace winrt::midiglass::implementation
             window->RestoreWindowPlacement();
 
             m_window = window.as<xaml::Window>();
+            g_libraryWindow = m_window;
             m_window.Activate();
 
             // midiglass --run "<layout file>" opens a runtime window beside the library.

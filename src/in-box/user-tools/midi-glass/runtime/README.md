@@ -4,12 +4,25 @@ Devices, connections and the things a running layout needs that are not drawing.
 
 | File | Holds |
 |---|---|
+| `LivePlayer.*` | Everything between a value on the surface and words on the wire. The runtime window and the editor's Try mode both drive one. |
 | `DeviceCatalog.*` | The layout's device table, resolved against what is plugged in right now. |
 | `OutputRouter.*` | One connection per endpoint per process, shared by every control, page and layout. |
 | `SurfaceScale.*` | Where a page sits inside a window, and which point on the page a point in the window is. |
 | `PanicMessages.*` | Exactly what a panic sends. |
 
-`SurfaceScale` and `PanicMessages` are free of `pch.h`, XAML and the MIDI SDK, so the unit tests compile them unchanged. `DeviceCatalog` and `OutputRouter` are not: one wraps a device watcher and the other owns a MIDI session.
+`SurfaceScale` and `PanicMessages` are free of `pch.h`, XAML and the MIDI SDK, so the unit tests compile them unchanged. `LivePlayer`, `DeviceCatalog` and `OutputRouter` are not: one opens connections, one wraps a device watcher and one owns a MIDI session.
+
+## LivePlayer
+
+The device table, the connections, the binding engine and the per-control throttles, in one place.
+
+**It exists so that a control sends exactly the same thing while it is being built as it does once the layout is running.** The editor's Try mode and the runtime window each own one. Two copies of this code would drift apart, and the one place a customer would notice is the place they can least afford it.
+
+- **Held by `shared_ptr`.** It starts detached threads that block on the service, and they must not call into a freed object when a window closes under them. `Create()` is the only way to make one.
+- **A window and the same layout being edited are two owners**, so closing one does not take the other's connections down.
+- **`Sent` is raised for every message that actually reached a connection**, which is what the editor's monitor rail draws. The runtime window leaves it empty and pays nothing for it.
+- **`UpdateDocument` is for Try mode**, where an edit has to reach the engine before the next finger does. It forgets the destination signature deliberately, because an edit can change what a control sends without changing which devices the layout wants.
+- It hands the page-item mapping back to the caller. The editor and the runtime window draw the same control differently, so what a feedback message does on screen is theirs to decide.
 
 ## DeviceCatalog
 

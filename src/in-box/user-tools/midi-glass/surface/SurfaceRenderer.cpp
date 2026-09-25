@@ -172,8 +172,6 @@ namespace glass
         auto const width = static_cast<float>(std::max(control.Width, 4.0));
         auto const height = static_cast<float>(std::max(control.Height, 4.0));
 
-        auto const colors = ResolveControlColors(control, theme);
-
         GlassControlElement element{};
 
         element.Width(width);
@@ -198,24 +196,75 @@ namespace glass
         SurfaceVisual visual{};
 
         visual.Kind = control.Kind;
+
+        LayoutVisual(compositor, visual, control, theme);
+
+        ElementCompositionPreview::SetElementChildVisual(element, visual.Root);
+
+        m_visuals.push_back(std::move(visual));
+        m_elements.push_back(element);
+        m_controlIndexes.push_back(controlIndex);
+        m_kinds.push_back(control.Kind);
+        m_labels.push_back(nullptr);
+        m_labelOffsets.push_back(0.0);
+        m_values.push_back(control.DefaultValue);
+
+        auto const itemIndex = m_visuals.size() - 1;
+
+        SetValue(itemIndex, control.DefaultValue);
+        winrt::get_self<winrt::midiglass::implementation::GlassControl>(element)
+            ->SetValueDirect(control.DefaultValue);
+
+        LayoutLabel(itemIndex, control, theme);
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::LayoutVisual(
+        Compositor const& compositor,
+        SurfaceVisual& visual,
+        Control const& control,
+        Theme const& theme)
+    {
+        auto const width = static_cast<float>(std::max(control.Width, 4.0));
+        auto const height = static_cast<float>(std::max(control.Height, 4.0));
+
+        auto const colors = ResolveControlColors(control, theme);
+
+        visual.Kind = control.Kind;
         visual.Width = width;
         visual.Height = height;
 
-        visual.Root = compositor.CreateContainerVisual();
+        // Rebuilt rather than reused: the track, the pipe and the arc all have their size baked
+        // into their geometry, and there is nothing to tune once they exist.
+        visual.PipeGeometry = nullptr;
+        visual.ArcGeometry = nullptr;
+        visual.PipeShape = nullptr;
+
+        if (visual.Root == nullptr)
+        {
+            visual.Root = compositor.CreateContainerVisual();
+
+            // The bloom sits behind the plate. Changing a visual's opacity invalidates no layout,
+            // which is what makes a page of blinking controls free.
+            visual.Bloom = compositor.CreateSpriteVisual();
+            visual.Bloom.Opacity(0.0f);
+            visual.Root.Children().InsertAtTop(visual.Bloom);
+
+            visual.Shape = compositor.CreateShapeVisual();
+            visual.Root.Children().InsertAtTop(visual.Shape);
+        }
+        else
+        {
+            visual.Shape.Shapes().Clear();
+        }
+
         visual.Root.Size(float2{ width, height });
 
-        // The bloom sits behind the plate. Changing a visual's opacity invalidates no layout,
-        // which is what makes a page of blinking controls free.
-        visual.Bloom = compositor.CreateSpriteVisual();
         visual.Bloom.Brush(BrushFor(compositor, colors.Bloom));
         visual.Bloom.Offset(float3{ -BloomSpread, -BloomSpread, 0.0f });
         visual.Bloom.Size(float2{ width + BloomSpread * 2, height + BloomSpread * 2 });
-        visual.Bloom.Opacity(0.0f);
-        visual.Root.Children().InsertAtTop(visual.Bloom);
 
-        visual.Shape = compositor.CreateShapeVisual();
         visual.Shape.Size(float2{ width, height });
-        visual.Root.Children().InsertAtTop(visual.Shape);
 
         auto const corner = static_cast<float>(std::min(
             static_cast<double>(theme.CornerRadius), std::min(width, height) / 2.0));
@@ -226,11 +275,34 @@ namespace glass
         plateGeometry.CornerRadius(float2{ corner, corner });
 
         visual.PlateShape = compositor.CreateSpriteShape(plateGeometry);
-        visual.PlateShape.FillBrush(BrushFor(compositor, colors.Plate));
 
-        if (colors.Rim.A != 0)
+        // The theme decides how a surface looks; one control can disagree with it. Outline drops
+        // the plate, Solid fills it in the control's own hue, Bare drops both.
+        auto const style = control.Style;
+
+        auto plateColor = colors.Plate;
+        auto rimColor = colors.Rim;
+
+        if (style == ControlStyleOverride::Outline || style == ControlStyleOverride::Bare)
         {
-            visual.PlateShape.StrokeBrush(BrushFor(compositor, colors.Rim));
+            plateColor.A = 0;
+        }
+        else if (style == ControlStyleOverride::Solid)
+        {
+            plateColor = colors.Pipe;
+            plateColor.A = 170;
+        }
+
+        if (style == ControlStyleOverride::Bare)
+        {
+            rimColor.A = 0;
+        }
+
+        visual.PlateShape.FillBrush(BrushFor(compositor, plateColor));
+
+        if (rimColor.A != 0)
+        {
+            visual.PlateShape.StrokeBrush(BrushFor(compositor, rimColor));
             visual.PlateShape.StrokeThickness(1.0f);
         }
 
@@ -301,43 +373,104 @@ namespace glass
                 visual.PipeCrossOffset = vertical ? trackX : trackY;
             }
         }
+    }
 
-        ElementCompositionPreview::SetElementChildVisual(element, visual.Root);
+    // Created, moved, retexted or taken away, whichever the control now needs.
+    _Use_decl_annotations_
+    void SurfaceRenderer::LayoutLabel(size_t itemIndex, Control const& control, Theme const& theme)
+    {
+        if (itemIndex >= m_labels.size())
+        {
+            return;
+        }
 
-        m_visuals.push_back(std::move(visual));
-        m_elements.push_back(element);
-        m_controlIndexes.push_back(controlIndex);
-        m_kinds.push_back(control.Kind);
+        auto const height = static_cast<float>(std::max(control.Height, 4.0));
+        auto const width = static_cast<float>(std::max(control.Width, 4.0));
 
-        auto const itemIndex = m_visuals.size() - 1;
+        // The theme says where labels go; one control can disagree with it.
+        auto const placement =
+            control.LabelPlaced == LabelPlacementOverride::Inside ? LabelPlacement::Inside :
+            control.LabelPlaced == LabelPlacementOverride::Below ? LabelPlacement::Below :
+            control.LabelPlaced == LabelPlacementOverride::None ? LabelPlacement::None :
+            theme.Labels;
 
-        SetValue(itemIndex, control.DefaultValue);
-        winrt::get_self<winrt::midiglass::implementation::GlassControl>(element)
-            ->SetValueDirect(control.DefaultValue);
+        auto const wanted = placement != LabelPlacement::None && !control.Label.empty();
 
-        if (theme.Labels != LabelPlacement::None && !control.Label.empty())
+        if (!wanted)
+        {
+            if (m_labels[itemIndex] != nullptr)
+            {
+                uint32_t index{ 0 };
+
+                if (m_host != nullptr && m_host.Children().IndexOf(m_labels[itemIndex], index))
+                {
+                    m_host.Children().RemoveAt(index);
+                }
+
+                m_labels[itemIndex] = nullptr;
+            }
+
+            return;
+        }
+
+        if (m_labels[itemIndex] == nullptr)
         {
             controls::TextBlock label{};
 
-            label.Text(winrt::hstring{ control.Label });
             label.FontSize(12);
             label.TextAlignment(xaml::TextAlignment::Center);
             label.TextTrimming(xaml::TextTrimming::CharacterEllipsis);
-            label.Width(width);
             label.IsHitTestVisible(false);
-            label.Foreground(media::SolidColorBrush(ToColor(colors.Label)));
 
             // The control beside it already carries the name, so a screen reader reading this as
             // well would say everything twice.
             xaml::Automation::AutomationProperties::SetAccessibilityView(
                 label, xaml::Automation::Peers::AccessibilityView::Raw);
 
-            controls::Canvas::SetLeft(label, control.X);
-            controls::Canvas::SetTop(label, theme.Labels == LabelPlacement::Below
-                ? control.Y + height + 2
-                : control.Y + height - 18);
-
             m_host.Children().Append(label);
+            m_labels[itemIndex] = label;
+        }
+
+        auto const colors = ResolveControlColors(control, theme);
+        auto const& label = m_labels[itemIndex];
+
+        label.Text(winrt::hstring{ control.Label });
+        label.Width(width);
+        label.Foreground(media::SolidColorBrush(ToColor(colors.Label)));
+
+        m_labelOffsets[itemIndex] = placement == LabelPlacement::Below
+            ? static_cast<double>(height) + 2.0
+            : static_cast<double>(height) - 18.0;
+
+        controls::Canvas::SetLeft(label, control.X);
+        controls::Canvas::SetTop(label, control.Y + m_labelOffsets[itemIndex]);
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::ResizeItem(size_t itemIndex, Control const& control, Theme const& theme) noexcept
+    {
+        if (itemIndex >= m_visuals.size() || m_elements[itemIndex] == nullptr || m_host == nullptr)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const compositor = ElementCompositionPreview::GetElementVisual(m_host).Compositor();
+            auto const& element = m_elements[itemIndex];
+
+            element.Width(std::max(control.Width, 4.0));
+            element.Height(std::max(control.Height, 4.0));
+
+            controls::Canvas::SetLeft(element, control.X);
+            controls::Canvas::SetTop(element, control.Y);
+
+            LayoutVisual(compositor, m_visuals[itemIndex], control, theme);
+            SetValue(itemIndex, m_values[itemIndex]);
+            LayoutLabel(itemIndex, control, theme);
+        }
+        catch (...)
+        {
         }
     }
 
@@ -360,6 +493,9 @@ namespace glass
         m_elements.clear();
         m_controlIndexes.clear();
         m_kinds.clear();
+        m_labels.clear();
+        m_labelOffsets.clear();
+        m_values.clear();
         m_brushes.clear();
         m_host = nullptr;
     }
@@ -400,6 +536,27 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    void SurfaceRenderer::MoveItem(size_t itemIndex, double x, double y) noexcept
+    {
+        if (itemIndex >= m_elements.size() || m_elements[itemIndex] == nullptr)
+        {
+            return;
+        }
+
+        // The composition visuals are a child visual of the element, so moving the element moves
+        // everything drawn inside it. The label is a separate child of the host and has to be
+        // carried along, or it sits where the control used to be until the next rebuild.
+        controls::Canvas::SetLeft(m_elements[itemIndex], x);
+        controls::Canvas::SetTop(m_elements[itemIndex], y);
+
+        if (itemIndex < m_labels.size() && m_labels[itemIndex] != nullptr)
+        {
+            controls::Canvas::SetLeft(m_labels[itemIndex], x);
+            controls::Canvas::SetTop(m_labels[itemIndex], y + m_labelOffsets[itemIndex]);
+        }
+    }
+
+    _Use_decl_annotations_
     void SurfaceRenderer::SetValue(size_t itemIndex, double value) noexcept
     {
         if (itemIndex >= m_visuals.size())
@@ -409,6 +566,8 @@ namespace glass
 
         auto const& visual = m_visuals[itemIndex];
         auto const clamped = static_cast<float>(std::clamp(value, 0.0, 1.0));
+
+        m_values[itemIndex] = value;
 
         try
         {

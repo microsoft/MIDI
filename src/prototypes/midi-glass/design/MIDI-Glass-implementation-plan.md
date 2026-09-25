@@ -6,7 +6,7 @@ Companion to `MIDI-Glass-design.md` and the twelve mockup screens. This is the *
 
 ## Where this stands — read this first
 
-**As of 24 September 2026. Phases 0, 1, 2, 3 and 4 are done. Phase 5 has not started.**
+**As of 24 September 2026. Phases 0, 1, 2, 3, 4 and 5 are done. Phase 6 has not started.**
 
 | Phase | State | Where the code is |
 |---|---|---|
@@ -15,10 +15,10 @@ Companion to `MIDI-Glass-design.md` and the twelve mockup screens. This is the *
 | 2 Shell | **Done** | `src/in-box/user-tools/midi-glass/` |
 | 3 Document, themes, thumbnails | **Done** | `midi-glass/document/`, `midi-glass/thumbnail/` |
 | 4 Runtime surface | **Done** | `midi-glass/binding/`, `runtime/`, `surface/`, `RuntimeWindow.*` |
-| 5 Editor | Not started | — |
+| 5 Editor | **Done** | `midi-glass/editor/`, `EditorWindow.*`, `EditorCanvas/Inspector/Outline/Dialogs/TryMode.cpp` |
 | 6–9 | Not started | — |
 
-**Tests: 138, all passing, none needing a window or a device.** `src/in-box/Test/Tools/Midi2.MidiGlass.unittests`. Builds clean x64 and ARM64 Release; spelling and accessibility checks clean.
+**Tests: 243, all passing, none needing a window or a device.** `src/in-box/Test/Tools/Midi2.MidiGlass.unittests`. Builds clean x64 Release; spelling and accessibility checks clean.
 
 ```
 build  msbuild <proj> /t:Build /p:Configuration=Release /p:Platform=x64 "/p:SolutionDir=<repo>\src\in-box\\" /v:minimal /nologo /nodeReuse:false
@@ -32,7 +32,9 @@ run    midiglass --run "<layout.midilayout.json>"
 
 Launch it and the **library** lists every layout in `Documents\MIDI Layouts`, each with a card drawn from the layout itself rather than captured from a window. It matches mockup screen 1: a toolbar with New layout, search, sort and a grid/list toggle; Favorites and Recent sections; a hover bar with Run, Edit and a context menu on every card; and a status bar that names the folder and reports whether the MIDI service is running. **New layout** asks which device to send to and offers five templates. **Run** opens a runtime window: the surface, the three scale modes, a device status line, View mode, full screen and Panic.
 
-Not there yet: the editor, sequences, generators, learn, the per-layout virtual device, and the full screen corner button. Everything in that list is phase 5 or later. Edit is present everywhere but disabled until the editor exists.
+**Edit** opens the editor: the palette, the outline, the canvas with its work area and page, the inspector, snapping with magnetic guides, Arrange, Repeat, undo and redo, page resizing with the grow and shrink paths, auto-save with the Saved chip, and **Edit / Try on Ctrl+Enter with the monitor rail underneath**.
+
+Not there yet: sequences, generators, learn, the per-layout virtual device, and the full screen corner button. Everything in that list is phase 6 or later.
 
 ### Two things learned here that apply to every tool in the family
 
@@ -376,6 +378,23 @@ Test it the way Patchbay was tested: **write a layout file before launching**, s
 Palette, drag and click placement, snap, magnetic guides, spacing, Repeat, the inspector, undo and redo, Edit/Try, the monitor rail, the Outline pane, keyboard order editing, **the virtual canvas with its grow and shrink paths and off-page handling**, and **auto-save with the Patchbay chip** — "Saved" / "Not saved", written about a second and a half after the last edit, moved here from phase 3 because it needs an editor to have something to save.
 
 **Exit:** a layout built entirely through the UI, then run, then edited again. Undo survives a drag, a repeat and a delete. A page grown then shrunk back leaves every control exactly where it started. Everything reachable by keyboard.
+
+> **Done, 24 September 2026.** `editor/` (`EditGeometry`, `ArrangeOps`, `RepeatPlan`, `UndoStack`, `ControlFactory`, `EditorController`), `EditorWindow.*` and its five view files, and `binding/MonitorFormat`. 243 tests, still no window and no device. The editing engine is free of XAML on purpose, so every rule below is checked without a window.
+>
+> **Driven end to end through UI Automation, 37 checks.** The outline fills the inspector; a typed position auto-saves and reaches the file; undo and redo walk the stack; the palette adds a control; Repeat builds a bank of eight; the page grows to 1920 x 1080 and one undo puts it back with **every control exactly where it started**; Try mode sends; the monitor catches it; Clear empties it; Edit comes back and a control driven there sends nothing.
+>
+> **Try mode is where the shared layer came from.** Edit and Try have to send exactly the same thing, and two copies of the device table, the connections, the engine and the throttles would drift apart. `runtime/LivePlayer` now holds all of it and both the runtime window and the editor drive one. The runtime window's phase 4 capture was re-run afterwards and still produces the same seven messages, which is what makes the extraction safe to believe.
+>
+> **The monitor rail reads the message back rather than reporting what was asked for.** Printing the request would agree with the arithmetic that built it even when the arithmetic is wrong, which is exactly the question somebody opens the monitor to answer. `DescribeMessage` decodes the words that actually reached a connection; on the wire and in the rail, a fader at the top reads `40 B0 07 00  FF FF FF FF` and **`CC 7 = 1.000`**, not 0.999.
+>
+> **Three defects the probe found, all of them in the app rather than in the test.**
+> 1. **Redo was disabled immediately after an undo**, so the button existed but could not be used until something else refreshed the toolbar.
+> 2. **A `ToggleButton`'s `Click` never fires for assistive technology.** UI Automation's Toggle calls `OnToggle`, which raises `Checked`/`Unchecked` only — so Edit and Try moved the highlight and changed nothing else for a screen reader user. Both toggles and both monitor switches now use `Checked`/`Unchecked`.
+> 3. **Moving to `Checked` crashed the window on open**, because `Checked` fires during `InitializeComponent` while the `x:Name` fields are still null, and calling a method on a null C++/WinRT projected type is an access violation rather than an exception a `catch` can hold. Everything those handlers touch is gated on a loaded flag set at the top of `Loaded`.
+>
+> **The editor says what the devices are doing in Try mode**, because a monitor with nothing in it cannot tell the difference between nothing sent and nowhere to send it. The status bar reads "Trying · N device(s) connected", names a device that is missing, and distinguishes a device that is present from one that would not open.
+>
+> **Not verified**: touch and pen on the canvas, a screen reader end to end, and ARM64 at run time. Drag, rubber band and handle resizing are covered by the engine tests but have not been driven with a real pointer, because a probe that synthesizes a mouse takes the machine away from whoever is using it.
 
 ### Phase 6 — Sequences, generators and learn.
 

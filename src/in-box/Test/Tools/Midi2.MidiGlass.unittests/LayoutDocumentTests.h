@@ -28,6 +28,11 @@ public:
     TEST_METHOD(ReadingBackWhatWasWrittenChangesNothing);
     TEST_METHOD(WholeNumbersDoNotGrowADecimalPoint);
 
+    // ---- overrides of the theme ----
+
+    TEST_METHOD(AControlThatAgreesWithItsThemeWritesNoOverrides);
+    TEST_METHOD(OverridesOfTheThemeSurviveARoundTrip);
+
     // ---- the forward rule ----
     TEST_METHOD(KeepsFieldsFromANewerVersion);
     TEST_METHOD(SaysWhenAFileIsFromANewerVersion);

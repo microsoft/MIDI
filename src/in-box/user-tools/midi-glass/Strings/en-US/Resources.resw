@@ -461,4 +461,892 @@
   <data name="ErrorNoComExtensions" xml:space="preserve">
     <value>This build of the MIDI SDK does not have the fast send path MIDI Glass needs.</value>
   </data>
+  <data name="EditorWindowTitleFormat" xml:space="preserve">
+    <value>{0} — Windows MIDI Glass</value>
+  </data>
+  <data name="EditorLibraryButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Back to the library</value>
+  </data>
+  <data name="EditorLibraryLabel.Text" xml:space="preserve">
+    <value>Library</value>
+  </data>
+  <data name="EditorUndoButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Undo</value>
+  </data>
+  <data name="EditorUndoButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Undo (Ctrl+Z)</value>
+  </data>
+  <data name="EditorRedoButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Redo</value>
+  </data>
+  <data name="EditorRedoButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Redo (Ctrl+Y)</value>
+  </data>
+  <data name="EditorSnapToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Snap to grid and guides</value>
+  </data>
+  <data name="EditorSnapToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Snap to the grid, to other controls and to the page edges. Hold Alt while dragging to suspend it.</value>
+  </data>
+  <data name="EditorSnapLabel.Text" xml:space="preserve">
+    <value>Snap</value>
+  </data>
+  <data name="EditorGridSizeCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Grid size</value>
+  </data>
+  <data name="GridSizeFormat" xml:space="preserve">
+    <value>{0} px grid</value>
+  </data>
+  <data name="EditorArrangeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Arrange the selection</value>
+  </data>
+  <data name="EditorArrangeLabel.Text" xml:space="preserve">
+    <value>Arrange</value>
+  </data>
+  <data name="ArrangeAlignLeft.Text" xml:space="preserve">
+    <value>Align left edges</value>
+  </data>
+  <data name="ArrangeAlignCenterX.Text" xml:space="preserve">
+    <value>Align centers across</value>
+  </data>
+  <data name="ArrangeAlignRight.Text" xml:space="preserve">
+    <value>Align right edges</value>
+  </data>
+  <data name="ArrangeAlignTop.Text" xml:space="preserve">
+    <value>Align top edges</value>
+  </data>
+  <data name="ArrangeAlignCenterY.Text" xml:space="preserve">
+    <value>Align centers down</value>
+  </data>
+  <data name="ArrangeAlignBottom.Text" xml:space="preserve">
+    <value>Align bottom edges</value>
+  </data>
+  <data name="ArrangeSpreadAcross.Text" xml:space="preserve">
+    <value>Equal gaps across</value>
+  </data>
+  <data name="ArrangeSpreadDown.Text" xml:space="preserve">
+    <value>Equal gaps down</value>
+  </data>
+  <data name="EditorRepeatButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Repeat the selection</value>
+  </data>
+  <data name="EditorRepeatLabel.Text" xml:space="preserve">
+    <value>Repeat</value>
+  </data>
+  <data name="EditorAlignLeftButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Align left edges</value>
+  </data>
+  <data name="EditorAlignLeftButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Align left edges</value>
+  </data>
+  <data name="EditorAlignCenterButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Align centers across</value>
+  </data>
+  <data name="EditorAlignCenterButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Align centers across</value>
+  </data>
+  <data name="EditorGroupButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Group — not built yet</value>
+  </data>
+  <data name="EditorGroupButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Group — not built yet</value>
+  </data>
+  <data name="EditorLockButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Lock — not built yet</value>
+  </data>
+  <data name="EditorLockButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Lock — not built yet</value>
+  </data>
+  <data name="EditorEditModeToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Edit mode</value>
+  </data>
+  <data name="EditorEditModeToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Build the layout. Ctrl+Enter switches between Edit and Try.</value>
+  </data>
+  <data name="EditorEditModeLabel.Text" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="EditorTryModeToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Try mode</value>
+  </data>
+  <data name="EditorTryModeToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Play the page for real without leaving the editor. Ctrl+Enter switches between Edit and Try.</value>
+  </data>
+  <data name="EditorTryModeLabel.Text" xml:space="preserve">
+    <value>Try</value>
+  </data>
+  <data name="MonitorHeading.Text" xml:space="preserve">
+    <value>Sending</value>
+  </data>
+  <data name="MonitorList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Messages this layout has sent</value>
+  </data>
+  <data name="MonitorSelectedOnlyCheck.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show the selected control only</value>
+  </data>
+  <data name="MonitorSelectedOnlyLabel.Text" xml:space="preserve">
+    <value>Selected control only</value>
+  </data>
+  <data name="MonitorPauseToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Pause the monitor</value>
+  </data>
+  <data name="MonitorPauseLabel.Text" xml:space="preserve">
+    <value>Pause</value>
+  </data>
+  <data name="MonitorClearButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Clear the monitor</value>
+  </data>
+  <data name="MonitorClearLabel.Text" xml:space="preserve">
+    <value>Clear</value>
+  </data>
+  <data name="MonitorExpandButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Hide the message list</value>
+  </data>
+  <data name="MonitorCollapseName" xml:space="preserve">
+    <value>Hide the message list</value>
+  </data>
+  <data name="MonitorExpandName" xml:space="preserve">
+    <value>Show the message list</value>
+  </data>
+  <data name="MonitorChannelFormat" xml:space="preserve">
+    <value> · ch {0}</value>
+  </data>
+  <data name="MonitorEmptyNotTrying" xml:space="preserve">
+    <value>Switch to Try to play the page and watch it send</value>
+  </data>
+  <data name="MonitorEmptyNoSelection" xml:space="preserve">
+    <value>Select a control, or clear the filter to see everything</value>
+  </data>
+  <data name="MonitorEmptyNothingYet" xml:space="preserve">
+    <value>Nothing sent yet</value>
+  </data>
+  <data name="TryDevicesReadyFormat" xml:space="preserve">
+    <value>Trying · {0} device(s) connected</value>
+  </data>
+  <data name="TryDevicesMissingFormat" xml:space="preserve">
+    <value>Trying · {0} is not connected</value>
+  </data>
+  <data name="TryDevicesNotOpen" xml:space="preserve">
+    <value>Trying · the device is here but would not open</value>
+  </data>
+  <data name="EditorLayoutSettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Layout settings</value>
+  </data>
+  <data name="EditorLayoutSettingsLabel.Text" xml:space="preserve">
+    <value>Layout…</value>
+  </data>
+  <data name="LayoutMenuPageSize.Text" xml:space="preserve">
+    <value>Page size…</value>
+  </data>
+  <data name="LayoutMenuRename.Text" xml:space="preserve">
+    <value>Rename layout…</value>
+  </data>
+  <data name="LayoutMenuKeyboardOrder.Text" xml:space="preserve">
+    <value>Set keyboard order from position</value>
+  </data>
+  <data name="LayoutMenuRun.Text" xml:space="preserve">
+    <value>Save and run</value>
+  </data>
+  <data name="SavedChipSaved" xml:space="preserve">
+    <value>Saved</value>
+  </data>
+  <data name="SavedChipNotSaved" xml:space="preserve">
+    <value>Not saved</value>
+  </data>
+  <data name="SavedChipFailed" xml:space="preserve">
+    <value>Could not save</value>
+  </data>
+  <data name="EditorStatusFormat" xml:space="preserve">
+    <value>{0} controls on this page  ·  {1} × {2}  ·  {3}</value>
+  </data>
+  <data name="EditorNothingSelected" xml:space="preserve">
+    <value>Nothing selected</value>
+  </data>
+  <data name="EditorSelectedFormat" xml:space="preserve">
+    <value>{0} selected</value>
+  </data>
+  <data name="PaletteSearch.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Find a control</value>
+  </data>
+  <data name="PaletteSearch.PlaceholderText" xml:space="preserve">
+    <value>Find a control</value>
+  </data>
+  <data name="PaletteGrid.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Controls you can add</value>
+  </data>
+  <data name="PalettePivotItem.Content" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="OutlinePivotItem.Content" xml:space="preserve">
+    <value>Outline</value>
+  </data>
+  <data name="OutlineList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Controls on this page, in keyboard order</value>
+  </data>
+  <data name="OutlineUpButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Move earlier in the keyboard order</value>
+  </data>
+  <data name="OutlineDownButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Move later in the keyboard order</value>
+  </data>
+  <data name="PaletteArmedFormat" xml:space="preserve">
+    <value>{0} — drag on the page to draw one, or click to drop one. Esc to stop.</value>
+  </data>
+  <data name="PaletteButton" xml:space="preserve">
+    <value>Button</value>
+  </data>
+  <data name="PaletteToggle" xml:space="preserve">
+    <value>Toggle</value>
+  </data>
+  <data name="PalettePad" xml:space="preserve">
+    <value>Pad</value>
+  </data>
+  <data name="PalettePageTab" xml:space="preserve">
+    <value>Page tab</value>
+  </data>
+  <data name="PaletteKnob" xml:space="preserve">
+    <value>Knob</value>
+  </data>
+  <data name="PaletteEncoder" xml:space="preserve">
+    <value>Encoder</value>
+  </data>
+  <data name="PaletteFader" xml:space="preserve">
+    <value>Fader</value>
+  </data>
+  <data name="PaletteXYPad" xml:space="preserve">
+    <value>XY pad</value>
+  </data>
+  <data name="PaletteMeter" xml:space="preserve">
+    <value>Meter</value>
+  </data>
+  <data name="PaletteLamp" xml:space="preserve">
+    <value>Lamp</value>
+  </data>
+  <data name="PaletteReadout" xml:space="preserve">
+    <value>Readout</value>
+  </data>
+  <data name="PaletteLabel" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="PaletteImage" xml:space="preserve">
+    <value>Image</value>
+  </data>
+  <data name="PaletteRadio" xml:space="preserve">
+    <value>Radio</value>
+  </data>
+  <data name="PaletteStepper" xml:space="preserve">
+    <value>Stepper</value>
+  </data>
+  <data name="PaletteFaderBank" xml:space="preserve">
+    <value>Fader bank</value>
+  </data>
+  <data name="PaletteWheel" xml:space="preserve">
+    <value>Wheel</value>
+  </data>
+  <data name="PaletteRange" xml:space="preserve">
+    <value>Range</value>
+  </data>
+  <data name="PaletteJoystick" xml:space="preserve">
+    <value>Joystick</value>
+  </data>
+  <data name="PaletteRibbon" xml:space="preserve">
+    <value>Ribbon</value>
+  </data>
+  <data name="PaletteBeatClock" xml:space="preserve">
+    <value>Beat clock</value>
+  </data>
+  <data name="PaletteLfo" xml:space="preserve">
+    <value>LFO</value>
+  </data>
+  <data name="PaletteSteps" xml:space="preserve">
+    <value>Steps</value>
+  </data>
+  <data name="PaletteComingFormat" xml:space="preserve">
+    <value>{0} — not built yet</value>
+  </data>
+  <data name="PaletteHost.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Controls you can add</value>
+  </data>
+  <data name="InspectorMoreButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>More for this control</value>
+  </data>
+  <data name="InspectorMenuDuplicate.Text" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+  <data name="InspectorMenuDelete.Text" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+  <data name="InspectorStyleHeading.Text" xml:space="preserve">
+    <value>Style</value>
+  </data>
+  <data name="InspectorPreviewHeading.Text" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="StyleThemeSegment.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Drawn the way the theme says</value>
+  </data>
+  <data name="StyleThemeLabel.Text" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="StylePlateSegment.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Plate style</value>
+  </data>
+  <data name="StylePlateLabel.Text" xml:space="preserve">
+    <value>Plate</value>
+  </data>
+  <data name="StyleOutlineSegment.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Outline style</value>
+  </data>
+  <data name="StyleOutlineLabel.Text" xml:space="preserve">
+    <value>Outline</value>
+  </data>
+  <data name="StyleSolidSegment.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Solid style</value>
+  </data>
+  <data name="StyleSolidLabel.Text" xml:space="preserve">
+    <value>Solid</value>
+  </data>
+  <data name="StyleBareSegment.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Bare style</value>
+  </data>
+  <data name="StyleBareLabel.Text" xml:space="preserve">
+    <value>Bare</value>
+  </data>
+  <data name="InspectorLabelTextLabel.Text" xml:space="preserve">
+    <value>Text</value>
+  </data>
+  <data name="InspectorLabelPlacedLabel.Text" xml:space="preserve">
+    <value>Placed</value>
+  </data>
+  <data name="InspectorShowValueLabel.Text" xml:space="preserve">
+    <value>Show value</value>
+  </data>
+  <data name="InspectorKindLabel.Text" xml:space="preserve">
+    <value>Kind</value>
+  </data>
+  <data name="LabelPlacedCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Where the label sits</value>
+  </data>
+  <data name="LabelPlacedTheme" xml:space="preserve">
+    <value>Same as the theme</value>
+  </data>
+  <data name="LabelPlacedBelow" xml:space="preserve">
+    <value>Below the control</value>
+  </data>
+  <data name="LabelPlacedInside" xml:space="preserve">
+    <value>Inside the control</value>
+  </data>
+  <data name="LabelPlacedNone" xml:space="preserve">
+    <value>No label</value>
+  </data>
+  <data name="ShowValueCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>When the value is shown — not built yet</value>
+  </data>
+  <data name="ShowValueTheme" xml:space="preserve">
+    <value>Same as the theme</value>
+  </data>
+  <data name="ShowValueWhileTouched" xml:space="preserve">
+    <value>While touched</value>
+  </data>
+  <data name="ShowValueAlways" xml:space="preserve">
+    <value>Always</value>
+  </data>
+  <data name="ShowValueNever" xml:space="preserve">
+    <value>Never</value>
+  </data>
+  <data name="PaletteGroupButtons" xml:space="preserve">
+    <value>Buttons</value>
+  </data>
+  <data name="PaletteGroupKnobs" xml:space="preserve">
+    <value>Knobs and faders</value>
+  </data>
+  <data name="PaletteGroupTwoAxis" xml:space="preserve">
+    <value>Two axis</value>
+  </data>
+  <data name="PaletteGroupGenerators" xml:space="preserve">
+    <value>Generators</value>
+  </data>
+  <data name="PaletteGroupDisplay" xml:space="preserve">
+    <value>Feedback and text</value>
+  </data>
+  <data name="CanvasScaleFormat" xml:space="preserve">
+    <value>{0} %</value>
+  </data>
+  <data name="CanvasStatusFormat" xml:space="preserve">
+    <value>Page {0} of {1}  ·  {2} × {3}  ·  {4} %</value>
+  </data>
+  <data name="ZoomInButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Zoom in</value>
+  </data>
+  <data name="ZoomInButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Zoom in</value>
+  </data>
+  <data name="ZoomOutButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Zoom out</value>
+  </data>
+  <data name="ZoomOutButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Zoom out</value>
+  </data>
+  <data name="ZoomFitButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Fit the whole work area in the window</value>
+  </data>
+  <data name="ZoomFitLabel.Text" xml:space="preserve">
+    <value>Fit</value>
+  </data>
+  <data name="LeftSplitter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Resize the tool pane</value>
+  </data>
+  <data name="InspectorSplitter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Resize the inspector</value>
+  </data>
+  <data name="MonitorSplitter.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Resize the message monitor</value>
+  </data>
+  <data name="CollapseLeftButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Fold the tool pane away</value>
+  </data>
+  <data name="CollapseLeftButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Fold the tool pane away</value>
+  </data>
+  <data name="RailPaletteButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Open the controls you can add</value>
+  </data>
+  <data name="RailPaletteButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="RailOutlineButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Open the outline</value>
+  </data>
+  <data name="RailOutlineButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Outline</value>
+  </data>
+  <data name="KeyboardOrderButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Set keyboard order from position</value>
+  </data>
+  <data name="KeyboardOrderLabel.Text" xml:space="preserve">
+    <value>Keyboard order</value>
+  </data>
+  <data name="GridSettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Change the page size</value>
+  </data>
+  <data name="GridSettingsLabel.Text" xml:space="preserve">
+    <value>Page size…</value>
+  </data>
+  <data name="OffPageBar.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Controls outside the page</value>
+  </data>
+  <data name="SelectOffPageButton.Content" xml:space="preserve">
+    <value>Select them</value>
+  </data>
+  <data name="OffPageCountFormat" xml:space="preserve">
+    <value>{0} controls are outside the page.</value>
+  </data>
+  <data name="OffPageCountOne" xml:space="preserve">
+    <value>One control is outside the page.</value>
+  </data>
+  <data name="OffPageMessage" xml:space="preserve">
+    <value>They are saved, and they are still editable, but nobody will see them when this layout runs.</value>
+  </data>
+  <data name="OffPageMessageOne" xml:space="preserve">
+    <value>It is saved, and it is still editable, but nobody will see it when this layout runs.</value>
+  </data>
+  <data name="AddPageButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Add a page</value>
+  </data>
+  <data name="AddPageLabel.Text" xml:space="preserve">
+    <value>Page</value>
+  </data>
+  <data name="PageNameFormat" xml:space="preserve">
+    <value>Page {0}</value>
+  </data>
+  <data name="InspectorLookItem.Content" xml:space="preserve">
+    <value>Look</value>
+  </data>
+  <data name="InspectorMidiItem.Content" xml:space="preserve">
+    <value>MIDI</value>
+  </data>
+  <data name="InspectorBehaviorItem.Content" xml:space="preserve">
+    <value>Behavior</value>
+  </data>
+  <data name="InspectorPageKind" xml:space="preserve">
+    <value>Page</value>
+  </data>
+  <data name="InspectorManySelected" xml:space="preserve">
+    <value>Several controls</value>
+  </data>
+  <data name="InspectorUnnamedControl" xml:space="preserve">
+    <value>Unnamed</value>
+  </data>
+  <data name="InspectorColorHeading.Text" xml:space="preserve">
+    <value>Color</value>
+  </data>
+  <data name="HueSlotCaption.Text" xml:space="preserve">
+    <value>A control stores a slot from the theme, not a color of its own. Change the theme and every control using that slot moves with it.</value>
+  </data>
+  <data name="HueSlotAccessibleFormat" xml:space="preserve">
+    <value>Color slot {0}</value>
+  </data>
+  <data name="InspectorPositionHeading.Text" xml:space="preserve">
+    <value>Position and size</value>
+  </data>
+  <data name="InspectorXYLabel.Text" xml:space="preserve">
+    <value>X, Y</value>
+  </data>
+  <data name="InspectorSizeLabel.Text" xml:space="preserve">
+    <value>Width, height</value>
+  </data>
+  <data name="BoundsX.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>X position</value>
+  </data>
+  <data name="BoundsY.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Y position</value>
+  </data>
+  <data name="BoundsWidth.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Width</value>
+  </data>
+  <data name="BoundsHeight.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Height</value>
+  </data>
+  <data name="AspectLockToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Hold the width and height in proportion</value>
+  </data>
+  <data name="InspectorLabelHeading.Text" xml:space="preserve">
+    <value>Label</value>
+  </data>
+  <data name="LabelBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Label text</value>
+  </data>
+  <data name="InspectorKindHeading.Text" xml:space="preserve">
+    <value>Kind</value>
+  </data>
+  <data name="KindCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Kind of control</value>
+  </data>
+  <data name="InspectorMessagesHeading.Text" xml:space="preserve">
+    <value>What it sends</value>
+  </data>
+  <data name="MessageList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Messages this control sends</value>
+  </data>
+  <data name="AddMessageButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Add a message</value>
+  </data>
+  <data name="RemoveMessageButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Remove this message</value>
+  </data>
+  <data name="MessageRowFormat" xml:space="preserve">
+    <value>{0}  ·  {1} {2}  ·  {3}</value>
+  </data>
+  <data name="MessageNoDevice" xml:space="preserve">
+    <value>no device</value>
+  </data>
+  <data name="MessageWhenLabel.Text" xml:space="preserve">
+    <value>When</value>
+  </data>
+  <data name="MessageWhatLabel.Text" xml:space="preserve">
+    <value>What</value>
+  </data>
+  <data name="MessageDeviceLabel.Text" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="MessageGroupLabel.Text" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="MessageChannelLabel.Text" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="MessageNumberLabel.Text" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="TriggerCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>When this message is sent</value>
+  </data>
+  <data name="KindMessageCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>What this message is</value>
+  </data>
+  <data name="DeviceCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Where this message goes</value>
+  </data>
+  <data name="GroupCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="ChannelCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="MessageNumberBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Controller or note number</value>
+  </data>
+  <data name="TriggerChanges" xml:space="preserve">
+    <value>It changes</value>
+  </data>
+  <data name="TriggerTurnsOn" xml:space="preserve">
+    <value>It turns on</value>
+  </data>
+  <data name="TriggerTurnsOff" xml:space="preserve">
+    <value>It turns off</value>
+  </data>
+  <data name="TriggerTouched" xml:space="preserve">
+    <value>It is touched</value>
+  </data>
+  <data name="TriggerReleased" xml:space="preserve">
+    <value>It is released</value>
+  </data>
+  <data name="MessageControlChange" xml:space="preserve">
+    <value>Control change</value>
+  </data>
+  <data name="MessageNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="MessageProgramChange" xml:space="preserve">
+    <value>Program change</value>
+  </data>
+  <data name="MessagePitchBend" xml:space="preserve">
+    <value>Pitch bend</value>
+  </data>
+  <data name="MessageChannelPressure" xml:space="preserve">
+    <value>Channel pressure</value>
+  </data>
+  <data name="MessagePerNoteController" xml:space="preserve">
+    <value>Per-note controller</value>
+  </data>
+  <data name="MessageRegisteredController" xml:space="preserve">
+    <value>Registered controller</value>
+  </data>
+  <data name="MessageAssignedController" xml:space="preserve">
+    <value>Assigned controller</value>
+  </data>
+  <data name="GroupAll" xml:space="preserve">
+    <value>All groups</value>
+  </data>
+  <data name="GroupNumberFormat" xml:space="preserve">
+    <value>Group {0}</value>
+  </data>
+  <data name="ChannelNumberFormat" xml:space="preserve">
+    <value>Channel {0}</value>
+  </data>
+  <data name="InspectorStartHeading.Text" xml:space="preserve">
+    <value>When the layout opens</value>
+  </data>
+  <data name="SendOnStartSwitch.Header" xml:space="preserve">
+    <value>Send this control's value</value>
+  </data>
+  <data name="SendOnStartCaption.Text" xml:space="preserve">
+    <value>A layout whose faders sit at zero, pushed to a live desk on load, mutes the show. Leave this off unless this control genuinely has to put something into a known state.</value>
+  </data>
+  <data name="InspectorDefaultHeading.Text" xml:space="preserve">
+    <value>Starting value</value>
+  </data>
+  <data name="DefaultValueSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Starting value, as a percentage</value>
+  </data>
+  <data name="InspectorThrottleHeading.Text" xml:space="preserve">
+    <value>Least time between sends</value>
+  </data>
+  <data name="SendIntervalBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Least time between sends, in milliseconds</value>
+  </data>
+  <data name="SendIntervalCaption.Text" xml:space="preserve">
+    <value>Milliseconds. Zero is no limit. A DIN cable carries about 350 three byte messages a second, so a fader dragged quickly can out-run it.</value>
+  </data>
+  <data name="InspectorPickupHeading.Text" xml:space="preserve">
+    <value>Pickup</value>
+  </data>
+  <data name="PickupCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Pickup mode</value>
+  </data>
+  <data name="PickupJump" xml:space="preserve">
+    <value>Jump to where it was touched</value>
+  </data>
+  <data name="PickupCatch" xml:space="preserve">
+    <value>Catch the value first</value>
+  </data>
+  <data name="PickupRelative" xml:space="preserve">
+    <value>Move relative to where it is</value>
+  </data>
+  <data name="InspectorKeyboardOrderHeading.Text" xml:space="preserve">
+    <value>Keyboard order</value>
+  </data>
+  <data name="KeyboardOrderBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Keyboard order</value>
+  </data>
+  <data name="KeyboardOrderCaption.Text" xml:space="preserve">
+    <value>The order the Tab key walks, and the order a screen reader reads. A hidden ordering is one nobody can fix.</value>
+  </data>
+  <data name="DialogCancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="DialogSave" xml:space="preserve">
+    <value>Save</value>
+  </data>
+  <data name="RepeatDialogTitle" xml:space="preserve">
+    <value>Repeat</value>
+  </data>
+  <data name="RepeatDialogAccept" xml:space="preserve">
+    <value>Repeat</value>
+  </data>
+  <data name="RepeatCopiesLabel" xml:space="preserve">
+    <value>Copies</value>
+  </data>
+  <data name="RepeatDirectionLabel" xml:space="preserve">
+    <value>Direction</value>
+  </data>
+  <data name="RepeatDirectionRight" xml:space="preserve">
+    <value>To the right</value>
+  </data>
+  <data name="RepeatDirectionLeft" xml:space="preserve">
+    <value>To the left</value>
+  </data>
+  <data name="RepeatDirectionDown" xml:space="preserve">
+    <value>Downward</value>
+  </data>
+  <data name="RepeatDirectionUp" xml:space="preserve">
+    <value>Upward</value>
+  </data>
+  <data name="RepeatGapLabel" xml:space="preserve">
+    <value>Gap, in pixels</value>
+  </data>
+  <data name="RepeatFieldLabel" xml:space="preserve">
+    <value>Step the binding by</value>
+  </data>
+  <data name="RepeatFieldNothing" xml:space="preserve">
+    <value>Nothing</value>
+  </data>
+  <data name="RepeatFieldChannel" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="RepeatFieldController" xml:space="preserve">
+    <value>Controller number</value>
+  </data>
+  <data name="RepeatFieldNote" xml:space="preserve">
+    <value>Note number</value>
+  </data>
+  <data name="RepeatFieldGroup" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="RepeatStepLabel" xml:space="preserve">
+    <value>Step</value>
+  </data>
+  <data name="RepeatLabelLabel" xml:space="preserve">
+    <value>Label pattern</value>
+  </data>
+  <data name="RepeatLabelPlaceholder" xml:space="preserve">
+    <value>Ch {n}</value>
+  </data>
+  <data name="RepeatExplanation" xml:space="preserve">
+    <value>One strip in, a correct bank out. Every {n} in the label pattern is replaced by the copy number, starting at 1. Channel and group come round again at 16; note and controller numbers at 128.</value>
+  </data>
+  <data name="PageSizeDialogTitle" xml:space="preserve">
+    <value>Page size</value>
+  </data>
+  <data name="PageSizeDialogAccept" xml:space="preserve">
+    <value>Resize</value>
+  </data>
+  <data name="PageSizePresetLabel" xml:space="preserve">
+    <value>Preset</value>
+  </data>
+  <data name="PageSizeWasFormat" xml:space="preserve">
+    <value>was {0} × {1}</value>
+  </data>
+  <data name="PageSizePreviewLabel" xml:space="preserve">
+    <value>Preview</value>
+  </data>
+  <data name="PageSizeScaleTitle" xml:space="preserve">
+    <value>Scale everything to fit</value>
+  </data>
+  <data name="PageSizeScaleBody" xml:space="preserve">
+    <value>Positions and sizes shrink together. Text and touch targets get smaller, so check the smallest control afterwards.</value>
+  </data>
+  <data name="PageSizeLeaveTitle" xml:space="preserve">
+    <value>Leave everything where it is</value>
+  </data>
+  <data name="PageSizeLeaveBodyFormat" xml:space="preserve">
+    <value>Nothing moves. {0} controls would end up outside the page and would need bringing back by hand.</value>
+  </data>
+  <data name="PageSizeLeaveBodyNoneOutside" xml:space="preserve">
+    <value>Nothing moves, and nothing ends up outside the page.</value>
+  </data>
+  <data name="PagePresetFormat" xml:space="preserve">
+    <value>{0} — {1} × {2}</value>
+  </data>
+  <data name="PagePresetCustom" xml:space="preserve">
+    <value>Custom</value>
+  </data>
+  <data name="PageSizeWidthLabel" xml:space="preserve">
+    <value>Page width</value>
+  </data>
+  <data name="PageSizeHeightLabel" xml:space="preserve">
+    <value>Page height</value>
+  </data>
+  <data name="PageSizeAnchorLabel" xml:space="preserve">
+    <value>Put existing controls</value>
+  </data>
+  <data name="AnchorTopLeft" xml:space="preserve">
+    <value>Top left</value>
+  </data>
+  <data name="AnchorTop" xml:space="preserve">
+    <value>Top</value>
+  </data>
+  <data name="AnchorTopRight" xml:space="preserve">
+    <value>Top right</value>
+  </data>
+  <data name="AnchorLeft" xml:space="preserve">
+    <value>Left</value>
+  </data>
+  <data name="AnchorCenter" xml:space="preserve">
+    <value>Center</value>
+  </data>
+  <data name="AnchorRight" xml:space="preserve">
+    <value>Right</value>
+  </data>
+  <data name="AnchorBottomLeft" xml:space="preserve">
+    <value>Bottom left</value>
+  </data>
+  <data name="AnchorBottom" xml:space="preserve">
+    <value>Bottom</value>
+  </data>
+  <data name="AnchorBottomRight" xml:space="preserve">
+    <value>Bottom right</value>
+  </data>
+  <data name="PageSizeScaleContents" xml:space="preserve">
+    <value>Scale everything to fit</value>
+  </data>
+  <data name="PageSizeNothingOutside" xml:space="preserve">
+    <value>Nothing would end up outside the page.</value>
+  </data>
+  <data name="PageSizeWouldBeOutsideFormat" xml:space="preserve">
+    <value>{0} controls would end up outside the page. They stay where they are and can be brought back by hand.</value>
+  </data>
+  <data name="RenameLayoutDialogTitle" xml:space="preserve">
+    <value>Rename layout</value>
+  </data>
+  <data name="RenameLayoutNameLabel" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="RenameLayoutDescriptionLabel" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="AddToPageButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Add the selected control to the page</value>
+  </data>
+  <data name="AddToPageLabel.Text" xml:space="preserve">
+    <value>Add to page</value>
+  </data>
+  <data name="PageTemplateTablet" xml:space="preserve">
+    <value>Tablet</value>
+  </data>
+  <data name="PageTemplateFullHd" xml:space="preserve">
+    <value>Full HD</value>
+  </data>
+  <data name="PageTemplateQuadHd" xml:space="preserve">
+    <value>Quad HD</value>
+  </data>
+  <data name="PageTemplateSurface" xml:space="preserve">
+    <value>Surface</value>
+  </data>
+  <data name="PageTemplateClassic" xml:space="preserve">
+    <value>Classic</value>
+  </data>
+  <data name="PageTemplatePortrait" xml:space="preserve">
+    <value>Portrait</value>
+  </data>
 </root>
