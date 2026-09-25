@@ -324,16 +324,25 @@
                             <FontIcon Glyph="&#xE70D;" FontSize="9" />
                         </StackPanel>                        <Button.Flyout>
                             <MenuFlyout>
-                                <MenuFlyoutItem x:Uid="ArrangeAlignLeft" Text="Align left edges" Tag="alignleft" Click="OnArrangeClick" />
-                                <MenuFlyoutItem x:Uid="ArrangeAlignCenterX" Text="Align centers across" Tag="aligncenterx" Click="OnArrangeClick" />
-                                <MenuFlyoutItem x:Uid="ArrangeAlignRight" Text="Align right edges" Tag="alignright" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignLeftItem" x:Uid="ArrangeAlignLeft" Text="Align left edges" Tag="alignleft" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignCenterXItem" x:Uid="ArrangeAlignCenterX" Text="Align centers across" Tag="aligncenterx" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignRightItem" x:Uid="ArrangeAlignRight" Text="Align right edges" Tag="alignright" Click="OnArrangeClick" />
                                 <MenuFlyoutSeparator />
-                                <MenuFlyoutItem x:Uid="ArrangeAlignTop" Text="Align top edges" Tag="aligntop" Click="OnArrangeClick" />
-                                <MenuFlyoutItem x:Uid="ArrangeAlignCenterY" Text="Align centers down" Tag="aligncentery" Click="OnArrangeClick" />
-                                <MenuFlyoutItem x:Uid="ArrangeAlignBottom" Text="Align bottom edges" Tag="alignbottom" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignTopItem" x:Uid="ArrangeAlignTop" Text="Align top edges" Tag="aligntop" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignCenterYItem" x:Uid="ArrangeAlignCenterY" Text="Align centers down" Tag="aligncentery" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignBottomItem" x:Uid="ArrangeAlignBottom" Text="Align bottom edges" Tag="alignbottom" Click="OnArrangeClick" />
                                 <MenuFlyoutSeparator />
-                                <MenuFlyoutItem x:Uid="ArrangeSpreadAcross" Text="Equal gaps across" Tag="spreadx" Click="OnArrangeClick" />
-                                <MenuFlyoutItem x:Uid="ArrangeSpreadDown" Text="Equal gaps down" Tag="spready" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="SpreadAcrossItem" x:Uid="ArrangeSpreadAcross" Text="Equal gaps across" Tag="spreadx" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="SpreadDownItem" x:Uid="ArrangeSpreadDown" Text="Equal gaps down" Tag="spready" Click="OnArrangeClick" />
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem x:Name="BringToFrontItem" x:Uid="ArrangeBringToFront" Text="Bring to front" Tag="tofront" Click="OnArrangeClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74A;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem x:Name="BringForwardItem" x:Uid="ArrangeBringForward" Text="Bring forward" Tag="forward" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="SendBackwardItem" x:Uid="ArrangeSendBackward" Text="Send backward" Tag="backward" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="SendToBackItem" x:Uid="ArrangeSendToBack" Text="Send to back" Tag="toback" Click="OnArrangeClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74B;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
                             </MenuFlyout>
                         </Button.Flyout>
                     </Button>
@@ -632,7 +641,11 @@
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
-                    <RowDefinition x:Name="MonitorRow" Height="Auto" />
+                    <!-- A fixed height, never Auto. The rail filling up must not take room away
+                         from the canvas: somebody in Try mode is watching the surface, and a
+                         render area that shrinks under them is the one thing that makes trying a
+                         layout impossible. It scrolls instead. -->
+                    <RowDefinition x:Name="MonitorRow" Height="104" />
                 </Grid.RowDefinitions>
 
                 <!-- The work area fills the whole middle. Only the PAGE keeps its aspect ratio;
@@ -837,7 +850,7 @@
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
                         <Grid Grid.Row="0" Height="27" Padding="11,0,11,0" ColumnSpacing="8">
@@ -930,7 +943,9 @@
                                   SelectionMode="None"
                                   IsItemClickEnabled="False"
                                   ScrollViewer.HorizontalScrollMode="Auto"
-                                  ScrollViewer.HorizontalScrollBarVisibility="Auto">
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  ScrollViewer.VerticalScrollMode="Auto"
+                                  ScrollViewer.VerticalScrollBarVisibility="Auto">
                             <ListView.ItemContainerStyle>
                                 <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
                                     <Setter Property="MinHeight" Value="18" />
@@ -1233,6 +1248,52 @@
                                         </Button>
                                     </StackPanel>
 
+                                    <!-- Touching a control on hardware says five things, not one:
+                                         which endpoint it arrived on, which group, which channel,
+                                         which kind of message and which number. Capturing only the
+                                         number is why remapping a controller is usually an hour of
+                                         typing. -->
+                                    <TextBlock x:Uid="LearnHeading" Text="Learn from your hardware" Style="{StaticResource InspectorHeadingStyle}" Margin="0,12,0,0" />
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <ToggleButton x:Name="LearnOneToggle"
+                                                      x:Uid="LearnOneToggle"
+                                                      Height="30"
+                                                      FontSize="11"
+                                                      Checked="OnLearnOneToggled"
+                                                      Unchecked="OnLearnOneToggled">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="&#xE945;" FontSize="11" />
+                                                <TextBlock x:Uid="LearnOneLabel" Text="Learn" FontSize="11" />
+                                            </StackPanel>
+                                        </ToggleButton>
+                                        <ToggleButton x:Name="LearnBankToggle"
+                                                      x:Uid="LearnBankToggle"
+                                                      Height="30"
+                                                      FontSize="11"
+                                                      Checked="OnLearnBankToggled"
+                                                      Unchecked="OnLearnBankToggled">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="&#xE8FD;" FontSize="11" />
+                                                <TextBlock x:Uid="LearnBankLabel" Text="Learn a bank" FontSize="11" />
+                                            </StackPanel>
+                                        </ToggleButton>
+                                    </StackPanel>
+
+                                    <TextBlock x:Name="LearnStatusText"
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                    <!-- Somebody remapping within one device locks the endpoint
+                                         and takes only the number. -->
+                                    <StackPanel x:Name="LearnAcceptPanel" Visibility="Collapsed" Orientation="Horizontal" Spacing="4" Margin="0,2,0,0">
+                                        <CheckBox x:Name="LearnAcceptDevice" x:Uid="LearnAcceptDevice" IsChecked="True" MinWidth="0" FontSize="11" Content="Device" />
+                                        <CheckBox x:Name="LearnAcceptGroup" x:Uid="LearnAcceptGroup" IsChecked="True" MinWidth="0" FontSize="11" Content="Group" />
+                                        <CheckBox x:Name="LearnAcceptChannel" x:Uid="LearnAcceptChannel" IsChecked="True" MinWidth="0" FontSize="11" Content="Channel" />
+                                        <CheckBox x:Name="LearnAcceptKind" x:Uid="LearnAcceptKind" IsChecked="True" MinWidth="0" FontSize="11" Content="What" />
+                                        <CheckBox x:Name="LearnAcceptNumber" x:Uid="LearnAcceptNumber" IsChecked="True" MinWidth="0" FontSize="11" Content="Number" />
+                                    </StackPanel>
+
                                     <Grid ColumnSpacing="8" RowSpacing="6" Margin="0,8,0,0">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto" />
@@ -1255,23 +1316,106 @@
                                         <ComboBox x:Name="KindMessageCombo" x:Uid="KindMessageCombo" Grid.Row="1" Grid.Column="1"
                                                   HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
 
-                                        <TextBlock x:Uid="MessageDeviceLabel" Grid.Row="2" Grid.Column="0" Text="To" Style="{StaticResource InspectorLabelStyle}" />
+                                        <TextBlock x:Name="MessageDeviceLabel" x:Uid="MessageDeviceLabel" Grid.Row="2" Grid.Column="0" Text="To" Style="{StaticResource InspectorLabelStyle}" />
                                         <ComboBox x:Name="DeviceCombo" x:Uid="DeviceCombo" Grid.Row="2" Grid.Column="1"
                                                   HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
 
-                                        <TextBlock x:Uid="MessageGroupLabel" Grid.Row="3" Grid.Column="0" Text="Group" Style="{StaticResource InspectorLabelStyle}" />
+                                        <TextBlock x:Name="MessageGroupLabel" x:Uid="MessageGroupLabel" Grid.Row="3" Grid.Column="0" Text="Group" Style="{StaticResource InspectorLabelStyle}" />
                                         <ComboBox x:Name="GroupCombo" x:Uid="GroupCombo" Grid.Row="3" Grid.Column="1"
                                                   HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
 
-                                        <TextBlock x:Uid="MessageChannelLabel" Grid.Row="4" Grid.Column="0" Text="Channel" Style="{StaticResource InspectorLabelStyle}" />
+                                        <TextBlock x:Name="MessageChannelLabel" x:Uid="MessageChannelLabel" Grid.Row="4" Grid.Column="0" Text="Channel" Style="{StaticResource InspectorLabelStyle}" />
                                         <ComboBox x:Name="ChannelCombo" x:Uid="ChannelCombo" Grid.Row="4" Grid.Column="1"
                                                   HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
 
-                                        <TextBlock x:Uid="MessageNumberLabel" Grid.Row="5" Grid.Column="0" Text="Number" Style="{StaticResource InspectorLabelStyle}" />
+                                        <TextBlock x:Name="MessageNumberLabel" x:Uid="MessageNumberLabel" Grid.Row="5" Grid.Column="0" Text="Number" Style="{StaticResource InspectorLabelStyle}" />
                                         <NumberBox x:Name="MessageNumberBox" x:Uid="MessageNumberBox" Grid.Row="5" Grid.Column="1"
                                                    Minimum="0" Maximum="127" SpinButtonPlacementMode="Compact"
                                                    ValueChanged="OnMessageNumberChanged" />
                                     </Grid>
+
+                                    <!-- Only one of these is ever shown, and only when the row
+                                         above it is that kind. A control change has no bytes and
+                                         a dump has no controller number, so showing both at once
+                                         would be asking for a number nobody can answer. -->
+                                    <StackPanel x:Name="SysExPanel" Visibility="Collapsed" Spacing="6" Margin="0,10,0,0">
+                                        <TextBlock x:Uid="SysExHeading" Text="The bytes to send" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <TextBox x:Name="SysExBox"
+                                                 x:Uid="SysExBox"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 MinHeight="72"
+                                                 MaxHeight="150"
+                                                 FontFamily="Cascadia Mono, Consolas"
+                                                 FontSize="11"
+                                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                                 LostFocus="OnSysExChanged" />
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <Button x:Name="SysExFromFileButton" x:Uid="SysExFromFileButton" FontSize="11" Click="OnSysExFromFileClick">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon Glyph="&#xE8E5;" FontSize="11" />
+                                                    <TextBlock x:Uid="SysExFromFileLabel" Text="From a .syx file…" FontSize="11" />
+                                                </StackPanel>
+                                            </Button>
+                                            <TextBlock x:Name="SysExCaption"
+                                                       FontSize="11"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                        </StackPanel>
+                                        <TextBlock x:Uid="SysExHelp"
+                                                   Text="Hexadecimal, spaces optional. The leading F0 and trailing F7 are optional too."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="RawWordsPanel" Visibility="Collapsed" Spacing="6" Margin="0,10,0,0">
+                                        <TextBlock x:Uid="RawWordsHeading" Text="The words to send" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <TextBox x:Name="RawWordsBox"
+                                                 x:Uid="RawWordsBox"
+                                                 FontFamily="Cascadia Mono, Consolas"
+                                                 FontSize="11"
+                                                 LostFocus="OnRawWordsChanged" />
+                                        <TextBlock x:Uid="RawWordsHelp"
+                                                   Text="Up to four 32 bit words, hexadecimal, separated by spaces. Sent exactly as written."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="SequencePanel" Visibility="Collapsed" Spacing="6" Margin="0,10,0,0">
+                                        <TextBlock x:Uid="SequenceHeading" Text="Which sequence" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <ComboBox x:Name="SequenceCombo"
+                                                  x:Uid="SequenceCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnSequenceChanged" />
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <Button x:Name="NewSequenceButton" x:Uid="NewSequenceButton" FontSize="11" Click="OnNewSequenceClick">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon Glyph="&#xE710;" FontSize="11" />
+                                                    <TextBlock x:Uid="NewSequenceLabel" Text="New" FontSize="11" />
+                                                </StackPanel>
+                                            </Button>
+                                            <Button x:Name="EditSequenceButton" x:Uid="EditSequenceButton" FontSize="11" Click="OnEditSequenceClick">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon Glyph="&#xE70F;" FontSize="11" />
+                                                    <TextBlock x:Uid="EditSequenceLabel" Text="Edit steps…" FontSize="11" />
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                        <TextBlock x:Name="SequenceCaption"
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="TargetPagePanel" Visibility="Collapsed" Spacing="6" Margin="0,10,0,0">
+                                        <TextBlock x:Uid="TargetPageHeading" Text="Which page" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <ComboBox x:Name="TargetPageCombo"
+                                                  x:Uid="TargetPageCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnTargetPageChanged" />
+                                    </StackPanel>
                                 </StackPanel>
                             </ScrollViewer>
 
@@ -1296,6 +1440,16 @@
                                             Maximum="100"
                                             StepFrequency="1"
                                             ValueChanged="OnDefaultValueChanged" />
+
+                                    <ToggleSwitch x:Name="ReturnsToDefaultSwitch"
+                                                  x:Uid="ReturnsToDefaultSwitch"
+                                                  Header="Springs back when released"
+                                                  Toggled="OnReturnsToDefaultToggled" />
+                                    <TextBlock x:Uid="ReturnsToDefaultCaption"
+                                               Text="What makes a pitch wheel a pitch wheel. The control goes back to its starting value the moment the finger comes off, and that value is sent."
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
                                     <TextBlock x:Uid="InspectorThrottleHeading" Text="Least time between sends" Style="{StaticResource InspectorHeadingStyle}" />
                                     <NumberBox x:Name="SendIntervalBox"

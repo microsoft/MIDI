@@ -93,6 +93,17 @@ namespace winrt::midiglass::implementation
             m_renderer.Teardown();
             m_renderer.Build(SurfaceCanvas(), document, m_theme, m_editor.PageIndex());
 
+            auto weak = get_weak();
+
+            m_renderer.DescribeValue = [weak](uint32_t controlIndex, double value) -> std::wstring
+                {
+                    auto strong = weak.get();
+
+                    return strong != nullptr && strong->m_player != nullptr
+                        ? strong->m_player->DescribeValue(controlIndex, value)
+                        : std::wstring{};
+                };
+
             // Nothing on the surface takes input in Edit mode. Every press belongs to the
             // overlay, which knows about selection, handles and guides. Try mode flips it, and
             // has to be re-applied here because a rebuild makes new elements.
@@ -1131,6 +1142,26 @@ namespace winrt::midiglass::implementation
             }
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to rebuild the page rail.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::ShowEditorPage(size_t pageIndex)
+    {
+        try
+        {
+            if (pageIndex >= m_editor.Document().Pages.size() ||
+                pageIndex == m_editor.PageIndex())
+            {
+                return;
+            }
+
+            m_editor.SetPageIndex(pageIndex);
+
+            BuildPage();
+            RebuildPageRail();
+            RefreshInspector();
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the page a control asked for.")
     }
 
     _Use_decl_annotations_

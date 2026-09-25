@@ -97,6 +97,11 @@ namespace glass
         size_t AvailableCount() const noexcept;
         size_t MissingCount() const noexcept;
 
+        // Which entry of the layout's device table this endpoint resolved to, or an empty string
+        // when nothing did. What a learn capture needs: it arrives knowing an endpoint id, and a
+        // binding is written in terms of a name.
+        std::wstring NameForEndpoint(_In_ std::wstring const& endpointDeviceId) const noexcept;
+
         // Leaves the list of catalogs the watcher notifies. Called by the destructor as well,
         // because a handler left behind pointing at a closed window is a use after free waiting
         // for somebody to plug something in.

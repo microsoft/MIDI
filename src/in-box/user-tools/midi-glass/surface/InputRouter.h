@@ -74,6 +74,10 @@ namespace glass
             // already using is ignored rather than fought over.
             uint32_t PointerId{ 0 };
 
+            // Where it goes when the finger comes off, and whether it goes there at all.
+            bool ReturnsToRest{ false };
+            double RestValue{ 0.0 };
+
             double StartValue{ 0.0 };
             double StartY{ 0.0 };
             double Value{ 0.0 };

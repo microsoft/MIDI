@@ -9,6 +9,7 @@
 
 #include "EditorController.h"
 #include "ControlFactory.h"
+#include "InputRules.h"
 
 #include <cmath>
 
@@ -677,6 +678,219 @@ void EditorControllerTests::GapsAreMeasuredInPositionOrderNotSelectionOrder()
     VERIFY_ARE_EQUAL(size_t{ 2 }, gaps.size());
     VerifyNear(44.0, gaps[0]);
     VerifyNear(44.0, gaps[1]);
+}
+
+// ---- which control is drawn over which ----
+
+namespace
+{
+    // Three pads in a known draw order, returned in that order.
+    std::vector<std::wstring> ThreeInOrder(_Inout_ glass::EditorController& controller)
+    {
+        return
+        {
+            PlaceExactly(controller, glass::ControlKind::Pad, 100, 100, 56, 56),
+            PlaceExactly(controller, glass::ControlKind::Pad, 200, 100, 56, 56),
+            PlaceExactly(controller, glass::ControlKind::Pad, 300, 100, 56, 56),
+        };
+    }
+
+    std::vector<std::wstring> DrawOrder(_In_ glass::EditorController const& controller)
+    {
+        std::vector<std::wstring> ids{};
+
+        if (auto const* const page = controller.CurrentPage())
+        {
+            for (auto const& control : page->Controls)
+            {
+                ids.push_back(control.Id);
+            }
+        }
+
+        return ids;
+    }
+}
+
+void EditorControllerTests::BringToFrontPutsTheSelectionLastInDrawOrder()
+{
+    auto controller = LoadedController();
+    auto const ids = ThreeInOrder(controller);
+
+    controller.SelectOnly(ids[0]);
+
+    VERIFY_IS_TRUE(controller.ChangeZOrder(glass::ZOrderMove::ToFront));
+
+    auto const order = DrawOrder(controller);
+
+    VERIFY_ARE_EQUAL(ids[1], order[0]);
+    VERIFY_ARE_EQUAL(ids[2], order[1]);
+    VERIFY_ARE_EQUAL(ids[0], order[2]);
+}
+
+void EditorControllerTests::SendToBackPutsTheSelectionFirst()
+{
+    auto controller = LoadedController();
+    auto const ids = ThreeInOrder(controller);
+
+    controller.SelectOnly(ids[2]);
+
+    VERIFY_IS_TRUE(controller.ChangeZOrder(glass::ZOrderMove::ToBack));
+
+    auto const order = DrawOrder(controller);
+
+    VERIFY_ARE_EQUAL(ids[2], order[0]);
+    VERIFY_ARE_EQUAL(ids[0], order[1]);
+    VERIFY_ARE_EQUAL(ids[1], order[2]);
+}
+
+void EditorControllerTests::BringForwardMovesOneStepOnly()
+{
+    auto controller = LoadedController();
+    auto const ids = ThreeInOrder(controller);
+
+    controller.SelectOnly(ids[0]);
+
+    VERIFY_IS_TRUE(controller.ChangeZOrder(glass::ZOrderMove::Forward));
+
+    auto const order = DrawOrder(controller);
+
+    VERIFY_ARE_EQUAL(ids[1], order[0]);
+    VERIFY_ARE_EQUAL(ids[0], order[1]);
+    VERIFY_ARE_EQUAL(ids[2], order[2]);
+}
+
+void EditorControllerTests::SendBackwardMovesOneStepOnly()
+{
+    auto controller = LoadedController();
+    auto const ids = ThreeInOrder(controller);
+
+    controller.SelectOnly(ids[2]);
+
+    VERIFY_IS_TRUE(controller.ChangeZOrder(glass::ZOrderMove::Backward));
+
+    auto const order = DrawOrder(controller);
+
+    VERIFY_ARE_EQUAL(ids[0], order[0]);
+    VERIFY_ARE_EQUAL(ids[2], order[1]);
+    VERIFY_ARE_EQUAL(ids[1], order[2]);
+}
+
+void EditorControllerTests::ABlockOfSelectedControlsMovesTogether()
+{
+    auto controller = LoadedController();
+    auto const ids = ThreeInOrder(controller);
+
+    // The two at the bottom, brought forward as one. Without the block rule the lower of the
+    // two would swap past the upper and the pair would come apart.
+    controller.SelectOnly(ids[0]);
+    controller.AddToSelection(ids[1]);
+
+    VERIFY_IS_TRUE(controller.ChangeZOrder(glass::ZOrderMove::Forward));
+
+    auto const order = DrawOrder(controller);
+
+    VERIFY_ARE_EQUAL(ids[2], order[0]);
+    VERIFY_ARE_EQUAL(ids[0], order[1]);
+    VERIFY_ARE_EQUAL(ids[1], order[2]);
+}
+
+void EditorControllerTests::AControlAlreadyAtTheFrontDoesNotMove()
+{
+    auto controller = LoadedController();
+    auto const ids = ThreeInOrder(controller);
+
+    controller.SelectOnly(ids[2]);
+
+    VERIFY_IS_FALSE(controller.ChangeZOrder(glass::ZOrderMove::Forward));
+    VERIFY_IS_FALSE(controller.ChangeZOrder(glass::ZOrderMove::ToFront));
+
+    auto const order = DrawOrder(controller);
+
+    VERIFY_ARE_EQUAL(ids[0], order[0]);
+    VERIFY_ARE_EQUAL(ids[1], order[1]);
+    VERIFY_ARE_EQUAL(ids[2], order[2]);
+}
+
+void EditorControllerTests::ChangingTheOrderLeavesTheKeyboardOrderAlone()
+{
+    auto controller = LoadedController();
+    auto const ids = ThreeInOrder(controller);
+
+    // Which control is drawn over which and the order a screen reader walks are two different
+    // ideas, and moving one must never quietly move the other.
+    std::vector<int32_t> before{};
+
+    for (auto const& id : ids)
+    {
+        before.push_back(controller.Document().FindControl(id)->KeyboardOrder);
+    }
+
+    controller.SelectOnly(ids[0]);
+
+    VERIFY_IS_TRUE(controller.ChangeZOrder(glass::ZOrderMove::ToFront));
+
+    for (size_t index = 0; index < ids.size(); ++index)
+    {
+        VERIFY_ARE_EQUAL(before[index], controller.Document().FindControl(ids[index])->KeyboardOrder);
+    }
+}
+
+void EditorControllerTests::ChangingTheOrderCanBeTakenBack()
+{
+    auto controller = LoadedController();
+    auto const ids = ThreeInOrder(controller);
+
+    controller.SelectOnly(ids[0]);
+
+    VERIFY_IS_TRUE(controller.ChangeZOrder(glass::ZOrderMove::ToFront));
+    VERIFY_IS_TRUE(controller.Undo());
+
+    auto const order = DrawOrder(controller);
+
+    VERIFY_ARE_EQUAL(ids[0], order[0]);
+    VERIFY_ARE_EQUAL(ids[1], order[1]);
+    VERIFY_ARE_EQUAL(ids[2], order[2]);
+}
+
+// ---- grouping panels ----
+
+void EditorControllerTests::ADroppedGroupPanelGoesToTheBack()
+{
+    auto controller = LoadedController();
+    auto const ids = ThreeInOrder(controller);
+
+    auto const panel = controller.AddControl(glass::ControlKind::Panel, 80, 80);
+
+    VERIFY_IS_FALSE(panel.empty());
+
+    // Dropped on top of the controls it is meant to frame, it would hide them, and nobody drops
+    // one meaning that.
+    auto const order = DrawOrder(controller);
+
+    VERIFY_ARE_EQUAL(panel, order[0]);
+    VERIFY_ARE_EQUAL(ids[0], order[1]);
+}
+
+void EditorControllerTests::AGroupPanelSendsNothing()
+{
+    auto controller = LoadedController();
+
+    auto const panel = controller.AddControl(glass::ControlKind::Panel, 80, 80);
+
+    VERIFY_ARE_EQUAL(size_t{ 0 }, controller.Document().FindControl(panel)->Messages.size());
+    VERIFY_IS_FALSE(glass::SendsAnything(glass::ControlKind::Panel));
+    VERIFY_IS_FALSE(glass::IsInteractive(glass::ControlKind::Panel));
+}
+
+void EditorControllerTests::AGroupPanelArrivesAsAnOutline()
+{
+    auto controller = LoadedController();
+
+    auto const panel = controller.AddControl(glass::ControlKind::Panel, 80, 80);
+    auto const* const control = controller.Document().FindControl(panel);
+
+    VERIFY_IS_TRUE(control->Style == glass::ControlStyleOverride::Outline);
+    VERIFY_IS_TRUE(control->LabelPlaced == glass::LabelPlacementOverride::Inside);
 }
 
 // ---- repeat ----

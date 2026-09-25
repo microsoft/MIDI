@@ -65,6 +65,11 @@ namespace glass
         Label = 10,
         Image = 11,
         PageTab = 12,
+
+        // A plate or an outline with nothing behind it, for putting a frame around the controls
+        // that belong together. It sends nothing and takes no input; it is there so a page of
+        // sixty controls reads as six groups of ten.
+        Panel = 13,
     };
 
     // When a control sends. A control has a list of messages, not one, so a single button can
@@ -331,6 +336,11 @@ namespace glass
         // A layout always starts from its own defaults; this is the value it starts at.
         double DefaultValue{ 0.0 };
 
+        // Springs back to DefaultValue the moment the finger comes off. A pitch wheel does; a
+        // volume fader had better not. It is a property of the control rather than of its kind
+        // because a mod wheel and a pitch wheel are the same control with different answers.
+        bool ReturnsToDefault{ false };
+
         // Sends DefaultValue when the layout opens, so a synth can be put into a known state.
         // The global override in the layout can suppress every one of these at once.
         bool SendsValueOnStart{ false };
@@ -385,15 +395,37 @@ namespace glass
         uint32_t WaitMilliseconds{ 0 };
         uint32_t RepeatCount{ 1 };
 
+        // How long a note in a sequence is held before its note off. A step list that could
+        // only turn notes on would be a step list that leaves a synthesizer droning, so this is
+        // part of the step rather than something to remember to add afterwards.
+        uint32_t DurationMilliseconds{ 200 };
+
         std::wstring TargetControlId{};
         double TargetValue{ 0.0 };
 
+        // Set when the file named a step kind this build does not know. The step does nothing
+        // and keeps its own name, because the alternative is a build from last year sending a
+        // message a newer build meant as something else entirely.
+        std::wstring UnrecognizedKind{};
+
         UnknownFields Unknown{ nullptr };
+    };
+
+    // What pressing the button does. A one shot patch recall and an arpeggio that runs while a
+    // finger is down are the same list of steps with a different answer to this question.
+    enum class SequenceRunMode
+    {
+        Once = 0,
+        WhileHeld = 1,
+
+        // Starts on one press and stops on the next.
+        Toggle = 2,
     };
 
     struct Sequence
     {
         std::wstring Name{};
+        SequenceRunMode Mode{ SequenceRunMode::Once };
         std::vector<SequenceStep> Steps{};
 
         UnknownFields Unknown{ nullptr };

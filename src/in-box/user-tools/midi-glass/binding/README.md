@@ -6,6 +6,9 @@ What a control puts on the wire, and how often.
 |---|---|
 | `BindingEngine.*` | A control moving to the words that leave the process. Resolution folding, routing by index, startup values, feedback in. |
 | `ValueThrottle.*` | The rate limit on a continuous control, and its trailing send. |
+| `ActionPlan.*` | Everything a control does that is **not** an immediate channel voice message: a system exclusive dump, a raw message, a sequence of steps, a jump to another page. Flattened at prepare time into a straight list of actions. |
+| `LearnCapture.*` | An incoming message read back into a binding, and the rules for which of them are worth acting on. |
+| `MonitorFormat.*` | Words decoded back into something a person can read, for the editor's monitor rail. |
 
 ## The hot path
 
@@ -86,5 +89,26 @@ A DIN cable carries about 350 three-byte messages a second, shared with everythi
 - **It does not open a connection or send anything.** It produces words and a destination index. Owning connections is the router's job, one layer up.
 - **It does not queue.** A control whose device is missing stops sending. Stale MIDI arriving late is worse than nothing, and a layout that buffered a minute of fader moves would dump them all at once when the device came back.
 - **It does not know about pointers, frames or windows.** It is handed a value.
-- **It does not handle system exclusive, sequences or page changes.** Those are not on the hot path and do not belong on it.
 - **It does not decide when to send.** The throttle answers "may this go now"; something above it does the sending.
+- **It has no clock.** `ActionPlan` says what happens and how long to wait between; something above it owns the waiting.
+- **It does not listen.** `LearnCapture` decodes a message it is handed; opening a connection to hear one is the runtime layer's job.
+
+## Plans — the things that are not on the hot path
+
+A control change leaves in the pointer handler. A dump, a raw message, a sequence and a page change do not: they can be thousands of packets, or they can have real gaps in them. `ActionPlanSet::Prepare` turns all of those into one flat list per control and trigger.
+
+**A plan is flattened, so the thing that runs it has no control flow at all.** A repeat block is expanded at prepare time, bounded at 4096 actions and four levels of nesting. That is what makes a plan readable in the editor, cheap to run, and impossible to turn into a loop that never ends — which matters, because a layout is untrusted input from a stranger.
+
+Two rules that came out of driving it on the wire rather than reading it:
+
+- **A channel voice message inside a sequence has to be built here.** A control's own rows leave in the pointer handler, so the plan builder skips them — and a sequence step went down the same path and sent nothing at all. Nothing is holding a step, so a step builds its own words.
+- **A note step is on, wait, off, in one piece.** A list of steps is exactly where a hanging note is easy to forget, so the hold time is part of the step rather than something to remember to add.
+- **A step kind this build does not understand does nothing and keeps its own name.** Falling through to the default was falling through to a control change, so a file written by a newer build would have sent controller 0 to somebody's desk.
+
+## Learn — five things, not one
+
+Touching a control on hardware says which endpoint it arrived on, which group, which channel, which kind of message and which number. Capturing only the number is why remapping a controller is usually an hour of typing.
+
+- A check box per field decides what a capture may write, so somebody remapping inside one device can lock the endpoint and take only the number.
+- **A note off, a control change at zero and pitch bend at center do not arm anything.** All three arrive constantly while somebody is still reaching for the control they actually mean.
+- **A swept knob is one binding.** Without that, a bank learn would fill eight controls from one gesture.

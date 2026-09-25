@@ -278,4 +278,32 @@ namespace glass
         return static_cast<size_t>(std::count_if(m_resolved.begin(), m_resolved.end(),
             [](ResolvedDevice const& device) { return !device.IsAvailable; }));
     }
+
+    _Use_decl_annotations_
+    std::wstring DeviceCatalog::NameForEndpoint(std::wstring const& endpointDeviceId) const noexcept
+    {
+        try
+        {
+            if (endpointDeviceId.empty())
+            {
+                return {};
+            }
+
+            std::scoped_lock guard{ m_lock };
+
+            for (auto const& device : m_resolved)
+            {
+                if (device.EndpointDeviceId == endpointDeviceId)
+                {
+                    return device.Name;
+                }
+            }
+
+            return {};
+        }
+        catch (...)
+        {
+            return {};
+        }
+    }
 }

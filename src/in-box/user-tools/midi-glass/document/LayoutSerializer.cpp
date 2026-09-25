@@ -63,6 +63,7 @@ namespace glass
         constexpr wchar_t KeyKeyboardOrder[] = L"keyboardOrder";
         constexpr wchar_t KeyPickup[] = L"pickup";
         constexpr wchar_t KeyDefaultValue[] = L"defaultValue";
+        constexpr wchar_t KeyReturnsToDefault[] = L"returnsToDefault";
         constexpr wchar_t KeySendsValueOnStart[] = L"sendsValueOnStart";
         constexpr wchar_t KeySendInterval[] = L"sendIntervalMilliseconds";
         constexpr wchar_t KeyMessages[] = L"messages";
@@ -98,6 +99,7 @@ namespace glass
         constexpr wchar_t KeySteps[] = L"steps";
         constexpr wchar_t KeyMessage[] = L"message";
         constexpr wchar_t KeyWaitMilliseconds[] = L"waitMilliseconds";
+        constexpr wchar_t KeyDurationMilliseconds[] = L"durationMilliseconds";
         constexpr wchar_t KeyRepeatCount[] = L"repeatCount";
         constexpr wchar_t KeyTargetControl[] = L"targetControl";
         constexpr wchar_t KeyTargetValue[] = L"targetValue";
@@ -127,6 +129,14 @@ namespace glass
             { ControlKind::Label, L"label" },
             { ControlKind::Image, L"image" },
             { ControlKind::PageTab, L"pageTab" },
+            { ControlKind::Panel, L"panel" },
+        };
+
+        constexpr EnumName<SequenceRunMode> RunModeNames[]
+        {
+            { SequenceRunMode::Once, L"once" },
+            { SequenceRunMode::WhileHeld, L"whileHeld" },
+            { SequenceRunMode::Toggle, L"toggle" },
         };
 
         constexpr EnumName<MessageTrigger> TriggerNames[]
@@ -677,6 +687,7 @@ namespace glass
             control.KeyboardOrder = ReadInt(object, KeyKeyboardOrder, 0, 0, 0x7FFFFFFF);
             control.Pickup = ValueOf(PickupNames, ReadString(object, KeyPickup), PickupMode::Jump);
             control.DefaultValue = std::clamp(ReadNumber(object, KeyDefaultValue, 0.0), 0.0, 1.0);
+            control.ReturnsToDefault = ReadBool(object, KeyReturnsToDefault, false);
             control.SendsValueOnStart = ReadBool(object, KeySendsValueOnStart, false);
             control.SendIntervalMilliseconds = ReadInt(object, KeySendInterval, 0, 0, 10000);
 
@@ -701,6 +712,7 @@ namespace glass
             control.Unknown = CaptureUnknown(object,
                 { KeyId, KeyKind, KeyLabel, KeyX, KeyY, KeyWidth, KeyHeight, KeyHueSlot,
                   KeyLiteralColor, KeyAspectLocked, KeyKeyboardOrder, KeyPickup, KeyDefaultValue,
+                  KeyReturnsToDefault,
                   KeySendsValueOnStart, KeySendInterval, KeyMessages, KeyFeedback,
                   KeyStyle, KeyLabelPlaced, KeyShowValue });
 
@@ -758,7 +770,28 @@ namespace glass
         {
             SequenceStep step{};
 
-            step.Kind = ValueOf(StepKindNames, ReadString(object, KeyKind), SequenceStepKind::SendMidiMessage);
+            auto const kindName = ReadString(object, KeyKind);
+
+            step.Kind = ValueOf(StepKindNames, kindName, SequenceStepKind::SendMidiMessage);
+
+            // A name this build does not know must not fall through to "send a message": the
+            // default message is a control change, and sending one nobody asked for is worse
+            // than doing nothing.
+            auto recognized = false;
+
+            for (auto const& entry : StepKindNames)
+            {
+                if (entry.Name == kindName)
+                {
+                    recognized = true;
+                    break;
+                }
+            }
+
+            if (!recognized && !kindName.empty())
+            {
+                step.UnrecognizedKind = kindName;
+            }
 
             if (auto const message = ReadObject(object, KeyMessage))
             {
@@ -766,12 +799,14 @@ namespace glass
             }
 
             step.WaitMilliseconds = static_cast<uint32_t>(ReadInt(object, KeyWaitMilliseconds, 0, 0, 24 * 60 * 60 * 1000));
+            step.DurationMilliseconds = static_cast<uint32_t>(ReadInt(object, KeyDurationMilliseconds, 200, 0, 60 * 1000));
             step.RepeatCount = static_cast<uint32_t>(ReadInt(object, KeyRepeatCount, 1, 1, 10000));
             step.TargetControlId = ReadString(object, KeyTargetControl);
             step.TargetValue = std::clamp(ReadNumber(object, KeyTargetValue, 0.0), 0.0, 1.0);
 
             step.Unknown = CaptureUnknown(object,
-                { KeyKind, KeyMessage, KeyWaitMilliseconds, KeyRepeatCount, KeyTargetControl, KeyTargetValue });
+                { KeyKind, KeyMessage, KeyWaitMilliseconds, KeyDurationMilliseconds, KeyRepeatCount,
+                  KeyTargetControl, KeyTargetValue });
 
             return step;
         }
@@ -781,6 +816,7 @@ namespace glass
             Sequence sequence{};
 
             sequence.Name = ReadString(object, KeyName);
+            sequence.Mode = ValueOf(RunModeNames, ReadString(object, KeyMode), SequenceRunMode::Once);
 
             if (auto const steps = ReadArray(object, KeySteps))
             {
@@ -795,7 +831,7 @@ namespace glass
                 }
             }
 
-            sequence.Unknown = CaptureUnknown(object, { KeyName, KeySteps });
+            sequence.Unknown = CaptureUnknown(object, { KeyName, KeyMode, KeySteps });
 
             return sequence;
         }
@@ -1010,6 +1046,7 @@ namespace glass
             writer.Write(KeyKeyboardOrder, static_cast<int64_t>(control.KeyboardOrder));
             writer.Write(KeyPickup, NameOf(PickupNames, control.Pickup));
             writer.Write(KeyDefaultValue, control.DefaultValue);
+            writer.Write(KeyReturnsToDefault, control.ReturnsToDefault);
             writer.Write(KeySendsValueOnStart, control.SendsValueOnStart);
             writer.Write(KeySendInterval, static_cast<int64_t>(control.SendIntervalMilliseconds));
 
@@ -1124,16 +1161,20 @@ namespace glass
             {
                 writer.BeginObject();
                 writer.Write(KeyName, sequence.Name);
+                writer.Write(KeyMode, NameOf(RunModeNames, sequence.Mode));
 
                 writer.BeginArray(KeySteps);
 
                 for (auto const& step : sequence.Steps)
                 {
                     writer.BeginObject();
-                    writer.Write(KeyKind, NameOf(StepKindNames, step.Kind));
+                    writer.Write(KeyKind, step.UnrecognizedKind.empty()
+                        ? NameOf(StepKindNames, step.Kind)
+                        : step.UnrecognizedKind);
 
                     if (step.Kind == SequenceStepKind::SendMidiMessage ||
-                        step.Kind == SequenceStepKind::SendSystemExclusive)
+                        step.Kind == SequenceStepKind::SendSystemExclusive ||
+                        step.Kind == SequenceStepKind::GoToPage)
                     {
                         writer.BeginObject(KeyMessage);
                         WriteMessage(writer, step.Message);
@@ -1143,6 +1184,12 @@ namespace glass
                     if (step.Kind == SequenceStepKind::Wait)
                     {
                         writer.Write(KeyWaitMilliseconds, static_cast<int64_t>(step.WaitMilliseconds));
+                    }
+
+                    if (step.Kind == SequenceStepKind::SendMidiMessage &&
+                        step.Message.Kind == MessageKind::Note)
+                    {
+                        writer.Write(KeyDurationMilliseconds, static_cast<int64_t>(step.DurationMilliseconds));
                     }
 
                     if (step.Kind == SequenceStepKind::RepeatBlockStart)

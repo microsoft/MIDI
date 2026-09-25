@@ -56,6 +56,21 @@ namespace winrt::midiglass::implementation
             foundation::IInspectable const& sender,
             xaml::RoutedEventArgs const& args);
 
+        // ---- full screen (RuntimeWindowFullScreen.cpp) ----
+
+        void OnCornerButtonPointerEntered(
+            foundation::IInspectable const& sender,
+            xaml::Input::PointerRoutedEventArgs const& args);
+        void OnCornerButtonPointerExited(
+            foundation::IInspectable const& sender,
+            xaml::Input::PointerRoutedEventArgs const& args);
+        void OnCornerFlyoutOpening(
+            foundation::IInspectable const& sender,
+            foundation::IInspectable const& args);
+        void OnCornerMenuClick(
+            foundation::IInspectable const& sender,
+            xaml::RoutedEventArgs const& args);
+
         void OnFullScreenAccelerator(
             xaml::Input::KeyboardAccelerator const& sender,
             xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
@@ -80,10 +95,23 @@ namespace winrt::midiglass::implementation
         // ---- surface ----
 
         void BuildPage(_In_ size_t pageIndex);
+
+        // Changes page and keeps the page selector in step. What a page tab and a sequence step
+        // both go through, so there is one path and one place a page change can go wrong.
+        void ShowPage(_In_ size_t pageIndex);
+
         void ApplyScale();
         void UpdateDeckBrush();
         void SetFullScreen(_In_ bool fullScreen);
         void Panic();
+
+        // The one button and its flyout, and the note that says how to get out again.
+        void ShowFullScreenChrome();
+        void ApplyCornerButtonPlacement();
+        void ShowEscapeToast();
+
+        // A performer's screen must not blank mid set.
+        void HoldDisplayAwake(_In_ bool hold);
 
         // ---- devices and sending ----
 
@@ -94,6 +122,7 @@ namespace winrt::midiglass::implementation
         void OnControlValueChanged(_In_ size_t itemIndex, _In_ double value, _In_ bool isFinal);
         void OnControlSetDirectly(_In_ size_t itemIndex, _In_ double value);
         void OnControlSwitched(_In_ size_t itemIndex, _In_ bool isOn);
+        void OnControlTouched(_In_ size_t itemIndex, _In_ bool isTouched);
 
         void OnFeedbackMoved(_In_ uint32_t controlIndex, _In_ double value);
 
@@ -120,6 +149,15 @@ namespace winrt::midiglass::implementation
         bool m_closing{ false };
         bool m_updatingChrome{ false };
         bool m_fullScreen{ false };
+
+        // The corner button settles back to a quarter opacity once it has been seen, unless the
+        // pointer is on it.
+        xaml::DispatcherTimer m_cornerFadeTimer{ nullptr };
+        xaml::DispatcherTimer m_toastTimer{ nullptr };
+        bool m_cornerHovered{ false };
+
+        winrt::Windows::System::Display::DisplayRequest m_displayRequest{ nullptr };
+        bool m_displayHeld{ false };
     };
 }
 

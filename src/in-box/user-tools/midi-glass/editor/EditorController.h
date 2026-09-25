@@ -35,6 +35,7 @@ namespace glass
         inline constexpr wchar_t Properties[]{ L"EditControlProperties" };
         inline constexpr wchar_t Messages[]{ L"EditControlMessages" };
         inline constexpr wchar_t Arrange[]{ L"EditArrangeControls" };
+        inline constexpr wchar_t ZOrder[]{ L"EditZOrder" };
         inline constexpr wchar_t Repeat[]{ L"EditRepeatControls" };
         inline constexpr wchar_t KeyboardOrder[]{ L"EditKeyboardOrder" };
         inline constexpr wchar_t PageSize[]{ L"EditPageSize" };
@@ -43,6 +44,7 @@ namespace glass
         inline constexpr wchar_t PageProperties[]{ L"EditPageProperties" };
         inline constexpr wchar_t LayoutProperties[]{ L"EditLayoutProperties" };
         inline constexpr wchar_t Devices[]{ L"EditDeviceTable" };
+        inline constexpr wchar_t Sequence[]{ L"EditSequence" };
     }
 
     // The page size is changing. What the grow and shrink dialogs hand back.
@@ -168,6 +170,11 @@ namespace glass
         bool DistributeSelection(_In_ ArrangeAxis axis);
         bool SetSelectionGap(_In_ ArrangeAxis axis, _In_ double gap);
 
+        // Which controls are drawn over which. A page is painted in the order its controls are
+        // stored, so this reorders that list; nothing else about a control changes, and the
+        // keyboard order is a separate idea that this leaves alone.
+        bool ChangeZOrder(_In_ ZOrderMove move);
+
         // What the spacing pills show. Empty when fewer than two are selected.
         std::vector<double> SelectionGaps(_In_ ArrangeAxis axis) const;
 
@@ -186,6 +193,7 @@ namespace glass
         bool SetControlLabelPlacement(_In_ std::wstring const& id, _In_ LabelPlacementOverride placement);
         bool SetControlShowValue(_In_ std::wstring const& id, _In_ ShowValueOverride showValue);
         bool SetControlDefaultValue(_In_ std::wstring const& id, _In_ double value);
+        bool SetControlReturnsToDefault(_In_ std::wstring const& id, _In_ bool returns);
         bool SetControlSendsValueOnStart(_In_ std::wstring const& id, _In_ bool sends);
         bool SetControlSendInterval(_In_ std::wstring const& id, _In_ int32_t milliseconds);
         bool SetControlPickup(_In_ std::wstring const& id, _In_ PickupMode pickup);
@@ -234,6 +242,19 @@ namespace glass
         bool AddDevice(_In_ DeviceEntry const& device);
         bool RemoveDevice(_In_ std::wstring const& name);
         bool RenameDevice(_In_ std::wstring const& oldName, _In_ std::wstring const& newName);
+
+        // ------------------------------------------------------------------ sequences
+
+        // A layout-wide list, not a property of one control, so two buttons can play the same
+        // sequence and a change reaches both. Returns the name it ended up with, which is not
+        // the one asked for when that name was taken.
+        std::wstring AddSequence(_In_ std::wstring const& name);
+
+        // Replaces one sequence whole. The editor builds the new steps in a dialog and hands
+        // them over at the end, so a canceled dialog leaves nothing behind.
+        bool SetSequence(_In_ std::wstring const& name, _In_ glass::Sequence const& sequence);
+
+        bool RemoveSequence(_In_ std::wstring const& name);
 
         // ------------------------------------------------------------------ undo
 

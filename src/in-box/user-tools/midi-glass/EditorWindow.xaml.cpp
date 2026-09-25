@@ -134,6 +134,7 @@ namespace winrt::midiglass::implementation
             BuildInspectorChoices();
             BuildPalette();
             InitializeSplitters();
+            AddZOrderAccelerators();
 
             m_updatingInspector = false;
 
@@ -376,9 +377,22 @@ namespace winrt::midiglass::implementation
             // Editing is not blocked in Try mode, but a rubber band over a live surface is, so
             // the tools that only make sense against a selection say so.
             RepeatButton().IsEnabled(selected > 0 && !m_tryMode);
-            ArrangeButton().IsEnabled(selected > 1 && !m_tryMode);
             AlignLeftButton().IsEnabled(selected > 1 && !m_tryMode);
             AlignCenterButton().IsEnabled(selected > 1 && !m_tryMode);
+
+            // The Arrange flyout carries the drawing order as well as the alignment, and
+            // sending one panel to the back is the whole reason somebody opens it. It needs a
+            // selection, not two; the items that need two say so themselves.
+            ArrangeButton().IsEnabled(selected > 0 && !m_tryMode);
+
+            for (auto const& item : { AlignLeftItem(), AlignCenterXItem(), AlignRightItem(),
+                AlignTopItem(), AlignCenterYItem(), AlignBottomItem() })
+            {
+                item.IsEnabled(selected > 1);
+            }
+
+            SpreadAcrossItem().IsEnabled(selected > 2);
+            SpreadDownItem().IsEnabled(selected > 2);
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to update the status bar.")
     }
@@ -520,6 +534,82 @@ namespace winrt::midiglass::implementation
         }
     }
 
+    // The square bracket keys have no name in the virtual key enum, so an accelerator for them
+    // cannot be written in markup at all: a number where the enum is expected fails to parse at
+    // run time, and the whole window fails to open with it.
+    void EditorWindow::AddZOrderAccelerators()
+    {
+        try
+        {
+            constexpr auto OpenBracket = static_cast<winrt::Windows::System::VirtualKey>(0xDB);
+            constexpr auto CloseBracket = static_cast<winrt::Windows::System::VirtualKey>(0xDD);
+
+            struct Shortcut
+            {
+                winrt::Windows::System::VirtualKey Key{};
+                winrt::Windows::System::VirtualKeyModifiers Modifiers{};
+            };
+
+            Shortcut const shortcuts[]
+            {
+                { CloseBracket, winrt::Windows::System::VirtualKeyModifiers::Control },
+                { OpenBracket, winrt::Windows::System::VirtualKeyModifiers::Control },
+                { CloseBracket,
+                  winrt::Windows::System::VirtualKeyModifiers::Control | winrt::Windows::System::VirtualKeyModifiers::Shift },
+                { OpenBracket,
+                  winrt::Windows::System::VirtualKeyModifiers::Control | winrt::Windows::System::VirtualKeyModifiers::Shift },
+            };
+
+            for (auto const& shortcut : shortcuts)
+            {
+                xaml::Input::KeyboardAccelerator accelerator{};
+
+                accelerator.Key(shortcut.Key);
+                accelerator.Modifiers(shortcut.Modifiers);
+
+                accelerator.Invoked({ this, &EditorWindow::OnZOrderAccelerator });
+
+                RootGrid().KeyboardAccelerators().Append(accelerator);
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to add the z-order shortcuts.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnZOrderAccelerator(
+        xaml::Input::KeyboardAccelerator const& sender,
+        xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args)
+    {
+        args.Handled(true);
+
+        try
+        {
+            if (sender == nullptr)
+            {
+                return;
+            }
+
+            auto const shifted =
+                (sender.Modifiers() & winrt::Windows::System::VirtualKeyModifiers::Shift) ==
+                winrt::Windows::System::VirtualKeyModifiers::Shift;
+
+            auto const forward = sender.Key() == static_cast<winrt::Windows::System::VirtualKey>(0xDD);
+
+            auto const move =
+                shifted ? (forward ? glass::ZOrderMove::ToFront : glass::ZOrderMove::ToBack)
+                        : (forward ? glass::ZOrderMove::Forward : glass::ZOrderMove::Backward);
+
+            if (m_editor.ChangeZOrder(move))
+            {
+                RebuildSurface();
+                RebuildOutline();
+                RefreshInspector();
+                MarkChanged();
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to change the drawing order.")
+    }
+
     _Use_decl_annotations_
     void EditorWindow::OnArrangeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
     {
@@ -548,10 +638,15 @@ namespace winrt::midiglass::implementation
             else if (tag == L"alignbottom") { changed = m_editor.AlignSelection(glass::AlignEdge::Bottom); }
             else if (tag == L"spreadx") { changed = m_editor.DistributeSelection(glass::ArrangeAxis::Horizontal); }
             else if (tag == L"spready") { changed = m_editor.DistributeSelection(glass::ArrangeAxis::Vertical); }
+            else if (tag == L"tofront") { changed = m_editor.ChangeZOrder(glass::ZOrderMove::ToFront); }
+            else if (tag == L"forward") { changed = m_editor.ChangeZOrder(glass::ZOrderMove::Forward); }
+            else if (tag == L"backward") { changed = m_editor.ChangeZOrder(glass::ZOrderMove::Backward); }
+            else if (tag == L"toback") { changed = m_editor.ChangeZOrder(glass::ZOrderMove::ToBack); }
 
             if (changed)
             {
                 RebuildSurface();
+                RebuildOutline();
                 RefreshInspector();
                 MarkChanged();
             }

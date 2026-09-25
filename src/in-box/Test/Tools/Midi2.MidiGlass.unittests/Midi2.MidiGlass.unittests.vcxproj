@@ -99,6 +99,8 @@
     <ClInclude Include="ThemeFileTests.h" />
     <ClInclude Include="ThumbnailLayoutTests.h" />
     <ClInclude Include="BindingEngineTests.h" />
+    <ClInclude Include="ActionPlanTests.h" />
+    <ClInclude Include="LearnCaptureTests.h" />
     <ClInclude Include="MonitorFormatTests.h" />
     <ClInclude Include="ValueThrottleTests.h" />
     <ClInclude Include="RuntimeSurfaceTests.h" />
@@ -120,6 +122,9 @@
     <ClInclude Include="..\..\..\user-tools\midi-glass\surface\InputRules.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\thumbnail\ThumbnailLayout.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\binding\BindingEngine.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\binding\ActionPlan.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\binding\LearnCapture.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\document\HexText.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\binding\MonitorFormat.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\binding\ValueThrottle.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\editor\ArrangeOps.h" />
@@ -138,6 +143,8 @@
     <ClCompile Include="ThemeFileTests.cpp" />
     <ClCompile Include="ThumbnailLayoutTests.cpp" />
     <ClCompile Include="BindingEngineTests.cpp" />
+    <ClCompile Include="ActionPlanTests.cpp" />
+    <ClCompile Include="LearnCaptureTests.cpp" />
     <ClCompile Include="MonitorFormatTests.cpp" />
     <ClCompile Include="ValueThrottleTests.cpp" />
     <ClCompile Include="RuntimeSurfaceTests.cpp" />
@@ -158,6 +165,9 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\surface\InputRules.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\thumbnail\ThumbnailLayout.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\binding\BindingEngine.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\binding\ActionPlan.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\binding\LearnCapture.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\document\HexText.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\binding\MonitorFormat.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\binding\ValueThrottle.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\ArrangeOps.cpp" />

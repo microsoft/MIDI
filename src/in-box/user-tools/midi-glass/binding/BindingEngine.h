@@ -139,6 +139,19 @@ namespace glass
         // The nearest stop to this position, or the position unchanged where there are none.
         double SnapToDetent(_In_ size_t controlIndex, _In_ double position) const noexcept;
 
+        // What this control's first message would put on the wire at this position, for the
+        // number a control can show inside itself.
+        //
+        // Returns false when the control sends nothing. `isAbsolute` is what decides how it
+        // should be read: somebody who typed 0 to 127 out of a device manual wants to see 64,
+        // and somebody who left it at 0 % to 100 % wants to see a percentage. Showing a
+        // percentage to the first of them is exactly the complaint the ranges exist to answer.
+        bool TryDescribeValue(
+            _In_ size_t controlIndex,
+            _In_ double position,
+            _Out_ uint32_t& value,
+            _Out_ bool& isAbsolute) const noexcept;
+
     private:
         struct PreparedFeedback
         {

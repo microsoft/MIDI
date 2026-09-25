@@ -125,6 +125,8 @@ namespace winrt::midiglass::implementation
                     MinimumMonitorHeight,
                     MaximumMonitorHeight);
 
+                m_monitorHeight = height;
+
                 MonitorRow().Height(xaml::GridLengthHelper::FromPixels(height));
             }
         }

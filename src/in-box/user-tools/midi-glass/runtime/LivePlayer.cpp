@@ -32,6 +32,11 @@ namespace glass
     LivePlayer::~LivePlayer() noexcept
     {
         m_stopping = true;
+
+        if (m_runner != nullptr)
+        {
+            m_runner->Stop();
+        }
     }
 
     _Use_decl_annotations_
@@ -53,6 +58,38 @@ namespace glass
         RebuildThrottles();
 
         std::weak_ptr<LivePlayer> weak{ shared_from_this() };
+
+        m_runner = SequenceRunner::Create();
+
+        m_runner->Send = [weak](uint32_t controlIndex, int32_t destinationIndex, uint32_t const* words, uint32_t wordCount)
+            {
+                if (auto strong = weak.lock())
+                {
+                    strong->SendWords(controlIndex, destinationIndex, words, wordCount);
+                }
+            };
+
+        m_runner->SetControlValue = [weak](uint32_t controlIndex, double value)
+            {
+                auto strong = weak.lock();
+
+                if (strong != nullptr && strong->ControlValueSet)
+                {
+                    strong->ControlValueSet(controlIndex, value);
+                }
+            };
+
+        m_runner->GoToPage = [weak](uint32_t pageIndex)
+            {
+                auto strong = weak.lock();
+
+                if (strong != nullptr && strong->PageRequested)
+                {
+                    strong->PageRequested(pageIndex);
+                }
+            };
+
+        m_runner->Start(dispatcher);
 
         m_devices.SetChangedHandler([weak]()
             {
@@ -131,6 +168,11 @@ namespace glass
 
         m_sendTable.clear();
 
+        if (m_runner != nullptr)
+        {
+            m_runner->Stop();
+        }
+
         auto const ownerId = m_ownerId;
 
         std::thread([ownerId]()
@@ -203,6 +245,7 @@ namespace glass
         // Every device name resolves to an index here, once, so nothing on the path a finger
         // takes ever compares a string.
         m_engine.Prepare(m_document, m_devices.BuildDestinations());
+        m_plans.Prepare(m_document, m_engine.Destinations());
 
         if (DevicesChanged)
         {
@@ -234,11 +277,11 @@ namespace glass
                     std::vector<winrt::com_ptr<IMidiEndpointConnectionRaw>> table{};
 
                     FeedbackHandler handler =
-                        [weak](std::wstring const&, uint64_t, uint32_t wordCount, uint32_t const* words)
+                        [weak](std::wstring const& endpointDeviceId, uint64_t, uint32_t wordCount, uint32_t const* words)
                         {
                             if (auto strong = weak.lock())
                             {
-                                strong->OnFeedbackWords(wordCount, words);
+                                strong->OnFeedbackWords(endpointDeviceId, wordCount, words);
                             }
                         };
 
@@ -383,12 +426,159 @@ namespace glass
         SendPrepared(
             controlIndex,
             m_engine.Evaluate(controlIndex, MessageTrigger::Changes, isOn ? 1.0 : 0.0, m_sends));
+
+        RunPlan(controlIndex, isOn ? MessageTrigger::TurnsOn : MessageTrigger::TurnsOff);
+    }
+
+    _Use_decl_annotations_
+    void LivePlayer::Touched(uint32_t controlIndex, bool isTouched)
+    {
+        SendPrepared(
+            controlIndex,
+            m_engine.Evaluate(
+                controlIndex,
+                isTouched ? MessageTrigger::Touched : MessageTrigger::Released,
+                isTouched ? 1.0 : 0.0,
+                m_sends));
+
+        RunPlan(controlIndex, isTouched ? MessageTrigger::Touched : MessageTrigger::Released);
+    }
+
+    _Use_decl_annotations_
+    void LivePlayer::RunPlan(uint32_t controlIndex, MessageTrigger trigger) noexcept
+    {
+        if (!m_outputEnabled || m_runner == nullptr)
+        {
+            return;
+        }
+
+        // Lifting the finger stops anything that was running while it was held.
+        if (trigger == MessageTrigger::TurnsOff || trigger == MessageTrigger::Released)
+        {
+            auto const* const held = m_plans.Find(
+                controlIndex,
+                trigger == MessageTrigger::TurnsOff ? MessageTrigger::TurnsOn : MessageTrigger::Touched);
+
+            if (held != nullptr && held->StopsOnRelease)
+            {
+                m_runner->CancelFor(controlIndex);
+            }
+        }
+
+        auto const* const plan = m_plans.Find(controlIndex, trigger);
+
+        if (plan == nullptr)
+        {
+            return;
+        }
+
+        // A plan that runs until the next press means exactly that: the second press stops it
+        // rather than starting a second copy.
+        if (plan->Loops && !plan->StopsOnRelease && m_runner->IsRunning(controlIndex))
+        {
+            m_runner->CancelFor(controlIndex);
+            return;
+        }
+
+        m_runner->Run(controlIndex, *plan);
+    }
+
+    _Use_decl_annotations_
+    void LivePlayer::SendWords(
+        uint32_t controlIndex,
+        int32_t destinationIndex,
+        uint32_t const* words,
+        uint32_t wordCount) noexcept
+    {
+        if (!m_outputEnabled || words == nullptr || wordCount == 0)
+        {
+            return;
+        }
+
+        if (destinationIndex < 0 || static_cast<size_t>(destinationIndex) >= m_sendTable.size())
+        {
+            return;
+        }
+
+        auto const& connection = m_sendTable[static_cast<size_t>(destinationIndex)];
+
+        if (connection == nullptr)
+        {
+            return;
+        }
+
+        try
+        {
+            // A dump is thousands of packets and a connection has its own limit on how many
+            // words one call may carry, so it goes out in whatever bites that connection
+            // accepts rather than in one call that would be rejected whole.
+            auto const limit = std::max<uint32_t>(
+                2, OutputRouter::Current().MaximumWordsPerSend(connection));
+
+            uint32_t offset{ 0 };
+
+            while (offset < wordCount)
+            {
+                auto const remaining = wordCount - offset;
+                auto bite = std::min(limit, remaining);
+
+                // Never split a 64 bit message down the middle: half of a system exclusive
+                // packet is a malformed packet, not a smaller one.
+                if (bite < remaining && (bite % 2) != 0)
+                {
+                    --bite;
+                }
+
+                if (bite == 0)
+                {
+                    break;
+                }
+
+                connection->SendMidiMessagesRaw(0, bite, const_cast<uint32_t*>(words) + offset);
+
+                if (Sent)
+                {
+                    SentMessage message{};
+
+                    message.TimestampMilliseconds = NowMilliseconds();
+                    message.ControlIndex = controlIndex;
+                    message.DestinationIndex = destinationIndex;
+                    message.WordCount = std::min<uint32_t>(bite, 4);
+
+                    for (uint32_t word = 0; word < message.WordCount; ++word)
+                    {
+                        message.Words[word] = words[offset + word];
+                    }
+
+                    Sent(message);
+                }
+
+                offset += bite;
+            }
+        }
+        catch (...)
+        {
+        }
     }
 
     _Use_decl_annotations_
     double LivePlayer::SnapToDetent(uint32_t controlIndex, double position) const
     {
         return m_engine.SnapToDetent(controlIndex, position);
+    }
+
+    _Use_decl_annotations_
+    std::wstring LivePlayer::DescribeValue(uint32_t controlIndex, double position) const
+    {
+        uint32_t value{ 0 };
+        bool isAbsolute{ false };
+
+        if (m_engine.TryDescribeValue(controlIndex, position, value, isAbsolute) && isAbsolute)
+        {
+            return std::to_wstring(value);
+        }
+
+        return std::to_wstring(static_cast<int32_t>(std::lround(position * 100.0))) + L" %";
     }
 
     void LivePlayer::SendStartupValues()
@@ -455,9 +645,19 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    void LivePlayer::OnFeedbackWords(uint32_t wordCount, uint32_t const* words)
+    void LivePlayer::OnFeedbackWords(
+        std::wstring const& endpointDeviceId,
+        uint32_t wordCount,
+        uint32_t const* words)
     {
-        if (words == nullptr || wordCount == 0 || m_dispatcher == nullptr || !FeedbackMoved)
+        if (words == nullptr || wordCount == 0 || m_dispatcher == nullptr)
+        {
+            return;
+        }
+
+        auto const learning = m_learning.load();
+
+        if (!learning && !FeedbackMoved)
         {
             return;
         }
@@ -465,6 +665,7 @@ namespace glass
         // This is a service callback thread and the buffer belongs to the caller, so what is
         // wanted is resolved here and only the answer is marshalled.
         std::vector<std::pair<uint32_t, double>> moves{};
+        std::vector<LearnedBinding> captures{};
 
         uint32_t position{ 0 };
 
@@ -480,33 +681,55 @@ namespace glass
             size_t controlIndex{ 0 };
             double value{ 0.0 };
 
-            if (m_engine.TryResolveFeedback(words + position, length, controlIndex, value))
+            if (FeedbackMoved && m_engine.TryResolveFeedback(words + position, length, controlIndex, value))
             {
                 moves.emplace_back(static_cast<uint32_t>(controlIndex), value);
+            }
+
+            if (learning)
+            {
+                LearnedBinding learned{};
+
+                if (TryLearnFromWords(words + position, length, learned) && IsWorthLearning(learned))
+                {
+                    learned.DeviceName = m_devices.NameForEndpoint(endpointDeviceId);
+
+                    captures.push_back(std::move(learned));
+                }
             }
 
             position += length;
         }
 
-        if (moves.empty())
+        if (moves.empty() && captures.empty())
         {
             return;
         }
 
         std::weak_ptr<LivePlayer> weak{ weak_from_this() };
 
-        m_dispatcher.TryEnqueue([weak, moves]()
+        m_dispatcher.TryEnqueue([weak, moves, captures]()
             {
                 auto strong = weak.lock();
 
-                if (strong == nullptr || strong->m_stopping || !strong->FeedbackMoved)
+                if (strong == nullptr || strong->m_stopping)
                 {
                     return;
                 }
 
-                for (auto const& [controlIndex, value] : moves)
+                if (strong->FeedbackMoved)
                 {
-                    strong->FeedbackMoved(controlIndex, value);
+                    for (auto const& [controlIndex, value] : moves)
+                    {
+                        strong->FeedbackMoved(controlIndex, value);
+                    }
+                }
+
+                // One capture per arrival. A knob swept across its travel sends a hundred
+                // messages and only the first of them should arm anything.
+                if (strong->Learned && strong->m_learning.load() && !captures.empty())
+                {
+                    strong->Learned(captures.front());
                 }
             });
     }

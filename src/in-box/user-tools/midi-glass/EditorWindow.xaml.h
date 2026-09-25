@@ -9,6 +9,7 @@
 
 #include "EditorWindow.g.h"
 
+#include "EditorItems.h"
 #include "WindowChrome.h"
 #include "LayoutModel.h"
 #include "ThemeModel.h"
@@ -66,6 +67,11 @@ namespace winrt::midiglass::implementation
         void OnMonitorClearClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnMonitorExpandClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        // ---- learn (EditorLearn.cpp) ----
+
+        void OnLearnOneToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnLearnBankToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
         // ---- accelerators ----
 
         void OnUndoAccelerator(xaml::Input::KeyboardAccelerator const& sender, xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
@@ -76,6 +82,8 @@ namespace winrt::midiglass::implementation
         void OnDeleteAccelerator(xaml::Input::KeyboardAccelerator const& sender, xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
         void OnEscapeAccelerator(xaml::Input::KeyboardAccelerator const& sender, xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
         void OnTryAccelerator(xaml::Input::KeyboardAccelerator const& sender, xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
+
+        void OnZOrderAccelerator(xaml::Input::KeyboardAccelerator const& sender, xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
 
         // ---- palette and outline ----
 
@@ -134,7 +142,16 @@ namespace winrt::midiglass::implementation
         void OnMessageFieldChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnMessageNumberChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
 
+        void OnSysExChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnSysExFromFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnRawWordsChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnSequenceChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnNewSequenceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnEditSequenceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnTargetPageChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+
         void OnSendOnStartToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnReturnsToDefaultToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnDefaultValueChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
         void OnSendIntervalChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnPickupChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
@@ -147,6 +164,10 @@ namespace winrt::midiglass::implementation
 
         void BuildPage();
         void RebuildSurface();
+
+        // Bracket and square bracket have no name in the virtual key enum, so they cannot be
+        // written in markup and are attached here instead.
+        void AddZOrderAccelerators();
         void RebuildGrid();
         void UpdateOverlay();
 
@@ -164,6 +185,11 @@ namespace winrt::midiglass::implementation
         void UpdateDeckBrushes();
         void UpdateOffPageBar();
         void RebuildPageRail();
+
+        // A page tab or a sequence step asked for another page. One path, so a page change
+        // cannot half happen.
+        void ShowEditorPage(_In_ size_t pageIndex);
+
         void InitializeSplitters();
 
         // Work area coordinates to page coordinates. The work area starts at a negative offset,
@@ -202,6 +228,16 @@ namespace winrt::midiglass::implementation
         void RefreshInspectorGeometry();
         void RefreshMessageList();
         void RefreshMessageFields();
+
+        // Which of the message rows make sense for the kind of message this is.
+        void RefreshMessageKindFields(_In_ glass::Control const& control);
+        void RefreshMessageKindFields(_In_ glass::ControlMessage const& message);
+        void RefreshSequenceChoices(_In_ std::wstring const& selectedName);
+
+        // Reads the selected message, hands it to the caller to change, and writes it back if
+        // the caller says something changed. One path, so every payload field is saved the same
+        // way and none of them can forget to mark the layout dirty.
+        bool TryEditSelectedMessage(_In_ std::function<bool(glass::ControlMessage&)> const& edit);
         void SyncStyleSegments(_In_ glass::ControlStyleOverride style);
         void RefreshPreview(_In_ glass::Control const& control);
 
@@ -226,9 +262,20 @@ namespace winrt::midiglass::implementation
         winrt::fire_and_forget ShowPageSizeDialog();
         winrt::fire_and_forget ShowRenameDialog();
 
+        // ---- the sequence editor (EditorSequenceDialog.cpp) ----
+
+        winrt::fire_and_forget ShowSequenceDialog(_In_ std::wstring sequenceName);
+
+        // A .syx file, read whole. False when nothing was chosen or the file is not usable.
+        bool TryReadSystemExclusiveFile(_Out_ std::vector<uint8_t>& bytes);
+
         // ---- Edit and Try (EditorTryMode.cpp) ----
 
         void SetTryMode(_In_ bool tryMode);
+
+        // Opens the connections without enabling output. Try mode and Learn share one player,
+        // because creating two would open the same devices twice.
+        void StartPlayerForLearning();
 
         // The surface only takes input in Try mode. In Edit mode every press belongs to the
         // overlay, which is what selection, handles and guides are built on.
@@ -239,6 +286,9 @@ namespace winrt::midiglass::implementation
         void OnTryFeedbackMoved(_In_ uint32_t controlIndex, _In_ double value);
 
         void AppendMonitorRow(_In_ glass::SentMessage const& message);
+        void AppendMonitorItem(_In_ glass::SentMessage const& message);
+        bool IsMonitoredControl(_In_ uint32_t controlIndex) const;
+        winrt::com_ptr<MonitorItem> MakeMonitorItem(_In_ glass::SentMessage const& message) const;
         void RebuildMonitorList();
         void UpdateMonitorEmptyText();
 
@@ -343,6 +393,42 @@ namespace winrt::midiglass::implementation
 
         bool m_tryMode{ false };
 
+        // ---- learn ----
+
+        enum class LearnMode
+        {
+            Off = 0,
+
+            // Arm, wiggle, done. The common case.
+            One = 1,
+
+            // Arm, then touch eight knobs in order, and eight controls fill in keyboard order.
+            // This is how somebody mirrors a hardware controller in about a minute.
+            Bank = 2,
+        };
+
+        void SetLearnMode(_In_ LearnMode mode);
+        void UpdateLearnStatus();
+        void OnLearned(_In_ glass::LearnedBinding const& learned);
+        std::wstring SelectedLearnTargetId() const;
+        std::vector<std::wstring> ControlsInKeyboardOrder() const;
+
+        bool ApplyLearnedToControl(
+            _In_ std::wstring const& controlId,
+            _In_ glass::LearnedBinding const& learned,
+            _In_ glass::LearnAcceptance const& accept);
+
+        LearnMode m_learnMode{ LearnMode::Off };
+
+        std::vector<std::wstring> m_learnBankOrder{};
+        size_t m_learnFilled{ 0 };
+
+        // The last capture, so a knob swept across its travel fills one control rather than a
+        // hundred.
+        glass::LearnedBinding m_learnLast{};
+        uint64_t m_learnLastTimestamp{ 0 };
+        bool m_learnHasLast{ false };
+
         glass::InputRouter m_input{};
         std::shared_ptr<glass::LivePlayer> m_player{};
 
@@ -360,9 +446,16 @@ namespace winrt::midiglass::implementation
         bool m_monitorSelectedOnly{ true };
         bool m_monitorExpanded{ true };
 
+        // What the rail goes back to when it is opened again. The comp's rail is 104 px.
+        double m_monitorHeight{ 104.0 };
+
         // How many rows the list is showing. Kept here because asking the ListView throws once
         // its ItemsSource is set.
         uint32_t m_monitorVisibleCount{ 0 };
+
+        // The list the rail is bound to, kept so a message can append one row rather than
+        // rebuilding every row.
+        foundation::Collections::IObservableVector<foundation::IInspectable> m_monitorItems{ nullptr };
 
         winrt::Microsoft::UI::Dispatching::DispatcherQueue m_dispatcher{ nullptr };
 

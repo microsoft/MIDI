@@ -56,6 +56,7 @@ namespace glass
         case ControlKind::Readout:
         case ControlKind::Label:
         case ControlKind::Image:
+        case ControlKind::Panel:
             return false;
 
         default:

@@ -44,6 +44,8 @@ namespace glass
             binding.ItemIndex = i;
             binding.Kind = kind;
             binding.Value = element.SurfaceValue();
+            binding.ReturnsToRest = renderer.ReturnsToRestAt(i);
+            binding.RestValue = renderer.RestValueAt(i);
 
             m_bindings.push_back(std::move(binding));
         }
@@ -359,6 +361,14 @@ namespace glass
         if (IsToggling(binding.Kind))
         {
             return;
+        }
+
+        // A pitch wheel springs back the moment the finger leaves it. It is published as the end
+        // of the same gesture rather than as a new one, so the throttle's trailing send carries
+        // the rest value and the desk cannot be left holding a bend.
+        if (binding.ReturnsToRest)
+        {
+            binding.Value = binding.RestValue;
         }
 
         // The last value is always sent. Without this a throttled fader settles a few units from

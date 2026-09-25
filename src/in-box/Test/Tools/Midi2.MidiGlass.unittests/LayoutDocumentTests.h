@@ -53,4 +53,12 @@ public:
 
     // ---- the page and the canvas ----
     TEST_METHOD(FindsControlsOutsideThePage);
+
+    // ---- hexadecimal in and out ----
+    TEST_METHOD(HexBytesRoundTrip);
+    TEST_METHOD(HexAcceptsWhatSomebodyWouldPaste);
+    TEST_METHOD(HalfAByteIsRefusedWhole);
+    TEST_METHOD(SomethingThatIsNotHexIsRefusedWhole);
+    TEST_METHOD(HexIsBounded);
+    TEST_METHOD(HexWordsRoundTrip);
 };

@@ -170,6 +170,7 @@
     <ClInclude Include="thumbnail\ThumbnailRenderer.h" />
     <ClInclude Include="runtime\DeviceCatalog.h" />
     <ClInclude Include="runtime\LivePlayer.h" />
+    <ClInclude Include="runtime\SequenceRunner.h" />
     <ClInclude Include="runtime\OutputRouter.h" />
     <ClInclude Include="runtime\PanicMessages.h" />
     <ClInclude Include="runtime\SurfaceScale.h" />
@@ -181,6 +182,9 @@
     <ClInclude Include="surface\SurfaceColors.h" />
     <ClInclude Include="surface\SurfaceRenderer.h" />
     <ClInclude Include="binding\BindingEngine.h" />
+    <ClInclude Include="binding\ActionPlan.h" />
+    <ClInclude Include="binding\LearnCapture.h" />
+    <ClInclude Include="document\HexText.h" />
     <ClInclude Include="binding\MonitorFormat.h" />
     <ClInclude Include="binding\ValueThrottle.h" />
     <ClInclude Include="editor\ArrangeOps.h" />
@@ -212,6 +216,7 @@
       <DependentUpon>RuntimeWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="RuntimeWindowDevices.cpp" />
+    <ClCompile Include="RuntimeWindowFullScreen.cpp" />
     <ClCompile Include="EditorWindow.xaml.cpp">
       <DependentUpon>EditorWindow.xaml</DependentUpon>
     </ClCompile>
@@ -219,6 +224,8 @@
     <ClCompile Include="EditorInspector.cpp" />
     <ClCompile Include="EditorOutline.cpp" />
     <ClCompile Include="EditorDialogs.cpp" />
+    <ClCompile Include="EditorLearn.cpp" />
+    <ClCompile Include="EditorSequenceDialog.cpp" />
     <ClCompile Include="EditorPanes.cpp" />
     <ClCompile Include="EditorTryMode.cpp" />
     <ClCompile Include="..\midi-app-shared\SingleInstance.cpp" />
@@ -261,6 +268,15 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="binding\BindingEngine.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="binding\ActionPlan.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="binding\LearnCapture.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\HexText.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="binding\ValueThrottle.cpp">
@@ -308,6 +324,7 @@
     <ClCompile Include="runtime\DeviceCatalog.cpp" />
     <ClCompile Include="surface\DeckBrush.cpp" />
     <ClCompile Include="runtime\LivePlayer.cpp" />
+    <ClCompile Include="runtime\SequenceRunner.cpp" />
     <ClCompile Include="runtime\OutputRouter.cpp" />
     <ClCompile Include="surface\GlassControl.cpp" />
     <ClCompile Include="surface\InputRouter.cpp" />

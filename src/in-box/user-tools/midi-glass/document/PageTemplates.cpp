@@ -34,6 +34,10 @@ namespace glass
             case ControlKind::Label:    return { 120, 24 };
             case ControlKind::Image:    return { 120, 120 };
             case ControlKind::PageTab:  return { 120, 36 };
+
+            // Big enough to hold a row of four faders and their labels, which is the smallest
+            // thing anybody draws a box around.
+            case ControlKind::Panel:    return { 280, 220 };
             }
 
             return { 56, 56 };

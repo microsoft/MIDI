@@ -102,6 +102,10 @@ namespace glass
                 { PaletteArtShape::Sample, 26, 14, 0, 0.00, 0.00, L"Aa" } },
             { ControlKind::Image,   L"PaletteImage",   L"PaletteGroupDisplay", L'\uEB9F',
                 { PaletteArtShape::Glyph, 18, 18, 0, 0.00, 0.00, L"\uEB9F" } },
+
+            // ---- Grouping ----
+            { ControlKind::Panel,   L"PalettePanel",   L"PaletteGroupLayout", L'\uE7C1',
+                { PaletteArtShape::Rectangle, 24, 16, 3, 0.70, 0.00 } },
         };
 
         return entries;
@@ -133,6 +137,7 @@ namespace glass
         case ControlKind::Label:
         case ControlKind::Image:
         case ControlKind::PageTab:
+        case ControlKind::Panel:
             return false;
 
         default:
@@ -198,6 +203,15 @@ namespace glass
         control.HueSlot = NextHueSlot(page);
         control.KeyboardOrder = NextKeyboardOrder(page);
         control.AspectLocked = IsSquareByNature(kind);
+
+        // A frame, not a filled box. A grouping panel that arrives as a solid plate competes
+        // with the controls it is there to group; Plate and Solid are one click away in the
+        // inspector for somebody who wants them.
+        if (kind == ControlKind::Panel)
+        {
+            control.Style = ControlStyleOverride::Outline;
+            control.LabelPlaced = LabelPlacementOverride::Inside;
+        }
 
         if (!SendsAnything(kind))
         {

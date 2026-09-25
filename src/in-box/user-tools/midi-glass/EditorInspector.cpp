@@ -14,6 +14,7 @@
 #include "StringResources.h"
 #include "ControlFactory.h"
 #include "SurfaceColors.h"
+#include "HexText.h"
 
 #include <format>
 
@@ -42,13 +43,14 @@ namespace winrt::midiglass::implementation
             glass::ControlKind::Label,
             glass::ControlKind::Image,
             glass::ControlKind::PageTab,
+            glass::ControlKind::Panel,
         };
 
         constexpr wchar_t const* KindResourceKeys[]
         {
             L"PaletteKnob", L"PaletteEncoder", L"PaletteFader", L"PalettePad", L"PaletteButton",
             L"PaletteToggle", L"PaletteXYPad", L"PaletteMeter", L"PaletteLamp", L"PaletteReadout",
-            L"PaletteLabel", L"PaletteImage", L"PalettePageTab",
+            L"PaletteLabel", L"PaletteImage", L"PalettePageTab", L"PalettePanel",
         };
 
         static_assert(std::size(KindOrder) == std::size(KindResourceKeys));
@@ -77,13 +79,18 @@ namespace winrt::midiglass::implementation
             glass::MessageKind::PerNoteController,
             glass::MessageKind::RegisteredController,
             glass::MessageKind::AssignedController,
+            glass::MessageKind::SystemExclusive,
+            glass::MessageKind::RawUmp,
+            glass::MessageKind::Sequence,
+            glass::MessageKind::GoToPage,
         };
 
         constexpr wchar_t const* MessageKindResourceKeys[]
         {
             L"MessageControlChange", L"MessageNote", L"MessageProgramChange", L"MessagePitchBend",
             L"MessageChannelPressure", L"MessagePerNoteController", L"MessageRegisteredController",
-            L"MessageAssignedController",
+            L"MessageAssignedController", L"MessageSystemExclusive", L"MessageRawUmp",
+            L"MessageSequence", L"MessageGoToPage",
         };
 
         static_assert(std::size(MessageKindOrder) == std::size(MessageKindResourceKeys));
@@ -405,15 +412,12 @@ namespace winrt::midiglass::implementation
             LabelPlacedCombo().SelectedIndex(IndexOf(LabelPlacedOrder, control->LabelPlaced));
             ShowValueCombo().SelectedIndex(IndexOf(ShowValueOrder, control->ShowValue));
 
-            // Stored and round-tripped, but the surface has no value readout yet, so offering
-            // to change it would be a promise the app cannot keep.
-            ShowValueCombo().IsEnabled(false);
-
             SyncStyleSegments(control->Style);
             RefreshPreview(*control);
 
             SendOnStartSwitch().IsOn(control->SendsValueOnStart);
             DefaultValueSlider().Value(control->DefaultValue * 100.0);
+            ReturnsToDefaultSwitch().IsOn(control->ReturnsToDefault);
             SendIntervalBox().Value(control->SendIntervalMilliseconds);
             KeyboardOrderBox().Value(control->KeyboardOrder);
 
@@ -519,6 +523,11 @@ namespace winrt::midiglass::implementation
 
             if (!valid)
             {
+                SysExPanel().Visibility(xaml::Visibility::Collapsed);
+                RawWordsPanel().Visibility(xaml::Visibility::Collapsed);
+                SequencePanel().Visibility(xaml::Visibility::Collapsed);
+                TargetPagePanel().Visibility(xaml::Visibility::Collapsed);
+
                 m_updatingInspector = previous;
                 return;
             }
@@ -545,9 +554,128 @@ namespace winrt::midiglass::implementation
             ChannelCombo().SelectedIndex(std::clamp(message.ChannelIndex, 0, 15));
             MessageNumberBox().Value(message.Number);
 
+            RefreshMessageKindFields(message);
+
             m_updatingInspector = previous;
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to refresh the message fields.")
+    }
+
+    // Which of the message rows make sense for this kind. A dump has no controller number and a
+    // control change has no bytes, so showing a field that cannot be answered is worse than
+    // hiding it.
+    _Use_decl_annotations_
+    void EditorWindow::RefreshMessageKindFields(glass::Control const& control)
+    {
+        if (m_messageIndex < 0 || m_messageIndex >= static_cast<int32_t>(control.Messages.size()))
+        {
+            return;
+        }
+
+        RefreshMessageKindFields(control.Messages[static_cast<size_t>(m_messageIndex)]);
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::RefreshMessageKindFields(glass::ControlMessage const& message)
+    {
+        auto const show = [](xaml::UIElement const& element, bool visible)
+            {
+                element.Visibility(visible ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            };
+
+        auto const kind = message.Kind;
+
+        auto const isChannelVoice =
+            kind != glass::MessageKind::SystemExclusive &&
+            kind != glass::MessageKind::RawUmp &&
+            kind != glass::MessageKind::Sequence &&
+            kind != glass::MessageKind::GoToPage;
+
+        auto const usesDevice = kind != glass::MessageKind::Sequence && kind != glass::MessageKind::GoToPage;
+        auto const usesGroup = usesDevice;
+
+        show(MessageDeviceLabel(), usesDevice);
+        show(DeviceCombo(), usesDevice);
+        show(MessageGroupLabel(), usesGroup);
+        show(GroupCombo(), usesGroup);
+        show(MessageChannelLabel(), isChannelVoice);
+        show(ChannelCombo(), isChannelVoice);
+        show(MessageNumberLabel(), isChannelVoice);
+        show(MessageNumberBox(), isChannelVoice);
+
+        show(SysExPanel(), kind == glass::MessageKind::SystemExclusive);
+        show(RawWordsPanel(), kind == glass::MessageKind::RawUmp);
+        show(SequencePanel(), kind == glass::MessageKind::Sequence);
+        show(TargetPagePanel(), kind == glass::MessageKind::GoToPage);
+
+        if (kind == glass::MessageKind::SystemExclusive)
+        {
+            SysExBox().Text(winrt::hstring{ glass::FormatHexBytes(message.SystemExclusive) });
+
+            SysExCaption().Text(message.SystemExclusive.empty()
+                ? resources::GetString(L"SysExEmpty")
+                : resources::FormatString(
+                    L"SysExByteCountFormat", static_cast<int32_t>(message.SystemExclusive.size())));
+        }
+        else if (kind == glass::MessageKind::RawUmp)
+        {
+            RawWordsBox().Text(winrt::hstring{ glass::FormatHexWords(message.RawWords) });
+        }
+        else if (kind == glass::MessageKind::Sequence)
+        {
+            RefreshSequenceChoices(message.SequenceName);
+        }
+        else if (kind == glass::MessageKind::GoToPage)
+        {
+            TargetPageCombo().Items().Clear();
+
+            auto selected = -1;
+
+            for (size_t index = 0; index < m_editor.Document().Pages.size(); ++index)
+            {
+                auto const& page = m_editor.Document().Pages[index];
+
+                TargetPageCombo().Items().Append(box_value(winrt::hstring{ page.Name }));
+
+                if (page.Id == message.TargetPageId)
+                {
+                    selected = static_cast<int32_t>(index);
+                }
+            }
+
+            TargetPageCombo().SelectedIndex(selected);
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::RefreshSequenceChoices(std::wstring const& selectedName)
+    {
+        SequenceCombo().Items().Clear();
+
+        auto selected = -1;
+
+        for (size_t index = 0; index < m_editor.Document().Sequences.size(); ++index)
+        {
+            auto const& sequence = m_editor.Document().Sequences[index];
+
+            SequenceCombo().Items().Append(box_value(winrt::hstring{ sequence.Name }));
+
+            if (sequence.Name == selectedName)
+            {
+                selected = static_cast<int32_t>(index);
+            }
+        }
+
+        SequenceCombo().SelectedIndex(selected);
+
+        auto const* const sequence = m_editor.Document().FindSequence(selectedName);
+
+        EditSequenceButton().IsEnabled(sequence != nullptr);
+
+        SequenceCaption().Text(sequence == nullptr
+            ? resources::GetString(L"SequenceNoneChosen")
+            : resources::FormatString(
+                L"SequenceStepCountFormat", static_cast<int32_t>(sequence->Steps.size())));
     }
 
     // ---------------------------------------------------------------- look
@@ -1283,6 +1411,29 @@ namespace winrt::midiglass::implementation
     }
 
     _Use_decl_annotations_
+    void EditorWindow::OnReturnsToDefaultToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control != nullptr &&
+            m_editor.SetControlReturnsToDefault(control->Id, ReturnsToDefaultSwitch().IsOn()))
+        {
+            // The surface reads this when it attaches the pointer handlers, so it has to be
+            // rebuilt for the change to be felt rather than only saved.
+            RebuildSurface();
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
     void EditorWindow::OnDefaultValueChanged(
         foundation::IInspectable const& sender,
         controls::Primitives::RangeBaseValueChangedEventArgs const& args)
@@ -1347,6 +1498,271 @@ namespace winrt::midiglass::implementation
             m_editor.SetControlPickup(control->Id, static_cast<glass::PickupMode>(index)))
         {
             MarkChanged();
+        }
+    }
+
+    // ---------------------------------------------------------------- the message payloads
+
+    bool EditorWindow::TryEditSelectedMessage(_In_ std::function<bool(glass::ControlMessage&)> const& edit)
+    {
+        auto const* const control = SingleSelectedControl();
+
+        if (control == nullptr ||
+            m_messageIndex < 0 ||
+            m_messageIndex >= static_cast<int32_t>(control->Messages.size()))
+        {
+            return false;
+        }
+
+        auto message = control->Messages[static_cast<size_t>(m_messageIndex)];
+
+        if (!edit(message))
+        {
+            return false;
+        }
+
+        auto const id = control->Id;
+        auto const index = static_cast<size_t>(m_messageIndex);
+
+        if (!m_editor.SetMessage(id, index, message))
+        {
+            return false;
+        }
+
+        RefreshMessageList();
+        MarkChanged();
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnSysExChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const text = std::wstring{ SysExBox().Text() };
+
+            auto const bytes = glass::ParseHexBytes(text, glass::MaximumSystemExclusiveBytes);
+
+            // Nothing readable means nothing is written. Half a dump is worse than none, and
+            // saying so is more use than quietly keeping the last good value.
+            if (bytes.empty() && !text.empty())
+            {
+                SysExCaption().Text(resources::GetString(L"SysExNotReadable"));
+                return;
+            }
+
+            TryEditSelectedMessage([&bytes](glass::ControlMessage& message)
+                {
+                    if (message.SystemExclusive == bytes)
+                    {
+                        return false;
+                    }
+
+                    message.SystemExclusive = bytes;
+                    return true;
+                });
+
+            SysExCaption().Text(bytes.empty()
+                ? resources::GetString(L"SysExEmpty")
+                : resources::FormatString(L"SysExByteCountFormat", static_cast<int32_t>(bytes.size())));
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to read the system exclusive bytes.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnRawWordsChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const words = glass::ParseHexWords(std::wstring{ RawWordsBox().Text() }, 4);
+
+            TryEditSelectedMessage([&words](glass::ControlMessage& message)
+                {
+                    if (message.RawWords == words)
+                    {
+                        return false;
+                    }
+
+                    message.RawWords = words;
+                    return true;
+                });
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to read the raw words.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnSequenceChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const index = SequenceCombo().SelectedIndex();
+
+            if (index < 0 || index >= static_cast<int32_t>(m_editor.Document().Sequences.size()))
+            {
+                return;
+            }
+
+            auto const name = m_editor.Document().Sequences[static_cast<size_t>(index)].Name;
+
+            if (TryEditSelectedMessage([&name](glass::ControlMessage& message)
+                {
+                    if (message.SequenceName == name)
+                    {
+                        return false;
+                    }
+
+                    message.SequenceName = name;
+                    return true;
+                }))
+            {
+                RefreshSequenceChoices(name);
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to choose the sequence.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnTargetPageChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const index = TargetPageCombo().SelectedIndex();
+
+            if (index < 0 || index >= static_cast<int32_t>(m_editor.Document().Pages.size()))
+            {
+                return;
+            }
+
+            auto const id = m_editor.Document().Pages[static_cast<size_t>(index)].Id;
+
+            TryEditSelectedMessage([&id](glass::ControlMessage& message)
+                {
+                    if (message.TargetPageId == id)
+                    {
+                        return false;
+                    }
+
+                    message.TargetPageId = id;
+                    return true;
+                });
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to choose the page.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnSysExFromFileClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            std::vector<uint8_t> bytes{};
+
+            if (!TryReadSystemExclusiveFile(bytes))
+            {
+                return;
+            }
+
+            TryEditSelectedMessage([&bytes](glass::ControlMessage& message)
+                {
+                    message.SystemExclusive = bytes;
+                    return true;
+                });
+
+            RefreshMessageFields();
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to read the system exclusive file.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnNewSequenceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        try
+        {
+            auto const name = m_editor.AddSequence(std::wstring{ resources::GetString(L"SequenceDefaultName") });
+
+            if (name.empty())
+            {
+                return;
+            }
+
+            // The new sequence is what the row plays, so the next thing somebody does is add
+            // steps to it rather than hunting for it in a list.
+            TryEditSelectedMessage([&name](glass::ControlMessage& message)
+                {
+                    message.SequenceName = name;
+                    return true;
+                });
+
+            RefreshSequenceChoices(name);
+            MarkChanged();
+
+            ShowSequenceDialog(name);
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to add a sequence.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnEditSequenceClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control == nullptr ||
+            m_messageIndex < 0 ||
+            m_messageIndex >= static_cast<int32_t>(control->Messages.size()))
+        {
+            return;
+        }
+
+        auto const name = control->Messages[static_cast<size_t>(m_messageIndex)].SequenceName;
+
+        if (!name.empty())
+        {
+            ShowSequenceDialog(name);
         }
     }
 

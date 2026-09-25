@@ -60,6 +60,78 @@ namespace winrt::midiglass::implementation
 
     // ---------------------------------------------------------------- the mode
 
+    // The player is shared: Try mode sends through it and Learn listens through it, and both
+    // need the same connections. Creating two would open the same devices twice.
+    void EditorWindow::StartPlayerForLearning()
+    {
+        if (m_player != nullptr)
+        {
+            m_player->UpdateDocument(m_editor.Document());
+            return;
+        }
+
+        m_player = glass::LivePlayer::Create();
+
+        auto weak = get_weak();
+
+        m_player->DevicesChanged = [weak]()
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->UpdateStatusBar();
+                }
+            };
+
+        m_player->FeedbackMoved = [weak](uint32_t controlIndex, double value)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->OnTryFeedbackMoved(controlIndex, value);
+                }
+            };
+
+        m_player->Sent = [weak](glass::SentMessage const& message)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->AppendMonitorRow(message);
+                }
+            };
+
+        // A sequence step moving a control looks exactly like a device moving one.
+        m_player->ControlValueSet = [weak](uint32_t controlIndex, double value)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->OnTryFeedbackMoved(controlIndex, value);
+                }
+            };
+
+        m_player->PageRequested = [weak](uint32_t pageIndex)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->ShowEditorPage(pageIndex);
+                }
+            };
+
+        m_player->Learned = [weak](glass::LearnedBinding const& learned)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->OnLearned(learned);
+                }
+            };
+
+        // Nothing leaves until Try mode says so. Learning opens the connections and listens;
+        // it must not push a layout's worth of startup values at a desk on its own.
+        m_player->SetOutputEnabled(false);
+
+        // A layout being edited and the same layout running are two owners on purpose, so
+        // closing one does not take the other's connections down.
+        m_player->Start(m_editor.Document(), m_dispatcher, m_filePath + L"\x1editor");
+    }
+
     _Use_decl_annotations_
     void EditorWindow::SetTryMode(bool tryMode)
     {
@@ -84,44 +156,7 @@ namespace winrt::midiglass::implementation
 
                 // An edit made while Try mode was off has to reach the engine before a finger
                 // does, and the player has to exist before either.
-                if (m_player == nullptr)
-                {
-                    m_player = glass::LivePlayer::Create();
-
-                    auto weak = get_weak();
-
-                    m_player->DevicesChanged = [weak]()
-                        {
-                            if (auto strong = weak.get())
-                            {
-                                strong->UpdateStatusBar();
-                            }
-                        };
-
-                    m_player->FeedbackMoved = [weak](uint32_t controlIndex, double value)
-                        {
-                            if (auto strong = weak.get())
-                            {
-                                strong->OnTryFeedbackMoved(controlIndex, value);
-                            }
-                        };
-
-                    m_player->Sent = [weak](glass::SentMessage const& message)
-                        {
-                            if (auto strong = weak.get())
-                            {
-                                strong->AppendMonitorRow(message);
-                            }
-                        };
-
-                    // A layout being edited and the same layout running are two owners on
-                    // purpose, so closing one does not take the other's connections down.
-                    m_player->Start(m_editor.Document(), m_dispatcher, m_filePath + L"\x1editor");
-                }
-                else
-                {
-                    m_player->UpdateDocument(m_editor.Document());
-                }
+                StartPlayerForLearning();
 
                 m_player->SetOutputEnabled(true);
             }
@@ -224,12 +259,24 @@ namespace winrt::midiglass::implementation
 
             m_input.TouchChanged = [weak](size_t itemIndex, bool isTouched)
                 {
-                    if (auto strong = weak.get())
+                    auto strong = weak.get();
+
+                    if (strong == nullptr)
                     {
-                        if (isTouched)
-                        {
-                            strong->m_renderer.Bloom(itemIndex);
-                        }
+                        return;
+                    }
+
+                    if (isTouched)
+                    {
+                        strong->m_renderer.Bloom(itemIndex);
+                    }
+
+                    strong->m_renderer.SetTouched(itemIndex, isTouched);
+
+                    if (strong->m_player != nullptr)
+                    {
+                        strong->m_player->Touched(
+                            strong->m_renderer.ControlIndexOf(itemIndex), isTouched);
                     }
                 };
 
@@ -407,9 +454,89 @@ namespace winrt::midiglass::implementation
                     m_monitorRows.begin() + static_cast<ptrdiff_t>(m_monitorRows.size() - MaximumMonitorRows));
             }
 
-            RebuildMonitorList();
+            // One row appended, not the whole list rebuilt. A fader dragged across the page
+            // produces a message every few milliseconds, and rebuilding two hundred rows each
+            // time is what makes the surface stutter in the middle of trying it.
+            AppendMonitorItem(message);
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to add a line to the monitor.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::AppendMonitorItem(glass::SentMessage const& message)
+    {
+        if (!m_loaded || m_monitorItems == nullptr)
+        {
+            return;
+        }
+
+        if (m_monitorSelectedOnly && !IsMonitoredControl(message.ControlIndex))
+        {
+            return;
+        }
+
+        m_monitorItems.Append(*MakeMonitorItem(message));
+
+        while (m_monitorItems.Size() > MaximumMonitorRows)
+        {
+            m_monitorItems.RemoveAt(0);
+        }
+
+        m_monitorVisibleCount = m_monitorItems.Size();
+
+        // A monitor that does not follow is a monitor nobody reads.
+        if (m_monitorVisibleCount != 0)
+        {
+            MonitorList().ScrollIntoView(m_monitorItems.GetAt(m_monitorVisibleCount - 1));
+        }
+
+        UpdateMonitorEmptyText();
+    }
+
+    _Use_decl_annotations_
+    bool EditorWindow::IsMonitoredControl(uint32_t controlIndex) const
+    {
+        for (auto const& id : m_editor.Selection())
+        {
+            if (auto const index = m_editor.ControlIndexOf(id);
+                index >= 0 && static_cast<uint32_t>(index) == controlIndex)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    _Use_decl_annotations_
+    winrt::com_ptr<MonitorItem> EditorWindow::MakeMonitorItem(glass::SentMessage const& message) const
+    {
+        auto const& devices = m_editor.Document().Devices;
+
+        auto const formatted = glass::DescribeMessage(message.Words, message.WordCount);
+
+        std::wstring destination{};
+
+        if (message.DestinationIndex >= 0 &&
+            static_cast<size_t>(message.DestinationIndex) < devices.size())
+        {
+            destination = devices[static_cast<size_t>(message.DestinationIndex)].Name;
+        }
+
+        if (formatted.Channel > 0)
+        {
+            destination += resources::FormatString(L"MonitorChannelFormat", formatted.Channel);
+        }
+
+        auto item = winrt::make_self<MonitorItem>();
+
+        item->Update(
+            glass::FormatElapsed(message.TimestampMilliseconds - m_monitorOrigin),
+            formatted.Words,
+            formatted.Meaning,
+            destination);
+
+        return item;
     }
 
     void EditorWindow::RebuildMonitorList()
@@ -421,64 +548,26 @@ namespace winrt::midiglass::implementation
 
         try
         {
-            // Filtered to the selected control by default, which is the question somebody is
-            // actually asking: is THIS thing sending what I think it is.
-            std::vector<uint32_t> wanted{};
-
-            if (m_monitorSelectedOnly)
-            {
-                for (auto const& id : m_editor.Selection())
-                {
-                    if (auto const index = m_editor.ControlIndexOf(id); index >= 0)
-                    {
-                        wanted.push_back(static_cast<uint32_t>(index));
-                    }
-                }
-            }
-
-            auto const& devices = m_editor.Document().Devices;
-
+            // The whole list, from scratch. Only the filter, the selection and Clear come
+            // through here; a message arriving appends one row instead.
             auto items = winrt::single_threaded_observable_vector<foundation::IInspectable>();
 
             for (auto const& row : m_monitorRows)
             {
-                if (m_monitorSelectedOnly &&
-                    std::find(wanted.begin(), wanted.end(), row.ControlIndex) == wanted.end())
+                if (m_monitorSelectedOnly && !IsMonitoredControl(row.ControlIndex))
                 {
                     continue;
                 }
 
-                auto const formatted = glass::DescribeMessage(row.Words, row.WordCount);
-
-                std::wstring destination{};
-
-                if (row.DestinationIndex >= 0 &&
-                    static_cast<size_t>(row.DestinationIndex) < devices.size())
-                {
-                    destination = devices[static_cast<size_t>(row.DestinationIndex)].Name;
-                }
-
-                if (formatted.Channel > 0)
-                {
-                    destination += resources::FormatString(L"MonitorChannelFormat", formatted.Channel);
-                }
-
-                auto item = winrt::make_self<MonitorItem>();
-
-                item->Update(
-                    glass::FormatElapsed(row.TimestampMilliseconds - m_monitorOrigin),
-                    formatted.Words,
-                    formatted.Meaning,
-                    destination);
-
-                items.Append(*item);
+                items.Append(*MakeMonitorItem(row));
             }
+
+            m_monitorItems = items;
 
             MonitorList().ItemsSource(items);
 
             m_monitorVisibleCount = items.Size();
 
-            // A monitor that does not follow is a monitor nobody reads.
             if (items.Size() != 0)
             {
                 MonitorList().ScrollIntoView(items.GetAt(items.Size() - 1));
@@ -578,6 +667,16 @@ namespace winrt::midiglass::implementation
 
             MonitorList().Visibility(
                 m_monitorExpanded ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            // The row carries the height, so folding the rail away gives the canvas the room
+            // back rather than leaving an empty panel behind.
+            MonitorRow().Height(xaml::GridLengthHelper::FromPixels(m_monitorExpanded ? m_monitorHeight : 27.0));
+
+            MonitorSplitter().Visibility(
+                m_monitorExpanded ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            ApplyCanvasScale();
+            RebuildGrid();
 
             MonitorExpandGlyph().Glyph(m_monitorExpanded ? L"\uE70D" : L"\uE70E");
 

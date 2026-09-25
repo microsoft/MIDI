@@ -589,6 +589,48 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    bool BindingEngine::TryDescribeValue(
+        size_t controlIndex,
+        double position,
+        uint32_t& value,
+        bool& isAbsolute) const noexcept
+    {
+        value = 0;
+        isAbsolute = false;
+
+        if (controlIndex >= m_controls.size())
+        {
+            return false;
+        }
+
+        auto const& control = m_controls[controlIndex];
+
+        for (uint32_t i = 0; i < control.MessageCount; ++i)
+        {
+            auto const& message = m_messages[control.FirstMessage + i];
+
+            if (!IsChannelVoice(message.Kind))
+            {
+                continue;
+            }
+
+            auto const bits = FieldBitsFor(message);
+
+            value = InterpolateValue(message, position, bits);
+
+            // Either end being an exact number means the customer is working in a device's own
+            // units, and the number they typed is the one they want to see.
+            isAbsolute =
+                message.Minimum.Scaling == ValueScaling::Absolute ||
+                message.Maximum.Scaling == ValueScaling::Absolute;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    _Use_decl_annotations_
     uint32_t BindingEngine::EvaluateStartupValues(std::span<PreparedSend> sends) const noexcept
     {
         uint32_t written{ 0 };

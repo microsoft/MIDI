@@ -9,6 +9,7 @@
 
 #include <sal.h>
 #include <array>
+#include <atomic>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -17,9 +18,12 @@
 
 #include "LayoutModel.h"
 #include "BindingEngine.h"
+#include "ActionPlan.h"
+#include "LearnCapture.h"
 #include "ValueThrottle.h"
 #include "DeviceCatalog.h"
 #include "OutputRouter.h"
+#include "SequenceRunner.h"
 
 namespace glass
 {
@@ -73,6 +77,16 @@ namespace glass
         // nothing for it; the editor's monitor rail sets it.
         std::function<void(SentMessage const& message)> Sent{};
 
+        // A sequence step moved another control. The owner owns what that does on screen.
+        std::function<void(uint32_t controlIndex, double value)> ControlValueSet{};
+
+        // A control or a sequence step asked for another page.
+        std::function<void(uint32_t pageIndex)> PageRequested{};
+
+        // Something arrived that a control could be bound to, while learning is armed. Raised
+        // on the dispatcher's thread, and only while SetLearning(true) is in force.
+        std::function<void(LearnedBinding const& learned)> Learned{};
+
         // ---- lifetime ----
 
         // ownerId separates one player's connections from another's inside the process-wide
@@ -96,6 +110,11 @@ namespace glass
         // whole layout's worth of startup values.
         void SetOutputEnabled(_In_ bool enabled) noexcept { m_outputEnabled = enabled; }
 
+        // Listen for something to bind to. Off by default, because reading every message that
+        // arrives on every device costs something and nothing wants it until somebody asks.
+        void SetLearning(_In_ bool learning) noexcept { m_learning = learning; }
+        bool IsLearning() const noexcept { return m_learning; }
+
         // ---- sending. Called on the UI thread, straight out of a pointer handler. ----
 
         void ValueChanged(_In_ uint32_t controlIndex, _In_ double value, _In_ bool isFinal);
@@ -106,8 +125,16 @@ namespace glass
 
         void Switched(_In_ uint32_t controlIndex, _In_ bool isOn);
 
+        // The touch and release triggers, which is what a system exclusive dump or a sequence
+        // usually hangs off. Separate from Switched because a fader is touched too.
+        void Touched(_In_ uint32_t controlIndex, _In_ bool isTouched);
+
         // Where the nearest stop is, or the position unchanged.
         double SnapToDetent(_In_ uint32_t controlIndex, _In_ double position) const;
+
+        // The number a control shows inside itself: the figure that would go on the wire when
+        // the customer is working in a device's own units, and a percentage when they are not.
+        std::wstring DescribeValue(_In_ uint32_t controlIndex, _In_ double position) const;
 
         // Sent once per run, in keyboard order. Does nothing until something is connected, so
         // the layout is not marked initialized before it actually was.
@@ -131,15 +158,31 @@ namespace glass
         void ReopenConnections();
         void SendPrepared(_In_ uint32_t controlIndex, _In_ uint32_t count) noexcept;
 
+        // Anything this control does for this trigger beyond the immediate channel voice
+        // messages: a dump, a raw message, a sequence, a page change.
+        void RunPlan(_In_ uint32_t controlIndex, _In_ MessageTrigger trigger) noexcept;
+
+        // One already-built burst of words straight to a connection. What the sequence runner
+        // calls, on the dispatcher's thread.
+        void SendWords(
+            _In_ uint32_t controlIndex,
+            _In_ int32_t destinationIndex,
+            _In_reads_(wordCount) uint32_t const* words,
+            _In_ uint32_t wordCount) noexcept;
+
         // On a service callback thread. Resolves what moved and marshals only the answer.
         void OnFeedbackWords(
+            _In_ std::wstring const& endpointDeviceId,
             _In_ uint32_t wordCount,
             _In_reads_(wordCount) uint32_t const* words);
 
         LayoutDocument m_document{};
 
         BindingEngine m_engine{};
+        ActionPlanSet m_plans{};
         DeviceCatalog m_devices{};
+
+        std::shared_ptr<SequenceRunner> m_runner{};
 
         // One per control, so a fader on a DIN cable can be limited without touching a note on.
         std::vector<ValueThrottle> m_throttles{};
@@ -161,6 +204,10 @@ namespace glass
         bool m_started{ false };
         bool m_stopping{ false };
         bool m_outputEnabled{ true };
+
+        // Read on a service callback thread and written on the UI thread, so it is atomic rather
+        // than a plain bool.
+        std::atomic<bool> m_learning{ false };
 
         winrt::Microsoft::UI::Dispatching::DispatcherQueue m_dispatcher{ nullptr };
     };

@@ -147,5 +147,85 @@
                    TextAlignment="Center"
                    Visibility="Collapsed"
                    Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+        <!-- Full screen has no bar. Everything the chrome offered lives behind one button in
+             whichever corner the layout names, and it fades back to a quarter after a few
+             seconds so it is findable without being in the way. -->
+        <Button x:Name="CornerButton"
+                x:Uid="CornerButton"
+                Grid.Row="0"
+                Grid.RowSpan="3"
+                Width="34"
+                Height="34"
+                Padding="0"
+                Margin="14"
+                CornerRadius="17"
+                Opacity="1"
+                Visibility="Collapsed"
+                HorizontalAlignment="Right"
+                VerticalAlignment="Top"
+                PointerEntered="OnCornerButtonPointerEntered"
+                PointerExited="OnCornerButtonPointerExited">
+            <FontIcon Glyph="&#xE712;" FontSize="14" />
+            <Button.Flyout>
+                <MenuFlyout x:Name="CornerFlyout" Opening="OnCornerFlyoutOpening">
+                    <MenuFlyoutItem x:Uid="CornerFitToScreen" Text="Fit to screen" Tag="fit" Click="OnCornerMenuClick">
+                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE9A6;" /></MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                    <MenuFlyoutItem x:Uid="CornerActualSize" Text="Actual size" Tag="actual" Click="OnCornerMenuClick">
+                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE9A5;" /></MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+
+                    <MenuFlyoutSubItem x:Name="CornerPagesItem" x:Uid="CornerPages" Text="Pages">
+                        <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE8A5;" /></MenuFlyoutSubItem.Icon>
+                    </MenuFlyoutSubItem>
+
+                    <MenuFlyoutSubItem x:Uid="CornerMoveButton" Text="Move this button">
+                        <MenuFlyoutSubItem.Icon><FontIcon Glyph="&#xE7C2;" /></MenuFlyoutSubItem.Icon>
+                        <MenuFlyoutItem x:Uid="CornerTopLeft" Text="Top left" Tag="corner0" Click="OnCornerMenuClick" />
+                        <MenuFlyoutItem x:Uid="CornerTopRight" Text="Top right" Tag="corner1" Click="OnCornerMenuClick" />
+                        <MenuFlyoutItem x:Uid="CornerBottomLeft" Text="Bottom left" Tag="corner2" Click="OnCornerMenuClick" />
+                        <MenuFlyoutItem x:Uid="CornerBottomRight" Text="Bottom right" Tag="corner3" Click="OnCornerMenuClick" />
+                    </MenuFlyoutSubItem>
+
+                    <MenuFlyoutSeparator />
+
+                    <MenuFlyoutItem x:Uid="CornerLeaveFullScreen" Text="Leave full screen" Tag="leave" Click="OnCornerMenuClick">
+                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE73F;" /></MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+
+                    <MenuFlyoutSeparator />
+
+                    <!-- Always last, always the same color, and it never moves. The moment Panic
+                         is needed is the moment nobody wants to go looking for it. -->
+                    <MenuFlyoutItem x:Uid="CornerPanic" Text="Panic" Tag="panic" Click="OnCornerMenuClick"
+                                    Foreground="{ThemeResource SystemFillColorCriticalBrush}">
+                        <MenuFlyoutItem.Icon>
+                            <FontIcon Glyph="&#xE7BA;" Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                        </MenuFlyoutItem.Icon>
+                    </MenuFlyoutItem>
+                </MenuFlyout>
+            </Button.Flyout>
+        </Button>
+
+        <!-- The browser-style "you are in full screen" note. It fades after a couple of seconds
+             and does not come back, because a note that keeps reappearing over a control surface
+             is worse than not knowing. -->
+        <Border x:Name="EscapeToast"
+                Grid.Row="0"
+                Grid.RowSpan="3"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                Margin="0,22,0,0"
+                Padding="16,9,16,9"
+                CornerRadius="17"
+                Opacity="0"
+                IsHitTestVisible="False"
+                Visibility="Collapsed"
+                Background="#D9000000">
+            <TextBlock x:Name="EscapeToastText"
+                       FontSize="12"
+                       Foreground="White" />
+        </Border>
     </Grid>
 </Window>

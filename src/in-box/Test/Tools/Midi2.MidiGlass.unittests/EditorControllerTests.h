@@ -67,6 +67,23 @@ public:
     TEST_METHOD(SettingAGapSpacesThemAll);
     TEST_METHOD(GapsAreMeasuredInPositionOrderNotSelectionOrder);
 
+    // ---- which control is drawn over which ----
+
+    TEST_METHOD(BringToFrontPutsTheSelectionLastInDrawOrder);
+    TEST_METHOD(SendToBackPutsTheSelectionFirst);
+    TEST_METHOD(BringForwardMovesOneStepOnly);
+    TEST_METHOD(SendBackwardMovesOneStepOnly);
+    TEST_METHOD(ABlockOfSelectedControlsMovesTogether);
+    TEST_METHOD(AControlAlreadyAtTheFrontDoesNotMove);
+    TEST_METHOD(ChangingTheOrderLeavesTheKeyboardOrderAlone);
+    TEST_METHOD(ChangingTheOrderCanBeTakenBack);
+
+    // ---- grouping panels ----
+
+    TEST_METHOD(ADroppedGroupPanelGoesToTheBack);
+    TEST_METHOD(AGroupPanelSendsNothing);
+    TEST_METHOD(AGroupPanelArrivesAsAnOutline);
+
     // ---- repeat ----
 
     TEST_METHOD(RepeatBuildsABank);

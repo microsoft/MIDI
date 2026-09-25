@@ -527,6 +527,18 @@
   <data name="ArrangeSpreadDown.Text" xml:space="preserve">
     <value>Equal gaps down</value>
   </data>
+  <data name="ArrangeBringToFront.Text" xml:space="preserve">
+    <value>Bring to front</value>
+  </data>
+  <data name="ArrangeBringForward.Text" xml:space="preserve">
+    <value>Bring forward</value>
+  </data>
+  <data name="ArrangeSendBackward.Text" xml:space="preserve">
+    <value>Send backward</value>
+  </data>
+  <data name="ArrangeSendToBack.Text" xml:space="preserve">
+    <value>Send to back</value>
+  </data>
   <data name="EditorRepeatButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Repeat the selection</value>
   </data>
@@ -840,10 +852,10 @@
     <value>No label</value>
   </data>
   <data name="ShowValueCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
-    <value>When the value is shown — not built yet</value>
+    <value>When the number is shown inside the control</value>
   </data>
   <data name="ShowValueTheme" xml:space="preserve">
-    <value>Same as the theme</value>
+    <value>While touched</value>
   </data>
   <data name="ShowValueWhileTouched" xml:space="preserve">
     <value>While touched</value>
@@ -868,6 +880,12 @@
   </data>
   <data name="PaletteGroupDisplay" xml:space="preserve">
     <value>Feedback and text</value>
+  </data>
+  <data name="PaletteGroupLayout" xml:space="preserve">
+    <value>Grouping</value>
+  </data>
+  <data name="PalettePanel" xml:space="preserve">
+    <value>Group</value>
   </data>
   <data name="CanvasScaleFormat" xml:space="preserve">
     <value>{0} %</value>
@@ -1115,6 +1133,291 @@
   <data name="MessageAssignedController" xml:space="preserve">
     <value>Assigned controller</value>
   </data>
+  <data name="MessageSystemExclusive" xml:space="preserve">
+    <value>System exclusive</value>
+  </data>
+  <data name="LearnHeading.Text" xml:space="preserve">
+    <value>Learn from your hardware</value>
+  </data>
+  <data name="LearnOneToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Learn this control from your hardware</value>
+  </data>
+  <data name="LearnOneLabel.Text" xml:space="preserve">
+    <value>Learn</value>
+  </data>
+  <data name="LearnBankToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Learn a whole bank from your hardware</value>
+  </data>
+  <data name="LearnBankLabel.Text" xml:space="preserve">
+    <value>Learn a bank</value>
+  </data>
+  <data name="LearnAcceptDevice.Content" xml:space="preserve">
+    <value>Device</value>
+  </data>
+  <data name="LearnAcceptGroup.Content" xml:space="preserve">
+    <value>Group</value>
+  </data>
+  <data name="LearnAcceptChannel.Content" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="LearnAcceptKind.Content" xml:space="preserve">
+    <value>What</value>
+  </data>
+  <data name="LearnAcceptNumber.Content" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="LearnIdle" xml:space="preserve">
+    <value>Fills in what a control sends by touching the hardware instead of typing numbers. The devices in this layout's table are the ones it listens to.</value>
+  </data>
+  <data name="CornerButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Layout controls, scale, pages and Panic</value>
+  </data>
+  <data name="CornerButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Layout controls, scale, pages and Panic</value>
+  </data>
+  <data name="CornerFitToScreen.Text" xml:space="preserve">
+    <value>Fit to screen</value>
+  </data>
+  <data name="CornerActualSize.Text" xml:space="preserve">
+    <value>Actual size</value>
+  </data>
+  <data name="CornerPages.Text" xml:space="preserve">
+    <value>Pages</value>
+  </data>
+  <data name="CornerMoveButton.Text" xml:space="preserve">
+    <value>Move this button</value>
+  </data>
+  <data name="CornerTopLeft.Text" xml:space="preserve">
+    <value>Top left</value>
+  </data>
+  <data name="CornerTopRight.Text" xml:space="preserve">
+    <value>Top right</value>
+  </data>
+  <data name="CornerBottomLeft.Text" xml:space="preserve">
+    <value>Bottom left</value>
+  </data>
+  <data name="CornerBottomRight.Text" xml:space="preserve">
+    <value>Bottom right</value>
+  </data>
+  <data name="CornerLeaveFullScreen.Text" xml:space="preserve">
+    <value>Leave full screen</value>
+  </data>
+  <data name="CornerPanic.Text" xml:space="preserve">
+    <value>Panic</value>
+  </data>
+  <data name="FullScreenToast" xml:space="preserve">
+    <value>Press Esc to leave full screen. Everything else is behind the corner button.</value>
+  </data>
+  <data name="LearnWaitingOne" xml:space="preserve">
+    <value>Listening. Move the control on your hardware that this one should follow.</value>
+  </data>
+  <data name="LearnWaitingBankFormat" xml:space="preserve">
+    <value>Listening. {0} of {1} filled — touch the next control on your hardware.</value>
+  </data>
+  <data name="LearnDoneOne" xml:space="preserve">
+    <value>Done. The row above now matches what you touched.</value>
+  </data>
+  <data name="LearnDoneBank" xml:space="preserve">
+    <value>Done. Every control on this page has been filled in keyboard order.</value>
+  </data>
+  <data name="MessageRawUmp" xml:space="preserve">
+    <value>Raw message</value>
+  </data>
+  <data name="MessageSequence" xml:space="preserve">
+    <value>A sequence of steps</value>
+  </data>
+  <data name="MessageGoToPage" xml:space="preserve">
+    <value>Go to a page</value>
+  </data>
+  <data name="SysExHeading.Text" xml:space="preserve">
+    <value>The bytes to send</value>
+  </data>
+  <data name="SysExBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>System exclusive bytes, in hexadecimal</value>
+  </data>
+  <data name="SysExFromFileButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Load the bytes from a .syx file</value>
+  </data>
+  <data name="SysExFromFileLabel.Text" xml:space="preserve">
+    <value>From a .syx file…</value>
+  </data>
+  <data name="SysExFromFileCommand" xml:space="preserve">
+    <value>From a .syx file…</value>
+  </data>
+  <data name="SysExHelp.Text" xml:space="preserve">
+    <value>Hexadecimal, spaces optional. The leading F0 and trailing F7 are optional too.</value>
+  </data>
+  <data name="SysExEmpty" xml:space="preserve">
+    <value>Nothing to send yet</value>
+  </data>
+  <data name="SysExNotReadable" xml:space="preserve">
+    <value>That is not readable as hexadecimal, so nothing was saved</value>
+  </data>
+  <data name="SysExByteCountFormat" xml:space="preserve">
+    <value>{0} bytes</value>
+  </data>
+  <data name="SysExOpenTitle" xml:space="preserve">
+    <value>Open a system exclusive file</value>
+  </data>
+  <data name="RawWordsHeading.Text" xml:space="preserve">
+    <value>The words to send</value>
+  </data>
+  <data name="RawWordsBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>The words to send, in hexadecimal</value>
+  </data>
+  <data name="RawWordsHelp.Text" xml:space="preserve">
+    <value>Up to four 32 bit words, hexadecimal, separated by spaces. Sent exactly as written.</value>
+  </data>
+  <data name="SequenceHeading.Text" xml:space="preserve">
+    <value>Which sequence</value>
+  </data>
+  <data name="SequenceCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Which sequence this plays</value>
+  </data>
+  <data name="NewSequenceButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Make a new sequence</value>
+  </data>
+  <data name="NewSequenceLabel.Text" xml:space="preserve">
+    <value>New</value>
+  </data>
+  <data name="EditSequenceButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Edit the steps of this sequence</value>
+  </data>
+  <data name="EditSequenceLabel.Text" xml:space="preserve">
+    <value>Edit steps…</value>
+  </data>
+  <data name="SequenceNoneChosen" xml:space="preserve">
+    <value>No sequence chosen yet, so this sends nothing.</value>
+  </data>
+  <data name="SequenceStepCountFormat" xml:space="preserve">
+    <value>{0} steps</value>
+  </data>
+  <data name="SequenceDefaultName" xml:space="preserve">
+    <value>Sequence</value>
+  </data>
+  <data name="TargetPageHeading.Text" xml:space="preserve">
+    <value>Which page</value>
+  </data>
+  <data name="TargetPageCombo.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Which page this goes to</value>
+  </data>
+  <data name="SequenceDialogTitleFormat" xml:space="preserve">
+    <value>Sequence — {0}</value>
+  </data>
+  <data name="SequenceAddHeading" xml:space="preserve">
+    <value>Add a step</value>
+  </data>
+  <data name="SequenceSummaryFormat" xml:space="preserve">
+    <value>{0} steps · about {1} s of waiting</value>
+  </data>
+  <data name="SequenceModeHeader" xml:space="preserve">
+    <value>Pressing the button</value>
+  </data>
+  <data name="SequenceModeOnce" xml:space="preserve">
+    <value>runs it once</value>
+  </data>
+  <data name="SequenceModeWhileHeld" xml:space="preserve">
+    <value>repeats it while held</value>
+  </data>
+  <data name="SequenceModeToggle" xml:space="preserve">
+    <value>starts it, and the next press stops it</value>
+  </data>
+  <data name="StepAddNote" xml:space="preserve">
+    <value>Note</value>
+  </data>
+  <data name="StepAddMessage" xml:space="preserve">
+    <value>Message</value>
+  </data>
+  <data name="StepAddSystemExclusive" xml:space="preserve">
+    <value>System exclusive</value>
+  </data>
+  <data name="StepAddWait" xml:space="preserve">
+    <value>Wait</value>
+  </data>
+  <data name="StepAddRepeat" xml:space="preserve">
+    <value>Repeat a block</value>
+  </data>
+  <data name="StepAddSetControl" xml:space="preserve">
+    <value>Set a control</value>
+  </data>
+  <data name="StepAddGoToPage" xml:space="preserve">
+    <value>Go to a page</value>
+  </data>
+  <data name="StepWaitFormat" xml:space="preserve">
+    <value>Wait {0} ms</value>
+  </data>
+  <data name="StepRepeatFormat" xml:space="preserve">
+    <value>Repeat these steps {0} times</value>
+  </data>
+  <data name="StepRepeatEnd" xml:space="preserve">
+    <value>End of the repeated steps</value>
+  </data>
+  <data name="StepSetControlFormat" xml:space="preserve">
+    <value>Set {0} to {1} %</value>
+  </data>
+  <data name="StepGoToPageFormat" xml:space="preserve">
+    <value>Go to {0}</value>
+  </data>
+  <data name="StepSystemExclusiveFormat" xml:space="preserve">
+    <value>System exclusive, {0} bytes → {1}</value>
+  </data>
+  <data name="StepNoteFormat" xml:space="preserve">
+    <value>Note {0} for {1} ms</value>
+  </data>
+  <data name="StepDurationHeader" xml:space="preserve">
+    <value>Held for, in milliseconds</value>
+  </data>
+  <data name="StepMessageFormat" xml:space="preserve">
+    <value>Control change {0}</value>
+  </data>
+  <data name="StepDestinationFormat" xml:space="preserve">
+    <value>{0} → {1} · ch {2}</value>
+  </data>
+  <data name="StepNoControl" xml:space="preserve">
+    <value>nothing yet</value>
+  </data>
+  <data name="StepNoPage" xml:space="preserve">
+    <value>nothing yet</value>
+  </data>
+  <data name="StepNumberHeader" xml:space="preserve">
+    <value>Number</value>
+  </data>
+  <data name="StepWaitHeader" xml:space="preserve">
+    <value>Milliseconds</value>
+  </data>
+  <data name="StepRepeatHeader" xml:space="preserve">
+    <value>Times</value>
+  </data>
+  <data name="StepDeviceHeader" xml:space="preserve">
+    <value>To</value>
+  </data>
+  <data name="StepChannelHeader" xml:space="preserve">
+    <value>Channel</value>
+  </data>
+  <data name="StepControlHeader" xml:space="preserve">
+    <value>Which control</value>
+  </data>
+  <data name="StepValueHeader" xml:space="preserve">
+    <value>Set it to, as a percentage</value>
+  </data>
+  <data name="StepPageHeader" xml:space="preserve">
+    <value>Which page</value>
+  </data>
+  <data name="StepBytesHeader" xml:space="preserve">
+    <value>The bytes to send</value>
+  </data>
+  <data name="StepMoveUp" xml:space="preserve">
+    <value>Move this step earlier</value>
+  </data>
+  <data name="StepMoveDown" xml:space="preserve">
+    <value>Move this step later</value>
+  </data>
+  <data name="StepDelete" xml:space="preserve">
+    <value>Delete this step</value>
+  </data>
+  <data name="DialogDone" xml:space="preserve">
+    <value>Done</value>
+  </data>
   <data name="GroupAll" xml:space="preserve">
     <value>All groups</value>
   </data>
@@ -1135,6 +1438,12 @@
   </data>
   <data name="InspectorDefaultHeading.Text" xml:space="preserve">
     <value>Starting value</value>
+  </data>
+  <data name="ReturnsToDefaultSwitch.Header" xml:space="preserve">
+    <value>Springs back when released</value>
+  </data>
+  <data name="ReturnsToDefaultCaption.Text" xml:space="preserve">
+    <value>What makes a pitch wheel a pitch wheel. The control goes back to its starting value the moment the finger comes off, and that value is sent.</value>
   </data>
   <data name="DefaultValueSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Starting value, as a percentage</value>

@@ -140,6 +140,7 @@ namespace glass
             {
             case ControlKind::Label:
             case ControlKind::Image:
+            case ControlKind::Panel:
                 return false;
 
             default:
@@ -212,6 +213,7 @@ namespace glass
             case ControlKind::Image:
             case ControlKind::Lamp:
             case ControlKind::Meter:
+            case ControlKind::Panel:
                 return projected::SurfaceControlRole::Text;
 
             default:
@@ -451,6 +453,10 @@ namespace glass
         element.IsTabStop(RoleFor(control.Kind) != projected::SurfaceControlRole::Text);
         element.UseSystemFocusVisuals(true);
 
+        // A grouping panel sits under the controls it frames. A finger landing on the empty part
+        // of it should reach the deck rather than being swallowed by a frame.
+        element.IsHitTestVisible(control.Kind != ControlKind::Panel);
+
         // Nothing is drawn by XAML, so the element still has to be hit testable. A transparent
         // background is the usual way, and it is why this is a Control rather than a bare
         // FrameworkElement.
@@ -475,6 +481,12 @@ namespace glass
         m_elements.push_back(element);
         m_controlIndexes.push_back(controlIndex);
         m_kinds.push_back(control.Kind);
+        m_restValues.push_back(control.DefaultValue);
+        m_returnsToRest.push_back(control.ReturnsToDefault);
+        m_valueTexts.push_back(nullptr);
+        m_valueOffsets.push_back(0.0);
+        m_showValues.push_back(control.ShowValue);
+        m_touched.push_back(false);
         m_labels.push_back(nullptr);
         m_labelOffsets.push_back(0.0);
         m_values.push_back(control.DefaultValue);
@@ -486,6 +498,130 @@ namespace glass
             ->SetValueDirect(control.DefaultValue);
 
         LayoutLabel(itemIndex, control, theme);
+        LayoutValueText(itemIndex, control, theme);
+    }
+
+    // The number inside the control. There is no comp for this, so it follows the design sheet's
+    // own rule for it: monospace, small, in the control's hue, centered along the bottom where
+    // it cannot cross the plate's edge whatever shape the control is.
+    _Use_decl_annotations_
+    void SurfaceRenderer::LayoutValueText(size_t itemIndex, Control const& control, Theme const& theme)
+    {
+        if (itemIndex >= m_valueTexts.size())
+        {
+            return;
+        }
+
+        // A control with no value to show is most of them. UseTheme means while touched: a
+        // number under every knob on a resting page is noise, and a number under the one being
+        // held is the thing somebody is looking for. Only a control with travel has a number
+        // worth reading, which is what the slider role means here.
+        auto const wanted =
+            control.ShowValue != ShowValueOverride::Never &&
+            RoleFor(control.Kind) == projected::SurfaceControlRole::Slider;
+
+        if (!wanted)
+        {
+            if (m_valueTexts[itemIndex] != nullptr)
+            {
+                uint32_t index{ 0 };
+
+                if (m_host != nullptr && m_host.Children().IndexOf(m_valueTexts[itemIndex], index))
+                {
+                    m_host.Children().RemoveAt(index);
+                }
+
+                m_valueTexts[itemIndex] = nullptr;
+            }
+
+            return;
+        }
+
+        if (m_valueTexts[itemIndex] == nullptr)
+        {
+            controls::TextBlock text{};
+
+            text.FontFamily(media::FontFamily{ L"Cascadia Mono, Consolas" });
+            text.FontSize(10);
+            text.TextAlignment(xaml::TextAlignment::Center);
+            text.IsHitTestVisible(false);
+
+            // The control already carries its value for assistive technology through its range
+            // value pattern, so reading this as well would say everything twice.
+            xaml::Automation::AutomationProperties::SetAccessibilityView(
+                text, xaml::Automation::Peers::AccessibilityView::Raw);
+
+            m_host.Children().Append(text);
+            m_valueTexts[itemIndex] = text;
+        }
+
+        auto const colors = ResolveControlColors(control, theme);
+        auto const& text = m_valueTexts[itemIndex];
+
+        auto const width = std::max(control.Width, 4.0);
+        auto const height = std::max(control.Height, 4.0);
+
+        // Above an inside label, or where an inside label would have been.
+        auto const labelInside =
+            control.LabelPlaced == LabelPlacementOverride::Inside ||
+            (control.LabelPlaced == LabelPlacementOverride::UseTheme &&
+                theme.Labels == LabelPlacement::Inside);
+
+        text.Width(width);
+        text.Foreground(media::SolidColorBrush(ToColor(colors.Pipe)));
+
+        m_valueOffsets[itemIndex] =
+            height - (labelInside && !control.Label.empty() ? 34.0 : 19.0);
+
+        controls::Canvas::SetLeft(text, control.X);
+        controls::Canvas::SetTop(text, control.Y + m_valueOffsets[itemIndex]);
+
+        RefreshValueText(itemIndex);
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::RefreshValueText(size_t itemIndex) noexcept
+    {
+        if (itemIndex >= m_valueTexts.size() || m_valueTexts[itemIndex] == nullptr)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const always = m_showValues[itemIndex] == ShowValueOverride::Always;
+            auto const visible = always || m_touched[itemIndex];
+
+            m_valueTexts[itemIndex].Visibility(
+                visible ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            if (!visible)
+            {
+                return;
+            }
+
+            auto const value = m_values[itemIndex];
+
+            m_valueTexts[itemIndex].Text(winrt::hstring{ DescribeValue
+                ? DescribeValue(ControlIndexOf(itemIndex), value)
+                : std::to_wstring(static_cast<int32_t>(std::lround(value * 100.0))) + L" %" });
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::SetTouched(size_t itemIndex, bool touched) noexcept
+    {
+        if (itemIndex >= m_touched.size())
+        {
+            return;
+        }
+
+        m_touched[itemIndex] = touched;
+
+        RefreshValueText(itemIndex);
     }
 
     _Use_decl_annotations_
@@ -1099,15 +1235,22 @@ namespace glass
         auto const colors = ResolveControlColors(control, theme);
         auto const& label = m_labels[itemIndex];
 
+        // A group's caption belongs at the top of the frame, the way every group box in every
+        // application puts it. Everywhere else the label sits under the value it describes.
+        auto const isPanel = control.Kind == ControlKind::Panel;
+
         label.Text(winrt::hstring{ control.Label });
-        label.Width(width);
+        label.Width(isPanel ? std::max(width - 16.0f, 4.0f) : width);
+        label.TextAlignment(isPanel ? xaml::TextAlignment::Left : xaml::TextAlignment::Center);
         label.Foreground(media::SolidColorBrush(ToColor(colors.Label)));
 
-        m_labelOffsets[itemIndex] = placement == LabelPlacement::Below
-            ? static_cast<double>(height) + 2.0
-            : static_cast<double>(height) - 18.0;
+        m_labelOffsets[itemIndex] = isPanel
+            ? 5.0
+            : placement == LabelPlacement::Below
+                ? static_cast<double>(height) + 2.0
+                : static_cast<double>(height) - 18.0;
 
-        controls::Canvas::SetLeft(label, control.X);
+        controls::Canvas::SetLeft(label, control.X + (isPanel ? 8.0 : 0.0));
         controls::Canvas::SetTop(label, control.Y + m_labelOffsets[itemIndex]);
     }
 
@@ -1133,6 +1276,7 @@ namespace glass
             LayoutVisual(compositor, m_visuals[itemIndex], control, theme);
             SetValue(itemIndex, m_values[itemIndex]);
             LayoutLabel(itemIndex, control, theme);
+            LayoutValueText(itemIndex, control, theme);
         }
         catch (...)
         {
@@ -1158,6 +1302,12 @@ namespace glass
         m_elements.clear();
         m_controlIndexes.clear();
         m_kinds.clear();
+        m_restValues.clear();
+        m_returnsToRest.clear();
+        m_valueTexts.clear();
+        m_valueOffsets.clear();
+        m_showValues.clear();
+        m_touched.clear();
         m_labels.clear();
         m_labelOffsets.clear();
         m_values.clear();
@@ -1204,6 +1354,18 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    bool SurfaceRenderer::ReturnsToRestAt(size_t itemIndex) const noexcept
+    {
+        return itemIndex < m_returnsToRest.size() && m_returnsToRest[itemIndex];
+    }
+
+    _Use_decl_annotations_
+    double SurfaceRenderer::RestValueAt(size_t itemIndex) const noexcept
+    {
+        return itemIndex < m_restValues.size() ? m_restValues[itemIndex] : 0.0;
+    }
+
+    _Use_decl_annotations_
     void SurfaceRenderer::MoveItem(size_t itemIndex, double x, double y) noexcept
     {
         if (itemIndex >= m_elements.size() || m_elements[itemIndex] == nullptr)
@@ -1219,8 +1381,16 @@ namespace glass
 
         if (itemIndex < m_labels.size() && m_labels[itemIndex] != nullptr)
         {
-            controls::Canvas::SetLeft(m_labels[itemIndex], x);
+            auto const inset = KindAt(itemIndex) == ControlKind::Panel ? 8.0 : 0.0;
+
+            controls::Canvas::SetLeft(m_labels[itemIndex], x + inset);
             controls::Canvas::SetTop(m_labels[itemIndex], y + m_labelOffsets[itemIndex]);
+        }
+
+        if (itemIndex < m_valueTexts.size() && m_valueTexts[itemIndex] != nullptr)
+        {
+            controls::Canvas::SetLeft(m_valueTexts[itemIndex], x);
+            controls::Canvas::SetTop(m_valueTexts[itemIndex], y + m_valueOffsets[itemIndex]);
         }
     }
 
@@ -1236,6 +1406,13 @@ namespace glass
         auto const clamped = static_cast<float>(std::clamp(value, 0.0, 1.0));
 
         m_values[itemIndex] = value;
+
+        // Only for a control that is actually showing a number, which is a handful on a page
+        // rather than all of them.
+        if (itemIndex < m_valueTexts.size() && m_valueTexts[itemIndex] != nullptr)
+        {
+            RefreshValueText(itemIndex);
+        }
 
         try
         {

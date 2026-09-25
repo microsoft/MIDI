@@ -426,6 +426,16 @@ namespace glass
 
         page->Controls.push_back(std::move(control));
 
+        // A grouping panel dropped on top of the controls it is meant to frame would hide them,
+        // and nobody drops one meaning that. It goes to the back on the way in; the z-order
+        // commands move it from there.
+        if (kind == ControlKind::Panel && page->Controls.size() > 1)
+        {
+            auto added = std::move(page->Controls.back());
+            page->Controls.pop_back();
+            page->Controls.insert(page->Controls.begin(), std::move(added));
+        }
+
         Commit(EditNames::Add);
         SelectOnly(id);
 
@@ -490,6 +500,13 @@ namespace glass
         auto const id = control.Id;
 
         page->Controls.push_back(std::move(control));
+
+        if (kind == ControlKind::Panel && page->Controls.size() > 1)
+        {
+            auto added = std::move(page->Controls.back());
+            page->Controls.pop_back();
+            page->Controls.insert(page->Controls.begin(), std::move(added));
+        }
 
         // One entry. Drawing a control out to a size is one action, and undoing it must not
         // leave a default-sized one behind.
@@ -889,6 +906,56 @@ namespace glass
         }
 
         Commit(EditNames::Arrange);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::ChangeZOrder(ZOrderMove move)
+    {
+        auto* const page = MutablePage();
+
+        if (page == nullptr || page->Controls.size() < 2 || m_selection.empty())
+        {
+            return false;
+        }
+
+        std::vector<size_t> selected{};
+
+        for (size_t index = 0; index < page->Controls.size(); ++index)
+        {
+            if (IsSelected(page->Controls[index].Id))
+            {
+                selected.push_back(index);
+            }
+        }
+
+        if (selected.empty() || selected.size() == page->Controls.size())
+        {
+            return false;
+        }
+
+        auto const order = ReorderForZ(page->Controls.size(), selected, move);
+
+        std::vector<Control> reordered{};
+        reordered.reserve(order.size());
+
+        bool changed{ false };
+
+        for (size_t index = 0; index < order.size(); ++index)
+        {
+            changed = changed || order[index] != index;
+            reordered.push_back(page->Controls[order[index]]);
+        }
+
+        if (!changed)
+        {
+            return false;
+        }
+
+        page->Controls = std::move(reordered);
+
+        Commit(EditNames::ZOrder);
 
         return true;
     }

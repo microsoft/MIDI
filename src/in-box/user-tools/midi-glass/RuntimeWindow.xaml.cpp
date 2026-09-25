@@ -238,6 +238,15 @@ namespace winrt::midiglass::implementation
 
         auto weak = get_weak();
 
+        m_renderer.DescribeValue = [weak](uint32_t controlIndex, double value) -> std::wstring
+            {
+                auto strong = weak.get();
+
+                return strong != nullptr && strong->m_player != nullptr
+                    ? strong->m_player->DescribeValue(controlIndex, value)
+                    : std::wstring{};
+            };
+
         m_input.ValueChanged = [weak](size_t itemIndex, double value, bool isFinal)
             {
                 if (auto strong = weak.get())
@@ -271,10 +280,7 @@ namespace winrt::midiglass::implementation
             {
                 if (auto strong = weak.get())
                 {
-                    if (isTouched)
-                    {
-                        strong->m_renderer.Bloom(itemIndex);
-                    }
+                    strong->OnControlTouched(itemIndex, isTouched);
                 }
             };
 
@@ -313,6 +319,26 @@ namespace winrt::midiglass::implementation
         }
 
         ApplyScale();
+    }
+
+    _Use_decl_annotations_
+    void RuntimeWindow::ShowPage(size_t pageIndex)
+    {
+        if (pageIndex >= m_document.Pages.size() || pageIndex == m_pageIndex)
+        {
+            return;
+        }
+
+        BuildPage(pageIndex);
+
+        // The selector is chrome following the surface, not the other way around, so its own
+        // handler must not turn round and build the page again.
+        auto const previous = m_updatingChrome;
+        m_updatingChrome = true;
+
+        PageSelector().SelectedIndex(static_cast<int32_t>(pageIndex));
+
+        m_updatingChrome = previous;
     }
 
     void RuntimeWindow::ApplyScale()
@@ -459,6 +485,10 @@ namespace winrt::midiglass::implementation
 
             // The chrome is the only place Panic lives, so it cannot go away with the title bar.
             AppTitleBar().Visibility(m_fullScreen ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+            ChromeBar().Visibility(m_fullScreen ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+
+            ShowFullScreenChrome();
+            HoldDisplayAwake(m_fullScreen);
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to switch full screen.")
     }

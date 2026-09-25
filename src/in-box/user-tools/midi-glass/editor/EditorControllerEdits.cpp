@@ -225,6 +225,22 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    bool EditorController::SetControlReturnsToDefault(std::wstring const& id, bool returns)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr || control->ReturnsToDefault == returns)
+        {
+            return false;
+        }
+
+        control->ReturnsToDefault = returns;
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
     bool EditorController::SetControlSendsValueOnStart(std::wstring const& id, bool sends)
     {
         auto* const control = MutableControl(id);
@@ -849,6 +865,127 @@ namespace glass
         }
 
         Commit(EditNames::Devices);
+
+        return true;
+    }
+
+    // ---------------------------------------------------------------- sequences
+
+    _Use_decl_annotations_
+    std::wstring EditorController::AddSequence(std::wstring const& name)
+    {
+        if (m_document.Sequences.size() >= MaximumSequencesPerLayout)
+        {
+            return {};
+        }
+
+        auto const base = name.empty() ? std::wstring{ L"Sequence" } : SanitizeStoredString(name);
+
+        auto chosen = base;
+        int32_t suffix{ 2 };
+
+        // Two sequences with one name would make "which one does this button play" unanswerable,
+        // so the second one gets a number rather than being refused.
+        while (m_document.FindSequence(chosen) != nullptr)
+        {
+            chosen = base + L" " + std::to_wstring(suffix++);
+
+            if (suffix > 1000)
+            {
+                return {};
+            }
+        }
+
+        Sequence sequence{};
+        sequence.Name = chosen;
+
+        m_document.Sequences.push_back(std::move(sequence));
+
+        Commit(EditNames::Sequence);
+
+        return chosen;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetSequence(std::wstring const& name, Sequence const& sequence)
+    {
+        auto const found = std::find_if(
+            m_document.Sequences.begin(),
+            m_document.Sequences.end(),
+            [&name](glass::Sequence const& entry) { return entry.Name == name; });
+
+        if (found == m_document.Sequences.end())
+        {
+            return false;
+        }
+
+        if (found->Steps.size() == sequence.Steps.size() && found->Mode == sequence.Mode)
+        {
+            // Writing back what is already there would put an entry on the undo stack for an
+            // edit nobody made.
+            auto same = true;
+
+            for (size_t index = 0; index < sequence.Steps.size(); ++index)
+            {
+                auto const& left = found->Steps[index];
+                auto const& right = sequence.Steps[index];
+
+                if (left.Kind != right.Kind ||
+                    left.WaitMilliseconds != right.WaitMilliseconds ||
+                    left.RepeatCount != right.RepeatCount ||
+                    left.TargetControlId != right.TargetControlId ||
+                    left.Message.Kind != right.Message.Kind ||
+                    left.Message.Number != right.Message.Number ||
+                    left.Message.DeviceName != right.Message.DeviceName ||
+                    left.Message.ChannelIndex != right.Message.ChannelIndex ||
+                    left.Message.SystemExclusive != right.Message.SystemExclusive)
+                {
+                    same = false;
+                    break;
+                }
+            }
+
+            if (same)
+            {
+                return false;
+            }
+        }
+
+        auto const unknown = found->Unknown;
+
+        *found = sequence;
+        found->Name = name;
+        found->Unknown = unknown;
+
+        if (found->Steps.size() > MaximumStepsPerSequence)
+        {
+            found->Steps.resize(MaximumStepsPerSequence);
+        }
+
+        Commit(EditNames::Sequence);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::RemoveSequence(std::wstring const& name)
+    {
+        auto const found = std::find_if(
+            m_document.Sequences.begin(),
+            m_document.Sequences.end(),
+            [&name](Sequence const& entry) { return entry.Name == name; });
+
+        if (found == m_document.Sequences.end())
+        {
+            return false;
+        }
+
+        m_document.Sequences.erase(found);
+
+        // The controls that played it keep the name. A message pointing at a sequence that is
+        // gone sends nothing, and the editor can still show what it was meant to play, which is
+        // more use than silently clearing the row.
+        Commit(EditNames::Sequence);
 
         return true;
     }

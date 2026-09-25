@@ -7,6 +7,7 @@ Devices, connections and the things a running layout needs that are not drawing.
 | `LivePlayer.*` | Everything between a value on the surface and words on the wire. The runtime window and the editor's Try mode both drive one. |
 | `DeviceCatalog.*` | The layout's device table, resolved against what is plugged in right now. |
 | `OutputRouter.*` | One connection per endpoint per process, shared by every control, page and layout. |
+| `SequenceRunner.*` | The clock behind a sequence, a dump with gaps in it, and anything else that has to happen later rather than now. |
 | `SurfaceScale.*` | Where a page sits inside a window, and which point on the page a point in the window is. |
 | `PanicMessages.*` | Exactly what a panic sends. |
 
@@ -60,6 +61,18 @@ Sustain off, all notes off, all sound off, pitch bend center — in that order, 
 
 Built as MIDI 1.0 protocol on purpose. A panic has to work on the oldest thing plugged in, and every one of those four is a message any device understands. The service still converts it for whatever is on the other end.
 
+## SequenceRunner
+
+One thread for the whole player, not one per sequence. Twenty buttons holding twenty sequences is a real layout, and twenty threads each waking every few milliseconds is not a reasonable way to spend a laptop's battery during a set.
+
+Three rules, all of which came out of driving it rather than reading it:
+
+- **Everything before the first wait runs on the caller's thread**, which is the pointer handler. A button carrying one dump has to feel like a button carrying one note. Only a wait puts a plan on the clock.
+- **Sending always happens on the dispatcher's thread**, because the send table is read from the UI thread and nothing else. That is what lets the hot path take no lock, and the clock thread never touches a connection.
+- **A run handed to the dispatcher is not due again until it comes back.** Without that flag, one slow frame turns a due run into a thousand work items.
+
+The wait is a condition variable with a **predicate**, not a bare `wait_for`. A notification landing between "is anything due" and "wait" is otherwise dropped, and every step of every sequence stalls for the full idle second — which looks exactly like a sequence stopping half way through.
+
 ## What this does not do
 
 - **It does not decide what to send.** That is the binding layer. The router is handed words and a destination index.
@@ -67,3 +80,5 @@ Built as MIDI 1.0 protocol on purpose. A panic has to work on the oldest thing p
 - **It does not own window placement, scroll position or zoom.** `SurfaceScale` answers a question; the window acts on the answer.
 - **It does not create or destroy devices.** No loopbacks, no virtual devices, no configuration file. The virtual device a layout can publish arrives later and will be a session-scoped device, never a loopback.
 - **It does not re-initialize a layout when a device comes back.** Startup values are sent once per run; the window owns that decision.
+- **The runner does not decide what a sequence contains.** It is handed a flat list of actions; expanding a repeat block and building the words is the binding layer's job, at load time.
+- **The runner never unwinds.** Stopping a sequence half way leaves what it already sent where it is, because guessing at somebody's synthesizer state is worse than leaving it alone. Panic is the thing that puts a rig back.

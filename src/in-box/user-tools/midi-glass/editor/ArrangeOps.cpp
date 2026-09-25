@@ -225,4 +225,89 @@ namespace glass
 
         return SetGap(rects, axis, gap);
     }
+
+    _Use_decl_annotations_
+    std::vector<size_t> ReorderForZ(
+        size_t count,
+        std::vector<size_t> const& selected,
+        ZOrderMove move)
+    {
+        std::vector<size_t> order(count);
+        std::iota(order.begin(), order.end(), size_t{ 0 });
+
+        std::vector<bool> isSelected(count, false);
+
+        for (auto const index : selected)
+        {
+            if (index < count)
+            {
+                isSelected[index] = true;
+            }
+        }
+
+        if (count < 2)
+        {
+            return order;
+        }
+
+        switch (move)
+        {
+        case ZOrderMove::ToFront:
+        case ZOrderMove::ToBack:
+        {
+            std::vector<size_t> moved{};
+            std::vector<size_t> stayed{};
+
+            for (auto const index : order)
+            {
+                (isSelected[index] ? moved : stayed).push_back(index);
+            }
+
+            order.clear();
+
+            if (move == ZOrderMove::ToBack)
+            {
+                order.insert(order.end(), moved.begin(), moved.end());
+                order.insert(order.end(), stayed.begin(), stayed.end());
+            }
+            else
+            {
+                order.insert(order.end(), stayed.begin(), stayed.end());
+                order.insert(order.end(), moved.begin(), moved.end());
+            }
+
+            break;
+        }
+
+        case ZOrderMove::Forward:
+        {
+            // From the top down, so a run of selected controls slides as one and the topmost
+            // one of them stops the rest rather than being jumped over.
+            for (size_t i = count - 1; i-- > 0;)
+            {
+                if (isSelected[order[i]] && !isSelected[order[i + 1]])
+                {
+                    std::swap(order[i], order[i + 1]);
+                }
+            }
+
+            break;
+        }
+
+        case ZOrderMove::Backward:
+        {
+            for (size_t i = 1; i < count; ++i)
+            {
+                if (isSelected[order[i]] && !isSelected[order[i - 1]])
+                {
+                    std::swap(order[i], order[i - 1]);
+                }
+            }
+
+            break;
+        }
+        }
+
+        return order;
+    }
 }

@@ -126,6 +126,11 @@ namespace glass
 
         ControlKind KindAt(_In_ size_t itemIndex) const noexcept;
 
+        // Where this control sits when nothing is holding it, and whether it goes back there on
+        // its own. A pitch wheel does; a volume fader had better not.
+        bool ReturnsToRestAt(_In_ size_t itemIndex) const noexcept;
+        double RestValueAt(_In_ size_t itemIndex) const noexcept;
+
         // Moves the drawing. Does not send anything and does not touch the XAML element's value,
         // which the caller owns.
         void SetValue(_In_ size_t itemIndex, _In_ double value) noexcept;
@@ -143,6 +148,18 @@ namespace glass
         // Windows says reduce motion, so the bloom switches instead of fading. The surface is a
         // wall of animation by design, which is exactly why honoring this is not optional.
         void SetReducedMotion(_In_ bool reduced) noexcept { m_reducedMotion = reduced; }
+
+        // What a control shows for its value, when it shows one. Set by the window, because only
+        // the window has the binding engine and only the engine knows whether this control's
+        // numbers are a percentage or a figure out of a device manual.
+        //
+        // Called on the hot path, but only for a control that is actually showing a value, which
+        // is a handful on a page rather than all of them.
+        std::function<std::wstring(uint32_t controlIndex, double value)> DescribeValue{};
+
+        // A finger went down or came up. A control set to show its value only while touched
+        // needs to be told; everything else ignores it.
+        void SetTouched(_In_ size_t itemIndex, _In_ bool touched) noexcept;
 
         // Moves a control without rebuilding anything. The editor drags with this, because
         // rebuilding a page of two hundred on every pointer move costs about five milliseconds
@@ -179,6 +196,14 @@ namespace glass
             _In_ Control const& control,
             _In_ Theme const& theme);
 
+        // The number inside the control, for the controls that show one.
+        void LayoutValueText(
+            _In_ size_t itemIndex,
+            _In_ Control const& control,
+            _In_ Theme const& theme);
+
+        void RefreshValueText(_In_ size_t itemIndex) noexcept;
+
         comp::CompositionColorBrush BrushFor(
             _In_ comp::Compositor const& compositor,
             _In_ ThemeColor const& color);
@@ -214,6 +239,18 @@ namespace glass
         std::vector<GlassControlElement> m_elements{};
         std::vector<uint32_t> m_controlIndexes{};
         std::vector<ControlKind> m_kinds{};
+
+        // Parallel to m_kinds: where a spring-return control goes when it is let go, and which
+        // controls do that at all.
+        std::vector<double> m_restValues{};
+        std::vector<bool> m_returnsToRest{};
+
+        // The number drawn inside a control, for the few that show one. Null everywhere else,
+        // so a page of two hundred pays nothing for a feature four of them use.
+        std::vector<controls::TextBlock> m_valueTexts{};
+        std::vector<double> m_valueOffsets{};
+        std::vector<ShowValueOverride> m_showValues{};
+        std::vector<bool> m_touched{};
 
         // The label is a XAML child of the host beside the control, not inside it, so it has to
         // be carried along by hand when the control moves.

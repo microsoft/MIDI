@@ -999,3 +999,63 @@ void BindingEngineTests::EvaluateWritesNoMoreThanTheCallerAllowed()
     std::array<glass::PreparedSend, glass::MaximumSendsPerEvent> sends{};
     VERIFY_ARE_EQUAL(uint32_t{ 0 }, engine.Evaluate(99, glass::MessageTrigger::Changes, 1.0, sends));
 }
+
+// ---- what a control shows inside itself ----
+
+void BindingEngineTests::AnAbsoluteRangeIsDescribedInItsOwnUnits()
+{
+    auto document = OneControlDocument();
+
+    auto& message = document.Pages[0].Controls[0].Messages[0];
+    message.Minimum = { 0, glass::ValueScaling::Absolute };
+    message.Maximum = { 127, glass::ValueScaling::Absolute };
+    message.UseMidi1Protocol = true;
+
+    glass::BindingEngine engine{};
+    engine.Prepare(document, DeskOn(glass::DestinationProtocol::Midi1));
+
+    uint32_t value{ 0 };
+    bool isAbsolute{ false };
+
+    VERIFY_IS_TRUE(engine.TryDescribeValue(0, 1.0, value, isAbsolute));
+
+    // Somebody who typed 0 to 127 out of a device manual wants to see 127, not 100 %.
+    VERIFY_IS_TRUE(isAbsolute);
+    VERIFY_ARE_EQUAL(uint32_t{ 127 }, value);
+
+    VERIFY_IS_TRUE(engine.TryDescribeValue(0, 0.5, value, isAbsolute));
+    VERIFY_ARE_EQUAL(uint32_t{ 64 }, value);
+}
+
+void BindingEngineTests::APercentageRangeIsNotDescribedAsANumber()
+{
+    auto const document = OneControlDocument();
+
+    glass::BindingEngine engine{};
+    engine.Prepare(document, DeskOn(glass::DestinationProtocol::Midi2));
+
+    uint32_t value{ 0 };
+    bool isAbsolute{ true };
+
+    VERIFY_IS_TRUE(engine.TryDescribeValue(0, 1.0, value, isAbsolute));
+
+    // A 32 bit control change at the top is 4294967295, which is nobody's idea of a readout.
+    // Saying it is not absolute is what tells the surface to show a percentage instead.
+    VERIFY_IS_FALSE(isAbsolute);
+}
+
+void BindingEngineTests::AControlThatSendsNothingDescribesNothing()
+{
+    auto document = OneControlDocument();
+
+    document.Pages[0].Controls[0].Messages.clear();
+
+    glass::BindingEngine engine{};
+    engine.Prepare(document, DeskOn(glass::DestinationProtocol::Midi1));
+
+    uint32_t value{ 5 };
+    bool isAbsolute{ true };
+
+    VERIFY_IS_FALSE(engine.TryDescribeValue(0, 1.0, value, isAbsolute));
+    VERIFY_IS_FALSE(engine.TryDescribeValue(99, 1.0, value, isAbsolute));
+}

@@ -73,4 +73,9 @@ public:
 
     // ---- the hot path ----
     TEST_METHOD(EvaluateWritesNoMoreThanTheCallerAllowed);
+
+    // ---- what a control shows inside itself ----
+    TEST_METHOD(AnAbsoluteRangeIsDescribedInItsOwnUnits);
+    TEST_METHOD(APercentageRangeIsNotDescribedAsANumber);
+    TEST_METHOD(AControlThatSendsNothingDescribesNothing);
 };

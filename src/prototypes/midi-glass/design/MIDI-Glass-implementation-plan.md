@@ -6,7 +6,7 @@ Companion to `MIDI-Glass-design.md` and the twelve mockup screens. This is the *
 
 ## Where this stands — read this first
 
-**As of 24 September 2026. Phases 0, 1, 2, 3, 4 and 5 are done. Phase 6 has not started.**
+**As of 25 September 2026. Phases 0, 1, 2, 3, 4 and 5 are done, and most of phase 6 with a slice of phase 7.**
 
 | Phase | State | Where the code is |
 |---|---|---|
@@ -16,9 +16,11 @@ Companion to `MIDI-Glass-design.md` and the twelve mockup screens. This is the *
 | 3 Document, themes, thumbnails | **Done** | `midi-glass/document/`, `midi-glass/thumbnail/` |
 | 4 Runtime surface | **Done** | `midi-glass/binding/`, `runtime/`, `surface/`, `RuntimeWindow.*` |
 | 5 Editor | **Done** | `midi-glass/editor/`, `EditorWindow.*`, `EditorCanvas/Inspector/Outline/Dialogs/TryMode.cpp` |
-| 6–9 | Not started | — |
+| 6 Sequences, generators, learn | **Sequences and learn done. Generators not started.** | `binding/ActionPlan.*`, `binding/LearnCapture.*`, `runtime/SequenceRunner.*`, `EditorSequenceDialog.cpp`, `EditorLearn.cpp` |
+| 7 Full screen, windows, displays | **The corner button, its flyout and display-required are done.** Per-layout display memory and the virtual device are not. | `RuntimeWindowFullScreen.cpp` |
+| 8–9 | Not started | — |
 
-**Tests: 243, all passing, none needing a window or a device.** `src/in-box/Test/Tools/Midi2.MidiGlass.unittests`. Builds clean x64 Release; spelling and accessibility checks clean.
+**Tests: 305, all passing, none needing a window or a device.** `src/in-box/Test/Tools/Midi2.MidiGlass.unittests`. Builds clean x64 and ARM64 Release; spelling and accessibility checks clean.
 
 ```
 build  msbuild <proj> /t:Build /p:Configuration=Release /p:Platform=x64 "/p:SolutionDir=<repo>\src\in-box\\" /v:minimal /nologo /nodeReuse:false
@@ -30,11 +32,15 @@ run    midiglass --run "<layout.midilayout.json>"
 
 ### What the app does today
 
-Launch it and the **library** lists every layout in `Documents\MIDI Layouts`, each with a card drawn from the layout itself rather than captured from a window. It matches mockup screen 1: a toolbar with New layout, search, sort and a grid/list toggle; Favorites and Recent sections; a hover bar with Run, Edit and a context menu on every card; and a status bar that names the folder and reports whether the MIDI service is running. **New layout** asks which device to send to and offers five templates. **Run** opens a runtime window: the surface, the three scale modes, a device status line, View mode, full screen and Panic.
+Launch it and the **library** lists every layout in `Documents\MIDI Layouts`, each with a card drawn from the layout itself rather than captured from a window. It matches mockup screen 1: a toolbar with New layout, search, sort and a grid/list toggle; Favorites and Recent sections; a hover bar with Run, Edit and a context menu on every card; and a status bar that names the folder and reports whether the MIDI service is running. **New layout** asks which device to send to and offers five templates. **Run** opens a runtime window: the surface, the three scale modes, a device status line, View mode, full screen and Panic. In **full screen** there is no bar at all — one 34 px button in whichever corner the layout names, fading back after a few seconds, with scale, pages, where to put the button, leaving full screen and Panic behind it. While a layout runs full screen the machine is asked not to blank the screen.
 
-**Edit** opens the editor: the palette, the outline, the canvas with its work area and page, the inspector, snapping with magnetic guides, Arrange, Repeat, undo and redo, page resizing with the grow and shrink paths, auto-save with the Saved chip, and **Edit / Try on Ctrl+Enter with the monitor rail underneath**.
+**Edit** opens the editor: the palette, the outline, the canvas with its work area and page, the inspector, snapping with magnetic guides, Arrange, **the drawing order**, Repeat, undo and redo, page resizing with the grow and shrink paths, auto-save with the Saved chip, and **Edit / Try on Ctrl+Enter with the monitor rail underneath**.
 
-Not there yet: sequences, generators, learn, the per-layout virtual device, and the full screen corner button. Everything in that list is phase 6 or later.
+A control can send a note, a control change, a program change, pitch bend, channel pressure, a registered or assigned controller, a per-note controller, **a system exclusive dump loaded from a .syx file or typed as hex, a raw UMP message, a sequence of steps, or a jump to another page**. **Learn** fills in a whole binding by touching the hardware — one control, or a whole bank in keyboard order — with a check box per field so somebody remapping within one device can lock the endpoint and take only the number. A **grouping panel** frames the controls that belong together, and any control can be told to **spring back** to its starting value when released, which is what makes a pitch wheel a pitch wheel.
+
+A control with travel can **show its number inside itself**, while it is held or all the time. It shows the figure that would go on the wire when the customer is working in a device's own units, and a percentage when they are not — a customer who typed 0 to 127 out of a manual wants to see 64, and showing them 50 % would be the same complaint the ranges exist to answer.
+
+Not there yet: generators (beat clock and LFO), the per-layout virtual device, per-layout display memory, the XY pad's second axis, and meters fed by something other than their own value. Everything in that list is the rest of phase 6, phase 7, or later.
 
 ### Two things learned here that apply to every tool in the family
 
@@ -402,11 +408,45 @@ Palette, drag and click placement, snap, magnetic guides, spacing, Repeat, the i
 
 **Exit:** a button plays a six-step sequence with a wait in the middle, proven on the wire with timing. Twenty simultaneous sequences do not cost twenty threads. Learn fills endpoint, group, channel and number from one wiggle, and a bank learn fills eight controls in order.
 
+> **Sequences and Learn done, 25 September 2026. Generators and the tempo source are not started.**
+>
+> **The sequence runner is not built on `MidiSequencePlayer`, and that was the right call.** A button sequence is a handful of messages with real gaps between them; a `MidiSequencePlayer` is a musical timeline with a 250 ms look-ahead and a worker thread of its own, and twenty buttons would mean twenty of them. What phase 6 built instead is `binding/ActionPlan` — pure, tested, no clock — plus `runtime/SequenceRunner`, one joined thread for the whole player. The phase-1 API work is not wasted; it is what a file player and a MainStage-style app need, and this is not one.
+>
+> **A plan is flattened at prepare time, so the runner has no control flow at all.** Repeat blocks are expanded into a straight list of send, wait, set-a-control and go-to-a-page actions, bounded at 4096. That is what makes a plan readable in the editor, cheap to run, and impossible to turn into a loop that never ends — which matters, because a layout is untrusted input from a stranger.
+>
+> **Everything before the first wait runs on the caller's thread.** A button carrying one system exclusive dump has to feel like a button carrying one note, so the plan is advanced in the pointer handler until it hits a wait; only then does it go on the clock. Sending always happens on the dispatcher's thread, because the send table is read from the UI thread and nothing else, which is what lets the hot path take no lock.
+>
+> **Proven on the wire, not by reasoning.** A layout written by hand, run, and driven through UI Automation while the far end of a loopback was captured:
+>
+> | What was driven | What arrived |
+> |---|---|
+> | A button carrying a five byte dump | `30047E7F 06010000` — one complete-in-one packet, the trailing `F7` stripped |
+> | A button carrying a thirteen byte dump | `30160020 6B7F4202`, `30260010 11121314`, `30311500 00000000` — start, continue, end |
+> | A button carrying a raw message | `408E4000 FFFF0000`, exactly as written |
+> | A button carrying a sequence | notes 60, 64 and 67 with their note offs, and the repeated block played twice |
+>
+> A grouping panel on the same page sent nothing and got in the way of nothing.
+>
+> **Three defects the wire probe found, and none of them would have been found by reading the code.**
+> 1. **A channel voice message inside a sequence sent nothing at all.** The plan builder deliberately skips channel voice messages, because a control's own rows leave in the pointer handler — and a sequence step went down the same path. Nothing is holding a step, so a step has to build its own words. While fixing it, a note step became **note on, wait, note off** in one piece, with the hold time on the step: a list of steps is exactly where a hanging note is easy to forget, so it is not something to remember.
+> 2. **A lost wakeup in the clock thread.** A notification landing between "is anything due" and "wait" was dropped, so every step could stall for the full idle second. It looked exactly like a sequence stopping half way through. The fix is the textbook one — a flag set under the lock and a predicate on the wait — and it is worth naming because the symptom pointed at the plan rather than at the clock.
+> 3. **A step kind this build does not understand fell through to "send a message".** The default message kind is a control change, so a layout written by a newer build would have made this one send controller 0 to somebody's desk. An unrecognized kind is now kept as written, skipped, and written back unchanged.
+>
+> **Learn captures five things, not one**, which is the whole point: the endpoint, the group, the channel, the kind of message and the number. A check box per field means somebody remapping inside one device can lock the endpoint and take only the number. It refuses a note off, a control change at zero and pitch bend sitting at center, because all three arrive while somebody is still reaching for the control they actually mean, and it treats a swept knob as one gesture so a bank learn fills one control rather than a hundred. **Bank learn fills in keyboard order**, which is the order the outline shows and the order somebody can fix.
+>
+> **Learn and Try share one player, with output switched off.** Learning needs the connections open and must not send anything; creating a second player would open every device twice.
+>
+> **Not done in this phase**: generators (the beat clock and the LFO), the tempo source, and learn-while-running, which was deferred by design.
+
 ### Phase 7 — Full screen, multiple windows, displays.
 
 Borderless full screen, the fading Esc toast, **the single corner button and its flyout, with the corner chosen per layout**, display-required while running, per-layout display memory, several runtime windows in one process, View mode with zoom and pan, **the optional virtual device**.
 
 **Exit:** two layouts running on two displays at once, sharing one connection to a shared synth. Full screen switches without reconnecting anything. Unplugging the second display does not strand a window. A DAW sees the virtual device appear and disappear with the layout, and nothing is left in the machine configuration afterwards.
+
+> **The corner button landed 25 September 2026.** Full screen has no bar: one 34 px button in the corner the layout names, at full brightness for four seconds and then a quarter until the pointer finds it again. Its flyout is fit to screen, actual size, the pages, where to move the button, leaving full screen, and **Panic last, in the critical color, never moving** — the moment Panic is needed is the moment nobody wants to go looking for it. The browser-style "press Esc" note fades after two and a half seconds and does not come back. While a layout runs full screen the app holds a display request, so a performer's screen cannot blank mid set.
+>
+> **Still open in this phase**: per-layout display memory, remembering the scale mode and the button corner in the file, and the virtual device.
 
 ### Phase 8 — Accessibility and the safety pass.
 

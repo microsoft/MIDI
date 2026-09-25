@@ -12,6 +12,7 @@
 
 #include "LayoutModel.h"
 #include "LayoutSerializer.h"
+#include "HexText.h"
 
 using namespace WEX::Common;
 using namespace WEX::Logging;
@@ -471,4 +472,84 @@ void LayoutDocumentTests::FindsControlsOutsideThePage()
     auto const outside = document.ControlsOutsidePage();
 
     VERIFY_ARE_EQUAL(size_t{ 2 }, outside.size());
+}
+
+// ---- hexadecimal in and out ----
+
+void LayoutDocumentTests::HexBytesRoundTrip()
+{
+    std::vector<uint8_t> const bytes{ 0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x02, 0x00, 0x10, 0xF7 };
+
+    auto const text = glass::FormatHexBytes(bytes);
+    auto const back = glass::ParseHexBytes(text, glass::MaximumSystemExclusiveBytes);
+
+    VERIFY_ARE_EQUAL(bytes.size(), back.size());
+
+    for (size_t index = 0; index < bytes.size(); ++index)
+    {
+        VERIFY_ARE_EQUAL(bytes[index], back[index]);
+    }
+}
+
+void LayoutDocumentTests::HexAcceptsWhatSomebodyWouldPaste()
+{
+    // A manual, a forum post and a hex editor all write it differently, and somebody pasting one
+    // of them should not have to know which form this app would have chosen.
+    auto const spaced = glass::ParseHexBytes(L"F0 00 20 6B F7", 64);
+    auto const packed = glass::ParseHexBytes(L"F000206BF7", 64);
+    auto const commas = glass::ParseHexBytes(L"0xF0, 0x00, 0x20, 0x6B, 0xF7", 64);
+    auto const lines = glass::ParseHexBytes(L"F0 00\r\n20 6B\nF7", 64);
+
+    VERIFY_ARE_EQUAL(size_t{ 5 }, spaced.size());
+    VERIFY_ARE_EQUAL(size_t{ 5 }, packed.size());
+    VERIFY_ARE_EQUAL(size_t{ 5 }, commas.size());
+    VERIFY_ARE_EQUAL(size_t{ 5 }, lines.size());
+
+    VERIFY_ARE_EQUAL(uint8_t{ 0x6B }, commas[3]);
+    VERIFY_ARE_EQUAL(uint8_t{ 0x6B }, lines[3]);
+}
+
+void LayoutDocumentTests::HalfAByteIsRefusedWhole()
+{
+    // A partly-read dump is worse than none: one bad character in a firmware image can leave a
+    // synthesizer unusable.
+    VERIFY_IS_TRUE(glass::ParseHexBytes(L"F0 00 2", 64).empty());
+}
+
+void LayoutDocumentTests::SomethingThatIsNotHexIsRefusedWhole()
+{
+    VERIFY_IS_TRUE(glass::ParseHexBytes(L"F0 ZZ 20", 64).empty());
+    VERIFY_IS_TRUE(glass::ParseHexBytes(L"the quick brown fox", 64).empty());
+}
+
+void LayoutDocumentTests::HexIsBounded()
+{
+    std::wstring long_{};
+
+    for (int32_t i = 0; i < 100; ++i)
+    {
+        long_ += L"7F";
+    }
+
+    VERIFY_ARE_EQUAL(size_t{ 100 }, glass::ParseHexBytes(long_, 100).size());
+    VERIFY_IS_TRUE(glass::ParseHexBytes(long_, 99).empty());
+}
+
+void LayoutDocumentTests::HexWordsRoundTrip()
+{
+    std::vector<uint32_t> const words{ 0x40903C00, 0xFFFF0000 };
+
+    auto const text = glass::FormatHexWords(words);
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"40903C00 FFFF0000" }, text);
+
+    auto const back = glass::ParseHexWords(text, 4);
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, back.size());
+    VERIFY_ARE_EQUAL(words[0], back[0]);
+    VERIFY_ARE_EQUAL(words[1], back[1]);
+
+    // Seven digits is not a word, and a word that is not whole is not a word.
+    VERIFY_IS_TRUE(glass::ParseHexWords(L"40903C0", 4).empty());
+    VERIFY_IS_TRUE(glass::ParseHexWords(L"40903C00 FFFF0000 00000000 11111111 22222222", 4).empty());
 }

@@ -42,6 +42,24 @@ namespace winrt::midiglass::implementation
                 }
             };
 
+        // A sequence step moving a control looks exactly like a device moving one: the surface
+        // follows, and nothing is sent a second time.
+        m_player->ControlValueSet = [weak](uint32_t controlIndex, double value)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->OnFeedbackMoved(controlIndex, value);
+                }
+            };
+
+        m_player->PageRequested = [weak](uint32_t pageIndex)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->ShowPage(pageIndex);
+                }
+            };
+
         // One owner per running layout, and the file path is what makes it unique, so the same
         // layout opened twice shares its connections instead of doubling them.
         m_player->Start(m_document, m_dispatcher, m_ownerId);
@@ -176,6 +194,22 @@ namespace winrt::midiglass::implementation
         if (m_player != nullptr)
         {
             m_player->Switched(m_renderer.ControlIndexOf(itemIndex), isOn);
+        }
+    }
+
+    _Use_decl_annotations_
+    void RuntimeWindow::OnControlTouched(size_t itemIndex, bool isTouched)
+    {
+        if (isTouched)
+        {
+            m_renderer.Bloom(itemIndex);
+        }
+
+        m_renderer.SetTouched(itemIndex, isTouched);
+
+        if (m_player != nullptr)
+        {
+            m_player->Touched(m_renderer.ControlIndexOf(itemIndex), isTouched);
         }
     }
 
