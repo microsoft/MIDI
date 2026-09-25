@@ -52,6 +52,68 @@ namespace winrt::midiclock::implementation
 
             return res::FormatString(L"TileDestinationFormat", endpointName, groupIndex + 1);
         }
+
+        // Only the parts that are not at their default, so a plain clock says nothing extra and
+        // the tile keeps its usual height.
+        winrt::hstring DescribeTiming(_In_ ::midiclock::ClockRowData const& data) noexcept
+        {
+            try
+            {
+                std::wstring text{};
+
+                auto const append = [&text](winrt::hstring const& part)
+                    {
+                        if (part.empty())
+                        {
+                            return;
+                        }
+
+                        if (!text.empty())
+                        {
+                            text.append(L"  \u00b7  ");
+                        }
+
+                        text.append(part);
+                    };
+
+                if (data.Kind == ::midiclock::ClockKind::TimeCode)
+                {
+                    // Where it starts is the only number a time code clock has besides its rate,
+                    // and it is the one somebody lining up to a picture needs to see.
+                    append(winrt::hstring{ midiapp::FormatPosition(data.StartTimeCode, data.FrameRate) });
+                }
+                else
+                {
+                    if (data.ClockRatioNumerator != data.ClockRatioDenominator)
+                    {
+                        auto const effective = data.BeatsPerMinute *
+                            static_cast<double>(data.ClockRatioNumerator) /
+                            static_cast<double>(data.ClockRatioDenominator);
+
+                        append(res::FormatString(L"TileRatioFormat",
+                            data.ClockRatioNumerator, data.ClockRatioDenominator, FormatTempo(effective)));
+                    }
+
+                    if (data.SwingPercent > ::midiclock::MinimumSwingPercent)
+                    {
+                        append(res::FormatString(L"TileSwingFormat",
+                            std::format(L"{:.0f}", std::round(data.SwingPercent))));
+                    }
+                }
+
+                if (data.OffsetMilliseconds != 0.0)
+                {
+                    append(res::FormatString(L"TileOffsetFormat",
+                        std::format(L"{:+.0f}", data.OffsetMilliseconds)));
+                }
+
+                return winrt::hstring{ text };
+            }
+            catch (...)
+            {
+                return L"";
+            }
+        }
     }
 
     _Use_decl_annotations_
@@ -76,12 +138,23 @@ namespace winrt::midiclock::implementation
                 RaisePropertyChanged(L"SelectAccessibleName");
             }
 
-            auto const tempoText = FormatTempo(data.BeatsPerMinute);
+            auto const tempoText = data.Kind == ::midiclock::ClockKind::TimeCode
+                ? winrt::hstring{ midiapp::FrameRateShortName(data.FrameRate) }
+                : FormatTempo(data.BeatsPerMinute);
 
             if (m_tempoText != tempoText)
             {
                 m_tempoText = tempoText;
                 RaisePropertyChanged(L"TempoText");
+            }
+
+            auto const unitText = res::GetString(
+                data.Kind == ::midiclock::ClockKind::TimeCode ? L"TileFramesPerSecondCaption" : L"TileBpmCaption");
+
+            if (m_unitText != unitText)
+            {
+                m_unitText = unitText;
+                RaisePropertyChanged(L"UnitText");
             }
 
             auto const destinationText = DescribeDestination(data.EndpointName, data.GroupIndex);
@@ -90,6 +163,15 @@ namespace winrt::midiclock::implementation
             {
                 m_destinationText = destinationText;
                 RaisePropertyChanged(L"DestinationText");
+            }
+
+            auto const timingText = DescribeTiming(data);
+
+            if (m_timingText != timingText)
+            {
+                m_timingText = timingText;
+                RaisePropertyChanged(L"TimingText");
+                RaisePropertyChanged(L"TimingVisibility");
             }
 
             if (m_isEndpointMissing != data.IsEndpointMissing)

@@ -1,0 +1,27 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Files
+{
+    [contract(MidiFilesUtilityApiContract,1)]
+    enum MidiFileWriteStatus
+    {
+        Success = 0,
+
+        NothingToWrite = 1,         // the sequence is empty, so there would be no file worth keeping
+        TooLarge = 2,               // refused against the supplied limit
+        AccessDenied = 3,
+        WriteError = 4,
+        OutOfMemory = 5
+    };
+}

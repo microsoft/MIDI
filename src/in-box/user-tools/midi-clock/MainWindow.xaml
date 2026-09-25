@@ -81,10 +81,18 @@
                                            TextWrapping="NoWrap"
                                            Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
                                            Text="{x:Bind TempoText, Mode=OneWay}" />
-                                <TextBlock x:Uid="TileBpmCaption"
+                                <TextBlock x:Name="TileUnitCaption"
                                            HorizontalAlignment="Center"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Text="{x:Bind UnitText, Mode=OneWay}" />
+                                <TextBlock HorizontalAlignment="Center"
+                                           TextWrapping="NoWrap"
+                                           TextTrimming="CharacterEllipsis"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Visibility="{x:Bind TimingVisibility, Mode=OneWay}"
+                                           Text="{x:Bind TimingText, Mode=OneWay}" />
                             </StackPanel>
 
                             <!-- where it goes -->
@@ -364,7 +372,14 @@
                              AutomationProperties.AutomationId="EditNameTextBox"
                              MaxLength="64" />
 
-                    <Grid ColumnSpacing="16">
+                    <ComboBox x:Name="EditKindComboBox"
+                              x:Uid="EditKindComboBox"
+                              AutomationProperties.AutomationId="EditKindComboBox"
+                              HorizontalAlignment="Stretch"
+                              ItemTemplate="{StaticResource NamedChoiceTemplate}"
+                              SelectionChanged="OnEditKindSelectionChanged" />
+
+                    <Grid x:Name="EditBeatClockPanel" ColumnSpacing="16">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
@@ -410,6 +425,31 @@
                         </StackPanel>
                     </Grid>
 
+                    <StackPanel x:Name="EditTimeCodePanel" Spacing="10" Visibility="Collapsed">
+                        <ComboBox x:Name="EditFrameRateComboBox"
+                                  x:Uid="EditFrameRateComboBox"
+                                  AutomationProperties.AutomationId="EditFrameRateComboBox"
+                                  HorizontalAlignment="Stretch"
+                                  ItemTemplate="{StaticResource NamedChoiceTemplate}"
+                                  SelectionChanged="OnEditFrameRateSelectionChanged" />
+
+                        <StackPanel Spacing="2">
+                            <TextBox x:Name="EditStartTimeCodeTextBox"
+                                     x:Uid="EditStartTimeCodeTextBox"
+                                     AutomationProperties.AutomationId="EditStartTimeCodeTextBox"
+                                     MaxLength="16"
+                                     TextChanged="OnEditStartTimeCodeChanged" />
+                            <TextBlock x:Name="EditStartTimeCodeCaption"
+                                       TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       Style="{ThemeResource CaptionTextBlockStyle}" />
+                        </StackPanel>
+
+                        <ToggleSwitch x:Name="EditSendFullFrameToggle"
+                                      x:Uid="EditSendFullFrameToggle"
+                                      AutomationProperties.AutomationId="EditSendFullFrameToggle" />
+                    </StackPanel>
+
                     <ComboBox x:Name="EditEndpointComboBox"
                               x:Uid="EditEndpointComboBox"
                               AutomationProperties.AutomationId="EditEndpointComboBox"
@@ -426,6 +466,59 @@
                     <ToggleSwitch x:Name="EditSendStartStopToggle"
                                   x:Uid="EditSendStartStopToggle"
                                   AutomationProperties.AutomationId="EditSendStartStopToggle" />
+
+                    <Expander x:Name="EditTimingExpander"
+                              x:Uid="EditTimingExpander"
+                              AutomationProperties.AutomationId="EditTimingExpander"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="12">
+                            <StackPanel x:Name="EditBeatShapingPanel" Spacing="12">
+                                <StackPanel Spacing="2">
+                                    <ComboBox x:Name="EditClockRatioComboBox"
+                                              x:Uid="EditClockRatioComboBox"
+                                              AutomationProperties.AutomationId="EditClockRatioComboBox"
+                                              HorizontalAlignment="Stretch"
+                                              ItemTemplate="{StaticResource NamedChoiceTemplate}"
+                                              SelectionChanged="OnEditClockRatioSelectionChanged" />
+                                    <TextBlock x:Name="EditClockRatioCaption"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                                </StackPanel>
+
+                                <StackPanel Spacing="2">
+                                    <Slider x:Name="EditSwingSlider"
+                                            x:Uid="EditSwingSlider"
+                                            AutomationProperties.AutomationId="EditSwingSlider"
+                                            Minimum="50"
+                                            Maximum="75"
+                                            StepFrequency="0.5"
+                                            TickFrequency="5"
+                                            ValueChanged="OnEditSwingValueChanged" />
+                                    <TextBlock x:Name="EditSwingCaption"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                                </StackPanel>
+
+                                <ComboBox x:Name="EditSwingSubdivisionComboBox"
+                                          x:Uid="EditSwingSubdivisionComboBox"
+                                          AutomationProperties.AutomationId="EditSwingSubdivisionComboBox"
+                                          HorizontalAlignment="Stretch"
+                                          ItemTemplate="{StaticResource NamedChoiceTemplate}" />
+                            </StackPanel>
+
+                            <muxc:NumberBox x:Name="EditOffsetNumberBox"
+                                            x:Uid="EditOffsetNumberBox"
+                                            AutomationProperties.AutomationId="EditOffsetNumberBox"
+                                            SpinButtonPlacementMode="Inline"
+                                            Minimum="-500"
+                                            Maximum="500"
+                                            SmallChange="1"
+                                            LargeChange="10" />
+                        </StackPanel>
+                    </Expander>
 
                     <InfoBar x:Name="EditInfoBar"
                              IsOpen="False"

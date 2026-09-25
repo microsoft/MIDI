@@ -132,8 +132,11 @@
   </data>
 
   <!-- =================================== Tiles =================================== -->
-  <data name="TileBpmCaption.Text" xml:space="preserve">
+  <data name="TileBpmCaption" xml:space="preserve">
     <value>BPM</value>
+  </data>
+  <data name="TileFramesPerSecondCaption" xml:space="preserve">
+    <value>frames per second</value>
   </data>
   <data name="TileUnnamedClock" xml:space="preserve">
     <value>Clock</value>
@@ -314,6 +317,139 @@
   </data>
   <data name="EditSendStartStopToggle.OffContent" xml:space="preserve">
     <value>Off</value>
+  </data>
+
+  <!-- ================================ MIDI Time Code ================================ -->
+  <data name="EditKindComboBox.Header" xml:space="preserve">
+    <value>What this clock sends</value>
+  </data>
+  <data name="ClockKindBeatClock" xml:space="preserve">
+    <value>Beat clock, at a tempo</value>
+  </data>
+  <data name="ClockKindTimeCode" xml:space="preserve">
+    <value>MIDI Time Code, at a frame rate</value>
+  </data>
+  <data name="EditFrameRateComboBox.Header" xml:space="preserve">
+    <value>Frame rate</value>
+  </data>
+  <data name="FrameRate24" xml:space="preserve">
+    <value>24 frames per second - film</value>
+  </data>
+  <data name="FrameRate25" xml:space="preserve">
+    <value>25 frames per second - PAL</value>
+  </data>
+  <data name="FrameRate2997Drop" xml:space="preserve">
+    <value>29.97 drop frame - NTSC broadcast</value>
+  </data>
+  <data name="FrameRate30" xml:space="preserve">
+    <value>30 frames per second</value>
+  </data>
+  <data name="EditStartTimeCodeTextBox.Header" xml:space="preserve">
+    <value>Start at</value>
+  </data>
+  <data name="EditStartTimeCodeTextBox.PlaceholderText" xml:space="preserve">
+    <value>00:00:00:00</value>
+  </data>
+  <data name="StartTimeCodeReadingFormat" xml:space="preserve">
+    <value>Starts at {0}.</value>
+    <comment>{0} is a timecode such as 01:02:03:04</comment>
+  </data>
+  <data name="StartTimeCodeNotUnderstood" xml:space="preserve">
+    <value>Write this as hours:minutes:seconds:frames. A shorter entry fills from the right, so 12 means twelve frames.</value>
+  </data>
+  <data name="EditSendFullFrameToggle.Header" xml:space="preserve">
+    <value>Send a full timecode when starting and stopping</value>
+  </data>
+  <data name="EditSendFullFrameToggle.OnContent" xml:space="preserve">
+    <value>On</value>
+  </data>
+  <data name="EditSendFullFrameToggle.OffContent" xml:space="preserve">
+    <value>Off</value>
+  </data>
+  <data name="EditTimingExpanderHeader" xml:space="preserve">
+    <value>Divider, swing and offset</value>
+  </data>
+  <data name="EditOffsetOnlyExpanderHeader" xml:space="preserve">
+    <value>Offset</value>
+  </data>
+
+  <!-- ================================ Divider, swing and offset ================================ -->
+  <data name="EditTimingExpander.Header" xml:space="preserve">
+    <value>Divider, swing and offset</value>
+  </data>
+  <data name="EditClockRatioComboBox.Header" xml:space="preserve">
+    <value>Clock rate</value>
+  </data>
+  <data name="ClockRatioEighthSpeed" xml:space="preserve">
+    <value>1/8 speed</value>
+  </data>
+  <data name="ClockRatioQuarterSpeed" xml:space="preserve">
+    <value>1/4 speed</value>
+  </data>
+  <data name="ClockRatioThirdSpeed" xml:space="preserve">
+    <value>1/3 speed</value>
+  </data>
+  <data name="ClockRatioHalfSpeed" xml:space="preserve">
+    <value>1/2 speed</value>
+  </data>
+  <data name="ClockRatioDotted" xml:space="preserve">
+    <value>Dotted (2/3 speed)</value>
+  </data>
+  <data name="ClockRatioNormal" xml:space="preserve">
+    <value>Normal speed</value>
+  </data>
+  <data name="ClockRatioTriplet" xml:space="preserve">
+    <value>Triplets (1.5x speed)</value>
+  </data>
+  <data name="ClockRatioDoubleSpeed" xml:space="preserve">
+    <value>2x speed</value>
+  </data>
+  <data name="ClockRatioTripleSpeed" xml:space="preserve">
+    <value>3x speed</value>
+  </data>
+  <data name="ClockRatioQuadrupleSpeed" xml:space="preserve">
+    <value>4x speed</value>
+  </data>
+  <data name="ClockRatioEightTimesSpeed" xml:space="preserve">
+    <value>8x speed</value>
+  </data>
+  <data name="ClockRatioEffectiveTempoFormat" xml:space="preserve">
+    <value>The device will run as though the tempo were {0} BPM.</value>
+    <comment>{0} is a tempo in beats per minute</comment>
+  </data>
+  <data name="EditSwingSlider.Header" xml:space="preserve">
+    <value>Swing</value>
+  </data>
+  <data name="SwingStraight" xml:space="preserve">
+    <value>Straight. Every beat is the same length.</value>
+  </data>
+  <data name="SwingValueFormat" xml:space="preserve">
+    <value>{0}% swing. The first note of each pair is held longer and the second is shortened, so the tempo stays the same.</value>
+    <comment>{0} is a percentage from 50 to 75</comment>
+  </data>
+  <data name="EditSwingSubdivisionComboBox.Header" xml:space="preserve">
+    <value>Swing applies to</value>
+  </data>
+  <data name="SwingSubdivisionEighths" xml:space="preserve">
+    <value>Eighth notes</value>
+  </data>
+  <data name="SwingSubdivisionSixteenths" xml:space="preserve">
+    <value>Sixteenth notes</value>
+  </data>
+  <data name="EditOffsetNumberBox.Header" xml:space="preserve">
+    <value>Offset in milliseconds</value>
+  </data>
+  <data name="TileRatioFormat" xml:space="preserve">
+    <value>{0}/{1} rate, {2} out</value>
+    <comment>{0} and {1} are the two halves of a ratio, {2} is the resulting tempo</comment>
+  </data>
+  <data name="TileSwingFormat" xml:space="preserve">
+    <value>{0}% swing</value>
+    <comment>{0} is a percentage</comment>
+  </data>
+  <data name="TileOffsetFormat" xml:space="preserve">
+    <value>{0} ms</value>
+    <comment>{0} is an offset in milliseconds, already carrying its plus or minus sign</comment>
   </data>
   <data name="EditNoEndpointTitle" xml:space="preserve">
     <value>Choose an endpoint</value>

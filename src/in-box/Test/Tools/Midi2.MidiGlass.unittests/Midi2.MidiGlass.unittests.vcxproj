@@ -103,6 +103,7 @@
     <ClInclude Include="LearnCaptureTests.h" />
     <ClInclude Include="MonitorFormatTests.h" />
     <ClInclude Include="ValueThrottleTests.h" />
+    <ClInclude Include="NewControlTests.h" />
     <ClInclude Include="RuntimeSurfaceTests.h" />
     <ClInclude Include="EditGeometryTests.h" />
     <ClInclude Include="EditorControllerTests.h" />
@@ -147,6 +148,7 @@
     <ClCompile Include="LearnCaptureTests.cpp" />
     <ClCompile Include="MonitorFormatTests.cpp" />
     <ClCompile Include="ValueThrottleTests.cpp" />
+    <ClCompile Include="NewControlTests.cpp" />
     <ClCompile Include="RuntimeSurfaceTests.cpp" />
     <ClCompile Include="EditGeometryTests.cpp" />
     <ClCompile Include="EditorControllerTests.cpp" />

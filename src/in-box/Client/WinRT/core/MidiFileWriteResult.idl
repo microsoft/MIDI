@@ -1,0 +1,33 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiFileWriteStatusEnum.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Files
+{
+    [contract(MidiFilesUtilityApiContract,1)]
+    [interface_name("Windows.Devices.Midi2.Utilities.Files.IMidiFileWriteResult", UUID_IMidiFileWriteResult)]
+    runtimeclass MidiFileWriteResult
+    {
+        Boolean Succeeded{ get; };
+        MidiFileWriteStatus Status{ get; };
+
+        UInt32 TrackCount{ get; };
+        UInt64 ByteCount{ get; };
+
+        // Messages that MIDI 1.0 has no way to express, so they are not in the file. A per note
+        // controller, a per note pitch bend and 8 bit system exclusive are the common ones. Zero
+        // for any sequence that came from a Standard MIDI File.
+        UInt32 SkippedEventCount{ get; };
+    };
+}

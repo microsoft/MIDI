@@ -524,6 +524,13 @@ namespace winrt::midiclock::implementation
                 data.Id = definition.Id;
                 data.BeatsPerMinute = definition.BeatsPerMinute;
                 data.GroupIndex = definition.GroupIndex;
+                data.ClockRatioNumerator = definition.ClockRatioNumerator;
+                data.ClockRatioDenominator = definition.ClockRatioDenominator;
+                data.SwingPercent = definition.SwingPercent;
+                data.OffsetMilliseconds = definition.OffsetMilliseconds;
+                data.Kind = definition.Kind;
+                data.FrameRate = definition.FrameRate;
+                data.StartTimeCode = definition.StartTimeCode;
 
                 data.EndpointName = device.has_value()
                     ? std::wstring{ device.value().Name() }
@@ -930,6 +937,15 @@ namespace winrt::midiclock::implementation
                 request.BeatsPerMinute = definition->BeatsPerMinute;
                 request.PulsesPerQuarterNote = definition->PulsesPerQuarterNote;
                 request.SendStartStop = definition->SendStartStop;
+                request.ClockRatioNumerator = definition->ClockRatioNumerator;
+                request.ClockRatioDenominator = definition->ClockRatioDenominator;
+                request.SwingPercent = definition->SwingPercent;
+                request.SwingSubdivision = definition->SwingSubdivision;
+                request.OffsetMilliseconds = definition->OffsetMilliseconds;
+                request.Kind = definition->Kind;
+                request.FrameRate = definition->FrameRate;
+                request.StartTimeCode = definition->StartTimeCode;
+                request.SendFullFrameMessages = definition->SendFullFrameMessages;
                 request.GroupIndexes = ResolveGroupIndexes(*definition);
 
                 requests->push_back(std::move(request));

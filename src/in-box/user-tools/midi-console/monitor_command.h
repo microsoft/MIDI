@@ -23,6 +23,7 @@ namespace midi2console
         std::string CaptureToFile;
         bool AnnotateCapture{ false };
         std::string CaptureFieldDelimiter{ "Space" };
+        std::string CaptureFormat{ "ump" };
     };
 
     int RunMonitorCommand(_In_ MonitorOptions const& options);

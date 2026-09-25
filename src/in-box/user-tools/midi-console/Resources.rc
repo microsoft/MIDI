@@ -278,6 +278,7 @@ IDS_OPT_BT_KEEP_WHEN_OFFLINE                L"How long to keep this device's MID
 IDS_OPT_BT_PROTOCOL                         L"The BLE MIDI protocol to publish, either 'midi1' or 'midi2'. Only one can be published at a time"
 IDS_OPT_BT_ADDRESS_ARGUMENT                 L"The twelve hex digit Bluetooth address of the device which connected to this PC"
 IDS_OPT_BT_SCOPE                            L"How long the decision applies: once, untilRestart, or always"
+IDS_OPT_CAPTURE_FORMAT                      L"Capture file format. ump writes Universal MIDI Packet words and can be replayed with send-message-file, csv writes one row per message under a fixed heading, smf writes a Standard MIDI File and replaces the file rather than appending to it"
 
 // ---- enumerate
 
@@ -607,12 +608,37 @@ IDS_CLOCK_PRESS_ESCAPE                      L"Sending beat clock. Press escape t
 IDS_CLOCK_STOPPED                           L"Stopped sending beat clock."
 IDS_CLOCK_LABEL_PULSES_SENT                 L"Pulses Scheduled"
 IDS_CLOCK_DRAINING                          L"Waiting for already scheduled pulses to play out..."
+IDS_OPT_CLOCK_RATIO                         L"Output rate against the tempo. 1 is the usual rate, 2 doubles it, 1/2 halves it. Any ratio works, so 3/2 is dotted and 1/3 is a third of the rate. You may also write dotted or triplet"
+IDS_OPT_CLOCK_SWING                         L"Swing, as a percentage from 50 to 75. 50 is straight and 66.67 is the triplet feel. The tempo does not change: the first of each pair of notes is lengthened and the second is shortened by the same amount"
+IDS_OPT_CLOCK_SWING_SUBDIVISION             L"What gets swung, as a division of the quarter note. 2 is eighth notes, 4 is sixteenths"
+IDS_OPT_CLOCK_OFFSET                        L"Shift this output against the others, in milliseconds from -500 to 500. Negative is earlier"
+IDS_ERROR_CLOCK_RATIO                       L"That is not a clock ratio. Write a whole number, a ratio such as 1/2 or 3/2, or dotted or triplet."
+IDS_ERROR_CLOCK_SWING_RANGE                 L"Swing must be between 50 and 75 percent."
+IDS_ERROR_CLOCK_SWING_SUBDIVISION           L"The swing subdivision must be between 1 and 16."
+IDS_ERROR_CLOCK_OFFSET_RANGE                L"The offset must be between -500 and 500 milliseconds."
+IDS_CLOCK_LABEL_RATIO                       L"Clock Ratio"
+IDS_CLOCK_LABEL_EFFECTIVE_TEMPO             L"Effective Tempo"
+IDS_CLOCK_LABEL_SWING                       L"Swing"
+IDS_CLOCK_LABEL_OFFSET                      L"Offset"
+IDS_CMD_EP_SEND_TIME_CODE                   L"Send MIDI Time Code to an endpoint until escape is pressed"
+IDS_OPT_MTC_FRAME_RATE                      L"Frames per second: 24, 25, 29.97 or 30. Write 29.97 or drop for drop frame, which counts thirty numbers a second and skips two of them a minute to stay with the clock on the wall"
+IDS_OPT_MTC_START_AT                        L"Where the timecode starts, as hours:minutes:seconds:frames. Shorter forms fill from the right, so 12 means twelve frames"
+IDS_OPT_MTC_FULL_FRAME                      L"Send a full frame message as the clock starts and again as it stops, so a receiver locates straight away instead of waiting two frames"
+IDS_ERROR_MTC_FRAME_RATE                    L"That is not a frame rate. Use 24, 25, 29.97 or 30."
+IDS_ERROR_MTC_START_AT                      L"That is not a timecode this frame rate can start at. Write it as hours:minutes:seconds:frames."
+IDS_MTC_LABEL_FRAME_RATE                    L"Frame Rate"
+IDS_MTC_LABEL_START_AT                      L"Starting At"
+IDS_MTC_LABEL_INTERVAL                      L"Quarter Frame Interval"
+IDS_MTC_LABEL_MESSAGES_SENT                 L"Quarter Frames Scheduled"
+IDS_MTC_LABEL_STOPPED_AT                    L"Stopped At"
 
 // ---- monitor capture
 
 IDS_CAPTURE_TO                              L"Capturing to"
 IDS_CAPTURE_FAILED                          L"The capture file could not be opened for writing."
 IDS_CAPTURE_CLOSED                          L"Wrote {0} messages to the capture file."
+IDS_CAPTURE_BAD_FORMAT                      L"That is not a capture format. Use ump, csv or smf."
+IDS_CAPTURE_SKIPPED                         L"{0} messages were left out because MIDI 1.0 has no way to express them."
 
 // ---- loopback mute
 

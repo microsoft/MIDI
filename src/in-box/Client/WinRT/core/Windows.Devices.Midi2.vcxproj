@@ -789,6 +789,9 @@
     <ClCompile Include="$(SolutionDir)inc\midi_file_smf_reader.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="$(SolutionDir)inc\midi_file_smf_writer.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="$(SolutionDir)inc\midi_sequence_playback_engine.cpp" />
     <ClCompile Include="MidiSequence.cpp" />
     <ClCompile Include="MidiSequenceBuilder.cpp" />
@@ -800,6 +803,9 @@
     <ClCompile Include="MidiFileReadOptions.cpp" />
     <ClCompile Include="MidiFileReadResult.cpp" />
     <ClCompile Include="MidiStandardFileReader.cpp" />
+    <ClCompile Include="MidiFileWriteOptions.cpp" />
+    <ClCompile Include="MidiFileWriteResult.cpp" />
+    <ClCompile Include="MidiStandardFileWriter.cpp" />
     <ClCompile Include="MidiBytestreamToUmpMessageConverterState.cpp" />
     <ClCompile Include="MidiSystemExclusiveReceivedEventArgs.cpp" />
     <ClCompile Include="MidiSystemExclusiveReceiver.cpp" />
@@ -1358,6 +1364,10 @@
     <Midl Include="MidiFileReadOptions.idl" />
     <Midl Include="MidiFileReadResult.idl" />
     <Midl Include="MidiStandardFileReader.idl" />
+    <Midl Include="MidiFileWriteStatusEnum.idl" />
+    <Midl Include="MidiFileWriteOptions.idl" />
+    <Midl Include="MidiFileWriteResult.idl" />
+    <Midl Include="MidiStandardFileWriter.idl" />
     <Midl Include="MidiUniversalSystemExclusiveChannel.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiGroupEndpointListener.idl" />

@@ -135,7 +135,17 @@ namespace midi2console
 
         if (!options.CaptureToFile.empty())
         {
-            if (!captureWriter.Open(options.CaptureToFile, options.CaptureFieldDelimiter, options.AnnotateCapture))
+            if (!MessageCaptureWriter::IsValidFormatName(options.CaptureFormat))
+            {
+                WriteErrorLine(ResourceString(IDS_CAPTURE_BAD_FORMAT));
+                return 1;
+            }
+
+            if (!captureWriter.Open(
+                options.CaptureToFile,
+                options.CaptureFormat,
+                options.CaptureFieldDelimiter,
+                options.AnnotateCapture))
             {
                 WriteErrorLine(ResourceString(IDS_CAPTURE_FAILED));
                 return 1;
@@ -276,10 +286,23 @@ namespace midi2console
 
         if (captureWriter.IsOpen())
         {
-            captureWriter.Flush();
+            auto const written = captureWriter.MessagesWritten();
 
-            WriteInfoLine(FormatResourceString(IDS_CAPTURE_CLOSED,
-                fmt::format("{}", captureWriter.MessagesWritten())));
+            // A Standard MIDI File is produced here, not a message at a time, so this is where
+            // it can still fail.
+            if (!captureWriter.Close())
+            {
+                WriteErrorLine(ResourceString(IDS_CAPTURE_FAILED));
+                return 1;
+            }
+
+            WriteInfoLine(FormatResourceString(IDS_CAPTURE_CLOSED, fmt::format("{}", written)));
+
+            if (captureWriter.MessagesSkipped() > 0)
+            {
+                WriteWarningLine(FormatResourceString(IDS_CAPTURE_SKIPPED,
+                    fmt::format("{}", captureWriter.MessagesSkipped())));
+            }
         }
 
         return 0;

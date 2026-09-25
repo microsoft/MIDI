@@ -315,6 +315,13 @@
 
 #define UUID_IMidiStandardFileReaderStatics                                 8087b303-0519-c0de-31d1-ee00E0503000
 
+#define UUID_IMidiFileWriteOptions                                          8087b303-0519-c0de-31d1-dd00E0504000
+//#define UUID_IMidiFileWriteOptionsFactory                                   8087b303-0519-c0de-31d1-ff00E0504000
+
+#define UUID_IMidiFileWriteResult                                           8087b303-0519-c0de-31d1-dd00E0505000
+
+#define UUID_IMidiStandardFileWriterStatics                                 8087b303-0519-c0de-31d1-ee00E0506000
+
 
 // ========== Transports : Interface number 0F ========================================================================
 

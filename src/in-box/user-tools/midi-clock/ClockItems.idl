@@ -23,8 +23,16 @@ namespace midiclock
         // the headline number on the tile
         String TempoText{ get; };
 
+        // What the headline number is: beats per minute, or frames per second for time code.
+        String UnitText{ get; };
+
         // "<endpoint>  ·  Group 3", or the endpoint alone when it sends to every group
         String DestinationText{ get; };
+
+        // The divider, the swing and the offset, when any of them is not at its default. Empty
+        // for a plain clock, which is most of them.
+        String TimingText{ get; };
+        Microsoft.UI.Xaml.Visibility TimingVisibility{ get; };
 
         String StatusText{ get; };
 
