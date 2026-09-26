@@ -53,6 +53,12 @@ namespace glass
             binding.Keyboard = renderer.KeyboardAt(i);
             binding.VelocityFromTouch = renderer.VelocityFromTouchAt(i);
 
+            auto const latches = kind != ControlKind::Lfo || renderer.LatchesAt(i);
+
+            binding.Momentary = IsMomentary(kind) || (kind == ControlKind::Lfo && !latches);
+            binding.Toggling = IsToggling(kind) || (kind == ControlKind::Lfo && latches);
+            binding.TurnDegreesForFullRange = renderer.TurnDegreesAt(i);
+
             m_bindings.push_back(std::move(binding));
         }
 
@@ -127,7 +133,7 @@ namespace glass
                 TouchChanged(binding.ItemIndex, false);
             }
 
-            if (IsMomentary(binding.Kind) && Switched)
+            if (binding.Momentary && Switched)
             {
                 // A finger lifted off the window rather than off the pad still has to end the
                 // note, or a layout that loses focus mid press leaves one sounding.
@@ -268,7 +274,7 @@ namespace glass
             TouchChanged(binding.ItemIndex, true);
         }
 
-        if (IsMomentary(binding.Kind))
+        if (binding.Momentary)
         {
             binding.Value = 1.0;
 
@@ -302,7 +308,7 @@ namespace glass
             return;
         }
 
-        if (IsToggling(binding.Kind))
+        if (binding.Toggling)
         {
             auto const isOn = binding.Value < 0.5;
 
@@ -331,6 +337,21 @@ namespace glass
         binding.StartValue = binding.Value;
         binding.StartY = point.Position().Y;
         binding.StartX = point.Position().X;
+
+        if (IsTurnedByHand(binding.Kind))
+        {
+            // Where the hand landed on the platter. Everything after this is measured from
+            // here, so a platter can be picked up anywhere on its face.
+            binding.StartAngle = AngleAtPosition(
+                binding.Element.ActualWidth(),
+                binding.Element.ActualHeight(),
+                point.Position().X,
+                point.Position().Y);
+
+            binding.TurnedDegrees = 0.0;
+
+            return;
+        }
 
         if (UsesAbsolutePosition(binding.Kind))
         {
@@ -364,7 +385,7 @@ namespace glass
             return;
         }
 
-        if (IsMomentary(binding.Kind) || IsToggling(binding.Kind))
+        if (binding.Momentary || binding.Toggling)
         {
             return;
         }
@@ -372,6 +393,36 @@ namespace glass
         auto const point = args.GetCurrentPoint(binding.Element);
 
         args.Handled(true);
+
+        if (IsTurnedByHand(binding.Kind))
+        {
+            auto const angle = AngleAtPosition(
+                binding.Element.ActualWidth(),
+                binding.Element.ActualHeight(),
+                point.Position().X,
+                point.Position().Y);
+
+            auto const span = binding.TurnDegreesForFullRange > 0.0
+                ? binding.TurnDegreesForFullRange
+                : 180.0;
+
+            // Accumulated the short way round, so pushing the platter past the top keeps going
+            // instead of snapping back to the other side. Held at the ends rather than allowed
+            // to run past them: without that, a platter spun three times has to be unwound three
+            // times before pushing it the other way does anything.
+            binding.TurnedDegrees = std::clamp(
+                binding.TurnedDegrees + AngleDelta(binding.StartAngle, angle),
+                -span * 0.5,
+                span * 0.5);
+
+            binding.StartAngle = angle;
+
+            // The middle means "not moving", which is what makes a pitch bend row a nudge and a
+            // 0 to 127 controller row sit at 64 the way DJ software expects a jog wheel to.
+            Publish(binding, 0.5 + binding.TurnedDegrees / span, false);
+
+            return;
+        }
 
         if (PlaysKeys(binding.Kind))
         {
@@ -455,7 +506,7 @@ namespace glass
             TouchChanged(binding.ItemIndex, false);
         }
 
-        if (IsMomentary(binding.Kind))
+        if (binding.Momentary)
         {
             binding.Value = 0.0;
 
@@ -473,7 +524,7 @@ namespace glass
             return;
         }
 
-        if (IsToggling(binding.Kind))
+        if (binding.Toggling)
         {
             return;
         }

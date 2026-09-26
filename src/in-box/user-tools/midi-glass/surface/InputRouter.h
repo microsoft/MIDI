@@ -94,11 +94,22 @@ namespace glass
             double Value{ 0.0 };
             double ValueY{ 0.0 };
 
+            // A platter: where the hand is on its face, and how far it has pushed it round
+            // since it landed.
+            double StartAngle{ 0.0 };
+            double TurnedDegrees{ 0.0 };
+            double TurnDegreesForFullRange{ 180.0 };
+
             // Which way a finger drags this control up. Knobs and encoders only.
             DragAxis Drag{ DragAxis::Vertical };
 
             // A pad that takes its velocity from how hard it was hit.
             bool VelocityFromTouch{ false };
+
+            // Whether a press has to be held or latches. Per control rather than per kind,
+            // because an LFO is one or the other depending on what the customer asked for.
+            bool Momentary{ false };
+            bool Toggling{ false };
 
             // A copy rather than a pointer into the document, because the document can be
             // edited underneath a gesture and a keyboard has to keep playing the key it started.

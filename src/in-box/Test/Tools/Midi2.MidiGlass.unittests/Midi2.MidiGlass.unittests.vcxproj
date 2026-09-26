@@ -104,6 +104,7 @@
     <ClInclude Include="MonitorFormatTests.h" />
     <ClInclude Include="ValueThrottleTests.h" />
     <ClInclude Include="NewControlTests.h" />
+    <ClInclude Include="GeneratorTests.h" />
     <ClInclude Include="PackageSurveyTests.h" />
     <ClInclude Include="RuntimeSurfaceTests.h" />
     <ClInclude Include="EditGeometryTests.h" />
@@ -114,6 +115,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutModel.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutSerializer.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\PageTemplates.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\document\LfoShape.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\ThemeModel.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\ThemeStore.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutStore.h" />
@@ -151,6 +153,7 @@
     <ClCompile Include="MonitorFormatTests.cpp" />
     <ClCompile Include="ValueThrottleTests.cpp" />
     <ClCompile Include="NewControlTests.cpp" />
+    <ClCompile Include="GeneratorTests.cpp" />
     <ClCompile Include="PackageSurveyTests.cpp" />
     <ClCompile Include="RuntimeSurfaceTests.cpp" />
     <ClCompile Include="EditGeometryTests.cpp" />
@@ -160,6 +163,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutModel.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutSerializer.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\PageTemplates.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\document\LfoShape.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\ThemeModel.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\ThemeStore.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutStore.cpp" />

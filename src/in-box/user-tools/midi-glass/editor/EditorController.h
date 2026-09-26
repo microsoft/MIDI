@@ -238,6 +238,8 @@ namespace glass
 
         bool SetControlKeyboard(_In_ std::wstring const& id, _In_ KeyboardSpec const& keyboard);
         bool SetControlClock(_In_ std::wstring const& id, _In_ ClockSpec const& clock);
+        bool SetControlLfo(_In_ std::wstring const& id, _In_ LfoSpec const& lfo);
+        bool SetControlTurntable(_In_ std::wstring const& id, _In_ TurntableSpec const& turntable);
 
         // The second axis's starting value, for an XY pad and a joystick.
         bool SetControlDefaultValueY(_In_ std::wstring const& id, _In_ double value);

@@ -51,6 +51,14 @@ namespace glass
             // Wide enough for hours, minutes, seconds and a fraction without the digits
             // shrinking to nothing.
             case ControlKind::TimeDisplay: return { 180, 64 };
+
+            // Wide rather than square: it draws one cycle of a wave, and a cycle squeezed into
+            // a square is hard to tell from any other cycle.
+            case ControlKind::Lfo: return { 160, 80 };
+
+            // A platter is pushed with a whole hand, so it is the biggest round thing on the
+            // page by some way.
+            case ControlKind::Turntable: return { 160, 160 };
             }
 
             return { 56, 56 };

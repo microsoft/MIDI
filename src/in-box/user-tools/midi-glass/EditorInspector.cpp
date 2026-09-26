@@ -32,6 +32,7 @@ namespace winrt::midiglass::implementation
         {
             glass::ControlKind::Knob,
             glass::ControlKind::Encoder,
+            glass::ControlKind::Turntable,
             glass::ControlKind::Fader,
             glass::ControlKind::Pad,
             glass::ControlKind::Button,
@@ -41,6 +42,7 @@ namespace winrt::midiglass::implementation
             glass::ControlKind::Ribbon,
             glass::ControlKind::PianoKeyboard,
             glass::ControlKind::BeatClock,
+            glass::ControlKind::Lfo,
             glass::ControlKind::TimeDisplay,
             glass::ControlKind::Meter,
             glass::ControlKind::Lamp,
@@ -53,9 +55,10 @@ namespace winrt::midiglass::implementation
 
         constexpr wchar_t const* KindResourceKeys[]
         {
-            L"PaletteKnob", L"PaletteEncoder", L"PaletteFader", L"PalettePad", L"PaletteButton",
+            L"PaletteKnob", L"PaletteEncoder", L"PaletteTurntable", L"PaletteFader", L"PalettePad", L"PaletteButton",
             L"PaletteToggle", L"PaletteXYPad", L"PaletteJoystick", L"PaletteRibbon",
             L"PaletteKeyboard", L"PaletteBeatClock",
+            L"PaletteLfo",
             L"PaletteTimeDisplay",
             L"PaletteMeter", L"PaletteLamp", L"PaletteReadout",
             L"PaletteLabel", L"PaletteImage", L"PalettePageTab", L"PalettePanel",
@@ -469,6 +472,19 @@ namespace winrt::midiglass::implementation
                     : control->LabelPlaced));
 
             ShowValueCombo().SelectedIndex(IndexOf(ShowValueOrder, control->ShowValue));
+
+            // Only a control with travel has a number worth reading inside it. A stopwatch
+            // already shows its own figure and a caption has none at all, so the row is hidden
+            // for them rather than left there doing nothing.
+            auto const showsAValue = glass::ShowsAValueReadout(control->Kind);
+
+            ShowValueLabel().Visibility(showsAValue
+                ? xaml::Visibility::Visible
+                : xaml::Visibility::Collapsed);
+
+            ShowValueCombo().Visibility(showsAValue
+                ? xaml::Visibility::Visible
+                : xaml::Visibility::Collapsed);
 
             LabelWidthBox().Value(control->LabelLook.WidthPercent);
             LabelFontCaption().Text(DescribeLabelFont(control->LabelLook));

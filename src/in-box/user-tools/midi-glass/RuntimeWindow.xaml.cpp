@@ -248,12 +248,15 @@ namespace winrt::midiglass::implementation
 
         auto weak = get_weak();
 
-        m_renderer.DescribeValue = [weak](uint32_t controlIndex, double value) -> std::wstring
+        m_renderer.DescribeValue = [weak](
+            uint32_t controlIndex,
+            glass::ValueAxis axis,
+            double value) -> std::wstring
             {
                 auto strong = weak.get();
 
                 return strong != nullptr && strong->m_player != nullptr
-                    ? strong->m_player->DescribeValue(controlIndex, value)
+                    ? strong->m_player->DescribeValue(controlIndex, axis, value)
                     : std::wstring{};
             };
 

@@ -25,6 +25,7 @@
 #include "OutputRouter.h"
 #include "SequenceRunner.h"
 #include "ClockGenerator.h"
+#include "LfoGenerator.h"
 
 namespace glass
 {
@@ -87,6 +88,9 @@ namespace glass
 
         // A clock generator moved on. The owner draws the sweep and the pips.
         std::function<void(uint32_t controlIndex, int32_t beatInBar, double phase, bool running)> BeatMoved{};
+
+        // An LFO swept. The owner moves the bead along the cycle it drew.
+        std::function<void(uint32_t controlIndex, double value, double phase, bool running)> LfoMoved{};
 
         // Every message that actually went out. Left empty by the runtime window, which pays
         // nothing for it; the editor's monitor rail sets it.
@@ -168,7 +172,10 @@ namespace glass
 
         // The number a control shows inside itself: the figure that would go on the wire when
         // the customer is working in a device's own units, and a percentage when they are not.
-        std::wstring DescribeValue(_In_ uint32_t controlIndex, _In_ double position) const;
+        std::wstring DescribeValue(
+            _In_ uint32_t controlIndex,
+            _In_ ValueAxis axis,
+            _In_ double position) const;
 
         // Sent once per run, in keyboard order. Does nothing until something is connected, so
         // the layout is not marked initialized before it actually was.
@@ -188,6 +195,12 @@ namespace glass
         // to be running the moment it opens.
         void StartClocks();
         bool IsClockRunning(_In_ uint32_t controlIndex) const noexcept;
+
+        bool IsLfoRunning(_In_ uint32_t controlIndex) const noexcept;
+
+        // Runs while held rather than latching. The surface needs this to decide whether a
+        // press is a toggle or a hold, and the answer is per control rather than per kind.
+        bool LfoLatchesAt(_In_ uint32_t controlIndex) const noexcept;
 
         // A control feeding a clock its tempo moved. Does nothing unless some clock on this
         // layout named that control.
@@ -243,6 +256,7 @@ namespace glass
 
         std::shared_ptr<SequenceRunner> m_runner{};
         std::shared_ptr<ClockGenerator> m_clocks{};
+        std::shared_ptr<LfoGenerator> m_lfos{};
 
         // Which control index each clock generator is, so the page can be walked once at load
         // rather than on every tick.
@@ -257,6 +271,16 @@ namespace glass
         };
 
         std::vector<ClockEntry> m_clockControls{};
+
+        // The same for the sweeps, so a press does not have to walk the document to find out
+        // what it is pressing.
+        struct LfoEntry
+        {
+            uint32_t ControlIndex{ 0 };
+            LfoSpec Spec{};
+        };
+
+        std::vector<LfoEntry> m_lfoControls{};
 
         // One per control, so a fader on a DIN cable can be limited without touching a note on.
         std::vector<ValueThrottle> m_throttles{};

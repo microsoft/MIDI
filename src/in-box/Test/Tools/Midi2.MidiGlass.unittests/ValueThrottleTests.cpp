@@ -27,7 +27,7 @@ void ValueThrottleTests::SendsEverythingWhenThereIsNoLimit()
     VERIFY_ARE_EQUAL(uint32_t{ 0 }, throttle.SuppressedCount());
 
     double trailing{ -1.0 };
-    VERIFY_IS_FALSE(throttle.Release(trailing));
+    VERIFY_IS_FALSE(throttle.Release(0.9, trailing));
 }
 
 void ValueThrottleTests::TheFirstMoveAlwaysGoes()
@@ -67,7 +67,7 @@ void ValueThrottleTests::TheLastValueIsAlwaysSent()
     // This is the rule that gets forgotten and it is the one that matters. Without it the fader
     // on screen says 0.9 and the desk is still at 0.0, for the rest of the session.
     double trailing{ -1.0 };
-    VERIFY_IS_TRUE(throttle.Release(trailing));
+    VERIFY_IS_TRUE(throttle.Release(0.9, trailing));
     VERIFY_ARE_EQUAL(0.9, trailing);
 }
 
@@ -81,7 +81,7 @@ void ValueThrottleTests::DoesNotRepeatAValueThatAlreadyWentOut()
     // The last move was the one that went out, so there is nothing owing. Sending it again is
     // harmless but it is noise on a wire that is rate limited because it has none to spare.
     double trailing{ -1.0 };
-    VERIFY_IS_FALSE(throttle.Release(trailing));
+    VERIFY_IS_FALSE(throttle.Release(0.5, trailing));
 }
 
 void ValueThrottleTests::AFullDragEndsOnWhereTheFingerLeftIt()
@@ -106,7 +106,7 @@ void ValueThrottleTests::AFullDragEndsOnWhereTheFingerLeftIt()
 
     double trailing{ -1.0 };
 
-    if (throttle.Release(trailing))
+    if (throttle.Release(finalPosition, trailing))
     {
         lastSent = trailing;
     }
@@ -119,4 +119,26 @@ void ValueThrottleTests::AFullDragEndsOnWhereTheFingerLeftIt()
 
     // and the wire has to agree with the surface exactly
     VERIFY_ARE_EQUAL(finalPosition, lastSent);
+}
+
+void ValueThrottleTests::ASpringReturnSendsARestValueTheFingerNeverVisited()
+{
+    // Found on the wire, not by reading the code: a pitch wheel let go left the synth bent.
+    //
+    // A spring return ends on a value that was NEVER offered to ShouldSend - the finger was at
+    // the top and the control jumps to the middle - so a throttle asked "what was pending" has
+    // nothing to give. Worse, with no rate limit at all, which is the default, nothing is ever
+    // pending, so the rest value was never sent under any circumstances.
+    for (auto const interval : { uint32_t{ 0 }, uint32_t{ 10 } })
+    {
+        glass::ValueThrottle throttle{};
+        throttle.SetMinimumInterval(interval);
+
+        VERIFY_IS_TRUE(throttle.ShouldSend(1.0, 1000));
+
+        double trailing{ -1.0 };
+
+        VERIFY_IS_TRUE(throttle.Release(0.5, trailing));
+        VERIFY_ARE_EQUAL(0.5, trailing);
+    }
 }

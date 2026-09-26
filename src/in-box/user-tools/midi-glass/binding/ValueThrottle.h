@@ -36,12 +36,17 @@ namespace glass
         // A new value from the surface. Returns true when it should go out now.
         bool ShouldSend(_In_ double value, _In_ uint64_t nowMs) noexcept;
 
-        // The gesture ended. Returns true when a value still has to go out, and fills it in.
+        // The gesture ended on this value. Returns true when it still has to go out.
         //
-        // This is the rule that gets forgotten and it is the one that matters: without it a fader
-        // settles a few units away from where the finger left it, every time, and the DAW and the
-        // surface disagree for the rest of the session.
-        bool Release(_Out_ double& value) noexcept;
+        // The value comes from the CALLER, not from whatever the rate limit happened to be
+        // holding. That is the difference between a fader, which ends where the last move left
+        // it, and a SPRING RETURN, which ends somewhere the finger never went - so its rest
+        // value was never offered to ShouldSend and the throttle has no way to know it.
+        //
+        // This is the rule that gets forgotten and it is the one that matters: without it a
+        // fader settles a few units away from where the finger left it, and a released pitch
+        // wheel leaves the synth bent for the rest of the set.
+        bool Release(_In_ double finalValue, _Out_ double& value) noexcept;
 
         // Dropped without sending, since the last reset. A diagnostic, not a decision.
         uint32_t SuppressedCount() const noexcept { return m_suppressed; }

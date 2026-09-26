@@ -833,6 +833,163 @@ namespace winrt::midiglass::implementation
         ApplyClockEdit();
     }
 
+    // ---------------------------------------------------------------- the sweep
+
+    void EditorWindow::ApplyLfoEdit()
+    {
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control == nullptr)
+        {
+            return;
+        }
+
+        auto lfo = control->Lfo;
+
+        auto const waveIndex = LfoWaveCombo().SelectedIndex();
+
+        if (waveIndex >= 0 && waveIndex < static_cast<int32_t>(std::size(glass::LfoWaveOrder)))
+        {
+            lfo.Wave = glass::LfoWaveOrder[waveIndex];
+        }
+
+        // Left alone when the combo is blank, which is what a file carrying a rate that is not
+        // on the list looks like. Snapping it would change the layout just by looking at it.
+        auto const rateIndex = LfoRateCombo().SelectedIndex();
+
+        if (rateIndex >= 0 && rateIndex < static_cast<int32_t>(std::size(glass::LfoRateChoices)))
+        {
+            lfo.BeatsPerCycle = glass::LfoRateChoices[rateIndex];
+        }
+
+        lfo.Lowest = LfoLowestSlider().Value() / 100.0;
+        lfo.Highest = LfoHighestSlider().Value() / 100.0;
+
+        if (!std::isnan(LfoUpdateBox().Value()))
+        {
+            lfo.UpdateIntervalMilliseconds =
+                static_cast<int32_t>(std::lround(LfoUpdateBox().Value()));
+        }
+
+        lfo.Latching = LfoLatchingCheck().IsChecked().GetBoolean();
+        lfo.StartsRunning = LfoStartsRunningCheck().IsChecked().GetBoolean();
+        lfo.ReturnsToRestWhenStopped = LfoReturnsToRestCheck().IsChecked().GetBoolean();
+
+        ApplyControlEdit(control->Id, [&](std::wstring const& id)
+            { return m_editor.SetControlLfo(id, lfo); });
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLfoWaveChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ApplyLfoEdit();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLfoRateChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ApplyLfoEdit();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLfoRangeChanged(
+        foundation::IInspectable const& sender,
+        controls::Primitives::RangeBaseValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ApplyLfoEdit();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLfoUpdateChanged(
+        controls::NumberBox const& sender,
+        controls::NumberBoxValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ApplyLfoEdit();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLfoFlagChanged(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ApplyLfoEdit();
+    }
+
+    // ---------------------------------------------------------------- the platter
+
+    void EditorWindow::ApplyTurntableEdit()
+    {
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control == nullptr)
+        {
+            return;
+        }
+
+        auto turntable = control->Turntable;
+
+        if (!std::isnan(TurntableDegreesBox().Value()))
+        {
+            turntable.DegreesForFullRange = TurntableDegreesBox().Value();
+        }
+
+        turntable.ShowsGrip = TurntableGripCheck().IsChecked().GetBoolean();
+
+        ApplyControlEdit(control->Id, [&](std::wstring const& id)
+            { return m_editor.SetControlTurntable(id, turntable); });
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnTurntableDegreesChanged(
+        controls::NumberBox const& sender,
+        controls::NumberBoxValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ApplyTurntableEdit();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnTurntableGripChanged(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ApplyTurntableEdit();
+    }
+
     // ---------------------------------------------------------------- the stops
 
     _Use_decl_annotations_

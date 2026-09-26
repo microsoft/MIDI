@@ -42,18 +42,18 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    bool ValueThrottle::Release(double& value) noexcept
+    bool ValueThrottle::Release(double finalValue, double& value) noexcept
     {
-        value = m_pendingValue;
+        value = finalValue;
 
-        // Only when the last thing the finger did was not what last went out. Sending an
-        // unchanged value again would be harmless but it would also be noise on a wire that is
-        // rate limited precisely because it has none to spare.
-        auto const needed = m_hasPending && (!m_hasSent || m_pendingValue != m_lastSentValue);
+        // Only when the gesture ended somewhere other than where the last send left it. Sending
+        // an unchanged value again would be harmless but it would also be noise on a wire that
+        // is rate limited precisely because it has none to spare.
+        auto const needed = !m_hasSent || finalValue != m_lastSentValue;
 
         if (needed)
         {
-            m_lastSentValue = m_pendingValue;
+            m_lastSentValue = finalValue;
             m_hasSent = true;
         }
 

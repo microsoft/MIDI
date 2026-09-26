@@ -77,6 +77,10 @@ namespace glass
 
         ControlKind Kind{ ControlKind::Knob };
 
+        // "Stays lit for", from this control's listener. Zero means it listens for nothing and
+        // the design's own decay is used.
+        int32_t FeedbackHoldMilliseconds{ 0 };
+
         float TrackOrigin{ 0.0f };
         float TrackLength{ 0.0f };
         float PipeThickness{ 0.0f };
@@ -190,6 +194,12 @@ namespace glass
         // Whether this control takes its velocity from how hard it was hit.
         bool VelocityFromTouchAt(_In_ size_t itemIndex) const noexcept;
 
+        // Whether a press latches or has to be held. Only an LFO answers anything but true.
+        bool LatchesAt(_In_ size_t itemIndex) const noexcept;
+
+        // How far a platter has to be pushed round to drive it from one end to the other.
+        double TurnDegreesAt(_In_ size_t itemIndex) const noexcept;
+
         // Where this control sits when nothing is holding it, and whether it goes back there on
         // its own. A pitch wheel does; a volume fader had better not.
         bool ReturnsToRestAt(_In_ size_t itemIndex) const noexcept;
@@ -221,8 +231,21 @@ namespace glass
         // What a clock generator is running at, under its ring. Zero means stopped.
         void SetClockTempo(_In_ size_t itemIndex, _In_ double beatsPerMinute) noexcept;
 
+        // Where an LFO's bead sits on the cycle it drew. Running dims the bead when false, so a
+        // stopped sweep still shows its shape without looking live.
+        void SetSweepPosition(
+            _In_ size_t itemIndex,
+            _In_ double value,
+            _In_ double phase,
+            _In_ bool running) noexcept;
+
         // A time display was tapped, so it counts again from zero.
         void ResetElapsed(_In_ size_t itemIndex) noexcept;
+
+        // Whether a stopwatch is counting. The designer holds it at zero: a clock running while
+        // somebody is placing controls is a moving thing in the corner of the eye that has
+        // nothing to do with the work, and the number it reaches is the time spent editing.
+        void SetElapsedRunning(_In_ bool running) noexcept;
 
         // The device this control sends to is not here. It is struck through rather than hidden
         // or disabled: a layout with a missing device still has to be editable, and the person
@@ -232,6 +255,16 @@ namespace glass
         // Activity, and the only thing that blooms. Decayed by the compositor rather than by a
         // timer on the UI thread, so a wall of blinking controls costs the app nothing.
         void Bloom(_In_ size_t itemIndex) noexcept;
+
+        // The same, for something that arrived rather than something the customer did. This one
+        // honors the control's own "stays lit for", which is the number the inspector shows.
+        void BloomFeedback(_In_ size_t itemIndex) noexcept;
+
+        // A blink: something arrived that carries no value of its own. A control whose state is
+        // its plate - a lamp above all - lights up for "stays lit for" and then goes out, which
+        // is the whole job of a lamp. Everything else just glows.
+        void FlashFeedback(_In_ size_t itemIndex) noexcept;
+
         void ClearBloom(_In_ size_t itemIndex) noexcept;
 
         // Windows says reduce motion, so the bloom switches instead of fading. The surface is a
@@ -244,7 +277,7 @@ namespace glass
         //
         // Called on the hot path, but only for a control that is actually showing a value, which
         // is a handful on a page rather than all of them.
-        std::function<std::wstring(uint32_t controlIndex, double value)> DescribeValue{};
+        std::function<std::wstring(uint32_t controlIndex, ValueAxis axis, double value)> DescribeValue{};
 
         // A finger went down or came up. A control set to show its value only while touched
         // needs to be told; everything else ignores it.
@@ -375,6 +408,22 @@ namespace glass
             _In_ float width,
             _In_ float height);
 
+        void LayoutLfo(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Control const& control,
+            _In_ ControlColors const& colors,
+            _In_ float width,
+            _In_ float height);
+
+        void LayoutTurntable(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Control const& control,
+            _In_ ControlColors const& colors,
+            _In_ float width,
+            _In_ float height);
+
         // Puts a two axis control's puck and crosshair where its two values say, and a ribbon's
         // light where its one value says.
         void MovePuck(_In_ size_t itemIndex) noexcept;
@@ -387,6 +436,12 @@ namespace glass
             _In_ Theme const& theme);
 
         void RefreshValueText(_In_ size_t itemIndex) noexcept;
+
+        void BloomFor(_In_ size_t itemIndex, _In_ int64_t milliseconds) noexcept;
+
+        // Turns off every control whose lit time has run out. One timer for the whole page
+        // rather than one per blink, because a busy page blinks a lot.
+        void SweepFlashes() noexcept;
 
         comp::CompositionColorBrush BrushFor(
             _In_ comp::Compositor const& compositor,
@@ -432,6 +487,8 @@ namespace glass
         std::vector<DragAxis> m_dragAxes{};
         std::vector<KeyboardSpec> m_keyboards{};
         std::vector<bool> m_velocityFromTouch{};
+        std::vector<bool> m_latches{};
+        std::vector<double> m_turnDegrees{};
 
         // The picture or video a control shows, and the fill behind a grouping panel. A XAML
         // child of the host like the label, so it has to be carried when the control moves.
@@ -457,6 +514,13 @@ namespace glass
 
         // Ticks only while the page holds at least one time display.
         winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_elapsedTimer{ nullptr };
+
+        // False while a layout is being designed rather than run.
+        bool m_elapsedRunning{ true };
+
+        // When a blinking control goes out again, as a tick count. Zero means it is not lit.
+        std::vector<uint64_t> m_litUntil{};
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_flashTimer{ nullptr };
 
         // The number drawn inside a control, for the few that show one. Null everywhere else,
         // so a page of two hundred pays nothing for a feature four of them use.

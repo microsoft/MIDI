@@ -23,4 +23,5 @@ public:
     TEST_METHOD(TheLastValueIsAlwaysSent);
     TEST_METHOD(DoesNotRepeatAValueThatAlreadyWentOut);
     TEST_METHOD(AFullDragEndsOnWhereTheFingerLeftIt);
+    TEST_METHOD(ASpringReturnSendsARestValueTheFingerNeverVisited);
 };

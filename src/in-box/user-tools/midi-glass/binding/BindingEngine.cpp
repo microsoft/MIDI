@@ -751,6 +751,7 @@ namespace glass
     _Use_decl_annotations_
     bool BindingEngine::TryDescribeValue(
         size_t controlIndex,
+        ValueAxis axis,
         double position,
         uint32_t& value,
         bool& isAbsolute) const noexcept
@@ -769,7 +770,7 @@ namespace glass
         {
             auto const& message = m_messages[control.FirstMessage + i];
 
-            if (!IsChannelVoice(message.Kind))
+            if (!IsChannelVoice(message.Kind) || message.Axis != axis)
             {
                 continue;
             }

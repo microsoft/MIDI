@@ -78,4 +78,5 @@ public:
     TEST_METHOD(AnAbsoluteRangeIsDescribedInItsOwnUnits);
     TEST_METHOD(APercentageRangeIsNotDescribedAsANumber);
     TEST_METHOD(AControlThatSendsNothingDescribesNothing);
+    TEST_METHOD(EachAxisIsDescribedByItsOwnRow);
 };

@@ -216,6 +216,15 @@ namespace winrt::midiglass::implementation
         void OnClockSourceChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnClockFlagChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        void OnLfoWaveChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnLfoRateChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnLfoRangeChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
+        void OnLfoUpdateChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnLfoFlagChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        void OnTurntableDegreesChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnTurntableGripChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
         // ---- what a control listens for (EditorControlProperties.cpp) ----
 
         void OnFeedbackEnabledToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -373,6 +382,8 @@ namespace winrt::midiglass::implementation
 
         void ApplyKeyboardEdit();
         void ApplyClockEdit();
+        void ApplyLfoEdit();
+        void ApplyTurntableEdit();
         void ApplyFeedbackEdit();
 
         // One number box per stop, rather than one line of text with separators in it. A comma
@@ -417,6 +428,27 @@ namespace winrt::midiglass::implementation
         // ---- the label font dialog (EditorFontDialog.cpp) ----
 
         winrt::fire_and_forget ShowLabelFontDialog(_In_ std::wstring controlId);
+
+        // ---- color pickers (EditorColorPicker.cpp) ----
+
+        // Puts a swatch button beside a color code box. The box stays, because a code pasted out
+        // of a brand guide is still the fastest way in and is the only thing a screen reader can
+        // read back; the button is for everybody who does not already know the number.
+        void AttachColorPicker(
+            _In_ xaml::Controls::Button const& button,
+            _In_ xaml::Controls::TextBox const& box,
+            _In_ bool allowEmpty,
+            _In_ std::function<void()> const& changed);
+
+        void RefreshColorButton(
+            _In_ xaml::Controls::Button const& button,
+            _In_ std::wstring const& code);
+
+        void ShowColorFlyout(
+            _In_ xaml::FrameworkElement const& anchor,
+            _In_ std::wstring const& current,
+            _In_ bool allowEmpty,
+            _In_ std::function<void(std::wstring const&)> const& apply);
 
         // ---- layout settings: pages and the device table (EditorLayoutSettings.cpp) ----
 

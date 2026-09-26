@@ -118,7 +118,7 @@ namespace winrt::midiglass::implementation
                     break;
 
                 default:
-                    strong->m_renderer.Bloom(itemIndex);
+                    strong->m_renderer.FlashFeedback(itemIndex);
                     break;
                 }
             };
@@ -154,6 +154,23 @@ namespace winrt::midiglass::implementation
                 if (strong->m_renderer.TryFindItem(controlIndex, itemIndex))
                 {
                     strong->m_renderer.SetBeat(itemIndex, beatInBar, phase, running);
+                }
+            };
+
+        m_player->LfoMoved = [weak](uint32_t controlIndex, double value, double phase, bool running)
+            {
+                auto strong = weak.get();
+
+                if (strong == nullptr)
+                {
+                    return;
+                }
+
+                size_t itemIndex{ 0 };
+
+                if (strong->m_renderer.TryFindItem(controlIndex, itemIndex))
+                {
+                    strong->m_renderer.SetSweepPosition(itemIndex, value, phase, running);
                 }
             };
 
@@ -257,6 +274,10 @@ namespace winrt::midiglass::implementation
         try
         {
             m_input.Detach();
+
+            // A stopwatch counts in Try mode and while a layout is running, and never while it
+            // is being designed.
+            m_renderer.SetElapsedRunning(m_tryMode);
 
             for (size_t index = 0; index < m_renderer.ItemCount(); ++index)
             {
@@ -534,7 +555,7 @@ namespace winrt::midiglass::implementation
             }
 
             m_renderer.SetValue(itemIndex, value);
-            m_renderer.Bloom(itemIndex);
+            m_renderer.BloomFeedback(itemIndex);
 
             if (auto element = m_renderer.ElementAt(itemIndex))
             {

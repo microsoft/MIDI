@@ -8,6 +8,7 @@
 #include "InputRules.h"
 
 #include <algorithm>
+#include <cmath>
 
 namespace glass
 {
@@ -37,6 +38,66 @@ namespace glass
     bool PlaysKeys(ControlKind kind) noexcept
     {
         return kind == ControlKind::PianoKeyboard;
+    }
+
+    _Use_decl_annotations_
+    bool IsTurnedByHand(ControlKind kind) noexcept
+    {
+        return kind == ControlKind::Turntable;
+    }
+
+    _Use_decl_annotations_
+    double AngleAtPosition(double width, double height, double x, double y) noexcept
+    {
+        auto const acrossFromMiddle = x - width * 0.5;
+
+        // Screen y counts downward, so it is flipped to make a positive angle a clockwise one.
+        auto const upFromMiddle = height * 0.5 - y;
+
+        if (acrossFromMiddle == 0.0 && upFromMiddle == 0.0)
+        {
+            return 0.0;
+        }
+
+        auto const degrees = std::atan2(acrossFromMiddle, upFromMiddle) * 180.0 / 3.14159265358979323846;
+
+        return degrees < 0.0 ? degrees + 360.0 : degrees;
+    }
+
+    _Use_decl_annotations_
+    double AngleDelta(double fromDegrees, double toDegrees) noexcept
+    {
+        auto delta = toDegrees - fromDegrees;
+
+        while (delta > 180.0)
+        {
+            delta -= 360.0;
+        }
+
+        while (delta < -180.0)
+        {
+            delta += 360.0;
+        }
+
+        return delta;
+    }
+
+    _Use_decl_annotations_
+    bool ShowsAValueReadout(ControlKind kind) noexcept
+    {
+        switch (kind)
+        {
+        case ControlKind::Knob:
+        case ControlKind::Encoder:
+        case ControlKind::Fader:
+        case ControlKind::XYPad:
+        case ControlKind::Joystick:
+        case ControlKind::Ribbon:
+            return true;
+
+        default:
+            return false;
+        }
     }
 
     _Use_decl_annotations_

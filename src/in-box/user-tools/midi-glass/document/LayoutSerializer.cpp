@@ -103,6 +103,17 @@ namespace glass
         constexpr wchar_t KeyShowNoteNames[] = L"showNoteNames";
         constexpr wchar_t KeyVelocityFromKeyPosition[] = L"velocityFromKeyPosition";
         constexpr wchar_t KeyClock[] = L"clock";
+        constexpr wchar_t KeyLfo[] = L"lfo";
+        constexpr wchar_t KeyWave[] = L"wave";
+        constexpr wchar_t KeyBeatsPerCycle[] = L"beatsPerCycle";
+        constexpr wchar_t KeyLowest[] = L"lowest";
+        constexpr wchar_t KeyHighest[] = L"highest";
+        constexpr wchar_t KeyUpdateMilliseconds[] = L"updateMilliseconds";
+        constexpr wchar_t KeyLatching[] = L"latching";
+        constexpr wchar_t KeyReturnsToRestWhenStopped[] = L"returnsToRestWhenStopped";
+        constexpr wchar_t KeyTurntable[] = L"turntable";
+        constexpr wchar_t KeyDegreesForFullRange[] = L"degreesForFullRange";
+        constexpr wchar_t KeyShowsGrip[] = L"showsGrip";
         constexpr wchar_t KeyTempoControl[] = L"tempoControl";
         constexpr wchar_t KeyLowestBeatsPerMinute[] = L"lowestBeatsPerMinute";
         constexpr wchar_t KeyHighestBeatsPerMinute[] = L"highestBeatsPerMinute";
@@ -185,6 +196,21 @@ namespace glass
             { ControlKind::PianoKeyboard, L"pianoKeyboard" },
             { ControlKind::BeatClock, L"beatClock" },
             { ControlKind::TimeDisplay, L"timeDisplay" },
+            { ControlKind::Lfo, L"lfo" },
+            { ControlKind::Turntable, L"turntable" },
+        };
+
+        constexpr EnumName<LfoWave> LfoWaveNames[]
+        {
+            { LfoWave::Sine, L"sine" },
+            { LfoWave::Triangle, L"triangle" },
+            { LfoWave::Square, L"square" },
+            { LfoWave::RampUp, L"rampUp" },
+            { LfoWave::RampDown, L"rampDown" },
+            { LfoWave::WhiteNoise, L"whiteNoise" },
+            { LfoWave::PinkNoise, L"pinkNoise" },
+            { LfoWave::BrownNoise, L"brownNoise" },
+            { LfoWave::BlueNoise, L"blueNoise" },
         };
 
         constexpr EnumName<ValueAxis> AxisNames[]
@@ -871,9 +897,60 @@ namespace glass
             return clock;
         }
 
-        Control ReadControl(_In_ mjson::JsonObject const& object) noexcept
+        LfoSpec ReadLfo(_In_ mjson::JsonObject const& object) noexcept
         {
-            Control control{};
+            LfoSpec lfo{};
+
+            auto const nested = ReadObject(object, KeyLfo);
+
+            if (nested == nullptr)
+            {
+                return lfo;
+            }
+
+            lfo.Wave = ValueOf(LfoWaveNames, ReadString(nested, KeyWave), LfoWave::Sine);
+            lfo.BeatsPerCycle = std::clamp(
+                ReadNumber(nested, KeyBeatsPerCycle, 4.0), MinimumBeatsPerCycle, MaximumBeatsPerCycle);
+            lfo.Lowest = std::clamp(ReadNumber(nested, KeyLowest, 0.0), 0.0, 1.0);
+            lfo.Highest = std::clamp(ReadNumber(nested, KeyHighest, 1.0), 0.0, 1.0);
+            lfo.UpdateIntervalMilliseconds = ReadInt(
+                nested, KeyUpdateMilliseconds, 25,
+                MinimumLfoIntervalMilliseconds, MaximumLfoIntervalMilliseconds);
+            lfo.Latching = ReadBool(nested, KeyLatching, true);
+            lfo.StartsRunning = ReadBool(nested, KeyStartsRunning, false);
+            lfo.ReturnsToRestWhenStopped = ReadBool(nested, KeyReturnsToRestWhenStopped, true);
+
+            lfo.Unknown = CaptureUnknown(nested,
+                { KeyWave, KeyBeatsPerCycle, KeyLowest, KeyHighest, KeyUpdateMilliseconds,
+                  KeyLatching, KeyStartsRunning, KeyReturnsToRestWhenStopped });
+
+            return lfo;
+        }
+
+        TurntableSpec ReadTurntable(_In_ mjson::JsonObject const& object) noexcept
+        {
+            TurntableSpec turntable{};
+
+            auto const nested = ReadObject(object, KeyTurntable);
+
+            if (nested == nullptr)
+            {
+                return turntable;
+            }
+
+            turntable.DegreesForFullRange = std::clamp(
+                ReadNumber(nested, KeyDegreesForFullRange, 180.0),
+                MinimumTurntableDegrees,
+                MaximumTurntableDegrees);
+            turntable.ShowsGrip = ReadBool(nested, KeyShowsGrip, true);
+
+            turntable.Unknown = CaptureUnknown(nested, { KeyDegreesForFullRange, KeyShowsGrip });
+
+            return turntable;
+        }
+
+        Control ReadControl(_In_ mjson::JsonObject const& object) noexcept
+        {            Control control{};
 
             control.Id = ReadString(object, KeyId);
             control.Kind = ValueOf(ControlKindNames, ReadString(object, KeyKind), ControlKind::Knob);
@@ -928,6 +1005,8 @@ namespace glass
             control.Image = ReadPicture(object);
             control.Keyboard = ReadKeyboard(object);
             control.Clock = ReadClock(object);
+            control.Lfo = ReadLfo(object);
+            control.Turntable = ReadTurntable(object);
             control.DefaultValue = std::clamp(ReadNumber(object, KeyDefaultValue, 0.0), 0.0, 1.0);
             control.DefaultValueY = std::clamp(ReadNumber(object, KeyDefaultValueY, 0.0), 0.0, 1.0);
             control.ReturnsToDefault = ReadBool(object, KeyReturnsToDefault, false);
@@ -956,7 +1035,7 @@ namespace glass
                 { KeyId, KeyKind, KeyLabel, KeyX, KeyY, KeyWidth, KeyHeight, KeyHueSlot,
                   KeyLiteralColor, KeyAspectLocked, KeyKeyboardOrder, KeyPickup, KeyDefaultValue,
                   KeyReturnsToDefault, KeyDrag, KeyTicks, KeyShowDetentValues, KeyPicture,
-                  KeyKeyboard, KeyClock, KeyDefaultValueY, KeyVelocityFromTouch,
+                  KeyKeyboard, KeyClock, KeyLfo, KeyTurntable, KeyDefaultValueY, KeyVelocityFromTouch,
                   KeySendsValueOnStart, KeySendInterval, KeyMessages, KeyFeedback,
                   KeyStyle, KeyLabelPlaced, KeyLabelStyle, KeyShowValue });
 
@@ -1438,6 +1517,30 @@ namespace glass
                 writer.Write(KeyStartsRunning, control.Clock.StartsRunning);
                 writer.Write(KeySendsTransport, control.Clock.SendsTransport);
                 WriteUnknown(writer, control.Clock.Unknown);
+                writer.EndObject();
+            }
+
+            if (control.Kind == ControlKind::Lfo || control.Lfo.Unknown != nullptr)
+            {
+                writer.BeginObject(KeyLfo);
+                writer.Write(KeyWave, NameOf(LfoWaveNames, control.Lfo.Wave));
+                writer.Write(KeyBeatsPerCycle, control.Lfo.BeatsPerCycle);
+                writer.Write(KeyLowest, control.Lfo.Lowest);
+                writer.Write(KeyHighest, control.Lfo.Highest);
+                writer.Write(KeyUpdateMilliseconds, static_cast<int64_t>(control.Lfo.UpdateIntervalMilliseconds));
+                writer.Write(KeyLatching, control.Lfo.Latching);
+                writer.Write(KeyStartsRunning, control.Lfo.StartsRunning);
+                writer.Write(KeyReturnsToRestWhenStopped, control.Lfo.ReturnsToRestWhenStopped);
+                WriteUnknown(writer, control.Lfo.Unknown);
+                writer.EndObject();
+            }
+
+            if (control.Kind == ControlKind::Turntable || control.Turntable.Unknown != nullptr)
+            {
+                writer.BeginObject(KeyTurntable);
+                writer.Write(KeyDegreesForFullRange, control.Turntable.DegreesForFullRange);
+                writer.Write(KeyShowsGrip, control.Turntable.ShowsGrip);
+                WriteUnknown(writer, control.Turntable.Unknown);
                 writer.EndObject();
             }
 

@@ -183,6 +183,33 @@ namespace winrt::midiglass::implementation
             color.Text(winrt::hstring{ working->Color });
             color.PlaceholderText(resources::GetString(L"FontColorPlaceholder"));
 
+            controls::Button colorButton{};
+            colorButton.VerticalAlignment(xaml::VerticalAlignment::Bottom);
+            xaml::Automation::AutomationProperties::SetName(
+                colorButton, resources::GetString(L"FontColorButtonName"));
+
+            controls::Grid colorRow{};
+            colorRow.ColumnSpacing(6);
+
+            controls::ColumnDefinition textColumn{};
+            textColumn.Width(xaml::GridLength{ 1.0, xaml::GridUnitType::Star });
+
+            controls::ColumnDefinition buttonColumn{};
+            buttonColumn.Width(xaml::GridLength{ 0.0, xaml::GridUnitType::Auto });
+
+            colorRow.ColumnDefinitions().Append(textColumn);
+            colorRow.ColumnDefinitions().Append(buttonColumn);
+
+            controls::Grid::SetColumn(color, 0);
+            controls::Grid::SetColumn(colorButton, 1);
+
+            colorRow.Children().Append(color);
+            colorRow.Children().Append(colorButton);
+
+            // A dialog is not the inspector, so the button is wired here rather than through
+            // AttachColorPicker's box handler. Blank is allowed: it means the theme's color.
+            AttachColorPicker(colorButton, color, true, nullptr);
+
             // ---- the preview ----
 
             controls::Border previewHost{};
@@ -206,7 +233,7 @@ namespace winrt::midiglass::implementation
             root.Children().Append(size);
             root.Children().Append(weight);
             root.Children().Append(switches);
-            root.Children().Append(color);
+            root.Children().Append(colorRow);
             root.Children().Append(previewHost);
 
             dialog.Content(root);

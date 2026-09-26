@@ -16,6 +16,7 @@
 #include "pch.h"
 #include "SurfaceRenderer.h"
 #include "LayoutStore.h"
+#include "LfoShape.h"
 #include "ThemeStore.h"
 
 #include <winrt/Windows.Media.Core.h>
@@ -124,6 +125,263 @@ namespace glass
         // Where a fader's slot starts and ends inside its plate. The same inset the renderer
         // uses, repeated here so a stop number lines up with the mark it belongs to.
         constexpr float PipeInsetForLabels = 8.0f;
+
+        // The cycle an LFO draws inside its plate, and the bead riding it.
+        constexpr float LfoInset = 9.0f;
+        constexpr float LfoStrokeThickness = 1.6f;
+        constexpr float LfoBeadFraction = 0.11f;
+        constexpr float MinimumLfoBead = 3.0f;
+
+        // How many straight pieces a curve is cut into. The corner cases are drawn from their
+        // own corners instead, so this only ever has to be smooth enough for a sine.
+        constexpr int32_t LfoCurveSteps = 48;
+
+        // How bright the bead is while the sweep is stopped. The same figure the ribbon's light
+        // rests at, for the same reason: it has to be visible without looking live.
+        constexpr float LfoRestOpacity = 0.45f;
+
+        // The platter, inside its plate.
+        constexpr float TurntableInset = 5.0f;
+        constexpr float TurntableGripInset = 3.0f;
+        constexpr float TurntableGripThickness = 3.0f;
+        constexpr float TurntableSpindleFraction = 0.13f;
+
+        // One cycle of a wave, as points inside a unit square: x is the phase, y is the value
+        // with 1 at the top. The shapes with corners are built from those corners rather than
+        // sampled, or a square wave comes out with a slope on its edges.
+        std::vector<float2> LfoCyclePoints(_In_ LfoSpec const& spec)
+        {
+            std::vector<float2> points{};
+
+            auto const at = [&spec](double phase)
+                {
+                    return static_cast<float>(LfoValueAt(spec, phase, 0.5));
+                };
+
+            switch (spec.Wave)
+            {
+            case LfoWave::Square:
+                points.push_back(float2{ 0.0f, at(0.0) });
+                points.push_back(float2{ 0.5f, at(0.0) });
+                points.push_back(float2{ 0.5f, at(0.75) });
+                points.push_back(float2{ 1.0f, at(0.75) });
+                break;
+
+            case LfoWave::Triangle:
+                points.push_back(float2{ 0.0f, at(0.0) });
+                points.push_back(float2{ 0.25f, at(0.25) });
+                points.push_back(float2{ 0.75f, at(0.75) });
+                points.push_back(float2{ 1.0f, at(1.0) });
+                break;
+
+            case LfoWave::RampUp:
+            case LfoWave::RampDown:
+                points.push_back(float2{ 0.0f, at(0.0) });
+                points.push_back(float2{ 1.0f, at(0.9999) });
+                break;
+
+            case LfoWave::Sine:
+                for (int32_t step = 0; step <= LfoCurveSteps; ++step)
+                {
+                    auto const phase = static_cast<double>(step) / LfoCurveSteps;
+
+                    points.push_back(float2{ static_cast<float>(phase), at(phase) });
+                }
+                break;
+
+            // Noise has no cycle to draw. A line through the middle of the sweep, with the bead
+            // jumping about on it, is the honest picture: a random value inside this range.
+            default:
+            {
+                auto const middle = static_cast<float>(
+                    std::clamp((spec.Lowest + spec.Highest) * 0.5, 0.0, 1.0));
+
+                points.push_back(float2{ 0.0f, middle });
+                points.push_back(float2{ 1.0f, middle });
+                break;
+            }
+            }
+
+            return points;
+        }
+    }
+
+    // ---------------------------------------------------------------------- the LFO
+
+    // One cycle of the wave, drawn across the plate, with a bead showing where the sweep is now.
+    //
+    // The comps draw generators as a dial with a rate on it. A single cycle with a bead on it
+    // says three things at once that a dial cannot: what shape is running, how far through it is,
+    // and how much of the travel it actually covers.
+    _Use_decl_annotations_
+    void SurfaceRenderer::LayoutLfo(
+        Compositor const& compositor,
+        SurfaceVisual& visual,
+        Control const& control,
+        ControlColors const& colors,
+        float width,
+        float height)
+    {
+        auto const fieldX = LfoInset;
+        auto const fieldW = std::max(width - LfoInset * 2.0f, 1.0f);
+
+        // Room under the cycle for a label, and a little at the top so a peak is not cut off.
+        auto const fieldY = LfoInset;
+        auto const fieldH = std::max(height - LfoInset * 2.0f, 1.0f);
+
+        visual.FieldX = fieldX;
+        visual.FieldY = fieldY;
+        visual.FieldWidth = fieldW;
+        visual.FieldHeight = fieldH;
+
+        auto const points = LfoCyclePoints(control.Lfo);
+
+        auto const place = [&](float2 const& point)
+            {
+                return float2{
+                    fieldX + point.x * fieldW,
+                    fieldY + (1.0f - point.y) * fieldH };
+            };
+
+        // A track under the wave at the middle of the sweep, so a shallow sweep still reads as
+        // something moving inside a range rather than as a line drawn slightly off center.
+        auto const trackColor = colors.Marks;
+
+        auto trackGeometry = compositor.CreateLineGeometry();
+        trackGeometry.Start(float2{ fieldX, fieldY + fieldH * 0.5f });
+        trackGeometry.End(float2{ fieldX + fieldW, fieldY + fieldH * 0.5f });
+
+        auto trackShape = compositor.CreateSpriteShape(trackGeometry);
+        trackShape.StrokeBrush(BrushFor(compositor, trackColor));
+        trackShape.StrokeThickness(1.0f);
+
+        visual.Shape.Shapes().Append(trackShape);
+
+        // The wave itself. Composition has no polyline, so it is a run of line segments with
+        // round joins, which at these sizes is indistinguishable from one path.
+        auto waveColor = colors.Pipe;
+        waveColor.A = static_cast<uint8_t>(std::lround(waveColor.A * 0.85));
+
+        auto const waveBrush = BrushFor(compositor, waveColor);
+
+        for (size_t index = 0; index + 1 < points.size(); ++index)
+        {
+            auto geometry = compositor.CreateLineGeometry();
+            geometry.Start(place(points[index]));
+            geometry.End(place(points[index + 1]));
+
+            auto shape = compositor.CreateSpriteShape(geometry);
+            shape.StrokeBrush(waveBrush);
+            shape.StrokeThickness(LfoStrokeThickness);
+            shape.StrokeStartCap(CompositionStrokeCap::Round);
+            shape.StrokeEndCap(CompositionStrokeCap::Round);
+
+            visual.Shape.Shapes().Append(shape);
+        }
+
+        // The bead. It sits at the start of the cycle until something moves it.
+        auto const bead = std::max(MinimumLfoBead, std::min(width, height) * LfoBeadFraction);
+
+        visual.PuckRadius = bead;
+
+        visual.PuckGeometry = compositor.CreateEllipseGeometry();
+        visual.PuckGeometry.Radius(float2{ bead, bead });
+        visual.PuckGeometry.Center(points.empty() ? float2{ fieldX, fieldY } : place(points.front()));
+
+        auto beadShape = compositor.CreateSpriteShape(visual.PuckGeometry);
+        beadShape.FillBrush(BrushFor(compositor, colors.Pipe));
+
+        visual.ValueShape.Shapes().Append(beadShape);
+
+        // Nothing is riding the wave until it runs, so the bead is dimmed at rest the same way
+        // a ribbon's light is.
+        visual.ValueShape.Opacity(LfoRestOpacity);
+    }
+
+    // ---------------------------------------------------------------- the turntable
+
+    // A platter, a spindle and a marker. The marker is what says the thing has been pushed, and
+    // it is the only part that moves: a record with no marker on it looks identical at every
+    // angle, which is exactly the complaint people have about jog wheels with no indicator.
+    _Use_decl_annotations_
+    void SurfaceRenderer::LayoutTurntable(
+        Compositor const& compositor,
+        SurfaceVisual& visual,
+        Control const& control,
+        ControlColors const& colors,
+        float width,
+        float height)
+    {
+        auto const center = float2{ width * 0.5f, height * 0.5f };
+        auto const shortest = std::min(width, height);
+        auto const outer = std::max(shortest * 0.5f - TurntableInset, 2.0f);
+
+        visual.FieldX = center.x;
+        visual.FieldY = center.y;
+        visual.FieldWidth = outer;
+        visual.FieldHeight = outer;
+
+        // The platter face.
+        auto faceGeometry = compositor.CreateEllipseGeometry();
+        faceGeometry.Radius(float2{ outer, outer });
+        faceGeometry.Center(center);
+
+        auto faceShape = compositor.CreateSpriteShape(faceGeometry);
+        faceShape.FillBrush(BrushFor(compositor, colors.Track));
+        faceShape.StrokeBrush(BrushFor(compositor, colors.Rim));
+        faceShape.StrokeThickness(1.0f);
+
+        visual.Shape.Shapes().Append(faceShape);
+
+        // The ridges around the edge. Drawn as a dashed ring rather than as one shape per
+        // ridge, the same trick the Bigwig lamp ring uses.
+        if (control.Turntable.ShowsGrip && outer > 14.0f)
+        {
+            auto gripGeometry = compositor.CreateEllipseGeometry();
+            gripGeometry.Radius(float2{ outer - TurntableGripInset, outer - TurntableGripInset });
+            gripGeometry.Center(center);
+
+            auto gripShape = compositor.CreateSpriteShape(gripGeometry);
+            gripShape.StrokeBrush(BrushFor(compositor, colors.Marks));
+            gripShape.StrokeThickness(TurntableGripThickness);
+            gripShape.IsStrokeNonScaling(false);
+            gripShape.StrokeDashArray().Append(1.2f);
+            gripShape.StrokeDashArray().Append(1.8f);
+
+            visual.Shape.Shapes().Append(gripShape);
+        }
+
+        // The spindle.
+        auto spindleGeometry = compositor.CreateEllipseGeometry();
+        auto const spindle = std::max(2.0f, outer * TurntableSpindleFraction);
+
+        spindleGeometry.Radius(float2{ spindle, spindle });
+        spindleGeometry.Center(center);
+
+        auto spindleShape = compositor.CreateSpriteShape(spindleGeometry);
+        spindleShape.FillBrush(BrushFor(compositor, colors.Thumb));
+
+        visual.Shape.Shapes().Append(spindleShape);
+
+        // The marker, drawn pointing straight up and rotated by however far the platter has
+        // been pushed. Rotating one shape costs nothing per frame; rebuilding it would not.
+        auto markerGeometry = compositor.CreateRoundedRectangleGeometry();
+        auto const markerWidth = std::max(2.0f, outer * 0.08f);
+        auto const markerLength = std::max(4.0f, outer - spindle - 3.0f);
+
+        markerGeometry.Size(float2{ markerWidth, markerLength });
+        markerGeometry.Offset(float2{ center.x - markerWidth * 0.5f, center.y - outer + 2.0f });
+        markerGeometry.CornerRadius(float2{ markerWidth * 0.5f, markerWidth * 0.5f });
+
+        visual.PointerShape = compositor.CreateSpriteShape(markerGeometry);
+        visual.PointerShape.FillBrush(BrushFor(compositor, colors.Pipe));
+        visual.PointerShape.CenterPoint(center);
+
+        visual.ValueShape.Shapes().Append(visual.PointerShape);
+
+        // Where the platter is now. A control loaded at its default is not being pushed, so it
+        // starts square.
+        visual.ArcGeometry = nullptr;
     }
 
     // ------------------------------------------------------------------ two axis
@@ -188,20 +446,20 @@ namespace glass
             ring(JoystickInnerRingInset, colors.Marks);
         }
 
-        // The grid. Same idea on both shapes: the marks say where the middle and the quarters
-        // are, so a hand can find a position rather than only the two ends.
-        if (control.Ticks.Show && control.Ticks.Count >= MinimumTickCount)
+        // The grid. It says where the middle and the quarters are, so a hand can find a
+        // position rather than only the two ends. A joystick goes without: its rings already
+        // say where the middle is, and a square grid on a round field lines up with nothing.
+        if (!joystick && control.Ticks.Show && control.Ticks.Count >= MinimumTickCount)
         {
             auto const divisions = control.Ticks.Count - 1;
 
             auto lineClip = compositor.CreateRoundedRectangleGeometry();
             lineClip.Size(float2{ fieldW, fieldH });
             lineClip.Offset(float2{ fieldX, fieldY });
-            lineClip.CornerRadius(joystick
-                ? float2{ fieldW * 0.5f, fieldH * 0.5f }
-                : float2{ static_cast<float>(theme.CornerRadius), static_cast<float>(theme.CornerRadius) });
+            lineClip.CornerRadius(
+                float2{ static_cast<float>(theme.CornerRadius), static_cast<float>(theme.CornerRadius) });
 
-            // A round field's grid has to stop at the circle, not at its bounding box.
+            // The grid has to stop at the plate's rounded corner, not at its bounding box.
             visual.Grid = compositor.CreateShapeVisual();
             visual.Grid.Size(float2{ width, height });
             visual.Grid.Clip(compositor.CreateGeometricClip(lineClip));
@@ -646,6 +904,15 @@ namespace glass
             return;
         }
 
+        // An LFO borrows the puck geometry for its bead, but its bead is placed by the sweep,
+        // not by its value - which is whether it is running. Without this every stopped LFO is
+        // parked in the bottom left corner, because that is where a value of zero on both axes
+        // puts a puck.
+        if (visual.Kind == ControlKind::Lfo)
+        {
+            return;
+        }
+
         try
         {
             auto const x = static_cast<float>(std::clamp(m_values[itemIndex], 0.0, 1.0));
@@ -731,6 +998,45 @@ namespace glass
         m_valuesY[itemIndex] = std::clamp(value, 0.0, 1.0);
 
         MovePuck(itemIndex);
+        RefreshValueText(itemIndex);
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::SetSweepPosition(
+        size_t itemIndex,
+        double value,
+        double phase,
+        bool running) noexcept
+    {
+        if (itemIndex >= m_visuals.size())
+        {
+            return;
+        }
+
+        auto const& visual = m_visuals[itemIndex];
+
+        if (visual.Kind != ControlKind::Lfo || visual.PuckGeometry == nullptr)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const across = static_cast<float>(std::clamp(phase, 0.0, 1.0));
+            auto const up = static_cast<float>(std::clamp(value, 0.0, 1.0));
+
+            visual.PuckGeometry.Center(float2{
+                visual.FieldX + across * visual.FieldWidth,
+                visual.FieldY + (1.0f - up) * visual.FieldHeight });
+
+            if (visual.ValueShape != nullptr)
+            {
+                visual.ValueShape.Opacity(running ? 1.0f : LfoRestOpacity);
+            }
+        }
+        catch (...)
+        {
+        }
     }
 
     _Use_decl_annotations_
@@ -954,8 +1260,64 @@ namespace glass
         RefreshElapsedTexts();
     }
 
+    _Use_decl_annotations_
+    void SurfaceRenderer::SetElapsedRunning(bool running) noexcept
+    {
+        if (m_elapsedRunning == running)
+        {
+            return;
+        }
+
+        m_elapsedRunning = running;
+
+        if (running)
+        {
+            // From zero, not from where it would have been. Nobody wants the stopwatch to
+            // start a run already showing four minutes of editing.
+            auto const now = ::GetTickCount64();
+
+            for (auto& origin : m_elapsedOrigins)
+            {
+                if (origin != 0)
+                {
+                    origin = now;
+                }
+            }
+
+            RefreshElapsedTexts();
+            StartElapsedTimerIfNeeded();
+
+            return;
+        }
+
+        if (m_elapsedTimer != nullptr)
+        {
+            m_elapsedTimer.Stop();
+            m_elapsedTimer = nullptr;
+        }
+
+        try
+        {
+            for (auto const& text : m_elapsedTexts)
+            {
+                if (text != nullptr)
+                {
+                    text.Text(winrt::hstring{ FormatElapsed(0) });
+                }
+            }
+        }
+        catch (...)
+        {
+        }
+    }
+
     void SurfaceRenderer::RefreshElapsedTexts() noexcept
     {
+        if (!m_elapsedRunning)
+        {
+            return;
+        }
+
         try
         {
             auto const now = ::GetTickCount64();
@@ -980,7 +1342,7 @@ namespace glass
     {
         try
         {
-            if (m_elapsedTimer != nullptr || m_host == nullptr)
+            if (m_elapsedTimer != nullptr || m_host == nullptr || !m_elapsedRunning)
             {
                 return;
             }

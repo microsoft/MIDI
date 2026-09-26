@@ -139,6 +139,32 @@ namespace glass
 
         m_clocks->Start(dispatcher);
 
+        m_lfos = LfoGenerator::Create();
+
+        m_lfos->ValueMoved = [weak](uint32_t controlIndex, double value, double phase, bool running)
+            {
+                auto strong = weak.lock();
+
+                if (strong == nullptr)
+                {
+                    return;
+                }
+
+                // Straight out, not through the throttle. The sweep's own update rate is
+                // already the limit, and a second one would eat samples the customer asked for.
+                strong->SendPrepared(
+                    controlIndex,
+                    strong->m_engine.Evaluate(
+                        controlIndex, MessageTrigger::Changes, value, strong->m_sends));
+
+                if (strong->LfoMoved)
+                {
+                    strong->LfoMoved(controlIndex, value, phase, running);
+                }
+            };
+
+        m_lfos->Start(dispatcher);
+
         m_devices.SetChangedHandler([weak]()
             {
                 auto strong = weak.lock();
@@ -222,6 +248,12 @@ namespace glass
             m_clocks->Stop();
         }
 
+        if (m_lfos != nullptr)
+        {
+            m_lfos->CancelAll();
+            m_lfos->Stop();
+        }
+
         m_sendTable.clear();
 
         if (m_runner != nullptr)
@@ -254,6 +286,7 @@ namespace glass
         m_soundingNotes.assign(m_document.ControlCount(), 0xFFFF);
         m_clockTickCounts.assign(m_document.ControlCount(), 0);
         m_clockControls.clear();
+        m_lfoControls.clear();
 
         size_t index{ 0 };
 
@@ -285,6 +318,16 @@ namespace glass
                     entry.Spec = control.Clock;
 
                     m_clockControls.push_back(std::move(entry));
+                }
+
+                if (control.Kind == ControlKind::Lfo)
+                {
+                    LfoEntry entry{};
+
+                    entry.ControlIndex = static_cast<uint32_t>(index);
+                    entry.Spec = control.Lfo;
+
+                    m_lfoControls.push_back(std::move(entry));
                 }
 
                 index++;
@@ -351,6 +394,41 @@ namespace glass
 
             m_clocks->Run(clock.ControlIndex, clock.Spec.BeatsPerMinute, clock.Spec.SendsTransport);
         }
+
+        if (m_lfos == nullptr)
+        {
+            return;
+        }
+
+        for (auto const& lfo : m_lfoControls)
+        {
+            if (!lfo.Spec.StartsRunning || m_lfos->IsRunning(lfo.ControlIndex))
+            {
+                continue;
+            }
+
+            m_lfos->Run(lfo.ControlIndex, lfo.Spec, m_document.Tempo.BeatsPerMinute);
+        }
+    }
+
+    _Use_decl_annotations_
+    bool LivePlayer::IsLfoRunning(uint32_t controlIndex) const noexcept
+    {
+        return m_lfos != nullptr && m_lfos->IsRunning(controlIndex);
+    }
+
+    _Use_decl_annotations_
+    bool LivePlayer::LfoLatchesAt(uint32_t controlIndex) const noexcept
+    {
+        for (auto const& lfo : m_lfoControls)
+        {
+            if (lfo.ControlIndex == controlIndex)
+            {
+                return lfo.Spec.Latching;
+            }
+        }
+
+        return true;
     }
 
     _Use_decl_annotations_
@@ -608,15 +686,15 @@ namespace glass
         if (isFinal)
         {
             // The last value is always sent. Without it a fader settles a few units from where
-            // the finger left it and the surface and the desk disagree for the rest of the set.
-            double pending{ 0.0 };
+            // the finger left it, and a spring return never reaches its rest value at all.
+            double trailing{ 0.0 };
 
-            if (!throttle.Release(pending))
+            if (!throttle.Release(value, trailing))
             {
                 return;
             }
 
-            value = pending;
+            value = trailing;
         }
         else if (!throttle.ShouldSend(value, NowMilliseconds()))
         {
@@ -644,14 +722,14 @@ namespace glass
 
         if (isFinal)
         {
-            double pending{ 0.0 };
+            double trailing{ 0.0 };
 
-            if (!throttle.Release(pending))
+            if (!throttle.Release(value, trailing))
             {
                 return;
             }
 
-            value = pending;
+            value = trailing;
         }
         else if (!throttle.ShouldSend(value, NowMilliseconds()))
         {
@@ -748,6 +826,31 @@ namespace glass
                 else
                 {
                     m_clocks->CancelFor(controlIndex);
+                }
+
+                return;
+            }
+        }
+
+        // A sweep is running or it is not, and pressing it is what changes which. Whether the
+        // press latches or has to be held is the control's own setting, so both arrive here the
+        // same way and the surface decides which one a release means.
+        if (m_lfos != nullptr)
+        {
+            for (auto const& lfo : m_lfoControls)
+            {
+                if (lfo.ControlIndex != controlIndex)
+                {
+                    continue;
+                }
+
+                if (isOn)
+                {
+                    m_lfos->Run(controlIndex, lfo.Spec, m_document.Tempo.BeatsPerMinute);
+                }
+                else
+                {
+                    m_lfos->CancelFor(controlIndex);
                 }
 
                 return;
@@ -947,12 +1050,15 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    std::wstring LivePlayer::DescribeValue(uint32_t controlIndex, double position) const
+    std::wstring LivePlayer::DescribeValue(
+        uint32_t controlIndex,
+        ValueAxis axis,
+        double position) const
     {
         uint32_t value{ 0 };
         bool isAbsolute{ false };
 
-        if (m_engine.TryDescribeValue(controlIndex, position, value, isAbsolute) && isAbsolute)
+        if (m_engine.TryDescribeValue(controlIndex, axis, position, value, isAbsolute) && isAbsolute)
         {
             return std::to_wstring(value);
         }

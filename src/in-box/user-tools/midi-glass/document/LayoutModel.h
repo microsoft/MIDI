@@ -96,6 +96,44 @@ namespace glass
         // Elapsed time, counting up. Tapped, it starts again from zero. Sends nothing: it is
         // there so somebody on stage can see how long they have been playing.
         TimeDisplay = 18,
+
+        // Sweeps a value on its own, in time with the layout's tempo, for as long as it is
+        // running. A tremolo, a filter sweep or a slow drift is a thing a hand cannot do and
+        // keep doing, which is the whole reason it is a control and not a gesture.
+        Lfo = 19,
+
+        // A platter. Pushed round with a finger, it reports how far it has been pushed from
+        // where it sits, and it springs back the moment the finger comes off - which is what a
+        // jog wheel on a DJ controller does and why a nudge is a nudge rather than a new
+        // position.
+        Turntable = 20,
+    };
+
+    // The shape an LFO sweeps. The first five repeat, so one cycle of them can be drawn with a
+    // bead running along it; the noises do not, so there is no cycle to draw and the bead only
+    // moves up and down.
+    enum class LfoWave
+    {
+        Sine = 0,
+        Triangle = 1,
+        Square = 2,
+
+        // A sawtooth. Up is the one that climbs and falls off a cliff; down is the reverse.
+        RampUp = 3,
+        RampDown = 4,
+
+        // Flat spectrum. Every sample is as likely to be anything as any other.
+        WhiteNoise = 5,
+
+        // Falls away three decibels an octave. Sounds and reads as more natural than white.
+        PinkNoise = 6,
+
+        // Six decibels an octave: a random walk, so it wanders rather than jumps. Also called
+        // red noise, which is the same thing under a different name rather than a sixth shape.
+        BrownNoise = 7,
+
+        // The mirror of pink. Rises three decibels an octave, so it is all jitter and no drift.
+        BlueNoise = 8,
     };
 
     // When a control sends. A control has a list of messages, not one, so a single button can
@@ -422,6 +460,70 @@ namespace glass
     constexpr double MinimumBeatsPerMinute = 20.0;
     constexpr double MaximumBeatsPerMinute = 300.0;
 
+    // The sweep an LFO control runs. The shape and how long one pass of it takes; where it
+    // sends and what the two ends mean is the control's ordinary message list, exactly as it is
+    // for a fader, so an LFO can drive anything a hand could.
+    struct LfoSpec
+    {
+        LfoWave Wave{ LfoWave::Sine };
+
+        // How long one pass takes, in quarter notes of the layout's tempo. Four is one bar.
+        // Musical rather than in seconds because everything else on stage is.
+        double BeatsPerCycle{ 4.0 };
+
+        // The two ends of the sweep, along the control's own travel. The middle of the wave
+        // lands halfway between them, so a sweep set 0.25 to 0.75 rests where a fader at half
+        // would. Lowest above highest turns the wave upside down, which is a real thing to want.
+        double Lowest{ 0.0 };
+        double Highest{ 1.0 };
+
+        // How often a value is taken off the wave and sent. A sweep is not audio: past about
+        // forty a second nobody can hear the difference and a DIN cable certainly cannot carry
+        // it, so the default leaves room on the wire for everything else the layout is doing.
+        int32_t UpdateIntervalMilliseconds{ 25 };
+
+        // Press to start and press again to stop, rather than running only while held.
+        bool Latching{ true };
+
+        // Running the moment the layout opens.
+        bool StartsRunning{ false };
+
+        // Where the value goes when it stops. A tremolo left parked at the bottom of its sweep
+        // is a muted channel, so stopping puts the control back where its own default says.
+        bool ReturnsToRestWhenStopped{ true };
+
+        UnknownFields Unknown{ nullptr };
+    };
+
+    // One pass may not be so slow that nobody can tell it is running, nor so fast that the
+    // update rate is doing all the shaping.
+    constexpr double MinimumBeatsPerCycle = 0.0625;
+    constexpr double MaximumBeatsPerCycle = 64.0;
+
+    constexpr int32_t MinimumLfoIntervalMilliseconds = 5;
+    constexpr int32_t MaximumLfoIntervalMilliseconds = 1000;
+
+    // The platter. There is only one thing to set on it, because everything else a jog wheel
+    // does already falls out of the ordinary message rows: the control's value is how far it
+    // has been pushed, with the middle meaning "not moving", so a pitch bend row nudges the
+    // pitch and a controller row set 0 to 127 sits at 64 at rest, which is the convention DJ
+    // software reads a jog wheel with.
+    struct TurntableSpec
+    {
+        // How far the platter has to be turned to drive the control from one end to the other.
+        // Smaller is twitchier. Half a turn is about right for a nudge and for a scratch.
+        double DegreesForFullRange{ 180.0 };
+
+        // Draw the ridges around the edge, the way a slipmat or a jog wheel has them, so it is
+        // obvious the thing turns.
+        bool ShowsGrip{ true };
+
+        UnknownFields Unknown{ nullptr };
+    };
+
+    constexpr double MinimumTurntableDegrees = 15.0;
+    constexpr double MaximumTurntableDegrees = 1440.0;
+
     // What lights a lamp or moves a meter. A meter following one controller is the ordinary
     // case; a lamp is more often "is anything coming from this device at all".
     enum class FeedbackMode
@@ -670,6 +772,12 @@ namespace glass
 
         // Only read when the kind is BeatClock.
         ClockSpec Clock{};
+
+        // Only read when the kind is Lfo.
+        LfoSpec Lfo{};
+
+        // Only read when the kind is Turntable.
+        TurntableSpec Turntable{};
 
         // A layout always starts from its own defaults; this is the value it starts at.
         double DefaultValue{ 0.0 };

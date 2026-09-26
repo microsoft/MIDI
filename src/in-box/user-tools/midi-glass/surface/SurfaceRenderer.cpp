@@ -7,13 +7,17 @@
 
 #include "pch.h"
 #include "SurfaceRenderer.h"
+#include "InputRules.h"
 #include "LayoutStore.h"
 #include "GlassControl.h"
+#include "StringResources.h"
 
 using namespace winrt;
 using namespace winrt::Windows::Foundation::Numerics;
 using namespace winrt::Microsoft::UI::Composition;
 using namespace winrt::Microsoft::UI::Xaml::Hosting;
+
+namespace resources = ::midiglass::resources;
 
 namespace glass
 {
@@ -125,7 +129,8 @@ namespace glass
         {
             return kind == ControlKind::Knob ||
                 kind == ControlKind::Encoder ||
-                kind == ControlKind::Joystick;
+                kind == ControlKind::Joystick ||
+                kind == ControlKind::Turntable;
         }
 
         // A control that draws its own thing inside the plate rather than a track and a bar.
@@ -139,6 +144,8 @@ namespace glass
             case ControlKind::PianoKeyboard:
             case ControlKind::BeatClock:
             case ControlKind::TimeDisplay:
+            case ControlKind::Lfo:
+            case ControlKind::Turntable:
                 return true;
 
             default:
@@ -198,6 +205,7 @@ namespace glass
             case ControlKind::Pad:
             case ControlKind::PageTab:
             case ControlKind::Lamp:
+            case ControlKind::Lfo:
                 return true;
 
             default:
@@ -237,6 +245,7 @@ namespace glass
 
             case ControlKind::Toggle:
             case ControlKind::BeatClock:
+            case ControlKind::Lfo:
                 return projected::SurfaceControlRole::Toggle;
 
             case ControlKind::Label:
@@ -612,6 +621,11 @@ namespace glass
         m_dragAxes.push_back(control.Drag);
         m_keyboards.push_back(control.Keyboard);
         m_velocityFromTouch.push_back(control.VelocityFromTouch);
+        m_latches.push_back(control.Kind != ControlKind::Lfo || control.Lfo.Latching);
+        m_turnDegrees.push_back(std::clamp(
+            control.Turntable.DegreesForFullRange,
+            MinimumTurntableDegrees,
+            MaximumTurntableDegrees));
         m_pictures.push_back(nullptr);
         m_detentTexts.push_back(nullptr);
         m_beatTexts.push_back(nullptr);
@@ -634,6 +648,7 @@ namespace glass
         m_labelBoxHeights.push_back(0.0);
         m_values.push_back(control.DefaultValue);
         m_valuesY.push_back(control.DefaultValueY);
+        m_litUntil.push_back(0);
 
         auto const itemIndex = m_visuals.size() - 1;
 
@@ -663,11 +678,10 @@ namespace glass
 
         // A control with no value to show is most of them. UseTheme means while touched: a
         // number under every knob on a resting page is noise, and a number under the one being
-        // held is the thing somebody is looking for. Only a control with travel has a number
-        // worth reading, which is what the slider role means here.
+        // held is the thing somebody is looking for.
         auto const wanted =
             control.ShowValue != ShowValueOverride::Never &&
-            RoleFor(control.Kind) == projected::SurfaceControlRole::Slider;
+            ShowsAValueReadout(control.Kind);
 
         if (!wanted)
         {
@@ -719,8 +733,12 @@ namespace glass
         text.Width(width);
         text.Foreground(media::SolidColorBrush(ToColor(colors.Pipe)));
 
+        // A two axis control shows both of its values, one to a line. One value under a
+        // joystick says nothing about where the stick is.
+        auto const lines = UsesTwoAxes(control.Kind) ? 2.0 : 1.0;
+
         m_valueOffsets[itemIndex] =
-            height - (labelInside && !control.Label.empty() ? 34.0 : 19.0);
+            height - (labelInside && !control.Label.empty() ? 34.0 : 19.0) - (lines - 1.0) * 12.0;
 
         controls::Canvas::SetLeft(text, control.X);
         controls::Canvas::SetTop(text, control.Y + m_valueOffsets[itemIndex]);
@@ -749,11 +767,32 @@ namespace glass
                 return;
             }
 
-            auto const value = m_values[itemIndex];
+            auto const controlIndex = ControlIndexOf(itemIndex);
 
-            m_valueTexts[itemIndex].Text(winrt::hstring{ DescribeValue
-                ? DescribeValue(ControlIndexOf(itemIndex), value)
-                : std::to_wstring(static_cast<int32_t>(std::lround(value * 100.0))) + L" %" });
+            auto const describe = [&](ValueAxis axis, double value)
+                {
+                    return DescribeValue
+                        ? DescribeValue(controlIndex, axis, value)
+                        : std::to_wstring(static_cast<int32_t>(std::lround(value * 100.0))) + L" %";
+                };
+
+            auto const across = describe(ValueAxis::X, m_values[itemIndex]);
+
+            if (!UsesTwoAxes(m_kinds[itemIndex]))
+            {
+                m_valueTexts[itemIndex].Text(winrt::hstring{ across });
+                return;
+            }
+
+            // Two lines rather than one. A joystick is narrow, and a single number under one
+            // says nothing about where the stick actually is.
+            auto both = std::wstring{ resources::FormatString(L"TwoAxisValueAcrossFormat", across) };
+
+            both += L'\n';
+            both += resources::FormatString(
+                L"TwoAxisValueDownFormat", describe(ValueAxis::Y, m_valuesY[itemIndex]));
+
+            m_valueTexts[itemIndex].Text(winrt::hstring{ both });
         }
         catch (...)
         {
@@ -798,6 +837,8 @@ namespace glass
         auto const colors = ResolveControlColors(control, theme);
 
         visual.Kind = control.Kind;
+        visual.FeedbackHoldMilliseconds =
+            control.Feedback.Enabled ? control.Feedback.HoldMilliseconds : 0;
         visual.Width = width;
         visual.Height = height;
         visual.HasThumb = false;
@@ -1032,6 +1073,14 @@ namespace glass
 
             case ControlKind::BeatClock:
                 LayoutClock(compositor, visual, control, colors, width, height);
+                break;
+
+            case ControlKind::Lfo:
+                LayoutLfo(compositor, visual, control, colors, width, height);
+                break;
+
+            case ControlKind::Turntable:
+                LayoutTurntable(compositor, visual, control, colors, width, height);
                 break;
 
             default:
@@ -1735,6 +1784,8 @@ namespace glass
         m_dragAxes.clear();
         m_keyboards.clear();
         m_velocityFromTouch.clear();
+        m_latches.clear();
+        m_turnDegrees.clear();
         m_pictures.clear();
         m_detentTexts.clear();
         m_beatTexts.clear();
@@ -1764,6 +1815,13 @@ namespace glass
         m_background = nullptr;
         m_values.clear();
         m_valuesY.clear();
+        m_litUntil.clear();
+
+        if (m_flashTimer != nullptr)
+        {
+            m_flashTimer.Stop();
+            m_flashTimer = nullptr;
+        }
         m_brushes.clear();
         m_gradients.clear();
         m_shadowMasks.clear();
@@ -1824,6 +1882,18 @@ namespace glass
     bool SurfaceRenderer::VelocityFromTouchAt(size_t itemIndex) const noexcept
     {
         return itemIndex < m_velocityFromTouch.size() && m_velocityFromTouch[itemIndex];
+    }
+
+    _Use_decl_annotations_
+    bool SurfaceRenderer::LatchesAt(size_t itemIndex) const noexcept
+    {
+        return itemIndex >= m_latches.size() || m_latches[itemIndex];
+    }
+
+    _Use_decl_annotations_
+    double SurfaceRenderer::TurnDegreesAt(size_t itemIndex) const noexcept
+    {
+        return itemIndex < m_turnDegrees.size() ? m_turnDegrees[itemIndex] : 180.0;
     }
 
     _Use_decl_annotations_
@@ -1964,6 +2034,19 @@ namespace glass
                 }
             }
 
+            // A platter's value is how far it has been pushed, with the middle meaning not
+            // moving, so the marker turns either way from square.
+            if (visual.Kind == ControlKind::Turntable)
+            {
+                if (visual.PointerShape != nullptr)
+                {
+                    visual.PointerShape.RotationAngleInDegrees(
+                        static_cast<float>((clamped - 0.5f) * TurnDegreesAt(itemIndex)));
+                }
+
+                return;
+            }
+
             if (visual.ArcGeometry != nullptr)
             {
                 visual.ArcGeometry.TrimEnd(clamped * (KnobSweepDegrees / 360.0f));
@@ -2062,6 +2145,25 @@ namespace glass
     _Use_decl_annotations_
     void SurfaceRenderer::Bloom(size_t itemIndex) noexcept
     {
+        BloomFor(itemIndex, BloomDecayMilliseconds);
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::BloomFeedback(size_t itemIndex) noexcept
+    {
+        if (itemIndex >= m_visuals.size())
+        {
+            return;
+        }
+
+        auto const hold = m_visuals[itemIndex].FeedbackHoldMilliseconds;
+
+        BloomFor(itemIndex, hold > 0 ? hold : BloomDecayMilliseconds);
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::BloomFor(size_t itemIndex, int64_t milliseconds) noexcept
+    {
         if (itemIndex >= m_visuals.size())
         {
             return;
@@ -2089,9 +2191,87 @@ namespace glass
             auto animation = compositor.CreateScalarKeyFrameAnimation();
             animation.InsertKeyFrame(0.0f, 1.0f);
             animation.InsertKeyFrame(1.0f, 0.0f);
-            animation.Duration(std::chrono::milliseconds{ BloomDecayMilliseconds });
+            animation.Duration(std::chrono::milliseconds{ std::max<int64_t>(milliseconds, 1) });
 
             visual.Bloom.StartAnimation(L"Opacity", animation);
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::FlashFeedback(size_t itemIndex) noexcept
+    {
+        BloomFeedback(itemIndex);
+
+        if (itemIndex >= m_visuals.size() || !m_visuals[itemIndex].IsSwitch)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const hold = m_visuals[itemIndex].FeedbackHoldMilliseconds;
+
+            SetValue(itemIndex, 1.0);
+
+            m_litUntil[itemIndex] =
+                ::GetTickCount64() + static_cast<uint64_t>(hold > 0 ? hold : BloomDecayMilliseconds);
+
+            if (m_flashTimer != nullptr)
+            {
+                return;
+            }
+
+            auto const queue = winrt::Microsoft::UI::Dispatching::DispatcherQueue::GetForCurrentThread();
+
+            if (queue == nullptr)
+            {
+                return;
+            }
+
+            m_flashTimer = queue.CreateTimer();
+            m_flashTimer.Interval(std::chrono::milliseconds{ 30 });
+            m_flashTimer.Tick([this](auto&&, auto&&) { SweepFlashes(); });
+            m_flashTimer.Start();
+        }
+        catch (...)
+        {
+        }
+    }
+
+    void SurfaceRenderer::SweepFlashes() noexcept
+    {
+        try
+        {
+            auto const now = ::GetTickCount64();
+            auto anyLit = false;
+
+            for (size_t index = 0; index < m_litUntil.size(); ++index)
+            {
+                if (m_litUntil[index] == 0)
+                {
+                    continue;
+                }
+
+                if (now >= m_litUntil[index])
+                {
+                    m_litUntil[index] = 0;
+                    SetValue(index, 0.0);
+                    continue;
+                }
+
+                anyLit = true;
+            }
+
+            // Nothing left to turn off, so the page stops paying for a timer until the next
+            // thing arrives.
+            if (!anyLit && m_flashTimer != nullptr)
+            {
+                m_flashTimer.Stop();
+                m_flashTimer = nullptr;
+            }
         }
         catch (...)
         {
@@ -2104,6 +2284,11 @@ namespace glass
         if (itemIndex >= m_visuals.size())
         {
             return;
+        }
+
+        if (itemIndex < m_litUntil.size())
+        {
+            m_litUntil[itemIndex] = 0;
         }
 
         auto const& visual = m_visuals[itemIndex];

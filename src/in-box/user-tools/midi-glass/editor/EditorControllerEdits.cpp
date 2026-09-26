@@ -634,6 +634,82 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    bool EditorController::SetControlLfo(std::wstring const& id, LfoSpec const& lfo)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr)
+        {
+            return false;
+        }
+
+        auto wanted = lfo;
+
+        wanted.BeatsPerCycle = std::clamp(
+            lfo.BeatsPerCycle, MinimumBeatsPerCycle, MaximumBeatsPerCycle);
+        wanted.Lowest = std::clamp(lfo.Lowest, 0.0, 1.0);
+        wanted.Highest = std::clamp(lfo.Highest, 0.0, 1.0);
+        wanted.UpdateIntervalMilliseconds = std::clamp(
+            lfo.UpdateIntervalMilliseconds,
+            MinimumLfoIntervalMilliseconds,
+            MaximumLfoIntervalMilliseconds);
+
+        auto const& current = control->Lfo;
+
+        if (current.Wave == wanted.Wave &&
+            current.BeatsPerCycle == wanted.BeatsPerCycle &&
+            current.Lowest == wanted.Lowest &&
+            current.Highest == wanted.Highest &&
+            current.UpdateIntervalMilliseconds == wanted.UpdateIntervalMilliseconds &&
+            current.Latching == wanted.Latching &&
+            current.StartsRunning == wanted.StartsRunning &&
+            current.ReturnsToRestWhenStopped == wanted.ReturnsToRestWhenStopped)
+        {
+            return false;
+        }
+
+        control->Lfo.Wave = wanted.Wave;
+        control->Lfo.BeatsPerCycle = wanted.BeatsPerCycle;
+        control->Lfo.Lowest = wanted.Lowest;
+        control->Lfo.Highest = wanted.Highest;
+        control->Lfo.UpdateIntervalMilliseconds = wanted.UpdateIntervalMilliseconds;
+        control->Lfo.Latching = wanted.Latching;
+        control->Lfo.StartsRunning = wanted.StartsRunning;
+        control->Lfo.ReturnsToRestWhenStopped = wanted.ReturnsToRestWhenStopped;
+
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetControlTurntable(std::wstring const& id, TurntableSpec const& turntable)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr)
+        {
+            return false;
+        }
+
+        auto const degrees = std::clamp(
+            turntable.DegreesForFullRange, MinimumTurntableDegrees, MaximumTurntableDegrees);
+
+        if (control->Turntable.DegreesForFullRange == degrees &&
+            control->Turntable.ShowsGrip == turntable.ShowsGrip)
+        {
+            return false;
+        }
+
+        control->Turntable.DegreesForFullRange = degrees;
+        control->Turntable.ShowsGrip = turntable.ShowsGrip;
+
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
     bool EditorController::SetControlDefaultValueY(std::wstring const& id, double value)
     {
         auto* const control = MutableControl(id);

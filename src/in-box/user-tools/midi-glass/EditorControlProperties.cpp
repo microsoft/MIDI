@@ -86,6 +86,41 @@ namespace winrt::midiglass::implementation
 
         static_assert(std::size(DragAxisOrder) == std::size(DragAxisKeys));
 
+        constexpr wchar_t const* LfoWaveKeys[]
+        {
+            L"LfoWaveSine", L"LfoWaveTriangle", L"LfoWaveSquare", L"LfoWaveRampUp",
+            L"LfoWaveRampDown", L"LfoWaveWhite", L"LfoWavePink", L"LfoWaveBrown", L"LfoWaveBlue",
+        };
+
+        static_assert(std::size(glass::LfoWaveOrder) == std::size(LfoWaveKeys));
+
+        constexpr wchar_t const* LfoRateKeys[]
+        {
+            L"LfoRateSixteenth", L"LfoRateEighth", L"LfoRateQuarter", L"LfoRateDottedQuarter",
+            L"LfoRateHalf", L"LfoRateDottedHalf", L"LfoRateBar", L"LfoRateTwoBars",
+            L"LfoRateFourBars", L"LfoRateEightBars",
+        };
+
+        static_assert(std::size(glass::LfoRateChoices) == std::size(LfoRateKeys));
+
+        // A figure a person reads, not a float: 4 rather than 4.000000, 1.5 rather than 1.500000.
+        std::wstring TrimNumber(_In_ double value)
+        {
+            auto text = std::format(L"{:.2f}", value);
+
+            while (!text.empty() && text.back() == L'0')
+            {
+                text.pop_back();
+            }
+
+            if (!text.empty() && text.back() == L'.')
+            {
+                text.pop_back();
+            }
+
+            return text;
+        }
+
         // Where a spring-return control goes when the finger comes off. Anything that is not
         // one of the three named positions is a number the customer set on the slider above,
         // so it is offered as itself rather than being rounded into one of these.
@@ -135,7 +170,6 @@ namespace winrt::midiglass::implementation
             case glass::ControlKind::Fader:
             case glass::ControlKind::Meter:
             case glass::ControlKind::XYPad:
-            case glass::ControlKind::Joystick:
             case glass::ControlKind::Ribbon:
                 return true;
 
@@ -176,6 +210,16 @@ namespace winrt::midiglass::implementation
                 DragAxisCombo().Items().Append(box_value(resources::GetString(key)));
             }
 
+            for (auto const* const key : LfoWaveKeys)
+            {
+                LfoWaveCombo().Items().Append(box_value(resources::GetString(key)));
+            }
+
+            for (auto const* const key : LfoRateKeys)
+            {
+                LfoRateCombo().Items().Append(box_value(resources::GetString(key)));
+            }
+
             for (auto const* const key : SpringTargetKeys)
             {
                 SpringTargetCombo().Items().Append(box_value(resources::GetString(key)));
@@ -200,6 +244,29 @@ namespace winrt::midiglass::implementation
                 FeedbackChannelCombo().Items().Append(box_value(
                     resources::FormatString(L"ChannelNumberFormat", std::to_wstring(channel))));
             }
+
+            // Every color code in the inspector gets the same swatch button beside it. Blank is
+            // a real answer on all four: it means the theme decides.
+            auto const keyboardEdit = [weak = get_weak()]()
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->ApplyKeyboardEdit();
+                    }
+                };
+
+            AttachColorPicker(WhiteKeyColorButton(), WhiteKeyColorBox(), true, keyboardEdit);
+            AttachColorPicker(BlackKeyColorButton(), BlackKeyColorBox(), true, keyboardEdit);
+            AttachColorPicker(PressedKeyColorButton(), PressedKeyColorBox(), true, keyboardEdit);
+
+            AttachColorPicker(PictureTintColorButton(), PictureTintBox(), true,
+                [weak = get_weak()]()
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->OnPictureTintChanged(nullptr, nullptr);
+                    }
+                });
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to build the control property choices.")
     }
@@ -326,6 +393,69 @@ namespace winrt::midiglass::implementation
                 ClockSendsTransportCheck().IsChecked(control.Clock.SendsTransport);
 
                 RefreshTempoSourceChoices(control);
+            }
+
+            // ---- the sweep ----
+
+            auto const sweep = control.Kind == glass::ControlKind::Lfo;
+
+            show(LfoPanel(), sweep);
+
+            if (sweep)
+            {
+                auto const& spec = control.Lfo;
+
+                LfoWaveCombo().SelectedIndex(IndexOfValue(glass::LfoWaveOrder, spec.Wave));
+
+                auto rateIndex = -1;
+
+                for (size_t index = 0; index < std::size(glass::LfoRateChoices); ++index)
+                {
+                    if (std::abs(spec.BeatsPerCycle - glass::LfoRateChoices[index]) < 0.0001)
+                    {
+                        rateIndex = static_cast<int32_t>(index);
+                        break;
+                    }
+                }
+
+                // A file can carry a figure that is not on the list. The combo is left blank
+                // rather than snapped to the nearest, and the caption says what is really set.
+                LfoRateCombo().SelectedIndex(rateIndex);
+
+                auto const tempo = std::clamp(
+                    m_editor.Document().Tempo.BeatsPerMinute,
+                    glass::MinimumBeatsPerMinute,
+                    glass::MaximumBeatsPerMinute);
+
+                LfoRateCaption().Text(winrt::hstring{ resources::FormatString(
+                    L"LfoRateCaptionFormat",
+                    TrimNumber(spec.BeatsPerCycle),
+                    TrimNumber(spec.BeatsPerCycle * 60.0 / tempo),
+                    TrimNumber(tempo)) });
+
+                LfoLowestSlider().Value(spec.Lowest * 100.0);
+                LfoHighestSlider().Value(spec.Highest * 100.0);
+                LfoUpdateBox().Value(spec.UpdateIntervalMilliseconds);
+
+                LfoUpdateCaption().Text(winrt::hstring{ resources::FormatString(
+                    L"LfoUpdateCaptionFormat",
+                    std::to_wstring(std::max(1, 1000 / std::max(1, spec.UpdateIntervalMilliseconds)))) });
+
+                LfoLatchingCheck().IsChecked(spec.Latching);
+                LfoStartsRunningCheck().IsChecked(spec.StartsRunning);
+                LfoReturnsToRestCheck().IsChecked(spec.ReturnsToRestWhenStopped);
+            }
+
+            // ---- the platter ----
+
+            auto const platter = control.Kind == glass::ControlKind::Turntable;
+
+            show(TurntablePanel(), platter);
+
+            if (platter)
+            {
+                TurntableDegreesBox().Value(control.Turntable.DegreesForFullRange);
+                TurntableGripCheck().IsChecked(control.Turntable.ShowsGrip);
             }
 
             // ---- where it springs back to ----

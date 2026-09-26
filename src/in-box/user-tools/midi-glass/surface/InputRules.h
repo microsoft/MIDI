@@ -36,6 +36,27 @@ namespace glass
     // Keys, where a touch means a note rather than a position.
     bool PlaysKeys(_In_ ControlKind kind) noexcept;
 
+    // A finger pushes this one round rather than along. Only the platter does.
+    bool IsTurnedByHand(_In_ ControlKind kind) noexcept;
+
+    // The angle of a point about the middle of a control, in degrees, measured clockwise from
+    // straight up. A control with no size returns zero rather than dividing by one.
+    double AngleAtPosition(
+        _In_ double width,
+        _In_ double height,
+        _In_ double x,
+        _In_ double y) noexcept;
+
+    // How far the hand moved between two angles, the short way round. Without this a platter
+    // pushed past the top jumps the whole way back instead of carrying on.
+    double AngleDelta(_In_ double fromDegrees, _In_ double toDegrees) noexcept;
+
+    // Whether this kind can print a number inside itself. Only a control with travel has a
+    // position worth reading: a stopwatch already shows its own figure, and a caption, a picture
+    // and a frame have no value at all. The inspector hides the setting for everything this
+    // says no to, so it can never be set and then appear to do nothing.
+    bool ShowsAValueReadout(_In_ ControlKind kind) noexcept;
+
     // Where a point inside a control puts a continuous value.
     double PositionToValue(
         _In_ ControlKind kind,

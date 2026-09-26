@@ -452,6 +452,14 @@
   <data name="SurfaceControlUnnamed" xml:space="preserve">
     <value>Unnamed control</value>
   </data>
+  <data name="TwoAxisValueAcrossFormat" xml:space="preserve">
+    <value>X {0}</value>
+    <comment>The sideways value of an XY pad or a joystick, shown inside the control.</comment>
+  </data>
+  <data name="TwoAxisValueDownFormat" xml:space="preserve">
+    <value>Y {0}</value>
+    <comment>The up and down value of an XY pad or a joystick, shown inside the control on the line below the sideways one.</comment>
+  </data>
   <data name="ErrorServiceUnavailable" xml:space="preserve">
     <value>Windows MIDI Services is not running, so nothing can be sent.</value>
   </data>
@@ -749,9 +757,6 @@
   <data name="PaletteStepper" xml:space="preserve">
     <value>Stepper</value>
   </data>
-  <data name="PaletteFaderBank" xml:space="preserve">
-    <value>Fader bank</value>
-  </data>
   <data name="PaletteWheel" xml:space="preserve">
     <value>Wheel</value>
   </data>
@@ -772,6 +777,9 @@
   </data>
   <data name="PaletteLfo" xml:space="preserve">
     <value>LFO</value>
+  </data>
+  <data name="PaletteTurntable" xml:space="preserve">
+    <value>Turntable</value>
   </data>
   <data name="PaletteSteps" xml:space="preserve">
     <value>Steps</value>
@@ -943,6 +951,37 @@
   </data>
   <data name="FontColorPlaceholder" xml:space="preserve">
     <value>Same as the theme, or #RRGGBB</value>
+  </data>
+  <data name="FontColorButtonName" xml:space="preserve">
+    <value>Pick the label color</value>
+  </data>
+  <data name="ColorPickerThemeHeading" xml:space="preserve">
+    <value>This theme's colors</value>
+  </data>
+  <data name="ColorPickerSlotFormat" xml:space="preserve">
+    <value>Theme color {0}, {1}</value>
+    <comment>{0} is the number of the theme color slot, 1 through 6. {1} is its hex color code.</comment>
+  </data>
+  <data name="ColorPickerUse" xml:space="preserve">
+    <value>Use this color</value>
+  </data>
+  <data name="ColorPickerClear" xml:space="preserve">
+    <value>Use the theme's color</value>
+  </data>
+  <data name="ColorPickerNone" xml:space="preserve">
+    <value>No color set</value>
+  </data>
+  <data name="WhiteKeyColorButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Pick the white key color</value>
+  </data>
+  <data name="BlackKeyColorButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Pick the black key color</value>
+  </data>
+  <data name="PressedKeyColorButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Pick the color of the key being played</value>
+  </data>
+  <data name="PictureTintColorButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Pick the wash color</value>
   </data>
   <data name="FontPreviewFallback" xml:space="preserve">
     <value>Label</value>
@@ -1140,7 +1179,7 @@
     <value>How it fits</value>
   </data>
   <data name="PictureOpacitySlider.Header" xml:space="preserve">
-    <value>How strongly it shows</value>
+    <value>Opacity</value>
   </data>
   <data name="PictureLoopsCheck.Content" xml:space="preserve">
     <value>Play a video on a loop</value>
@@ -1273,6 +1312,116 @@
   </data>
   <data name="ClockSendsTransportCheck.Content" xml:space="preserve">
     <value>Send start and stop as well</value>
+  </data>
+  <data name="InspectorLfoHeading.Text" xml:space="preserve">
+    <value>Sweep</value>
+  </data>
+  <data name="LfoWaveCombo.Header" xml:space="preserve">
+    <value>Shape</value>
+  </data>
+  <data name="LfoWaveSine" xml:space="preserve">
+    <value>Sine</value>
+  </data>
+  <data name="LfoWaveTriangle" xml:space="preserve">
+    <value>Triangle</value>
+  </data>
+  <data name="LfoWaveSquare" xml:space="preserve">
+    <value>Square</value>
+  </data>
+  <data name="LfoWaveRampUp" xml:space="preserve">
+    <value>Ramp up</value>
+  </data>
+  <data name="LfoWaveRampDown" xml:space="preserve">
+    <value>Ramp down</value>
+  </data>
+  <data name="LfoWaveWhite" xml:space="preserve">
+    <value>White noise</value>
+  </data>
+  <data name="LfoWavePink" xml:space="preserve">
+    <value>Pink noise</value>
+  </data>
+  <data name="LfoWaveBrown" xml:space="preserve">
+    <value>Brown noise, also called red</value>
+  </data>
+  <data name="LfoWaveBlue" xml:space="preserve">
+    <value>Blue noise</value>
+  </data>
+  <data name="LfoRateCombo.Header" xml:space="preserve">
+    <value>One pass takes</value>
+  </data>
+  <data name="LfoRateSixteenth" xml:space="preserve">
+    <value>A sixteenth note</value>
+  </data>
+  <data name="LfoRateEighth" xml:space="preserve">
+    <value>An eighth note</value>
+  </data>
+  <data name="LfoRateQuarter" xml:space="preserve">
+    <value>A quarter note</value>
+  </data>
+  <data name="LfoRateDottedQuarter" xml:space="preserve">
+    <value>A dotted quarter note</value>
+  </data>
+  <data name="LfoRateHalf" xml:space="preserve">
+    <value>A half note</value>
+  </data>
+  <data name="LfoRateDottedHalf" xml:space="preserve">
+    <value>A dotted half note</value>
+  </data>
+  <data name="LfoRateBar" xml:space="preserve">
+    <value>One bar</value>
+  </data>
+  <data name="LfoRateTwoBars" xml:space="preserve">
+    <value>Two bars</value>
+  </data>
+  <data name="LfoRateFourBars" xml:space="preserve">
+    <value>Four bars</value>
+  </data>
+  <data name="LfoRateEightBars" xml:space="preserve">
+    <value>Eight bars</value>
+  </data>
+  <data name="LfoRateCaptionFormat" xml:space="preserve">
+    <value>{0} beats, which is about {1} seconds at this layout's tempo of {2}.</value>
+    <comment>{0} is a number of beats, {1} a number of seconds, {2} a tempo in beats per minute.</comment>
+  </data>
+  <data name="LfoLowestSlider.Header" xml:space="preserve">
+    <value>Low end of the sweep</value>
+  </data>
+  <data name="LfoHighestSlider.Header" xml:space="preserve">
+    <value>High end of the sweep</value>
+  </data>
+  <data name="LfoRangeCaption.Text" xml:space="preserve">
+    <value>How much of the travel the sweep covers. The middle of the wave lands halfway between the two. Setting the low end above the high one turns the wave upside down.</value>
+  </data>
+  <data name="LfoUpdateLabel.Text" xml:space="preserve">
+    <value>Send a value every</value>
+  </data>
+  <data name="LfoUpdateBox.Header" xml:space="preserve">
+    <value>Milliseconds</value>
+  </data>
+  <data name="LfoUpdateCaptionFormat" xml:space="preserve">
+    <value>About {0} messages a second. A DIN cable carries roughly 350, shared with everything else on the wire, so leave room.</value>
+    <comment>{0} is a number of messages per second.</comment>
+  </data>
+  <data name="LfoLatchingCheck.Content" xml:space="preserve">
+    <value>Press to start, press again to stop</value>
+  </data>
+  <data name="LfoStartsRunningCheck.Content" xml:space="preserve">
+    <value>Running when the layout opens</value>
+  </data>
+  <data name="LfoReturnsToRestCheck.Content" xml:space="preserve">
+    <value>Go back to the middle when it stops</value>
+  </data>
+  <data name="InspectorTurntableHeading.Text" xml:space="preserve">
+    <value>Platter</value>
+  </data>
+  <data name="TurntableDegreesBox.Header" xml:space="preserve">
+    <value>Degrees for the full range</value>
+  </data>
+  <data name="TurntableDegreesCaption.Text" xml:space="preserve">
+    <value>How far you push the platter round to take it from one end to the other. Less is twitchier. The middle means the platter is not moving, so a pitch bend row nudges the track and a controller row set 0 to 127 sits at 64 at rest, which is how DJ software reads a jog wheel.</value>
+  </data>
+  <data name="TurntableGripCheck.Content" xml:space="preserve">
+    <value>Show the ridges around the edge</value>
   </data>
   <data name="FeedbackEnabledSwitch.Header" xml:space="preserve">
     <value>Follow what arrives</value>

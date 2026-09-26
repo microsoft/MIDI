@@ -1291,7 +1291,7 @@
                                             </Button>
                                         </Grid>
 
-                                        <TextBlock x:Uid="InspectorShowValueLabel" Grid.Row="3" Grid.Column="0" Text="Show value" Style="{StaticResource RowLabelStyle}" />
+                                        <TextBlock x:Name="ShowValueLabel" x:Uid="InspectorShowValueLabel" Grid.Row="3" Grid.Column="0" Text="Show value" Style="{StaticResource RowLabelStyle}" />
                                         <ComboBox x:Name="ShowValueCombo" x:Uid="ShowValueCombo" Grid.Row="3" Grid.Column="1"
                                                   Style="{StaticResource RowComboStyle}" SelectionChanged="OnShowValueChanged" />
 
@@ -1414,10 +1414,23 @@
 
                                         <TextBlock x:Uid="PictureTintHeading" Text="Wash of color" Style="{StaticResource InspectorHeadingStyle}" />
 
-                                        <TextBox x:Name="PictureTintBox"
-                                                 x:Uid="PictureTintBox"
-                                                 PlaceholderText="#000000"
-                                                 LostFocus="OnPictureTintChanged" />
+                                        <Grid ColumnSpacing="6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBox x:Name="PictureTintBox"
+                                                     x:Uid="PictureTintBox"
+                                                     Grid.Column="0"
+                                                     PlaceholderText="#000000"
+                                                     LostFocus="OnPictureTintChanged" />
+
+                                            <Button x:Name="PictureTintColorButton"
+                                                    x:Uid="PictureTintColorButton"
+                                                    Grid.Column="1"
+                                                    VerticalAlignment="Bottom" />
+                                        </Grid>
 
                                         <Slider x:Name="PictureTintStrengthSlider"
                                                 x:Uid="PictureTintStrengthSlider"
@@ -1460,21 +1473,48 @@
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
                                         <TextBlock x:Uid="KeyColorsLabel" Text="Key colors" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
-                                        <TextBox x:Name="WhiteKeyColorBox"
-                                                 x:Uid="WhiteKeyColorBox"
-                                                 PlaceholderText="#E8EAEE"
-                                                 Margin="0,2,0,0"
-                                                 LostFocus="OnKeyColorChanged" />
-                                        <TextBox x:Name="BlackKeyColorBox"
-                                                 x:Uid="BlackKeyColorBox"
-                                                 PlaceholderText="#16191F"
-                                                 Margin="0,4,0,0"
-                                                 LostFocus="OnKeyColorChanged" />
-                                        <TextBox x:Name="PressedKeyColorBox"
-                                                 x:Uid="PressedKeyColorBox"
-                                                 PlaceholderText="the control's own color"
-                                                 Margin="0,4,0,0"
-                                                 LostFocus="OnKeyColorChanged" />
+
+                                        <Grid ColumnSpacing="6" RowSpacing="4" Margin="0,2,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <TextBox x:Name="WhiteKeyColorBox"
+                                                     x:Uid="WhiteKeyColorBox"
+                                                     Grid.Row="0" Grid.Column="0"
+                                                     PlaceholderText="#E8EAEE"
+                                                     LostFocus="OnKeyColorChanged" />
+                                            <Button x:Name="WhiteKeyColorButton"
+                                                    x:Uid="WhiteKeyColorButton"
+                                                    Grid.Row="0" Grid.Column="1"
+                                                    VerticalAlignment="Bottom" />
+
+                                            <TextBox x:Name="BlackKeyColorBox"
+                                                     x:Uid="BlackKeyColorBox"
+                                                     Grid.Row="1" Grid.Column="0"
+                                                     PlaceholderText="#16191F"
+                                                     LostFocus="OnKeyColorChanged" />
+                                            <Button x:Name="BlackKeyColorButton"
+                                                    x:Uid="BlackKeyColorButton"
+                                                    Grid.Row="1" Grid.Column="1"
+                                                    VerticalAlignment="Bottom" />
+
+                                            <TextBox x:Name="PressedKeyColorBox"
+                                                     x:Uid="PressedKeyColorBox"
+                                                     Grid.Row="2" Grid.Column="0"
+                                                     PlaceholderText="the control's own color"
+                                                     LostFocus="OnKeyColorChanged" />
+                                            <Button x:Name="PressedKeyColorButton"
+                                                    x:Uid="PressedKeyColorButton"
+                                                    Grid.Row="2" Grid.Column="1"
+                                                    VerticalAlignment="Bottom" />
+                                        </Grid>
 
                                         <CheckBox x:Name="KeyVelocityCheck"
                                                   x:Uid="KeyVelocityCheck"
@@ -1990,6 +2030,105 @@
                                                   Content="Send start and stop as well"
                                                   Checked="OnClockFlagChanged"
                                                   Unchecked="OnClockFlagChanged" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="LfoPanel" Visibility="Collapsed">
+                                        <TextBlock x:Uid="InspectorLfoHeading" Text="Sweep" Style="{StaticResource InspectorHeadingStyle}" />
+
+                                        <ComboBox x:Name="LfoWaveCombo"
+                                                  x:Uid="LfoWaveCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnLfoWaveChanged" />
+
+                                        <ComboBox x:Name="LfoRateCombo"
+                                                  x:Uid="LfoRateCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,6,0,0"
+                                                  SelectionChanged="OnLfoRateChanged" />
+
+                                        <TextBlock x:Name="LfoRateCaption"
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <Slider x:Name="LfoLowestSlider"
+                                                x:Uid="LfoLowestSlider"
+                                                Minimum="0"
+                                                Maximum="100"
+                                                StepFrequency="1"
+                                                Margin="0,4,0,0"
+                                                ValueChanged="OnLfoRangeChanged" />
+
+                                        <Slider x:Name="LfoHighestSlider"
+                                                x:Uid="LfoHighestSlider"
+                                                Minimum="0"
+                                                Maximum="100"
+                                                StepFrequency="1"
+                                                ValueChanged="OnLfoRangeChanged" />
+
+                                        <TextBlock x:Uid="LfoRangeCaption"
+                                                   Text="How much of the travel the sweep covers. The middle of the wave lands halfway between the two. Setting the low end above the high one turns the wave upside down."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <TextBlock x:Uid="LfoUpdateLabel" Text="Send a value every" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
+                                        <NumberBox x:Name="LfoUpdateBox"
+                                                   x:Uid="LfoUpdateBox"
+                                                   Minimum="5"
+                                                   Maximum="1000"
+                                                   Margin="0,2,0,0"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnLfoUpdateChanged" />
+                                        <TextBlock x:Name="LfoUpdateCaption"
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <CheckBox x:Name="LfoLatchingCheck"
+                                                  x:Uid="LfoLatchingCheck"
+                                                  Content="Press to start, press again to stop"
+                                                  Margin="0,6,0,0"
+                                                  Checked="OnLfoFlagChanged"
+                                                  Unchecked="OnLfoFlagChanged" />
+                                        <CheckBox x:Name="LfoStartsRunningCheck"
+                                                  x:Uid="LfoStartsRunningCheck"
+                                                  Content="Running when the layout opens"
+                                                  Checked="OnLfoFlagChanged"
+                                                  Unchecked="OnLfoFlagChanged" />
+                                        <CheckBox x:Name="LfoReturnsToRestCheck"
+                                                  x:Uid="LfoReturnsToRestCheck"
+                                                  Content="Go back to the middle when it stops"
+                                                  Checked="OnLfoFlagChanged"
+                                                  Unchecked="OnLfoFlagChanged" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="TurntablePanel" Visibility="Collapsed">
+                                        <TextBlock x:Uid="InspectorTurntableHeading" Text="Platter" Style="{StaticResource InspectorHeadingStyle}" />
+
+                                        <NumberBox x:Name="TurntableDegreesBox"
+                                                   x:Uid="TurntableDegreesBox"
+                                                   Minimum="15"
+                                                   Maximum="1440"
+                                                   SmallChange="15"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnTurntableDegreesChanged" />
+
+                                        <TextBlock x:Uid="TurntableDegreesCaption"
+                                                   Text="How far you push the platter round to take it from one end to the other. Less is twitchier. The middle means the platter is not moving, so a pitch bend row nudges the track and a controller row set 0 to 127 sits at 64 at rest, which is how DJ software reads a jog wheel."
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <CheckBox x:Name="TurntableGripCheck"
+                                                  x:Uid="TurntableGripCheck"
+                                                  Content="Show the ridges around the edge"
+                                                  Margin="0,6,0,0"
+                                                  Checked="OnTurntableGripChanged"
+                                                  Unchecked="OnTurntableGripChanged" />
                                     </StackPanel>
 
                                     <TextBlock x:Uid="InspectorThrottleHeading" Text="Least time between sends" Style="{StaticResource InspectorHeadingStyle}" />

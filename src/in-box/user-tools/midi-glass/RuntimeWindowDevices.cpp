@@ -58,6 +58,23 @@ namespace winrt::midiglass::implementation
                 }
             };
 
+        m_player->LfoMoved = [weak](uint32_t controlIndex, double value, double phase, bool running)
+            {
+                auto strong = weak.get();
+
+                if (strong == nullptr || strong->m_closing)
+                {
+                    return;
+                }
+
+                size_t itemIndex{ 0 };
+
+                if (strong->m_renderer.TryFindItem(controlIndex, itemIndex))
+                {
+                    strong->m_renderer.SetSweepPosition(itemIndex, value, phase, running);
+                }
+            };
+
         m_player->TempoChanged = [weak](uint32_t controlIndex, double beatsPerMinute)
             {
                 auto strong = weak.get();
@@ -305,7 +322,7 @@ namespace winrt::midiglass::implementation
         }
 
         m_renderer.SetValue(itemIndex, value);
-        m_renderer.Bloom(itemIndex);
+        m_renderer.BloomFeedback(itemIndex);
 
         if (auto element = m_renderer.ElementAt(itemIndex))
         {
@@ -344,9 +361,10 @@ namespace winrt::midiglass::implementation
             break;
 
         default:
-            // A blink has no value to carry, so the glow is the whole message. It decays on
-            // its own, which is what makes it read as a blink rather than a light left on.
-            m_renderer.Bloom(itemIndex);
+            // A blink has no value to carry, so the light is the whole message. It goes out on
+            // its own after "stays lit for", which is what makes it read as a blink rather than
+            // a light left on.
+            m_renderer.FlashFeedback(itemIndex);
             break;
         }
     }

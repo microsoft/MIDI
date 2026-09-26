@@ -66,10 +66,10 @@ namespace glass
                 { PaletteArtShape::Ellipse, 17, 17, 0, 0.85, 0.00 } },
             { ControlKind::Encoder, L"PaletteEncoder", L"PaletteGroupKnobs",   L'\uE9F5',
                 { PaletteArtShape::Ellipse, 17, 17, 0, 0.45, 0.00 } },
+            { ControlKind::Turntable, L"PaletteTurntable", L"PaletteGroupKnobs", L'\uE93C',
+                { PaletteArtShape::Ellipse, 19, 19, 0, 0.25, 0.00 } },
             { ControlKind::Fader,   L"PaletteFader",   L"PaletteGroupKnobs",   L'\uE9E9',
                 { PaletteArtShape::Rectangle, 5, 19, 3, 0.00, 0.70 } },
-            { ControlKind::Fader,   L"PaletteFaderBank", L"PaletteGroupKnobs", L'\uE9E9',
-                { PaletteArtShape::VerticalBars, 19, 19, 0, 0.00, 0.75 }, true },
             { ControlKind::Fader,   L"PaletteWheel",   L"PaletteGroupKnobs",   L'\uE9E9',
                 { PaletteArtShape::Rectangle, 10, 19, 3, 0.80, 0.00 }, true },
             { ControlKind::Fader,   L"PaletteRange",   L"PaletteGroupKnobs",   L'\uE9E9',
@@ -86,8 +86,8 @@ namespace glass
             // ---- Generators ----
             { ControlKind::BeatClock, L"PaletteBeatClock", L"PaletteGroupGenerators", L'\uE916',
                 { PaletteArtShape::Glyph, 18, 18, 0, 0.00, 0.00, L"\uE916" } },
-            { ControlKind::Knob,    L"PaletteLfo",     L"PaletteGroupGenerators", L'\uE9E9',
-                { PaletteArtShape::Wave, 20, 12, 0, 0.85, 0.00 }, true },
+            { ControlKind::Lfo,     L"PaletteLfo",     L"PaletteGroupGenerators", L'\uE9E9',
+                { PaletteArtShape::Wave, 20, 12, 0, 0.85, 0.00 } },
             { ControlKind::Knob,    L"PaletteSteps",   L"PaletteGroupGenerators", L'\uE8FD',
                 { PaletteArtShape::HorizontalBars, 20, 10, 0, 0.00, 0.80 }, true },
 
@@ -159,7 +159,8 @@ namespace glass
             kind == ControlKind::Encoder ||
             kind == ControlKind::Pad ||
             kind == ControlKind::XYPad ||
-            kind == ControlKind::Joystick;
+            kind == ControlKind::Joystick ||
+            kind == ControlKind::Turntable;
     }
 
     _Use_decl_annotations_
@@ -252,6 +253,39 @@ namespace glass
             control.LabelPlaced = LabelPlacementOverride::None;
         }
 
+        // A lamp sends nothing, so without a listener it is a dark circle that never does
+        // anything, and somebody has to go and find the Listens tab to discover that. It
+        // arrives watching the layout's device for any activity at all, which is what an
+        // activity light is, and the rest of the panel narrows it from there.
+        if (kind == ControlKind::Lamp)
+        {
+            control.Feedback.Enabled = true;
+            control.Feedback.Mode = FeedbackMode::AnyActivity;
+            control.Feedback.DeviceName = deviceName;
+            control.Feedback.GroupIndex = AllGroups;
+        }
+
+        // A meter with nothing driving it never moves. One controller on the layout's device is
+        // the ordinary case, and it is the row somebody would have had to fill in by hand.
+        if (kind == ControlKind::Meter)
+        {
+            control.Feedback.Enabled = true;
+            control.Feedback.Mode = FeedbackMode::Message;
+            control.Feedback.Kind = MessageKind::ControlChange;
+            control.Feedback.DeviceName = deviceName;
+            control.Feedback.Number = NextFreeNumber(page, MessageKind::ControlChange, FirstController);
+        }
+
+        // A platter reports how far it has been pushed, not where it is, so it has to come back
+        // to the middle the moment the hand leaves it. Without that, letting go of a nudge would
+        // leave the deck running fast for the rest of the set.
+        if (kind == ControlKind::Turntable)
+        {
+            control.ReturnsToDefault = true;
+            control.DefaultValue = 0.5;
+            control.LabelPlaced = LabelPlacementOverride::Below;
+        }
+
         if (!SendsAnything(kind))
         {
             return control;
@@ -318,6 +352,18 @@ namespace glass
 
             control.Messages.push_back(std::move(message));
             control.Messages.push_back(std::move(vertical));
+            break;
+        }
+
+        // Pitch bend, centered, because that is what a nudge is: push the platter and the deck
+        // runs a little fast, let go and it settles back. A controller row set 0 to 127 gives
+        // the other convention, where 64 means the wheel is not moving.
+        case ControlKind::Turntable:
+        {
+            message.Trigger = MessageTrigger::Changes;
+            message.Kind = MessageKind::PitchBend;
+
+            control.Messages.push_back(std::move(message));
             break;
         }
 
