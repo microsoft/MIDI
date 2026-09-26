@@ -248,8 +248,35 @@ namespace winrt::midiglass::implementation
             // tinting it with the layout's own color is what made it look like one.
             WorkAreaFill().Background(media::SolidColorBrush(
                 winrt::Windows::UI::ColorHelper::FromArgb(255, 10, 11, 14)));
+
+            UpdateDeckOverlay();
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to color the work area.")
+    }
+
+    // The theme's scan lines, corner fall-off and faceplate reflection, over the page only.
+    //
+    // On the surface canvas rather than on the page rectangle, because a tube's raster and its
+    // glass are the same surface and a scan line that stopped at the edge of a control would
+    // read as a mistake. The editor's own handles and guides live on a canvas above this one and
+    // stay clear of it, which is right: they are not part of the layout.
+    void EditorWindow::UpdateDeckOverlay()
+    {
+        try
+        {
+            auto const& document = m_editor.Document();
+
+            // The grain is part of the panel, so it goes on the page rectangle, under the
+            // controls. The glass goes on the surface canvas, over them.
+            glass::ApplyDeckOverlay(
+                PageDeck(), m_theme, document.PageWidth, document.PageHeight, m_canvasScale,
+                glass::DeckOverlayLayer::BeneathControls);
+
+            glass::ApplyDeckOverlay(
+                SurfaceCanvas(), m_theme, document.PageWidth, document.PageHeight, m_canvasScale,
+                glass::DeckOverlayLayer::AboveControls);
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to lay the deck overlay over the page.")
     }
 
     // The snap grid, on the page only, and only where the eye can resolve it.
@@ -361,6 +388,10 @@ namespace winrt::midiglass::implementation
 
             CanvasScale().ScaleX(scale);
             CanvasScale().ScaleY(scale);
+
+            // The scan lines are laid over the page in page units, so the pitch has to be
+            // divided back out by the zoom or it turns into a beat pattern across the screen.
+            UpdateDeckOverlay();
 
             // The transform paints the work area scaled; the host carries the scaled size so
             // the scroll viewer knows how much there is and centers what fits.

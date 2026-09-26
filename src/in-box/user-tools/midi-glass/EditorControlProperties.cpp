@@ -354,6 +354,20 @@ namespace winrt::midiglass::implementation
                     L"KeyboardRangeFormat", NoteName(spec.LowestNote), NoteName(highest)) });
             }
 
+            // ---- where it starts ----
+            //
+            // A toggle is on or off, so it starts one way or the other. A percentage slider for
+            // that gave nobody a way to say "on" short of dragging it past half way.
+            auto const onOff = control.Kind == glass::ControlKind::Toggle;
+
+            show(DefaultValueSlider(), !onOff);
+            show(StartsOnSwitch(), onOff);
+
+            if (onOff)
+            {
+                StartsOnSwitch().IsOn(control.DefaultValue >= 0.5);
+            }
+
             // ---- how it is dragged ----
 
             auto const dragged = IsDraggedInALine(control.Kind);

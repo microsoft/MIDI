@@ -171,6 +171,7 @@
     <ClInclude Include="document\ThemeStore.h" />
     <ClInclude Include="thumbnail\ThumbnailLayout.h" />
     <ClInclude Include="thumbnail\ThumbnailRenderer.h" />
+    <ClInclude Include="thumbnail\SurfaceThumbnail.h" />
     <ClInclude Include="runtime\DeviceCatalog.h" />
     <ClInclude Include="runtime\LivePlayer.h" />
     <ClInclude Include="runtime\SequenceRunner.h" />
@@ -228,6 +229,9 @@
     </ClCompile>
     <ClCompile Include="EditorCanvas.cpp" />
     <ClCompile Include="EditorColorPicker.cpp" />
+    <ClCompile Include="EditorAppearance.cpp" />
+    <ClCompile Include="EditorThemeProperties.cpp" />
+    <ClCompile Include="EditorLayoutPanes.cpp" />
     <ClCompile Include="EditorControlProperties.cpp" />
     <ClCompile Include="EditorControlEdits.cpp" />
     <ClCompile Include="EditorInspector.cpp" />
@@ -354,6 +358,7 @@
     <ClCompile Include="surface\SurfaceControls.cpp" />
     <ClCompile Include="surface\SurfaceRenderer.cpp" />
     <ClCompile Include="thumbnail\ThumbnailRenderer.cpp" />
+    <ClCompile Include="thumbnail\SurfaceThumbnail.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>

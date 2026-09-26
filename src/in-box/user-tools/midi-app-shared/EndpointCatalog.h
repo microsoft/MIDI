@@ -51,6 +51,10 @@ namespace midiapp
         std::array<std::wstring, MaximumGroupCount> SourcePortNames{};
         std::array<std::wstring, MaximumGroupCount> DestinationPortNames{};
 
+        // Function block name per group, falling back to the group terminal block name.
+        std::array<std::wstring, MaximumGroupCount> SourceGroupNames{};
+        std::array<std::wstring, MaximumGroupCount> DestinationGroupNames{};
+
         // Loopbacks are the only endpoints an app knows for certain will echo what it sends,
         // which is what makes a loop provable rather than merely possible.
         bool IsLoopback{ false };
@@ -62,6 +66,8 @@ namespace midiapp
         EndpointMatch BuildMatch() const noexcept;
 
         std::wstring const& PortName(_In_ int32_t groupIndex, _In_ bool isSource) const noexcept;
+
+        std::wstring const& GroupName(_In_ int32_t groupIndex, _In_ bool isSource) const noexcept;
     };
 
     // Watches the live endpoints and answers "which live endpoint does this saved one mean".

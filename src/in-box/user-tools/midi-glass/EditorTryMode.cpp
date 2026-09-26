@@ -257,6 +257,11 @@ namespace winrt::midiglass::implementation
             }
 
             ApplySurfaceInputMode();
+
+            // The snap grid is for placing things. In Try mode the page is being played, and a
+            // field of dots over it is the one thing that makes it look like the editor still.
+            GridCanvas().Visibility(tryMode ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
+
             UpdateOverlay();
             UpdateStatusBar();
             RebuildMonitorList();

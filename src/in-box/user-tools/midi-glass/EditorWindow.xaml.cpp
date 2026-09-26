@@ -50,18 +50,7 @@ namespace winrt::midiglass::implementation
             m_filePath = filePath;
             m_editor.Load(read.Document);
 
-            auto const themes = glass::AllThemes();
-
-            m_theme = themes.empty() ? glass::Theme{} : themes[0];
-
-            for (auto const& theme : themes)
-            {
-                if (theme.Name == read.Document.ThemeName)
-                {
-                    m_theme = theme;
-                    break;
-                }
-            }
+            m_theme = glass::ResolveDocumentTheme(read.Document);
 
             try
             {

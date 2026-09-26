@@ -130,11 +130,18 @@
             <Border x:Name="SurfaceDeck"
                     HorizontalAlignment="Center"
                     VerticalAlignment="Center">
-                <Canvas x:Name="SurfaceCanvas">
-                    <Canvas.RenderTransform>
-                        <ScaleTransform x:Name="SurfaceScale" ScaleX="1" ScaleY="1" />
-                    </Canvas.RenderTransform>
-                </Canvas>
+                <Grid>
+                    <!-- The panel's own texture. A separate element because a control sitting
+                         on the panel has to cover it, and a child visual set on the deck would
+                         render in front of the canvas instead. -->
+                    <Border x:Name="SurfaceGrain" IsHitTestVisible="False" />
+
+                    <Canvas x:Name="SurfaceCanvas">
+                        <Canvas.RenderTransform>
+                            <ScaleTransform x:Name="SurfaceScale" ScaleX="1" ScaleY="1" />
+                        </Canvas.RenderTransform>
+                    </Canvas>
+                </Grid>
             </Border>
         </ScrollViewer>
 

@@ -16,16 +16,17 @@ using namespace WEX::Common;
 using namespace WEX::Logging;
 using namespace WEX::TestExecution;
 
-void ThemeTests::ShipsTheTenThemesTheDesignNames()
+void ThemeTests::ShipsTheThemesTheDesignNames()
 {
     auto const& themes = glass::BuiltInThemes();
 
-    VERIFY_ARE_EQUAL(size_t{ 10 }, themes.size());
+    VERIFY_ARE_EQUAL(size_t{ 14 }, themes.size());
 
     wchar_t const* expected[]
     {
         L"Studio Dark", L"Neon Booth", L"Daylight", L"Amber Console", L"Blueprint",
         L"High contrast", L"Pigment Light", L"Pigment Dark", L"Bigwig", L"Bone",
+        L"Cathode", L"Terminal Green", L"Jove", L"Supersaw",
     };
 
     for (auto const* name : expected)
@@ -135,25 +136,68 @@ void ThemeTests::NoThemeLeavesTheTrackColorAgainstItsOwnDeck()
     }
 }
 
-void ThemeTests::BigwigUsesANeutralRimAndOneHue()
+void ThemeTests::BigwigIsALadderOfGraysWithColorOnlyForTheValue()
 {
     auto const* bigwig = glass::FindBuiltInTheme(L"Bigwig");
     VERIFY_IS_NOT_NULL(bigwig);
 
+    // A neutral edge, so color only ever means the value, the state, or which section this is.
     VERIFY_IS_TRUE(bigwig->Rim == glass::RimSource::NeutralEdge);
-    VERIFY_IS_TRUE(bigwig->ValueStrip == glass::ValueStripPlacement::Top);
-    VERIFY_IS_TRUE(bigwig->ValueIndicator == glass::ValueIndicatorStyle::SegmentedLamps);
 
-    // Below this the lamps stop separating and the ring reads as a fine comb, so a knob that
-    // small falls back to the solid arc on its own.
-    VERIFY_IS_GREATER_THAN(bigwig->MinimumLampRingSize, 0);
-    VERIFY_IS_GREATER_THAN(bigwig->LampCount, 0);
+    // No value strip: a lit switch is its color outright, and a strip would vanish into it.
+    VERIFY_IS_TRUE(bigwig->ValueStrip == glass::ValueStripPlacement::None);
+    VERIFY_ARE_EQUAL(100, bigwig->FillWhenOnPercent);
+    VERIFY_IS_TRUE(bigwig->NamesInsideSwitches);
 
-    // One strong orange doing all the work. That restraint is the whole theme.
-    for (int32_t i = 1; i < glass::ThemeHueSlotCount; ++i)
+    // What makes the product look machined is a ladder of grays rather than a color: a well cut
+    // below the page, the page, a section one step up, and a control one more.
+    VERIFY_IS_TRUE(bigwig->PanelFill == glass::PanelFillStyle::Color);
+
+    auto const well = glass::RelativeLuminance(bigwig->WellColor);
+    auto const page = glass::RelativeLuminance(bigwig->Deck.Color);
+    auto const section = glass::RelativeLuminance(bigwig->PanelColor);
+    auto const control = glass::RelativeLuminance(bigwig->PlateColor);
+
+    Log::Comment(String().Format(L"Bigwig well %.4f, page %.4f, section %.4f, control %.4f",
+        well, page, section, control));
+
+    VERIFY_IS_LESS_THAN(well, page);
+    VERIFY_IS_LESS_THAN(page, section);
+    VERIFY_IS_LESS_THAN(section, control);
+
+    // A value sits on the page, on a section or in a well, so every slot has to clear 3.0 on the
+    // two it can sit on that are not already near black.
+    for (int32_t slot = 0; slot < glass::ThemeHueSlotCount; ++slot)
     {
-        VERIFY_IS_TRUE(bigwig->HueSlots[0] == bigwig->HueSlots[static_cast<size_t>(i)]);
+        auto const& color = bigwig->HueSlots[static_cast<size_t>(slot)];
+
+        auto const onPage = glass::ContrastRatio(color, bigwig->Deck.Color);
+        auto const onSection = glass::ContrastRatio(color, bigwig->PanelColor);
+
+        Log::Comment(String().Format(L"Bigwig slot %d: %.2f on the page, %.2f on a section",
+            slot + 1, onPage, onSection));
+
+        VERIFY_IS_GREATER_THAN_OR_EQUAL(onPage, glass::MinimumSlotContrast);
+        VERIFY_IS_GREATER_THAN_OR_EQUAL(onSection, glass::MinimumSlotContrast);
     }
+
+    // Lit is the hue top to bottom, and the name on it turns dark so it still reads.
+    glass::Control tab{};
+    tab.Kind = glass::ControlKind::Toggle;
+    tab.HueSlot = 0;
+
+    auto const colors = glass::ResolveControlColors(tab, *bigwig);
+
+    VERIFY_IS_TRUE((colors.OnPlate == bigwig->HueSlots[0]));
+    VERIFY_IS_TRUE((colors.OnPlateEnd == bigwig->HueSlots[0]));
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(glass::ContrastRatio(colors.SwitchInkOn, colors.OnPlate), 4.5);
+    VERIFY_IS_LESS_THAN(glass::RelativeLuminance(colors.SwitchInkOn), glass::RelativeLuminance(colors.OnPlate));
+
+    // A knob has no plate of its own: a graded cap, lit above the middle.
+    VERIFY_IS_TRUE(bigwig->KnobFaceColor.A != 0);
+    VERIFY_IS_GREATER_THAN(
+        glass::RelativeLuminance(bigwig->KnobFaceColor),
+        glass::RelativeLuminance(bigwig->KnobFaceEndColor));
 }
 
 void ThemeTests::TheTonalThemesTurnOffTheGlass()
@@ -176,6 +220,48 @@ void ThemeTests::TheTonalThemesTurnOffTheGlass()
     auto const* bigwig = glass::FindBuiltInTheme(L"Bigwig");
     VERIFY_IS_NOT_NULL(bigwig);
     VERIFY_ARE_EQUAL(0.0, bigwig->FillAtRest);
+
+    // Every theme without a glow has to say touch some other way, or a finger on a control does
+    // nothing visible at all. On the flat ones the plate is the only thing left.
+    for (auto const& theme : glass::BuiltInThemes())
+    {
+        if (theme.GlowStrength > 0 || theme.RestingGlowPercent > 0)
+        {
+            continue;
+        }
+
+        Log::Comment(String().Format(L"%s has no glow, so its touch fill is %d per cent",
+            theme.Name.c_str(), theme.TouchFillPercent));
+
+        VERIFY_IS_GREATER_THAN(theme.TouchFillPercent, 0);
+
+        glass::Control control{};
+        control.HueSlot = 0;
+
+        auto const colors = glass::ResolveControlColors(control, theme);
+
+        // And it has to land somewhere different from the resting plate, or it says nothing.
+        VERIFY_IS_TRUE(colors.TouchPlate.A != 0);
+        VERIFY_IS_FALSE((colors.TouchPlate == colors.Plate));
+    }
+
+    // !! A ThemeColor defaults its ALPHA to 255, so a plain ThemeColor member is opaque BLACK
+    // rather than nothing. That one default turned "this theme has no touch fill" into a black
+    // disc painted over every control the moment it was pressed, on four shipped themes, and it
+    // took a real pointer and a pixel read to find. Any theme that does not ask for a touch fill
+    // has to resolve to nothing at all.
+    {
+        auto theme = *glass::FindBuiltInTheme(L"Studio Dark");
+        theme.TouchFillPercent = 0;
+
+        glass::Control control{};
+        control.HueSlot = 0;
+
+        auto const colors = glass::ResolveControlColors(control, theme);
+
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, colors.TouchPlate.A);
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, colors.TouchPlateEnd.A);
+    }
 }
 
 void ThemeTests::HighContrastTurnsOffEveryEffect()
@@ -249,10 +335,10 @@ void ThemeTests::BoneNeverLetsTheSpaceGoDarkerThanBone()
 
 void ThemeTests::OnlyALightThemeRaisesItsRestingRim()
 {
-    // Nothing is saturated at rest, and the six dark themes keep the quarter-strength rim that
-    // rule produces. This is the guard on that: a light theme needing a stronger hairline must
-    // not drag the dark ones up with it.
-    for (auto const* name : { L"Studio Dark", L"Neon Booth", L"Amber Console", L"Blueprint",
+    // Nothing is saturated at rest, and the plain dark themes keep the quarter-strength rim that
+    // rule produces. This is the guard on that: a theme needing a stronger hairline must not
+    // drag the others up with it.
+    for (auto const* name : { L"Studio Dark", L"Neon Booth", L"Blueprint",
         L"High contrast", L"Pigment Dark" })
     {
         auto const* theme = glass::FindBuiltInTheme(name);
@@ -265,6 +351,17 @@ void ThemeTests::OnlyALightThemeRaisesItsRestingRim()
 
     // A hairline that reads as a line on near-black is simply not there on near-white.
     VERIFY_IS_GREATER_THAN(bone->RimStrengthPercent, 50);
+
+    // A tube sits between the two: the rim is one of only two things separating a raster box
+    // from the glass, and the other one is the spill.
+    for (auto const* name : { L"Cathode", L"Amber Console", L"Terminal Green" })
+    {
+        auto const* theme = glass::FindBuiltInTheme(name);
+        VERIFY_IS_NOT_NULL(theme);
+
+        VERIFY_IS_GREATER_THAN(theme->RimStrengthPercent, 28);
+        VERIFY_IS_LESS_THAN(theme->RimStrengthPercent, 85);
+    }
 
     glass::Control control{};
     control.HueSlot = 0;
@@ -280,10 +377,32 @@ void ThemeTests::OnlyBoneMovesTheShadowOffItsShippedGeometry()
     // The renderer used to hardcode a 3 pixel blur and a 1 pixel drop. Spread is now a theme
     // number, and the offset is a third of it, so a spread of 3 reproduces those two constants
     // exactly. This is the guard that says so: every theme drawn before Bone still has it.
+    //
+    // The two hardware panels are allowed off it as well, and for the same reason Bone is: a
+    // knob bolted to a steel panel casts a real shadow on it, and that shadow is part of what
+    // makes the control read as an object sitting on a surface rather than as paint.
+    wchar_t const* const raised[]{ L"Bone", L"Jove", L"Supersaw" };
+
+    auto const isRaised = [&raised](std::wstring const& name)
+        {
+            for (auto const* one : raised)
+            {
+                if (name == one)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
     for (auto const& theme : glass::BuiltInThemes())
     {
-        if (theme.Name == L"Bone")
+        if (isRaised(theme.Name))
         {
+            // Whatever it moved to, it moved DELIBERATELY - a spread of 3 here would mean
+            // somebody reset it and did not notice.
+            VERIFY_IS_GREATER_THAN(theme.ShadowSpread, 3);
             continue;
         }
 
@@ -303,4 +422,1085 @@ void ThemeTests::OnlyBoneMovesTheShadowOffItsShippedGeometry()
     auto const* bone = glass::FindBuiltInTheme(L"Bone");
     VERIFY_IS_NOT_NULL(bone);
     VERIFY_IS_GREATER_THAN(bone->ShadowSpread, 3);
+}
+
+// ============================================================================
+// The three cathode ray tube themes, and the engine work they earned.
+// ============================================================================
+
+namespace
+{
+    wchar_t const* const TubeThemeNames[]{ L"Cathode", L"Amber Console", L"Terminal Green" };
+
+    bool IsTubeTheme(_In_ glass::Theme const& theme) noexcept
+    {
+        for (auto const* name : TubeThemeNames)
+        {
+            if (theme.Name == name)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+
+void ThemeTests::OnlyATubeThemeLaysAnOverlayOverTheDeck()
+{
+    // The overlay is the one genuinely new rendering element in the whole set, and it is one
+    // visual for the whole page. This is the guard that says nothing else grew one by accident:
+    // a scan line on Studio Dark would be a defect nobody would think to look for.
+    //
+    // Grain lives in the same overlay but is not a tube thing - it is the texture of a painted
+    // panel - so it is checked separately below rather than treated as a scan line.
+    for (auto const& theme : glass::BuiltInThemes())
+    {
+        if (!IsTubeTheme(theme))
+        {
+            VERIFY_ARE_EQUAL(0, theme.Overlay.ScanLinePitch);
+            VERIFY_ARE_EQUAL(0, theme.Overlay.VignettePercent);
+            VERIFY_ARE_EQUAL(0, theme.Overlay.FaceplateSheenPercent);
+            continue;
+        }
+
+        VERIFY_IS_FALSE(theme.Overlay.IsEmpty());
+
+        // A tube is not a painted panel, so it has no grain.
+        VERIFY_ARE_EQUAL(0, theme.Overlay.GrainPercent);
+
+        // One dark line every three screen pixels, which is what the comps draw.
+        VERIFY_ARE_EQUAL(3, theme.Overlay.ScanLinePitch);
+        VERIFY_IS_GREATER_THAN(theme.Overlay.ScanLineStrength, 0);
+        VERIFY_IS_GREATER_THAN(theme.Overlay.VignettePercent, 0);
+    }
+
+    // Only the terminal reflects the room. A television and a console do not, and putting the
+    // highlight on all three would make them look like one theme recolored.
+    auto const* green = glass::FindBuiltInTheme(L"Terminal Green");
+    VERIFY_IS_NOT_NULL(green);
+    VERIFY_IS_GREATER_THAN(green->Overlay.FaceplateSheenPercent, 0);
+
+    for (auto const* name : { L"Cathode", L"Amber Console" })
+    {
+        VERIFY_ARE_EQUAL(0, glass::FindBuiltInTheme(name)->Overlay.FaceplateSheenPercent);
+    }
+}
+
+void ThemeTests::EveryTubeThemeCarriesItsControlsOnLightRatherThanValue()
+{
+    // The claim the three of them rest on, measured rather than asserted: a raster box has
+    // essentially no brightness difference from the glass it is drawn on. Every other theme
+    // tells a control from its deck by value, and these cannot.
+    for (auto const* name : TubeThemeNames)
+    {
+        auto const* theme = glass::FindBuiltInTheme(name);
+        VERIFY_IS_NOT_NULL(theme);
+
+        auto const platedness = glass::ContrastRatio(theme->PlateColor, theme->Deck.Color);
+
+        Log::Comment(String().Format(L"%s plate on deck measures %.2f : 1", name, platedness));
+        VERIFY_IS_LESS_THAN(platedness, 1.5);
+
+        // So the spill is the structure, and a theme editor has to refuse to let it reach zero.
+        VERIFY_IS_GREATER_THAN(theme->RestingGlowPercent, 0);
+
+        // A screen has no thickness. A drop shadow under a raster box is the one thing that
+        // would give the illusion away.
+        VERIFY_ARE_EQUAL(0, theme->PlateElevation);
+
+        // The lift is the plate's own gradient, so a sheen would be saying it twice.
+        VERIFY_ARE_EQUAL(0, theme->PlateSheenPercent);
+        VERIFY_IS_TRUE(theme->PlateEndColor.A != 0);
+
+        // The ink is the phosphor rather than a neutral white measured off the glass, and it
+        // still has to be readable on the plate it lands on.
+        VERIFY_IS_TRUE(theme->InkColor.A != 0);
+
+        glass::Control control{};
+        control.HueSlot = 0;
+
+        auto const colors = glass::ResolveControlColors(control, *theme);
+
+        VERIFY_IS_TRUE((colors.Label == theme->InkColor));
+
+        auto const readability = glass::ContrastRatio(theme->InkColor, theme->PlateColor);
+
+        Log::Comment(String().Format(L"%s ink on its plate measures %.2f : 1", name, readability));
+        VERIFY_IS_GREATER_THAN(readability, 4.5);
+    }
+
+    // And nothing else picked up a resting glow on the way past.
+    for (auto const& theme : glass::BuiltInThemes())
+    {
+        if (!IsTubeTheme(theme))
+        {
+            VERIFY_ARE_EQUAL(0, theme.RestingGlowPercent);
+        }
+    }
+}
+
+void ThemeTests::ATubeThemeLightsUpInAColorThatIsNeitherTheHueNorWhite()
+{
+    // The reason the light source had to become a color rather than stay an enum. A phosphor's
+    // afterglow is a different color from its emission, and on P3 it is REDDER than the thing
+    // casting it - which is the single fact people recognize as "the amber screen".
+    struct Expected
+    {
+        wchar_t const* Name;
+        glass::ThemeColor Bloom;
+    };
+
+    Expected const expected[]
+    {
+        { L"Cathode", { 0xCF, 0xE0, 0xF3, 255 } },
+        { L"Amber Console", { 0xFF, 0x60, 0x10, 255 } },
+        { L"Terminal Green", { 0x86, 0xF2, 0x60, 255 } },
+    };
+
+    for (auto const& entry : expected)
+    {
+        auto const* theme = glass::FindBuiltInTheme(entry.Name);
+        VERIFY_IS_NOT_NULL(theme);
+
+        VERIFY_IS_TRUE(glass::HasNamedBloomColor(*theme));
+        VERIFY_IS_TRUE((glass::NamedBloomColor(*theme) == entry.Bloom));
+
+        // The old enum stays where it was, so a theme file written before this existed reads
+        // back identically.
+        VERIFY_IS_TRUE(theme->Light == glass::LightSource::ControlHue);
+
+        glass::Control control{};
+        control.HueSlot = 0;
+
+        auto const colors = glass::ResolveControlColors(control, *theme);
+
+        VERIFY_ARE_EQUAL(entry.Bloom.R, colors.Bloom.R);
+        VERIFY_ARE_EQUAL(entry.Bloom.G, colors.Bloom.G);
+        VERIFY_ARE_EQUAL(entry.Bloom.B, colors.Bloom.B);
+    }
+
+    // Amber's halo really is redder than its own default slot, which is the whole claim.
+    auto const* amber = glass::FindBuiltInTheme(L"Amber Console");
+    auto const halo = glass::NamedBloomColor(*amber);
+
+    VERIFY_IS_LESS_THAN(static_cast<int32_t>(halo.G), static_cast<int32_t>(amber->HueSlots[0].G));
+    VERIFY_IS_LESS_THAN(static_cast<int32_t>(halo.B), static_cast<int32_t>(amber->HueSlots[0].B));
+
+    // A theme that names nothing still lights up in the control's own hue, so nothing shipped
+    // before this moved.
+    auto const* studio = glass::FindBuiltInTheme(L"Studio Dark");
+    VERIFY_IS_FALSE(glass::HasNamedBloomColor(*studio));
+}
+
+void ThemeTests::EveryThemeThatDerivesAColorStillResolvesToSomething()
+{
+    // Four properties mean "work it out" when their alpha is zero. A derived color that came
+    // back transparent would be an invisible arc, a plate with no lift or a vignette that does
+    // nothing, and all three are the kind of thing only one theme shows.
+    for (auto const& theme : glass::BuiltInThemes())
+    {
+        VERIFY_IS_TRUE(glass::EffectiveArcTrackColor(theme).A != 0);
+        VERIFY_IS_TRUE(glass::EffectivePlateSheenColor(theme).A != 0);
+        VERIFY_IS_TRUE(glass::EffectiveVignetteColor(theme).A != 0);
+        VERIFY_IS_TRUE(glass::EffectiveFaceplateColor(theme).A != 0);
+
+        // A theme that names neither still hands back its slot track rather than nothing.
+        if (theme.ArcTrackColor.A == 0)
+        {
+            VERIFY_IS_TRUE((glass::EffectiveArcTrackColor(theme) == theme.TrackColor));
+        }
+    }
+
+    // Bone's arc track is the mirror image of a tube's. On a tube the arc sits on dark glass and
+    // has to be a faint LIGHT; on Bone it sits on a near-white deck and has to be a DARK, and
+    // darker than the slot track at that, or a knob shows where it is without ever showing how
+    // far it can go. Measured as it lands rather than as it is written: both are alpha over the
+    // deck, so comparing the two written colors compares nothing.
+    auto const* bone = glass::FindBuiltInTheme(L"Bone");
+    VERIFY_IS_NOT_NULL(bone);
+
+    VERIFY_IS_TRUE(bone->ArcTrackColor.A != 0);
+
+    auto const boneArc = glass::BlendOver(
+        bone->Deck.GradientEndColor, glass::EffectiveArcTrackColor(*bone), 1.0);
+
+    auto const boneSlot = glass::BlendOver(bone->Deck.GradientEndColor, bone->TrackColor, 1.0);
+
+    Log::Comment(String().Format(L"Bone arc track %.3f, slot track %.3f",
+        glass::RelativeLuminance(boneArc), glass::RelativeLuminance(boneSlot)));
+
+    VERIFY_IS_LESS_THAN(glass::RelativeLuminance(boneArc), glass::RelativeLuminance(boneSlot));
+
+    // And the three tubes go the other way: the arc is brighter than the glass behind it.
+    for (auto const* name : TubeThemeNames)
+    {
+        auto const* theme = glass::FindBuiltInTheme(name);
+
+        auto const arc = glass::BlendOver(
+            theme->Deck.GradientEndColor, glass::EffectiveArcTrackColor(*theme), 1.0);
+
+        VERIFY_IS_GREATER_THAN(
+            glass::RelativeLuminance(arc),
+            glass::RelativeLuminance(theme->Deck.GradientEndColor));
+    }
+}
+
+void ThemeTests::EveryMeterZoneNamesASlotThatExists()
+{
+    for (auto const& theme : glass::BuiltInThemes())
+    {
+        for (int32_t zone = 0; zone < glass::MeterZoneCount; ++zone)
+        {
+            auto const slot = theme.MeterSlots[static_cast<size_t>(zone)];
+
+            VERIFY_IS_GREATER_THAN_OR_EQUAL(slot, 0);
+            VERIFY_IS_LESS_THAN(slot, glass::ThemeHueSlotCount);
+        }
+
+        glass::Control control{};
+        control.HueSlot = 0;
+
+        auto const colors = glass::ResolveControlColors(control, theme);
+
+        // Each zone is the slot the theme named, not the control's own hue. A meter drawn in
+        // one color is the one control where the theme's choice is doing real work.
+        VERIFY_IS_TRUE((colors.MeterLit == theme.HueSlots[static_cast<size_t>(theme.MeterSlots[0])]));
+        VERIFY_IS_TRUE((colors.MeterWarn == theme.HueSlots[static_cast<size_t>(theme.MeterSlots[1])]));
+        VERIFY_IS_TRUE((colors.MeterHot == theme.HueSlots[static_cast<size_t>(theme.MeterSlots[2])]));
+
+        // On a theme with color to spend, green, amber and red is the convention and red is
+        // legitimately darker than green. On a tube there is no color to spend, so the three
+        // zones have to be three brightnesses or the meter says nothing at all.
+        if (IsTubeTheme(theme))
+        {
+            Log::Comment(String().Format(L"%s meter zones: %.3f -> %.3f -> %.3f",
+                theme.Name.c_str(),
+                glass::RelativeLuminance(colors.MeterLit),
+                glass::RelativeLuminance(colors.MeterWarn),
+                glass::RelativeLuminance(colors.MeterHot)));
+
+            VERIFY_IS_GREATER_THAN(
+                glass::RelativeLuminance(colors.MeterWarn),
+                glass::RelativeLuminance(colors.MeterLit));
+
+            VERIFY_IS_GREATER_THAN(
+                glass::RelativeLuminance(colors.MeterHot),
+                glass::RelativeLuminance(colors.MeterWarn));
+        }
+    }
+}
+
+void ThemeTests::CathodeCannotColorCodeAndSaysSo()
+{
+    auto const* cathode = glass::FindBuiltInTheme(L"Cathode");
+    VERIFY_IS_NOT_NULL(cathode);
+
+    // Six brightnesses of one phosphor. The widest pair in this palette does not reach the 3 : 1
+    // somebody needs to tell two controls apart, so on this theme a control is known by where it
+    // sits and what it is called. That is a property of a tube, not a defect to fix.
+    auto widest = 1.0;
+
+    for (int32_t first = 0; first < glass::ThemeHueSlotCount; ++first)
+    {
+        for (int32_t second = first + 1; second < glass::ThemeHueSlotCount; ++second)
+        {
+            widest = (std::max)(widest, glass::ContrastRatio(
+                cathode->HueSlots[static_cast<size_t>(first)],
+                cathode->HueSlots[static_cast<size_t>(second)]));
+        }
+    }
+
+    Log::Comment(String().Format(L"Cathode's widest pair of slots measures %.2f : 1", widest));
+    VERIFY_IS_LESS_THAN(widest, 3.0);
+
+    // So the picker has to say so. A theme that cannot carry grouping by color and does not
+    // admit it is worse than one that never tried.
+    VERIFY_IS_FALSE(cathode->CautionResourceKey.empty());
+
+    // The glass is olive - red and blue equal - which is what separates it from the green
+    // terminal. Built as green on dark green the two stop looking like different ideas.
+    VERIFY_ARE_EQUAL(cathode->Deck.Color.R, cathode->Deck.Color.B);
+    VERIFY_IS_GREATER_THAN(
+        static_cast<int32_t>(cathode->Deck.Color.G), static_cast<int32_t>(cathode->Deck.Color.R));
+}
+
+void ThemeTests::TheAmberRampIsARisingBrightnessAsWellAsARisingHue()
+{
+    // What keeps the theme honest with no color vision at all. The ramp runs ember, orange,
+    // amber, standard, yellow, white hot, and every step up that ladder is also brighter, so
+    // stripping the color out leaves a wider ladder than Cathode's rather than six of the same.
+    auto const* amber = glass::FindBuiltInTheme(L"Amber Console");
+    VERIFY_IS_NOT_NULL(amber);
+
+    // Ramp order, which is not slot order: h1 stays the default slot.
+    constexpr size_t rampOrder[]{ 3, 1, 4, 0, 2, 5 };
+
+    auto previous = 0.0;
+
+    for (auto const slot : rampOrder)
+    {
+        auto const luminance = glass::RelativeLuminance(amber->HueSlots[slot]);
+
+        Log::Comment(String().Format(
+            L"Amber slot %d measures %.3f relative luminance", static_cast<int32_t>(slot) + 1, luminance));
+
+        VERIFY_IS_GREATER_THAN(luminance, previous);
+        previous = luminance;
+    }
+
+    // Long persistence is a property of the tube rather than of one binding.
+    VERIFY_IS_GREATER_THAN(amber->PersistenceMilliseconds, 220);
+
+    // The fill runs into the halo, which is what makes an amber fader look like fire.
+    VERIFY_IS_TRUE(amber->ValueFadesToLight);
+}
+
+void ThemeTests::TerminalGreenGlassIsBlueSlateRatherThanGreen()
+{
+    // The one that would have been got wrong from memory. A terminal has a tinted anti-glare
+    // faceplate, so the unlit screen is a cool blue-slate and the green sits a long way from it
+    // in hue. Built as green on dark green it comes out as Cathode with the colors swapped.
+    auto const* green = glass::FindBuiltInTheme(L"Terminal Green");
+    VERIFY_IS_NOT_NULL(green);
+
+    VERIFY_IS_GREATER_THAN(
+        static_cast<int32_t>(green->Deck.Color.B), static_cast<int32_t>(green->Deck.Color.R));
+
+    // The afterglow is yellower than the emission, the same way Amber's is redder.
+    auto const halo = glass::NamedBloomColor(*green);
+
+    VERIFY_IS_GREATER_THAN(
+        static_cast<int32_t>(halo.R), static_cast<int32_t>(green->HueSlots[0].R));
+}
+
+void ThemeTests::NothingShippedReachesAPureBlackOrAPureWhite()
+{
+    // A true black punches a hole in a piece of glass and a true white looks like paper. The
+    // three tube themes are built so that neither ever happens - the palette floors and ceilings
+    // were measured against a rendered deck, and this is the guard that keeps them there.
+    for (auto const* name : TubeThemeNames)
+    {
+        auto const* theme = glass::FindBuiltInTheme(name);
+        VERIFY_IS_NOT_NULL(theme);
+
+        glass::ThemeColor const checked[]
+        {
+            theme->Deck.Color,
+            theme->Deck.GradientEndColor,
+            theme->PlateColor,
+            theme->PlateEndColor,
+            theme->Overlay.VignetteColor,
+            theme->Overlay.ScanLineColor,
+        };
+
+        for (auto const& color : checked)
+        {
+            VERIFY_IS_TRUE(color.R != 0 || color.G != 0 || color.B != 0);
+            VERIFY_IS_TRUE(color.R != 255 || color.G != 255 || color.B != 255);
+        }
+
+        for (auto const& slot : theme->HueSlots)
+        {
+            VERIFY_IS_TRUE(slot.R != 255 || slot.G != 255 || slot.B != 255);
+        }
+    }
+}
+
+// ============================================================================
+// The two hardware panels, and the engine work they earned.
+//
+// These two break the assumption every theme before them shares: that a control is a plate with
+// a hairline of its own color on it. Jove has no plate on a knob at all and its tabs ARE their
+// color at rest; Supersaw says "on" with three lit pixels and leaves the plate black.
+// ============================================================================
+
+namespace
+{
+    wchar_t const* const PanelThemeNames[]{ L"Jove", L"Supersaw" };
+
+    bool IsPanelTheme(_In_ glass::Theme const& theme) noexcept
+    {
+        for (auto const* name : PanelThemeNames)
+        {
+            if (theme.Name == name)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+}
+
+void ThemeTests::OnlyAPanelThemeCarriesAGrainOrANeutral()
+{
+    // Both are additive and both default to off, so every theme shipped before these two has to
+    // come out untouched. A grain on Studio Dark would be a defect nobody would look for.
+    for (auto const& theme : glass::BuiltInThemes())
+    {
+        if (IsPanelTheme(theme))
+        {
+            continue;
+        }
+
+        VERIFY_ARE_EQUAL(0, theme.Overlay.GrainPercent);
+        VERIFY_IS_FALSE(glass::HasNeutralColor(theme));
+    }
+
+    // Everything about how a switch, a knob, a fader and a section are drawn moved off the
+    // original look only on the four themes drawn from a comp that asked for it. The rest have
+    // to come out exactly as they were, because every property here is additive: a theme that
+    // picked one of these up by accident is a theme that changed with nobody deciding it should.
+    wchar_t const* const drawnFromAComp[]{ L"Jove", L"Supersaw", L"Bigwig", L"Bone" };
+
+    auto const fromAComp = [&drawnFromAComp](std::wstring const& name)
+        {
+            return std::find_if(std::begin(drawnFromAComp), std::end(drawnFromAComp),
+                [&name](wchar_t const* one) { return name == one; }) != std::end(drawnFromAComp);
+        };
+
+    for (auto const& theme : glass::BuiltInThemes())
+    {
+        if (fromAComp(theme.Name))
+        {
+            continue;
+        }
+
+        Log::Comment(String().Format(L"%s keeps the original look", theme.Name.c_str()));
+
+        VERIFY_IS_TRUE(theme.SectionHeader == glass::SectionHeaderStyle::Caption);
+        VERIFY_ARE_EQUAL(34, theme.FillWhenOnPercent);
+        VERIFY_IS_LESS_THAN(theme.SwitchFillAtRest, 0.0);
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, theme.PointerColor.A);
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, theme.CapLineColor.A);
+
+        VERIFY_IS_FALSE(theme.SectionNameInHue);
+        VERIFY_IS_TRUE(theme.PanelFill == glass::PanelFillStyle::Plate);
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, theme.PanelOutlineColor.A);
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, theme.KnobFaceColor.A);
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, theme.KnobCapColor.A);
+        VERIFY_ARE_EQUAL(0, theme.KnobTickCount);
+        VERIFY_IS_FALSE(theme.NamesInsideSwitches);
+        VERIFY_ARE_EQUAL(0, theme.OnLiftPercent);
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, theme.LampColor.A);
+        VERIFY_ARE_EQUAL(0, theme.PlateShadePercent);
+        VERIFY_ARE_EQUAL(0, theme.PlateHighlightPercent);
+        VERIFY_IS_TRUE(theme.FaderPlate == glass::FaderPlateStyle::Full);
+        VERIFY_ARE_EQUAL(100, theme.FaderFillPercent);
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, theme.ValueColor.A);
+        VERIFY_ARE_EQUAL(0, theme.RecessShadePercent);
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, theme.WellColor.A);
+        VERIFY_ARE_EQUAL(0, theme.ThumbShadowPercent);
+        VERIFY_IS_FALSE(theme.CapLineWide);
+    }
+
+    // The grain is the panel's texture rather than a second color over it, so it belongs to
+    // exactly one of the two.
+    auto const* saw = glass::FindBuiltInTheme(L"Supersaw");
+    VERIFY_IS_NOT_NULL(saw);
+    VERIFY_IS_GREATER_THAN(saw->Overlay.GrainPercent, 0);
+    VERIFY_IS_FALSE(saw->Overlay.IsEmpty());
+}
+
+void ThemeTests::JoveFillsItsSwitchesWithoutFillingItsKnobs()
+{
+    auto const* jove = glass::FindBuiltInTheme(L"Jove");
+    VERIFY_IS_NOT_NULL(jove);
+
+    // One number for the whole theme could not say this: turning the tabs on filled the knobs
+    // too. That is the entire reason the property exists.
+    VERIFY_ARE_EQUAL(0.0, jove->FillAtRest);
+    VERIFY_IS_GREATER_THAN(jove->SwitchFillAtRest, 0.5);
+
+    glass::Control knob{};
+    knob.Kind = glass::ControlKind::Knob;
+    knob.HueSlot = 0;
+
+    glass::Control tab{};
+    tab.Kind = glass::ControlKind::Toggle;
+    tab.HueSlot = 0;
+
+    auto const knobColors = glass::ResolveControlColors(knob, *jove);
+    auto const tabColors = glass::ResolveControlColors(tab, *jove);
+
+    auto const hue = jove->HueSlots[0];
+
+    // The knob is the black cap the theme named. The tab IS its own color at rest, and lit it is
+    // the same plastic with the lamp behind it on: paler, never darker.
+    VERIFY_IS_TRUE((knobColors.Plate == jove->PlateColor));
+    VERIFY_IS_TRUE((tabColors.Plate == hue));
+    VERIFY_IS_GREATER_THAN(glass::RelativeLuminance(tabColors.OnPlate), glass::RelativeLuminance(hue));
+    VERIFY_IS_GREATER_THAN(jove->OnLiftPercent, 0);
+
+    // and the two really are different, which is what a single fill number could not produce
+    VERIFY_IS_FALSE((knobColors.Plate == tabColors.Plate));
+
+    // On this theme a tab's label sits ON its color rather than beside it, so every slot has to
+    // carry type at 4.5 as well as clear the panel at 3.0. That is a harder bar than any other
+    // shipped theme has to meet, and it is what a solid-color switch costs.
+    for (int32_t slot = 0; slot < glass::ThemeHueSlotCount; ++slot)
+    {
+        auto const& color = jove->HueSlots[static_cast<size_t>(slot)];
+        auto const ratio = glass::ContrastRatio(glass::ReadableInk(color), color);
+
+        if (ratio < 4.5)
+        {
+            Log::Error(String().Format(
+                L"Jove slot %d carries its own label at only %.2f : 1.", slot + 1, ratio));
+        }
+
+        VERIFY_IS_GREATER_THAN(ratio, 4.5);
+    }
+
+    // The cream tabs are the seventh color and they carry type too.
+    VERIFY_IS_GREATER_THAN(
+        glass::ContrastRatio(glass::ReadableInk(jove->NeutralColor), jove->NeutralColor), 4.5);
+}
+
+void ThemeTests::SupersawSaysOnWithItsLampRatherThanItsPlate()
+{
+    auto const* saw = glass::FindBuiltInTheme(L"Supersaw");
+    VERIFY_IS_NOT_NULL(saw);
+
+    VERIFY_ARE_EQUAL(0, saw->FillWhenOnPercent);
+
+    glass::Control tab{};
+    tab.Kind = glass::ControlKind::Toggle;
+    tab.HueSlot = 1;
+
+    auto const colors = glass::ResolveControlColors(tab, *saw);
+
+    // On is not a plate state here. A switch that is on looks exactly like one that is off
+    // apart from its lamp, which is what makes a rack of forty of them readable.
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, colors.OnPlate.A);
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, colors.OnPlateEnd.A);
+
+    // Every theme that fills is untouched by the same arithmetic.
+    auto const* studio = glass::FindBuiltInTheme(L"Studio Dark");
+    VERIFY_IS_NOT_NULL(studio);
+
+    auto const filled = glass::ResolveControlColors(tab, *studio);
+    VERIFY_IS_GREATER_THAN(static_cast<int32_t>(filled.OnPlate.A), 0);
+}
+
+void ThemeTests::TheNeutralSlotIsTheAbsenceOfAColorRatherThanASeventhHue()
+{
+    auto const* jove = glass::FindBuiltInTheme(L"Jove");
+    VERIFY_IS_NOT_NULL(jove);
+
+    glass::Control tab{};
+    tab.Kind = glass::ControlKind::Toggle;
+    tab.HueSlot = glass::NeutralSlot;
+
+    VERIFY_IS_TRUE(glass::IsSlotInRange(tab.HueSlot));
+    VERIFY_IS_TRUE((glass::ResolveHue(tab, *jove) == jove->NeutralColor));
+
+    // It is not one of the six. A customer counting seven button colors on a photograph has six
+    // hues and one absence, and putting the absence in a slot is what survives a theme swap.
+    for (auto const& slot : jove->HueSlots)
+    {
+        VERIFY_IS_FALSE((slot == jove->NeutralColor));
+    }
+
+    // A theme with no neutral falls the control back to a color rather than to nothing, because
+    // an invisible control is worse than a wrongly colored one.
+    auto const* studio = glass::FindBuiltInTheme(L"Studio Dark");
+    VERIFY_IS_NOT_NULL(studio);
+    VERIFY_IS_FALSE(glass::HasNeutralColor(*studio));
+    VERIFY_IS_TRUE((glass::ResolveHue(tab, *studio) == studio->HueSlots[0]));
+}
+
+void ThemeTests::APointerAndACapLineCanStopFollowingTheHue()
+{
+    // The mirror of the white-and-black rule: anything worked out from the CONTROL'S HUE
+    // eventually meets a theme where it is not the hue. Both of these were derived until a panel
+    // arrived whose every knob points in one color and whose every cap line is white.
+    auto const* jove = glass::FindBuiltInTheme(L"Jove");
+    VERIFY_IS_NOT_NULL(jove);
+
+    glass::Control knob{};
+    knob.Kind = glass::ControlKind::Knob;
+
+    glass::Control fader{};
+    fader.Kind = glass::ControlKind::Fader;
+
+    for (int32_t slot = 0; slot < glass::ThemeHueSlotCount; ++slot)
+    {
+        knob.HueSlot = slot;
+        fader.HueSlot = slot;
+
+        VERIFY_IS_TRUE((glass::ResolveControlColors(knob, *jove).Pointer == jove->PointerColor));
+        VERIFY_IS_TRUE((glass::ResolveControlColors(fader, *jove).ThumbLine == jove->CapLineColor));
+    }
+
+    // and a theme that names neither still follows the hue, which is what every shipped theme
+    // did before this existed
+    auto const* studio = glass::FindBuiltInTheme(L"Studio Dark");
+    VERIFY_IS_NOT_NULL(studio);
+
+    knob.HueSlot = 3;
+    VERIFY_IS_TRUE((glass::ResolveControlColors(knob, *studio).Pointer == studio->HueSlots[3]));
+}
+
+void ThemeTests::EveryPanelThemePutsItsLabelsAboveItsControls()
+{
+    // Silkscreen sits above what it names. Both comps asked for it, which is what turned it from
+    // one theme's preference into a fourth value on a property that already existed.
+    for (auto const* name : PanelThemeNames)
+    {
+        auto const* theme = glass::FindBuiltInTheme(name);
+        VERIFY_IS_NOT_NULL(theme);
+
+        VERIFY_IS_TRUE(theme->Labels == glass::LabelPlacement::Above);
+
+        // Neither of them has a rim. The control IS the part you touch, so there is nothing for
+        // a hairline to sit on.
+        VERIFY_IS_TRUE(theme->Rim == glass::RimSource::None);
+
+        // Both name their plate outright rather than deriving it from a glass tint.
+        VERIFY_IS_GREATER_THAN(static_cast<int32_t>(theme->PlateColor.A), 0);
+        VERIFY_ARE_EQUAL(0, theme->GlassTintPercent);
+
+        // A panel is painted, not lit from above like a sheet of glass.
+        VERIFY_IS_TRUE(theme->Deck.Kind == glass::DeckKind::SolidColor);
+    }
+}
+
+void ThemeTests::NoShippedThemeGoesDarkerWhenItIsLit()
+{
+    // A switch turning on has to say something, whichever direction it says it in. The wash used
+    // to be laid over NOTHING rather than over the resting plate, which is right only while that
+    // plate is dark glass, and it failed at both ends: on Bone a lit plate went 247,243,232 ->
+    // 193,183,166, and on a theme whose tabs are already their own color at full strength the
+    // lit state came out identical to the resting one.
+    //
+    // So the bar is "did it move", not "did it get brighter". A light theme legitimately goes
+    // darker - a colored button on paper - and that reads correctly.
+    for (auto const& theme : glass::BuiltInThemes())
+    {
+        for (int32_t slot = 0; slot < glass::ThemeHueSlotCount; ++slot)
+        {
+            glass::Control tab{};
+            tab.Kind = glass::ControlKind::Toggle;
+            tab.HueSlot = slot;
+
+            auto const colors = glass::ResolveControlColors(tab, theme);
+
+            // Alpha 0 means the theme says "on" with its lamp and never touches the plate.
+            if (colors.OnPlate.A == 0)
+            {
+                VERIFY_ARE_EQUAL(0, theme.FillWhenOnPercent);
+                continue;
+            }
+
+            auto const resting = colors.Plate.A == 0
+                ? theme.Deck.Color
+                : glass::BlendOver(theme.Deck.Color, colors.Plate, 1.0);
+
+            auto const moved = glass::ContrastRatio(colors.OnPlate, resting);
+
+            if (moved < 1.15)
+            {
+                Log::Error(String().Format(
+                    L"%s slot %d looks the same lit as it does at rest (%.3f : 1).",
+                    theme.Name.c_str(), slot + 1, moved));
+            }
+
+            VERIFY_IS_GREATER_THAN_OR_EQUAL(moved, 1.15);
+        }
+    }
+}
+
+void ThemeTests::APointerIsVisibleOnEveryThemesOwnPlate()
+{
+    // A knob's pointer is a two pixel line, so it needs the graphics bar of 3.0 against whatever
+    // it is drawn on. It used to be the control's hue, which could never fail this because a hue
+    // has to clear the deck anyway. Once a theme could NAME it, it could name one that vanishes -
+    // and measuring at 5x magnification is exactly where an eye says "that looks light" about a
+    // line that is actually 1.4 : 1.
+    for (auto const& theme : glass::BuiltInThemes())
+    {
+        glass::Control knob{};
+        knob.Kind = glass::ControlKind::Knob;
+        knob.HueSlot = 0;
+
+        auto const colors = glass::ResolveControlColors(knob, theme);
+
+        // A knob with a turned face has its pointer drawn on the face, not on the plate.
+        auto const behind = theme.KnobFaceColor.A != 0
+            ? glass::BlendOver(colors.KnobFace, colors.KnobFaceEnd, 0.5)
+            : (colors.Plate.A == 0
+                ? theme.Deck.Color
+                : glass::BlendOver(theme.Deck.Color, colors.Plate, 1.0));
+
+        auto const ratio = glass::ContrastRatio(colors.Pointer, behind);
+
+        if (ratio < glass::MinimumSlotContrast)
+        {
+            Log::Error(String().Format(
+                L"%s draws a knob pointer at only %.2f : 1 against its own plate.",
+                theme.Name.c_str(), ratio));
+        }
+
+        VERIFY_IS_GREATER_THAN_OR_EQUAL(ratio, glass::MinimumSlotContrast);
+    }
+}
+
+// ============================================================================
+// The engine round that brought Bone, Bigwig, Jove and Supersaw up to their comps.
+// ============================================================================
+
+void ThemeTests::TheTouchRimIsTheRimComingUpNotBlack()
+{
+    // The touch rim used to be worked out before the rim itself, while the rim was still a
+    // default ThemeColor - opaque black - so a finger on any control turned its rim black.
+    for (auto const& theme : glass::BuiltInThemes())
+    {
+        glass::Control fader{};
+        fader.Kind = glass::ControlKind::Fader;
+        fader.HueSlot = 0;
+
+        auto const colors = glass::ResolveControlColors(fader, theme);
+
+        if (colors.Rim.A == 0)
+        {
+            VERIFY_ARE_EQUAL(uint8_t{ 0 }, colors.TouchRim.A);
+            continue;
+        }
+
+        VERIFY_ARE_EQUAL(colors.Rim.R, colors.TouchRim.R);
+        VERIFY_ARE_EQUAL(colors.Rim.G, colors.TouchRim.G);
+        VERIFY_ARE_EQUAL(colors.Rim.B, colors.TouchRim.B);
+
+        // Up, never down: a finger makes the rim stronger than it is at rest.
+        VERIFY_IS_GREATER_THAN_OR_EQUAL(colors.TouchRim.A, colors.Rim.A);
+    }
+}
+
+void ThemeTests::ASwitchNameReadsOnItsPlateLitOrNot()
+{
+    // A name printed on a switch sits on its plate, and on a theme whose lit switch is its color
+    // outright that plate changes completely. So the name is measured against both, and a
+    // theme's own ink is only used where it actually reads. Checked on every theme that prints
+    // names on its switches.
+    for (auto const& theme : glass::BuiltInThemes())
+    {
+        if (!theme.NamesInsideSwitches && theme.Labels != glass::LabelPlacement::Inside)
+        {
+            continue;
+        }
+
+        for (int32_t slot = 0; slot < glass::ThemeHueSlotCount; ++slot)
+        {
+            glass::Control tab{};
+            tab.Kind = glass::ControlKind::Toggle;
+            tab.HueSlot = slot;
+
+            auto const colors = glass::ResolveControlColors(tab, theme);
+
+            auto const restTop = colors.Plate.A == 0
+                ? theme.Deck.Color
+                : glass::BlendOver(theme.Deck.Color, colors.Plate, 1.0);
+
+            auto const restBottom = colors.PlateEnd.A == 0
+                ? theme.Deck.GradientEndColor
+                : glass::BlendOver(theme.Deck.GradientEndColor, colors.PlateEnd, 1.0);
+
+            auto const resting = glass::BlendOver(restTop, restBottom, 0.5);
+            auto const atRest = glass::ContrastRatio(colors.SwitchInk, resting);
+
+            if (atRest < 4.5)
+            {
+                Log::Error(String().Format(L"%s slot %d names a switch at %.2f : 1 at rest.",
+                    theme.Name.c_str(), slot + 1, atRest));
+            }
+
+            VERIFY_IS_GREATER_THAN_OR_EQUAL(atRest, 4.5);
+
+            if (colors.OnPlate.A == 0)
+            {
+                // A lamp theme leaves the plate alone, so the name does not change either.
+                VERIFY_IS_TRUE((colors.SwitchInkOn == colors.SwitchInk));
+                continue;
+            }
+
+            auto const lit = glass::ContrastRatio(
+                colors.SwitchInkOn, glass::BlendOver(colors.OnPlate, colors.OnPlateEnd, 0.5));
+
+            if (lit < 4.5)
+            {
+                Log::Error(String().Format(L"%s slot %d names a lit switch at %.2f : 1.",
+                    theme.Name.c_str(), slot + 1, lit));
+            }
+
+            VERIFY_IS_GREATER_THAN_OR_EQUAL(lit, 4.5);
+        }
+    }
+}
+
+void ThemeTests::AFullFillIsTheHueTopToBottom()
+{
+    // At a third of a fill the bottom of a lit plate carries half as much hue, which is the lit
+    // top edge every theme was drawn with. At a full fill it catches up: a tab that IS its color
+    // when it is on is that color from top to bottom rather than fading out.
+    auto theme = *glass::FindBuiltInTheme(L"Studio Dark");
+
+    glass::Control tab{};
+    tab.Kind = glass::ControlKind::Toggle;
+    tab.HueSlot = 0;
+
+    theme.FillWhenOnPercent = 100;
+
+    auto const full = glass::ResolveControlColors(tab, theme);
+
+    VERIFY_IS_TRUE((full.OnPlate == theme.HueSlots[0]));
+    VERIFY_IS_TRUE((full.OnPlateEnd == theme.HueSlots[0]));
+
+    // and the original third is exactly what it always was
+    theme.FillWhenOnPercent = 34;
+
+    auto const third = glass::ResolveControlColors(tab, theme);
+
+    auto const restingBottom = glass::BlendOver(theme.Deck.GradientEndColor, third.PlateEnd, 1.0);
+    auto expected = glass::BlendOver(restingBottom, theme.HueSlots[0], 0.17);
+    expected.A = 255;
+
+    VERIFY_IS_TRUE((third.OnPlateEnd == expected));
+
+    // Lifting goes toward white and deepening toward black, and both leave the resting plate
+    // alone.
+    theme.FillWhenOnPercent = 100;
+    theme.OnLiftPercent = 30;
+
+    auto const lifted = glass::ResolveControlColors(tab, theme);
+    VERIFY_IS_GREATER_THAN(
+        glass::RelativeLuminance(lifted.OnPlate), glass::RelativeLuminance(theme.HueSlots[0]));
+
+    theme.OnLiftPercent = -30;
+
+    auto const deepened = glass::ResolveControlColors(tab, theme);
+    VERIFY_IS_LESS_THAN(
+        glass::RelativeLuminance(deepened.OnPlate), glass::RelativeLuminance(theme.HueSlots[0]));
+
+    VERIFY_IS_TRUE((lifted.Plate == deepened.Plate));
+}
+
+void ThemeTests::AnLfoIsNeverFilledLikeASwitch()
+{
+    // Its plate is where the wave is drawn. On a theme whose tabs are solid color at rest, an LFO
+    // filled like a tab put a red wave on a red plate, and a wave the same color as the plate
+    // under it is not there at all.
+    VERIFY_IS_TRUE(glass::IsSwitchControl(glass::ControlKind::Lfo));
+    VERIFY_IS_FALSE(glass::FillsLikeASwitch(glass::ControlKind::Lfo));
+    VERIFY_IS_TRUE(glass::FillsLikeASwitch(glass::ControlKind::Toggle));
+
+    auto const* jove = glass::FindBuiltInTheme(L"Jove");
+    VERIFY_IS_NOT_NULL(jove);
+
+    glass::Control lfo{};
+    lfo.Kind = glass::ControlKind::Lfo;
+    lfo.HueSlot = 0;
+
+    auto const colors = glass::ResolveControlColors(lfo, *jove);
+
+    VERIFY_IS_TRUE((colors.Plate == jove->PlateColor));
+
+    // and the wave on it reads
+    auto const behind = jove->WellColor.A != 0 ? jove->WellColor : jove->PlateColor;
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(glass::ContrastRatio(colors.Pipe, behind), glass::MinimumSlotContrast);
+}
+
+void ThemeTests::AFaderFillFollowsTheThemesStrength()
+{
+    glass::Control fader{};
+    fader.Kind = glass::ControlKind::Fader;
+    fader.HueSlot = 0;
+
+    // Every theme that fills a fader outright still does.
+    auto const* studio = glass::FindBuiltInTheme(L"Studio Dark");
+    auto const full = glass::ResolveControlColors(fader, *studio);
+
+    VERIFY_IS_TRUE((full.Fill == full.Pipe));
+    VERIFY_IS_TRUE((full.FillEnd == full.PipeEnd));
+
+    // A panel whose cap position is the whole value lights the slot below the cap only faintly.
+    auto const* jove = glass::FindBuiltInTheme(L"Jove");
+    auto const faint = glass::ResolveControlColors(fader, *jove);
+
+    VERIFY_IS_LESS_THAN(jove->FaderFillPercent, 100);
+    VERIFY_ARE_EQUAL(
+        static_cast<int32_t>(std::lround(faint.Pipe.A * jove->FaderFillPercent / 100.0)),
+        static_cast<int32_t>(faint.Fill.A));
+
+    // The color does not move, only its strength.
+    VERIFY_ARE_EQUAL(faint.Pipe.R, faint.Fill.R);
+    VERIFY_ARE_EQUAL(faint.Pipe.G, faint.Fill.G);
+    VERIFY_ARE_EQUAL(faint.Pipe.B, faint.Fill.B);
+}
+
+void ThemeTests::TheValueColorDrawsEveryValueInOneColor()
+{
+    auto const* jove = glass::FindBuiltInTheme(L"Jove");
+    VERIFY_IS_NOT_NULL(jove);
+    VERIFY_IS_TRUE(jove->ValueColor.A != 0);
+
+    for (int32_t slot = 0; slot < glass::ThemeHueSlotCount; ++slot)
+    {
+        glass::Control knob{};
+        knob.Kind = glass::ControlKind::Knob;
+        knob.HueSlot = slot;
+
+        glass::Control tab{};
+        tab.Kind = glass::ControlKind::Toggle;
+        tab.HueSlot = slot;
+
+        // Every value is the section orange, whatever the control's own color...
+        VERIFY_IS_TRUE((glass::ResolveControlColors(knob, *jove).Pipe == jove->ValueColor));
+
+        // ...and a tab is still its own color, because a tab is not a value.
+        VERIFY_IS_TRUE((glass::ResolveControlColors(tab, *jove).Plate == jove->HueSlots[static_cast<size_t>(slot)]));
+    }
+
+    // A theme that names none still draws each value in its control's own hue.
+    auto const* studio = glass::FindBuiltInTheme(L"Studio Dark");
+
+    glass::Control knob{};
+    knob.Kind = glass::ControlKind::Knob;
+    knob.HueSlot = 3;
+
+    VERIFY_IS_TRUE((glass::ResolveControlColors(knob, *studio).Pipe == studio->HueSlots[3]));
+}
+
+void ThemeTests::EveryKeyboardHasALightAndADarkKey()
+{
+    // The naturals are the theme's light and the sharps its dark, so the two have to be told
+    // apart at a glance on every theme, including the ones with no white or black at all.
+    for (auto const& theme : glass::BuiltInThemes())
+    {
+        auto const white = glass::EffectiveKeyWhiteColor(theme);
+        auto const black = glass::EffectiveKeyBlackColor(theme);
+
+        auto const ratio = glass::ContrastRatio(white, black);
+
+        Log::Comment(String().Format(L"%s keys measure %.2f : 1", theme.Name.c_str(), ratio));
+
+        VERIFY_IS_GREATER_THAN(glass::RelativeLuminance(white), glass::RelativeLuminance(black));
+        VERIFY_IS_GREATER_THAN_OR_EQUAL(ratio, glass::MinimumSlotContrast);
+    }
+
+    // The tubes have no white and no black, so theirs are the phosphor and the glass.
+    for (auto const* name : TubeThemeNames)
+    {
+        auto const* theme = glass::FindBuiltInTheme(name);
+
+        VERIFY_IS_TRUE(theme->KeyWhiteColor.A != 0);
+        VERIFY_IS_TRUE(theme->KeyBlackColor.A != 0);
+    }
+
+    // A theme that names neither still draws the plain keyboard it always did.
+    glass::Theme plain{};
+
+    VERIFY_IS_TRUE((glass::EffectiveKeyWhiteColor(plain) == glass::ThemeColor{ 232, 234, 238, 255 }));
+    VERIFY_IS_TRUE((glass::EffectiveKeyBlackColor(plain) == glass::ThemeColor{ 22, 25, 31, 255 }));
+}
+
+void ThemeTests::ALampThemeLightsItsOwnLampColor()
+{
+    auto const* saw = glass::FindBuiltInTheme(L"Supersaw");
+    VERIFY_IS_NOT_NULL(saw);
+
+    // A lamp is the one light on the switch, and it is the same red whatever slot the switch
+    // is on. Lit, a faint line of that red goes round the switch, and the glow is red too.
+    VERIFY_IS_TRUE(saw->LampColor.A != 0);
+
+    for (int32_t slot = 0; slot < glass::ThemeHueSlotCount; ++slot)
+    {
+        glass::Control tab{};
+        tab.Kind = glass::ControlKind::Toggle;
+        tab.HueSlot = slot;
+
+        auto const colors = glass::ResolveControlColors(tab, *saw);
+
+        VERIFY_IS_TRUE((colors.Lamp == saw->LampColor));
+        VERIFY_IS_GREATER_THAN(static_cast<int32_t>(colors.LampRim.A), 0);
+        VERIFY_IS_LESS_THAN(static_cast<int32_t>(colors.LampRim.A), 255);
+        VERIFY_ARE_EQUAL(saw->LampColor.R, colors.Bloom.R);
+    }
+
+    // and a strip as well as a lamp is two lights saying one thing
+    VERIFY_IS_TRUE(saw->ValueStrip == glass::ValueStripPlacement::None);
+
+    // A theme that fills has no lamp at all.
+    glass::Control tab{};
+    tab.Kind = glass::ControlKind::Toggle;
+
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, glass::ResolveControlColors(tab, *glass::FindBuiltInTheme(L"Studio Dark")).Lamp.A);
+}
+
+void ThemeTests::ADefaultThemeAsksForNoneOfTheNewLooks()
+{
+    // Every property this round added is additive: a theme file written before it existed has to
+    // draw exactly what it always did. These are the defaults that promise says.
+    glass::Theme theme{};
+
+    VERIFY_IS_TRUE(theme.PanelFill == glass::PanelFillStyle::Plate);
+    VERIFY_IS_TRUE(theme.FaderPlate == glass::FaderPlateStyle::Full);
+    VERIFY_IS_FALSE(theme.SectionNameInHue);
+    VERIFY_IS_FALSE(theme.NamesInsideSwitches);
+    VERIFY_IS_FALSE(theme.CapLineWide);
+    VERIFY_ARE_EQUAL(100, theme.FaderFillPercent);
+    VERIFY_ARE_EQUAL(0, theme.OnLiftPercent);
+    VERIFY_ARE_EQUAL(0, theme.PlateShadePercent);
+    VERIFY_ARE_EQUAL(0, theme.PlateHighlightPercent);
+    VERIFY_ARE_EQUAL(0, theme.RecessShadePercent);
+    VERIFY_ARE_EQUAL(0, theme.ThumbShadowPercent);
+    VERIFY_ARE_EQUAL(0, theme.KnobTickCount);
+
+    for (auto const& color : { theme.PanelColor, theme.PanelEndColor, theme.PanelOutlineColor,
+        theme.KnobFaceColor, theme.KnobFaceEndColor, theme.KnobCapColor, theme.KnobCapEndColor,
+        theme.LampColor, theme.ValueColor, theme.WellColor, theme.KeyWhiteColor, theme.KeyBlackColor })
+    {
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, color.A);
+    }
+
+    // So a control on it resolves with no well, no recess, no shade and no highlight, and its
+    // knob face is its plate.
+    glass::Control knob{};
+    knob.Kind = glass::ControlKind::Knob;
+
+    auto const colors = glass::ResolveControlColors(knob, theme);
+
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, colors.Well.A);
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, colors.Recess.A);
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, colors.PlateShade.A);
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, colors.PlateHighlight.A);
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, colors.KnobCap.A);
+    VERIFY_IS_TRUE((colors.KnobFace == colors.Plate));
+    VERIFY_IS_TRUE((colors.PanelOutline == colors.Rim));
+}
+
+void ThemeTests::TheDeckColorIsReadDownThePage()
+{
+    // A notch cut into a panel's frame is filled with the deck at that height, so the frame
+    // looks cut rather than painted over. On a gradient that is not the color at the top.
+    auto const* studio = glass::FindBuiltInTheme(L"Studio Dark");
+    VERIFY_IS_NOT_NULL(studio);
+    VERIFY_IS_TRUE(studio->Deck.Kind == glass::DeckKind::Gradient);
+
+    VERIFY_IS_TRUE((glass::DeckColorAt(*studio, 0.0) == studio->Deck.Color));
+    VERIFY_IS_TRUE((glass::DeckColorAt(*studio, 1.0) == studio->Deck.GradientEndColor));
+
+    auto const middle = glass::DeckColorAt(*studio, 0.5);
+
+    VERIFY_IS_LESS_THAN(glass::RelativeLuminance(middle), glass::RelativeLuminance(studio->Deck.Color));
+    VERIFY_IS_GREATER_THAN(glass::RelativeLuminance(middle), glass::RelativeLuminance(studio->Deck.GradientEndColor));
+
+    // Out of range is clamped rather than extrapolated past the deck's own ends.
+    VERIFY_IS_TRUE((glass::DeckColorAt(*studio, -3.0) == studio->Deck.Color));
+    VERIFY_IS_TRUE((glass::DeckColorAt(*studio, 7.0) == studio->Deck.GradientEndColor));
+
+    // A flat deck is the same color all the way down.
+    auto const* saw = glass::FindBuiltInTheme(L"Supersaw");
+    VERIFY_IS_TRUE((glass::DeckColorAt(*saw, 0.8) == saw->Deck.Color));
 }

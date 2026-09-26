@@ -1741,8 +1741,8 @@
   <data name="DetentListCaption" xml:space="preserve">
     <value>Each value gets an equal share of the travel, not its position between the ends. That is what makes a list like 10, 17, 38, 39, 40 usable with a finger.</value>
   </data>
-  <data name="InspectorPageKind" xml:space="preserve">
-    <value>Page</value>
+  <data name="InspectorEmptyText.Text" xml:space="preserve">
+    <value>Nothing is selected</value>
   </data>
   <data name="InspectorManySelected" xml:space="preserve">
     <value>Several controls</value>
@@ -2202,6 +2202,9 @@
   </data>
   <data name="DefaultValueSlider.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Starting value, as a percentage</value>
+  </data>
+  <data name="StartsOnSwitch.Header" xml:space="preserve">
+    <value>Starts on</value>
   </data>
   <data name="InspectorThrottleHeading.Text" xml:space="preserve">
     <value>Least time between sends</value>
@@ -2715,5 +2718,834 @@
   </data>
   <data name="PageTemplatePortrait" xml:space="preserve">
     <value>Portrait</value>
+  </data>
+  <!-- ============================================ layout settings rail -->
+  <data name="SettingsNavAppearance.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="SettingsNavAppearanceLabel.Text" xml:space="preserve">
+    <value>Appearance</value>
+  </data>
+  <data name="SettingsNavPages.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Pages and layers</value>
+  </data>
+  <data name="SettingsNavPagesLabel.Text" xml:space="preserve">
+    <value>Pages and layers</value>
+  </data>
+  <data name="SettingsNavOutputs.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Outputs</value>
+  </data>
+  <data name="SettingsNavOutputsLabel.Text" xml:space="preserve">
+    <value>Outputs</value>
+  </data>
+  <data name="SettingsNavBehavior.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Behavior</value>
+  </data>
+  <data name="SettingsNavBehaviorLabel.Text" xml:space="preserve">
+    <value>Behavior</value>
+  </data>
+  <data name="SettingsNavThisLayout.Text" xml:space="preserve">
+    <value>This layout</value>
+  </data>
+  <data name="SettingsNavName.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Name and description</value>
+  </data>
+  <data name="SettingsNavNameLabel.Text" xml:space="preserve">
+    <value>Name and description</value>
+  </data>
+  <data name="SettingsNavAccessibility.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Accessibility check</value>
+  </data>
+  <data name="SettingsNavAccessibilityLabel.Text" xml:space="preserve">
+    <value>Accessibility check</value>
+  </data>
+  <data name="SettingsNavExport.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Export the layout</value>
+  </data>
+  <data name="SettingsNavExportLabel.Text" xml:space="preserve">
+    <value>Export…</value>
+  </data>
+
+  <!-- ==================================================== the theme editor -->
+  <data name="ThemeHeading.Text" xml:space="preserve">
+    <value>Theme</value>
+  </data>
+  <data name="ThemeCaption.Text" xml:space="preserve">
+    <value>Six colors, a deck and a set of control defaults. Every control points at a slot number, so switching theme keeps the meaning of the colors.</value>
+  </data>
+  <data name="ThemeColorsHeading.Text" xml:space="preserve">
+    <value>Colors</value>
+  </data>
+  <data name="ThemeOwnHeading.Text" xml:space="preserve">
+    <value>Your own themes</value>
+  </data>
+  <data name="ThemeOwnCaption.Text" xml:space="preserve">
+    <value>A theme is a small file. Save one and it shows up in the gallery for every layout on this PC.</value>
+  </data>
+  <data name="ThemePreviewHeading.Text" xml:space="preserve">
+    <value>Live preview</value>
+  </data>
+  <data name="ThemeTravelsNote.Text" xml:space="preserve">
+    <value>The theme travels inside the layout file, so a layout you send to somebody looks the way you built it even if they have never seen your theme.</value>
+  </data>
+  <data name="SaveThemeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Save these colors as a theme</value>
+  </data>
+  <data name="SaveThemeLabel.Text" xml:space="preserve">
+    <value>Save these colors as a theme…</value>
+  </data>
+  <data name="ImportThemeButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Import a theme</value>
+  </data>
+  <data name="ImportThemeLabel.Text" xml:space="preserve">
+    <value>Import a theme…</value>
+  </data>
+  <data name="LayoutMenuTheme.Text" xml:space="preserve">
+    <value>Theme and colors…</value>
+  </data>
+
+  <!-- slot rows -->
+  <data name="ThemeSlotNameFormat" xml:space="preserve">
+    <value>{0} · {1}</value>
+  </data>
+  <data name="ThemeSlotNameBrightnessFormat" xml:space="preserve">
+    <value>{0} · {1} {2}%</value>
+    <comment>Used when two slots of a theme land on the same color name, which happens on a theme whose six slots are one color at six brightnesses. {0} is the slot number, {1} a color name, {2} how bright it is out of 100.</comment>
+  </data>
+  <data name="ThemeSlotSwatchFormat" xml:space="preserve">
+    <value>Change the color of slot {0}</value>
+  </data>
+  <data name="ThemeSlotControlsFormat" xml:space="preserve">
+    <value>{0} controls</value>
+  </data>
+  <data name="ThemeSlotOneControl" xml:space="preserve">
+    <value>1 control</value>
+  </data>
+  <data name="ThemeRatioFormat" xml:space="preserve">
+    <value>{0} : 1</value>
+  </data>
+  <data name="ThemeSlotTooCloseFormat" xml:space="preserve">
+    <value>Slot {0} is close to the deck. It will still be readable, but a label in it will be hard work on a dim stage. Lighten it, or move those controls to a brighter slot.</value>
+  </data>
+  <data name="ThemePickColorFormat" xml:space="preserve">
+    <value>Pick a color for {0}</value>
+  </data>
+
+  <!-- color names, worked out from the color itself -->
+  <data name="ColorNameRed" xml:space="preserve">
+    <value>Red</value>
+  </data>
+  <data name="ColorNameOrange" xml:space="preserve">
+    <value>Orange</value>
+  </data>
+  <data name="ColorNameAmber" xml:space="preserve">
+    <value>Amber</value>
+  </data>
+  <data name="ColorNameYellow" xml:space="preserve">
+    <value>Yellow</value>
+  </data>
+  <data name="ColorNameLime" xml:space="preserve">
+    <value>Lime</value>
+  </data>
+  <data name="ColorNameGreen" xml:space="preserve">
+    <value>Green</value>
+  </data>
+  <data name="ColorNameMint" xml:space="preserve">
+    <value>Mint</value>
+  </data>
+  <data name="ColorNameTeal" xml:space="preserve">
+    <value>Teal</value>
+  </data>
+  <data name="ColorNameCyan" xml:space="preserve">
+    <value>Cyan</value>
+  </data>
+  <data name="ColorNameAzure" xml:space="preserve">
+    <value>Azure</value>
+  </data>
+  <data name="ColorNameBlue" xml:space="preserve">
+    <value>Blue</value>
+  </data>
+  <data name="ColorNameViolet" xml:space="preserve">
+    <value>Violet</value>
+  </data>
+  <data name="ColorNameMagenta" xml:space="preserve">
+    <value>Magenta</value>
+  </data>
+  <data name="ColorNamePink" xml:space="preserve">
+    <value>Pink</value>
+  </data>
+  <data name="ColorNameWhite" xml:space="preserve">
+    <value>White</value>
+  </data>
+  <data name="ColorNameGray" xml:space="preserve">
+    <value>Gray</value>
+  </data>
+  <data name="ColorNameBlack" xml:space="preserve">
+    <value>Black</value>
+  </data>
+
+  <!-- what a theme costs -->
+  <data name="ThemeCautionCathode" xml:space="preserve">
+    <value>Six brightnesses of one phosphor. No two of them are far enough apart to be told apart, so on this theme a control is known by where it sits and what it is called, never by its color.</value>
+  </data>
+  <data name="ThemeCautionAmberConsole" xml:space="preserve">
+    <value>A lamp in a dark room. The ramp runs like heat, so it still works without color vision, but the deepest ember is light rather than letters: give it a rim, a value or a fill, not a label.</value>
+  </data>
+  <data name="ThemeCautionTerminalGreen" xml:space="preserve">
+    <value>A lamp in a dark room. Every color here survives being filled and labeled except the deepest green, which is too dark to carry type on a lit control.</value>
+  </data>
+  <data name="ThemeCautionBigwig" xml:space="preserve">
+    <value>Red is for light, not for words. It is bright enough for a knob's ring, a fader's fill or a lit button, but too dark to read as a name, so give record and panic their names in the ink.</value>
+  </data>
+  <data name="ThemeCautionJove" xml:space="preserve">
+    <value>The tabs are their color, at full strength, all the time. That reads beautifully on a panel of a few dozen switches and turns into a wall of color on a page of a few hundred, so keep the colored switches to the ones that matter.</value>
+  </data>
+  <data name="ThemeCautionSupersaw" xml:space="preserve">
+    <value>A switch that is on looks exactly like a switch that is off, apart from its lamp. That is what makes a rack of them readable at arm's length, but it does mean the state is one small light rather than a whole button.</value>
+  </data>
+  <data name="ThemeCautionPigment" xml:space="preserve">
+    <value>Every control carries a wash of its own color at rest, so a busy page is colorful even when nothing is happening and activity has less room to stand out.</value>
+  </data>
+  <data name="ThemeCautionHighContrast" xml:space="preserve">
+    <value>Hard edges, no glow and no rounding. It is offered, never forced: if Windows switches to high contrast during a set, the running layout is left alone and the offer waits until the layout is next opened.</value>
+  </data>
+
+  <!-- theme property groups -->
+  <data name="ThemeGroupDeck" xml:space="preserve">
+    <value>Deck</value>
+  </data>
+  <data name="ThemeGroupControls" xml:space="preserve">
+    <value>Control defaults</value>
+  </data>
+  <data name="ThemeGroupPlate" xml:space="preserve">
+    <value>Plate</value>
+  </data>
+  <data name="ThemeGroupRim" xml:space="preserve">
+    <value>Rim</value>
+  </data>
+  <data name="ThemeGroupValue" xml:space="preserve">
+    <value>Value</value>
+  </data>
+  <data name="ThemeGroupLight" xml:space="preserve">
+    <value>Light</value>
+  </data>
+  <data name="ThemeGroupOverlay" xml:space="preserve">
+    <value>Glass over the page</value>
+  </data>
+  <data name="ThemeGroupMeter" xml:space="preserve">
+    <value>Meter zones</value>
+  </data>
+  <data name="ThemeGroupKnobs" xml:space="preserve">
+    <value>Knobs</value>
+  </data>
+  <data name="ThemeGroupSwitches" xml:space="preserve">
+    <value>Switches</value>
+  </data>
+  <data name="ThemeGroupSections" xml:space="preserve">
+    <value>Sections</value>
+  </data>
+  <data name="ThemeGroupKeyboard" xml:space="preserve">
+    <value>Piano keyboard</value>
+  </data>
+
+  <!-- theme property rows -->
+  <data name="ThemeRowBackground" xml:space="preserve">
+    <value>Background</value>
+  </data>
+  <data name="ThemeRowDeckTop" xml:space="preserve">
+    <value>Lit top</value>
+  </data>
+  <data name="ThemeRowDeckFloor" xml:space="preserve">
+    <value>Shaded floor</value>
+  </data>
+  <data name="ThemeRowCornerRounding" xml:space="preserve">
+    <value>Corner rounding</value>
+  </data>
+  <data name="ThemeRowGlassTint" xml:space="preserve">
+    <value>Glass tint</value>
+  </data>
+  <data name="ThemeRowGlassColor" xml:space="preserve">
+    <value>Glass color</value>
+  </data>
+  <data name="ThemeRowGlow" xml:space="preserve">
+    <value>Glow</value>
+  </data>
+  <data name="ThemeRowFillAtRest" xml:space="preserve">
+    <value>Fill at rest</value>
+  </data>
+  <data name="ThemeRowSwitchFillAtRest" xml:space="preserve">
+    <value>Switch fill at rest</value>
+  </data>
+  <data name="ThemeRowFillWhenOn" xml:space="preserve">
+    <value>Fill when on</value>
+  </data>
+  <data name="ThemeFillWhenOnNote" xml:space="preserve">
+    <value>At zero a switch that is on looks like one that is off, apart from its lamp. A rack of identical switches with one lamp lit is easier to read across a room than a rack of colored blocks.</value>
+  </data>
+  <data name="ThemeRowSectionHeader" xml:space="preserve">
+    <value>Section header</value>
+  </data>
+  <data name="ThemeSectionCaption" xml:space="preserve">
+    <value>Caption on the deck</value>
+  </data>
+  <data name="ThemeSectionFilledBar" xml:space="preserve">
+    <value>Filled bar</value>
+  </data>
+  <data name="ThemeSectionNotched" xml:space="preserve">
+    <value>Name in the frame</value>
+    <comment>A section header style: the section's name sits in a gap cut into the top line of its frame.</comment>
+  </data>
+  <data name="ThemeRowSectionNameInHue" xml:space="preserve">
+    <value>Section name in color</value>
+  </data>
+  <data name="ThemeRowNamesInside" xml:space="preserve">
+    <value>Names on switches</value>
+  </data>
+  <data name="ThemeRowPlateShade" xml:space="preserve">
+    <value>Shade</value>
+  </data>
+  <data name="ThemeRowPlateHighlight" xml:space="preserve">
+    <value>Top edge light</value>
+  </data>
+  <data name="ThemeRowValueColor" xml:space="preserve">
+    <value>Value color</value>
+  </data>
+  <data name="ThemeValueColorNote" xml:space="preserve">
+    <value>Leave it empty and every value is drawn in its control's own color. Name one and every knob ring, fader fill and puck on the page uses it, whatever color the control is.</value>
+  </data>
+  <data name="ThemeRowFaderPlate" xml:space="preserve">
+    <value>Fader plate</value>
+  </data>
+  <data name="ThemeFaderPlateFull" xml:space="preserve">
+    <value>The whole control</value>
+  </data>
+  <data name="ThemeFaderPlateStrip" xml:space="preserve">
+    <value>A strip around the slot</value>
+  </data>
+  <data name="ThemeFaderPlateNone" xml:space="preserve">
+    <value>None, just the slot</value>
+  </data>
+  <data name="ThemeRowFaderFill" xml:space="preserve">
+    <value>Fader fill</value>
+  </data>
+  <data name="ThemeRowThumbShadow" xml:space="preserve">
+    <value>Cap shadow</value>
+  </data>
+  <data name="ThemeRowCapLineWide" xml:space="preserve">
+    <value>Wide cap line</value>
+  </data>
+  <data name="ThemeRowRecessShade" xml:space="preserve">
+    <value>Sunk shadow</value>
+  </data>
+  <data name="ThemeRowWellColor" xml:space="preserve">
+    <value>Display well</value>
+  </data>
+  <data name="ThemeWellNote" xml:space="preserve">
+    <value>What shows you something is sunk into its plate: the field of an XY pad, an LFO or a ribbon. Leave it empty for no well.</value>
+  </data>
+  <data name="ThemeRowKnobFace" xml:space="preserve">
+    <value>Knob face</value>
+  </data>
+  <data name="ThemeRowKnobFaceEnd" xml:space="preserve">
+    <value>Knob face edge</value>
+  </data>
+  <data name="ThemeKnobFaceNote" xml:space="preserve">
+    <value>Leave the face empty and a knob is its plate. Name one and the knob is a turned cap, brightest just above the middle where the light catches it.</value>
+  </data>
+  <data name="ThemeRowKnobCap" xml:space="preserve">
+    <value>Knob cap</value>
+  </data>
+  <data name="ThemeRowKnobCapEnd" xml:space="preserve">
+    <value>Knob cap edge</value>
+  </data>
+  <data name="ThemeRowKnobCapSize" xml:space="preserve">
+    <value>Knob cap size</value>
+  </data>
+  <data name="ThemeRowKnobTicks" xml:space="preserve">
+    <value>Knob marks</value>
+  </data>
+  <data name="ThemeRowOnLift" xml:space="preserve">
+    <value>Lift when on</value>
+  </data>
+  <data name="ThemeOnLiftNote" xml:space="preserve">
+    <value>Above zero a lit switch gets paler, like a colored tab with a lamp behind it. Below zero it gets deeper, so a light name on it still reads.</value>
+  </data>
+  <data name="ThemeRowLampColor" xml:space="preserve">
+    <value>Lamp color</value>
+  </data>
+  <data name="ThemeRowPanelFill" xml:space="preserve">
+    <value>Section fill</value>
+  </data>
+  <data name="ThemePanelFillPlate" xml:space="preserve">
+    <value>Like a control</value>
+  </data>
+  <data name="ThemePanelFillColor" xml:space="preserve">
+    <value>Its own color</value>
+  </data>
+  <data name="ThemePanelFillNone" xml:space="preserve">
+    <value>Outline only</value>
+  </data>
+  <data name="ThemeRowPanelColor" xml:space="preserve">
+    <value>Section color</value>
+  </data>
+  <data name="ThemeRowPanelEnd" xml:space="preserve">
+    <value>Section bottom</value>
+  </data>
+  <data name="ThemeRowPanelOutline" xml:space="preserve">
+    <value>Section outline</value>
+  </data>
+  <data name="ThemeRowKeyWhite" xml:space="preserve">
+    <value>Natural keys</value>
+  </data>
+  <data name="ThemeRowKeyBlack" xml:space="preserve">
+    <value>Sharp keys</value>
+  </data>
+  <data name="ThemeRowNeutralColor" xml:space="preserve">
+    <value>Neutral color</value>
+  </data>
+  <data name="ThemeNeutralColorNote" xml:space="preserve">
+    <value>The seventh color, and it is the absence of one. A control set to the neutral slot uses this instead of a hue, so an unassigned button stays unassigned after a theme swap.</value>
+  </data>
+  <data name="ThemeRowTouchFill" xml:space="preserve">
+    <value>Fill under a finger</value>
+  </data>
+  <data name="ThemeRowLabels" xml:space="preserve">
+    <value>Labels</value>
+  </data>
+  <data name="ThemeRowInk" xml:space="preserve">
+    <value>Ink</value>
+  </data>
+  <data name="ThemeRowPlateColor" xml:space="preserve">
+    <value>Plate</value>
+  </data>
+  <data name="ThemeRowPlateBottom" xml:space="preserve">
+    <value>Plate bottom</value>
+  </data>
+  <data name="ThemeRowSheen" xml:space="preserve">
+    <value>Sheen</value>
+  </data>
+  <data name="ThemeRowSheenColor" xml:space="preserve">
+    <value>Sheen color</value>
+  </data>
+  <data name="ThemeRowElevation" xml:space="preserve">
+    <value>Raised</value>
+  </data>
+  <data name="ThemeRowShadowReach" xml:space="preserve">
+    <value>Shadow reach</value>
+  </data>
+  <data name="ThemeRowShadowColor" xml:space="preserve">
+    <value>Shadow color</value>
+  </data>
+  <data name="ThemeRowRimFrom" xml:space="preserve">
+    <value>Rim from</value>
+  </data>
+  <data name="ThemeRowRimStrength" xml:space="preserve">
+    <value>Rim strength</value>
+  </data>
+  <data name="ThemeRowNeutralRim" xml:space="preserve">
+    <value>Neutral rim</value>
+  </data>
+  <data name="ThemeRowTrack" xml:space="preserve">
+    <value>Slot track</value>
+  </data>
+  <data name="ThemeRowArcTrack" xml:space="preserve">
+    <value>Knob arc track</value>
+  </data>
+  <data name="ThemeRowValueStrip" xml:space="preserve">
+    <value>Value strip</value>
+  </data>
+  <data name="ThemeRowIndicator" xml:space="preserve">
+    <value>Knob indicator</value>
+  </data>
+  <data name="ThemeRowLampCount" xml:space="preserve">
+    <value>Lamps</value>
+  </data>
+  <data name="ThemeRowSmallestRing" xml:space="preserve">
+    <value>Smallest ring</value>
+  </data>
+  <data name="ThemeRowValueFade" xml:space="preserve">
+    <value>Value fade</value>
+  </data>
+  <data name="ThemeRowFadeToLight" xml:space="preserve">
+    <value>Fade to the light</value>
+  </data>
+  <data name="ThemeRowCap" xml:space="preserve">
+    <value>Fader cap</value>
+  </data>
+  <data name="ThemeRowCapTop" xml:space="preserve">
+    <value>Cap top</value>
+  </data>
+  <data name="ThemeRowCapBottom" xml:space="preserve">
+    <value>Cap bottom</value>
+  </data>
+  <data name="HueSlotNeutralName" xml:space="preserve">
+    <value>No color</value>
+    <comment>The theme's one un-hued color, offered beside the six hues. Chosen for a control that is deliberately not color coded.</comment>
+  </data>
+  <data name="ThemeRowCapLine" xml:space="preserve">
+    <value>Cap line</value>
+  </data>
+  <data name="ThemeRowPointer" xml:space="preserve">
+    <value>Knob pointer</value>
+  </data>
+  <data name="ThemePointerNote" xml:space="preserve">
+    <value>Leave both empty and they follow the control's own color. Name one and every knob or cap on the page uses it, which is what a hardware panel does: one color for every pointer, whatever the knob is for.</value>
+  </data>
+  <data name="ThemeRowLightColor" xml:space="preserve">
+    <value>Light color</value>
+  </data>
+  <data name="ThemeRowRestingGlow" xml:space="preserve">
+    <value>Resting glow</value>
+  </data>
+  <data name="ThemeRowStaysLit" xml:space="preserve">
+    <value>Stays lit for</value>
+  </data>
+  <data name="ThemeRowScanLines" xml:space="preserve">
+    <value>Scan lines</value>
+  </data>
+  <data name="ThemeRowScanStrength" xml:space="preserve">
+    <value>Scan strength</value>
+  </data>
+  <data name="ThemeRowScanColor" xml:space="preserve">
+    <value>Scan color</value>
+  </data>
+  <data name="ThemeRowVignette" xml:space="preserve">
+    <value>Corner fall-off</value>
+  </data>
+  <data name="ThemeRowVignetteColor" xml:space="preserve">
+    <value>Corner color</value>
+  </data>
+  <data name="ThemeRowFaceplate" xml:space="preserve">
+    <value>Faceplate</value>
+  </data>
+  <data name="ThemeRowFaceplateColor" xml:space="preserve">
+    <value>Faceplate color</value>
+  </data>
+  <data name="ThemeRowGrain" xml:space="preserve">
+    <value>Grain</value>
+  </data>
+  <data name="ThemeRowGrainColor" xml:space="preserve">
+    <value>Grain color</value>
+  </data>
+  <data name="ThemeGrainNote" xml:space="preserve">
+    <value>Texture in the panel rather than a color over it. At full it reads as sandpaper and at a quarter it is only a warmth. Controls sit on top of it, so the grain never touches them.</value>
+  </data>
+  <data name="ThemeRowMeterSignal" xml:space="preserve">
+    <value>Signal</value>
+  </data>
+  <data name="ThemeRowMeterWarning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+  <data name="ThemeRowMeterTooLoud" xml:space="preserve">
+    <value>Too loud</value>
+  </data>
+
+  <!-- theme property choices -->
+  <data name="ThemeDeckOneColor" xml:space="preserve">
+    <value>One color</value>
+  </data>
+  <data name="ThemeDeckTwoColors" xml:space="preserve">
+    <value>Two colors</value>
+  </data>
+  <data name="ThemeDeckPicture" xml:space="preserve">
+    <value>Picture</value>
+  </data>
+  <data name="ThemeLabelsInside" xml:space="preserve">
+    <value>Inside the control</value>
+  </data>
+  <data name="ThemeLabelsBelow" xml:space="preserve">
+    <value>Below the control</value>
+  </data>
+  <data name="ThemeLabelsNone" xml:space="preserve">
+    <value>No labels</value>
+  </data>
+  <data name="ThemeLabelsAbove" xml:space="preserve">
+    <value>Above the control</value>
+  </data>
+  <data name="ThemeRimControlColor" xml:space="preserve">
+    <value>The control's color</value>
+  </data>
+  <data name="ThemeRimNeutral" xml:space="preserve">
+    <value>A neutral edge</value>
+  </data>
+  <data name="ThemeRimNone" xml:space="preserve">
+    <value>No rim</value>
+  </data>
+  <data name="ThemeStripBottom" xml:space="preserve">
+    <value>Along the bottom</value>
+  </data>
+  <data name="ThemeStripTop" xml:space="preserve">
+    <value>Along the top</value>
+  </data>
+  <data name="ThemeStripNone" xml:space="preserve">
+    <value>None</value>
+  </data>
+  <data name="ThemeIndicatorArc" xml:space="preserve">
+    <value>A solid arc</value>
+  </data>
+  <data name="ThemeIndicatorLamps" xml:space="preserve">
+    <value>A ring of lamps</value>
+  </data>
+  <data name="ThemeCapNone" xml:space="preserve">
+    <value>No cap</value>
+  </data>
+  <data name="ThemeCapNeutral" xml:space="preserve">
+    <value>Neutral</value>
+  </data>
+  <data name="ThemeCapControlColor" xml:space="preserve">
+    <value>The control's color</value>
+  </data>
+  <data name="ThemeSlotOne" xml:space="preserve">
+    <value>Slot 1</value>
+  </data>
+  <data name="ThemeSlotTwo" xml:space="preserve">
+    <value>Slot 2</value>
+  </data>
+  <data name="ThemeSlotThree" xml:space="preserve">
+    <value>Slot 3</value>
+  </data>
+  <data name="ThemeSlotFour" xml:space="preserve">
+    <value>Slot 4</value>
+  </data>
+  <data name="ThemeSlotFive" xml:space="preserve">
+    <value>Slot 5</value>
+  </data>
+  <data name="ThemeSlotSix" xml:space="preserve">
+    <value>Slot 6</value>
+  </data>
+
+  <!-- units -->
+  <data name="ThemeUnitPixels" xml:space="preserve">
+    <value>{0} px</value>
+  </data>
+  <data name="ThemeUnitPercent" xml:space="preserve">
+    <value>{0} %</value>
+  </data>
+  <data name="ThemeUnitPercentOrFollow" xml:space="preserve">
+    <value>{0} %</value>
+    <comment>The same percentage as ThemeUnitPercent. Below zero the row means "follow the row above it" and the app shows ThemeFollowsFillAtRest instead of this.</comment>
+  </data>
+  <data name="ThemeFollowsFillAtRest" xml:space="preserve">
+    <value>Same</value>
+  </data>
+  <data name="ThemeUnitMilliseconds" xml:space="preserve">
+    <value>{0} ms</value>
+  </data>
+
+  <!-- notes beside a row that is carrying something structural -->
+  <data name="ThemeShadowIsStructure" xml:space="preserve">
+    <value>There is almost no difference in brightness between this plate and this deck, so the shadow is the only thing separating a control from the space behind it. At zero the layout disappears.</value>
+  </data>
+  <data name="ThemeRestingGlowIsStructure" xml:space="preserve">
+    <value>A raster box is barely brighter than the glass it is drawn on, so the light it spills all the time is what makes it an object. At zero the controls dissolve into the deck.</value>
+  </data>
+  <data name="ThemeArcTrackNote" xml:space="preserve">
+    <value>A fader slot is cut into the plate, so its track is a dark. A knob's arc sits outside the plate on bare deck, where on a dark theme there is nothing left to be darker than, so it has to be a faint light. Leave this empty to use the slot track for both.</value>
+  </data>
+  <data name="ThemeLightColorNote" xml:space="preserve">
+    <value>Leave this empty and a control lights up in its own color. A phosphor does not: a monochrome tube glows blue-white, an amber one glows redder than the thing casting it, and a green one glows yellower.</value>
+  </data>
+  <data name="ThemeInkNote" xml:space="preserve">
+    <value>Leave this empty and the label color is measured against whatever the plate turned out to be. A tube names it instead, because its ink is its phosphor: a neutral white label on amber glass reads as a fault rather than as a picture.</value>
+  </data>
+  <data name="ThemeOverlayNote" xml:space="preserve">
+    <value>One layer over the whole page rather than one per control, drawn in screen pixels so the lines stay the same distance apart at every zoom.</value>
+  </data>
+  <data name="ThemeMeterNote" xml:space="preserve">
+    <value>The one control where a heat ramp does real work. Pick three slots that are also a rising brightness and it still reads with no color vision at all.</value>
+  </data>
+
+  <!-- ================================================== behavior -->
+  <data name="BehaviorHeadingOpening" xml:space="preserve">
+    <value>How it opens</value>
+  </data>
+  <data name="BehaviorCaptionOpening" xml:space="preserve">
+    <value>A surface is muscle memory, so a page is never stretched. Fitting scales both axes by the same amount and leaves a band at the edge.</value>
+  </data>
+  <data name="BehaviorScaleLabel" xml:space="preserve">
+    <value>Size when it opens</value>
+  </data>
+  <data name="BehaviorCornerLabel" xml:space="preserve">
+    <value>Full screen button corner</value>
+  </data>
+  <data name="SettingsCornerTopLeft" xml:space="preserve">
+    <value>Top left</value>
+  </data>
+  <data name="SettingsCornerTopRight" xml:space="preserve">
+    <value>Top right</value>
+  </data>
+  <data name="SettingsCornerBottomLeft" xml:space="preserve">
+    <value>Bottom left</value>
+  </data>
+  <data name="SettingsCornerBottomRight" xml:space="preserve">
+    <value>Bottom right</value>
+  </data>
+  <data name="BehaviorHeadingStartup" xml:space="preserve">
+    <value>What it sends when it opens</value>
+  </data>
+  <data name="BehaviorCaptionStartup" xml:space="preserve">
+    <value>A control can be set to send its value as soon as the layout loads. This is the one switch that stops a layout whose faders sit at zero from muting a live desk.</value>
+  </data>
+  <data name="BehaviorSuppressStartup" xml:space="preserve">
+    <value>Send nothing when this layout opens</value>
+  </data>
+  <data name="BehaviorHeadingVirtual" xml:space="preserve">
+    <value>What other apps see</value>
+  </data>
+  <data name="BehaviorCaptionVirtual" xml:space="preserve">
+    <value>The layout can appear to other apps as a MIDI device named after itself. It is a virtual device rather than a loopback, so it goes away with the layout and leaves nothing behind.</value>
+  </data>
+  <data name="BehaviorVirtualDevice" xml:space="preserve">
+    <value>Appear to other apps as a MIDI device</value>
+  </data>
+  <data name="BehaviorHeadingTempo" xml:space="preserve">
+    <value>What keeps time</value>
+  </data>
+  <data name="BehaviorCaptionTempo" xml:space="preserve">
+    <value>Clocks and sweeps on this layout run from here. Following an incoming clock holds the last tempo if the clock stops, rather than snapping back.</value>
+  </data>
+  <data name="BehaviorTempoSourceLabel" xml:space="preserve">
+    <value>Tempo comes from</value>
+  </data>
+  <data name="BehaviorTempoLabel" xml:space="preserve">
+    <value>Beats per minute</value>
+  </data>
+  <data name="TempoInternal" xml:space="preserve">
+    <value>This layout</value>
+  </data>
+  <data name="TempoFollowIncoming" xml:space="preserve">
+    <value>An incoming clock</value>
+  </data>
+  <data name="BehaviorHeadingBackground" xml:space="preserve">
+    <value>The picture behind everything</value>
+  </data>
+  <data name="BehaviorCaptionBackground" xml:space="preserve">
+    <value>The deck is still what the controls are read against, so a picture at full strength is usually the wrong answer.</value>
+  </data>
+  <data name="BehaviorBackgroundButton" xml:space="preserve">
+    <value>Background picture…</value>
+  </data>
+
+  <!-- ================================================== name pane -->
+  <data name="SettingsNameHeading.Text" xml:space="preserve">
+    <value>Name and description</value>
+  </data>
+  <data name="SettingsNameCaption.Text" xml:space="preserve">
+    <value>This is what the library shows on the card. The file keeps its own name on disk until you rename it.</value>
+  </data>
+  <data name="SettingsNameBox.Header" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="SettingsNameBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Layout name</value>
+  </data>
+  <data name="SettingsDescriptionBox.Header" xml:space="preserve">
+    <value>Description</value>
+  </data>
+  <data name="SettingsDescriptionBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Layout description</value>
+  </data>
+  <data name="SettingsFileFormat" xml:space="preserve">
+    <value>Saved as {0}</value>
+  </data>
+  <data name="SettingsFileNotSaved" xml:space="preserve">
+    <value>This layout has not been saved yet.</value>
+  </data>
+
+  <!-- ============================================ accessibility check -->
+  <data name="SettingsAccessibilityHeading.Text" xml:space="preserve">
+    <value>Accessibility check</value>
+  </data>
+  <data name="SettingsAccessibilityCaption.Text" xml:space="preserve">
+    <value>Contrast is measured, not guessed. Every slot is checked against the deck before the layout goes near a stage. Not every theme can pass everything, and that is a choice rather than a fault — high contrast is always one press away.</value>
+  </data>
+  <data name="CheckSlotContrastTitle" xml:space="preserve">
+    <value>Colors against the deck</value>
+  </data>
+  <data name="CheckSlotContrastPass" xml:space="preserve">
+    <value>Every slot clears the bar a thin rim needs. The closest measures {0} to 1.</value>
+  </data>
+  <data name="CheckSlotContrastFail" xml:space="preserve">
+    <value>Slot {0} is too close to the deck to read as a rim on a dim stage. Lighten it, or move those controls to a brighter slot.</value>
+  </data>
+  <data name="CheckPlateTitle" xml:space="preserve">
+    <value>Telling a control from the space</value>
+  </data>
+  <data name="CheckPlatePass" xml:space="preserve">
+    <value>A control separates itself from the deck, either by brightness or by the shadow or glow the theme carries.</value>
+  </data>
+  <data name="CheckPlateFail" xml:space="preserve">
+    <value>This plate is almost exactly as bright as this deck, and nothing is carrying the difference. Raise the plate, or give it a resting glow.</value>
+  </data>
+  <data name="CheckRimTitle" xml:space="preserve">
+    <value>How strong the rim is</value>
+  </data>
+  <data name="CheckRimDarkPlate" xml:space="preserve">
+    <value>This plate is dark, so the hairline reads as a line at {0} per cent. Nothing is saturated at rest, which is what keeps a busy page readable.</value>
+  </data>
+  <data name="CheckRimPass" xml:space="preserve">
+    <value>The rim is strong enough at {0} per cent to carry which control is which.</value>
+  </data>
+  <data name="CheckRimFail" xml:space="preserve">
+    <value>A hairline at {0} per cent vanishes on a plate this light, and the control's identity goes with it. Take it to 50 per cent or more.</value>
+  </data>
+  <data name="CheckThemeCostTitle" xml:space="preserve">
+    <value>What this theme costs</value>
+  </data>
+  <data name="CheckLabelsTitle" xml:space="preserve">
+    <value>Controls a screen reader can name</value>
+  </data>
+  <data name="CheckLabelsPass" xml:space="preserve">
+    <value>Every control that does something has a label.</value>
+  </data>
+  <data name="CheckLabelsFail" xml:space="preserve">
+    <value>{0} controls have no label. A screen reader can find them but cannot say what they are.</value>
+  </data>
+  <data name="CheckHighContrastTitle" xml:space="preserve">
+    <value>High contrast</value>
+  </data>
+  <data name="CheckHighContrastDetail" xml:space="preserve">
+    <value>The High contrast theme is offered, never forced. If Windows switches to high contrast during a set, the running layout is left alone and the offer waits until the layout is next opened.</value>
+  </data>
+
+  <!-- ============================================= saving a theme out -->
+  <data name="SaveThemeTitle" xml:space="preserve">
+    <value>Save these colors as a theme</value>
+  </data>
+  <data name="SaveThemeNameLabel" xml:space="preserve">
+    <value>Theme name</value>
+  </data>
+  <data name="SaveThemeNote" xml:space="preserve">
+    <value>The theme is written to Documents › MIDI Layouts › Themes and shows up in the gallery for every layout on this PC. The layouts you already made keep the colors they were built with.</value>
+  </data>
+  <data name="SaveThemeConfirm" xml:space="preserve">
+    <value>Save the theme</value>
+  </data>
+  <data name="SaveThemeDoneTitle" xml:space="preserve">
+    <value>Theme saved</value>
+  </data>
+  <data name="SaveThemeDoneFormat" xml:space="preserve">
+    <value>"{0}" is in the gallery now, for every layout on this PC.</value>
+  </data>
+  <data name="SaveThemeFailedTitle" xml:space="preserve">
+    <value>The theme was not saved</value>
+  </data>
+  <data name="SaveThemeFailedDetail" xml:space="preserve">
+    <value>The file could not be written. Check that Documents › MIDI Layouts › Themes can be written to.</value>
+  </data>
+  <data name="SaveThemeNameTaken" xml:space="preserve">
+    <value>"{0}" is the name of a theme that ships with MIDI Glass, so it cannot be written over. Pick another name and both will be in the gallery.</value>
+  </data>
+  <data name="SaveThemeNoFolder" xml:space="preserve">
+    <value>The themes folder could not be found or created.</value>
+  </data>
+  <data name="ImportThemeTitle" xml:space="preserve">
+    <value>Import a theme</value>
+  </data>
+  <data name="ImportThemeFailedTitle" xml:space="preserve">
+    <value>The theme was not imported</value>
+  </data>
+  <data name="ImportThemeFailedDetail" xml:space="preserve">
+    <value>That file is not a MIDI Glass theme.</value>
   </data>
 </root>

@@ -411,7 +411,10 @@
                         </StackPanel>
                         <Button.Flyout>
                             <MenuFlyout>
-                                <MenuFlyoutItem x:Uid="LayoutMenuPagesDevices" Text="Pages and devices…" Click="OnLayoutSettingsClick">
+                                <MenuFlyoutItem x:Uid="LayoutMenuTheme" Text="Theme and colors…" Tag="appearance" Click="OnLayoutSettingsClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE790;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem x:Uid="LayoutMenuPagesDevices" Text="Pages and devices…" Tag="pages" Click="OnLayoutSettingsClick">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE964;" /></MenuFlyoutItem.Icon>
                                 </MenuFlyoutItem>
                                 <MenuFlyoutSeparator />
@@ -1043,7 +1046,7 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="0" Margin="13,11,13,8" ColumnSpacing="8">
+                    <Grid x:Name="InspectorHeader" Grid.Row="0" Margin="13,11,13,8" ColumnSpacing="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
@@ -1087,11 +1090,25 @@
                         </Button>
                     </Grid>
 
-                    <!-- Nothing here is modal: the inspector always reflects the selection, and
-                         an empty selection shows the page's own properties. -->
+                    <!-- Nothing here is modal: the inspector always reflects the selection. With
+                         nothing selected it says so and nothing else, because a row of grayed
+                         tabs over empty boxes reads as broken rather than as not applicable. -->
+                    <TextBlock x:Name="InspectorEmptyText"
+                               x:Uid="InspectorEmptyText"
+                               Grid.Row="0"
+                               Grid.RowSpan="2"
+                               Text="Nothing is selected"
+                               Visibility="Collapsed"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               Margin="16,0,16,0"
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
                     <!-- Underline tabs, not a Pivot. A Pivot header is more than twice this
                          tall and carries side padding a 288 px pane cannot spare. -->
-                    <Grid Grid.Row="1">
+                    <Grid x:Name="InspectorBody" Grid.Row="1">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
@@ -1831,7 +1848,7 @@
                                                Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
                                     <!-- A Grid rather than a StackPanel, because only a Control
-                                         carries IsEnabled and the whole block is greyed at once
+                                         carries IsEnabled and the whole block is grayed at once
                                          while the switch above it is off. -->
                                     <ContentControl x:Name="FeedbackFieldsPanel" IsEnabled="False"
                                                     HorizontalContentAlignment="Stretch"
@@ -1938,6 +1955,14 @@
                                             Maximum="100"
                                             StepFrequency="1"
                                             ValueChanged="OnDefaultValueChanged" />
+
+                                    <!-- A toggle is on or off, so it starts one way or the other rather than
+                                         somewhere along a percentage. -->
+                                    <ToggleSwitch x:Name="StartsOnSwitch"
+                                                  x:Uid="StartsOnSwitch"
+                                                  Header="Starts on"
+                                                  Visibility="Collapsed"
+                                                  Toggled="OnStartsOnToggled" />
 
                                     <ToggleSwitch x:Name="ReturnsToDefaultSwitch"
                                                   x:Uid="ReturnsToDefaultSwitch"
@@ -2248,16 +2273,298 @@
 
             <Grid Grid.Row="1" ColumnSpacing="0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="330" />
+                    <ColumnDefinition Width="194" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Pages -->
+                <!-- The rail. Everything about the layout in one place, so somebody who wants to
+                     change how it looks does not have to guess which menu it is under. -->
                 <Border Grid.Column="0"
                         BorderThickness="0,0,1,0"
                         BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
-                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="14,12,14,16">
-                        <StackPanel Spacing="8">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,8,0,8">
+                        <StackPanel>
+                            <!-- Never IsChecked in markup. A Checked handler fires while
+                                 InitializeComponent is still building the tree, and every
+                                 x:Name field it reaches for is still null at that point, which
+                                 takes the whole window down with no crash and no event log.
+                                 The first pane is selected in ShowSettingsPane instead. -->
+                            <ToggleButton x:Name="NavAppearance"
+                                          x:Uid="SettingsNavAppearance"
+                                          Style="{StaticResource SettingsNavItemStyle}"
+                                          Tag="appearance"
+                                          Checked="OnSettingsNavChecked"
+                                          Unchecked="OnSettingsNavUnchecked">
+                                <StackPanel Orientation="Horizontal" Spacing="11">
+                                    <FontIcon Glyph="&#xE790;" FontSize="15" Width="16"
+                                              Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <TextBlock x:Uid="SettingsNavAppearanceLabel" Text="Appearance" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <ToggleButton x:Name="NavPages"
+                                          x:Uid="SettingsNavPages"
+                                          Style="{StaticResource SettingsNavItemStyle}"
+                                          Tag="pages"
+                                          Checked="OnSettingsNavChecked"
+                                          Unchecked="OnSettingsNavUnchecked">
+                                <StackPanel Orientation="Horizontal" Spacing="11">
+                                    <FontIcon Glyph="&#xE8A9;" FontSize="15" Width="16"
+                                              Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <TextBlock x:Uid="SettingsNavPagesLabel" Text="Pages and layers" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <ToggleButton x:Name="NavOutputs"
+                                          x:Uid="SettingsNavOutputs"
+                                          Style="{StaticResource SettingsNavItemStyle}"
+                                          Tag="outputs"
+                                          Checked="OnSettingsNavChecked"
+                                          Unchecked="OnSettingsNavUnchecked">
+                                <StackPanel Orientation="Horizontal" Spacing="11">
+                                    <FontIcon Glyph="&#xE9D9;" FontSize="15" Width="16"
+                                              Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <TextBlock x:Uid="SettingsNavOutputsLabel" Text="Outputs" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <ToggleButton x:Name="NavBehavior"
+                                          x:Uid="SettingsNavBehavior"
+                                          Style="{StaticResource SettingsNavItemStyle}"
+                                          Tag="behavior"
+                                          Checked="OnSettingsNavChecked"
+                                          Unchecked="OnSettingsNavUnchecked">
+                                <StackPanel Orientation="Horizontal" Spacing="11">
+                                    <FontIcon Glyph="&#xE713;" FontSize="15" Width="16"
+                                              Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <TextBlock x:Uid="SettingsNavBehaviorLabel" Text="Behavior" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <TextBlock x:Uid="SettingsNavThisLayout"
+                                       Text="This layout"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Margin="15,12,0,4"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                            <ToggleButton x:Name="NavName"
+                                          x:Uid="SettingsNavName"
+                                          Style="{StaticResource SettingsNavItemStyle}"
+                                          Tag="name"
+                                          Checked="OnSettingsNavChecked"
+                                          Unchecked="OnSettingsNavUnchecked">
+                                <StackPanel Orientation="Horizontal" Spacing="11">
+                                    <FontIcon Glyph="&#xE8A5;" FontSize="15" Width="16"
+                                              Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <TextBlock x:Uid="SettingsNavNameLabel" Text="Name and description" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <ToggleButton x:Name="NavAccessibility"
+                                          x:Uid="SettingsNavAccessibility"
+                                          Style="{StaticResource SettingsNavItemStyle}"
+                                          Tag="accessibility"
+                                          Checked="OnSettingsNavChecked"
+                                          Unchecked="OnSettingsNavUnchecked">
+                                <StackPanel Orientation="Horizontal" Spacing="11">
+                                    <FontIcon Glyph="&#xE7B3;" FontSize="15" Width="16"
+                                              Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <TextBlock x:Uid="SettingsNavAccessibilityLabel" Text="Accessibility check" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <!-- An action rather than a destination, so it is a button and never
+                                 stays selected. -->
+                            <Button x:Name="NavExport"
+                                    x:Uid="SettingsNavExport"
+                                    Height="34"
+                                    Margin="4,2,4,2"
+                                    Padding="11,0,11,0"
+                                    MinWidth="0"
+                                    MinHeight="0"
+                                    FontSize="13"
+                                    CornerRadius="5"
+                                    BorderThickness="0"
+                                    Background="Transparent"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Click="OnSettingsExportClick">
+                                <StackPanel Orientation="Horizontal" Spacing="11">
+                                    <FontIcon Glyph="&#xEDE1;" FontSize="15" Width="16"
+                                              Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <TextBlock x:Uid="SettingsNavExportLabel" Text="Export…" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <Grid Grid.Column="1">
+
+                    <!-- ============================================ Appearance -->
+                    <Grid x:Name="AppearancePane">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MinWidth="300" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Padding="18,14,18,18">
+                            <StackPanel Spacing="0" MaxWidth="520" HorizontalAlignment="Left">
+                                <TextBlock x:Uid="ThemeHeading"
+                                           Text="Theme"
+                                           Style="{StaticResource SettingsHeadingStyle}" />
+
+                                <TextBlock x:Uid="ThemeCaption"
+                                           Text="Six colors, a deck and a set of control defaults. Every control points at a slot number, so switching theme keeps the meaning of the colors."
+                                           Style="{StaticResource SettingsCaptionStyle}"
+                                           Margin="0,0,0,9" />
+
+                                <!-- Filled in code: a theme card is a painted miniature of its own
+                                     deck, because a row of swatches cannot say what a theme is. -->
+                                <Grid x:Name="ThemeGallery" HorizontalAlignment="Left" />
+
+                                <TextBlock x:Uid="ThemeColorsHeading"
+                                           Text="Colors"
+                                           Style="{StaticResource SettingsHeadingStyle}"
+                                           Margin="0,18,0,7" />
+
+                                <StackPanel x:Name="ThemeSlotList" Spacing="6" />
+
+                                <Border x:Name="ThemeContrastWarning"
+                                        Visibility="Collapsed"
+                                        CornerRadius="6"
+                                        Padding="10,8,11,9"
+                                        Margin="0,8,0,0"
+                                        BorderThickness="1"
+                                        Background="{ThemeResource SystemFillColorCautionBackgroundBrush}"
+                                        BorderBrush="{ThemeResource SystemFillColorCautionBrush}">
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <FontIcon Grid.Column="0" Glyph="&#xE7BA;" FontSize="13"
+                                                  VerticalAlignment="Top"
+                                                  Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                                        <TextBlock x:Name="ThemeContrastWarningText"
+                                                   Grid.Column="1"
+                                                   FontSize="11"
+                                                   LineHeight="17"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </Grid>
+                                </Border>
+
+                                <TextBlock x:Uid="ThemeOwnHeading"
+                                           Text="Your own themes"
+                                           Style="{StaticResource SettingsHeadingStyle}"
+                                           Margin="0,18,0,2" />
+
+                                <TextBlock x:Uid="ThemeOwnCaption"
+                                           Text="A theme is a small file. Save one and it shows up in the gallery for every layout on this PC."
+                                           Style="{StaticResource SettingsCaptionStyle}"
+                                           Margin="0,0,0,7" />
+
+                                <StackPanel Orientation="Horizontal" Spacing="7">
+                                    <Button x:Name="SaveThemeButton"
+                                            x:Uid="SaveThemeButton"
+                                            Style="{StaticResource EditorSmallButtonStyle}"
+                                            Click="OnSaveThemeClick">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xE74E;" FontSize="12" />
+                                            <TextBlock x:Uid="SaveThemeLabel" Text="Save these colors as a theme…" />
+                                        </StackPanel>
+                                    </Button>
+
+                                    <Button x:Name="ImportThemeButton"
+                                            x:Uid="ImportThemeButton"
+                                            Style="{StaticResource EditorSmallButtonStyle}"
+                                            Click="OnImportThemeClick">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xE8B7;" FontSize="12" />
+                                            <TextBlock x:Uid="ImportThemeLabel" Text="Import a theme…" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+
+                                <Border CornerRadius="6"
+                                        Padding="11,9,11,10"
+                                        Margin="0,12,0,0"
+                                        BorderThickness="1"
+                                        Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <FontIcon Grid.Column="0" Glyph="&#xE946;" FontSize="13"
+                                                  VerticalAlignment="Top"
+                                                  Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                        <TextBlock x:Uid="ThemeTravelsNote"
+                                                   Grid.Column="1"
+                                                   Text="The theme travels inside the layout file, so a layout you send to somebody looks the way you built it even if they have never seen your theme."
+                                                   FontSize="11"
+                                                   LineHeight="17"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- The preview and every number the theme is made of. -->
+                        <Border Grid.Column="1"
+                                Width="316"
+                                BorderThickness="1,0,0,0"
+                                BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,14,16,18">
+                                <StackPanel Spacing="0">
+                                    <TextBlock x:Uid="ThemePreviewHeading"
+                                               Text="Live preview"
+                                               Style="{StaticResource SettingsHeadingStyle}"
+                                               Margin="0,0,0,7" />
+
+                                    <Grid x:Name="ThemePreviewHost"
+                                          Height="236"
+                                          CornerRadius="8">
+                                        <Rectangle x:Name="ThemePreviewDeck" RadiusX="8" RadiusY="8" />
+                                        <Canvas x:Name="ThemePreviewCanvas" IsHitTestVisible="False" />
+                                        <Rectangle RadiusX="8" RadiusY="8" StrokeThickness="1"
+                                                   UseLayoutRounding="False"
+                                                   IsHitTestVisible="False"
+                                                   Stroke="{ThemeResource CardStrokeColorDefaultBrush}" />
+                                    </Grid>
+
+                                    <TextBlock x:Name="ThemeCautionText"
+                                               Visibility="Collapsed"
+                                               FontSize="11"
+                                               LineHeight="16"
+                                               TextWrapping="Wrap"
+                                               Margin="0,8,0,0"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                    <!-- Every property the theme has, grouped the way somebody
+                                         changing one would look for it. Built in code: the list
+                                         is long, the rows are all the same four shapes, and a
+                                         theme property that had no row here would be a property
+                                         nobody could reach. -->
+                                    <StackPanel x:Name="ThemePropertyPanel" Spacing="0" Margin="0,14,0,0" />
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+
+                    <!-- ====================================== Pages and layers -->
+                    <ScrollViewer x:Name="PagesPane"
+                                  Visibility="Collapsed"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Padding="18,14,18,18">
+                        <StackPanel Spacing="8" MaxWidth="520" HorizontalAlignment="Left">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
@@ -2304,79 +2611,148 @@
                                        Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                         </StackPanel>
                     </ScrollViewer>
-                </Border>
 
-                <!-- Devices -->
-                <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto" Padding="16,12,16,16">
-                    <StackPanel Spacing="8" MaxWidth="560" HorizontalAlignment="Left">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-
-                            <TextBlock x:Uid="LayoutSettingsDevicesHeader"
-                                       Grid.Column="0"
-                                       Text="Devices this layout uses"
-                                       FontSize="14"
-                                       FontWeight="SemiBold"
-                                       VerticalAlignment="Center" />
-
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                                <Button x:Name="SettingsLookAgainButton"
-                                        x:Uid="LayoutSettingsLookAgain"
-                                        Style="{StaticResource EditorSmallButtonStyle}"
-                                        Click="OnSettingsLookAgainClick">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <FontIcon Glyph="&#xE72C;" FontSize="12" />
-                                        <TextBlock x:Uid="LayoutSettingsLookAgainLabel" Text="Look again" />
-                                    </StackPanel>
-                                </Button>
-
-                                <Button x:Name="SettingsAddDeviceButton"
-                                        x:Uid="LayoutSettingsAddDevice"
-                                        Style="{StaticResource EditorSmallButtonStyle}"
-                                        Click="OnSettingsAddDeviceClick">
-                                    <StackPanel Orientation="Horizontal" Spacing="6">
-                                        <FontIcon Glyph="&#xE710;" FontSize="12" />
-                                        <TextBlock x:Uid="LayoutSettingsAddDeviceLabel" Text="Device" />
-                                    </StackPanel>
-                                </Button>
-                            </StackPanel>
-                        </Grid>
-
-                        <TextBlock x:Uid="LayoutSettingsDevicesCaption"
-                                   Text="Controls point at the name on the left, never at the hardware. Change the device here and every control that used it follows."
-                                   FontSize="11"
-                                   TextWrapping="Wrap"
-                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-
-                        <StackPanel x:Name="SettingsDeviceList" Spacing="7" />
-
-                        <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
-                                CornerRadius="6"
-                                Padding="12,10,12,11"
-                                Margin="0,8,0,0">
-                            <!-- A Grid, not a horizontal StackPanel: a stack hands its children
-                                 infinite width, so TextWrapping never takes effect in one. -->
-                            <Grid ColumnSpacing="10">
+                    <!-- ================================================ Outputs -->
+                    <ScrollViewer x:Name="OutputsPane"
+                                  Visibility="Collapsed"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Padding="18,14,18,18">
+                        <StackPanel Spacing="8" MaxWidth="560" HorizontalAlignment="Left">
+                            <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
 
-                                <FontIcon Grid.Column="0" Glyph="&#xE946;" FontSize="14" VerticalAlignment="Top"
-                                          Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                                <TextBlock x:Uid="LayoutSettingsConnectionNote"
-                                           Grid.Column="1"
-                                           Text="One connection is opened per device when the layout loads, shared by every control and every page, and closed when the layout closes. Group and channel travel in the message, so hundreds of controls on four groups of one device still cost exactly one connection."
-                                           FontSize="11"
-                                           TextWrapping="Wrap"
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                <TextBlock x:Uid="LayoutSettingsDevicesHeader"
+                                           Grid.Column="0"
+                                           Text="Devices this layout uses"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center" />
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                    <Button x:Name="SettingsLookAgainButton"
+                                            x:Uid="LayoutSettingsLookAgain"
+                                            Style="{StaticResource EditorSmallButtonStyle}"
+                                            Click="OnSettingsLookAgainClick">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xE72C;" FontSize="12" />
+                                            <TextBlock x:Uid="LayoutSettingsLookAgainLabel" Text="Look again" />
+                                        </StackPanel>
+                                    </Button>
+
+                                    <Button x:Name="SettingsAddDeviceButton"
+                                            x:Uid="LayoutSettingsAddDevice"
+                                            Style="{StaticResource EditorSmallButtonStyle}"
+                                            Click="OnSettingsAddDeviceClick">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xE710;" FontSize="12" />
+                                            <TextBlock x:Uid="LayoutSettingsAddDeviceLabel" Text="Device" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
                             </Grid>
-                        </Border>
-                    </StackPanel>
-                </ScrollViewer>
+
+                            <TextBlock x:Uid="LayoutSettingsDevicesCaption"
+                                       Text="Controls point at the name on the left, never at the hardware. Change the device here and every control that used it follows."
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                            <StackPanel x:Name="SettingsDeviceList" Spacing="7" />
+
+                            <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                    CornerRadius="6"
+                                    Padding="12,10,12,11"
+                                    Margin="0,8,0,0">
+                                <!-- A Grid, not a horizontal StackPanel: a stack hands its children
+                                     infinite width, so TextWrapping never takes effect in one. -->
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <FontIcon Grid.Column="0" Glyph="&#xE946;" FontSize="14" VerticalAlignment="Top"
+                                              Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                    <TextBlock x:Uid="LayoutSettingsConnectionNote"
+                                               Grid.Column="1"
+                                               Text="One connection is opened per device when the layout loads, shared by every control and every page, and closed when the layout closes. Group and channel travel in the message, so hundreds of controls on four groups of one device still cost exactly one connection."
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- =============================================== Behavior -->
+                    <ScrollViewer x:Name="SettingsBehaviorPane"
+                                  Visibility="Collapsed"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Padding="18,14,18,18">
+                        <StackPanel x:Name="SettingsBehaviorPanel" Spacing="0" MaxWidth="520" HorizontalAlignment="Left" />
+                    </ScrollViewer>
+
+                    <!-- =================================== Name and description -->
+                    <ScrollViewer x:Name="NamePane"
+                                  Visibility="Collapsed"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Padding="18,14,18,18">
+                        <StackPanel Spacing="0" MaxWidth="520" HorizontalAlignment="Left">
+                            <TextBlock x:Uid="SettingsNameHeading"
+                                       Text="Name and description"
+                                       Style="{StaticResource SettingsHeadingStyle}" />
+
+                            <TextBlock x:Uid="SettingsNameCaption"
+                                       Text="This is what the library shows on the card. The file keeps its own name on disk until you rename it."
+                                       Style="{StaticResource SettingsCaptionStyle}"
+                                       Margin="0,0,0,10" />
+
+                            <TextBox x:Name="SettingsNameBox"
+                                     x:Uid="SettingsNameBox"
+                                     Header="Name"
+                                     MaxLength="120"
+                                     TextChanged="OnSettingsNameChanged" />
+
+                            <TextBox x:Name="SettingsDescriptionBox"
+                                     x:Uid="SettingsDescriptionBox"
+                                     Header="Description"
+                                     Margin="0,12,0,0"
+                                     Height="110"
+                                     MaxLength="400"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     TextChanged="OnSettingsDescriptionChanged" />
+
+                            <TextBlock x:Name="SettingsFileText"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Margin="0,12,0,0"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- ==================================== Accessibility check -->
+                    <ScrollViewer x:Name="AccessibilityPane"
+                                  Visibility="Collapsed"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Padding="18,14,18,18">
+                        <StackPanel Spacing="0" MaxWidth="560" HorizontalAlignment="Left">
+                            <TextBlock x:Uid="SettingsAccessibilityHeading"
+                                       Text="Accessibility check"
+                                       Style="{StaticResource SettingsHeadingStyle}" />
+
+                            <TextBlock x:Uid="SettingsAccessibilityCaption"
+                                       Text="Contrast is measured, not guessed. Every slot is checked against the deck before the layout goes near a stage. Not every theme can pass everything, and that is a choice rather than a fault - high contrast is always one press away."
+                                       Style="{StaticResource SettingsCaptionStyle}"
+                                       Margin="0,0,0,10" />
+
+                            <StackPanel x:Name="AccessibilityList" Spacing="7" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
             </Grid>
         </Grid>
     </Grid>

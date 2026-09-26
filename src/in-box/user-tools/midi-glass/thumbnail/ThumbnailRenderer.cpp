@@ -226,8 +226,10 @@ namespace glass
 
             auto const hash = std::hash<std::wstring>{}(lowered);
 
+            // The version is part of the name, so a card drawn the old way is simply never
+            // found again and the library draws a new one. Version 2 is the real surface.
             std::filesystem::path file{ folder };
-            file /= std::format(L"{:016x}-{}.png", hash, imageWidth);
+            file /= std::format(L"{:016x}-{}-v{}.png", hash, imageWidth, ThumbnailCacheVersion);
 
             return file.wstring();
         }

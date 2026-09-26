@@ -440,12 +440,20 @@ void RuntimeSurfaceTests::AFaderCapCarriesTheHueWhenItIsNotTheHue()
     VERIFY_IS_TRUE(colors.ThumbLine.A > 0);
     VERIFY_IS_TRUE(colors.Thumb != colors.ThumbEnd);
 
-    // Bigwig's cap is the hue itself, so a line of the same color would be invisible.
-    auto const bigwig = ThemeNamed(L"Bigwig");
-    auto const orange = glass::ResolveControlColors(control, bigwig);
+    // A tonal theme's cap is the hue itself, so a line of the same color would be invisible.
+    auto const pigment = ThemeNamed(L"Pigment Light");
+    auto const solid = glass::ResolveControlColors(control, pigment);
 
-    VERIFY_ARE_EQUAL(glass::ThumbStyle::Hue, bigwig.Thumb);
-    VERIFY_ARE_EQUAL(uint8_t{ 0 }, orange.ThumbLine.A);
+    VERIFY_ARE_EQUAL(glass::ThumbStyle::Hue, pigment.Thumb);
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, solid.ThumbLine.A);
+
+    // Bigwig's cap is gray with a line of the control's color through it, like the desk it
+    // plays on.
+    auto const bigwig = ThemeNamed(L"Bigwig");
+    auto const gray = glass::ResolveControlColors(control, bigwig);
+
+    VERIFY_ARE_EQUAL(glass::ThumbStyle::Neutral, bigwig.Thumb);
+    VERIFY_IS_TRUE(gray.ThumbLine == bigwig.HueSlots[2]);
 }
 
 void RuntimeSurfaceTests::AFlatThemeAsksForAFlatValueBar()
@@ -457,12 +465,19 @@ void RuntimeSurfaceTests::AFlatThemeAsksForAFlatValueBar()
     auto const studio = glass::ResolveControlColors(control, ThemeNamed(L"Studio Dark"));
     VERIFY_IS_LESS_THAN(studio.PipeEnd.A, studio.Pipe.A);
 
-    for (auto const* name : { L"Pigment Light", L"Pigment Dark", L"Bigwig", L"High contrast", L"Bone" })
+    for (auto const* name : { L"Pigment Light", L"Pigment Dark", L"High contrast", L"Bone" })
     {
         auto const colors = glass::ResolveControlColors(control, ThemeNamed(name));
 
         VERIFY_ARE_EQUAL(colors.Pipe.A, colors.PipeEnd.A);
     }
+
+    // Bigwig's fill is brightest at the value and falls away below it, as the desk draws it,
+    // but it never fades out entirely the way a glass theme's does.
+    auto const bigwig = glass::ResolveControlColors(control, ThemeNamed(L"Bigwig"));
+
+    VERIFY_IS_LESS_THAN(bigwig.PipeEnd.A, bigwig.Pipe.A);
+    VERIFY_IS_GREATER_THAN(bigwig.PipeEnd.A, studio.PipeEnd.A);
 }
 
 void RuntimeSurfaceTests::ANamedPlateColorWins()
@@ -474,7 +489,7 @@ void RuntimeSurfaceTests::ANamedPlateColorWins()
 
     auto const colors = glass::ResolveControlColors(control, theme);
 
-    VERIFY_ARE_EQUAL(uint8_t{ 0x3A }, colors.Plate.R);
+    VERIFY_ARE_EQUAL(uint8_t{ 0x47 }, colors.Plate.R);
     VERIFY_ARE_EQUAL(uint8_t{ 255 }, colors.Plate.A);
 
     // and its rim is neutral, not the hue
@@ -503,7 +518,12 @@ void RuntimeSurfaceTests::ALiteralColorThatDoesNotParseFallsBackToTheSlot()
 
 void RuntimeSurfaceTests::TheLampRingFallsBackToASolidArcWhenSmall()
 {
-    auto const theme = ThemeNamed(L"Bigwig");
+    // No shipped theme draws a ring of lamps now, but a customer's can, so it is checked on a
+    // theme that asks for one.
+    auto theme = ThemeNamed(L"Studio Dark");
+
+    theme.ValueIndicator = glass::ValueIndicatorStyle::SegmentedLamps;
+    theme.MinimumLampRingSize = 48;
 
     // Measured at 36 px the lamps stop separating and the ring reads as a fine comb, so below the
     // theme's own floor a knob draws a solid arc instead.

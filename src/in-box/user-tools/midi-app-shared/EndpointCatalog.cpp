@@ -35,6 +35,101 @@ namespace midiapp
         {
             return SanitizeStoredString(std::wstring{ value });
         }
+
+        // Groups that already have a name keep it, so whichever block was offered first wins.
+        void ClaimGroupNames(
+            _Inout_ std::array<std::wstring, MaximumGroupCount>& names,
+            _In_ mdm2::MidiGroup const& firstGroup,
+            _In_ uint8_t groupCount,
+            _In_ std::wstring const& name) noexcept
+        {
+            if (firstGroup == nullptr || name.empty())
+            {
+                return;
+            }
+
+            auto const first = static_cast<size_t>(firstGroup.Index());
+            auto const last = std::min(first + groupCount, names.size());
+
+            for (auto i = first; i < last; i++)
+            {
+                if (names[i].empty())
+                {
+                    names[i] = name;
+                }
+            }
+        }
+
+        // Block directions are the device's point of view: a block output is a source for us.
+        void ReadGroupNames(
+            _In_ mdm2enum::MidiEndpointDeviceInformation const& device,
+            _Inout_ LiveEndpoint& endpoint) noexcept
+        {
+            try
+            {
+                // Active function blocks, then inactive ones, then group terminal blocks for the rest.
+                if (auto const functionBlocks = device.GetDeclaredFunctionBlocks())
+                {
+                    for (auto const active : { true, false })
+                    {
+                        for (auto const& block : functionBlocks)
+                        {
+                            if (block == nullptr || block.IsActive() != active)
+                            {
+                                continue;
+                            }
+
+                            auto const direction = block.Direction();
+                            auto const firstGroup = block.FirstGroup();
+                            auto const name = SafeString(block.Name());
+
+                            if (direction == mdm2enum::MidiFunctionBlockDirection::BlockOutput ||
+                                direction == mdm2enum::MidiFunctionBlockDirection::Bidirectional)
+                            {
+                                ClaimGroupNames(endpoint.SourceGroupNames, firstGroup, block.GroupCount(), name);
+                            }
+
+                            if (direction == mdm2enum::MidiFunctionBlockDirection::BlockInput ||
+                                direction == mdm2enum::MidiFunctionBlockDirection::Bidirectional)
+                            {
+                                ClaimGroupNames(endpoint.DestinationGroupNames, firstGroup, block.GroupCount(), name);
+                            }
+                        }
+                    }
+                }
+
+                if (auto const terminalBlocks = device.GetGroupTerminalBlocks())
+                {
+                    for (auto const& block : terminalBlocks)
+                    {
+                        if (block == nullptr)
+                        {
+                            continue;
+                        }
+
+                        auto const direction = block.Direction();
+                        auto const firstGroup = block.FirstGroup();
+                        auto const name = SafeString(block.Name());
+
+                        if (direction == mdm2enum::MidiGroupTerminalBlockDirection::BlockOutput ||
+                            direction == mdm2enum::MidiGroupTerminalBlockDirection::Bidirectional)
+                        {
+                            ClaimGroupNames(endpoint.SourceGroupNames, firstGroup, block.GroupCount(), name);
+                        }
+
+                        if (direction == mdm2enum::MidiGroupTerminalBlockDirection::BlockInput ||
+                            direction == mdm2enum::MidiGroupTerminalBlockDirection::Bidirectional)
+                        {
+                            ClaimGroupNames(endpoint.DestinationGroupNames, firstGroup, block.GroupCount(), name);
+                        }
+                    }
+                }
+            }
+            catch (...)
+            {
+                ReportEndpointError(L"Unable to read the group names of an endpoint.");
+            }
+        }
     }
 
     _Use_decl_annotations_
@@ -50,6 +145,21 @@ namespace midiapp
         return isSource
             ? SourcePortNames[static_cast<size_t>(groupIndex)]
             : DestinationPortNames[static_cast<size_t>(groupIndex)];
+    }
+
+    _Use_decl_annotations_
+    std::wstring const& LiveEndpoint::GroupName(int32_t groupIndex, bool isSource) const noexcept
+    {
+        static std::wstring const empty{};
+
+        if (groupIndex < 0 || groupIndex >= MaximumGroupCount)
+        {
+            return empty;
+        }
+
+        return isSource
+            ? SourceGroupNames[static_cast<size_t>(groupIndex)]
+            : DestinationGroupNames[static_cast<size_t>(groupIndex)];
     }
 
     int32_t LiveEndpoint::SourceGroupCount() const noexcept
@@ -269,8 +379,9 @@ namespace midiapp
                     endpoint.SourceGroups = directions.Sources;
                     endpoint.DestinationGroups = directions.Destinations;
 
-                    // The MIDI 1.0 port names are what the customer already sees everywhere
-                    // else, so they are the labels on the connection points.
+                    ReadGroupNames(device, endpoint);
+
+                    // The names these groups carry as MIDI 1.0 ports.
                     auto const sourcePorts = mdm2legacy::MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(
                         winrt::hstring{ endpoint.EndpointDeviceId },
                         mdm2enum::Midi1PortFlow::MidiMessageSource);

@@ -874,5 +874,15 @@
                 </Grid>
             </Grid>
         </Border>
+
+        <!-- Where a card's picture is drawn: the real surface, built far off to one side of the
+             window, captured and taken down again. It has no size, takes no input and is never
+             seen. -->
+        <Canvas x:Name="ThumbnailStage"
+                Width="0"
+                Height="0"
+                HorizontalAlignment="Left"
+                VerticalAlignment="Top"
+                IsHitTestVisible="False" />
     </Grid>
 </Window>

@@ -42,6 +42,11 @@ namespace glass
         comp::SpriteVisual Bloom{ nullptr };
         comp::DropShadow BloomShadow{ nullptr };
 
+        // Where that glow sits when nothing is happening. Zero on every theme whose plate can
+        // separate itself from its deck on its own; a floor rather than zero on the ones where
+        // the spill IS the separation.
+        float RestingGlow{ 0.0f };
+
         comp::ShapeVisual Shape{ nullptr };
 
         // Struck through when the device this control sends to is not here. Built once and
@@ -60,6 +65,20 @@ namespace glass
         comp::CompositionRoundedRectangleGeometry ThumbGeometry{ nullptr };
         comp::CompositionRoundedRectangleGeometry ThumbLineGeometry{ nullptr };
 
+        // Everything that rides the fader - the cap, its line and the shadow it casts - in one
+        // visual, so a value change moves one offset rather than three geometries. A shadow has
+        // to be cast by a visual of its own, which is why the cap is not simply more shapes.
+        comp::ContainerVisual Cap{ nullptr };
+
+        // A knob's face keeps its own shading under a finger, so touch is a wash laid over it
+        // rather than a different brush for the face. Null on every other kind.
+        comp::CompositionSpriteShape TouchOverlay{ nullptr };
+        comp::CompositionBrush TouchOverlayBrush{ nullptr };
+
+        // The gap cut into a grouping panel's frame for its name. Laid out with the label, which
+        // is the only thing that knows how wide the name came out.
+        comp::CompositionSpriteShape NotchShape{ nullptr };
+
         comp::CompositionSpriteShape PlateShape{ nullptr };
         comp::CompositionSpriteShape PipeShape{ nullptr };
 
@@ -70,8 +89,23 @@ namespace glass
         // so turning one on costs two property sets.
         comp::CompositionBrush PlateOffBrush{ nullptr };
         comp::CompositionBrush PlateOnBrush{ nullptr };
+
+        // What the plate is painted with while a finger is on it. Null on a theme that lifts a
+        // glow instead, which is every theme built out of glass.
+        comp::CompositionBrush PlateTouchBrush{ nullptr };
+
         comp::CompositionBrush RimOffBrush{ nullptr };
         comp::CompositionBrush RimOnBrush{ nullptr };
+
+        // The lamp a switch lights instead of filling its plate, on a theme that asks for one.
+        // Null everywhere else, which is every theme that says "on" by filling.
+        comp::CompositionSpriteShape LampShape{ nullptr };
+        comp::CompositionBrush LampOffBrush{ nullptr };
+        comp::CompositionBrush LampOnBrush{ nullptr };
+
+        // The rim under a finger. Never null where the control has a rim at all: a touch state
+        // carried by a glow alone is a touch state nobody sees on a light theme.
+        comp::CompositionBrush RimTouchBrush{ nullptr };
 
         bool IsSwitch{ false };
 
@@ -373,6 +407,17 @@ namespace glass
             _In_ Control const& control,
             _In_ Theme const& theme);
 
+        // The field of a control that shows something, sunk into its plate. Nothing on a theme
+        // that asks for no well.
+        void AppendWell(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ ControlColors const& colors,
+            _In_ float x,
+            _In_ float y,
+            _In_ float width,
+            _In_ float height);
+
         // The two axis field, for the XY pad and the joystick.
         void LayoutTwoAxis(
             _In_ comp::Compositor const& compositor,
@@ -439,6 +484,11 @@ namespace glass
 
         void BloomFor(_In_ size_t itemIndex, _In_ int64_t milliseconds) noexcept;
 
+        // Paints a control's plate for whichever state it is in: on wins over touched, and
+        // touched wins over at rest. One place, because two call sites deciding it separately is
+        // how a control ends up stuck looking held after a switch is turned off under a finger.
+        void ApplyPlateBrush(_In_ size_t itemIndex) noexcept;
+
         // Turns off every control whose lit time has run out. One timer for the whole page
         // rather than one per blink, because a busy page blinks a lot.
         void SweepFlashes() noexcept;
@@ -459,6 +509,33 @@ namespace glass
         comp::CompositionLinearGradientBrush SheenBrush(
             _In_ comp::Compositor const& compositor,
             _In_ ThemeColor const& color);
+
+        // The mirror of the sheen: the shadow color at the bottom, gone before the middle.
+        comp::CompositionLinearGradientBrush ShadeBrush(
+            _In_ comp::Compositor const& compositor,
+            _In_ ThemeColor const& color);
+
+        // The shadow inside something cut into the surface: strongest at its top edge and gone a
+        // few pixels down. The fade is a fraction of the recess's own height.
+        comp::CompositionLinearGradientBrush RecessBrush(
+            _In_ comp::Compositor const& compositor,
+            _In_ ThemeColor const& color,
+            _In_ float fade);
+
+        // A knob's face or cap, lit from above the middle and falling off to its edge.
+        comp::CompositionRadialGradientBrush DomeBrush(
+            _In_ comp::Compositor const& compositor,
+            _In_ ThemeColor const& lit,
+            _In_ ThemeColor const& edge);
+
+        // A meter's three zones, mapped to the TRACK rather than to the bar, so the boundaries
+        // stay where the marks are as the bar grows past them.
+        comp::CompositionLinearGradientBrush MeterBrush(
+            _In_ comp::Compositor const& compositor,
+            _In_ ControlColors const& colors,
+            _In_ float trackOrigin,
+            _In_ float trackLength,
+            _In_ bool vertical);
 
         // A brush whose alpha is the shape of a control, for a drop shadow to be cast through.
         // Without one, a shadow is the visual's rectangle, which is how a knob ended up with a
@@ -546,6 +623,11 @@ namespace glass
         std::vector<double> m_labelBoxWidths{};
         std::vector<double> m_labelBoxHeights{};
 
+        // A name inside a switch, in the ink that reads on the plate at rest and on the plate
+        // lit. Null for every label that does not sit on a switch, which keeps its one ink.
+        std::vector<media::Brush> m_labelRestInks{};
+        std::vector<media::Brush> m_labelOnInks{};
+
         // The page's background picture, behind everything, hit test invisible.
         xaml::FrameworkElement m_background{ nullptr };
 
@@ -557,6 +639,7 @@ namespace glass
         // what keeps a theme swap a handful of objects rather than a walk of two hundred.
         std::unordered_map<uint32_t, comp::CompositionColorBrush> m_brushes{};
         std::unordered_map<uint64_t, comp::CompositionLinearGradientBrush> m_gradients{};
+        std::unordered_map<uint64_t, comp::CompositionRadialGradientBrush> m_domes{};
 
         // Shadow masks, and the offscreen visuals they are rendered from, which have to stay
         // alive for as long as the brush does.
@@ -564,7 +647,16 @@ namespace glass
         std::vector<comp::Visual> m_maskSources{};
 
         ThemeColor m_deck{};
+
+        // How tall the page is, so a notch in a panel's frame can be filled with the deck color
+        // at that height rather than the color at the top of the page.
+        double m_pageHeight{ 0.0 };
+
         bool m_reducedMotion{ false };
+
+        // How long a control stays lit when nothing else has said. The theme's own number where
+        // it named one, because persistence belongs to the phosphor rather than to a binding.
+        int64_t m_decayMilliseconds{ 220 };
 
         // Where the layout file is, so a control's picture resolves against its own folder.
         std::wstring m_layoutFilePath{};

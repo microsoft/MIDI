@@ -61,7 +61,13 @@ The plate is worked out from the theme rather than stored per control:
 
 **One brush per distinct color for the whole page.** A control never owns a brush. That is what keeps a theme swap a handful of objects rather than a walk of two hundred, and it is the trap MIDI Patchbay hit — creating a brush per control is a coding mistake, not a property of the approach.
 
-**A label's ink is chosen by measuring the background**, not by assuming the theme is dark. A theme with a mid grey deck gets whichever of the two candidates wins.
+**A label's ink is chosen by measuring the background**, not by assuming the theme is dark. A theme with a mid gray deck gets whichever of the two candidates wins. A name printed on a switch is measured against the switch's plate at rest and again lit, and changes ink when the switch does, because a lit plate can be the hue outright.
+
+**A knob's arc hangs outside its face.** The plate of a knob is only the face in the middle; the arc runs round it two pixels clear, at the edge of the control, or further in when the theme prints a ring of marks round every knob. A theme can give the face its own lit-from-above colors and a small cap in the middle.
+
+**A shadow is the exact shape of what casts it.** Every mask is drawn at the control's own size. A shared nine-grid mask per corner radius looked cheaper and came out as a small rectangle in the middle of each side.
+
+**A switch never shows a touch wash.** It says it is held by being on. A toggle turned off under a finger used to take the wash until the finger came up, which read as the switch flashing on as it went off.
 
 **The lamp ring falls back to a solid arc below the theme's own size floor.** Measured: at 36 px the lamps stop separating and the ring reads as a fine comb.
 

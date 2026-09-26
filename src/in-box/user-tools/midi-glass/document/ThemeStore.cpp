@@ -46,7 +46,9 @@ namespace glass
         constexpr wchar_t KeyGlowStrength[] = L"glowStrength";
         constexpr wchar_t KeyLabels[] = L"labels";
         constexpr wchar_t KeyFillAtRest[] = L"fillAtRest";
+        constexpr wchar_t KeyTouchFill[] = L"touchFillPercent";
         constexpr wchar_t KeyTrackColor[] = L"trackColor";
+        constexpr wchar_t KeyInkColor[] = L"inkColor";
         constexpr wchar_t KeyPlateColor[] = L"plateColor";
         constexpr wchar_t KeyRim[] = L"rim";
         constexpr wchar_t KeyNeutralRim[] = L"neutralRimColor";
@@ -64,6 +66,55 @@ namespace glass
         constexpr wchar_t KeyThumb[] = L"thumb";
         constexpr wchar_t KeyThumbColor[] = L"thumbColor";
         constexpr wchar_t KeyThumbEnd[] = L"thumbEndColor";
+        constexpr wchar_t KeyBloomColor[] = L"bloomColor";
+        constexpr wchar_t KeyRestingGlow[] = L"restingGlowPercent";
+        constexpr wchar_t KeyPersistence[] = L"persistenceMilliseconds";
+        constexpr wchar_t KeyPlateSheenColor[] = L"plateSheenColor";
+        constexpr wchar_t KeyPlateEnd[] = L"plateEndColor";
+        constexpr wchar_t KeyArcTrack[] = L"arcTrackColor";
+        constexpr wchar_t KeyValueFadesToLight[] = L"valueFadesToLight";
+        constexpr wchar_t KeyMeterSlots[] = L"meterSlots";
+        constexpr wchar_t KeyOverlay[] = L"deckOverlay";
+        constexpr wchar_t KeyScanLinePitch[] = L"scanLinePitch";
+        constexpr wchar_t KeyScanLineStrength[] = L"scanLineStrength";
+        constexpr wchar_t KeyScanLineColor[] = L"scanLineColor";
+        constexpr wchar_t KeyVignettePercent[] = L"vignettePercent";
+        constexpr wchar_t KeyVignetteColor[] = L"vignetteColor";
+        constexpr wchar_t KeyFaceplatePercent[] = L"faceplateSheenPercent";
+        constexpr wchar_t KeyFaceplateColor[] = L"faceplateSheenColor";
+        constexpr wchar_t KeyGrainPercent[] = L"grainPercent";
+        constexpr wchar_t KeyGrainColor[] = L"grainColor";
+        constexpr wchar_t KeySwitchFillAtRest[] = L"switchFillAtRest";
+        constexpr wchar_t KeyFillWhenOn[] = L"fillWhenOnPercent";
+        constexpr wchar_t KeyPointerColor[] = L"pointerColor";
+        constexpr wchar_t KeyCapLineColor[] = L"capLineColor";
+        constexpr wchar_t KeyNeutralColor[] = L"neutralColor";
+        constexpr wchar_t KeySectionHeader[] = L"sectionHeader";
+        constexpr wchar_t KeySectionNameInHue[] = L"sectionNameInHue";
+        constexpr wchar_t KeyPanelFill[] = L"panelFill";
+        constexpr wchar_t KeyPanelColor[] = L"panelColor";
+        constexpr wchar_t KeyPanelEnd[] = L"panelEndColor";
+        constexpr wchar_t KeyPanelOutline[] = L"panelOutlineColor";
+        constexpr wchar_t KeyKnobFace[] = L"knobFaceColor";
+        constexpr wchar_t KeyKnobFaceEnd[] = L"knobFaceEndColor";
+        constexpr wchar_t KeyKnobCap[] = L"knobCapColor";
+        constexpr wchar_t KeyKnobCapEnd[] = L"knobCapEndColor";
+        constexpr wchar_t KeyKnobCapSize[] = L"knobCapSizePercent";
+        constexpr wchar_t KeyKnobTicks[] = L"knobTickCount";
+        constexpr wchar_t KeyNamesInsideSwitches[] = L"namesInsideSwitches";
+        constexpr wchar_t KeyOnLift[] = L"onLiftPercent";
+        constexpr wchar_t KeyLampColor[] = L"lampColor";
+        constexpr wchar_t KeyPlateShade[] = L"plateShadePercent";
+        constexpr wchar_t KeyPlateHighlight[] = L"plateHighlightPercent";
+        constexpr wchar_t KeyFaderPlate[] = L"faderPlate";
+        constexpr wchar_t KeyFaderFill[] = L"faderFillPercent";
+        constexpr wchar_t KeyValueColor[] = L"valueColor";
+        constexpr wchar_t KeyRecessShade[] = L"recessShadePercent";
+        constexpr wchar_t KeyWellColor[] = L"wellColor";
+        constexpr wchar_t KeyThumbShadow[] = L"thumbShadowPercent";
+        constexpr wchar_t KeyCapLineWide[] = L"capLineWide";
+        constexpr wchar_t KeyKeyWhite[] = L"keyWhiteColor";
+        constexpr wchar_t KeyKeyBlack[] = L"keyBlackColor";
 
         template <typename TEnum>
         struct EnumName
@@ -84,6 +135,28 @@ namespace glass
             { LabelPlacement::Inside, L"inside" },
             { LabelPlacement::Below, L"below" },
             { LabelPlacement::None, L"none" },
+            { LabelPlacement::Above, L"above" },
+        };
+
+        constexpr EnumName<SectionHeaderStyle> SectionHeaderNames[]
+        {
+            { SectionHeaderStyle::Caption, L"caption" },
+            { SectionHeaderStyle::FilledBar, L"filledBar" },
+            { SectionHeaderStyle::Notched, L"notched" },
+        };
+
+        constexpr EnumName<PanelFillStyle> PanelFillNames[]
+        {
+            { PanelFillStyle::Plate, L"plate" },
+            { PanelFillStyle::Color, L"color" },
+            { PanelFillStyle::None, L"none" },
+        };
+
+        constexpr EnumName<FaderPlateStyle> FaderPlateNames[]
+        {
+            { FaderPlateStyle::Full, L"full" },
+            { FaderPlateStyle::Strip, L"strip" },
+            { FaderPlateStyle::None, L"none" },
         };
 
         constexpr EnumName<RimSource> RimNames[]
@@ -223,6 +296,59 @@ namespace glass
 
             return TryParseColor(ReadString(object, key), parsed) ? parsed : fallback;
         }
+
+        bool ReadBoolean(
+            _In_ mjson::JsonObject const& object,
+            _In_ std::wstring_view key,
+            _In_ bool fallback) noexcept
+        {
+            try
+            {
+                winrt::hstring const name{ key };
+
+                if (!object.HasKey(name))
+                {
+                    return fallback;
+                }
+
+                auto const value = object.Lookup(name);
+
+                return (value != nullptr && value.ValueType() == mjson::JsonValueType::Boolean)
+                    ? value.GetBoolean()
+                    : fallback;
+            }
+            catch (...)
+            {
+                return fallback;
+            }
+        }
+
+        // A child object, or null when the file does not have one. Every nested block in a theme
+        // file is optional, so a theme written before the block existed still loads.
+        mjson::JsonObject ReadObject(
+            _In_ mjson::JsonObject const& root,
+            _In_ std::wstring_view key) noexcept
+        {
+            try
+            {
+                winrt::hstring const name{ key };
+
+                if (!root.HasKey(name))
+                {
+                    return nullptr;
+                }
+
+                auto const value = root.Lookup(name);
+
+                return (value != nullptr && value.ValueType() == mjson::JsonValueType::Object)
+                    ? value.GetObject()
+                    : nullptr;
+            }
+            catch (...)
+            {
+                return nullptr;
+            }
+        }
     }
 
     _Use_decl_annotations_
@@ -296,38 +422,20 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    ThemeReadResult ReadThemeFromJson(std::wstring_view json) noexcept
+    Theme ReadThemeObject(mjson::JsonObject const& object) noexcept
     {
-        ThemeReadResult result{};
+        Theme theme{};
 
         try
         {
-            if (json.empty())
+            if (object == nullptr)
             {
-                result.Detail = L"The file is empty.";
-                return result;
+                return BuiltInThemes()[0];
             }
 
-            mjson::JsonObject root{ nullptr };
-
-            if (!mjson::JsonObject::TryParse(winrt::hstring{ json }, root) || root == nullptr)
-            {
-                result.Detail = L"The file is not valid JSON.";
-                return result;
-            }
-
-            auto& theme = result.Value;
-
-            auto const version = static_cast<uint32_t>(
-                ReadNumber(root, KeyFileVersion, ThemeFileVersion, 1, 0x7FFFFFFF));
-
-            result.IsFromNewerVersion = version > ThemeFileVersion;
+            auto const& root = object;
 
             theme.Name = ReadString(root, KeyName);
-
-            // A theme read from a file is never built in, whatever the file claims. Otherwise a
-            // shared file could make itself unoverwritable on somebody else's PC.
-            theme.IsBuiltIn = false;
 
             // Starting from Studio Dark means a half written theme file still produces something
             // usable rather than six black slots on a black deck.
@@ -407,7 +515,10 @@ namespace glass
             theme.GlowStrength = static_cast<int32_t>(ReadNumber(root, KeyGlowStrength, base.GlowStrength, 0, 100));
             theme.Labels = ValueOf(LabelNames, ReadString(root, KeyLabels), base.Labels);
             theme.FillAtRest = ReadNumber(root, KeyFillAtRest, base.FillAtRest, 0.0, 1.0);
+            theme.TouchFillPercent = static_cast<int32_t>(
+                ReadNumber(root, KeyTouchFill, base.TouchFillPercent, 0, 100));
             theme.TrackColor = ReadColor(root, KeyTrackColor, base.TrackColor);
+            theme.InkColor = ReadColor(root, KeyInkColor, base.InkColor);
             theme.PlateColor = ReadColor(root, KeyPlateColor, base.PlateColor);
             theme.Rim = ValueOf(RimNames, ReadString(root, KeyRim), base.Rim);
             theme.NeutralRimColor = ReadColor(root, KeyNeutralRim, base.NeutralRimColor);
@@ -433,6 +544,166 @@ namespace glass
             theme.ThumbEndColor = ReadColor(root, KeyThumbEnd, base.ThumbEndColor);
             theme.GlassColor = ReadColor(root, KeyGlassColor, base.GlassColor);
 
+            theme.BloomColor = ReadColor(root, KeyBloomColor, base.BloomColor);
+            theme.RestingGlowPercent = static_cast<int32_t>(
+                ReadNumber(root, KeyRestingGlow, base.RestingGlowPercent, 0, 100));
+            theme.PersistenceMilliseconds = static_cast<int32_t>(
+                ReadNumber(root, KeyPersistence, base.PersistenceMilliseconds, 0, 10000));
+            theme.PlateSheenColor = ReadColor(root, KeyPlateSheenColor, base.PlateSheenColor);
+            theme.PlateEndColor = ReadColor(root, KeyPlateEnd, base.PlateEndColor);
+            theme.ArcTrackColor = ReadColor(root, KeyArcTrack, base.ArcTrackColor);
+            theme.ValueFadesToLight = ReadBoolean(root, KeyValueFadesToLight, base.ValueFadesToLight);
+
+            // Below zero means follow FillAtRest, so the bound starts there rather than at zero.
+            theme.SwitchFillAtRest = ReadNumber(root, KeySwitchFillAtRest, base.SwitchFillAtRest, -1.0, 1.0);
+            theme.FillWhenOnPercent = static_cast<int32_t>(
+                ReadNumber(root, KeyFillWhenOn, base.FillWhenOnPercent, 0, 100));
+            theme.PointerColor = ReadColor(root, KeyPointerColor, base.PointerColor);
+            theme.CapLineColor = ReadColor(root, KeyCapLineColor, base.CapLineColor);
+            theme.NeutralColor = ReadColor(root, KeyNeutralColor, base.NeutralColor);
+            theme.SectionHeader = ValueOf(
+                SectionHeaderNames, ReadString(root, KeySectionHeader), base.SectionHeader);
+
+            // Everything the hardware panel comps asked for. Each one is optional, and a file
+            // written before it existed gets what the theme did before it existed.
+            theme.SectionNameInHue = ReadBoolean(root, KeySectionNameInHue, base.SectionNameInHue);
+            theme.PanelFill = ValueOf(PanelFillNames, ReadString(root, KeyPanelFill), base.PanelFill);
+            theme.PanelColor = ReadColor(root, KeyPanelColor, base.PanelColor);
+            theme.PanelEndColor = ReadColor(root, KeyPanelEnd, base.PanelEndColor);
+            theme.PanelOutlineColor = ReadColor(root, KeyPanelOutline, base.PanelOutlineColor);
+            theme.KnobFaceColor = ReadColor(root, KeyKnobFace, base.KnobFaceColor);
+            theme.KnobFaceEndColor = ReadColor(root, KeyKnobFaceEnd, base.KnobFaceEndColor);
+            theme.KnobCapColor = ReadColor(root, KeyKnobCap, base.KnobCapColor);
+            theme.KnobCapEndColor = ReadColor(root, KeyKnobCapEnd, base.KnobCapEndColor);
+            theme.KnobCapSizePercent = static_cast<int32_t>(
+                ReadNumber(root, KeyKnobCapSize, base.KnobCapSizePercent, 5, 100));
+            theme.KnobTickCount = static_cast<int32_t>(
+                ReadNumber(root, KeyKnobTicks, base.KnobTickCount, 0, 64));
+            theme.NamesInsideSwitches = ReadBoolean(root, KeyNamesInsideSwitches, base.NamesInsideSwitches);
+            theme.OnLiftPercent = static_cast<int32_t>(
+                ReadNumber(root, KeyOnLift, base.OnLiftPercent, -100, 100));
+            theme.LampColor = ReadColor(root, KeyLampColor, base.LampColor);
+            theme.PlateShadePercent = static_cast<int32_t>(
+                ReadNumber(root, KeyPlateShade, base.PlateShadePercent, 0, 100));
+            theme.PlateHighlightPercent = static_cast<int32_t>(
+                ReadNumber(root, KeyPlateHighlight, base.PlateHighlightPercent, 0, 100));
+            theme.FaderPlate = ValueOf(FaderPlateNames, ReadString(root, KeyFaderPlate), base.FaderPlate);
+            theme.FaderFillPercent = static_cast<int32_t>(
+                ReadNumber(root, KeyFaderFill, base.FaderFillPercent, 0, 100));
+            theme.ValueColor = ReadColor(root, KeyValueColor, base.ValueColor);
+            theme.RecessShadePercent = static_cast<int32_t>(
+                ReadNumber(root, KeyRecessShade, base.RecessShadePercent, 0, 100));
+            theme.WellColor = ReadColor(root, KeyWellColor, base.WellColor);
+            theme.ThumbShadowPercent = static_cast<int32_t>(
+                ReadNumber(root, KeyThumbShadow, base.ThumbShadowPercent, 0, 100));
+            theme.CapLineWide = ReadBoolean(root, KeyCapLineWide, base.CapLineWide);
+            theme.KeyWhiteColor = ReadColor(root, KeyKeyWhite, base.KeyWhiteColor);
+            theme.KeyBlackColor = ReadColor(root, KeyKeyBlack, base.KeyBlackColor);
+
+            // A resource key rather than a sentence, so it is translated like everything else. A
+            // theme from a stranger has no business naming one of ours, so it is dropped.
+            theme.CautionResourceKey.clear();
+
+            theme.MeterSlots = base.MeterSlots;
+
+            if (auto const zones = [&root]() -> mjson::JsonArray
+                {
+                    winrt::hstring const name{ KeyMeterSlots };
+
+                    if (!root.HasKey(name))
+                    {
+                        return nullptr;
+                    }
+
+                    auto const value = root.Lookup(name);
+
+                    return (value != nullptr && value.ValueType() == mjson::JsonValueType::Array)
+                        ? value.GetArray()
+                        : nullptr;
+                }())
+            {
+                for (uint32_t i = 0; i < zones.Size() && i < MeterZoneCount; ++i)
+                {
+                    auto const value = zones.GetAt(i);
+
+                    if (value == nullptr || value.ValueType() != mjson::JsonValueType::Number)
+                    {
+                        continue;
+                    }
+
+                    auto const slot = static_cast<int32_t>(value.GetNumber());
+
+                    if (slot >= 0 && slot < ThemeHueSlotCount)
+                    {
+                        theme.MeterSlots[i] = slot;
+                    }
+                }
+            }
+
+            theme.Overlay = base.Overlay;
+
+            if (auto const overlay = ReadObject(root, KeyOverlay))
+            {
+                theme.Overlay.ScanLinePitch = static_cast<int32_t>(
+                    ReadNumber(overlay, KeyScanLinePitch, base.Overlay.ScanLinePitch, 0, 64));
+                theme.Overlay.ScanLineStrength = static_cast<int32_t>(
+                    ReadNumber(overlay, KeyScanLineStrength, base.Overlay.ScanLineStrength, 0, 100));
+                theme.Overlay.ScanLineColor =
+                    ReadColor(overlay, KeyScanLineColor, base.Overlay.ScanLineColor);
+                theme.Overlay.VignettePercent = static_cast<int32_t>(
+                    ReadNumber(overlay, KeyVignettePercent, base.Overlay.VignettePercent, 0, 100));
+                theme.Overlay.VignetteColor =
+                    ReadColor(overlay, KeyVignetteColor, base.Overlay.VignetteColor);
+                theme.Overlay.FaceplateSheenPercent = static_cast<int32_t>(
+                    ReadNumber(overlay, KeyFaceplatePercent, base.Overlay.FaceplateSheenPercent, 0, 100));
+                theme.Overlay.FaceplateSheenColor =
+                    ReadColor(overlay, KeyFaceplateColor, base.Overlay.FaceplateSheenColor);
+                theme.Overlay.GrainPercent = static_cast<int32_t>(
+                    ReadNumber(overlay, KeyGrainPercent, base.Overlay.GrainPercent, 0, 100));
+                theme.Overlay.GrainColor =
+                    ReadColor(overlay, KeyGrainColor, base.Overlay.GrainColor);
+            }
+        }
+        catch (...)
+        {
+            // A half read theme is still a usable one, because every field started at Studio
+            // Dark's. Two colors set and the rest of the file garbage still gives a legible
+            // surface rather than six black slots on a black deck.
+        }
+
+        // A theme read from a file is never built in, whatever the file claims. Otherwise a
+        // shared file could make itself unoverwritable on somebody else's PC.
+        theme.IsBuiltIn = false;
+
+        return theme;
+    }
+
+    _Use_decl_annotations_
+    ThemeReadResult ReadThemeFromJson(std::wstring_view json) noexcept
+    {
+        ThemeReadResult result{};
+
+        try
+        {
+            if (json.empty())
+            {
+                result.Detail = L"The file is empty.";
+                return result;
+            }
+
+            mjson::JsonObject root{ nullptr };
+
+            if (!mjson::JsonObject::TryParse(winrt::hstring{ json }, root) || root == nullptr)
+            {
+                result.Detail = L"The file is not valid JSON.";
+                return result;
+            }
+
+            auto const version = static_cast<uint32_t>(
+                ReadNumber(root, KeyFileVersion, ThemeFileVersion, 1, 0x7FFFFFFF));
+
+            result.IsFromNewerVersion = version > ThemeFileVersion;
+            result.Value = ReadThemeObject(root);
             result.Succeeded = true;
         }
         catch (...)
@@ -445,16 +716,10 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    std::wstring WriteThemeToJson(Theme const& theme) noexcept
+    void WriteThemeBody(JsonTextWriter& writer, Theme const& theme) noexcept
     {
         try
         {
-            JsonTextWriter writer{};
-
-            writer.BeginObject();
-
-            writer.Write(KeyComment, CommentText);
-            writer.Write(KeyFileVersion, static_cast<int64_t>(ThemeFileVersion));
             writer.Write(KeyName, theme.Name);
 
             writer.BeginArray(KeyHueSlots);
@@ -478,7 +743,9 @@ namespace glass
             writer.Write(KeyGlowStrength, static_cast<int64_t>(theme.GlowStrength));
             writer.Write(KeyLabels, NameOf(LabelNames, theme.Labels));
             writer.Write(KeyFillAtRest, theme.FillAtRest);
+            writer.Write(KeyTouchFill, static_cast<int64_t>(theme.TouchFillPercent));
             writer.Write(KeyTrackColor, ColorToText(theme.TrackColor));
+            writer.Write(KeyInkColor, ColorToText(theme.InkColor));
             writer.Write(KeyPlateColor, ColorToText(theme.PlateColor));
             writer.Write(KeyRim, NameOf(RimNames, theme.Rim));
             writer.Write(KeyNeutralRim, ColorToText(theme.NeutralRimColor));
@@ -497,6 +764,84 @@ namespace glass
             writer.Write(KeyThumbColor, ColorToText(theme.ThumbColor));
             writer.Write(KeyThumbEnd, ColorToText(theme.ThumbEndColor));
             writer.Write(KeyGlassColor, ColorToText(theme.GlassColor));
+            writer.Write(KeyBloomColor, ColorToText(theme.BloomColor));
+            writer.Write(KeyRestingGlow, static_cast<int64_t>(theme.RestingGlowPercent));
+            writer.Write(KeyPersistence, static_cast<int64_t>(theme.PersistenceMilliseconds));
+            writer.Write(KeyPlateSheenColor, ColorToText(theme.PlateSheenColor));
+            writer.Write(KeyPlateEnd, ColorToText(theme.PlateEndColor));
+            writer.Write(KeyArcTrack, ColorToText(theme.ArcTrackColor));
+            writer.Write(KeyValueFadesToLight, theme.ValueFadesToLight);
+            writer.Write(KeySwitchFillAtRest, theme.SwitchFillAtRest);
+            writer.Write(KeyFillWhenOn, static_cast<int64_t>(theme.FillWhenOnPercent));
+            writer.Write(KeyPointerColor, ColorToText(theme.PointerColor));
+            writer.Write(KeyCapLineColor, ColorToText(theme.CapLineColor));
+            writer.Write(KeyNeutralColor, ColorToText(theme.NeutralColor));
+            writer.Write(KeySectionHeader, NameOf(SectionHeaderNames, theme.SectionHeader));
+            writer.Write(KeySectionNameInHue, theme.SectionNameInHue);
+            writer.Write(KeyPanelFill, NameOf(PanelFillNames, theme.PanelFill));
+            writer.Write(KeyPanelColor, ColorToText(theme.PanelColor));
+            writer.Write(KeyPanelEnd, ColorToText(theme.PanelEndColor));
+            writer.Write(KeyPanelOutline, ColorToText(theme.PanelOutlineColor));
+            writer.Write(KeyKnobFace, ColorToText(theme.KnobFaceColor));
+            writer.Write(KeyKnobFaceEnd, ColorToText(theme.KnobFaceEndColor));
+            writer.Write(KeyKnobCap, ColorToText(theme.KnobCapColor));
+            writer.Write(KeyKnobCapEnd, ColorToText(theme.KnobCapEndColor));
+            writer.Write(KeyKnobCapSize, static_cast<int64_t>(theme.KnobCapSizePercent));
+            writer.Write(KeyKnobTicks, static_cast<int64_t>(theme.KnobTickCount));
+            writer.Write(KeyNamesInsideSwitches, theme.NamesInsideSwitches);
+            writer.Write(KeyOnLift, static_cast<int64_t>(theme.OnLiftPercent));
+            writer.Write(KeyLampColor, ColorToText(theme.LampColor));
+            writer.Write(KeyPlateShade, static_cast<int64_t>(theme.PlateShadePercent));
+            writer.Write(KeyPlateHighlight, static_cast<int64_t>(theme.PlateHighlightPercent));
+            writer.Write(KeyFaderPlate, NameOf(FaderPlateNames, theme.FaderPlate));
+            writer.Write(KeyFaderFill, static_cast<int64_t>(theme.FaderFillPercent));
+            writer.Write(KeyValueColor, ColorToText(theme.ValueColor));
+            writer.Write(KeyRecessShade, static_cast<int64_t>(theme.RecessShadePercent));
+            writer.Write(KeyWellColor, ColorToText(theme.WellColor));
+            writer.Write(KeyThumbShadow, static_cast<int64_t>(theme.ThumbShadowPercent));
+            writer.Write(KeyCapLineWide, theme.CapLineWide);
+            writer.Write(KeyKeyWhite, ColorToText(theme.KeyWhiteColor));
+            writer.Write(KeyKeyBlack, ColorToText(theme.KeyBlackColor));
+
+            writer.BeginArray(KeyMeterSlots);
+
+            for (auto const slot : theme.MeterSlots)
+            {
+                writer.WriteArrayValue(static_cast<int64_t>(slot));
+            }
+
+            writer.EndArray();
+
+            writer.BeginObject(KeyOverlay);
+            writer.Write(KeyScanLinePitch, static_cast<int64_t>(theme.Overlay.ScanLinePitch));
+            writer.Write(KeyScanLineStrength, static_cast<int64_t>(theme.Overlay.ScanLineStrength));
+            writer.Write(KeyScanLineColor, ColorToText(theme.Overlay.ScanLineColor));
+            writer.Write(KeyVignettePercent, static_cast<int64_t>(theme.Overlay.VignettePercent));
+            writer.Write(KeyVignetteColor, ColorToText(theme.Overlay.VignetteColor));
+            writer.Write(KeyFaceplatePercent, static_cast<int64_t>(theme.Overlay.FaceplateSheenPercent));
+            writer.Write(KeyFaceplateColor, ColorToText(theme.Overlay.FaceplateSheenColor));
+            writer.Write(KeyGrainPercent, static_cast<int64_t>(theme.Overlay.GrainPercent));
+            writer.Write(KeyGrainColor, ColorToText(theme.Overlay.GrainColor));
+            writer.EndObject();
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    std::wstring WriteThemeToJson(Theme const& theme) noexcept
+    {
+        try
+        {
+            JsonTextWriter writer{};
+
+            writer.BeginObject();
+
+            writer.Write(KeyComment, CommentText);
+            writer.Write(KeyFileVersion, static_cast<int64_t>(ThemeFileVersion));
+
+            WriteThemeBody(writer, theme);
 
             writer.EndObject();
 
@@ -598,7 +943,7 @@ namespace glass
             }
 
             // A customer who edited a shipped theme and then wanted it back would have nothing to
-            // go back to, so the shipped nine are never written over.
+            // go back to, so the ones that ship are never written over.
             if (FindBuiltInTheme(theme.Name) != nullptr)
             {
                 return false;
@@ -750,5 +1095,39 @@ namespace glass
         }
 
         return themes;
+    }
+
+    _Use_decl_annotations_
+    Theme ResolveDocumentTheme(LayoutDocument const& document) noexcept
+    {
+        // What the layout carries wins. It was edited on purpose, and it is what made the
+        // layout worth sending to somebody.
+        if (document.HasOwnTheme)
+        {
+            return document.OwnTheme;
+        }
+
+        try
+        {
+            auto const themes = AllThemes();
+
+            for (auto const& theme : themes)
+            {
+                if (theme.Name == document.ThemeName)
+                {
+                    return theme;
+                }
+            }
+
+            if (!themes.empty())
+            {
+                return themes[0];
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return BuiltInThemes()[0];
     }
 }

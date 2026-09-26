@@ -48,7 +48,7 @@ namespace glass
     ThemeColor ReadableInk(ThemeColor const& background) noexcept
     {
         // The two candidates a surface actually wants, measured against the background rather
-        // than picked from the theme's name. A theme with a mid grey deck gets whichever wins.
+        // than picked from the theme's name. A theme with a mid gray deck gets whichever wins.
         constexpr ThemeColor light{ 0xF2, 0xF3, 0xF5, 255 };
         constexpr ThemeColor dark{ 0x10, 0x11, 0x14, 255 };
 
@@ -61,6 +61,13 @@ namespace glass
         if (control.HueSlot >= 0 && control.HueSlot < ThemeHueSlotCount)
         {
             return theme.HueSlots[static_cast<size_t>(control.HueSlot)];
+        }
+
+        // The one un-hued color. A theme without one falls back to the first hue rather than to
+        // nothing, because an invisible control is worse than a wrongly colored one.
+        if (control.HueSlot == NeutralSlot && HasNeutralColor(theme))
+        {
+            return theme.NeutralColor;
         }
 
         if (control.HueSlot == LiteralHue && !control.LiteralColor.empty())
@@ -77,25 +84,77 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    bool IsSwitchControl(ControlKind kind) noexcept
+    {
+        switch (kind)
+        {
+        case ControlKind::Button:
+        case ControlKind::Toggle:
+        case ControlKind::Pad:
+        case ControlKind::PageTab:
+        case ControlKind::Lamp:
+        case ControlKind::Lfo:
+            return true;
+
+        default:
+            return false;
+        }
+    }
+
+    _Use_decl_annotations_
+    bool FillsLikeASwitch(ControlKind kind) noexcept
+    {
+        return IsSwitchControl(kind) && kind != ControlKind::Lfo;
+    }
+
+    _Use_decl_annotations_
+    ThemeColor InkOn(ThemeColor const& themeInk, ThemeColor const& background) noexcept
+    {
+        if (themeInk.A != 0 && ContrastRatio(themeInk, background) >= 4.5)
+        {
+            return themeInk;
+        }
+
+        return ReadableInk(background);
+    }
+
+    _Use_decl_annotations_
     ControlColors ResolveControlColors(Control const& control, Theme const& theme) noexcept
     {
         ControlColors colors{};
 
         auto const hue = ResolveHue(control, theme);
 
-        colors.Pipe = hue;
-        colors.Track = theme.TrackColor;
+        // The value can be one color on a panel whose switches are all different ones. Every
+        // theme that does not name one draws each value in its control's own hue.
+        auto const value = theme.ValueColor.A != 0 ? theme.ValueColor : hue;
 
-        if (theme.PlateColor.A != 0)
+        // A switch can be filled at rest while a knob on the same panel is bare, so the wash is
+        // asked for by kind rather than read straight off the theme.
+        auto const fillAtRest = FillAtRestFor(theme, FillsLikeASwitch(control.Kind));
+
+        colors.Pipe = value;
+        colors.Track = theme.TrackColor;
+        colors.ArcTrack = EffectiveArcTrackColor(theme);
+
+        for (int32_t zone = 0; zone < MeterZoneCount; ++zone)
+        {
+            auto const slot = std::clamp(theme.MeterSlots[static_cast<size_t>(zone)], 0, ThemeHueSlotCount - 1);
+
+            (zone == 0 ? colors.MeterLit : zone == 1 ? colors.MeterWarn : colors.MeterHot) =
+                theme.HueSlots[static_cast<size_t>(slot)];
+        }
+
+        if (theme.PlateColor.A != 0 && fillAtRest <= 0.0)
         {
             // The theme named a plate outright, which is what a raised neutral surface needs.
             colors.Plate = theme.PlateColor;
         }
-        else if (theme.FillAtRest > 0.0)
+        else if (fillAtRest > 0.0)
         {
             // Tonal: the plate is the deck tinted with the control's own hue. That is why the
             // tonal themes cost no extra rendering layer - a tint is a background color.
-            colors.Plate = BlendOver(theme.Deck.Color, hue, theme.FillAtRest);
+            colors.Plate = BlendOver(theme.Deck.Color, hue, fillAtRest);
             colors.Plate.A = 255;
         }
         else
@@ -106,6 +165,40 @@ namespace glass
             colors.Plate = theme.GlassColor;
             colors.Plate.A = static_cast<uint8_t>(
                 std::clamp(std::lround(255.0 * theme.GlassTintPercent / 100.0), 0L, 255L));
+        }
+
+        // A plate lifted at the top, where the theme named a second end. The tube themes all
+        // want one, because a raster box is brighter where the beam started.
+        colors.PlateEnd = colors.Plate;
+
+        if (theme.PlateEndColor.A != 0 && theme.PlateColor.A != 0 && fillAtRest <= 0.0)
+        {
+            colors.PlateEnd = theme.PlateEndColor;
+        }
+
+        // What the resting plate actually comes out as once it is over the deck. The touch and
+        // the on states are both worked out against this rather than against the plate's own
+        // alpha, because a theme can have no plate at all at rest - High contrast lets the deck
+        // through untouched - and a wash of nothing is still nothing.
+        auto const restingTop = colors.Plate.A == 0
+            ? theme.Deck.Color
+            : BlendOver(theme.Deck.Color, colors.Plate, 1.0);
+
+        auto const restingBottom = colors.PlateEnd.A == 0
+            ? theme.Deck.GradientEndColor
+            : BlendOver(theme.Deck.GradientEndColor, colors.PlateEnd, 1.0);
+
+        // What the plate becomes under a finger. A flat theme has no glow to lift, so the plate
+        // is the only thing left that can say a control is being held.
+        if (theme.TouchFillPercent > 0)
+        {
+            auto const wash = std::clamp(theme.TouchFillPercent / 100.0, 0.0, 1.0);
+
+            colors.TouchPlate = BlendOver(restingTop, hue, wash);
+            colors.TouchPlate.A = 255;
+
+            colors.TouchPlateEnd = BlendOver(restingBottom, hue, wash);
+            colors.TouchPlateEnd.A = 255;
         }
 
         switch (theme.Rim)
@@ -140,23 +233,59 @@ namespace glass
         }
         }
 
+        // The rim comes up under a finger, whatever the rim is made of. On a theme with a
+        // neutral edge the hue is reserved for the value, so the edge strengthens rather than
+        // turning colored.
+        //
+        // !! Worked out AFTER the rim, not before it. !! Before, this read the rim while it was
+        // still a default ThemeColor - opaque black - so on every theme a finger turned the rim
+        // black: gone on a dark deck, a dirty line on a light one.
+        if (colors.Rim.A != 0)
+        {
+            colors.TouchRim = colors.Rim;
+            colors.TouchRim.A = std::max(colors.Rim.A, static_cast<uint8_t>(
+                std::clamp(std::lround(255.0 * 0.88), 0L, 255L)));
+        }
+
         // Activity lights up in the control's own hue on every dark theme. On a light one there
         // is nowhere for a hue to glow to - the plate is already near-white - so the theme can
-        // ask for the light itself instead.
-        colors.Bloom = theme.Light == LightSource::White
-            ? ThemeColor{ 255, 255, 255, 255 }
-            : hue;
+        // ask for the light itself instead. A tube asks for something else again: its phosphor
+        // is blue-white, or ember, or yellow-green, and none of those is either the hue or white.
+        colors.Bloom = HasNamedBloomColor(theme) ? NamedBloomColor(theme) : hue;
 
         colors.Bloom.A = static_cast<uint8_t>(
             std::clamp(std::lround(255.0 * theme.GlowStrength / 100.0), 0L, 255L));
 
+        // The floor under the animated value rather than a second layer. A lit thing on a tube
+        // spills a little all the time, and on those themes that spill is the only thing
+        // separating a control from the glass.
+        colors.RestingGlow = std::clamp(theme.RestingGlowPercent / 100.0, 0.0, 1.0);
+
         // The bar is brightest where the value is and falls away behind it. A falloff of one
         // means the theme wants a flat bar, which is what the tonal themes and Bigwig ask for.
-        colors.PipeEnd = hue;
-        colors.PipeEnd.A = static_cast<uint8_t>(
-            std::clamp(std::lround(hue.A * theme.PipeFalloff), 0L, 255L));
+        // A theme with a long persistence runs the far end into its own halo instead: the top of
+        // the fill is where the beam just was, and what is under it has had time to decay.
+        colors.PipeEnd = theme.ValueFadesToLight && HasNamedBloomColor(theme)
+            ? NamedBloomColor(theme)
+            : value;
 
-        colors.Sheen = { 255, 255, 255, static_cast<uint8_t>(
+        colors.PipeEnd.A = static_cast<uint8_t>(
+            std::clamp(std::lround(value.A * theme.PipeFalloff), 0L, 255L));
+
+        // A fader's fill at the theme's own strength. On a panel where the cap position is the
+        // whole value, the slot under it is only faintly lit.
+        auto const fillStrength = std::clamp(theme.FaderFillPercent / 100.0, 0.0, 1.0);
+
+        colors.Fill = colors.Pipe;
+        colors.Fill.A = static_cast<uint8_t>(std::clamp(std::lround(colors.Pipe.A * fillStrength), 0L, 255L));
+
+        colors.FillEnd = colors.PipeEnd;
+        colors.FillEnd.A = static_cast<uint8_t>(
+            std::clamp(std::lround(colors.PipeEnd.A * fillStrength), 0L, 255L));
+
+        auto const sheen = EffectivePlateSheenColor(theme);
+
+        colors.Sheen = { sheen.R, sheen.G, sheen.B, static_cast<uint8_t>(
             std::clamp(std::lround(255.0 * theme.PlateSheenPercent / 100.0), 0L, 255L)) };
 
         switch (theme.Thumb)
@@ -170,7 +299,7 @@ namespace glass
         case ThumbStyle::Neutral:
             colors.Thumb = theme.ThumbColor;
             colors.ThumbEnd = theme.ThumbEndColor;
-            colors.ThumbLine = hue;
+            colors.ThumbLine = theme.CapLineColor.A != 0 ? theme.CapLineColor : hue;
             break;
 
         case ThumbStyle::None:
@@ -183,25 +312,150 @@ namespace glass
 
         // On is the plate itself carrying the hue, top brighter than bottom. The same two
         // numbers on every theme: what changes between them is the hue and whether it glows.
-        colors.OnPlate = hue;
-        colors.OnPlate.A = static_cast<uint8_t>(std::clamp(std::lround(hue.A * 0.34), 0L, 255L));
+        //
+        // !! THE WASH GOES OVER THE RESTING PLATE, NOT OVER NOTHING. !! Laying it over nothing
+        // is right only while the resting plate is dark glass. On a theme whose plate is
+        // near-white the control jumped from paper to a dark translucent hue over the deck -
+        // measured on Bone, 247,243,232 dropped to 193,183,166, which is a lamp going out.
+        //
+        // A theme can turn the fill off entirely and say it with a lamp alone, which is what
+        // alpha 0 means here.
+        if (theme.FillWhenOnPercent <= 0)
+        {
+            colors.OnPlate = { hue.R, hue.G, hue.B, 0 };
+            colors.OnPlateEnd = colors.OnPlate;
 
-        colors.OnPlateEnd = hue;
-        colors.OnPlateEnd.A = static_cast<uint8_t>(std::clamp(std::lround(hue.A * 0.17), 0L, 255L));
+            // The lamp, and the faint line of its light around the switch while it is lit.
+            colors.Lamp = theme.LampColor.A != 0 ? theme.LampColor : hue;
+            colors.LampRim = colors.Lamp;
+            colors.LampRim.A = static_cast<uint8_t>(std::clamp(std::lround(colors.Lamp.A * 0.40), 0L, 255L));
+
+            // A lit lamp spills its own light, not the switch's hue.
+            if (theme.LampColor.A != 0 && FillsLikeASwitch(control.Kind))
+            {
+                colors.Bloom = { theme.LampColor.R, theme.LampColor.G, theme.LampColor.B, colors.Bloom.A };
+            }
+        }
+        else
+        {
+            auto const onFill = std::clamp(theme.FillWhenOnPercent / 100.0, 0.0, 1.0);
+
+            // The bottom carries half as much at a third's worth of fill, which is the lit top
+            // edge every theme is drawn with. It catches up as the fill grows, so a tab that IS
+            // its color when it is on is that color top to bottom rather than fading out.
+            auto const bottomFill = onFill <= 0.5
+                ? onFill * 0.5
+                : 0.25 + (onFill - 0.5) * 1.5;
+
+            colors.OnPlate = BlendOver(restingTop, hue, onFill);
+            colors.OnPlate.A = 255;
+
+            colors.OnPlateEnd = BlendOver(restingBottom, hue, bottomFill);
+            colors.OnPlateEnd.A = 255;
+
+            // Paler for a tab lit from behind, deeper for a colored button on paper.
+            if (theme.OnLiftPercent != 0)
+            {
+                auto const lift = std::clamp(theme.OnLiftPercent / 100.0, -1.0, 1.0);
+
+                constexpr ThemeColor white{ 255, 255, 255, 255 };
+                constexpr ThemeColor black{ 0, 0, 0, 255 };
+
+                auto const& toward = lift > 0.0 ? white : black;
+                auto const amount = std::fabs(lift);
+
+                colors.OnPlate = BlendOver(colors.OnPlate, toward, amount);
+                colors.OnPlateEnd = BlendOver(colors.OnPlateEnd, toward, lift > 0.0 ? amount * 0.5 : amount);
+            }
+        }
 
         colors.OnRim = hue;
         colors.OnRim.A = static_cast<uint8_t>(std::clamp(std::lround(hue.A * 0.90), 0L, 255L));
 
         // The label sits on the plate where there is one, and on the deck where there is not.
-        colors.Label = ReadableInk(
-            colors.Plate.A >= 128
-            ? BlendOver(theme.Deck.Color, colors.Plate, 1.0)
-            : theme.Deck.Color);
+        // A theme can name its ink instead of having it measured, because a phosphor's color is
+        // a property of the tube rather than something to work out from the glass.
+        colors.Label = theme.InkColor.A != 0
+            ? theme.InkColor
+            : ReadableInk(
+                colors.Plate.A >= 128
+                ? BlendOver(theme.Deck.Color, colors.Plate, 1.0)
+                : theme.Deck.Color);
 
-        colors.Pointer = theme.Rim == RimSource::NeutralEdge ? colors.Label : hue;
+        // Derived from the hue until a panel arrived whose every knob points in the section
+        // color. That is the mirror of the white-and-black rule: anything worked out from the
+        // CONTROL'S HUE eventually meets a theme where it is not the hue.
+        colors.Pointer = theme.PointerColor.A != 0
+            ? theme.PointerColor
+            : (theme.Rim == RimSource::NeutralEdge ? colors.Label : hue);
 
         colors.Marks = colors.Label;
         colors.Marks.A = MarkAlpha;
+
+        // A name inside a switch sits on the plate, and a lit plate can be a different color
+        // altogether, so it is measured against both.
+        auto const restingMiddle = BlendOver(restingTop, restingBottom, 0.5);
+
+        colors.SwitchInk = InkOn(theme.InkColor, restingMiddle);
+        colors.SwitchInkOn = colors.OnPlate.A == 0
+            ? colors.SwitchInk
+            : InkOn(theme.InkColor, BlendOver(colors.OnPlate, colors.OnPlateEnd, 0.5));
+
+        // A knob's face is the plate unless the theme turned one of its own.
+        if (theme.KnobFaceColor.A != 0)
+        {
+            colors.KnobFace = theme.KnobFaceColor;
+            colors.KnobFaceEnd = theme.KnobFaceEndColor.A != 0 ? theme.KnobFaceEndColor : theme.KnobFaceColor;
+        }
+        else
+        {
+            colors.KnobFace = colors.Plate;
+            colors.KnobFaceEnd = colors.PlateEnd;
+        }
+
+        if (theme.KnobCapColor.A != 0)
+        {
+            colors.KnobCap = theme.KnobCapColor;
+            colors.KnobCapEnd = theme.KnobCapEndColor.A != 0 ? theme.KnobCapEndColor : theme.KnobCapColor;
+        }
+
+        // Printed on the panel, so it is the ink rather than the barely-there marks inside a
+        // control.
+        if (theme.KnobTickCount > 0)
+        {
+            colors.KnobTick = colors.Label;
+            colors.KnobTick.A = static_cast<uint8_t>(std::clamp(std::lround(colors.Label.A * 0.60), 0L, 255L));
+        }
+
+        auto const withStrength = [](ThemeColor color, int32_t percent) noexcept
+            {
+                color.A = static_cast<uint8_t>(
+                    std::clamp(std::lround(255.0 * std::clamp(percent, 0, 100) / 100.0), 0L, 255L));
+
+                return color;
+            };
+
+        colors.Well = theme.WellColor;
+
+        if (theme.RecessShadePercent > 0)
+        {
+            colors.Recess = withStrength(theme.ShadowColor, theme.RecessShadePercent);
+        }
+
+        if (theme.PlateShadePercent > 0)
+        {
+            colors.PlateShade = withStrength(theme.ShadowColor, theme.PlateShadePercent);
+        }
+
+        if (theme.PlateHighlightPercent > 0)
+        {
+            colors.PlateHighlight = withStrength(EffectivePlateSheenColor(theme), theme.PlateHighlightPercent);
+        }
+
+        colors.PanelOutline = theme.PanelOutlineColor.A != 0 ? theme.PanelOutlineColor : colors.Rim;
+
+        colors.KeyWhite = EffectiveKeyWhiteColor(theme);
+        colors.KeyBlack = EffectiveKeyBlackColor(theme);
 
         return colors;
     }

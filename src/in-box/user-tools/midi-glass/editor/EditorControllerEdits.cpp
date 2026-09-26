@@ -127,7 +127,7 @@ namespace glass
     {
         auto* const control = MutableControl(id);
 
-        if (control == nullptr || (slot != LiteralHue && (slot < 0 || slot >= HueSlotCount)))
+        if (control == nullptr || !IsSlotInRange(slot))
         {
             return false;
         }
@@ -1244,6 +1244,45 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    bool EditorController::ChooseTheme(Theme const& theme)
+    {
+        if (m_document.ThemeName == theme.Name && !m_document.HasOwnTheme)
+        {
+            return false;
+        }
+
+        m_document.ThemeName = theme.Name;
+
+        // Picking one out of the gallery drops whatever the layout was carrying. The layout now
+        // points at a theme by name again, which is what lets a later improvement to that theme
+        // reach it.
+        m_document.HasOwnTheme = false;
+        m_document.OwnTheme = {};
+
+        Commit(EditNames::LayoutProperties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetOwnTheme(Theme const& theme)
+    {
+        m_document.OwnTheme = theme;
+        m_document.HasOwnTheme = true;
+
+        // A theme carried by a layout is not a built-in one, whatever it started as. Leaving the
+        // flag set would let an edited copy shadow a shipped theme in the picker and make itself
+        // unoverwritable.
+        m_document.OwnTheme.IsBuiltIn = false;
+
+        // Dragging a slider is one edit, not sixty. The coalescing key is the property itself,
+        // so moving the glow and then moving the corner radius are two entries in the stack.
+        CommitCoalesced(EditNames::LayoutProperties, L"theme");
+
+        return true;
+    }
+
+    _Use_decl_annotations_
     bool EditorController::SetBackgroundImage(std::wstring const& fileName, BackgroundFit fit)
     {
         // Only a bare file name is ever stored, so that a layout from a stranger cannot point
@@ -1273,6 +1312,86 @@ namespace glass
 
         m_document.SuppressAllStartupValues = suppress;
         Commit(EditNames::LayoutProperties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetPublishesVirtualDevice(bool publishes)
+    {
+        if (m_document.PublishesVirtualDevice == publishes)
+        {
+            return false;
+        }
+
+        m_document.PublishesVirtualDevice = publishes;
+        Commit(EditNames::LayoutProperties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetScaleMode(ScaleMode mode, double customPercent)
+    {
+        auto const percent = std::clamp(customPercent, 10.0, 400.0);
+
+        if (m_document.Scale == mode && std::abs(m_document.CustomScalePercent - percent) < 0.01)
+        {
+            return false;
+        }
+
+        m_document.Scale = mode;
+        m_document.CustomScalePercent = percent;
+        Commit(EditNames::LayoutProperties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetFullScreenButtonCorner(ScreenCorner corner)
+    {
+        if (m_document.FullScreenButtonCorner == corner)
+        {
+            return false;
+        }
+
+        m_document.FullScreenButtonCorner = corner;
+        Commit(EditNames::LayoutProperties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetTempoSource(TempoSource const& tempo)
+    {
+        if (m_document.Tempo.Kind == tempo.Kind &&
+            std::abs(m_document.Tempo.BeatsPerMinute - tempo.BeatsPerMinute) < 0.01 &&
+            m_document.Tempo.DeviceName == tempo.DeviceName)
+        {
+            return false;
+        }
+
+        m_document.Tempo.Kind = tempo.Kind;
+        m_document.Tempo.BeatsPerMinute = std::clamp(tempo.BeatsPerMinute, 1.0, 999.0);
+        m_document.Tempo.DeviceName = tempo.DeviceName;
+
+        Commit(EditNames::LayoutProperties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetBackgroundOpacity(double opacity)
+    {
+        auto const clamped = std::clamp(opacity, 0.0, 1.0);
+
+        if (std::abs(m_document.BackgroundOpacity - clamped) < 0.001)
+        {
+            return false;
+        }
+
+        m_document.BackgroundOpacity = clamped;
+        CommitCoalesced(EditNames::LayoutProperties, L"backgroundopacity");
 
         return true;
     }

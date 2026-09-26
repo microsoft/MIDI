@@ -9,6 +9,7 @@
 
 #include "LayoutSerializer.h"
 #include "JsonText.h"
+#include "ThemeStore.h"
 
 #include <algorithm>
 
@@ -32,6 +33,7 @@ namespace glass
         constexpr wchar_t KeyCanvasWidth[] = L"canvasWidth";
         constexpr wchar_t KeyCanvasHeight[] = L"canvasHeight";
         constexpr wchar_t KeyTheme[] = L"theme";
+        constexpr wchar_t KeyThemeColors[] = L"themeColors";
         constexpr wchar_t KeyBackgroundImage[] = L"backgroundImage";
         constexpr wchar_t KeyBackgroundFit[] = L"backgroundFit";
         constexpr wchar_t KeyBackgroundOpacity[] = L"backgroundOpacity";
@@ -959,7 +961,7 @@ namespace glass
             control.Y = ReadNumber(object, KeyY, 0);
             control.Width = ReadNumber(object, KeyWidth, 56);
             control.Height = ReadNumber(object, KeyHeight, 56);
-            control.HueSlot = ReadInt(object, KeyHueSlot, 0, LiteralHue, HueSlotCount - 1);
+            control.HueSlot = ReadInt(object, KeyHueSlot, 0, LiteralHue, NeutralSlot);
             control.LiteralColor = ReadString(object, KeyLiteralColor);
             control.AspectLocked = ReadBool(object, KeyAspectLocked, false);
             control.Style = ValueOf(StyleNames, ReadString(object, KeyStyle), ControlStyleOverride::UseTheme);
@@ -1236,6 +1238,20 @@ namespace glass
 
             document.ThemeName = ReadString(root, KeyTheme);
 
+            // A theme travels inside the layout file where it has been edited, so a layout sent
+            // to somebody looks the way it was built even though they have never seen it. A
+            // layout that simply picked a shipped theme carries the name alone.
+            if (auto const theme = ReadObject(root, KeyThemeColors))
+            {
+                document.OwnTheme = ReadThemeObject(theme);
+                document.HasOwnTheme = true;
+
+                if (document.OwnTheme.Name.empty())
+                {
+                    document.OwnTheme.Name = document.ThemeName;
+                }
+            }
+
             // A bare file name only. A path from a stranger's file is how a layout turns into a
             // way to read something off this PC, so anything with a separator in it is refused.
             document.BackgroundImage = SanitizeFileName(ReadString(root, KeyBackgroundImage));
@@ -1300,6 +1316,7 @@ namespace glass
             document.Unknown = CaptureUnknown(root,
                 { KeyComment, KeyFileVersion, KeyName, KeyDescription, KeyCreated, KeyModified,
                   KeyPageWidth, KeyPageHeight, KeyCanvasWidth, KeyCanvasHeight, KeyTheme,
+                  KeyThemeColors,
                   KeyBackgroundImage, KeyBackgroundFit, KeyBackgroundOpacity,
                   KeyScaleMode, KeyCustomScalePercent, KeyCornerButton, KeyPreferredDisplay,
                   KeySuppressStartup, KeyVirtualDevice, KeyFavorite, KeyTempo, KeyDevices, KeyPages, KeySequences });
@@ -1598,6 +1615,13 @@ namespace glass
             writer.Write(KeyCanvasWidth, static_cast<int64_t>(document.CanvasWidth));
             writer.Write(KeyCanvasHeight, static_cast<int64_t>(document.CanvasHeight));
             writer.Write(KeyTheme, document.ThemeName);
+
+            if (document.HasOwnTheme)
+            {
+                writer.BeginObject(KeyThemeColors);
+                WriteThemeBody(writer, document.OwnTheme);
+                writer.EndObject();
+            }
 
             if (!document.BackgroundImage.empty())
             {

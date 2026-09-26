@@ -18,8 +18,11 @@
 #include "ThemeStore.h"
 #include "ThumbnailLayout.h"
 #include "ThumbnailRenderer.h"
+#include "SurfaceThumbnail.h"
 #include "EndpointCatalog.h"
 #include "MidiServiceStatus.h"
+
+#include <wil/cppwinrt_helpers.h>
 
 #include <shlobj_core.h>
 #include <filesystem>
@@ -181,6 +184,61 @@ namespace winrt::midiglass::implementation
             }
         }
 
+        // Cards drawn an older way are never looked up again, so they are cleared out once a
+        // session rather than left to pile up. It is a cache: nothing in it is ever the only
+        // copy of anything.
+        void ForgetOldCards() noexcept
+        {
+            static std::atomic<bool> done{ false };
+
+            if (done.exchange(true))
+            {
+                return;
+            }
+
+            try
+            {
+                auto const folder = glass::ThumbnailCacheFolder();
+
+                if (folder.empty())
+                {
+                    return;
+                }
+
+                auto const current = std::format(L"-v{}", glass::ThumbnailCacheVersion);
+
+                std::error_code error{};
+
+                for (auto const& entry : std::filesystem::directory_iterator(folder, error))
+                {
+                    if (error || !entry.is_regular_file(error))
+                    {
+                        continue;
+                    }
+
+                    auto const& path = entry.path();
+                    auto const extension = path.extension().wstring();
+                    auto const stem = path.stem().wstring();
+
+                    auto const oldCard = extension == L".png" &&
+                        (stem.size() < current.size() ||
+                         stem.compare(stem.size() - current.size(), current.size(), current) != 0);
+
+                    // Left behind by a write that never finished.
+                    auto const partial = extension == L".partial";
+
+                    if (oldCard || partial)
+                    {
+                        std::error_code ignored{};
+                        std::filesystem::remove(path, ignored);
+                    }
+                }
+            }
+            catch (...)
+            {
+            }
+        }
+
         std::wstring FallbackName(_In_ std::wstring const& filePath) noexcept
         {
             try
@@ -216,6 +274,9 @@ namespace winrt::midiglass::implementation
 
                 media::Imaging::BitmapImage bitmap{};
 
+                // A card is redrawn under the same file name, so the decoder's cache would
+                // otherwise keep showing the picture from before the layout changed.
+                bitmap.CreateOptions(media::Imaging::BitmapCreateOptions::IgnoreImageCache);
                 bitmap.DecodePixelWidth(glass::LargeThumbnailWidth);
                 bitmap.UriSource(foundation::Uri{ L"file:///" + winrt::hstring{ cardPath } });
 
@@ -312,10 +373,12 @@ namespace winrt::midiglass::implementation
                 winrt::init_apartment(winrt::apartment_type::multi_threaded);
 
                 std::vector<::midiglass::LayoutCardData> cards{};
+                std::vector<StaleCard> stale{};
+
+                ForgetOldCards();
 
                 try
                 {
-                    auto const themes = glass::AllThemes();
                     auto const& settings = ::midiglass::AppSettings::Current();
 
                     for (auto const& path : glass::ListLayoutFiles())
@@ -362,29 +425,11 @@ namespace winrt::midiglass::implementation
 
                         auto const cardPath = glass::ThumbnailPathForLayout(path, glass::LargeThumbnailWidth);
 
+                        // Drawn afterwards, on the window's own thread, by the same surface the
+                        // layout opens in. Only the reading happens here.
                         if (!cardPath.empty() && CardIsStale(path, cardPath))
                         {
-                            auto const* theme = themes.empty() ? nullptr : &themes[0];
-
-                            for (auto const& candidate : themes)
-                            {
-                                if (candidate.Name == document.ThemeName)
-                                {
-                                    theme = &candidate;
-                                    break;
-                                }
-                            }
-
-                            if (theme != nullptr)
-                            {
-                                glass::RenderThumbnailToFile(
-                                    glass::PlanThumbnail(
-                                        document,
-                                        *theme,
-                                        glass::LargeThumbnailWidth,
-                                        glass::LargeThumbnailHeight),
-                                    cardPath);
-                            }
+                            stale.push_back(StaleCard{ path, cardPath, document });
                         }
 
                         cards.push_back(std::move(card));
@@ -398,18 +443,108 @@ namespace winrt::midiglass::implementation
 
                 if (strong != nullptr && strong->m_dispatcher != nullptr)
                 {
-                    strong->m_dispatcher.TryEnqueue([weak, cards]()
+                    strong->m_dispatcher.TryEnqueue([weak, cards, stale]()
                         {
                             if (auto inner = weak.get())
                             {
                                 inner->ApplyCards(cards);
                                 inner->m_refreshing = false;
+                                inner->QueueStaleCards(stale);
                             }
                         });
                 }
 
                 winrt::uninit_apartment();
             }).detach();
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::QueueStaleCards(std::vector<StaleCard> stale)
+    {
+        // A layout already waiting is not queued twice. A refresh can land while the last one's
+        // cards are still being drawn, and it finds the same stale cards they are about to fix.
+        for (auto& card : stale)
+        {
+            auto const queued = std::any_of(m_cardQueue.begin(), m_cardQueue.end(),
+                [&card](StaleCard const& waiting) { return waiting.CardPath == card.CardPath; });
+
+            if (!queued)
+            {
+                m_cardQueue.push_back(std::move(card));
+            }
+        }
+
+        if (!m_drawingCards && !m_cardQueue.empty())
+        {
+            DrawQueuedCardsAsync();
+        }
+    }
+
+    winrt::fire_and_forget MainWindow::DrawQueuedCardsAsync()
+    {
+        auto strong = get_strong();
+
+        m_drawingCards = true;
+
+        auto drewAny = false;
+
+        try
+        {
+            while (!m_cardQueue.empty())
+            {
+                auto next = std::move(m_cardQueue.front());
+                m_cardQueue.erase(m_cardQueue.begin());
+
+                auto const theme = glass::ResolveDocumentTheme(next.Document);
+
+                // What the layout really looks like, drawn by the surface it opens in.
+                auto const captured = co_await glass::RenderSurfaceThumbnailAsync(
+                    ThumbnailStage(),
+                    next.Document,
+                    theme,
+                    glass::LargeThumbnailWidth,
+                    glass::LargeThumbnailHeight,
+                    next.CardPath);
+
+                // A capture that fails or comes back empty still gets a card. The plain drawing
+                // needs no window at all, so the card is never left blank.
+                if (!captured)
+                {
+                    co_await winrt::resume_background();
+
+                    glass::RenderThumbnailToFile(
+                        glass::PlanThumbnail(
+                            next.Document,
+                            theme,
+                            glass::LargeThumbnailWidth,
+                            glass::LargeThumbnailHeight),
+                        next.CardPath);
+
+                    co_await wil::resume_foreground(m_dispatcher);
+                }
+
+                drewAny = true;
+            }
+        }
+        catch (...)
+        {
+            // The window went away mid-card. Whatever was not drawn is stale, and will be found
+            // again the next time the library is read.
+            m_cardQueue.clear();
+        }
+
+        m_drawingCards = false;
+
+        if (drewAny)
+        {
+            try
+            {
+                RebuildSections();
+            }
+            catch (...)
+            {
+            }
+        }
     }
 
     _Use_decl_annotations_

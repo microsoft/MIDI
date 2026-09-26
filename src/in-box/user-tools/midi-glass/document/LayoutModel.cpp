@@ -582,8 +582,7 @@ namespace glass
                     issues.push_back({ control.Id, L"The control has no size." });
                 }
 
-                if (control.HueSlot != LiteralHue &&
-                    (control.HueSlot < 0 || control.HueSlot >= HueSlotCount))
+                if (!IsSlotInRange(control.HueSlot))
                 {
                     issues.push_back({ control.Id, L"The hue slot is outside the theme." });
                 }

@@ -37,6 +37,10 @@ namespace glass
     // The cache folder, created if it is not there. Empty when it cannot be created.
     std::wstring ThumbnailCacheFolder() noexcept;
 
+    // Which way the cards in the cache were drawn. Raised when that changes, so every card
+    // drawn the old way is drawn again rather than kept.
+    constexpr int32_t ThumbnailCacheVersion = 2;
+
     // Where this layout's card lives. The name is derived from the layout path, so two layouts
     // with the same file name in different folders do not fight over one entry.
     std::wstring ThumbnailPathForLayout(

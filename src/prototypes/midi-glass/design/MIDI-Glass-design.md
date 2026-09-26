@@ -165,7 +165,7 @@ If it ever does need more, the right escape hatch is a **tiny expression grammar
 
 A theme is **six hue slots, a deck, and a handful of control defaults**. A control stores "slot 3", never `#FFC247`. Switch theme and every amber control becomes lime together, and the mute buttons still all match. A control can still override with a literal color when it has to, and the theme editor says how many controls are using each slot so a customer knows what a change will touch.
 
-- Shipped themes: **Studio Dark**, **Neon Booth**, **Daylight**, **Blueprint**, **High contrast**, and the seven worked out below — Pigment Light, Pigment Dark, Bigwig, Bone, Cathode, **Amber Console** and Terminal Green. Amber Console was a swatch in this picker from the start; screen 17 is that swatch finally built, which is why it keeps the name rather than getting a new one.
+- Shipped themes: **Studio Dark**, **Neon Booth**, **Daylight**, **Blueprint**, **High contrast**, and the nine worked out below — Pigment Light, Pigment Dark, Bigwig, Bone, Cathode, **Amber Console**, Terminal Green, Jove and Supersaw. Amber Console was a swatch in this picker from the start; screen 17 is that swatch finally built, which is why it keeps the name rather than getting a new one.
 - Deck: one color, a two-stop gradient, or an image.
 - Control defaults in the theme: corner rounding, glass tint percentage, glow strength, label placement. This is how a customer makes their whole surface squarer or flatter in one move.
 - **Contrast is measured, not guessed.** Each slot is checked against the deck and flagged before it ships to a stage. In the mockup, slot 5 at 4.1 : 1 is called out with what to do about it.
@@ -190,13 +190,17 @@ Names are placeholders. **Studio Paper** and **Studio Slate** would sit closer t
 
 ### Bigwig
 
-**Screen 12** (`12-bigwig.html`). Raised mid-gray panels on a near-black deck, one strong orange doing all the work, and the value strip running along the *top* edge of a control the way a channel header does. It uses the tonal machinery with the hue wash turned **off**, so the plate stays a neutral gray and orange only ever means "this is the value" or "this is on". That restraint is what makes a dense page readable, and it is a third point on the same scale rather than a new mechanism.
+**Screen 12** (`12-bigwig.html`), revisited Sep 26 2026. A play on Bitwig Studio: charcoal and gray, one lead orange, and five section colors.
 
-**The segmented LED ring is worth doing.** A ringed knob is still *one* element, exactly like the solid arc it replaces, because the lamps are a repeating mask laid over the arc rather than thirty separate shapes. Lamp count is one number in the theme and does not change with size. The catch is size, not count: below about 48 px the lamps stop separating and the ring reads as a fine comb — still legible as a value, but no longer the effect. A knob that small should fall back to the solid arc on its own rather than making somebody notice and fix it.
+The first pass was one gray and one orange, and next to the product it came out flat. What the product actually does is a **ladder of grays**: the page, a section one step up, a control one step up again with a dark edge and a lit top, and a dark display cut into them. Knobs are **graded caps inside a thin arc**, with no plate behind them. Color only ever means the value, the state, or which section this is, so at rest every control is the same gray and a dense page stays readable.
 
-**Deferred:** drop shadows. The older card-and-shadow look would mean a composition shadow under every control, which on a surface that has to stay smooth under a finger is a real cost at eighty controls. Not doing it for now. The second arc of white lamps on the hardware is skipped too — that is an endless encoder with no pointer, so the lamps are showing what the main arc is not, which our knobs do not need.
+**What changed from the first pass, and why.** Six hue slots instead of one orange in all six. The product colors its sections, and with one orange the meter's green, yellow and red all came out orange. The segmented lamp ring is gone from this theme, because the product's own knobs draw a continuous arc; the ring stays in the engine and is one setting to put back. The value strip is gone too: a lit switch is now its color outright, and at rest the product's buttons carry no color. A light outline became a dark edge and a lit top, which is what makes a plate read as raised rather than drawn.
 
-*Superseded for the shadow part only:* Bone, below, is built on an elevation shadow, and the surface renderer now draws one under every plate anyway. See that section for what actually changed.
+**What the engine does for it now.** Everything the screen asked for was built in the engine round that followed it, and the app draws Bigwig from these values. The **knob face** is a graded cap inside the arc (`KnobFaceColor` to `KnobFaceEndColor`), and every knob's arc now hangs outside its face on every theme. A section is **its own color**, one step between the page and the controls (`PanelFill` = Color, `PanelColor`, `PanelEndColor`), and says its name in its own color (`SectionNameInHue`). Switches carry their **names inside** them (`NamesInsideSwitches`), and a switch lit at full strength is its color top to bottom with its name inked against the lit plate. Anything that shows a value sits in a dark **well** (`WellColor`). The screen's comparison board still shows the app from before that round, which is what it was drawn to compare against.
+
+**What it costs.** Red measures 3.1 : 1 as a section name, so it is light, not letters. The other five slots clear 4.5. The grays are close on purpose, a section on the page at 1.24 : 1 and a control on a section at 1.28 : 1, and the edge and the lit top do the separating, the way they do in the product. Nothing glows, so activity lights the plate instead.
+
+*Superseded:* the first pass's lamp ring, and its note that the plate stays flat. Drop shadows were deferred in the first pass; the renderer now draws one under every plate anyway, as Bone explains.
 
 ### Bone
 
@@ -218,6 +222,8 @@ The first two were predicted as one; they are two because they answer different 
 
 The honest trade: in a dark room this is a lamp pointed at the performer. Bone is for a desk by a window, a classroom, a studio with the lights on — somewhere a near-black surface is the thing that looks wrong. Studio Dark still wins on a stage, and the theme picker should say so rather than letting somebody find out during a set.
 
+**As built, after the engine round.** The shadows are now the shape of the control they sit under; before, a rounded rectangle cast a small rectangle out of the middle of each side, which was most visible on this theme because the shadow is its structure. A button carries its name, and lit it is its color outright, deepened 16 % so the white name still reads (`NamesInsideSwitches`, `FillWhenOnPercent` 100, `OnLiftPercent` -16). Slots and the XY field are sunk with a warm shadow inside (`RecessShadePercent`, `WellColor`), a fader cap casts a shadow on its slot (`ThumbShadowPercent`), and the piano keyboard is warm white with sharps in the shadow color.
+
 Bone and Shadow are the two given colors. The other four slots — sage `#5C6E4E`, ochre `#8F6318`, clay `#9A543E`, slate `#5A647C` and brick `#9B3D34` — are chosen to sit with them, and every one measures 3 : 1 or better against both the plate and the deck.
 
 ### The retro set — Cathode, Amber Console and Terminal Green
@@ -232,9 +238,27 @@ Bone and Shadow are the two given colors. The other four slots — sage `#5C6E4E
 
 All three share the same grammar: a dim raster box that separates from the glass by its own spill rather than by value, inverse video for a latched control, snow instead of a red light when a device has gone, and a value that is hottest at the leading edge and decays behind it. And all three keep the original rule — a control never uses more than one color, and that color only ever appears on the rim, the value and the fill.
 
+### The panel pair — Jove and Supersaw
+
+**Screens 19 and 20** (`19-jove.html`, `20-supersaw.html`). Two hardware synthesizer panels rather than two screens, and between them they break the thing every theme so far has taken for granted: that a control is a plate with a hairline of its own color on it.
+
+**Jove** is matte black steel, one orange, and a row of colored tabs, after the Roland Jupiter-8. **A control here is not on a plate at all.** A knob is a black cap sitting straight on the panel; a fader is a slot milled into it with a cap whose whole job is one wide white line. Only the tab switches are objects, and a tab does not *carry* a color — it **is** one, at full saturation, at rest. That is the exact thing the "nothing is saturated at rest" rule exists to prevent, and it works here only because the panel around them is near-black and there are a few dozen tabs rather than a hundred. It is the first theme that would genuinely be worse at a hundred and twenty controls, and the picker should say so.
+
+**The seven-color question has a clean answer, and it is not a seventh slot.** Red, orange, yellow, green, aqua and blue are exactly six, which is exactly what a theme has. The cream tabs are a seventh color only if you count them as a color; they are better read as **the absence of one** — a tab with nothing assigned. So a theme should name **one neutral** beside its six hues and let a control pick it. Studio Dark's would be a gray, Bone's a warm white. One property, and it stops a customer reaching for a literal color and losing it at the next theme swap.
+
+**Supersaw** is a matte blue panel with the texture of very fine sandpaper, shiny black molding and one small red lamp per switch, after the Roland JP-8000. Two things here that nothing before it has asked for. **The panel has a grain**: every deck so far has been a color, a gradient or a photograph, and the grain is most of why this blue reads as a manufactured object rather than a fill. An image deck cannot do it, because an image is stretched to the page and a stretched 120 pixel noise tile is blur — it needs to **tile**, which is one brush over the whole deck, drawn once, nothing per control. And **on is not a plate state**: a switch that is on looks exactly like a switch that is off except for three lit pixels above its label. At forty switches that is the better answer, because the eye only has to find the bright thing.
+
+That second one mattered beyond this theme. It became **fill when on**, and at zero a switch lights its lamp and leaves the plate alone.
+
+**The other half of the mistake the retro set found.** That set established that anything the renderer works out from pure white or pure black eventually meets a theme that is neither. These two establish the mirror image: **anything the renderer works out from the control's own hue eventually meets a theme where it is not the hue.** Every knob on Jove points in the section orange rather than in its own color, because on that panel a pointer is not the value — it is just which way the shaft is turned. Every fader cap on both panels carries a white line, on all of them, whatever the control is. Both were derived from the hue until these two arrived. Give a derived thing a color the first time a theme disagrees, not the third.
+
+**As built, after the engine round.** Both panels now draw close to their screens. **Jove**: a knob is a turned black cap lit above the middle (`KnobFaceColor`), and every value - arc, fill, puck, LFO wave - is the section orange (`ValueColor`), whatever color the control is. A fader is a slot cut straight into the steel with no plate (`FaderPlate` = None), only faintly lit below the cap (`FaderFillPercent` 20), and the cap stands off it with a shadow (`ThumbShadowPercent`) and a wide white line (`CapLineWide`). A tab IS its color at rest, glossed lighter at the top and darker at the bottom with a light line along its top edge (sheen, `PlateShadePercent`, `PlateHighlightPercent`), carries its name (`NamesInsideSwitches`), and lit it goes paler and glows (`OnLiftPercent`, glow). A section is an outline under its banner (`PanelFill` = None, `PanelOutlineColor`). An LFO is no longer filled like a tab, which put a red wave on a red plate; it sits in a well. **Supersaw**: a knob is a black turned body with a small light cap (`KnobCapColor`, `KnobCapSizePercent`), a white pointer and a ring of printed marks outside its arc (`KnobTickCount`). A fader is a slot in a strip of molding (`FaderPlate` = Strip) with a cap wider than the strip. A switch lights one red lamp (`LampColor`) and, lit, a faint line of that red goes round it; the value strip that used to run along the top as well is gone, because a strip and a lamp was two lights saying one thing. A section is a faint line on the panel with its orange name in a gap cut into the top (`SectionHeader` = Notched, `SectionNameInHue`). **Labels above** have been in the engine since these screens were drawn.
+
+**Still different from the screens, on purpose or for now.** Both decks are flat rather than the screens' soft gradients, which the panel themes' tests hold them to. Silkscreen type is whatever font a control's label is set in, so Jove's bold letter-spaced names need setting per control. Jove's banner has no bracket line under it, and its pointer is drawn 2 px wide rather than 3.
+
 ### The theme model, consolidated
 
-Seven themes past the original six have each asked for one small thing, and together they settle what a theme actually is. This is the list to build against.
+Nine themes past the original six have each asked for one small thing, and together they settle what a theme actually is. This is the list to build against.
 
 | Property | Values | Added for |
 | --- | --- | --- |
@@ -256,11 +280,35 @@ Seven themes past the original six have each asked for one small thing, and toge
 | **Resting glow** | 0 to 100, separate from the glow that activity causes | Cathode |
 | **Scan lines** | pitch in page pixels, strength, color | Cathode |
 | **Deck falloff** | how far the corners drop below the deck's own floor | Cathode |
-| **Plate sheen color** | so a warm plate lifts warm instead of going grey | Amber |
+| **Plate sheen color** | so a warm plate lifts warm instead of going gray | Amber |
 | **Arc track color** | the knob arc's track, which is on the deck rather than on the plate | Cathode |
 | **Meter zones** | which three slots the meter's three levels use | Cathode, Amber, Green |
 | **Faceplate sheen** | strength and color of the room reflected in the glass | Terminal Green |
 | **Caution** | one sentence the theme picker shows about what this theme costs | Amber |
+| **Neutral slot** | one un-hued color a control can pick, beside the six hues | Jove |
+| **Fill at rest by kind** | so a filled tab and a bare knob can sit on the same panel | Jove |
+| **Pointer color** | a color, or derived from the control's hue | Jove |
+| **Cap line color** | a color, or derived from the control's hue | Jove, Supersaw |
+| **Section header** | a caption on the deck, a filled bar, or a name cut into the frame | Jove, Supersaw |
+| **Label placement** | *above* joins inside, below and none | Jove, Supersaw |
+| **Deck grain** | a tiled texture over the deck, and a strength | Supersaw |
+| **Fill when on** | 0 to 1. At zero a switch lights a lamp and leaves the plate alone. At a full fill a lit switch is its color top to bottom | Supersaw, Bigwig |
+| **Recessed style** | built as a **well color** for the field of a display and a **sunk shadow** inside slots and wells | Bone, Supersaw, Bigwig |
+| **Knob face** | a face color and an end color, lit above the middle. The arc always hangs outside the face | Supersaw, Bigwig, Jove |
+| **Knob cap** | a small cap on the face, a color, an end color and a size | Supersaw |
+| **Knob marks** | a ring of printed marks outside every knob's arc | Supersaw |
+| **Section fill** | like a control, its own color with an end color, or an outline only; and an outline color | Bigwig, Jove, Supersaw |
+| **Section name color** | the name in the section's own color | Bigwig, Supersaw |
+| **Names on switches** | switches carry their names inside, whatever knobs and faders do | Jove, Bigwig, Bone |
+| **Lit switch ink** | a name on a switch is inked against its plate at rest and lit, so it turns dark on a bright fill | Bigwig, Jove |
+| **Lift when on** | -100 to 100. Paler for a tab lit from behind, deeper for a colored button on paper | Jove, Bone |
+| **Lamp color** | the one lamp a switch lights, and the faint line of it round the switch while lit | Supersaw |
+| **Shade and top edge light** | a shade up from the bottom of a plate and a light line along its top | Jove, Supersaw |
+| **Fader plate** | the whole control, a strip around the slot, or none | Jove, Supersaw |
+| **Fader fill** | how strongly the slot below the cap is lit | Jove, Supersaw |
+| **Value color** | every value in one color, or each control's own hue | Jove |
+| **Cap shadow and wide cap line** | a shadow under a fader cap; a line nearly the cap's width | Jove, Supersaw, Bone |
+| **Keyboard keys** | the naturals and the sharps in the theme's own light and dark | the tubes, Bone, Bigwig, Jove, Supersaw |
 
 The track color is worth calling out separately: it is not a cost of any of these themes, it is a gap in the original model. The dark themes get away with hardcoding it as black, and the first customer who built a light theme of their own would have hit it.
 
@@ -268,7 +316,7 @@ The elevation shadow was deferred once, for a good reason — a composition shad
 
 **Bone's light source became a color.** It was an either-or — the control's hue, or white — and that was right for Bone, where the only room left to say "this just did something" is to take a near-white plate the rest of the way. It is not enough for a phosphor. Cathode's light is blue-white because a monochrome tube is not white. Amber's halo is **neither the hue nor white**: it is ember, redder than the thing casting it, because P3 decays through red, and that single fact is what people recognize as an amber screen. Terminal Green's is yellow-green, the same shift at the other end of the spectrum. A bloom derived from the hue cannot express any of those, so the property becomes a color with "derive it" as its default, and every theme that shipped before renders exactly as it did.
 
-**That is the third time the same thing has happened, and it is worth naming.** Anything the renderer works out from pure white or pure black eventually meets a theme that is neither. The shadow was the first (Bone). The bloom is the second. The plate sheen is the third: it is a percentage of white today, and on a warm plate that desaturates rather than lifts — measured on Amber, white at 7 % over the plate overshoots blue by eight counts and the warm lift goes grey. **If a fourth percentage-of-white is ever added to this model, give it a color when it is born.**
+**That is the third time the same thing has happened, and it is worth naming.** Anything the renderer works out from pure white or pure black eventually meets a theme that is neither. The shadow was the first (Bone). The bloom is the second. The plate sheen is the third: it is a percentage of white today, and on a warm plate that desaturates rather than lifts — measured on Amber, white at 7 % over the plate overshoots blue by eight counts and the warm lift goes gray. **If a fourth percentage-of-white is ever added to this model, give it a color when it is born.**
 
 **Scan lines are the one genuinely new thing to draw, and they are cheap.** One overlay for the whole deck, never anything per control, so eighty controls cost what four cost — the corner falloff and the faceplate reflection ride along in the same overlay. The one thing that has to be right: **they are drawn in screen pixels after the page has been scaled.** A three pixel pitch in page units at 87 % zoom is a beat pattern across the whole screen. Cathode asked for them first; Amber and Terminal Green wanting them too is what turns them from a one-off into a property.
 
@@ -474,13 +522,18 @@ Everything that was an open question is now answered. Recorded here so the reaso
 | `9-language.html` | The surface control language — every control type |
 | `10-pages-devices.html` | Pages, layers, and the device table |
 | `11-tonal-themes.html` | Pigment Light and Pigment Dark — the tonal theme family |
-| `12-bigwig.html` | Bigwig — gray panels, one orange, and the segmented LED ring |
+| `12-bigwig.html` | Bigwig — a ladder of grays, knob caps inside a thin arc, and five section colors |
 | `13-canvas.html` | Page size templates, the virtual canvas, off-page controls, resizing |
 | `14-running-scale.html` | The three scale modes, and the full screen corner button |
 | `15-bone.html` | Bone — a warm light theme where the shadow, not the value, separates a control from the deck |
-| `mock.css` | Shared styles for all fifteen |
+| `16-cathode.html` | Cathode — a black and white television, which is neither |
+| `17-amber.html` | Amber Console — the P3 terminal, and a halo redder than the thing casting it |
+| `18-green.html` | Terminal Green — the green screen, on glass that is not green |
+| `19-jove.html` | Jove — matte black steel, one orange, and tabs that are their own color |
+| `20-supersaw.html` | Supersaw — a grained blue panel, and a switch that says "on" with one lamp |
+| `mock.css` | Shared styles for all twenty |
 | `serve.ps1` | Local static server on port 8742 |
-| `shots\` | PNG captures of all fifteen screens |
+| `shots\` | PNG captures of all twenty screens |
 | `MIDI-Glass-implementation-plan.md` | Remaining design gaps, the engine layering, the API work, and the phases |
 
 These live in `src/prototypes/midi-glass/design/` so the design record is versioned. Nothing in this folder ships; when the app is real it goes to `src/in-box/user-tools/midi-glass/` like every other tool.

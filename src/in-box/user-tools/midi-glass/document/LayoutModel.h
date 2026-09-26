@@ -22,6 +22,7 @@
 #include <winrt/Windows.Data.Json.h>
 
 #include "EndpointMatch.h"
+#include "ThemeModel.h"
 
 namespace glass
 {
@@ -49,6 +50,16 @@ namespace glass
     // six color operation rather than a redesign.
     constexpr int32_t HueSlotCount = 6;
     constexpr int32_t LiteralHue = -1;
+
+    // The theme's one un-hued color. A control set to this is deliberately NOT color coded, and
+    // saying that with a slot rather than with a literal is what keeps it that way through a
+    // theme swap. A theme with no neutral falls the control back to its first hue.
+    constexpr int32_t NeutralSlot = HueSlotCount;
+
+    constexpr bool IsSlotInRange(_In_ int32_t slot) noexcept
+    {
+        return slot == LiteralHue || slot == NeutralSlot || (slot >= 0 && slot < HueSlotCount);
+    }
 
     // Keys this build did not understand, kept so an older build can open a newer file and write
     // it back without quietly throwing away the parts it could not edit.
@@ -936,6 +947,15 @@ namespace glass
         int32_t CanvasHeight{ 800 };
 
         std::wstring ThemeName{};
+
+        // The theme itself, where the customer has edited it away from the one it is named
+        // after. A theme travels INSIDE the layout file, so a layout sent to somebody looks the
+        // way it was built even though they have never seen the theme.
+        //
+        // Only written when it has been edited. A layout that simply picked a shipped theme
+        // keeps the name alone, so an improvement to that theme reaches it.
+        bool HasOwnTheme{ false };
+        Theme OwnTheme{};
 
         // A picture behind the controls. Stored as a bare file name, resolved against the folder
         // the layout file is in, so a layout and its artwork move together. Empty means none.

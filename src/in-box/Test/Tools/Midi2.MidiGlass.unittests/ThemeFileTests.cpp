@@ -8,6 +8,7 @@
 #include "ThemeFileTests.h"
 
 #include "ThemeStore.h"
+#include "LayoutSerializer.h"
 
 using namespace WEX::Common;
 using namespace WEX::Logging;
@@ -78,6 +79,72 @@ void ThemeFileTests::EveryShippedThemeSurvivesARoundTrip()
         VERIFY_IS_TRUE(theme.Rim == read.Value.Rim);
         VERIFY_IS_TRUE(theme.ValueStrip == read.Value.ValueStrip);
         VERIFY_IS_TRUE(theme.ValueIndicator == read.Value.ValueIndicator);
+
+        // Everything the tube themes and Bone added. A property that is written but not read
+        // back is a theme that quietly loses a feature the moment somebody saves a copy of it.
+        VERIFY_IS_TRUE(theme.BloomColor == read.Value.BloomColor);
+        VERIFY_IS_TRUE(theme.PlateSheenColor == read.Value.PlateSheenColor);
+        VERIFY_IS_TRUE(theme.PlateEndColor == read.Value.PlateEndColor);
+        VERIFY_IS_TRUE(theme.ArcTrackColor == read.Value.ArcTrackColor);
+        VERIFY_IS_TRUE(theme.ShadowColor == read.Value.ShadowColor);
+        VERIFY_IS_TRUE(theme.InkColor == read.Value.InkColor);
+
+        VERIFY_ARE_EQUAL(theme.RestingGlowPercent, read.Value.RestingGlowPercent);
+        VERIFY_ARE_EQUAL(theme.TouchFillPercent, read.Value.TouchFillPercent);
+        VERIFY_ARE_EQUAL(theme.PersistenceMilliseconds, read.Value.PersistenceMilliseconds);
+        VERIFY_ARE_EQUAL(theme.RimStrengthPercent, read.Value.RimStrengthPercent);
+        VERIFY_ARE_EQUAL(theme.PlateSheenPercent, read.Value.PlateSheenPercent);
+        VERIFY_ARE_EQUAL(theme.PlateElevation, read.Value.PlateElevation);
+        VERIFY_ARE_EQUAL(theme.ShadowSpread, read.Value.ShadowSpread);
+        VERIFY_ARE_EQUAL(theme.PipeFalloff, read.Value.PipeFalloff);
+        VERIFY_ARE_EQUAL(theme.ValueFadesToLight, read.Value.ValueFadesToLight);
+
+        VERIFY_ARE_EQUAL(theme.Overlay.ScanLinePitch, read.Value.Overlay.ScanLinePitch);
+        VERIFY_ARE_EQUAL(theme.Overlay.ScanLineStrength, read.Value.Overlay.ScanLineStrength);
+        VERIFY_IS_TRUE(theme.Overlay.ScanLineColor == read.Value.Overlay.ScanLineColor);
+        VERIFY_ARE_EQUAL(theme.Overlay.VignettePercent, read.Value.Overlay.VignettePercent);
+        VERIFY_IS_TRUE(theme.Overlay.VignetteColor == read.Value.Overlay.VignetteColor);
+        VERIFY_ARE_EQUAL(theme.Overlay.FaceplateSheenPercent, read.Value.Overlay.FaceplateSheenPercent);
+        VERIFY_IS_TRUE(theme.Overlay.FaceplateSheenColor == read.Value.Overlay.FaceplateSheenColor);
+
+        // Everything the hardware panel comps added.
+        VERIFY_IS_TRUE(theme.SectionHeader == read.Value.SectionHeader);
+        VERIFY_ARE_EQUAL(theme.SectionNameInHue, read.Value.SectionNameInHue);
+        VERIFY_IS_TRUE(theme.PanelFill == read.Value.PanelFill);
+        VERIFY_IS_TRUE(theme.PanelColor == read.Value.PanelColor);
+        VERIFY_IS_TRUE(theme.PanelEndColor == read.Value.PanelEndColor);
+        VERIFY_IS_TRUE(theme.PanelOutlineColor == read.Value.PanelOutlineColor);
+        VERIFY_IS_TRUE(theme.KnobFaceColor == read.Value.KnobFaceColor);
+        VERIFY_IS_TRUE(theme.KnobFaceEndColor == read.Value.KnobFaceEndColor);
+        VERIFY_IS_TRUE(theme.KnobCapColor == read.Value.KnobCapColor);
+        VERIFY_IS_TRUE(theme.KnobCapEndColor == read.Value.KnobCapEndColor);
+        VERIFY_ARE_EQUAL(theme.KnobCapSizePercent, read.Value.KnobCapSizePercent);
+        VERIFY_ARE_EQUAL(theme.KnobTickCount, read.Value.KnobTickCount);
+        VERIFY_ARE_EQUAL(theme.NamesInsideSwitches, read.Value.NamesInsideSwitches);
+        VERIFY_ARE_EQUAL(theme.OnLiftPercent, read.Value.OnLiftPercent);
+        VERIFY_IS_TRUE(theme.LampColor == read.Value.LampColor);
+        VERIFY_ARE_EQUAL(theme.PlateShadePercent, read.Value.PlateShadePercent);
+        VERIFY_ARE_EQUAL(theme.PlateHighlightPercent, read.Value.PlateHighlightPercent);
+        VERIFY_IS_TRUE(theme.FaderPlate == read.Value.FaderPlate);
+        VERIFY_ARE_EQUAL(theme.FaderFillPercent, read.Value.FaderFillPercent);
+        VERIFY_IS_TRUE(theme.ValueColor == read.Value.ValueColor);
+        VERIFY_ARE_EQUAL(theme.RecessShadePercent, read.Value.RecessShadePercent);
+        VERIFY_IS_TRUE(theme.WellColor == read.Value.WellColor);
+        VERIFY_ARE_EQUAL(theme.ThumbShadowPercent, read.Value.ThumbShadowPercent);
+        VERIFY_ARE_EQUAL(theme.CapLineWide, read.Value.CapLineWide);
+        VERIFY_IS_TRUE(theme.KeyWhiteColor == read.Value.KeyWhiteColor);
+        VERIFY_IS_TRUE(theme.KeyBlackColor == read.Value.KeyBlackColor);
+        VERIFY_IS_TRUE(theme.PointerColor == read.Value.PointerColor);
+        VERIFY_IS_TRUE(theme.CapLineColor == read.Value.CapLineColor);
+        VERIFY_ARE_EQUAL(theme.FillWhenOnPercent, read.Value.FillWhenOnPercent);
+        VERIFY_ARE_EQUAL(theme.SwitchFillAtRest, read.Value.SwitchFillAtRest);
+
+        for (int32_t zone = 0; zone < glass::MeterZoneCount; ++zone)
+        {
+            VERIFY_ARE_EQUAL(
+                theme.MeterSlots[static_cast<size_t>(zone)],
+                read.Value.MeterSlots[static_cast<size_t>(zone)]);
+        }
 
         for (int32_t i = 0; i < glass::ThemeHueSlotCount; ++i)
         {
@@ -236,4 +303,81 @@ void ThemeFileTests::SurvivesAHostileThemeFile()
 
     VERIFY_IS_FALSE(glass::ReadThemeFromJson(L"not json at all").Succeeded);
     VERIFY_IS_FALSE(glass::ReadThemeFromJson(L"").Succeeded);
+}
+
+// ============================================================================
+// A theme travels inside the layout once it has been edited.
+// ============================================================================
+
+void ThemeFileTests::ALayoutCarriesAnEditedThemeInsideItself()
+{
+    glass::LayoutDocument document{};
+
+    document.Name = L"Carried";
+    document.ThemeName = L"Cathode";
+
+    // Somebody took the scan lines off and warmed the light up. There is no file anywhere that
+    // says what the theme now is, so the layout has to carry it or the layout looks like
+    // Cathode again on the next machine.
+    document.OwnTheme = *glass::FindBuiltInTheme(L"Cathode");
+    document.OwnTheme.Overlay.ScanLinePitch = 0;
+    document.OwnTheme.BloomColor = { 0xFF, 0x60, 0x10, 255 };
+    document.OwnTheme.MeterSlots = { 5, 4, 0 };
+    document.HasOwnTheme = true;
+
+    glass::Page page{};
+    page.Id = L"p1";
+    page.Name = L"Main";
+    document.Pages.push_back(page);
+
+    auto const text = glass::WriteLayoutToJson(document);
+    VERIFY_IS_FALSE(text.empty());
+
+    auto const read = glass::ReadLayoutFromJson(text);
+    VERIFY_IS_TRUE(read.Succeeded);
+
+    VERIFY_IS_TRUE(read.Document.HasOwnTheme);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Cathode" }, read.Document.ThemeName);
+
+    VERIFY_ARE_EQUAL(0, read.Document.OwnTheme.Overlay.ScanLinePitch);
+    VERIFY_IS_TRUE((read.Document.OwnTheme.BloomColor == glass::ThemeColor{ 0xFF, 0x60, 0x10, 255 }));
+    VERIFY_ARE_EQUAL(5, read.Document.OwnTheme.MeterSlots[0]);
+    VERIFY_ARE_EQUAL(0, read.Document.OwnTheme.MeterSlots[2]);
+
+    // A theme inside a layout is never built in, however it got there.
+    VERIFY_IS_FALSE(read.Document.OwnTheme.IsBuiltIn);
+
+    // And the layout is drawn with what it carries rather than with the theme it names.
+    auto const resolved = glass::ResolveDocumentTheme(read.Document);
+
+    VERIFY_ARE_EQUAL(0, resolved.Overlay.ScanLinePitch);
+}
+
+void ThemeFileTests::ALayoutThatOnlyPickedAThemeCarriesTheNameAlone()
+{
+    // The other half of the deal. A layout that simply chose a shipped theme keeps the name, so
+    // an improvement to that theme still reaches it.
+    glass::LayoutDocument document{};
+
+    document.Name = L"Named";
+    document.ThemeName = L"Terminal Green";
+
+    auto const text = glass::WriteLayoutToJson(document);
+
+    VERIFY_IS_TRUE(text.find(L"\"themeColors\"") == std::wstring::npos);
+
+    auto const read = glass::ReadLayoutFromJson(text);
+    VERIFY_IS_TRUE(read.Succeeded);
+    VERIFY_IS_FALSE(read.Document.HasOwnTheme);
+
+    auto const resolved = glass::ResolveDocumentTheme(read.Document);
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"Terminal Green" }, resolved.Name);
+    VERIFY_ARE_EQUAL(3, resolved.Overlay.ScanLinePitch);
+
+    // A layout naming a theme this PC has never heard of still opens, on the default.
+    glass::LayoutDocument stranger{};
+    stranger.ThemeName = L"Somebody Else's Theme";
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"Studio Dark" }, glass::ResolveDocumentTheme(stranger).Name);
 }

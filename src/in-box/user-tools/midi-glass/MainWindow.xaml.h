@@ -142,6 +142,19 @@ namespace winrt::midiglass::implementation
         void ApplyItemWidths();
         void UpdateStatusBar();
 
+        // A card that is older than its layout, and what is needed to draw it again.
+        struct StaleCard
+        {
+            std::wstring LayoutPath{};
+            std::wstring CardPath{};
+            glass::LayoutDocument Document{};
+        };
+
+        // Cards are drawn by the real surface, which only renders on this window's thread and
+        // in this window's tree, so they wait their turn here and are drawn one at a time.
+        void QueueStaleCards(_In_ std::vector<StaleCard> stale);
+        winrt::fire_and_forget DrawQueuedCardsAsync();
+
         // The service can stop while the library is open, and a device watcher says nothing
         // about that on its own. This both polls and is called whenever a device arrives or
         // leaves, because a stopping service takes every device with it. Returns true when the
@@ -223,6 +236,9 @@ namespace winrt::midiglass::implementation
 
         bool m_refreshing{ false };
         bool m_updatingChrome{ false };
+
+        std::vector<StaleCard> m_cardQueue{};
+        bool m_drawingCards{ false };
     };
 }
 

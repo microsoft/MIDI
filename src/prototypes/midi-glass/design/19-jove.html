@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - Jove theme</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    .board {
+        width: 1000px; border-radius: 8px; position: relative; overflow: hidden;
+        border: 1px solid rgba(255,255,255,.08);
+        background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+        box-shadow: var(--shadow);
+    }
+    .chiprow { position: absolute; left: 14px; top: 13px; display: flex; gap: 6px; align-items: center; }
+    .tchip {
+        height: 26px; padding: 0 11px; border-radius: 13px;
+        display: flex; align-items: center; gap: 7px;
+        font-size: 11px; color: var(--text3);
+        background: rgba(255,255,255,.035); box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    .tchip i { width: 11px; height: 11px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
+    .tchip.new { color: #F58A44; background: rgba(232,96,28,.14); box-shadow: inset 0 0 0 1px rgba(232,96,28,.55); }
+
+    .deck {
+        position: absolute; left: 14px; top: 54px; width: 972px; height: 428px;
+        border-radius: 4px; overflow: hidden;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.07);
+    }
+    .decktag { position: absolute; left: 14px; top: 494px; font-size: 11px; color: var(--text3); }
+    .decktag b { color: var(--text2); font-weight: 600; }
+
+    /* ---- the things this panel has that the shared language has no name for ---- */
+
+    /* the orange section header. On the instrument it is a filled bar with the
+       section name reversed out of it, and a hairline bracket under it. */
+    .banner {
+        position: absolute; height: 17px; border-radius: 2px;
+        background: linear-gradient(180deg, #F0722B 0%, #DD5A16 100%);
+        color: #1A0E05; font-size: 9px; font-weight: 700; letter-spacing: .13em;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.30);
+    }
+    .bracket {
+        position: absolute; height: 5px;
+        border-left: 1px solid rgba(255,255,255,.26);
+        border-right: 1px solid rgba(255,255,255,.26);
+        border-top: 1px solid rgba(255,255,255,.26);
+    }
+    .silk { position: absolute; font-size: 8px; letter-spacing: .05em; color: rgba(237,237,237,.78); text-align: center; }
+    .silk.dim { color: rgba(237,237,237,.50); }
+    .silk.amber { color: #F0722B; }
+
+    /* the only display it has: red seven segment */
+    .led7 {
+        position: absolute; border-radius: 3px;
+        background: #060606;
+        box-shadow: inset 0 2px 5px rgba(0,0,0,.95), inset 0 0 0 1px rgba(255,255,255,.10);
+        display: flex; align-items: center; justify-content: center; gap: 12px;
+    }
+    .led7 b {
+        font-family: "Cascadia Mono","Consolas",monospace;
+        font-size: 27px; font-weight: 400; letter-spacing: .06em;
+        color: #FF3324; text-shadow: 0 0 9px rgba(255,51,36,.85), 0 0 22px rgba(255,51,36,.35);
+    }
+    .led7 i {
+        position: absolute; left: 0; right: 0; top: 4px;
+        font-size: 7.5px; letter-spacing: .16em; font-style: normal;
+        color: rgba(237,237,237,.42); text-align: center;
+    }
+
+    .rhead { position: absolute; font-size: 11px; letter-spacing: .10em; color: rgba(237,237,237,.46); }
+    .kcap { position: absolute; text-align: center; font-size: 10.5px; color: rgba(237,237,237,.60); }
+    .kcap b { display: block; color: #EDEDED; font-weight: 600; font-size: 11px; margin-bottom: 2px; }
+    .measure { position: absolute; font-size: 11.5px; line-height: 1.6; color: rgba(237,237,237,.72); }
+    .measure b { color: #FFFFFF; font-weight: 600; }
+    .measure .num { font-family: "Cascadia Mono","Consolas",monospace; color: #F0722B; font-weight: 600; }
+
+    .swatches { display: flex; gap: 0; border-radius: 7px; overflow: hidden; margin-top: 14px; }
+    .swatches div {
+        flex: 1; height: 58px; display: flex; flex-direction: column; justify-content: flex-end;
+        padding: 6px 8px; font-size: 9.5px; font-family: "Cascadia Mono","Consolas",monospace;
+    }
+    .swatches div span { display: block; font-family: "Segoe UI Variable Text","Segoe UI",sans-serif; font-size: 10px; opacity: .78; }
+
+    .costgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; margin-top: 12px; }
+    .cost {
+        border-radius: 7px; padding: 12px 14px;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke);
+        font-size: 11.5px; color: var(--text3); line-height: 1.55;
+    }
+    .cost h4 { margin: 0 0 7px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .cost b { color: var(--text2); font-weight: 600; }
+    .cost .yes { color: var(--success); font-weight: 600; }
+    .cost .no { color: var(--caution); font-weight: 600; }
+    .cost .mono { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="caption-above">Screen 19 &mdash; <b>Jove</b>, after the Roland Jupiter-8. Matte black steel, one orange, and a row of colored tabs. <b>This is the first theme where a control is not on a plate at all</b>: a knob is a black cap sitting straight on the panel and a fader is a slot milled into it. Only the tab switches are objects, and a tab does not <i>carry</i> a color &mdash; it <b>is</b> one. That inverts how every other theme uses the six slots, and it is the one real strain this puts on the model.</p>
+
+<!-- ============================================================= DECK -->
+<div class="board" style="height:516px;">
+
+    <div class="chiprow">
+        <div class="tchip"><i style="background:#4CE0FF"></i>Studio Dark</div>
+        <div class="tchip"><i style="background:#F98B31"></i>Bigwig</div>
+        <div class="tchip"><i style="background:#E3DAC9"></i>Bone</div>
+        <div class="tchip"><i style="background:#2C362C"></i>Cathode</div>
+        <div class="tchip"><i style="background:#4AE06A"></i>Terminal Green</div>
+        <div class="tchip new"><i style="background:#E8601C"></i>Jove</div>
+        <div class="tchip" style="margin-left:6px">&#43; New theme&hellip;</div>
+    </div>
+
+    <div class="deck surf tonal jove">
+
+        <div class="surftext h1" style="left:18px; top:10px; font-size:15px;">Jove</div>
+        <div class="surftext small" style="left:70px; top:15px;">two manual &middot; upper</div>
+
+        <div class="pagetabs" style="right:14px; top:10px; gap:3px;">
+            <div class="tab sel" style="height:20px; padding:0 11px; font-size:10px">Panel</div>
+            <div class="tab" style="height:20px; padding:0 11px; font-size:10px">Patch</div>
+            <div class="tab" style="height:20px; padding:0 11px; font-size:10px">Arp</div>
+        </div>
+
+        <!-- ================================ band A: the banner sections -->
+
+        <div class="banner" style="left:20px; top:40px; width:150px;">LFO</div>
+        <div class="bracket" style="left:20px; top:59px; width:148px;"></div>
+        <div class="silk" style="left:22px; top:68px; width:56px;">RATE</div>
+        <div class="silk" style="left:88px; top:68px; width:56px;">DELAY</div>
+        <div class="ctl knob hue2" style="left:26px; top:82px; width:48px; height:48px;">
+            <div class="dial"><div class="arc" style="--pct:.46turn"></div><div class="ptr" style="transform:rotate(22deg)"></div></div>
+        </div>
+        <div class="ctl knob hue2" style="left:92px; top:82px; width:48px; height:48px;">
+            <div class="dial"><div class="arc" style="--pct:.28turn"></div><div class="ptr" style="transform:rotate(-43deg)"></div></div>
+        </div>
+
+        <div class="banner" style="left:186px; top:40px; width:210px;">VCO-1</div>
+        <div class="bracket" style="left:186px; top:59px; width:208px;"></div>
+        <div class="silk" style="left:188px; top:68px; width:56px;">RANGE</div>
+        <div class="silk" style="left:254px; top:68px; width:56px;">WAVE</div>
+        <div class="silk" style="left:320px; top:68px; width:56px;">TUNE</div>
+        <div class="ctl knob hue2" style="left:192px; top:82px; width:48px; height:48px;">
+            <div class="dial"><div class="arc" style="--pct:.58turn"></div><div class="ptr" style="transform:rotate(64deg)"></div></div>
+        </div>
+        <div class="ctl knob hue2 detent" style="left:258px; top:82px; width:48px; height:48px;">
+            <div class="dial"><div class="arc" style="--pct:.40turn"></div><div class="ptr" style="transform:rotate(0deg)"></div></div>
+        </div>
+        <div class="ctl knob hue2" style="left:324px; top:82px; width:48px; height:48px;">
+            <div class="dial"><div class="arc" style="--pct:.72turn"></div><div class="ptr" style="transform:rotate(114deg)"></div></div>
+        </div>
+
+        <div class="banner" style="left:412px; top:40px; width:218px;">VCF</div>
+        <div class="bracket" style="left:412px; top:59px; width:216px;"></div>
+        <div class="silk" style="left:414px; top:68px; width:56px;">CUTOFF</div>
+        <div class="silk" style="left:480px; top:68px; width:56px;">RES</div>
+        <div class="silk" style="left:552px; top:68px; width:70px;">ENV MOD</div>
+        <div class="ctl knob hue2" style="left:418px; top:82px; width:48px; height:48px;">
+            <div class="dial"><div class="arc" style="--pct:.62turn"></div><div class="ptr" style="transform:rotate(78deg)"></div></div>
+        </div>
+        <div class="ctl knob hue2" style="left:484px; top:82px; width:48px; height:48px;">
+            <div class="dial"><div class="arc" style="--pct:.34turn"></div><div class="ptr" style="transform:rotate(-22deg)"></div></div>
+        </div>
+        <div class="ctl fader hue2" style="left:568px; top:82px; width:38px; height:92px;">
+            <div class="slot"><div class="fill" style="height:64%"></div><div class="capbar" style="bottom:calc(64% - 8px);"></div></div>
+        </div>
+
+        <div class="banner" style="left:646px; top:40px; width:156px;">ENV-1</div>
+        <div class="bracket" style="left:646px; top:59px; width:154px;"></div>
+        <div class="silk" style="left:648px; top:68px; width:26px;">A</div>
+        <div class="silk" style="left:682px; top:68px; width:26px;">D</div>
+        <div class="silk" style="left:716px; top:68px; width:26px;">S</div>
+        <div class="silk" style="left:750px; top:68px; width:26px;">R</div>
+        <div class="ctl fader hue2" style="left:648px; top:82px; width:26px; height:92px;">
+            <div class="slot"><div class="fill" style="height:24%"></div><div class="capbar" style="bottom:calc(24% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue2" style="left:682px; top:82px; width:26px; height:92px;">
+            <div class="slot"><div class="fill" style="height:58%"></div><div class="capbar" style="bottom:calc(58% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue2" style="left:716px; top:82px; width:26px; height:92px;">
+            <div class="slot"><div class="fill" style="height:82%"></div><div class="capbar" style="bottom:calc(82% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue2" style="left:750px; top:82px; width:26px; height:92px;">
+            <div class="slot"><div class="fill" style="height:41%"></div><div class="capbar" style="bottom:calc(41% - 8px);"></div></div>
+        </div>
+
+        <div class="banner" style="left:816px; top:40px; width:140px;">ENV-2</div>
+        <div class="bracket" style="left:816px; top:59px; width:138px;"></div>
+        <div class="silk" style="left:818px; top:68px; width:26px;">A</div>
+        <div class="silk" style="left:850px; top:68px; width:26px;">D</div>
+        <div class="silk" style="left:882px; top:68px; width:26px;">S</div>
+        <div class="silk" style="left:914px; top:68px; width:26px;">R</div>
+        <div class="ctl fader hue2" style="left:818px; top:82px; width:26px; height:92px;">
+            <div class="slot"><div class="fill" style="height:36%"></div><div class="capbar" style="bottom:calc(36% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue2" style="left:850px; top:82px; width:26px; height:92px;">
+            <div class="slot"><div class="fill" style="height:70%"></div><div class="capbar" style="bottom:calc(70% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue2" style="left:882px; top:82px; width:26px; height:92px;">
+            <div class="slot"><div class="fill" style="height:52%"></div><div class="capbar" style="bottom:calc(52% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue2" style="left:914px; top:82px; width:26px; height:92px;">
+            <div class="slot"><div class="fill" style="height:88%"></div><div class="capbar" style="bottom:calc(88% - 8px);"></div></div>
+        </div>
+
+        <div class="surfrule" style="left:16px; top:190px; width:940px;"></div>
+
+        <!-- ============================== band B: the tab switches, row 1 -->
+
+        <div class="silk dim" style="left:20px; top:200px; width:152px; letter-spacing:.14em;">ARPEGGIO RANGE</div>
+        <div class="ctl btn-ctl hue2" style="left:20px; top:214px; width:34px; height:38px;"><div class="name" style="font-size:10px">1</div></div>
+        <div class="ctl btn-ctl hue2 on" style="left:58px; top:214px; width:34px; height:38px;"><div class="name" style="font-size:10px">2</div></div>
+        <div class="ctl btn-ctl hue2" style="left:96px; top:214px; width:34px; height:38px;"><div class="name" style="font-size:10px">3</div></div>
+        <div class="ctl btn-ctl hue2" style="left:134px; top:214px; width:34px; height:38px;"><div class="name" style="font-size:10px">4</div></div>
+
+        <div class="silk dim" style="left:188px; top:200px; width:152px; letter-spacing:.14em;">MODE</div>
+        <div class="ctl btn-ctl hue3" style="left:188px; top:214px; width:34px; height:38px;"><div class="name" style="font-size:8px">UP</div></div>
+        <div class="ctl btn-ctl hue3" style="left:226px; top:214px; width:34px; height:38px;"><div class="name" style="font-size:8px">DN</div></div>
+        <div class="ctl btn-ctl hue3 on" style="left:264px; top:214px; width:34px; height:38px;"><div class="name" style="font-size:8px">U&amp;D</div></div>
+        <div class="ctl btn-ctl hue3" style="left:302px; top:214px; width:34px; height:38px;"><div class="name" style="font-size:8px">RND</div></div>
+
+        <div class="silk dim" style="left:356px; top:200px; width:114px; letter-spacing:.14em;">ASSIGN</div>
+        <div class="ctl btn-ctl neutral" style="left:356px; top:214px; width:34px; height:38px;"><div class="name" style="font-size:8px">SOLO</div></div>
+        <div class="ctl btn-ctl neutral" style="left:394px; top:214px; width:34px; height:38px;"><div class="name" style="font-size:8px">UNI</div></div>
+        <div class="ctl btn-ctl neutral on" style="left:432px; top:214px; width:34px; height:38px;"><div class="name" style="font-size:8px">POLY</div></div>
+
+        <div class="silk dim" style="left:486px; top:200px; width:114px; letter-spacing:.14em;">KEY MODE</div>
+        <div class="ctl btn-ctl hue5" style="left:486px; top:214px; width:34px; height:38px;"><div class="name" style="font-size:8px">DUAL</div></div>
+        <div class="ctl btn-ctl hue5" style="left:524px; top:214px; width:34px; height:38px;"><div class="name" style="font-size:8px">SPLT</div></div>
+        <div class="ctl btn-ctl hue5 on" style="left:562px; top:214px; width:34px; height:38px;"><div class="name" style="font-size:8px">WHL</div></div>
+
+        <div class="silk dim" style="left:616px; top:200px; width:76px; letter-spacing:.14em;">PANEL</div>
+        <div class="ctl btn-ctl hue6" style="left:616px; top:214px; width:34px; height:38px;"><div class="name" style="font-size:8px">LWR</div></div>
+        <div class="ctl btn-ctl hue6 on" style="left:654px; top:214px; width:34px; height:38px;"><div class="name" style="font-size:8px">UPR</div></div>
+
+        <div class="led7" style="left:718px; top:200px; width:238px; height:56px;">
+            <i>PATCH NUMBER</i>
+            <b style="margin-top:6px">A</b><b style="margin-top:6px">7</b>
+        </div>
+
+        <!-- ============================== band C: the tab switches, row 2 -->
+
+        <div class="silk dim" style="left:20px; top:274px; width:266px; letter-spacing:.14em;">PATCH NUMBER 1-8</div>
+        <div class="ctl btn-ctl neutral" style="left:20px; top:288px; width:30px; height:38px;"><div class="name" style="font-size:10px">1</div></div>
+        <div class="ctl btn-ctl neutral" style="left:54px; top:288px; width:30px; height:38px;"><div class="name" style="font-size:10px">2</div></div>
+        <div class="ctl btn-ctl neutral" style="left:88px; top:288px; width:30px; height:38px;"><div class="name" style="font-size:10px">3</div></div>
+        <div class="ctl btn-ctl neutral" style="left:122px; top:288px; width:30px; height:38px;"><div class="name" style="font-size:10px">4</div></div>
+        <div class="ctl btn-ctl neutral" style="left:156px; top:288px; width:30px; height:38px;"><div class="name" style="font-size:10px">5</div></div>
+        <div class="ctl btn-ctl neutral" style="left:190px; top:288px; width:30px; height:38px;"><div class="name" style="font-size:10px">6</div></div>
+        <div class="ctl btn-ctl neutral on" style="left:224px; top:288px; width:30px; height:38px;"><div class="name" style="font-size:10px">7</div></div>
+        <div class="ctl btn-ctl neutral" style="left:258px; top:288px; width:30px; height:38px;"><div class="name" style="font-size:10px">8</div></div>
+
+        <div class="silk dim" style="left:306px; top:274px; width:44px; letter-spacing:.14em;">MAN</div>
+        <div class="ctl btn-ctl hue4" style="left:306px; top:288px; width:44px; height:38px;"><div class="name" style="font-size:8px">MANUAL</div></div>
+
+        <div class="silk dim" style="left:372px; top:274px; width:266px; letter-spacing:.14em;">PATCH PRESET A-H</div>
+        <div class="ctl btn-ctl hue3 on" style="left:372px; top:288px; width:30px; height:38px;"><div class="name" style="font-size:10px">A</div></div>
+        <div class="ctl btn-ctl hue3" style="left:406px; top:288px; width:30px; height:38px;"><div class="name" style="font-size:10px">B</div></div>
+        <div class="ctl btn-ctl hue3" style="left:440px; top:288px; width:30px; height:38px;"><div class="name" style="font-size:10px">C</div></div>
+        <div class="ctl btn-ctl hue3" style="left:474px; top:288px; width:30px; height:38px;"><div class="name" style="font-size:10px">D</div></div>
+        <div class="ctl btn-ctl hue3" style="left:508px; top:288px; width:30px; height:38px;"><div class="name" style="font-size:10px">E</div></div>
+        <div class="ctl btn-ctl hue3" style="left:542px; top:288px; width:30px; height:38px;"><div class="name" style="font-size:10px">F</div></div>
+        <div class="ctl btn-ctl hue3" style="left:576px; top:288px; width:30px; height:38px;"><div class="name" style="font-size:10px">G</div></div>
+        <div class="ctl btn-ctl hue3" style="left:610px; top:288px; width:30px; height:38px;"><div class="name" style="font-size:10px">H</div></div>
+
+        <div class="silk dim" style="left:658px; top:274px; width:110px; letter-spacing:.14em;">MEMORY</div>
+        <div class="ctl btn-ctl hue2 dim" style="left:658px; top:288px; width:46px; height:38px;"><div class="name" style="font-size:8px">PROT</div></div>
+        <div class="ctl btn-ctl hue1" style="left:708px; top:288px; width:46px; height:38px;"><div class="name" style="font-size:8px">WRITE</div></div>
+
+        <div class="silk dim" style="left:772px; top:274px; width:116px; letter-spacing:.14em;">TAPE MEMORY</div>
+        <div class="ctl btn-ctl hue5" style="left:772px; top:288px; width:36px; height:38px;"><div class="name" style="font-size:8px">SAVE</div></div>
+        <div class="ctl btn-ctl hue5" style="left:812px; top:288px; width:36px; height:38px;"><div class="name" style="font-size:8px">VER</div></div>
+        <div class="ctl btn-ctl hue5" style="left:852px; top:288px; width:36px; height:38px;"><div class="name" style="font-size:8px">LOAD</div></div>
+
+        <div class="silk dim" style="left:900px; top:274px; width:56px; letter-spacing:.14em;">DATA</div>
+        <div class="ctl btn-ctl hue1 offline" style="left:900px; top:288px; width:56px; height:38px;">
+            <div class="cap" style="font-size:8px; color:rgba(237,237,237,.45)">no link</div>
+        </div>
+
+        <div class="surfrule" style="left:16px; top:344px; width:940px;"></div>
+
+        <!-- ============================== band D: the rest of the family -->
+
+        <div class="silk dim" style="left:20px; top:352px; width:58px; letter-spacing:.14em;">BENDER</div>
+        <div class="ctl joy hue2" style="left:20px; top:366px; width:48px; height:48px;">
+            <div class="ring"></div><div class="spring"></div>
+            <div class="puck" style="left:50%; top:50%; width:18px; height:18px; margin:-9px 0 0 -9px"></div>
+        </div>
+
+        <div class="silk dim" style="left:84px; top:352px; width:60px; letter-spacing:.14em;">WHEELS</div>
+        <div class="ctl wheel hue2" style="left:84px; top:366px; width:26px; height:48px;">
+            <div class="body"><div class="ridges"></div><div class="ind" style="bottom:66%"></div></div>
+        </div>
+        <div class="ctl wheel hue2" style="left:118px; top:366px; width:26px; height:48px;">
+            <div class="body"><div class="ridges"></div><div class="center"></div><div class="ind" style="bottom:50%"></div></div>
+        </div>
+
+        <div class="silk dim" style="left:176px; top:352px; width:180px; letter-spacing:.14em;">MIX</div>
+        <div class="ctl fader hue2 horiz" style="left:176px; top:378px; width:180px; height:24px;">
+            <div class="slot"><div class="fill" style="width:48%"></div><div class="capbar" style="left:calc(48% - 8px);"></div></div>
+        </div>
+
+        <div class="silk dim" style="left:376px; top:352px; width:82px; letter-spacing:.14em;">XY</div>
+        <div class="ctl xy hue2" style="left:376px; top:366px; width:82px; height:48px;">
+            <div class="field2">
+                <div class="cross h" style="top:40%"></div>
+                <div class="cross v" style="left:58%"></div>
+                <div class="puck" style="left:58%; top:40%; width:12px; height:12px; margin:-6px 0 0 -6px"></div>
+            </div>
+        </div>
+
+        <div class="silk dim" style="left:478px; top:352px; width:50px; letter-spacing:.14em;">LEVEL</div>
+        <div class="ctl meter hue4" style="left:478px; top:366px; width:22px; height:48px;">
+            <i></i><i class="lit hot"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i>
+        </div>
+        <div class="ctl meter hue4" style="left:506px; top:366px; width:22px; height:48px;">
+            <i></i><i></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i>
+        </div>
+
+        <div class="silk dim" style="left:552px; top:352px; width:180px; letter-spacing:.14em;">SEQUENCE</div>
+        <div class="ctl steps hue2" style="left:552px; top:366px; width:180px; height:48px;">
+            <div class="row"><i class="on cur"></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i></div>
+            <div class="row"><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i></div>
+        </div>
+
+        <div class="silk dim" style="left:752px; top:352px; width:54px; letter-spacing:.14em;">HELD</div>
+        <div class="ctl btn-ctl hue4 held" style="left:752px; top:366px; width:54px; height:48px;">
+            <div class="name" style="font-size:9px">HOLD</div>
+        </div>
+
+        <div class="silk dim" style="left:826px; top:352px; width:74px; letter-spacing:.14em;">MSTR TUNE</div>
+        <div class="ctl knob hue2 detent" style="left:838px; top:366px; width:48px; height:48px;">
+            <div class="dial"><div class="arc" style="--pct:.40turn"></div><div class="ptr" style="transform:rotate(0deg)"></div></div>
+        </div>
+
+    </div>
+    <div class="decktag"><b>Jove</b> &mdash; matte black steel, one orange for every section header and every knob pointer, and tabs that are their own color</div>
+
+</div>
+
+<!-- ============================================= WHAT THE PANEL DOES -->
+<div class="board" style="height:318px; margin-top:13px;">
+
+    <div class="surf tonal jove" style="position:absolute; inset:0;">
+
+        <div class="rhead" style="left:20px; top:14px;">NO PLATE, NO RIM, NO LIGHT PIPE. THE CONTROL IS THE PART YOU TOUCH.</div>
+
+        <div class="ctl fader hue2" style="left:40px; top:48px; width:60px; height:150px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:12%"></i><i style="top:31%"></i><i style="top:50%"></i><i style="top:69%"></i><i style="top:88%"></i></div>
+                <div class="fill" style="height:62%"></div>
+                <div class="capbar" style="bottom:calc(62% - 8px);"></div>
+            </div>
+        </div>
+        <div class="kcap" style="left:20px; top:206px; width:100px;"><b>Fader</b>a milled slot, a wide white line</div>
+
+        <div class="ctl knob hue2" style="left:148px; top:66px; width:104px; height:104px;">
+            <div class="dial"><div class="arc" style="--pct:.58turn"></div><div class="ptr" style="transform:rotate(64deg)"></div></div>
+        </div>
+        <div class="kcap" style="left:140px; top:206px; width:120px;"><b>Knob</b>black cap, orange pointer</div>
+
+        <div class="banner" style="left:296px; top:78px; width:150px; height:22px; font-size:10px;">VCO-1</div>
+        <div class="bracket" style="left:296px; top:102px; width:148px;"></div>
+        <div class="kcap" style="left:290px; top:206px; width:162px;"><b>Section header</b>a filled bar, not a caption</div>
+
+        <div class="ctl btn-ctl hue4" style="left:484px; top:62px; width:52px; height:52px;"><div class="name" style="font-size:9px">OFF</div></div>
+        <div class="ctl btn-ctl hue4 on" style="left:544px; top:62px; width:52px; height:52px;"><div class="name" style="font-size:9px">ON</div></div>
+        <div class="ctl btn-ctl neutral" style="left:484px; top:122px; width:52px; height:52px;"><div class="name" style="font-size:9px">OFF</div></div>
+        <div class="ctl btn-ctl neutral on" style="left:544px; top:122px; width:52px; height:52px;"><div class="name" style="font-size:9px">ON</div></div>
+        <div class="kcap" style="left:478px; top:206px; width:124px;"><b>Tab switch</b>the color IS the control</div>
+
+        <div class="led7" style="left:628px; top:78px; width:172px; height:52px;">
+            <i>PATCH NUMBER</i>
+            <b style="margin-top:6px">A</b><b style="margin-top:6px">7</b>
+        </div>
+        <div class="kcap" style="left:624px; top:206px; width:180px;"><b>Seven segment</b>the only display on the panel</div>
+
+        <div class="measure" style="left:40px; top:256px; width:912px;">
+            <b>The strain.</b>
+            Every theme before this one spends a slot on a <i>hairline</i>. Jove spends each of its six on a whole button face, at full saturation, at rest &mdash; which is the exact thing the &ldquo;nothing is saturated at rest&rdquo; rule exists to prevent. It gets away with it because the panel around them is <span class="num">#262626</span> and there are only ever a few dozen tabs, but it is the first theme that would genuinely be worse at a hundred and twenty controls, and the picker should say so.
+        </div>
+    </div>
+</div>
+
+<div class="swatches">
+    <div style="background:#262626; color:#EDEDED">#262626 <span>Matte steel</span></div>
+    <div style="background:#E8601C; color:#1A0E05">#E8601C <span>Orange</span></div>
+    <div style="background:#E8E2CE; color:#1A1A1A">#E8E2CE <span>Cream</span></div>
+    <div style="background:#FFFFFF; color:#1A1A1A">#FFFFFF <span>Cap line</span></div>
+    <div style="background:#D6382C; color:#FFF6F5">#D6382C <span>Red</span></div>
+    <div style="background:#E8892B; color:#1A0E05">#E8892B <span>Orange</span></div>
+    <div style="background:#E7D14A; color:#1A1605">#E7D14A <span>Yellow</span></div>
+    <div style="background:#5CBE6A; color:#08170B">#5CBE6A <span>Green</span></div>
+    <div style="background:#56C6CD; color:#04171A">#56C6CD <span>Aqua</span></div>
+    <div style="background:#4A7FC1; color:#F2F7FF">#4A7FC1 <span>Blue</span></div>
+    <div style="background:#FF3324; color:#FFFFFF">#FF3324 <span>LED red</span></div>
+</div>
+
+<div class="costgrid">
+    <div class="cost">
+        <h4><span class="yes">Your seven colors fit</span> &mdash; because one of them is not a color</h4>
+        Red, orange, yellow, green, aqua and blue are <b>exactly six</b>, which is exactly what a theme has. The cream tabs are the seventh only if you count them as a color; they are better read as <b>the absence of one</b> &mdash; a tab with no assignment. That is worth making real: a theme names <b>one neutral</b> beside its six hues, and a control can pick it. Studio Dark's neutral would be a gray, Bone's a warm white. One property, and it stops a customer reaching for a literal color and losing it at the next theme swap.
+    </div>
+    <div class="cost">
+        <h4><span class="yes">Built</span> &mdash; what the engine now does for this panel</h4>
+        <b>Fill at rest by control kind</b>, so the tabs are solid and the knobs are black on the same panel. A <b>pointer color</b> and a <b>cap line color</b>. Then, from the engine round after this screen: every value &mdash; arc, fill, puck, LFO wave &mdash; in the section orange (<span class="mono">ValueColor</span>). A knob is a <b>turned black cap</b> lit above the middle, with its arc outside it (<span class="mono">KnobFaceColor</span>). A fader has <b>no plate</b>, a faint fill and a cap that stands off the slot with a wide white line (<span class="mono">FaderPlate</span>, <span class="mono">FaderFillPercent</span>, <span class="mono">ThumbShadowPercent</span>, <span class="mono">CapLineWide</span>). A tab is glossed and carries its name; lit, it goes paler and glows (<span class="mono">PlateShadePercent</span>, <span class="mono">PlateHighlightPercent</span>, <span class="mono">NamesInsideSwitches</span>, <span class="mono">OnLiftPercent</span>). An LFO sits in a well instead of being filled like a tab.
+    </div>
+    <div class="cost">
+        <h4><span class="yes">Built too</span> &mdash; and what is still different</h4>
+        Labels sit <b>above</b> their control, and the section header is <b>a filled bar</b> over a section drawn as a faint outline (<span class="mono">PanelFill</span> none, <span class="mono">PanelOutlineColor</span>). <b>Still different:</b> the panel is one flat color rather than this screen's soft gradient; the bold, letter-spaced silkscreen is whatever font each label is set in; the banner has no bracket line under it; and the pointer is 2&nbsp;px wide rather than 3.
+    </div>
+</div>
+
+<p class="note" style="margin-top:12px;">
+<b>On the name.</b> Jove is the planet, not the instrument &mdash; same idea, nothing borrowed. <b>Matte Steel</b> and <b>Tab Row</b> both describe it if you would rather the name said what it looks like. Colors are eyeballed from your photograph rather than sampled from anything of Roland's, and every one of the six measures over 3:1 against the panel, which a saturated color on near-black does easily. <b>What I left out on purpose:</b> the instrument's silkscreen is dense enough to need a magnifier, and the arrows and brackets that tie a knob to its label are documentation rather than controls &mdash; a customer who wants that can draw it with text and rule objects, which are already surface objects. I also kept the fader slot faintly lit behind the cap. The real panel has nothing there at all, and the cap position is the whole value; a completely unlit slot reads correctly but it is the one place where being right about the instrument costs the language a rule, so it is yours to call.
+</p>
+
+</div>
+</body>
+</html>

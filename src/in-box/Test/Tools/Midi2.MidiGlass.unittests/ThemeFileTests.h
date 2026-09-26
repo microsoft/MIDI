@@ -27,4 +27,9 @@ public:
     TEST_METHOD(AThemeFileCannotClaimToBeBuiltIn);
     TEST_METHOD(RefusesADeckImageThatEscapesItsFolder);
     TEST_METHOD(SurvivesAHostileThemeFile);
+
+    // A layout carries the theme it was built with, so it looks the way it was built on a PC
+    // that has never seen the theme.
+    TEST_METHOD(ALayoutCarriesAnEditedThemeInsideItself);
+    TEST_METHOD(ALayoutThatOnlyPickedAThemeCarriesTheNameAlone);
 };

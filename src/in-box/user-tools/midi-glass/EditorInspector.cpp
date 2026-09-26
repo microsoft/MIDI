@@ -271,9 +271,28 @@ namespace winrt::midiglass::implementation
                 PickupCombo().Items().Append(box_value(resources::GetString(key)));
             }
 
-            // Six hue slots and nothing else. A control stores a slot rather than a color, which
-            // is what makes changing theme a six color operation instead of a redesign.
-            //
+            // Six hue slots, the theme's one neutral where it has one, and a color of this
+            // control's own. A control stores a slot rather than a color, which is what makes
+            // changing theme a six color operation instead of a redesign.
+            RefreshHueSwatches();
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to build the inspector choices.")
+    }
+
+    // Rebuilt rather than recolored, because a theme can arrive with a neutral where the last
+    // one had none. Called on every theme change: before this the swatches kept the previous
+    // theme's six colors and a customer picked from a palette that was no longer there.
+    void EditorWindow::RefreshHueSwatches()
+    {
+        try
+        {
+            if (HueSlotHost() == nullptr)
+            {
+                return;
+            }
+
+            HueSlotHost().Items().Clear();
+
             // The swatch is the whole tile rather than a small square inside a button, because
             // the comp's row of color is the thing being chosen; a button around it is chrome
             // that pushes six swatches wider than the pane.
@@ -297,6 +316,32 @@ namespace winrt::midiglass::implementation
                 swatch.Click({ this, &EditorWindow::OnHueSlotClick });
 
                 HueSlotHost().Items().Append(swatch);
+            }
+
+            // The seventh, and it is the absence of a color. Only offered by a theme that has
+            // one, because on the others it would be a swatch that does nothing.
+            if (glass::HasNeutralColor(m_theme))
+            {
+                controls::Button neutral{};
+
+                neutral.Width(26);
+                neutral.Height(26);
+                neutral.MinWidth(0);
+                neutral.Padding({ 0, 0, 0, 0 });
+                neutral.CornerRadius({ 5, 5, 5, 5 });
+                neutral.BorderThickness({ 0, 0, 0, 0 });
+                neutral.Background(media::SolidColorBrush(ToColor(m_theme.NeutralColor)));
+                neutral.Tag(box_value(glass::NeutralSlot));
+
+                xaml::Automation::AutomationProperties::SetName(
+                    neutral, resources::GetString(L"HueSlotNeutralName"));
+
+                controls::ToolTipService::SetToolTip(
+                    neutral, box_value(resources::GetString(L"HueSlotNeutralName")));
+
+                neutral.Click({ this, &EditorWindow::OnHueSlotClick });
+
+                HueSlotHost().Items().Append(neutral);
             }
 
             // A color of this control's own, outside the theme. Last, and drawn as a spectrum,
@@ -345,7 +390,7 @@ namespace winrt::midiglass::implementation
                 HueSlotHost().Items().Append(custom);
             }
         }
-        MIDI_GLASS_CATCH_AND_LOG(L"Unable to build the inspector choices.")
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to lay out the color swatches.")
     }
 
     glass::Control const* EditorWindow::SingleSelectedControl() const
@@ -399,23 +444,31 @@ namespace winrt::midiglass::implementation
             MidiTab().IsEnabled(control != nullptr);
             MidiInTab().IsEnabled(control != nullptr);
 
+            // Nothing selected says so and nothing else. A selection of several keeps its heading,
+            // which counts them and carries Duplicate and Delete, but has no tabs to show: there
+            // is no one control for them to describe.
+            InspectorEmptyText().Visibility(selectedCount == 0
+                ? xaml::Visibility::Visible
+                : xaml::Visibility::Collapsed);
+
+            InspectorHeader().Visibility(selectedCount == 0
+                ? xaml::Visibility::Collapsed
+                : xaml::Visibility::Visible);
+
+            InspectorBody().Visibility(control == nullptr
+                ? xaml::Visibility::Collapsed
+                : xaml::Visibility::Visible);
+
             if (control == nullptr)
             {
-                auto const* const page = m_editor.CurrentPage();
-
-                InspectorKindText().Text(resources::GetString(
-                    selectedCount > 1 ? L"InspectorManySelected" : L"InspectorPageKind"));
-
-                InspectorTitleText().Text(selectedCount > 1
-                    ? resources::FormatString(L"EditorSelectedFormat", std::to_wstring(selectedCount))
-                    : winrt::hstring{ page == nullptr || page->Name.empty()
-                        ? std::wstring{ m_editor.Document().Name }
-                        : page->Name });
+                InspectorKindText().Text(resources::GetString(L"InspectorManySelected"));
+                InspectorTitleText().Text(
+                    resources::FormatString(L"EditorSelectedFormat", std::to_wstring(selectedCount)));
 
                 // "11 selected" is a count, not a name. Nothing to rename, so nothing to type in.
-                InspectorTitleText().IsReadOnly(selectedCount > 1 || page == nullptr);
+                InspectorTitleText().IsReadOnly(true);
 
-                // Emptied and greyed, not left as they were. Leaving the last control's numbers
+                // Emptied and grayed, not left as they were. Leaving the last control's numbers
                 // under a heading that says "Page" is what made three disabled tabs look like
                 // three broken ones.
                 BoundsX().Text(L"");
@@ -999,20 +1052,10 @@ namespace winrt::midiglass::implementation
 
         auto const* const control = SingleSelectedControl();
 
+        // The heading is only shown for one control or for a count of several, and a count is
+        // read only. A page is renamed from the page rail.
         if (control == nullptr)
         {
-            // With nothing selected the heading is the PAGE's name, so typing in it renames the
-            // page. Doing nothing here is what made a rename look as though it had taken and
-            // then vanish the moment anything refreshed the box.
-            if (fromTitle && m_editor.Selection().empty())
-            {
-                if (m_editor.RenamePage(m_editor.PageIndex(), std::wstring{ InspectorTitleText().Text() }))
-                {
-                    RebuildPageRail();
-                    MarkChanged();
-                }
-            }
-
             return;
         }
 
@@ -1524,6 +1567,9 @@ namespace winrt::midiglass::implementation
             m_preview.Build(PreviewCanvas(), single, m_theme, 0);
             m_preview.SetValue(0, control.DefaultValue > 0.0 ? control.DefaultValue : 0.62);
 
+            glass::ApplyDeckOverlay(
+                PreviewCanvas(), m_theme, single.PageWidth, single.PageHeight, 1.0);
+
             if (auto const element = m_preview.ElementAt(0))
             {
                 element.IsHitTestVisible(false);
@@ -1793,6 +1839,29 @@ namespace winrt::midiglass::implementation
         if (control != nullptr &&
             m_editor.SetControlDefaultValue(control->Id, DefaultValueSlider().Value() / 100.0))
         {
+            MarkChanged();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnStartsOnToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control != nullptr &&
+            m_editor.SetControlDefaultValue(control->Id, StartsOnSwitch().IsOn() ? 1.0 : 0.0))
+        {
+            // The page shows the switch the way it will open, so the change is seen as well as
+            // saved.
+            RebuildSurface();
             MarkChanged();
         }
     }

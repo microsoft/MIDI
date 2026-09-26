@@ -68,6 +68,13 @@ namespace glass
         constexpr float BlackKeyLengthFraction = 0.62f;
         constexpr float BlackKeyWidthFraction = 0.60f;
 
+        // How strongly a natural key is outlined in the dark key color.
+        constexpr double KeyOutlineStrength = 0.40;
+
+        // A well: the field of a display, sunk into its plate.
+        constexpr float WellCornerRadius = 2.0f;
+        constexpr float WellShadePixels = 5.0f;
+
         // Which semitones in an octave are black, counting from C.
         constexpr bool BlackInOctave[12]
         {
@@ -206,6 +213,46 @@ namespace glass
         }
     }
 
+    // ---------------------------------------------------------------------- the well
+
+    // Anything that SHOWS something is sunk into its plate rather than raised off it: a dark
+    // field a few pixels inside the edge, with a shadow along its top, so the plate becomes its
+    // frame. What you press stands up; what shows you something is cut in. Nothing is drawn on
+    // a theme that asks for no well.
+    _Use_decl_annotations_
+    void SurfaceRenderer::AppendWell(
+        Compositor const& compositor,
+        SurfaceVisual& visual,
+        ControlColors const& colors,
+        float x,
+        float y,
+        float width,
+        float height)
+    {
+        if (colors.Well.A == 0 || width < 2.0f || height < 2.0f)
+        {
+            return;
+        }
+
+        auto geometry = compositor.CreateRoundedRectangleGeometry();
+        geometry.Size(float2{ width, height });
+        geometry.Offset(float2{ x, y });
+        geometry.CornerRadius(float2{ WellCornerRadius, WellCornerRadius });
+
+        auto well = compositor.CreateSpriteShape(geometry);
+        well.FillBrush(BrushFor(compositor, colors.Well));
+
+        visual.Shape.Shapes().Append(well);
+
+        if (colors.Recess.A > 0)
+        {
+            auto shade = compositor.CreateSpriteShape(geometry);
+            shade.FillBrush(RecessBrush(compositor, colors.Recess, WellShadePixels / height));
+
+            visual.Shape.Shapes().Append(shade);
+        }
+    }
+
     // ---------------------------------------------------------------------- the LFO
 
     // One cycle of the wave, drawn across the plate, with a bead showing where the sweep is now.
@@ -222,6 +269,9 @@ namespace glass
         float width,
         float height)
     {
+        AppendWell(compositor, visual, colors,
+            FieldInset, FieldInset, width - FieldInset * 2.0f, height - FieldInset * 2.0f);
+
         auto const fieldX = LfoInset;
         auto const fieldW = std::max(width - LfoInset * 2.0f, 1.0f);
 
@@ -403,6 +453,13 @@ namespace glass
         auto const fieldW = std::max(width - FieldInset * 2.0f, 1.0f);
         auto const fieldH = std::max(height - FieldInset * 2.0f, 1.0f);
 
+        // A pad's field is a display, so it is sunk. A joystick's is round and ringed, and a
+        // square well behind it would line up with nothing.
+        if (!joystick)
+        {
+            AppendWell(compositor, visual, colors, fieldX, fieldY, fieldW, fieldH);
+        }
+
         auto const puck = std::max(
             MinimumPuckSize,
             std::min(width, height) * (joystick ? JoystickPuckFraction : PuckFraction));
@@ -514,7 +571,7 @@ namespace glass
         }
 
         // The puck. On a joystick it is a cap with a dot of hue in it, the way a real stick has
-        // a moulded top; on a pad it is the light itself.
+        // a molded top; on a pad it is the light itself.
         visual.PuckGeometry = compositor.CreateEllipseGeometry();
         visual.PuckGeometry.Radius(float2{ visual.PuckRadius, visual.PuckRadius });
         visual.PuckGeometry.Center(float2{ visual.FieldX, visual.FieldY });
@@ -612,6 +669,10 @@ namespace glass
         visual.PipeCrossOffset = inset;
         visual.PipeThickness = std::max(across - inset * 2.0f, 1.0f);
         visual.RibbonSpan = across * RibbonGlowSpread;
+
+        // The strip the light runs along, sunk into the plate.
+        AppendWell(compositor, visual, colors,
+            inset, inset, std::max(width - inset * 2.0f, 1.0f), std::max(height - inset * 2.0f, 1.0f));
 
         // Tick marks across the travel, if the customer asked for them. There is no groove for
         // them to sit beside, so they run the full width of the strip at low contrast.
@@ -724,8 +785,14 @@ namespace glass
         auto const blackWidth = whiteWidth * BlackKeyWidthFraction;
         auto const blackHeight = height * BlackKeyLengthFraction;
 
-        auto const white = ColorOr(spec.WhiteKeyColor, ThemeColor{ 232, 234, 238, 255 });
-        auto const black = ColorOr(spec.BlackKeyColor, ThemeColor{ 22, 25, 31, 255 });
+        // The theme's own light and dark, unless this keyboard names its own. The naturals are
+        // outlined in the dark at a low strength, because on a light theme a light key against a
+        // light deck has no edge of its own.
+        auto const white = ColorOr(spec.WhiteKeyColor, colors.KeyWhite);
+        auto const black = ColorOr(spec.BlackKeyColor, colors.KeyBlack);
+
+        auto outline = black;
+        outline.A = static_cast<uint8_t>(std::lround(black.A * KeyOutlineStrength));
 
         auto const pressed = ColorOr(spec.PressedKeyColor, colors.Pipe);
 
@@ -772,6 +839,12 @@ namespace glass
                 auto restBrush = BrushFor(compositor, blacks ? black : white);
 
                 shape.FillBrush(restBrush);
+
+                if (!blacks)
+                {
+                    shape.StrokeBrush(BrushFor(compositor, outline));
+                    shape.StrokeThickness(1.0f);
+                }
 
                 visual.KeyShapes[static_cast<size_t>(index)] = shape;
                 visual.KeyRestBrushes[static_cast<size_t>(index)] = restBrush.as<CompositionBrush>();

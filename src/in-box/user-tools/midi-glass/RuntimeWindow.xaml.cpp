@@ -48,18 +48,7 @@ namespace winrt::midiglass::implementation
             m_filePath = filePath;
             m_document = read.Document;
 
-            auto const themes = glass::AllThemes();
-
-            m_theme = themes.empty() ? glass::Theme{} : themes[0];
-
-            for (auto const& theme : themes)
-            {
-                if (theme.Name == m_document.ThemeName)
-                {
-                    m_theme = theme;
-                    break;
-                }
-            }
+            m_theme = glass::ResolveDocumentTheme(m_document);
 
             // One owner per running layout, and the file path is what makes it unique, so the
             // same layout opened twice shares its connections instead of doubling them.
@@ -224,6 +213,14 @@ namespace winrt::midiglass::implementation
             auto const surround = glass::BlendOver(m_theme.Deck.Color, { 0, 0, 0, 255 }, 0.45);
 
             SurfaceScroll().Background(media::SolidColorBrush(ToColor(surround)));
+
+            glass::ApplyDeckOverlay(
+                SurfaceGrain(), m_theme, SurfaceDeck().Width(), SurfaceDeck().Height(), 1.0,
+                glass::DeckOverlayLayer::BeneathControls);
+
+            glass::ApplyDeckOverlay(
+                SurfaceDeck(), m_theme, SurfaceDeck().Width(), SurfaceDeck().Height(), 1.0,
+                glass::DeckOverlayLayer::AboveControls);
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to color the deck.")
     }
@@ -395,6 +392,16 @@ namespace winrt::midiglass::implementation
             // scroll viewer knows how much there is and centers what fits.
             SurfaceDeck().Width(viewport.ContentWidth);
             SurfaceDeck().Height(viewport.ContentHeight);
+
+            // The scan lines belong to the border rather than to the scaled canvas, so their
+            // pitch is screen pixels at every zoom instead of a beat pattern at most of them.
+            glass::ApplyDeckOverlay(
+                SurfaceGrain(), m_theme, viewport.ContentWidth, viewport.ContentHeight, 1.0,
+                glass::DeckOverlayLayer::BeneathControls);
+
+            glass::ApplyDeckOverlay(
+                SurfaceDeck(), m_theme, viewport.ContentWidth, viewport.ContentHeight, 1.0,
+                glass::DeckOverlayLayer::AboveControls);
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to scale the surface.")
     }

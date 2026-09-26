@@ -65,6 +65,22 @@ namespace winrt::midiglass::implementation
         void OnSettingsLookAgainClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnShowAllGroupsChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        // ---- the settings rail and the theme editor (EditorAppearance.cpp) ----
+
+        void OnSettingsNavChecked(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnSettingsNavUnchecked(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnSettingsExportClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnSaveThemeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnImportThemeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        void OnSettingsNameChanged(
+            foundation::IInspectable const& sender,
+            controls::TextChangedEventArgs const& args);
+
+        void OnSettingsDescriptionChanged(
+            foundation::IInspectable const& sender,
+            controls::TextChangedEventArgs const& args);
+
         // ---- setting the keyboard order by clicking (EditorKeyboardOrder.cpp) ----
 
         void OnKeyboardOrderDoneClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -173,6 +189,7 @@ namespace winrt::midiglass::implementation
         void OnSendOnStartToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnReturnsToDefaultToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnDefaultValueChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
+        void OnStartsOnToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSendIntervalChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnPickupChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnKeyboardOrderChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
@@ -268,6 +285,10 @@ namespace winrt::midiglass::implementation
         // drawn against the wrong origin until they are redrawn.
         bool UpdateWorkArea();
         void UpdateDeckBrushes();
+
+        // The theme's scan lines, corner fall-off and faceplate reflection, over the page only.
+        void UpdateDeckOverlay();
+
         void UpdateOffPageBar();
         void RebuildPageRail();
 
@@ -333,6 +354,7 @@ namespace winrt::midiglass::implementation
         // ---- inspector (EditorInspector.cpp) ----
 
         void BuildInspectorChoices();
+        void RefreshHueSwatches();
         void RefreshInspector();
         void RefreshInspectorGeometry();
         void RefreshMessageList();
@@ -457,6 +479,74 @@ namespace winrt::midiglass::implementation
         void RefreshSettingsPages();
         void RefreshSettingsDevices();
 
+        // ---- the settings rail and the theme editor (EditorAppearance.cpp) ----
+
+        void ShowSettingsPane(_In_ std::wstring const& tag);
+        void RefreshAppearancePane();
+        void RebuildThemeGallery();
+        void RebuildThemeSlots();
+        void RefreshThemePreview();
+
+        // A painted miniature of a theme's own deck and controls, for its card in the gallery.
+        xaml::FrameworkElement BuildThemeCardPreview(_In_ glass::Theme const& theme);
+
+        void ChooseThemeByName(_In_ std::wstring const& name);
+        void ShowSlotColorFlyout(_In_ xaml::FrameworkElement const& anchor, _In_ int32_t slot);
+
+        // Changes the theme this layout is drawn with and repaints everything showing it. From
+        // the first edit the layout carries the theme itself, because there is no file anywhere
+        // that says what it now is.
+        void EditTheme(_In_ std::function<void(glass::Theme&)> const& change);
+        void ApplyThemeEverywhere();
+
+        // ---- every number a theme is made of (EditorThemeProperties.cpp) ----
+
+        void RebuildThemeProperties();
+
+        void AddThemeGroupHeading(_In_ wchar_t const* key, _In_ bool first);
+        void AddThemeNote(_In_ wchar_t const* key);
+
+        void AddThemeSliderRow(
+            _In_ wchar_t const* labelKey,
+            _In_opt_ wchar_t const* unitKey,
+            _In_ double smallest,
+            _In_ double largest,
+            _In_ double value,
+            _In_ std::function<void(double)> const& apply);
+
+        void AddThemeComboRow(
+            _In_ wchar_t const* labelKey,
+            _In_ std::vector<wchar_t const*> const& itemKeys,
+            _In_ int32_t selected,
+            _In_ std::function<void(int32_t)> const& apply);
+
+        void AddThemeColorRow(
+            _In_ wchar_t const* labelKey,
+            _In_ glass::ThemeColor const& color,
+            _In_ bool allowEmpty,
+            _In_ std::function<void(std::wstring const&)> const& apply);
+
+        void AddThemeSwitchRow(
+            _In_ wchar_t const* labelKey,
+            _In_ bool on,
+            _In_ std::function<void(bool)> const& apply);
+
+        // Whether this theme's plate can separate itself from its deck on its own. On Bone it
+        // cannot - a warm white plate measures 1.23 : 1 against a bone deck - so the elevation
+        // shadow is the structure and the editor says so before somebody flattens it.
+        bool PlateNeedsItsShadow() const;
+
+        // ---- the rest of the rail (EditorLayoutPanes.cpp) ----
+
+        void RefreshBehaviorPane();
+        void RefreshNamePane();
+        void RefreshAccessibilityPane();
+
+        winrt::fire_and_forget ShowSaveThemeDialog();
+        void ExportLayoutPackage();
+
+        winrt::fire_and_forget ShowEditorNotice(_In_ winrt::hstring title, _In_ winrt::hstring message);
+
         // Runs an edit, then rebuilds the list it came from on the next tick.
         void ApplyPageEdit(_In_ std::function<bool(glass::EditorController&)> edit);
         void ApplyDeviceEdit(_In_ std::function<bool(glass::EditorController&)> edit);
@@ -514,6 +604,17 @@ namespace winrt::midiglass::implementation
         // The inspector's preview draws one control on its own tiny deck, so a style or a color
         // is judged rather than imagined.
         glass::SurfaceRenderer m_preview{};
+
+        // The theme editor's preview: one page of most things, drawn by the same renderer the
+        // surface uses, so it cannot end up disagreeing with what the layout will do.
+        glass::SurfaceRenderer m_themePreview{};
+
+        // Which rail item is showing, and the guard that stops a rebuild being read as an edit.
+        std::wstring m_settingsPane{ L"appearance" };
+        bool m_updatingSettings{ false };
+
+        // Every theme offered in the gallery, in the order it is drawn.
+        std::vector<glass::Theme> m_galleryThemes{};
 
         glass::EditRect m_workArea{};
         double m_canvasScale{ 1.0 };

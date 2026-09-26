@@ -989,79 +989,242 @@ html, body {
 
 
 /* =========================================================================
-   "BIGWIG" - raised mid-gray panels on a near-black deck, one strong orange.
+   "BIGWIG" - a play on Bitwig Studio: charcoal and gray, one lead orange,
+   and a family of section colors.
 
-   Built on the same tonal machinery with the hue wash turned OFF, so the
-   plate stays neutral and color appears only in the indicator, the header
-   strip and the filled state. Two things it needs that the others do not:
-   the rim is a NEUTRAL edge rather than the control's hue, and the value
-   strip runs along the top edge instead of the bottom.
+   Revisited Sep 26 2026. The first pass was one gray and one orange, and it
+   read as a drawing of the product rather than the product. What makes the
+   real thing look machined is a ladder of grays, not a color:
+
+     the page       #282828   what everything sits on
+     a section      #373737   one step up, and it says its name in its color
+     a control      #474747   one more step, a dark edge and a lit top
+     a display      #161616   cut into the surface: slots, fields, meters
+     a knob         a graded cap inside its arc, and no plate at all
+
+   Color only ever means the value, the state, or which section this is. At
+   rest every control is the same gray, which is what keeps a dense page
+   readable.
+
+   Measured in g:\midi-scratch\bigwig-measure.ps1: every slot clears 3.0 on
+   the page, a section and a control. Five of the six clear 4.5 as a section
+   name; red is 3.1, so red is light, not letters.
+
+   Beyond theme data this asks for the knob cap (coming), a panel color, a
+   section name in its own color, names inside switches that stay readable
+   when lit, and a well for the controls that show a value. Nothing here
+   glows: GlowStrength stays 0, and touch is a wash of the control's color.
    ========================================================================= */
 
 .surf.bigwig {
-    --deck: linear-gradient(180deg, #1F1F1F 0%, #151515 100%);
-    --plate: #3A3A3A;
-    --track: rgba(0, 0, 0, .46);
-    --on-hue: #17120D;
-    --deck-ink: #E6E6E6;
-    --deck-ink2: rgba(230, 230, 230, .52);
+    --deck: linear-gradient(180deg, #282828 0%, #202020 100%);
+    --panel: linear-gradient(180deg, #373737 0%, #313131 100%);
+    --plate: linear-gradient(180deg, #474747 0%, #3C3C3C 100%);
+    --sheen: linear-gradient(180deg, rgba(255, 255, 255, .03) 0%, rgba(255, 255, 255, 0) 42%);
+    --edge: #1A1A1A;
+    --lift: 0 1px 3px rgba(0, 0, 0, .40);
+    --track: #161616;                   /* a fader slot and a meter body */
+    --well: #161616;                    /* the field of anything that shows a value */
+    --arc-track: rgba(0, 0, 0, .50);    /* on the section or the page, never on a plate */
+    --cap: #4A4A4A;
+    --cap-end: #1F1F1F;
+    --thumb: #6E6E6E;
+    --thumb-end: #4A4A4A;
+    --pointer: #E6E6E6;
+    --marks: rgba(201, 201, 201, .18);
+    --on-hue: #141414;                  /* a lit switch is its color outright, so its name goes dark */
+    --deck-ink: #C9C9C9;
+    --deck-ink2: rgba(201, 201, 201, .62);
     --grid1: rgba(255, 255, 255, .13);
     --grid2: rgba(255, 255, 255, .048);
-    --tonal-rest: 0;                    /* the plate is neutral gray, never tinted */
+    --tonal-rest: 0;                    /* a control is gray at rest, never tinted */
     --tonal-held: .26;
     --rim-rest: 0;
-    --tonal-radius: 3px;
-    --cap-shadow: 0 1px 3px rgba(0, 0, 0, .6);
-    --edge: rgba(0, 0, 0, .55);
+    --tonal-radius: 4px;
+    --cap-shadow: var(--lift);
 
-    --h1: 245, 106, 26;     /* orange - the one that does the work */
-    --h2: 74, 158, 214;     /* blue   */
-    --h3: 232, 193, 64;     /* yellow */
-    --h4: 166, 108, 214;    /* purple */
-    --h5: 109, 191, 75;     /* green  */
-    --h6: 224, 72, 60;      /* red    */
+    --h1: 249, 139,  49;   /* #F98B31 orange - the lead, and the default slot */
+    --h2:  88, 176, 240;   /* #58B0F0 blue   */
+    --h3: 232, 193,  64;   /* #E8C140 yellow */
+    --h4: 192, 148, 240;   /* #C094F0 purple */
+    --h5: 109, 191,  75;   /* #6DBF4B green  */
+    --h6: 236,  84,  70;   /* #EC5446 red    - record and panic. Light, not letters */
 }
 
-.surf.bigwig .ctl,
-.surf.bigwig .ctl.on,
-.surf.bigwig .ctl.held,
-.surf.bigwig .ctl.dim { box-shadow: inset 0 0 0 1px var(--edge); }
-.surf.bigwig .knob { box-shadow: none; }         /* the dial carries the edge, not the box */
-.surf.bigwig .knob .dial { box-shadow: inset 0 0 0 1px var(--edge); }
-.surf.bigwig .ctl.dim { background: linear-gradient(0deg, var(--track), var(--track)), var(--plate); }
-.surf.bigwig .xy .field2 { background: var(--track); }
-.surf.bigwig .meter i.lit { background: rgb(var(--h5)); }
-.surf.bigwig .meter i.lit.warn { background: rgb(var(--h3)); }
-.surf.bigwig .meter i.lit.hot { background: rgb(var(--h6)); }
+/* a control: the plate, a lit top, a dark edge, and a small shadow */
+.surf.bigwig .ctl {
+    border-radius: var(--tonal-radius);
+    background: var(--sheen), var(--plate);
+    box-shadow: inset 0 0 0 1px var(--edge), var(--lift);
+    color: var(--deck-ink);
+}
 
-/* the value strip runs along the top edge, the way a Bitwig panel header does */
-.surf.bigwig .pipe {
-    left: 0; right: 0; top: 0; bottom: auto;
-    height: 3px; border-radius: 0;
+/* under a finger: a quarter of the way to the control's own color */
+.surf.bigwig .ctl.held {
+    background:
+        var(--sheen),
+        linear-gradient(0deg, rgba(var(--hue), var(--tonal-held)), rgba(var(--hue), var(--tonal-held))),
+        var(--plate);
+    box-shadow: inset 0 0 0 1px var(--edge), var(--lift);
+}
+
+/* on: the color outright, top to bottom, and the name turns dark so it still reads */
+.surf.bigwig .ctl.on {
+    background: var(--sheen), rgb(var(--hue));
+    box-shadow: inset 0 0 0 1px rgba(var(--hue), .90), var(--lift);
+    color: var(--on-hue);
+}
+.surf.bigwig .ctl.on .name,
+.surf.bigwig .ctl.on .glyph,
+.surf.bigwig .ctl.on .cap { color: var(--on-hue); }
+
+.surf.bigwig .ctl.offline {
+    background: repeating-linear-gradient(135deg, rgba(242, 243, 245, .10) 0 2px, transparent 2px 9px), var(--plate);
+    box-shadow: inset 0 0 0 1px var(--edge), var(--lift);
+    opacity: .55;
+}
+
+/* a button's name is its own ink, never its color */
+.surf.bigwig .ctl.btn-ctl .glyph { color: var(--deck-ink); }
+.surf.bigwig .ctl.btn-ctl.on .glyph { color: var(--on-hue); }
+
+/* No value strip. A lit switch is now its color outright, so a strip would
+   vanish into the fill, and at rest the product's buttons carry no color at
+   all. It also leaves room for a name centered in a switch 24 px tall. */
+.surf.bigwig .pipe { display: none; }
+
+.surf.bigwig .outlabel { color: var(--deck-ink); }
+.surf.bigwig .surftext.readout { color: rgb(var(--h1)); text-shadow: none; }
+
+/* ------------------------------------------------------------- knobs */
+/* No plate at all. The arc sits on whatever the knob sits on, 2 px in from
+   the control's edge and 3 px thick; the cap sits inside it with a 3 px gap.
+   The cap is graded top to bottom, so it reads as a turned object on the
+   bare page and on a section alike. */
+.surf.bigwig .knob { background: none; box-shadow: none; }
+.surf.bigwig .knob .dial { background: none; box-shadow: none; }
+.surf.bigwig .knob .arc {
+    inset: 2px;
+    background: conic-gradient(from 225deg,
+        rgb(var(--hue)) 0turn var(--pct, .35turn),
+        var(--arc-track) var(--pct, .35turn) .75turn,
+        transparent .75turn 1turn);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 3px));
+    filter: none;
+}
+.surf.bigwig .knob .knobcap {
+    position: absolute; inset: 8px; border-radius: 50%;
+    background: var(--sheen), linear-gradient(180deg, var(--cap) 0%, var(--cap-end) 100%);
+    box-shadow: inset 0 0 0 1px var(--edge), var(--lift);
+}
+/* from just inside the cap's edge nearly to the middle */
+.surf.bigwig .knob .ptr {
+    left: 50%; top: 0; width: 2px; height: 50%; margin-left: -1px;
+    border-radius: 1px;
+    background: linear-gradient(180deg,
+        transparent 0, transparent 11px,
+        var(--pointer) 11px, var(--pointer) calc(100% - 3px),
+        transparent calc(100% - 3px));
+    box-shadow: none;
+    transform-origin: 50% 100%;
+}
+/* the light cap the product puts on its biggest knobs. Not asked for: it is
+   a second cap color and a choice made per knob. Shown on this screen only. */
+.surf.bigwig .knob.lightcap .knobcap {
+    background: var(--sheen), linear-gradient(180deg, #E4E4E4 0%, #A9A9A9 100%);
+}
+.surf.bigwig .knob.lightcap { --pointer: #1C1C1C; }
+
+/* ------------------------------------------------------------ faders */
+/* the slot is cut into the plate, the fill is brightest at the value and
+   falls away below it, and the cap is gray with a line of the control's color */
+.surf.bigwig .fader .slot {
     background: var(--track);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .03);
 }
-.surf.bigwig .pipe.lit { background: rgb(var(--hue)); }
-.surf.bigwig .ctl.on .pipe.lit { background: var(--on-hue); opacity: .5; }
+.surf.bigwig .fader .fill {
+    background: linear-gradient(180deg, rgb(var(--hue)) 0%, rgba(var(--hue), .55) 100%);
+    box-shadow: none;
+}
+.surf.bigwig .fader.horiz .fill {
+    background: linear-gradient(90deg, rgba(var(--hue), .55) 0%, rgb(var(--hue)) 100%);
+}
+.surf.bigwig .fader .capbar {
+    border-radius: 4px;
+    background: linear-gradient(180deg, var(--thumb) 0%, var(--thumb-end) 100%);
+    box-shadow: none;
+}
+.surf.bigwig .fader .capbar::after { background: rgb(var(--hue)); box-shadow: none; opacity: 1; }
+.surf.bigwig .fader .ticks i { background: var(--marks); }
 
-.surf.bigwig .knob .ptr { background: var(--deck-ink); width: 2px; }
-.surf.bigwig .fader .capbar { border-radius: 2px; }
-.surf.bigwig .xy .cross { background: rgba(var(--hue), .45); }
-.surf.bigwig .pagetabs .tab { border-radius: 2px; }
-.surf.bigwig .pagetabs .tab.sel { background: rgb(var(--h1)); color: var(--on-hue); }
+/* ------------------------------------------------------------ meters */
+/* A bar in a dark slot rather than a column of lamps, because that is what
+   the renderer draws. The three zones belong to the slot, so a quiet meter
+   is all green and a loud one uncovers the yellow and then the red. */
+.surf.bigwig .meter { padding: 8px 0; align-items: center; justify-content: flex-start; gap: 0; }
+.surf.bigwig .meter .mslot {
+    position: relative; flex: 1; width: 6px; border-radius: 3px; overflow: hidden;
+    background: linear-gradient(0deg,
+        rgb(var(--h5)) 0%, rgb(var(--h5)) 70%,
+        rgb(var(--h3)) 70%, rgb(var(--h3)) 90%,
+        rgb(var(--h6)) 90%, rgb(var(--h6)) 100%);
+}
+.surf.bigwig .meter .mcover { position: absolute; left: 0; right: 0; top: 0; background: var(--track); }
 
-/* Segmented LED ring. ONE element, exactly like the solid arc it replaces:
-   the dots are a repeating mask over the same conic gradient, not N shapes.
-   Below roughly 48 px the segments stop resolving, so a control this size or
-   smaller falls back to the solid arc. */
-.surf.bigwig .knob.leds .arc {
-    -webkit-mask:
-        repeating-conic-gradient(from 215deg, #000 0 5.2deg, transparent 5.2deg 10.4deg),
-        radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
-    -webkit-mask-composite: source-in;
-    mask:
-        repeating-conic-gradient(from 215deg, #000 0 5.2deg, transparent 5.2deg 10.4deg),
-        radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
-    mask-composite: intersect;
+/* ------------------------------------------------- controls that show */
+/* A display is cut into the surface rather than raised off it: a dark well
+   three pixels inside the plate, so the plate becomes its frame. What you
+   press stands up; what shows you something is sunk. */
+.surf.bigwig .xy .field2 {
+    inset: 3px; border-radius: 2px;
+    background: var(--well);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .03);
+}
+.surf.bigwig .xy .field2::before {
+    background-image:
+        linear-gradient(var(--marks) 1px, transparent 1px),
+        linear-gradient(90deg, var(--marks) 1px, transparent 1px);
+}
+.surf.bigwig .xy .cross { background: rgba(var(--hue), .38); box-shadow: none; }
+.surf.bigwig .xy .puck { background: rgb(var(--hue)); box-shadow: none; }
+.surf.bigwig .xy .trail { display: none; }
+
+.surf.bigwig .lfo { padding: 0; }
+.surf.bigwig .lfo .lwell {
+    position: absolute; inset: 3px; border-radius: 2px;
+    background: var(--well);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .03);
+}
+.surf.bigwig .lfo svg { position: absolute; left: 9px; top: 9px; width: calc(100% - 18px); height: calc(100% - 18px); }
+
+/* ---------------------------------------------------------- sections */
+/* one step up from the page and one step down from the controls on it,
+   and it says its name in its own color */
+.surf.bigwig .ctlpanel {
+    border-radius: var(--tonal-radius);
+    background: var(--sheen), var(--panel);
+    box-shadow: inset 0 0 0 1px var(--edge), var(--lift);
+}
+.surf.bigwig .ctlpanel > .ptitle {
+    top: 5px; left: 8px; padding: 0;
+    background: none;
+    font-size: 12px; letter-spacing: 0;
+    color: rgb(var(--hue));
+}
+
+/* -------------------------------------------------------------- tabs */
+/* a page tab is a switch like any other: the one you are on is lit */
+.surf.bigwig .pagetabs .tab {
+    border-radius: var(--tonal-radius);
+    background: var(--sheen), var(--plate);
+    box-shadow: inset 0 0 0 1px var(--edge), var(--lift);
+    color: var(--deck-ink);
+}
+.surf.bigwig .pagetabs .tab.sel {
+    background: var(--sheen), rgb(var(--h1));
+    box-shadow: inset 0 0 0 1px rgba(var(--h1), .90), var(--lift);
+    color: var(--on-hue);
 }
 
 
@@ -1957,7 +2120,7 @@ html, body {
    inverse video at 5.00:1 or better, where Amber's ember failed at 4.10.
    The single failure is the dimmest slot used as TYPE on a raster box,
    3.25:1. So the rule is narrower here than on Amber: only the bottom rung
-   is barred from carrying letters, and it can still be filled and labelled.
+   is barred from carrying letters, and it can still be filled and labeled.
    ========================================================================= */
 
 .surf.green {
@@ -2212,4 +2375,419 @@ html, body {
     box-shadow: 0 0 14px rgba(var(--halo), .55);
     color: var(--on-hue);
     text-shadow: none;
+}
+
+
+/* =========================================================================
+   "JOVE" - matte black steel, one orange, and a row of colored tabs.
+   After the Roland Jupiter-8.
+
+   The idea that makes it different from every theme before it: THE CONTROL
+   IS NOT ON A PLATE. A knob is a black cap sitting directly on the panel and
+   a fader is a slot milled into it. Only the tab switches are objects, and a
+   tab is nothing but its color - it does not carry a hue, it IS one.
+
+   So the hue is used the opposite way round here. Everywhere else a control
+   is neutral and its color is a hairline; here a control is a solid block of
+   color and the neutral thing is the panel. That is the one real strain this
+   theme puts on the model.
+   ========================================================================= */
+
+.surf.jove {
+    --deck: linear-gradient(180deg, #343434 0%, #272727 44%, #1E1E1E 100%);
+    --plate: linear-gradient(180deg, #1D1D1D 0%, #0E0E0E 100%);
+    --track: #080808;
+    --on-hue: #170F04;
+    --deck-ink: #EDEDED;
+    --deck-ink2: rgba(237, 237, 237, .62);
+    --grid1: rgba(255, 255, 255, .13);
+    --grid2: rgba(255, 255, 255, .045);
+    --tonal-rest: 0;
+    --tonal-held: .26;
+    --rim-rest: 0;                      /* nothing on this panel has a colored rim */
+    --tonal-radius: 2px;
+    --cap-shadow: 0 2px 4px rgba(0, 0, 0, .85);
+    --edge: rgba(0, 0, 0, .90);
+
+    /* the milled top edge that is the only highlight matte steel gives you */
+    --lip: inset 0 1px 0 rgba(255, 255, 255, .10);
+    --sink: inset 0 2px 3px rgba(0, 0, 0, .90), inset 0 0 0 1px rgba(255, 255, 255, .05);
+
+    /* the three colors that are not hue slots */
+    --banner: 232, 96, 28;              /* section headers, and every knob pointer */
+    --mark: #FFFFFF;                    /* the wide white line across a fader cap */
+    --neutral: #E8E2CE;                 /* a tab with no color. Cream, never white */
+
+    --h1: 214,  56,  44;   /* #D6382C red    */
+    --h2: 232, 137,  43;   /* #E8892B orange */
+    --h3: 231, 209,  74;   /* #E7D14A yellow */
+    --h4:  92, 190, 106;   /* #5CBE6A green  */
+    --h5:  86, 198, 205;   /* #56C6CD aqua   */
+    --h6:  74, 127, 193;   /* #4A7FC1 blue   */
+}
+
+.surf.jove .ctl {
+    background: var(--plate);
+    box-shadow: var(--lip), inset 0 0 0 1px var(--edge), 0 2px 3px rgba(0, 0, 0, .60);
+    color: var(--deck-ink);
+}
+
+/* a tab switch IS its color. Filled at rest, which no theme before this one
+   asked for - Pigment washes a plate, this replaces it. */
+.surf.jove .ctl.btn-ctl {
+    background: linear-gradient(180deg, rgba(255, 255, 255, .17), rgba(0, 0, 0, .16)), rgb(var(--hue));
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .30),
+        inset 0 0 0 1px rgba(0, 0, 0, .55),
+        0 2px 3px rgba(0, 0, 0, .60);
+    color: var(--on-hue);
+}
+.surf.jove .ctl.btn-ctl .name,
+.surf.jove .ctl.btn-ctl .glyph,
+.surf.jove .ctl.btn-ctl .cap { color: var(--on-hue); }
+
+/* the cream tabs are not a seventh color, they are the absence of one */
+.surf.jove .ctl.btn-ctl.neutral {
+    background: linear-gradient(180deg, rgba(255, 255, 255, .22), rgba(0, 0, 0, .10)), var(--neutral);
+}
+
+/* lit is the same plastic with the lamp behind it on */
+.surf.jove .ctl.btn-ctl.on {
+    background: linear-gradient(180deg, rgba(255, 255, 255, .45), rgba(255, 255, 255, .06)), rgb(var(--hue));
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .55),
+        inset 0 0 0 1px rgba(0, 0, 0, .50),
+        0 0 15px rgba(var(--hue), .55),
+        0 2px 3px rgba(0, 0, 0, .60);
+}
+.surf.jove .ctl.btn-ctl.neutral.on {
+    background: linear-gradient(180deg, rgba(255, 255, 255, .55), rgba(255, 255, 255, .10)), var(--neutral);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .6),
+        inset 0 0 0 1px rgba(0, 0, 0, .5),
+        0 0 15px rgba(232, 226, 206, .5),
+        0 2px 3px rgba(0, 0, 0, .6);
+}
+
+.surf.jove .ctl.held {
+    box-shadow:
+        inset 0 0 0 2px rgba(255, 255, 255, .60),
+        inset 0 2px 5px rgba(0, 0, 0, .70),
+        0 1px 2px rgba(0, 0, 0, .70);
+}
+.surf.jove .ctl.dim {
+    opacity: 1;
+    background: linear-gradient(180deg, #2A2A2A 0%, #202020 100%);
+    box-shadow: inset 0 0 0 1px var(--edge);
+    color: rgba(237, 237, 237, .38);
+}
+.surf.jove .ctl.offline {
+    background:
+        repeating-linear-gradient(135deg, rgba(255, 255, 255, .06) 0 6px, transparent 6px 12px),
+        #1A1A1A;
+    box-shadow: inset 0 0 0 1px var(--edge);
+}
+
+/* the tab is the indicator, so there is no light pipe to draw. The model
+   already says this: value strip = none. */
+.surf.jove .pipe { display: none; }
+
+/* knobs: a black cap on the steel, and the pointer is the section orange
+   rather than the control's own color - on this panel a pointer is not the
+   value, it is just which way the shaft is turned */
+.surf.jove .knob { background: none; box-shadow: none; }
+.surf.jove .knob .dial {
+    background: radial-gradient(circle at 50% 28%, #303030 0%, #151515 60%, #090909 100%);
+    box-shadow: var(--lip), inset 0 0 0 1px var(--edge), 0 2px 4px rgba(0, 0, 0, .80);
+}
+.surf.jove .knob .arc {
+    background: conic-gradient(from 215deg,
+        rgb(var(--banner)) 0turn var(--pct, .35turn),
+        rgba(255, 255, 255, .10) var(--pct, .35turn) .805turn,
+        transparent .805turn 1turn);
+    filter: none;
+}
+.surf.jove .knob .ptr {
+    background: rgb(var(--banner));
+    width: 3px; height: 34%; top: 8%;
+    margin-left: -1.5px;
+    border-radius: 0;
+    box-shadow: none;
+}
+.surf.jove .knob .dotmark { background: rgba(255, 255, 255, .20); }
+.surf.jove .knob .kval { color: var(--deck-ink); }
+.surf.jove .knob.detent .dial::after { background: var(--mark); }
+
+/* faders: no border at all, a slot milled into the steel, and a cap whose
+   whole job is that one wide white line */
+.surf.jove .fader { background: none; box-shadow: none; }
+.surf.jove .fader .slot { background: var(--track); box-shadow: var(--sink); }
+/* the slot below the cap is only faintly lit. The instrument has nothing there
+   at all - the cap position is the whole value - and anything stronger reads as
+   a column of orange the panel does not have */
+.surf.jove .fader .fill { background: rgba(var(--banner), .20); box-shadow: none; }
+.surf.jove .fader .capbar {
+    background: linear-gradient(180deg, #3C3C3C 0%, #1A1A1A 46%, #0F0F0F 100%);
+    border-radius: 2px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .24), 0 3px 6px rgba(0, 0, 0, .85);
+}
+.surf.jove .fader .capbar::after {
+    left: 2px; right: 2px; height: 3px; margin-top: -1.5px;
+    background: var(--mark);
+    border-radius: 0;
+    box-shadow: none;
+    opacity: 1;
+}
+.surf.jove .fader.horiz .capbar::after {
+    top: 2px; bottom: 2px; left: 50%; right: auto;
+    width: 3px; height: auto; margin: 0 0 0 -1.5px;
+}
+.surf.jove .fader .ticks i { background: rgba(255, 255, 255, .18); }
+
+.surf.jove .xy .field2 { background: var(--track); box-shadow: var(--sink); }
+.surf.jove .xy .field2::before {
+    background-image:
+        linear-gradient(rgba(255, 255, 255, .07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .07) 1px, transparent 1px);
+}
+.surf.jove .xy .cross { background: rgba(var(--banner), .50); box-shadow: none; }
+.surf.jove .xy .puck { background: rgb(var(--banner)); box-shadow: 0 2px 4px rgba(0, 0, 0, .8); }
+.surf.jove .xy .trail { background: rgba(var(--banner), .22); }
+
+.surf.jove .meter i { background: rgba(255, 255, 255, .08); }
+.surf.jove .meter i.lit { background: rgb(var(--h4)); box-shadow: none; }
+.surf.jove .meter i.lit.warn { background: rgb(var(--h3)); box-shadow: none; }
+.surf.jove .meter i.lit.hot { background: rgb(var(--h1)); box-shadow: none; }
+
+.surf.jove .steps .row i { background: rgba(255, 255, 255, .07); box-shadow: inset 0 0 0 1px var(--edge); }
+.surf.jove .steps .row i.on { background: rgb(var(--hue)); box-shadow: none; }
+.surf.jove .steps .row i.cur { box-shadow: inset 0 0 0 2px var(--mark); }
+
+.surf.jove .surftext.readout { color: rgb(var(--h1)); text-shadow: 0 0 10px rgba(var(--h1), .55); }
+.surf.jove .surfrule { background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .22), transparent); }
+.surf.jove .ctlpanel { background: none; box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .13); }
+.surf.jove .ctlpanel > .ptitle { background: #272727; color: var(--deck-ink2); }
+
+.surf.jove .pagetabs .tab {
+    border-radius: 2px;
+    background: linear-gradient(180deg, #282828, #141414);
+    box-shadow: var(--lip), inset 0 0 0 1px var(--edge);
+    color: var(--deck-ink2);
+}
+.surf.jove .pagetabs .tab.sel {
+    background: linear-gradient(180deg, rgba(255, 255, 255, .32), rgba(0, 0, 0, .06)), rgb(var(--banner));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .45), 0 0 13px rgba(var(--banner), .45);
+    color: #17100A;
+}
+
+
+/* =========================================================================
+   "SUPERSAW" - a matte blue panel with the texture of very fine sandpaper,
+   shiny black moulding, and one small red lamp per switch.
+   After the Roland JP-8000.
+
+   Two things here that no other theme has asked for:
+
+   1. THE PANEL HAS A TEXTURE. Every deck so far has been a color, a gradient
+      or a photograph. This one is a flat color with a fine grain over it, and
+      the grain is most of why the blue reads as a manufactured object rather
+      than a fill. It is one tiled overlay for the whole deck and costs
+      nothing per control.
+
+   2. ON IS NOT A PLATE STATE. A switch that is on looks exactly like a switch
+      that is off, except that a three pixel red lamp above its label is lit.
+      Every other theme fills the plate. This one refuses to, and it is right:
+      a rack of sixteen identical black switches with one lamp lit is far
+      easier to read at arm's length than sixteen colored blocks.
+   ========================================================================= */
+
+.surf.supersaw {
+    --deck: linear-gradient(180deg, #44516C 0%, #394660 46%, #2E394F 100%);
+    --plate: linear-gradient(180deg, #1C1F25 0%, #0D0F13 100%);
+    --track: #090B0E;
+    --on-hue: #0A0C10;
+    --deck-ink: #E9ECF2;
+    --deck-ink2: rgba(233, 236, 242, .66);
+    --grid1: rgba(255, 255, 255, .15);
+    --grid2: rgba(255, 255, 255, .055);
+    --tonal-rest: 0;
+    --tonal-held: .24;
+    --rim-rest: 0;
+    --tonal-radius: 3px;
+    --cap-shadow: 0 2px 5px rgba(0, 0, 0, .70);
+    --edge: rgba(0, 0, 0, .80);
+
+    --gloss: inset 0 1px 0 rgba(255, 255, 255, .24);
+    --sink: inset 0 2px 4px rgba(0, 0, 0, .85), inset 0 0 0 1px rgba(0, 0, 0, .60);
+    --mark: #E9ECF2;                    /* the cap line and the tick ring */
+    --lamp: 255, 82, 58;                /* the small red bar above a label */
+
+    --h1: 232, 130,  42;   /* #E8822A orange - the section accent, and the default */
+    --h2: 255,  82,  58;   /* #FF523A red    - the switch lamps */
+    --h3:  76, 229, 122;   /* #4CE57A green  - the display */
+    --h4: 150, 183, 226;   /* #96B7E2 steel blue */
+    --h5: 226, 206, 126;   /* #E2CE7E pale amber */
+    --h6: 176, 156, 226;   /* #B09CE2 violet */
+}
+
+/* The grain. `.surf.tonal::after` turns the glass sheen off, so this rule
+   carries a third class to win whatever order the file ends up in. One tiled
+   120 px tile of fractal noise over the whole deck, blended rather than laid
+   on, so it darkens and lightens the blue instead of graying it. */
+.surf.tonal.supersaw::after {
+    display: block;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.95' numOctaves='2' stitchTiles='stitch'/></filter><rect width='120' height='120' filter='url(%23g)'/></svg>");
+    background-size: 120px 120px;
+    opacity: .10;
+    mix-blend-mode: overlay;
+}
+
+.surf.supersaw .ctl {
+    background: var(--plate);
+    box-shadow: var(--gloss), inset 0 0 0 1px var(--edge), 0 2px 4px rgba(0, 0, 0, .55);
+    color: var(--deck-ink);
+}
+
+/* on changes the lamp and nothing else. The plate stays black. */
+.surf.supersaw .ctl.on {
+    background: var(--plate);
+    box-shadow:
+        var(--gloss),
+        inset 0 0 0 1px rgba(var(--lamp), .40),
+        0 0 12px rgba(var(--lamp), .26),
+        0 2px 4px rgba(0, 0, 0, .55);
+    color: var(--deck-ink);
+}
+.surf.supersaw .ctl.on .cap,
+.surf.supersaw .ctl.on .name,
+.surf.supersaw .ctl.on .glyph { color: var(--deck-ink); }
+
+.surf.supersaw .ctl.held {
+    box-shadow:
+        inset 0 0 0 2px rgba(233, 236, 242, .55),
+        inset 0 2px 5px rgba(0, 0, 0, .70),
+        0 1px 2px rgba(0, 0, 0, .70);
+}
+.surf.supersaw .ctl.dim {
+    opacity: 1;
+    background: linear-gradient(180deg, #2B3243 0%, #242A38 100%);
+    box-shadow: inset 0 0 0 1px var(--edge);
+    color: rgba(233, 236, 242, .40);
+}
+.surf.supersaw .ctl.offline {
+    background:
+        repeating-linear-gradient(135deg, rgba(255, 255, 255, .07) 0 6px, transparent 6px 12px),
+        #1A1E27;
+    box-shadow: inset 0 0 0 1px var(--edge);
+}
+
+/* the lamp: a short bar at the top center, not a strip across the whole edge */
+.surf.supersaw .pipe {
+    left: 50%; right: auto; bottom: auto; top: 5px;
+    width: 30%; min-width: 13px; height: 3px;
+    margin-left: 0;
+    transform: translateX(-50%);
+    border-radius: 1px;
+    background: rgba(var(--lamp), .18);
+    box-shadow: none;
+}
+.surf.supersaw .pipe.lit {
+    background: rgb(var(--lamp));
+    box-shadow: 0 0 8px rgba(var(--lamp), .90);
+}
+.surf.supersaw .ctl.on .pipe.lit { background: rgb(var(--lamp)); opacity: 1; }
+
+/* knobs: a black body with a light cap and a white pointer, and a ring of
+   short white ticks on the panel outside it */
+.surf.supersaw .knob { background: none; box-shadow: none; }
+.surf.supersaw .knob .dial {
+    background: radial-gradient(circle at 50% 32%, #363B44 0%, #1B1F25 58%, #0D0F13 100%);
+    box-shadow: var(--gloss), inset 0 0 0 1px var(--edge), 0 2px 5px rgba(0, 0, 0, .75);
+}
+.surf.supersaw .knob .dial::before {
+    content: "";
+    position: absolute; inset: -13px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(from 215deg,
+        rgba(233, 236, 242, .60) 0 1.4deg, transparent 1.4deg 36deg);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+    pointer-events: none;
+}
+.surf.supersaw .knob .arc {
+    background: conic-gradient(from 215deg,
+        rgb(var(--hue)) 0turn var(--pct, .35turn),
+        rgba(255, 255, 255, .10) var(--pct, .35turn) .805turn,
+        transparent .805turn 1turn);
+    filter: none;
+}
+.surf.supersaw .knob .ptr {
+    background: var(--mark);
+    width: 2px; height: 30%; top: 10%;
+    box-shadow: none;
+}
+/* the light cap on the top face. Small: at anything over a third of the knob
+   it stops reading as a cap and starts reading as a lamp */
+.surf.supersaw .knob .dotmark {
+    width: 28%; height: 28%;
+    left: 36%; top: 36%;
+    margin: 0;
+    background: radial-gradient(circle at 50% 34%, #D6DAE1 0%, #B9BFC9 70%, #9AA1AD 100%);
+    box-shadow: inset 0 -1px 2px rgba(0, 0, 0, .35), 0 1px 2px rgba(0, 0, 0, .5);
+}
+.surf.supersaw .knob .kval { color: var(--deck-ink); }
+.surf.supersaw .knob.detent .dial::after { background: var(--mark); }
+
+.surf.supersaw .fader .slot { background: var(--track); box-shadow: var(--sink); }
+.surf.supersaw .fader .fill { background: rgba(var(--hue), .34); box-shadow: none; }
+.surf.supersaw .fader .capbar {
+    background: linear-gradient(180deg, #2C3039 0%, #15181D 46%, #0C0E11 100%);
+    border-radius: 2px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .22), 0 3px 6px rgba(0, 0, 0, .80);
+}
+.surf.supersaw .fader .capbar::after {
+    background: var(--mark);
+    height: 2px;
+    border-radius: 0;
+    box-shadow: none;
+    opacity: 1;
+}
+.surf.supersaw .fader.horiz .capbar::after { width: 2px; }
+.surf.supersaw .fader .ticks i { background: rgba(233, 236, 242, .22); }
+
+.surf.supersaw .xy .field2 { background: var(--track); box-shadow: var(--sink); }
+.surf.supersaw .xy .field2::before {
+    background-image:
+        linear-gradient(rgba(255, 255, 255, .07) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, .07) 1px, transparent 1px);
+}
+.surf.supersaw .xy .cross { background: rgba(var(--hue), .50); box-shadow: none; }
+.surf.supersaw .xy .puck { background: var(--mark); box-shadow: 0 2px 5px rgba(0, 0, 0, .8); }
+.surf.supersaw .xy .trail { background: rgba(var(--hue), .25); }
+
+.surf.supersaw .meter i { background: rgba(255, 255, 255, .08); }
+.surf.supersaw .meter i.lit { background: rgb(var(--h3)); box-shadow: none; }
+.surf.supersaw .meter i.lit.warn { background: rgb(var(--h5)); box-shadow: none; }
+.surf.supersaw .meter i.lit.hot { background: rgb(var(--h2)); box-shadow: none; }
+
+.surf.supersaw .steps .row i { background: rgba(255, 255, 255, .07); box-shadow: inset 0 0 0 1px var(--edge); }
+.surf.supersaw .steps .row i.on { background: rgba(var(--hue), .70); box-shadow: none; }
+.surf.supersaw .steps .row i.cur { box-shadow: inset 0 0 0 2px var(--mark); }
+
+.surf.supersaw .surftext.readout { color: rgb(var(--h3)); text-shadow: 0 0 9px rgba(var(--h3), .45); }
+.surf.supersaw .surftext.h2 { color: rgb(var(--h1)); }
+.surf.supersaw .surfrule { background: linear-gradient(90deg, transparent, rgba(233, 236, 242, .24), transparent); }
+.surf.supersaw .ctlpanel { background: none; box-shadow: inset 0 0 0 1px rgba(233, 236, 242, .16); }
+.surf.supersaw .ctlpanel > .ptitle { background: #38445D; color: rgb(var(--h1)); }
+
+.surf.supersaw .pagetabs .tab {
+    border-radius: 3px;
+    background: var(--plate);
+    box-shadow: var(--gloss), inset 0 0 0 1px var(--edge);
+    color: var(--deck-ink2);
+}
+.surf.supersaw .pagetabs .tab.sel {
+    background: linear-gradient(180deg, rgba(255, 255, 255, .28), rgba(0, 0, 0, .06)), rgb(var(--h1));
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .40), 0 0 12px rgba(var(--h1), .40);
+    color: #150D05;
 }

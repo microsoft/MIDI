@@ -11,6 +11,7 @@
 #include "CommandLine.h"
 #include "LayoutStore.h"
 #include "ThemeModel.h"
+#include "ThemeStore.h"
 #include "ThumbnailLayout.h"
 #include "ThumbnailRenderer.h"
 
@@ -62,14 +63,9 @@ namespace
             return 3;
         }
 
-        auto const* theme = glass::FindBuiltInTheme(layout.Document.ThemeName);
+        auto const theme = glass::ResolveDocumentTheme(layout.Document);
 
-        if (theme == nullptr)
-        {
-            theme = &glass::BuiltInThemes()[0];
-        }
-
-        auto const plan = glass::PlanThumbnail(layout.Document, *theme, width, height);
+        auto const plan = glass::PlanThumbnail(layout.Document, theme, width, height);
 
         return glass::RenderThumbnailToFile(plan, arguments[3]).Succeeded ? 0 : 4;
     }

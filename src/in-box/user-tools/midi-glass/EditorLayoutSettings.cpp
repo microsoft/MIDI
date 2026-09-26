@@ -272,8 +272,19 @@ namespace winrt::midiglass::implementation
         foundation::IInspectable const& sender,
         xaml::RoutedEventArgs const& args)
     {
-        UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
+
+        // The menu item says where in the rail to land, so "Theme…" opens on the theme rather
+        // than on whatever was open last.
+        if (auto const element = sender.try_as<xaml::FrameworkElement>())
+        {
+            auto const tag = unbox_value_or<winrt::hstring>(element.Tag(), L"");
+
+            if (!tag.empty())
+            {
+                m_settingsPane = std::wstring{ tag };
+            }
+        }
 
         ShowLayoutSettings(true);
     }
@@ -311,8 +322,7 @@ namespace winrt::midiglass::implementation
 
     void EditorWindow::RefreshLayoutSettings()
     {
-        RefreshSettingsPages();
-        RefreshSettingsDevices();
+        ShowSettingsPane(m_settingsPane);
     }
 
     // The menu item that asks for the edit lives inside the list the edit rebuilds, so the

@@ -70,7 +70,7 @@
         <div class="tchip"><i style="background:#4CE0FF"></i>Studio Dark</div>
         <div class="tchip"><i style="background:#0C56A8"></i>Pigment Light</div>
         <div class="tchip"><i style="background:#98CCFF"></i>Pigment Dark</div>
-        <div class="tchip"><i style="background:#F56A1A"></i>Bigwig</div>
+        <div class="tchip"><i style="background:#F98B31"></i>Bigwig</div>
         <div class="tchip new"><i style="background:#E3DAC9"></i>Bone</div>
         <div class="tchip" style="margin-left:6px">&#43; New theme&hellip;</div>
     </div>
@@ -352,8 +352,8 @@
         The same tonal machinery as Pigment and Bigwig with the hue wash turned <b>off</b>, the six color slots, the track color, corner rounding, and the value strip along the bottom edge where Studio Dark puts it. No new control types and no new shapes. Even the segmented LED ring comes along, because it is a mask over the arc that is already there.
     </div>
     <div class="cost">
-        <h4><span class="no">Two additions</span> &mdash; what it needs</h4>
-        A <b>shadow color</b>, because a black shadow on a bone deck goes a dirty gray and this theme lives or dies on that shadow being warm. And a <b>light source</b> for the bloom &mdash; the control's own color today, or white &mdash; which is the same shape of property as the rim source Bigwig asked for. The elevation shadow itself is no longer a cost: the renderer already draws a masked shadow under every plate (<span class="mono">PlateElevation</span>) and the dark themes simply keep it low. Bone turns it up and tints it.
+        <h4><span class="yes">Built</span> &mdash; the two additions, and what the engine round added</h4>
+        A <b>shadow color</b>, because a black shadow on a bone deck goes a dirty gray, and a <b>light source</b> for the bloom that became a bloom color. Then, in the engine round: shadows the shape of the control they sit under rather than a small rectangle out of each side; buttons that carry their names and, lit, are their color deepened 16&nbsp;% (<span class="mono">NamesInsideSwitches</span>, <span class="mono">OnLiftPercent</span>); slots and the XY field sunk with a warm shadow inside (<span class="mono">RecessShadePercent</span>, <span class="mono">WellColor</span>); a fader cap that casts a shadow on its slot; knob arcs outside the dial; and a piano keyboard in warm white and the shadow color.
     </div>
     <div class="cost">
         <h4>Four things the measurement decided</h4>

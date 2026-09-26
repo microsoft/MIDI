@@ -273,7 +273,21 @@ namespace glass
         bool SetLayoutName(_In_ std::wstring const& name);
         bool SetLayoutDescription(_In_ std::wstring const& description);
         bool SetThemeName(_In_ std::wstring const& themeName);
+
+        // The customer picked a theme out of the gallery. The layout stops carrying one of its
+        // own, so an improvement to the shipped theme still reaches this layout.
+        bool ChooseTheme(_In_ Theme const& theme);
+
+        // The customer changed one of the theme's own numbers. From here on the layout carries
+        // the theme inside itself, because there is no file anywhere that says what it now is.
+        bool SetOwnTheme(_In_ Theme const& theme);
+
         bool SetSuppressAllStartupValues(_In_ bool suppress);
+        bool SetPublishesVirtualDevice(_In_ bool publishes);
+        bool SetScaleMode(_In_ ScaleMode mode, _In_ double customPercent);
+        bool SetFullScreenButtonCorner(_In_ ScreenCorner corner);
+        bool SetTempoSource(_In_ TempoSource const& tempo);
+        bool SetBackgroundOpacity(_In_ double opacity);
 
         // The picture behind the whole surface. The name is a bare file name beside the layout,
         // never a path: a layout is untrusted input, and a path in it is a way to make this app
