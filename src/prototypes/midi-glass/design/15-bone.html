@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - Bone theme</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    /* This screen frames its decks in bone rather than the dark chrome the
+       other theme screens use, so the whole space reads light. */
+    .board {
+        width: 1000px; border-radius: 8px; position: relative; overflow: hidden;
+        border: 1px solid rgba(138,121,93,.38);
+        background: #EDE7DB;
+        box-shadow: var(--shadow);
+    }
+    .chiprow { position: absolute; left: 14px; top: 13px; display: flex; gap: 6px; align-items: center; }
+    .tchip {
+        height: 26px; padding: 0 11px; border-radius: 13px;
+        display: flex; align-items: center; gap: 7px;
+        font-size: 11px; color: #4E4330;
+        background: rgba(255,255,255,.66); box-shadow: inset 0 0 0 1px rgba(138,121,93,.26);
+    }
+    .tchip i { width: 11px; height: 11px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(43,35,22,.20); }
+    .tchip.new {
+        color: #FFFDF7; background: #8A795D;
+        box-shadow: inset 0 0 0 1px rgba(43,35,22,.35), 0 2px 5px rgba(94,81,57,.30);
+    }
+
+    .deck { position: absolute; left: 14px; top: 54px; width: 972px; height: 496px; border-radius: 6px; overflow: hidden; }
+    .decktag { position: absolute; left: 14px; top: 558px; font-size: 11px; color: #4E4330; }
+    .decktag b { color: #2F2718; font-weight: 600; }
+
+    .lightboard { background: #EDE7DB; }
+    .rhead { position: absolute; font-size: 11px; letter-spacing: .10em; color: rgba(59,50,34,.60); }
+    .kcap { position: absolute; text-align: center; font-size: 10.5px; color: rgba(59,50,34,.62); }
+    .kcap b { display: block; color: #2F2718; font-weight: 600; font-size: 11px; margin-bottom: 2px; }
+    .measure { position: absolute; font-size: 11.5px; line-height: 1.6; color: rgba(59,50,34,.72); }
+    .measure b { color: #2F2718; font-weight: 600; }
+    .measure .num { font-family: "Cascadia Mono","Consolas",monospace; color: #8F3A18; font-weight: 600; }
+
+    .swatches { display: flex; gap: 0; border-radius: 7px; overflow: hidden; margin-top: 14px; }
+    .swatches div {
+        flex: 1; height: 58px; display: flex; flex-direction: column; justify-content: flex-end;
+        padding: 6px 8px; font-size: 9.5px; font-family: "Cascadia Mono","Consolas",monospace;
+    }
+    .swatches div span { display: block; font-family: "Segoe UI Variable Text","Segoe UI",sans-serif; font-size: 10px; opacity: .78; }
+
+    .costgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; margin-top: 12px; }
+    .cost {
+        border-radius: 7px; padding: 12px 14px;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke);
+        font-size: 11.5px; color: var(--text3); line-height: 1.55;
+    }
+    .cost h4 { margin: 0 0 7px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .cost b { color: var(--text2); font-weight: 600; }
+    .cost .yes { color: var(--success); font-weight: 600; }
+    .cost .no { color: var(--caution); font-weight: 600; }
+    .cost .mono { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="caption-above">Screen 15 &mdash; <b>Bone</b>. A warm light theme built out of two colors: <b>#E3DAC9</b> for the space and <b>#8A795D</b> for everything that has to read as dark. Every other theme tells a control from its deck by <b>value</b> &mdash; a dark plate on a darker deck, or the reverse. Bone cannot: a warm white plate measures <b>1.23:1</b> against a bone deck, which is nothing. So the separation is carried by a soft warm <b>shadow</b>, and the thing that lights up is <b>white</b> instead of the control's color.</p>
+
+<!-- ============================================================= DECK -->
+<div class="board" style="height:584px;">
+
+    <div class="chiprow">
+        <div class="tchip"><i style="background:#4CE0FF"></i>Studio Dark</div>
+        <div class="tchip"><i style="background:#0C56A8"></i>Pigment Light</div>
+        <div class="tchip"><i style="background:#98CCFF"></i>Pigment Dark</div>
+        <div class="tchip"><i style="background:#F56A1A"></i>Bigwig</div>
+        <div class="tchip new"><i style="background:#E3DAC9"></i>Bone</div>
+        <div class="tchip" style="margin-left:6px">&#43; New theme&hellip;</div>
+    </div>
+
+    <div class="deck surf tonal bone">
+
+        <div class="surftext h1" style="left:18px; top:11px; font-size:15px;">Bone Desk</div>
+        <div class="surftext readout" style="left:150px; top:12px; font-size:14px;">118.00</div>
+        <div class="surftext small" style="left:224px; top:16px;">4 / 4</div>
+
+        <div class="pagetabs" style="right:14px; top:10px; gap:4px;">
+            <div class="tab sel" style="height:21px; padding:0 11px; font-size:10px">Desk</div>
+            <div class="tab" style="height:21px; padding:0 11px; font-size:10px">Pads</div>
+            <div class="tab" style="height:21px; padding:0 11px; font-size:10px">FX</div>
+        </div>
+
+        <!-- macro row -->
+        <div class="ctl knob hue1" style="left:24px; top:54px; width:64px; height:64px;">
+            <div class="dial"><div class="arc" style="--pct:.58turn"></div><div class="ptr" style="transform:rotate(64deg)"></div></div>
+        </div>
+        <div class="ctl knob hue1" style="left:104px; top:54px; width:64px; height:64px;">
+            <div class="dial"><div class="arc" style="--pct:.34turn"></div><div class="ptr" style="transform:rotate(-22deg)"></div></div>
+        </div>
+        <div class="ctl knob hue1" style="left:184px; top:54px; width:64px; height:64px;">
+            <div class="dial"><div class="arc" style="--pct:.72turn"></div><div class="ptr" style="transform:rotate(114deg)"></div></div>
+        </div>
+        <div class="ctl knob hue3" style="left:264px; top:54px; width:64px; height:64px;">
+            <div class="dial"><div class="arc" style="--pct:.46turn"></div><div class="ptr" style="transform:rotate(21deg)"></div></div>
+        </div>
+        <div class="ctl knob hue2" style="left:344px; top:54px; width:64px; height:64px;">
+            <div class="dial"><div class="arc" style="--pct:.62turn"></div><div class="ptr" style="transform:rotate(78deg)"></div></div>
+        </div>
+        <div class="ctl knob hue4" style="left:424px; top:54px; width:64px; height:64px;">
+            <div class="dial"><div class="arc" style="--pct:.28turn"></div><div class="ptr" style="transform:rotate(-43deg)"></div></div>
+        </div>
+        <div class="outlabel" style="left:24px; top:122px; width:64px; font-size:9.5px;">Drive</div>
+        <div class="outlabel" style="left:104px; top:122px; width:64px; font-size:9.5px;">Bias</div>
+        <div class="outlabel" style="left:184px; top:122px; width:64px; font-size:9.5px;">Sag</div>
+        <div class="outlabel" style="left:264px; top:122px; width:64px; font-size:9.5px;">Color</div>
+        <div class="outlabel" style="left:344px; top:122px; width:64px; font-size:9.5px;">Spread</div>
+        <div class="outlabel" style="left:424px; top:122px; width:64px; font-size:9.5px;">Depth</div>
+
+        <div class="ctl xy hue1" style="left:516px; top:54px; width:136px; height:136px;">
+            <div class="field2">
+                <div class="cross h" style="top:42%"></div>
+                <div class="cross v" style="left:57%"></div>
+                <div class="trail" style="left:46%; top:53%"></div>
+                <div class="puck" style="left:57%; top:42%"></div>
+            </div>
+        </div>
+        <div class="outlabel" style="left:516px; top:194px; width:136px; font-size:9.5px;">Morph</div>
+
+        <div class="ctl meter hue5" style="left:672px; top:54px; width:24px; height:136px;">
+            <i></i><i></i><i class="lit hot"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i>
+        </div>
+        <div class="ctl meter hue5" style="left:702px; top:54px; width:24px; height:136px;">
+            <i></i><i></i><i></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i>
+        </div>
+
+        <div class="ctl steps hue1" style="left:744px; top:54px; width:212px; height:66px;">
+            <div class="row"><i class="on cur"></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i></div>
+            <div class="row"><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i></div>
+        </div>
+
+        <div class="ctl lfo hue4" style="left:744px; top:128px; width:102px; height:62px; padding:5px 7px;">
+            <div class="head" style="font-size:8.5px"><span>LFO</span><span class="mono">1/8</span></div>
+            <svg viewBox="0 0 70 24" preserveAspectRatio="none">
+                <path d="M0,12 C6,1 12,1 18,12 C24,23 30,23 36,12 C42,1 48,1 54,12 C60,23 66,23 70,12" fill="none" style="stroke:rgb(var(--hue))" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="ctl btn-ctl hue1 on" style="left:854px; top:128px; width:102px; height:62px;">
+            <div class="glyph" style="font-size:17px">&#9679;</div><div class="name" style="font-size:10px">Clock</div><div class="pipe lit"></div>
+        </div>
+
+        <!-- mixer band -->
+        <div class="surftext h2" style="left:18px; top:206px; font-size:10px;">MIXER</div>
+
+        <div class="ctl fader hue1" style="left:24px; top:226px; width:44px; height:116px;">
+            <div class="slot"><div class="fill" style="height:76%"></div><div class="capbar" style="bottom:calc(76% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue1" style="left:82px; top:226px; width:44px; height:116px;">
+            <div class="slot"><div class="fill" style="height:58%"></div><div class="capbar" style="bottom:calc(58% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue1" style="left:140px; top:226px; width:44px; height:116px;">
+            <div class="slot"><div class="fill" style="height:88%"></div><div class="capbar" style="bottom:calc(88% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue1" style="left:198px; top:226px; width:44px; height:116px;">
+            <div class="slot"><div class="fill" style="height:41%"></div><div class="capbar" style="bottom:calc(41% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue1" style="left:256px; top:226px; width:44px; height:116px;">
+            <div class="slot"><div class="fill" style="height:67%"></div><div class="capbar" style="bottom:calc(67% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue2" style="left:314px; top:226px; width:44px; height:116px;">
+            <div class="slot"><div class="fill" style="height:80%"></div><div class="capbar" style="bottom:calc(80% - 8px);"></div></div>
+        </div>
+        <div class="outlabel" style="left:24px; top:346px; width:44px; font-size:9px;">Kick</div>
+        <div class="outlabel" style="left:82px; top:346px; width:44px; font-size:9px;">Bass</div>
+        <div class="outlabel" style="left:140px; top:346px; width:44px; font-size:9px;">Keys</div>
+        <div class="outlabel" style="left:198px; top:346px; width:44px; font-size:9px;">Perc</div>
+        <div class="outlabel" style="left:256px; top:346px; width:44px; font-size:9px;">FX</div>
+        <div class="outlabel" style="left:314px; top:346px; width:44px; font-size:9px;">Main</div>
+
+        <div class="ctl btn-ctl hue1" style="left:378px; top:226px; width:68px; height:40px;"><div class="name" style="font-size:10px">Intro</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1 on" style="left:454px; top:226px; width:68px; height:40px;"><div class="name" style="font-size:10px">Build</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue1" style="left:530px; top:226px; width:68px; height:40px;"><div class="name" style="font-size:10px">Drop</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1 held" style="left:378px; top:274px; width:68px; height:40px;"><div class="name" style="font-size:10px">Break</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue1" style="left:454px; top:274px; width:68px; height:40px;"><div class="name" style="font-size:10px">Outro</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1 dim" style="left:530px; top:274px; width:68px; height:40px;"><div class="name" style="font-size:10px">Spare</div><div class="pipe"></div></div>
+
+        <div class="ctl btn-ctl hue5 on" style="left:378px; top:322px; width:68px; height:40px;"><div class="glyph" style="font-size:14px">&#9654;</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue2" style="left:454px; top:322px; width:68px; height:40px;"><div class="glyph" style="font-size:12px">&#9632;</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue6" style="left:530px; top:322px; width:68px; height:40px;"><div class="glyph" style="font-size:14px">&#9679;</div><div class="pipe"></div></div>
+
+        <div class="ctl fader hue1 horiz" style="left:628px; top:226px; width:328px; height:26px;">
+            <div class="slot"><div class="fill" style="width:52%"></div><div class="capbar" style="left:calc(52% - 8px);"></div></div>
+        </div>
+        <div class="outlabel" style="left:628px; top:256px; width:328px; font-size:9px;">Crossfader</div>
+
+        <div class="ctl btn-ctl hue3" style="left:628px; top:276px; width:78px; height:38px;"><div class="name" style="font-size:10px">Kill LO</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue3 on" style="left:712px; top:276px; width:78px; height:38px;"><div class="name" style="font-size:10px">Kill MID</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue3" style="left:796px; top:276px; width:78px; height:38px;"><div class="name" style="font-size:10px">Kill HI</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue4" style="left:880px; top:276px; width:76px; height:38px;"><div class="name" style="font-size:10px">Layer</div><div class="pipe"></div></div>
+
+        <div class="ctl btn-ctl hue1 offline" style="left:628px; top:322px; width:162px; height:40px;">
+            <div class="name" style="font-size:10px; color:var(--deck-ink2)">Iridium</div>
+            <div class="cap" style="font-size:8.5px; color:rgb(var(--h6))">device offline</div>
+        </div>
+        <div class="ctl btn-ctl hue6" style="left:796px; top:322px; width:160px; height:40px;"><div class="name" style="font-size:10px">Panic</div><div class="pipe"></div></div>
+
+        <!-- performance band -->
+        <div class="surftext h2" style="left:18px; top:374px; font-size:10px;">PERFORMANCE</div>
+
+        <div class="ctl joy hue2" style="left:24px; top:392px; width:76px; height:76px;">
+            <div class="ring"></div><div class="ring2"></div><div class="spring"></div>
+            <div class="puck" style="left:62%; top:42%"></div>
+        </div>
+        <div class="outlabel" style="left:16px; top:472px; width:92px; font-size:9px;">Joystick</div>
+
+        <div class="ctl wheel hue5" style="left:116px; top:392px; width:30px; height:76px;">
+            <div class="body"><div class="ridges"></div><div class="ind" style="bottom:68%"></div></div>
+        </div>
+        <div class="outlabel" style="left:108px; top:472px; width:46px; font-size:9px;">Mod</div>
+
+        <div class="ctl wheel hue6" style="left:154px; top:392px; width:30px; height:76px;">
+            <div class="body"><div class="ridges"></div><div class="center"></div><div class="ind" style="bottom:50%"></div></div>
+        </div>
+        <div class="outlabel" style="left:146px; top:472px; width:46px; font-size:9px;">Pitch</div>
+
+        <div class="ctl clockctl hue3" style="left:200px; top:392px; width:96px; height:76px;">
+            <div class="ringwrap" style="width:44px; height:44px;">
+                <div class="sweep" style="--pct:.62turn"></div>
+                <div class="beat" style="font-size:12px">3</div>
+            </div>
+            <div class="pips"><i class="lit"></i><i class="lit"></i><i class="lit"></i><i></i></div>
+        </div>
+        <div class="outlabel" style="left:192px; top:472px; width:112px; font-size:9px;">Beat clock</div>
+
+        <div style="position:absolute; left:308px; top:392px; width:156px; height:76px; display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(2,1fr); gap:6px;">
+            <div class="ctl hue1" style="position:relative;"></div>
+            <div class="ctl hue1 on" style="position:relative;"></div>
+            <div class="ctl hue4" style="position:relative;"></div>
+            <div class="ctl hue4" style="position:relative;"></div>
+            <div class="ctl hue2" style="position:relative;"></div>
+            <div class="ctl hue2" style="position:relative;"></div>
+            <div class="ctl hue1 held" style="position:relative;"></div>
+            <div class="ctl hue1" style="position:relative;"></div>
+        </div>
+        <div class="outlabel" style="left:308px; top:472px; width:156px; font-size:9px;">Pad bank</div>
+
+        <div class="ctl btn-ctl hue1" style="left:478px; top:402px; width:72px; height:56px; border-radius:28px;">
+            <div class="name" style="font-size:9.5px; letter-spacing:.08em">SHIFT</div>
+            <div class="cap" style="font-size:8.5px">hold</div>
+        </div>
+        <div class="outlabel" style="left:464px; top:472px; width:100px; font-size:9px;">Layer modifier</div>
+
+        <div class="ctl knob hue3 detent" style="left:566px; top:396px; width:56px; height:56px;">
+            <div class="dial"><div class="arc" style="--pct:.40turn"></div><div class="ptr" style="transform:rotate(0deg)"></div></div>
+        </div>
+        <div class="outlabel" style="left:556px; top:472px; width:76px; font-size:9px;">Pan, detent</div>
+
+        <div class="ctl knob leds hue1" style="left:640px; top:396px; width:56px; height:56px;">
+            <div class="dial"><div class="arc" style="--pct:.55turn"></div><div class="ptr" style="transform:rotate(55deg)"></div></div>
+        </div>
+        <div class="outlabel" style="left:630px; top:472px; width:76px; font-size:9px;">LED ring</div>
+
+        <div class="ctl hue3" style="left:714px; top:402px; width:110px; height:48px; align-items:center; justify-content:center;">
+            <div class="mono" style="font-size:15px; color:var(--deck-ink)">01.03.04</div>
+        </div>
+        <div class="outlabel" style="left:714px; top:472px; width:110px; font-size:9px;">Readout (in)</div>
+
+        <div class="ctl btn-ctl hue6 on" style="left:838px; top:400px; width:52px; height:52px; border-radius:26px;">
+            <div class="name" style="font-size:9px">REC</div>
+        </div>
+        <div class="outlabel" style="left:832px; top:472px; width:64px; font-size:9px;">Lamp (in)</div>
+
+        <div class="ctl btn-ctl hue1 held" style="left:904px; top:400px; width:52px; height:52px;">
+            <div class="glyph" style="font-size:13px">&#9679;</div>
+        </div>
+        <div class="outlabel" style="left:898px; top:472px; width:64px; font-size:9px;">Under the hand</div>
+
+    </div>
+    <div class="decktag"><b>Bone</b> &mdash; the deck is bone, a control is a top-lit warm white plate standing off it on a soft warm shadow, and the one saturated thing on the page is the value</div>
+
+</div>
+
+<!-- ================================================== HOW THE LIGHT WORKS -->
+<div class="board lightboard" style="height:322px; margin-top:13px;">
+
+    <div class="surf tonal bone" style="position:absolute; inset:0; background:#EDE7DB;">
+
+        <div class="rhead" style="left:20px; top:14px;">THE SHADOW IS THE STRUCTURE. THE LIGHT IS WHITE.</div>
+
+        <div class="ctl btn-ctl hue1" style="left:36px; top:52px; width:112px; height:68px;">
+            <div class="name" style="font-size:10.5px">Break</div><div class="pipe"></div>
+        </div>
+        <div class="ctl btn-ctl hue1 held" style="left:164px; top:52px; width:112px; height:68px;">
+            <div class="name" style="font-size:10.5px">Break</div><div class="pipe lit"></div>
+        </div>
+        <div class="ctl btn-ctl hue1 on" style="left:292px; top:52px; width:112px; height:68px;">
+            <div class="name" style="font-size:10.5px">Break</div><div class="pipe lit"></div>
+        </div>
+        <div class="ctl btn-ctl hue1 dim" style="left:420px; top:52px; width:112px; height:68px;">
+            <div class="name" style="font-size:10.5px">Break</div><div class="pipe"></div>
+        </div>
+        <div class="ctl btn-ctl hue1 offline" style="left:548px; top:52px; width:112px; height:68px;">
+            <div class="name" style="font-size:10.5px; color:var(--deck-ink2)">Break</div>
+            <div class="cap" style="font-size:8.5px; color:rgb(var(--h6))">offline</div>
+        </div>
+
+        <div class="kcap" style="left:36px; top:130px; width:112px;"><b>At rest</b>raised, hairline rim</div>
+        <div class="kcap" style="left:164px; top:130px; width:112px;"><b>Under the hand</b>white, rim to full</div>
+        <div class="kcap" style="left:292px; top:130px; width:112px;"><b>On</b>filled, white light pipe</div>
+        <div class="kcap" style="left:420px; top:130px; width:112px;"><b>Disabled</b>flush with the deck</div>
+        <div class="kcap" style="left:548px; top:130px; width:112px;"><b>Device offline</b>flush and hatched</div>
+
+        <div class="rhead" style="left:36px; top:192px;">RAISED, FLUSH, CARVED &mdash; THE THREE THINGS A SURFACE CAN DO HERE</div>
+
+        <div class="ctl hue1" style="left:36px; top:216px; width:112px; height:62px;"></div>
+        <div class="ctl hue1 dim" style="left:164px; top:216px; width:112px; height:62px;"></div>
+        <div style="position:absolute; left:292px; top:216px; width:112px; height:62px; border-radius:8px; background:#E4DCCB; box-shadow:var(--sink);"></div>
+
+        <div class="kcap" style="left:36px; top:286px; width:112px;"><b>Raised</b>you can press it</div>
+        <div class="kcap" style="left:164px; top:286px; width:112px;"><b>Flush</b>it is there, it is dead</div>
+        <div class="kcap" style="left:292px; top:286px; width:112px;"><b>Carved</b>it holds a value</div>
+
+        <div class="measure" style="left:700px; top:44px; width:252px;">
+            <b>What the numbers said.</b>
+            A warm white plate measures <span class="num">1.23:1</span> to <span class="num">1.39:1</span>
+            against a bone deck. There is no value difference to work with, so the soft warm shadow
+            under every plate is not decoration here &mdash; it is the only thing telling a control
+            from the space behind it. Drag elevation to zero and you do not get a flatter theme, you
+            get a blank sheet.
+            <br><br>
+            <b>And white light is a weak signal.</b>
+            White on bone is <span class="num">1.39:1</span>. A halo on its own cannot carry a state
+            on a light deck, so the rim comes up to full color in the same moment. Anyone who cannot
+            see the glow still sees the outline change.
+        </div>
+    </div>
+</div>
+
+<div class="swatches">
+    <div style="background:#E3DAC9; color:#3B3222">#E3DAC9 <span>Bone &middot; the space</span></div>
+    <div style="background:#FAF6EC; color:#3B3222">#FAF6EC <span>Plate &middot; raised</span></div>
+    <div style="background:#FFFFFF; color:#3B3222">#FFFFFF <span>White &middot; the light</span></div>
+    <div style="background:#8A795D; color:#FFFDF7">#8A795D <span>Shadow &middot; slot 1</span></div>
+    <div style="background:#7B6B52; color:#FFFDF7">#7B6B52 <span>Shadow &middot; filled</span></div>
+    <div style="background:#5C6E4E; color:#FFFDF7">#5C6E4E <span>Sage</span></div>
+    <div style="background:#8F6318; color:#FFFDF7">#8F6318 <span>Ochre</span></div>
+    <div style="background:#9A543E; color:#FFFDF7">#9A543E <span>Clay</span></div>
+    <div style="background:#5A647C; color:#FFFDF7">#5A647C <span>Slate</span></div>
+    <div style="background:#9B3D34; color:#FFFDF7">#9B3D34 <span>Brick</span></div>
+    <div style="background:#3B3222; color:#F4EFE4">#3B3222 <span>Ink</span></div>
+</div>
+
+<div class="costgrid">
+    <div class="cost">
+        <h4><span class="yes">Free</span> &mdash; what Bone reuses</h4>
+        The same tonal machinery as Pigment and Bigwig with the hue wash turned <b>off</b>, the six color slots, the track color, corner rounding, and the value strip along the bottom edge where Studio Dark puts it. No new control types and no new shapes. Even the segmented LED ring comes along, because it is a mask over the arc that is already there.
+    </div>
+    <div class="cost">
+        <h4><span class="no">Two additions</span> &mdash; what it needs</h4>
+        A <b>shadow color</b>, because a black shadow on a bone deck goes a dirty gray and this theme lives or dies on that shadow being warm. And a <b>light source</b> for the bloom &mdash; the control's own color today, or white &mdash; which is the same shape of property as the rim source Bigwig asked for. The elevation shadow itself is no longer a cost: the renderer already draws a masked shadow under every plate (<span class="mono">PlateElevation</span>) and the dark themes simply keep it low. Bone turns it up and tints it.
+    </div>
+    <div class="cost">
+        <h4>Four things the measurement decided</h4>
+        Ochre at readout size is <b>3.82:1</b> on bone and a number needs 4.5, so <b>readouts are ink</b>, not color. Shadow cannot carry warm white at 4.5 either, so the <b>filled state deepens 16&nbsp;%</b> and lands at 5.5:1. Plate against deck is <b>1.23:1</b>, which is why the shadow is structural. White against bone is <b>1.39:1</b>, which is why the rim always moves with the light. None of those four were taste.
+    </div>
+</div>
+
+<p class="note" style="margin-top:12px;">
+<b>Where this theme belongs, and where it does not.</b> Bone is for a desk by a window, a classroom, a studio with the lights on &mdash; somewhere a near-black surface is the thing that looks wrong. In a dark room it is a lamp pointed at the performer, and Studio Dark still wins there; the theme picker should say so rather than letting somebody find out during a set. <b>One rule it inherits and keeps.</b> A control still never uses more than one color, and that color still only appears on the rim, the value and the fill. What changed is where the depth comes from: the other themes make a control by darkening it, Bone makes one by lifting it. <b>Bone and Shadow are yours; the other four slots are mine.</b> All six are measured against both the plate and the deck at 3:1 or better, and the deck is bone at the bottom and a lifted bone at the top, so the space is never anything else.
+</p>
+
+</div>
+</body>
+</html>

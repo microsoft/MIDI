@@ -165,10 +165,11 @@ If it ever does need more, the right escape hatch is a **tiny expression grammar
 
 A theme is **six hue slots, a deck, and a handful of control defaults**. A control stores "slot 3", never `#FFC247`. Switch theme and every amber control becomes lime together, and the mute buttons still all match. A control can still override with a literal color when it has to, and the theme editor says how many controls are using each slot so a customer knows what a change will touch.
 
-- Shipped themes: **Studio Dark**, **Neon Booth**, **Daylight**, **Amber Console**, **Blueprint**, **High contrast**, and the three below.
+- Shipped themes: **Studio Dark**, **Neon Booth**, **Daylight**, **Blueprint**, **High contrast**, and the seven worked out below — Pigment Light, Pigment Dark, Bigwig, Bone, Cathode, **Amber Console** and Terminal Green. Amber Console was a swatch in this picker from the start; screen 17 is that swatch finally built, which is why it keeps the name rather than getting a new one.
 - Deck: one color, a two-stop gradient, or an image.
 - Control defaults in the theme: corner rounding, glass tint percentage, glow strength, label placement. This is how a customer makes their whole surface squarer or flatter in one move.
 - **Contrast is measured, not guessed.** Each slot is checked against the deck and flagged before it ships to a stage. In the mockup, slot 5 at 4.1 : 1 is called out with what to do about it.
+- **Each theme carries one sentence about what it costs**, shown in the picker. Not every theme can be equally accessible, and that is better said than quietly designed around. See the end of this section.
 - A theme is a small separate file, so one can be saved and reused across layouts, or shared.
 - The **High contrast** theme is *offered, never forced*. If Windows switches to a high-contrast theme while a layout is running, the running layout is left alone and the offer waits until it is next opened. Reskinning a performer's surface mid-set would be worse than the problem it solves.
 
@@ -195,9 +196,45 @@ Names are placeholders. **Studio Paper** and **Studio Slate** would sit closer t
 
 **Deferred:** drop shadows. The older card-and-shadow look would mean a composition shadow under every control, which on a surface that has to stay smooth under a finger is a real cost at eighty controls. Not doing it for now. The second arc of white lamps on the hardware is skipped too — that is an endless encoder with no pointer, so the lamps are showing what the main arc is not, which our knobs do not need.
 
+*Superseded for the shadow part only:* Bone, below, is built on an elevation shadow, and the surface renderer now draws one under every plate anyway. See that section for what actually changed.
+
+### Bone
+
+**Screen 15** (`15-bone.html`). A warm light theme made of two colors: **#E3DAC9** for the space and **#8A795D** for everything that has to read as dark. The deck is bone, or a lifted bone at the top of the gradient, and nothing else.
+
+**The reason it is a different kind of theme.** Every other theme tells a control from its deck by *value* — a dark plate on a darker deck, or the reverse. Bone cannot. A warm white plate measures **1.23 : 1** against a bone deck, which is nothing at all. So the separation is carried entirely by a soft warm **shadow** under the plate, and the thing that lights up is **white** rather than the control's own color. The other themes make a control by darkening it; Bone makes one by lifting it.
+
+That single change gives the surface a physical grammar the dark themes do not have, and it is worth naming because a customer will feel it before they can describe it: **what your hand touches is raised, what holds a value is carved, and what is dead is flush.** A fader cap stands off the plate while its slot is cut into it. An XY field is sunk. A disabled control loses its shadow and sinks back into the deck, which says "this does nothing" more plainly than any amount of fading can on a light surface.
+
+**Four things it needs that the model does not have.** A **shadow color**, because a black shadow on a bone deck goes a dirty gray and this theme lives or dies on that shadow being warm. A **shadow spread**, because elevation only ever said how *dark* a shadow was, never how far it reached — the renderer hardcoded a 3 pixel blur, and measured on screen that darkens the single row of pixels under a plate by four values and then stops, which is not a shadow. A **light source** for the bloom — the control's own color as today, or white. And a **resting rim strength**, because a hairline that reads as a line on near-black is not there at all on near-white.
+
+The first two were predicted as one; they are two because they answer different questions and a theme editor has to show both. The fourth was not predicted at all and came out of looking at the thing on screen at four times size.
+
+**The elevation shadow itself is no longer a cost.** The surface renderer already draws a masked shadow under every plate and the dark themes simply keep it low, so Bone turns it up and tints it rather than adding a layer. That closes the deferral in the table below, and it closes it on measurement rather than on preference. Every theme shipped before Bone keeps a spread of 3 and a black shadow, which reproduces the two constants they were drawn with exactly.
+
+**Four things the numbers decided, not taste.** Ochre at readout size measures 3.82 : 1 on bone and a number needs 4.5, so readouts are ink rather than color. Shadow cannot carry warm white at 4.5 either, so the filled state deepens 16 % and lands at 5.5 : 1. Plate against deck is 1.23 : 1, which is why the shadow is structural and why a theme editor should refuse to let somebody drag elevation to zero on this theme — they would not get a flatter surface, they would get a blank sheet. White against bone is 1.39 : 1, which is why the rim always comes up to full color at the same moment the white light appears: anyone who cannot see the glow still sees the outline change.
+
+**A hairline rim has to be nearly full strength here.** On a near-white plate the resting rim at the opacity the other themes use simply vanishes, and the control's color identity goes with it — six faders on six different slots all look the same. Bone runs the rim at 85 %. Measured against each theme's own plate, the 28 every other theme uses lands at 1.8 : 1 to 2.2 : 1 on the six dark themes and only 1.4 : 1 on the light ones. The "nothing is saturated at rest" rule survives because the *area* of color is still one pixel, and because all six slots are muted earth tones rather than neon.
+
+The honest trade: in a dark room this is a lamp pointed at the performer. Bone is for a desk by a window, a classroom, a studio with the lights on — somewhere a near-black surface is the thing that looks wrong. Studio Dark still wins on a stage, and the theme picker should say so rather than letting somebody find out during a set.
+
+Bone and Shadow are the two given colors. The other four slots — sage `#5C6E4E`, ochre `#8F6318`, clay `#9A543E`, slate `#5A647C` and brick `#9B3D34` — are chosen to sit with them, and every one measures 3 : 1 or better against both the plate and the deck.
+
+### The retro set — Cathode, Amber Console and Terminal Green
+
+**Screens 16, 17 and 18.** Three old screens, one ramp machine. Each is the tonal machinery with the hue wash off, the way Bigwig and Bone are, and together they are what finished the theme model — by the third one, nothing new had to be added.
+
+**Cathode** is a black and white television, and it is neither. The glass is a sour olive green when nothing is driving it, the phosphor is blue-white, every edge is soft because a beam has no hard edge, and there is no pure black or pure white anywhere — the palette runs `#101611` to `#F4F8FF` and a sweep of the rendered deck never leaves it except where a scan line crosses a carved slot. What makes it unlike every other theme is that **a tube has one phosphor, so there is no color to tell one control from another with**. Brightness has to carry identity, value and state at once and it cannot: the widest pair of its six slots is 2.32 : 1. So a control here is known by where it sits and what it is called, which is also the first time the full-screen rule about Panic keeping its place has had to do all the work on its own.
+
+**Amber Console** is the P3 terminal, and it is the swatch that had been sitting in the picker since the beginning. Three things make it: the glass is a warm maroon, **the glow is redder than the thing casting it** because P3 decays through red, and brightness moves hue — the ramp runs like heat, from deep ember through orange and amber and yellow to white. That last part gives it something Cathode has not got at all, a second channel, and the numbers say so. What it costs is stated rather than engineered away: the deepest ember fails as type, so the bottom rung of the ramp carries light and never letters.
+
+**Terminal Green** is the green screen, and **the glass is not green**. A terminal has a tinted anti-glare faceplate, so the unlit screen is a cool blue-slate and the phosphor sits a long way from it in hue — built from memory this comes out as green on dark green, which is Cathode with the colors swapped and makes two of the three look like one idea. Every photograph of real hardware also has the room reflected across the upper left of the glass, which is what makes a faceplate read as glass rather than as paint. It has the highest rim contrast of the three and it is the only one where every slot still works filled with a label on it.
+
+All three share the same grammar: a dim raster box that separates from the glass by its own spill rather than by value, inverse video for a latched control, snow instead of a red light when a device has gone, and a value that is hottest at the leading edge and decays behind it. And all three keep the original rule — a control never uses more than one color, and that color only ever appears on the rim, the value and the fill.
+
 ### The theme model, consolidated
 
-Three themes past the original six have each asked for one small thing, and together they settle what a theme actually is. This is the list to build against.
+Seven themes past the original six have each asked for one small thing, and together they settle what a theme actually is. This is the list to build against.
 
 | Property | Values | Added for |
 | --- | --- | --- |
@@ -212,9 +249,54 @@ Three themes past the original six have each asked for one small thing, and toge
 | **Rim source** | the control's hue, a neutral edge, or none | Bigwig |
 | **Value strip** | bottom, top, or none | Bigwig |
 | **Value indicator** | solid arc, or segmented with a lamp count and a minimum size | Bigwig |
-| ~~Elevation shadow~~ | deferred, real cost at scale | — |
+| **Elevation shadow** | strength, and a **color** so it can be warm rather than black | Bone |
+| **Shadow spread** | how far the shadow reaches, in pixels. Elevation is how dark it is | Bone |
+| **Resting rim strength** | 0 to 100. A hairline needs far more of it on a light plate | Bone |
+| **Bloom color** | a color, or derived from the control's hue. **Replaces Bone's light source** | Cathode, Amber, Green |
+| **Resting glow** | 0 to 100, separate from the glow that activity causes | Cathode |
+| **Scan lines** | pitch in page pixels, strength, color | Cathode |
+| **Deck falloff** | how far the corners drop below the deck's own floor | Cathode |
+| **Plate sheen color** | so a warm plate lifts warm instead of going grey | Amber |
+| **Arc track color** | the knob arc's track, which is on the deck rather than on the plate | Cathode |
+| **Meter zones** | which three slots the meter's three levels use | Cathode, Amber, Green |
+| **Faceplate sheen** | strength and color of the room reflected in the glass | Terminal Green |
+| **Caution** | one sentence the theme picker shows about what this theme costs | Amber |
 
 The track color is worth calling out separately: it is not a cost of any of these themes, it is a gap in the original model. The dark themes get away with hardcoding it as black, and the first customer who built a light theme of their own would have hit it.
+
+The elevation shadow was deferred once, for a good reason — a composition shadow under every control is a real cost at eighty of them. It comes back here because the renderer already draws one and the dark themes just keep it low, so Bone is turning an existing layer up rather than adding one. What is genuinely new is the **color**, and that part is not optional: a black shadow on a bone deck goes a dirty gray.
+
+**Bone's light source became a color.** It was an either-or — the control's hue, or white — and that was right for Bone, where the only room left to say "this just did something" is to take a near-white plate the rest of the way. It is not enough for a phosphor. Cathode's light is blue-white because a monochrome tube is not white. Amber's halo is **neither the hue nor white**: it is ember, redder than the thing casting it, because P3 decays through red, and that single fact is what people recognize as an amber screen. Terminal Green's is yellow-green, the same shift at the other end of the spectrum. A bloom derived from the hue cannot express any of those, so the property becomes a color with "derive it" as its default, and every theme that shipped before renders exactly as it did.
+
+**That is the third time the same thing has happened, and it is worth naming.** Anything the renderer works out from pure white or pure black eventually meets a theme that is neither. The shadow was the first (Bone). The bloom is the second. The plate sheen is the third: it is a percentage of white today, and on a warm plate that desaturates rather than lifts — measured on Amber, white at 7 % over the plate overshoots blue by eight counts and the warm lift goes grey. **If a fourth percentage-of-white is ever added to this model, give it a color when it is born.**
+
+**Scan lines are the one genuinely new thing to draw, and they are cheap.** One overlay for the whole deck, never anything per control, so eighty controls cost what four cost — the corner falloff and the faceplate reflection ride along in the same overlay. The one thing that has to be right: **they are drawn in screen pixels after the page has been scaled.** A three pixel pitch in page units at 87 % zoom is a beat pattern across the whole screen. Cathode asked for them first; Amber and Terminal Green wanting them too is what turns them from a one-off into a property.
+
+**A slot and an arc are not the same kind of empty.** A fader slot is a recess cut into the plate, so its track has to be darker than the plate. A knob arc sits outside the plate, on bare deck, and on a dark theme there is nothing left out there to be darker than — its track has to be a faint light instead. Getting that wrong is not subtle once it is on screen: the knob shows where it is without ever showing how far it can go. One track color cannot answer both questions, so the arc gets its own with "same as the track" as its default.
+
+**Every recess comes from one color, and nothing in the renderer picks a dark by eye.** Amber's palette was clean and its composite was not: hand-chosen recess colors with a scan line and the corner falloff laid over them drove the blue channel to zero, which is a pure black inside the one theme whose whole claim is that it does not have one. The fix was a single floor color used at different opacities everywhere. The check that catches it is a sweep of the rendered deck for any channel at 0 or 255, and it belongs in the theme tests.
+
+**A theme must not choose a typeface.** All three retro themes are pictured in monospace and all three starter layouts use one, but the font belongs to the layout. A theme that reflowed somebody's labels because they liked the colors would break a page that was laid out around those labels.
+
+### Measuring a theme: contrast is not the only question
+
+Contrast answers "can this be read". It does not answer "can these two controls be told apart", because it counts brightness only and scores a change of hue at nothing. For that, measure the **color difference** between adjacent hue slots — CIE Δ*E*, where about 2.3 is the smallest difference anyone notices. The retro set is what proved the point: three themes, the same six slots and the same machinery, and wildly different answers.
+
+| Theme | Mean Δ*E* between adjacent slots | Smallest pair | Widest pair | Dimmest slot used as type |
+| --- | --- | --- | --- | --- |
+| Cathode | 6.5 | 5.3 | 2.32 : 1 | 4.53 : 1, the only one that passes |
+| Terminal Green | 20.4 | 8.7 | 3.60 : 1 | 3.25 : 1, fails |
+| Amber Console | 21.9 | 13.6 | 4.18 : 1 | 3.02 : 1, fails |
+
+No pair of Cathode's six slots reaches 3 : 1, so **nothing on that theme can be grouped by color** and the picker has to say so. Amber and Terminal Green both can. And each of the three fails somewhere different — Cathode is the only one whose dimmest slot can carry type, because it has no dim end; Terminal Green is the only one where every slot still works filled with a dark label on it; Amber has the widest pair. None of them wins outright, so the picker should say what each one is for rather than ranking them.
+
+**Brightness is not the same question as loudness either.** Terminal Green looked far too bright next to the other two until it was measured: the three comps draw identical controls in identical places, and a sweep of the deck put mean luminance at 6.2 % for Cathode, 4.6 % for Amber and 4.7 % for Terminal Green. Cathode is the brightest of the three. Green only reads as the loudest because it is more saturated, and nothing in a contrast check counts saturation. Worth knowing before somebody turns a theme down to fix a problem that was never brightness.
+
+### Not every theme can be equally accessible
+
+We do what we can, and some themes will still need ordinary color vision. That is better said out loud than quietly designed around, because the alternative is washing a palette out until it clears every threshold and loses the thing that made it worth having. Amber's deepest ember fails as type at 2.65 : 1 and it stays, because it is the color that makes the theme look like a real amber tube. What replaced the fudge is a rule the editor can enforce: **the bottom rung of the ramp is light, not letters** — it carries a rim, a value or a fill, and never type.
+
+Three things keep that honest. Each theme carries **one sentence in the picker** about what it costs. Every ramp is a rising **brightness** as well as a rising hue, so with no color vision at all a theme degrades to a plain brightness ladder and no further — Amber runs 18 / 28 / 40 / 53 / 71 / 90 %, Terminal Green 22 / 34 / 45 / 56 / 75 / 93 %. And **High contrast is always one press away**, offered when a layout is opened and never in the middle of a set.
 
 ---
 
@@ -342,7 +424,7 @@ Either MIDI Glass keeps a small scheduler of its own for short sequences and use
 
 ## 13. The name — settled
 
-**MIDI Glass.** Executable `midiglass`, title bar **Windows MIDI Glass**, Start menu **MIDI Glass**. The theme names **Pigment Light**, **Pigment Dark** and **Bigwig** stay too.
+**MIDI Glass.** Executable `midiglass`, title bar **Windows MIDI Glass**, Start menu **MIDI Glass**. The theme names **Pigment Light**, **Pigment Dark**, **Bigwig** and **Bone** stay too.
 
 ---
 
@@ -395,9 +477,10 @@ Everything that was an open question is now answered. Recorded here so the reaso
 | `12-bigwig.html` | Bigwig — gray panels, one orange, and the segmented LED ring |
 | `13-canvas.html` | Page size templates, the virtual canvas, off-page controls, resizing |
 | `14-running-scale.html` | The three scale modes, and the full screen corner button |
-| `mock.css` | Shared styles for all fourteen |
+| `15-bone.html` | Bone — a warm light theme where the shadow, not the value, separates a control from the deck |
+| `mock.css` | Shared styles for all fifteen |
 | `serve.ps1` | Local static server on port 8742 |
-| `shots\` | PNG captures of all fourteen screens |
+| `shots\` | PNG captures of all fifteen screens |
 | `MIDI-Glass-implementation-plan.md` | Remaining design gaps, the engine layering, the API work, and the phases |
 
 These live in `src/prototypes/midi-glass/design/` so the design record is versioned. Nothing in this folder ships; when the app is real it goes to `src/in-box/user-tools/midi-glass/` like every other tool.

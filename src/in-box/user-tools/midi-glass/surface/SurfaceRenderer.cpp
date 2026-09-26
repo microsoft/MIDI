@@ -928,11 +928,16 @@ namespace glass
 
         if (theme.PlateElevation > 0 && plateColor.A > 0)
         {
+            // A shadow falls further the higher the thing casting it is, so the offset follows
+            // the spread rather than being its own number. A third of it puts the default back
+            // at exactly the 3 and 1 every shipped theme was drawn with.
+            auto const spread = static_cast<float>(std::clamp(theme.ShadowSpread, 0, 64));
+
             auto shadow = compositor.CreateDropShadow();
 
-            shadow.BlurRadius(3.0f);
-            shadow.Offset(float3{ 0.0f, 1.0f, 0.0f });
-            shadow.Color(winrt::Windows::UI::Colors::Black());
+            shadow.BlurRadius(spread);
+            shadow.Offset(float3{ 0.0f, spread / 3.0f, 0.0f });
+            shadow.Color(ToColor(theme.ShadowColor));
             shadow.Opacity(static_cast<float>(theme.PlateElevation) / 100.0f);
             shadow.Mask(ShadowMaskFor(compositor, width, height, corner, round));
 

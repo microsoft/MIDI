@@ -21,7 +21,8 @@ namespace glass
                 std::lround(base + (over - base) * amount), 0L, 255L));
         }
 
-        // How strong a control's rim is when nothing is happening to it.
+        // How strong a control's rim is when nothing is happening to it. The theme's own
+        // RimStrengthPercent, as a fraction; this is only the fallback for a half-written file.
         constexpr double RestingRimAlpha = 0.28;
 
         // Tick marks and center dots are orientation, not information. They have to be findable
@@ -119,16 +120,33 @@ namespace glass
 
         case RimSource::ControlHue:
         default:
-            // A quarter strength, not the full hue. Nothing is saturated at rest - the rim is
-            // there to say which control this is, and the value and the activity are the only
-            // things allowed to be bright. A full-strength rim on every control turns a busy
-            // page into a grid of neon rectangles and nothing stands out at all.
+        {
+            // A quarter strength on a dark theme, not the full hue. Nothing is saturated at
+            // rest - the rim is there to say which control this is, and the value and the
+            // activity are the only things allowed to be bright. A full-strength rim on every
+            // control turns a busy page into a grid of neon rectangles and nothing stands out
+            // at all.
+            //
+            // A light theme has to run it much higher, because a hairline that reads as a line
+            // on near-black is not there at all on near-white. That is what the property is
+            // for; it is not a taste setting.
+            auto const strength = theme.RimStrengthPercent > 0
+                ? theme.RimStrengthPercent / 100.0
+                : RestingRimAlpha;
+
             colors.Rim = hue;
-            colors.Rim.A = static_cast<uint8_t>(std::clamp(std::lround(hue.A * RestingRimAlpha), 0L, 255L));
+            colors.Rim.A = static_cast<uint8_t>(std::clamp(std::lround(hue.A * strength), 0L, 255L));
             break;
         }
+        }
 
-        colors.Bloom = hue;
+        // Activity lights up in the control's own hue on every dark theme. On a light one there
+        // is nowhere for a hue to glow to - the plate is already near-white - so the theme can
+        // ask for the light itself instead.
+        colors.Bloom = theme.Light == LightSource::White
+            ? ThemeColor{ 255, 255, 255, 255 }
+            : hue;
+
         colors.Bloom.A = static_cast<uint8_t>(
             std::clamp(std::lround(255.0 * theme.GlowStrength / 100.0), 0L, 255L));
 

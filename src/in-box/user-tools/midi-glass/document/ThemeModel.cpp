@@ -291,6 +291,58 @@ namespace glass
                     list.push_back(bigwig);
                 }
 
+                // ---- Bone ----
+                // Two colors: #E3DAC9 for the space and #8A795D for everything that has to read
+                // as dark. Every other theme tells a control from its deck by VALUE - a dark
+                // plate on a darker deck, or the reverse. This one cannot: a warm white plate
+                // measures 1.23 : 1 against a bone deck. So the separation is carried entirely
+                // by a soft warm shadow, and activity lights up white instead of the hue.
+                //
+                // Every color here was measured against both the plate and the deck at 3 : 1 or
+                // better. The first ochre tried, #A67428, came out at 2.94 on bone and was
+                // dropped for this one.
+
+                {
+                    auto bone = MakeDarkTheme(L"Bone", 0xE3DAC9,
+                        { 0x8A795D, 0x5C6E4E, 0x8F6318, 0x9A543E, 0x5A647C, 0x9B3D34 });
+
+                    // The deck is named rather than derived, because the derived floor shades
+                    // BELOW bone, and the whole point of the theme is that the space is bone or
+                    // a lifted bone and never anything else.
+                    bone.Deck.Color = Rgb(0xF4EFE4);
+                    bone.Deck.GradientEndColor = Rgb(0xE3DAC9);
+
+                    bone.GlassTintPercent = 0;
+                    bone.FillAtRest = 0.0;
+                    bone.PlateColor = Rgb(0xFAF6EC);
+                    bone.TrackColor = Rgb(0xD9D0BC);
+                    bone.CornerRadius = 8;
+
+                    // The rim carries the control's identity on its own here, so it runs close
+                    // to full strength. At the 28 every other theme uses it measures 1.4 : 1
+                    // against this plate and is simply not there.
+                    bone.RimStrengthPercent = 85;
+
+                    // The theme, in two lines. A white sheen on a near-white plate is only haze,
+                    // so the light from above becomes the shadow underneath instead.
+                    bone.PlateSheenPercent = 0;
+                    bone.PlateElevation = 45;
+                    bone.ShadowSpread = 9;
+                    bone.ShadowColor = Rgb(0x5E5139);
+
+                    bone.GlowStrength = 55;
+                    bone.Light = LightSource::White;
+
+                    // A white cap with a hairline of the control's color through it, and a flat
+                    // value bar - a fade would be one more thing competing with the shadow.
+                    bone.PipeFalloff = 1.0;
+                    bone.Thumb = ThumbStyle::Neutral;
+                    bone.ThumbColor = Rgb(0xFFFFFF);
+                    bone.ThumbEndColor = Rgb(0xF0E9DB);
+
+                    list.push_back(bone);
+                }
+
                 return list;
             }();
 

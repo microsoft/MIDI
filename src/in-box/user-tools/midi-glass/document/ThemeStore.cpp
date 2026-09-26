@@ -56,6 +56,10 @@ namespace glass
         constexpr wchar_t KeyMinimumLampRing[] = L"minimumLampRingSize";
         constexpr wchar_t KeyPlateSheen[] = L"plateSheenPercent";
         constexpr wchar_t KeyPlateElevation[] = L"plateElevation";
+        constexpr wchar_t KeyShadowSpread[] = L"shadowSpread";
+        constexpr wchar_t KeyShadowColor[] = L"shadowColor";
+        constexpr wchar_t KeyLightSource[] = L"lightSource";
+        constexpr wchar_t KeyRimStrength[] = L"rimStrengthPercent";
         constexpr wchar_t KeyPipeFalloff[] = L"pipeFalloff";
         constexpr wchar_t KeyThumb[] = L"thumb";
         constexpr wchar_t KeyThumbColor[] = L"thumbColor";
@@ -107,6 +111,12 @@ namespace glass
             { ThumbStyle::None, L"none" },
             { ThumbStyle::Neutral, L"neutral" },
             { ThumbStyle::Hue, L"hue" },
+        };
+
+        constexpr EnumName<LightSource> LightNames[]
+        {
+            { LightSource::ControlHue, L"controlHue" },
+            { LightSource::White, L"white" },
         };
 
         template <typename TEnum, size_t N>
@@ -411,6 +421,12 @@ namespace glass
                 ReadNumber(root, KeyPlateSheen, base.PlateSheenPercent, 0, 100));
             theme.PlateElevation = static_cast<int32_t>(
                 ReadNumber(root, KeyPlateElevation, base.PlateElevation, 0, 100));
+            theme.ShadowSpread = static_cast<int32_t>(
+                ReadNumber(root, KeyShadowSpread, base.ShadowSpread, 0, 64));
+            theme.ShadowColor = ReadColor(root, KeyShadowColor, base.ShadowColor);
+            theme.Light = ValueOf(LightNames, ReadString(root, KeyLightSource), base.Light);
+            theme.RimStrengthPercent = static_cast<int32_t>(
+                ReadNumber(root, KeyRimStrength, base.RimStrengthPercent, 0, 100));
             theme.PipeFalloff = ReadNumber(root, KeyPipeFalloff, base.PipeFalloff, 0.0, 1.0);
             theme.Thumb = ValueOf(ThumbNames, ReadString(root, KeyThumb), base.Thumb);
             theme.ThumbColor = ReadColor(root, KeyThumbColor, base.ThumbColor);
@@ -472,6 +488,10 @@ namespace glass
             writer.Write(KeyMinimumLampRing, static_cast<int64_t>(theme.MinimumLampRingSize));
             writer.Write(KeyPlateSheen, static_cast<int64_t>(theme.PlateSheenPercent));
             writer.Write(KeyPlateElevation, static_cast<int64_t>(theme.PlateElevation));
+            writer.Write(KeyShadowSpread, static_cast<int64_t>(theme.ShadowSpread));
+            writer.Write(KeyShadowColor, ColorToText(theme.ShadowColor));
+            writer.Write(KeyLightSource, NameOf(LightNames, theme.Light));
+            writer.Write(KeyRimStrength, static_cast<int64_t>(theme.RimStrengthPercent));
             writer.Write(KeyPipeFalloff, theme.PipeFalloff);
             writer.Write(KeyThumb, NameOf(ThumbNames, theme.Thumb));
             writer.Write(KeyThumbColor, ColorToText(theme.ThumbColor));

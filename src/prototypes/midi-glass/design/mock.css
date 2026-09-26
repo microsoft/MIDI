@@ -1063,3 +1063,1153 @@ html, body {
         radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
     mask-composite: intersect;
 }
+
+
+/* =========================================================================
+   "BONE" - a warm light theme built out of two colors: #E3DAC9 bone for the
+   space and #8A795D shadow for everything that has to read as dark.
+
+   The other themes separate a control from the deck with VALUE - a dark
+   plate on a darker deck, or the reverse. Bone cannot. A warm white plate
+   measures 1.23:1 to 1.39:1 against a bone deck, which is nothing. So the
+   separation is carried entirely by a soft warm SHADOW under the plate, and
+   the thing that lights up is WHITE rather than the control's hue.
+
+   Two consequences worth knowing before touching any number here:
+     - The elevation shadow is structural, not decoration. Turn it off and
+       the layout disappears into the deck.
+     - White on bone is only 1.39:1, so a white light is a weak signal on
+       its own. It never travels alone - the rim moves with it every time.
+
+   Built on the same tonal machinery as Pigment and Bigwig, with the hue
+   wash off. Every color below was measured, not picked by eye.
+   ========================================================================= */
+
+.surf.bone {
+    --deck: linear-gradient(168deg, #F4EFE4 0%, #E3DAC9 100%);
+    --plate: linear-gradient(180deg, #FFFFFF 0%, #F6F1E6 100%);
+    --track: rgba(138, 121, 93, .22);
+    --on-hue: #FFFDF7;
+    --deck-ink: #3B3222;
+    --deck-ink2: rgba(78, 67, 48, .78);
+    --grid1: rgba(138, 121, 93, .40);
+    --grid2: rgba(138, 121, 93, .15);
+    --tonal-rest: 0;                    /* the plate is warm white, never tinted */
+    --tonal-held: .10;
+    --rim-rest: .85;                    /* a hairline below this vanishes on near-white */
+    --tonal-radius: 8px;
+    --cap-shadow: 0 2px 4px rgba(94, 81, 57, .34);
+
+    /* the two things this theme adds to the model */
+    --lift:
+        0 1px 1px rgba(94, 81, 57, .13),
+        0 2px 4px rgba(94, 81, 57, .11),
+        0 5px 10px rgba(94, 81, 57, .07);
+    --lift-high:
+        0 1px 2px rgba(94, 81, 57, .16),
+        0 3px 8px rgba(94, 81, 57, .15),
+        0 10px 20px rgba(94, 81, 57, .11);
+    --sink: inset 0 2px 3px rgba(94, 81, 57, .38), inset 0 0 0 1px rgba(94, 81, 57, .20);
+    --sheen: inset 0 1px 0 rgba(255, 255, 255, .95);
+    --light: 255, 255, 255;             /* activity is white here, not the hue */
+    --deepen: rgba(43, 35, 22, .16);    /* so warm white clears 4.5:1 on every slot */
+    --edge: rgba(138, 121, 93, .26);
+
+    --h1: 138, 121,  93;   /* #8A795D shadow - the named dark, and the default slot */
+    --h2:  92, 110,  78;   /* #5C6E4E sage  */
+    --h3: 143,  99,  24;   /* #8F6318 ochre */
+    --h4: 154,  84,  62;   /* #9A543E clay  */
+    --h5:  90, 100, 124;   /* #5A647C slate */
+    --h6: 155,  61,  52;   /* #9B3D34 brick */
+}
+
+/* a control is a top-lit warm white plate standing off the bone deck */
+.surf.bone .ctl {
+    background: var(--plate);
+    box-shadow:
+        var(--sheen),
+        inset 0 0 0 1px rgba(var(--hue), var(--rim-rest)),
+        var(--lift);
+}
+
+/* held: the plate goes white, the shadow deepens, the rim comes up to full.
+   The white halo alone is 1.39:1 on bone, so the rim is what carries it. */
+.surf.bone .ctl.held {
+    background: #FFFFFF;
+    box-shadow:
+        var(--sheen),
+        inset 0 0 0 1px rgba(var(--hue), .88),
+        0 0 0 3px rgba(var(--light), .95),
+        0 0 18px 5px rgba(var(--light), .85),
+        var(--lift-high);
+}
+
+/* on: filled, deepened 16 % so warm white text measures 4.9:1 or better */
+.surf.bone .ctl.on {
+    background: linear-gradient(0deg, var(--deepen), var(--deepen)), rgb(var(--hue));
+    box-shadow:
+        inset 0 0 0 1px rgba(43, 35, 22, .22),
+        0 0 0 2px rgba(var(--light), .85),
+        var(--lift-high);
+    color: var(--on-hue);
+}
+.surf.bone .ctl.on .cap { color: var(--on-hue); }
+
+/* disabled and offline sit FLUSH with the deck. On a theme whose whole
+   language is standing off the surface, losing the shadow says "dead"
+   more plainly than any amount of fading can. */
+.surf.bone .ctl.dim {
+    opacity: 1;
+    background: #EFE9DC;
+    box-shadow: inset 0 0 0 1px var(--edge);
+    color: var(--deck-ink2);
+}
+.surf.bone .ctl.offline {
+    background:
+        repeating-linear-gradient(135deg, rgba(138, 121, 93, .17) 0 6px, transparent 6px 12px),
+        #F2ECE0;
+    box-shadow: inset 0 0 0 1px var(--edge);
+}
+
+/* ochre at readout size measures 3.82:1 on bone and a readout needs 4.5,
+   so numbers are ink here. Same for the small value line under a control. */
+.surf.bone .surftext.readout { color: var(--deck-ink); }
+.surf.bone .ctl .val { color: var(--deck-ink); }
+
+.surf.bone .pipe { background: var(--track); }
+.surf.bone .pipe.lit { background: rgb(var(--hue)); box-shadow: none; }
+.surf.bone .ctl.on .pipe.lit { background: rgba(var(--light), .92); opacity: 1; }
+
+/* ------------------------------------------------------------ knobs */
+.surf.bone .knob { background: none; box-shadow: none; }
+.surf.bone .knob .dial {
+    background: var(--plate);
+    box-shadow:
+        var(--sheen),
+        inset 0 0 0 1px rgba(var(--hue), var(--rim-rest)),
+        var(--lift);
+}
+.surf.bone .knob .ptr { background: rgb(var(--hue)); width: 2px; box-shadow: none; }
+/* the unfilled part of the arc has to be darker than --track or a knob shows
+   where it is without showing how far it can go */
+.surf.bone .knob .arc {
+    background: conic-gradient(from 215deg,
+        rgb(var(--hue)) 0turn var(--pct, .35turn),
+        rgba(138, 121, 93, .42) var(--pct, .35turn) .805turn,
+        transparent .805turn 1turn);
+}
+.surf.bone .knob .dotmark { background: rgba(138, 121, 93, .45); }
+.surf.bone .knob.detent .dial::after { background: rgba(138, 121, 93, .75); }
+.surf.bone .knob.leds .arc {
+    -webkit-mask:
+        repeating-conic-gradient(from 215deg, #000 0 5.2deg, transparent 5.2deg 10.4deg),
+        radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+    -webkit-mask-composite: source-in;
+    mask:
+        repeating-conic-gradient(from 215deg, #000 0 5.2deg, transparent 5.2deg 10.4deg),
+        radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+    mask-composite: intersect;
+}
+
+/* ----------------------------------------------------------- faders */
+/* the slot is carved INTO the plate, the cap sits ON it. That pairing is
+   the whole theme in one control: what holds a value is sunk, what your
+   hand touches is raised. */
+.surf.bone .fader .slot { background: var(--track); box-shadow: var(--sink); }
+.surf.bone .fader .fill { background: rgb(var(--hue)); box-shadow: none; }
+.surf.bone .fader .capbar {
+    background: linear-gradient(180deg, #FFFFFF 0%, #F0E9DB 100%);
+    border-radius: 3px;
+    box-shadow: var(--sheen), inset 0 0 0 1px var(--edge), var(--lift);
+}
+.surf.bone .fader .capbar::after {
+    background: rgb(var(--hue));
+    opacity: 1;
+    box-shadow: none;
+}
+.surf.bone .fader .ticks i { background: rgba(138, 121, 93, .30); }
+
+/* ------------------------------------------------- two-axis controls */
+/* a recess has to be DARKER than the surface it is cut into, or the inset
+   shadow has nothing to sell and the field reads as another raised plate */
+.surf.bone .xy .field2 { background: #EDE6D8; box-shadow: var(--sink); }
+.surf.bone .xy .field2::before {
+    background-image:
+        linear-gradient(rgba(138, 121, 93, .24) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(138, 121, 93, .24) 1px, transparent 1px);
+}
+.surf.bone .xy .cross { background: rgba(var(--hue), .62); }
+.surf.bone .xy .trail { background: rgba(var(--hue), .26); }
+.surf.bone .xy .puck {
+    background: #FFFFFF;
+    box-shadow: inset 0 0 0 3px rgb(var(--hue)), var(--cap-shadow);
+}
+
+.surf.bone .joy .ring,
+.surf.bone .joy .ring2 { box-shadow: inset 0 0 0 1px var(--edge); }
+.surf.bone .joy .spring { box-shadow: inset 0 0 0 1px rgba(var(--hue), .42); }
+.surf.bone .joy .puck {
+    background: linear-gradient(180deg, #FFFFFF 0%, #EFE8DA 100%);
+    box-shadow: var(--sheen), inset 0 0 0 1px var(--edge), var(--lift-high);
+}
+.surf.bone .joy .puck::after { background: rgb(var(--hue)); box-shadow: none; }
+
+/* ----------------------------------------------------------- wheels */
+.surf.bone .wheel .body {
+    background: linear-gradient(90deg, #E7E0D1 0%, #FDFBF6 44%, #E7E0D1 100%);
+    box-shadow: var(--sink);
+}
+.surf.bone .wheel .ridges {
+    background: repeating-linear-gradient(180deg, rgba(138, 121, 93, .20) 0 1px, transparent 1px 7px);
+}
+.surf.bone .wheel .ind { background: rgb(var(--hue)); box-shadow: 0 1px 2px rgba(94, 81, 57, .40); }
+.surf.bone .wheel .center { background: rgba(138, 121, 93, .40); }
+
+/* ------------------------------------------- meters, steps, clock */
+/* `.surf.bone .meter i` outranks the base `.meter i.lit`, so the lit
+   segments have to be named again here or a meter renders entirely empty. */
+.surf.bone .meter i { background: var(--track); }
+.surf.bone .meter i.lit { background: rgb(var(--h2)); box-shadow: none; }
+.surf.bone .meter i.lit.warn { background: rgb(var(--h3)); box-shadow: none; }
+.surf.bone .meter i.lit.hot { background: rgb(var(--h6)); box-shadow: none; }
+.surf.bone .steps .row i { background: var(--track); box-shadow: inset 0 1px 1px rgba(94, 81, 57, .16); }
+.surf.bone .steps .row i.on { background: rgb(var(--hue)); box-shadow: none; }
+.surf.bone .steps .row i.cur { box-shadow: inset 0 0 0 2px rgba(var(--light), .95); }
+.surf.bone .clockctl .beat {
+    background: #FFFFFF;
+    box-shadow: inset 0 0 0 1px rgba(var(--hue), .45), var(--lift);
+    color: var(--deck-ink);
+}
+.surf.bone .clockctl .pips i { background: var(--track); }
+.surf.bone .clockctl .pips i.lit { background: rgb(var(--hue)); box-shadow: none; }
+
+/* --------------------------------------------- panels, text, tabs */
+.surf.bone .ctlpanel {
+    background: rgba(255, 255, 255, .34);
+    box-shadow: inset 0 0 0 1px rgba(138, 121, 93, .20);
+}
+.surf.bone .ctlpanel > .ptitle { background: #EDE6D8; color: var(--deck-ink2); }
+.surf.bone .surfrule {
+    background: linear-gradient(90deg, transparent, rgba(138, 121, 93, .40), transparent);
+}
+.surf.bone .pagetabs .tab {
+    background: rgba(255, 255, 255, .55);
+    box-shadow: inset 0 0 0 1px var(--edge);
+    color: var(--deck-ink2);
+}
+.surf.bone .pagetabs .tab.sel {
+    background: #FFFFFF;
+    box-shadow: var(--sheen), inset 0 0 0 1px rgba(var(--hue), .48), var(--lift);
+    color: var(--deck-ink);
+}
+
+
+/* =========================================================================
+   "CATHODE" - an old black and white television, which is not black and
+   white at all.
+
+   Four things are true of a monochrome tube and all four are in here:
+     - The glass is a dark, slightly sour GREEN when nothing is driving it,
+       and it is brighter in the middle than at the corners.
+     - The phosphor is BLUE-white, not white. A warm white on that green
+       glass reads as a fault, not as a picture.
+     - Every edge is SOFT. The beam has no hard edge, so a lit shape spills
+       into the glass around it. Nothing here is a hairline.
+     - There is no pure black and no pure white anywhere. The darkest color
+       below is #101611 and the brightest is #F4F8FF. Both on purpose: a
+       true black punches a hole in the glass and a true white looks like
+       paper.
+
+   Built on the same tonal machinery as Pigment, Bigwig and Bone with the
+   hue wash off. What makes it unlike all three: THERE IS NO SECOND
+   CHANNEL. Every other theme tells one control from another with color. A
+   tube has one phosphor, so brightness has to carry identity, value and
+   state all at once, and it cannot. Measured in cathode-contrast.ps1: the
+   widest pair of slots in this palette is 2.32:1 and the closest adjacent
+   pair is 1.10:1, so no two slots reach the 3:1 a customer needs to read
+   them apart. On Cathode a control is identified by where it sits and what
+   it is called, never by its color.
+   ========================================================================= */
+
+.surf.cathode {
+    --deck: radial-gradient(118% 96% at 50% 40%, #2C362C 0%, #222B24 46%, #1B231E 100%);
+    --plate: linear-gradient(180deg, #3A464C 0%, #2C373C 100%);
+    --track: rgba(13, 19, 15, .72);
+    --on-hue: #121A16;                  /* inverse video: the label goes tube dark */
+    --deck-ink: #CFDDEE;
+    --deck-ink2: rgba(168, 188, 206, .74);
+    --grid1: rgba(207, 224, 243, .17);
+    --grid2: rgba(207, 224, 243, .06);
+    --tonal-rest: 0;                    /* there is no hue to wash a plate with */
+    --tonal-held: .18;
+    --rim-rest: .52;
+    --tonal-radius: 6px;
+    --cap-shadow: 0 0 10px rgba(207, 224, 243, .40);
+    --edge: rgba(207, 224, 243, .16);
+
+    /* the three things this theme adds to the model */
+    --halo: 207, 224, 243;              /* the light source. blue-white, never #FFF */
+    --lit:
+        0 0 5px rgba(var(--halo), .13),
+        0 0 16px rgba(var(--halo), .07);
+    --lit-high:
+        0 0 10px rgba(var(--halo), .40),
+        0 0 30px rgba(var(--halo), .22),
+        0 0 64px rgba(var(--halo), .10);
+    --lit-peak:
+        0 0 14px rgba(var(--halo), .55),
+        0 0 40px rgba(var(--halo), .30),
+        0 0 86px rgba(var(--halo), .14);
+    --scan: rgba(6, 11, 8, .46);        /* one dark line every 3 page pixels */
+    --sink: inset 0 1px 3px rgba(5, 9, 6, .75), inset 0 0 0 1px rgba(6, 11, 8, .55);
+    --text-glow: 0 0 4px rgba(207, 224, 243, .40);
+
+    /* six slots, and all six are the same phosphor at six brightnesses */
+    --h1: 210, 225, 243;   /* #D2E1F3 the standard raster, and the default slot */
+    --h2: 169, 189, 210;   /* #A9BDD2 */
+    --h3: 228, 238, 251;   /* #E4EEFB */
+    --h4: 146, 167, 190;   /* #92A7BE the dimmest that still measures 4.5 on a plate */
+    --h5: 191, 209, 228;   /* #BFD1E4 */
+    --h6: 244, 248, 255;   /* #F4F8FF peak, the slot that shouts */
+}
+
+/* The scan lines and the corner falloff are ONE overlay for the whole deck,
+   never anything per control. `.surf.tonal::after` switches the glass sheen
+   off, so this rule carries a third class to be sure it wins whatever order
+   the file ends up in.
+
+   The corner stop is set so the glass falls to the palette floor of #101611
+   and no further. The only thing on the screen that goes under it is the gap
+   between two scan lines, which is unlit phosphor and is supposed to be the
+   darkest thing there is. Measured over the whole deck, that bottoms out at
+   #060B08 - still green, and still not black. */
+.surf.tonal.cathode::after {
+    display: block;
+    background:
+        repeating-linear-gradient(180deg, var(--scan) 0 1px, transparent 1px 3px),
+        radial-gradient(112% 88% at 50% 44%,
+            transparent 30%, rgba(9, 14, 9, .30) 70%, rgba(9, 14, 9, .60) 100%);
+}
+
+/* a control is a dim raster box on the glass, and its own spill is what
+   separates it - the plate measures 1.12:1 against the middle of the tube */
+.surf.cathode .ctl {
+    background: var(--plate);
+    box-shadow:
+        inset 0 0 0 1px rgba(var(--hue), var(--rim-rest)),
+        inset 0 0 7px rgba(var(--hue), .16),
+        0 0 0 1px rgba(var(--hue), .10),
+        var(--lit);
+}
+
+/* under the hand the beam is driven harder: the box lifts and the spill
+   goes wide, which is what an overdriven area of a tube actually does */
+.surf.cathode .ctl.held {
+    background: linear-gradient(180deg, #56656C 0%, #45535A 100%);
+    box-shadow:
+        inset 0 0 0 1px rgba(var(--hue), .95),
+        inset 0 0 12px rgba(var(--halo), .30),
+        var(--lit-high);
+}
+
+/* on = inverse video, which the tonal machinery already does for free:
+   a filled plate plus a dark label. It is also the one state that does
+   not depend on seeing a glow. */
+.surf.cathode .ctl.on {
+    background: rgb(var(--hue));
+    box-shadow:
+        inset 0 0 0 1px rgba(var(--halo), .90),
+        var(--lit-peak);
+    color: var(--on-hue);
+}
+.surf.cathode .ctl.on .cap,
+.surf.cathode .ctl.on .name,
+.surf.cathode .ctl.on .glyph,
+.surf.cathode .ctl.on .val { color: var(--on-hue); text-shadow: none; }
+
+/* disabled: nothing is driving this part of the screen */
+.surf.cathode .ctl.dim {
+    opacity: 1;
+    background: #1E2721;
+    box-shadow: inset 0 0 0 1px rgba(207, 224, 243, .10);
+    color: rgba(168, 188, 206, .46);
+}
+
+/* offline: snow. A tube with no signal does not go gray, it goes to static,
+   and that says "nothing is coming in" without needing a red. The noise is
+   forced to one blue-white and varied in ALPHA only - colored static on a
+   monochrome set is the giveaway that somebody reached for a stock texture.
+   One shared tile serves every offline control on the page. */
+.surf.cathode .ctl.offline {
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.86' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.81 0 0 0 0 0.88 0 0 0 0 0.95 0.34 0.34 0.34 0 0'/%3E%3C/filter%3E%3Crect width='90' height='90' filter='url(%23s)' opacity='0.5'/%3E%3C/svg%3E"),
+        linear-gradient(180deg, #232D26 0%, #1A231D 100%);
+    background-size: 90px 90px, auto;
+    box-shadow: inset 0 0 0 1px rgba(207, 224, 243, .13);
+}
+
+.surf.cathode .pipe { background: rgba(var(--halo), .14); }
+.surf.cathode .pipe.lit { background: rgb(var(--hue)); box-shadow: 0 0 8px rgba(var(--halo), .90); }
+.surf.cathode .ctl.on .pipe.lit { background: var(--on-hue); opacity: .55; box-shadow: none; }
+
+/* ------------------------------------------------------------ knobs */
+.surf.cathode .knob { background: none; box-shadow: none; }
+.surf.cathode .knob .dial {
+    background: var(--plate);
+    box-shadow:
+        inset 0 0 0 1px rgba(var(--hue), var(--rim-rest)),
+        inset 0 0 7px rgba(var(--hue), .16),
+        var(--lit);
+}
+/* The unfilled part of the arc sits OUTSIDE the box, on bare glass, so it
+   cannot be a darker color - there is nothing left to be darker than. It is
+   a barely driven raster instead, which is also what an unused part of a
+   scan line looks like. Take this out and a knob shows where it is without
+   ever showing how far it can go. */
+.surf.cathode .knob .arc {
+    background: conic-gradient(from 215deg,
+        rgb(var(--hue)) 0turn var(--pct, .35turn),
+        rgba(var(--halo), .15) var(--pct, .35turn) .805turn,
+        transparent .805turn 1turn);
+    filter: drop-shadow(0 0 4px rgba(var(--halo), .55)) drop-shadow(0 0 11px rgba(var(--halo), .28));
+}
+.surf.cathode .knob .ptr { background: rgb(var(--hue)); width: 2px; box-shadow: 0 0 6px rgba(var(--halo), .90); }
+.surf.cathode .knob .dotmark { background: rgba(var(--halo), .22); }
+.surf.cathode .knob .kval { color: var(--deck-ink); text-shadow: var(--text-glow); }
+.surf.cathode .knob.detent .dial::after { background: rgba(var(--halo), .45); }
+.surf.cathode .knob.leds .arc {
+    -webkit-mask:
+        repeating-conic-gradient(from 215deg, #000 0 5.2deg, transparent 5.2deg 10.4deg),
+        radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+    -webkit-mask-composite: source-in;
+    mask:
+        repeating-conic-gradient(from 215deg, #000 0 5.2deg, transparent 5.2deg 10.4deg),
+        radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+    mask-composite: intersect;
+}
+
+/* ----------------------------------------------------------- faders */
+/* a recess has to be darker than the box it is cut into, and on this theme
+   the darkest thing available is the glass itself */
+.surf.cathode .fader .slot { background: rgba(9, 14, 11, .80); box-shadow: var(--sink); }
+.surf.cathode .fader .fill {
+    background: linear-gradient(180deg, rgb(var(--hue)), rgba(var(--hue), .58));
+    box-shadow: 0 0 8px rgba(var(--halo), .55), 0 0 20px rgba(var(--halo), .26);
+}
+.surf.cathode .fader .capbar {
+    background: linear-gradient(180deg, #4F5D64 0%, #333F45 100%);
+    border-radius: 3px;
+    box-shadow:
+        inset 0 1px 0 rgba(var(--halo), .22),
+        inset 0 0 0 1px rgba(var(--halo), .16),
+        0 0 9px rgba(var(--halo), .18);
+}
+.surf.cathode .fader .capbar::after {
+    background: rgb(var(--hue));
+    opacity: 1;
+    box-shadow: 0 0 7px rgba(var(--halo), .95);
+}
+.surf.cathode .fader .ticks i { background: rgba(var(--halo), .16); }
+
+/* ------------------------------------------------- two axis controls */
+.surf.cathode .xy .field2 { background: rgba(9, 14, 11, .58); box-shadow: var(--sink); }
+.surf.cathode .xy .field2::before {
+    background-image:
+        linear-gradient(rgba(var(--halo), .14) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--halo), .14) 1px, transparent 1px);
+}
+.surf.cathode .xy .cross { background: rgba(var(--hue), .62); box-shadow: 0 0 7px rgba(var(--halo), .45); }
+/* the phosphor keeps glowing for a moment after the beam has moved on */
+.surf.cathode .xy .trail { background: rgba(var(--hue), .26); box-shadow: 0 0 11px rgba(var(--halo), .22); }
+.surf.cathode .xy .puck {
+    background: rgb(var(--hue));
+    box-shadow: 0 0 10px rgba(var(--halo), .85), 0 0 28px rgba(var(--halo), .40);
+}
+
+.surf.cathode .joy .ring,
+.surf.cathode .joy .ring2 { box-shadow: inset 0 0 0 1px rgba(var(--halo), .13); }
+.surf.cathode .joy .spring { box-shadow: inset 0 0 0 1px rgba(var(--hue), .38); }
+.surf.cathode .joy .puck {
+    background: linear-gradient(180deg, #4F5D64 0%, #2E3A3F 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(var(--halo), .22),
+        inset 0 0 0 1px rgba(var(--halo), .16),
+        var(--lit);
+}
+.surf.cathode .joy .puck::after { background: rgb(var(--hue)); box-shadow: 0 0 9px rgba(var(--halo), .85); }
+
+/* ----------------------------------------------------------- wheels */
+.surf.cathode .wheel .body {
+    background: linear-gradient(90deg, #151D18 0%, #37444A 44%, #151D18 100%);
+    box-shadow: var(--sink);
+}
+.surf.cathode .wheel .ridges {
+    background: repeating-linear-gradient(180deg, rgba(var(--halo), .11) 0 1px, transparent 1px 7px);
+}
+.surf.cathode .wheel .ind { background: rgb(var(--hue)); box-shadow: 0 0 9px rgba(var(--halo), .90); }
+.surf.cathode .wheel .center { background: rgba(var(--halo), .26); }
+
+/* ------------------------------------------- meters, steps, clock */
+/* `.surf.cathode .meter i` outranks the base `.meter i.lit`, so the lit
+   segments have to be named again here or a meter renders entirely empty.
+   There is no green, amber and red to have: the three zones are three
+   brightnesses, and they get the WIDEST three slots in the palette rather
+   than three neighbors. It works at all only because the segments touch -
+   the eye is far better at ordering two levels side by side than at naming
+   one on its own. */
+.surf.cathode .meter i { background: rgba(var(--halo), .09); }
+.surf.cathode .meter i.lit { background: rgb(var(--h4)); box-shadow: none; }
+.surf.cathode .meter i.lit.warn { background: rgb(var(--h1)); box-shadow: 0 0 6px rgba(var(--halo), .45); }
+.surf.cathode .meter i.lit.hot { background: rgb(var(--h6)); box-shadow: 0 0 10px rgba(var(--halo), .90); }
+
+.surf.cathode .steps .row i { background: rgba(9, 14, 11, .60); box-shadow: inset 0 0 0 1px rgba(var(--halo), .07); }
+.surf.cathode .steps .row i.on { background: rgba(var(--hue), .62); box-shadow: 0 0 8px rgba(var(--halo), .32); }
+.surf.cathode .steps .row i.cur { box-shadow: inset 0 0 0 2px rgb(var(--hue)), 0 0 14px rgba(var(--halo), .55); }
+
+.surf.cathode .clockctl .sweep {
+    background: conic-gradient(rgb(var(--hue)) 0turn var(--pct, .25turn), rgba(9, 14, 11, .70) var(--pct, .25turn) 1turn);
+    filter: drop-shadow(0 0 5px rgba(var(--halo), .50));
+}
+.surf.cathode .clockctl .beat {
+    background: rgba(var(--hue), .16);
+    box-shadow: inset 0 0 0 1px rgba(var(--hue), .55), 0 0 18px rgba(var(--halo), .35);
+    color: var(--deck-ink);
+    text-shadow: var(--text-glow);
+}
+.surf.cathode .clockctl .pips i { background: rgba(var(--halo), .12); }
+.surf.cathode .clockctl .pips i.lit { background: rgb(var(--hue)); box-shadow: 0 0 8px rgba(var(--halo), .80); }
+
+.surf.cathode .lfo svg { filter: drop-shadow(0 0 4px rgba(var(--halo), .60)); }
+
+/* --------------------------------------------- text, panels, tabs */
+/* The glass is soft. The type is not. Every lit EDGE spills, but a letter
+   gets a tight halo and no blur - a 9 px label under a fader stops being a
+   word the moment it is allowed to smear. */
+.surf.cathode .surftext.h1 { color: var(--deck-ink); text-shadow: 0 0 7px rgba(var(--halo), .45); }
+.surf.cathode .surftext.readout { color: var(--deck-ink); text-shadow: 0 0 9px rgba(var(--halo), .55); }
+.surf.cathode .ctl .val { color: rgb(var(--hue)); text-shadow: var(--text-glow); }
+.surf.cathode .ctl .name,
+.surf.cathode .ctl .cap,
+.surf.cathode .outlabel { text-shadow: var(--text-glow); }
+
+.surf.cathode .ctlpanel {
+    background: rgba(207, 224, 243, .035);
+    box-shadow: inset 0 0 0 1px rgba(var(--halo), .11);
+}
+.surf.cathode .ctlpanel > .ptitle { background: #1B231E; color: var(--deck-ink2); }
+.surf.cathode .surfrule {
+    background: linear-gradient(90deg, transparent, rgba(var(--halo), .30), transparent);
+}
+.surf.cathode .pagetabs .tab {
+    border-radius: 4px;
+    background: rgba(207, 224, 243, .05);
+    box-shadow: inset 0 0 0 1px rgba(var(--halo), .14);
+    color: var(--deck-ink2);
+}
+.surf.cathode .pagetabs .tab.sel {
+    background: rgb(var(--h1));
+    box-shadow: 0 0 13px rgba(var(--halo), .45);
+    color: var(--on-hue);
+    text-shadow: none;
+}
+
+
+/* =========================================================================
+   "AMBER CONSOLE" - the P3 amber terminal. This is the swatch that has been
+   sitting on the theme picker since screen 8, finally built.
+
+   It is Cathode's machinery with three things changed, and each one is a
+   real property of that tube rather than a preference:
+
+     - THE GLASS IS WARM. A dark maroon brown, brighter in the middle where
+       the raster scatters inside the glass, falling to almost nothing at
+       the corners.
+     - THE GLOW IS REDDER THAN THE THING CASTING IT. P3 has a long red
+       decay, so a bright character sits inside a rusty halo rather than a
+       halo of its own color. That one fact is what people recognize as
+       "the amber screen", and it is why --halo here is ember rather than
+       the slot color.
+     - BRIGHTNESS MOVES HUE. The ramp runs like heat: deep ember, orange,
+       amber, yellow, near white. So unlike Cathode this theme has a SECOND
+       CHANNEL, and it shows up in the numbers. Adjacent slots average
+       delta E 21.9 against Cathode's 6.5, smallest adjacent 13.6 against
+       5.3, and the widest pair reaches 4.18:1 where Cathode managed 2.32.
+       Amber can color code. Cathode could not.
+
+   What it costs, measured and NOT engineered away: the bottom rung of the
+   ramp is light, not letters. #C25316 as type on the lit top of a raster box
+   is 2.65:1, and a dark label on a filled #C25316 is 4.10:1. Both fail the
+   4.5 a label wants. The ember slot carries a rim, a value or a fill - never
+   type.
+
+   Strip the color out entirely and the ramp is still 18 / 28 / 40 / 53 / 71
+   / 90 % luminance, a wider ladder than Cathode's. With no color vision at
+   all this theme degrades to Cathode, and no further.
+
+   Measured over the rendered deck: darkest #120804, lightest #FFF3D2 exactly.
+   ========================================================================= */
+
+.surf.amber {
+    --deck: radial-gradient(118% 96% at 50% 42%, #33200F 0%, #2B1A10 44%, #24160C 100%);
+    --plate: linear-gradient(180deg, #48301C 0%, #3A2413 100%);
+    /* EVERY recess on this theme is the palette floor at some alpha, and nothing
+       else. Hand-picked recess colors bottomed the blue channel out at zero once
+       a scan line and the corner falloff had both been laid over them, which is a
+       pure black by any other name. One token cannot drift. */
+    --floor: 20, 11, 7;
+    --track: rgba(var(--floor), .80);
+    --on-hue: #1A0E05;                  /* inverse video, and the terminals really did this */
+    --deck-ink: #F0C489;
+    --deck-ink2: rgba(217, 160, 91, .80);
+    --grid1: rgba(255, 176, 46, .16);
+    --grid2: rgba(255, 176, 46, .06);
+    --tonal-rest: 0;
+    --tonal-held: .20;
+    --rim-rest: .55;
+    --tonal-radius: 6px;
+    --cap-shadow: 0 0 10px rgba(255, 96, 16, .45);
+    --edge: rgba(255, 176, 46, .18);
+
+    /* the light source is the slot. the HALO is ember, whatever the slot is. */
+    --halo: 255, 96, 16;
+    --lit:
+        0 0 6px rgba(var(--halo), .16),
+        0 0 18px rgba(var(--halo), .09);
+    --lit-high:
+        0 0 11px rgba(var(--halo), .46),
+        0 0 32px rgba(var(--halo), .26),
+        0 0 68px rgba(var(--halo), .12);
+    --lit-peak:
+        0 0 15px rgba(var(--halo), .60),
+        0 0 42px rgba(var(--halo), .34),
+        0 0 90px rgba(var(--halo), .16);
+    --scan: rgba(18, 7, 3, .44);
+    --sink: inset 0 1px 3px rgba(var(--floor), .85), inset 0 0 0 1px rgba(var(--floor), .70);
+    --text-glow: 0 0 5px rgba(var(--halo), .50);
+
+    /* the fire ramp. h1 is the classic P3 amber and stays the default slot. */
+    --h4: 194,  83,  22;   /* #C25316 ember  - light only, never a label */
+    --h2: 224, 115,  15;   /* #E0730F orange */
+    --h5: 245, 146,  20;   /* #F59214 amber  */
+    --h1: 255, 176,  46;   /* #FFB02E the standard, and the default slot */
+    --h3: 255, 215, 110;   /* #FFD76E yellow */
+    --h6: 255, 243, 210;   /* #FFF3D2 white hot */
+}
+
+/* Scan lines and the corner falloff are ONE overlay for the whole deck, the
+   same as Cathode. The corner stop is set so the glass bottoms out on the
+   palette floor of #140B07 and no further. */
+.surf.tonal.amber::after {
+    display: block;
+    background:
+        repeating-linear-gradient(180deg, var(--scan) 0 1px, transparent 1px 3px),
+        radial-gradient(112% 88% at 50% 44%,
+            transparent 30%, rgba(10, 5, 3, .30) 70%, rgba(10, 5, 3, .615) 100%);
+}
+
+.surf.amber .ctl {
+    background: var(--plate);
+    box-shadow:
+        inset 0 0 0 1px rgba(var(--hue), var(--rim-rest)),
+        inset 0 0 8px rgba(var(--hue), .15),
+        0 0 0 1px rgba(var(--hue), .10),
+        var(--lit);
+}
+
+.surf.amber .ctl.held {
+    background: linear-gradient(180deg, #6B4726 0%, #55371B 100%);
+    box-shadow:
+        inset 0 0 0 1px rgba(var(--hue), .95),
+        inset 0 0 14px rgba(var(--halo), .34),
+        var(--lit-high);
+}
+
+.surf.amber .ctl.on {
+    background: rgb(var(--hue));
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 233, 190, .55),
+        var(--lit-peak);
+    color: var(--on-hue);
+}
+.surf.amber .ctl.on .cap,
+.surf.amber .ctl.on .name,
+.surf.amber .ctl.on .glyph,
+.surf.amber .ctl.on .val { color: var(--on-hue); text-shadow: none; }
+
+.surf.amber .ctl.dim {
+    opacity: 1;
+    background: #2A1B10;
+    box-shadow: inset 0 0 0 1px rgba(255, 176, 46, .11);
+    color: rgba(217, 160, 91, .46);
+}
+
+/* offline: snow, forced to one warm color and varied in ALPHA only. An amber
+   set has one phosphor, so its static is amber static. */
+.surf.amber .ctl.offline {
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.86' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 0.66 0 0 0 0 0.24 0.34 0.34 0.34 0 0'/%3E%3C/filter%3E%3Crect width='90' height='90' filter='url(%23a)' opacity='0.46'/%3E%3C/svg%3E"),
+        linear-gradient(180deg, #33200F 0%, #261709 100%);
+    background-size: 90px 90px, auto;
+    box-shadow: inset 0 0 0 1px rgba(255, 176, 46, .14);
+}
+
+.surf.amber .pipe { background: rgba(var(--halo), .18); }
+.surf.amber .pipe.lit { background: rgb(var(--hue)); box-shadow: 0 0 9px rgba(var(--halo), .95); }
+.surf.amber .ctl.on .pipe.lit { background: var(--on-hue); opacity: .50; box-shadow: none; }
+
+/* ------------------------------------------------------------ knobs */
+.surf.amber .knob { background: none; box-shadow: none; }
+.surf.amber .knob .dial {
+    background: var(--plate);
+    box-shadow:
+        inset 0 0 0 1px rgba(var(--hue), var(--rim-rest)),
+        inset 0 0 8px rgba(var(--hue), .15),
+        var(--lit);
+}
+/* the unfilled arc sits on bare glass, so it has to be a faint LIGHT - there
+   is nothing out there left to be darker than */
+.surf.amber .knob .arc {
+    background: conic-gradient(from 215deg,
+        rgb(var(--hue)) 0turn var(--pct, .35turn),
+        rgba(var(--halo), .20) var(--pct, .35turn) .805turn,
+        transparent .805turn 1turn);
+    filter: drop-shadow(0 0 4px rgba(var(--halo), .70)) drop-shadow(0 0 12px rgba(var(--halo), .34));
+}
+.surf.amber .knob .ptr { background: rgb(var(--h6)); width: 2px; box-shadow: 0 0 7px rgba(var(--halo), .95); }
+.surf.amber .knob .dotmark { background: rgba(var(--halo), .30); }
+.surf.amber .knob .kval { color: var(--deck-ink); text-shadow: var(--text-glow); }
+.surf.amber .knob.detent .dial::after { background: rgba(255, 176, 46, .55); }
+.surf.amber .knob.leds .arc {
+    -webkit-mask:
+        repeating-conic-gradient(from 215deg, #000 0 5.2deg, transparent 5.2deg 10.4deg),
+        radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+    -webkit-mask-composite: source-in;
+    mask:
+        repeating-conic-gradient(from 215deg, #000 0 5.2deg, transparent 5.2deg 10.4deg),
+        radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+    mask-composite: intersect;
+}
+
+/* ----------------------------------------------------------- faders */
+.surf.amber .fader .slot { background: rgba(var(--floor), .82); box-shadow: var(--sink); }
+/* the top of the fill is where the beam just was, so it is the slot color;
+   everything under it has had time to decay toward red. Long persistence,
+   drawn rather than animated. */
+.surf.amber .fader .fill {
+    background: linear-gradient(180deg,
+        rgb(var(--hue)) 0%, rgba(var(--hue), .88) 30%, rgba(var(--halo), .72) 100%);
+    box-shadow: 0 0 9px rgba(var(--halo), .60), 0 0 22px rgba(var(--halo), .30);
+}
+.surf.amber .fader.horiz .fill {
+    background: linear-gradient(270deg,
+        rgb(var(--hue)) 0%, rgba(var(--hue), .88) 30%, rgba(var(--halo), .72) 100%);
+}
+.surf.amber .fader .capbar {
+    background: linear-gradient(180deg, #6E4A28 0%, #402915 100%);
+    border-radius: 3px;
+    box-shadow:
+        inset 0 1px 0 rgba(255, 210, 150, .26),
+        inset 0 0 0 1px rgba(255, 176, 46, .20),
+        0 0 10px rgba(var(--halo), .22);
+}
+.surf.amber .fader .capbar::after {
+    background: rgb(var(--h6));
+    opacity: 1;
+    box-shadow: 0 0 8px rgba(var(--halo), .95);
+}
+.surf.amber .fader .ticks i { background: rgba(255, 176, 46, .18); }
+
+/* ------------------------------------------------- two axis controls */
+.surf.amber .xy .field2 { background: rgba(var(--floor), .62); box-shadow: var(--sink); }
+.surf.amber .xy .field2::before {
+    background-image:
+        linear-gradient(rgba(255, 176, 46, .13) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 176, 46, .13) 1px, transparent 1px);
+}
+.surf.amber .xy .cross { background: rgba(var(--hue), .62); box-shadow: 0 0 8px rgba(var(--halo), .55); }
+/* P3 holds on for a while. The trail is the longest of any theme here. */
+.surf.amber .xy .trail {
+    background: rgba(var(--halo), .42);
+    box-shadow: 0 0 14px rgba(var(--halo), .34);
+}
+.surf.amber .xy .puck {
+    background: rgb(var(--h6));
+    box-shadow: 0 0 11px rgba(var(--halo), .95), 0 0 30px rgba(var(--halo), .50);
+}
+
+.surf.amber .joy .ring,
+.surf.amber .joy .ring2 { box-shadow: inset 0 0 0 1px rgba(255, 176, 46, .15); }
+.surf.amber .joy .spring { box-shadow: inset 0 0 0 1px rgba(var(--hue), .42); }
+.surf.amber .joy .puck {
+    background: linear-gradient(180deg, #6E4A28 0%, #3A2413 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 210, 150, .26),
+        inset 0 0 0 1px rgba(255, 176, 46, .20),
+        var(--lit);
+}
+.surf.amber .joy .puck::after { background: rgb(var(--hue)); box-shadow: 0 0 10px rgba(var(--halo), .90); }
+
+/* ----------------------------------------------------------- wheels */
+.surf.amber .wheel .body {
+    background: linear-gradient(90deg, #1C1109 0%, #4A3018 44%, #1C1109 100%);
+    box-shadow: var(--sink);
+}.surf.amber .wheel .ridges {
+    background: repeating-linear-gradient(180deg, rgba(255, 176, 46, .13) 0 1px, transparent 1px 7px);
+}
+.surf.amber .wheel .ind { background: rgb(var(--hue)); box-shadow: 0 0 10px rgba(var(--halo), .95); }
+.surf.amber .wheel .center { background: rgba(255, 176, 46, .28); }
+
+/* ------------------------------------------- meters, steps, clock */
+/* Same specificity trap as every other theme here: `.surf.amber .meter i`
+   outranks the base `.meter i.lit`, so the lit segments are named again or
+   the meter renders empty. This is the one control where the fire ramp does
+   real work - amber, yellow, white hot reads as heat without anyone being
+   told, and it survives with no color vision because it is also a rising
+   brightness. */
+.surf.amber .meter i { background: rgba(255, 176, 46, .10); }
+.surf.amber .meter i.lit { background: rgb(var(--h1)); box-shadow: 0 0 6px rgba(var(--halo), .45); }
+.surf.amber .meter i.lit.warn { background: rgb(var(--h3)); box-shadow: 0 0 8px rgba(var(--halo), .65); }
+.surf.amber .meter i.lit.hot { background: rgb(var(--h6)); box-shadow: 0 0 11px rgba(var(--halo), .95); }
+
+.surf.amber .steps .row i { background: rgba(var(--floor), .64); box-shadow: inset 0 0 0 1px rgba(255, 176, 46, .09); }
+.surf.amber .steps .row i.on { background: rgba(var(--hue), .70); box-shadow: 0 0 9px rgba(var(--halo), .40); }
+.surf.amber .steps .row i.cur { box-shadow: inset 0 0 0 2px rgb(var(--h6)), 0 0 15px rgba(var(--halo), .70); }
+
+.surf.amber .clockctl .sweep {
+    background: conic-gradient(rgb(var(--hue)) 0turn var(--pct, .25turn), rgba(var(--floor), .74) var(--pct, .25turn) 1turn);
+    filter: drop-shadow(0 0 6px rgba(var(--halo), .60));
+}
+.surf.amber .clockctl .beat {
+    background: rgba(var(--hue), .18);
+    box-shadow: inset 0 0 0 1px rgba(var(--hue), .60), 0 0 20px rgba(var(--halo), .45);
+    color: var(--deck-ink);
+    text-shadow: var(--text-glow);
+}
+.surf.amber .clockctl .pips i { background: rgba(255, 176, 46, .14); }
+.surf.amber .clockctl .pips i.lit { background: rgb(var(--hue)); box-shadow: 0 0 9px rgba(var(--halo), .90); }
+
+.surf.amber .lfo svg { filter: drop-shadow(0 0 5px rgba(var(--halo), .75)); }
+
+/* --------------------------------------------- text, panels, tabs */
+/* The theme does NOT set a typeface. A monospace face is what everybody
+   pictures here, and it belongs to the layout, not to the theme - changing
+   somebody's type because they picked a color scheme is overreach. The
+   starter layout for this theme uses Cascadia Mono; the theme only lights it. */
+.surf.amber .surftext.h1 { color: var(--deck-ink); text-shadow: 0 0 8px rgba(var(--halo), .55); }
+.surf.amber .surftext.readout { color: rgb(var(--h1)); text-shadow: 0 0 10px rgba(var(--halo), .70); }
+.surf.amber .ctl .val { color: rgb(var(--hue)); text-shadow: var(--text-glow); }
+.surf.amber .ctl .name,
+.surf.amber .ctl .cap,
+.surf.amber .outlabel { text-shadow: var(--text-glow); }
+
+.surf.amber .ctlpanel {
+    background: rgba(255, 176, 46, .045);
+    box-shadow: inset 0 0 0 1px rgba(255, 176, 46, .13);
+}
+.surf.amber .ctlpanel > .ptitle { background: #24160C; color: var(--deck-ink2); }
+.surf.amber .surfrule {
+    background: linear-gradient(90deg, transparent, rgba(255, 176, 46, .34), transparent);
+}
+.surf.amber .pagetabs .tab {
+    border-radius: 4px;
+    background: rgba(255, 176, 46, .06);
+    box-shadow: inset 0 0 0 1px rgba(255, 176, 46, .16);
+    color: var(--deck-ink2);
+}
+.surf.amber .pagetabs .tab.sel {
+    background: rgb(var(--h1));
+    box-shadow: 0 0 14px rgba(var(--halo), .55);
+    color: var(--on-hue);
+    text-shadow: none;
+}
+
+
+/* =========================================================================
+   "TERMINAL GREEN" - the green screen, and the third of the retro set.
+
+   THIS ONE COSTS NOTHING NEW. Bone asked for a light source, Cathode asked
+   for scan lines and a resting glow, Amber asked for a bloom color that is
+   not derived from the hue. Terminal Green needs none of that added - it is
+   entirely those properties at different values. Three retro themes and the
+   third was free is the argument that the theme model is finished.
+
+   What the photographs decided, and none of it was taste:
+
+     - THE GLASS IS COOL BLUE-SLATE, NOT GREEN. This is the one that would
+       have been got wrong from memory. A terminal has a tinted anti-glare
+       faceplate, so the unlit screen is a dark blue-gray, and against that
+       the green is a long way from the glass in hue. Cathode's glass is an
+       olive #2C362C with red equal to blue; this one is #1E262D with blue
+       clearly above red. The two "green" themes are not alike at all.
+     - THE FACEPLATE REFLECTS THE ROOM. Every photograph of a real terminal
+       has a soft highlight across the upper left of the glass. It is one
+       more stop in the deck overlay that already carries the scan lines, so
+       it is still one visual for the whole page.
+     - THE RAMP WALKS TO YELLOW. Driven hard, the phosphor goes yellow-green
+       and then pale, which is why reverse video and a cursor read as almost
+       white. Same heat idea as Amber, narrower gamut.
+     - THE AFTERGLOW IS YELLOWER THAN THE EMISSION, the same way Amber's is
+       redder. Both shift down the spectrum, because that is what a decaying
+       phosphor does.
+
+   Measured, and its profile is NOT Amber's. Every rim clears the glass at
+   3.97:1 or better, where Amber's ember managed 3.35. Every slot survives
+   inverse video at 5.00:1 or better, where Amber's ember failed at 4.10.
+   The single failure is the dimmest slot used as TYPE on a raster box,
+   3.25:1. So the rule is narrower here than on Amber: only the bottom rung
+   is barred from carrying letters, and it can still be filled and labelled.
+   ========================================================================= */
+
+.surf.green {
+    --deck: radial-gradient(118% 96% at 50% 42%, #1E262D 0%, #1A222A 46%, #161E24 100%);
+    /* Only the BOTTOM of this gradient was darkened to kill the glare. The lit
+       top stays #2A353D, which is the worst case every measured number is
+       quoted against, so the numbers still hold. */
+    --plate: linear-gradient(180deg, #2A353D 0%, #1E272E 100%);
+    --floor: 11, 16, 19;                /* every recess is this at an alpha, never a hand-picked dark */
+    --track: rgba(var(--floor), .80);
+    --on-hue: #071009;
+    --deck-ink: #A6DCB0;
+    --deck-ink2: rgba(147, 206, 158, .78);
+    --grid1: rgba(74, 224, 106, .16);
+    --grid2: rgba(74, 224, 106, .06);
+    --tonal-rest: 0;
+    --tonal-held: .20;
+    --rim-rest: .40;
+    --tonal-radius: 6px;
+    --cap-shadow: 0 0 10px rgba(134, 242, 96, .38);
+    --edge: rgba(166, 220, 176, .16);
+
+    /* the afterglow is yellower than the emission */
+    --halo: 134, 242, 96;
+    --lit:
+        0 0 5px rgba(var(--halo), .09),
+        0 0 15px rgba(var(--halo), .05);
+    --lit-high:
+        0 0 9px rgba(var(--halo), .30),
+        0 0 26px rgba(var(--halo), .16),
+        0 0 58px rgba(var(--halo), .08);
+    --lit-peak:
+        0 0 12px rgba(var(--halo), .38),
+        0 0 34px rgba(var(--halo), .20),
+        0 0 76px rgba(var(--halo), .09);
+    --scan: rgba(4, 9, 11, .46);
+    --sink: inset 0 1px 3px rgba(var(--floor), .85), inset 0 0 0 1px rgba(var(--floor), .70);
+    --text-glow: 0 0 5px rgba(var(--halo), .45);
+
+    --h4:  42, 148,  75;   /* #2A944B deep   - clears every rim, fails only as type */
+    --h2:  53, 180,  87;   /* #35B457 green  */
+    --h5:  62, 203,  96;   /* #3ECB60 working green */
+    --h1:  74, 224, 106;   /* #4AE06A the standard, and the default slot */
+    --h3: 162, 245, 120;   /* #A2F578 yellow-green, the overdriven shift */
+    --h6: 228, 255, 214;   /* #E4FFD6 pale */
+}
+
+/* Scan lines, the corner falloff AND the faceplate reflection, all in the one
+   overlay the other two already use. */
+.surf.tonal.green::after {
+    display: block;
+    background:
+        linear-gradient(142deg, rgba(190, 225, 240, .050) 0%, rgba(190, 225, 240, .018) 26%, transparent 46%),
+        repeating-linear-gradient(180deg, var(--scan) 0 1px, transparent 1px 3px),
+        radial-gradient(112% 88% at 50% 44%,
+            transparent 30%, rgba(var(--floor), .30) 70%, rgba(var(--floor), .60) 100%);
+}
+
+.surf.green .ctl {
+    background: var(--plate);
+    box-shadow:
+        inset 0 0 0 1px rgba(var(--hue), var(--rim-rest)),
+        inset 0 0 8px rgba(var(--hue), .09),
+        0 0 0 1px rgba(var(--hue), .07),
+        var(--lit);
+}
+
+.surf.green .ctl.held {
+    background: linear-gradient(180deg, #3B4950 0%, #2C383F 100%);
+    box-shadow:
+        inset 0 0 0 1px rgba(var(--hue), .90),
+        inset 0 0 14px rgba(var(--halo), .24),
+        var(--lit-high);
+}
+
+.surf.green .ctl.on {
+    background: rgb(var(--hue));
+    box-shadow:
+        inset 0 0 0 1px rgba(214, 255, 206, .50),
+        var(--lit-peak);
+    color: var(--on-hue);
+}
+.surf.green .ctl.on .cap,
+.surf.green .ctl.on .name,
+.surf.green .ctl.on .glyph,
+.surf.green .ctl.on .val { color: var(--on-hue); text-shadow: none; }
+
+.surf.green .ctl.dim {
+    opacity: 1;
+    background: #1F282F;
+    box-shadow: inset 0 0 0 1px rgba(166, 220, 176, .11);
+    color: rgba(147, 206, 158, .46);
+}
+
+.surf.green .ctl.offline {
+    background:
+        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.86' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.35 0 0 0 0 0.92 0 0 0 0 0.45 0.34 0.34 0.34 0 0'/%3E%3C/filter%3E%3Crect width='90' height='90' filter='url(%23g)' opacity='0.46'/%3E%3C/svg%3E"),
+        linear-gradient(180deg, #27313A 0%, #1B242B 100%);
+    background-size: 90px 90px, auto;
+    box-shadow: inset 0 0 0 1px rgba(166, 220, 176, .14);
+}
+
+.surf.green .pipe { background: rgba(var(--halo), .14); }
+.surf.green .pipe.lit { background: rgb(var(--hue)); box-shadow: 0 0 7px rgba(var(--halo), .70); }
+.surf.green .ctl.on .pipe.lit { background: var(--on-hue); opacity: .50; box-shadow: none; }
+
+/* ------------------------------------------------------------ knobs */
+.surf.green .knob { background: none; box-shadow: none; }
+.surf.green .knob .dial {
+    background: var(--plate);
+    box-shadow:
+        inset 0 0 0 1px rgba(var(--hue), var(--rim-rest)),
+        inset 0 0 8px rgba(var(--hue), .09),
+        var(--lit);
+}
+.surf.green .knob .arc {
+    background: conic-gradient(from 215deg,
+        rgb(var(--hue)) 0turn var(--pct, .35turn),
+        rgba(var(--halo), .16) var(--pct, .35turn) .805turn,
+        transparent .805turn 1turn);
+    filter: drop-shadow(0 0 3px rgba(var(--halo), .45)) drop-shadow(0 0 9px rgba(var(--halo), .20));
+}
+.surf.green .knob .ptr { background: rgb(var(--h6)); width: 2px; box-shadow: 0 0 6px rgba(var(--halo), .80); }
+.surf.green .knob .dotmark { background: rgba(var(--halo), .28); }
+.surf.green .knob .kval { color: var(--deck-ink); text-shadow: var(--text-glow); }
+.surf.green .knob.detent .dial::after { background: rgba(166, 220, 176, .55); }
+.surf.green .knob.leds .arc {
+    -webkit-mask:
+        repeating-conic-gradient(from 215deg, #000 0 5.2deg, transparent 5.2deg 10.4deg),
+        radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+    -webkit-mask-composite: source-in;
+    mask:
+        repeating-conic-gradient(from 215deg, #000 0 5.2deg, transparent 5.2deg 10.4deg),
+        radial-gradient(farthest-side, transparent calc(100% - 6px), #000 calc(100% - 6px));
+    mask-composite: intersect;
+}
+
+/* ----------------------------------------------------------- faders */
+.surf.green .fader .slot { background: rgba(var(--floor), .82); box-shadow: var(--sink); }
+.surf.green .fader .fill {
+    background: linear-gradient(180deg,
+        rgb(var(--hue)) 0%, rgba(var(--hue), .78) 26%, rgba(var(--halo), .22) 100%);
+    box-shadow: 0 0 7px rgba(var(--halo), .42), 0 0 18px rgba(var(--halo), .18);
+}
+.surf.green .fader.horiz .fill {
+    background: linear-gradient(270deg,
+        rgb(var(--hue)) 0%, rgba(var(--hue), .78) 26%, rgba(var(--halo), .22) 100%);
+}
+.surf.green .fader .capbar {
+    background: linear-gradient(180deg, #44545C 0%, #232D34 100%);
+    border-radius: 3px;
+    box-shadow:
+        inset 0 1px 0 rgba(214, 255, 206, .20),
+        inset 0 0 0 1px rgba(166, 220, 176, .16),
+        0 0 8px rgba(var(--halo), .14);
+}
+.surf.green .fader .capbar::after {
+    background: rgb(var(--h6));
+    opacity: 1;
+    box-shadow: 0 0 6px rgba(var(--halo), .80);
+}
+.surf.green .fader .ticks i { background: rgba(166, 220, 176, .18); }
+
+/* ------------------------------------------------- two axis controls */
+.surf.green .xy .field2 { background: rgba(var(--floor), .62); box-shadow: var(--sink); }
+.surf.green .xy .field2::before {
+    background-image:
+        linear-gradient(rgba(166, 220, 176, .12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(166, 220, 176, .12) 1px, transparent 1px);
+}
+.surf.green .xy .cross { background: rgba(var(--hue), .62); box-shadow: 0 0 8px rgba(var(--halo), .50); }
+.surf.green .xy .trail { background: rgba(var(--halo), .34); box-shadow: 0 0 13px rgba(var(--halo), .28); }
+.surf.green .xy .puck {
+    background: rgb(var(--h6));
+    box-shadow: 0 0 11px rgba(var(--halo), .95), 0 0 30px rgba(var(--halo), .45);
+}
+
+.surf.green .joy .ring,
+.surf.green .joy .ring2 { box-shadow: inset 0 0 0 1px rgba(166, 220, 176, .15); }
+.surf.green .joy .spring { box-shadow: inset 0 0 0 1px rgba(var(--hue), .42); }
+.surf.green .joy .puck {
+    background: linear-gradient(180deg, #4E6068 0%, #26313A 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(214, 255, 206, .24),
+        inset 0 0 0 1px rgba(166, 220, 176, .20),
+        var(--lit);
+}
+.surf.green .joy .puck::after { background: rgb(var(--hue)); box-shadow: 0 0 10px rgba(var(--halo), .90); }
+
+/* ----------------------------------------------------------- wheels */
+.surf.green .wheel .body {
+    background: linear-gradient(90deg, #141B21 0%, #36444D 44%, #141B21 100%);
+    box-shadow: var(--sink);
+}
+.surf.green .wheel .ridges {
+    background: repeating-linear-gradient(180deg, rgba(166, 220, 176, .12) 0 1px, transparent 1px 7px);
+}
+.surf.green .wheel .ind { background: rgb(var(--hue)); box-shadow: 0 0 10px rgba(var(--halo), .95); }
+.surf.green .wheel .center { background: rgba(166, 220, 176, .28); }
+
+/* ------------------------------------------- meters, steps, clock */
+/* Fourth time for this: `.surf.green .meter i` outranks `.meter i.lit`, so
+   the lit segments get named again or the meter renders empty. */
+.surf.green .meter i { background: rgba(166, 220, 176, .10); }
+.surf.green .meter i.lit { background: rgb(var(--h1)); box-shadow: 0 0 6px rgba(var(--halo), .42); }
+.surf.green .meter i.lit.warn { background: rgb(var(--h3)); box-shadow: 0 0 8px rgba(var(--halo), .62); }
+.surf.green .meter i.lit.hot { background: rgb(var(--h6)); box-shadow: 0 0 11px rgba(var(--halo), .95); }
+
+.surf.green .steps .row i { background: rgba(var(--floor), .64); box-shadow: inset 0 0 0 1px rgba(166, 220, 176, .09); }
+.surf.green .steps .row i.on { background: rgba(var(--hue), .50); box-shadow: 0 0 7px rgba(var(--halo), .26); }
+.surf.green .steps .row i.cur { box-shadow: inset 0 0 0 2px rgb(var(--h6)), 0 0 12px rgba(var(--halo), .50); }
+
+.surf.green .clockctl .sweep {
+    background: conic-gradient(rgb(var(--hue)) 0turn var(--pct, .25turn), rgba(var(--floor), .74) var(--pct, .25turn) 1turn);
+    filter: drop-shadow(0 0 6px rgba(var(--halo), .60));
+}
+.surf.green .clockctl .beat {
+    background: rgba(var(--hue), .18);
+    box-shadow: inset 0 0 0 1px rgba(var(--hue), .60), 0 0 20px rgba(var(--halo), .42);
+    color: var(--deck-ink);
+    text-shadow: var(--text-glow);
+}
+.surf.green .clockctl .pips i { background: rgba(166, 220, 176, .14); }
+.surf.green .clockctl .pips i.lit { background: rgb(var(--hue)); box-shadow: 0 0 9px rgba(var(--halo), .90); }
+
+.surf.green .lfo svg { filter: drop-shadow(0 0 5px rgba(var(--halo), .75)); }
+
+/* --------------------------------------------- text, panels, tabs */
+.surf.green .surftext.h1 { color: var(--deck-ink); text-shadow: 0 0 8px rgba(var(--halo), .50); }
+.surf.green .surftext.readout { color: rgb(var(--h1)); text-shadow: 0 0 10px rgba(var(--halo), .65); }
+.surf.green .ctl .val { color: rgb(var(--hue)); text-shadow: var(--text-glow); }
+.surf.green .ctl .name,
+.surf.green .ctl .cap,
+.surf.green .outlabel { text-shadow: var(--text-glow); }
+
+.surf.green .ctlpanel {
+    background: rgba(166, 220, 176, .045);
+    box-shadow: inset 0 0 0 1px rgba(166, 220, 176, .13);
+}
+.surf.green .ctlpanel > .ptitle { background: #161E24; color: var(--deck-ink2); }
+.surf.green .surfrule {
+    background: linear-gradient(90deg, transparent, rgba(166, 220, 176, .32), transparent);
+}
+.surf.green .pagetabs .tab {
+    border-radius: 4px;
+    background: rgba(166, 220, 176, .06);
+    box-shadow: inset 0 0 0 1px rgba(166, 220, 176, .16);
+    color: var(--deck-ink2);
+}
+.surf.green .pagetabs .tab.sel {
+    background: rgb(var(--h1));
+    box-shadow: 0 0 14px rgba(var(--halo), .55);
+    color: var(--on-hue);
+    text-shadow: none;
+}

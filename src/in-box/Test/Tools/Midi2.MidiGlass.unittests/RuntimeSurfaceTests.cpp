@@ -457,7 +457,7 @@ void RuntimeSurfaceTests::AFlatThemeAsksForAFlatValueBar()
     auto const studio = glass::ResolveControlColors(control, ThemeNamed(L"Studio Dark"));
     VERIFY_IS_LESS_THAN(studio.PipeEnd.A, studio.Pipe.A);
 
-    for (auto const* name : { L"Pigment Light", L"Pigment Dark", L"Bigwig", L"High contrast" })
+    for (auto const* name : { L"Pigment Light", L"Pigment Dark", L"Bigwig", L"High contrast", L"Bone" })
     {
         auto const colors = glass::ResolveControlColors(control, ThemeNamed(name));
 
@@ -467,8 +467,8 @@ void RuntimeSurfaceTests::AFlatThemeAsksForAFlatValueBar()
 
 void RuntimeSurfaceTests::ANamedPlateColorWins()
 {
-    // Bigwig is the one shipped theme whose plate is a real neutral surface rather than something
-    // derived, because its whole idea is that orange only ever means "this is the value".
+    // Bigwig names its plate outright rather than deriving one, because its whole idea is that
+    // orange only ever means "this is the value". Bone does the same for a different reason.
     auto const theme = ThemeNamed(L"Bigwig");
     auto const control = MakeControl(glass::ControlKind::Knob, 0);
 

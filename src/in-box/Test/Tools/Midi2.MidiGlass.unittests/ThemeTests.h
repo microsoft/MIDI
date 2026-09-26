@@ -17,7 +17,7 @@ public:
         TEST_CLASS_PROPERTY(L"TestClassification", L"Unit")
     END_TEST_CLASS()
 
-    TEST_METHOD(ShipsTheNineThemesTheDesignNames);
+    TEST_METHOD(ShipsTheTenThemesTheDesignNames);
     TEST_METHOD(EveryBuiltInThemeFillsAllSixSlots);
     TEST_METHOD(ContrastMatchesTheWcagReferenceValues);
     TEST_METHOD(MeasuresEverySlotAgainstTheDeck);
@@ -26,4 +26,8 @@ public:
     TEST_METHOD(BigwigUsesANeutralRimAndOneHue);
     TEST_METHOD(TheTonalThemesTurnOffTheGlass);
     TEST_METHOD(HighContrastTurnsOffEveryEffect);
+    TEST_METHOD(BoneIsSeparatedByItsShadowRatherThanItsValue);
+    TEST_METHOD(BoneNeverLetsTheSpaceGoDarkerThanBone);
+    TEST_METHOD(OnlyALightThemeRaisesItsRestingRim);
+    TEST_METHOD(OnlyBoneMovesTheShadowOffItsShippedGeometry);
 };

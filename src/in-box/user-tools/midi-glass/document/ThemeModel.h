@@ -70,6 +70,15 @@ namespace glass
         SegmentedLamps = 1,
     };
 
+    // What color activity lights up in. Bone lights up white, because on a bone deck a control
+    // is already near-white and the only room left to say "this one just did something" is to
+    // take it the rest of the way.
+    enum class LightSource
+    {
+        ControlHue = 0,
+        White = 1,
+    };
+
     // The cap on a fader. Studio Dark's is a neutral machined bar with a hairline of the
     // control's hue through it; the tonal themes and Bigwig make the whole cap the hue.
     enum class ThumbStyle
@@ -125,6 +134,22 @@ namespace glass
         // elevation as a tint of the surface's own color instead, and set this to zero.
         int32_t PlateElevation{ 55 };
 
+        // How far that shadow reaches, as a blur radius in pixels. Elevation is how DARK the
+        // shadow is; this is how FAR it goes, and they are not the same question. On a dark deck
+        // a shadow is nearly invisible whatever it does, so 3 was fine for every theme until one
+        // arrived that has nothing else to separate a control from its deck. Measured on screen:
+        // at 3 a white plate on a bone deck reads as a flat rectangle with an outline.
+        int32_t ShadowSpread{ 3 };
+
+        // What that shadow is made of. Black everywhere it has always been black, so nothing
+        // shipped moves. Bone needs it warm: a black shadow on a bone deck comes out a dirty
+        // gray, and on that theme the shadow is not decoration - a warm white plate measures
+        // 1.23 : 1 against a bone deck, so the shadow is the only thing separating a control
+        // from the space behind it.
+        ThemeColor ShadowColor{ 0, 0, 0, 255 };
+
+        LightSource Light{ LightSource::ControlHue };
+
         // The far end of the value bar, as a fraction of the hue's own alpha. The bar is
         // brightest where the value is and falls away behind it, which is what stops a long
         // fader reading as a flat stripe. 1.0 is a solid bar.
@@ -139,8 +164,19 @@ namespace glass
         LabelPlacement Labels{ LabelPlacement::Below };
 
         // Pigment. A wash of the control's own hue at rest, instead of an outline. This is what
-        // makes the tonal themes read as a different family rather than a recolour.
+        // makes the tonal themes read as a different family rather than a recolor.
         double FillAtRest{ 0.0 };
+
+        // How strong a control's rim is when nothing is happening to it. A quarter strength is
+        // what keeps a busy page readable - nothing is saturated at rest, and the value and the
+        // activity are the only things allowed to be bright.
+        //
+        // It is a property rather than a constant because a hairline behaves differently on a
+        // light plate. Measured against each theme's own plate, 28 lands at 1.8 : 1 to 2.2 : 1
+        // on the six dark themes and only 1.4 : 1 on the light ones, where the rim simply
+        // vanishes and takes the control's identity with it - six faders on six different slots
+        // all look the same. Bone runs 85.
+        int32_t RimStrengthPercent{ 28 };
 
         // Pigment. The empty part of a fader slot or a knob arc. The dark themes get away with
         // hardcoding this black, which is a gap in the model rather than a cost of those themes:
@@ -166,7 +202,7 @@ namespace glass
         int32_t MinimumLampRingSize{ 48 };
     };
 
-    // The nine that ship. Studio Dark first, because it is the default and the one that stays
+    // The ten that ship. Studio Dark first, because it is the default and the one that stays
     // readable on the densest page.
     std::vector<Theme> const& BuiltInThemes() noexcept;
 

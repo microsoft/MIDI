@@ -10,21 +10,22 @@
 #include <algorithm>
 
 #include "ThemeModel.h"
+#include "SurfaceColors.h"
 
 using namespace WEX::Common;
 using namespace WEX::Logging;
 using namespace WEX::TestExecution;
 
-void ThemeTests::ShipsTheNineThemesTheDesignNames()
+void ThemeTests::ShipsTheTenThemesTheDesignNames()
 {
     auto const& themes = glass::BuiltInThemes();
 
-    VERIFY_ARE_EQUAL(size_t{ 9 }, themes.size());
+    VERIFY_ARE_EQUAL(size_t{ 10 }, themes.size());
 
     wchar_t const* expected[]
     {
         L"Studio Dark", L"Neon Booth", L"Daylight", L"Amber Console", L"Blueprint",
-        L"High contrast", L"Pigment Light", L"Pigment Dark", L"Bigwig",
+        L"High contrast", L"Pigment Light", L"Pigment Dark", L"Bigwig", L"Bone",
     };
 
     for (auto const* name : expected)
@@ -191,4 +192,115 @@ void ThemeTests::HighContrastTurnsOffEveryEffect()
     {
         VERIFY_IS_GREATER_THAN(slot.Ratio, 7.0);
     }
+}
+
+void ThemeTests::BoneIsSeparatedByItsShadowRatherThanItsValue()
+{
+    auto const* bone = glass::FindBuiltInTheme(L"Bone");
+    VERIFY_IS_NOT_NULL(bone);
+
+    // The claim the whole theme rests on, measured rather than asserted: there is essentially no
+    // value difference between a Bone plate and a Bone deck. Every other theme has one, and that
+    // is what it uses to make a control read as an object.
+    auto const platedness = glass::ContrastRatio(bone->PlateColor, bone->Deck.GradientEndColor);
+
+    Log::Comment(String().Format(L"Bone plate on deck measures %.2f : 1", platedness));
+    VERIFY_IS_LESS_THAN(platedness, 1.5);
+
+    // So the shadow is structural. Turning it off does not give a flatter theme, it gives a
+    // blank sheet, which is why a theme editor should not offer zero here.
+    VERIFY_IS_GREATER_THAN(bone->PlateElevation, 0);
+
+    // And it has to be warm. A black shadow on a bone deck comes out a dirty gray.
+    VERIFY_IS_TRUE(bone->ShadowColor.R > bone->ShadowColor.B);
+    VERIFY_IS_GREATER_THAN(static_cast<int32_t>(bone->ShadowColor.R), 0);
+
+    // Activity lights up white, because the plate is already near-white and a hue has nowhere
+    // to glow to.
+    VERIFY_IS_TRUE(bone->Light == glass::LightSource::White);
+    VERIFY_IS_GREATER_THAN(bone->GlowStrength, 0);
+
+    glass::Control control{};
+    control.HueSlot = 0;
+
+    auto const colors = glass::ResolveControlColors(control, *bone);
+
+    VERIFY_ARE_EQUAL(uint8_t{ 255 }, colors.Bloom.R);
+    VERIFY_ARE_EQUAL(uint8_t{ 255 }, colors.Bloom.G);
+    VERIFY_ARE_EQUAL(uint8_t{ 255 }, colors.Bloom.B);
+    VERIFY_IS_GREATER_THAN(static_cast<int32_t>(colors.Bloom.A), 0);
+}
+
+void ThemeTests::BoneNeverLetsTheSpaceGoDarkerThanBone()
+{
+    auto const* bone = glass::FindBuiltInTheme(L"Bone");
+    VERIFY_IS_NOT_NULL(bone);
+
+    // The deck is named rather than derived on this one theme, and this is why: the derived
+    // floor shades below the color the theme is named for. The space is bone or a lifted bone
+    // and never anything else, so the darker end of the gradient IS bone.
+    constexpr glass::ThemeColor named{ 0xE3, 0xDA, 0xC9, 255 };
+
+    VERIFY_IS_TRUE(bone->Deck.GradientEndColor == named);
+    VERIFY_IS_GREATER_THAN(
+        glass::RelativeLuminance(bone->Deck.Color),
+        glass::RelativeLuminance(bone->Deck.GradientEndColor));
+}
+
+void ThemeTests::OnlyALightThemeRaisesItsRestingRim()
+{
+    // Nothing is saturated at rest, and the six dark themes keep the quarter-strength rim that
+    // rule produces. This is the guard on that: a light theme needing a stronger hairline must
+    // not drag the dark ones up with it.
+    for (auto const* name : { L"Studio Dark", L"Neon Booth", L"Amber Console", L"Blueprint",
+        L"High contrast", L"Pigment Dark" })
+    {
+        auto const* theme = glass::FindBuiltInTheme(name);
+        VERIFY_IS_NOT_NULL(theme);
+        VERIFY_ARE_EQUAL(28, theme->RimStrengthPercent);
+    }
+
+    auto const* bone = glass::FindBuiltInTheme(L"Bone");
+    VERIFY_IS_NOT_NULL(bone);
+
+    // A hairline that reads as a line on near-black is simply not there on near-white.
+    VERIFY_IS_GREATER_THAN(bone->RimStrengthPercent, 50);
+
+    glass::Control control{};
+    control.HueSlot = 0;
+
+    auto const dark = glass::ResolveControlColors(control, *glass::FindBuiltInTheme(L"Studio Dark"));
+    auto const light = glass::ResolveControlColors(control, *bone);
+
+    VERIFY_IS_GREATER_THAN(static_cast<int32_t>(light.Rim.A), static_cast<int32_t>(dark.Rim.A));
+}
+
+void ThemeTests::OnlyBoneMovesTheShadowOffItsShippedGeometry()
+{
+    // The renderer used to hardcode a 3 pixel blur and a 1 pixel drop. Spread is now a theme
+    // number, and the offset is a third of it, so a spread of 3 reproduces those two constants
+    // exactly. This is the guard that says so: every theme drawn before Bone still has it.
+    for (auto const& theme : glass::BuiltInThemes())
+    {
+        if (theme.Name == L"Bone")
+        {
+            continue;
+        }
+
+        VERIFY_ARE_EQUAL(3, theme.ShadowSpread);
+
+        // and a black shadow, which is what every one of them was drawn with
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, theme.ShadowColor.R);
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, theme.ShadowColor.G);
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, theme.ShadowColor.B);
+
+        VERIFY_IS_TRUE(theme.Light == glass::LightSource::ControlHue);
+    }
+
+    // Measured on screen at a spread of 3: a white plate on a bone deck darkened the single row
+    // of pixels under it by four values and then stopped. That is not a shadow, and on this one
+    // theme the shadow is the only thing there is.
+    auto const* bone = glass::FindBuiltInTheme(L"Bone");
+    VERIFY_IS_NOT_NULL(bone);
+    VERIFY_IS_GREATER_THAN(bone->ShadowSpread, 3);
 }

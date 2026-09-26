@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - Cathode theme</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    .board {
+        width: 1000px; border-radius: 8px; position: relative; overflow: hidden;
+        border: 1px solid rgba(255,255,255,.08);
+        background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+        box-shadow: var(--shadow);
+    }
+    .chiprow { position: absolute; left: 14px; top: 13px; display: flex; gap: 6px; align-items: center; }
+    .tchip {
+        height: 26px; padding: 0 11px; border-radius: 13px;
+        display: flex; align-items: center; gap: 7px;
+        font-size: 11px; color: var(--text3);
+        background: rgba(255,255,255,.035); box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    .tchip i { width: 11px; height: 11px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
+    .tchip.new { color: var(--success); background: rgba(108,203,95,.11); box-shadow: inset 0 0 0 1px rgba(108,203,95,.45); }
+
+    /* the tube itself: a deeper corner radius than any other deck, because a
+       picture tube has a corner and a flat panel does not */
+    .deck {
+        position: absolute; left: 14px; top: 54px; width: 972px; height: 496px;
+        border-radius: 22px; overflow: hidden;
+        box-shadow: inset 0 0 0 1px rgba(207,224,243,.07), 0 0 0 5px #0B0F0C, 0 0 0 6px rgba(207,224,243,.05);
+    }
+    .decktag { position: absolute; left: 14px; top: 562px; font-size: 11px; color: var(--text3); }
+    .decktag b { color: var(--text2); font-weight: 600; }
+
+    .rhead { position: absolute; font-size: 11px; letter-spacing: .10em; color: rgba(207,224,243,.42); }
+    .kcap { position: absolute; text-align: center; font-size: 10.5px; color: rgba(190,206,222,.60); }
+    .kcap b { display: block; color: #CFDDEE; font-weight: 600; font-size: 11px; margin-bottom: 2px; }
+    .measure { position: absolute; font-size: 11.5px; line-height: 1.6; color: rgba(190,206,222,.66); }
+    .measure b { color: #CFDDEE; font-weight: 600; }
+    .measure .num { font-family: "Cascadia Mono","Consolas",monospace; color: #F4F8FF; font-weight: 600; }
+
+    /* the brightness ladder, drawn as one strip so the segments touch */
+    .ladder { position: absolute; display: flex; border-radius: 5px; overflow: hidden; }
+    .ladder div {
+        width: 50px; height: 46px;
+        display: flex; align-items: flex-end; justify-content: center;
+        font-family: "Cascadia Mono","Consolas",monospace; font-size: 8.5px;
+        color: #121A16; padding-bottom: 3px;
+    }
+
+    .swatches { display: flex; gap: 0; border-radius: 7px; overflow: hidden; margin-top: 14px; }
+    .swatches div {
+        flex: 1; height: 58px; display: flex; flex-direction: column; justify-content: flex-end;
+        padding: 6px 8px; font-size: 9.5px; font-family: "Cascadia Mono","Consolas",monospace;
+    }
+    .swatches div span { display: block; font-family: "Segoe UI Variable Text","Segoe UI",sans-serif; font-size: 10px; opacity: .78; }
+
+    .costgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; margin-top: 12px; }
+    .cost {
+        border-radius: 7px; padding: 12px 14px;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke);
+        font-size: 11.5px; color: var(--text3); line-height: 1.55;
+    }
+    .cost h4 { margin: 0 0 7px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .cost b { color: var(--text2); font-weight: 600; }
+    .cost .yes { color: var(--success); font-weight: 600; }
+    .cost .no { color: var(--caution); font-weight: 600; }
+    .cost .mono { color: var(--accent); }
+
+    /* documentation only - three versions of one button to show how soft is
+       right. None of this is theme data. */
+    .demo-hard {
+        box-shadow: inset 0 0 0 1px rgb(var(--hue)) !important;
+        background: #2C373C !important;
+    }
+    .demo-blur { filter: blur(1.4px); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="caption-above">Screen 16 &mdash; <b>Cathode</b>. An old black and white television, which is not black and white. The glass is a dark sour green when nothing is driving it, the phosphor is <b>blue</b>-white, every edge is soft because a beam has no hard edge, and there is <b>no pure black and no pure white anywhere</b> &mdash; the darkest color here is <span class="mono">#101611</span> and the brightest is <span class="mono">#F4F8FF</span>. What makes it unlike every other theme: a tube has one phosphor, so <b>there is no color to tell one control from another with</b>. That turns out to be the whole design.</p>
+
+<!-- ============================================================= DECK -->
+<div class="board" style="height:588px;">
+
+    <div class="chiprow">
+        <div class="tchip"><i style="background:#4CE0FF"></i>Studio Dark</div>
+        <div class="tchip"><i style="background:#0C56A8"></i>Pigment Light</div>
+        <div class="tchip"><i style="background:#98CCFF"></i>Pigment Dark</div>
+        <div class="tchip"><i style="background:#F56A1A"></i>Bigwig</div>
+        <div class="tchip"><i style="background:#E3DAC9"></i>Bone</div>
+        <div class="tchip new"><i style="background:#2C362C"></i>Cathode</div>
+        <div class="tchip" style="margin-left:6px">&#43; New theme&hellip;</div>
+    </div>
+
+    <div class="deck surf tonal cathode">
+
+        <div class="surftext h1" style="left:22px; top:13px; font-size:15px;">Cathode Desk</div>
+        <div class="surftext readout" style="left:170px; top:14px; font-size:14px;">118.00</div>
+        <div class="surftext small" style="left:244px; top:18px;">4 / 4</div>
+
+        <div class="pagetabs" style="right:18px; top:12px; gap:4px;">
+            <div class="tab sel" style="height:21px; padding:0 11px; font-size:10px">Desk</div>
+            <div class="tab" style="height:21px; padding:0 11px; font-size:10px">Pads</div>
+            <div class="tab" style="height:21px; padding:0 11px; font-size:10px">FX</div>
+        </div>
+
+        <!-- macro row -->
+        <div class="ctl knob hue1" style="left:28px; top:54px; width:64px; height:64px;">
+            <div class="dial"><div class="arc" style="--pct:.58turn"></div><div class="ptr" style="transform:rotate(64deg)"></div></div>
+        </div>
+        <div class="ctl knob hue1" style="left:108px; top:54px; width:64px; height:64px;">
+            <div class="dial"><div class="arc" style="--pct:.34turn"></div><div class="ptr" style="transform:rotate(-22deg)"></div></div>
+        </div>
+        <div class="ctl knob hue1" style="left:188px; top:54px; width:64px; height:64px;">
+            <div class="dial"><div class="arc" style="--pct:.72turn"></div><div class="ptr" style="transform:rotate(114deg)"></div></div>
+        </div>
+        <div class="ctl knob hue3" style="left:268px; top:54px; width:64px; height:64px;">
+            <div class="dial"><div class="arc" style="--pct:.46turn"></div><div class="ptr" style="transform:rotate(21deg)"></div></div>
+        </div>
+        <div class="ctl knob hue2" style="left:348px; top:54px; width:64px; height:64px;">
+            <div class="dial"><div class="arc" style="--pct:.62turn"></div><div class="ptr" style="transform:rotate(78deg)"></div></div>
+        </div>
+        <div class="ctl knob hue4" style="left:428px; top:54px; width:64px; height:64px;">
+            <div class="dial"><div class="arc" style="--pct:.28turn"></div><div class="ptr" style="transform:rotate(-43deg)"></div></div>
+        </div>
+        <div class="outlabel" style="left:28px; top:122px; width:64px; font-size:9.5px;">Drive</div>
+        <div class="outlabel" style="left:108px; top:122px; width:64px; font-size:9.5px;">Bias</div>
+        <div class="outlabel" style="left:188px; top:122px; width:64px; font-size:9.5px;">Sag</div>
+        <div class="outlabel" style="left:268px; top:122px; width:64px; font-size:9.5px;">Color</div>
+        <div class="outlabel" style="left:348px; top:122px; width:64px; font-size:9.5px;">Spread</div>
+        <div class="outlabel" style="left:428px; top:122px; width:64px; font-size:9.5px;">Depth</div>
+
+        <div class="ctl xy hue1" style="left:520px; top:54px; width:136px; height:136px;">
+            <div class="field2">
+                <div class="cross h" style="top:42%"></div>
+                <div class="cross v" style="left:57%"></div>
+                <div class="trail" style="left:46%; top:53%"></div>
+                <div class="puck" style="left:57%; top:42%"></div>
+            </div>
+        </div>
+        <div class="outlabel" style="left:520px; top:194px; width:136px; font-size:9.5px;">Morph</div>
+
+        <div class="ctl meter hue5" style="left:676px; top:54px; width:24px; height:136px;">
+            <i></i><i></i><i class="lit hot"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i>
+        </div>
+        <div class="ctl meter hue5" style="left:706px; top:54px; width:24px; height:136px;">
+            <i></i><i></i><i></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i>
+        </div>
+
+        <div class="ctl steps hue1" style="left:748px; top:54px; width:206px; height:66px;">
+            <div class="row"><i class="on cur"></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i></div>
+            <div class="row"><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i></i></div>
+        </div>
+
+        <div class="ctl lfo hue4" style="left:748px; top:128px; width:100px; height:62px; padding:5px 7px;">
+            <div class="head" style="font-size:8.5px"><span>LFO</span><span class="mono">1/8</span></div>
+            <svg viewBox="0 0 70 24" preserveAspectRatio="none">
+                <path d="M0,12 C6,1 12,1 18,12 C24,23 30,23 36,12 C42,1 48,1 54,12 C60,23 66,23 70,12" fill="none" style="stroke:rgb(var(--hue))" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="ctl btn-ctl hue1 on" style="left:856px; top:128px; width:98px; height:62px;">
+            <div class="glyph" style="font-size:17px">&#9679;</div><div class="name" style="font-size:10px">Clock</div><div class="pipe lit"></div>
+        </div>
+
+        <!-- mixer band -->
+        <div class="surftext h2" style="left:22px; top:206px; font-size:10px;">MIXER</div>
+
+        <div class="ctl fader hue1" style="left:28px; top:226px; width:44px; height:116px;">
+            <div class="slot"><div class="fill" style="height:76%"></div><div class="capbar" style="bottom:calc(76% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue1" style="left:86px; top:226px; width:44px; height:116px;">
+            <div class="slot"><div class="fill" style="height:58%"></div><div class="capbar" style="bottom:calc(58% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue1" style="left:144px; top:226px; width:44px; height:116px;">
+            <div class="slot"><div class="fill" style="height:88%"></div><div class="capbar" style="bottom:calc(88% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue1" style="left:202px; top:226px; width:44px; height:116px;">
+            <div class="slot"><div class="fill" style="height:41%"></div><div class="capbar" style="bottom:calc(41% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue1" style="left:260px; top:226px; width:44px; height:116px;">
+            <div class="slot"><div class="fill" style="height:67%"></div><div class="capbar" style="bottom:calc(67% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue3" style="left:318px; top:226px; width:44px; height:116px;">
+            <div class="slot"><div class="fill" style="height:80%"></div><div class="capbar" style="bottom:calc(80% - 8px);"></div></div>
+        </div>
+        <div class="outlabel" style="left:28px; top:346px; width:44px; font-size:9px;">Kick</div>
+        <div class="outlabel" style="left:86px; top:346px; width:44px; font-size:9px;">Bass</div>
+        <div class="outlabel" style="left:144px; top:346px; width:44px; font-size:9px;">Keys</div>
+        <div class="outlabel" style="left:202px; top:346px; width:44px; font-size:9px;">Perc</div>
+        <div class="outlabel" style="left:260px; top:346px; width:44px; font-size:9px;">FX</div>
+        <div class="outlabel" style="left:318px; top:346px; width:44px; font-size:9px;">Main</div>
+
+        <div class="ctl btn-ctl hue1" style="left:382px; top:226px; width:68px; height:40px;"><div class="name" style="font-size:10px">Intro</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1 on" style="left:458px; top:226px; width:68px; height:40px;"><div class="name" style="font-size:10px">Build</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue1" style="left:534px; top:226px; width:68px; height:40px;"><div class="name" style="font-size:10px">Drop</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1 held" style="left:382px; top:274px; width:68px; height:40px;"><div class="name" style="font-size:10px">Break</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue1" style="left:458px; top:274px; width:68px; height:40px;"><div class="name" style="font-size:10px">Outro</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1 dim" style="left:534px; top:274px; width:68px; height:40px;"><div class="name" style="font-size:10px">Spare</div><div class="pipe"></div></div>
+
+        <div class="ctl btn-ctl hue6 on" style="left:382px; top:322px; width:68px; height:40px;"><div class="glyph" style="font-size:14px">&#9654;</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue2" style="left:458px; top:322px; width:68px; height:40px;"><div class="glyph" style="font-size:12px">&#9632;</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue4" style="left:534px; top:322px; width:68px; height:40px;"><div class="glyph" style="font-size:14px">&#9679;</div><div class="pipe"></div></div>
+
+        <div class="ctl fader hue1 horiz" style="left:632px; top:226px; width:322px; height:26px;">
+            <div class="slot"><div class="fill" style="width:52%"></div><div class="capbar" style="left:calc(52% - 8px);"></div></div>
+        </div>
+        <div class="outlabel" style="left:632px; top:256px; width:322px; font-size:9px;">Crossfader</div>
+
+        <div class="ctl btn-ctl hue2" style="left:632px; top:276px; width:76px; height:38px;"><div class="name" style="font-size:10px">Kill LO</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue2 on" style="left:714px; top:276px; width:76px; height:38px;"><div class="name" style="font-size:10px">Kill MID</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue2" style="left:796px; top:276px; width:76px; height:38px;"><div class="name" style="font-size:10px">Kill HI</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue4" style="left:878px; top:276px; width:76px; height:38px;"><div class="name" style="font-size:10px">Layer</div><div class="pipe"></div></div>
+
+        <div class="ctl btn-ctl hue1 offline" style="left:632px; top:322px; width:158px; height:40px;">
+            <div class="name" style="font-size:10px; color:rgba(200,214,228,.80); text-shadow:0 0 4px rgba(8,13,10,.95)">Iridium</div>
+            <div class="cap" style="font-size:8.5px; color:#EDF3FF; text-shadow:0 0 4px rgba(8,13,10,.95)">no signal</div>
+        </div>
+        <div class="ctl btn-ctl hue6" style="left:798px; top:322px; width:156px; height:40px;"><div class="name" style="font-size:10px">Panic</div><div class="pipe"></div></div>
+
+        <!-- performance band -->
+        <div class="surftext h2" style="left:22px; top:374px; font-size:10px;">PERFORMANCE</div>
+
+        <div class="ctl joy hue2" style="left:28px; top:392px; width:76px; height:76px;">
+            <div class="ring"></div><div class="ring2"></div><div class="spring"></div>
+            <div class="puck" style="left:62%; top:42%"></div>
+        </div>
+        <div class="outlabel" style="left:20px; top:472px; width:92px; font-size:9px;">Joystick</div>
+
+        <div class="ctl wheel hue5" style="left:120px; top:392px; width:30px; height:76px;">
+            <div class="body"><div class="ridges"></div><div class="ind" style="bottom:68%"></div></div>
+        </div>
+        <div class="outlabel" style="left:112px; top:472px; width:46px; font-size:9px;">Mod</div>
+
+        <div class="ctl wheel hue5" style="left:158px; top:392px; width:30px; height:76px;">
+            <div class="body"><div class="ridges"></div><div class="center"></div><div class="ind" style="bottom:50%"></div></div>
+        </div>
+        <div class="outlabel" style="left:150px; top:472px; width:46px; font-size:9px;">Pitch</div>
+
+        <div class="ctl clockctl hue3" style="left:204px; top:392px; width:96px; height:76px;">
+            <div class="ringwrap" style="width:44px; height:44px;">
+                <div class="sweep" style="--pct:.62turn"></div>
+                <div class="beat" style="font-size:12px">3</div>
+            </div>
+            <div class="pips"><i class="lit"></i><i class="lit"></i><i class="lit"></i><i></i></div>
+        </div>
+        <div class="outlabel" style="left:196px; top:472px; width:112px; font-size:9px;">Beat clock</div>
+
+        <div style="position:absolute; left:312px; top:392px; width:156px; height:76px; display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(2,1fr); gap:6px;">
+            <div class="ctl hue1" style="position:relative;"></div>
+            <div class="ctl hue1 on" style="position:relative;"></div>
+            <div class="ctl hue4" style="position:relative;"></div>
+            <div class="ctl hue4" style="position:relative;"></div>
+            <div class="ctl hue2" style="position:relative;"></div>
+            <div class="ctl hue2" style="position:relative;"></div>
+            <div class="ctl hue1 held" style="position:relative;"></div>
+            <div class="ctl hue1" style="position:relative;"></div>
+        </div>
+        <div class="outlabel" style="left:312px; top:472px; width:156px; font-size:9px;">Pad bank</div>
+
+        <div class="ctl btn-ctl hue1" style="left:482px; top:402px; width:72px; height:56px; border-radius:28px;">
+            <div class="name" style="font-size:9.5px; letter-spacing:.08em">SHIFT</div>
+            <div class="cap" style="font-size:8.5px">hold</div>
+        </div>
+        <div class="outlabel" style="left:468px; top:472px; width:100px; font-size:9px;">Layer modifier</div>
+
+        <div class="ctl knob hue3 detent" style="left:570px; top:396px; width:56px; height:56px;">
+            <div class="dial"><div class="arc" style="--pct:.40turn"></div><div class="ptr" style="transform:rotate(0deg)"></div></div>
+        </div>
+        <div class="outlabel" style="left:560px; top:472px; width:76px; font-size:9px;">Pan, detent</div>
+
+        <div class="ctl knob leds hue1" style="left:644px; top:396px; width:56px; height:56px;">
+            <div class="dial"><div class="arc" style="--pct:.55turn"></div><div class="ptr" style="transform:rotate(55deg)"></div></div>
+        </div>
+        <div class="outlabel" style="left:634px; top:472px; width:76px; font-size:9px;">LED ring</div>
+
+        <div class="ctl hue3" style="left:718px; top:402px; width:110px; height:48px; align-items:center; justify-content:center;">
+            <div class="mono" style="font-size:15px; color:#CFDDEE; text-shadow:0 0 8px rgba(207,224,243,.55)">01.03.04</div>
+        </div>
+        <div class="outlabel" style="left:718px; top:472px; width:110px; font-size:9px;">Readout (in)</div>
+
+        <div class="ctl btn-ctl hue6 on" style="left:842px; top:400px; width:52px; height:52px; border-radius:26px;">
+            <div class="name" style="font-size:9px">REC</div>
+        </div>
+        <div class="outlabel" style="left:836px; top:472px; width:64px; font-size:9px;">Lamp (in)</div>
+
+        <div class="ctl btn-ctl hue1 held" style="left:906px; top:400px; width:52px; height:52px;">
+            <div class="glyph" style="font-size:13px">&#9679;</div>
+        </div>
+        <div class="outlabel" style="left:900px; top:472px; width:64px; font-size:9px;">Under the hand</div>
+
+    </div>
+    <div class="decktag"><b>Cathode</b> &mdash; the deck is unlit phosphor, a control is a dim raster box that separates from the glass by its own spill, and the one thing that shouts is the value</div>
+
+</div>
+
+<!-- ============================================== HOW THE LIGHT WORKS -->
+<div class="board" style="height:514px; margin-top:13px;">
+
+    <div class="surf tonal cathode" style="position:absolute; inset:0; border-radius:8px;">
+
+        <div class="rhead" style="left:22px; top:14px;">BRIGHTNESS IS THE ONLY CHANNEL THIS TUBE HAS</div>
+
+        <div class="ctl btn-ctl hue1" style="left:36px; top:40px; width:112px; height:62px;">
+            <div class="name" style="font-size:10.5px">Break</div><div class="pipe"></div>
+        </div>
+        <div class="ctl btn-ctl hue1 held" style="left:164px; top:40px; width:112px; height:62px;">
+            <div class="name" style="font-size:10.5px">Break</div><div class="pipe lit"></div>
+        </div>
+        <div class="ctl btn-ctl hue1 on" style="left:292px; top:40px; width:112px; height:62px;">
+            <div class="name" style="font-size:10.5px">Break</div><div class="pipe lit"></div>
+        </div>
+        <div class="ctl btn-ctl hue1 dim" style="left:420px; top:40px; width:112px; height:62px;">
+            <div class="name" style="font-size:10.5px">Break</div><div class="pipe"></div>
+        </div>
+        <div class="ctl btn-ctl hue1 offline" style="left:548px; top:40px; width:112px; height:62px;">
+            <div class="name" style="font-size:10.5px; color:rgba(200,214,228,.80); text-shadow:0 0 4px rgba(8,13,10,.95)">Break</div>
+            <div class="cap" style="font-size:8.5px; color:#EDF3FF; text-shadow:0 0 4px rgba(8,13,10,.95)">no signal</div>
+        </div>
+
+        <div class="kcap" style="left:36px; top:112px; width:112px;"><b>At rest</b>a dim box, soft rim</div>
+        <div class="kcap" style="left:164px; top:112px; width:112px;"><b>Under the hand</b>driven harder, spills</div>
+        <div class="kcap" style="left:292px; top:112px; width:112px;"><b>On</b>inverse video</div>
+        <div class="kcap" style="left:420px; top:112px; width:112px;"><b>Disabled</b>nothing drives it</div>
+        <div class="kcap" style="left:548px; top:112px; width:112px;"><b>Device gone</b>snow, not a red light</div>
+
+        <div class="rhead" style="left:36px; top:162px;">SIX SLOTS, AND NOT ONE PAIR OF THEM REACHES 3:1</div>
+
+        <div class="ladder" style="left:36px; top:186px;">
+            <div style="background:#92A7BE">h4</div>
+            <div style="background:#A9BDD2">h2</div>
+            <div style="background:#BFD1E4">h5</div>
+            <div style="background:#D2E1F3">h1</div>
+            <div style="background:#E4EEFB">h3</div>
+            <div style="background:#F4F8FF">h6</div>
+        </div>
+        <div class="kcap" style="left:36px; top:240px; width:266px; text-align:left;"><b>Touching, you can just read the order.</b> That is why a meter still works: its segments are adjacent, and the eye orders two levels side by side far better than it names one on its own.</div>
+
+        <div class="ctl btn-ctl hue4" style="left:340px; top:184px; width:66px; height:38px;"><div class="name" style="font-size:9.5px">Cue A</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1" style="left:416px; top:192px; width:66px; height:38px;"><div class="name" style="font-size:9.5px">Cue B</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue3" style="left:492px; top:182px; width:66px; height:38px;"><div class="name" style="font-size:9.5px">Cue C</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue2" style="left:568px; top:194px; width:66px; height:38px;"><div class="name" style="font-size:9.5px">Cue D</div><div class="pipe"></div></div>
+        <div class="kcap" style="left:340px; top:240px; width:300px; text-align:left;"><b>Apart, you cannot.</b> Four different slots, and nothing says which is which. So a control is known here by where it sits and what it is called, and the theme picker has to say so.</div>
+
+        <div class="rhead" style="left:36px; top:308px;">HOW SOFT IS RIGHT</div>
+
+        <div class="ctl btn-ctl hue1 demo-hard" style="left:36px; top:330px; width:112px; height:52px;">
+            <div class="name" style="font-size:10.5px">Break</div><div class="pipe"></div>
+        </div>
+        <div class="ctl btn-ctl hue1" style="left:164px; top:330px; width:112px; height:52px;">
+            <div class="name" style="font-size:10.5px">Break</div><div class="pipe"></div>
+        </div>
+        <div class="ctl btn-ctl hue1 demo-blur" style="left:292px; top:330px; width:112px; height:52px;">
+            <div class="name" style="font-size:10.5px">Break</div><div class="pipe"></div>
+        </div>
+
+        <div class="kcap" style="left:36px; top:392px; width:112px;"><b>Too sharp</b>a modern box on a TV</div>
+        <div class="kcap" style="left:164px; top:392px; width:112px;"><b>Shipped</b>edges spill, type does not</div>
+        <div class="kcap" style="left:292px; top:392px; width:112px;"><b>Too soft</b>that is not a word any more</div>
+
+        <div class="measure" style="left:690px; top:36px; width:276px;">
+            <b>What the numbers said.</b>
+            The widest pair of slots here is <span class="num">2.32:1</span> and the closest
+            adjacent pair is <span class="num">1.10:1</span>. Three is the least anyone needs to
+            read two things apart, so <b>nothing on this theme can be color coded</b>. The slots
+            stay six, because the model has six and a layout has to keep working when the theme is
+            switched &mdash; they simply stop carrying meaning.
+            <br><br>
+            <b>The box does not separate itself.</b>
+            A raster box measures <span class="num">1.12:1</span> against the middle of the glass.
+            Bone had the same problem and answered it with a shadow; a tube answers it the other
+            way round, with the light it spills. Turn the glow off and the layout disappears into
+            the screen, so a theme editor should refuse to let it reach zero here.
+            <br><br>
+            <b>Two colors were not chosen.</b>
+            <span class="num">#92A7BE</span> is the dimmest slot because it is where a label on a
+            raster box lands at exactly <span class="num">4.53:1</span> &mdash; one step lower and
+            the text fails. And the palette runs from <span class="num">#101611</span> to
+            <span class="num">#F4F8FF</span> and no further, because a true black is a hole cut in
+            the glass and a true white is a sheet of paper. Swept over the whole deck, the darkest
+            pixel on the screen is <span class="num">#060B08</span>, where a scan line crosses a
+            carved slot in a corner. Still green. Still not black.
+        </div>
+    </div>
+</div>
+
+<div class="swatches">
+    <div style="background:#2C362C; color:#CFDDEE">#2C362C <span>Glass &middot; the lit middle</span></div>
+    <div style="background:#1B231E; color:#CFDDEE">#1B231E <span>Glass &middot; mid</span></div>
+    <div style="background:#101611; color:#CFDDEE">#101611 <span>Glass &middot; the corners</span></div>
+    <div style="background:#313D42; color:#CFDDEE">#313D42 <span>Raster box &middot; at rest</span></div>
+    <div style="background:#92A7BE; color:#121A16">#92A7BE <span>h4 &middot; dimmest usable</span></div>
+    <div style="background:#A9BDD2; color:#121A16">#A9BDD2 <span>h2</span></div>
+    <div style="background:#BFD1E4; color:#121A16">#BFD1E4 <span>h5</span></div>
+    <div style="background:#D2E1F3; color:#121A16">#D2E1F3 <span>h1 &middot; standard raster</span></div>
+    <div style="background:#E4EEFB; color:#121A16">#E4EEFB <span>h3</span></div>
+    <div style="background:#F4F8FF; color:#121A16">#F4F8FF <span>h6 &middot; peak</span></div>
+    <div style="background:#121A16; color:#CFDDEE">#121A16 <span>Ink &middot; inverse video</span></div>
+</div>
+
+<div class="costgrid">
+    <div class="cost">
+        <h4><span class="yes">Free</span> &mdash; what Cathode reuses</h4>
+        The same tonal machinery as Pigment, Bigwig and Bone with the hue wash <b>off</b>, the six slots, the track color, corner rounding and the value strip. The deck is already a radial gradient lit from the middle, so the corner falloff is the existing deck brush with different stops. <b>Inverse video costs nothing at all</b> &mdash; a filled plate with a dark label is exactly what the tonal themes already do for <span class="mono">on</span>. No new control types and no new shapes.
+    </div>
+    <div class="cost">
+        <h4><span class="no">Three additions</span> &mdash; what it needs</h4>
+        <b>Scan lines</b>: one overlay for the whole deck, never anything per control, so eighty controls cost the same as four. It has to be drawn in <b>device pixels after the page is scaled</b>, or a layout at 87&nbsp;% turns a 3 px pitch into a beat pattern across the screen. <b>A white light source</b>, which Bone already asked for. And <b>a resting glow level</b> separate from the activity glow, because on this theme every lit thing spills a little all the time. The masked shadow that draws it is already there.
+    </div>
+    <div class="cost">
+        <h4>Three things the measurement decided</h4>
+        No two slots reach <b>3:1</b>, so color coding is off the table and the theme picker has to say so. The dimmest slot is <b>#92A7BE</b> because one step lower fails 4.5:1 for a label. And the box sits at <b>1.12:1</b> against the glass, which is why the glow is structure rather than decoration &mdash; a theme editor should refuse to let it go to zero here, the same way it should refuse to flatten Bone's shadow.
+    </div>
+</div>
+
+<p class="note" style="margin-top:12px;">
+<b>Panic is the test of this.</b> The full screen rule already says Panic sits last, keeps its color and never moves. On every other theme the color is doing most of that work and the position is a backstop. Here the position is all there is, which is a good argument that the rule was right to begin with. <b>One motion, and it is optional.</b> The obvious flourish is a tube warming up when a layout opens &mdash; a bright line that opens into a picture. It is lovely once and tiresome by the fourth time, it delays the first thing a performer wants to touch, and it is exactly the kind of thing the Windows reduced motion setting exists to stop. So: off by default, a per-layout switch, and never on a page change. <b>No roll, no flicker, no jitter</b> at any setting; a surface somebody has to hit accurately must not move on its own. <b>Where this theme belongs.</b> A dark room, and a page that does not lean on color &mdash; a transport, a clip grid, a row of faders. On a hundred-and-twenty-control page where color is what stops two knobs being confused, Studio Dark still wins, and Cathode will make that page harder to play. <b>Two rules it keeps.</b> A control still never uses more than one color, and that color still only appears on the rim, the value and the fill. It is just that here, for the first time, every control has the same one.
+</p>
+
+</div>
+</body>
+</html>
