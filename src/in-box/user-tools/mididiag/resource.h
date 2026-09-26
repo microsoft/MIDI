@@ -71,6 +71,10 @@
 #define IDS_ERROR_EXCEPTION_GATHERING_INFORMATION					50800
 #define IDS_ERROR_ABORTING_RUN										50801
 
+// Session errors
+
+#define IDS_ERROR_EXCEPTION_ENUMERATING_SESSIONS					50900
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
