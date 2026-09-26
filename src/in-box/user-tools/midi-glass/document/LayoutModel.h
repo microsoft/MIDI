@@ -92,6 +92,10 @@ namespace glass
         // from another control on the same page, which is the whole reason it is a control and
         // not a layout setting.
         BeatClock = 17,
+
+        // Elapsed time, counting up. Tapped, it starts again from zero. Sends nothing: it is
+        // there so somebody on stage can see how long they have been playing.
+        TimeDisplay = 18,
     };
 
     // When a control sends. A control has a list of messages, not one, so a single button can
@@ -380,16 +384,31 @@ namespace glass
     // case; a lamp is more often "is anything coming from this device at all".
     enum class FeedbackMode
     {
-        // One message: this controller, on this channel, from this device.
+        // One message: this controller, on this channel, from this device. The only mode that
+        // carries a value, so it is the only one that can move a fader or a meter.
         Message = 0,
 
         // Any message at all from the device, optionally narrowed to a group and a channel.
         // This is what somebody means by an activity light.
         AnyActivity = 1,
 
-        // The beat. Either incoming MIDI clock or a clock generator control on this layout.
+        // The beat. Either incoming MIDI clock, counted twenty four to the quarter note, or a
+        // clock generator control on this layout.
         Tempo = 2,
+
+        // Any note on, whatever the note is. What a keyboard activity light wants.
+        Notes = 3,
+
+        // Any control change, whatever the controller is.
+        ControlChanges = 4,
+
+        // Lit from start until stop, rather than blinking. The one mode that latches, because
+        // "is the sequencer running" is a state and not an event.
+        Transport = 5,
     };
+
+    // How many clock messages make a quarter note. Fixed by MIDI since 1983.
+    constexpr int32_t ClockTicksPerQuarterNote = 24;
 
     enum class ScaleMode
     {
@@ -588,7 +607,10 @@ namespace glass
 
         // Which way a finger drags to turn this control up. Knobs and encoders only.
         DragAxis Drag{ DragAxis::Vertical };
-
+        // A pad hit softly sends a softer note. Pads only, and only worth turning on where the
+        // hardware reports it: a mouse says the same thing every time, and a finger on a
+        // screen without pressure says the same thing every time too.
+        bool VelocityFromTouch{ false };
         // The marks across the travel. A grid on a two axis control, notches beside a slot on
         // a fader, and ticks around the arc on a knob.
         TickMarks Ticks{};

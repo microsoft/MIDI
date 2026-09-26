@@ -111,10 +111,30 @@ namespace glass
             {
                 auto strong = weak.lock();
 
-                if (strong != nullptr && strong->BeatMoved)
+                if (strong == nullptr)
+                {
+                    return;
+                }
+
+                if (strong->BeatMoved)
                 {
                     strong->BeatMoved(controlIndex, beatInBar, phase, running);
                 }
+
+                // The tempo rides along with the beat, so a clock taking its tempo from a knob
+                // shows the number changing under the hand rather than only at the ends.
+                if (strong->TempoChanged && (phase < 0.0001 || !running))
+                {
+                    strong->TempoChanged(
+                        controlIndex,
+                        running && strong->m_clocks != nullptr
+                            ? strong->m_clocks->TempoOf(controlIndex)
+                            : 0.0);
+                }
+
+                // Everything on the layout that said it follows this clock. A beat light next
+                // to a clock generator is the ordinary reason somebody adds one.
+                strong->PulseTempoFollowers(controlIndex, phase, running);
             };
 
         m_clocks->Start(dispatcher);
@@ -232,6 +252,7 @@ namespace glass
         m_throttles.assign(m_document.ControlCount(), ValueThrottle{});
         m_throttlesY.assign(m_document.ControlCount(), ValueThrottle{});
         m_soundingNotes.assign(m_document.ControlCount(), 0xFFFF);
+        m_clockTickCounts.assign(m_document.ControlCount(), 0);
         m_clockControls.clear();
 
         size_t index{ 0 };
@@ -336,6 +357,54 @@ namespace glass
     bool LivePlayer::IsClockRunning(uint32_t controlIndex) const noexcept
     {
         return m_clocks != nullptr && m_clocks->IsRunning(controlIndex);
+    }
+
+    _Use_decl_annotations_
+    void LivePlayer::PulseTempoFollowers(uint32_t clockControlIndex, double phase, bool running)
+    {
+        if (!ActivitySeen)
+        {
+            return;
+        }
+
+        // A tick is raised twenty four times a quarter note; only the first of them is the
+        // beat. Everything else would turn a lamp into a solid light.
+        auto const onTheBeat = running && phase < 0.0001;
+
+        std::wstring clockId{};
+
+        for (auto const& clock : m_clockControls)
+        {
+            if (clock.ControlIndex == clockControlIndex)
+            {
+                clockId = clock.ControlId;
+                break;
+            }
+        }
+
+        if (clockId.empty())
+        {
+            return;
+        }
+
+        for (auto const& watcher : m_engine.TempoWatchers())
+        {
+            if (watcher.ClockControlId != clockId)
+            {
+                continue;
+            }
+
+            auto const index = static_cast<uint32_t>(watcher.ControlIndex);
+
+            if (!running)
+            {
+                ActivitySeen(index, ListenerState::Off);
+            }
+            else if (onTheBeat)
+            {
+                ActivitySeen(index, ListenerState::Blink);
+            }
+        }
     }
 
     _Use_decl_annotations_
@@ -655,6 +724,12 @@ namespace glass
     _Use_decl_annotations_
     void LivePlayer::Switched(uint32_t controlIndex, bool isOn)
     {
+        Switched(controlIndex, isOn, 1.0);
+    }
+
+    _Use_decl_annotations_
+    void LivePlayer::Switched(uint32_t controlIndex, bool isOn, double velocity)
+    {
         // A clock is running or it is not, and pressing it is what changes which.
         if (m_clocks != nullptr)
         {
@@ -681,18 +756,24 @@ namespace glass
 
         // Nothing but a continuous control is ever throttled. Rate limiting a note on would be a
         // defect, not a feature.
+        //
+        // How hard it was hit rides in as the value, which is what the message's own two ends
+        // then scale. A pad that does not measure pressure passes 1.0 and lands on the top end,
+        // exactly as it did before.
+        auto const hit = isOn ? std::clamp(velocity, 0.0, 1.0) : 0.0;
+
         SendPrepared(
             controlIndex,
             m_engine.Evaluate(
                 controlIndex,
                 isOn ? MessageTrigger::TurnsOn : MessageTrigger::TurnsOff,
-                isOn ? 1.0 : 0.0,
+                hit,
                 m_sends));
 
         // A control that only declares "changes" still has to do something when a pad is hit.
         SendPrepared(
             controlIndex,
-            m_engine.Evaluate(controlIndex, MessageTrigger::Changes, isOn ? 1.0 : 0.0, m_sends));
+            m_engine.Evaluate(controlIndex, MessageTrigger::Changes, hit, m_sends));
 
         RunPlan(controlIndex, isOn ? MessageTrigger::TurnsOn : MessageTrigger::TurnsOff);
     }
@@ -969,6 +1050,8 @@ namespace glass
         std::vector<std::pair<uint32_t, double>> moves{};
         std::vector<LearnedBinding> captures{};
         std::vector<uint32_t> lit{};
+        std::vector<std::pair<uint32_t, ListenerState>> latched{};
+        std::vector<uint32_t> ticks{};
 
         uint32_t position{ 0 };
 
@@ -991,20 +1074,38 @@ namespace glass
 
             if (ActivitySeen)
             {
-                std::array<size_t, 32> watching{};
+                std::array<BindingEngine::FeedbackHit, 32> watching{};
 
-                auto const count = m_engine.CollectActivityLit(
+                auto const count = m_engine.CollectFeedbackHits(
                     words + position, length, destinationIndex, watching);
 
                 for (uint32_t i = 0; i < count; ++i)
                 {
-                    auto const index = static_cast<uint32_t>(watching[i]);
+                    auto const index = static_cast<uint32_t>(watching[i].ControlIndex);
 
-                    // One message can light several lamps, but a burst of a hundred must not
-                    // queue a hundred hits at the same one.
-                    if (std::find(lit.begin(), lit.end(), index) == lit.end())
+                    switch (watching[i].Kind)
                     {
-                        lit.push_back(index);
+                    case BindingEngine::FeedbackHitKind::On:
+                        latched.emplace_back(index, ListenerState::On);
+                        break;
+
+                    case BindingEngine::FeedbackHitKind::Off:
+                        latched.emplace_back(index, ListenerState::Off);
+                        break;
+
+                    case BindingEngine::FeedbackHitKind::ClockTick:
+                        ticks.push_back(index);
+                        break;
+
+                    default:
+                        // One message can light several lamps, but a burst of a hundred must
+                        // not queue a hundred hits at the same one.
+                        if (std::find(lit.begin(), lit.end(), index) == lit.end())
+                        {
+                            lit.push_back(index);
+                        }
+
+                        break;
                     }
                 }
             }
@@ -1024,14 +1125,14 @@ namespace glass
             position += length;
         }
 
-        if (moves.empty() && captures.empty() && lit.empty())
+        if (moves.empty() && captures.empty() && lit.empty() && latched.empty() && ticks.empty())
         {
             return;
         }
 
         std::weak_ptr<LivePlayer> weak{ weak_from_this() };
 
-        m_dispatcher.TryEnqueue([weak, moves, captures, lit]()
+        m_dispatcher.TryEnqueue([weak, moves, captures, lit, latched, ticks]()
             {
                 auto strong = weak.lock();
 
@@ -1052,7 +1153,33 @@ namespace glass
                 {
                     for (auto const controlIndex : lit)
                     {
-                        strong->ActivitySeen(controlIndex);
+                        strong->ActivitySeen(controlIndex, ListenerState::Blink);
+                    }
+
+                    for (auto const& [controlIndex, state] : latched)
+                    {
+                        strong->ActivitySeen(controlIndex, state);
+                    }
+
+                    // Twenty four clock messages is a quarter note. Counting them here rather
+                    // than in the engine keeps the engine free of state between messages.
+                    for (auto const controlIndex : ticks)
+                    {
+                        if (controlIndex >= strong->m_clockTickCounts.size())
+                        {
+                            continue;
+                        }
+
+                        auto& count = strong->m_clockTickCounts[controlIndex];
+
+                        if (++count < ClockTicksPerQuarterNote)
+                        {
+                            continue;
+                        }
+
+                        count = 0;
+
+                        strong->ActivitySeen(controlIndex, ListenerState::Blink);
                     }
                 }
 

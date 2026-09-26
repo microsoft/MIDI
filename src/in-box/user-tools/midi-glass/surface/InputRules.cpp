@@ -47,6 +47,10 @@ namespace glass
         case ControlKind::Pad:
         case ControlKind::Button:
         case ControlKind::PageTab:
+
+        // Tapped, it starts again from zero. Nothing is held, so it is a press and a release
+        // like any other momentary control.
+        case ControlKind::TimeDisplay:
             return true;
 
         default:

@@ -767,6 +767,9 @@
   <data name="PaletteBeatClock" xml:space="preserve">
     <value>Beat clock</value>
   </data>
+  <data name="PaletteTimeDisplay" xml:space="preserve">
+    <value>Stopwatch</value>
+  </data>
   <data name="PaletteLfo" xml:space="preserve">
     <value>LFO</value>
   </data>
@@ -1256,6 +1259,24 @@
   <data name="FeedbackModeTempo" xml:space="preserve">
     <value>The beat</value>
   </data>
+  <data name="FeedbackModeNotes" xml:space="preserve">
+    <value>Notes</value>
+  </data>
+  <data name="FeedbackModeControlChanges" xml:space="preserve">
+    <value>Controller messages</value>
+  </data>
+  <data name="FeedbackModeTransport" xml:space="preserve">
+    <value>Start and stop</value>
+  </data>
+  <data name="FeedbackModeNotesCaption" xml:space="preserve">
+    <value>The control lights when any note is played, and goes out when the last one is let go.</value>
+  </data>
+  <data name="FeedbackModeControlChangesCaption" xml:space="preserve">
+    <value>The control blinks whenever any controller message arrives. Useful for watching a knob-heavy part.</value>
+  </data>
+  <data name="FeedbackModeTransportCaption" xml:space="preserve">
+    <value>The control lights on Start or Continue and stays lit until Stop. It shows whether the other end is running.</value>
+  </data>
   <data name="FeedbackModeMessageCaption" xml:space="preserve">
     <value>The control follows one controller, note or bend, and shows the value it carries.</value>
   </data>
@@ -1267,6 +1288,15 @@
   </data>
   <data name="FeedbackDeviceHeading.Text" xml:space="preserve">
     <value>From</value>
+  </data>
+  <data name="InspectorPadVelocityHeading.Text" xml:space="preserve">
+    <value>How hard it was hit</value>
+  </data>
+  <data name="PadVelocityCheck.Content" xml:space="preserve">
+    <value>Use pen or touch pressure for the value</value>
+  </data>
+  <data name="PadVelocityCaption.Text" xml:space="preserve">
+    <value>Only a pen and a few touch screens report pressure. Everything else, including a mouse, hits at full. Leave this off unless you have tried it on the machine you will play on.</value>
   </data>
   <data name="FeedbackDeviceCombo.Header" xml:space="preserve">
     <value>Device</value>
@@ -1316,6 +1346,123 @@
   <data name="GroupAny" xml:space="preserve">
     <value>Any group</value>
   </data>
+  <data name="CardMenuBackUp.Text" xml:space="preserve">
+    <value>Back up now</value>
+  </data>
+  <data name="CardMenuRestore.Text" xml:space="preserve">
+    <value>Restore from a backup…</value>
+  </data>
+  <data name="CardMenuPackage.Text" xml:space="preserve">
+    <value>Package for another PC…</value>
+  </data>
+  <data name="LibraryMoreButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>More options</value>
+  </data>
+  <data name="LibraryMoreButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>More options</value>
+  </data>
+  <data name="LibraryMenuImport.Text" xml:space="preserve">
+    <value>Import a layout package…</value>
+  </data>
+  <data name="LibraryMenuBackupsFolder.Text" xml:space="preserve">
+    <value>Show the backups folder</value>
+  </data>
+  <data name="LibraryMenuKeepAwake.Text" xml:space="preserve">
+    <value>Keep this PC awake while a layout runs</value>
+  </data>
+  <data name="PackageSaveTitle" xml:space="preserve">
+    <value>Save the layout package</value>
+  </data>
+  <data name="ImportOpenTitle" xml:space="preserve">
+    <value>Choose a layout package</value>
+  </data>
+  <data name="BackupDoneTitle" xml:space="preserve">
+    <value>Backed up</value>
+  </data>
+  <data name="BackupDoneFormat" xml:space="preserve">
+    <value>Saved as {0}, with {1} file(s) inside. It is in the Backups folder next to your layouts.</value>
+  </data>
+  <data name="BackupFailedTitle" xml:space="preserve">
+    <value>The backup did not happen</value>
+  </data>
+  <data name="RestoreTitle" xml:space="preserve">
+    <value>Restore from a backup</value>
+  </data>
+  <data name="RestoreAction" xml:space="preserve">
+    <value>Restore</value>
+  </data>
+  <data name="RestorePickCaption" xml:space="preserve">
+    <value>Pick which backup to put back. The layout as it stands now is backed up first, so you can change your mind.</value>
+  </data>
+  <data name="RestoreNoneTitle" xml:space="preserve">
+    <value>Nothing to restore</value>
+  </data>
+  <data name="RestoreNoneBody" xml:space="preserve">
+    <value>This layout has no backups yet. Choose Back up now to make one.</value>
+  </data>
+  <data name="RestoreDoneTitle" xml:space="preserve">
+    <value>Restored</value>
+  </data>
+  <data name="RestoreDoneBody" xml:space="preserve">
+    <value>The layout and its pictures are back the way the backup had them.</value>
+  </data>
+  <data name="RestoreFailedTitle" xml:space="preserve">
+    <value>The restore did not happen</value>
+  </data>
+  <data name="RestoreFailedNoBackup" xml:space="preserve">
+    <value>That backup is not there any more.</value>
+  </data>
+  <data name="PackageDoneTitle" xml:space="preserve">
+    <value>Packaged</value>
+  </data>
+  <data name="PackageDoneFormat" xml:space="preserve">
+    <value>Saved as {0}, with {1} file(s) inside. Copy it to the other PC and use Import a layout package.</value>
+  </data>
+  <data name="PackageFailedTitle" xml:space="preserve">
+    <value>The package was not made</value>
+  </data>
+  <data name="PackageFailedNoLayout" xml:space="preserve">
+    <value>The layout file is not there.</value>
+  </data>
+  <data name="PackageFailedUnreadable" xml:space="preserve">
+    <value>The layout file could not be read.</value>
+  </data>
+  <data name="PackageFailedTooBig" xml:space="preserve">
+    <value>The layout and its pictures add up to more than this can carry.</value>
+  </data>
+  <data name="PackageFailedWrite" xml:space="preserve">
+    <value>The file could not be written. Check that the folder is there and that you can write to it.</value>
+  </data>
+  <data name="ImportDoneTitle" xml:space="preserve">
+    <value>Imported</value>
+  </data>
+  <data name="ImportDoneFormat" xml:space="preserve">
+    <value>{0} is in your layouts now, with {1} file(s) from the package.</value>
+  </data>
+  <data name="ImportFailedTitle" xml:space="preserve">
+    <value>The package was not imported</value>
+  </data>
+  <data name="ImportFailedNoLayout" xml:space="preserve">
+    <value>There is no layout inside that package.</value>
+  </data>
+  <data name="ImportFailedUnreadable" xml:space="preserve">
+    <value>That file is not a layout package this version can read.</value>
+  </data>
+  <data name="ImportFailedCompressed" xml:space="preserve">
+    <value>That package has been compressed by another tool. Unzip it yourself, then use Open a file to open the layout inside.</value>
+  </data>
+  <data name="ImportFailedWrite" xml:space="preserve">
+    <value>The files could not be written into your layouts folder.</value>
+  </data>
+  <data name="SizeBytesFormat" xml:space="preserve">
+    <value>{0} bytes</value>
+  </data>
+  <data name="SizeKilobytesFormat" xml:space="preserve">
+    <value>{0} KB</value>
+  </data>
+  <data name="SizeMegabytesFormat" xml:space="preserve">
+    <value>{0} MB</value>
+  </data>
   <data name="DetentHeading.Text" xml:space="preserve">
     <value>Stops</value>
   </data>
@@ -1336,6 +1483,24 @@
   </data>
   <data name="DetentStopsBox.Header" xml:space="preserve">
     <value>The values, separated by commas</value>
+  </data>
+  <data name="DetentStopLowest" xml:space="preserve">
+    <value>At the bottom</value>
+  </data>
+  <data name="DetentStopHighest" xml:space="preserve">
+    <value>At the top</value>
+  </data>
+  <data name="DetentStopBetween" xml:space="preserve">
+    <value>Stop {0}</value>
+  </data>
+  <data name="RemoveDetentStopName" xml:space="preserve">
+    <value>Remove this stop</value>
+  </data>
+  <data name="AddDetentStopButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Add a stop</value>
+  </data>
+  <data name="AddDetentStopLabel.Text" xml:space="preserve">
+    <value>Add a stop</value>
   </data>
   <data name="DetentContinuousCaption" xml:space="preserve">
     <value>The control moves smoothly, which is what a volume fader wants.</value>

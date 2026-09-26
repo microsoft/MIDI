@@ -102,6 +102,8 @@ namespace glass
                 { PaletteArtShape::Ellipse, 12, 12, 0, 0.00, 0.60 } },
             { ControlKind::Readout, L"PaletteReadout", L"PaletteGroupDisplay", L'\uE943',
                 { PaletteArtShape::Sample, 26, 14, 0, 0.00, 0.00, L"0.00" } },
+            { ControlKind::TimeDisplay, L"PaletteTimeDisplay", L"PaletteGroupDisplay", L'\uE916',
+                { PaletteArtShape::Sample, 30, 14, 0, 0.00, 0.00, L"0:00" } },
             { ControlKind::Label,   L"PaletteLabel",   L"PaletteGroupDisplay", L'\uE8D2',
                 { PaletteArtShape::Sample, 26, 14, 0, 0.00, 0.00, L"Aa" } },
             { ControlKind::Image,   L"PaletteImage",   L"PaletteGroupDisplay", L'\uEB9F',
@@ -142,6 +144,7 @@ namespace glass
         case ControlKind::Image:
         case ControlKind::PageTab:
         case ControlKind::Panel:
+        case ControlKind::TimeDisplay:
             return false;
 
         default:

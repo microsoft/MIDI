@@ -135,6 +135,16 @@
                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8DA;" /></MenuFlyoutItem.Icon>
                 </MenuFlyoutItem>
                 <MenuFlyoutSeparator />
+                <MenuFlyoutItem x:Uid="CardMenuBackUp" Text="Back up now" Click="OnCardMenuBackUp">
+                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Uid="CardMenuRestore" Text="Restore from a backup…" Click="OnCardMenuRestore">
+                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE777;" /></MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Uid="CardMenuPackage" Text="Package for another PC…" Click="OnCardMenuPackage">
+                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8B5;" /></MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutSeparator />
                 <MenuFlyoutItem x:Uid="CardMenuDelete" Text="Delete" Click="OnCardMenuDelete"
                                 Foreground="{ThemeResource SystemFillColorCriticalBrush}">
                     <MenuFlyoutItem.Icon>
@@ -574,6 +584,7 @@
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <Button x:Name="NewLayoutButton"
@@ -646,6 +657,33 @@
                         <FontIcon Glyph="&#xE8B7;" FontSize="14" />
                         <TextBlock x:Name="OpenFileLabel" x:Uid="OpenFileLabel" Text="Open a file…" FontSize="13" />
                     </StackPanel>
+                </Button>
+
+                <!-- The commands that are about this PC rather than about one layout. A layout's
+                     own commands live on its card, where the thing they act on is visible. -->
+                <Button x:Name="LibraryMoreButton"
+                        x:Uid="LibraryMoreButton"
+                        Grid.Column="7"
+                        Width="38"
+                        Height="32"
+                        Padding="0"
+                        Style="{StaticResource SubtleToolbarButtonStyle}">
+                    <Button.Flyout>
+                        <MenuFlyout>
+                            <MenuFlyoutItem x:Uid="LibraryMenuImport" Text="Import a layout package…" Click="OnImportPackageClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8B5;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutItem x:Uid="LibraryMenuBackupsFolder" Text="Show the backups folder" Click="OnShowBackupsFolderClick">
+                                <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8DA;" /></MenuFlyoutItem.Icon>
+                            </MenuFlyoutItem>
+                            <MenuFlyoutSeparator />
+                            <ToggleMenuFlyoutItem x:Name="KeepAwakeMenuItem"
+                                                  x:Uid="LibraryMenuKeepAwake"
+                                                  Text="Keep this PC awake while a layout runs"
+                                                  Click="OnKeepAwakeClick" />
+                        </MenuFlyout>
+                    </Button.Flyout>
+                    <FontIcon Glyph="&#xE712;" FontSize="14" />
                 </Button>
             </Grid>
         </Border>

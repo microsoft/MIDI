@@ -30,23 +30,30 @@ namespace winrt::midiglass::implementation
     {
         constexpr glass::FeedbackMode FeedbackModeOrder[]
         {
-            glass::FeedbackMode::Message,
             glass::FeedbackMode::AnyActivity,
+            glass::FeedbackMode::Notes,
+            glass::FeedbackMode::ControlChanges,
+            glass::FeedbackMode::Message,
             glass::FeedbackMode::Tempo,
+            glass::FeedbackMode::Transport,
         };
 
         constexpr wchar_t const* FeedbackModeKeys[]
         {
-            L"FeedbackModeMessage", L"FeedbackModeActivity", L"FeedbackModeTempo",
+            L"FeedbackModeActivity", L"FeedbackModeNotes", L"FeedbackModeControlChanges",
+            L"FeedbackModeMessage", L"FeedbackModeTempo", L"FeedbackModeTransport",
         };
 
         static_assert(std::size(FeedbackModeOrder) == std::size(FeedbackModeKeys));
 
         constexpr wchar_t const* FeedbackModeCaptionKeys[]
         {
-            L"FeedbackModeMessageCaption",
             L"FeedbackModeActivityCaption",
+            L"FeedbackModeNotesCaption",
+            L"FeedbackModeControlChangesCaption",
+            L"FeedbackModeMessageCaption",
             L"FeedbackModeTempoCaption",
+            L"FeedbackModeTransportCaption",
         };
 
         constexpr glass::BackgroundFit PictureFitOrder[]
@@ -284,6 +291,19 @@ namespace winrt::midiglass::implementation
                 DragAxisCombo().SelectedIndex(IndexOfValue(DragAxisOrder, control.Drag));
             }
 
+            // ---- how hard it was hit ----
+            //
+            // A pad and a button are the same control until this is on. It is what makes a pad
+            // worth having its own entry in the palette.
+            auto const padded = control.Kind == glass::ControlKind::Pad;
+
+            show(PadVelocityPanel(), padded);
+
+            if (padded)
+            {
+                PadVelocityCheck().IsChecked(control.VelocityFromTouch);
+            }
+
             // ---- the clock ----
 
             auto const clock = control.Kind == glass::ControlKind::BeatClock;
@@ -417,9 +437,12 @@ namespace winrt::midiglass::implementation
             FeedbackTempoPanel().Visibility(
                 tempo ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
-            // A channel is only a filter for an activity light; a message names one outright.
+            // A channel is only a filter for the modes that watch a category of message; one
+            // specific message names its channel outright.
             FeedbackMatchChannelCheck().Visibility(
-                feedback.Mode == glass::FeedbackMode::AnyActivity
+                feedback.Mode == glass::FeedbackMode::AnyActivity ||
+                feedback.Mode == glass::FeedbackMode::Notes ||
+                feedback.Mode == glass::FeedbackMode::ControlChanges
                     ? xaml::Visibility::Visible
                     : xaml::Visibility::Collapsed);
 

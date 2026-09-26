@@ -187,6 +187,9 @@ namespace glass
         DragAxis DragAxisAt(_In_ size_t itemIndex) const noexcept;
         KeyboardSpec const& KeyboardAt(_In_ size_t itemIndex) const noexcept;
 
+        // Whether this control takes its velocity from how hard it was hit.
+        bool VelocityFromTouchAt(_In_ size_t itemIndex) const noexcept;
+
         // Where this control sits when nothing is holding it, and whether it goes back there on
         // its own. A pitch wheel does; a volume fader had better not.
         bool ReturnsToRestAt(_In_ size_t itemIndex) const noexcept;
@@ -214,6 +217,12 @@ namespace glass
             _In_ int32_t beatInBar,
             _In_ double phase,
             _In_ bool running) noexcept;
+
+        // What a clock generator is running at, under its ring. Zero means stopped.
+        void SetClockTempo(_In_ size_t itemIndex, _In_ double beatsPerMinute) noexcept;
+
+        // A time display was tapped, so it counts again from zero.
+        void ResetElapsed(_In_ size_t itemIndex) noexcept;
 
         // The device this control sends to is not here. It is struck through rather than hidden
         // or disabled: a layout with a missing device still has to be editable, and the person
@@ -291,6 +300,15 @@ namespace glass
             _In_ size_t itemIndex,
             _In_ Control const& control,
             _In_ Theme const& theme);
+
+        // The elapsed time a time display shows, and the timer that keeps it moving.
+        void LayoutElapsedText(
+            _In_ size_t itemIndex,
+            _In_ Control const& control,
+            _In_ Theme const& theme);
+
+        void RefreshElapsedTexts() noexcept;
+        void StartElapsedTimerIfNeeded();
 
         // The number at each stop, for a control asked to show them. One canvas per control
         // holding one text block per stop, so moving the control moves them all at once.
@@ -390,6 +408,7 @@ namespace glass
         std::vector<bool> m_returnsToRest{};
         std::vector<DragAxis> m_dragAxes{};
         std::vector<KeyboardSpec> m_keyboards{};
+        std::vector<bool> m_velocityFromTouch{};
 
         // The picture or video a control shows, and the fill behind a grouping panel. A XAML
         // child of the host like the label, so it has to be carried when the control moves.
@@ -402,6 +421,19 @@ namespace glass
         // else, so a page with no clock on it pays nothing.
         std::vector<controls::TextBlock> m_beatTexts{};
         std::vector<double> m_beatTextOffsets{};
+
+        // The tempo under a clock's ring, and the elapsed time a time display shows. Both are
+        // text blocks for the same reason: composition has none.
+        std::vector<controls::TextBlock> m_tempoTexts{};
+        std::vector<double> m_tempoTextOffsets{};
+        std::vector<controls::TextBlock> m_elapsedTexts{};
+        std::vector<double> m_elapsedTextOffsets{};
+
+        // When each time display was last started, as a tick count. Zero means it is not one.
+        std::vector<uint64_t> m_elapsedOrigins{};
+
+        // Ticks only while the page holds at least one time display.
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_elapsedTimer{ nullptr };
 
         // The number drawn inside a control, for the few that show one. Null everywhere else,
         // so a page of two hundred pays nothing for a feature four of them use.

@@ -28,6 +28,12 @@ namespace glass
         constexpr uint8_t StatusAssignedController = 0x3;
         constexpr uint8_t StatusPerNoteController = 0x0;
 
+        // System real time, whole status bytes rather than nibbles.
+        constexpr uint8_t StatusTimingClock = 0xF8;
+        constexpr uint8_t StatusStart = 0xFA;
+        constexpr uint8_t StatusContinue = 0xFB;
+        constexpr uint8_t StatusStop = 0xFC;
+
         constexpr uint32_t MessageTypeMidi1ChannelVoice = 0x2;
         constexpr uint32_t MessageTypeMidi2ChannelVoice = 0x4;
 
@@ -474,6 +480,7 @@ namespace glass
                         feedback.Number = static_cast<uint16_t>(control.Feedback.Number);
                         feedback.AnyGroup = control.Feedback.GroupIndex == AllGroups;
                         feedback.AnyChannel = !control.Feedback.MatchesChannel;
+                        feedback.TempoFromWire = control.Feedback.TempoControlId.empty();
 
                         m_feedback.push_back(feedback);
 
@@ -944,13 +951,13 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    uint32_t BindingEngine::CollectActivityLit(
+    uint32_t BindingEngine::CollectFeedbackHits(
         uint32_t const* words,
         uint32_t wordCount,
         int32_t destinationIndex,
-        std::span<size_t> lit) const noexcept
+        std::span<FeedbackHit> hits) const noexcept
     {
-        if (words == nullptr || wordCount == 0 || lit.empty())
+        if (words == nullptr || wordCount == 0 || hits.empty())
         {
             return 0;
         }
@@ -965,17 +972,34 @@ namespace glass
 
         auto const group = static_cast<uint8_t>((words[0] >> 24) & 0x0F);
         auto const channel = static_cast<uint8_t>((words[0] >> 16) & 0x0F);
+        auto const status = static_cast<uint8_t>((words[0] >> 20) & 0x0F);
+
+        // A system real time message keeps its whole status byte where a channel voice one
+        // keeps a nibble, so the two are read from different places.
+        auto const realTime = messageType == MessageTypeSystem
+            ? static_cast<uint8_t>((words[0] >> 16) & 0xFF)
+            : uint8_t{ 0 };
+
+        // A MIDI 1.0 note on carrying velocity zero is how most gear says note off, so a light
+        // watching for playing must not blink on it. MIDI 2.0 has a real note off and puts its
+        // velocity in the second word, so this only applies to the one-word form.
+        auto const velocityIsZero =
+            messageType == MessageTypeMidi1ChannelVoice && (words[0] & 0x7F) == 0;
+
+        auto const isNoteOn = channelVoice && status == StatusNoteOn && !velocityIsZero;
+        auto const isControlChange = channelVoice && status == StatusControlChange;
 
         uint32_t written{ 0 };
 
         for (auto const& feedback : m_feedback)
         {
-            if (written >= lit.size())
+            if (written >= hits.size())
             {
                 break;
             }
 
-            if (feedback.Mode != FeedbackMode::AnyActivity)
+            // One specific message is answered by TryResolveFeedback, which carries the value.
+            if (feedback.Mode == FeedbackMode::Message)
             {
                 continue;
             }
@@ -997,7 +1021,68 @@ namespace glass
                 continue;
             }
 
-            lit[written] = feedback.ControlIndex;
+            FeedbackHit hit{};
+
+            hit.ControlIndex = feedback.ControlIndex;
+
+            switch (feedback.Mode)
+            {
+            case FeedbackMode::AnyActivity:
+                hit.Kind = FeedbackHitKind::Pulse;
+                break;
+
+            case FeedbackMode::Notes:
+                // A note off is the end of something, not the start of it, so it does not
+                // blink a light that is there to say somebody is playing.
+                if (!isNoteOn)
+                {
+                    continue;
+                }
+
+                hit.Kind = FeedbackHitKind::Pulse;
+                break;
+
+            case FeedbackMode::ControlChanges:
+                if (!isControlChange)
+                {
+                    continue;
+                }
+
+                hit.Kind = FeedbackHitKind::Pulse;
+                break;
+
+            case FeedbackMode::Transport:
+                if (realTime == StatusStart || realTime == StatusContinue)
+                {
+                    hit.Kind = FeedbackHitKind::On;
+                }
+                else if (realTime == StatusStop)
+                {
+                    hit.Kind = FeedbackHitKind::Off;
+                }
+                else
+                {
+                    continue;
+                }
+
+                break;
+
+            case FeedbackMode::Tempo:
+                // Only a control following the wire. One following a clock on this layout is
+                // driven by that clock rather than by anything arriving.
+                if (!feedback.TempoFromWire || realTime != StatusTimingClock)
+                {
+                    continue;
+                }
+
+                hit.Kind = FeedbackHitKind::ClockTick;
+                break;
+
+            default:
+                continue;
+            }
+
+            hits[written] = hit;
             ++written;
         }
 

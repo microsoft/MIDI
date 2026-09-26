@@ -29,8 +29,9 @@ namespace glass
         // lets a throttled control finish on the value the finger left it at.
         std::function<void(size_t itemIndex, double value, bool isFinal)> ValueChanged{};
 
-        // A button or a pad went down or came up, and a toggle changed state.
-        std::function<void(size_t itemIndex, bool isOn)> Switched{};
+        // A button or a pad went down or came up, and a toggle changed state. Velocity is how
+        // hard it was hit, which is 1.0 for everything that does not measure it.
+        std::function<void(size_t itemIndex, bool isOn, double velocity)> Switched{};
 
         // The other axis of a two axis control. Separate from ValueChanged so every control
         // that only has one value pays nothing for the ones that have two.
@@ -95,6 +96,9 @@ namespace glass
 
             // Which way a finger drags this control up. Knobs and encoders only.
             DragAxis Drag{ DragAxis::Vertical };
+
+            // A pad that takes its velocity from how hard it was hit.
+            bool VelocityFromTouch{ false };
 
             // A copy rather than a pointer into the document, because the document can be
             // edited underneath a gesture and a keyboard has to keep playing the key it started.

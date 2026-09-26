@@ -122,7 +122,7 @@ namespace winrt::midiglass::implementation
         void OnControlValueChanged(_In_ size_t itemIndex, _In_ double value, _In_ bool isFinal);
         void OnControlValueYChanged(_In_ size_t itemIndex, _In_ double value, _In_ bool isFinal);
         void OnControlSetDirectly(_In_ size_t itemIndex, _In_ double value);
-        void OnControlSwitched(_In_ size_t itemIndex, _In_ bool isOn);
+        void OnControlSwitched(_In_ size_t itemIndex, _In_ bool isOn, _In_ double velocity);
         void OnControlTouched(_In_ size_t itemIndex, _In_ bool isTouched);
         void OnControlKeyChanged(
             _In_ size_t itemIndex,
@@ -131,7 +131,9 @@ namespace winrt::midiglass::implementation
             _In_ bool isDown);
 
         void OnFeedbackMoved(_In_ uint32_t controlIndex, _In_ double value);
-        void OnActivitySeen(_In_ uint32_t controlIndex);
+        void OnActivitySeen(
+            _In_ uint32_t controlIndex,
+            _In_ glass::LivePlayer::ListenerState state);
         void OnBeatMoved(
             _In_ uint32_t controlIndex,
             _In_ int32_t beatInBar,

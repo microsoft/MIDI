@@ -39,6 +39,14 @@ namespace midiglass
         bool LibraryShowsList() const noexcept { return m_libraryShowsList; }
         void LibraryShowsList(_In_ bool value) noexcept;
 
+        // Whether a running layout holds the machine awake. Off unless asked: a layout left
+        // open on a laptop would otherwise keep it from sleeping all night.
+        //
+        // About this PC rather than about one layout, because it is a decision about the
+        // machine's power behavior and somebody who wants it wants it for everything.
+        bool KeepAwakeWhileRunning() const noexcept { return m_keepAwakeWhileRunning; }
+        void KeepAwakeWhileRunning(_In_ bool value) noexcept;
+
         // When a layout was last opened, as a FILETIME, or 0. Kept here rather than in the layout
         // file because "when did I last use this" is about this PC, and because writing the file
         // every time it opened would make every run look like an edit.
@@ -73,6 +81,7 @@ namespace midiglass
 
         LibrarySort m_librarySort{ LibrarySort::LastUsed };
         bool m_libraryShowsList{ false };
+        bool m_keepAwakeWhileRunning{ false };
 
         WindowPlacementInfo m_editorPlacement{};
 

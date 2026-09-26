@@ -25,9 +25,12 @@ namespace winrt::midiglass::implementation
     {
         constexpr glass::FeedbackMode FeedbackModeOrder[]
         {
-            glass::FeedbackMode::Message,
             glass::FeedbackMode::AnyActivity,
+            glass::FeedbackMode::Notes,
+            glass::FeedbackMode::ControlChanges,
+            glass::FeedbackMode::Message,
             glass::FeedbackMode::Tempo,
+            glass::FeedbackMode::Transport,
         };
 
         constexpr glass::BackgroundFit PictureFitOrder[]
@@ -165,6 +168,32 @@ namespace winrt::midiglass::implementation
 
         ApplyControlEdit(control->Id, [&](std::wstring const& id)
             { return m_editor.SetControlShowDetentValues(id, show); });
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnPadVelocityChanged(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control == nullptr)
+        {
+            return;
+        }
+
+        auto const fromTouch = PadVelocityCheck().IsChecked().GetBoolean();
+
+        ApplyControlEdit(control->Id, [&](std::wstring const& id)
+            { return m_editor.SetControlVelocityFromTouch(id, fromTouch); });
     }
 
     // ---------------------------------------------------------------- the picture
@@ -654,7 +683,35 @@ namespace winrt::midiglass::implementation
 
                 if (mode == glass::DetentMode::ExplicitValues && message.Detents.Stops.empty())
                 {
-                    message.Detents.Stops = { 0.0, 0.5, 1.0 };
+                    // However many stops the control already had, spread evenly between its
+                    // two ends. Somebody switching from even steps to a list is refining what
+                    // is there, not starting again.
+                    auto const lowest = message.Minimum.Value;
+                    auto const highest = message.Maximum.Value;
+
+                    auto count = 2;
+
+                    if (message.Detents.Mode == glass::DetentMode::EvenSteps &&
+                        message.Detents.Step > 0.0)
+                    {
+                        auto const span = std::abs(highest - lowest);
+
+                        if (span > 0.0)
+                        {
+                            count = std::clamp(
+                                static_cast<int32_t>(std::floor(span / message.Detents.Step)) + 1,
+                                2,
+                                static_cast<int32_t>(glass::MaximumDetentStops));
+                        }
+                    }
+
+                    for (int32_t stop = 0; stop < count; ++stop)
+                    {
+                        auto const fraction =
+                            static_cast<double>(stop) / static_cast<double>(count - 1);
+
+                        message.Detents.Stops.push_back(lowest + (highest - lowest) * fraction);
+                    }
                 }
 
                 return true;
@@ -697,29 +754,200 @@ namespace winrt::midiglass::implementation
         }
     }
 
+    // One row per stop: a number box, a caption saying what that stop is, and a way to take it
+    // away. The two ends are the range's own ends and cannot be removed, because a range with
+    // one end missing is not a range.
+    void EditorWindow::RebuildDetentStopRows()
+    {
+        try
+        {
+            DetentStopsHost().Items().Clear();
+
+            auto const* const control = SingleSelectedControl();
+
+            if (control == nullptr ||
+                m_messageIndex < 0 ||
+                m_messageIndex >= static_cast<int32_t>(control->Messages.size()))
+            {
+                return;
+            }
+
+            auto const& message = control->Messages[static_cast<size_t>(m_messageIndex)];
+            auto const& stops = message.Detents.Stops;
+
+            auto const absolute =
+                message.Detents.Scaling == glass::ValueScaling::Absolute ||
+                message.Minimum.Scaling == glass::ValueScaling::Absolute ||
+                message.Maximum.Scaling == glass::ValueScaling::Absolute;
+
+            auto weak = get_weak();
+
+            for (size_t index = 0; index < stops.size(); ++index)
+            {
+                controls::Grid row{};
+
+                row.ColumnSpacing(6.0);
+
+                for (auto const width : {
+                    xaml::GridLengthHelper::FromValueAndType(1.0, xaml::GridUnitType::Star),
+                    xaml::GridLengthHelper::FromValueAndType(0.0, xaml::GridUnitType::Auto) })
+                {
+                    controls::ColumnDefinition column{};
+                    column.Width(width);
+                    row.ColumnDefinitions().Append(column);
+                }
+
+                controls::NumberBox box{};
+
+                box.Value(stops[index]);
+                box.SpinButtonPlacementMode(controls::NumberBoxSpinButtonPlacementMode::Compact);
+                box.SmallChange(absolute ? 1.0 : 0.05);
+
+                // The ends are the range's ends, so they are not free numbers: an absolute
+                // range counts in the device's own units and a fraction counts 0 to 1.
+                box.Minimum(absolute ? 0.0 : 0.0);
+                box.Maximum(absolute ? 4294967295.0 : 1.0);
+
+                auto const header =
+                    index == 0 ? L"DetentStopLowest"
+                    : index + 1 == stops.size() ? L"DetentStopHighest"
+                    : L"DetentStopBetween";
+
+                box.Header(box_value(index == 0 || index + 1 == stops.size()
+                    ? resources::GetString(header)
+                    : resources::FormatString(header, std::to_wstring(index + 1))));
+
+                xaml::Automation::AutomationProperties::SetName(
+                    box, winrt::unbox_value<winrt::hstring>(box.Header()));
+
+                controls::Grid::SetColumn(box, 0);
+
+                box.ValueChanged([weak, index](auto&&, auto&& valueArgs)
+                    {
+                        auto strong = weak.get();
+
+                        if (strong == nullptr || strong->m_updatingInspector)
+                        {
+                            return;
+                        }
+
+                        if (std::isnan(valueArgs.NewValue()))
+                        {
+                            return;
+                        }
+
+                        strong->SetDetentStop(index, valueArgs.NewValue());
+                    });
+
+                row.Children().Append(box);
+
+                // Only the ones between the ends can go. Two stops is the fewest that means
+                // anything, so the button is there and disabled rather than missing.
+                controls::Button remove{};
+
+                remove.Content(box_value(winrt::hstring{ L"\uE738" }));
+                remove.FontFamily(media::FontFamily{ L"Segoe Fluent Icons" });
+                remove.FontSize(11.0);
+                remove.Height(32.0);
+                remove.VerticalAlignment(xaml::VerticalAlignment::Bottom);
+                remove.IsEnabled(index != 0 && index + 1 != stops.size() && stops.size() > 2);
+
+                xaml::Automation::AutomationProperties::SetName(
+                    remove, resources::GetString(L"RemoveDetentStopName"));
+
+                remove.Click([weak, index](auto&&, auto&&)
+                    {
+                        if (auto strong = weak.get())
+                        {
+                            strong->RemoveDetentStop(index);
+                        }
+                    });
+
+                controls::Grid::SetColumn(remove, 1);
+
+                row.Children().Append(remove);
+
+                DetentStopsHost().Items().Append(row);
+            }
+
+            AddDetentStopButton().IsEnabled(stops.size() < glass::MaximumDetentStops);
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the stops.")
+    }
+
     _Use_decl_annotations_
-    void EditorWindow::OnDetentStopsChanged(
+    void EditorWindow::SetDetentStop(size_t index, double value)
+    {
+        if (TryEditSelectedMessage([index, value](glass::ControlMessage& message)
+            {
+                if (index >= message.Detents.Stops.size() ||
+                    message.Detents.Stops[index] == value)
+                {
+                    return false;
+                }
+
+                message.Detents.Stops[index] = value;
+
+                return true;
+            }))
+        {
+            RebuildSurface();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::RemoveDetentStop(size_t index)
+    {
+        if (TryEditSelectedMessage([index](glass::ControlMessage& message)
+            {
+                // The two ends stay. A range with one end missing is not a range.
+                if (index == 0 ||
+                    index + 1 >= message.Detents.Stops.size() ||
+                    message.Detents.Stops.size() <= 2)
+                {
+                    return false;
+                }
+
+                message.Detents.Stops.erase(message.Detents.Stops.begin() + index);
+
+                return true;
+            }))
+        {
+            RebuildSurface();
+            RefreshMessageFields();
+        }
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnAddDetentStopClick(
         foundation::IInspectable const& sender,
         xaml::RoutedEventArgs const& args)
     {
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
 
-        if (m_updatingInspector)
-        {
-            return;
-        }
-
-        auto const stops = glass::ParseStopList(std::wstring{ DetentStopsBox().Text() });
-
-        if (TryEditSelectedMessage([&stops](glass::ControlMessage& message)
+        if (TryEditSelectedMessage([](glass::ControlMessage& message)
             {
-                if (message.Detents.Stops == stops)
+                auto& stops = message.Detents.Stops;
+
+                if (stops.size() >= glass::MaximumDetentStops)
                 {
                     return false;
                 }
 
-                message.Detents.Stops = stops;
+                if (stops.size() < 2)
+                {
+                    stops = { 0.0, 1.0 };
+                    return true;
+                }
+
+                // A new stop lands halfway between the last two, which is somewhere sensible
+                // whatever the range is, rather than on top of one that is already there.
+                auto const last = stops.size() - 1;
+
+                stops.insert(
+                    stops.begin() + last,
+                    (stops[last - 1] + stops[last]) / 2.0);
 
                 return true;
             }))

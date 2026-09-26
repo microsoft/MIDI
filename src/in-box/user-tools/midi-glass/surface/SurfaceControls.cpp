@@ -841,6 +841,172 @@ namespace glass
         }
     }
 
+    // ------------------------------------------------------- elapsed time
+
+    namespace
+    {
+        // Hours only once there are any. A stopwatch that reads 00:00:04.2 for the first hour
+        // of its life is four characters of noise.
+        std::wstring FormatElapsed(_In_ uint64_t milliseconds) noexcept
+        {
+            auto const tenths = (milliseconds / 100) % 10;
+            auto const seconds = (milliseconds / 1000) % 60;
+            auto const minutes = (milliseconds / 60000) % 60;
+            auto const hours = milliseconds / 3600000;
+
+            wchar_t text[32]{};
+
+            if (hours > 0)
+            {
+                swprintf_s(text, L"%llu:%02llu:%02llu.%llu", hours, minutes, seconds, tenths);
+            }
+            else
+            {
+                swprintf_s(text, L"%llu:%02llu.%llu", minutes, seconds, tenths);
+            }
+
+            return text;
+        }
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::LayoutElapsedText(
+        size_t itemIndex,
+        Control const& control,
+        Theme const& theme)
+    {
+        if (itemIndex >= m_elapsedTexts.size())
+        {
+            return;
+        }
+
+        if (m_elapsedTexts[itemIndex] != nullptr)
+        {
+            uint32_t index{ 0 };
+
+            if (m_host != nullptr && m_host.Children().IndexOf(m_elapsedTexts[itemIndex], index))
+            {
+                m_host.Children().RemoveAt(index);
+            }
+
+            m_elapsedTexts[itemIndex] = nullptr;
+        }
+
+        m_elapsedOrigins[itemIndex] = 0;
+
+        if (control.Kind != ControlKind::TimeDisplay)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const width = std::max(control.Width, 4.0);
+            auto const height = std::max(control.Height, 4.0);
+
+            auto const colors = ResolveControlColors(control, theme);
+
+            controls::TextBlock text{};
+
+            // Monospace, or every tenth of a second shuffles the digits sideways.
+            text.FontFamily(media::FontFamily{ L"Cascadia Mono, Consolas" });
+            text.FontSize(std::clamp(height * 0.42, 11.0, 48.0));
+            text.Foreground(media::SolidColorBrush{ ToWindowsColor(colors.Pipe) });
+            text.IsHitTestVisible(false);
+            text.TextAlignment(xaml::TextAlignment::Center);
+            text.Width(width);
+            text.Text(winrt::hstring{ FormatElapsed(0) });
+
+            xaml::Automation::AutomationProperties::SetAccessibilityView(
+                text, xaml::Automation::Peers::AccessibilityView::Raw);
+
+            text.Measure(winrt::Windows::Foundation::Size{
+                static_cast<float>(width), std::numeric_limits<float>::infinity() });
+
+            auto const offset = (height - text.DesiredSize().Height) * 0.5;
+
+            m_elapsedTextOffsets[itemIndex] = offset;
+            m_elapsedOrigins[itemIndex] = ::GetTickCount64();
+
+            controls::Canvas::SetLeft(text, control.X);
+            controls::Canvas::SetTop(text, control.Y + offset);
+
+            m_host.Children().Append(text);
+            m_elapsedTexts[itemIndex] = text;
+
+            StartElapsedTimerIfNeeded();
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::ResetElapsed(size_t itemIndex) noexcept
+    {
+        if (itemIndex >= m_elapsedOrigins.size() || m_elapsedOrigins[itemIndex] == 0)
+        {
+            return;
+        }
+
+        m_elapsedOrigins[itemIndex] = ::GetTickCount64();
+
+        RefreshElapsedTexts();
+    }
+
+    void SurfaceRenderer::RefreshElapsedTexts() noexcept
+    {
+        try
+        {
+            auto const now = ::GetTickCount64();
+
+            for (size_t index = 0; index < m_elapsedTexts.size(); ++index)
+            {
+                if (m_elapsedTexts[index] == nullptr || m_elapsedOrigins[index] == 0)
+                {
+                    continue;
+                }
+
+                m_elapsedTexts[index].Text(winrt::hstring{
+                    FormatElapsed(now - m_elapsedOrigins[index]) });
+            }
+        }
+        catch (...)
+        {
+        }
+    }
+
+    void SurfaceRenderer::StartElapsedTimerIfNeeded()
+    {
+        try
+        {
+            if (m_elapsedTimer != nullptr || m_host == nullptr)
+            {
+                return;
+            }
+
+            auto const queue = winrt::Microsoft::UI::Dispatching::DispatcherQueue::GetForCurrentThread();
+
+            if (queue == nullptr)
+            {
+                return;
+            }
+
+            m_elapsedTimer = queue.CreateTimer();
+
+            // Tenths are what is shown, so anything faster is work nobody can see. A page with
+            // no time display on it never gets here at all.
+            m_elapsedTimer.Interval(std::chrono::milliseconds{ 50 });
+
+            m_elapsedTimer.Tick([this](auto&&, auto&&) { RefreshElapsedTexts(); });
+
+            m_elapsedTimer.Start();
+        }
+        catch (...)
+        {
+        }
+    }
+
     // ------------------------------------------------------- the beat count on a clock
 
     _Use_decl_annotations_
@@ -864,6 +1030,18 @@ namespace glass
             }
 
             m_beatTexts[itemIndex] = nullptr;
+        }
+
+        if (m_tempoTexts[itemIndex] != nullptr)
+        {
+            uint32_t index{ 0 };
+
+            if (m_host != nullptr && m_host.Children().IndexOf(m_tempoTexts[itemIndex], index))
+            {
+                m_host.Children().RemoveAt(index);
+            }
+
+            m_tempoTexts[itemIndex] = nullptr;
         }
 
         if (control.Kind != ControlKind::BeatClock)
@@ -906,6 +1084,75 @@ namespace glass
 
             m_host.Children().Append(text);
             m_beatTexts[itemIndex] = text;
+
+            // The tempo, under the ring and above the pips. "How fast is this going" is the
+            // question somebody asks of a clock, and the beat number does not answer it.
+            controls::TextBlock tempo{};
+
+            tempo.FontFamily(media::FontFamily{ L"Cascadia Mono, Consolas" });
+            tempo.FontSize(std::clamp(width * 0.10, 8.0, 12.0));
+            tempo.Foreground(media::SolidColorBrush{ ToWindowsColor(ReadableInk(DeckColor())) });
+            tempo.Opacity(0.7);
+            tempo.IsHitTestVisible(false);
+            tempo.TextAlignment(xaml::TextAlignment::Center);
+            tempo.Width(width);
+            tempo.Text(L"");
+
+            xaml::Automation::AutomationProperties::SetAccessibilityView(
+                tempo, xaml::Automation::Peers::AccessibilityView::Raw);
+
+            tempo.Measure(winrt::Windows::Foundation::Size{
+                static_cast<float>(width), std::numeric_limits<float>::infinity() });
+
+            auto const tempoOffset = usable - tempo.DesiredSize().Height * 0.5;
+
+            m_tempoTextOffsets[itemIndex] = tempoOffset;
+
+            controls::Canvas::SetLeft(tempo, control.X);
+            controls::Canvas::SetTop(tempo, control.Y + tempoOffset);
+
+            m_host.Children().Append(tempo);
+            m_tempoTexts[itemIndex] = tempo;
+
+            // Show the configured tempo straight away. A clock that reads nothing until it is
+            // started looks broken, and the number is the first thing a designer wants to check.
+            SetClockTempo(itemIndex, control.Clock.BeatsPerMinute);
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::SetClockTempo(size_t itemIndex, double beatsPerMinute) noexcept
+    {
+        if (itemIndex >= m_tempoTexts.size() || m_tempoTexts[itemIndex] == nullptr)
+        {
+            return;
+        }
+
+        try
+        {
+            if (beatsPerMinute <= 0.0)
+            {
+                m_tempoTexts[itemIndex].Text(L"");
+                return;
+            }
+
+            wchar_t text[16]{};
+
+            // Whole numbers unless the tempo is riding a knob, where a tenth is the difference
+            // between two positions somebody can hear.
+            if (std::abs(beatsPerMinute - std::round(beatsPerMinute)) < 0.05)
+            {
+                swprintf_s(text, L"%d BPM", static_cast<int32_t>(std::lround(beatsPerMinute)));
+            }
+            else
+            {
+                swprintf_s(text, L"%.1f BPM", beatsPerMinute);
+            }
+
+            m_tempoTexts[itemIndex].Text(text);
         }
         catch (...)
         {

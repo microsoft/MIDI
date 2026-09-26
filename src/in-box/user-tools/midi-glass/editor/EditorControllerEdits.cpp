@@ -479,6 +479,22 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    bool EditorController::SetControlVelocityFromTouch(std::wstring const& id, bool fromTouch)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr || control->VelocityFromTouch == fromTouch)
+        {
+            return false;
+        }
+
+        control->VelocityFromTouch = fromTouch;
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
     bool EditorController::SetControlPicture(std::wstring const& id, Picture const& picture)
     {
         auto* const control = MutableControl(id);

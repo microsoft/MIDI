@@ -75,8 +75,15 @@ namespace glass
         std::function<void(uint32_t controlIndex, double value)> FeedbackMoved{};
 
         // A device sent something a control is only watching for as traffic, so there is no
-        // value to carry. What an activity lamp lights on.
-        std::function<void(uint32_t controlIndex)> ActivitySeen{};
+        // value to carry. Lit says whether it blinks, comes on, or goes dark.
+        enum class ListenerState
+        {
+            Blink = 0,
+            On = 1,
+            Off = 2,
+        };
+
+        std::function<void(uint32_t controlIndex, ListenerState state)> ActivitySeen{};
 
         // A clock generator moved on. The owner draws the sweep and the pips.
         std::function<void(uint32_t controlIndex, int32_t beatInBar, double phase, bool running)> BeatMoved{};
@@ -90,6 +97,10 @@ namespace glass
 
         // A control or a sequence step asked for another page.
         std::function<void(uint32_t pageIndex)> PageRequested{};
+
+        // The tempo a clock generator is running at, for whatever draws it. Zero when it is
+        // stopped.
+        std::function<void(uint32_t controlIndex, double beatsPerMinute)> TempoChanged{};
 
         // Something arrived that a control could be bound to, while learning is armed. Raised
         // on the dispatcher's thread, and only while SetLearning(true) is in force.
@@ -143,6 +154,10 @@ namespace glass
         void SetDirectly(_In_ uint32_t controlIndex, _In_ double value);
 
         void Switched(_In_ uint32_t controlIndex, _In_ bool isOn);
+
+        // The same, for a pad that takes its velocity from how hard it was hit. Everything else
+        // hits at full, which is what the plain overload passes.
+        void Switched(_In_ uint32_t controlIndex, _In_ bool isOn, _In_ double velocity);
 
         // The touch and release triggers, which is what a system exclusive dump or a sequence
         // usually hangs off. Separate from Switched because a fader is touched too.
@@ -214,6 +229,12 @@ namespace glass
             _In_ uint32_t wordCount,
             _In_reads_(wordCount) uint32_t const* words);
 
+        // Everything on the layout that said it follows this clock control's beat.
+        void PulseTempoFollowers(
+            _In_ uint32_t clockControlIndex,
+            _In_ double phase,
+            _In_ bool running);
+
         LayoutDocument m_document{};
 
         BindingEngine m_engine{};
@@ -246,6 +267,10 @@ namespace glass
         // What each keyboard is playing, so releasing a key sends the note it started rather
         // than whatever the key would be after an edit.
         std::vector<uint16_t> m_soundingNotes{};
+
+        // How many clock messages have arrived for each control following the wire's beat.
+        // Twenty four of them is a quarter note, and that is when the lamp blinks.
+        std::vector<int32_t> m_clockTickCounts{};
 
         // Rebuilt when the device table changes, read only on the UI thread, so the path a finger
         // takes never waits on a lock. Swapped whole rather than edited.

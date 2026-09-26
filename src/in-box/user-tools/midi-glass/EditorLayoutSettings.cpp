@@ -133,6 +133,10 @@ namespace winrt::midiglass::implementation
         // The device picker's panel width.
         constexpr double DevicePickerWidth = 560.0;
 
+        // Every endpoint row is this tall whatever it has to say, so the list reads as a list
+        // rather than as a ragged column.
+        constexpr double DevicePickerRowHeight = 64.0;
+
         // How wide a line in an endpoint row may be before it is trimmed.
         //
         // It is a number rather than a layout rule on purpose. A ListView arranges its rows at
@@ -1020,14 +1024,46 @@ namespace winrt::midiglass::implementation
                 controls::Control::HorizontalContentAlignmentProperty(),
                 box_value(xaml::HorizontalAlignment::Stretch) });
 
+            itemStyle.Setters().Append(xaml::Setter{
+                controls::Control::VerticalContentAlignmentProperty(),
+                box_value(xaml::VerticalAlignment::Center) });
+
+            // Each endpoint gets a card of its own. The rows carry one, two or three lines of
+            // text depending on what the device declares, so without a floor they come out
+            // different heights and the list reads as ragged rather than as a list.
+            itemStyle.Setters().Append(xaml::Setter{
+                xaml::FrameworkElement::MinHeightProperty(), box_value(DevicePickerRowHeight) });
+
+            itemStyle.Setters().Append(xaml::Setter{
+                controls::Control::PaddingProperty(),
+                box_value(xaml::ThicknessHelper::FromLengths(12.0, 9.0, 12.0, 9.0)) });
+
+            itemStyle.Setters().Append(xaml::Setter{
+                xaml::FrameworkElement::MarginProperty(),
+                box_value(xaml::ThicknessHelper::FromLengths(0.0, 0.0, 0.0, 6.0)) });
+
+            itemStyle.Setters().Append(xaml::Setter{
+                controls::Control::CornerRadiusProperty(),
+                box_value(xaml::CornerRadiusHelper::FromUniformRadius(6.0)) });
+
+            // The rest color. Hover and selection come from the container's own states, which
+            // is what puts the system highlight color on them rather than one invented here.
+            itemStyle.Setters().Append(xaml::Setter{
+                controls::Control::BackgroundProperty(),
+                xaml::Application::Current().Resources().Lookup(
+                    box_value(L"CardBackgroundFillColorDefaultBrush")) });
+
             endpointList.ItemContainerStyle(itemStyle);
+
+            // Room for the rounded corners to sit in rather than against the list's own edge.
+            endpointList.Padding(xaml::ThicknessHelper::FromLengths(2.0, 2.0, 2.0, 0.0));
 
             for (auto const& endpoint : endpoints)
             {
                 controls::Grid row{};
-                row.ColumnSpacing(11.0);
-                row.Padding(xaml::ThicknessHelper::FromLengths(0.0, 3.0, 0.0, 3.0));
+                row.ColumnSpacing(12.0);
                 row.HorizontalAlignment(xaml::HorizontalAlignment::Stretch);
+                row.VerticalAlignment(xaml::VerticalAlignment::Center);
 
                 for (auto const width : { xaml::GridLengthHelper::FromValueAndType(0.0, xaml::GridUnitType::Auto),
                                           xaml::GridLengthHelper::FromValueAndType(1.0, xaml::GridUnitType::Star) })

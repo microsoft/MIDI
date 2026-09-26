@@ -47,6 +47,10 @@ namespace glass
             case ControlKind::PianoKeyboard: return { 420, 120 };
 
             case ControlKind::BeatClock: return { 100, 120 };
+
+            // Wide enough for hours, minutes, seconds and a fraction without the digits
+            // shrinking to nothing.
+            case ControlKind::TimeDisplay: return { 180, 64 };
             }
 
             return { 56, 56 };

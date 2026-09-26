@@ -182,6 +182,7 @@ namespace winrt::midiglass::implementation
         void OnTicksShowChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnTickCountChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnShowDetentValuesChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnPadVelocityChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         void OnChoosePictureClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnRemovePictureClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -217,7 +218,7 @@ namespace winrt::midiglass::implementation
 
         void OnDetentModeChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnDetentStepChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
-        void OnDetentStopsChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnAddDetentStopClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
     private:
         void OnWindowClosed(foundation::IInspectable const& sender, xaml::WindowEventArgs const& args);
@@ -361,6 +362,13 @@ namespace winrt::midiglass::implementation
         void ApplyClockEdit();
         void ApplyFeedbackEdit();
 
+        // One number box per stop, rather than one line of text with separators in it. A comma
+        // is a decimal point in most of the world, so a typed list cannot be read the same way
+        // twice and a stop list is the one place a customer types real numbers.
+        void RebuildDetentStopRows();
+        void SetDetentStop(_In_ size_t index, _In_ double value);
+        void RemoveDetentStop(_In_ size_t index);
+
         // The full path of a picture or video the customer chose, or empty. Does not copy it.
         std::wstring PickControlPictureFile();
 
@@ -441,7 +449,7 @@ namespace winrt::midiglass::implementation
         void ApplySurfaceInputMode();
 
         void OnTryValueChanged(_In_ size_t itemIndex, _In_ double value, _In_ bool isFinal);
-        void OnTrySwitched(_In_ size_t itemIndex, _In_ bool isOn);
+        void OnTrySwitched(_In_ size_t itemIndex, _In_ bool isOn, _In_ double velocity);
         void OnTryFeedbackMoved(_In_ uint32_t controlIndex, _In_ double value);
 
         void AppendMonitorRow(_In_ glass::SentMessage const& message);

@@ -169,6 +169,13 @@ namespace winrt::midiglass::implementation
 
             StartDevices();
 
+            // Only a layout that is actually running. The designer and Try mode do not hold the
+            // machine awake, because somebody building a layout is at the keyboard anyway.
+            if (::midiglass::AppSettings::Current().KeepAwakeWhileRunning())
+            {
+                HoldDisplayAwake(true);
+            }
+
             Closed({ this, &RuntimeWindow::OnWindowClosed });
 
             m_loaded = true;
@@ -186,6 +193,9 @@ namespace winrt::midiglass::implementation
 
         try
         {
+            // Whatever else happens, the machine gets its power behavior back.
+            HoldDisplayAwake(false);
+
             // Nothing is left held. A finger lifted by a window closing still has to end its note.
             m_input.ReleaseAll();
             m_input.Detach();
@@ -271,11 +281,11 @@ namespace winrt::midiglass::implementation
                 }
             };
 
-        m_input.Switched = [weak](size_t itemIndex, bool isOn)
+        m_input.Switched = [weak](size_t itemIndex, bool isOn, double velocity)
             {
                 if (auto strong = weak.get())
                 {
-                    strong->OnControlSwitched(itemIndex, isOn);
+                    strong->OnControlSwitched(itemIndex, isOn, velocity);
                 }
             };
 
@@ -328,8 +338,9 @@ namespace winrt::midiglass::implementation
                 {
                     if (auto strong = weak.get())
                     {
-                        strong->OnControlSwitched(i, true);
-                        strong->OnControlSwitched(i, false);
+                        // Assistive technology cannot press harder, so it always hits at full.
+                        strong->OnControlSwitched(i, true, 1.0);
+                        strong->OnControlSwitched(i, false, 0.0);
                     }
                 });
         }
@@ -504,7 +515,7 @@ namespace winrt::midiglass::implementation
             ChromeBar().Visibility(m_fullScreen ? xaml::Visibility::Collapsed : xaml::Visibility::Visible);
 
             ShowFullScreenChrome();
-            HoldDisplayAwake(m_fullScreen);
+            HoldDisplayAwake(m_fullScreen || ::midiglass::AppSettings::Current().KeepAwakeWhileRunning());
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to switch full screen.")
     }

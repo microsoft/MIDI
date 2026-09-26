@@ -79,6 +79,7 @@ namespace glass
         constexpr wchar_t KeyKeyboardOrder[] = L"keyboardOrder";
         constexpr wchar_t KeyPickup[] = L"pickup";
         constexpr wchar_t KeyDrag[] = L"drag";
+        constexpr wchar_t KeyVelocityFromTouch[] = L"velocityFromTouch";
         constexpr wchar_t KeyTicks[] = L"ticks";
         constexpr wchar_t KeyShow[] = L"show";
         constexpr wchar_t KeyCount[] = L"count";
@@ -178,6 +179,7 @@ namespace glass
             { ControlKind::Ribbon, L"ribbon" },
             { ControlKind::PianoKeyboard, L"pianoKeyboard" },
             { ControlKind::BeatClock, L"beatClock" },
+            { ControlKind::TimeDisplay, L"timeDisplay" },
         };
 
         constexpr EnumName<ValueAxis> AxisNames[]
@@ -197,6 +199,9 @@ namespace glass
             { FeedbackMode::Message, L"message" },
             { FeedbackMode::AnyActivity, L"anyActivity" },
             { FeedbackMode::Tempo, L"tempo" },
+            { FeedbackMode::Notes, L"notes" },
+            { FeedbackMode::ControlChanges, L"controlChanges" },
+            { FeedbackMode::Transport, L"transport" },
         };
 
         constexpr EnumName<SequenceRunMode> RunModeNames[]
@@ -902,6 +907,7 @@ namespace glass
             control.KeyboardOrder = ReadInt(object, KeyKeyboardOrder, 0, 0, 0x7FFFFFFF);
             control.Pickup = ValueOf(PickupNames, ReadString(object, KeyPickup), PickupMode::Jump);
             control.Drag = ValueOf(DragNames, ReadString(object, KeyDrag), DragAxis::Vertical);
+            control.VelocityFromTouch = ReadBool(object, KeyVelocityFromTouch, false);
             control.Ticks = ReadTicks(object);
             control.ShowDetentValues = ReadBool(object, KeyShowDetentValues, false);
             control.Image = ReadPicture(object);
@@ -935,7 +941,7 @@ namespace glass
                 { KeyId, KeyKind, KeyLabel, KeyX, KeyY, KeyWidth, KeyHeight, KeyHueSlot,
                   KeyLiteralColor, KeyAspectLocked, KeyKeyboardOrder, KeyPickup, KeyDefaultValue,
                   KeyReturnsToDefault, KeyDrag, KeyTicks, KeyShowDetentValues, KeyPicture,
-                  KeyKeyboard, KeyClock, KeyDefaultValueY,
+                  KeyKeyboard, KeyClock, KeyDefaultValueY, KeyVelocityFromTouch,
                   KeySendsValueOnStart, KeySendInterval, KeyMessages, KeyFeedback,
                   KeyStyle, KeyLabelPlaced, KeyLabelStyle, KeyShowValue });
 
@@ -1351,6 +1357,11 @@ namespace glass
             if (control.Drag != DragAxis::Vertical)
             {
                 writer.Write(KeyDrag, NameOf(DragNames, control.Drag));
+            }
+
+            if (control.VelocityFromTouch)
+            {
+                writer.Write(KeyVelocityFromTouch, control.VelocityFromTouch);
             }
 
             if (control.DefaultValueY != 0.0)

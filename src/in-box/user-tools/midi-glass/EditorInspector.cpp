@@ -41,6 +41,7 @@ namespace winrt::midiglass::implementation
             glass::ControlKind::Ribbon,
             glass::ControlKind::PianoKeyboard,
             glass::ControlKind::BeatClock,
+            glass::ControlKind::TimeDisplay,
             glass::ControlKind::Meter,
             glass::ControlKind::Lamp,
             glass::ControlKind::Readout,
@@ -55,6 +56,7 @@ namespace winrt::midiglass::implementation
             L"PaletteKnob", L"PaletteEncoder", L"PaletteFader", L"PalettePad", L"PaletteButton",
             L"PaletteToggle", L"PaletteXYPad", L"PaletteJoystick", L"PaletteRibbon",
             L"PaletteKeyboard", L"PaletteBeatClock",
+            L"PaletteTimeDisplay",
             L"PaletteMeter", L"PaletteLamp", L"PaletteReadout",
             L"PaletteLabel", L"PaletteImage", L"PalettePageTab", L"PalettePanel",
         };
@@ -815,10 +817,14 @@ namespace winrt::midiglass::implementation
             DetentModeCombo().SelectedIndex(static_cast<int32_t>(message.Detents.Mode));
 
             show(DetentStepBox(), message.Detents.Mode == glass::DetentMode::EvenSteps);
-            show(DetentStopsBox(), message.Detents.Mode == glass::DetentMode::ExplicitValues);
+            show(DetentStopsPanel(), message.Detents.Mode == glass::DetentMode::ExplicitValues);
 
             DetentStepBox().Value(message.Detents.Step);
-            DetentStopsBox().Text(winrt::hstring{ glass::FormatStopList(message.Detents.Stops) });
+
+            if (message.Detents.Mode == glass::DetentMode::ExplicitValues)
+            {
+                RebuildDetentStopRows();
+            }
 
             DetentCaption().Text(
                 message.Detents.Mode == glass::DetentMode::Continuous

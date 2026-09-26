@@ -58,6 +58,10 @@ public:
     TEST_METHOD(AnActivityLampTakesAnythingFromItsDevice);
     TEST_METHOD(AnActivityLampCanBeNarrowedToOneChannel);
     TEST_METHOD(AnActivityLampIgnoresAnotherDevice);
+    TEST_METHOD(ANoteLampTakesOnlyNotes);
+    TEST_METHOD(AControllerLampTakesOnlyControlChanges);
+    TEST_METHOD(ATransportLampLatchesOnStartAndClearsOnStop);
+    TEST_METHOD(ABeatLampCountsClockMessages);
     TEST_METHOD(AMessageBindingIsNotLitByActivity);
     TEST_METHOD(AnActivityBindingDoesNotMoveAControl);
 };

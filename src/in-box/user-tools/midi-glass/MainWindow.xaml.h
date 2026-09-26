@@ -121,6 +121,15 @@ namespace winrt::midiglass::implementation
         void OnCardMenuShowInFolder(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCardMenuDelete(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        // ---- backing up, restoring and moving a layout (MainWindowPackaging.cpp) ----
+
+        void OnCardMenuBackUp(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCardMenuRestore(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnCardMenuPackage(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnImportPackageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnShowBackupsFolderClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnKeepAwakeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
     private:
         void OnWindowClosed(
             foundation::IInspectable const& sender,
@@ -141,6 +150,15 @@ namespace winrt::midiglass::implementation
 
         void RunCard(_In_ midiglass::LayoutCard const& card);
         void EditCard(_In_ midiglass::LayoutCard const& card);
+
+        // Which backup to put back. A dialog rather than a straight overwrite, because there is
+        // usually more than one and they are only told apart by their number.
+        winrt::fire_and_forget RestoreCardAsync(_In_ midiglass::LayoutCard card);
+
+        // Says plainly what happened. A backup nobody was told about is a backup nobody trusts.
+        winrt::fire_and_forget ShowNoticeAsync(
+            _In_ std::wstring title,
+            _In_ std::wstring body);
 
         // Reads, changes and writes one layout, then refreshes. Everything the card menu does to
         // a file goes through here, so there is one place that knows a save can fail.

@@ -42,11 +42,11 @@ namespace winrt::midiglass::implementation
                 }
             };
 
-        m_player->ActivitySeen = [weak](uint32_t controlIndex)
+        m_player->ActivitySeen = [weak](uint32_t controlIndex, glass::LivePlayer::ListenerState state)
             {
                 if (auto strong = weak.get())
                 {
-                    strong->OnActivitySeen(controlIndex);
+                    strong->OnActivitySeen(controlIndex, state);
                 }
             };
 
@@ -55,6 +55,23 @@ namespace winrt::midiglass::implementation
                 if (auto strong = weak.get())
                 {
                     strong->OnBeatMoved(controlIndex, beatInBar, phase, running);
+                }
+            };
+
+        m_player->TempoChanged = [weak](uint32_t controlIndex, double beatsPerMinute)
+            {
+                auto strong = weak.get();
+
+                if (strong == nullptr)
+                {
+                    return;
+                }
+
+                size_t itemIndex{ 0 };
+
+                if (strong->m_renderer.TryFindItem(controlIndex, itemIndex))
+                {
+                    strong->m_renderer.SetClockTempo(itemIndex, beatsPerMinute);
                 }
             };
 
@@ -232,13 +249,25 @@ namespace winrt::midiglass::implementation
     }
 
     _Use_decl_annotations_
-    void RuntimeWindow::OnControlSwitched(size_t itemIndex, bool isOn)
+    void RuntimeWindow::OnControlSwitched(size_t itemIndex, bool isOn, double velocity)
     {
         m_renderer.SetValue(itemIndex, isOn ? 1.0 : 0.0);
 
+        // A time display counts again from zero when it is tapped. Nothing is sent: it is
+        // there for the person on stage, not for the desk.
+        if (m_renderer.KindAt(itemIndex) == glass::ControlKind::TimeDisplay)
+        {
+            if (isOn)
+            {
+                m_renderer.ResetElapsed(itemIndex);
+            }
+
+            return;
+        }
+
         if (m_player != nullptr)
         {
-            m_player->Switched(m_renderer.ControlIndexOf(itemIndex), isOn);
+            m_player->Switched(m_renderer.ControlIndexOf(itemIndex), isOn, velocity);
         }
     }
 
@@ -285,7 +314,9 @@ namespace winrt::midiglass::implementation
     }
 
     _Use_decl_annotations_
-    void RuntimeWindow::OnActivitySeen(uint32_t controlIndex)
+    void RuntimeWindow::OnActivitySeen(
+        uint32_t controlIndex,
+        glass::LivePlayer::ListenerState state)
     {
         if (m_closing)
         {
@@ -299,9 +330,25 @@ namespace winrt::midiglass::implementation
             return;
         }
 
-        // An activity lamp has no value to carry, so the glow is the whole message. It decays
-        // on its own, which is what makes it read as a blink rather than as a light left on.
-        m_renderer.Bloom(itemIndex);
+        switch (state)
+        {
+        case glass::LivePlayer::ListenerState::On:
+            // Latched. "Is the sequencer running" is a state, not an event, so it stays lit
+            // rather than decaying the way a blink does.
+            m_renderer.SetValue(itemIndex, 1.0);
+            break;
+
+        case glass::LivePlayer::ListenerState::Off:
+            m_renderer.SetValue(itemIndex, 0.0);
+            m_renderer.ClearBloom(itemIndex);
+            break;
+
+        default:
+            // A blink has no value to carry, so the glow is the whole message. It decays on
+            // its own, which is what makes it read as a blink rather than a light left on.
+            m_renderer.Bloom(itemIndex);
+            break;
+        }
     }
 
     _Use_decl_annotations_

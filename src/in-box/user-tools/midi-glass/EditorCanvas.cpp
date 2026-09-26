@@ -272,9 +272,12 @@ namespace winrt::midiglass::implementation
                 {
                     media::GeometryGroup dots{};
 
-                    for (double y = 0.0; y <= document.PageHeight; y += spacing)
+                    // The page edge is already drawn as a line. A dot sitting on it reads as a
+                    // blemish in the border rather than as part of the grid, so the outermost
+                    // row and column are left out.
+                    for (double y = spacing; y < document.PageHeight; y += spacing)
                     {
-                        for (double x = 0.0; x <= document.PageWidth; x += spacing)
+                        for (double x = spacing; x < document.PageWidth; x += spacing)
                         {
                             media::EllipseGeometry dot{};
 

@@ -161,6 +161,7 @@
     <ClInclude Include="..\midi-app-shared\EndpointCatalog.h" />
     <ClInclude Include="document\JsonText.h" />
     <ClInclude Include="document\LayoutModel.h" />
+    <ClInclude Include="document\LayoutPackage.h" />
     <ClInclude Include="document\LayoutSerializer.h" />
     <ClInclude Include="document\LayoutStore.h" />
     <ClInclude Include="document\PageTemplates.h" />
@@ -213,6 +214,7 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
     </ClCompile>
     <ClCompile Include="MainWindowLibrary.cpp" />
+    <ClCompile Include="MainWindowPackaging.cpp" />
     <ClCompile Include="MainWindowDialogs.cpp" />
     <ClCompile Include="RuntimeWindow.xaml.cpp">
       <DependentUpon>RuntimeWindow.xaml</DependentUpon>
@@ -253,6 +255,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="document\LayoutModel.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\LayoutPackage.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="document\LayoutSerializer.cpp">

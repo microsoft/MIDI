@@ -138,6 +138,7 @@ namespace glass
             case ControlKind::Ribbon:
             case ControlKind::PianoKeyboard:
             case ControlKind::BeatClock:
+            case ControlKind::TimeDisplay:
                 return true;
 
             default:
@@ -244,6 +245,7 @@ namespace glass
             case ControlKind::Lamp:
             case ControlKind::Meter:
             case ControlKind::Panel:
+            case ControlKind::TimeDisplay:
                 return projected::SurfaceControlRole::Text;
 
             default:
@@ -609,10 +611,16 @@ namespace glass
         m_returnsToRest.push_back(control.ReturnsToDefault);
         m_dragAxes.push_back(control.Drag);
         m_keyboards.push_back(control.Keyboard);
+        m_velocityFromTouch.push_back(control.VelocityFromTouch);
         m_pictures.push_back(nullptr);
         m_detentTexts.push_back(nullptr);
         m_beatTexts.push_back(nullptr);
         m_beatTextOffsets.push_back(0.0);
+        m_tempoTexts.push_back(nullptr);
+        m_tempoTextOffsets.push_back(0.0);
+        m_elapsedTexts.push_back(nullptr);
+        m_elapsedTextOffsets.push_back(0.0);
+        m_elapsedOrigins.push_back(0);
         m_valueTexts.push_back(nullptr);
         m_valueOffsets.push_back(0.0);
         m_showValues.push_back(control.ShowValue);
@@ -639,6 +647,7 @@ namespace glass
         LayoutPicture(itemIndex, control);
         LayoutDetentValues(itemIndex, control, theme);
         LayoutBeatText(itemIndex, control, theme);
+        LayoutElapsedText(itemIndex, control, theme);
     }
 
     // The number inside the control. There is no comp for this, so it follows the design sheet's
@@ -1685,6 +1694,7 @@ namespace glass
             LayoutPicture(itemIndex, control);
             LayoutDetentValues(itemIndex, control, theme);
             LayoutBeatText(itemIndex, control, theme);
+            LayoutElapsedText(itemIndex, control, theme);
         }
         catch (...)
         {
@@ -1715,10 +1725,22 @@ namespace glass
         m_returnsToRest.clear();
         m_dragAxes.clear();
         m_keyboards.clear();
+        m_velocityFromTouch.clear();
         m_pictures.clear();
         m_detentTexts.clear();
         m_beatTexts.clear();
         m_beatTextOffsets.clear();
+        m_tempoTexts.clear();
+        m_tempoTextOffsets.clear();
+        m_elapsedTexts.clear();
+        m_elapsedTextOffsets.clear();
+        m_elapsedOrigins.clear();
+
+        if (m_elapsedTimer != nullptr)
+        {
+            m_elapsedTimer.Stop();
+            m_elapsedTimer = nullptr;
+        }
         m_valueTexts.clear();
         m_valueOffsets.clear();
         m_showValues.clear();
@@ -1790,6 +1812,12 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    bool SurfaceRenderer::VelocityFromTouchAt(size_t itemIndex) const noexcept
+    {
+        return itemIndex < m_velocityFromTouch.size() && m_velocityFromTouch[itemIndex];
+    }
+
+    _Use_decl_annotations_
     bool SurfaceRenderer::ReturnsToRestAt(size_t itemIndex) const noexcept
     {
         return itemIndex < m_returnsToRest.size() && m_returnsToRest[itemIndex];
@@ -1855,6 +1883,18 @@ namespace glass
         {
             controls::Canvas::SetLeft(m_beatTexts[itemIndex], x);
             controls::Canvas::SetTop(m_beatTexts[itemIndex], y + m_beatTextOffsets[itemIndex]);
+        }
+
+        if (itemIndex < m_tempoTexts.size() && m_tempoTexts[itemIndex] != nullptr)
+        {
+            controls::Canvas::SetLeft(m_tempoTexts[itemIndex], x);
+            controls::Canvas::SetTop(m_tempoTexts[itemIndex], y + m_tempoTextOffsets[itemIndex]);
+        }
+
+        if (itemIndex < m_elapsedTexts.size() && m_elapsedTexts[itemIndex] != nullptr)
+        {
+            controls::Canvas::SetLeft(m_elapsedTexts[itemIndex], x);
+            controls::Canvas::SetTop(m_elapsedTexts[itemIndex], y + m_elapsedTextOffsets[itemIndex]);
         }
     }
 

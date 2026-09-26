@@ -71,6 +71,8 @@ namespace winrt::midiglass::implementation
             }
 
             AlwaysOnTopToggle().IsChecked(::midiglass::AppSettings::Current().AlwaysOnTop());
+            KeepAwakeMenuItem().IsChecked(
+                ::midiglass::AppSettings::Current().KeepAwakeWhileRunning());
 
             m_dispatcher = DispatcherQueue();
 

@@ -90,7 +90,7 @@ namespace winrt::midiglass::implementation
                 }
             };
 
-        m_player->ActivitySeen = [weak](uint32_t controlIndex)
+        m_player->ActivitySeen = [weak](uint32_t controlIndex, glass::LivePlayer::ListenerState state)
             {
                 auto strong = weak.get();
 
@@ -101,9 +101,42 @@ namespace winrt::midiglass::implementation
 
                 size_t itemIndex{ 0 };
 
+                if (!strong->m_renderer.TryFindItem(controlIndex, itemIndex))
+                {
+                    return;
+                }
+
+                switch (state)
+                {
+                case glass::LivePlayer::ListenerState::On:
+                    strong->m_renderer.SetValue(itemIndex, 1.0);
+                    break;
+
+                case glass::LivePlayer::ListenerState::Off:
+                    strong->m_renderer.SetValue(itemIndex, 0.0);
+                    strong->m_renderer.ClearBloom(itemIndex);
+                    break;
+
+                default:
+                    strong->m_renderer.Bloom(itemIndex);
+                    break;
+                }
+            };
+
+        m_player->TempoChanged = [weak](uint32_t controlIndex, double beatsPerMinute)
+            {
+                auto strong = weak.get();
+
+                if (strong == nullptr)
+                {
+                    return;
+                }
+
+                size_t itemIndex{ 0 };
+
                 if (strong->m_renderer.TryFindItem(controlIndex, itemIndex))
                 {
-                    strong->m_renderer.Bloom(itemIndex);
+                    strong->m_renderer.SetClockTempo(itemIndex, beatsPerMinute);
                 }
             };
 
@@ -309,11 +342,11 @@ namespace winrt::midiglass::implementation
                     }
                 };
 
-            m_input.Switched = [weak](size_t itemIndex, bool isOn)
+            m_input.Switched = [weak](size_t itemIndex, bool isOn, double velocity)
                 {
                     if (auto strong = weak.get())
                     {
-                        strong->OnTrySwitched(itemIndex, isOn);
+                        strong->OnTrySwitched(itemIndex, isOn, velocity);
                     }
                 };
 
@@ -382,8 +415,8 @@ namespace winrt::midiglass::implementation
                     {
                         if (auto strong = weak.get())
                         {
-                            strong->OnTrySwitched(index, true);
-                            strong->OnTrySwitched(index, false);
+                            strong->OnTrySwitched(index, true, 1.0);
+                            strong->OnTrySwitched(index, false, 0.0);
                         }
                     });
             }
@@ -460,13 +493,24 @@ namespace winrt::midiglass::implementation
     }
 
     _Use_decl_annotations_
-    void EditorWindow::OnTrySwitched(size_t itemIndex, bool isOn)
+    void EditorWindow::OnTrySwitched(size_t itemIndex, bool isOn, double velocity)
     {
         m_renderer.SetValue(itemIndex, isOn ? 1.0 : 0.0);
 
+        // A time display counts again from zero when it is tapped, in Try mode too.
+        if (m_renderer.KindAt(itemIndex) == glass::ControlKind::TimeDisplay)
+        {
+            if (isOn)
+            {
+                m_renderer.ResetElapsed(itemIndex);
+            }
+
+            return;
+        }
+
         if (m_tryMode && m_player != nullptr)
         {
-            m_player->Switched(m_renderer.ControlIndexOf(itemIndex), isOn);
+            m_player->Switched(m_renderer.ControlIndexOf(itemIndex), isOn, velocity);
         }
     }
 

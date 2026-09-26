@@ -1608,10 +1608,31 @@
                                                    SpinButtonPlacementMode="Compact"
                                                    ValueChanged="OnDetentStepChanged" />
 
-                                        <TextBox x:Name="DetentStopsBox"
-                                                 x:Uid="DetentStopsBox"
-                                                 Visibility="Collapsed"
-                                                 LostFocus="OnDetentStopsChanged" />
+                                        <!-- One box per stop, not one line of text with commas
+                                             in it. A comma is a decimal point in most of the
+                                             world, so a typed list cannot be read the same way
+                                             twice. The first and last boxes are the two ends of
+                                             the range and are labeled as such. -->
+                                        <StackPanel x:Name="DetentStopsPanel" Visibility="Collapsed" Spacing="4">
+                                            <ItemsControl x:Name="DetentStopsHost">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Spacing="4" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+
+                                            <Button x:Name="AddDetentStopButton"
+                                                    x:Uid="AddDetentStopButton"
+                                                    FontSize="11"
+                                                    HorizontalAlignment="Left"
+                                                    Click="OnAddDetentStopClick">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon Glyph="&#xE710;" FontSize="11" />
+                                                    <TextBlock x:Uid="AddDetentStopLabel" Text="Add a stop" FontSize="11" />
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
 
                                         <TextBlock x:Name="DetentCaption"
                                                    FontSize="11"
@@ -1853,6 +1874,20 @@
                                                   SelectionChanged="OnDragAxisChanged" />
                                         <TextBlock x:Uid="DragAxisCaption"
                                                    Text="A circle is hard to trace on glass, so a knob is dragged in a straight line instead. Up is more, or right is more for a row of knobs in a narrow strip."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="PadVelocityPanel" Visibility="Collapsed">
+                                        <TextBlock x:Uid="InspectorPadVelocityHeading" Text="How hard it was hit" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <CheckBox x:Name="PadVelocityCheck"
+                                                  x:Uid="PadVelocityCheck"
+                                                  Content="Use pen or touch pressure for the value"
+                                                  Checked="OnPadVelocityChanged"
+                                                  Unchecked="OnPadVelocityChanged" />
+                                        <TextBlock x:Uid="PadVelocityCaption"
+                                                   Text="Only a pen and a few touch screens report pressure. Everything else, including a mouse, hits at full. Leave this off unless you have tried it on the machine you will play on."
                                                    FontSize="11"
                                                    TextWrapping="Wrap"
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />

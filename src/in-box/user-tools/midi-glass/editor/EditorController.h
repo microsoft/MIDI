@@ -231,6 +231,7 @@ namespace glass
         // them.
         bool SetControlTicks(_In_ std::wstring const& id, _In_ TickMarks const& ticks);
         bool SetControlShowDetentValues(_In_ std::wstring const& id, _In_ bool show);
+        bool SetControlVelocityFromTouch(_In_ std::wstring const& id, _In_ bool fromTouch);
 
         // The picture or video an image control shows, and the fill behind a grouping panel.
         bool SetControlPicture(_In_ std::wstring const& id, _In_ Picture const& picture);

@@ -160,16 +160,40 @@ namespace glass
             _Out_ size_t& controlIndex,
             _Out_ double& value) const noexcept;
 
-        // The controls that light up on any traffic at all rather than on one message. Fills
-        // the caller's span with their indexes and returns how many were written.
+        // What a listening control saw. An activity light blinks, a transport light latches,
+        // and a beat light has to be told about every clock message so somebody can count them.
+        enum class FeedbackHitKind
+        {
+            // Something arrived. Blink.
+            Pulse = 0,
+
+            // Start or continue. Stays lit until told otherwise.
+            On = 1,
+
+            // Stop. Goes dark.
+            Off = 2,
+
+            // One MIDI clock message. Twenty four of them is a quarter note; counting them is
+            // the caller's job, because this class holds no state between messages.
+            ClockTick = 3,
+        };
+
+        struct FeedbackHit
+        {
+            size_t ControlIndex{ 0 };
+            FeedbackHitKind Kind{ FeedbackHitKind::Pulse };
+        };
+
+        // Every control watching for something this message satisfies. Fills the caller's span
+        // and returns how many were written.
         //
         // Separate from TryResolveFeedback because one arriving message can light several of
-        // them at once, and because an activity light has no value to carry.
-        uint32_t CollectActivityLit(
+        // them at once, and because none of these modes carries a value to move a control to.
+        uint32_t CollectFeedbackHits(
             _In_ uint32_t const* words,
             _In_ uint32_t wordCount,
             _In_ int32_t destinationIndex,
-            _Inout_ std::span<size_t> lit) const noexcept;
+            _Inout_ std::span<FeedbackHit> hits) const noexcept;
 
         // Which controls follow a tempo, and where each one gets it from. Empty when nothing
         // on the layout is watching the beat.
@@ -219,6 +243,9 @@ namespace glass
             // the device counts.
             bool AnyGroup{ false };
             bool AnyChannel{ true };
+
+            // Tempo mode: whether the beat comes from the wire or from a clock on this layout.
+            bool TempoFromWire{ true };
         };
 
         std::vector<PreparedDestination> m_destinations{};

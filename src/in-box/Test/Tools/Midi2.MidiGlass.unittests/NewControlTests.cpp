@@ -500,6 +500,47 @@ namespace
     {
         return 0x20B00700u | (static_cast<uint32_t>(channel & 0x0F) << 16);
     }
+
+    // A MIDI 1.0 note on, group 0, on the channel given.
+    uint32_t NoteOnWord(_In_ uint8_t channel, _In_ uint8_t note, _In_ uint8_t velocity) noexcept
+    {
+        return 0x20900000u
+            | (static_cast<uint32_t>(channel & 0x0F) << 16)
+            | (static_cast<uint32_t>(note & 0x7F) << 8)
+            | static_cast<uint32_t>(velocity & 0x7F);
+    }
+
+    // A system real time message in a group 0 UMP.
+    uint32_t RealTimeWord(_In_ uint8_t status) noexcept
+    {
+        return 0x10000000u | (static_cast<uint32_t>(status) << 16);
+    }
+
+    // How many controls this message lights, and how the first of them was lit.
+    uint32_t HitsFor(
+        _In_ glass::BindingEngine const& engine,
+        _In_ uint32_t word,
+        _In_ int32_t destinationIndex,
+        _Out_ glass::BindingEngine::FeedbackHitKind& firstKind) noexcept
+    {
+        std::array<glass::BindingEngine::FeedbackHit, 8> hits{};
+
+        auto const count = engine.CollectFeedbackHits(&word, 1, destinationIndex, hits);
+
+        firstKind = count > 0 ? hits[0].Kind : glass::BindingEngine::FeedbackHitKind::Pulse;
+
+        return count;
+    }
+
+    uint32_t HitsFor(
+        _In_ glass::BindingEngine const& engine,
+        _In_ uint32_t word,
+        _In_ int32_t destinationIndex) noexcept
+    {
+        glass::BindingEngine::FeedbackHitKind ignored{};
+
+        return HitsFor(engine, word, destinationIndex, ignored);
+    }
 }
 
 void NewControlTests::AnActivityLampTakesAnythingFromItsDevice()
@@ -510,12 +551,12 @@ void NewControlTests::AnActivityLampTakesAnythingFromItsDevice()
         OneControl(LampWatching(glass::FeedbackMode::AnyActivity, L"Synth")),
         OneDevice());
 
+    std::array<glass::BindingEngine::FeedbackHit, 8> hits{};
+
     auto const word = ControlChangeWord(5);
 
-    std::array<size_t, 8> lit{};
-
-    VERIFY_ARE_EQUAL(1u, engine.CollectActivityLit(&word, 1, 0, lit));
-    VERIFY_ARE_EQUAL(size_t{ 0 }, lit[0]);
+    VERIFY_ARE_EQUAL(1u, engine.CollectFeedbackHits(&word, 1, 0, hits));
+    VERIFY_ARE_EQUAL(size_t{ 0 }, hits[0].ControlIndex);
 }
 
 void NewControlTests::AnActivityLampCanBeNarrowedToOneChannel()
@@ -526,13 +567,8 @@ void NewControlTests::AnActivityLampCanBeNarrowedToOneChannel()
         OneControl(LampWatching(glass::FeedbackMode::AnyActivity, L"Synth", true)),
         OneDevice());
 
-    std::array<size_t, 8> lit{};
-
-    auto const wanted = ControlChangeWord(0);
-    auto const other = ControlChangeWord(5);
-
-    VERIFY_ARE_EQUAL(1u, engine.CollectActivityLit(&wanted, 1, 0, lit));
-    VERIFY_ARE_EQUAL(0u, engine.CollectActivityLit(&other, 1, 0, lit));
+    VERIFY_ARE_EQUAL(1u, HitsFor(engine, ControlChangeWord(0), 0));
+    VERIFY_ARE_EQUAL(0u, HitsFor(engine, ControlChangeWord(5), 0));
 }
 
 void NewControlTests::AnActivityLampIgnoresAnotherDevice()
@@ -545,10 +581,8 @@ void NewControlTests::AnActivityLampIgnoresAnotherDevice()
 
     auto const word = ControlChangeWord(0);
 
-    std::array<size_t, 8> lit{};
-
     // Destination 1 is not the one the lamp named.
-    VERIFY_ARE_EQUAL(0u, engine.CollectActivityLit(&word, 1, 1, lit));
+    VERIFY_ARE_EQUAL(0u, HitsFor(engine, word, 1));
 
     // A lamp naming no device at all takes traffic from anything on the layout.
     glass::BindingEngine anywhere{};
@@ -557,7 +591,79 @@ void NewControlTests::AnActivityLampIgnoresAnotherDevice()
         OneControl(LampWatching(glass::FeedbackMode::AnyActivity, L"")),
         OneDevice());
 
-    VERIFY_ARE_EQUAL(1u, anywhere.CollectActivityLit(&word, 1, 1, lit));
+    VERIFY_ARE_EQUAL(1u, HitsFor(anywhere, word, 1));
+}
+
+void NewControlTests::ANoteLampTakesOnlyNotes()
+{
+    glass::BindingEngine engine{};
+
+    engine.Prepare(
+        OneControl(LampWatching(glass::FeedbackMode::Notes, L"Synth")),
+        OneDevice());
+
+    glass::BindingEngine::FeedbackHitKind kind{};
+
+    // A note on blinks it for its hold time. A note off is the end of something rather than
+    // the start of it, so it is left alone, and a controller is not a note at all.
+    VERIFY_ARE_EQUAL(1u, HitsFor(engine, NoteOnWord(0, 60, 100), 0, kind));
+    VERIFY_IS_TRUE(kind == glass::BindingEngine::FeedbackHitKind::Pulse);
+
+    VERIFY_ARE_EQUAL(0u, HitsFor(engine, NoteOnWord(0, 60, 0), 0));
+    VERIFY_ARE_EQUAL(0u, HitsFor(engine, ControlChangeWord(0), 0));
+}
+
+void NewControlTests::AControllerLampTakesOnlyControlChanges()
+{
+    glass::BindingEngine engine{};
+
+    engine.Prepare(
+        OneControl(LampWatching(glass::FeedbackMode::ControlChanges, L"Synth")),
+        OneDevice());
+
+    VERIFY_ARE_EQUAL(1u, HitsFor(engine, ControlChangeWord(0), 0));
+    VERIFY_ARE_EQUAL(0u, HitsFor(engine, NoteOnWord(0, 60, 100), 0));
+}
+
+void NewControlTests::ATransportLampLatchesOnStartAndClearsOnStop()
+{
+    glass::BindingEngine engine{};
+
+    engine.Prepare(
+        OneControl(LampWatching(glass::FeedbackMode::Transport, L"Synth")),
+        OneDevice());
+
+    glass::BindingEngine::FeedbackHitKind kind{};
+
+    VERIFY_ARE_EQUAL(1u, HitsFor(engine, RealTimeWord(0xFA), 0, kind));
+    VERIFY_IS_TRUE(kind == glass::BindingEngine::FeedbackHitKind::On);
+
+    VERIFY_ARE_EQUAL(1u, HitsFor(engine, RealTimeWord(0xFB), 0, kind));
+    VERIFY_IS_TRUE(kind == glass::BindingEngine::FeedbackHitKind::On);
+
+    VERIFY_ARE_EQUAL(1u, HitsFor(engine, RealTimeWord(0xFC), 0, kind));
+    VERIFY_IS_TRUE(kind == glass::BindingEngine::FeedbackHitKind::Off);
+
+    // A clock message is not transport, and must not flicker a running light.
+    VERIFY_ARE_EQUAL(0u, HitsFor(engine, RealTimeWord(0xF8), 0));
+}
+
+void NewControlTests::ABeatLampCountsClockMessages()
+{
+    glass::BindingEngine engine{};
+
+    engine.Prepare(
+        OneControl(LampWatching(glass::FeedbackMode::Tempo, L"Synth")),
+        OneDevice());
+
+    glass::BindingEngine::FeedbackHitKind kind{};
+
+    // Every clock is reported. Counting twenty four of them to a beat is the player's job,
+    // because the engine keeps no state between messages.
+    VERIFY_ARE_EQUAL(1u, HitsFor(engine, RealTimeWord(0xF8), 0, kind));
+    VERIFY_IS_TRUE(kind == glass::BindingEngine::FeedbackHitKind::ClockTick);
+
+    VERIFY_ARE_EQUAL(0u, HitsFor(engine, ControlChangeWord(0), 0));
 }
 
 void NewControlTests::AMessageBindingIsNotLitByActivity()
@@ -573,9 +679,7 @@ void NewControlTests::AMessageBindingIsNotLitByActivity()
 
     auto const word = ControlChangeWord(0);
 
-    std::array<size_t, 8> lit{};
-
-    VERIFY_ARE_EQUAL(0u, engine.CollectActivityLit(&word, 1, 0, lit));
+    VERIFY_ARE_EQUAL(0u, HitsFor(engine, word, 0));
 
     // It still moves on the message it was actually pointed at.
     size_t controlIndex{ 99 };

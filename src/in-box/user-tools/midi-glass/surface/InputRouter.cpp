@@ -51,6 +51,7 @@ namespace glass
             binding.RestValueY = renderer.RestValueYAt(i);
             binding.Drag = renderer.DragAxisAt(i);
             binding.Keyboard = renderer.KeyboardAt(i);
+            binding.VelocityFromTouch = renderer.VelocityFromTouchAt(i);
 
             m_bindings.push_back(std::move(binding));
         }
@@ -130,7 +131,7 @@ namespace glass
             {
                 // A finger lifted off the window rather than off the pad still has to end the
                 // note, or a layout that loses focus mid press leaves one sounding.
-                Switched(binding.ItemIndex, false);
+                Switched(binding.ItemIndex, false, 0.0);
             }
         }
 
@@ -279,7 +280,23 @@ namespace glass
 
             if (Switched)
             {
-                Switched(binding.ItemIndex, true);
+                // How hard it was hit, where the hardware says. A mouse reports one number
+                // every time and most touch screens report nothing at all, which is why this
+                // is off unless the customer asked for it: otherwise every pad on the page
+                // would quietly send half velocity.
+                auto velocity = 1.0;
+
+                if (binding.VelocityFromTouch)
+                {
+                    auto const pressure = point.Properties().Pressure();
+
+                    if (pressure > 0.0f && pressure <= 1.0f)
+                    {
+                        velocity = pressure;
+                    }
+                }
+
+                Switched(binding.ItemIndex, true, velocity);
             }
 
             return;
@@ -299,7 +316,7 @@ namespace glass
 
             if (Switched)
             {
-                Switched(binding.ItemIndex, isOn);
+                Switched(binding.ItemIndex, isOn, 1.0);
             }
 
             return;
@@ -450,7 +467,7 @@ namespace glass
 
             if (Switched)
             {
-                Switched(binding.ItemIndex, false);
+                Switched(binding.ItemIndex, false, 0.0);
             }
 
             return;
