@@ -191,6 +191,8 @@ namespace winrt::midiglass::implementation
         void OnPictureZoomChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
         void OnPictureCenterXChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
         void OnPictureCenterYChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
+        void OnPictureTintChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnPictureTintStrengthChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
         void ApplyPictureCropEdit(_In_ double value, _In_ void (*assign)(glass::Picture&, double));
 
         winrt::fire_and_forget ChoosePictureAsync();

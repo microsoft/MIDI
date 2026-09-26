@@ -475,6 +475,45 @@ void LayoutDocumentTests::ABackgroundPictureSurvivesARoundTrip()
     VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(reread.Document));
 }
 
+void LayoutDocumentTests::AControlPictureSurvivesARoundTrip()
+{
+    auto document = LoadHandAuthored();
+
+    glass::Control control{};
+
+    control.Id = L"backdrop";
+    control.Kind = glass::ControlKind::Image;
+    control.Image.FileName = L"stage clip.mp4";
+    control.Image.Fit = glass::BackgroundFit::Fill;
+    control.Image.Opacity = 0.8;
+    control.Image.Loops = false;
+    control.Image.Zoom = 2.5;
+    control.Image.CenterX = 0.25;
+    control.Image.CenterY = 0.75;
+    control.Image.TintColor = L"#2E6CC8";
+    control.Image.TintStrength = 0.55;
+
+    document.Pages[0].Controls.push_back(control);
+
+    auto const text = glass::WriteLayoutToJson(document);
+    auto const reread = glass::ReadLayoutFromJson(text);
+
+    VERIFY_IS_TRUE(reread.Succeeded);
+
+    auto const& back = reread.Document.Pages[0].Controls.back().Image;
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"stage clip.mp4" }, back.FileName);
+    VERIFY_IS_TRUE(back.Fit == glass::BackgroundFit::Fill);
+    VERIFY_IS_FALSE(back.Loops);
+    VERIFY_ARE_EQUAL(2.5, back.Zoom);
+    VERIFY_ARE_EQUAL(0.25, back.CenterX);
+    VERIFY_ARE_EQUAL(0.75, back.CenterY);
+    VERIFY_ARE_EQUAL(std::wstring{ L"#2E6CC8" }, back.TintColor);
+    VERIFY_ARE_EQUAL(0.55, back.TintStrength);
+
+    VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(reread.Document));
+}
+
 void LayoutDocumentTests::ABackgroundPictureThatIsAPathIsRefused()
 {
     // A layout arrives from a stranger. A background that names a path is a way to make this app

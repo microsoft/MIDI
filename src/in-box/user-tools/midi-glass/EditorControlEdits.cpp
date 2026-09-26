@@ -536,6 +536,46 @@ namespace winrt::midiglass::implementation
     }
 
     _Use_decl_annotations_
+    void EditorWindow::OnPictureTintStrengthChanged(
+        foundation::IInspectable const& sender,
+        controls::Primitives::RangeBaseValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+
+        ApplyPictureCropEdit(args.NewValue() / 100.0, [](glass::Picture& picture, double value)
+            {
+                picture.TintStrength = value;
+            });
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnPictureTintChanged(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control == nullptr)
+        {
+            return;
+        }
+
+        auto picture = control->Image;
+        picture.TintColor = std::wstring{ PictureTintBox().Text() };
+
+        ApplyControlEdit(control->Id, [&](std::wstring const& id)
+            { return m_editor.SetControlPicture(id, picture); });
+    }
+
+    _Use_decl_annotations_
     void EditorWindow::OnPictureLoopsChanged(
         foundation::IInspectable const& sender,
         xaml::RoutedEventArgs const& args)

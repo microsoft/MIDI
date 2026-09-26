@@ -329,6 +329,12 @@ namespace glass
         double CenterX{ 0.5 };
         double CenterY{ 0.5 };
 
+        // A wash of color laid over the top. Empty for none. Black dims, which is usually what
+        // a picture behind a page of controls needs before the controls can be read over it;
+        // anything else tints.
+        std::wstring TintColor{};
+        double TintStrength{ 0.0 };
+
         // Nothing at all to draw.
         bool IsEmpty() const noexcept { return FileName.empty(); }
 

@@ -260,6 +260,8 @@ namespace winrt::midiglass::implementation
                 PictureZoomSlider().Value(image.Zoom * 100.0);
                 PictureCenterXSlider().Value(image.CenterX * 100.0);
                 PictureCenterYSlider().Value(image.CenterY * 100.0);
+                PictureTintBox().Text(winrt::hstring{ image.TintColor });
+                PictureTintStrengthSlider().Value(image.TintStrength * 100.0);
             }
 
             // ---- keys ----

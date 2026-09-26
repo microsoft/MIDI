@@ -1160,6 +1160,18 @@
   <data name="PictureCropCaption.Text" xml:space="preserve">
     <value>Zoom in and then move the middle to take a slice out of a picture or a clip. Set the fit above to Fill first, or there will be nothing to crop.</value>
   </data>
+  <data name="PictureTintHeading.Text" xml:space="preserve">
+    <value>Wash of color</value>
+  </data>
+  <data name="PictureTintBox.Header" xml:space="preserve">
+    <value>Color, or blank for none</value>
+  </data>
+  <data name="PictureTintStrengthSlider.Header" xml:space="preserve">
+    <value>How strong the wash is</value>
+  </data>
+  <data name="PictureTintCaption.Text" xml:space="preserve">
+    <value>Black dims the picture, which is what a busy clip behind a page of controls usually needs. Any other color tints it.</value>
+  </data>
   <data name="PictureFilterBothFormat" xml:space="preserve">
     <value>Pictures and video ({0})</value>
   </data>

@@ -512,6 +512,7 @@ namespace glass
         safe.Zoom = std::clamp(picture.Zoom, MinimumPictureZoom, MaximumPictureZoom);
         safe.CenterX = std::clamp(picture.CenterX, 0.0, 1.0);
         safe.CenterY = std::clamp(picture.CenterY, 0.0, 1.0);
+        safe.TintStrength = std::clamp(picture.TintStrength, 0.0, 1.0);
 
         if (control->Image.FileName == safe.FileName &&
             control->Image.Fit == safe.Fit &&
@@ -519,7 +520,9 @@ namespace glass
             control->Image.Loops == safe.Loops &&
             control->Image.Zoom == safe.Zoom &&
             control->Image.CenterX == safe.CenterX &&
-            control->Image.CenterY == safe.CenterY)
+            control->Image.CenterY == safe.CenterY &&
+            control->Image.TintColor == safe.TintColor &&
+            control->Image.TintStrength == safe.TintStrength)
         {
             return false;
         }
@@ -531,6 +534,8 @@ namespace glass
         control->Image.Zoom = safe.Zoom;
         control->Image.CenterX = safe.CenterX;
         control->Image.CenterY = safe.CenterY;
+        control->Image.TintColor = safe.TintColor;
+        control->Image.TintStrength = safe.TintStrength;
 
         Commit(EditNames::Properties);
 

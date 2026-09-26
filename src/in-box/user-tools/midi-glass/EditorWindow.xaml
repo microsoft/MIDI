@@ -1411,6 +1411,26 @@
                                                    FontSize="11"
                                                    TextWrapping="Wrap"
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <TextBlock x:Uid="PictureTintHeading" Text="Wash of color" Style="{StaticResource InspectorHeadingStyle}" />
+
+                                        <TextBox x:Name="PictureTintBox"
+                                                 x:Uid="PictureTintBox"
+                                                 PlaceholderText="#000000"
+                                                 LostFocus="OnPictureTintChanged" />
+
+                                        <Slider x:Name="PictureTintStrengthSlider"
+                                                x:Uid="PictureTintStrengthSlider"
+                                                Minimum="0"
+                                                Maximum="100"
+                                                StepFrequency="1"
+                                                ValueChanged="OnPictureTintStrengthChanged" />
+
+                                        <TextBlock x:Uid="PictureTintCaption"
+                                                   Text="Black dims the picture, which is what a busy clip behind a page of controls usually needs. Any other color tints it."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                                     </StackPanel>
 
                                     <StackPanel x:Name="KeyboardPanel" Visibility="Collapsed">

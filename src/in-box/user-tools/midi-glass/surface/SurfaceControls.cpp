@@ -1457,6 +1457,14 @@ namespace glass
 
             container.Children().Append(content);
 
+            // A wash over the top. A XAML rectangle rather than a composition effect: video in
+            // WinUI 3 reaches the screen through the system compositor, not this app's, so an
+            // effect brush cannot be put in front of it. An alpha overlay can.
+            if (auto const wash = BuildPictureTint(picture, width, height); wash != nullptr)
+            {
+                container.Children().Append(wash);
+            }
+
             controls::Canvas::SetLeft(container, control.X);
             controls::Canvas::SetTop(container, control.Y);
 
@@ -1477,6 +1485,43 @@ namespace glass
         catch (...)
         {
         }
+    }
+
+    _Use_decl_annotations_
+    xaml::FrameworkElement SurfaceRenderer::BuildPictureTint(
+        Picture const& picture,
+        double width,
+        double height)
+    {
+        auto const strength = std::clamp(picture.TintStrength, 0.0, 1.0);
+
+        if (picture.TintColor.empty() || strength <= 0.0)
+        {
+            return nullptr;
+        }
+
+        ThemeColor parsed{};
+
+        if (!TryParseColor(picture.TintColor, parsed))
+        {
+            return nullptr;
+        }
+
+        xaml::Shapes::Rectangle wash{};
+
+        wash.Width(width);
+        wash.Height(height);
+        wash.Fill(media::SolidColorBrush{ ToWindowsColor(parsed) });
+        wash.Opacity(strength);
+        wash.IsHitTestVisible(false);
+
+        xaml::Automation::AutomationProperties::SetAccessibilityView(
+            wash, xaml::Automation::Peers::AccessibilityView::Raw);
+
+        controls::Canvas::SetLeft(wash, 0.0);
+        controls::Canvas::SetTop(wash, 0.0);
+
+        return wash;
     }
 
     _Use_decl_annotations_

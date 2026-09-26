@@ -308,6 +308,12 @@ namespace glass
             _In_ double width,
             _In_ double height);
 
+        // The wash of color over a picture, or nullptr when there is none.
+        static xaml::FrameworkElement BuildPictureTint(
+            _In_ Picture const& picture,
+            _In_ double width,
+            _In_ double height);
+
         // Shuts down the media player behind a video, if that is what this picture was.
         static void ClosePicture(_In_ xaml::FrameworkElement const& element) noexcept;
 

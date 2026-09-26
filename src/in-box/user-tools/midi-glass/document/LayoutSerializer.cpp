@@ -92,6 +92,8 @@ namespace glass
         constexpr wchar_t KeyZoom[] = L"zoom";
         constexpr wchar_t KeyCenterX[] = L"centerX";
         constexpr wchar_t KeyCenterY[] = L"centerY";
+        constexpr wchar_t KeyTint[] = L"tint";
+        constexpr wchar_t KeyTintStrength[] = L"tintStrength";
         constexpr wchar_t KeyKeyboard[] = L"keyboard";
         constexpr wchar_t KeyKeyCount[] = L"keyCount";
         constexpr wchar_t KeyLowestNote[] = L"lowestNote";
@@ -804,10 +806,13 @@ namespace glass
                 ReadNumber(nested, KeyZoom, 1.0), MinimumPictureZoom, MaximumPictureZoom);
             picture.CenterX = std::clamp(ReadNumber(nested, KeyCenterX, 0.5), 0.0, 1.0);
             picture.CenterY = std::clamp(ReadNumber(nested, KeyCenterY, 0.5), 0.0, 1.0);
+            picture.TintColor = ReadString(nested, KeyTint);
+            picture.TintStrength = std::clamp(ReadNumber(nested, KeyTintStrength, 0.0), 0.0, 1.0);
 
             picture.Unknown = CaptureUnknown(
                 nested,
-                { KeyFile, KeyFit, KeyOpacity, KeyLoops, KeyZoom, KeyCenterX, KeyCenterY });
+                { KeyFile, KeyFit, KeyOpacity, KeyLoops, KeyZoom, KeyCenterX, KeyCenterY,
+                  KeyTint, KeyTintStrength });
 
             return picture;
         }
@@ -1403,6 +1408,8 @@ namespace glass
                 writer.Write(KeyZoom, control.Image.Zoom);
                 writer.Write(KeyCenterX, control.Image.CenterX);
                 writer.Write(KeyCenterY, control.Image.CenterY);
+                writer.Write(KeyTint, control.Image.TintColor);
+                writer.Write(KeyTintStrength, control.Image.TintStrength);
                 WriteUnknown(writer, control.Image.Unknown);
                 writer.EndObject();
             }
