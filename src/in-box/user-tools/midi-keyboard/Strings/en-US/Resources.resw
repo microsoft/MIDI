@@ -121,6 +121,16 @@
   <data name="ArpRateComboBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Arpeggiator note length</value>
   </data>
+  <data name="LatchToggleText.Text" xml:space="preserve">
+    <value>Latch</value>
+    <comment>Label on the button that keeps notes sounding after the keys are released. Keep it brief.</comment>
+  </data>
+  <data name="LatchToggle.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Latch notes on</value>
+  </data>
+  <data name="LatchToggle.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>Keep notes sounding after you let go of the keys. Press a latched key again to release it.</value>
+  </data>
   <data name="PanicButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>All notes off</value>
   </data>
@@ -162,6 +172,42 @@
   </data>
   <data name="ConnectionEndpointUnavailableToolTip" xml:space="preserve">
     <value>This device is no longer connected. The keyboard will start playing it again as soon as it comes back.</value>
+  </data>
+  <data name="RetryProgramListCheckBox.Content" xml:space="preserve">
+    <value>Keep looking for the device's programs</value>
+  </data>
+  <data name="RetryProgramListCheckBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Keep looking for the device's programs</value>
+  </data>
+  <data name="RetryProgramListHint.Text" xml:space="preserve">
+    <value>Asks again every few seconds until something answers, so a synthesizer or DAW you start after this app is still found. Turn it off to ask only once each time you pick a destination.</value>
+  </data>
+  <data name="ProgramViewRadioButtons.Header" xml:space="preserve">
+    <value>Show programs</value>
+  </data>
+  <data name="ProgramViewRadioButtons.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Show programs</value>
+  </data>
+  <data name="ProgramViewFlatRadio.Content" xml:space="preserve">
+    <value>In one list</value>
+  </data>
+  <data name="ProgramViewCategoryRadio.Content" xml:space="preserve">
+    <value>By category</value>
+  </data>
+  <data name="ProgramCategoryListView.Header" xml:space="preserve">
+    <value>Categories</value>
+  </data>
+  <data name="ProgramCategoryListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Program categories</value>
+  </data>
+  <data name="CategoryProgramListView.Header" xml:space="preserve">
+    <value>Programs</value>
+  </data>
+  <data name="CategoryProgramListView.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>Programs in the selected category</value>
+  </data>
+  <data name="ProgramCategoryOther" xml:space="preserve">
+    <value>Other</value>
   </data>
   <data name="ProgramListComboBox.Header" xml:space="preserve">
     <value>Programs on this device</value>

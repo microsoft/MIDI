@@ -92,6 +92,11 @@ public:
     std::vector<winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiCapabilityInquiryMessageType>
         MessageLog() const;
 
+    // What the last Discovery to arrive declared about the initiator, read straight out of the
+    // payload. This is how a test checks that what an application set is what went on the wire.
+    uint8_t LastInitiatorCategories() const { return m_lastInitiatorCategories; }
+    uint32_t LastInitiatorReceivableSize() const { return m_lastInitiatorReceivableSize; }
+
 private:
 
     void OnMessageReceived(
@@ -120,6 +125,9 @@ private:
 
     std::atomic<bool> m_answerDiscovery{ true };
     std::atomic<bool> m_answerAsVersion11{ false };
+
+    std::atomic<uint8_t> m_lastInitiatorCategories{ 0 };
+    std::atomic<uint32_t> m_lastInitiatorReceivableSize{ 0 };
     std::atomic<bool> m_answerWithNak{ false };
     std::atomic<bool> m_answerNothing{ false };
     std::atomic<int32_t> m_resourceStatus{ 200 };

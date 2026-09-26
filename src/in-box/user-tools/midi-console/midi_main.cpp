@@ -85,24 +85,16 @@ namespace
     // The shipping console takes the endpoint id between the branch and the sub-command
     // ("midi endpoint <id> monitor"). CLI11 cannot express that, so the id is moved to the end
     // where it is parsed as the sub-command's positional. Existing scripts keep working.
-    void NormalizeEndpointArgumentOrder(_Inout_ std::vector<std::string>& arguments)
+    //
+    // The sub-command names are asked of CLI11 rather than listed here. A list went stale the
+    // first time a new endpoint verb was added, and the symptom was baffling: the new verb was
+    // mistaken for an endpoint id, moved to the end, and the command failed complaining that a
+    // required option had not been supplied when it plainly had.
+    void NormalizeEndpointArgumentOrder(
+        _In_ CLI::App const* const endpointCommand,
+        _Inout_ std::vector<std::string>& arguments)
     {
-        static const std::vector<std::string> endpointSubcommands
-        {
-            "monitor", "listen",
-            "send-message", "send-ump", "send",
-            "send-message-file", "send-ump-file", "send-file",
-            "send-sysex-file", "send-sysex",
-            "send-beat-clock", "send-clock", "clock",
-            "play-notes", "play",
-            "properties", "props", "information", "info",
-            "customize",
-            "customizations",
-            "short-id", "full-id", "long-id",
-            "request", "req"
-        };
-
-        if (arguments.size() < 4)
+        if (arguments.size() < 4 || endpointCommand == nullptr)
         {
             return;
         }
@@ -119,8 +111,12 @@ namespace
             return;
         }
 
-        auto const isSubcommand = std::any_of(endpointSubcommands.begin(), endpointSubcommands.end(),
-            [&candidate](auto const& name) { return EqualsIgnoreCase(candidate, name); });
+        auto const subcommands = endpointCommand->get_subcommands(
+            [](CLI::App const*) noexcept { return true; });
+
+        // check_name matches a sub-command's own name and every alias it was given.
+        auto const isSubcommand = std::any_of(subcommands.begin(), subcommands.end(),
+            [&candidate](CLI::App const* const command) { return command->check_name(candidate); });
 
         if (isSubcommand)
         {
@@ -229,6 +225,7 @@ int main()
     monitorCommand->add_option("-c,--capture-to-file", monitorOptions.CaptureToFile, ResourceString(IDS_OPT_CAPTURE_TO_FILE));
     monitorCommand->add_flag("-n,--annotate-capture", monitorOptions.AnnotateCapture, ResourceString(IDS_OPT_ANNOTATE_CAPTURE));
     monitorCommand->add_option("-l,--capture-field-delimiter", monitorOptions.CaptureFieldDelimiter, ResourceString(IDS_OPT_CAPTURE_FIELD_DELIMITER));
+    monitorCommand->add_option("-f,--capture-format", monitorOptions.CaptureFormat, ResourceString(IDS_OPT_CAPTURE_FORMAT));
 
     EndpointPropertiesOptions propertiesOptions{};
 
@@ -296,6 +293,23 @@ int main()
     sendClockCommand->add_option("-g,--group,--group-number", sendClockOptions.GroupNumbers, ResourceString(IDS_OPT_CLOCK_GROUPS))->required();
     sendClockCommand->add_flag("-s,--send-midi-start-message,--send-start-message,--send-start", sendClockOptions.SendStartMessage, ResourceString(IDS_OPT_CLOCK_SEND_START));
     sendClockCommand->add_flag("-x,--send-midi-stop-message,--send-stop-message,--send-stop", sendClockOptions.SendStopMessage, ResourceString(IDS_OPT_CLOCK_SEND_STOP));
+    sendClockCommand->add_option("-r,--clock-ratio,--divide,--multiply", sendClockOptions.ClockRatio, ResourceString(IDS_OPT_CLOCK_RATIO));
+    sendClockCommand->add_option("-w,--swing,--swing-percent", sendClockOptions.SwingPercent, ResourceString(IDS_OPT_CLOCK_SWING));
+    sendClockCommand->add_option("-b,--swing-subdivision", sendClockOptions.SwingSubdivision, ResourceString(IDS_OPT_CLOCK_SWING_SUBDIVISION));
+    sendClockCommand->add_option("-o,--offset,--offset-milliseconds", sendClockOptions.OffsetMilliseconds, ResourceString(IDS_OPT_CLOCK_OFFSET));
+
+    EndpointSendTimeCodeOptions sendTimeCodeOptions{};
+
+    auto sendTimeCodeCommand = endpointCommand->add_subcommand("send-time-code", ResourceString(IDS_CMD_EP_SEND_TIME_CODE));
+    sendTimeCodeCommand->alias("send-mtc");
+    sendTimeCodeCommand->alias("time-code");
+    sendTimeCodeCommand->alias("mtc");
+    sendTimeCodeCommand->add_option("endpoint-id", sendTimeCodeOptions.EndpointDeviceId, ResourceString(IDS_OPT_ENDPOINT_DEVICE_ID));
+    sendTimeCodeCommand->add_option("-f,--frame-rate,--fps", sendTimeCodeOptions.FrameRate, ResourceString(IDS_OPT_MTC_FRAME_RATE));
+    sendTimeCodeCommand->add_option("-b,--begin-at,--start-at", sendTimeCodeOptions.StartAt, ResourceString(IDS_OPT_MTC_START_AT));
+    sendTimeCodeCommand->add_option("-g,--group,--group-number", sendTimeCodeOptions.GroupNumbers, ResourceString(IDS_OPT_CLOCK_GROUPS))->required();
+    sendTimeCodeCommand->add_flag("-u,--full-frame,!-U,!--no-full-frame", sendTimeCodeOptions.SendFullFrameMessages, ResourceString(IDS_OPT_MTC_FULL_FRAME));
+    sendTimeCodeCommand->add_option("-o,--offset,--offset-milliseconds", sendTimeCodeOptions.OffsetMilliseconds, ResourceString(IDS_OPT_CLOCK_OFFSET));
 
     EndpointCustomizeOptions customizeOptions{};
 
@@ -700,7 +714,7 @@ int main()
     auto arguments = GetUtf8CommandLineArguments();
 
     RewriteEndpointSysExAlias(arguments);
-    NormalizeEndpointArgumentOrder(arguments);
+    NormalizeEndpointArgumentOrder(endpointCommand, arguments);
 
     std::vector<const char*> argumentPointers;
     argumentPointers.reserve(arguments.size());
@@ -783,6 +797,7 @@ int main()
         if (sendMessageFileCommand->parsed())       return RunEndpointSendMessageFileCommand(sendMessageFileOptions);
         if (playNotesCommand->parsed())             return RunEndpointPlayNotesCommand(playNotesOptions);
         if (sendClockCommand->parsed())             return RunEndpointSendClockCommand(sendClockOptions);
+        if (sendTimeCodeCommand->parsed())          return RunEndpointSendTimeCodeCommand(sendTimeCodeOptions);
         if (customizeCommand->parsed())             return RunEndpointCustomizeCommand(customizeOptions);
         if (customizationsListCommand->parsed())    return RunEndpointCustomizationsListCommand(customizationsListOptions);
         if (customizationsRelinkCommand->parsed())  return RunEndpointCustomizationsRelinkCommand(customizationsRelinkOptions);

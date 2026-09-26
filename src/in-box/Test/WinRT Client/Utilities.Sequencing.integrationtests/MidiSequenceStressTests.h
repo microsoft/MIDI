@@ -17,6 +17,7 @@ class MidiSequenceStressTests
 
     // ---- dense content ----
     TEST_METHOD(ReadsDenseContentQuickly);
+    TEST_METHOD(PreparesDenseContentQuickly);
     TEST_METHOD(WindowedReadsStayCheapOnDenseContent);
     TEST_METHOD(PlaysDenseContentWithoutFalteringOrHanging);
 

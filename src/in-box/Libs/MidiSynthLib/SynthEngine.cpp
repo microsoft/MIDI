@@ -87,6 +87,11 @@ namespace MidiSynth
         }
     }
 
+    SynthEngine::SynthEngine() noexcept
+    {
+        ResetChannels();
+    }
+
     _Use_decl_annotations_
     bool SynthEngine::Initialize(const DlsCollection* collection, const SynthConfig& config)
     {
@@ -142,9 +147,26 @@ namespace MidiSynth
             m_chorusSendBuffer.clear();
         }
 
-        SystemReset();
+        // Channel state deliberately survives. A program change commonly arrives before the note
+        // that opens the audio device, and changing a setting rebuilds the engine mid performance,
+        // so resetting here would silently undo the sound the sender asked for. The instruments
+        // are the only thing that has to be recomputed, because they point into this collection.
+        for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
+        {
+            ResolveInstrument(channel);
+        }
 
         return true;
+    }
+
+    void SynthEngine::ResetChannels() noexcept
+    {
+        for (size_t channel = 0; channel < MidiChannelCount; channel++)
+        {
+            m_channels[channel] = SynthChannelState{};
+            m_channels[channel].IsDrumChannel = (channel == DrumChannelIndex);
+            ResolveInstrument(static_cast<uint8_t>(channel));
+        }
     }
 
     void SynthEngine::SystemReset()
@@ -154,12 +176,7 @@ namespace MidiSynth
             voice = SynthVoice{};
         }
 
-        for (size_t channel = 0; channel < MidiChannelCount; channel++)
-        {
-            m_channels[channel] = SynthChannelState{};
-            m_channels[channel].IsDrumChannel = (channel == DrumChannelIndex);
-            ResolveInstrument(static_cast<uint8_t>(channel));
-        }
+        ResetChannels();
 
         // GM2 defaults: master volume full, tuning centered.
         m_masterVolumeDb = 0.0;
@@ -292,6 +309,15 @@ namespace MidiSynth
     void SynthEngine::ResolveInstrument(uint8_t channel) noexcept
     {
         auto& state = m_channels[channel];
+
+        // The transport points the dispatcher at the engine before a sound set is known, so that
+        // MIDI-CI can be answered without opening the audio device. A program change or a reset
+        // arriving then has nothing to resolve against.
+        if (m_collection == nullptr)
+        {
+            state.Instrument = nullptr;
+            return;
+        }
 
         uint32_t variationBank{ 0 };
         bool isDrumKit{ false };

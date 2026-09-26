@@ -161,8 +161,10 @@ MidiSynthDevice::EnsureSoundSetLoaded()
 void
 MidiSynthDevice::PrimeDispatcher() noexcept
 {
-    // The engine is not initialized yet, and will not be until a sample rate is known. Its entry
-    // points all no-op without a sound set, so the dispatcher can be pointed at it safely.
+    // The engine is not initialized yet, and will not be until a sample rate is known. Its channel
+    // map is at power-up defaults from construction and its control entry points all work without
+    // a sound set, so the dispatcher can be pointed at it and MIDI-CI answered before there is any
+    // audio device. Nothing here opens one.
     m_dispatcher.Initialize(&m_engine, MIDI_SYNTH_GROUP_INDEX, m_muid);
     m_dispatcher.SetOutput(&m_output, SynthIdentity{});
 
@@ -248,7 +250,8 @@ MidiSynthDevice::AcquireAudio()
     {
         RETURN_HR_IF(E_FAIL, !m_engine.Initialize(&m_collection, config));
 
-        // Initialize clears the channel map, so the customer's rhythm channels go back afterwards.
+        // The engine keeps its channel map across this, so this only matters for a rhythm channel
+        // chosen before the engine had ever been told about it.
         for (uint8_t channel = 0; channel < MidiChannelCount; channel++)
         {
             if ((m_drumChannelMask & (1u << channel)) != 0)
@@ -646,10 +649,9 @@ MidiSynthDevice::SetDrumChannel(uint8_t channel, bool isDrumChannel) noexcept
         m_drumChannelMask &= ~(1u << channel);
     }
 
-    if (m_engineInitialized)
-    {
-        m_engine.SetDrumChannel(channel, isDrumChannel);
-    }
+    // Told to the engine even with no audio device, so a MIDI-CI ChannelList read before anything
+    // has played links the channel to the right program list.
+    m_engine.SetDrumChannel(channel, isDrumChannel);
 
     return S_OK;
 }
@@ -908,6 +910,22 @@ MidiSynthDevice::ServicePropertyRequests() noexcept
 {
     try
     {
+        // A device whose identifier was withdrawn, whether by another device or by a collision it
+        // detected itself, has to make a new one or it stops answering MIDI-CI for good. The
+        // dispatcher deliberately has no random source, so the replacement is made here.
+        if (m_dispatcher.MuidNeedsReplacement())
+        {
+            const auto replacement = CreateRandomMuid();
+
+            // Zero means the draw failed. Leaving the flag set retries on the next pass, which is
+            // better than latching an identifier we did not generate properly.
+            if (replacement != 0)
+            {
+                m_muid = replacement;
+                m_dispatcher.SetMuid(m_muid);
+            }
+        }
+
         ServicePropertyRequestsInner();
     }
     catch (...)
@@ -943,12 +961,12 @@ MidiSynthDevice::ServicePropertyRequestsInner()
                 return;
             }
 
-            const std::vector<char>* blob = nullptr;
-            bool cacheable{ true };
+            ResourceRequest resourceRequest{};
 
-            auto const lookup = ResourceForHeader(request.Header, request.HeaderByteCount, &blob, cacheable);
+            auto const lookup = ResourceForHeader(request.Header, request.HeaderByteCount, resourceRequest);
 
-            if (lookup != ResourceLookup::Found || blob == nullptr)
+            if (lookup != ResourceLookup::Found ||
+                (resourceRequest.Blob == nullptr && !resourceRequest.IsProgramList))
             {
                 std::string const asked(
                     reinterpret_cast<const char*>(request.Header), request.HeaderByteCount);
@@ -972,7 +990,19 @@ MidiSynthDevice::ServicePropertyRequestsInner()
                 return;
             }
 
-            m_propertyExchange.BeginReply(request, *blob, cacheable);
+            if (resourceRequest.IsProgramList)
+            {
+                m_propertyExchange.BeginProgramListReply(
+                    m_collection,
+                    request,
+                    resourceRequest.ResourceId,
+                    resourceRequest.Offset,
+                    resourceRequest.Limit);
+            }
+            else
+            {
+                m_propertyExchange.BeginReply(request, *resourceRequest.Blob, resourceRequest.Cacheable);
+            }
         }
         else if (m_propertyExchange.HasSubscriptions())
         {
@@ -981,7 +1011,7 @@ MidiSynthDevice::ServicePropertyRequestsInner()
             // a list of at most eight.
             (void)m_propertyExchange.ChannelListChanged(m_engine);
 
-            if (!m_propertyExchange.BeginNextSubscriptionUpdate(m_engine, m_collection))
+            if (!m_propertyExchange.BeginNextSubscriptionNotification())
             {
                 return;
             }
@@ -1088,11 +1118,9 @@ MidiSynthDevice::ResourceLookup
 MidiSynthDevice::ResourceForHeader(
     const uint8_t* header,
     uint16_t headerBytes,
-    const std::vector<char>** blob,
-    bool& cacheable)
+    ResourceRequest& result)
 {
-    *blob = nullptr;
-    cacheable = true;
+    result = {};
 
     std::string const text(reinterpret_cast<const char*>(header), headerBytes);
 
@@ -1125,10 +1153,43 @@ MidiSynthDevice::ResourceForHeader(
         return std::wstring{ found.GetString() };
     };
 
+    // Same discipline for numbers, plus a guard on what a double can be: an initiator is free to
+    // send a negative or an absurd offset and neither may become a huge size_t.
+    auto const readCount = [&parsed](std::wstring_view key, size_t fallback) -> size_t
+    {
+        winrt::hstring const name{ key };
+
+        if (!parsed.HasKey(name))
+        {
+            return fallback;
+        }
+
+        auto const found = parsed.Lookup(name);
+
+        if (found == nullptr || found.ValueType() != json::JsonValueType::Number)
+        {
+            return fallback;
+        }
+
+        auto const value = found.GetNumber();
+
+        // Negative and not-a-number are out of spec, so the default stands. An absurd but positive
+        // value is clamped rather than ignored: an offset past the end has to stay past the end,
+        // which is how an initiator paging forward learns it is done.
+        if (!(value >= 0.0))
+        {
+            return fallback;
+        }
+
+        constexpr double ceiling = 1000000.0;
+
+        return static_cast<size_t>((value > ceiling) ? ceiling : value);
+    };
+
     auto const resource = readString(L"resource");
 
-    if (resource == L"ResourceList") { *blob = &m_propertyExchange.ResourceListJson(); return ResourceLookup::Found; }
-    if (resource == L"DeviceInfo") { *blob = &m_propertyExchange.DeviceInfoJson(); return ResourceLookup::Found; }
+    if (resource == L"ResourceList") { result.Blob = &m_propertyExchange.ResourceListJson(); return ResourceLookup::Found; }
+    if (resource == L"DeviceInfo") { result.Blob = &m_propertyExchange.DeviceInfoJson(); return ResourceLookup::Found; }
 
     if (resource == L"ProgramList")
     {
@@ -1146,7 +1207,11 @@ MidiSynthDevice::ResourceForHeader(
             return ResourceLookup::UnknownResource;
         }
 
-        *blob = &m_propertyExchange.ProgramListJson(resourceId);
+        result.IsProgramList = true;
+        result.ResourceId = std::move(resourceId);
+        result.Offset = readCount(L"offset", 0);
+        result.Limit = readCount(L"limit", SIZE_MAX);
+
         return ResourceLookup::Found;
     }
 
@@ -1154,8 +1219,8 @@ MidiSynthDevice::ResourceForHeader(
     // also why it is the one resource sent without a cache time.
     if (resource == L"ChannelList")
     {
-        *blob = &m_propertyExchange.RebuildChannelListJson(m_engine, m_collection);
-        cacheable = false;
+        result.Blob = &m_propertyExchange.RebuildChannelListJson(m_engine, m_collection);
+        result.Cacheable = false;
         return ResourceLookup::Found;
     }
 

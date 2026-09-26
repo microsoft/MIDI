@@ -17,6 +17,7 @@ A sequence is a handle over its own storage rather than a collection of message 
 | `Format` | The [`MidiSequenceFormat`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequenceFormatEnum/) of the sequence |
 | `TicksPerQuarterNote` | Ticks per quarter note, unless the sequence is timed in SMPTE frames |
 | `UsesSmpteTiming` | True when the tick is an absolute division of a second rather than a musical division, in which case tempo does not apply |
+| `TimingMode` | [`MidiSequenceTimingMode`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequenceTimingModeEnum/). Whether the ticks above are musical or are plain microseconds. A sequence read from a file is always `Musical`; only one built with [`MidiSequenceBuilder`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequenceBuilder/) can be `Absolute` |
 | `DurationMicroseconds` | Total length of the sequence |
 | `LastTick` | The tick of the final event |
 

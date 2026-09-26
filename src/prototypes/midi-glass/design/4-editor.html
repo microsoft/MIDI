@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - editor</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    .canvasarea { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .canvaswrap {
+        flex: 1; position: relative; overflow: hidden;
+        background: #0A0B0E;
+        border-bottom: 1px solid var(--divider);
+    }
+    /* the page: the actual bounds of the customer's surface, inside the scrollable canvas */
+    .pagerect {
+        position: absolute; left: 17px; top: 14px; width: 496px; height: 404px;
+        border-radius: 6px; overflow: hidden;
+        box-shadow: 0 0 0 1px rgba(255,255,255,.10), 0 10px 30px rgba(0,0,0,.6);
+    }
+    .zoomtag {
+        position: absolute; right: 8px; bottom: 6px;
+        font-size: 10px; color: var(--text3);
+        font-family: "Cascadia Mono","Consolas",monospace;
+    }
+    .pagerail {
+        height: 34px; flex: 0 0 34px; display: flex; align-items: center; gap: 5px;
+        padding: 0 10px; border-bottom: 1px solid var(--divider);
+    }
+    .prtab {
+        height: 23px; padding: 0 10px; border-radius: 4px; font-size: 11.5px;
+        color: var(--text3); display: flex; align-items: center; gap: 6px;
+        box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    .prtab.sel { color: var(--text); background: rgba(96,205,255,.16); box-shadow: inset 0 0 0 1px rgba(96,205,255,.5); }
+    .prtab .dot { width: 6px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.25); }
+    .previewbox {
+        height: 92px; border-radius: 6px; position: relative;
+        margin-top: 4px;
+    }
+</style>
+</head>
+<body>
+<div class="page">
+<p class="caption-above">Screen 4 &mdash; the editor. Palette on the left, page in the middle, inspector on the right, and a live message monitor along the bottom so a customer can see what a control actually sends while they build it.</p>
+
+<div class="window">
+
+    <div class="titlebar">
+        <div class="appmark"></div>
+        <div class="title">Live Rig &mdash; Windows MIDI Glass</div>
+        <div class="preview-chiclet">PREVIEW</div>
+        <div class="spacer"></div>
+        <div class="caption-btn gl">&#xE713;</div>
+        <div class="caption-btn gl">&#xE840;</div>
+        <div class="sys-btns"><div class="gl">&#xE921;</div><div class="gl">&#xE922;</div><div class="gl">&#xE8BB;</div></div>
+    </div>
+
+    <div class="toolbar">
+        <div class="btn subtle small"><span class="gl">&#xE72B;</span>Library</div>
+        <div class="seg"><div class="sel gl" style="font-size:12px">&#xE70F;&nbsp; Edit</div><div>&#9654;&nbsp; Try</div></div>
+        <div class="sep"></div>
+        <div class="btn icon small gl">&#xE7A7;</div>
+        <div class="btn icon small gl disabled">&#xE7A6;</div>
+        <div class="sep"></div>
+        <div class="btn small on"><span class="gl">&#xE80A;</span>Snap</div>
+        <div class="field combo flat" style="width:82px; height:28px; font-size:11.5px">8 px grid</div>
+        <div class="sep"></div>
+        <div class="btn icon small gl" title="Align left">&#xE8E4;</div>
+        <div class="btn icon small gl" title="Align centers">&#xE8E3;</div>
+        <div class="btn icon small gl" title="Distribute">&#xE8E9;</div>
+        <div class="sep"></div>
+        <div class="btn icon small gl" title="Group">&#xE71D;</div>
+        <div class="btn icon small gl" title="Lock">&#xE72E;</div>
+        <div class="spacer"></div>
+        <div class="chip on"><span class="gl">&#xE73E;</span>Saved</div>
+        <div class="btn small"><span class="gl">&#xE713;</span>Layout&hellip;</div>
+    </div>
+
+    <div class="shell">
+
+        <!-- ================================================== PALETTE -->
+        <div class="palette">
+            <div class="psearch"><div class="field" style="height:28px"><span class="gl">&#xE721;</span><span class="ph">Find a control</span></div></div>
+            <div class="pscroll">
+
+                <h3>Buttons</h3>
+                <div class="pgrid">
+                    <div class="ptile"><span class="pico" style="display:block; width:22px; height:14px; border-radius:3px; box-shadow:inset 0 0 0 1px rgba(96,205,255,.8)"></span>Button</div>
+                    <div class="ptile"><span class="pico" style="display:block; width:22px; height:14px; border-radius:3px; background:rgba(96,205,255,.35); box-shadow:inset 0 0 0 1px rgba(96,205,255,.9)"></span>Toggle</div>
+                    <div class="ptile"><span class="pico" style="display:block; width:22px; height:14px; border-radius:7px; box-shadow:inset 0 0 0 1px rgba(96,205,255,.8)"></span>Radio</div>
+                    <div class="ptile"><span class="pico gl" style="font-size:15px">&#xE80A;</span>Pad bank</div>
+                    <div class="ptile"><span class="pico mono" style="font-size:13px">1&#9662;</span>Stepper</div>
+                    <div class="ptile hover"><span class="pico" style="display:block; width:22px; height:14px; border-radius:7px; box-shadow:inset 0 0 0 1px rgba(96,205,255,.8); background:rgba(96,205,255,.15)"></span>Layer key</div>
+                </div>
+
+                <h3>Knobs and faders</h3>
+                <div class="pgrid">
+                    <div class="ptile"><span class="pico" style="display:block; width:17px; height:17px; border-radius:50%; box-shadow:inset 0 0 0 2px rgba(96,205,255,.85)"></span>Knob</div>
+                    <div class="ptile"><span class="pico" style="display:block; width:17px; height:17px; border-radius:50%; box-shadow:inset 0 0 0 2px rgba(96,205,255,.45)"></span>Encoder</div>
+                    <div class="ptile"><span class="pico" style="display:block; width:5px; height:19px; border-radius:3px; background:rgba(96,205,255,.7)"></span>Fader</div>
+                    <div class="ptile"><span class="pico" style="display:block; width:19px; height:19px; background:linear-gradient(90deg, rgba(96,205,255,.75) 0 3px, transparent 3px 6px, rgba(96,205,255,.75) 6px 9px, transparent 9px 12px, rgba(96,205,255,.75) 12px 15px)"></span>Fader bank</div>
+                    <div class="ptile"><span class="pico" style="display:block; width:10px; height:19px; border-radius:3px; box-shadow:inset 0 0 0 1px rgba(96,205,255,.8)"></span>Wheel</div>
+                    <div class="ptile"><span class="pico" style="display:block; width:20px; height:6px; border-radius:3px; box-shadow:inset 0 0 0 1px rgba(96,205,255,.8)"></span>Range</div>
+                </div>
+
+                <h3>Two axis</h3>
+                <div class="pgrid">
+                    <div class="ptile"><span class="pico" style="display:block; width:18px; height:18px; border-radius:3px; box-shadow:inset 0 0 0 1px rgba(96,205,255,.8)"></span>XY pad</div>
+                    <div class="ptile"><span class="pico" style="display:block; width:18px; height:18px; border-radius:50%; box-shadow:inset 0 0 0 1px rgba(96,205,255,.8)"></span>Joystick</div>
+                    <div class="ptile"><span class="pico" style="display:block; width:20px; height:8px; border-radius:4px; background:rgba(96,205,255,.30)"></span>Ribbon</div>
+                </div>
+
+                <h3>Generators</h3>
+                <div class="pgrid">
+                    <div class="ptile"><span class="pico gl" style="font-size:15px">&#xE916;</span>Beat clock</div>
+                    <div class="ptile"><span class="pico" style="font-size:15px">&#8767;</span>LFO</div>
+                    <div class="ptile"><span class="pico" style="display:block; width:20px; height:10px; background:linear-gradient(90deg, rgba(96,205,255,.8) 0 4px, transparent 4px 7px, rgba(96,205,255,.8) 7px 11px, transparent 11px 14px, rgba(96,205,255,.8) 14px 18px)"></span>Steps</div>
+                </div>
+
+                <h3>Feedback and text</h3>
+                <div class="pgrid">
+                    <div class="ptile"><span class="pico" style="display:block; width:7px; height:18px; background:linear-gradient(180deg, transparent 0 6px, rgba(96,205,255,.8) 6px)"></span>Meter</div>
+                    <div class="ptile"><span class="pico" style="display:block; width:12px; height:12px; border-radius:50%; background:rgba(96,205,255,.6)"></span>Lamp</div>
+                    <div class="ptile"><span class="pico mono" style="font-size:11px">0.00</span>Readout</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================== CANVAS -->
+        <div class="canvasarea">
+
+            <div class="canvaswrap">
+                <div class="pagerect surf grid">
+
+                    <div class="surftext h1" style="left:14px; top:9px; font-size:15px;">Live Rig</div>
+                    <div class="surftext readout" style="left:96px; top:10px; font-size:14px;">128.0</div>
+
+                    <div class="pagetabs" style="right:12px; top:8px; gap:4px;">
+                        <div class="tab sel" style="height:20px; padding:0 9px; font-size:10px">Mixer</div>
+                        <div class="tab" style="height:20px; padding:0 9px; font-size:10px">Decks</div>
+                        <div class="tab" style="height:20px; padding:0 9px; font-size:10px">Clips</div>
+                    </div>
+
+                    <!-- four mixer strips -->
+                    <div class="ctl knob hue2" style="left:22px; top:48px; width:34px; height:34px;">
+                        <div class="dial"><div class="arc" style="--pct:.52turn"></div><div class="ptr" style="transform:rotate(46deg)"></div></div>
+                    </div>
+                    <div class="ctl fader hue2" style="left:20px; top:92px; width:28px; height:120px;">
+                        <div class="slot"><div class="fill" style="height:74%"></div><div class="capbar" style="bottom:calc(74% - 7px); height:14px; left:-9px; right:-9px"></div></div>
+                    </div>
+                    <div class="ctl btn-ctl hue3" style="left:20px; top:220px; width:28px; height:20px;"><div class="name" style="font-size:8px">M</div></div>
+                    <div class="outlabel" style="left:14px; top:244px; width:42px; font-size:9px;">Drums</div>
+
+                    <div class="ctl knob hue2" style="left:76px; top:48px; width:34px; height:34px;">
+                        <div class="dial"><div class="arc" style="--pct:.40turn"></div><div class="ptr" style="transform:rotate(0deg)"></div></div>
+                    </div>
+                    <div class="ctl fader hue2" style="left:74px; top:92px; width:28px; height:120px;">
+                        <div class="slot"><div class="fill" style="height:58%"></div><div class="capbar" style="bottom:calc(58% - 7px); height:14px; left:-9px; right:-9px"></div></div>
+                    </div>
+                    <div class="ctl btn-ctl hue3 on" style="left:74px; top:220px; width:28px; height:20px;"><div class="name" style="font-size:8px">M</div></div>
+                    <div class="outlabel" style="left:68px; top:244px; width:42px; font-size:9px;">Bass</div>
+
+                    <div class="ctl knob hue2" style="left:130px; top:48px; width:34px; height:34px;">
+                        <div class="dial"><div class="arc" style="--pct:.63turn"></div><div class="ptr" style="transform:rotate(82deg)"></div></div>
+                    </div>
+                    <div class="ctl fader hue2" style="left:128px; top:92px; width:28px; height:120px;">
+                        <div class="slot"><div class="fill" style="height:88%"></div><div class="capbar" style="bottom:calc(88% - 7px); height:14px; left:-9px; right:-9px"></div></div>
+                    </div>
+                    <div class="ctl btn-ctl hue3" style="left:128px; top:220px; width:28px; height:20px;"><div class="name" style="font-size:8px">M</div></div>
+                    <div class="outlabel" style="left:122px; top:244px; width:42px; font-size:9px;">Keys</div>
+
+                    <div class="ctl knob hue2" style="left:184px; top:48px; width:34px; height:34px;">
+                        <div class="dial"><div class="arc" style="--pct:.30turn"></div><div class="ptr" style="transform:rotate(-37deg)"></div></div>
+                    </div>
+                    <div class="ctl fader hue2" style="left:182px; top:92px; width:28px; height:120px;">
+                        <div class="slot"><div class="fill" style="height:41%"></div><div class="capbar" style="bottom:calc(41% - 7px); height:14px; left:-9px; right:-9px"></div></div>
+                    </div>
+                    <div class="ctl btn-ctl hue3" style="left:182px; top:220px; width:28px; height:20px;"><div class="name" style="font-size:8px">M</div></div>
+                    <div class="outlabel" style="left:176px; top:244px; width:42px; font-size:9px;">Pads</div>
+
+                    <!-- xy pad -->
+                    <div class="ctl xy hue1" style="left:246px; top:48px; width:140px; height:140px;">
+                        <div class="field2">
+                            <div class="cross h" style="top:34%"></div>
+                            <div class="cross v" style="left:58%"></div>
+                            <div class="puck" style="left:58%; top:34%"></div>
+                        </div>
+                    </div>
+                    <div class="outlabel" style="left:246px; top:192px; width:140px; font-size:9px;">Filter &middot; Resonance</div>
+
+                    <!-- THE SELECTED CONTROL -->
+                    <div class="ctl knob hue5" style="left:410px; top:52px; width:54px; height:54px;">
+                        <div class="dial"><div class="arc" style="--pct:.58turn; background:conic-gradient(from 215deg, rgb(var(--h5)) 0 .58turn, rgba(255,255,255,.10) .58turn .805turn, transparent .805turn);"></div><div class="ptr" style="transform:rotate(64deg)"></div></div>
+                    </div>
+                    <div class="outlabel" style="left:406px; top:110px; width:62px; font-size:9px;">Reverb</div>
+
+                    <div class="sel-box" style="left:406px; top:48px; width:62px; height:62px; border-radius:50%;">
+                        <i class="nw"></i><i class="n"></i><i class="ne"></i><i class="e"></i>
+                        <i class="se"></i><i class="s"></i><i class="sw"></i><i class="w"></i>
+                        <div class="sel-tag" style="left:auto; right:-4px;">Knob &middot; Reverb &nbsp; 56 &times; 56</div>
+                    </div>
+
+                    <!-- snap guide from the dragged knob to the XY pad's top edge -->
+                    <div class="guide h" style="left:236px; top:48px; width:246px;"></div>
+
+                    <div class="ctl btn-ctl hue4" style="left:246px; top:212px; width:66px; height:28px;"><div class="name" style="font-size:9px">Tap</div></div>
+                    <div class="ctl btn-ctl hue4" style="left:320px; top:212px; width:66px; height:28px;"><div class="name" style="font-size:9px">Sync</div></div>
+                    <div class="ctl lfo hue4" style="left:400px; top:130px; width:80px; height:52px; padding:4px 5px;">
+                        <div class="head" style="font-size:8px"><span>LFO</span><span class="mono">1/8</span></div>
+                        <svg viewBox="0 0 70 24" preserveAspectRatio="none">
+                            <path d="M0,12 C6,1 12,1 18,12 C24,23 30,23 36,12 C42,1 48,1 54,12 C60,23 66,23 70,12" fill="none" stroke="rgba(255,107,214,.9)" stroke-width="2"/>
+                        </svg>
+                    </div>
+
+                    <!-- clip row, so the page reads as a real work in progress -->
+                    <div class="ctl btn-ctl hue1" style="left:246px; top:268px; width:66px; height:30px;"><div class="name" style="font-size:9px">Intro</div></div>
+                    <div class="ctl btn-ctl hue1" style="left:320px; top:268px; width:66px; height:30px;"><div class="name" style="font-size:9px">Verse</div></div>
+                    <div class="ctl btn-ctl hue1 on" style="left:394px; top:268px; width:66px; height:30px;"><div class="name" style="font-size:9px">Build</div></div>
+                    <div class="ctl btn-ctl hue1" style="left:246px; top:306px; width:66px; height:30px;"><div class="name" style="font-size:9px">Drop</div></div>
+                    <div class="ctl btn-ctl hue1" style="left:320px; top:306px; width:66px; height:30px;"><div class="name" style="font-size:9px">Break</div></div>
+                    <div class="ctl btn-ctl hue1" style="left:394px; top:306px; width:66px; height:30px;"><div class="name" style="font-size:9px">Outro</div></div>
+                    <div class="ctl fader hue4 horiz" style="left:246px; top:348px; width:214px; height:24px;">
+                        <div class="slot"><div class="fill" style="width:52%"></div><div class="capbar" style="left:calc(52% - 4px); width:8px; top:-6px; bottom:-6px; height:auto"></div></div>
+                    </div>
+
+                    <!-- a control being dragged in from the palette -->
+                    <div class="ctl fader hue1 ghost" style="left:22px; top:284px; width:28px; height:96px;">
+                        <div class="slot"><div class="fill" style="height:50%"></div></div>
+                    </div>
+                    <div class="gap-pill" style="left:56px; top:300px;">drop here</div>
+                </div>
+
+                <div class="zoomtag">Page 1 of 3 &nbsp;&middot;&nbsp; 1280 &times; 800 &nbsp;&middot;&nbsp; 38&nbsp;%</div>
+
+                <div class="callout down" style="left:238px; top:30px;">Magnetic guide</div>
+                <div class="callout left" style="left:82px; top:352px;">Snapped to the 8&nbsp;px grid</div>
+            </div>
+
+            <!-- ---------------------------------------------------- pages -->
+            <div class="pagerail">
+                <div class="prtab sel"><span class="dot" style="background:rgb(var(--h1))"></span>Mixer</div>
+                <div class="prtab"><span class="dot" style="background:rgb(var(--h2))"></span>Decks</div>
+                <div class="prtab"><span class="dot" style="background:rgb(var(--h4))"></span>Clips</div>
+                <div class="prtab"><span class="gl" style="font-size:10px">&#xE710;</span>Page</div>
+                <div style="flex:1"></div>
+                <div class="prtab"><span class="gl" style="font-size:10px">&#xE718;</span>Shared band</div>
+                <div class="prtab"><span class="gl" style="font-size:10px">&#xE72E;</span>Layer: Shift</div>
+            </div>
+
+            <!-- --------------------------------------------------- monitor -->
+            <div class="monitor">
+                <div class="mh">
+                    <span class="gl">&#xE9D9;</span>
+                    <span>Sending</span>
+                    <span class="chip" style="height:18px; font-size:10px">Selected control only</span>
+                    <div class="spacer"></div>
+                    <span class="btn tiny"><span class="gl" style="font-size:10px">&#xE769;</span>Pause</span>
+                    <span class="btn tiny"><span class="gl" style="font-size:10px">&#xE74D;</span>Clear</span>
+                </div>
+                <table>
+                    <tr><td class="t">+0.000</td><td class="w">40&nbsp;B0&nbsp;5B&nbsp;00&nbsp;&nbsp;5C&nbsp;7A&nbsp;00&nbsp;00</td><td class="n">CC&nbsp;91 = 0.36</td><td>Iridium &middot; ch 1</td></tr>
+                    <tr><td class="t">+0.012</td><td class="w">40&nbsp;B0&nbsp;5B&nbsp;00&nbsp;&nbsp;61&nbsp;18&nbsp;00&nbsp;00</td><td class="n">CC&nbsp;91 = 0.38</td><td>Iridium &middot; ch 1</td></tr>
+                    <tr><td class="t">+0.024</td><td class="w">40&nbsp;B0&nbsp;5B&nbsp;00&nbsp;&nbsp;66&nbsp;C1&nbsp;00&nbsp;00</td><td class="n">CC&nbsp;91 = 0.40</td><td>Iridium &middot; ch 1</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- ================================================== INSPECTOR -->
+        <div class="inspector">
+            <div class="ihead">
+                <div style="flex:1">
+                    <div class="itype">Knob</div>
+                    <div class="iname">Reverb</div>
+                </div>
+                <div class="btn icon small gl">&#xE712;</div>
+            </div>
+
+            <div class="pivot">
+                <div class="sel">Look</div><div>MIDI</div><div>Behavior</div>
+            </div>
+
+            <div class="iscroll">
+                <div class="igroup">
+                    <h3>Color</h3>
+                    <div class="swatches">
+                        <i style="background:rgb(var(--h1))"></i>
+                        <i style="background:rgb(var(--h2))"></i>
+                        <i style="background:rgb(var(--h3))"></i>
+                        <i style="background:rgb(var(--h4))"></i>
+                        <i class="sel" style="background:rgb(var(--h5))"></i>
+                        <i style="background:rgb(var(--h6))"></i>
+                        <i style="background:conic-gradient(red,yellow,lime,aqua,blue,magenta,red)"></i>
+                    </div>
+                    <div style="font-size:10.5px; color:var(--text3); margin-top:6px">
+                        Slot 5 of the theme. Change the theme and this moves with it.
+                    </div>
+                </div>
+
+                <div class="igroup">
+                    <h3>Style</h3>
+                    <div class="seg" style="width:100%">
+                        <div class="sel" style="flex:1; justify-content:center">Plate</div>
+                        <div style="flex:1; justify-content:center">Outline</div>
+                        <div style="flex:1; justify-content:center">Solid</div>
+                        <div style="flex:1; justify-content:center">Bare</div>
+                    </div>
+                </div>
+
+                <div class="igroup">
+                    <h3>Position and size</h3>
+                    <div class="irow">
+                        <span class="lbl">X, Y</span>
+                        <div class="field" style="flex:1">1048</div>
+                        <div class="field" style="flex:1">128</div>
+                    </div>
+                    <div class="irow">
+                        <span class="lbl">Width, height</span>
+                        <div class="field" style="flex:1">56</div>
+                        <div class="field" style="flex:1">56</div>
+                        <div class="btn icon small gl on">&#xE72E;</div>
+                    </div>
+                </div>
+
+                <div class="igroup">
+                    <h3>Label</h3>
+                    <div class="irow">
+                        <span class="lbl">Text</span>
+                        <div class="field" style="flex:1">Reverb</div>
+                    </div>
+                    <div class="irow">
+                        <span class="lbl">Placed</span>
+                        <div class="field combo" style="flex:1">Below the control</div>
+                    </div>
+                    <div class="irow">
+                        <span class="lbl">Show value</span>
+                        <div class="switch"></div>
+                        <span style="font-size:11.5px; color:var(--text3)">while touched</span>
+                    </div>
+                </div>
+
+                <div class="igroup">
+                    <h3>Preview</h3>
+                    <div class="previewbox surf">
+                        <div class="ctl knob hue5" style="left:50%; top:16px; margin-left:-22px; width:44px; height:44px;">
+                            <div class="dial"><div class="arc" style="--pct:.58turn; background:conic-gradient(from 215deg, rgb(var(--h5)) 0 .58turn, rgba(255,255,255,.10) .58turn .805turn, transparent .805turn);"></div><div class="ptr" style="transform:rotate(64deg)"></div></div>
+                        </div>
+                        <div class="outlabel" style="left:0; right:0; top:66px;">Reverb</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p class="note">
+<b>Edit and Try are one keystroke apart.</b> Ctrl+Enter flips the whole canvas live without leaving the editor, so
+a customer can feel a fader and then nudge it two pixels. The monitor rail at the bottom is filtered to the
+selected control by default &mdash; that is the fastest way to answer "is this thing actually sending what I think
+it is", and it is the same message view the MIDI Monitor tool uses. Nothing here is modal: the inspector always
+reflects the selection, and an empty selection shows the page's own properties instead.
+</p>
+
+</div>
+</body>
+</html>

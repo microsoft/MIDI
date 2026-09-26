@@ -123,6 +123,16 @@ namespace midikeyboard
         bool SendPatchOnStartup() const noexcept { return m_sendPatchOnStartup; }
         void SendPatchOnStartup(bool value) noexcept;
 
+        // show the device's programs grouped by category rather than as one list. Only offered
+        // when the device publishes categories, so this can be true with nothing to group.
+        bool ProgramsByCategory() const noexcept { return m_programsByCategory; }
+        void ProgramsByCategory(bool value) noexcept;
+
+        // Keep asking for programs over MIDI-CI while nothing has answered, so a device started
+        // after this app is still found. Off means the question is asked once per connection.
+        bool RetryProgramListQuery() const noexcept { return m_retryProgramListQuery; }
+        void RetryProgramListQuery(bool value) noexcept;
+
         // octave of the leftmost C, in the numbering where note 60 is C3
         int32_t BaseOctave() const noexcept { return m_baseOctave; }
         void BaseOctave(int32_t value) noexcept;
@@ -182,6 +192,12 @@ namespace midikeyboard
         ArpeggiatorDivision ArpeggiatorRate() const noexcept { return m_arpeggiatorRate; }
         void ArpeggiatorRate(ArpeggiatorDivision value) noexcept;
 
+        // Keys keep sounding after they are released. Pressing a latched key again lets it go,
+        // and turning the latch off releases everything it is holding. It applies with or
+        // without the arpeggiator running.
+        bool Latch() const noexcept { return m_latch; }
+        void Latch(bool value) noexcept;
+
         static constexpr int32_t MinimumBaseOctave = -2;
         static constexpr int32_t MaximumBaseOctave = 8;
         static constexpr uint32_t MinimumOctaveCount = 1;
@@ -215,6 +231,8 @@ namespace midikeyboard
         uint32_t m_bankMsb{ 0 };
         uint32_t m_bankLsb{ 0 };
         bool m_sendPatchOnStartup{ false };
+        bool m_programsByCategory{ false };
+        bool m_retryProgramListQuery{ true };
 
         int32_t m_baseOctave{ 1 };
 
@@ -244,5 +262,7 @@ namespace midikeyboard
         ArpeggiatorMode m_arpeggiator{ ArpeggiatorMode::Off };
         uint32_t m_arpeggiatorBpm{ 120 };
         ArpeggiatorDivision m_arpeggiatorRate{ ArpeggiatorDivision::Sixteenth };
+
+        bool m_latch{ false };
     };
 }

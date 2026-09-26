@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - Bigwig theme</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    .board {
+        width: 1000px; border-radius: 8px; position: relative; overflow: hidden;
+        border: 1px solid rgba(255,255,255,.08);
+        background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+        box-shadow: var(--shadow);
+    }
+    .chiprow { position: absolute; left: 14px; top: 13px; display: flex; gap: 6px; align-items: center; }
+    .tchip {
+        height: 26px; padding: 0 11px; border-radius: 13px;
+        display: flex; align-items: center; gap: 7px;
+        font-size: 11px; color: var(--text3);
+        background: rgba(255,255,255,.035); box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    .tchip i { width: 11px; height: 11px; border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(0,0,0,.35); }
+    .tchip.new { color: #FAA662; background: rgba(249,139,49,.13); box-shadow: inset 0 0 0 1px rgba(249,139,49,.55); }
+
+    .deck {
+        position: absolute; left: 14px; top: 54px; width: 972px; height: 448px;
+        border-radius: 4px; overflow: hidden;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    }
+    .decktag { position: absolute; left: 14px; top: 512px; font-size: 11px; color: var(--text3); }
+    .decktag b { color: var(--text2); font-weight: 600; }
+
+    /* ---- the second panel: one part at a time, today above, this comp below ---- */
+    .rhead { position: absolute; left: 26px; top: 14px; font-size: 11px; letter-spacing: .10em; color: var(--text3); }
+    .acol { position: absolute; top: 40px; width: 180px; }
+    .acol h5 { margin: 0 0 8px 0; font-size: 12px; font-weight: 600; color: var(--text); }
+    .abox {
+        position: relative; height: 128px; border-radius: 5px; overflow: hidden;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+    }
+    .abox + .abox { margin-top: 8px; }
+    .atag {
+        position: absolute; right: 7px; bottom: 5px; z-index: 5;
+        font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.40);
+    }
+    .astate { position: absolute; font-size: 9.5px; color: rgba(255,255,255,.46); text-align: center; white-space: nowrap; }
+    .acap { margin-top: 9px; font-size: 11px; line-height: 1.5; color: var(--text3); }
+    .acap b { color: var(--text2); font-weight: 600; }
+
+    /* ---- Bigwig as the app draws it today, measured off glass-shots\theme-bigwig.png ---- */
+    .today { background: linear-gradient(180deg, #1B1B1B 0%, #060606 100%); }
+    .today .tp {
+        position: absolute; border-radius: 4px;
+        background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,0) 42%), #3A3A3A;
+        box-shadow: inset 0 0 0 1px #5A5A5A, 0 1px 3px rgba(0,0,0,.40);
+    }
+    /* on is a third of the way to orange, over the gray: the brown */
+    .today .tp.on {
+        background: linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,0) 42%), linear-gradient(180deg, #7D4A26, #5C4230);
+        box-shadow: inset 0 0 0 1px rgba(255,106,0,.90), 0 1px 3px rgba(0,0,0,.40);
+    }
+    .today .tstrip { position: absolute; left: 8px; right: 8px; top: 6px; height: 2.5px; border-radius: 1.25px; background: rgba(255,106,0,.22); }
+    .today .tstrip.lit { background: #FF6A00; }
+    .today .tname { position: absolute; font-size: 11px; color: #F2F3F5; text-align: center; }
+    .today .tknob { border-radius: 50%; }
+    .today .tknob .ring {
+        position: absolute; inset: 6px; border-radius: 50%;
+        background: conic-gradient(from 225deg, #FF6A00 0turn var(--pct), #0C0C0C var(--pct) .75turn, transparent .75turn 1turn);
+        -webkit-mask:
+            repeating-conic-gradient(from 225deg, #000 0 7.4deg, transparent 7.4deg 11.25deg),
+            radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+        -webkit-mask-composite: source-in;
+        mask:
+            repeating-conic-gradient(from 225deg, #000 0 7.4deg, transparent 7.4deg 11.25deg),
+            radial-gradient(farthest-side, transparent calc(100% - 4px), #000 calc(100% - 4px));
+        mask-composite: intersect;
+    }
+    .today .tknob .tptr {
+        position: absolute; left: 50%; top: 0; width: 2px; height: 50%; margin-left: -1px;
+        transform-origin: 50% 100%; border-radius: 1px;
+        background: linear-gradient(180deg, transparent 0, transparent 12px, #F2F3F5 12px, #F2F3F5 calc(100% - 1px), transparent calc(100% - 1px));
+    }
+    .today .tslot {
+        position: absolute; width: 8px; border-radius: 4px;
+        background: #0C0C0C; box-shadow: inset 0 0 0 1px rgba(255,255,255,.04);
+    }
+    .today .tslot i { position: absolute; left: 0; right: 0; bottom: 0; border-radius: 4px; background: #FF6A00; }
+    .today .tcap { position: absolute; border-radius: 4px; background: #FF6A00; }
+    .today .tgrid { position: absolute; background: rgba(242,243,245,.18); }
+    .today .tcross { position: absolute; background: rgba(255,106,0,.38); }
+    .today .tpuck { position: absolute; border-radius: 50%; background: #FF6A00; }
+    .today .tcaption { position: absolute; font-size: 12px; color: #F2F3F5; }
+
+    .swatches { display: flex; gap: 0; border-radius: 7px; overflow: hidden; margin-top: 14px; }
+    .swatches div {
+        flex: 1; height: 58px; display: flex; flex-direction: column; justify-content: flex-end;
+        padding: 6px 7px; font-size: 9.5px; font-family: "Cascadia Mono","Consolas",monospace;
+    }
+    .swatches div span { display: block; font-family: "Segoe UI Variable Text","Segoe UI",sans-serif; font-size: 10px; opacity: .78; }
+
+    .costgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; margin-top: 12px; }
+    .cost {
+        border-radius: 7px; padding: 12px 14px;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke);
+        font-size: 11.5px; color: var(--text3); line-height: 1.55;
+    }
+    .cost h4 { margin: 0 0 7px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .cost b { color: var(--text2); font-weight: 600; }
+    .cost .yes { color: var(--success); font-weight: 600; }
+    .cost .no { color: var(--caution); font-weight: 600; }
+    .cost .mono { color: var(--accent); }
+
+    .asks { width: 1000px; margin-top: 11px; border-radius: 7px; padding: 12px 14px 6px 14px; box-sizing: border-box;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke); }
+    .asks h4 { margin: 0 0 8px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .asks table { width: 100%; border-collapse: collapse; font-size: 11.5px; line-height: 1.5; color: var(--text3); }
+    .asks th { text-align: left; font-weight: 600; color: var(--text2); padding: 0 10px 6px 0; border-bottom: 1px solid var(--divider); font-size: 11px; }
+    .asks td { vertical-align: top; padding: 7px 10px 7px 0; border-bottom: 1px solid var(--divider); }
+    .asks tr:last-child td { border-bottom: none; }
+    .asks td.n { width: 18px; color: var(--caution); font-weight: 600; }
+    .asks td.ask { width: 250px; }
+    .asks td.ask b { color: var(--text); font-weight: 600; }
+    .asks td.without { width: 220px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="caption-above">Screen 12 &mdash; <b>Bigwig</b>, revisited. The first pass was one gray and one orange, and next to the product it came out flat. What the product does is a <b>ladder of grays</b> &mdash; the page, a section, a control, and a dark display cut into them &mdash; with knobs that are <b>graded caps inside a thin arc</b>, and color only on the value, the state and the name of a section. The knob cap and all four asks at the bottom are now built, and the app draws Bigwig from these values. The comparison panel still shows the app from before that round, because that is what it was drawn to compare against.</p>
+
+<!-- ============================================================= DECK -->
+<div class="board" style="height:540px;">
+
+    <div class="chiprow">
+        <div class="tchip"><i style="background:#4CE0FF"></i>Studio Dark</div>
+        <div class="tchip"><i style="background:#98CCFF"></i>Pigment Dark</div>
+        <div class="tchip new"><i style="background:#F98B31"></i>Bigwig</div>
+        <div class="tchip"><i style="background:#E3DAC9"></i>Bone</div>
+        <div class="tchip"><i style="background:#E8601C"></i>Jove</div>
+        <div class="tchip"><i style="background:#39465F"></i>Supersaw</div>
+        <div class="tchip" style="margin-left:6px">&#43; New theme&hellip;</div>
+    </div>
+
+    <div class="deck surf tonal bigwig">
+
+        <div class="surftext h1" style="left:16px; top:11px; font-size:15px;">Studio Rack</div>
+        <div class="surftext readout" style="left:132px; top:12px; font-size:14px;">128.00</div>
+        <div class="surftext small" style="left:196px; top:16px;">4 / 4</div>
+
+        <div class="pagetabs" style="right:14px; top:10px; gap:3px;">
+            <div class="tab sel" style="height:22px; padding:0 12px; font-size:11px">Device</div>
+            <div class="tab" style="height:22px; padding:0 12px; font-size:11px">Mix</div>
+            <div class="tab" style="height:22px; padding:0 12px; font-size:11px">Clips</div>
+        </div>
+
+        <!-- ======================================== row 1: the voice -->
+
+        <div class="ctlpanel hue3" style="left:14px; top:44px; width:314px; height:136px;"><div class="ptitle">Oscillator</div></div>
+        <div class="ctlpanel hue5" style="left:338px; top:44px; width:314px; height:136px;"><div class="ptitle">Filter</div></div>
+        <div class="ctlpanel hue2" style="left:662px; top:44px; width:296px; height:136px;"><div class="ptitle">Envelope</div></div>
+
+        <!-- oscillator -->
+        <div class="ctl knob hue3" style="left:28px; top:74px; width:72px; height:72px;">
+            <div class="dial"><div class="arc" style="--pct:.465turn"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(32.4deg)"></div></div>
+        </div>
+        <div class="ctl knob hue3" style="left:116px; top:94px; width:52px; height:52px;">
+            <div class="dial"><div class="arc" style="--pct:.2625turn"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-40.5deg)"></div></div>
+        </div>
+        <div class="ctl knob hue3" style="left:182px; top:94px; width:52px; height:52px;">
+            <div class="dial"><div class="arc" style="--pct:.375turn"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(0deg)"></div></div>
+        </div>
+        <div class="outlabel" style="left:28px; top:149px; width:72px; font-size:11px;">Index</div>
+        <div class="outlabel" style="left:116px; top:149px; width:52px; font-size:11px;">Shape</div>
+        <div class="outlabel" style="left:182px; top:149px; width:52px; font-size:11px;">Sub</div>
+
+        <div class="ctl btn-ctl hue3 on" style="left:250px; top:72px; width:64px; height:26px;"><div class="name" style="font-size:11px">Saw</div></div>
+        <div class="ctl btn-ctl hue3" style="left:250px; top:102px; width:64px; height:26px;"><div class="name" style="font-size:11px">Square</div></div>
+        <div class="ctl btn-ctl hue3" style="left:250px; top:132px; width:64px; height:26px;"><div class="name" style="font-size:11px">Sine</div></div>
+
+        <!-- filter -->
+        <div class="ctl knob hue5" style="left:352px; top:74px; width:72px; height:72px;">
+            <div class="dial"><div class="arc" style="--pct:.525turn"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(54deg)"></div></div>
+        </div>
+        <div class="ctl knob hue5" style="left:440px; top:94px; width:52px; height:52px;">
+            <div class="dial"><div class="arc" style="--pct:.21turn"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-59.4deg)"></div></div>
+        </div>
+        <div class="ctl knob hue5" style="left:506px; top:94px; width:52px; height:52px;">
+            <div class="dial"><div class="arc" style="--pct:.33turn"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-16.2deg)"></div></div>
+        </div>
+        <div class="outlabel" style="left:352px; top:149px; width:72px; font-size:11px;">Cutoff</div>
+        <div class="outlabel" style="left:440px; top:149px; width:52px; font-size:11px;">Reso</div>
+        <div class="outlabel" style="left:506px; top:149px; width:52px; font-size:11px;">Drive</div>
+
+        <div class="ctl btn-ctl hue5 on" style="left:574px; top:72px; width:64px; height:26px;"><div class="name" style="font-size:11px">Low</div></div>
+        <div class="ctl btn-ctl hue5" style="left:574px; top:102px; width:64px; height:26px;"><div class="name" style="font-size:11px">Band</div></div>
+        <div class="ctl btn-ctl hue5" style="left:574px; top:132px; width:64px; height:26px;"><div class="name" style="font-size:11px">High</div></div>
+
+        <!-- envelope -->
+        <div class="ctl knob hue2" style="left:678px; top:90px; width:56px; height:56px;">
+            <div class="dial"><div class="arc" style="--pct:.09turn"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-102.6deg)"></div></div>
+        </div>
+        <div class="ctl knob hue2" style="left:748px; top:90px; width:56px; height:56px;">
+            <div class="dial"><div class="arc" style="--pct:.285turn"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-32.4deg)"></div></div>
+        </div>
+        <div class="ctl knob hue2" style="left:818px; top:90px; width:56px; height:56px;">
+            <div class="dial"><div class="arc" style="--pct:.495turn"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(43.2deg)"></div></div>
+        </div>
+        <div class="ctl knob hue2" style="left:888px; top:90px; width:56px; height:56px;">
+            <div class="dial"><div class="arc" style="--pct:.225turn"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-54deg)"></div></div>
+        </div>
+        <div class="outlabel" style="left:678px; top:149px; width:56px; font-size:11px;">Attack</div>
+        <div class="outlabel" style="left:748px; top:149px; width:56px; font-size:11px;">Decay</div>
+        <div class="outlabel" style="left:818px; top:149px; width:56px; font-size:11px;">Sustain</div>
+        <div class="outlabel" style="left:888px; top:149px; width:56px; font-size:11px;">Release</div>
+
+        <!-- ======================================== row 2: mix and play -->
+
+        <div class="ctlpanel hue1" style="left:14px; top:190px; width:424px; height:244px;"><div class="ptitle">Mixer</div></div>
+        <div class="ctlpanel hue4" style="left:448px; top:190px; width:262px; height:244px;"><div class="ptitle">Perform</div></div>
+        <div class="ctlpanel hue5" style="left:720px; top:190px; width:238px; height:244px;"><div class="ptitle">Scenes</div></div>
+
+        <!-- mixer: solo is yellow and mute is orange, the way the product does it -->
+        <div class="ctl btn-ctl hue3" style="left:37px; top:220px; width:26px; height:24px;"><div class="name" style="font-size:11px">S</div></div>
+        <div class="ctl btn-ctl hue1" style="left:65px; top:220px; width:26px; height:24px;"><div class="name" style="font-size:11px">M</div></div>
+        <div class="ctl btn-ctl hue3 on" style="left:117px; top:220px; width:26px; height:24px;"><div class="name" style="font-size:11px">S</div></div>
+        <div class="ctl btn-ctl hue1" style="left:145px; top:220px; width:26px; height:24px;"><div class="name" style="font-size:11px">M</div></div>
+        <div class="ctl btn-ctl hue3" style="left:197px; top:220px; width:26px; height:24px;"><div class="name" style="font-size:11px">S</div></div>
+        <div class="ctl btn-ctl hue1 on" style="left:225px; top:220px; width:26px; height:24px;"><div class="name" style="font-size:11px">M</div></div>
+        <div class="ctl btn-ctl hue3" style="left:277px; top:220px; width:26px; height:24px;"><div class="name" style="font-size:11px">S</div></div>
+        <div class="ctl btn-ctl hue1" style="left:305px; top:220px; width:26px; height:24px;"><div class="name" style="font-size:11px">M</div></div>
+        <div class="ctl btn-ctl hue3" style="left:357px; top:220px; width:26px; height:24px;"><div class="name" style="font-size:11px">S</div></div>
+        <div class="ctl btn-ctl hue1" style="left:385px; top:220px; width:26px; height:24px;"><div class="name" style="font-size:11px">M</div></div>
+
+        <div class="ctl fader hue1" style="left:37px; top:252px; width:40px; height:150px;">
+            <div class="slot"><div class="fill" style="height:72%"></div><div class="capbar" style="bottom:calc(72% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue1" style="left:117px; top:252px; width:40px; height:150px;">
+            <div class="slot"><div class="fill" style="height:58%"></div><div class="capbar" style="bottom:calc(58% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue1" style="left:197px; top:252px; width:40px; height:150px;">
+            <div class="slot"><div class="fill" style="height:66%"></div><div class="capbar" style="bottom:calc(66% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue1 held" style="left:277px; top:252px; width:40px; height:150px;">
+            <div class="slot"><div class="fill" style="height:48%"></div><div class="capbar" style="bottom:calc(48% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue1" style="left:357px; top:252px; width:40px; height:150px;">
+            <div class="slot"><div class="fill" style="height:80%"></div><div class="capbar" style="bottom:calc(80% - 8px);"></div></div>
+        </div>
+
+        <div class="ctl meter" style="left:81px; top:252px; width:14px; height:150px;"><div class="mslot"><div class="mcover" style="height:36%"></div></div></div>
+        <div class="ctl meter" style="left:161px; top:252px; width:14px; height:150px;"><div class="mslot"><div class="mcover" style="height:48%"></div></div></div>
+        <div class="ctl meter" style="left:241px; top:252px; width:14px; height:150px;"><div class="mslot"><div class="mcover" style="height:100%"></div></div></div>
+        <div class="ctl meter" style="left:321px; top:252px; width:14px; height:150px;"><div class="mslot"><div class="mcover" style="height:60%"></div></div></div>
+        <div class="ctl meter" style="left:401px; top:252px; width:14px; height:150px;"><div class="mslot"><div class="mcover" style="height:7%"></div></div></div>
+
+        <div class="outlabel" style="left:37px; top:405px; width:58px; font-size:11px;">Kick</div>
+        <div class="outlabel" style="left:117px; top:405px; width:58px; font-size:11px;">Bass</div>
+        <div class="outlabel" style="left:197px; top:405px; width:58px; font-size:11px;">Keys</div>
+        <div class="outlabel" style="left:277px; top:405px; width:58px; font-size:11px;">Pad</div>
+        <div class="outlabel" style="left:357px; top:405px; width:58px; font-size:11px;">Main</div>
+
+        <!-- perform -->
+        <div class="ctl xy hue4" style="left:462px; top:220px; width:160px; height:160px;">
+            <div class="field2">
+                <div class="cross h" style="top:38%"></div>
+                <div class="cross v" style="left:60%"></div>
+                <div class="puck" style="left:60%; top:38%"></div>
+            </div>
+        </div>
+        <div class="outlabel" style="left:462px; top:383px; width:160px; font-size:11px;">Morph</div>
+
+        <div class="ctl lfo hue4" style="left:634px; top:220px; width:62px; height:56px;">
+            <div class="lwell"></div>
+            <svg viewBox="0 0 44 38" preserveAspectRatio="none">
+                <line x1="0" y1="19" x2="44" y2="19" stroke="rgba(201,201,201,.18)" stroke-width="1"/>
+                <path d="M0,19 C7,2 15,2 22,19 C29,36 37,36 44,19" fill="none" style="stroke:rgba(var(--hue),.85)" stroke-width="1.6" stroke-linecap="round"/>
+                <circle cx="13.2" cy="4.2" r="5" style="fill:rgb(var(--hue))"/>
+            </svg>
+        </div>
+        <div class="outlabel" style="left:634px; top:279px; width:62px; font-size:11px;">LFO</div>
+
+        <div class="ctl btn-ctl hue4 on" style="left:634px; top:300px; width:62px; height:26px;"><div class="name" style="font-size:11px">Sync</div></div>
+        <div class="ctl btn-ctl hue4" style="left:634px; top:332px; width:62px; height:26px;"><div class="name" style="font-size:11px">Retrig</div></div>
+
+        <div class="ctl knob hue4" style="left:643px; top:366px; width:44px; height:44px;">
+            <div class="dial"><div class="arc" style="--pct:.4125turn"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(13.5deg)"></div></div>
+        </div>
+        <div class="outlabel" style="left:634px; top:413px; width:62px; font-size:11px;">Rate</div>
+
+        <!-- scenes -->
+        <div class="ctl btn-ctl hue5" style="left:730px; top:220px; width:50px; height:36px;"><div class="name" style="font-size:11px">Intro</div></div>
+        <div class="ctl btn-ctl hue5 on" style="left:786px; top:220px; width:50px; height:36px;"><div class="name" style="font-size:11px">Verse</div></div>
+        <div class="ctl btn-ctl hue5" style="left:842px; top:220px; width:50px; height:36px;"><div class="name" style="font-size:11px">Build</div></div>
+        <div class="ctl btn-ctl hue5" style="left:898px; top:220px; width:50px; height:36px;"><div class="name" style="font-size:11px">Drop</div></div>
+
+        <div class="ctl btn-ctl hue1" style="left:730px; top:262px; width:50px; height:36px;"><div class="name" style="font-size:11px">Break</div></div>
+        <div class="ctl btn-ctl hue1 on" style="left:786px; top:262px; width:50px; height:36px;"><div class="name" style="font-size:11px">Lift</div></div>
+        <div class="ctl btn-ctl hue1" style="left:842px; top:262px; width:50px; height:36px;"><div class="name" style="font-size:11px">Fill</div></div>
+        <div class="ctl btn-ctl hue1" style="left:898px; top:262px; width:50px; height:36px;"><div class="name" style="font-size:11px">Outro</div></div>
+
+        <div class="ctl btn-ctl hue2" style="left:730px; top:304px; width:50px; height:36px;"><div class="name" style="font-size:11px">Pad A</div></div>
+        <div class="ctl btn-ctl hue2 on" style="left:786px; top:304px; width:50px; height:36px;"><div class="name" style="font-size:11px">Pad B</div></div>
+        <div class="ctl btn-ctl hue2" style="left:842px; top:304px; width:50px; height:36px;"><div class="name" style="font-size:11px">Vox</div></div>
+        <div class="ctl btn-ctl hue2 offline" style="left:898px; top:304px; width:50px; height:36px;"><div class="name" style="font-size:11px">Stab</div></div>
+
+        <div class="ctl btn-ctl hue5 on" style="left:730px; top:352px; width:70px; height:30px;"><div class="glyph" style="font-size:12px">&#9654;</div></div>
+        <div class="ctl btn-ctl hue1" style="left:804px; top:352px; width:70px; height:30px;"><div class="glyph" style="font-size:11px">&#9632;</div></div>
+        <div class="ctl btn-ctl hue6" style="left:878px; top:352px; width:70px; height:30px;"><div class="glyph" style="font-size:12px">&#9679;</div></div>
+
+        <div class="ctl btn-ctl hue6" style="left:730px; top:390px; width:218px; height:30px;"><div class="name" style="font-size:11px">Panic</div></div>
+
+    </div>
+    <div class="decktag"><b>Bigwig</b> &mdash; three grays and a well. A knob is a cap with no plate. Color is only ever the value, the state, or which section this is.</div>
+
+</div>
+
+<!-- =================================================== ONE PART AT A TIME -->
+<div class="board" style="height:452px; margin-top:13px;">
+
+    <div class="rhead">WHAT MADE IT FLAT, ONE PART AT A TIME &mdash; THE APP BEFORE THE ENGINE ROUND ON TOP, THIS COMP UNDERNEATH</div>
+
+    <!-- ---------------------------------------------------------- the knob -->
+    <div class="acol" style="left:26px;">
+        <h5>The knob</h5>
+        <div class="abox today">
+            <div class="atag">before</div>
+            <div class="tp tknob" style="left:58px; top:22px; width:64px; height:64px;">
+                <div class="ring" style="--pct:.41turn"></div>
+                <div class="tptr" style="transform:rotate(13.5deg)"></div>
+            </div>
+            <div class="astate" style="left:0; width:180px; top:94px;">a gray disc with a dashed ring inside it</div>
+        </div>
+        <div class="abox surf tonal bigwig">
+            <div class="atag">this comp</div>
+            <div class="ctl knob hue1" style="left:12px; top:24px; width:60px; height:60px;">
+                <div class="dial"><div class="arc" style="--pct:.41turn"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(13.5deg)"></div></div>
+            </div>
+            <div class="ctl knob hue1" style="left:82px; top:36px; width:42px; height:42px;">
+                <div class="dial"><div class="arc" style="--pct:.41turn"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(13.5deg)"></div></div>
+            </div>
+            <div class="ctl knob lightcap hue1" style="left:132px; top:36px; width:42px; height:42px;">
+                <div class="dial"><div class="arc" style="--pct:.41turn"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(13.5deg)"></div></div>
+            </div>
+            <div class="astate" style="left:12px; width:60px; top:94px;">60 px</div>
+            <div class="astate" style="left:82px; width:42px; top:94px;">42 px</div>
+            <div class="astate" style="left:126px; width:54px; top:94px;">light cap *</div>
+        </div>
+        <div class="acap"><b>A graded cap inside a solid arc, and no disc</b>, so the arc sits on the section. * The product's biggest knobs have a light cap: a second color, chosen per knob. Shown, not asked for.</div>
+    </div>
+
+    <!-- ---------------------------------------------------------- the switch -->
+    <div class="acol" style="left:218px;">
+        <h5>The switch</h5>
+        <div class="abox today">
+            <div class="atag">before</div>
+            <div class="tp" style="left:8px; top:24px; width:52px; height:30px;"><div class="tstrip"></div></div>
+            <div class="tp on" style="left:64px; top:24px; width:52px; height:30px;"><div class="tstrip lit"></div></div>
+            <div class="tp on" style="left:120px; top:24px; width:52px; height:30px;"><div class="tstrip lit"></div></div>
+            <div class="tname" style="left:8px; width:52px; top:57px;">Mute</div>
+            <div class="tname" style="left:64px; width:52px; top:57px;">Mute</div>
+            <div class="tname" style="left:120px; width:52px; top:57px;">Solo</div>
+            <div class="astate" style="left:8px; width:52px; top:94px;">at rest</div>
+            <div class="astate" style="left:64px; width:52px; top:94px;">on</div>
+            <div class="astate" style="left:120px; width:52px; top:94px;">on</div>
+        </div>
+        <div class="abox surf tonal bigwig">
+            <div class="atag">this comp</div>
+            <div class="ctl btn-ctl hue1" style="left:8px; top:32px; width:52px; height:30px;"><div class="name" style="font-size:11px">Mute</div></div>
+            <div class="ctl btn-ctl hue1 on" style="left:64px; top:32px; width:52px; height:30px;"><div class="name" style="font-size:11px">Mute</div></div>
+            <div class="ctl btn-ctl hue3 on" style="left:120px; top:32px; width:52px; height:30px;"><div class="name" style="font-size:11px">Solo</div></div>
+            <div class="astate" style="left:8px; width:52px; top:94px;">at rest</div>
+            <div class="astate" style="left:64px; width:52px; top:94px;">on</div>
+            <div class="astate" style="left:120px; width:52px; top:94px;">on</div>
+        </div>
+        <div class="acap"><b>The name inside, and on is the color outright</b>, with the name turned dark. Before, on was a third of the way to orange, which is the brown, and the name sat underneath.</div>
+    </div>
+
+    <!-- ---------------------------------------------------------- the fader -->
+    <div class="acol" style="left:410px;">
+        <h5>The fader and the meter</h5>
+        <div class="abox today">
+            <div class="atag">before</div>
+            <div class="tp" style="left:52px; top:11px; width:40px; height:96px;">
+                <div class="tslot" style="left:16px; top:8px; height:80px;"><i style="height:62%"></i></div>
+                <div class="tcap" style="left:4px; top:22px; width:32px; height:17px;"></div>
+            </div>
+            <div class="tp" style="left:104px; top:11px; width:14px; height:96px;">
+                <div class="tslot" style="left:4px; top:8px; width:6px; height:80px; border-radius:3px;"><i style="height:78%; border-radius:3px;"></i></div>
+            </div>
+        </div>
+        <div class="abox surf tonal bigwig">
+            <div class="atag">this comp</div>
+            <div class="ctl fader hue1" style="left:52px; top:11px; width:40px; height:96px;">
+                <div class="slot"><div class="fill" style="height:62%"></div><div class="capbar" style="bottom:calc(62% - 8px);"></div></div>
+            </div>
+            <div class="ctl meter" style="left:104px; top:11px; width:14px; height:96px;"><div class="mslot"><div class="mcover" style="height:4%"></div></div></div>
+        </div>
+        <div class="acap"><b>A dark slot, a fill that falls away, and a gray cap with an orange line.</b> Before, all six slots were one orange, so the meter's three zones all came out orange.</div>
+    </div>
+
+    <!-- ---------------------------------------------------------- the section -->
+    <div class="acol" style="left:602px;">
+        <h5>The section</h5>
+        <div class="abox today">
+            <div class="atag">before</div>
+            <div class="tp" style="left:8px; top:9px; width:164px; height:100px;"></div>
+            <div class="tcaption" style="left:16px; top:14px;">Filter</div>
+            <div class="tp tknob" style="left:20px; top:38px; width:48px; height:48px;">
+                <div class="ring" style="--pct:.46turn; inset:4px;"></div>
+                <div class="tptr" style="transform:rotate(27deg); background:linear-gradient(180deg, transparent 0, transparent 9px, #F2F3F5 9px, #F2F3F5 calc(100% - 1px), transparent calc(100% - 1px));"></div>
+            </div>
+            <div class="tp" style="left:84px; top:44px; width:40px; height:24px;"><div class="tstrip lit" style="top:5px;"></div></div>
+            <div class="tp" style="left:126px; top:44px; width:40px; height:24px;"><div class="tstrip" style="top:5px;"></div></div>
+            <div class="tname" style="left:84px; width:40px; top:71px;">Low</div>
+            <div class="tname" style="left:126px; width:40px; top:71px;">High</div>
+        </div>
+        <div class="abox surf tonal bigwig">
+            <div class="atag">this comp</div>
+            <div class="ctlpanel hue5" style="left:8px; top:9px; width:164px; height:100px;"><div class="ptitle">Filter</div></div>
+            <div class="ctl knob hue5" style="left:20px; top:38px; width:48px; height:48px;">
+                <div class="dial"><div class="arc" style="--pct:.345turn"></div><div class="knobcap"></div><div class="ptr" style="transform:rotate(-10.8deg)"></div></div>
+            </div>
+            <div class="ctl btn-ctl hue5 on" style="left:84px; top:44px; width:40px; height:24px;"><div class="name" style="font-size:11px">Low</div></div>
+            <div class="ctl btn-ctl hue5" style="left:126px; top:44px; width:40px; height:24px;"><div class="name" style="font-size:11px">High</div></div>
+        </div>
+        <div class="acap"><b>A step darker than the controls on it, with its name in its own color.</b> Before, it was the same gray as its buttons, and a hairline was all that told them apart.</div>
+    </div>
+
+    <!-- ---------------------------------------------------------- the display -->
+    <div class="acol" style="left:794px;">
+        <h5>The display</h5>
+        <div class="abox today">
+            <div class="atag">before</div>
+            <div class="tp" style="left:8px; top:11px; width:96px; height:96px;">
+                <div class="tgrid" style="left:3px; right:3px; top:33%; height:1px;"></div>
+                <div class="tgrid" style="left:3px; right:3px; top:66%; height:1px;"></div>
+                <div class="tgrid" style="top:3px; bottom:3px; left:33%; width:1px;"></div>
+                <div class="tgrid" style="top:3px; bottom:3px; left:66%; width:1px;"></div>
+                <div class="tcross" style="left:3px; right:3px; top:40%; height:1px;"></div>
+                <div class="tcross" style="top:3px; bottom:3px; left:58%; width:1px;"></div>
+                <div class="tpuck" style="left:calc(58% - 5px); top:calc(40% - 5px); width:10px; height:10px;"></div>
+            </div>
+            <div class="tp" style="left:112px; top:11px; width:62px; height:50px;">
+                <svg style="position:absolute; left:9px; top:9px;" width="44" height="32" viewBox="0 0 44 32">
+                    <line x1="0" y1="16" x2="44" y2="16" stroke="rgba(242,243,245,.18)" stroke-width="1"/>
+                    <path d="M0,16 C7,1 15,1 22,16 C29,31 37,31 44,16" fill="none" stroke="rgba(255,106,0,.85)" stroke-width="1.6" stroke-linecap="round"/>
+                </svg>
+            </div>
+        </div>
+        <div class="abox surf tonal bigwig">
+            <div class="atag">this comp</div>
+            <div class="ctl xy hue4" style="left:8px; top:11px; width:96px; height:96px;">
+                <div class="field2">
+                    <div class="cross h" style="top:40%"></div>
+                    <div class="cross v" style="left:58%"></div>
+                    <div class="puck" style="left:58%; top:40%; width:10px; height:10px; margin:-5px 0 0 -5px;"></div>
+                </div>
+            </div>
+            <div class="ctl lfo hue4" style="left:112px; top:11px; width:62px; height:50px;">
+                <div class="lwell"></div>
+                <svg viewBox="0 0 44 32" preserveAspectRatio="none">
+                    <line x1="0" y1="16" x2="44" y2="16" stroke="rgba(201,201,201,.18)" stroke-width="1"/>
+                    <path d="M0,16 C7,1 15,1 22,16 C29,31 37,31 44,16" fill="none" style="stroke:rgba(var(--hue),.85)" stroke-width="1.6" stroke-linecap="round"/>
+                </svg>
+            </div>
+        </div>
+        <div class="acap"><b>What shows you something is cut into the surface</b>, with the plate as its frame. What you press stands up. Before, a display was one more raised gray plate.</div>
+    </div>
+
+</div>
+
+<div class="swatches">
+    <div style="background:#F98B31; color:#141414">#F98B31 <span>Orange, the lead</span></div>
+    <div style="background:#58B0F0; color:#141414">#58B0F0 <span>Blue</span></div>
+    <div style="background:#E8C140; color:#141414">#E8C140 <span>Yellow</span></div>
+    <div style="background:#C094F0; color:#141414">#C094F0 <span>Purple</span></div>
+    <div style="background:#6DBF4B; color:#141414">#6DBF4B <span>Green</span></div>
+    <div style="background:#EC5446; color:#141414">#EC5446 <span>Red, not letters</span></div>
+    <div style="background:#282828; color:#C9C9C9">#282828 <span>Page</span></div>
+    <div style="background:#373737; color:#C9C9C9">#373737 <span>Section</span></div>
+    <div style="background:#474747; color:#C9C9C9">#474747 <span>Control</span></div>
+    <div style="background:linear-gradient(180deg,#4A4A4A,#1F1F1F); color:#C9C9C9">#4A4A4A <span>Knob cap, to #1F1F1F</span></div>
+    <div style="background:#161616; color:#C9C9C9">#161616 <span>Well</span></div>
+    <div style="background:#C9C9C9; color:#141414">#C9C9C9 <span>Ink</span></div>
+</div>
+
+<div class="costgrid">
+    <div class="cost">
+        <h4><span class="yes">Free</span> &mdash; theme data only</h4>
+        Six slots instead of one orange six times. The page and the plate named at both ends. A <b>dark edge and a lit top</b> instead of a light outline. The solid arc instead of the ring, and no value strip. A gray fader cap with a line of the control's color, and a fill that falls away below the value. Ink <span class="mono">#C9C9C9</span>, pointer <span class="mono">#E6E6E6</span>, and on at full strength.
+    </div>
+    <div class="cost">
+        <h4><span class="yes">Built</span> &mdash; the knob face</h4>
+        A <b>face color and an end color</b>, lit above the middle (<span class="mono">KnobFaceColor</span>, <span class="mono">KnobFaceEndColor</span>). Every knob's arc now hangs outside its face, on every theme, with a 2&nbsp;px gap. The pointer runs from just inside the face's edge toward the middle. Under a finger the face keeps its shading and takes the touch wash over it.
+    </div>
+    <div class="cost">
+        <h4>What it costs</h4>
+        <b>Red is light, not letters.</b> It measures 3.1&nbsp;:&nbsp;1 as a section name, so it carries a fill, an arc or the top of a meter, and never a name. The other five clear 4.5. The grays are close on purpose &mdash; section on page 1.24&nbsp;:&nbsp;1, control on section 1.28&nbsp;:&nbsp;1 &mdash; and the edge and the lit top do the separating, the way they do in the product. Nothing glows, so incoming activity lights the plate instead.
+    </div>
+</div>
+
+<div class="asks">
+    <h4>Four more asks, smallest first. All four are now built, and the page above uses all four.</h4>
+    <table>
+        <tr><th></th><th>Ask</th><th>Why Bigwig needs it</th><th>Built as</th></tr>
+        <tr>
+            <td class="n">1</td>
+            <td class="ask"><b>A panel color.</b> One color and an end color for a grouping panel.</td>
+            <td>A section drawn in the controls' gray swallows the buttons on it, and a 1&nbsp;px edge is the only thing left to tell them apart. It is also what lets a section name clear 4.5: on the lighter plate, orange measures 3.6.</td>
+            <td class="without"><span class="mono">PanelFill</span> color, <span class="mono">PanelColor</span>, <span class="mono">PanelEndColor</span>. A section can also be an outline only.</td>
+        </tr>
+        <tr>
+            <td class="n">2</td>
+            <td class="ask"><b>A section name in its own color.</b></td>
+            <td>It is how the product tells one section from the next. Five of the six slots measure 4.5 or better as a name on a panel.</td>
+            <td class="without"><span class="mono">SectionNameInHue</span>, with any of the three header styles.</td>
+        </tr>
+        <tr>
+            <td class="n">3</td>
+            <td class="ask"><b>Names inside switches, readable when lit.</b> Switches placed apart from knobs and faders, and a switch lit at full strength is its color top to bottom, with its name in dark ink.</td>
+            <td>Jove asked for placement by kind first. The bottom of a lit plate used to be only half way to its color, and on blue, purple and green neither ink reached 4.5 there. Filled all the way, dark ink measures 5.3 to 10.9 on all six.</td>
+            <td class="without"><span class="mono">NamesInsideSwitches</span>. A name is inked against its plate at rest and lit, and a full fill runs top to bottom.</td>
+        </tr>
+        <tr>
+            <td class="n">4</td>
+            <td class="ask"><b>A well color</b> for the field of an XY pad, an LFO and a ribbon.</td>
+            <td>The fourth sighting of a recessed style, after Bone's fader slots and Supersaw's ribbon. What you press stands up, and what shows you something is sunk.</td>
+            <td class="without"><span class="mono">WellColor</span>, and <span class="mono">RecessShadePercent</span> for the shadow inside. A joystick keeps its rings instead.</td>
+        </tr>
+    </table>
+</div>
+
+<p class="note" style="margin-top:12px;">
+<b>Two calls that are yours.</b> The lamp ring was your ask when this theme was first drawn. The product's own knobs draw a continuous arc, so this comp does too; the ring stays in the engine and is one setting to put back. And the light cap the product puts on its biggest knobs is shown once, in the second panel, rather than asked for. <b>Left out:</b> the mixer's column fader, a filled column with a bright line instead of a cap, because it needs a slot width and a line-style cap &mdash; two properties for one control. Also the filled area under a waveform, power buttons, track color strips and device names. Colors are eyeballed from your screenshots, not sampled from anything of theirs, and every one was then measured.
+</p>
+
+</div>
+</body>
+</html>

@@ -98,20 +98,30 @@ namespace midipatchbay
         void Select(_In_ CanvasSelectionKind kind, _In_ std::wstring const& id) noexcept;
         void ClearSelection() noexcept;
 
-        // Moves the viewport so every node is in view, at the largest zoom that fits.
-        void FitToContent() noexcept;
+        // Moves the viewport so everything on the canvas is in view, at the largest zoom that fits
+        // up to the ceiling. Automatic fits stay at 100% or less so a small patch is not blown up.
+        void FitToContent(_In_ float maximumZoom = 1.0f) noexcept;
 
         // Lays the nodes out in two columns, sources on the left and everything they feed on
         // the right, which is the shape almost every patch ends up in by hand anyway.
         void AutoArrange() noexcept;
+
+        // For a node that was just added: its width is only known once it is built, so a spot
+        // picked beforehand can land on another node. Moves it right until it does not.
+        void MoveClearOfOtherNodes(_In_ std::wstring const& endpointId) noexcept;
 
         void UpdateMinimap() noexcept;
 
         // Extent of the content, which is what makes the canvas bigger than the window.
         foundation::Size ContentExtent() const noexcept { return m_extent; }
 
-        static constexpr double NodeWidth = 252.0;
+        // Nodes grow from here to fit their longest name.
+        static constexpr double MinimumNodeWidth = 252.0;
         static constexpr double CanvasMargin = 280.0;
+
+        // Must match the scroll viewer's MinZoomFactor and MaxZoomFactor in MainWindow.xaml.
+        static constexpr float MinimumZoom = 0.1f;
+        static constexpr float MaximumZoom = 4.0f;
 
     private:
         struct PortVisual
@@ -134,7 +144,7 @@ namespace midipatchbay
             shapes::Ellipse StatusDot{ nullptr };
             controls::Border AlertPanel{ nullptr };
             std::vector<PortVisual> Ports{};
-            double Width{ NodeWidth };
+            double Width{ MinimumNodeWidth };
             double Height{ 0 };
             bool IsOffline{ false };
         };
@@ -216,6 +226,14 @@ namespace midipatchbay
 
         static media::Brush ThemeBrush(_In_ std::wstring_view key, _In_ winrt::Windows::UI::Color fallback) noexcept;
 
+        // The part of the canvas in view, in overview coordinates.
+        foundation::Rect MinimapViewportRect() const noexcept;
+
+        void OnMinimapPointerPressed(_In_ input::PointerRoutedEventArgs const& args) noexcept;
+        void OnMinimapPointerMoved(_In_ input::PointerRoutedEventArgs const& args) noexcept;
+        void OnMinimapPointerReleased(_In_ input::PointerRoutedEventArgs const& args) noexcept;
+        void PanToMinimapPoint(_In_ foundation::Point const& point) noexcept;
+
         controls::ScrollViewer m_scrollViewer{ nullptr };
         controls::Canvas m_surface{ nullptr };
         controls::Canvas m_connectionLayer{ nullptr };
@@ -266,6 +284,11 @@ namespace midipatchbay
         std::optional<PortKey> m_hoverRowPort{};
 
         foundation::Size m_extent{ 0, 0 };
+
+        // Scale the overview was last drawn at, so a drag on it maps back to the same place.
+        double m_minimapScale{ 0 };
+        bool m_panningMinimap{ false };
+        foundation::Point m_minimapGrabOffset{};
 
         bool m_initialized{ false };
         bool m_shuttingDown{ false };

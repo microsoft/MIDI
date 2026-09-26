@@ -12,8 +12,11 @@
 
 #include <algorithm>
 
+#include <MidiDefs.h>
+
 using namespace winrt::Windows::Devices::Midi2;
 using namespace winrt::Windows::Devices::Midi2::CapabilityInquiry;
+using namespace winrt::Windows::Devices::Midi2::Enumeration;
 
 namespace midikeyboard
 {
@@ -53,6 +56,84 @@ namespace midikeyboard
 
             return joined;
         }
+
+        std::vector<std::wstring> CopyCategories(_In_ MidiProgramListEntry const& entry) noexcept
+        {
+            std::vector<std::wstring> categories{};
+
+            try
+            {
+                for (auto const& category : entry.Categories())
+                {
+                    if (!category.empty())
+                    {
+                        categories.emplace_back(category);
+                    }
+                }
+            }
+            catch (...)
+            {
+            }
+
+            return categories;
+        }
+    }
+
+    _Use_decl_annotations_
+    std::vector<ProgramCategoryGroup> GroupProgramsByCategory(
+        std::vector<ProgramListEntry> const& entries,
+        std::wstring const& otherName) noexcept
+    {
+        std::vector<ProgramCategoryGroup> groups{};
+
+        try
+        {
+            std::vector<size_t> uncategorized{};
+
+            for (size_t index = 0; index < entries.size(); index++)
+            {
+                auto const& entry = entries[index];
+
+                if (entry.Categories.empty())
+                {
+                    uncategorized.push_back(index);
+                    continue;
+                }
+
+                for (auto const& category : entry.Categories)
+                {
+                    auto existing = std::find_if(groups.begin(), groups.end(),
+                        [&category](ProgramCategoryGroup const& group) { return group.Name == category; });
+
+                    if (existing == groups.end())
+                    {
+                        groups.push_back(ProgramCategoryGroup{ category, { index } });
+                    }
+                    else
+                    {
+                        existing->EntryIndexes.push_back(index);
+                    }
+                }
+            }
+
+            // A device that categorizes nothing gets no grouped view at all, rather than one
+            // group holding everything, which would be a worse way to show the same list.
+            if (groups.empty())
+            {
+                return {};
+            }
+
+            if (!uncategorized.empty())
+            {
+                groups.push_back(ProgramCategoryGroup{ otherName, std::move(uncategorized) });
+            }
+        }
+        catch (...)
+        {
+            return {};
+        }
+
+        return groups;
     }
 
 
@@ -63,22 +144,21 @@ namespace midikeyboard
 
     _Use_decl_annotations_
     std::shared_ptr<MidiCiProgramListQuery> MidiCiProgramListQuery::Start(
-        MidiEndpointConnection const& connection,
-        uint8_t group,
+        MidiCapabilityInquirySession const& session,
         uint8_t channel,
         CompletedHandler handler,
         ChangedHandler changed) noexcept
     {
         try
         {
-            if (connection == nullptr || handler == nullptr)
+            if (session == nullptr || handler == nullptr)
             {
                 return nullptr;
             }
 
             auto query = std::make_shared<MidiCiProgramListQuery>();
 
-            query->Begin(connection, group, channel, handler, changed);
+            query->Begin(session, channel, handler, changed);
 
             return query;
         }
@@ -90,8 +170,7 @@ namespace midikeyboard
 
     _Use_decl_annotations_
     void MidiCiProgramListQuery::Begin(
-        MidiEndpointConnection const& connection,
-        uint8_t group,
+        MidiCapabilityInquirySession const& session,
         uint8_t channel,
         CompletedHandler handler,
         ChangedHandler changed) noexcept
@@ -101,28 +180,12 @@ namespace midikeyboard
             {
                 std::lock_guard<std::mutex> guard(m_lock);
 
-                m_group = group;
                 m_channel = channel;
                 m_handler = handler;
                 m_changedHandler = changed;
+                m_session = session;
 
-                m_session = MidiCapabilityInquirySession::Create(connection);
-
-                if (m_session == nullptr)
-                {
-                    m_handler = nullptr;
-                }
-                else
-                {
-                    m_session.Group(MidiGroup(group));
-                    m_session.ResponseTimeoutMilliseconds(StepTimeoutMilliseconds);
-                }
-            }
-
-            if (m_session == nullptr)
-            {
-                handler(ProgramListResult::NoResponse, {});
-                return;
+                m_session.ResponseTimeoutMilliseconds(StepTimeoutMilliseconds);
             }
 
             // Held for the length of the exchange, so a caller that drops its reference the moment
@@ -459,6 +522,7 @@ namespace midikeyboard
 
                 program.Title = entry.Title();
                 program.Tags = JoinTags(entry);
+                program.Categories = CopyCategories(entry);
 
                 // These three go on the wire exactly as they arrive. M2-107-UM section 2.3 gives a
                 // worked example: bankPC [121,2,49] is sent as Program Change 49.
@@ -505,17 +569,11 @@ namespace midikeyboard
 
             m_watching = false;
 
-            // Closing wakes anything waiting for a device that is never going to answer, so the
-            // worker does not sit out the rest of its timeout before noticing. It also ends any
-            // subscription this query holds.
-            if (session != nullptr)
+            // The session is borrowed and belongs to this app's presence on the connection, so it
+            // is deliberately not closed here. Only the subscription this query took is given up.
+            if (session != nullptr && token.value != 0)
             {
-                if (token.value != 0)
-                {
-                    session.PropertySubscriptionUpdated(token);
-                }
-
-                session.Close();
+                session.PropertySubscriptionUpdated(token);
             }
         }
         catch (...)
@@ -620,11 +678,6 @@ namespace midikeyboard
 
         CompletedHandler handler{};
         std::vector<ProgramListEntry> entries{};
-        MidiCapabilityInquirySession session{ nullptr };
-
-        // A subscription lives on the session, so a query that is watching cannot close it. The
-        // caller ends it with Cancel instead.
-        const bool watching = m_watching;
 
         try
         {
@@ -635,17 +688,6 @@ namespace midikeyboard
                 m_handler = nullptr;
 
                 entries.swap(m_entries);
-
-                if (!watching)
-                {
-                    session = m_session;
-                    m_session = nullptr;
-                }
-            }
-
-            if (session != nullptr)
-            {
-                session.Close();
             }
 
             if (handler != nullptr && !m_canceled)
@@ -657,9 +699,9 @@ namespace midikeyboard
         {
         }
 
-        // Last thing: this may be the only reference left. A watching query keeps it until it is
-        // canceled, because the subscription needs both the session and this object alive.
-        if (!watching)
+        // Last thing: this may be the only reference left. A query holding a subscription keeps it
+        // until it is canceled, because the subscription needs this object alive to raise on.
+        if (!m_watching)
         {
             m_self.reset();
         }

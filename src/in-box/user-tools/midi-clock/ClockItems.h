@@ -22,6 +22,15 @@ namespace midiclock
         std::wstring EndpointName{};
         int32_t GroupIndex{ 0 };
         bool IsEndpointMissing{ false };
+
+        int32_t ClockRatioNumerator{ DefaultClockRatioNumerator };
+        int32_t ClockRatioDenominator{ DefaultClockRatioDenominator };
+        double SwingPercent{ DefaultSwingPercent };
+        double OffsetMilliseconds{ 0.0 };
+
+        ClockKind Kind{ ClockKind::BeatClock };
+        midiapp::MidiTimeCodeFrameRate FrameRate{ midiapp::MidiTimeCodeFrameRate::Frames30 };
+        midiapp::MidiTimeCodePosition StartTimeCode{};
     };
 }
 
@@ -36,8 +45,15 @@ namespace winrt::midiclock::implementation
         winrt::hstring Id() const noexcept { return m_id; }
         winrt::hstring DisplayName() const noexcept { return m_displayName; }
         winrt::hstring TempoText() const noexcept { return m_tempoText; }
+        winrt::hstring UnitText() const noexcept { return m_unitText; }
         winrt::hstring DestinationText() const noexcept { return m_destinationText; }
+        winrt::hstring TimingText() const noexcept { return m_timingText; }
         winrt::hstring StatusText() const noexcept;
+
+        xaml::Visibility TimingVisibility() const noexcept
+        {
+            return m_timingText.empty() ? xaml::Visibility::Collapsed : xaml::Visibility::Visible;
+        }
 
         bool IsRunning() const noexcept { return m_isRunning; }
         void IsRunning(bool value) noexcept;
@@ -98,7 +114,9 @@ namespace winrt::midiclock::implementation
         winrt::hstring m_id{};
         winrt::hstring m_displayName{};
         winrt::hstring m_tempoText{};
+        winrt::hstring m_unitText{};
         winrt::hstring m_destinationText{};
+        winrt::hstring m_timingText{};
 
         bool m_isRunning{ false };
         bool m_isBusy{ false };

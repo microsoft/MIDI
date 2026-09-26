@@ -344,13 +344,11 @@ namespace winrt::midipatchbay::implementation
 
         try
         {
-            auto& catalog = patchbay::EndpointCatalog::Current();
-
             for (auto const& patch : m_patches)
             {
                 for (auto const& endpoint : patch.Endpoints)
                 {
-                    if (catalog.Resolve(endpoint).has_value())
+                    if (patchbay::ResolveEndpoint(endpoint).has_value())
                     {
                         continue;
                     }
@@ -517,6 +515,8 @@ namespace winrt::midipatchbay::implementation
 
             PlaceNewNode(added, patch->Endpoints.size());
 
+            auto const addedId = added.Id;
+
             patch->Endpoints.push_back(std::move(added));
 
             MarkDirty();
@@ -524,6 +524,8 @@ namespace winrt::midipatchbay::implementation
             RebuildCanvas();
             UpdateMessages();
             ApplyRouting();
+
+            m_canvas.MoveClearOfOtherNodes(addedId);
 
             // a node dropped outside the viewport looks like nothing happened
             m_canvas.FitToContent();
@@ -556,6 +558,8 @@ namespace winrt::midipatchbay::implementation
 
             PlaceNewNode(added, patch->Endpoints.size());
 
+            auto const addedId = added.Id;
+
             patch->Endpoints.push_back(std::move(added));
 
             MarkDirty();
@@ -564,6 +568,7 @@ namespace winrt::midipatchbay::implementation
             UpdateMessages();
             ApplyRouting();
 
+            m_canvas.MoveClearOfOtherNodes(addedId);
             m_canvas.FitToContent();
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to add the remembered endpoint.")
@@ -941,7 +946,7 @@ namespace winrt::midipatchbay::implementation
                 }
 
                 items.Append(winrt::box_value(patchbay::DescribeGroupIndex(
-                    group, live.has_value() ? live->PortName(group, isSource) : std::wstring{})));
+                    group, live.has_value() ? live->GroupName(group, isSource) : std::wstring{})));
             }
 
             groupCombo.ItemsSource(items);
@@ -1139,6 +1144,11 @@ namespace winrt::midipatchbay::implementation
             ApplyRouting();
             UpdateMessages();
 
+            if (destinationNodeId != sourceNodeId)
+            {
+                m_canvas.MoveClearOfOtherNodes(destinationNodeId);
+            }
+
             m_canvas.Select(patchbay::CanvasSelectionKind::Connection, connection.Id);
 
             // Selecting opens the details panel, which takes its width from the canvas. Fitting
@@ -1181,7 +1191,7 @@ namespace winrt::midipatchbay::implementation
 
             for (auto const& endpoint : patch->Endpoints)
             {
-                auto const live = patchbay::EndpointCatalog::Current().Resolve(endpoint);
+                auto const live = patchbay::ResolveEndpoint(endpoint);
 
                 if (!live.has_value())
                 {
@@ -1253,7 +1263,7 @@ namespace winrt::midipatchbay::implementation
             controls::MenuFlyout menu{};
             auto weak = get_weak();
 
-            auto const live = patchbay::EndpointCatalog::Current().Resolve(*endpoint);
+            auto const live = patchbay::ResolveEndpoint(*endpoint);
 
             if (live.has_value())
             {

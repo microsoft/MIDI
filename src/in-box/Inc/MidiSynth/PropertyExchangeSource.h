@@ -78,6 +78,16 @@ namespace MidiSynth
             _In_ const std::vector<char>& resource,
             _In_ bool cacheable) noexcept;
 
+        // Starts a ProgramList reply, serializing the requested page first. The ResourceList
+        // declares this resource paginated, so M2-103-UM requires "totalCount" in every reply for
+        // it, page or no page. Pass SIZE_MAX as the limit for a request that did not paginate.
+        void BeginProgramListReply(
+            _In_ const DlsCollection& collection,
+            _In_ const UmpDispatcher::PendingPropertyRequest& request,
+            _In_ const std::string& resourceId,
+            _In_ size_t offset,
+            _In_ size_t limit) noexcept;
+
         // Emits at most one chunk per call. A full program list is far more system exclusive
         // packets than an outbound queue holds at once, so the caller paces it.
         // Returns false when the reply has finished or none was started.
@@ -114,12 +124,14 @@ namespace MidiSynth
         // change costs a rebuild.
         bool ChannelListChanged(_In_ const SynthEngine& engine) noexcept;
 
-        // Starts sending the current ChannelList to one subscriber that has not had it yet.
-        // Returns false when every subscriber is up to date. Drive it with SendNextChunk exactly
-        // like a reply, and only while no other reply is in progress.
-        bool BeginNextSubscriptionUpdate(
-            _In_ const SynthEngine& engine,
-            _In_ const DlsCollection& collection) noexcept;
+        // Tells one subscriber that has not been told yet that the channel list moved. Returns
+        // false when every subscriber is up to date. Drive it with SendNextChunk exactly like a
+        // reply, and only while no other reply is in progress.
+        //
+        // This is a "notify" rather than a "full": M2-103-UM section 11.1.1 limits "full" to data
+        // that fits in one chunk, and a sixteen channel list with links does not. The subscriber
+        // answers it with an ordinary Get, which is a path that already works.
+        bool BeginNextSubscriptionNotification() noexcept;
 
         // Answers a subscription message. Status 200 carries the identifier back, which is what a
         // start needs; anything else is a refusal.
@@ -162,6 +174,14 @@ namespace MidiSynth
         std::vector<char> m_melodicProgramListJson;
         std::vector<char> m_drumKitProgramListJson;
         std::vector<char> m_channelListJson;
+
+        // One page of a program list, serialized per request. Like the channel list it has to
+        // outlive the chunked reply, which points into it rather than copying it.
+        std::vector<char> m_programPageJson;
+
+        // The header for the reply currently going out, for the replies whose header is not a
+        // constant. Same lifetime rule as the page above.
+        char m_replyHeader[80]{};
 
         // The header for the update currently going out. It has to outlive the chunker, which
         // holds a pointer to it rather than a copy.

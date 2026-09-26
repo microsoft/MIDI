@@ -9,6 +9,8 @@
 #pragma once
 #include "CapabilityInquiry.MidiCapabilityInquirySession.g.h"
 
+#include "MidiCapabilityInquiryMessageBuilder.h"
+
 #include <condition_variable>
 #include <map>
 #include <mutex>
@@ -39,6 +41,12 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
         midi2enum::MidiDeclaredDeviceIdentity Identity() const noexcept;
         void Identity(_In_ midi2enum::MidiDeclaredDeviceIdentity const& value) noexcept;
+
+        ci::MidiCapabilityInquiryCategories SupportedCategories() const noexcept { return m_supportedCategories; }
+        void SupportedCategories(_In_ ci::MidiCapabilityInquiryCategories const value) noexcept { m_supportedCategories = value; }
+
+        uint32_t ReceivableMaximumSystemExclusiveSize() const noexcept { return m_receivableMaximumSystemExclusiveSize; }
+        void ReceivableMaximumSystemExclusiveSize(_In_ uint32_t const value) noexcept;
 
         bool IsOpen() const noexcept { return m_isOpen; }
 
@@ -238,6 +246,15 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
 
         std::atomic<uint32_t> m_responseTimeoutMilliseconds{ 2000 };
         std::atomic<uint8_t> m_nextRequestId{ 1 };
+
+        // What Discovery declares. The defaults are what this class did before either could be
+        // set, so an application that does not care keeps the behavior it had.
+        std::atomic<ci::MidiCapabilityInquiryCategories> m_supportedCategories{
+            ci::MidiCapabilityInquiryCategories::PropertyExchange |
+            ci::MidiCapabilityInquiryCategories::ProfileConfiguration };
+
+        std::atomic<uint32_t> m_receivableMaximumSystemExclusiveSize{
+            MidiCapabilityInquiryMessageBuilder::MinimumReceivableSystemExclusiveSize() };
 
         // Guards everything below, and is not held while an event is raised.
         mutable std::mutex m_lock;

@@ -3,6 +3,8 @@
 
 #include "MidiSynth/ProgramList.h"
 
+#include <iterator>
+
 #include <windows.h>
 
 #include "MidiCiProgramList.h"
@@ -11,6 +13,39 @@ namespace MidiSynth
 {
     namespace
     {
+        // RP-003 Table 1 "Instrument Group", one per block of eight programs. These are the
+        // categories this sound set actually has, so they are published verbatim rather than
+        // translated into the vocabulary M2-107-UM suggests.
+        constexpr char const* GeneralMidiInstrumentGroups[]
+        {
+            "Piano",
+            "Chromatic Percussion",
+            "Organ",
+            "Guitar",
+            "Bass",
+            "Strings",
+            "Ensemble",
+            "Brass",
+            "Reed",
+            "Pipe",
+            "Synth Lead",
+            "Synth Pad",
+            "Synth Effects",
+            "Ethnic",
+            "Percussive",
+            "Sound Effects",
+        };
+
+        constexpr size_t GeneralMidiProgramsPerGroup = 8;
+
+        static_assert(
+            std::size(GeneralMidiInstrumentGroups) * GeneralMidiProgramsPerGroup == 128,
+            "The instrument groups must cover every program number exactly once.");
+
+        // Table 1 covers every channel but 10, so General MIDI names no group for a kit. A client
+        // filtering on category would drop these entirely, so they get one of our own.
+        constexpr char const* DrumKitGroup[]{ "Drum Kit" };
+
         std::string ToUtf8(_In_ const std::wstring& text)
         {
             if (text.empty())
@@ -37,7 +72,35 @@ namespace MidiSynth
     }
 
     _Use_decl_annotations_
+    size_t CountPrograms(const DlsCollection& collection, ProgramListKind kind) noexcept
+    {
+        const bool wantDrumKits = (kind == ProgramListKind::DrumKits);
+
+        size_t count = 0;
+
+        for (const auto& instrument : collection.Instruments())
+        {
+            if (instrument.IsDrumKit == wantDrumKits)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    _Use_decl_annotations_
     std::vector<char> BuildProgramListJson(const DlsCollection& collection, ProgramListKind kind)
+    {
+        return BuildProgramListPageJson(collection, kind, 0, SIZE_MAX);
+    }
+
+    _Use_decl_annotations_
+    std::vector<char> BuildProgramListPageJson(
+        const DlsCollection& collection,
+        ProgramListKind kind,
+        size_t offset,
+        size_t limit)
     {
         namespace ci = WindowsMidiServicesCapabilityInquiry;
 
@@ -49,6 +112,8 @@ namespace MidiSynth
         titles.reserve(collection.Instruments().size());
         entries.reserve(collection.Instruments().size());
 
+        size_t position = 0;
+
         for (const auto& instrument : collection.Instruments())
         {
             if (instrument.IsDrumKit != wantDrumKits)
@@ -56,16 +121,37 @@ namespace MidiSynth
                 continue;
             }
 
+            if (position++ < offset)
+            {
+                continue;
+            }
+
+            if (titles.size() >= limit)
+            {
+                break;
+            }
+
             titles.push_back(ToUtf8(instrument.Name));
         }
 
         size_t titleIndex = 0;
+        position = 0;
 
         for (const auto& instrument : collection.Instruments())
         {
             if (instrument.IsDrumKit != wantDrumKits)
             {
                 continue;
+            }
+
+            if (position++ < offset)
+            {
+                continue;
+            }
+
+            if (titleIndex >= titles.size())
+            {
+                break;
             }
 
             ci::ProgramListEntry entry{};
@@ -80,6 +166,14 @@ namespace MidiSynth
             if (!wantDrumKits)
             {
                 entry.Tag = (instrument.BankMsb == 0) ? "GM" : "GS variation";
+
+                entry.Categories = &GeneralMidiInstrumentGroups[entry.Program / GeneralMidiProgramsPerGroup];
+                entry.CategoryCount = 1;
+            }
+            else
+            {
+                entry.Categories = DrumKitGroup;
+                entry.CategoryCount = std::size(DrumKitGroup);
             }
 
             entries.push_back(entry);

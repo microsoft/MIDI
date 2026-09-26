@@ -30,6 +30,7 @@
 #include <mutex>
 #include <optional>
 #include <random>
+#include <set>
 #include <shared_mutex>
 #include <string>
 #include <string_view>

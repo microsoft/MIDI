@@ -33,6 +33,7 @@ Clocks are saved as soon as you make them, and they come back the next time you 
 | Field | What it's for |
 |---|---|
 | **Name** | Optional. The endpoint's name is used when you leave it empty, which is usually enough |
+| **What this clock sends** | A beat clock at a tempo, or MIDI Time Code at a frame rate |
 | **Tempo** | 20 to 300 beats per minute. Type it, drag the slider, or tap it in |
 | **Send to endpoint** | Which device gets the clock |
 | **Group** | One group, or every group the endpoint declares |
@@ -45,6 +46,30 @@ Stop tapping and start again at a different tempo and it works out that you've s
 **Send Start and Stop messages** is the setting to think about. With it on, a device that's waiting for a Start will begin its pattern when you start the clock, and go back to the top when you stop. With it off, only the timing clock goes out, and a device follows the tempo without being told when the bar begins. Some gear wants the first, some gets confused by it, so it's per clock.
 
 **All groups this endpoint declares** is for a MIDI 2.0 device where you don't know, or don't care, which group the sequencer is listening on. A MIDI 1.0 device has one group and the choice doesn't arise.
+
+## Divider, swing and offset
+
+Open **Divider, swing and offset** at the bottom of the clock settings when you want a device to run at a different speed from the others, or with a different feel. A clock with any of these set opens the section already expanded, and its tile says what is going on underneath the tempo.
+
+**Clock rate** is the divider and multiplier. A drum machine at **1/2 speed** plays half-time against a sequencer at normal speed, from the same tempo; **2x speed** gets you double time. **Dotted** and **Triplets** are there too. This app is the clock source rather than a box counting somebody else's pulses, so every one of these rates is exact — there is no rounding and no drift, whichever you pick. The line under the picker tells you the tempo the device will think it is running at.
+
+**Swing** shapes the feel without changing the tempo. At 50 the clock is straight. Higher holds the first note of each pair a little longer and shortens the second by the same amount, so the pair, and the bar, still takes exactly as long as it did. 66.7 is the classic triplet shuffle. **Swing applies to** chooses whether the pairs are eighth notes or sixteenths.
+
+**Offset in milliseconds** shifts one clock against the others. Use it when a device answers late, or when a long cable run or a wireless link costs time: give that device a negative offset and it starts early enough to land with everything else. It only applies to clocks started together, and it takes effect when the clock starts.
+
+## MIDI Time Code
+
+Set **What this clock sends** to MIDI Time Code and the clock stops sending a tempo and starts sending a position on a timeline: hours, minutes, seconds and frames. This is what you use to line a MIDI rig up with picture, or with anything else that follows timecode rather than a beat.
+
+A timecode clock has no tempo, no divider and no swing, so those fields go away and two others appear.
+
+**Frame rate** is how many frames there are in a second. 24 is film, 25 is PAL, 30 is plain, and **29.97 drop frame** is what NTSC broadcast uses. Drop frame is the one that surprises people: it still counts thirty frame numbers a second, but it throws two of those numbers away at the top of every minute except every tenth minute. That is not a glitch, and nothing is missing from the audio. It is how a count that runs very slightly fast is kept level with the clock on the wall, so an hour of timecode really is an hour long.
+
+**Start at** is where the timecode begins, written as hours:minutes:seconds:frames. A shorter entry fills from the right, so typing 12 means twelve frames and 1:20 means one second and twenty frames. The line under the box shows what will actually be sent.
+
+**Send a full timecode when starting and stopping** is on by default and should usually stay on. A running timecode is spelled out a piece at a time and takes two frames to say one position, so a receiver that joins in the middle has to wait. A full timecode says the whole position in one message, which lets the device you are driving find its place the moment you press Start.
+
+The offset works the same way it does for a beat clock, and matters more here: lining sound up with picture is exactly the job it exists for.
 
 ## Running more than one
 

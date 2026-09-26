@@ -7,13 +7,14 @@
 
 #pragma once
 
-#include "PatchModel.h"
+#include "EndpointMatch.h"
+#include "MidiServiceStatus.h"
 
-namespace midipatchbay
+namespace midiapp
 {
-    // A snapshot of one endpoint that is present right now. Everything the canvas, the graph
-    // checker and the routing engine need, copied out of the watcher so nothing on the UI thread
-    // iterates a collection the watcher is rewriting.
+    // A snapshot of one endpoint that is present right now. Everything a canvas, a graph checker
+    // or a routing engine needs, copied out of the watcher so nothing on the UI thread iterates a
+    // collection the watcher is rewriting.
     struct LiveEndpoint
     {
         std::wstring EndpointDeviceId{};
@@ -24,6 +25,10 @@ namespace midipatchbay
         std::wstring ParentDeviceName{};
         std::wstring TransportSuppliedName{};
 
+        // What the customer or the transport says this thing is, for a picker that has room for
+        // a second line. A transport code tells nobody anything.
+        std::wstring Description{};
+
         // Full path of the picture the customer gave this endpoint, if there is one.
         std::wstring ImagePath{};
 
@@ -33,12 +38,24 @@ namespace midipatchbay
 
         std::array<bool, MaximumGroupCount> DeclaredGroups{};
 
+        // The same, split by which way the messages go, so a picker can say "1 source group,
+        // 3 destination groups" rather than a count that does not say what it is for.
+        std::array<bool, MaximumGroupCount> SourceGroups{};
+        std::array<bool, MaximumGroupCount> DestinationGroups{};
+
+        int32_t SourceGroupCount() const noexcept;
+        int32_t DestinationGroupCount() const noexcept;
+
         // The names these groups carry as MIDI 1.0 ports, which is what the customer already
         // sees in every other app. Empty where the endpoint has no MIDI 1.0 port for the group.
         std::array<std::wstring, MaximumGroupCount> SourcePortNames{};
         std::array<std::wstring, MaximumGroupCount> DestinationPortNames{};
 
-        // Loopbacks are the only endpoints this app knows for certain will echo what it sends,
+        // Function block name per group, falling back to the group terminal block name.
+        std::array<std::wstring, MaximumGroupCount> SourceGroupNames{};
+        std::array<std::wstring, MaximumGroupCount> DestinationGroupNames{};
+
+        // Loopbacks are the only endpoints an app knows for certain will echo what it sends,
         // which is what makes a loop provable rather than merely possible.
         bool IsLoopback{ false };
 
@@ -49,6 +66,8 @@ namespace midipatchbay
         EndpointMatch BuildMatch() const noexcept;
 
         std::wstring const& PortName(_In_ int32_t groupIndex, _In_ bool isSource) const noexcept;
+
+        std::wstring const& GroupName(_In_ int32_t groupIndex, _In_ bool isSource) const noexcept;
     };
 
     // Watches the live endpoints and answers "which live endpoint does this saved one mean".
@@ -71,13 +90,21 @@ namespace midipatchbay
 
         std::optional<LiveEndpoint> Find(_In_ std::wstring const& endpointDeviceId) const noexcept;
 
-        // The endpoint a saved entry resolves to under its own match mode, or nothing.
-        std::optional<LiveEndpoint> Resolve(_In_ PatchEndpoint const& endpoint) const noexcept;
+        // The endpoint a saved match resolves to under its mode, or nothing. The fallback name is
+        // used for a name match when the match itself carries no transport supplied name, which is
+        // how a caller offers the display name it last saw.
+        std::optional<LiveEndpoint> Resolve(
+            _In_ EndpointMatch const& match,
+            _In_ EndpointMatchMode mode,
+            _In_ std::wstring const& fallbackName = {}) const noexcept;
 
         // A live endpoint that is probably the saved one but does not match under the current
         // mode, so it can be offered rather than bound silently. Only returns something when
         // the endpoint is not already resolved.
-        std::optional<LiveEndpoint> SuggestReplacement(_In_ PatchEndpoint const& endpoint) const noexcept;
+        std::optional<LiveEndpoint> SuggestReplacement(
+            _In_ EndpointMatch const& match,
+            _In_ EndpointMatchMode mode,
+            _In_ std::wstring const& fallbackName = {}) const noexcept;
 
         bool IsServiceAvailable() const noexcept { return m_serviceAvailable.load(std::memory_order_relaxed); }
 
@@ -96,7 +123,7 @@ namespace midipatchbay
 
         std::function<void()> m_changedHandler{};
 
-        midi2enum::MidiEndpointDeviceWatcher m_watcher{ nullptr };
+        winrt::Windows::Devices::Midi2::Enumeration::MidiEndpointDeviceWatcher m_watcher{ nullptr };
 
         winrt::event_token m_addedToken{};
         winrt::event_token m_removedToken{};

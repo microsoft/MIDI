@@ -89,6 +89,13 @@ namespace midifile
 
     uint64_t MidiSequence::MicrosecondsAtTick(uint32_t tick) const noexcept
     {
+        // Absolute is handled here rather than at every call site, so position maps, seeking and
+        // the player all agree about what a tick means without any of them having to ask.
+        if (Timing == TimingMode::Absolute)
+        {
+            return tick;
+        }
+
         if (Division.IsSmpte)
         {
             auto const perSecond = Division.TicksPerSecond();
@@ -127,6 +134,11 @@ namespace midifile
 
     uint32_t MidiSequence::TickAtMicroseconds(uint64_t microseconds) const noexcept
     {
+        if (Timing == TimingMode::Absolute)
+        {
+            return microseconds >= 0xFFFFFFFFull ? 0xFFFFFFFFu : static_cast<uint32_t>(microseconds);
+        }
+
         if (Division.IsSmpte)
         {
             auto const perSecond = Division.TicksPerSecond();

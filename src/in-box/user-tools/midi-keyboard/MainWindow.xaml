@@ -65,26 +65,30 @@
             <!-- Spans every column so it sits in the middle of the window rather than the middle
                  of the stretchy column. Not hit testable, so it stays part of the drag region.
                  Hidden when this is not a preview build; see midi-app-shared\PreviewBuild.h. -->
-            <Border x:Name="PreviewChiclet"
-                    Grid.Column="0"
-                    Grid.ColumnSpan="5"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Height="18"
-                    Padding="9,0,9,0"
-                    CornerRadius="9"
-                    IsHitTestVisible="False"
-                    BorderThickness="1"
-                    BorderBrush="{ThemeResource SystemFillColorCautionBrush}"
-                    Background="{ThemeResource SystemFillColorCautionBackgroundBrush}">
+            <Grid x:Name="PreviewChiclet"
+                  Grid.Column="0"
+                  Grid.ColumnSpan="5"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Height="18"
+                  IsHitTestVisible="False">
+                <!-- A shape, not a Border: a Border snaps its corner radius to whole pixels
+                     along with its bounds, so at 125% scaling the arc comes out stepped. -->
+                <Rectangle RadiusX="9"
+                           RadiusY="9"
+                           StrokeThickness="1"
+                           UseLayoutRounding="False"
+                           Stroke="{ThemeResource SystemFillColorCautionBrush}"
+                           Fill="{ThemeResource SystemFillColorCautionBackgroundBrush}" />
                 <TextBlock x:Name="PreviewChicletText"
                            x:Uid="PreviewChicletText"
                            Text="PREVIEW"
                            FontSize="10"
                            FontWeight="SemiBold"
+                           Margin="9,0,9,0"
                            VerticalAlignment="Center"
                            Foreground="{ThemeResource SystemFillColorCautionBrush}" />
-            </Border>
+            </Grid>
 
             <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top">
                 <StackPanel.Resources>
@@ -132,6 +136,7 @@
             <Grid ColumnSpacing="16">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" MinWidth="120" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
@@ -243,12 +248,27 @@
                               SelectionChanged="OnArpRateChanged" />
                 </StackPanel>
 
+                <!-- next to the arpeggiator because that is what it is most often used with,
+                     but it holds the keys down whether or not a pattern is running -->
+                <ToggleButton x:Name="LatchToggle"
+                              x:Uid="LatchToggle"
+                              AutomationProperties.AutomationId="LatchToggle"
+                              Grid.Column="3"
+                              VerticalAlignment="Center"
+                              Padding="10,4,10,4"
+                              Click="OnLatchToggled">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE72E;" FontSize="12" />
+                        <TextBlock x:Uid="LatchToggleText" Text="Latch" />
+                    </StackPanel>
+                </ToggleButton>
+
                 <!-- bank and program. The values live behind a flyout because the strip has no
                      room for three spinners at the default window size. -->
                 <Button x:Name="PatchButton"
                         x:Uid="PatchButton"
                         AutomationProperties.AutomationId="PatchButton"
-                        Grid.Column="3"
+                        Grid.Column="4"
                         VerticalAlignment="Center">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <FontIcon Glyph="&#xE90B;" FontSize="12" />
@@ -260,11 +280,46 @@
                                    Text="" />
                     </StackPanel>
                     <Button.Flyout>
-                        <Flyout Opened="OnPatchFlyoutOpened">
-                            <StackPanel Spacing="12" MinWidth="320" MaxWidth="380">
+                        <!-- This button sits at the right hand end of the strip, so a flyout held
+                             inside the window is clipped rather than moved and loses the right of
+                             the grouped view. -->
+                        <Flyout Opened="OnPatchFlyoutOpened"
+                                ShouldConstrainToRootBounds="False">
+                            <!-- the presenter's own theme width is 456, which is narrower than
+                                 two lists side by side and silently squeezes them -->
+                            <Flyout.FlyoutPresenterStyle>
+                                <Style TargetType="FlyoutPresenter">
+                                    <Setter Property="MaxWidth" Value="620" />
+                                </Style>
+                            </Flyout.FlyoutPresenterStyle>
+                            <!-- the grouped view makes this taller than a short window can show,
+                                 and a clipped flyout would hide the Send button entirely -->
+                            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                                          HorizontalScrollMode="Disabled"
+                                          HorizontalScrollBarVisibility="Disabled">
+                                <StackPanel Spacing="12" MinWidth="320" MaxWidth="540">
                                 <TextBlock x:Uid="PatchFlyoutTitle"
                                            Text="Bank and program"
                                            Style="{ThemeResource BodyStrongTextBlockStyle}" />
+
+                                <!-- only shown when the device published categories, so the
+                                     choice never offers a grouping that has nothing in it -->
+                                <RadioButtons x:Name="ProgramViewRadioButtons"
+                                              x:Uid="ProgramViewRadioButtons"
+                                              AutomationProperties.AutomationId="ProgramViewRadioButtons"
+                                              Header="Show programs"
+                                              MaxColumns="2"
+                                              Visibility="Collapsed"
+                                              SelectionChanged="OnProgramViewChanged">
+                                    <RadioButton x:Name="ProgramViewFlatRadio"
+                                                 x:Uid="ProgramViewFlatRadio"
+                                                 AutomationProperties.AutomationId="ProgramViewFlatRadio"
+                                                 Content="In one list" />
+                                    <RadioButton x:Name="ProgramViewCategoryRadio"
+                                                 x:Uid="ProgramViewCategoryRadio"
+                                                 AutomationProperties.AutomationId="ProgramViewCategoryRadio"
+                                                 Content="By category" />
+                                </RadioButtons>
 
                                 <!-- shown only when the device answered a MIDI-CI ProgramList
                                      query; otherwise the numbers below are the only way in -->
@@ -306,6 +361,68 @@
                                         </DataTemplate>
                                     </ComboBox.ItemTemplate>
                                 </ComboBox>
+
+                                <!-- the grouped view. Picking a category on the left fills the
+                                     list on the right; only the right list changes the patch.
+                                     Both lists are sized, because a flyout measures its content
+                                     unconstrained and a starred column would size to the longest
+                                     program name and then be clipped. -->
+                                <Grid x:Name="ProgramCategoryGrid"
+                                      ColumnSpacing="10"
+                                      Height="300"
+                                      Visibility="Collapsed">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <ListView x:Name="ProgramCategoryListView"
+                                              x:Uid="ProgramCategoryListView"
+                                              AutomationProperties.AutomationId="ProgramCategoryListView"
+                                              Grid.Column="0"
+                                              Width="164"
+                                              Header="Categories"
+                                              SelectionMode="Single"
+                                              SelectionChanged="OnProgramCategoryChanged" />
+
+                                    <ListView x:Name="CategoryProgramListView"
+                                              x:Uid="CategoryProgramListView"
+                                              AutomationProperties.AutomationId="CategoryProgramListView"
+                                              Grid.Column="1"
+                                              Width="350"
+                                              Header="Programs"
+                                              SelectionMode="Single"
+                                              SelectionChanged="OnCategoryProgramSelectionChanged">
+                                        <ListView.ItemContainerStyle>
+                                            <Style TargetType="ListViewItem">
+                                                <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                            </Style>
+                                        </ListView.ItemContainerStyle>
+                                        <ListView.ItemTemplate>
+                                            <DataTemplate x:DataType="local:ProgramChoice">
+                                                <Grid ColumnSpacing="10"
+                                                      AutomationProperties.Name="{x:Bind AutomationName}">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0"
+                                                               Text="{x:Bind DisplayName}"
+                                                               VerticalAlignment="Center"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               TextWrapping="NoWrap" />
+                                                    <TextBlock Grid.Column="1"
+                                                               Text="{x:Bind Tags}"
+                                                               Visibility="{x:Bind TagsVisibility}"
+                                                               VerticalAlignment="Center"
+                                                               TextWrapping="NoWrap"
+                                                               Style="{ThemeResource CaptionTextBlockStyle}"
+                                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ListView.ItemTemplate>
+                                    </ListView>
+                                </Grid>
 
                                 <TextBlock x:Name="ProgramListStatusText"
                                            AutomationProperties.AutomationId="ProgramListStatusText"
@@ -368,7 +485,8 @@
                                         Click="OnSendPatchClick">
                                     <TextBlock x:Uid="SendPatchButtonText" Text="Send now" />
                                 </Button>
-                            </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
                         </Flyout>
                     </Button.Flyout>
                 </Button>
@@ -376,7 +494,7 @@
                 <Button x:Name="PanicButton"
                         x:Uid="PanicButton"
                         AutomationProperties.AutomationId="PanicButton"
-                        Grid.Column="4"
+                        Grid.Column="5"
                         VerticalAlignment="Center"
                         Click="OnPanicClick">
                     <!-- icon only: the strip has no room for the caption once bank and program
@@ -707,6 +825,19 @@
                                        ValueChanged="OnMinimumKeyWidthChanged" />
                             <TextBlock x:Uid="MinimumKeyWidthHint"
                                        Text="In pixels. When the window is too narrow to fit every key at this width, the keyboard scrolls instead of shrinking."
+                                       TextWrapping="Wrap"
+                                       Style="{ThemeResource CaptionTextBlockStyle}"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <StackPanel Spacing="4">
+                            <CheckBox x:Name="RetryProgramListCheckBox"
+                                      x:Uid="RetryProgramListCheckBox"
+                                      AutomationProperties.AutomationId="RetryProgramListCheckBox"
+                                      Content="Keep looking for the device's programs"
+                                      Click="OnRetryProgramListChanged" />
+                            <TextBlock x:Uid="RetryProgramListHint"
+                                       Text="Asks again every few seconds until something answers, so a synthesizer or DAW you start after this app is still found. Turn it off to ask only once each time you pick a destination."
                                        TextWrapping="Wrap"
                                        Style="{ThemeResource CaptionTextBlockStyle}"
                                        Foreground="{ThemeResource TextFillColorSecondaryBrush}" />

@@ -30,6 +30,8 @@ public:
     TEST_METHOD(TestGetPropertyDataIsHandedToTheCaller);
     TEST_METHOD(TestSubscriptionIsHandedToTheCaller);
     TEST_METHOD(TestPropertyExchangeCapabilitiesReply);
+    TEST_METHOD(TestMuidCollisionIsResolved);
+    TEST_METHOD(TestUnsupportedInquiryIsRefused);
 
 private:
 

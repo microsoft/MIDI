@@ -1,0 +1,755 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+#include "LayoutDocumentTests.h"
+#include "TestLayoutFiles.h"
+
+#include <winrt/Windows.Foundation.h>
+
+#include "LayoutModel.h"
+#include "LayoutSerializer.h"
+#include "HexText.h"
+
+using namespace WEX::Common;
+using namespace WEX::Logging;
+using namespace WEX::TestExecution;
+
+namespace
+{
+    glass::LayoutDocument LoadHandAuthored()
+    {
+        auto const result = glass::ReadLayoutFromJson(glasstests::HandAuthoredLayout());
+        VERIFY_IS_TRUE(result.Succeeded);
+        return result.Document;
+    }
+
+    // A minimal document that passes validation, for the tests that then break one thing.
+    glass::LayoutDocument MinimalDocument()
+    {
+        glass::LayoutDocument document{};
+
+        document.Name = L"Minimal";
+        document.PageWidth = 1280;
+        document.PageHeight = 800;
+        document.CanvasWidth = 1280;
+        document.CanvasHeight = 800;
+
+        glass::Page page{};
+        page.Id = L"p1";
+        page.Name = L"One";
+
+        glass::Control control{};
+        control.Id = L"c1";
+        control.Kind = glass::ControlKind::Knob;
+        control.Width = 56;
+        control.Height = 56;
+
+        page.Controls.push_back(control);
+        document.Pages.push_back(page);
+
+        return document;
+    }
+}
+
+void LayoutDocumentTests::ReadsAHandAuthoredLayout()
+{
+    auto const document = LoadHandAuthored();
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"Hand Authored" }, document.Name);
+    VERIFY_ARE_EQUAL(1280, document.PageWidth);
+    VERIFY_ARE_EQUAL(800, document.PageHeight);
+
+    // The canvas is deliberately larger than the page in this file. If the reader quietly
+    // clamped it to the page, growing and shrinking would stop working.
+    VERIFY_ARE_EQUAL(1600, document.CanvasWidth);
+    VERIFY_ARE_EQUAL(1000, document.CanvasHeight);
+
+    VERIFY_IS_TRUE(document.Scale == glass::ScaleMode::FitToScreen);
+    VERIFY_IS_TRUE(document.FullScreenButtonCorner == glass::ScreenCorner::BottomLeft);
+    VERIFY_IS_TRUE(document.Tempo.Kind == glass::TempoSourceKind::FollowIncomingClock);
+    VERIFY_ARE_EQUAL(128.0, document.Tempo.BeatsPerMinute);
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, document.Pages.size());
+    VERIFY_ARE_EQUAL(size_t{ 2 }, document.ControlCount());
+
+    auto const* fader = document.FindControl(L"fader-1");
+    VERIFY_IS_NOT_NULL(fader);
+    VERIFY_IS_TRUE(fader->Kind == glass::ControlKind::Fader);
+    VERIFY_IS_TRUE(fader->Pickup == glass::PickupMode::Catch);
+    VERIFY_ARE_EQUAL(0.25, fader->DefaultValue);
+    VERIFY_IS_TRUE(fader->SendsValueOnStart);
+    VERIFY_IS_TRUE(fader->Feedback.Enabled);
+}
+
+void LayoutDocumentTests::ReadsMessagesAndSystemExclusive()
+{
+    auto const document = LoadHandAuthored();
+
+    auto const* pad = document.FindControl(L"pad-1");
+    VERIFY_IS_NOT_NULL(pad);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, pad->Messages.size());
+
+    VERIFY_IS_TRUE(pad->Messages[0].Kind == glass::MessageKind::Sequence);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Intro" }, pad->Messages[0].SequenceName);
+
+    // F0 7E 7F 06 01 F7 - a universal identity request, which is the shortest real world blob
+    // anyone would put on a pad.
+    auto const& sysex = pad->Messages[1].SystemExclusive;
+    VERIFY_ARE_EQUAL(size_t{ 6 }, sysex.size());
+    VERIFY_ARE_EQUAL(uint8_t{ 0xF0 }, sysex[0]);
+    VERIFY_ARE_EQUAL(uint8_t{ 0x7E }, sysex[1]);
+    VERIFY_ARE_EQUAL(uint8_t{ 0x06 }, sysex[3]);
+    VERIFY_ARE_EQUAL(uint8_t{ 0xF7 }, sysex[5]);
+}
+
+void LayoutDocumentTests::ReadsTheDeviceTableThroughTheSharedMatchCriteria()
+{
+    auto const document = LoadHandAuthored();
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, document.Devices.size());
+
+    auto const* desk = document.FindDevice(L"Desk");
+    VERIFY_IS_NOT_NULL(desk);
+    VERIFY_IS_TRUE(desk->MatchMode == midiapp::EndpointMatchMode::UsbVendorAndProduct);
+    VERIFY_IS_TRUE(desk->SendsBeatClock);
+
+    // The criteria come back through the shipped service configuration type, which is the whole
+    // point of storing them in its shape rather than in one of our own.
+    VERIFY_ARE_EQUAL(uint16_t{ 1234 }, desk->Match.UsbVendorId);
+    VERIFY_ARE_EQUAL(uint16_t{ 99 }, desk->Match.UsbProductId);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Big Desk" }, desk->Match.TransportSuppliedEndpointName);
+
+    auto const* synth = document.FindDevice(L"Synth");
+    VERIFY_IS_NOT_NULL(synth);
+    VERIFY_IS_TRUE(synth->MatchMode == midiapp::EndpointMatchMode::EndpointDeviceId);
+    VERIFY_IS_FALSE(synth->Match.EndpointDeviceId.empty());
+}
+
+void LayoutDocumentTests::ReadsSequenceSteps()
+{
+    auto const document = LoadHandAuthored();
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, document.Sequences.size());
+
+    auto const& steps = document.Sequences[0].Steps;
+    VERIFY_ARE_EQUAL(size_t{ 5 }, steps.size());
+
+    VERIFY_IS_TRUE(steps[0].Kind == glass::SequenceStepKind::RepeatBlockStart);
+    VERIFY_ARE_EQUAL(uint32_t{ 3 }, steps[0].RepeatCount);
+
+    VERIFY_IS_TRUE(steps[2].Kind == glass::SequenceStepKind::Wait);
+    VERIFY_ARE_EQUAL(uint32_t{ 250 }, steps[2].WaitMilliseconds);
+
+    VERIFY_IS_TRUE(steps[4].Kind == glass::SequenceStepKind::SetControlValue);
+    VERIFY_ARE_EQUAL(std::wstring{ L"fader-1" }, steps[4].TargetControlId);
+    VERIFY_ARE_EQUAL(0.75, steps[4].TargetValue);
+}
+
+void LayoutDocumentTests::WritingTheSameDocumentTwiceProducesTheSameBytes()
+{
+    auto const document = LoadHandAuthored();
+
+    auto const first = glass::WriteLayoutToJson(document);
+    auto const second = glass::WriteLayoutToJson(document);
+
+    VERIFY_IS_FALSE(first.empty());
+
+    // A JsonObject is a map and gives its keys back in whatever order it likes. If this file were
+    // written through Stringify, two saves of an untouched layout could differ, which would make
+    // the file undiffable and this whole test meaningless.
+    VERIFY_ARE_EQUAL(first, second);
+}
+
+void LayoutDocumentTests::ReadingBackWhatWasWrittenChangesNothing()
+{
+    auto const original = LoadHandAuthored();
+
+    auto const once = glass::WriteLayoutToJson(original);
+
+    auto const reread = glass::ReadLayoutFromJson(once);
+    VERIFY_IS_TRUE(reread.Succeeded);
+
+    auto const twice = glass::WriteLayoutToJson(reread.Document);
+
+    // The real round trip property: what the app writes, the app reads back to the same thing.
+    // A hand-authored file is allowed to differ on whitespace and key order; a written one is not.
+    VERIFY_ARE_EQUAL(once, twice);
+
+    Log::Comment(String().Format(L"Canonical form is %zu characters.", once.size()));
+}
+
+void LayoutDocumentTests::WholeNumbersDoNotGrowADecimalPoint()
+{
+    auto const document = LoadHandAuthored();
+    auto const text = glass::WriteLayoutToJson(document);
+
+    // x was 48 in the hand-authored file. Written as "48.0" it would read back the same but the
+    // file would churn on every save, which is exactly what the number formatter exists to stop.
+    VERIFY_IS_TRUE(text.find(L"\"x\": 48\n") != std::wstring::npos ||
+        text.find(L"\"x\": 48,") != std::wstring::npos);
+
+    VERIFY_IS_TRUE(text.find(L"48.0") == std::wstring::npos);
+
+    // and a real fraction still survives
+    VERIFY_IS_TRUE(text.find(L"0.25") != std::wstring::npos);
+}
+
+// ---- overrides of the theme ----
+
+void LayoutDocumentTests::AControlThatAgreesWithItsThemeWritesNoOverrides()
+{
+    auto const document = LoadHandAuthored();
+    auto const text = glass::WriteLayoutToJson(document);
+
+    // An override that defers to the theme is the absence of an override. Writing "useTheme"
+    // three times on every control would put dead weight in every file for no reader's benefit,
+    // and would make a diff of a real edit impossible to find.
+    VERIFY_IS_TRUE(text.find(L"\"style\"") == std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"labelPlaced\"") == std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"showValue\"") == std::wstring::npos);
+}
+
+void LayoutDocumentTests::OverridesOfTheThemeSurviveARoundTrip()
+{
+    auto document = LoadHandAuthored();
+
+    VERIFY_IS_GREATER_THAN(document.Pages.size(), size_t{ 0 });
+    VERIFY_IS_GREATER_THAN(document.Pages[0].Controls.size(), size_t{ 0 });
+
+    auto& control = document.Pages[0].Controls[0];
+
+    control.Style = glass::ControlStyleOverride::Outline;
+    control.LabelPlaced = glass::LabelPlacementOverride::None;
+    control.ShowValue = glass::ShowValueOverride::Always;
+
+    auto const text = glass::WriteLayoutToJson(document);
+
+    VERIFY_IS_TRUE(text.find(L"\"style\": \"outline\"") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"labelPlaced\": \"none\"") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"showValue\": \"always\"") != std::wstring::npos);
+
+    auto const reread = glass::ReadLayoutFromJson(text);
+
+    VERIFY_IS_TRUE(reread.Succeeded);
+
+    auto const& back = reread.Document.Pages[0].Controls[0];
+
+    VERIFY_IS_TRUE(back.Style == glass::ControlStyleOverride::Outline);
+    VERIFY_IS_TRUE(back.LabelPlaced == glass::LabelPlacementOverride::None);
+    VERIFY_IS_TRUE(back.ShowValue == glass::ShowValueOverride::Always);
+
+    // Writing what was read produces the same bytes, which is what keeps a save from looking
+    // like an edit.
+    VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(reread.Document));
+}
+
+void LayoutDocumentTests::ALabelBoxSurvivesARoundTrip()
+{
+    auto document = LoadHandAuthored();
+
+    auto& control = document.Pages[0].Controls[0];
+
+    control.LabelPlaced = glass::LabelPlacementOverride::Custom;
+    control.LabelLook.BoxX = -12.5;
+    control.LabelLook.BoxY = 70.0;
+    control.LabelLook.BoxWidth = 96.0;
+    control.LabelLook.BoxHeight = 34.0;
+
+    auto const text = glass::WriteLayoutToJson(document);
+
+    VERIFY_IS_TRUE(text.find(L"\"labelPlaced\": \"custom\"") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"boxWidth\": 96") != std::wstring::npos);
+
+    auto const reread = glass::ReadLayoutFromJson(text);
+    VERIFY_IS_TRUE(reread.Succeeded);
+
+    auto const& back = reread.Document.Pages[0].Controls[0];
+
+    VERIFY_IS_TRUE(back.LabelPlaced == glass::LabelPlacementOverride::Custom);
+    VERIFY_IS_TRUE(back.LabelLook.HasBox());
+    VERIFY_ARE_EQUAL(-12.5, back.LabelLook.BoxX);
+    VERIFY_ARE_EQUAL(70.0, back.LabelLook.BoxY);
+    VERIFY_ARE_EQUAL(96.0, back.LabelLook.BoxWidth);
+    VERIFY_ARE_EQUAL(34.0, back.LabelLook.BoxHeight);
+
+    VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(reread.Document));
+}
+
+void LayoutDocumentTests::ALabelWithNoBoxWritesNoBox()
+{
+    auto document = LoadHandAuthored();
+
+    // A box of nothing is the absence of a box. Writing four zeroes on every control would put
+    // dead weight in every file and make a real edit impossible to find in a diff.
+    document.Pages[0].Controls[0].LabelLook.Italic = true;
+
+    auto const text = glass::WriteLayoutToJson(document);
+
+    VERIFY_IS_TRUE(text.find(L"\"italic\": true") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"boxWidth\"") == std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"boxX\"") == std::wstring::npos);
+}
+
+void LayoutDocumentTests::ACustomPlacementWithNoBoxFallsBackToTheTheme()
+{
+    // A file that says the label is where the customer put it, but does not say where, is a file
+    // that says one thing and carries another. Drawing nothing would be worse than deferring.
+    auto const result = glass::ReadLayoutFromJson(
+        LR"({ "fileVersion": 1, "name": "T", "pages": [ { "id": "p", "name": "P", "controls": [
+            { "id": "c", "kind": "knob", "label": "Knob", "labelPlaced": "custom" } ] } ] })");
+
+    VERIFY_IS_TRUE(result.Succeeded);
+
+    auto const& control = result.Document.Pages[0].Controls[0];
+
+    VERIFY_IS_TRUE(control.LabelPlaced == glass::LabelPlacementOverride::UseTheme);
+    VERIFY_IS_FALSE(control.LabelLook.HasBox());
+}
+
+void LayoutDocumentTests::ALabelBoxFromAFileIsBounded()
+{
+    // A stranger's file must not be able to ask for a text block the size of a wall.
+    auto const result = glass::ReadLayoutFromJson(
+        LR"({ "fileVersion": 1, "name": "T", "pages": [ { "id": "p", "name": "P", "controls": [
+            { "id": "c", "kind": "knob", "label": "Knob", "labelPlaced": "custom",
+              "labelStyle": { "boxX": -1e12, "boxY": 1e12, "boxWidth": 1e12, "boxHeight": 1e12 } } ] } ] })");
+
+    VERIFY_IS_TRUE(result.Succeeded);
+
+    auto const& look = result.Document.Pages[0].Controls[0].LabelLook;
+
+    VERIFY_ARE_EQUAL(-glass::MaximumLabelBoxExtent, look.BoxX);
+    VERIFY_ARE_EQUAL(glass::MaximumLabelBoxExtent, look.BoxY);
+    VERIFY_ARE_EQUAL(glass::MaximumLabelBoxExtent, look.BoxWidth);
+    VERIFY_ARE_EQUAL(glass::MaximumLabelBoxExtent, look.BoxHeight);
+}
+
+void LayoutDocumentTests::KeepsFieldsFromANewerVersion()
+{
+    auto const result = glass::ReadLayoutFromJson(glasstests::LayoutFromANewerVersion());
+    VERIFY_IS_TRUE(result.Succeeded);
+
+    auto const text = glass::WriteLayoutToJson(result.Document);
+
+    // An older build opening a newer file keeps what it does not understand rather than silently
+    // dropping it. Losing these would quietly destroy the customer's work on the machine that
+    // could least explain why.
+    VERIFY_IS_TRUE(text.find(L"somethingThisBuildHasNeverHeardOf") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"alpha\"") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"deep\"") != std::wstring::npos);
+
+    // and the version it announced is written back as it was found, not lowered to ours
+    VERIFY_IS_TRUE(text.find(L"\"fileVersion\": 99") != std::wstring::npos);
+}
+
+void LayoutDocumentTests::SaysWhenAFileIsFromANewerVersion()
+{
+    auto const newer = glass::ReadLayoutFromJson(glasstests::LayoutFromANewerVersion());
+    VERIFY_IS_TRUE(newer.Succeeded);
+    VERIFY_IS_TRUE(newer.IsFromNewerVersion);
+
+    auto const ours = glass::ReadLayoutFromJson(glasstests::HandAuthoredLayout());
+    VERIFY_IS_TRUE(ours.Succeeded);
+    VERIFY_IS_FALSE(ours.IsFromNewerVersion);
+}
+
+void LayoutDocumentTests::UnknownFieldsSurviveAtEveryLevel()
+{
+    auto const result = glass::ReadLayoutFromJson(glasstests::LayoutFromANewerVersion());
+    VERIFY_IS_TRUE(result.Succeeded);
+
+    auto const text = glass::WriteLayoutToJson(result.Document);
+
+    // Document level, page level, control level and message level each keep their own leftovers.
+    // Keeping only the document level would be the easy mistake and would lose the most.
+    VERIFY_IS_TRUE(text.find(L"somethingThisBuildHasNeverHeardOf") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"futurePageProperty") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"holographicProjection") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"quantumEntanglement") != std::wstring::npos);
+
+    // and they still survive a second trip
+    auto const again = glass::ReadLayoutFromJson(text);
+    VERIFY_IS_TRUE(again.Succeeded);
+
+    auto const twice = glass::WriteLayoutToJson(again.Document);
+    VERIFY_ARE_EQUAL(text, twice);
+}
+
+void LayoutDocumentTests::RejectsSomethingThatIsNotJson()
+{
+    VERIFY_IS_FALSE(glass::ReadLayoutFromJson(L"").Succeeded);
+    VERIFY_IS_FALSE(glass::ReadLayoutFromJson(L"this is not json").Succeeded);
+    VERIFY_IS_FALSE(glass::ReadLayoutFromJson(L"[1,2,3]").Succeeded);
+    VERIFY_IS_FALSE(glass::ReadLayoutFromJson(L"{\"unterminated\": ").Succeeded);
+}
+
+void LayoutDocumentTests::SurvivesAHostileFile()
+{
+    auto const result = glass::ReadLayoutFromJson(glasstests::HostileLayout());
+
+    // It parses as JSON, so it loads. What matters is that nothing in it reached the model with a
+    // value the rest of the app would have to defend against.
+    VERIFY_IS_TRUE(result.Succeeded);
+
+    auto const& document = result.Document;
+
+    VERIFY_IS_TRUE(document.PageWidth > 0);
+    VERIFY_IS_TRUE(document.PageHeight > 0);
+    VERIFY_IS_TRUE(document.Scale == glass::ScaleMode::ActualSize);
+    VERIFY_IS_TRUE(document.Tempo.Kind == glass::TempoSourceKind::Internal);
+    VERIFY_IS_TRUE(document.Tempo.BeatsPerMinute >= 1.0);
+    VERIFY_ARE_EQUAL(size_t{ 0 }, document.Devices.size());
+
+    VERIFY_ARE_EQUAL(size_t{ 1 }, document.Pages.size());
+
+    auto const* control = document.FindControl(L"c1");
+    VERIFY_IS_NOT_NULL(control);
+
+    VERIFY_IS_TRUE(control->Kind == glass::ControlKind::Knob);
+    VERIFY_IS_TRUE(control->HueSlot >= glass::LiteralHue && control->HueSlot < glass::HueSlotCount);
+    VERIFY_IS_TRUE(control->DefaultValue >= 0.0 && control->DefaultValue <= 1.0);
+
+    // the two entries that were not objects are dropped rather than guessed at
+    VERIFY_ARE_EQUAL(size_t{ 2 }, control->Messages.size());
+
+    for (auto const& message : control->Messages)
+    {
+        VERIFY_IS_TRUE(message.GroupIndex >= glass::AllGroups && message.GroupIndex < glass::MaximumGroupCount);
+        VERIFY_IS_TRUE(message.ChannelIndex >= 0 && message.ChannelIndex <= 15);
+        VERIFY_IS_TRUE(message.RawWords.size() <= 4);
+    }
+
+    // and it still writes out as well formed JSON that reads back
+    auto const text = glass::WriteLayoutToJson(document);
+    VERIFY_IS_TRUE(glass::ReadLayoutFromJson(text).Succeeded);
+}
+
+void LayoutDocumentTests::BoundsStringsFromAFile()
+{
+    auto const result = glass::ReadLayoutFromJson(glasstests::HostileLayout());
+    VERIFY_IS_TRUE(result.Succeeded);
+
+    // 4000 characters went in. A name that long in a title bar or a card is a denial of service
+    // against the person looking at it.
+    VERIFY_IS_LESS_THAN_OR_EQUAL(result.Document.Name.size(), midiapp::MaximumStringLength);
+}
+
+void LayoutDocumentTests::RejectsSystemExclusiveThatIsNotHex()
+{
+    auto const result = glass::ReadLayoutFromJson(glasstests::HostileLayout());
+    VERIFY_IS_TRUE(result.Succeeded);
+
+    auto const* control = result.Document.FindControl(L"c1");
+    VERIFY_IS_NOT_NULL(control);
+
+    // "F0ZZ7F06" is half plausible, which is the dangerous kind. One bad character means the
+    // whole blob is dropped rather than partly believed, because a truncated system exclusive
+    // message sent to a synth is how a device gets bricked.
+    VERIFY_ARE_EQUAL(size_t{ 0 }, control->Messages[0].SystemExclusive.size());
+}
+
+// ---- the background picture ----
+
+void LayoutDocumentTests::ABackgroundPictureSurvivesARoundTrip()
+{
+    auto document = LoadHandAuthored();
+
+    document.BackgroundImage = L"desk photo.png";
+    document.BackgroundFitMode = glass::BackgroundFit::Tiled;
+
+    auto const text = glass::WriteLayoutToJson(document);
+
+    VERIFY_IS_TRUE(text.find(L"\"backgroundImage\": \"desk photo.png\"") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"backgroundFit\": \"tiled\"") != std::wstring::npos);
+
+    auto const reread = glass::ReadLayoutFromJson(text);
+    VERIFY_IS_TRUE(reread.Succeeded);
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"desk photo.png" }, reread.Document.BackgroundImage);
+    VERIFY_IS_TRUE(reread.Document.BackgroundFitMode == glass::BackgroundFit::Tiled);
+
+    VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(reread.Document));
+}
+
+void LayoutDocumentTests::AControlPictureSurvivesARoundTrip()
+{
+    auto document = LoadHandAuthored();
+
+    glass::Control control{};
+
+    control.Id = L"backdrop";
+    control.Kind = glass::ControlKind::Image;
+    control.Image.FileName = L"stage clip.mp4";
+    control.Image.Fit = glass::BackgroundFit::Fill;
+    control.Image.Opacity = 0.8;
+    control.Image.Loops = false;
+    control.Image.Zoom = 2.5;
+    control.Image.CenterX = 0.25;
+    control.Image.CenterY = 0.75;
+    control.Image.TintColor = L"#2E6CC8";
+    control.Image.TintStrength = 0.55;
+
+    document.Pages[0].Controls.push_back(control);
+
+    auto const text = glass::WriteLayoutToJson(document);
+    auto const reread = glass::ReadLayoutFromJson(text);
+
+    VERIFY_IS_TRUE(reread.Succeeded);
+
+    auto const& back = reread.Document.Pages[0].Controls.back().Image;
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"stage clip.mp4" }, back.FileName);
+    VERIFY_IS_TRUE(back.Fit == glass::BackgroundFit::Fill);
+    VERIFY_IS_FALSE(back.Loops);
+    VERIFY_ARE_EQUAL(2.5, back.Zoom);
+    VERIFY_ARE_EQUAL(0.25, back.CenterX);
+    VERIFY_ARE_EQUAL(0.75, back.CenterY);
+    VERIFY_ARE_EQUAL(std::wstring{ L"#2E6CC8" }, back.TintColor);
+    VERIFY_ARE_EQUAL(0.55, back.TintStrength);
+
+    VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(reread.Document));
+}
+
+void LayoutDocumentTests::ABackgroundPictureThatIsAPathIsRefused()
+{
+    // A layout arrives from a stranger. A background that names a path is a way to make this app
+    // read a file somewhere else on the PC, so anything that is not a bare file name is dropped
+    // whole rather than trimmed into something that looks safe.
+    wchar_t const* const hostile[]
+    {
+        LR"(..\..\Windows\System32\config\SAM)",
+        LR"(C:\Users\Someone\secret.png)",
+        LR"(\\server\share\thing.png)",
+        LR"(sub/dir/thing.png)",
+        LR"(..)",
+        LR"(nice..name.png)",
+    };
+
+    for (auto const* const name : hostile)
+    {
+        // A backslash has to reach the reader as a backslash, so it is escaped for JSON here.
+        // Without this the parser refuses the file and the sanitizer never gets a look, which
+        // would make this test pass for the wrong reason.
+        std::wstring escaped{};
+
+        for (auto const character : std::wstring{ name })
+        {
+            if (character == L'\\') { escaped += L'\\'; }
+            escaped += character;
+        }
+
+        std::wstring json{ LR"({ "fileVersion": 1, "name": "T", "backgroundImage": ")" };
+        json += escaped;
+        json += LR"(", "pages": [ { "id": "p", "name": "P", "controls": [] } ] })";
+
+        auto const result = glass::ReadLayoutFromJson(json);
+
+        VERIFY_IS_TRUE(result.Succeeded);
+        VERIFY_IS_TRUE(result.Document.BackgroundImage.empty());
+    }
+
+    // and a plain name still gets through
+    auto const good = glass::ReadLayoutFromJson(
+        LR"({ "fileVersion": 1, "name": "T", "backgroundImage": "wood.jpg",
+              "pages": [ { "id": "p", "name": "P", "controls": [] } ] })");
+
+    VERIFY_IS_TRUE(good.Succeeded);
+    VERIFY_ARE_EQUAL(std::wstring{ L"wood.jpg" }, good.Document.BackgroundImage);
+}
+
+void LayoutDocumentTests::NoBackgroundPictureWritesNothing()
+{
+    auto const text = glass::WriteLayoutToJson(LoadHandAuthored());
+
+    // The absence of a picture is the absence of the key, not an empty string and a fit mode
+    // nobody chose.
+    VERIFY_IS_TRUE(text.find(L"\"backgroundImage\"") == std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"backgroundFit\"") == std::wstring::npos);
+}
+
+void LayoutDocumentTests::AcceptsAValidDocument()
+{
+    auto const issues = glass::Validate(MinimalDocument());
+
+    for (auto const& issue : issues)
+    {
+        Log::Error(String().Format(L"unexpected: %s", issue.Detail.c_str()));
+    }
+
+    VERIFY_ARE_EQUAL(size_t{ 0 }, issues.size());
+
+    // and the file a person wrote is valid too
+    VERIFY_ARE_EQUAL(size_t{ 0 }, glass::Validate(LoadHandAuthored()).size());
+}
+
+void LayoutDocumentTests::CatchesAMessageSentToAnUnknownDevice()
+{
+    auto document = MinimalDocument();
+
+    glass::ControlMessage message{};
+    message.DeviceName = L"A Device That Is Not In The Table";
+
+    document.Pages[0].Controls[0].Messages.push_back(message);
+
+    auto const issues = glass::Validate(document);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, issues.size());
+    VERIFY_ARE_EQUAL(std::wstring{ L"c1" }, issues[0].ObjectId);
+}
+
+void LayoutDocumentTests::CatchesDuplicateControlIds()
+{
+    auto document = MinimalDocument();
+
+    auto duplicate = document.Pages[0].Controls[0];
+    document.Pages[0].Controls.push_back(duplicate);
+
+    auto const issues = glass::Validate(document);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, issues.size());
+}
+
+void LayoutDocumentTests::CatchesAnUnclosedRepeatBlock()
+{
+    auto document = MinimalDocument();
+
+    glass::Sequence sequence{};
+    sequence.Name = L"Broken";
+
+    glass::SequenceStep start{};
+    start.Kind = glass::SequenceStepKind::RepeatBlockStart;
+    sequence.Steps.push_back(start);
+
+    document.Sequences.push_back(sequence);
+
+    auto const issues = glass::Validate(document);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, issues.size());
+    VERIFY_ARE_EQUAL(std::wstring{ L"Broken" }, issues[0].ObjectId);
+}
+
+void LayoutDocumentTests::CatchesASequenceThatDoesNotExist()
+{
+    auto document = MinimalDocument();
+
+    glass::ControlMessage message{};
+    message.Kind = glass::MessageKind::Sequence;
+    message.SequenceName = L"Never Written";
+
+    document.Pages[0].Controls[0].Messages.push_back(message);
+
+    auto const issues = glass::Validate(document);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, issues.size());
+}
+
+void LayoutDocumentTests::FindsControlsOutsideThePage()
+{
+    auto document = MinimalDocument();
+
+    document.CanvasWidth = 4000;
+    document.CanvasHeight = 4000;
+
+    glass::Control stray{};
+    stray.Id = L"stray";
+    stray.X = 3000;
+    stray.Y = 10;
+    stray.Width = 56;
+    stray.Height = 56;
+
+    // half on, half off. Clamping this one inside would be the tidy answer and the wrong one,
+    // because then shrinking a page could never be undone.
+    glass::Control straddling{};
+    straddling.Id = L"straddling";
+    straddling.X = document.PageWidth - 20;
+    straddling.Y = 10;
+    straddling.Width = 56;
+    straddling.Height = 56;
+
+    document.Pages[0].Controls.push_back(stray);
+    document.Pages[0].Controls.push_back(straddling);
+
+    auto const outside = document.ControlsOutsidePage();
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, outside.size());
+}
+
+// ---- hexadecimal in and out ----
+
+void LayoutDocumentTests::HexBytesRoundTrip()
+{
+    std::vector<uint8_t> const bytes{ 0xF0, 0x00, 0x20, 0x6B, 0x7F, 0x42, 0x02, 0x00, 0x10, 0xF7 };
+
+    auto const text = glass::FormatHexBytes(bytes);
+    auto const back = glass::ParseHexBytes(text, glass::MaximumSystemExclusiveBytes);
+
+    VERIFY_ARE_EQUAL(bytes.size(), back.size());
+
+    for (size_t index = 0; index < bytes.size(); ++index)
+    {
+        VERIFY_ARE_EQUAL(bytes[index], back[index]);
+    }
+}
+
+void LayoutDocumentTests::HexAcceptsWhatSomebodyWouldPaste()
+{
+    // A manual, a forum post and a hex editor all write it differently, and somebody pasting one
+    // of them should not have to know which form this app would have chosen.
+    auto const spaced = glass::ParseHexBytes(L"F0 00 20 6B F7", 64);
+    auto const packed = glass::ParseHexBytes(L"F000206BF7", 64);
+    auto const commas = glass::ParseHexBytes(L"0xF0, 0x00, 0x20, 0x6B, 0xF7", 64);
+    auto const lines = glass::ParseHexBytes(L"F0 00\r\n20 6B\nF7", 64);
+
+    VERIFY_ARE_EQUAL(size_t{ 5 }, spaced.size());
+    VERIFY_ARE_EQUAL(size_t{ 5 }, packed.size());
+    VERIFY_ARE_EQUAL(size_t{ 5 }, commas.size());
+    VERIFY_ARE_EQUAL(size_t{ 5 }, lines.size());
+
+    VERIFY_ARE_EQUAL(uint8_t{ 0x6B }, commas[3]);
+    VERIFY_ARE_EQUAL(uint8_t{ 0x6B }, lines[3]);
+}
+
+void LayoutDocumentTests::HalfAByteIsRefusedWhole()
+{
+    // A partly-read dump is worse than none: one bad character in a firmware image can leave a
+    // synthesizer unusable.
+    VERIFY_IS_TRUE(glass::ParseHexBytes(L"F0 00 2", 64).empty());
+}
+
+void LayoutDocumentTests::SomethingThatIsNotHexIsRefusedWhole()
+{
+    VERIFY_IS_TRUE(glass::ParseHexBytes(L"F0 ZZ 20", 64).empty());
+    VERIFY_IS_TRUE(glass::ParseHexBytes(L"the quick brown fox", 64).empty());
+}
+
+void LayoutDocumentTests::HexIsBounded()
+{
+    std::wstring long_{};
+
+    for (int32_t i = 0; i < 100; ++i)
+    {
+        long_ += L"7F";
+    }
+
+    VERIFY_ARE_EQUAL(size_t{ 100 }, glass::ParseHexBytes(long_, 100).size());
+    VERIFY_IS_TRUE(glass::ParseHexBytes(long_, 99).empty());
+}
+
+void LayoutDocumentTests::HexWordsRoundTrip()
+{
+    std::vector<uint32_t> const words{ 0x40903C00, 0xFFFF0000 };
+
+    auto const text = glass::FormatHexWords(words);
+
+    VERIFY_ARE_EQUAL(std::wstring{ L"40903C00 FFFF0000" }, text);
+
+    auto const back = glass::ParseHexWords(text, 4);
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, back.size());
+    VERIFY_ARE_EQUAL(words[0], back[0]);
+    VERIFY_ARE_EQUAL(words[1], back[1]);
+
+    // Seven digits is not a word, and a word that is not whole is not a word.
+    VERIFY_IS_TRUE(glass::ParseHexWords(L"40903C0", 4).empty());
+    VERIFY_IS_TRUE(glass::ParseHexWords(L"40903C00 FFFF0000 00000000 11111111 22222222", 4).empty());
+}

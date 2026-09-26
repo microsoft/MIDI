@@ -1,0 +1,53 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of the Windows MIDI Services WinRT API and should be used
+// in your Windows application via an official binary distribution.
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+
+#include "..\..\..\Inc\midi_sdk_idl_defs.h"
+import "MidiApiContracts.idl";
+
+import "MidiFileWriteOptions.idl";
+import "MidiFileWriteResult.idl";
+import "MidiSequence.idl";
+
+
+namespace Windows.Devices.Midi2.Utilities.Files
+{
+    // Writes a sequence out as a Standard MIDI File, RP-001. The mirror of
+    // MidiStandardFileReader: read a file, write it back, and reading the result again gives the
+    // same sequence.
+    //
+    // "The same sequence" means the same events at the same ticks, with the same tempo and meter
+    // maps and the same text. It does not mean the same bytes. A file is not a canonical form,
+    // and the reader repairs a missing tempo event and decodes older text to UTF-8 on the way in.
+    //
+    // MIDI 1.0 is what this format holds. A sequence built from Universal MIDI Packets is
+    // translated where MIDI 1.0 has an equivalent, and what is left over is reported in
+    // MidiFileWriteResult.SkippedEventCount.
+    [contract(MidiFilesUtilityApiContract,1)]
+    [static_name("Windows.Devices.Midi2.Utilities.Files.IMidiStandardFileWriterStatics", UUID_IMidiStandardFileWriterStatics)]
+    static runtimeclass MidiStandardFileWriter
+    {
+        static Windows.Foundation.IAsyncOperation<MidiFileWriteResult> WriteAsync(
+            Windows.Storage.Streams.IRandomAccessStream stream,
+            Windows.Devices.Midi2.Utilities.Sequencing.MidiSequence sequence);
+
+        static Windows.Foundation.IAsyncOperation<MidiFileWriteResult> WriteAsync(
+            Windows.Storage.Streams.IRandomAccessStream stream,
+            Windows.Devices.Midi2.Utilities.Sequencing.MidiSequence sequence,
+            MidiFileWriteOptions options);
+
+        static Windows.Foundation.IAsyncOperation<MidiFileWriteResult> WriteToFileAsync(
+            Windows.Storage.StorageFile file,
+            Windows.Devices.Midi2.Utilities.Sequencing.MidiSequence sequence);
+
+        static Windows.Foundation.IAsyncOperation<MidiFileWriteResult> WriteToFileAsync(
+            Windows.Storage.StorageFile file,
+            Windows.Devices.Midi2.Utilities.Sequencing.MidiSequence sequence,
+            MidiFileWriteOptions options);
+    };
+}

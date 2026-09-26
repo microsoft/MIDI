@@ -38,16 +38,52 @@ void MidiCiProgramListTests::TestSingleEntryBytes()
 {
     ProgramListEntry entry{};
 
+    char const* const categories[]{ "Piano" };
+
     entry.Title = "Acoustic Grand Piano";
     entry.BankMsb = 0;
     entry.BankLsb = 0;
     entry.Program = 0;
-    entry.Category = "Piano";
+    entry.Categories = categories;
+    entry.CategoryCount = 1;
 
     // Compared against text written out by hand, not against whatever the builder happens to emit.
     VERIFY_ARE_EQUAL(
         BuildToString(&entry, 1),
         std::string("[{\"title\":\"Acoustic Grand Piano\",\"bankPC\":[0,0,0],\"category\":[\"Piano\"]}]"));
+}
+
+void MidiCiProgramListTests::TestMultipleCategoriesBytes()
+{
+    // M2-107-UM's own example carries more than one, so a single value must not be assumed.
+    ProgramListEntry entry{};
+
+    char const* const categories[]{ "Piano", "Keys" };
+
+    entry.Title = "Electric Piano 1";
+    entry.Program = 4;
+    entry.Categories = categories;
+    entry.CategoryCount = 2;
+
+    VERIFY_ARE_EQUAL(
+        BuildToString(&entry, 1),
+        std::string("[{\"title\":\"Electric Piano 1\",\"bankPC\":[0,0,4],\"category\":[\"Piano\",\"Keys\"]}]"));
+}
+
+void MidiCiProgramListTests::TestCategoryIsOmittedWhenCountIsZero()
+{
+    // A caller that fills in the pointer but leaves the count at zero must not produce "category":[].
+    ProgramListEntry entry{};
+
+    char const* const categories[]{ "Piano" };
+
+    entry.Title = "Acoustic Grand Piano";
+    entry.Categories = categories;
+    entry.CategoryCount = 0;
+
+    VERIFY_ARE_EQUAL(
+        BuildToString(&entry, 1),
+        std::string("[{\"title\":\"Acoustic Grand Piano\",\"bankPC\":[0,0,0]}]"));
 }
 
 void MidiCiProgramListTests::TestBankProgramAreZeroBased()
@@ -120,8 +156,34 @@ void MidiCiProgramListTests::TestOutputIsAlwaysSevenBit()
         VERIFY_IS_GREATER_THAN_OR_EQUAL((uint8_t)character, (uint8_t)0x20);
     }
 
-    VERIFY_IS_TRUE(json.find("\\u00C3") != std::string::npos);
-    VERIFY_IS_TRUE(json.find("\\u0001") != std::string::npos);
+    // M2-103-UM asks for the UTF-16 value, not the UTF-8 bytes. C3 A9 is one character, U+00E9,
+    // so escaping each byte on its own would arrive as two wrong ones.
+    VERIFY_IS_TRUE(json.find("Caf\\u00E9") != std::string::npos, L"a two byte sequence is one escape");
+    VERIFY_IS_TRUE(json.find("\\u0001") != std::string::npos, L"a control character is escaped");
+    VERIFY_IS_TRUE(json.find("Organ\\uFFFD") != std::string::npos, L"a byte that is not UTF-8 becomes a replacement");
+}
+
+void MidiCiProgramListTests::TestLongerUtf8SequencesAreEscaped()
+{
+    ProgramListEntry entry{};
+
+    // Three bytes for U+266A, and four for U+1F3B9, which needs a surrogate pair in UTF-16.
+    entry.Title = "\xE2\x99\xAA \xF0\x9F\x8E\xB9";
+
+    const auto json = BuildToString(&entry, 1);
+
+    VERIFY_ARE_EQUAL(
+        json,
+        std::string("[{\"title\":\"\\u266A \\uD83C\\uDFB9\",\"bankPC\":[0,0,0]}]"));
+
+    ProgramListEntry truncated{};
+
+    // A sequence that runs into the end of the string must not be read past.
+    truncated.Title = "End\xE2\x99";
+
+    VERIFY_ARE_EQUAL(
+        BuildToString(&truncated, 1),
+        std::string("[{\"title\":\"End\\uFFFD\\uFFFD\",\"bankPC\":[0,0,0]}]"));
 }
 
 void MidiCiProgramListTests::TestMeasureThenBuild()
@@ -185,6 +247,12 @@ namespace
         fields.ModelId[1] = 0;
         fields.Model = "General MIDI Synth";
 
+        fields.VersionId[0] = 1;
+        fields.VersionId[1] = 0;
+        fields.VersionId[2] = 0;
+        fields.VersionId[3] = 0;
+        fields.Version = "1.0.0.0";
+
         return fields;
     }
 }
@@ -197,12 +265,14 @@ void MidiCiProgramListTests::TestDeviceInfoBytes()
 
     VERIFY_IS_GREATER_THAN(length, (size_t)0);
 
-    // Written out by hand from the worked example in the specification.
+    // Written out by hand from the worked example in the specification. M2-105-UM makes every one
+    // of these properties required, versionId and version included.
     VERIFY_ARE_EQUAL(
         std::string(buffer, length),
         std::string("{\"manufacturerId\":[0,0,65],\"manufacturer\":\"Microsoft\","
                     "\"familyId\":[11,0],\"family\":\"Windows\","
-                    "\"modelId\":[1,0],\"model\":\"General MIDI Synth\"}"));
+                    "\"modelId\":[1,0],\"model\":\"General MIDI Synth\","
+                    "\"versionId\":[1,0,0,0],\"version\":\"1.0.0.0\"}"));
 }
 
 void MidiCiProgramListTests::TestDeviceInfoAgreesWithTheOtherIdentityCarriers()
@@ -220,6 +290,9 @@ void MidiCiProgramListTests::TestDeviceInfoAgreesWithTheOtherIdentityCarriers()
     VERIFY_IS_TRUE(json.find("\"familyId\":[11,0]") != std::string::npos);
     VERIFY_IS_TRUE(json.find("\"modelId\":[1,0]") != std::string::npos);
 
+    // M2-105-UM: familyId, modelId and versionId shall match the discovery message.
+    VERIFY_IS_TRUE(json.find("\"versionId\":[1,0,0,0]") != std::string::npos);
+
     const auto measured = BuildDeviceInfoJson(info, nullptr, 0);
 
     VERIFY_ARE_EQUAL(measured, length);
@@ -235,18 +308,19 @@ void MidiCiProgramListTests::TestResourceListBytes()
     resources[1].CanSubscribe = true;
     resources[2].Resource = "ProgramList";
     resources[2].RequireResourceId = true;
+    resources[2].CanPaginate = true;
 
     char buffer[256]{};
 
     const auto length = BuildResourceListJson(resources, 3, buffer, sizeof(buffer));
 
-    // Both flags default to false in the specification, so a bare name is a complete entry and
-    // only the true ones are written.
+    // All three flags default to false in the specification, so a bare name is a complete entry
+    // and only the true ones are written.
     VERIFY_ARE_EQUAL(
         std::string(buffer, length),
         std::string("[{\"resource\":\"ResourceList\"},"
                     "{\"resource\":\"ChannelList\",\"canSubscribe\":true},"
-                    "{\"resource\":\"ProgramList\",\"requireResId\":true}]"));
+                    "{\"resource\":\"ProgramList\",\"requireResId\":true,\"canPaginate\":true}]"));
 
     // An empty list is still a valid array.
     VERIFY_ARE_EQUAL(BuildResourceListJson(nullptr, 0, buffer, sizeof(buffer)), (size_t)2);

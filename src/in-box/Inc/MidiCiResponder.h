@@ -57,6 +57,10 @@ namespace WindowsMidiServicesCapabilityInquiry
         // holding for that initiator. ParsedMessage::TargetMuid says whose.
         InitiatorMuidInvalidated,
 
+        // Another device is using our identifier. The reply is an Invalidate MUID withdrawing it,
+        // and the host owes us a new one afterwards, exactly as for MuidInvalidated.
+        MuidCollision,
+
         // The caller owns the answer from here: it parses the header JSON with Windows.Data.Json,
         // which cannot be done at this layer, then drives a PropertyReplyChunker.
         PropertyDataRequested,
@@ -129,6 +133,37 @@ namespace WindowsMidiServicesCapabilityInquiry
                 {
                     return ResponderAction::Ignored;
                 }
+
+                // Two devices picked the same identifier. M2-101-UM section 5.9.1 gives two ways
+                // out; this is option B, which withdraws the duplicate for everyone holding it
+                // including us. Option A is only open to a responder that has not used its
+                // identifier yet, and nothing here tracks that.
+                if (message.SourceMuid == m_config.Muid)
+                {
+                    if (replyBuffer == nullptr || replyCapacity < InvalidateMuidByteCount)
+                    {
+                        return ResponderAction::ReplyBufferTooSmall;
+                    }
+
+                    const auto withdrawn = BuildInvalidateMuid(
+                        m_config.Muid, m_config.Muid, replyBuffer, replyCapacity);
+
+                    if (withdrawn == 0)
+                    {
+                        return ResponderAction::ReplyBufferTooSmall;
+                    }
+
+                    if (replyByteCount != nullptr)
+                    {
+                        *replyByteCount = withdrawn;
+                    }
+
+                    m_config.Muid = 0;
+                    m_muidNeedsReplacement = true;
+
+                    return ResponderAction::MuidCollision;
+                }
+
                 if (replyBuffer == nullptr || replyCapacity < DiscoveryReplyByteCount)
                 {
                     return ResponderAction::ReplyBufferTooSmall;
@@ -183,53 +218,79 @@ namespace WindowsMidiServicesCapabilityInquiry
             }
 
             if (message.Type == MessageType::PropertyGetDataInquiry)
-            {                if (!m_config.SupportsPropertyExchange || m_config.Muid == 0)
+            {
+                if (m_config.SupportsPropertyExchange &&
+                    m_config.Muid != 0 &&
+                    message.HasPropertyExchangeFields)
                 {
-                    return ResponderAction::Ignored;
+                    return ResponderAction::PropertyDataRequested;
                 }
-
-                if (!message.HasPropertyExchangeFields)
+            }
+            else if (message.Type == MessageType::PropertySubscriptionInquiry)
+            {
+                if (m_config.SupportsPropertyExchange &&
+                    m_config.Muid != 0 &&
+                    message.HasPropertyExchangeFields)
                 {
-                    return ResponderAction::Ignored;
+                    return ResponderAction::PropertySubscriptionRequested;
                 }
+            }
+            else if (message.Type == MessageType::PropertyExchangeCapabilitiesInquiry)
+            {
+                if (m_config.SupportsPropertyExchange && m_config.Muid != 0)
+                {
+                    if (replyBuffer == nullptr || replyCapacity < PropertyExchangeCapabilitiesByteCount)
+                    {
+                        return ResponderAction::ReplyBufferTooSmall;
+                    }
 
-                return ResponderAction::PropertyDataRequested;
+                    const auto written = BuildPropertyExchangeCapabilitiesReply(
+                        m_config.Muid,
+                        message.SourceMuid,
+                        m_config.SimultaneousPropertyRequests,
+                        replyBuffer,
+                        replyCapacity,
+                        ReplyVersionFor(message.VersionFormat));
+
+                    if (written == 0)
+                    {
+                        return ResponderAction::ReplyBufferTooSmall;
+                    }
+
+                    if (replyByteCount != nullptr)
+                    {
+                        *replyByteCount = written;
+                    }
+
+                    return ResponderAction::Replied;
+                }
             }
 
-            if (message.Type == MessageType::PropertySubscriptionInquiry)
+            // Being able to NAK is one of the three things M2-101-UM section 2 asks of every
+            // MIDI-CI device. An initiator that gets silence instead waits out its timeout and may
+            // write the device off; a NAK ends the transaction at once.
+            if (m_config.Muid != 0 && MessageTypeExpectsAResponderAnswer(message.Type))
             {
-                if (!m_config.SupportsPropertyExchange || m_config.Muid == 0)
-                {
-                    return ResponderAction::Ignored;
-                }
-
-                if (!message.HasPropertyExchangeFields)
-                {
-                    return ResponderAction::Ignored;
-                }
-
-                return ResponderAction::PropertySubscriptionRequested;
-            }
-
-            if (message.Type == MessageType::PropertyExchangeCapabilitiesInquiry)
-            {
-                if (!m_config.SupportsPropertyExchange || m_config.Muid == 0)
-                {
-                    return ResponderAction::Ignored;
-                }
-
-                if (replyBuffer == nullptr || replyCapacity < PropertyExchangeCapabilitiesByteCount)
+                if (replyBuffer == nullptr || replyCapacity < AcknowledgmentFixedByteCount)
                 {
                     return ResponderAction::ReplyBufferTooSmall;
                 }
 
-                const auto written = BuildPropertyExchangeCapabilitiesReply(
+                AcknowledgmentFields fields{};
+
+                fields.OriginalMessageType = static_cast<uint8_t>(message.Type);
+                fields.StatusCode = NakStatusMessageNotSupported;
+
+                const auto written = BuildAcknowledgment(
+                    MessageType::Nak,
+                    DeviceIdFunctionBlock,
                     m_config.Muid,
                     message.SourceMuid,
-                    m_config.SimultaneousPropertyRequests,
+                    fields,
+                    nullptr,
+                    0,
                     replyBuffer,
-                    replyCapacity,
-                    ReplyVersionFor(message.VersionFormat));
+                    replyCapacity);
 
                 if (written == 0)
                 {

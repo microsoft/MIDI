@@ -81,10 +81,18 @@
                                            TextWrapping="NoWrap"
                                            Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"
                                            Text="{x:Bind TempoText, Mode=OneWay}" />
-                                <TextBlock x:Uid="TileBpmCaption"
+                                <TextBlock x:Name="TileUnitCaption"
                                            HorizontalAlignment="Center"
                                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                           Style="{ThemeResource CaptionTextBlockStyle}" />
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Text="{x:Bind UnitText, Mode=OneWay}" />
+                                <TextBlock HorizontalAlignment="Center"
+                                           TextWrapping="NoWrap"
+                                           TextTrimming="CharacterEllipsis"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                           Style="{ThemeResource CaptionTextBlockStyle}"
+                                           Visibility="{x:Bind TimingVisibility, Mode=OneWay}"
+                                           Text="{x:Bind TimingText, Mode=OneWay}" />
                             </StackPanel>
 
                             <!-- where it goes -->
@@ -201,26 +209,30 @@
             <!-- Spans every column so it sits in the middle of the window rather than the middle
                  of the stretchy column. Not hit testable, so it stays part of the drag region.
                  Hidden when this is not a preview build; see midi-app-shared\PreviewBuild.h. -->
-            <Border x:Name="PreviewChiclet"
-                    Grid.Column="0"
-                    Grid.ColumnSpan="5"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Height="18"
-                    Padding="9,0,9,0"
-                    CornerRadius="9"
-                    IsHitTestVisible="False"
-                    BorderThickness="1"
-                    BorderBrush="{ThemeResource SystemFillColorCautionBrush}"
-                    Background="{ThemeResource SystemFillColorCautionBackgroundBrush}">
+            <Grid x:Name="PreviewChiclet"
+                  Grid.Column="0"
+                  Grid.ColumnSpan="5"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Height="18"
+                  IsHitTestVisible="False">
+                <!-- A shape, not a Border: a Border snaps its corner radius to whole pixels
+                     along with its bounds, so at 125% scaling the arc comes out stepped. -->
+                <Rectangle RadiusX="9"
+                           RadiusY="9"
+                           StrokeThickness="1"
+                           UseLayoutRounding="False"
+                           Stroke="{ThemeResource SystemFillColorCautionBrush}"
+                           Fill="{ThemeResource SystemFillColorCautionBackgroundBrush}" />
                 <TextBlock x:Name="PreviewChicletText"
                            x:Uid="PreviewChicletText"
                            Text="PREVIEW"
                            FontSize="10"
                            FontWeight="SemiBold"
+                           Margin="9,0,9,0"
                            VerticalAlignment="Center"
                            Foreground="{ThemeResource SystemFillColorCautionBrush}" />
-            </Border>
+            </Grid>
 
             <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top">
                 <StackPanel.Resources>
@@ -360,7 +372,14 @@
                              AutomationProperties.AutomationId="EditNameTextBox"
                              MaxLength="64" />
 
-                    <Grid ColumnSpacing="16">
+                    <ComboBox x:Name="EditKindComboBox"
+                              x:Uid="EditKindComboBox"
+                              AutomationProperties.AutomationId="EditKindComboBox"
+                              HorizontalAlignment="Stretch"
+                              ItemTemplate="{StaticResource NamedChoiceTemplate}"
+                              SelectionChanged="OnEditKindSelectionChanged" />
+
+                    <Grid x:Name="EditBeatClockPanel" ColumnSpacing="16">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
@@ -406,6 +425,31 @@
                         </StackPanel>
                     </Grid>
 
+                    <StackPanel x:Name="EditTimeCodePanel" Spacing="10" Visibility="Collapsed">
+                        <ComboBox x:Name="EditFrameRateComboBox"
+                                  x:Uid="EditFrameRateComboBox"
+                                  AutomationProperties.AutomationId="EditFrameRateComboBox"
+                                  HorizontalAlignment="Stretch"
+                                  ItemTemplate="{StaticResource NamedChoiceTemplate}"
+                                  SelectionChanged="OnEditFrameRateSelectionChanged" />
+
+                        <StackPanel Spacing="2">
+                            <TextBox x:Name="EditStartTimeCodeTextBox"
+                                     x:Uid="EditStartTimeCodeTextBox"
+                                     AutomationProperties.AutomationId="EditStartTimeCodeTextBox"
+                                     MaxLength="16"
+                                     TextChanged="OnEditStartTimeCodeChanged" />
+                            <TextBlock x:Name="EditStartTimeCodeCaption"
+                                       TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                       Style="{ThemeResource CaptionTextBlockStyle}" />
+                        </StackPanel>
+
+                        <ToggleSwitch x:Name="EditSendFullFrameToggle"
+                                      x:Uid="EditSendFullFrameToggle"
+                                      AutomationProperties.AutomationId="EditSendFullFrameToggle" />
+                    </StackPanel>
+
                     <ComboBox x:Name="EditEndpointComboBox"
                               x:Uid="EditEndpointComboBox"
                               AutomationProperties.AutomationId="EditEndpointComboBox"
@@ -422,6 +466,59 @@
                     <ToggleSwitch x:Name="EditSendStartStopToggle"
                                   x:Uid="EditSendStartStopToggle"
                                   AutomationProperties.AutomationId="EditSendStartStopToggle" />
+
+                    <Expander x:Name="EditTimingExpander"
+                              x:Uid="EditTimingExpander"
+                              AutomationProperties.AutomationId="EditTimingExpander"
+                              HorizontalAlignment="Stretch"
+                              HorizontalContentAlignment="Stretch">
+                        <StackPanel Spacing="12">
+                            <StackPanel x:Name="EditBeatShapingPanel" Spacing="12">
+                                <StackPanel Spacing="2">
+                                    <ComboBox x:Name="EditClockRatioComboBox"
+                                              x:Uid="EditClockRatioComboBox"
+                                              AutomationProperties.AutomationId="EditClockRatioComboBox"
+                                              HorizontalAlignment="Stretch"
+                                              ItemTemplate="{StaticResource NamedChoiceTemplate}"
+                                              SelectionChanged="OnEditClockRatioSelectionChanged" />
+                                    <TextBlock x:Name="EditClockRatioCaption"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                                </StackPanel>
+
+                                <StackPanel Spacing="2">
+                                    <Slider x:Name="EditSwingSlider"
+                                            x:Uid="EditSwingSlider"
+                                            AutomationProperties.AutomationId="EditSwingSlider"
+                                            Minimum="50"
+                                            Maximum="75"
+                                            StepFrequency="0.5"
+                                            TickFrequency="5"
+                                            ValueChanged="OnEditSwingValueChanged" />
+                                    <TextBlock x:Name="EditSwingCaption"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                               Style="{ThemeResource CaptionTextBlockStyle}" />
+                                </StackPanel>
+
+                                <ComboBox x:Name="EditSwingSubdivisionComboBox"
+                                          x:Uid="EditSwingSubdivisionComboBox"
+                                          AutomationProperties.AutomationId="EditSwingSubdivisionComboBox"
+                                          HorizontalAlignment="Stretch"
+                                          ItemTemplate="{StaticResource NamedChoiceTemplate}" />
+                            </StackPanel>
+
+                            <muxc:NumberBox x:Name="EditOffsetNumberBox"
+                                            x:Uid="EditOffsetNumberBox"
+                                            AutomationProperties.AutomationId="EditOffsetNumberBox"
+                                            SpinButtonPlacementMode="Inline"
+                                            Minimum="-500"
+                                            Maximum="500"
+                                            SmallChange="1"
+                                            LargeChange="10" />
+                        </StackPanel>
+                    </Expander>
 
                     <InfoBar x:Name="EditInfoBar"
                              IsOpen="False"

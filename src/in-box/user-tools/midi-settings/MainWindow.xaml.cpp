@@ -269,6 +269,7 @@ namespace winrt::midisettings::implementation
             m_toolbarItems.push_back({ ScratchPadButton(), ScratchPadIcon(), ScratchPadLabel(), nullptr, native::MidiTool::ScratchPad, 1 });
             m_toolbarItems.push_back({ KeyboardButton(), KeyboardIcon(), KeyboardLabel(), nullptr, native::MidiTool::Keyboard, 1 });
             m_toolbarItems.push_back({ ClockButton(), ClockIcon(), ClockLabel(), nullptr, native::MidiTool::Clock, 1 });
+            m_toolbarItems.push_back({ GlassButton(), GlassIcon(), GlassLabel(), nullptr, native::MidiTool::Glass, 1 });
 
             m_toolbarItems.push_back({ TroubleshooterButton(), TroubleshooterIcon(), TroubleshooterLabel(), UtilityToolsSeparator(), native::MidiTool::Troubleshooter, 2 });
         }
@@ -635,6 +636,12 @@ namespace winrt::midisettings::implementation
     void MainWindow::OnClockClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
     {
         native::LaunchTool(native::MidiTool::Clock);
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnGlassClick(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        native::LaunchTool(native::MidiTool::Glass);
     }
 
     _Use_decl_annotations_

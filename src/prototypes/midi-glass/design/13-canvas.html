@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - the canvas</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    .board {
+        width: 1000px; border-radius: 8px; position: relative; overflow: hidden;
+        border: 1px solid rgba(255,255,255,.08);
+        background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+        box-shadow: var(--shadow);
+    }
+    .bhead { position: absolute; left: 16px; top: 14px; font-size: 11px; letter-spacing: .10em; color: rgba(255,255,255,.34); }
+
+    /* ---- page size templates ---- */
+    .sizegrid { position: absolute; left: 16px; top: 44px; right: 16px; display: flex; gap: 9px; }
+    .sizecard {
+        flex: 1; border-radius: 7px; padding: 12px 10px 10px 10px;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke);
+        display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    .sizecard.sel { background: rgba(96,205,255,.13); box-shadow: inset 0 0 0 1px rgba(96,205,255,.55); }
+    .sizecard .thumb {
+        background: linear-gradient(150deg, #1A1E26, #0D1014);
+        box-shadow: inset 0 0 0 1px rgba(var(--h1), .40);
+        border-radius: 2px;
+    }
+    .sizecard .thumb.custom { background: none; box-shadow: none; border: 1px dashed rgba(255,255,255,.28); }
+    .sizecard .n { font-size: 11.5px; font-weight: 600; text-align: center; }
+    .sizecard .r { font-size: 10px; color: var(--text3); font-family: "Cascadia Mono","Consolas",monospace; }
+    .sizecard .a { font-size: 9.5px; color: var(--text3); }
+
+    /* ---- virtual canvas ---- */
+    .workarea {
+        position: absolute; left: 14px; top: 62px; right: 14px; bottom: 58px;
+        border-radius: 5px; overflow: hidden;
+        background:
+            repeating-linear-gradient(135deg, rgba(255,255,255,.018) 0 9px, transparent 9px 18px),
+            #0A0B0E;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.07);
+    }
+    .pagebox {
+        position: absolute; left: 118px; top: 30px; width: 620px; height: 262px;
+        box-shadow: 0 0 0 1px rgba(var(--h1), .55), 0 0 0 9999px rgba(0,0,0,.45);
+        border-radius: 3px;
+    }
+    .pagelabel {
+        position: absolute; left: 118px; top: 12px; font-size: 10px;
+        color: rgb(var(--h1)); font-family: "Cascadia Mono","Consolas",monospace;
+    }
+    .worklabel { position: absolute; right: 12px; bottom: 8px; font-size: 10px; color: rgba(255,255,255,.28); }
+
+    .offbar {
+        position: absolute; left: 14px; right: 14px; bottom: 14px; height: 34px;
+        border-radius: 6px; display: flex; align-items: center; gap: 10px; padding: 0 12px;
+        background: rgba(255,107,107,.11); box-shadow: inset 0 0 0 1px rgba(255,107,107,.42);
+        font-size: 11.5px; color: #FF9BA4;
+    }
+    .offbar .spacer { flex: 1; }
+    .offbar .act {
+        height: 24px; padding: 0 11px; border-radius: 4px; font-size: 11px;
+        display: flex; align-items: center; background: rgba(255,255,255,.07);
+        box-shadow: inset 0 0 0 1px var(--stroke-strong); color: var(--text);
+    }
+
+    /* ---- resize dialog ---- */
+    .dlg {
+        position: absolute; top: 44px; width: 468px; border-radius: 8px;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke-strong), var(--shadow);
+        padding: 14px 16px 15px 16px;
+    }
+    .dlg h3 { margin: 0 0 3px 0; font-size: 14px; font-weight: 600; }
+    .dlg .sub { font-size: 11px; color: var(--text3); margin-bottom: 12px; line-height: 1.5; }
+    .fieldrow { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; font-size: 11.5px; color: var(--text2); }
+    .fieldrow .lbl { width: 78px; flex: 0 0 78px; color: var(--text3); }
+    .fieldbox {
+        height: 28px; padding: 0 9px; border-radius: 4px; display: flex; align-items: center;
+        background: rgba(255,255,255,.045); box-shadow: inset 0 0 0 1px var(--stroke-strong);
+        font-family: "Cascadia Mono","Consolas",monospace; font-size: 11.5px;
+    }
+    .anchor { display: grid; grid-template-columns: repeat(3, 30px); grid-template-rows: repeat(3, 30px); gap: 3px; }
+    .anchor i {
+        border-radius: 3px; background: rgba(255,255,255,.05);
+        box-shadow: inset 0 0 0 1px var(--stroke); display: block;
+    }
+    .anchor i.sel { background: rgba(96,205,255,.28); box-shadow: inset 0 0 0 1px rgba(96,205,255,.75); }
+    .prev {
+        width: 150px; height: 96px; border-radius: 3px; position: relative;
+        background: #0C0E13; box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    .prev .old { position: absolute; border: 1px dashed rgba(255,255,255,.34); border-radius: 2px; }
+    .prev .new { position: absolute; border: 1px solid rgb(var(--h1)); border-radius: 2px; background: rgba(var(--h1),.10); }
+    .choice {
+        border-radius: 6px; padding: 9px 11px; font-size: 11.5px; line-height: 1.5;
+        background: rgba(255,255,255,.035); box-shadow: inset 0 0 0 1px var(--stroke); margin-bottom: 7px;
+        color: var(--text3);
+    }
+    .choice.sel { background: rgba(96,205,255,.12); box-shadow: inset 0 0 0 1px rgba(96,205,255,.5); color: var(--text2); }
+    .choice b { display: block; color: var(--text); font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+    .dlgfoot { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+    .dlgfoot .b { height: 30px; padding: 0 16px; border-radius: 4px; display: flex; align-items: center; font-size: 12px; background: rgba(255,255,255,.06); box-shadow: inset 0 0 0 1px var(--stroke-strong); }
+    .dlgfoot .b.pri { background: var(--accent-deep); color: #00131C; box-shadow: none; font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="caption-above">Screen 13 &mdash; <b>the canvas</b>. A layout has a fixed page size chosen from a template, and the editor works on a <b>virtual canvas that is bigger than the page</b>, the way a drawing app does &mdash; but with exactly one active area, so there is never any doubt about what will be seen. Growing the canvas asks where the existing controls should sit. Shrinking it offers to scale them. Anything left outside the page is flagged and stays reachable.</p>
+
+<!-- ================================================== SIZE TEMPLATES -->
+<div class="board" style="height:196px;">
+    <div class="bhead">NEW LAYOUT &mdash; PICK A PAGE SIZE, OR START FROM A DEVICE YOU OWN</div>
+    <div class="sizegrid">
+        <div class="sizecard sel">
+            <div class="thumb" style="width:64px; height:40px;"></div>
+            <div class="n">Tablet</div><div class="r">1280 &times; 800</div><div class="a">16 : 10</div>
+        </div>
+        <div class="sizecard">
+            <div class="thumb" style="width:64px; height:36px;"></div>
+            <div class="n">Full HD</div><div class="r">1920 &times; 1080</div><div class="a">16 : 9</div>
+        </div>
+        <div class="sizecard">
+            <div class="thumb" style="width:64px; height:36px;"></div>
+            <div class="n">Quad HD</div><div class="r">2560 &times; 1440</div><div class="a">16 : 9</div>
+        </div>
+        <div class="sizecard">
+            <div class="thumb" style="width:63px; height:42px;"></div>
+            <div class="n">Surface</div><div class="r">2736 &times; 1824</div><div class="a">3 : 2</div>
+        </div>
+        <div class="sizecard">
+            <div class="thumb" style="width:56px; height:42px;"></div>
+            <div class="n">Classic</div><div class="r">1024 &times; 768</div><div class="a">4 : 3</div>
+        </div>
+        <div class="sizecard">
+            <div class="thumb" style="width:24px; height:42px;"></div>
+            <div class="n">Portrait</div><div class="r">1080 &times; 1920</div><div class="a">9 : 16</div>
+        </div>
+        <div class="sizecard">
+            <div class="thumb custom" style="width:52px; height:40px;"></div>
+            <div class="n">Custom</div><div class="r">&mdash;</div><div class="a">any size</div>
+        </div>
+    </div>
+</div>
+
+<!-- ==================================================== VIRTUAL CANVAS -->
+<div class="board" style="height:446px; margin-top:12px;">
+    <div class="bhead">THE EDITOR CANVAS &mdash; THE PAGE IS THE BRIGHT RECTANGLE, EVERYTHING ELSE IS WORKING SPACE</div>
+
+    <div class="workarea">
+        <div class="pagelabel">Page &middot; 1280 &times; 800</div>
+        <div class="pagebox"></div>
+        <div class="worklabel">working space &mdash; not shown at run time</div>
+
+        <!-- inside the page -->
+        <div class="surf" style="position:absolute; left:118px; top:30px; width:620px; height:262px; border-radius:3px;">
+            <div class="surftext h1" style="left:14px; top:9px; font-size:14px;">Live Rig</div>
+
+            <div class="ctl knob hue2" style="left:20px; top:40px; width:34px; height:34px;">
+                <div class="dial"><div class="arc" style="--pct:.52turn"></div><div class="ptr" style="transform:rotate(46deg)"></div></div>
+            </div>
+            <div class="ctl knob hue2" style="left:66px; top:40px; width:34px; height:34px;">
+                <div class="dial"><div class="arc" style="--pct:.40turn"></div><div class="ptr" style="transform:rotate(0deg)"></div></div>
+            </div>
+            <div class="ctl knob hue2" style="left:112px; top:40px; width:34px; height:34px;">
+                <div class="dial"><div class="arc" style="--pct:.63turn"></div><div class="ptr" style="transform:rotate(82deg)"></div></div>
+            </div>
+            <div class="ctl fader hue2" style="left:18px; top:82px; width:28px; height:104px;">
+                <div class="slot"><div class="fill" style="height:74%"></div><div class="capbar" style="bottom:calc(74% - 7px); height:14px; left:-9px; right:-9px"></div></div>
+            </div>
+            <div class="ctl fader hue2" style="left:64px; top:82px; width:28px; height:104px;">
+                <div class="slot"><div class="fill" style="height:58%"></div><div class="capbar" style="bottom:calc(58% - 7px); height:14px; left:-9px; right:-9px"></div></div>
+            </div>
+            <div class="ctl fader hue2" style="left:110px; top:82px; width:28px; height:104px;">
+                <div class="slot"><div class="fill" style="height:88%"></div><div class="capbar" style="bottom:calc(88% - 7px); height:14px; left:-9px; right:-9px"></div></div>
+            </div>
+            <div class="outlabel" style="left:12px; top:190px; width:42px; font-size:9px;">Drums</div>
+            <div class="outlabel" style="left:58px; top:190px; width:42px; font-size:9px;">Bass</div>
+            <div class="outlabel" style="left:104px; top:190px; width:42px; font-size:9px;">Keys</div>
+
+            <div class="ctl xy hue1" style="left:168px; top:40px; width:120px; height:120px;">
+                <div class="field2">
+                    <div class="cross h" style="top:34%"></div><div class="cross v" style="left:58%"></div>
+                    <div class="puck" style="left:58%; top:34%"></div>
+                </div>
+            </div>
+            <div class="outlabel" style="left:168px; top:164px; width:120px; font-size:9px;">Filter &middot; Resonance</div>
+
+            <div class="ctl btn-ctl hue4" style="left:308px; top:40px; width:62px; height:38px;"><div class="name" style="font-size:9px">Intro</div><div class="pipe"></div></div>
+            <div class="ctl btn-ctl hue4 on" style="left:378px; top:40px; width:62px; height:38px;"><div class="name" style="font-size:9px">Build</div><div class="pipe lit"></div></div>
+            <div class="ctl btn-ctl hue4" style="left:308px; top:86px; width:62px; height:38px;"><div class="name" style="font-size:9px">Drop</div><div class="pipe"></div></div>
+            <div class="ctl btn-ctl hue4" style="left:378px; top:86px; width:62px; height:38px;"><div class="name" style="font-size:9px">Outro</div><div class="pipe"></div></div>
+
+            <div class="ctl fader hue3 horiz" style="left:308px; top:140px; width:290px; height:22px;">
+                <div class="slot"><div class="fill" style="width:46%"></div><div class="capbar" style="left:calc(46% - 4px); width:8px; top:-6px; bottom:-6px; height:auto"></div></div>
+            </div>
+
+            <div class="ctl lfo hue5" style="left:468px; top:40px; width:130px; height:84px; padding:5px 7px;">
+                <div class="head" style="font-size:8.5px"><span>LFO &middot; sine</span><span class="mono">1/8</span></div>
+                <svg viewBox="0 0 70 24" preserveAspectRatio="none">
+                    <path d="M0,12 C6,1 12,1 18,12 C24,23 30,23 36,12 C42,1 48,1 54,12 C60,23 66,23 70,12" fill="none" stroke="rgba(155,140,255,.9)" stroke-width="2"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- OUTSIDE the page, left over from a page that used to be wider -->
+        <div class="ctl knob hue6 offpage" style="left:46px; top:70px; width:40px; height:40px;">
+            <div class="dial"><div class="arc" style="--pct:.30turn"></div><div class="ptr" style="transform:rotate(-40deg)"></div></div>
+        </div>
+        <div class="ctl btn-ctl hue6 offpage" style="left:30px; top:126px; width:70px; height:36px;"><div class="name" style="font-size:9px">Cue B</div><div class="pipe"></div></div>
+        <div class="ctl fader hue6 offpage" style="left:770px; top:56px; width:28px; height:96px;">
+            <div class="slot"><div class="fill" style="height:40%"></div><div class="capbar" style="bottom:calc(40% - 7px); height:14px; left:-9px; right:-9px"></div></div>
+        </div>
+
+        <div class="callout down" style="left:22px; top:40px;">off the page</div>
+    </div>
+
+    <div class="offbar">
+        <span class="gl" style="font-size:13px">&#xE7BA;</span>
+        <b style="font-weight:600">3 controls are outside the page.</b>
+        <span style="color:rgba(255,155,164,.75)">They are saved, and they are still editable, but nobody will see them when this layout runs.</span>
+        <div class="spacer"></div>
+        <div class="act">Select them</div>
+        <div class="act">Bring inside</div>
+    </div>
+</div>
+
+<!-- ====================================================== RESIZE PAGE -->
+<div class="board" style="height:404px; margin-top:12px;">
+    <div class="bhead">CHANGING THE PAGE SIZE &mdash; GROWING ASKS WHERE, SHRINKING OFFERS TO SCALE</div>
+
+    <div class="dlg" style="left:16px;">
+        <h3>Page size</h3>
+        <div class="sub">Making the page <b style="color:var(--text2)">bigger</b>. Choose where the controls you already have should sit in the new space.</div>
+
+        <div class="fieldrow"><div class="lbl">Preset</div><div class="fieldbox" style="flex:1">Full HD &mdash; 1920 &times; 1080</div></div>
+        <div class="fieldrow">
+            <div class="lbl">Size</div>
+            <div class="fieldbox" style="width:92px">1920</div><span style="color:var(--text3)">&times;</span>
+            <div class="fieldbox" style="width:92px">1080</div>
+            <span style="color:var(--text3); font-size:10.5px">was 1280 &times; 800</span>
+        </div>
+
+        <div style="display:flex; gap:16px; align-items:center; margin-top:14px;">
+            <div>
+                <div style="font-size:10.5px; color:var(--text3); margin-bottom:6px;">Put existing controls</div>
+                <div class="anchor">
+                    <i></i><i></i><i></i>
+                    <i></i><i class="sel"></i><i></i>
+                    <i></i><i></i><i></i>
+                </div>
+            </div>
+            <div>
+                <div style="font-size:10.5px; color:var(--text3); margin-bottom:6px;">Preview</div>
+                <div class="prev">
+                    <div class="new" style="left:6px; top:6px; right:6px; bottom:6px;"></div>
+                    <div class="old" style="left:36px; top:26px; width:78px; height:44px;"></div>
+                </div>
+            </div>
+        </div>
+        <div class="dlgfoot"><div class="b">Cancel</div><div class="b pri">Resize</div></div>
+    </div>
+
+    <div class="dlg" style="left:516px;">
+        <h3>Page size</h3>
+        <div class="sub">Making the page <b style="color:var(--text2)">smaller</b>. Some controls will fall outside it.</div>
+
+        <div class="fieldrow">
+            <div class="lbl">Size</div>
+            <div class="fieldbox" style="width:92px">1024</div><span style="color:var(--text3)">&times;</span>
+            <div class="fieldbox" style="width:92px">768</div>
+            <span style="color:var(--text3); font-size:10.5px">was 1280 &times; 800</span>
+        </div>
+
+        <div class="choice sel"><b>Scale everything to fit</b>Positions and sizes shrink together. Text and touch targets get smaller, so check the smallest control afterwards.</div>
+        <div class="choice"><b>Leave everything where it is</b>Nothing moves. <span style="color:#FF9BA4">11 controls would end up outside the page</span> and would need bringing back by hand.</div>
+
+        <div class="dlgfoot"><div class="b">Cancel</div><div class="b pri">Resize</div></div>
+    </div>
+</div>
+
+<p class="note" style="margin-top:12px;">
+<b>Why a virtual canvas rather than a hard edge.</b> The alternative is to clamp every control inside the page, which sounds tidy and is miserable in practice: shrink a page and eleven controls silently pile up along the right edge on top of each other, and there is no undoing that by hand. Letting them sit outside, marked and reachable, means a resize is always reversible &mdash; resize back and everything is where it was. The working space is deliberately <b>one</b> area around <b>one</b> page, not an infinite scroll with multiple artboards. There is exactly one thing that gets seen at run time, and the bright rectangle is it.
+</p>
+
+</div>
+</body>
+</html>

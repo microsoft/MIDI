@@ -1,0 +1,45 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+// MIDI Glass phase 0 spike. Nothing here ships.
+
+namespace glassspike
+{
+    // Lets one automation peer serve both the templated control and the hybrid element.
+    interface ISurfaceValueHost
+    {
+        Double SurfaceValue;
+        String SurfaceName;
+    };
+
+    // Approach A: a templated XAML control. Everything it draws is a XAML element, styled from
+    // a ControlTemplate in markup.
+    runtimeclass GlassControl : Microsoft.UI.Xaml.Controls.Control, ISurfaceValueHost
+    {
+        GlassControl();
+
+        // 0 fader, 1 knob, 2 pad. Set once, before the template is applied.
+        Int32 Kind;
+        Int32 HueSlot;
+        Double Bloom;
+    };
+
+    // Approach C: a XAML element with no template at all. It exists for hit testing, focus and
+    // automation; its content is a composition visual tree attached from the renderer.
+    [default_interface]
+    runtimeclass HybridControl : Microsoft.UI.Xaml.Controls.Control, ISurfaceValueHost
+    {
+        HybridControl();
+    };
+
+    [default_interface]
+    runtimeclass SurfaceAutomationPeer :
+        Microsoft.UI.Xaml.Automation.Peers.FrameworkElementAutomationPeer,
+        Microsoft.UI.Xaml.Automation.Provider.IRangeValueProvider
+    {
+        SurfaceAutomationPeer(Microsoft.UI.Xaml.FrameworkElement owner, ISurfaceValueHost host);
+    };
+}

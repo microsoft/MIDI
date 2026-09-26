@@ -173,6 +173,10 @@
     <ClCompile Include="cmd_sysex.cpp" />
     <ClCompile Include="cmd_system.cpp" />
     <ClCompile Include="..\midi-app-shared\BeatClockGenerator.cpp" />
+    <ClCompile Include="..\midi-app-shared\TimeCodeGenerator.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiTimeCode.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="..\midi-app-shared\MidiMessageForwarder.cpp" />
     <ClCompile Include="console_output.cpp" />
     <ClCompile Include="console_table.cpp" />
@@ -180,6 +184,12 @@
     <ClCompile Include="endpoint_utility.cpp" />
     <ClCompile Include="help_formatter.cpp" />
     <ClCompile Include="message_capture_writer.cpp" />
+    <ClCompile Include="$(SolutionDir)..\in-box\Inc\midi_file_sequence.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="$(SolutionDir)..\in-box\Inc\midi_file_smf_writer.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="midi_formatting.cpp" />
     <ClCompile Include="midi_message_table.cpp" />
     <ClCompile Include="midi_main.cpp" />

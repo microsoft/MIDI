@@ -1,0 +1,68 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+// One row in the palette or the outline. Both lists are rebuilt whole when anything changes
+// rather than patched, so there is nothing here to notify about.
+namespace midiglass
+{
+    [default_interface]
+    runtimeclass EditorItem
+    {
+        EditorItem();
+
+        // A control id for an outline row, a control kind for a palette tile.
+        String Key{ get; };
+
+        String DisplayName{ get; };
+
+        // "Fader · 40 × 180", or the group a palette tile belongs to.
+        String Detail{ get; };
+
+        // A Segoe Fluent Icons code point.
+        String Glyph{ get; };
+
+        // The same drawn miniature the palette tile uses, so a control looks like the thing it
+        // was dropped from rather than like a different icon set.
+        Object Art{ get; };
+
+        // The keyboard order badge. Empty on a palette tile.
+        String Badge{ get; };
+
+        // Nesting in the outline. A page is at zero, a control is one in.
+        Microsoft.UI.Xaml.Thickness Indent{ get; };
+
+        Microsoft.UI.Xaml.Visibility DetailVisibility{ get; };
+        Microsoft.UI.Xaml.Visibility BadgeVisibility{ get; };
+
+        // A control that has ended up outside the page. Counted in the warning strip and marked
+        // here, because the outline is how somebody using a screen reader finds it.
+        Boolean IsOutsidePage{ get; };
+        Microsoft.UI.Xaml.Visibility OutsideVisibility{ get; };
+    }
+
+    // One line in the monitor rail: a message that actually went out.
+    [default_interface]
+    runtimeclass MonitorItem
+    {
+        MonitorItem();
+
+        // "+0.000", counted from the first row still in the list.
+        String Elapsed{ get; };
+
+        // The bytes as they went out.
+        String Words{ get; };
+
+        // "CC 91 = 0.360".
+        String Meaning{ get; };
+
+        // "Main Synth \u00b7 ch 1", or the control's label where the device has no name.
+        String Destination{ get; };
+
+        // Read out as one line, because four columns of hex read one cell at a time is useless.
+        String AutomationName{ get; };
+    }
+}

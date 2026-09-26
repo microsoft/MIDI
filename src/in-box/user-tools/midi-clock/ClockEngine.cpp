@@ -114,8 +114,29 @@ namespace midiclock
                 options.GroupIndexes = request.GroupIndexes;
                 options.SendStartMessage = request.SendStartStop;
                 options.SendStopMessage = request.SendStartStop;
+                options.ClockRatioNumerator = request.ClockRatioNumerator;
+                options.ClockRatioDenominator = request.ClockRatioDenominator;
+                options.SwingPercent = request.SwingPercent;
+                options.SwingSubdivision = request.SwingSubdivision;
+                options.OffsetMilliseconds = request.OffsetMilliseconds;
 
-                clock.Generator = std::make_unique<midiapp::BeatClockGenerator>(clock.Connection, options);
+                if (request.Kind == ClockKind::TimeCode)
+                {
+                    midiapp::TimeCodeGeneratorOptions timeCodeOptions{};
+
+                    timeCodeOptions.FrameRate = request.FrameRate;
+                    timeCodeOptions.StartPosition = request.StartTimeCode;
+                    timeCodeOptions.GroupIndexes = request.GroupIndexes;
+                    timeCodeOptions.SendFullFrameMessages = request.SendFullFrameMessages;
+                    timeCodeOptions.OffsetMilliseconds = request.OffsetMilliseconds;
+
+                    clock.TimeCode = std::make_unique<midiapp::TimeCodeGenerator>(
+                        clock.Connection, timeCodeOptions);
+                }
+                else
+                {
+                    clock.Generator = std::make_unique<midiapp::BeatClockGenerator>(clock.Connection, options);
+                }
 
                 m_running[request.Id] = std::move(clock);
 
@@ -127,9 +148,23 @@ namespace midiclock
                 return results;
             }
 
+            // A clock asked to play early takes its offset off the shared origin, so the origin
+            // has to sit far enough ahead that the earliest of them is still in the future.
+            double earliestOffset{ 0.0 };
+
+            for (auto const& request : requests)
+            {
+                if (request.OffsetMilliseconds < earliestOffset)
+                {
+                    earliestOffset = request.OffsetMilliseconds;
+                }
+            }
+
             // One instant for the whole batch. Queuing a generator is only a thread creation,
             // so the lead only has to cover that, not the service calls above.
-            auto const origin = midi2::MidiClock::Now() + midiapp::BeatClockGenerator::SuggestedStartLeadTicks();
+            auto const origin = midi2::MidiClock::Now()
+                + midiapp::BeatClockGenerator::SuggestedStartLeadTicks()
+                + midiapp::BeatClockGenerator::OffsetMillisecondsToTicks(earliestOffset);
 
             for (auto const& id : ready)
             {
@@ -138,6 +173,11 @@ namespace midiclock
                 if (entry != m_running.end() && entry->second.Generator != nullptr)
                 {
                     entry->second.Generator->Start(origin);
+                    results[id] = ClockStartResult::Success;
+                }
+                else if (entry != m_running.end() && entry->second.TimeCode != nullptr)
+                {
+                    entry->second.TimeCode->Start(origin);
                     results[id] = ClockStartResult::Success;
                 }
             }
@@ -167,6 +207,11 @@ namespace midiclock
             {
                 lastTimestamp = entry->second.Generator->Stop();
                 entry->second.Generator.reset();
+            }
+            else if (entry->second.TimeCode != nullptr)
+            {
+                lastTimestamp = entry->second.TimeCode->Stop();
+                entry->second.TimeCode.reset();
             }
 
             if (entry->second.Connection != nullptr)
@@ -226,6 +271,10 @@ namespace midiclock
                 {
                     entry->second.Generator->Stop();
                 }
+                else if (entry != m_running.end() && entry->second.TimeCode != nullptr)
+                {
+                    entry->second.TimeCode->Stop();
+                }
             }
 
             for (auto const& id : ids)
@@ -254,11 +303,73 @@ namespace midiclock
     }
 
     _Use_decl_annotations_
+    void ClockEngine::SetClockRatio(std::wstring const& id, int32_t numerator, int32_t denominator) noexcept
+    {
+        try
+        {
+            std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+
+            auto const entry = m_running.find(id);
+
+            if (entry != m_running.end() && entry->second.Generator != nullptr)
+            {
+                entry->second.Generator->ClockRatio(numerator, denominator);
+            }
+        }
+        MIDI_CLOCK_CATCH_AND_LOG(L"Unable to change the ratio of a running clock.")
+    }
+
+    _Use_decl_annotations_
+    void ClockEngine::SetSwingPercent(std::wstring const& id, double swingPercent) noexcept
+    {
+        try
+        {
+            std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+
+            auto const entry = m_running.find(id);
+
+            if (entry != m_running.end() && entry->second.Generator != nullptr)
+            {
+                entry->second.Generator->SwingPercent(swingPercent);
+            }
+        }
+        MIDI_CLOCK_CATCH_AND_LOG(L"Unable to change the swing of a running clock.")
+    }
+
+    _Use_decl_annotations_
     bool ClockEngine::IsRunning(std::wstring const& id) const noexcept
     {
         std::lock_guard<std::recursive_mutex> const guard{ m_lock };
 
         return m_running.find(id) != m_running.end();
+    }
+
+    _Use_decl_annotations_
+    bool ClockEngine::TryGetTimeCodePosition(
+        std::wstring const& id,
+        midiapp::MidiTimeCodePosition& position) const noexcept
+    {
+        position = midiapp::MidiTimeCodePosition{};
+
+        try
+        {
+            std::lock_guard<std::recursive_mutex> const guard{ m_lock };
+
+            auto const entry = m_running.find(id);
+
+            if (entry == m_running.end() || entry->second.TimeCode == nullptr)
+            {
+                return false;
+            }
+
+            position = entry->second.TimeCode->CurrentPosition();
+
+            return true;
+        }
+        catch (...)
+        {
+            return false;
+        }
     }
 
     std::vector<std::wstring> ClockEngine::RunningIds() const noexcept

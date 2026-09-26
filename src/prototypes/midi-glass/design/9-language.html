@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - surface visual language</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    .board {
+        width: 1000px; height: 740px; border-radius: 8px; overflow: hidden;
+        position: relative; border: 1px solid rgba(255,255,255,.08);
+        box-shadow: var(--shadow);
+    }
+    .rowhead {
+        position: absolute; font-size: 10px; letter-spacing: .12em;
+        color: rgba(255,255,255,.30);
+    }
+    .row { position: absolute; left: 0; right: 0; }
+    .sheettitle { position: absolute; left: 22px; top: 16px; }
+    .sheettitle b { font-family: "Segoe UI Variable Display","Segoe UI",sans-serif; font-size: 19px; font-weight: 700; }
+    .sheettitle span { font-size: 11px; color: rgba(255,255,255,.45); margin-left: 10px; }
+    .hueleg { position: absolute; right: 22px; top: 20px; display: flex; gap: 7px; align-items: center; }
+    .hueleg i { width: 15px; height: 15px; border-radius: 4px; }
+    .hueleg span { font-size: 10px; color: rgba(255,255,255,.40); margin-right: 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+<p class="caption-above">MIDI Glass &mdash; the surface control language. Dark smoked-glass plates, a hairline rim in the control's hue, a "light pipe" that carries the value. Nothing is saturated at rest; value and activity are the only things that glow.</p>
+
+<div class="board surf">
+
+    <div class="sheettitle"><b>Surface elements</b><span>Studio Dark theme &middot; 6 hue slots &middot; 4&nbsp;px base unit</span></div>
+    <div class="hueleg">
+        <span>hue slots</span>
+        <i style="background:rgb(var(--h1))"></i><i style="background:rgb(var(--h2))"></i>
+        <i style="background:rgb(var(--h3))"></i><i style="background:rgb(var(--h4))"></i>
+        <i style="background:rgb(var(--h5))"></i><i style="background:rgb(var(--h6))"></i>
+    </div>
+
+    <!-- ============================================================ STATES -->
+    <div class="row" style="top:62px; height:104px;">
+        <div class="rowhead" style="left:22px; top:0;">ONE CONTROL, SIX STATES &mdash; ACTIVITY IS THE ONLY THING THAT BLOOMS</div>
+
+        <div class="ctl btn-ctl hue1" style="left:22px; top:22px; width:84px; height:62px;">
+            <div class="name">Cue A</div><div class="pipe"></div>
+        </div>
+        <div class="outlabel" style="left:22px; top:88px; width:84px;">Rest</div>
+
+        <div class="ctl btn-ctl hue1" style="left:122px; top:22px; width:84px; height:62px; box-shadow:inset 0 1px 0 rgba(255,255,255,.12), inset 0 0 0 1px rgba(var(--h1),.55), 0 1px 3px rgba(0,0,0,.55); background:linear-gradient(180deg, rgba(255,255,255,.075), rgba(255,255,255,.012) 42%), var(--plate);">
+            <div class="name">Cue A</div><div class="pipe"></div>
+        </div>
+        <div class="outlabel" style="left:122px; top:88px; width:84px;">Pointer over</div>
+
+        <div class="ctl btn-ctl hue1 held" style="left:222px; top:22px; width:84px; height:62px;">
+            <div class="name">Cue A</div><div class="pipe lit"></div>
+        </div>
+        <div class="outlabel" style="left:222px; top:88px; width:84px;">Held</div>
+
+        <div class="ctl btn-ctl hue1 on" style="left:322px; top:22px; width:84px; height:62px;">
+            <div class="name">Cue A</div><div class="pipe lit" style="background:#fff; box-shadow:0 0 9px #fff;"></div>
+        </div>
+        <div class="outlabel" style="left:322px; top:88px; width:84px;">Latched on</div>
+
+        <div class="ctl btn-ctl hue1 dim" style="left:422px; top:22px; width:84px; height:62px;">
+            <div class="name" style="color:rgba(255,255,255,.35)">Cue A</div><div class="pipe"></div>
+        </div>
+        <div class="outlabel" style="left:422px; top:88px; width:84px;">Disabled</div>
+
+        <div class="ctl btn-ctl hue1 offline" style="left:522px; top:22px; width:84px; height:62px;">
+            <div class="name" style="color:rgba(255,255,255,.45)">Cue A</div>
+            <div class="cap" style="font-size:9px; color:rgba(255,153,164,.85)">device offline</div>
+        </div>
+        <div class="outlabel" style="left:522px; top:88px; width:84px;">Unavailable</div>
+
+        <div style="position:absolute; left:640px; top:20px; width:336px; font-size:11px; line-height:1.55; color:rgba(255,255,255,.45)">
+            <b style="color:rgba(255,255,255,.78)">Why it reads at a glance on a dark stage.</b>
+            The plate is 86&nbsp;% opaque over the deck, so a themed or photographic background shows through
+            faintly &mdash; that is the "glass". Rim, pipe and glow all come from one hue, so a whole surface
+            can be re-themed by swapping six colors.
+        </div>
+    </div>
+
+    <!-- =========================================================== BUTTONS -->
+    <div class="row" style="top:180px; height:118px;">
+        <div class="rowhead" style="left:22px; top:0;">BUTTONS AND PADS</div>
+
+        <div class="ctl btn-ctl hue2" style="left:22px; top:20px; width:76px; height:56px;">
+            <div class="glyph">&#9654;</div><div class="pipe"></div>
+        </div>
+        <div class="outlabel" style="left:22px; top:80px; width:76px;">Momentary</div>
+
+        <div class="ctl btn-ctl hue2 on" style="left:112px; top:20px; width:76px; height:56px;">
+            <div class="glyph">&#9635;</div><div class="pipe lit" style="background:#fff; box-shadow:0 0 9px #fff;"></div>
+        </div>
+        <div class="outlabel" style="left:112px; top:80px; width:76px;">Toggle</div>
+
+        <div class="ctl btn-ctl hue4" style="left:202px; top:20px; width:76px; height:56px;">
+            <div class="glyph" style="font-size:12px">&#9656;&#9656;&#9656;</div>
+            <div class="cap" style="font-size:9px">4 steps</div>
+        </div>
+        <div class="outlabel" style="left:202px; top:80px; width:76px;">Sequence</div>
+
+        <div style="position:absolute; left:292px; top:20px; width:150px; height:56px; display:flex; gap:3px;">
+            <div class="ctl btn-ctl hue5" style="position:relative; flex:1; height:56px; border-radius:7px 2px 2px 7px;"><div class="name" style="font-size:10px">A</div></div>
+            <div class="ctl btn-ctl hue5 on" style="position:relative; flex:1; height:56px; border-radius:2px;"><div class="name" style="font-size:10px">B</div></div>
+            <div class="ctl btn-ctl hue5" style="position:relative; flex:1; height:56px; border-radius:2px 7px 7px 2px;"><div class="name" style="font-size:10px">C</div></div>
+        </div>
+        <div class="outlabel" style="left:292px; top:80px; width:150px;">Radio group (one of N)</div>
+
+        <div class="ctl btn-ctl hue3" style="left:456px; top:20px; width:86px; height:56px;">
+            <div class="cap" style="font-size:9px">Bank</div>
+            <div class="name mono" style="font-size:15px">3</div>
+            <div class="pipe" style="left:6px; right:6px; background:linear-gradient(90deg, rgb(var(--h3)) 0 66%, rgba(var(--h3),.18) 66%); box-shadow:none;"></div>
+        </div>
+        <div class="outlabel" style="left:456px; top:80px; width:86px;">Stepper</div>
+
+        <div style="position:absolute; left:558px; top:20px; width:116px; height:56px; display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(2,1fr); gap:3px;">
+            <div class="ctl hue6" style="position:relative; border-radius:4px;"></div>
+            <div class="ctl hue6 on" style="position:relative; border-radius:4px;"></div>
+            <div class="ctl hue3" style="position:relative; border-radius:4px;"></div>
+            <div class="ctl hue3" style="position:relative; border-radius:4px;"></div>
+            <div class="ctl hue2" style="position:relative; border-radius:4px;"></div>
+            <div class="ctl hue2" style="position:relative; border-radius:4px;"></div>
+            <div class="ctl hue1 held" style="position:relative; border-radius:4px;"></div>
+            <div class="ctl hue1" style="position:relative; border-radius:4px;"></div>
+        </div>
+        <div class="outlabel" style="left:552px; top:80px; width:128px;">Pad bank</div>
+
+        <div class="ctl btn-ctl hue1" style="left:700px; top:20px; width:76px; height:56px; border-radius:28px;">
+            <div class="name" style="font-size:10px; letter-spacing:.08em">SHIFT</div>
+            <div class="cap" style="font-size:8.5px">hold</div>
+        </div>
+        <div class="outlabel" style="left:692px; top:80px; width:92px;">Layer modifier</div>
+
+        <div style="position:absolute; left:790px; top:14px; width:186px; font-size:10.5px; line-height:1.5; color:rgba(255,255,255,.45)">
+            A <b style="color:rgba(255,255,255,.78)">layer modifier</b> swaps the whole surface to its
+            alternate binding set while it is held, or latches on a double tap. Controls that change
+            get a thin second rim in the layer's hue.
+        </div>
+    </div>
+
+    <!-- ======================================================== CONTINUOUS -->
+    <div class="row" style="top:312px; height:150px;">
+        <div class="rowhead" style="left:22px; top:0;">CONTINUOUS CONTROLS &mdash; THE ARC AND THE SLOT ARE THE SAME "LIGHT PIPE" IDEA</div>
+
+        <div class="ctl knob hue1" style="left:26px; top:24px; width:62px; height:62px;">
+            <div class="dial">
+                <div class="arc" style="--pct:.563turn"></div>
+                <div class="ptr" style="transform:rotate(58deg)"></div>
+            </div>
+        </div>
+        <div class="outlabel" style="left:16px; top:96px; width:82px;">Knob</div>
+        <div class="outlabel mono" style="left:16px; top:112px; width:82px; color:rgba(var(--h1),.9)">70&nbsp;%</div>
+
+        <div class="ctl knob hue3 detent" style="left:120px; top:24px; width:62px; height:62px;">
+            <div class="dial">
+                <div class="arc" style="background:conic-gradient(from 215deg, rgba(255,255,255,.10) 0 .4025turn, rgb(var(--h3)) .4025turn .499turn, rgba(255,255,255,.10) .499turn .805turn, transparent .805turn 1turn);"></div>
+                <div class="ptr" style="transform:rotate(35deg)"></div>
+            </div>
+        </div>
+        <div class="outlabel" style="left:104px; top:96px; width:94px;">Knob, center detent</div>
+        <div class="outlabel mono" style="left:104px; top:112px; width:94px; color:rgba(var(--h3),.9)">R&nbsp;24</div>
+
+        <div class="ctl knob hue5" style="left:214px; top:24px; width:62px; height:62px;">
+            <div class="dial">
+                <div class="arc" style="--pct:.14turn; background:conic-gradient(from 90deg, rgb(var(--h5)) 0 .14turn, rgba(255,255,255,.08) .14turn 1turn);"></div>
+                <div class="dotmark"></div>
+                <div class="ptr" style="transform:rotate(38deg); height:24%; top:13%;"></div>
+            </div>
+        </div>
+        <div class="outlabel" style="left:204px; top:96px; width:82px;">Endless encoder</div>
+        <div class="outlabel mono" style="left:204px; top:112px; width:82px; color:rgba(var(--h5),.9)">relative</div>
+
+        <div class="ctl fader hue2" style="left:312px; top:20px; width:38px; height:110px;">
+            <div class="slot">
+                <div class="ticks"><i style="top:12%"></i><i style="top:30%"></i><i style="top:50%"></i><i style="top:70%"></i><i style="top:88%"></i></div>
+                <div class="fill" style="height:64%"></div>
+                <div class="capbar" style="bottom:calc(64% - 8px)"></div>
+            </div>
+        </div>
+        <div class="outlabel" style="left:300px; top:134px; width:62px;">Fader</div>
+
+        <div style="position:absolute; left:372px; top:20px; width:132px; height:110px; display:flex; gap:6px;">
+            <div class="ctl fader hue2" style="position:relative; flex:1; height:110px;"><div class="slot"><div class="fill" style="height:78%"></div><div class="capbar" style="bottom:calc(78% - 8px)"></div></div></div>
+            <div class="ctl fader hue2" style="position:relative; flex:1; height:110px;"><div class="slot"><div class="fill" style="height:52%"></div><div class="capbar" style="bottom:calc(52% - 8px)"></div></div></div>
+            <div class="ctl fader hue2" style="position:relative; flex:1; height:110px;"><div class="slot"><div class="fill" style="height:91%"></div><div class="capbar" style="bottom:calc(91% - 8px)"></div></div></div>
+            <div class="ctl fader hue2" style="position:relative; flex:1; height:110px;"><div class="slot"><div class="fill" style="height:35%"></div><div class="capbar" style="bottom:calc(35% - 8px)"></div></div></div>
+        </div>
+        <div class="outlabel" style="left:372px; top:134px; width:132px;">Fader bank (one inspector, N strips)</div>
+
+        <div class="ctl fader horiz hue4" style="left:524px; top:44px; width:150px; height:38px;">
+            <div class="slot"><div class="fill" style="width:42%"></div><div class="capbar" style="left:calc(42% - 8px)"></div></div>
+        </div>
+        <div class="outlabel" style="left:524px; top:96px; width:150px;">Horizontal fader / crossfader</div>
+
+        <div class="ctl wheel hue5" style="left:700px; top:20px; width:34px; height:110px;">
+            <div class="body"><div class="ridges"></div><div class="ind" style="bottom:72%"></div></div>
+        </div>
+        <div class="outlabel" style="left:688px; top:134px; width:58px;">Mod</div>
+
+        <div class="ctl wheel hue6" style="left:756px; top:20px; width:34px; height:110px;">
+            <div class="body"><div class="ridges"></div><div class="center"></div><div class="ind" style="bottom:50%"></div></div>
+        </div>
+        <div class="outlabel" style="left:744px; top:134px; width:58px;">Pitch, springs back</div>
+
+        <div style="position:absolute; left:820px; top:22px; width:156px; font-size:10.5px; line-height:1.5; color:rgba(255,255,255,.45)">
+            Every continuous control can send <b style="color:rgba(255,255,255,.78)">32-bit MIDI&nbsp;2.0</b>
+            values when the endpoint supports them, and folds down to 7-bit automatically when it does not.
+            Pickup mode (jump / catch / relative) is per control.
+        </div>
+    </div>
+
+    <!-- ========================================================== 2-D + FB -->
+    <div class="row" style="top:478px; height:150px;">
+        <div class="rowhead" style="left:22px; top:0;">TWO-AXIS, GENERATORS, AND FEEDBACK FROM THE DEVICE</div>
+
+        <div class="ctl xy hue1" style="left:22px; top:20px; width:124px; height:110px;">
+            <div class="field2">
+                <div class="cross h" style="top:38%"></div>
+                <div class="cross v" style="left:62%"></div>
+                <div class="trail" style="left:52%; top:52%; opacity:.25"></div>
+                <div class="trail" style="left:57%; top:44%; opacity:.5"></div>
+                <div class="puck" style="left:62%; top:38%"></div>
+            </div>
+        </div>
+        <div class="outlabel" style="left:22px; top:134px; width:124px;">XY pad (with trail)</div>
+
+        <div class="ctl joy hue2" style="left:164px; top:20px; width:110px; height:110px;">
+            <div class="ring"></div><div class="ring2"></div><div class="spring"></div>
+            <div class="puck" style="left:63%; top:41%"></div>
+        </div>
+        <div class="outlabel" style="left:164px; top:134px; width:110px;">Joystick (spring return)</div>
+
+        <div class="ctl clockctl hue3" style="left:292px; top:20px; width:100px; height:110px;">
+            <div class="ringwrap">
+                <div class="sweep" style="--pct:.62turn"></div>
+                <div class="beat">3</div>
+            </div>
+            <div class="pips"><i class="lit"></i><i class="lit"></i><i class="lit"></i><i></i></div>
+        </div>
+        <div class="outlabel" style="left:284px; top:134px; width:116px;">Beat clock</div>
+
+        <div class="ctl lfo hue4" style="left:410px; top:20px; width:132px; height:110px;">
+            <div class="head"><span>LFO&nbsp;&middot;&nbsp;sine</span><span class="mono">1/8</span></div>
+            <svg viewBox="0 0 120 46" preserveAspectRatio="none">
+                <path d="M0,23 C10,2 20,2 30,23 C40,44 50,44 60,23 C70,2 80,2 90,23 C100,44 110,44 120,23"
+                      fill="none" stroke="rgba(255,107,214,.9)" stroke-width="2"/>
+                <circle cx="76" cy="9" r="4" fill="rgb(255,107,214)"/>
+            </svg>
+            <div class="head"><span style="color:rgba(255,255,255,.35)">while held</span><span class="mono" style="color:rgba(var(--h4),.9)">CC&nbsp;74</span></div>
+        </div>
+        <div class="outlabel" style="left:410px; top:134px; width:132px;">LFO, gated or free run</div>
+
+        <div class="ctl steps hue1" style="left:560px; top:20px; width:174px; height:110px;">
+            <div class="row" style="position:relative;">
+                <i class="on"></i><i></i><i class="on cur"></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i>
+            </div>
+            <div class="row" style="position:relative;">
+                <i></i><i class="on"></i><i></i><i class="on"></i><i></i><i class="on"></i><i class="on"></i><i></i>
+            </div>
+        </div>
+        <div class="outlabel" style="left:560px; top:134px; width:174px;">Step strip (2 lanes x 8)</div>
+
+        <div style="position:absolute; left:752px; top:20px; width:34px; height:110px;" class="ctl meter hue2">
+            <i class="hot"></i><i class="warn"></i><i class="warn"></i><i class="lit warn"></i><i class="lit"></i>
+            <i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i>
+        </div>
+        <div class="outlabel" style="left:744px; top:134px; width:50px;">Meter (in)</div>
+
+        <div class="ctl btn-ctl hue2 on" style="left:804px; top:20px; width:50px; height:50px; border-radius:25px;">
+            <div class="name" style="font-size:9px">REC</div>
+        </div>
+        <div class="outlabel" style="left:804px; top:74px; width:50px;">Lamp (in)</div>
+
+        <div class="ctl hue3" style="left:868px; top:20px; width:108px; height:50px; align-items:center; justify-content:center;">
+            <div class="mono" style="font-size:16px; color:rgb(var(--h3)); text-shadow:0 0 12px rgba(var(--h3),.55)">01.03.04</div>
+        </div>
+        <div class="outlabel" style="left:868px; top:74px; width:108px;">Readout (in)</div>
+
+        <div style="position:absolute; left:804px; top:96px; width:172px; font-size:10.5px; line-height:1.5; color:rgba(255,255,255,.45)">
+            Meters, lamps and readouts are <b style="color:rgba(255,255,255,.78)">driven by incoming
+            MIDI</b>. Any control can also take a feedback binding, so a fader follows the DAW.
+        </div>
+    </div>
+
+    <!-- ======================================================== DECORATION -->
+    <div class="row" style="top:640px; height:100px;">
+        <div class="rowhead" style="left:22px; top:0;">TEXT, PANELS AND PAGE NAVIGATION ARE SURFACE OBJECTS TOO</div>
+
+        <div class="surftext h1" style="left:22px; top:20px;">Live Rig</div>
+        <div class="surftext h2" style="left:22px; top:50px;">DECK A</div>
+        <div class="surftext readout" style="left:128px; top:22px;">128.0</div>
+        <div class="surftext small" style="left:22px; top:72px;">In-box fonts only, so a shared layout looks the same on every PC</div>
+
+        <div class="ctlpanel" style="left:400px; top:18px; width:190px; height:50px;">
+            <div class="ptitle">FILTER</div>
+        </div>
+        <div class="outlabel" style="left:400px; top:72px; width:190px;">Panel groups and tints its children</div>
+
+        <div class="pagetabs" style="left:628px; top:24px;">
+            <div class="tab sel">Mixer</div><div class="tab">Decks</div><div class="tab">Pads</div><div class="tab">FX</div>
+        </div>
+        <div class="outlabel" style="left:628px; top:72px; width:348px;">Page tabs are a surface object, not a WinUI tab control</div>
+    </div>
+
+</div>
+
+<p class="note" style="margin-top:2px">
+<b>The one rule that holds the language together:</b> a control never uses more than one hue, and a hue never
+appears anywhere except the rim, the value pipe and the bloom. That is what keeps a busy surface readable and
+makes a theme swap a six-color operation. Sizes here are at 100&nbsp;%; every measurement is a multiple of 4&nbsp;px
+so grid snapping always lands cleanly.
+</p>
+
+</div>
+</body>
+</html>

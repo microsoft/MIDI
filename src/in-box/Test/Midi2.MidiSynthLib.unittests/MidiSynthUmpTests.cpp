@@ -1187,10 +1187,331 @@ void MidiSynthUmpTests::TestPropertyExchangeProgramListLinks()
         L"the channel it left goes back to the melodic programs");
 
     // The resource list has to declare that a resource id is required, or a client is entitled to
-    // ask for the program list without one.
+    // ask for the program list without one. Declaring pagination is what obliges every reply for
+    // the resource to carry a total count, so the two travel together.
     VERIFY_IS_TRUE(
-        contains(source.ResourceListJson(), "{\"resource\":\"ProgramList\",\"requireResId\":true}"),
-        L"ProgramList declares requireResId");
+        contains(source.ResourceListJson(),
+            "{\"resource\":\"ProgramList\",\"requireResId\":true,\"canPaginate\":true}"),
+        L"ProgramList declares requireResId and canPaginate");
+
+    // M2-103-UM section 14 is explicit that the reply to a ResourceList inquiry does not list
+    // ResourceList itself, and none of the examples in the specification do.
+    VERIFY_IS_FALSE(
+        contains(source.ResourceListJson(), "\"ResourceList\""),
+        L"the resource list does not list itself");
+}
+
+
+// A subscriber is told that the channel list moved with a "notify", not by having the list
+// pushed at it. M2-103-UM section 11.1.1 limits "full" to data that fits in a single chunk, and
+// section 7.1 requires the command to be the first Property of a subscription message.
+void MidiSynthUmpTests::TestChannelListSubscriptionNotification()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    SynthEngine engine;
+    UmpDispatcher dispatcher;
+    FreshEngine(*collection, engine, dispatcher, 0);
+
+    PropertyExchangeSource source;
+    source.Build(*collection, SynthIdentity{});
+
+    const std::string subscribeId = source.AddChannelListSubscription(0x0000001);
+
+    VERIFY_IS_FALSE(subscribeId.empty(), L"a subscription is accepted");
+    VERIFY_IS_LESS_THAN_OR_EQUAL(subscribeId.size(), (size_t)8, L"the identifier fits the eight character limit");
+
+    // The first pass only establishes a baseline, so nothing is owed to anybody yet.
+    VERIFY_IS_FALSE(source.ChannelListChanged(engine));
+    VERIFY_IS_FALSE(source.BeginNextSubscriptionNotification(), L"an unchanged list notifies nobody");
+
+    engine.ProgramChange(0, 19);
+
+    VERIFY_IS_TRUE(source.ChannelListChanged(engine), L"a program change moves the channel list");
+    VERIFY_IS_TRUE(source.BeginNextSubscriptionNotification(), L"the subscriber is owed a message");
+
+    CaptureOutput output;
+
+    // One message, so this reports that no more follow.
+    VERIFY_IS_FALSE(source.SendNextChunk(output, 0, 0x0000002), L"a notify is a single message");
+
+    const auto payload = DecodeSysEx7(output.Words);
+    const std::string text(payload.begin(), payload.end());
+
+    const std::string expected = "{\"command\":\"notify\",\"subscribeId\":\"" + subscribeId + "\"}";
+
+    // Sub-id 2 at byte 3 identifies the message. 0x38 is Subscription, and the header starts
+    // after the two muids, the request id and the two byte header length.
+    VERIFY_IS_GREATER_THAN(payload.size(), (size_t)16);
+    VERIFY_ARE_EQUAL((int)payload[3], 0x38, L"this is a subscription message");
+    VERIFY_ARE_EQUAL(text.substr(16, expected.size()), expected, L"the command comes first");
+
+    // Header, then two bytes each of chunk count, chunk number and data length, and nothing else.
+    VERIFY_ARE_EQUAL(payload.size(), 16 + expected.size() + 6, L"a notify carries no body");
+}
+
+
+// This is a General MIDI sound set, so the category a client reads has to be the instrument group
+// RP-003 Table 1 gives that program rather than something close to it.
+void MidiSynthUmpTests::TestPropertyExchangeProgramListCategories()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    PropertyExchangeSource source;
+    source.Build(*collection, SynthIdentity{});
+
+    static constexpr char const* expected[]
+    {
+        "Piano", "Chromatic Percussion", "Organ", "Guitar",
+        "Bass", "Strings", "Ensemble", "Brass",
+        "Reed", "Pipe", "Synth Lead", "Synth Pad",
+        "Synth Effects", "Ethnic", "Percussive", "Sound Effects",
+    };
+
+    const auto& melodicJson = source.ProgramListJson(MelodicProgramListResourceId);
+    const std::string melodic(melodicJson.data(), melodicJson.size());
+
+    const std::string opening{ "],\"category\":[\"" };
+
+    size_t examined = 0;
+    size_t wrong = 0;
+    bool groupSeen[16]{};
+
+    for (auto at = melodic.find("\"bankPC\":["); at != std::string::npos; at = melodic.find("\"bankPC\":[", at + 1))
+    {
+        const auto close = melodic.find(']', at);
+
+        VERIFY_ARE_NOT_EQUAL(close, std::string::npos, L"every entry has a complete bankPC");
+
+        const auto program = atoi(melodic.c_str() + melodic.rfind(',', close) + 1);
+
+        VERIFY_IS_LESS_THAN(program, 128);
+
+        examined++;
+        groupSeen[program / 8] = true;
+
+        if (melodic.compare(close, opening.size(), opening) != 0)
+        {
+            wrong++;
+            continue;
+        }
+
+        const auto nameStart = close + opening.size();
+        const auto nameEnd = melodic.find('"', nameStart);
+
+        // RP-003 puts every program in exactly one group, so a second name here would be invented.
+        if (nameEnd == std::string::npos ||
+            melodic[nameEnd + 1] != ']' ||
+            melodic.compare(nameStart, nameEnd - nameStart, expected[program / 8]) != 0)
+        {
+            wrong++;
+        }
+    }
+
+    size_t groups = 0;
+
+    for (const auto seen : groupSeen)
+    {
+        groups += seen ? 1 : 0;
+    }
+
+    VERIFY_IS_GREATER_THAN(examined, (size_t)127, L"every melodic program was examined");
+    VERIFY_ARE_EQUAL(wrong, (size_t)0, L"each program carries its own instrument group");
+    VERIFY_ARE_EQUAL(groups, (size_t)16, L"all sixteen instrument groups are represented");
+
+    // General MIDI names no group for a kit, but a client filtering on category must still find
+    // them, so every kit carries one of our own and none is left uncategorized.
+    const auto& drumsJson = source.ProgramListJson(DrumKitProgramListResourceId);
+    const std::string drums(drumsJson.data(), drumsJson.size());
+
+    const std::string kitCategory{ opening + "Drum Kit\"]" };
+
+    size_t kits = 0;
+    size_t categorized = 0;
+
+    for (auto at = drums.find("\"bankPC\":["); at != std::string::npos; at = drums.find("\"bankPC\":[", at + 1))
+    {
+        kits++;
+
+        const auto close = drums.find(']', at);
+
+        if (close != std::string::npos && drums.compare(close, kitCategory.size(), kitCategory) == 0)
+        {
+            categorized++;
+        }
+    }
+
+    VERIFY_IS_GREATER_THAN(kits, (size_t)0, L"the drum kit list is not empty");
+    VERIFY_ARE_EQUAL(categorized, kits, L"every drum kit is categorized");
+}
+
+
+// The ResourceList declares the program list paginated, and M2-103-UM section 8.6.2 then obliges
+// every reply for it to carry "totalCount" and to honor the offset and limit that were asked for.
+void MidiSynthUmpTests::TestPropertyExchangeProgramListPagination()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    const auto countEntries = [](const std::vector<char>& json)
+    {
+        const std::string text(json.data(), json.size());
+
+        size_t entries = 0;
+
+        for (auto at = text.find("\"bankPC\":["); at != std::string::npos; at = text.find("\"bankPC\":[", at + 1))
+        {
+            entries++;
+        }
+
+        return entries;
+    };
+
+    const auto total = CountPrograms(*collection, ProgramListKind::Melodic);
+
+    VERIFY_IS_GREATER_THAN(total, (size_t)127, L"the melodic list covers at least all of General MIDI");
+    VERIFY_ARE_EQUAL(countEntries(BuildProgramListJson(*collection, ProgramListKind::Melodic)), total,
+        L"the count reported matches the list that gets built");
+
+    const auto first = BuildProgramListPageJson(*collection, ProgramListKind::Melodic, 0, 5);
+    const auto second = BuildProgramListPageJson(*collection, ProgramListKind::Melodic, 5, 5);
+
+    VERIFY_ARE_EQUAL(countEntries(first), (size_t)5, L"a limit of five returns five entries");
+    VERIFY_ARE_EQUAL(countEntries(second), (size_t)5);
+    VERIFY_ARE_NOT_EQUAL(
+        std::string(first.data(), first.size()),
+        std::string(second.data(), second.size()),
+        L"the second page is not the first page again");
+
+    // Asking for more than is left is not an error, and neither is starting past the end: an
+    // initiator paging forward finds out it is done by getting fewer entries, then none.
+    VERIFY_ARE_EQUAL(countEntries(BuildProgramListPageJson(*collection, ProgramListKind::Melodic, total - 2, 10)),
+        (size_t)2, L"a page running off the end stops at the end");
+
+    const auto past = BuildProgramListPageJson(*collection, ProgramListKind::Melodic, total + 10, 5);
+
+    VERIFY_ARE_EQUAL(countEntries(past), (size_t)0);
+    VERIFY_ARE_EQUAL(std::string(past.data(), past.size()), std::string("[]"),
+        L"an offset past the end is an empty list, not an empty reply");
+
+    // And the reply that goes on the wire carries the total, whichever page was asked for.
+    PropertyExchangeSource source;
+    source.Build(*collection, SynthIdentity{});
+
+    char expected[64]{};
+    (void)snprintf(expected, sizeof(expected), "\"totalCount\":%zu", total);
+
+    for (const size_t limit : { (size_t)3, SIZE_MAX })
+    {
+        UmpDispatcher::PendingPropertyRequest request{};
+        request.InitiatorMuid = 0x0000001;
+        request.RequestId = 0x11;
+
+        source.BeginProgramListReply(*collection, request, MelodicProgramListResourceId, 0, limit);
+
+        CaptureOutput output;
+
+        // The return value says whether more chunks follow, so it is false for a page small
+        // enough to fit in one. What matters here is that a first chunk went out.
+        (void)source.SendNextChunk(output, 0, 0x0000002);
+
+        VERIFY_IS_GREATER_THAN(output.Words.size(), (size_t)0, L"the reply has a first chunk");
+
+        const auto payload = DecodeSysEx7(output.Words);
+        const std::string text(payload.begin(), payload.end());
+
+        VERIFY_ARE_NOT_EQUAL(text.find(expected), std::string::npos,
+            L"the reply header reports the whole list, not the page");
+    }
+}
+
+
+// The transport points the dispatcher at the engine before there is a sound set or an audio
+// device, so that MIDI-CI can be answered without waking the device up. Whatever arrives then has
+// to be safe, and has to leave the channel map truthful, or the ChannelList a client reads is a
+// lie about what the synthesizer will play.
+void MidiSynthUmpTests::TestChannelStateIsValidBeforeInitialize()
+{
+    // Deliberately NOT initialized: no sound set, no sample rate, no audio device.
+    SynthEngine engine;
+    UmpDispatcher dispatcher;
+
+    dispatcher.Initialize(&engine, 0, TestMuid);
+
+    VERIFY_IS_TRUE(engine.ChannelState(9).IsDrumChannel,
+        L"channel 10 is the drum channel from the moment the engine exists");
+    VERIFY_IS_FALSE(engine.ChannelState(0).IsDrumChannel, L"and channel 1 is not");
+
+    // Every one of these reaches ResolveInstrument, which had no sound set to resolve against.
+    uint32_t word = MakeMidi1Cv(0, 0xC, 0, 19, 0);
+    dispatcher.ProcessWords(&word, 1);
+
+    VERIFY_ARE_EQUAL(engine.ChannelState(0).Program, (uint8_t)19, L"a program change is remembered");
+
+    word = MakeMidi1Cv(0, 0xB, 0, 0, 8);
+    dispatcher.ProcessWords(&word, 1);
+
+    VERIFY_ARE_EQUAL(engine.ChannelState(0).BankMsb, (uint8_t)8, L"a bank select is remembered");
+
+    // GM1 System On, which is a full reset of every channel.
+    SendSysExPayload(dispatcher, { 0x7E, 0x7F, 0x09, 0x01 });
+
+    VERIFY_ARE_EQUAL(engine.ChannelState(0).Program, (uint8_t)0, L"a GM System On resets the channels");
+    VERIFY_IS_TRUE(engine.ChannelState(9).IsDrumChannel, L"and leaves channel 10 on drums");
+
+    engine.SetDrumChannel(5, true);
+    VERIFY_IS_TRUE(engine.ChannelState(5).IsDrumChannel, L"the rhythm part can still be moved");
+
+    // Nothing can resolve with no sound set, and that has to be a null pointer rather than a
+    // crash or a stale one.
+    VERIFY_IS_NULL(engine.ChannelState(0).Instrument, L"no instrument resolves without a sound set");
+}
+
+
+// A program change commonly arrives before the first note, and the note is what opens the audio
+// device. Initializing the engine at that point must not throw the choice away and leave the
+// note playing on the wrong sound.
+void MidiSynthUmpTests::TestInitializeKeepsChannelState()
+{
+    const auto* const collection = RequireSoundSet();
+
+    if (collection == nullptr)
+    {
+        return;
+    }
+
+    SynthEngine engine;
+    UmpDispatcher dispatcher;
+
+    dispatcher.Initialize(&engine, 0, TestMuid);
+
+    uint32_t word = MakeMidi1Cv(0, 0xC, 0, 19, 0);
+    dispatcher.ProcessWords(&word, 1);
+
+    engine.SetDrumChannel(5, true);
+
+    VERIFY_IS_TRUE(engine.Initialize(collection, TestConfig()));
+
+    VERIFY_ARE_EQUAL(engine.ChannelState(0).Program, (uint8_t)19,
+        L"the program chosen before there was audio survives");
+    VERIFY_IS_TRUE(engine.ChannelState(5).IsDrumChannel,
+        L"so does a rhythm part the content moved");
+    VERIFY_IS_NOT_NULL(engine.ChannelState(0).Instrument,
+        L"and the instrument resolves once the sound set is there");
 }
 
 

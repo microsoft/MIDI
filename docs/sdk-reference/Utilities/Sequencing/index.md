@@ -5,7 +5,7 @@ namespace: Windows.Devices.Midi2.Utilities.Sequencing
 description: Music on a timeline, and a player which sends it to your MIDI endpoints
 ---
 
-This namespace holds a sequence of music on a timeline, and a player which sends it out. It is deliberately not tied to any file format: a Standard MIDI File read through [`MidiStandardFileReader`]({{ site.baseurl }}/sdk-reference/Utilities/Files/MidiStandardFileReader/) produces a [`MidiSequence`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequence/), and so does an application building one itself.
+This namespace holds a sequence of music on a timeline, and a player which sends it out. It is deliberately not tied to any file format: a Standard MIDI File read through [`MidiStandardFileReader`]({{ site.baseurl }}/sdk-reference/Utilities/Files/MidiStandardFileReader/) produces a [`MidiSequence`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequence/), and so does an application building one itself with [`MidiSequenceBuilder`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequenceBuilder/).
 
 [`MidiSequencePlayer`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequencePlayer/) hands its messages to the service with a timestamp on each and lets the service release them, rather than waking up to send each one itself. That is what keeps playback steady under load, and it is why a sequence has to be prepared before playback starts.
 
