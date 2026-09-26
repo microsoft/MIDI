@@ -313,6 +313,16 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
         m_responseTimeoutMilliseconds = value == 0 ? 1 : value;
     }
 
+    _Use_decl_annotations_
+    void MidiCapabilityInquirySession::ReceivableMaximumSystemExclusiveSize(uint32_t const value) noexcept
+    {
+        // Anything that implements profiles or property exchange has to accept at least the
+        // minimum, so a smaller declaration would be claiming it cannot do what it does.
+        auto const minimum = MidiCapabilityInquiryMessageBuilder::MinimumReceivableSystemExclusiveSize();
+
+        m_receivableMaximumSystemExclusiveSize = value < minimum ? minimum : value;
+    }
+
     midi2enum::MidiDeclaredDeviceIdentity MidiCapabilityInquirySession::Identity() const noexcept
     {
         std::lock_guard<std::mutex> guard(m_lock);
@@ -1221,9 +1231,8 @@ namespace winrt::Windows::Devices::Midi2::CapabilityInquiry::implementation
                 Group(),
                 m_sourceMuid,
                 Identity(),
-                ci::MidiCapabilityInquiryCategories::PropertyExchange |
-                    ci::MidiCapabilityInquiryCategories::ProfileConfiguration,
-                MidiCapabilityInquiryMessageBuilder::MinimumReceivableSystemExclusiveSize(),
+                m_supportedCategories.load(),
+                m_receivableMaximumSystemExclusiveSize.load(),
                 0));
 
             // There is no way to know how many devices are out there, so this waits the whole

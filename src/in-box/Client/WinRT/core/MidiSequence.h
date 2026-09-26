@@ -24,6 +24,7 @@ namespace winrt::Windows::Devices::Midi2::Utilities::Sequencing::implementation
 
         uint16_t TicksPerQuarterNote() const noexcept;
         bool UsesSmpteTiming() const noexcept;
+        Sequencing::MidiSequenceTimingMode TimingMode() const noexcept;
 
         uint64_t DurationMicroseconds() const noexcept;
         uint32_t LastTick() const noexcept;

@@ -12,6 +12,7 @@
 #include "AppSettings.h"
 #include "Arpeggiator.h"
 #include "KeyboardLayout.h"
+#include "MidiCiPresence.h"
 #include "MidiCiProgramList.h"
 #include "MidiOutput.h"
 
@@ -75,10 +76,14 @@ namespace winrt::midikeyboard::implementation
         void OnSendPatchOnStartupChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnSendPatchClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnProgramListSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnProgramViewChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnProgramCategoryChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
+        void OnCategoryProgramSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
         void OnArpModeChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnArpRateChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnArpBpmChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
+        void OnLatchToggled(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         void OnConnectionModeChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnEndpointSelectionChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
@@ -90,6 +95,7 @@ namespace winrt::midikeyboard::implementation
         void OnMinimumKeyWidthChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnTransposeChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnShowNoteNamesChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnRetryProgramListChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnShowComputerKeysChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnComputerKeyboardLayoutChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
 
@@ -157,6 +163,25 @@ namespace winrt::midikeyboard::implementation
         // moves the combo to whichever program matches the current bank and program numbers
         void SyncProgramListSelection() noexcept;
 
+        // hides both ways of showing the list, for while there is nothing to show
+        void HideProgramLists() noexcept;
+
+        // Starts or stops asking again for a program list. Only runs while nothing has answered
+        // at all, so a device that replied and simply has no programs is never asked twice.
+        void UpdateProgramListRetry() noexcept;
+
+        // fills whichever of the two views is showing and hides the other
+        void RefreshProgramViews() noexcept;
+
+        // fills the right hand list with the programs in one category
+        void FillCategoryPrograms(_In_ int32_t categoryIndex) noexcept;
+
+        // takes the patch from one entry of m_programList and sends it
+        void SelectProgram(_In_ size_t index) noexcept;
+
+        // index into m_programList of the current bank and program, or -1
+        int32_t CurrentProgramIndex() const noexcept;
+
         // once per app run, after the first connection to the saved endpoint succeeds
         void SendStartupPatchIfRequested() noexcept;
         void UpdateRibbonLayout() noexcept;
@@ -183,6 +208,18 @@ namespace winrt::midikeyboard::implementation
         void BeginNote(int32_t noteNumber, uint16_t velocity) noexcept;
         void EndNote(int32_t noteNumber) noexcept;
         void EndAllNotes() noexcept;
+
+        // A note sounds while an input is holding it down or the latch is keeping it on.
+        bool IsNoteSounding(int32_t noteNumber) const noexcept;
+        bool AnyNoteSounding() const noexcept;
+
+        // Stops the notes the latch is holding. One still under a finger keeps sounding until
+        // that finger lets go.
+        void ReleaseLatchedNotes() noexcept;
+
+        // Channel pressure and the mod wheel belong to the whole channel, so they go back to
+        // zero once nothing at all is sounding.
+        void ReleaseChannelExpressionIfIdle() noexcept;
 
         void SendNoteOnNow(int32_t noteNumber, uint16_t velocity) noexcept;
         void SendNoteOffNow(int32_t noteNumber) noexcept;
@@ -243,6 +280,9 @@ namespace winrt::midikeyboard::implementation
         // how many separate inputs are holding each note down
         std::array<int32_t, 128> m_noteHoldCount{};
 
+        // notes the latch is keeping on after the key that started them was released
+        std::array<bool, 128> m_latchedNotes{};
+
         std::unordered_map<uint32_t, ActivePointer> m_activePointers{};
         std::unordered_map<uint32_t, int32_t> m_computerKeyNotes{};
 
@@ -302,9 +342,19 @@ namespace winrt::midikeyboard::implementation
         bool m_startupPatchSendPending{ true };
 
         std::shared_ptr<::midikeyboard::MidiCiProgramListQuery> m_programListQuery{};
+
+        // One session for as long as a connection lasts, so the identifier this app is known by
+        // on the wire does not change every time it asks a question.
+        ::midikeyboard::MidiCiPresence m_ciPresence{};
         std::vector<::midikeyboard::ProgramListEntry> m_programList{};
+        std::vector<::midikeyboard::ProgramCategoryGroup> m_programCategories{};
         ::midikeyboard::ProgramListResult m_programListResult{ ::midikeyboard::ProgramListResult::NoResponse };
         bool m_programListQueryRan{ false };
+
+        // Runs only while nothing has answered a capability inquiry, and stops the moment
+        // something does. MIDI-CI is rare enough today that this is a setting.
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_programListRetryTimer{ nullptr };
+        static constexpr int32_t ProgramListRetrySeconds = 8;
 
         bool m_startupOptionsApplied{ false };
         bool m_reconnectInProgress{ false };

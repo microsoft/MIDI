@@ -17,6 +17,7 @@ namespace midisettings
         BluetoothSetup,
         NetworkSetup,
         Patchbay,
+        Glass,
         SysEx,
         ScratchPad,
         Keyboard,

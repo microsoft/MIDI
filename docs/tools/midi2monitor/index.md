@@ -98,7 +98,13 @@ The pin button next to the window's minimize button keeps MIDI Monitor above you
 
 ## Saving a capture
 
-**Save to File** writes everything currently in the list to a plain text file, including any comments you added. It's a good way to keep a record of what an instrument sent, or to send the details to someone who's helping you troubleshoot.
+**Save to File** writes everything currently in the list, including any comments you added and the messages the display filters hid. Pick one of three kinds of file in the save box:
+
+**Text file (.txt)** is for reading, and for sending to somebody who is helping you troubleshoot. It has one line per message with the same columns the window shows, separated by tabs.
+
+**Comma separated values (.csv)** is for a script or a spreadsheet. It has a heading row, the raw Universal MIDI Packet words in hex, and the times as plain numbers of microseconds, so you can chart the gap between messages or search for a particular word. The column names are always in English, whatever language Windows is set to, so a script that reads the file keeps working on any machine.
+
+**Standard MIDI File (.mid)** is for a sequencer. The capture becomes a playable file at 120 beats per minute, with one track per group, so you can drop it into a DAW and hear it back. Standard MIDI Files are a MIDI 1.0 format, so MIDI 2.0 messages are converted where MIDI 1.0 has an equivalent and left out where it does not. If you want to study the exact timing, save the comma separated file instead: it carries the real microsecond figures, and a MIDI file rounds them to its own musical grid.
 
 ## Settings
 

@@ -147,6 +147,10 @@ namespace MidiSynth
     class SynthEngine
     {
     public:
+        // The channel map is at General MIDI power-up defaults from here, because the transport
+        // answers MIDI-CI out of the engine long before any audio device is opened.
+        SynthEngine() noexcept;
+
         // The collection must outlive the engine.
         bool Initialize(_In_ const DlsCollection* collection, _In_ const SynthConfig& config);
 
@@ -290,6 +294,10 @@ namespace MidiSynth
         }
 
     private:
+        // Puts every channel back to its power-up default. Separate from SystemReset because the
+        // constructor needs it before there are any voices to clear.
+        void ResetChannels() noexcept;
+
         // Translates an incoming bank select into the addressing this sound set actually uses.
         void ResolveBankAddressing(
             _In_ SynthChannelState const& state,

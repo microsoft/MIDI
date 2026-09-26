@@ -1,0 +1,51 @@
+// Copyright (c) Microsoft Corporation and Contributors.
+// Licensed under the MIT License
+// ============================================================================
+// This is part of Windows MIDI Services
+// Further information: https://aka.ms/midi
+// ============================================================================
+
+namespace midiglass
+{
+    // What a control is, in automation terms. A knob and a fader are both sliders to a screen
+    // reader; a pad is a button; a toggle is a toggle. Kept as a small number rather than a
+    // string so the surface can set it once when the page is built.
+    enum SurfaceControlRole
+    {
+        Slider = 0,
+        Button = 1,
+        Toggle = 2,
+        Text = 3,
+    };
+
+    // One XAML element per control, with no template and nothing to lay out.
+    //
+    // It exists for the four things XAML is good at - a place in the tree, hit testing, focus and
+    // an automation peer - and its pixels come from a composition visual the renderer attaches to
+    // it. Measured in the phase 0 spike: the element costs nothing per frame, because changing a
+    // value touches the composition visual and invalidates no layout, and it is the difference
+    // between a screen reader finding two hundred named sliders and finding nothing at all.
+    [default_interface]
+    runtimeclass GlassControl : Microsoft.UI.Xaml.Controls.Control
+    {
+        GlassControl();
+
+        // 0 to 1 of the control's travel. Setting it through automation moves the control and
+        // sends, so assistive technology drives the same path a finger does.
+        Double SurfaceValue;
+
+        String SurfaceName;
+
+        SurfaceControlRole SurfaceRole;
+    };
+
+    [default_interface]
+    runtimeclass SurfaceAutomationPeer :
+        Microsoft.UI.Xaml.Automation.Peers.FrameworkElementAutomationPeer,
+        Microsoft.UI.Xaml.Automation.Provider.IRangeValueProvider,
+        Microsoft.UI.Xaml.Automation.Provider.IToggleProvider,
+        Microsoft.UI.Xaml.Automation.Provider.IInvokeProvider
+    {
+        SurfaceAutomationPeer(GlassControl owner);
+    };
+}

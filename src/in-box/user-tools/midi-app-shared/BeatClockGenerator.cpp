@@ -62,6 +62,13 @@ namespace midiapp
         m_connection(connection),
         m_options(std::move(options))
     {
+        m_options.ClockRatioNumerator = std::clamp(m_options.ClockRatioNumerator, 1, MaximumClockRatioPart);
+        m_options.ClockRatioDenominator = std::clamp(m_options.ClockRatioDenominator, 1, MaximumClockRatioPart);
+        m_options.SwingPercent = std::clamp(m_options.SwingPercent, MinimumSwingPercent, MaximumSwingPercent);
+        m_options.SwingSubdivision = std::clamp(m_options.SwingSubdivision, 1, 16);
+        m_options.OffsetMilliseconds =
+            std::clamp(m_options.OffsetMilliseconds, -MaximumOffsetMilliseconds, MaximumOffsetMilliseconds);
+
         m_clockWords = BuildSystemMessageWords(m_options.GroupIndexes, StatusTimingClock);
         m_startWords = BuildSystemMessageWords(m_options.GroupIndexes, StatusStart);
         m_stopWords = BuildSystemMessageWords(m_options.GroupIndexes, StatusStop);
@@ -84,13 +91,71 @@ namespace midiapp
 
         auto const ticksPerMinute = static_cast<double>(clockmidi::MidiClock::TimestampFrequency()) * 60.0;
 
-        return ticksPerMinute / clamped / static_cast<double>(pulsesPerQuarterNote);
+        auto const base = ticksPerMinute / clamped / static_cast<double>(pulsesPerQuarterNote);
+
+        // A higher ratio means more pulses in the same time, so the gap between them shrinks.
+        return base * static_cast<double>(m_options.ClockRatioDenominator)
+            / static_cast<double>(m_options.ClockRatioNumerator);
+    }
+
+    BeatClockGenerator::SwingShape BeatClockGenerator::BuildSwingShape() const noexcept
+    {
+        SwingShape shape{};
+
+        auto const pulsesPerHalf =
+            static_cast<double>(std::max(1, m_options.PulsesPerQuarterNote)) /
+            static_cast<double>(std::max(1, m_options.SwingSubdivision));
+
+        // Below a pulse there is nothing left to move, and at fifty percent the two halves are
+        // already equal, so both cases leave the timeline exactly as it was.
+        if (pulsesPerHalf < 1.0 || m_options.SwingPercent <= MinimumSwingPercent)
+        {
+            return shape;
+        }
+
+        auto const ratio = std::clamp(m_options.SwingPercent, MinimumSwingPercent, MaximumSwingPercent) / 100.0;
+
+        shape.PulsesPerHalf = pulsesPerHalf;
+        shape.FirstScale = ratio * 2.0;
+        shape.SecondScale = (1.0 - ratio) * 2.0;
+
+        return shape;
+    }
+
+    _Use_decl_annotations_
+    double BeatClockGenerator::SwingPosition(uint64_t pulseIndex, SwingShape const& shape) noexcept
+    {
+        if (shape.PulsesPerHalf <= 0.0)
+        {
+            return static_cast<double>(pulseIndex);
+        }
+
+        auto const pair = shape.PulsesPerHalf * 2.0;
+        auto const index = static_cast<double>(pulseIndex);
+
+        auto const pairIndex = std::floor(index / pair);
+        auto const withinPair = index - (pairIndex * pair);
+
+        auto const warped = withinPair <= shape.PulsesPerHalf
+            ? withinPair * shape.FirstScale
+            : (shape.PulsesPerHalf * shape.FirstScale) + ((withinPair - shape.PulsesPerHalf) * shape.SecondScale);
+
+        return (pairIndex * pair) + warped;
     }
 
     uint64_t BeatClockGenerator::SuggestedStartLeadTicks() noexcept
     {
         return static_cast<uint64_t>(
             clockmidi::MidiClock::TimestampFrequency() * StartLeadMilliseconds / 1000);
+    }
+
+    _Use_decl_annotations_
+    uint64_t BeatClockGenerator::OffsetMillisecondsToTicks(double milliseconds) noexcept
+    {
+        auto const clamped = std::clamp(std::abs(milliseconds), 0.0, MaximumOffsetMilliseconds);
+
+        return static_cast<uint64_t>(
+            llround(static_cast<double>(clockmidi::MidiClock::TimestampFrequency()) * clamped / 1000.0));
     }
 
     uint64_t BeatClockGenerator::TicksPerPulse() const noexcept
@@ -107,6 +172,14 @@ namespace midiapp
         return m_requestedBeatsPerMinute;
     }
 
+    double BeatClockGenerator::EffectiveBeatsPerMinute() const noexcept
+    {
+        std::lock_guard<std::mutex> const guard{ m_mutex };
+
+        return m_requestedBeatsPerMinute * static_cast<double>(m_options.ClockRatioNumerator)
+            / static_cast<double>(m_options.ClockRatioDenominator);
+    }
+
     _Use_decl_annotations_
     void BeatClockGenerator::BeatsPerMinute(double value) noexcept
     {
@@ -114,6 +187,7 @@ namespace midiapp
             std::lock_guard<std::mutex> const guard{ m_mutex };
 
             m_requestedBeatsPerMinute = std::clamp(value, MinimumBeatsPerMinute, MaximumBeatsPerMinute);
+            m_timingGeneration++;
 
             if (!m_running.load())
             {
@@ -123,6 +197,54 @@ namespace midiapp
         }
 
         m_wakeup.notify_all();
+    }
+
+    _Use_decl_annotations_
+    void BeatClockGenerator::ClockRatio(int numerator, int denominator) noexcept
+    {
+        {
+            std::lock_guard<std::mutex> const guard{ m_mutex };
+
+            m_options.ClockRatioNumerator = std::clamp(numerator, 1, MaximumClockRatioPart);
+            m_options.ClockRatioDenominator = std::clamp(denominator, 1, MaximumClockRatioPart);
+            m_timingGeneration++;
+
+            if (!m_running.load())
+            {
+                m_ticksPerPulse = TicksPerPulseForTempo(m_requestedBeatsPerMinute);
+            }
+        }
+
+        m_wakeup.notify_all();
+    }
+
+    _Use_decl_annotations_
+    void BeatClockGenerator::GetClockRatio(int& numerator, int& denominator) const noexcept
+    {
+        std::lock_guard<std::mutex> const guard{ m_mutex };
+
+        numerator = m_options.ClockRatioNumerator;
+        denominator = m_options.ClockRatioDenominator;
+    }
+
+    _Use_decl_annotations_
+    void BeatClockGenerator::SwingPercent(double value) noexcept
+    {
+        {
+            std::lock_guard<std::mutex> const guard{ m_mutex };
+
+            m_options.SwingPercent = std::clamp(value, MinimumSwingPercent, MaximumSwingPercent);
+            m_timingGeneration++;
+        }
+
+        m_wakeup.notify_all();
+    }
+
+    double BeatClockGenerator::SwingPercent() const noexcept
+    {
+        std::lock_guard<std::mutex> const guard{ m_mutex };
+
+        return m_options.SwingPercent;
     }
 
     _Use_decl_annotations_
@@ -202,14 +324,34 @@ namespace midiapp
         // cannot accumulate into audible drift over a long session.
         uint64_t originTimestamp{ 0 };
         double ticksPerPulse{ 0.0 };
-        double tempoInEffect{ 0.0 };
+        uint64_t timingGeneration{ 0 };
+        SwingShape swingShape{};
+        double offsetMilliseconds{ 0.0 };
 
         {
             std::lock_guard<std::mutex> const guard{ m_mutex };
 
             originTimestamp = m_startOriginTimestamp != 0 ? m_startOriginTimestamp : clockmidi::MidiClock::Now();
             ticksPerPulse = m_ticksPerPulse;
-            tempoInEffect = m_requestedBeatsPerMinute;
+            timingGeneration = m_timingGeneration;
+            swingShape = BuildSwingShape();
+            offsetMilliseconds = m_options.OffsetMilliseconds;
+        }
+
+        // The per-output offset shifts the whole stream against the shared origin, which is what
+        // lets one device that answers late line up with the rest.
+        if (offsetMilliseconds != 0.0)
+        {
+            auto const offsetTicks = OffsetMillisecondsToTicks(offsetMilliseconds);
+
+            if (offsetMilliseconds > 0.0)
+            {
+                originTimestamp += offsetTicks;
+            }
+            else
+            {
+                originTimestamp = originTimestamp > offsetTicks ? originTimestamp - offsetTicks : 0;
+            }
         }
 
         if (m_options.SendStartMessage && !m_startWords.empty())
@@ -218,11 +360,18 @@ namespace midiapp
             SendToAllGroups(originTimestamp - 1, m_startWords.data());
         }
 
+        // Counts every pulse since the clock started, so the swing phase is continuous even
+        // after a tempo change re-bases the origin.
         uint64_t pulseIndex{ 0 };
+        uint64_t originPulseIndex{ 0 };
+        double originPosition{ 0.0 };
 
-        auto timestampForPulse = [&originTimestamp, &ticksPerPulse](uint64_t index)
+        auto timestampForPulse =
+            [&originTimestamp, &originPosition, &ticksPerPulse, &swingShape](uint64_t index)
             {
-                return originTimestamp + static_cast<uint64_t>(llround(index * ticksPerPulse));
+                auto const delta = (SwingPosition(index, swingShape) - originPosition) * ticksPerPulse;
+
+                return delta <= 0.0 ? originTimestamp : originTimestamp + static_cast<uint64_t>(llround(delta));
             };
 
         for (;;)
@@ -235,16 +384,19 @@ namespace midiapp
                     break;
                 }
 
-                if (m_requestedBeatsPerMinute != tempoInEffect)
+                if (m_timingGeneration != timingGeneration)
                 {
                     // Re-base on the first pulse that has not been scheduled, so that pulse
                     // still plays when it was promised and the new spacing runs on from there.
+                    // The pulse index is not reset, so the swing keeps its place in the bar.
                     originTimestamp = timestampForPulse(pulseIndex);
-                    pulseIndex = 0;
+                    originPulseIndex = pulseIndex;
 
-                    tempoInEffect = m_requestedBeatsPerMinute;
-                    m_ticksPerPulse = TicksPerPulseForTempo(tempoInEffect);
+                    timingGeneration = m_timingGeneration;
+                    m_ticksPerPulse = TicksPerPulseForTempo(m_requestedBeatsPerMinute);
                     ticksPerPulse = m_ticksPerPulse;
+                    swingShape = BuildSwingShape();
+                    originPosition = SwingPosition(originPulseIndex, swingShape);
                 }
             }
 
@@ -278,7 +430,7 @@ namespace midiapp
 
             m_wakeup.wait_for(guard,
                 std::chrono::milliseconds(std::max<int64_t>(1, sleepMilliseconds)),
-                [this, tempoInEffect] { return m_stopRequested || m_requestedBeatsPerMinute != tempoInEffect; });
+                [this, timingGeneration] { return m_stopRequested || m_timingGeneration != timingGeneration; });
         }
 
         if (m_options.SendStopMessage && !m_stopWords.empty())

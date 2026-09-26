@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - library</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    .libgrid { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+    .libcard .thumb { height: 128px; }
+    .libbody { flex: 1; padding: 14px 24px 0 24px; overflow: hidden; }
+    .footer {
+        height: 30px; flex: 0 0 30px; border-top: 1px solid var(--divider);
+        display: flex; align-items: center; gap: 10px; padding: 0 16px;
+        font-size: 11px; color: var(--text3);
+    }
+    /* tiny maps of a layout, drawn at thumbnail scale */
+    .mini { position: absolute; inset: 0; }
+    .mini i { position: absolute; border-radius: 2px; }
+    .mini .fd { width: 5px; border-radius: 2px; }
+    .mini .kb { border-radius: 50%; }
+    .pin {
+        position: absolute; width: 17px; height: 17px; border-radius: 9px;
+        background: var(--accent-deep); color: #00131C;
+        font-size: 10px; font-weight: 700;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,.6); z-index: 45;
+    }
+    .annot {
+        position: absolute; display: flex; align-items: flex-start; gap: 7px;
+        font-size: 11px; color: var(--text3); line-height: 1.45; max-width: 300px;
+    }
+    .annot .pin { position: relative; flex: 0 0 17px; margin-top: 1px; }
+</style>
+</head>
+<body>
+<div class="page">
+<p class="caption-above">Screen 1 &mdash; the Library. This is what opens when the app starts. A customer never has to see a file path: every layout they have ever made is a card with a live thumbnail, and Run is the primary action.</p>
+
+<div class="window">
+
+    <div class="titlebar">
+        <div class="appmark"></div>
+        <div class="title">Windows MIDI Glass</div>
+        <div class="preview-chiclet">PREVIEW</div>
+        <div class="spacer"></div>
+        <div class="caption-btn gl">&#xE713;</div>
+        <div class="caption-btn gl">&#xE840;</div>
+        <div class="sys-btns"><div class="gl">&#xE921;</div><div class="gl">&#xE922;</div><div class="gl">&#xE8BB;</div></div>
+    </div>
+
+    <div class="toolbar">
+        <div class="btn accent"><span class="gl">&#xE710;</span>New layout</div>
+        <div class="field" style="width:250px"><span class="gl">&#xE721;</span><span class="ph">Search layouts</span></div>
+        <div class="sep"></div>
+        <div class="field combo flat" style="width:150px">Sorted by last used</div>
+        <div class="seg"><div class="sel gl" style="font-size:13px">&#xE80A;</div><div class="gl" style="font-size:13px">&#xE8FD;</div></div>
+        <div class="spacer"></div>
+        <div class="btn subtle"><span class="gl">&#xE8B7;</span>Open a file&hellip;</div>
+    </div>
+
+    <div class="libbody">
+
+        <div class="sectionhead">
+            <span class="gl" style="color:var(--caution); font-size:13px">&#xE735;</span>
+            <h2>Favorites</h2>
+            <span class="count">3</span>
+            <div class="spacer"></div>
+        </div>
+
+        <div class="libgrid" style="grid-template-columns:repeat(4,1fr); margin-bottom:18px;">
+
+            <!-- ============================================== card 1, hovered -->
+            <div class="libcard sel">
+                <div class="thumb surf">
+                    <div class="mini">
+                        <i class="fd" style="left:16px;  top:22px; height:58px; background:rgba(91,232,181,.85)"></i>
+                        <i class="fd" style="left:30px;  top:22px; height:58px; background:rgba(91,232,181,.85)"></i>
+                        <i class="fd" style="left:44px;  top:22px; height:58px; background:rgba(91,232,181,.85)"></i>
+                        <i class="fd" style="left:58px;  top:22px; height:58px; background:rgba(91,232,181,.85)"></i>
+                        <i class="fd" style="left:72px;  top:22px; height:58px; background:rgba(91,232,181,.85)"></i>
+                        <i class="fd" style="left:86px;  top:22px; height:58px; background:rgba(91,232,181,.85)"></i>
+                        <i class="kb" style="left:112px; top:24px; width:16px; height:16px; background:rgba(76,224,255,.7)"></i>
+                        <i class="kb" style="left:134px; top:24px; width:16px; height:16px; background:rgba(76,224,255,.7)"></i>
+                        <i class="kb" style="left:156px; top:24px; width:16px; height:16px; background:rgba(76,224,255,.7)"></i>
+                        <i class="kb" style="left:112px; top:48px; width:16px; height:16px; background:rgba(155,140,255,.7)"></i>
+                        <i class="kb" style="left:134px; top:48px; width:16px; height:16px; background:rgba(155,140,255,.7)"></i>
+                        <i class="kb" style="left:156px; top:48px; width:16px; height:16px; background:rgba(155,140,255,.7)"></i>
+                        <i style="left:112px; top:70px; width:60px; height:10px; background:rgba(255,194,71,.55)"></i>
+                        <i style="left:184px; top:22px; width:28px; height:58px; background:rgba(255,107,214,.35)"></i>
+                        <i style="left:16px; top:90px; width:196px; height:12px; background:rgba(255,255,255,.07)"></i>
+                        <i style="left:16px; top:10px; width:40px; height:5px; background:rgba(255,255,255,.22)"></i>
+                    </div>
+                    <div class="star gl">&#xE735;</div>
+                    <div class="pin" style="left:8px; top:8px;">1</div>
+                    <div class="hoverbar">
+                        <div class="btn accent small"><span class="gl">&#xE768;</span>Run</div>
+                        <div class="btn small"><span class="gl">&#xE70F;</span>Edit</div>
+                        <div class="spacer" style="flex:1"></div>
+                        <div class="btn small icon gl">&#xE712;</div>
+                    </div>
+                </div>
+                <div class="meta">
+                    <div class="lname">Live Rig</div>
+                    <div class="ldesc">Main show surface. 6 channel mixer, clip pads and the FX layer for the Push.</div>
+                    <div class="lfoot">
+                        <span class="chip on"><span class="gl">&#xE73E;</span>3 devices ready</span>
+                        <span class="count" style="margin-left:auto; font-size:10.5px; color:var(--text3)">2 hours ago</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================ card 2, DJ deck -->
+            <div class="libcard">
+                <div class="thumb surf">
+                    <div class="mini">
+                        <i class="kb" style="left:20px; top:30px; width:44px; height:44px; background:rgba(91,232,181,.45)"></i>
+                        <i class="kb" style="left:146px; top:30px; width:44px; height:44px; background:rgba(76,224,255,.45)"></i>
+                        <i class="fd" style="left:80px;  top:24px; height:56px; background:rgba(255,194,71,.8)"></i>
+                        <i class="fd" style="left:92px;  top:24px; height:56px; background:rgba(255,194,71,.8)"></i>
+                        <i class="fd" style="left:116px; top:24px; height:56px; background:rgba(255,194,71,.8)"></i>
+                        <i class="fd" style="left:128px; top:24px; height:56px; background:rgba(255,194,71,.8)"></i>
+                        <i style="left:66px; top:88px; width:76px; height:9px; background:rgba(255,107,214,.8)"></i>
+                        <i style="left:20px; top:88px; width:36px; height:9px; background:rgba(255,255,255,.10)"></i>
+                        <i style="left:152px; top:88px; width:36px; height:9px; background:rgba(255,255,255,.10)"></i>
+                    </div>
+                    <div class="star gl">&#xE735;</div>
+                    <div class="pin" style="left:8px; top:8px; background:var(--caution); color:#241F00">3</div>
+                </div>
+                <div class="meta">
+                    <div class="lname">Club Deck</div>
+                    <div class="ldesc">Two decks, crossfader and kill switches. Built for the tablet.</div>
+                    <div class="lfoot">
+                        <span class="chip on"><span class="gl">&#xE73E;</span>1 device ready</span>
+                        <span class="count" style="margin-left:auto; font-size:10.5px; color:var(--text3)">Sunday</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================ card 3, device gone -->
+            <div class="libcard">
+                <div class="thumb surf">
+                    <div class="mini">
+                        <i class="kb" style="left:22px; top:18px; width:34px; height:34px; background:rgba(76,224,255,.6)"></i>
+                        <i class="kb" style="left:66px; top:18px; width:34px; height:34px; background:rgba(76,224,255,.6)"></i>
+                        <i class="kb" style="left:110px; top:18px; width:34px; height:34px; background:rgba(255,194,71,.6)"></i>
+                        <i class="kb" style="left:154px; top:18px; width:34px; height:34px; background:rgba(255,194,71,.6)"></i>
+                        <i style="left:22px; top:62px; width:80px; height:40px; background:rgba(155,140,255,.30)"></i>
+                        <i style="left:110px; top:62px; width:78px; height:16px; background:rgba(255,107,107,.5)"></i>
+                        <i style="left:110px; top:84px; width:78px; height:18px; background:rgba(255,255,255,.08)"></i>
+                    </div>
+                    <div class="star gl">&#xE735;</div>
+                    <div class="pin" style="left:8px; bottom:8px;">2</div>
+                </div>
+                <div class="meta">
+                    <div class="lname">Iridium Panel</div>
+                    <div class="ldesc">Hands-on filter, envelope and arp page for the Waldorf.</div>
+                    <div class="lfoot">
+                        <span class="chip warn"><span class="gl">&#xE7BA;</span>1 device missing</span>
+                        <span class="count" style="margin-left:auto; font-size:10.5px; color:var(--text3)">Yesterday</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================================================== new layout tile -->
+            <div class="libcard" style="background:transparent; box-shadow:inset 0 0 0 1px var(--stroke-strong); border-style:dashed;">
+                <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:9px;">
+                    <div class="gl" style="font-size:24px; color:var(--accent)">&#xE710;</div>
+                    <div style="font-size:12.5px; font-weight:600">New layout</div>
+                    <div style="font-size:10.5px; color:var(--text3); text-align:center; padding:0 18px; line-height:1.4">
+                        Start blank, or from a mixer, DJ deck, drum pad or transport template
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="sectionhead">
+            <span class="gl" style="color:var(--text3); font-size:13px">&#xE823;</span>
+            <h2>Recent</h2>
+            <span class="count">5</span>
+            <div class="spacer"></div>
+            <div class="btn subtle small">See all 12</div>
+        </div>
+
+        <div class="libgrid" style="grid-template-columns:repeat(4,1fr);">
+            <div class="libcard">
+                <div class="thumb surf">
+                    <div class="mini">
+                        <i style="left:18px; top:16px; width:72px; height:26px; background:rgba(76,224,255,.45)"></i>
+                        <i style="left:98px; top:16px; width:36px; height:26px; background:rgba(91,232,181,.45)"></i>
+                        <i style="left:142px; top:16px; width:46px; height:26px; background:rgba(255,194,71,.45)"></i>
+                        <i style="left:18px; top:50px; width:170px; height:14px; background:rgba(255,255,255,.08)"></i>
+                        <i class="fd" style="left:18px; top:72px; height:30px; background:rgba(155,140,255,.7)"></i>
+                        <i class="fd" style="left:32px; top:72px; height:30px; background:rgba(155,140,255,.7)"></i>
+                        <i class="fd" style="left:46px; top:72px; height:30px; background:rgba(155,140,255,.7)"></i>
+                        <i class="fd" style="left:60px; top:72px; height:30px; background:rgba(155,140,255,.7)"></i>
+                    </div>
+                </div>
+                <div class="meta">
+                    <div class="lname">Organ Drawbars</div>
+                    <div class="ldesc">Nine drawbars, Leslie speed and percussion.</div>
+                    <div class="lfoot"><span class="chip on"><span class="gl">&#xE73E;</span>Ready</span>
+                        <span style="margin-left:auto; font-size:10.5px; color:var(--text3)">Sep 18</span></div>
+                </div>
+            </div>
+
+            <div class="libcard">
+                <div class="thumb surf">
+                    <div class="mini">
+                        <i style="left:16px; top:14px; width:194px; height:9px; background:rgba(255,255,255,.10)"></i>
+                        <i style="left:16px; top:30px; width:38px; height:30px; background:rgba(255,107,107,.45)"></i>
+                        <i style="left:60px; top:30px; width:38px; height:30px; background:rgba(255,107,107,.45)"></i>
+                        <i style="left:104px; top:30px; width:38px; height:30px; background:rgba(255,107,107,.45)"></i>
+                        <i style="left:148px; top:30px; width:38px; height:30px; background:rgba(255,107,107,.45)"></i>
+                        <i style="left:16px; top:66px; width:38px; height:30px; background:rgba(255,194,71,.45)"></i>
+                        <i style="left:60px; top:66px; width:38px; height:30px; background:rgba(255,194,71,.45)"></i>
+                        <i style="left:104px; top:66px; width:38px; height:30px; background:rgba(255,194,71,.45)"></i>
+                        <i style="left:148px; top:66px; width:38px; height:30px; background:rgba(255,194,71,.45)"></i>
+                    </div>
+                </div>
+                <div class="meta">
+                    <div class="lname">Drum Pads 4x4</div>
+                    <div class="ldesc">Velocity pads on channel 10, three kits on the layer key.</div>
+                    <div class="lfoot"><span class="chip on"><span class="gl">&#xE73E;</span>Ready</span>
+                        <span style="margin-left:auto; font-size:10.5px; color:var(--text3)">Sep 14</span></div>
+                </div>
+            </div>
+
+            <div class="libcard">
+                <div class="thumb surf">
+                    <div class="mini">
+                        <i style="left:60px; top:20px; width:110px; height:44px; background:rgba(76,224,255,.28)"></i>
+                        <i class="kb" style="left:20px; top:24px; width:30px; height:30px; background:rgba(255,107,214,.55)"></i>
+                        <i class="kb" style="left:178px; top:24px; width:30px; height:30px; background:rgba(255,107,214,.55)"></i>
+                        <i style="left:20px; top:74px; width:188px; height:26px; background:rgba(255,255,255,.06)"></i>
+                        <i style="left:26px; top:80px; width:26px; height:14px; background:rgba(91,232,181,.7)"></i>
+                        <i style="left:58px; top:80px; width:26px; height:14px; background:rgba(255,255,255,.12)"></i>
+                        <i style="left:90px; top:80px; width:26px; height:14px; background:rgba(255,255,255,.12)"></i>
+                    </div>
+                </div>
+                <div class="meta">
+                    <div class="lname">XY Morph Pad</div>
+                    <div class="ldesc">Big two-axis pad with an LFO on each corner.</div>
+                    <div class="lfoot"><span class="chip info"><span class="gl">&#xE8AB;</span>Not saved yet</span>
+                        <span style="margin-left:auto; font-size:10.5px; color:var(--text3)">Sep 11</span></div>
+                </div>
+            </div>
+
+            <div class="libcard">
+                <div class="thumb surf">
+                    <div class="mini">
+                        <i style="left:16px; top:18px; width:60px; height:20px; background:rgba(255,255,255,.10)"></i>
+                        <i style="left:16px; top:46px; width:192px; height:54px; background:rgba(255,194,71,.12)"></i>
+                        <i style="left:22px; top:52px; width:18px; height:42px; background:rgba(255,194,71,.6)"></i>
+                        <i style="left:46px; top:52px; width:18px; height:42px; background:rgba(255,194,71,.6)"></i>
+                        <i style="left:70px; top:52px; width:18px; height:42px; background:rgba(255,194,71,.6)"></i>
+                        <i style="left:94px; top:52px; width:18px; height:42px; background:rgba(255,194,71,.6)"></i>
+                        <i style="left:118px; top:52px; width:18px; height:42px; background:rgba(255,194,71,.6)"></i>
+                        <i style="left:142px; top:52px; width:18px; height:42px; background:rgba(255,194,71,.6)"></i>
+                    </div>
+                </div>
+                <div class="meta">
+                    <div class="lname">Step Sketch</div>
+                    <div class="ldesc">Sixteen steps into the GM synth for working out parts.</div>
+                    <div class="lfoot"><span class="chip on"><span class="gl">&#xE73E;</span>Ready</span>
+                        <span style="margin-left:auto; font-size:10.5px; color:var(--text3)">Sep 9</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <span class="gl">&#xE8B7;</span>
+        <span>12 layouts in Documents &rsaquo; MIDI Layouts</span>
+        <div style="flex:1"></div>
+        <span class="chip on" style="height:19px; font-size:10px"><span class="gl">&#xE73E;</span>MIDI service running</span>
+    </div>
+
+    <!-- card menu, dropped from the More button on the hovered card -->
+    <div style="position:absolute; left:262px; top:404px; width:186px; background:#2C2C2C;
+                border:1px solid var(--stroke-strong); border-radius:7px; box-shadow:0 10px 28px rgba(0,0,0,.6);
+                padding:4px; z-index:40; font-size:12.5px;">
+        <div style="height:30px; display:flex; align-items:center; gap:10px; padding:0 10px; color:var(--text2)"><span class="gl" style="font-size:13px">&#xE8C8;</span>Duplicate</div>
+        <div style="height:30px; display:flex; align-items:center; gap:10px; padding:0 10px; color:var(--text2)"><span class="gl" style="font-size:13px">&#xE8AC;</span>Rename&hellip;</div>
+        <div style="height:30px; display:flex; align-items:center; gap:10px; padding:0 10px; color:var(--text2)"><span class="gl" style="font-size:13px">&#xE8A5;</span>Edit description&hellip;</div>
+        <div style="height:1px; background:var(--divider); margin:4px 8px;"></div>
+        <div style="height:30px; display:flex; align-items:center; gap:10px; padding:0 10px; color:var(--text2)"><span class="gl" style="font-size:13px">&#xE735;</span>Remove from favorites</div>
+        <div style="height:30px; display:flex; align-items:center; gap:10px; padding:0 10px; color:var(--text2)"><span class="gl" style="font-size:13px">&#xE8DA;</span>Show in folder</div>
+        <div style="height:1px; background:var(--divider); margin:4px 8px;"></div>
+        <div style="height:30px; display:flex; align-items:center; gap:10px; padding:0 10px; color:var(--critical)"><span class="gl" style="font-size:13px">&#xE74D;</span>Delete</div>
+    </div>
+
+    <div class="annot" style="left:24px; top:646px; width:300px;">
+        <span class="pin">1</span>
+        <span><b style="color:var(--text2)">Run is the primary action.</b> Pointer, pen or touch on a card
+        reveals Run, Edit and the card menu. Enter runs it, Ctrl+Enter edits it.</span>
+    </div>
+    <div class="annot" style="left:356px; top:646px; width:300px;">
+        <span class="pin">2</span>
+        <span><b style="color:var(--text2)">A missing device never blocks opening.</b> The card names the count,
+        the layout still runs, and the affected controls show as unavailable until it comes back.</span>
+    </div>
+    <div class="annot" style="left:688px; top:646px; width:290px;">
+        <span class="pin" style="background:var(--caution); color:#241F00">3</span>
+        <span><b style="color:var(--text2)">Thumbnails are drawn from the model</b>, not from a screen capture,
+        so they are correct before the layout has ever been opened on this PC.</span>
+    </div>
+</div>
+
+<p class="note">
+<b>Why no file browsing.</b> Every layout lives in <b>Documents &rsaquo; MIDI Layouts</b> as one
+<span class="mono">.midilayout.json</span> file, the same shape MIDI Patchbay uses for patches. The card is the
+only thing a customer normally touches. <b>Open a file</b> and <b>Show in folder</b> exist for the moment
+someone is handed a layout by a friend. Thumbnails are cached under
+<span class="mono">%LOCALAPPDATA%</span> and regenerated when the file changes, so the Documents folder stays
+clean and nothing has to load to draw the grid.
+</p>
+
+</div>
+</body>
+</html>

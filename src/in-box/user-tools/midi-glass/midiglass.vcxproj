@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Label="Globals">
+    <CppWinRTOptimized>true</CppWinRTOptimized>
+    <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
+    <CppWinRTGenerateWindowsMetadata>true</CppWinRTGenerateWindowsMetadata>
+    <MinimalCoreWin>false</MinimalCoreWin>
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{F9FF254E-0F0E-4479-B720-AE24EB2BF444}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>midiglass</RootNamespace>
+    <ProjectName>midiglass</ProjectName>
+    <TargetName>midiglass</TargetName>
+    <DefaultLanguage>en-US</DefaultLanguage>
+    <MinimumVisualStudioVersion>16.0</MinimumVisualStudioVersion>
+    <WindowsTargetPlatformVersion Condition=" '$(WindowsTargetPlatformVersion)' == '' ">10.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformMinVersion>10.0.19041.0</WindowsTargetPlatformMinVersion>
+    <!-- Desktop app, but the "Windows Store" application type is what brings in the XAML
+         markup compiler passes for native projects. -->
+    <ApplicationType>Windows Store</ApplicationType>
+    <ApplicationTypeRevision>10.0</ApplicationTypeRevision>
+    <AppContainerApplication>false</AppContainerApplication>
+    <DesktopCompatible>true</DesktopCompatible>
+    <AppxPackage>false</AppxPackage>
+    <WindowsPackageType>None</WindowsPackageType>
+    <UseWinUI>true</UseWinUI>
+    <WinUISDKReferences>false</WinUISDKReferences>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <!-- PackageReference is used here, so the legacy UAP NuGet asset resolver must stay out -->
+    <ResolveNuGetPackages>false</ResolveNuGetPackages>
+    <!-- unpackaged MRT Core looks for resources.pri next to the executable -->
+    <ProjectPriFileName>resources.pri</ProjectPriFileName>
+    <!-- unpackaged app: the Windows App SDK bootstrapper is auto-initialized -->
+    <WindowsAppSDKSelfContained>false</WindowsAppSDKSelfContained>
+    <WindowsAppSdkBootstrapInitialize>true</WindowsAppSdkBootstrapInitialize>
+    <WindowsAppSDKBootstrapAutoInitializeOptions_OnNoMatch_ShowUI>true</WindowsAppSDKBootstrapAutoInitializeOptions_OnNoMatch_ShowUI>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|ARM64">
+      <Configuration>Debug</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v143</PlatformToolset>
+    <PlatformToolset Condition="'$(VisualStudioVersion)' &gt;= '18.0'">v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <DesktopCompatible>true</DesktopCompatible>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Release'" Label="Configuration">
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <IntDir>$(SolutionDir)vsfiles-sdk\intermediate\$(ProjectName)\$(Platform)\$(Configuration)\</IntDir>
+    <OutDir>$(SolutionDir)vsfiles-sdk\out\$(ProjectName)\$(Platform)\$(Configuration)\</OutDir>
+    <IncludePath>$(IncludePath);$(SolutionDir)..\..\build\staging\version\;$(GeneratedFilesDir);$(SolutionDir)..\shared\api-ref\$(Platform);$(SolutionDir)vsfiles-sdk\intermediate\com-extensions-idl\$(Platform)\$(Configuration)</IncludePath>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)pch.pch</PrecompiledHeaderOutputFile>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;WINRT_LEAN_AND_MEAN;NOMINMAX;DISABLE_XAML_GENERATED_MAIN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WarningLevel>Level4</WarningLevel>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)Inc;$(GeneratedFilesDir);$(ProjectDir);$(ProjectDir)..\midi-app-shared;$(ProjectDir)document;$(ProjectDir)thumbnail;$(ProjectDir)binding;$(ProjectDir)runtime;$(ProjectDir)surface;$(ProjectDir)editor</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /permissive- /bigobj /utf-8</AdditionalOptions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(ProjectDir)..\midi-app-shared</AdditionalIncludeDirectories>
+    </Midl>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+      <AdditionalDependencies>%(AdditionalDependencies);windowsapp.lib;shlwapi.lib;shell32.lib;advapi32.lib;pathcch.lib</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="AppSettings.h" />
+    <ClInclude Include="CommandLine.h" />
+    <ClInclude Include="LibraryItems.h" />
+    <ClInclude Include="EditorItems.h" />
+    <ClInclude Include="StringResources.h" />
+    <ClInclude Include="Telemetry.h" />
+    <ClInclude Include="App.xaml.h">
+      <DependentUpon>App.xaml</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="MainWindow.xaml.h">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="RuntimeWindow.xaml.h">
+      <DependentUpon>RuntimeWindow.xaml</DependentUpon>
+    </ClInclude>
+    <ClInclude Include="EditorWindow.xaml.h">
+      <DependentUpon>EditorWindow.xaml</DependentUpon>
+    </ClInclude>
+    <!-- shared with the other Windows MIDI Services user tools; see midi-app-shared\README.md.
+         The ones this app does not use yet are still here because MidiAppShared.idl declares the
+         runtime classes, so their implementations have to be linked in. -->
+    <ClInclude Include="..\midi-app-shared\LiveRegion.h" />
+    <ClInclude Include="..\midi-app-shared\PreviewBuild.h" />
+    <ClInclude Include="..\midi-app-shared\SingleInstance.h" />
+    <ClInclude Include="..\midi-app-shared\NamedChoice.h" />
+    <ClInclude Include="..\midi-app-shared\EndpointChoice.h" />
+    <ClInclude Include="..\midi-app-shared\MidiAppSettings.h" />
+    <ClInclude Include="..\midi-app-shared\WindowChrome.h" />
+    <ClInclude Include="..\midi-app-shared\MidiEndpointHelpers.h" />
+    <ClInclude Include="..\midi-app-shared\EndpointImageAssets.h" />
+    <ClInclude Include="..\midi-app-shared\MidiServiceStatus.h" />
+    <ClInclude Include="..\midi-app-shared\EndpointMatch.h" />
+    <ClInclude Include="..\midi-app-shared\EndpointCatalog.h" />
+    <ClInclude Include="document\JsonText.h" />
+    <ClInclude Include="document\LayoutModel.h" />
+    <ClInclude Include="document\LayoutPackage.h" />
+    <ClInclude Include="document\LayoutSerializer.h" />
+    <ClInclude Include="document\LayoutStore.h" />
+    <ClInclude Include="document\PageTemplates.h" />
+    <ClInclude Include="document\LfoShape.h" />
+    <ClInclude Include="document\LayoutTemplates.h" />
+    <ClInclude Include="document\ThemeModel.h" />
+    <ClInclude Include="document\ThemeStore.h" />
+    <ClInclude Include="thumbnail\ThumbnailLayout.h" />
+    <ClInclude Include="thumbnail\ThumbnailRenderer.h" />
+    <ClInclude Include="thumbnail\SurfaceThumbnail.h" />
+    <ClInclude Include="runtime\DeviceCatalog.h" />
+    <ClInclude Include="runtime\LivePlayer.h" />
+    <ClInclude Include="runtime\SequenceRunner.h" />
+    <ClInclude Include="runtime\OutputRouter.h" />
+    <ClInclude Include="runtime\PanicMessages.h" />
+    <ClInclude Include="runtime\SurfaceScale.h" />
+    <ClInclude Include="surface\GlassControl.h" />
+    <ClInclude Include="surface\DeckBrush.h" />
+    <ClInclude Include="surface\InputRouter.h" />
+    <ClInclude Include="surface\InputRules.h" />
+    <ClInclude Include="surface\SurfaceAutomationPeer.h" />
+    <ClInclude Include="surface\SurfaceColors.h" />
+    <ClInclude Include="surface\SurfaceRenderer.h" />
+    <ClInclude Include="runtime\ClockGenerator.h" />
+    <ClInclude Include="runtime\LfoGenerator.h" />
+    <ClInclude Include="binding\BindingEngine.h" />
+    <ClInclude Include="binding\ActionPlan.h" />
+    <ClInclude Include="binding\LearnCapture.h" />
+    <ClInclude Include="document\HexText.h" />
+    <ClInclude Include="binding\MonitorFormat.h" />
+    <ClInclude Include="binding\ValueThrottle.h" />
+    <ClInclude Include="editor\ArrangeOps.h" />
+    <ClInclude Include="editor\ControlFactory.h" />
+    <ClInclude Include="editor\EditGeometry.h" />
+    <ClInclude Include="editor\EditorController.h" />
+    <ClInclude Include="editor\RepeatPlan.h" />
+    <ClInclude Include="editor\UndoStack.h" />
+    <ClInclude Include="..\midi-app-shared\AppearanceFlyout.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="AppSettings.cpp" />
+    <ClCompile Include="LibraryItems.cpp" />
+    <ClCompile Include="EditorItems.cpp" />
+    <ClCompile Include="StringResources.cpp" />
+    <ClCompile Include="App.xaml.cpp">
+      <DependentUpon>App.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MainWindow.xaml.cpp">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="MainWindowLibrary.cpp" />
+    <ClCompile Include="MainWindowPackaging.cpp" />
+    <ClCompile Include="MainWindowDialogs.cpp" />
+    <ClCompile Include="RuntimeWindow.xaml.cpp">
+      <DependentUpon>RuntimeWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="RuntimeWindowDevices.cpp" />
+    <ClCompile Include="RuntimeWindowFullScreen.cpp" />
+    <ClCompile Include="EditorWindow.xaml.cpp">
+      <DependentUpon>EditorWindow.xaml</DependentUpon>
+    </ClCompile>
+    <ClCompile Include="EditorCanvas.cpp" />
+    <ClCompile Include="EditorColorPicker.cpp" />
+    <ClCompile Include="EditorAppearance.cpp" />
+    <ClCompile Include="EditorThemeProperties.cpp" />
+    <ClCompile Include="EditorLayoutPanes.cpp" />
+    <ClCompile Include="EditorControlProperties.cpp" />
+    <ClCompile Include="EditorControlEdits.cpp" />
+    <ClCompile Include="EditorInspector.cpp" />
+    <ClCompile Include="EditorOutline.cpp" />
+    <ClCompile Include="EditorDialogs.cpp" />
+    <ClCompile Include="EditorBackgroundDialog.cpp" />
+    <ClCompile Include="EditorFontDialog.cpp" />
+    <ClCompile Include="EditorLayoutSettings.cpp" />
+    <ClCompile Include="EditorKeyboardOrder.cpp" />
+    <ClCompile Include="EditorLearn.cpp" />
+    <ClCompile Include="EditorSequenceDialog.cpp" />
+    <ClCompile Include="EditorPanes.cpp" />
+    <ClCompile Include="EditorTryMode.cpp" />
+    <ClCompile Include="..\midi-app-shared\SingleInstance.cpp" />
+    <ClCompile Include="..\midi-app-shared\NamedChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\EndpointChoice.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiAppSettings.cpp" />
+    <ClCompile Include="..\midi-app-shared\WindowChrome.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
+    <ClCompile Include="..\midi-app-shared\EndpointImageAssets.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiServiceStatus.cpp" />
+    <ClCompile Include="..\midi-app-shared\EndpointMatch.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\midi-app-shared\EndpointCatalog.cpp" />
+    <!-- the document layer is free of the pch, XAML and WinRT UI so the unit tests compile it unchanged -->
+    <ClCompile Include="document\JsonText.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\LayoutModel.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\LayoutPackage.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\LayoutSerializer.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\LayoutStore.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\PageTemplates.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\LfoShape.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\LayoutTemplates.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\ThemeModel.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\ThemeStore.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="thumbnail\ThumbnailLayout.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="binding\BindingEngine.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="binding\ActionPlan.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="binding\LearnCapture.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\HexText.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="binding\ValueThrottle.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="binding\MonitorFormat.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <!-- the pure parts of the runtime and surface layers follow the same rule as the document
+         layer: no pch, no XAML, so the unit tests compile them unchanged -->
+    <ClCompile Include="runtime\PanicMessages.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="runtime\SurfaceScale.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="surface\SurfaceColors.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="surface\InputRules.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <!-- the editor's engines follow the same rule: pure, testable, no window -->
+    <ClCompile Include="editor\ArrangeOps.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="editor\ControlFactory.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="editor\EditGeometry.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="editor\EditorController.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="editor\EditorControllerEdits.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="editor\RepeatPlan.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="editor\UndoStack.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="runtime\DeviceCatalog.cpp" />
+    <ClCompile Include="runtime\ClockGenerator.cpp" />
+    <ClCompile Include="runtime\LfoGenerator.cpp" />
+    <ClCompile Include="surface\DeckBrush.cpp" />
+    <ClCompile Include="runtime\LivePlayer.cpp" />
+    <ClCompile Include="runtime\SequenceRunner.cpp" />
+    <ClCompile Include="runtime\OutputRouter.cpp" />
+    <ClCompile Include="surface\GlassControl.cpp" />
+    <ClCompile Include="surface\InputRouter.cpp" />
+    <ClCompile Include="surface\SurfaceAutomationPeer.cpp" />
+    <ClCompile Include="surface\SurfaceControls.cpp" />
+    <ClCompile Include="surface\SurfaceRenderer.cpp" />
+    <ClCompile Include="thumbnail\ThumbnailRenderer.cpp" />
+    <ClCompile Include="thumbnail\SurfaceThumbnail.cpp" />
+    <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
+    <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="..\midi-app-shared\MidiAppShared.idl" />
+    <Midl Include="LibraryItems.idl" />
+    <Midl Include="EditorItems.idl" />
+    <Midl Include="surface\SurfaceTypes.idl" />
+    <Midl Include="MainWindow.idl">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+    </Midl>
+    <Midl Include="RuntimeWindow.idl">
+      <DependentUpon>RuntimeWindow.xaml</DependentUpon>
+    </Midl>
+    <Midl Include="EditorWindow.idl">
+      <DependentUpon>EditorWindow.xaml</DependentUpon>
+    </Midl>
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Page Include="MainWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="RuntimeWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="EditorWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="EditorStyles.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Themes\Generic.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <PRIResource Include="Strings\en-US\Resources.resw" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Resources.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Manifest Include="midiglass.exe.manifest" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Windows.CppWinRT" Version="3.0.260520.1" />
+    <PackageReference Include="Microsoft.Windows.ImplementationLibrary" Version="1.0.260126.7" />
+    <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.7463" />
+    <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.8.260101001" />
+    <!-- Draws a layout thumbnail with no window and no compositor. XAML and composition both
+         need a window, and a thumbnail has to exist for a layout never opened on this PC. -->
+    <PackageReference Include="Microsoft.Graphics.Win2D" Version="1.3.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Client\WinRT\com-extensions-idl\com-extensions-idl.vcxproj">
+      <Project>{9a508d6d-08cb-473a-995e-d069f00eb8bb}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Client\WinRT\core\Windows.Devices.Midi2.vcxproj">
+      <Project>{9eaa3af3-7328-4f67-a011-e2dd8fbaa4c4}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

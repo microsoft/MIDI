@@ -29,6 +29,40 @@ namespace winrt::midipatchbay::implementation
         constexpr int32_t DefaultWindowHeight = 860;
 
         constexpr int32_t RefreshIntervalMilliseconds = 500;
+
+        // Ten points at a time up to 150%, then bigger steps so 400% is a few clicks away.
+        constexpr float ZoomSteps[] = {
+            0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.0f,
+            1.1f, 1.2f, 1.3f, 1.4f, 1.5f, 1.75f, 2.0f, 2.5f, 3.0f, 3.5f, 4.0f };
+
+        float NextZoomStep(_In_ float current, _In_ bool zoomIn) noexcept
+        {
+            // So a zoom already on a step moves to the next one, whatever rounding it picked up.
+            constexpr float tolerance = 0.01f;
+
+            if (zoomIn)
+            {
+                for (auto const step : ZoomSteps)
+                {
+                    if (step > current + tolerance)
+                    {
+                        return step;
+                    }
+                }
+
+                return ZoomSteps[std::size(ZoomSteps) - 1];
+            }
+
+            for (auto step = std::rbegin(ZoomSteps); step != std::rend(ZoomSteps); ++step)
+            {
+                if (*step < current - tolerance)
+                {
+                    return *step;
+                }
+            }
+
+            return ZoomSteps[0];
+        }
     }
 
     MainWindow::MainWindow()
@@ -239,6 +273,13 @@ namespace winrt::midipatchbay::implementation
                         // thread and the window waits for nothing
                         std::thread([]() { patchbay::RouteEngine::Current().Shutdown(); }).detach();
                     }
+                });
+
+            // The catalog is shared with the other MIDI tools, so it cannot reach this app's
+            // telemetry by itself. Give it the same sink everything else here logs to.
+            midiapp::SetEndpointErrorHandler([](std::wstring_view message)
+                {
+                    MIDI_PATCHBAY_LOG_GENERAL_EXCEPTION(std::wstring{ message }.c_str());
                 });
 
             // Starting the watcher blocks on the service, so it never happens on this thread.
@@ -703,7 +744,7 @@ namespace winrt::midipatchbay::implementation
         {
             auto const offline = std::any_of(patch.Endpoints.begin(), patch.Endpoints.end(),
                 [](patchbay::PatchEndpoint const& e)
-                { return !patchbay::EndpointCatalog::Current().Resolve(e).has_value(); });
+                { return !patchbay::ResolveEndpoint(e).has_value(); });
 
             signature += offline ? L"1" : L"0";
         }
@@ -797,7 +838,7 @@ namespace winrt::midipatchbay::implementation
 
                 auto const offline = std::any_of(patch->Endpoints.begin(), patch->Endpoints.end(),
                     [](patchbay::PatchEndpoint const& e)
-                    { return !patchbay::EndpointCatalog::Current().Resolve(e).has_value(); });
+                    { return !patchbay::ResolveEndpoint(e).has_value(); });
 
                 if (patch->IsTemporary)
                 {
@@ -1205,12 +1246,18 @@ namespace winrt::midipatchbay::implementation
     }
 
     _Use_decl_annotations_
-    void MainWindow::OnFitClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
+    void MainWindow::OnZoomFitClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args)
     {
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
 
-        m_canvas.FitToContent();
+        try
+        {
+            ZoomFlyout().Hide();
+
+            m_canvas.FitToContent(patchbay::PatchCanvas::MaximumZoom);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to fit the canvas to the screen.")
     }
 
     _Use_decl_annotations_
@@ -1219,7 +1266,7 @@ namespace winrt::midipatchbay::implementation
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
 
-        ApplyZoom(CanvasScroller().ZoomFactor() + 0.1f);
+        ApplyZoom(NextZoomStep(CanvasScroller().ZoomFactor(), true));
     }
 
     _Use_decl_annotations_
@@ -1228,7 +1275,7 @@ namespace winrt::midipatchbay::implementation
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
 
-        ApplyZoom(CanvasScroller().ZoomFactor() - 0.1f);
+        ApplyZoom(NextZoomStep(CanvasScroller().ZoomFactor(), false));
     }
 
     _Use_decl_annotations_
@@ -1236,9 +1283,9 @@ namespace winrt::midipatchbay::implementation
     {
         try
         {
-            // Snapped to whole steps. Adding 0.1f repeatedly drifts, and the drift shows up as
-            // 101% where the customer expects to land back on 100.
-            auto const snapped = std::clamp(std::round(zoom * 20.0f) / 20.0f, 0.4f, 1.5f);
+            // Snapped to 5%, the same grain as the zoom box's spin buttons.
+            auto const snapped = std::clamp(std::round(zoom * 20.0f) / 20.0f,
+                patchbay::PatchCanvas::MinimumZoom, patchbay::PatchCanvas::MaximumZoom);
 
             CanvasScroller().ChangeView(nullptr, nullptr,
                 winrt::box_value(snapped).as<foundation::IReference<float>>());

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - two tonal themes</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    .board {
+        width: 1000px; border-radius: 8px; position: relative; overflow: hidden;
+        border: 1px solid rgba(255,255,255,.08);
+        background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+        box-shadow: var(--shadow);
+    }
+    .chiprow { position: absolute; left: 14px; top: 13px; display: flex; gap: 6px; align-items: center; }
+    .tchip {
+        height: 26px; padding: 0 11px; border-radius: 13px;
+        display: flex; align-items: center; gap: 7px;
+        font-size: 11px; color: var(--text3);
+        background: rgba(255,255,255,.035); box-shadow: inset 0 0 0 1px var(--stroke);
+    }
+    .tchip i { width: 11px; height: 11px; border-radius: 3px; }
+    .tchip.sel { color: #fff; background: rgba(96,205,255,.15); box-shadow: inset 0 0 0 1px rgba(96,205,255,.50); }
+    .tchip.new { color: var(--success); background: rgba(108,203,95,.11); box-shadow: inset 0 0 0 1px rgba(108,203,95,.45); }
+
+    .deck { position: absolute; top: 54px; width: 478px; height: 416px; border-radius: 6px; overflow: hidden; }
+    .decktag {
+        position: absolute; top: 478px; font-size: 11px; color: var(--text3);
+    }
+    .decktag b { color: var(--text2); font-weight: 600; }
+
+    .strip { position: absolute; left: 0; right: 0; height: 74px; }
+    .striplabel {
+        position: absolute; left: 16px; top: 22px; font-size: 11px; font-weight: 600;
+    }
+    .striplabel span { display: block; font-weight: 400; font-size: 10px; opacity: .6; margin-top: 2px; }
+    .colhead {
+        position: absolute; top: 0; font-size: 10px; letter-spacing: .10em;
+        color: rgba(255,255,255,.34);
+    }
+    .costgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 11px; margin-top: 14px; }
+    .cost {
+        border-radius: 7px; padding: 12px 14px;
+        background: var(--card); box-shadow: inset 0 0 0 1px var(--stroke);
+        font-size: 11.5px; color: var(--text3); line-height: 1.55;
+    }
+    .cost h4 { margin: 0 0 7px 0; font-size: 12px; color: var(--text); font-weight: 600; }
+    .cost b { color: var(--text2); font-weight: 600; }
+    .cost .yes { color: var(--success); font-weight: 600; }
+    .cost .no { color: var(--caution); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<p class="caption-above">Screen 11 &mdash; two tonal themes, <b>Pigment Light</b> and <b>Pigment Dark</b>. Short answer to your question: <b>yes, and it costs no new rendering layers.</b> The reason it is cheap is that I took the newer Material approach, where a raised surface is tinted with its own color rather than casting a shadow. A tint is a background color. Eighty controls cost exactly what they cost today.</p>
+
+<!-- ==================================================== TWO FULL DECKS -->
+<div class="board" style="height:508px;">
+
+    <div class="chiprow">
+        <div class="tchip"><i style="background:#4CE0FF"></i>Studio Dark</div>
+        <div class="tchip"><i style="background:#FF6BD6"></i>Neon Booth</div>
+        <div class="tchip"><i style="background:#FFC247"></i>Amber Console</div>
+        <div class="tchip"><i style="background:#5B8CFF"></i>Blueprint</div>
+        <div class="tchip new"><i style="background:#0C56A8"></i>Pigment Light</div>
+        <div class="tchip new"><i style="background:#98CCFF"></i>Pigment Dark</div>
+        <div class="tchip" style="margin-left:6px">&#43; New theme&hellip;</div>
+    </div>
+
+    <!-- ------------------------------------------------ Pigment Light -->
+    <div class="deck surf tonal tonal-light" style="left:14px;">
+
+        <div class="surftext h1" style="left:16px; top:11px; font-size:15px;">Live Rig</div>
+        <div class="surftext readout" style="left:104px; top:12px; font-size:14px;">128.0</div>
+
+        <div class="pagetabs" style="right:12px; top:9px; gap:4px;">
+            <div class="tab sel" style="height:21px; padding:0 10px; font-size:10px">Mixer</div>
+            <div class="tab" style="height:21px; padding:0 10px; font-size:10px">Pads</div>
+            <div class="tab" style="height:21px; padding:0 10px; font-size:10px">FX</div>
+        </div>
+
+        <div class="ctl knob hue1" style="left:20px; top:52px; width:36px; height:36px;">
+            <div class="dial"><div class="arc" style="--pct:.54turn"></div><div class="ptr" style="transform:rotate(52deg)"></div></div>
+        </div>
+        <div class="ctl knob hue1" style="left:72px; top:52px; width:36px; height:36px;">
+            <div class="dial"><div class="arc" style="--pct:.38turn"></div><div class="ptr" style="transform:rotate(-6deg)"></div></div>
+        </div>
+        <div class="ctl knob hue1" style="left:124px; top:52px; width:36px; height:36px;">
+            <div class="dial"><div class="arc" style="--pct:.66turn"></div><div class="ptr" style="transform:rotate(95deg)"></div></div>
+        </div>
+
+        <div class="ctl fader hue1" style="left:18px; top:96px; width:32px; height:116px;">
+            <div class="slot"><div class="fill" style="height:72%"></div><div class="capbar" style="bottom:calc(72% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue1" style="left:70px; top:96px; width:32px; height:116px;">
+            <div class="slot"><div class="fill" style="height:54%"></div><div class="capbar" style="bottom:calc(54% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue1" style="left:122px; top:96px; width:32px; height:116px;">
+            <div class="slot"><div class="fill" style="height:88%"></div><div class="capbar" style="bottom:calc(88% - 8px);"></div></div>
+        </div>
+        <div class="outlabel" style="left:12px; top:216px; width:44px; font-size:9.5px;">Drums</div>
+        <div class="outlabel" style="left:64px; top:216px; width:44px; font-size:9.5px;">Bass</div>
+        <div class="outlabel" style="left:116px; top:216px; width:44px; font-size:9.5px;">Keys</div>
+
+        <div class="ctl xy hue5" style="left:182px; top:52px; width:124px; height:124px;">
+            <div class="field2">
+                <div class="cross h" style="top:38%"></div>
+                <div class="cross v" style="left:61%"></div>
+                <div class="trail" style="left:52%; top:47%"></div>
+                <div class="puck" style="left:61%; top:38%"></div>
+            </div>
+        </div>
+        <div class="outlabel" style="left:182px; top:180px; width:124px; font-size:9.5px;">Filter &middot; Resonance</div>
+
+        <div class="ctl btn-ctl hue3" style="left:322px; top:52px; width:66px; height:46px;"><div class="name" style="font-size:10px">Intro</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue3 on" style="left:396px; top:52px; width:66px; height:46px;"><div class="name" style="font-size:10px">Build</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue3" style="left:322px; top:106px; width:66px; height:46px;"><div class="name" style="font-size:10px">Drop</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue3" style="left:396px; top:106px; width:66px; height:46px;"><div class="name" style="font-size:10px">Outro</div><div class="pipe"></div></div>
+        <div class="outlabel" style="left:322px; top:156px; width:140px; font-size:9.5px;">Clips</div>
+
+        <div class="ctl fader hue2 horiz" style="left:182px; top:204px; width:280px; height:24px;">
+            <div class="slot"><div class="fill" style="width:46%"></div><div class="capbar" style="left:calc(46% - 8px);"></div></div>
+        </div>
+
+        <div class="ctl btn-ctl hue6" style="left:18px; top:248px; width:104px; height:38px;"><div class="name" style="font-size:10px">Panic</div></div>
+        <div class="ctl btn-ctl hue2 held" style="left:130px; top:248px; width:104px; height:38px;"><div class="name" style="font-size:10px">Tap</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue2 on" style="left:242px; top:248px; width:104px; height:38px;"><div class="name" style="font-size:10px">Sync</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue4" style="left:354px; top:248px; width:108px; height:38px;"><div class="name" style="font-size:10px">Layer A</div><div class="pipe"></div></div>
+
+        <div class="ctl lfo hue4" style="left:18px; top:298px; width:140px; height:54px; padding:5px 7px;">
+            <div class="head" style="font-size:8.5px"><span>LFO &middot; sine</span><span class="mono">1/8</span></div>
+            <svg viewBox="0 0 70 24" preserveAspectRatio="none">
+                <path d="M0,12 C6,1 12,1 18,12 C24,23 30,23 36,12 C42,1 48,1 54,12 C60,23 66,23 70,12" fill="none" style="stroke:rgb(var(--hue))" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="ctl knob hue3 detent" style="left:174px; top:300px; width:50px; height:50px;">
+            <div class="dial"><div class="arc" style="--pct:.40turn"></div><div class="ptr" style="transform:rotate(0deg)"></div></div>
+        </div>
+        <div class="outlabel" style="left:166px; top:354px; width:66px; font-size:9.5px;">Pan</div>
+        <div class="ctl knob hue5" style="left:246px; top:300px; width:50px; height:50px;">
+            <div class="dial"><div class="arc" style="--pct:.61turn"></div><div class="ptr" style="transform:rotate(76deg)"></div></div>
+        </div>
+        <div class="outlabel" style="left:238px; top:354px; width:66px; font-size:9.5px;">Reverb</div>
+
+        <div class="ctl btn-ctl hue1 offline" style="left:322px; top:298px; width:140px; height:54px;">
+            <div class="name" style="font-size:10px; color:var(--deck-ink2)">Iridium</div>
+            <div class="cap" style="font-size:9px; color:rgb(var(--h6))">device offline</div>
+        </div>
+    </div>
+    <div class="decktag" style="left:14px;"><b>Pigment Light</b> &mdash; opaque white plates, a wash of the control's own color at rest, filled when on</div>
+
+    <!-- ------------------------------------------------- Pigment Dark -->
+    <div class="deck surf tonal tonal-dark" style="left:508px;">
+
+        <div class="surftext h1" style="left:16px; top:11px; font-size:15px;">Live Rig</div>
+        <div class="surftext readout" style="left:104px; top:12px; font-size:14px;">128.0</div>
+
+        <div class="pagetabs" style="right:12px; top:9px; gap:4px;">
+            <div class="tab sel" style="height:21px; padding:0 10px; font-size:10px">Mixer</div>
+            <div class="tab" style="height:21px; padding:0 10px; font-size:10px">Pads</div>
+            <div class="tab" style="height:21px; padding:0 10px; font-size:10px">FX</div>
+        </div>
+
+        <div class="ctl knob hue1" style="left:20px; top:52px; width:36px; height:36px;">
+            <div class="dial"><div class="arc" style="--pct:.54turn"></div><div class="ptr" style="transform:rotate(52deg)"></div></div>
+        </div>
+        <div class="ctl knob hue1" style="left:72px; top:52px; width:36px; height:36px;">
+            <div class="dial"><div class="arc" style="--pct:.38turn"></div><div class="ptr" style="transform:rotate(-6deg)"></div></div>
+        </div>
+        <div class="ctl knob hue1" style="left:124px; top:52px; width:36px; height:36px;">
+            <div class="dial"><div class="arc" style="--pct:.66turn"></div><div class="ptr" style="transform:rotate(95deg)"></div></div>
+        </div>
+
+        <div class="ctl fader hue1" style="left:18px; top:96px; width:32px; height:116px;">
+            <div class="slot"><div class="fill" style="height:72%"></div><div class="capbar" style="bottom:calc(72% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue1" style="left:70px; top:96px; width:32px; height:116px;">
+            <div class="slot"><div class="fill" style="height:54%"></div><div class="capbar" style="bottom:calc(54% - 8px);"></div></div>
+        </div>
+        <div class="ctl fader hue1" style="left:122px; top:96px; width:32px; height:116px;">
+            <div class="slot"><div class="fill" style="height:88%"></div><div class="capbar" style="bottom:calc(88% - 8px);"></div></div>
+        </div>
+        <div class="outlabel" style="left:12px; top:216px; width:44px; font-size:9.5px;">Drums</div>
+        <div class="outlabel" style="left:64px; top:216px; width:44px; font-size:9.5px;">Bass</div>
+        <div class="outlabel" style="left:116px; top:216px; width:44px; font-size:9.5px;">Keys</div>
+
+        <div class="ctl xy hue5" style="left:182px; top:52px; width:124px; height:124px;">
+            <div class="field2">
+                <div class="cross h" style="top:38%"></div>
+                <div class="cross v" style="left:61%"></div>
+                <div class="trail" style="left:52%; top:47%"></div>
+                <div class="puck" style="left:61%; top:38%"></div>
+            </div>
+        </div>
+        <div class="outlabel" style="left:182px; top:180px; width:124px; font-size:9.5px;">Filter &middot; Resonance</div>
+
+        <div class="ctl btn-ctl hue3" style="left:322px; top:52px; width:66px; height:46px;"><div class="name" style="font-size:10px">Intro</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue3 on" style="left:396px; top:52px; width:66px; height:46px;"><div class="name" style="font-size:10px">Build</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue3" style="left:322px; top:106px; width:66px; height:46px;"><div class="name" style="font-size:10px">Drop</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue3" style="left:396px; top:106px; width:66px; height:46px;"><div class="name" style="font-size:10px">Outro</div><div class="pipe"></div></div>
+        <div class="outlabel" style="left:322px; top:156px; width:140px; font-size:9.5px;">Clips</div>
+
+        <div class="ctl fader hue2 horiz" style="left:182px; top:204px; width:280px; height:24px;">
+            <div class="slot"><div class="fill" style="width:46%"></div><div class="capbar" style="left:calc(46% - 8px);"></div></div>
+        </div>
+
+        <div class="ctl btn-ctl hue6" style="left:18px; top:248px; width:104px; height:38px;"><div class="name" style="font-size:10px">Panic</div></div>
+        <div class="ctl btn-ctl hue2 held" style="left:130px; top:248px; width:104px; height:38px;"><div class="name" style="font-size:10px">Tap</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue2 on" style="left:242px; top:248px; width:104px; height:38px;"><div class="name" style="font-size:10px">Sync</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue4" style="left:354px; top:248px; width:108px; height:38px;"><div class="name" style="font-size:10px">Layer A</div><div class="pipe"></div></div>
+
+        <div class="ctl lfo hue4" style="left:18px; top:298px; width:140px; height:54px; padding:5px 7px;">
+            <div class="head" style="font-size:8.5px"><span>LFO &middot; sine</span><span class="mono">1/8</span></div>
+            <svg viewBox="0 0 70 24" preserveAspectRatio="none">
+                <path d="M0,12 C6,1 12,1 18,12 C24,23 30,23 36,12 C42,1 48,1 54,12 C60,23 66,23 70,12" fill="none" style="stroke:rgb(var(--hue))" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="ctl knob hue3 detent" style="left:174px; top:300px; width:50px; height:50px;">
+            <div class="dial"><div class="arc" style="--pct:.40turn"></div><div class="ptr" style="transform:rotate(0deg)"></div></div>
+        </div>
+        <div class="outlabel" style="left:166px; top:354px; width:66px; font-size:9.5px;">Pan</div>
+        <div class="ctl knob hue5" style="left:246px; top:300px; width:50px; height:50px;">
+            <div class="dial"><div class="arc" style="--pct:.61turn"></div><div class="ptr" style="transform:rotate(76deg)"></div></div>
+        </div>
+        <div class="outlabel" style="left:238px; top:354px; width:66px; font-size:9.5px;">Reverb</div>
+
+        <div class="ctl btn-ctl hue1 offline" style="left:322px; top:298px; width:140px; height:54px;">
+            <div class="name" style="font-size:10px; color:var(--deck-ink2)">Iridium</div>
+            <div class="cap" style="font-size:9px; color:rgb(var(--h6))">device offline</div>
+        </div>
+    </div>
+    <div class="decktag" style="left:508px;"><b>Pigment Dark</b> &mdash; the same theme data with light tones on a near-black deck</div>
+
+</div>
+
+<!-- ================================================= THE SAME CONTROL -->
+<div class="board" style="height:296px; margin-top:13px;">
+
+    <div style="position:absolute; left:16px; top:14px; font-size:11px; letter-spacing:.10em; color:rgba(255,255,255,.34)">THE SAME CONTROL IN ALL THREE THEMES &mdash; NOTHING WAS ADDED TO THE CONTROL TO MAKE THIS WORK</div>
+
+    <div class="colhead" style="left:150px; top:36px;">REST</div>
+    <div class="colhead" style="left:250px; top:36px;">HELD</div>
+    <div class="colhead" style="left:350px; top:36px;">LATCHED ON</div>
+    <div class="colhead" style="left:450px; top:36px;">DISABLED</div>
+    <div class="colhead" style="left:550px; top:36px;">UNAVAILABLE</div>
+
+    <div class="strip surf" style="top:54px;">
+        <div class="striplabel" style="color:var(--deck-ink)">Studio Dark<span>glass, glow</span></div>
+        <div class="ctl btn-ctl hue1" style="left:150px; top:11px; width:84px; height:52px;"><div class="name">Cue A</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1 held" style="left:250px; top:11px; width:84px; height:52px;"><div class="name">Cue A</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue1 on" style="left:350px; top:11px; width:84px; height:52px;"><div class="name">Cue A</div><div class="pipe lit" style="background:#fff; box-shadow:0 0 9px #fff;"></div></div>
+        <div class="ctl btn-ctl hue1 dim" style="left:450px; top:11px; width:84px; height:52px;"><div class="name" style="color:rgba(255,255,255,.35)">Cue A</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1 offline" style="left:550px; top:11px; width:84px; height:52px;"><div class="name" style="font-size:10px; color:rgba(255,255,255,.45)">Cue A</div><div class="cap" style="font-size:8.5px; color:rgba(255,153,164,.85)">offline</div></div>
+        <div style="position:absolute; left:664px; top:16px; width:320px; font-size:11px; line-height:1.5; color:rgba(255,255,255,.44)">Depth comes from a <b style="color:rgba(255,255,255,.75)">glow</b> behind the plate, and the plate is translucent so the deck shows through.</div>
+    </div>
+
+    <div class="strip surf tonal tonal-dark" style="top:134px;">
+        <div class="striplabel" style="color:var(--deck-ink)">Pigment Dark<span>flat, tonal</span></div>
+        <div class="ctl btn-ctl hue1" style="left:150px; top:11px; width:84px; height:52px;"><div class="name">Cue A</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1 held" style="left:250px; top:11px; width:84px; height:52px;"><div class="name">Cue A</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue1 on" style="left:350px; top:11px; width:84px; height:52px;"><div class="name">Cue A</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue1 dim" style="left:450px; top:11px; width:84px; height:52px;"><div class="name">Cue A</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1 offline" style="left:550px; top:11px; width:84px; height:52px;"><div class="name" style="font-size:10px; color:var(--deck-ink2)">Cue A</div><div class="cap" style="font-size:8.5px; color:rgb(var(--h6))">offline</div></div>
+        <div style="position:absolute; left:664px; top:16px; width:320px; font-size:11px; line-height:1.5; color:var(--deck-ink2)">Depth comes from <b style="color:var(--deck-ink)">how much of its own color</b> the plate is carrying. No glow, no shadow, no extra element.</div>
+    </div>
+
+    <div class="strip surf tonal tonal-light" style="top:214px;">
+        <div class="striplabel" style="color:var(--deck-ink)">Pigment Light<span>flat, tonal</span></div>
+        <div class="ctl btn-ctl hue1" style="left:150px; top:11px; width:84px; height:52px;"><div class="name">Cue A</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1 held" style="left:250px; top:11px; width:84px; height:52px;"><div class="name">Cue A</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue1 on" style="left:350px; top:11px; width:84px; height:52px;"><div class="name">Cue A</div><div class="pipe lit"></div></div>
+        <div class="ctl btn-ctl hue1 dim" style="left:450px; top:11px; width:84px; height:52px;"><div class="name">Cue A</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1 offline" style="left:550px; top:11px; width:84px; height:52px;"><div class="name" style="font-size:10px; color:var(--deck-ink2)">Cue A</div><div class="cap" style="font-size:8.5px; color:rgb(var(--h6))">offline</div></div>
+        <div style="position:absolute; left:664px; top:16px; width:320px; font-size:11px; line-height:1.5; color:var(--deck-ink2)">The light one is the real test. The value bar had to stop glowing and start being a <b style="color:var(--deck-ink)">dark, saturated ink</b> instead.</div>
+    </div>
+
+</div>
+
+<div class="costgrid">
+    <div class="cost">
+        <h4><span class="yes">Free</span> &mdash; what these reuse</h4>
+        The six hue slots, the deck, corner rounding, glass tint set to fully opaque and glow strength set to zero. All four are already theme properties in the editor on <b>screen 8</b>. A customer can slide glow back up on Pigment Dark and land halfway between it and Studio Dark, because they are the same system with different numbers.
+    </div>
+    <div class="cost">
+        <h4><span class="no">Two additions</span> &mdash; what they need</h4>
+        <b>Fill at rest</b>, outlined or tonal &mdash; one property, and it is what makes these read as a different family. And a <b>track color</b> for the empty part of a fader slot and a knob arc, which the dark themes get away with hardcoding as black. That second one is really a gap in the theme model I should have caught, not a cost of these themes.
+    </div>
+    <div class="cost">
+        <h4>What I did <span class="no">not</span> take</h4>
+        <b>Drop shadows.</b> The older Material look puts a real shadow under every card, which would be eighty composition shadows on a surface that has to stay smooth under a finger. The newer approach carries elevation as a tint of the surface's own color instead, and a tint is free. If you want the shadowed look later, that is the conversation to have &mdash; it is the one thing here with a real cost.
+    </div>
+</div>
+
+<p class="note" style="margin-top:13px;">
+<b>One thing to decide.</b> These break the "nothing is saturated at rest" rule that keeps a busy Studio Dark page readable &mdash; a tonal page is colorful when nothing is happening, so activity has less room to stand out. On a forty-control mixer that is a fair trade for how much friendlier it looks; on a hundred-and-twenty-control page I think Studio Dark still wins. Worth naming that in the theme picker rather than letting someone find out during a set. <b>Names are placeholders</b> &mdash; Studio Paper and Studio Slate would sit closer to the existing family if you would rather they read as siblings of Studio Dark.
+</p>
+
+</div>
+</body>
+</html>

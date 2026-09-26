@@ -128,6 +128,76 @@ namespace
         return static_cast<uint8_t>((word >> 16) & 0xF);
     }
 
+    uint8_t GroupOf(_In_ uint32_t const word)
+    {
+        return static_cast<uint8_t>((word >> 24) & 0xF);
+    }
+
+    // The far end of the same loopback pair. Sending into B comes out of A, which is what lets
+    // one pair of built-in endpoints stand in for two separate instruments.
+    struct ReverseCaptureSession
+    {
+        MidiSession Session{ nullptr };
+        MidiEndpointConnection Sender{ nullptr };
+        MidiEndpointConnection Receiver{ nullptr };
+
+        std::mutex Lock{};
+        std::vector<std::array<uint32_t, 4>> Messages{};
+
+        winrt::event_token Token{};
+
+        void Start()
+        {
+            Session = MidiSession::Create(L"Sequencing tests, second endpoint");
+            VERIFY_IS_NOT_NULL(Session);
+
+            Sender = Session.CreateEndpointConnection(LoopbackBEndpointId());
+            VERIFY_IS_NOT_NULL(Sender);
+            VERIFY_IS_TRUE(Sender.Open());
+
+            Receiver = Session.CreateEndpointConnection(LoopbackAEndpointId());
+            VERIFY_IS_NOT_NULL(Receiver);
+
+            Token = Receiver.MessageReceived([this](auto&&, auto&& args)
+                {
+                    std::array<uint32_t, 4> words{};
+
+                    args.FillWords(words[0], words[1], words[2], words[3]);
+
+                    std::lock_guard<std::mutex> const guard{ Lock };
+
+                    Messages.push_back(words);
+                });
+
+            VERIFY_IS_TRUE(Receiver.Open());
+        }
+
+        void Stop()
+        {
+            if (Receiver != nullptr)
+            {
+                Receiver.MessageReceived(Token);
+            }
+
+            if (Session != nullptr)
+            {
+                Session.Close();
+                Session = nullptr;
+            }
+
+            Sender = nullptr;
+            Receiver = nullptr;
+        }
+
+        ~ReverseCaptureSession() { Stop(); }
+
+        std::vector<std::array<uint32_t, 4>> Snapshot()
+        {
+            std::lock_guard<std::mutex> const guard{ Lock };
+            return Messages;
+        }
+    };
+
     bool WaitForState(
         _In_ MidiSequencePlayer const& player,
         _In_ MidiSequencePlayerState const state,
@@ -698,7 +768,6 @@ void MidiSequencePlayerTests::RoundTripsTrackRouting()
     capture.Start(false);
 
     auto player = MakeBorrowingPlayer(capture);
-
     player.SetSequenceAsync(ReadTestSequence(L"multi-track.mid")).get();
 
     MidiSequenceTrackRouting routing{};
@@ -734,6 +803,267 @@ void MidiSequencePlayerTests::RoutingMuteAgreesWithTrackMute()
 
     // Setting routing with a mute has to be the same statement as muting the track.
     VERIFY_IS_TRUE(player.IsTrackMuted(2));
+
+    player.Close();
+}
+
+namespace
+{
+    // multi-track.mid writes track 1 to channel 0 and track 2 to channel 1, which is what the
+    // mute and solo tests above rely on as well.
+    constexpr uint16_t ChannelZeroTrack = 1;
+    constexpr uint16_t ChannelOneTrack = 2;
+
+    // Every routing test plays the whole file and then waits for the all sound off that ends it,
+    // so the assertions run against a complete capture rather than a partial one.
+    void PlayToTheEnd(_In_ MidiSequencePlayer const& player, _In_ CaptureSession& capture)
+    {
+        player.Play();
+
+        VERIFY_IS_TRUE(WaitForState(player, MidiSequencePlayerState::Stopped, 6000));
+
+        WaitForMessages(capture, 0,
+            [](auto const& messages, size_t)
+            {
+                for (auto const& message : messages)
+                {
+                    if (IsControlChange(message[0], 120)) { return true; }
+                }
+
+                return false;
+            },
+            4000);
+    }
+}
+
+void MidiSequencePlayerTests::RoutesATrackToADifferentGroup()
+{
+    CaptureSession capture{};
+    capture.Start();
+
+    auto player = MakeBorrowingPlayer(capture);
+
+    player.SetSequenceAsync(ReadTestSequence(L"multi-track.mid")).get();
+
+    MidiSequenceTrackRouting routing{};
+    routing.Group(MidiGroup{ static_cast<uint8_t>(5) });
+
+    player.SetTrackRouting(ChannelZeroTrack, routing);
+
+    PlayToTheEnd(player, capture);
+
+    bool routedTrackOnGroupFive{ false };
+    bool routedTrackOnGroupZero{ false };
+    bool otherTrackOnGroupZero{ false };
+
+    for (auto const& message : capture.Snapshot())
+    {
+        if (!IsNoteOnWithVelocity(message[0]))
+        {
+            continue;
+        }
+
+        if (ChannelOf(message[0]) == 0)
+        {
+            if (GroupOf(message[0]) == 5) { routedTrackOnGroupFive = true; }
+            if (GroupOf(message[0]) == 0) { routedTrackOnGroupZero = true; }
+        }
+        else if (ChannelOf(message[0]) == 1 && GroupOf(message[0]) == 0)
+        {
+            otherTrackOnGroupZero = true;
+        }
+    }
+
+    // The routed track moved, and only the routed track moved.
+    VERIFY_IS_TRUE(routedTrackOnGroupFive);
+    VERIFY_IS_FALSE(routedTrackOnGroupZero);
+    VERIFY_IS_TRUE(otherTrackOnGroupZero);
+
+    player.Close();
+}
+
+void MidiSequencePlayerTests::RoutesATrackToADifferentChannel()
+{
+    CaptureSession capture{};
+    capture.Start();
+
+    auto player = MakeBorrowingPlayer(capture);
+
+    player.SetSequenceAsync(ReadTestSequence(L"multi-track.mid")).get();
+
+    MidiSequenceTrackRouting routing{};
+    routing.ChannelOverride(MidiChannel{ static_cast<uint8_t>(9) });
+
+    player.SetTrackRouting(ChannelZeroTrack, routing);
+
+    PlayToTheEnd(player, capture);
+
+    std::array<bool, 16> noteOnChannels{};
+
+    for (auto const& message : capture.Snapshot())
+    {
+        if (IsNoteOnWithVelocity(message[0]))
+        {
+            noteOnChannels[ChannelOf(message[0])] = true;
+        }
+    }
+
+    // The track the file wrote to channel 0 now plays on channel 9, and nothing is left behind
+    // on channel 0. The untouched track still plays where it always did.
+    VERIFY_IS_TRUE(noteOnChannels[9]);
+    VERIFY_IS_FALSE(noteOnChannels[0]);
+    VERIFY_IS_TRUE(noteOnChannels[1]);
+
+    player.Close();
+}
+
+void MidiSequencePlayerTests::RoutesTwoTracksToTwoEndpointsAtOnce()
+{
+    // This is what MidiSequenceTrackRouting has always documented and never done: one file
+    // driving two instruments at the same time.
+    CaptureSession capture{};
+    capture.Start();
+
+    ReverseCaptureSession second{};
+    second.Start();
+
+    auto player = MakeBorrowingPlayer(capture);
+
+    player.SetSequenceAsync(ReadTestSequence(L"multi-track.mid")).get();
+
+    MidiSequenceTrackRouting routing{};
+    routing.Connection(second.Sender);
+
+    player.SetTrackRouting(ChannelOneTrack, routing);
+
+    PlayToTheEnd(player, capture);
+
+    bool firstEndpointSawChannelZero{ false };
+    bool firstEndpointSawChannelOne{ false };
+
+    for (auto const& message : capture.Snapshot())
+    {
+        if (!IsNoteOnWithVelocity(message[0])) { continue; }
+
+        if (ChannelOf(message[0]) == 0) { firstEndpointSawChannelZero = true; }
+        if (ChannelOf(message[0]) == 1) { firstEndpointSawChannelOne = true; }
+    }
+
+    bool secondEndpointSawChannelOne{ false };
+    bool secondEndpointSawChannelZero{ false };
+
+    for (auto const& message : second.Snapshot())
+    {
+        if (!IsNoteOnWithVelocity(message[0])) { continue; }
+
+        if (ChannelOf(message[0]) == 1) { secondEndpointSawChannelOne = true; }
+        if (ChannelOf(message[0]) == 0) { secondEndpointSawChannelZero = true; }
+    }
+
+    // Each endpoint got its own track and neither got the other's.
+    VERIFY_IS_TRUE(firstEndpointSawChannelZero);
+    VERIFY_IS_FALSE(firstEndpointSawChannelOne);
+    VERIFY_IS_TRUE(secondEndpointSawChannelOne);
+    VERIFY_IS_FALSE(secondEndpointSawChannelZero);
+
+    player.Close();
+}
+
+void MidiSequencePlayerTests::ClearingRoutingSendsTheTrackBackToThePlayerConnection()
+{
+    CaptureSession capture{};
+    capture.Start();
+
+    auto player = MakeBorrowingPlayer(capture);
+
+    player.SetSequenceAsync(ReadTestSequence(L"multi-track.mid")).get();
+
+    MidiSequenceTrackRouting routing{};
+    routing.Group(MidiGroup{ static_cast<uint8_t>(7) });
+
+    player.SetTrackRouting(ChannelZeroTrack, routing);
+    player.SetTrackRouting(ChannelZeroTrack, nullptr);
+
+    PlayToTheEnd(player, capture);
+
+    bool onGroupZero{ false };
+    bool onGroupSeven{ false };
+
+    for (auto const& message : capture.Snapshot())
+    {
+        if (!IsNoteOnWithVelocity(message[0]) || ChannelOf(message[0]) != 0)
+        {
+            continue;
+        }
+
+        if (GroupOf(message[0]) == 0) { onGroupZero = true; }
+        if (GroupOf(message[0]) == 7) { onGroupSeven = true; }
+    }
+
+    VERIFY_IS_TRUE(onGroupZero);
+    VERIFY_IS_FALSE(onGroupSeven);
+
+    player.Close();
+}
+
+void MidiSequencePlayerTests::SilencesEveryEndpointATrackWasRoutedTo()
+{
+    // A note left sounding on an endpoint the panic skipped is the whole reason a panic exists.
+    CaptureSession capture{};
+    capture.Start();
+
+    ReverseCaptureSession second{};
+    second.Start();
+
+    auto player = MakeBorrowingPlayer(capture);
+
+    player.SetSequenceAsync(ReadTestSequence(L"multi-track.mid")).get();
+
+    MidiSequenceTrackRouting routing{};
+    routing.Connection(second.Sender);
+
+    player.SetTrackRouting(ChannelOneTrack, routing);
+
+    player.Play();
+
+    VERIFY_IS_TRUE(WaitForMessages(capture, 0,
+        [](auto const& messages, size_t)
+        {
+            for (auto const& message : messages)
+            {
+                if (IsNoteOnWithVelocity(message[0])) { return true; }
+            }
+
+            return false;
+        },
+        4000));
+
+    player.Stop();
+
+    // All sound off has to reach the routed endpoint too, not only the player's own.
+    auto const reached = [](std::vector<std::array<uint32_t, 4>> const& messages)
+        {
+            for (auto const& message : messages)
+            {
+                if (IsControlChange(message[0], 120)) { return true; }
+            }
+
+            return false;
+        };
+
+    auto const deadline = std::chrono::steady_clock::now() + std::chrono::milliseconds(4000);
+
+    bool secondSilenced{ false };
+
+    while (std::chrono::steady_clock::now() < deadline && !secondSilenced)
+    {
+        secondSilenced = reached(second.Snapshot());
+
+        if (!secondSilenced) { ::Sleep(PollIntervalMilliseconds); }
+    }
+
+    VERIFY_IS_TRUE(reached(capture.Snapshot()));
+    VERIFY_IS_TRUE(secondSilenced);
 
     player.Close();
 }

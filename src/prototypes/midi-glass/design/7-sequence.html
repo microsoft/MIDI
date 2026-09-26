@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - sequence editor</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    .dialog { width: 860px; height: 626px; }
+    .dialog .db { padding: 0 20px 10px 20px; display: flex; flex-direction: column; min-height: 0; }
+    .seqbar { display: flex; align-items: center; gap: 7px; padding: 8px 0 10px 0; }
+    .seqbar .spacer { flex: 1; }
+    .steplist { flex: 1; overflow: hidden; }
+    .step {
+        display: flex; align-items: center; gap: 9px;
+        height: 38px; padding: 0 9px 0 5px;
+        border-radius: 6px; margin-bottom: 4px;
+        background: rgba(255,255,255,.032);
+        box-shadow: inset 0 0 0 1px var(--stroke);
+        font-size: 12px;
+    }
+    .step.sel { background: rgba(96,205,255,.10); box-shadow: inset 0 0 0 1px rgba(96,205,255,.45); }
+    .step .grip { color: var(--text-disabled); font-family: "Segoe Fluent Icons"; font-size: 13px; width: 14px; text-align: center; }
+    .step .kind {
+        width: 112px; flex: 0 0 112px; display: flex; align-items: center; gap: 7px;
+        color: var(--text2); font-size: 11px; white-space: nowrap;
+    }
+    .addchips { display: flex; gap: 5px; align-items: center; padding: 0 0 10px 0; flex-wrap: wrap; }
+    .addchips .lead { font-size: 11.5px; color: var(--text3); margin-right: 3px; }
+    .addchip {
+        height: 26px; padding: 0 9px; border-radius: 13px;
+        display: inline-flex; align-items: center; gap: 6px;
+        font-size: 11.5px; color: var(--text2);
+        box-shadow: inset 0 0 0 1px var(--stroke-strong);
+        background: rgba(255,255,255,.035);
+    }
+    .addchip .gl { font-size: 12px; color: var(--text3); }
+    .step .kind .gl { font-size: 13px; }
+    .step .body { flex: 1; display: flex; align-items: center; gap: 7px; min-width: 0; }
+    .step .field { height: 27px; font-size: 11.5px; }
+    .step .to { font-size: 11px; color: var(--text3); white-space: nowrap; }
+    .step .gone { color: var(--text-disabled); font-family: "Segoe Fluent Icons"; font-size: 12px; }
+    .step.wait { background: rgba(255,255,255,.016); }
+    .step.wait .kind { color: var(--caution); }
+    .repeatwrap {
+        border-radius: 7px; padding: 5px 5px 2px 5px; margin-bottom: 5px;
+        box-shadow: inset 0 0 0 1px rgba(155,140,255,.35);
+        background: rgba(155,140,255,.055);
+    }
+    .repeatwrap .rh { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: #C7BDFF; padding: 3px 6px 7px 8px; }
+    .repeatwrap .rh .spacer { flex: 1; }
+    .addmenu {
+        position: absolute; left: 120px; top: 176px; width: 224px;
+        background: #2C2C2C; border: 1px solid var(--stroke-strong);
+        border-radius: 7px; box-shadow: 0 12px 32px rgba(0,0,0,.65);
+        padding: 4px; z-index: 50; font-size: 12.5px;
+    }
+    .addmenu .mi { height: 30px; display: flex; align-items: center; gap: 10px; padding: 0 10px; color: var(--text2); }
+    .addmenu .mi .gl { font-size: 13px; color: var(--text3); }
+    .addmenu .msep { height: 1px; background: var(--divider); margin: 4px 8px; }
+    .addmenu .mh { font-size: 10.5px; color: var(--text3); padding: 7px 10px 3px 10px; }
+</style>
+</head>
+<body>
+<div class="page">
+<p class="caption-above">Screen 7 &mdash; a button that does more than one thing. Steps run in order, a <b>Wait</b> is a first-class step, and a block can repeat. This is deliberately a list, not a scripting language.</p>
+
+<div class="window">
+
+    <div class="titlebar">
+        <div class="appmark"></div>
+        <div class="title">Live Rig &mdash; Windows MIDI Glass</div>
+        <div class="preview-chiclet">PREVIEW</div>
+        <div class="spacer"></div>
+        <div class="caption-btn gl">&#xE713;</div>
+        <div class="caption-btn gl">&#xE840;</div>
+        <div class="sys-btns"><div class="gl">&#xE921;</div><div class="gl">&#xE922;</div><div class="gl">&#xE8BB;</div></div>
+    </div>
+
+    <div class="toolbar">
+        <div class="btn subtle small"><span class="gl">&#xE72B;</span>Library</div>
+        <div class="seg"><div class="sel gl" style="font-size:12px">&#xE70F;&nbsp; Edit</div><div>&#9654;&nbsp; Try</div></div>
+        <div class="spacer"></div>
+        <div class="chip on"><span class="gl">&#xE73E;</span>Saved</div>
+    </div>
+
+    <div class="shell" style="opacity:.32">
+        <div class="palette" style="width:150px; flex:0 0 150px;"></div>
+        <div style="flex:1; background:#0A0B0E"></div>
+        <div class="inspector"></div>
+    </div>
+
+    <div class="scrim"></div>
+
+    <div class="dialog">
+        <div class="dh" style="display:flex; align-items:baseline; gap:10px">
+            Sequence
+            <span style="font-size:12px; font-weight:400; color:var(--text3)">Button &middot; Song 2 recall</span>
+        </div>
+
+        <div class="db">
+            <div class="seqbar">
+                <div class="btn small"><span class="gl">&#xE8C8;</span>Duplicate</div>
+                <div class="btn icon small gl">&#xE74A;</div>
+                <div class="btn icon small gl">&#xE74B;</div>
+                <div class="btn icon small gl">&#xE74D;</div>
+                <div class="spacer"></div>
+                <span class="chip"><span class="gl">&#xE916;</span>About 2.0 s in total</span>
+                <div class="btn small"><span class="gl">&#xE768;</span>Test it</div>
+            </div>
+
+            <div class="addchips">
+                <span class="lead">Add a step</span>
+                <span class="addchip"><span class="gl">&#xE8D6;</span>Note</span>
+                <span class="addchip"><span class="gl">&#xE9E9;</span>Message</span>
+                <span class="addchip"><span class="gl">&#xE8A5;</span>System exclusive</span>
+                <span class="addchip"><span class="gl">&#xE8B7;</span>From a .syx file</span>
+                <span class="addchip" style="color:var(--caution); box-shadow:inset 0 0 0 1px rgba(252,225,0,.35)"><span class="gl" style="color:var(--caution)">&#xE916;</span>Wait</span>
+                <span class="addchip" style="color:#C7BDFF; box-shadow:inset 0 0 0 1px rgba(155,140,255,.35)"><span class="gl" style="color:#C7BDFF">&#xE72C;</span>Repeat a block</span>
+                <span class="addchip"><span class="gl">&#xE8AB;</span>Set a control</span>
+                <span class="addchip"><span class="gl">&#xE8A9;</span>Go to a page</span>
+                <span class="addchip"><span class="gl">&#xE72E;</span>Hold a layer</span>
+            </div>
+
+            <div class="steplist">
+
+                <div class="step sel">
+                    <span class="grip">&#xE76F;</span>
+                    <span class="kind"><span class="gl" style="color:var(--accent)">&#xE8A5;</span>System exclusive</span>
+                    <div class="body">
+                        <div class="field flat" style="flex:1"><span class="mono" style="font-size:11px; color:var(--text2)">F0 00 20 6B 7F 42 02 00 10 &hellip; F7</span></div>
+                        <span class="chip" style="height:22px; font-size:10px"><span class="gl">&#xE8B7;</span>Song2.syx &middot; 214 bytes</span>
+                    </div>
+                    <span class="to">&rarr; Synth</span>
+                    <span class="gone">&#xE712;</span>
+                </div>
+
+                <div class="step wait">
+                    <span class="grip">&#xE76F;</span>
+                    <span class="kind"><span class="gl">&#xE916;</span>Wait</span>
+                    <div class="body">
+                        <div class="field" style="width:96px">250</div>
+                        <span style="font-size:11.5px; color:var(--text3)">milliseconds</span>
+                        <div style="flex:1"></div>
+                        <span style="font-size:11px; color:var(--text-disabled)">gives the synth time to load the patch</span>
+                    </div>
+                    <span class="gone">&#xE712;</span>
+                </div>
+
+                <div class="repeatwrap">
+                    <div class="rh">
+                        <span class="gl" style="font-size:13px">&#xE72C;</span>
+                        <span>Repeat these steps</span>
+                        <div class="field" style="width:62px; height:25px; font-size:11.5px">3</div>
+                        <span>times</span>
+                        <div class="spacer"></div>
+                        <span style="color:rgba(199,189,255,.65); font-size:11px">1.2 s</span>
+                        <span class="gone">&#xE712;</span>
+                    </div>
+
+                    <div class="step" style="margin-left:22px">
+                        <span class="grip">&#xE76F;</span>
+                        <span class="kind"><span class="gl" style="color:rgb(var(--h2))">&#xE8D6;</span>Note</span>
+                        <div class="body">
+                            <div class="field combo" style="width:106px">C3&nbsp; (48)</div>
+                            <span style="font-size:11.5px; color:var(--text3)">for</span>
+                            <div class="field" style="width:78px">200 ms</div>
+                            <span style="font-size:11.5px; color:var(--text3)">at</span>
+                            <div class="field" style="width:74px">100 %</div>
+                            <div style="flex:1"></div>
+                        </div>
+                        <span class="to">&rarr; Synth &middot; ch 1</span>
+                        <span class="gone">&#xE712;</span>
+                    </div>
+
+                    <div class="step" style="margin-left:22px">
+                        <span class="grip">&#xE76F;</span>
+                        <span class="kind"><span class="gl" style="color:rgb(var(--h2))">&#xE8D6;</span>Note</span>
+                        <div class="body">
+                            <div class="field combo" style="width:106px">G3&nbsp; (55)</div>
+                            <span style="font-size:11.5px; color:var(--text3)">for</span>
+                            <div class="field" style="width:78px">200 ms</div>
+                            <span style="font-size:11.5px; color:var(--text3)">at</span>
+                            <div class="field" style="width:74px">80 %</div>
+                            <div style="flex:1"></div>
+                        </div>
+                        <span class="to">&rarr; Synth &middot; ch 1</span>
+                        <span class="gone">&#xE712;</span>
+                    </div>
+                </div>
+
+                <div class="step">
+                    <span class="grip">&#xE76F;</span>
+                    <span class="kind"><span class="gl" style="color:rgb(var(--h4))">&#xE9E9;</span>Message</span>
+                    <div class="body">
+                        <div class="field combo" style="width:150px">Control change</div>
+                        <div class="field" style="width:76px">64</div>
+                        <span style="font-size:11.5px; color:var(--text3)">=</span>
+                        <div class="field" style="width:80px">100 %</div>
+                        <div style="flex:1"></div>
+                    </div>
+                    <span class="to">&rarr; DAW &middot; ch 16</span>
+                    <span class="gone">&#xE712;</span>
+                </div>
+
+                <div class="step">
+                    <span class="grip">&#xE76F;</span>
+                    <span class="kind"><span class="gl" style="color:rgb(var(--h5))">&#xE8AB;</span>Set a control</span>
+                    <div class="body">
+                        <div class="field combo" style="width:180px">Fader &middot; Master</div>
+                        <span style="font-size:11.5px; color:var(--text3)">to</span>
+                        <div class="field" style="width:80px">75 %</div>
+                        <div style="flex:1"></div>
+                        <span style="font-size:11px; color:var(--text-disabled)">sends its message too</span>
+                    </div>
+                    <span class="gone">&#xE712;</span>
+                </div>
+
+                <div class="step">
+                    <span class="grip">&#xE76F;</span>
+                    <span class="kind"><span class="gl" style="color:rgb(var(--h1))">&#xE8A9;</span>Go to page</span>
+                    <div class="body">
+                        <div class="field combo" style="width:180px">Clips</div>
+                        <div style="flex:1"></div>
+                    </div>
+                    <span class="gone">&#xE712;</span>
+                </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:14px; padding-top:12px; border-top:1px solid var(--divider); margin-top:8px">
+                <span style="font-size:12px; color:var(--text2)">Pressing the button</span>
+                <div class="seg">
+                    <div class="sel">runs it once</div>
+                    <div>repeats it while held</div>
+                    <div>starts it, and the next press stops it</div>
+                </div>
+                <div style="flex:1"></div>
+                <span class="chip warn" style="height:20px; font-size:10px"><span class="gl">&#xE7BA;</span>Waits do not block the surface</span>
+            </div>
+        </div>
+
+        <div class="df">
+            <div style="flex:1"></div>
+            <div class="btn accent" style="flex:0 0 116px">Done</div>
+            <div class="btn" style="flex:0 0 116px">Cancel</div>
+        </div>
+    </div>
+
+    <!-- step types are always visible as chips, so adding a step is one click -->
+</div>
+
+<p class="note">
+<b>Why this is a list and not a script.</b> Layouts get shared on forums, so a layout file is untrusted input from
+a stranger. Putting a general-purpose script engine behind a downloaded file would make a sequencer into a code
+delivery mechanism, and it would drag a large runtime into a tool that has to start instantly and run with no
+network. A fixed set of steps covers what people actually build &mdash; recall a patch, arpeggiate, stage a
+crossfade, jump to a page &mdash; and every step is inspectable, localizable and readable by a screen reader.
+<br><br>
+If it ever needs more, the right escape hatch is a <b>tiny expression for value mapping only</b>
+(<span class="mono">value * 0.5 + 0.25</span>), with no loops, no I/O and no file access. That is a few hundred
+lines and cannot be turned into a payload. <b>Recommendation: no JavaScript engine, in this version or later.</b>
+<br><br>
+<b>Waits never block the surface.</b> Each running sequence is a small scheduled state machine on the MIDI clock,
+not a sleeping thread, so twenty buttons can be mid-sequence while a fader still moves at full rate.
+</p>
+
+</div>
+</body>
+</html>

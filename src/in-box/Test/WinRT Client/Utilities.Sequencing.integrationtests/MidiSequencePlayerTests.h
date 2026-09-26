@@ -42,6 +42,11 @@ class MidiSequencePlayerTests
     // ---- routing ----
     TEST_METHOD(RoundTripsTrackRouting);
     TEST_METHOD(RoutingMuteAgreesWithTrackMute);
+    TEST_METHOD(RoutesATrackToADifferentGroup);
+    TEST_METHOD(RoutesATrackToADifferentChannel);
+    TEST_METHOD(RoutesTwoTracksToTwoEndpointsAtOnce);
+    TEST_METHOD(ClearingRoutingSendsTheTrackBackToThePlayerConnection);
+    TEST_METHOD(SilencesEveryEndpointATrackWasRoutedTo);
 
     // ---- misuse ----
     TEST_METHOD(TransportCallsWithoutASequenceAreHarmless);

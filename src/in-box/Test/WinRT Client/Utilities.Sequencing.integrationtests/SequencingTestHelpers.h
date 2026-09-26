@@ -91,6 +91,43 @@ namespace SequencingTests
         return std::vector<uint8_t>(first, last);
     }
 
+    struct WrittenFile
+    {
+        winrt::Windows::Devices::Midi2::Utilities::Files::MidiFileWriteResult Result{ nullptr };
+        std::vector<uint8_t> Bytes{};
+    };
+
+    // Writes a sequence into memory and hands back both the result and the bytes, which is what
+    // lets a test read its own output back without touching the disk.
+    inline WrittenFile WriteSequenceBytes(
+        _In_ winrt::Windows::Devices::Midi2::Utilities::Sequencing::MidiSequence const& sequence,
+        _In_ winrt::Windows::Devices::Midi2::Utilities::Files::MidiFileWriteOptions const& options = nullptr)
+    {
+        WrittenFile written{};
+
+        streams::InMemoryRandomAccessStream stream{};
+
+        written.Result = winrt::Windows::Devices::Midi2::Utilities::Files::MidiStandardFileWriter::WriteAsync(
+            stream, sequence, options).get();
+
+        if (written.Result == nullptr || !written.Result.Succeeded())
+        {
+            return written;
+        }
+
+        auto const size = static_cast<uint32_t>(stream.Size());
+
+        streams::DataReader reader{ stream.GetInputStreamAt(0) };
+
+        reader.LoadAsync(size).get();
+
+        written.Bytes.resize(size);
+
+        reader.ReadBytes(winrt::array_view<uint8_t>{ written.Bytes });
+
+        return written;
+    }
+
     // Group zero, spelled so the byte overload is chosen rather than an int.
     inline winrt::Windows::Devices::Midi2::MidiGroup FirstGroup()
     {

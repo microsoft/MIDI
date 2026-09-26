@@ -198,6 +198,15 @@
   <data name="ClockButtonText.Text" xml:space="preserve">
     <value>MIDI Clock</value>
   </data>
+  <data name="GlassButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
+    <value>MIDI Glass control surfaces</value>
+  </data>
+  <data name="GlassButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve">
+    <value>MIDI Glass control surfaces</value>
+  </data>
+  <data name="GlassButtonText.Text" xml:space="preserve">
+    <value>MIDI Glass</value>
+  </data>
   <data name="TroubleshooterButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>MIDI Troubleshooting and Repair</value>
   </data>

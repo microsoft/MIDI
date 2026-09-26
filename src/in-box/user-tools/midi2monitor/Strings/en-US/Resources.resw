@@ -412,6 +412,19 @@ Examples
   <data name="ExportFileTypeText" xml:space="preserve">
     <value>Text file</value>
   </data>
+  <data name="ExportFileTypeCommaSeparated" xml:space="preserve">
+    <value>Comma separated values</value>
+  </data>
+  <data name="ExportFileTypeStandardMidiFile" xml:space="preserve">
+    <value>Standard MIDI File</value>
+  </data>
+  <data name="ExportSequenceDefaultTrackName" xml:space="preserve">
+    <value>MIDI capture</value>
+  </data>
+  <data name="ExportSequenceGroupTrackNameFormat" xml:space="preserve">
+    <value>{0} - group {1}</value>
+    <comment>{0} is the endpoint name, {1} is a group number from 1 to 16</comment>
+  </data>
   <data name="ExportHeaderIndex" xml:space="preserve">
     <value>Number</value>
   </data>
@@ -448,6 +461,9 @@ Examples
   </data>
   <data name="ExportFailedBody" xml:space="preserve">
     <value>The capture could not be written to that location. Choose a different folder or file name and try again.</value>
+  </data>
+  <data name="ExportNothingToWriteBody" xml:space="preserve">
+    <value>There are no MIDI messages in the capture, so there is nothing to put in a Standard MIDI File. Save it as a text or comma separated file instead, or capture some messages first.</value>
   </data>
 
   <!-- ================================ Settings ================================ -->

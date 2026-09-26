@@ -58,6 +58,26 @@ namespace winrt::midiclock::implementation
             foundation::IInspectable const& sender,
             controls::SelectionChangedEventArgs const& args);
 
+        void OnEditClockRatioSelectionChanged(
+            foundation::IInspectable const& sender,
+            controls::SelectionChangedEventArgs const& args);
+
+        void OnEditSwingValueChanged(
+            foundation::IInspectable const& sender,
+            controls::Primitives::RangeBaseValueChangedEventArgs const& args);
+
+        void OnEditKindSelectionChanged(
+            foundation::IInspectable const& sender,
+            controls::SelectionChangedEventArgs const& args);
+
+        void OnEditFrameRateSelectionChanged(
+            foundation::IInspectable const& sender,
+            controls::SelectionChangedEventArgs const& args);
+
+        void OnEditStartTimeCodeChanged(
+            foundation::IInspectable const& sender,
+            controls::TextChangedEventArgs const& args);
+
         void OnTapTempoClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
     private:
@@ -104,6 +124,14 @@ namespace winrt::midiclock::implementation
         void RefreshEditorGroupList(int32_t desiredGroupIndex) noexcept;
         ::midiclock::ClockDefinition ReadEditor() noexcept;
         void SetEditorTempo(double beatsPerMinute) noexcept;
+        void RefreshEditorTimingCaptions() noexcept;
+
+        // Shows the fields that belong to the chosen kind and hides the rest, because a time
+        // code clock has no tempo and a beat clock has no frame rate.
+        void RefreshEditorKindVisibility() noexcept;
+
+        ::midiclock::ClockKind SelectedEditorKind() noexcept;
+        midiapp::MidiTimeCodeFrameRate SelectedEditorFrameRate() noexcept;
 
         void ApplyStartupOptions() noexcept;
 
@@ -116,6 +144,10 @@ namespace winrt::midiclock::implementation
         collections::IObservableVector<winrt::midiclock::ClockItem> m_items{ nullptr };
         collections::IObservableVector<appshared::EndpointChoice> m_endpoints{ nullptr };
         collections::IObservableVector<appshared::NamedChoice> m_groups{ nullptr };
+        collections::IObservableVector<appshared::NamedChoice> m_clockRatios{ nullptr };
+        collections::IObservableVector<appshared::NamedChoice> m_swingSubdivisions{ nullptr };
+        collections::IObservableVector<appshared::NamedChoice> m_clockKinds{ nullptr };
+        collections::IObservableVector<appshared::NamedChoice> m_frameRates{ nullptr };
 
         // parallel to m_endpoints, so a picked row can be turned back into its device
         std::vector<midi2enum::MidiEndpointDeviceInformation> m_endpointDevices{};
@@ -133,6 +165,7 @@ namespace winrt::midiclock::implementation
         bool m_editorOpen{ false };
 
         bool m_suppressTempoHandlers{ false };
+        bool m_suppressTimingHandlers{ false };
         bool m_initialized{ false };
         bool m_startupOptionsApplied{ false };
     };

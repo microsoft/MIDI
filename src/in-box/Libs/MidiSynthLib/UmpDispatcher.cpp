@@ -539,7 +539,14 @@ namespace MidiSynth
             return;
         }
 
-        uint8_t reply[ci::DiscoveryReplyByteCount]{};
+        // Big enough for every reply the responder can produce, so growing one of them cannot
+        // quietly turn into a ReplyBufferTooSmall at run time.
+        uint8_t reply[(std::max)({
+            ci::DiscoveryReplyByteCount,
+            ci::InvalidateMuidByteCount,
+            ci::AcknowledgmentFixedByteCount,
+            ci::PropertyExchangeCapabilitiesByteCount })]{};
+
         size_t replyBytes{ 0 };
 
         const auto action = m_responder.ProcessMessage(parsed, reply, sizeof(reply), &replyBytes);
@@ -560,6 +567,18 @@ namespace MidiSynth
 
         case ci::ResponderAction::MuidInvalidated:
             m_stats.MuidInvalidations++;
+            return;
+
+        case ci::ResponderAction::MuidCollision:
+            // The withdrawal goes out even though our identifier is already gone: the other device
+            // holding it has to hear about it too. The host generates the replacement.
+            m_stats.MuidInvalidations++;
+
+            if (m_output != nullptr)
+            {
+                SendSysEx7(reply, replyBytes);
+            }
+
             return;
 
         case ci::ResponderAction::InitiatorMuidInvalidated:

@@ -33,13 +33,15 @@ Each endpoint on the canvas has two columns.
 - **In** is what Patchbay sends *to* that device.
 - **Out** is what Patchbay receives *from* it.
 
-There's a row for each group the endpoint declares, labeled with the same name that group has as a MIDI 1.0 port, so it matches what you see in every other app. Above them is an **All groups** row: connect that and everything passes through with its group untouched, which is usually what you want when you just mean "send this device to that one".
+There's a row for each group the endpoint declares, labeled with the group's number and the name the device gives that group. The name comes from the device's function blocks, or from its group terminal blocks when no function block names the group. Each endpoint grows wide enough to show its longest name. If a name is longer still, point at the row to see all of it. Above them is an **All groups** row: connect that and everything passes through with its group untouched, which is usually what you want when you just mean "send this device to that one".
 
 Connect a specific group to a different specific group and Patchbay rewrites the group as the message goes past. That's how you fold four groups of one device onto one group of another.
 
 You can draw a connection by dragging from an Out point to an In point, or by clicking the Out point and then clicking the In point. The second way also works from the keyboard. You don't have to land exactly on the point &mdash; get close and the connection snaps to it.
 
 To change where an existing connection goes, drag the end of the cord onto a different point. Drag a node by its title bar to move it out of the way. Select a connection or an endpoint and press **Delete** to remove it; the first time, Patchbay asks, and offers to stop asking.
+
+The zoom controls above the canvas go from 10% to 400%. Click the zoom percentage and choose **Fit to screen** to see everything on the patch at once, as large as the window allows. The overview in the corner of the canvas shows the whole patch, with a box around the part on screen. Drag the box to move around, or click anywhere in the overview to jump there.
 
 ## Filters
 

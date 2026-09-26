@@ -7,8 +7,19 @@
 
 #pragma once
 
+#include "MidiTimeCode.h"
+
 namespace midiclock
 {
+    // What a saved clock sends. MIDI Time Code has no tempo at all, so it is a kind of clock
+    // rather than a switch on a beat clock: the tempo, the divider and the swing simply do not
+    // apply to it, and the editor hides them.
+    enum class ClockKind : int32_t
+    {
+        BeatClock = 0,
+        TimeCode = 1
+    };
+
     // Group value meaning "every group the endpoint declares", resolved against the endpoint
     // when the clock starts rather than stored as a list.
     constexpr int32_t AllDeclaredGroups = -1;
@@ -22,6 +33,23 @@ namespace midiclock
     constexpr int32_t DefaultPulsesPerQuarterNote = 24;
     constexpr int32_t MinimumPulsesPerQuarterNote = 1;
     constexpr int32_t MaximumPulsesPerQuarterNote = 96;
+
+    // The output rate against the tempo, as a ratio. 1/1 is the plain clock; 1/2 halves the
+    // rate so the receiver runs at half speed, 2/1 doubles it, 3/2 is triplets and 2/3 dotted.
+    constexpr int32_t DefaultClockRatioNumerator = 1;
+    constexpr int32_t DefaultClockRatioDenominator = 1;
+    constexpr int32_t MaximumClockRatioPart = 64;
+
+    // 50 is straight. The tempo is unchanged either way: swing lengthens the first of each
+    // pair of notes and shortens the second by the same amount.
+    constexpr double DefaultSwingPercent = 50.0;
+    constexpr double MinimumSwingPercent = 50.0;
+    constexpr double MaximumSwingPercent = 75.0;
+
+    // What gets swung, as a division of the quarter note: 2 is eighth notes, 4 is sixteenths.
+    constexpr int32_t DefaultSwingSubdivision = 2;
+
+    constexpr double MaximumOffsetMilliseconds = 500.0;
 
     // A saved clock. Everything here comes from a machine-wide, user-writable file, so every
     // field is range checked on the way in.
@@ -40,6 +68,19 @@ namespace midiclock
         int32_t PulsesPerQuarterNote{ DefaultPulsesPerQuarterNote };
         bool SendStartStop{ true };
         int32_t DisplayOrder{ 0 };
+
+        int32_t ClockRatioNumerator{ DefaultClockRatioNumerator };
+        int32_t ClockRatioDenominator{ DefaultClockRatioDenominator };
+        double SwingPercent{ DefaultSwingPercent };
+        int32_t SwingSubdivision{ DefaultSwingSubdivision };
+        double OffsetMilliseconds{ 0.0 };
+
+        ClockKind Kind{ ClockKind::BeatClock };
+
+        // Time code only. Ignored by a beat clock.
+        midiapp::MidiTimeCodeFrameRate FrameRate{ midiapp::MidiTimeCodeFrameRate::Frames30 };
+        midiapp::MidiTimeCodePosition StartTimeCode{};
+        bool SendFullFrameMessages{ true };
     };
 
     // The saved clocks, in their own file in a subfolder of the Windows MIDI Services

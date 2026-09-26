@@ -28,6 +28,18 @@ namespace midipatchbay
         // How close a drop has to be to a connection point to land on it.
         constexpr double PortSnapRadius = 36.0;
 
+        // Space kept around the content when the view is fitted to it.
+        constexpr double FitMargin = 24.0;
+
+        // Past this a name is trimmed, and the row's tooltip carries the rest.
+        constexpr double MaximumNodeWidth = 560.0;
+
+        // Both sides of the border at its selected thickness, plus a pixel each way for rounding.
+        constexpr double NodeWidthAllowance = 6.0;
+
+        // Left between a newly added node and one it would otherwise have landed on.
+        constexpr double NodeClearance = 40.0;
+
         // Within the connection layer: the selection glow, then the line, then its group label.
         constexpr int GlowZIndex = 0;
         constexpr int LineZIndex = 1;
@@ -237,6 +249,36 @@ namespace midipatchbay
                 // Focusable so arrow keys scroll it, and so Delete has somewhere on the canvas
                 // to bubble up from.
                 m_scrollViewer.IsTabStop(true);
+
+                // A resize changes how much is in view without scrolling, which ViewChanged
+                // does not report.
+                m_scrollViewer.SizeChanged([this](auto&&, auto&&)
+                    {
+                        UpdateExtent();
+                        UpdateMinimap();
+                    });
+            }
+
+            if (m_minimap != nullptr)
+            {
+                m_minimap.PointerPressed([this](auto&&, input::PointerRoutedEventArgs const& args)
+                    { OnMinimapPointerPressed(args); });
+
+                m_minimap.PointerMoved([this](auto&&, input::PointerRoutedEventArgs const& args)
+                    { OnMinimapPointerMoved(args); });
+
+                m_minimap.PointerReleased([this](auto&&, input::PointerRoutedEventArgs const& args)
+                    { OnMinimapPointerReleased(args); });
+
+                m_minimap.PointerCaptureLost([this](auto&&, auto&&) { m_panningMinimap = false; });
+                m_minimap.PointerCanceled([this](auto&&, auto&&) { m_panningMinimap = false; });
+
+                // ProtectedCursor is not on the projected type, but the interface carrying it is.
+                if (auto const element = m_minimap.try_as<xaml::IUIElementProtected>())
+                {
+                    element.ProtectedCursor(winrt::Microsoft::UI::Input::InputSystemCursor::Create(
+                        winrt::Microsoft::UI::Input::InputSystemCursorShape::SizeAll));
+                }
             }
 
             m_initialized = true;
@@ -291,14 +333,12 @@ namespace midipatchbay
                 return;
             }
 
-            auto& catalog = EndpointCatalog::Current();
-
             for (auto const& endpoint : patch->Endpoints)
             {
-                auto const resolved = catalog.Resolve(endpoint);
+                auto const resolved = ResolveEndpoint(endpoint);
                 auto const suggestion = resolved.has_value()
                     ? std::nullopt
-                    : catalog.SuggestReplacement(endpoint);
+                    : SuggestReplacementFor(endpoint);
 
                 BuildNode(endpoint, resolved.has_value() ? &resolved.value() : nullptr, suggestion);
             }
@@ -330,7 +370,7 @@ namespace midipatchbay
 
         node.EndpointId = endpoint.Id;
         node.IsOffline = live == nullptr;
-        node.Width = NodeWidth;
+        node.Width = MinimumNodeWidth;
 
         auto const textPrimary = ThemeBrush(L"TextFillColorPrimaryBrush", Rgb(0xFF, 0xFF, 0xFF));
         auto const textSecondary = ThemeBrush(L"TextFillColorSecondaryBrush", Rgb(0xC8, 0xC8, 0xC8));
@@ -521,25 +561,20 @@ namespace midipatchbay
 
                 controls::Grid rowGrid{};
 
-                std::wstring portName{};
+                std::wstring groupName{};
 
                 if (live != nullptr && groupIndex != AllGroups)
                 {
-                    // the label is the same name this group carries as a MIDI 1.0 port, which is
-                    // what the customer already sees in every other app
-                    portName = live->PortName(groupIndex, isOutput);
-
-                    // A single group device names its port after the device, so repeating it on
-                    // every row says nothing and pushes the useful part out of view.
-                    if (!portName.empty() && !endpoint.DisplayName.empty() &&
-                        (portName.find(endpoint.DisplayName) != std::wstring::npos ||
-                         endpoint.DisplayName.find(portName) != std::wstring::npos))
-                    {
-                        portName.clear();
-                    }
+                    groupName = live->GroupName(groupIndex, isOutput);
                 }
 
-                auto const groupLabel = DescribeGroupIndex(groupIndex, portName);
+                auto const groupLabel = DescribeGroupIndex(groupIndex, groupName);
+
+                // A name longer than the widest node allowed is trimmed.
+                if (!groupName.empty())
+                {
+                    controls::ToolTipService::SetToolTip(row, winrt::box_value(groupLabel));
+                }
 
                 auto label = MakeText(
                     groupLabel,
@@ -705,6 +740,26 @@ namespace midipatchbay
         node.Root = root;
 
         m_nodeLayer.Children().Append(root);
+
+        // Measured once in the tree, where the text has its real font and scale.
+        foundation::Size const unbounded{
+            std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity() };
+
+        header.Measure(unbounded);
+
+        auto widest = static_cast<double>(header.DesiredSize().Width);
+
+        for (auto const& port : node.Ports)
+        {
+            port.Label.Measure(unbounded);
+
+            // The In and Out halves are always equal, so the wider label sets both.
+            widest = std::max(widest, 2.0 * port.Label.DesiredSize().Width);
+        }
+
+        node.Width = std::clamp(std::ceil(widest) + NodeWidthAllowance, MinimumNodeWidth, MaximumNodeWidth);
+        root.Width(node.Width);
+
         m_nodes.push_back(std::move(node));
 
         ApplyNodeAppearance(m_nodes.back());
@@ -1759,7 +1814,7 @@ namespace midipatchbay
                     auto const* node = FindNode(endpoint.Id);
                     auto const height = node != nullptr && node->Height > 0 ? node->Height : 200.0;
 
-                    right = std::max(right, endpoint.CanvasX + NodeWidth);
+                    right = std::max(right, endpoint.CanvasX + (node != nullptr ? node->Width : MinimumNodeWidth));
                     bottom = std::max(bottom, endpoint.CanvasY + height);
                 }
             }
@@ -1787,7 +1842,8 @@ namespace midipatchbay
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to size the canvas.")
     }
 
-    void PatchCanvas::FitToContent() noexcept
+    _Use_decl_annotations_
+    void PatchCanvas::FitToContent(float maximumZoom) noexcept
     {
         try
         {
@@ -1796,33 +1852,66 @@ namespace midipatchbay
                 return;
             }
 
+            // A window that starts minimized has no viewport yet, and fitting to nothing would
+            // drop straight to the lowest zoom.
+            if (m_scrollViewer.ViewportWidth() <= 0 || m_scrollViewer.ViewportHeight() <= 0)
+            {
+                return;
+            }
+
             double left{ std::numeric_limits<double>::max() };
             double top{ std::numeric_limits<double>::max() };
-            double right{ 0 };
-            double bottom{ 0 };
+            double right{ std::numeric_limits<double>::lowest() };
+            double bottom{ std::numeric_limits<double>::lowest() };
+
+            auto const include = [&](double x, double y, double width, double height)
+                {
+                    left = std::min(left, x);
+                    top = std::min(top, y);
+                    right = std::max(right, x + width);
+                    bottom = std::max(bottom, y + height);
+                };
 
             for (auto const& endpoint : m_patch->Endpoints)
             {
                 auto const* node = FindNode(endpoint.Id);
                 auto const height = node != nullptr && node->Height > 0 ? node->Height : 200.0;
 
-                left = std::min(left, endpoint.CanvasX);
-                top = std::min(top, endpoint.CanvasY);
-                right = std::max(right, endpoint.CanvasX + NodeWidth);
-                bottom = std::max(bottom, endpoint.CanvasY + height);
+                include(endpoint.CanvasX, endpoint.CanvasY, node != nullptr ? node->Width : MinimumNodeWidth, height);
             }
 
-            auto const contentWidth = std::max(1.0, right - left + 48.0);
-            auto const contentHeight = std::max(1.0, bottom - top + 48.0);
+            // A connection back to an earlier node bows below the nodes, label and all.
+            for (auto const& visual : m_connections)
+            {
+                if (visual.Line != nullptr &&
+                    visual.Line.Visibility() == xaml::Visibility::Visible &&
+                    visual.Line.Data() != nullptr)
+                {
+                    auto const bounds = visual.Line.Data().Bounds();
+                    include(bounds.X, bounds.Y, bounds.Width, bounds.Height);
+                }
+
+                if (visual.Pill != nullptr && visual.Pill.Visibility() == xaml::Visibility::Visible)
+                {
+                    auto const size = visual.Pill.DesiredSize();
+
+                    include(controls::Canvas::GetLeft(visual.Pill), controls::Canvas::GetTop(visual.Pill),
+                        size.Width, size.Height);
+                }
+            }
+
+            auto const contentWidth = std::max(1.0, right - left + 2 * FitMargin);
+            auto const contentHeight = std::max(1.0, bottom - top + 2 * FitMargin);
 
             auto const zoom = static_cast<float>(std::clamp(
                 std::min(m_scrollViewer.ViewportWidth() / contentWidth,
                          m_scrollViewer.ViewportHeight() / contentHeight),
-                0.4, 1.0));
+                static_cast<double>(MinimumZoom),
+                static_cast<double>(std::clamp(maximumZoom, MinimumZoom, MaximumZoom))));
 
             m_scrollViewer.ChangeView(
-                winrt::box_value((left - 24.0) * zoom).as<foundation::IReference<double>>(),
-                winrt::box_value((top - 24.0) * zoom).as<foundation::IReference<double>>(),
+                winrt::box_value((left - FitMargin) * zoom).as<foundation::IReference<double>>(),
+                winrt::box_value((top - FitMargin) * zoom).as<foundation::IReference<double>>(),
                 winrt::box_value(zoom).as<foundation::IReference<float>>());
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to fit the canvas to its content.")
@@ -1848,6 +1937,20 @@ namespace midipatchbay
                 hasIncoming.insert(connection.DestinationEndpointId);
             }
 
+            // The right column moves over by however much the widest node on the left grew.
+            double leftColumnWidth{ MinimumNodeWidth };
+
+            for (auto const& endpoint : patch->Endpoints)
+            {
+                auto const* node = FindNode(endpoint.Id);
+
+                if (hasIncoming.count(endpoint.Id) == 0 && node != nullptr)
+                {
+                    leftColumnWidth = std::max(leftColumnWidth, node->Width);
+                }
+            }
+
+            double const columnX[2] = { DefaultColumnX[0], DefaultColumnX[1] + leftColumnWidth - MinimumNodeWidth };
             double columnY[2] = { ArrangeTopMargin, ArrangeTopMargin };
 
             for (auto& endpoint : patch->Endpoints)
@@ -1857,7 +1960,7 @@ namespace midipatchbay
                 auto const* node = FindNode(endpoint.Id);
                 auto const height = node != nullptr && node->Height > 0 ? node->Height : 200.0;
 
-                endpoint.CanvasX = DefaultColumnX[column];
+                endpoint.CanvasX = columnX[column];
                 endpoint.CanvasY = columnY[column];
 
                 columnY[column] += height + ArrangeRowGap;
@@ -1902,9 +2005,18 @@ namespace midipatchbay
             m_minimap.Width(MinimapWidth);
             m_minimap.Height(MinimapHeight);
 
-            auto const scale = std::min(
-                MinimapWidth / static_cast<double>(m_extent.Width),
-                MinimapHeight / static_cast<double>(m_extent.Height));
+            auto const zoom = m_scrollViewer != nullptr && m_scrollViewer.ZoomFactor() > 0
+                ? static_cast<double>(m_scrollViewer.ZoomFactor()) : 1.0;
+
+            // What is in view counts too, so zoomed out past the content the box still fits.
+            auto const worldWidth = std::max(static_cast<double>(m_extent.Width),
+                m_scrollViewer != nullptr ? m_scrollViewer.ViewportWidth() / zoom : 0.0);
+            auto const worldHeight = std::max(static_cast<double>(m_extent.Height),
+                m_scrollViewer != nullptr ? m_scrollViewer.ViewportHeight() / zoom : 0.0);
+
+            m_minimapScale = std::min(MinimapWidth / worldWidth, MinimapHeight / worldHeight);
+
+            auto const scale = m_minimapScale;
 
             auto const accent = ThemeBrush(L"AccentFillColorDefaultBrush", Rgb(0x60, 0xCD, 0xFF));
             auto const critical = ThemeBrush(L"SystemFillColorCriticalBrush", Rgb(0xFF, 0x99, 0xA4));
@@ -1917,7 +2029,7 @@ namespace midipatchbay
 
                 shapes::Rectangle rectangle{};
 
-                rectangle.Width(std::max(2.0, NodeWidth * scale));
+                rectangle.Width(std::max(2.0, (node != nullptr ? node->Width : MinimumNodeWidth) * scale));
                 rectangle.Height(std::max(2.0, height * scale));
                 rectangle.RadiusX(1);
                 rectangle.RadiusY(1);
@@ -1929,23 +2041,209 @@ namespace midipatchbay
                 m_minimap.Children().Append(rectangle);
             }
 
-            if (m_scrollViewer != nullptr && m_scrollViewer.ZoomFactor() > 0)
+            if (auto const box = MinimapViewportRect(); box.Width > 0 && box.Height > 0)
             {
-                auto const zoom = static_cast<double>(m_scrollViewer.ZoomFactor());
-
                 shapes::Rectangle viewport{};
 
-                viewport.Width(std::max(4.0, m_scrollViewer.ViewportWidth() / zoom * scale));
-                viewport.Height(std::max(4.0, m_scrollViewer.ViewportHeight() / zoom * scale));
+                viewport.Width(std::max(4.0, static_cast<double>(box.Width)));
+                viewport.Height(std::max(4.0, static_cast<double>(box.Height)));
                 viewport.Stroke(accent);
                 viewport.StrokeThickness(1.0);
 
-                controls::Canvas::SetLeft(viewport, m_scrollViewer.HorizontalOffset() / zoom * scale);
-                controls::Canvas::SetTop(viewport, m_scrollViewer.VerticalOffset() / zoom * scale);
+                controls::Canvas::SetLeft(viewport, box.X);
+                controls::Canvas::SetTop(viewport, box.Y);
 
                 m_minimap.Children().Append(viewport);
             }
         }
         MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to draw the canvas map.")
+    }
+
+    foundation::Rect PatchCanvas::MinimapViewportRect() const noexcept
+    {
+        try
+        {
+            if (m_scrollViewer != nullptr && m_minimapScale > 0 && m_scrollViewer.ZoomFactor() > 0)
+            {
+                auto const perPixel = m_minimapScale / static_cast<double>(m_scrollViewer.ZoomFactor());
+
+                return foundation::Rect{
+                    static_cast<float>(m_scrollViewer.HorizontalOffset() * perPixel),
+                    static_cast<float>(m_scrollViewer.VerticalOffset() * perPixel),
+                    static_cast<float>(m_scrollViewer.ViewportWidth() * perPixel),
+                    static_cast<float>(m_scrollViewer.ViewportHeight() * perPixel) };
+            }
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to place the view on the canvas map.")
+
+        return {};
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::OnMinimapPointerPressed(input::PointerRoutedEventArgs const& args) noexcept
+    {
+        try
+        {
+            if (m_minimap == nullptr || m_minimapScale <= 0)
+            {
+                return;
+            }
+
+            auto const point = args.GetCurrentPoint(m_minimap);
+
+            if (!point.Properties().IsLeftButtonPressed())
+            {
+                return;
+            }
+
+            args.Handled(true);
+
+            auto const position = point.Position();
+            auto const box = MinimapViewportRect();
+
+            auto const onBox = position.X >= box.X && position.X <= box.X + box.Width &&
+                position.Y >= box.Y && position.Y <= box.Y + box.Height;
+
+            // Grabbing the box keeps it under the pointer where it was taken; pressing anywhere
+            // else brings that spot to the middle of the view.
+            m_minimapGrabOffset = onBox
+                ? foundation::Point{ position.X - box.X, position.Y - box.Y }
+                : foundation::Point{ box.Width / 2, box.Height / 2 };
+
+            m_panningMinimap = true;
+            m_minimap.CapturePointer(args.Pointer());
+
+            PanToMinimapPoint(position);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to start moving the view from the canvas map.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::OnMinimapPointerMoved(input::PointerRoutedEventArgs const& args) noexcept
+    {
+        try
+        {
+            if (!m_panningMinimap || m_minimap == nullptr)
+            {
+                return;
+            }
+
+            args.Handled(true);
+            PanToMinimapPoint(args.GetCurrentPoint(m_minimap).Position());
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to move the view from the canvas map.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::OnMinimapPointerReleased(input::PointerRoutedEventArgs const& args) noexcept
+    {
+        try
+        {
+            if (!m_panningMinimap || m_minimap == nullptr)
+            {
+                return;
+            }
+
+            m_panningMinimap = false;
+            args.Handled(true);
+
+            // Moves are coalesced, so the release is what says where the view ends up.
+            PanToMinimapPoint(args.GetCurrentPoint(m_minimap).Position());
+            m_minimap.ReleasePointerCapture(args.Pointer());
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to finish moving the view from the canvas map.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::PanToMinimapPoint(foundation::Point const& point) noexcept
+    {
+        try
+        {
+            if (m_scrollViewer == nullptr || m_minimapScale <= 0 || m_scrollViewer.ZoomFactor() <= 0)
+            {
+                return;
+            }
+
+            // Scroll offsets are in zoomed pixels, the map is in canvas units times its scale.
+            auto const pixelsPerMapUnit = static_cast<double>(m_scrollViewer.ZoomFactor()) / m_minimapScale;
+
+            auto const left = std::max(0.0, (point.X - m_minimapGrabOffset.X) * pixelsPerMapUnit);
+            auto const top = std::max(0.0, (point.Y - m_minimapGrabOffset.Y) * pixelsPerMapUnit);
+
+            m_scrollViewer.ChangeView(
+                winrt::box_value(left).as<foundation::IReference<double>>(),
+                winrt::box_value(top).as<foundation::IReference<double>>(),
+                nullptr,
+                true);
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to move the view from the canvas map.")
+    }
+
+    _Use_decl_annotations_
+    void PatchCanvas::MoveClearOfOtherNodes(std::wstring const& endpointId) noexcept
+    {
+        try
+        {
+            if (m_patch == nullptr)
+            {
+                return;
+            }
+
+            auto* endpoint = const_cast<PatchDocument*>(m_patch)->FindEndpoint(endpointId);
+            auto* node = FindNode(endpointId);
+
+            if (endpoint == nullptr || node == nullptr || node->Root == nullptr)
+            {
+                return;
+            }
+
+            auto const startX = endpoint->CanvasX;
+
+            // Only ever moves right, and each pass gets past one more node, so this ends.
+            for (size_t pass = 0; pass <= m_nodes.size(); pass++)
+            {
+                auto clear = true;
+
+                for (auto const& other : m_nodes)
+                {
+                    auto const* placed = other.EndpointId == endpointId
+                        ? nullptr : m_patch->FindEndpoint(other.EndpointId);
+
+                    if (placed == nullptr)
+                    {
+                        continue;
+                    }
+
+                    auto const overlaps =
+                        endpoint->CanvasX < placed->CanvasX + other.Width + NodeClearance &&
+                        placed->CanvasX < endpoint->CanvasX + node->Width + NodeClearance &&
+                        endpoint->CanvasY < placed->CanvasY + other.Height &&
+                        placed->CanvasY < endpoint->CanvasY + node->Height;
+
+                    if (overlaps)
+                    {
+                        endpoint->CanvasX = placed->CanvasX + other.Width + NodeClearance;
+                        clear = false;
+                    }
+                }
+
+                if (clear)
+                {
+                    break;
+                }
+            }
+
+            if (endpoint->CanvasX == startX)
+            {
+                return;
+            }
+
+            controls::Canvas::SetLeft(node->Root, endpoint->CanvasX);
+
+            RedrawConnections();
+            UpdateExtent();
+            UpdateMinimap();
+        }
+        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to move a new node clear of the others.")
     }
 }

@@ -179,6 +179,10 @@
     <ClCompile Include="..\midi-app-shared\MidiEndpointHelpers.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />
     <ClCompile Include="..\midi-app-shared\BeatClockGenerator.cpp" />
+    <ClCompile Include="..\midi-app-shared\TimeCodeGenerator.cpp" />
+    <ClCompile Include="..\midi-app-shared\MidiTimeCode.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="$(GeneratedFilesDir)module.g.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -19,6 +19,7 @@
 #include "endpoint_utility.h"
 #include "midi_formatting.h"
 #include "BeatClockGenerator.h"
+#include "TimeCodeGenerator.h"
 #include "pickers.h"
 #include "return_codes.h"
 #include "strings.h"
@@ -30,6 +31,70 @@ namespace midi2console
     {
         constexpr int KeyEscape = 27;
         constexpr int SendRetryLimit = 500;
+
+        // "2" doubles the clock rate, "1/2" halves it, "3/2" is dotted and "2/3" is the other
+        // way round. Named forms are here because that is how a hardware divider labels them.
+        bool ParseClockRatio(_In_ std::string const& text, _Out_ int& numerator, _Out_ int& denominator)
+        {
+            numerator = 1;
+            denominator = 1;
+
+            auto trimmed = TrimCopy(text);
+
+            if (trimmed.empty())
+            {
+                return true;
+            }
+
+            if (EqualsIgnoreCase(trimmed, "dotted"))  { numerator = 2; denominator = 3; return true; }
+            if (EqualsIgnoreCase(trimmed, "triplet")) { numerator = 3; denominator = 2; return true; }
+
+            // A leading x or * reads as a multiplier and a leading slash as a divider, which is
+            // how these are written on a front panel.
+            if (trimmed.front() == 'x' || trimmed.front() == 'X' || trimmed.front() == '*')
+            {
+                trimmed.erase(trimmed.begin());
+            }
+            else if (trimmed.front() == '/')
+            {
+                trimmed.erase(trimmed.begin());
+                trimmed.insert(0, "1/");
+            }
+
+            auto const slash = trimmed.find('/');
+
+            std::string const first = slash == std::string::npos ? trimmed : trimmed.substr(0, slash);
+            std::string const second = slash == std::string::npos ? std::string{ "1" } : trimmed.substr(slash + 1);
+
+            auto parsePart = [](std::string const& part, int& value) noexcept
+                {
+                    if (part.empty())
+                    {
+                        return false;
+                    }
+
+                    value = 0;
+
+                    for (auto const character : part)
+                    {
+                        if (character < '0' || character > '9')
+                        {
+                            return false;
+                        }
+
+                        value = (value * 10) + (character - '0');
+
+                        if (value > midiapp::BeatClockGenerator::MaximumClockRatioPart)
+                        {
+                            return false;
+                        }
+                    }
+
+                    return value >= 1;
+                };
+
+            return parsePart(first, numerator) && parsePart(second, denominator);
+        }
 
         // Detail lines sit under a table row rather than in columns, so line the values up the way
         // the other verbose tables do. Detail text has to stay unstyled: the table measures it as
@@ -1871,6 +1936,35 @@ namespace midi2console
             return AsExitCode(ReturnCode::ErrorGeneralFailure);
         }
 
+        int ratioNumerator{ 1 };
+        int ratioDenominator{ 1 };
+
+        if (!ParseClockRatio(options.ClockRatio, ratioNumerator, ratioDenominator))
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_CLOCK_RATIO));
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        if (options.SwingPercent < midiapp::BeatClockGenerator::MinimumSwingPercent ||
+            options.SwingPercent > midiapp::BeatClockGenerator::MaximumSwingPercent)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_CLOCK_SWING_RANGE));
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        if (options.SwingSubdivision < 1 || options.SwingSubdivision > 16)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_CLOCK_SWING_SUBDIVISION));
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        if (options.OffsetMilliseconds < -midiapp::BeatClockGenerator::MaximumOffsetMilliseconds ||
+            options.OffsetMilliseconds > midiapp::BeatClockGenerator::MaximumOffsetMilliseconds)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_CLOCK_OFFSET_RANGE));
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
         midiapp::BeatClockGeneratorOptions generatorOptions{};
 
         for (auto const groupNumber : options.GroupNumbers)
@@ -1888,6 +1982,11 @@ namespace midi2console
         generatorOptions.PulsesPerQuarterNote = options.PulsesPerQuarterNote;
         generatorOptions.SendStartMessage = options.SendStartMessage;
         generatorOptions.SendStopMessage = options.SendStopMessage;
+        generatorOptions.ClockRatioNumerator = ratioNumerator;
+        generatorOptions.ClockRatioDenominator = ratioDenominator;
+        generatorOptions.SwingPercent = options.SwingPercent;
+        generatorOptions.SwingSubdivision = options.SwingSubdivision;
+        generatorOptions.OffsetMilliseconds = options.OffsetMilliseconds;
 
         auto session = OpenEndpoint(options.EndpointDeviceId, L"MIDI Console - Beat Clock", true);
 
@@ -1900,6 +1999,28 @@ namespace midi2console
 
         WriteField(ResourceString(IDS_CLOCK_LABEL_TEMPO),
             fmt::format("{:.2f} BPM", options.Tempo), numberTextStyle);
+
+        if (ratioNumerator != 1 || ratioDenominator != 1)
+        {
+            WriteField(ResourceString(IDS_CLOCK_LABEL_RATIO),
+                fmt::format("{}/{}", ratioNumerator, ratioDenominator), numberTextStyle);
+            WriteField(ResourceString(IDS_CLOCK_LABEL_EFFECTIVE_TEMPO),
+                fmt::format("{:.2f} BPM", generator.EffectiveBeatsPerMinute()), numberTextStyle);
+        }
+
+        if (options.SwingPercent > midiapp::BeatClockGenerator::MinimumSwingPercent)
+        {
+            WriteField(ResourceString(IDS_CLOCK_LABEL_SWING),
+                fmt::format("{:.2f} % (1/{} notes)", options.SwingPercent, options.SwingSubdivision * 4),
+                numberTextStyle);
+        }
+
+        if (options.OffsetMilliseconds != 0.0)
+        {
+            WriteField(ResourceString(IDS_CLOCK_LABEL_OFFSET),
+                fmt::format("{:.2f} ms", options.OffsetMilliseconds), numberTextStyle);
+        }
+
         WriteField(ResourceString(IDS_CLOCK_LABEL_PPQN),
             fmt::format("{}", options.PulsesPerQuarterNote), numberTextStyle);
         WriteField(ResourceString(IDS_CLOCK_LABEL_INTERVAL),
@@ -1937,6 +2058,117 @@ namespace midi2console
         WriteSuccessLine(ResourceString(IDS_CLOCK_STOPPED));
         WriteField(ResourceString(IDS_CLOCK_LABEL_PULSES_SENT),
             fmt::format("{}", generator.PulsesScheduled()), numberTextStyle);
+
+        return 0;
+    }
+
+    int RunEndpointSendTimeCodeCommand(_In_ EndpointSendTimeCodeOptions const& options)
+    {
+        if (options.GroupNumbers.empty())
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_CLOCK_NO_GROUPS));
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        midiapp::MidiTimeCodeFrameRate frameRate{};
+
+        if (!midiapp::TryParseFrameRate(FromUtf8(options.FrameRate), frameRate))
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_MTC_FRAME_RATE));
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        midiapp::MidiTimeCodePosition startPosition{};
+
+        if (!midiapp::TryParsePosition(FromUtf8(options.StartAt), frameRate, startPosition) ||
+            !midiapp::IsPositionValid(startPosition, frameRate))
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_MTC_START_AT));
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        if (options.OffsetMilliseconds < -midiapp::BeatClockGenerator::MaximumOffsetMilliseconds ||
+            options.OffsetMilliseconds > midiapp::BeatClockGenerator::MaximumOffsetMilliseconds)
+        {
+            WriteErrorLine(ResourceString(IDS_ERROR_CLOCK_OFFSET_RANGE));
+            return AsExitCode(ReturnCode::ErrorGeneralFailure);
+        }
+
+        midiapp::TimeCodeGeneratorOptions generatorOptions{};
+
+        for (auto const groupNumber : options.GroupNumbers)
+        {
+            if (groupNumber < 1 || groupNumber > 16)
+            {
+                WriteErrorLine(FormatResourceString(IDS_ERROR_INVALID_GROUP, fmt::format("{}", groupNumber)));
+                return AsExitCode(ReturnCode::ErrorGeneralFailure);
+            }
+
+            generatorOptions.GroupIndexes.push_back(static_cast<uint8_t>(groupNumber - 1));
+        }
+
+        generatorOptions.FrameRate = frameRate;
+        generatorOptions.StartPosition = startPosition;
+        generatorOptions.SendFullFrameMessages = options.SendFullFrameMessages;
+        generatorOptions.OffsetMilliseconds = options.OffsetMilliseconds;
+
+        auto session = OpenEndpoint(options.EndpointDeviceId, L"MIDI Console - Time Code", true);
+
+        if (!session.IsValid())
+        {
+            return session.FailureCode;
+        }
+
+        midiapp::TimeCodeGenerator generator{ session.Connection, generatorOptions };
+
+        WriteField(ResourceString(IDS_MTC_LABEL_FRAME_RATE),
+            ToUtf8(midiapp::FrameRateShortName(frameRate)), numberTextStyle);
+        WriteField(ResourceString(IDS_MTC_LABEL_START_AT),
+            ToUtf8(midiapp::FormatPosition(startPosition, frameRate)), numberTextStyle);
+        WriteField(ResourceString(IDS_MTC_LABEL_INTERVAL),
+            fmt::format("{:.3f} ms",
+                midi2::MidiClock::ConvertTimestampTicksToMilliseconds(generator.TicksPerQuarterFrame())),
+            numberTextStyle);
+
+        if (options.OffsetMilliseconds != 0.0)
+        {
+            WriteField(ResourceString(IDS_CLOCK_LABEL_OFFSET),
+                fmt::format("{:.2f} ms", options.OffsetMilliseconds), numberTextStyle);
+        }
+
+        WriteBlankLine();
+        WriteInfoLine(ResourceString(IDS_CLOCK_PRESS_ESCAPE));
+        WriteBlankLine();
+
+        generator.Start();
+
+        for (;;)
+        {
+            if (_kbhit() && _getch() == KeyEscape)
+            {
+                break;
+            }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+
+        WriteInfoLine(ResourceString(IDS_CLOCK_DRAINING));
+
+        auto const stoppedAt = generator.CurrentPosition();
+        auto const lastTimestamp = generator.Stop();
+
+        // Messages are already in the service queue, so exiting now would cut them off.
+        while (midi2::MidiClock::Now() < lastTimestamp)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+
+        WriteBlankLine();
+        WriteSuccessLine(ResourceString(IDS_CLOCK_STOPPED));
+        WriteField(ResourceString(IDS_MTC_LABEL_STOPPED_AT),
+            ToUtf8(midiapp::FormatPosition(stoppedAt, frameRate)), numberTextStyle);
+        WriteField(ResourceString(IDS_MTC_LABEL_MESSAGES_SENT),
+            fmt::format("{}", generator.QuarterFramesScheduled()), numberTextStyle);
 
         return 0;
     }

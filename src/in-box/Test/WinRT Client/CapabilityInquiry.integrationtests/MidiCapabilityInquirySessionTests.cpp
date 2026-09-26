@@ -190,6 +190,84 @@ void MidiCapabilityInquirySessionTests::TestGetPropertyDataReturnsTheResource()
     responder.Stop();
 }
 
+// An application that answers capability inquiry as well as asking it must be able to say what it
+// actually answers. These used to be fixed inside DiscoverAsync, so every session claimed property
+// exchange and profiles whether or not the application implemented either.
+void MidiCapabilityInquirySessionTests::TestDeclaredCapabilitiesAreWhatGoesOnTheWire()
+{
+    auto const pair = CreateLoopbackPair(L"TAEF CI Declared Capabilities");
+
+    MidiCapabilityInquiryTestResponder responder{};
+    responder.Start(pair->Device, 0x0123456);
+
+    pair->Initiator.Open();
+    pair->Device.Open();
+
+    // What a session declares when the application says nothing, which is what it always used to
+    // declare. Property exchange plus profile configuration, and the specification's minimum size.
+    {
+        auto session = MidiCapabilityInquirySession::Create(pair->Initiator);
+
+        VERIFY_ARE_EQUAL(
+            (uint32_t)session.SupportedCategories(),
+            (uint32_t)(MidiCapabilityInquiryCategories::PropertyExchange |
+                       MidiCapabilityInquiryCategories::ProfileConfiguration));
+
+        VERIFY_ARE_EQUAL(
+            session.ReceivableMaximumSystemExclusiveSize(),
+            MidiCapabilityInquiryMessageBuilder::MinimumReceivableSystemExclusiveSize());
+
+        (void)session.DiscoverAsync().get();
+
+        VERIFY_ARE_EQUAL(responder.LastInitiatorCategories(), (uint8_t)0x0C,
+            L"the default declaration is unchanged");
+        VERIFY_ARE_EQUAL(
+            responder.LastInitiatorReceivableSize(),
+            MidiCapabilityInquiryMessageBuilder::MinimumReceivableSystemExclusiveSize());
+
+        session.Close();
+    }
+
+    // An application that answers nothing says so, which is the case this exists for.
+    {
+        auto session = MidiCapabilityInquirySession::Create(pair->Initiator);
+
+        session.SupportedCategories(MidiCapabilityInquiryCategories::None);
+        session.ReceivableMaximumSystemExclusiveSize(4096);
+
+        (void)session.DiscoverAsync().get();
+
+        VERIFY_ARE_EQUAL(responder.LastInitiatorCategories(), (uint8_t)0x00,
+            L"a session that answers nothing declares nothing");
+        VERIFY_ARE_EQUAL(responder.LastInitiatorReceivableSize(), (uint32_t)4096);
+
+        session.Close();
+    }
+
+    // One category on its own, so a passing test cannot be the default sneaking through.
+    {
+        auto session = MidiCapabilityInquirySession::Create(pair->Initiator);
+
+        session.SupportedCategories(MidiCapabilityInquiryCategories::ProfileConfiguration);
+
+        // Below the minimum every profile and property exchange device has to accept, so it is
+        // raised rather than declared as something the device could not honor.
+        session.ReceivableMaximumSystemExclusiveSize(16);
+
+        (void)session.DiscoverAsync().get();
+
+        VERIFY_ARE_EQUAL(responder.LastInitiatorCategories(), (uint8_t)0x04);
+        VERIFY_ARE_EQUAL(
+            responder.LastInitiatorReceivableSize(),
+            MidiCapabilityInquiryMessageBuilder::MinimumReceivableSystemExclusiveSize(),
+            L"a size below the minimum is raised to it");
+
+        session.Close();
+    }
+
+    responder.Stop();
+}
+
 void MidiCapabilityInquirySessionTests::TestPropertyExchangeCapabilitiesComeFirst()
 {
     auto const pair = CreateLoopbackPair(L"TAEF CI Capabilities First");

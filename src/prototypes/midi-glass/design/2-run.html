@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - running a layout</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    .runbar {
+        height: 38px; flex: 0 0 38px;
+        display: flex; align-items: center; gap: 8px; padding: 0 12px;
+        border-bottom: 1px solid var(--divider);
+        background: rgba(0,0,0,.14);
+    }
+    .runbar .spacer { flex: 1; }
+    .strip { position: absolute; width: 88px; }
+</style>
+</head>
+<body>
+<div class="page">
+<p class="caption-above">Screen 2 &mdash; running a layout in a window. The app chrome is ordinary WinUI; everything below the bar is the customer's surface and obeys their theme, not the Windows theme.</p>
+
+<div class="window">
+
+    <div class="titlebar">
+        <div class="appmark"></div>
+        <div class="title">Live Rig &mdash; Windows MIDI Glass</div>
+        <div class="preview-chiclet">PREVIEW</div>
+        <div class="spacer"></div>
+        <div class="caption-btn gl">&#xE713;</div>
+        <div class="caption-btn gl">&#xE840;</div>
+        <div class="sys-btns"><div class="gl">&#xE921;</div><div class="gl">&#xE922;</div><div class="gl">&#xE8BB;</div></div>
+    </div>
+
+    <div class="runbar">
+        <div class="btn subtle small"><span class="gl">&#xE72B;</span>Library</div>
+        <div class="sep" style="width:1px; height:18px; background:var(--divider)"></div>
+        <div class="seg"><div class="gl" style="font-size:12px">&#xE70F;&nbsp; Edit</div><div class="sel">&#9654;&nbsp; Run</div></div>
+        <div class="chip on"><span class="gl">&#xE73E;</span>3 outputs open</div>
+        <div class="chip"><span class="gl">&#xE9D9;</span>412 msg/s</div>
+        <div class="spacer"></div>
+        <div class="btn small" style="color:#FFB3BB; border-color:rgba(255,107,107,.45); background:rgba(255,107,107,.10)"><span class="gl" style="color:#FFB3BB">&#xE711;</span>Panic</div>
+        <div class="btn small"><span class="gl">&#xE740;</span>Full screen&nbsp;&nbsp;<span style="color:var(--text3); font-size:11px">F11</span></div>
+    </div>
+
+    <!-- ======================================================= THE SURFACE -->
+    <div class="surf" style="flex:1; position:relative;">
+
+        <div class="surftext h1" style="left:24px; top:14px;">Live Rig</div>
+        <div class="surftext readout" style="left:152px; top:16px;">128.0</div>
+        <div class="surftext small" style="left:236px; top:26px;">BPM</div>
+
+        <div class="pagetabs" style="right:24px; top:12px;">
+            <div class="tab sel">Mixer</div><div class="tab">Decks</div><div class="tab">Clips</div><div class="tab">FX</div>
+        </div>
+
+        <!-- ------------------------------------------------- mixer strips -->
+        <div class="ctlpanel" style="left:16px; top:64px; width:584px; height:306px;">
+            <div class="ptitle">MIXER</div>
+        </div>
+
+        <!-- strip 1 -->
+        <div class="ctl knob hue2" style="left:36px; top:84px; width:44px; height:44px;">
+            <div class="dial"><div class="arc" style="--pct:.52turn"></div><div class="ptr" style="transform:rotate(46deg)"></div></div>
+        </div>
+        <div class="ctl fader hue2" style="left:30px; top:142px; width:36px; height:148px;">
+            <div class="slot"><div class="fill" style="height:74%"></div><div class="capbar" style="bottom:calc(74% - 8px)"></div></div>
+        </div>
+        <div class="ctl meter hue2" style="left:74px; top:142px; width:14px; height:148px; padding:4px 3px;">
+            <i class="hot"></i><i class="warn"></i><i class="warn"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i>
+            <i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i>
+        </div>
+        <div class="ctl btn-ctl hue3" style="left:30px; top:302px; width:36px; height:26px;"><div class="name" style="font-size:9px">M</div></div>
+        <div class="ctl btn-ctl hue1" style="left:70px; top:302px; width:36px; height:26px;"><div class="name" style="font-size:9px">S</div></div>
+        <div class="outlabel" style="left:30px; top:334px; width:76px;">Drums</div>
+
+        <!-- strip 2 -->
+        <div class="ctl knob hue2" style="left:130px; top:84px; width:44px; height:44px;">
+            <div class="dial"><div class="arc" style="--pct:.40turn"></div><div class="ptr" style="transform:rotate(0deg)"></div></div>
+        </div>
+        <div class="ctl fader hue2" style="left:124px; top:142px; width:36px; height:148px;">
+            <div class="slot"><div class="fill" style="height:58%"></div><div class="capbar" style="bottom:calc(58% - 8px)"></div></div>
+        </div>
+        <div class="ctl meter hue2" style="left:168px; top:142px; width:14px; height:148px; padding:4px 3px;">
+            <i class="hot"></i><i class="warn"></i><i class="warn"></i><i></i><i></i><i class="lit"></i>
+            <i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i>
+        </div>
+        <div class="ctl btn-ctl hue3 on" style="left:124px; top:302px; width:36px; height:26px;"><div class="name" style="font-size:9px">M</div></div>
+        <div class="ctl btn-ctl hue1" style="left:164px; top:302px; width:36px; height:26px;"><div class="name" style="font-size:9px">S</div></div>
+        <div class="outlabel" style="left:124px; top:334px; width:76px;">Bass</div>
+
+        <!-- strip 3 -->
+        <div class="ctl knob hue2" style="left:224px; top:84px; width:44px; height:44px;">
+            <div class="dial"><div class="arc" style="--pct:.63turn"></div><div class="ptr" style="transform:rotate(82deg)"></div></div>
+        </div>
+        <div class="ctl fader hue2" style="left:218px; top:142px; width:36px; height:148px;">
+            <div class="slot"><div class="fill" style="height:88%"></div><div class="capbar" style="bottom:calc(88% - 8px)"></div></div>
+        </div>
+        <div class="ctl meter hue2" style="left:262px; top:142px; width:14px; height:148px; padding:4px 3px;">
+            <i class="hot"></i><i class="warn"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i>
+            <i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i>
+        </div>
+        <div class="ctl btn-ctl hue3" style="left:218px; top:302px; width:36px; height:26px;"><div class="name" style="font-size:9px">M</div></div>
+        <div class="ctl btn-ctl hue1 on" style="left:258px; top:302px; width:36px; height:26px;"><div class="name" style="font-size:9px">S</div></div>
+        <div class="outlabel" style="left:218px; top:334px; width:76px;">Keys</div>
+
+        <!-- strip 4 -->
+        <div class="ctl knob hue2" style="left:318px; top:84px; width:44px; height:44px;">
+            <div class="dial"><div class="arc" style="--pct:.30turn"></div><div class="ptr" style="transform:rotate(-37deg)"></div></div>
+        </div>
+        <div class="ctl fader hue2" style="left:312px; top:142px; width:36px; height:148px;">
+            <div class="slot"><div class="fill" style="height:41%"></div><div class="capbar" style="bottom:calc(41% - 8px)"></div></div>
+        </div>
+        <div class="ctl meter hue2" style="left:356px; top:142px; width:14px; height:148px; padding:4px 3px;">
+            <i class="hot"></i><i class="warn"></i><i class="warn"></i><i></i><i></i><i></i>
+            <i></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i>
+        </div>
+        <div class="ctl btn-ctl hue3" style="left:312px; top:302px; width:36px; height:26px;"><div class="name" style="font-size:9px">M</div></div>
+        <div class="ctl btn-ctl hue1" style="left:352px; top:302px; width:36px; height:26px;"><div class="name" style="font-size:9px">S</div></div>
+        <div class="outlabel" style="left:312px; top:334px; width:76px;">Pads</div>
+
+        <!-- strip 5 -->
+        <div class="ctl knob hue2" style="left:412px; top:84px; width:44px; height:44px;">
+            <div class="dial"><div class="arc" style="--pct:.47turn"></div><div class="ptr" style="transform:rotate(24deg)"></div></div>
+        </div>
+        <div class="ctl fader hue2" style="left:406px; top:142px; width:36px; height:148px;">
+            <div class="slot"><div class="fill" style="height:66%"></div><div class="capbar" style="bottom:calc(66% - 8px)"></div></div>
+        </div>
+        <div class="ctl meter hue2" style="left:450px; top:142px; width:14px; height:148px; padding:4px 3px;">
+            <i class="hot"></i><i class="warn"></i><i class="warn"></i><i></i><i class="lit"></i><i class="lit"></i>
+            <i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i>
+        </div>
+        <div class="ctl btn-ctl hue3" style="left:406px; top:302px; width:36px; height:26px;"><div class="name" style="font-size:9px">M</div></div>
+        <div class="ctl btn-ctl hue1" style="left:446px; top:302px; width:36px; height:26px;"><div class="name" style="font-size:9px">S</div></div>
+        <div class="outlabel" style="left:406px; top:334px; width:76px;">Vox</div>
+
+        <!-- strip 6 -->
+        <div class="ctl knob hue4" style="left:506px; top:84px; width:44px; height:44px;">
+            <div class="dial"><div class="arc" style="--pct:.72turn; background:conic-gradient(from 215deg, rgb(var(--h4)) 0 .72turn, rgba(255,255,255,.10) .72turn .805turn, transparent .805turn);"></div><div class="ptr" style="transform:rotate(113deg)"></div></div>
+        </div>
+        <div class="ctl fader hue4" style="left:500px; top:142px; width:36px; height:148px;">
+            <div class="slot"><div class="fill" style="height:95%"></div><div class="capbar" style="bottom:calc(95% - 8px)"></div></div>
+        </div>
+        <div class="ctl meter hue2" style="left:544px; top:142px; width:14px; height:148px; padding:4px 3px;">
+            <i class="lit hot"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i>
+            <i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i>
+        </div>
+        <div class="ctl btn-ctl hue3" style="left:500px; top:302px; width:36px; height:26px;"><div class="name" style="font-size:9px">M</div></div>
+        <div class="ctl btn-ctl hue1" style="left:540px; top:302px; width:36px; height:26px;"><div class="name" style="font-size:9px">S</div></div>
+        <div class="outlabel" style="left:500px; top:334px; width:76px;">Master</div>
+
+        <!-- ------------------------------------------------ macro / xy area -->
+        <div class="ctlpanel" style="left:616px; top:64px; width:368px; height:306px;">
+            <div class="ptitle">PERFORM</div>
+        </div>
+
+        <div class="ctl xy hue1" style="left:634px; top:86px; width:210px; height:210px;">
+            <div class="field2">
+                <div class="cross h" style="top:34%"></div>
+                <div class="cross v" style="left:58%"></div>
+                <div class="trail" style="left:44%; top:56%; opacity:.18"></div>
+                <div class="trail" style="left:49%; top:48%; opacity:.30"></div>
+                <div class="trail" style="left:54%; top:41%; opacity:.55"></div>
+                <div class="puck" style="left:58%; top:34%"></div>
+            </div>
+        </div>
+        <div class="outlabel" style="left:634px; top:302px; width:210px;">Filter &nbsp;&middot;&nbsp; Resonance</div>
+        <div class="outlabel mono" style="left:634px; top:320px; width:210px; color:rgba(var(--h1),.9)">CC&nbsp;74&nbsp;=&nbsp;49152&nbsp;&nbsp;&nbsp;CC&nbsp;71&nbsp;=&nbsp;21299</div>
+
+        <div class="ctl knob hue5" style="left:872px; top:92px; width:54px; height:54px;">
+            <div class="dial"><div class="arc" style="--pct:.24turn; background:conic-gradient(from 215deg, rgb(var(--h5)) 0 .24turn, rgba(255,255,255,.10) .24turn .805turn, transparent .805turn);"></div><div class="ptr" style="transform:rotate(-58deg)"></div></div>
+        </div>
+        <div class="outlabel" style="left:862px; top:150px; width:74px;">Delay</div>
+
+        <div class="ctl knob hue5" style="left:872px; top:180px; width:54px; height:54px;">
+            <div class="dial"><div class="arc" style="--pct:.58turn; background:conic-gradient(from 215deg, rgb(var(--h5)) 0 .58turn, rgba(255,255,255,.10) .58turn .805turn, transparent .805turn);"></div><div class="ptr" style="transform:rotate(64deg)"></div></div>
+        </div>
+        <div class="outlabel" style="left:862px; top:238px; width:74px;">Reverb</div>
+
+        <div class="ctl clockctl hue3" style="left:864px; top:262px; width:70px; height:88px; padding-top:4px;">
+            <div class="ringwrap" style="width:44px; height:44px;">
+                <div class="sweep" style="--pct:.75turn"></div>
+                <div class="beat" style="font-size:12px">4</div>
+            </div>
+            <div class="pips"><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i></div>
+        </div>
+
+        <!-- ------------------------------------------------------ clip pads -->
+        <div class="ctlpanel" style="left:16px; top:388px; width:584px; height:236px;">
+            <div class="ptitle">CLIPS</div>
+        </div>
+
+        <div class="ctl btn-ctl hue1 on" style="left:32px;  top:410px; width:86px; height:46px;"><div class="name" style="font-size:10px">Intro</div><div class="pipe lit" style="background:#fff; box-shadow:0 0 8px #fff"></div></div>
+        <div class="ctl btn-ctl hue1" style="left:126px; top:410px; width:86px; height:46px;"><div class="name" style="font-size:10px">Verse</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1" style="left:220px; top:410px; width:86px; height:46px;"><div class="name" style="font-size:10px">Build</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1" style="left:314px; top:410px; width:86px; height:46px;"><div class="name" style="font-size:10px">Drop</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1" style="left:408px; top:410px; width:86px; height:46px;"><div class="name" style="font-size:10px">Break</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue1 held" style="left:502px; top:410px; width:86px; height:46px;"><div class="name" style="font-size:10px">Outro</div><div class="pipe lit"></div></div>
+
+        <div class="ctl btn-ctl hue4" style="left:32px;  top:466px; width:86px; height:46px;"><div class="name" style="font-size:10px">Stab A</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue4" style="left:126px; top:466px; width:86px; height:46px;"><div class="name" style="font-size:10px">Stab B</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue4" style="left:220px; top:466px; width:86px; height:46px;"><div class="name" style="font-size:10px">Riser</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue4" style="left:314px; top:466px; width:86px; height:46px;"><div class="name" style="font-size:10px">Impact</div><div class="pipe"></div></div>
+        <div class="ctl btn-ctl hue6" style="left:408px; top:466px; width:86px; height:46px;"><div class="glyph" style="font-size:12px">&#9635;</div><div class="cap" style="font-size:8.5px">Stop all</div></div>
+        <div class="ctl btn-ctl hue3" style="left:502px; top:466px; width:86px; height:46px;"><div class="name" style="font-size:10px">SHIFT</div><div class="cap" style="font-size:8.5px">hold</div></div>
+
+        <div class="ctl fader horiz hue4" style="left:32px; top:534px; width:400px; height:40px;">
+            <div class="slot"><div class="fill" style="width:50%"></div><div class="capbar" style="left:calc(50% - 8px)"></div></div>
+        </div>
+        <div class="outlabel" style="left:32px; top:580px; width:400px;">Crossfader</div>
+
+        <div class="ctl btn-ctl hue2" style="left:452px; top:534px; width:40px; height:40px; border-radius:20px;"><div class="glyph">&#9654;</div></div>
+        <div class="ctl btn-ctl hue3" style="left:500px; top:534px; width:40px; height:40px; border-radius:20px;"><div class="glyph" style="font-size:12px">&#9635;</div></div>
+        <div class="ctl btn-ctl hue6 on" style="left:548px; top:534px; width:40px; height:40px; border-radius:20px;"><div class="glyph" style="font-size:12px">&#9679;</div></div>
+
+        <!-- -------------------------------------------------------- FX bank -->
+        <div class="ctlpanel" style="left:616px; top:388px; width:368px; height:236px;">
+            <div class="ptitle">FX &nbsp;&middot;&nbsp; IRIDIUM</div>
+        </div>
+
+        <div class="ctl lfo hue4" style="left:634px; top:410px; width:160px; height:78px;">
+            <div class="head"><span>LFO &middot; triangle</span><span class="mono">1/16</span></div>
+            <svg viewBox="0 0 150 30" preserveAspectRatio="none">
+                <path d="M0,28 L18,2 L36,28 L54,2 L72,28 L90,2 L108,28 L126,2 L144,28" fill="none" stroke="rgba(255,107,214,.9)" stroke-width="2"/>
+                <circle cx="99" cy="12" r="3.5" fill="rgb(255,107,214)"/>
+            </svg>
+        </div>
+
+        <div class="ctl steps hue1" style="left:806px; top:410px; width:160px; height:78px;">
+            <div class="row" style="position:relative;"><i class="on"></i><i></i><i class="on cur"></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i></div>
+            <div class="row" style="position:relative;"><i></i><i class="on"></i><i></i><i class="on"></i><i></i><i class="on"></i><i class="on"></i><i></i></div>
+        </div>
+
+        <div class="ctl joy hue2" style="left:640px; top:498px; width:104px; height:104px;">
+            <div class="ring"></div><div class="ring2"></div><div class="spring"></div>
+            <div class="puck" style="left:50%; top:50%"></div>
+        </div>
+        <div class="outlabel" style="left:640px; top:604px; width:104px;">Pitch / Mod</div>
+
+        <div class="ctl wheel hue5" style="left:772px; top:498px; width:32px; height:104px;">
+            <div class="body"><div class="ridges"></div><div class="ind" style="bottom:28%"></div></div>
+        </div>
+        <div class="ctl wheel hue6" style="left:812px; top:498px; width:32px; height:104px;">
+            <div class="body"><div class="ridges"></div><div class="center"></div><div class="ind" style="bottom:50%"></div></div>
+        </div>
+
+        <div class="ctl hue3" style="left:862px; top:498px; width:104px; height:46px; align-items:center; justify-content:center;">
+            <div class="mono" style="font-size:15px; color:rgb(var(--h3)); text-shadow:0 0 12px rgba(var(--h3),.5)">001.3.02</div>
+        </div>
+        <div class="ctl btn-ctl hue2 on" style="left:862px; top:556px; width:46px; height:46px; border-radius:23px;"><div class="name" style="font-size:9px">SYNC</div></div>
+        <div class="ctl btn-ctl hue5" style="left:920px; top:556px; width:46px; height:46px; border-radius:23px;"><div class="name" style="font-size:9px">TAP</div></div>
+
+    </div>
+</div>
+
+<p class="note">
+<b>What is happening underneath.</b> Opening this layout opened <b>one connection per endpoint it mentions</b>
+&mdash; three here &mdash; not one per control and not one per page. Groups and channels are per binding, so the
+six mixer strips can all live on one endpoint while the XY pad talks to another. Pointer input goes straight from
+the control to the send with no data binding in between, and the surface is redrawn by the compositor, so a
+finger on a fader is never waiting on the UI thread.
+</p>
+
+</div>
+</body>
+</html>

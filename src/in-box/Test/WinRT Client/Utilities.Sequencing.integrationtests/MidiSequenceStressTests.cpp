@@ -98,8 +98,47 @@ void MidiSequenceStressTests::ReadsDenseContentQuickly()
     VERIFY_IS_LESS_THAN(elapsed, 5000LL);
 }
 
-void MidiSequenceStressTests::WindowedReadsStayCheapOnDenseContent()
+void MidiSequenceStressTests::PreparesDenseContentQuickly()
 {
+    // Preparing is the expensive call in the whole API: it converts every event in the file
+    // once. This is the number to watch when anything is added to the load path.
+    auto session = MakeSession(L"Sequencing prepare timing");
+    auto connection = OpenLoopbackA(session);
+
+    MidiSequencePlayer player{ connection, FirstGroup() };
+
+    auto const sequence = ReadTestSequence(L"black-midi.mid");
+
+    long long best = (std::numeric_limits<long long>::max)();
+
+    // Best of several: the first pass pays for page faults and a warm cache, and neither is what
+    // is being measured.
+    for (int pass = 0; pass < 5; ++pass)
+    {
+        player.SetSequenceAsync(nullptr).get();
+
+        auto const start = std::chrono::steady_clock::now();
+
+        player.SetSequenceAsync(sequence).get();
+
+        auto const elapsed = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::steady_clock::now() - start).count();
+
+        if (elapsed < best) { best = elapsed; }
+    }
+
+    LOG_OUTPUT(L"prepared %d events in %d us (best of 5)",
+        static_cast<int>(sequence.EventCount()),
+        static_cast<int>(best));
+
+    VERIFY_IS_NOT_NULL(player.Sequence());
+
+    player.Close();
+
+    VERIFY_IS_LESS_THAN(best, 5000000LL);
+}
+
+void MidiSequenceStressTests::WindowedReadsStayCheapOnDenseContent(){
     auto const sequence = ReadTestSequence(L"black-midi.mid");
 
     // This is the property the whole design rests on: asking for a window costs what is in the

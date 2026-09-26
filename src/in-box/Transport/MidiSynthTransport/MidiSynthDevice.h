@@ -99,11 +99,23 @@ private:
         UnknownResource,
     };
 
+    // What one Get Property Data header asked for. A program list is answered by serializing a
+    // page rather than by handing back a stored blob, so it is told apart here.
+    struct ResourceRequest
+    {
+        const std::vector<char>* Blob{ nullptr };
+        bool Cacheable{ true };
+
+        bool IsProgramList{ false };
+        std::string ResourceId{};
+        size_t Offset{ 0 };
+        size_t Limit{ SIZE_MAX };
+    };
+
     ResourceLookup ResourceForHeader(
         _In_reads_(headerBytes) const uint8_t* header,
         _In_ uint16_t headerBytes,
-        _Outptr_result_maybenull_ const std::vector<char>** blob,
-        _Out_ bool& cacheable);
+        _Out_ ResourceRequest& result);
 
     // Starting and ending a subscription. The command is in the header JSON, which is why this
     // does not live in the library alongside the subscription table itself.

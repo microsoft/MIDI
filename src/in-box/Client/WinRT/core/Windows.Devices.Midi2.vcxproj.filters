@@ -803,6 +803,18 @@
     <Midl Include="MidiFileReadStatusEnum.idl">
       <Filter>SDK\Utilities\Files</Filter>
     </Midl>
+    <Midl Include="MidiFileWriteOptions.idl">
+      <Filter>SDK\Utilities\Files</Filter>
+    </Midl>
+    <Midl Include="MidiFileWriteResult.idl">
+      <Filter>SDK\Utilities\Files</Filter>
+    </Midl>
+    <Midl Include="MidiFileWriteStatusEnum.idl">
+      <Filter>SDK\Utilities\Files</Filter>
+    </Midl>
+    <Midl Include="MidiStandardFileWriter.idl">
+      <Filter>SDK\Utilities\Files</Filter>
+    </Midl>
     <Midl Include="MidiSequence.idl">
       <Filter>SDK\Utilities\Sequencing</Filter>
     </Midl>

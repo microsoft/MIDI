@@ -233,6 +233,7 @@
 #define IDS_OPT_BT_PROTOCOL                             50471
 #define IDS_OPT_BT_ADDRESS_ARGUMENT                     50472
 #define IDS_OPT_BT_SCOPE                                50473
+#define IDS_OPT_CAPTURE_FORMAT                          50474
 
 // ---------------------------------------------------------------- enumerate     50700
 #define IDS_ENUM_ENDPOINTS_TABLE_TITLE                  50700
@@ -543,11 +544,25 @@
 #define IDS_CLOCK_STOPPED                               51793
 #define IDS_CLOCK_LABEL_PULSES_SENT                     51794
 #define IDS_CLOCK_DRAINING                              51795
+#define IDS_OPT_CLOCK_RATIO                             51796
+#define IDS_OPT_CLOCK_SWING                             51797
+#define IDS_OPT_CLOCK_SWING_SUBDIVISION                 51798
+#define IDS_OPT_CLOCK_OFFSET                            51799
+#define IDS_ERROR_CLOCK_RATIO                           51800
+#define IDS_ERROR_CLOCK_SWING_RANGE                     51801
+#define IDS_ERROR_CLOCK_SWING_SUBDIVISION               51802
+#define IDS_ERROR_CLOCK_OFFSET_RANGE                    51803
+#define IDS_CLOCK_LABEL_RATIO                           51804
+#define IDS_CLOCK_LABEL_EFFECTIVE_TEMPO                 51805
+#define IDS_CLOCK_LABEL_SWING                           51806
+#define IDS_CLOCK_LABEL_OFFSET                          51807
 
 // ---------------------------------------------------------------- monitor capture  51810
 #define IDS_CAPTURE_TO                                  51813
 #define IDS_CAPTURE_FAILED                              51814
 #define IDS_CAPTURE_CLOSED                              51815
+#define IDS_CAPTURE_BAD_FORMAT                          51816
+#define IDS_CAPTURE_SKIPPED                             51817
 
 // ---------------------------------------------------------------- loopback mute    51830
 #define IDS_CMD_LOOPBACK_MUTE                           51830
@@ -638,6 +653,19 @@
 #define IDS_BT_TIMESTAMPS_ESTIMATED_NOTE                51943
 #define IDS_BT_STATE_CONNECTING                         51944
 #define IDS_BT_STATE_WAITING                            51945
+
+// ---------------------------------------------------------------- MIDI time code  51960
+#define IDS_CMD_EP_SEND_TIME_CODE                       51960
+#define IDS_OPT_MTC_FRAME_RATE                          51961
+#define IDS_OPT_MTC_START_AT                            51962
+#define IDS_OPT_MTC_FULL_FRAME                          51963
+#define IDS_ERROR_MTC_FRAME_RATE                        51964
+#define IDS_ERROR_MTC_START_AT                          51965
+#define IDS_MTC_LABEL_FRAME_RATE                        51966
+#define IDS_MTC_LABEL_START_AT                          51967
+#define IDS_MTC_LABEL_INTERVAL                          51968
+#define IDS_MTC_LABEL_MESSAGES_SENT                     51969
+#define IDS_MTC_LABEL_STOPPED_AT                        51970
 
 #define IDS_CMD_FORWARD                                 52000
 #define IDS_OPT_FWD_SOURCE_ENDPOINT                     52001

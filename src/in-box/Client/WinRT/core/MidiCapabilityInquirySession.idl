@@ -70,6 +70,16 @@ namespace Windows.Devices.Midi2.CapabilityInquiry
         // What this session declares about itself when it announces itself with Discovery.
         Windows.Devices.Midi2.Enumeration.MidiDeclaredDeviceIdentity Identity;
 
+        // Which capability inquiry categories this session declares it supports, again when it
+        // announces itself. Property exchange and profile configuration unless set otherwise,
+        // which is what an application using this class to ask questions does. An application
+        // that answers questions too should declare what it actually answers.
+        [noexcept] MidiCapabilityInquiryCategories SupportedCategories;
+
+        // The largest system exclusive message this session declares it can receive. The minimum
+        // the specification allows unless set higher.
+        [noexcept] UInt32 ReceivableMaximumSystemExclusiveSize;
+
         [noexcept] Boolean IsOpen{ get; };
 
         // Responders found so far, including any which announced themselves rather than being

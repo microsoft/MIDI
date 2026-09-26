@@ -7,9 +7,15 @@
 
 #include "pch.h"
 #include "EndpointCatalog.h"
+#include "MidiEndpointHelpers.h"
 
-namespace midipatchbay
+namespace midiapp
 {
+    namespace mdm2 = winrt::Windows::Devices::Midi2;
+    namespace mdm2enum = winrt::Windows::Devices::Midi2::Enumeration;
+    namespace mdm2legacy = winrt::Windows::Devices::Midi2::Enumeration::Legacy;
+    namespace mdm2loop = winrt::Windows::Devices::Midi2::Transports::Loopback;
+
     namespace
     {
         constexpr wchar_t TransportCodeLoopback[] = L"LOOP";
@@ -29,6 +35,101 @@ namespace midipatchbay
         {
             return SanitizeStoredString(std::wstring{ value });
         }
+
+        // Groups that already have a name keep it, so whichever block was offered first wins.
+        void ClaimGroupNames(
+            _Inout_ std::array<std::wstring, MaximumGroupCount>& names,
+            _In_ mdm2::MidiGroup const& firstGroup,
+            _In_ uint8_t groupCount,
+            _In_ std::wstring const& name) noexcept
+        {
+            if (firstGroup == nullptr || name.empty())
+            {
+                return;
+            }
+
+            auto const first = static_cast<size_t>(firstGroup.Index());
+            auto const last = std::min(first + groupCount, names.size());
+
+            for (auto i = first; i < last; i++)
+            {
+                if (names[i].empty())
+                {
+                    names[i] = name;
+                }
+            }
+        }
+
+        // Block directions are the device's point of view: a block output is a source for us.
+        void ReadGroupNames(
+            _In_ mdm2enum::MidiEndpointDeviceInformation const& device,
+            _Inout_ LiveEndpoint& endpoint) noexcept
+        {
+            try
+            {
+                // Active function blocks, then inactive ones, then group terminal blocks for the rest.
+                if (auto const functionBlocks = device.GetDeclaredFunctionBlocks())
+                {
+                    for (auto const active : { true, false })
+                    {
+                        for (auto const& block : functionBlocks)
+                        {
+                            if (block == nullptr || block.IsActive() != active)
+                            {
+                                continue;
+                            }
+
+                            auto const direction = block.Direction();
+                            auto const firstGroup = block.FirstGroup();
+                            auto const name = SafeString(block.Name());
+
+                            if (direction == mdm2enum::MidiFunctionBlockDirection::BlockOutput ||
+                                direction == mdm2enum::MidiFunctionBlockDirection::Bidirectional)
+                            {
+                                ClaimGroupNames(endpoint.SourceGroupNames, firstGroup, block.GroupCount(), name);
+                            }
+
+                            if (direction == mdm2enum::MidiFunctionBlockDirection::BlockInput ||
+                                direction == mdm2enum::MidiFunctionBlockDirection::Bidirectional)
+                            {
+                                ClaimGroupNames(endpoint.DestinationGroupNames, firstGroup, block.GroupCount(), name);
+                            }
+                        }
+                    }
+                }
+
+                if (auto const terminalBlocks = device.GetGroupTerminalBlocks())
+                {
+                    for (auto const& block : terminalBlocks)
+                    {
+                        if (block == nullptr)
+                        {
+                            continue;
+                        }
+
+                        auto const direction = block.Direction();
+                        auto const firstGroup = block.FirstGroup();
+                        auto const name = SafeString(block.Name());
+
+                        if (direction == mdm2enum::MidiGroupTerminalBlockDirection::BlockOutput ||
+                            direction == mdm2enum::MidiGroupTerminalBlockDirection::Bidirectional)
+                        {
+                            ClaimGroupNames(endpoint.SourceGroupNames, firstGroup, block.GroupCount(), name);
+                        }
+
+                        if (direction == mdm2enum::MidiGroupTerminalBlockDirection::BlockInput ||
+                            direction == mdm2enum::MidiGroupTerminalBlockDirection::Bidirectional)
+                        {
+                            ClaimGroupNames(endpoint.DestinationGroupNames, firstGroup, block.GroupCount(), name);
+                        }
+                    }
+                }
+            }
+            catch (...)
+            {
+                ReportEndpointError(L"Unable to read the group names of an endpoint.");
+            }
+        }
     }
 
     _Use_decl_annotations_
@@ -44,6 +145,31 @@ namespace midipatchbay
         return isSource
             ? SourcePortNames[static_cast<size_t>(groupIndex)]
             : DestinationPortNames[static_cast<size_t>(groupIndex)];
+    }
+
+    _Use_decl_annotations_
+    std::wstring const& LiveEndpoint::GroupName(int32_t groupIndex, bool isSource) const noexcept
+    {
+        static std::wstring const empty{};
+
+        if (groupIndex < 0 || groupIndex >= MaximumGroupCount)
+        {
+            return empty;
+        }
+
+        return isSource
+            ? SourceGroupNames[static_cast<size_t>(groupIndex)]
+            : DestinationGroupNames[static_cast<size_t>(groupIndex)];
+    }
+
+    int32_t LiveEndpoint::SourceGroupCount() const noexcept
+    {
+        return static_cast<int32_t>(std::count(SourceGroups.begin(), SourceGroups.end(), true));
+    }
+
+    int32_t LiveEndpoint::DestinationGroupCount() const noexcept
+    {
+        return static_cast<int32_t>(std::count(DestinationGroups.begin(), DestinationGroups.end(), true));
     }
 
     EndpointMatch LiveEndpoint::BuildMatch() const noexcept
@@ -83,10 +209,10 @@ namespace midipatchbay
                 return true;
             }
 
-            m_serviceAvailable.store(midi2::MidiApi::EnsureServiceAvailable(), std::memory_order_relaxed);
+            m_serviceAvailable.store(mdm2::MidiApi::EnsureServiceAvailable(), std::memory_order_relaxed);
 
-            m_watcher = midi2enum::MidiEndpointDeviceWatcher::Create(
-                midi2enum::MidiEndpointDeviceInformationFilters::AllStandardEndpoints);
+            m_watcher = mdm2enum::MidiEndpointDeviceWatcher::Create(
+                mdm2enum::MidiEndpointDeviceInformationFilters::AllStandardEndpoints);
 
             if (m_watcher == nullptr)
             {
@@ -101,7 +227,10 @@ namespace midipatchbay
                         Rebuild();
                         NotifyChanged();
                     }
-                    MIDI_PATCHBAY_CATCH_AND_LOG(L"Endpoint watcher notification failed.")
+                    catch (...)
+                    {
+                        ReportEndpointError(L"Endpoint watcher notification failed.");
+                    }
                 };
 
             m_addedToken = m_watcher.Added(onChanged);
@@ -114,7 +243,10 @@ namespace midipatchbay
 
             return true;
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to start the endpoint watcher.")
+        catch (...)
+        {
+            ReportEndpointError(L"Unable to start the endpoint watcher.");
+        }
 
         m_running.store(false);
         return false;
@@ -139,7 +271,10 @@ namespace midipatchbay
                 m_watcher = nullptr;
             }
         }
-        MIDI_PATCHBAY_CATCH_AND_LOG(L"Unable to stop the endpoint watcher.")
+        catch (...)
+        {
+            ReportEndpointError(L"Unable to stop the endpoint watcher.");
+        }
     }
 
     void EndpointCatalog::Refresh() noexcept
@@ -163,19 +298,28 @@ namespace midipatchbay
             {
                 handler();
             }
-            MIDI_PATCHBAY_CATCH_AND_LOG(L"An endpoint change handler failed.")
+            catch (...)
+            {
+                ReportEndpointError(L"An endpoint change handler failed.");
+            }
         }
     }
 
     void EndpointCatalog::Rebuild() noexcept
     {
+        // Every rebuild is driven by a device arriving, leaving or changing, which is exactly
+        // when the service may have gone away, so the flag is refreshed here rather than left as
+        // whatever it was when the watcher started. Read only: asking with
+        // EnsureServiceAvailable would start the service and the answer would always be yes.
+        m_serviceAvailable.store(IsMidiServiceRunning(), std::memory_order_relaxed);
+
         std::vector<LiveEndpoint> rebuilt{};
 
         try
         {
-            auto const all = midi2enum::MidiEndpointDeviceInformation::FindAll(
-                midi2enum::MidiEndpointDeviceInformationSortOrder::Name,
-                midi2enum::MidiEndpointDeviceInformationFilters::AllStandardEndpoints);
+            auto const all = mdm2enum::MidiEndpointDeviceInformation::FindAll(
+                mdm2enum::MidiEndpointDeviceInformationSortOrder::Name,
+                mdm2enum::MidiEndpointDeviceInformationFilters::AllStandardEndpoints);
 
             if (all != nullptr)
             {
@@ -207,6 +351,7 @@ namespace midipatchbay
                     endpoint.UsbVendorId = transportInfo.VendorId();
                     endpoint.UsbProductId = transportInfo.ProductId();
                     endpoint.UsbSerialNumber = SafeString(transportInfo.SerialNumber());
+                    endpoint.Description = SafeString(transportInfo.Description());
 
                     auto const parent = device.GetParentDeviceInformation();
 
@@ -217,17 +362,29 @@ namespace midipatchbay
 
                     if (auto const userInfo = device.GetUserSuppliedInfo())
                     {
-                        endpoint.ImagePath = SafeString(
-                            midiapp::ResolveEndpointImagePath(userInfo.ImageFileName()));
+                        endpoint.ImagePath = SafeString(ResolveEndpointImagePath(userInfo.ImageFileName()));
+
+                        // The customer's own words win, because they are the ones who will be
+                        // reading them back.
+                        if (auto const described = SafeString(userInfo.Description()); !described.empty())
+                        {
+                            endpoint.Description = described;
+                        }
                     }
 
-                    endpoint.DeclaredGroups = midiapp::DeclaredGroups(device);
+                    endpoint.DeclaredGroups = DeclaredGroups(device);
 
-                    // The MIDI 1.0 port names are what the customer already sees everywhere
-                    // else, so they are the labels on the connection points.
-                    auto const sourcePorts = midi2legacy::MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(
+                    auto const directions = DeclaredGroupDirections(device);
+
+                    endpoint.SourceGroups = directions.Sources;
+                    endpoint.DestinationGroups = directions.Destinations;
+
+                    ReadGroupNames(device, endpoint);
+
+                    // The names these groups carry as MIDI 1.0 ports.
+                    auto const sourcePorts = mdm2legacy::MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(
                         winrt::hstring{ endpoint.EndpointDeviceId },
-                        midi2enum::Midi1PortFlow::MidiMessageSource);
+                        mdm2enum::Midi1PortFlow::MidiMessageSource);
 
                     if (sourcePorts != nullptr)
                     {
@@ -247,9 +404,9 @@ namespace midipatchbay
                         }
                     }
 
-                    auto const destinationPorts = midi2legacy::MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(
+                    auto const destinationPorts = mdm2legacy::MidiLegacyPortDeviceInformation::FindAllForAssociatedEndpoint(
                         winrt::hstring{ endpoint.EndpointDeviceId },
-                        midi2enum::Midi1PortFlow::MidiMessageDestination);
+                        mdm2enum::Midi1PortFlow::MidiMessageDestination);
 
                     if (destinationPorts != nullptr)
                     {
@@ -277,7 +434,7 @@ namespace midipatchbay
                     {
                         endpoint.IsLoopback = true;
 
-                        auto const partner = midi2loop::MidiLoopbackManager::GetAssociatedLoopbackEndpoint(device);
+                        auto const partner = mdm2loop::MidiLoopbackManager::GetAssociatedLoopbackEndpoint(device);
 
                         if (partner != nullptr)
                         {
@@ -291,15 +448,9 @@ namespace midipatchbay
 
             m_serviceAvailable.store(true, std::memory_order_relaxed);
         }
-        catch (winrt::hresult_error const& ex)
-        {
-            MIDI_PATCHBAY_LOG_HRESULT_EXCEPTION(ex, L"Unable to enumerate endpoints.");
-            m_serviceAvailable.store(false, std::memory_order_relaxed);
-            return;
-        }
         catch (...)
         {
-            MIDI_PATCHBAY_LOG_GENERAL_EXCEPTION(L"Unable to enumerate endpoints.");
+            ReportEndpointError(L"Unable to enumerate endpoints.");
             m_serviceAvailable.store(false, std::memory_order_relaxed);
             return;
         }
@@ -332,17 +483,20 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
-    std::optional<LiveEndpoint> EndpointCatalog::Resolve(PatchEndpoint const& endpoint) const noexcept
+    std::optional<LiveEndpoint> EndpointCatalog::Resolve(
+        EndpointMatch const& match,
+        EndpointMatchMode mode,
+        std::wstring const& fallbackName) const noexcept
     {
         std::scoped_lock guard{ m_lock };
 
         // The device id is always tried first, whatever the mode, because when it is still there
         // it is unambiguous and the broader modes only exist for when it is not.
-        if (!endpoint.Match.EndpointDeviceId.empty())
+        if (!match.EndpointDeviceId.empty())
         {
             auto it = std::find_if(m_endpoints.begin(), m_endpoints.end(),
-                [&endpoint](LiveEndpoint const& e)
-                { return EqualsIgnoringCase(e.EndpointDeviceId, endpoint.Match.EndpointDeviceId); });
+                [&match](LiveEndpoint const& e)
+                { return EqualsIgnoringCase(e.EndpointDeviceId, match.EndpointDeviceId); });
 
             if (it != m_endpoints.end())
             {
@@ -350,20 +504,20 @@ namespace midipatchbay
             }
         }
 
-        if (endpoint.MatchMode == EndpointMatchMode::UsbVendorAndProduct && endpoint.Match.HasUsbIdentity())
+        if (mode == EndpointMatchMode::UsbVendorAndProduct && match.HasUsbIdentity())
         {
             auto it = std::find_if(m_endpoints.begin(), m_endpoints.end(),
-                [&endpoint](LiveEndpoint const& e)
+                [&match](LiveEndpoint const& e)
                 {
-                    if (e.UsbVendorId != endpoint.Match.UsbVendorId || e.UsbProductId != endpoint.Match.UsbProductId)
+                    if (e.UsbVendorId != match.UsbVendorId || e.UsbProductId != match.UsbProductId)
                     {
                         return false;
                     }
 
                     // a serial number makes the match exact, so honor it when both sides have one
-                    if (!endpoint.Match.UsbSerialNumber.empty() && !e.UsbSerialNumber.empty())
+                    if (!match.UsbSerialNumber.empty() && !e.UsbSerialNumber.empty())
                     {
-                        return EqualsIgnoringCase(e.UsbSerialNumber, endpoint.Match.UsbSerialNumber);
+                        return EqualsIgnoringCase(e.UsbSerialNumber, match.UsbSerialNumber);
                     }
 
                     return true;
@@ -375,11 +529,11 @@ namespace midipatchbay
             }
         }
 
-        if (endpoint.MatchMode == EndpointMatchMode::EndpointName)
+        if (mode == EndpointMatchMode::EndpointName)
         {
-            auto const& wanted = endpoint.Match.TransportSuppliedEndpointName.empty()
-                ? endpoint.DisplayName
-                : endpoint.Match.TransportSuppliedEndpointName;
+            auto const& wanted = match.TransportSuppliedEndpointName.empty()
+                ? fallbackName
+                : match.TransportSuppliedEndpointName;
 
             auto it = std::find_if(m_endpoints.begin(), m_endpoints.end(),
                 [&wanted](LiveEndpoint const& e)
@@ -398,9 +552,12 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
-    std::optional<LiveEndpoint> EndpointCatalog::SuggestReplacement(PatchEndpoint const& endpoint) const noexcept
+    std::optional<LiveEndpoint> EndpointCatalog::SuggestReplacement(
+        EndpointMatch const& match,
+        EndpointMatchMode mode,
+        std::wstring const& fallbackName) const noexcept
     {
-        if (Resolve(endpoint).has_value())
+        if (Resolve(match, mode, fallbackName).has_value())
         {
             return std::nullopt;
         }
@@ -409,13 +566,13 @@ namespace midipatchbay
 
         // USB identity first: the same model in a different port is by far the most common
         // reason a device id stops resolving.
-        if (endpoint.Match.HasUsbIdentity())
+        if (match.HasUsbIdentity())
         {
             auto it = std::find_if(m_endpoints.begin(), m_endpoints.end(),
-                [&endpoint](LiveEndpoint const& e)
+                [&match](LiveEndpoint const& e)
                 {
-                    return e.UsbVendorId == endpoint.Match.UsbVendorId &&
-                        e.UsbProductId == endpoint.Match.UsbProductId;
+                    return e.UsbVendorId == match.UsbVendorId &&
+                        e.UsbProductId == match.UsbProductId;
                 });
 
             if (it != m_endpoints.end())
@@ -424,9 +581,9 @@ namespace midipatchbay
             }
         }
 
-        auto const& wanted = endpoint.Match.TransportSuppliedEndpointName.empty()
-            ? endpoint.DisplayName
-            : endpoint.Match.TransportSuppliedEndpointName;
+        auto const& wanted = match.TransportSuppliedEndpointName.empty()
+            ? fallbackName
+            : match.TransportSuppliedEndpointName;
 
         auto it = std::find_if(m_endpoints.begin(), m_endpoints.end(),
             [&wanted](LiveEndpoint const& e)

@@ -47,11 +47,16 @@ namespace
 
     // Every request goes through here so the header and the reply are always shown together. A
     // resource that comes back empty is as interesting as one that does not.
+    //
+    // A negative offset or limit means the request does not paginate. M2-103-UM wants both
+    // Properties present when it does, so they are written as a pair or not at all.
     MidiPropertyExchangeResponse Request(
         MidiCapabilityInquirySession const& session,
         MidiUniqueId const& muid,
         std::wstring const& resource,
-        std::wstring const& resourceId)
+        std::wstring const& resourceId,
+        int32_t const offset = -1,
+        int32_t const limit = -1)
     {
         json::JsonObject header;
 
@@ -60,6 +65,12 @@ namespace
         if (!resourceId.empty())
         {
             header.SetNamedValue(L"resId", json::JsonValue::CreateStringValue(winrt::hstring{ resourceId }));
+        }
+
+        if (offset >= 0 && limit >= 0)
+        {
+            header.SetNamedValue(L"offset", json::JsonValue::CreateNumberValue(offset));
+            header.SetNamedValue(L"limit", json::JsonValue::CreateNumberValue(limit));
         }
 
         Line();
@@ -203,6 +214,11 @@ namespace
         uint32_t timeoutMilliseconds{ 5000 };
         bool listOnly{ false };
 
+        // Set both to ask each program list for one page as well as the whole thing, which is how
+        // a resource that declares "canPaginate" gets checked.
+        int32_t pageOffset{ -1 };
+        int32_t pageLimit{ -1 };
+
         for (int i = 1; i < argc; i++)
         {
             std::wstring const arg{ argv[i] };
@@ -212,6 +228,8 @@ namespace
             else if (arg == L"--out" && i + 1 < argc) { outputPath = argv[++i]; }
             else if (arg == L"--group" && i + 1 < argc) { groupIndex = static_cast<uint8_t>(_wtoi(argv[++i]) - 1); }
             else if (arg == L"--timeout" && i + 1 < argc) { timeoutMilliseconds = static_cast<uint32_t>(_wtoi(argv[++i])); }
+            else if (arg == L"--offset" && i + 1 < argc) { pageOffset = _wtoi(argv[++i]); }
+            else if (arg == L"--limit" && i + 1 < argc) { pageLimit = _wtoi(argv[++i]); }
             else
             {
                 std::wcout << L"midicidump [--endpoint <text>] [--group <1-16>] [--timeout <ms>] [--out <file>] [--list]"
@@ -381,6 +399,14 @@ namespace
                 Line();
                 Line(L"=== ProgramList, resId '" + resourceId + L"' ===");
                 (void)Request(session, muid, L"ProgramList", resourceId);
+
+                if (pageOffset >= 0 && pageLimit >= 0)
+                {
+                    Line();
+                    Line(L"=== ProgramList, resId '" + resourceId + L"', offset " +
+                        std::to_wstring(pageOffset) + L" limit " + std::to_wstring(pageLimit) + L" ===");
+                    (void)Request(session, muid, L"ProgramList", resourceId, pageOffset, pageLimit);
+                }
             }
 
             Line();

@@ -12,6 +12,15 @@ needs step 1, 2 and the `$(ProjectDir)` part of step 4 below.
 must set `<PrecompiledHeader>NotUsing</PrecompiledHeader>` on its `ClCompile` entry. MIDI Player
 and MIDI Patchbay both use it, so the General MIDI names they show agree.
 
+`EndpointCatalog` watches the live endpoints and answers "which live endpoint does this saved one
+mean". It owns `EndpointMatch`, `EndpointMatchMode` and `LiveEndpoint`, and it matches on criteria
+alone, so it never sees an app's own document type. An app that stores endpoints keeps its own
+wrapper that pulls the criteria, the mode and the last known display name out of whatever it saved.
+Its `.cpp` spells out the WinRT namespace aliases it needs rather than relying on the consuming
+app's `pch.h`, so a new project can pick the file up without matching another app's alias list.
+Because shared code cannot reach any one app's telemetry, a swallowed exception goes to
+`midiapp::SetEndpointErrorHandler`; set it before starting the catalog or the errors are dropped.
+
 ## What a consuming project has to do
 
 There is no `.props` file and no MSBuild import. Each app's `.vcxproj` lists these files with

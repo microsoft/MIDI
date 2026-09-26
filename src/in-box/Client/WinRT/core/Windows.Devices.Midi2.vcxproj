@@ -789,8 +789,12 @@
     <ClCompile Include="$(SolutionDir)inc\midi_file_smf_reader.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="$(SolutionDir)inc\midi_file_smf_writer.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="$(SolutionDir)inc\midi_sequence_playback_engine.cpp" />
     <ClCompile Include="MidiSequence.cpp" />
+    <ClCompile Include="MidiSequenceBuilder.cpp" />
     <ClCompile Include="MidiSequenceTextEvent.cpp" />
     <ClCompile Include="MidiSequenceLyricLine.cpp" />
     <ClCompile Include="MidiSequenceTrack.cpp" />
@@ -799,6 +803,9 @@
     <ClCompile Include="MidiFileReadOptions.cpp" />
     <ClCompile Include="MidiFileReadResult.cpp" />
     <ClCompile Include="MidiStandardFileReader.cpp" />
+    <ClCompile Include="MidiFileWriteOptions.cpp" />
+    <ClCompile Include="MidiFileWriteResult.cpp" />
+    <ClCompile Include="MidiStandardFileWriter.cpp" />
     <ClCompile Include="MidiBytestreamToUmpMessageConverterState.cpp" />
     <ClCompile Include="MidiSystemExclusiveReceivedEventArgs.cpp" />
     <ClCompile Include="MidiSystemExclusiveReceiver.cpp" />
@@ -1339,6 +1346,7 @@
     <Midl Include="MidiSystemTimerSettings.idl" />
     <Midl Include="MidiSequenceFormatEnum.idl" />
     <Midl Include="MidiSequenceTextKindEnum.idl" />
+    <Midl Include="MidiSequenceTimingModeEnum.idl" />
     <Midl Include="MidiSequencePlayerStateEnum.idl" />
     <Midl Include="MidiSequenceNote.idl" />
     <Midl Include="MidiSequenceBarPosition.idl" />
@@ -1349,12 +1357,17 @@
     <Midl Include="MidiSequenceLyricLine.idl" />
     <Midl Include="MidiSequenceTrack.idl" />
     <Midl Include="MidiSequence.idl" />
+    <Midl Include="MidiSequenceBuilder.idl" />
     <Midl Include="MidiSequenceTrackRouting.idl" />
     <Midl Include="MidiSequencePlayer.idl" />
     <Midl Include="MidiFileReadStatusEnum.idl" />
     <Midl Include="MidiFileReadOptions.idl" />
     <Midl Include="MidiFileReadResult.idl" />
     <Midl Include="MidiStandardFileReader.idl" />
+    <Midl Include="MidiFileWriteStatusEnum.idl" />
+    <Midl Include="MidiFileWriteOptions.idl" />
+    <Midl Include="MidiFileWriteResult.idl" />
+    <Midl Include="MidiStandardFileWriter.idl" />
     <Midl Include="MidiUniversalSystemExclusiveChannel.idl" />
     <Midl Include="MidiChannelEndpointListener.idl" />
     <Midl Include="MidiGroupEndpointListener.idl" />

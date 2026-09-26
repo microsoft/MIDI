@@ -1,0 +1,2759 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Window
+    x:Class="midiglass.EditorWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:midiglass"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <!-- Hidden, because the accelerators below belong to this grid and the grid is the whole
+         window: without it, hovering anywhere that has no tool tip of its own pops "Ctrl+Z". -->
+    <Grid x:Name="RootGrid" Loaded="OnRootLoaded" KeyboardAcceleratorPlacementMode="Hidden">
+        <Grid.Resources>
+
+            <!-- Every brush comes from the theme, so the customer's choice of light, dark or
+                 system decides what the editor chrome looks like. Only the surface inside the
+                 page belongs to the layout's own theme. -->
+
+            <Style x:Key="ChipShapeStyle" TargetType="Rectangle">
+                <Setter Property="RadiusX" Value="11" />
+                <Setter Property="RadiusY" Value="11" />
+                <Setter Property="StrokeThickness" Value="1" />
+                <Setter Property="UseLayoutRounding" Value="False" />
+            </Style>
+
+            <Style x:Key="ChipPanelStyle" TargetType="StackPanel">
+                <Setter Property="Orientation" Value="Horizontal" />
+                <Setter Property="Spacing" Value="6" />
+                <Setter Property="Height" Value="22" />
+                <Setter Property="Padding" Value="9,0,9,0" />
+            </Style>
+
+            <Style x:Key="ChipTextStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="11" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+            </Style>
+
+            <Style x:Key="InspectorLabelStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
+            </Style>
+
+            <Style x:Key="InspectorHeadingStyle" TargetType="TextBlock">
+                <Setter Property="FontSize" Value="12" />
+                <Setter Property="FontWeight" Value="SemiBold" />
+                <Setter Property="Margin" Value="0,8,0,4" />
+            </Style>
+
+            <Style x:Key="InspectorNumberStyle" TargetType="TextBox">
+                <Setter Property="Height" Value="32" />
+                <Setter Property="MinWidth" Value="72" />
+            </Style>
+
+            <!-- One outline row. This is how somebody using a screen reader builds a layout, and
+                 it is also just useful on a page with two hundred controls. -->
+            <DataTemplate x:Key="OutlineTemplate" x:DataType="local:EditorItem">
+                <Grid Height="32"
+                      Margin="{x:Bind Indent}"
+                      ColumnSpacing="8"
+                      AutomationProperties.Name="{x:Bind DisplayName}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0"
+                               Text="{x:Bind Badge}"
+                               Visibility="{x:Bind BadgeVisibility}"
+                               FontSize="10"
+                               MinWidth="18"
+                               TextAlignment="Center"
+                               VerticalAlignment="Center"
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                    <Grid Grid.Column="1" Width="22" Height="20">
+                        <ContentPresenter Content="{x:Bind Art}"
+                                          IsHitTestVisible="False"
+                                          HorizontalAlignment="Center"
+                                          VerticalAlignment="Center" />
+                    </Grid>
+
+                    <TextBlock Grid.Column="2"
+                               Text="{x:Bind DisplayName}"
+                               FontSize="12"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis" />
+
+                    <FontIcon Grid.Column="3"
+                              Glyph="&#xE7BA;"
+                              FontSize="12"
+                              VerticalAlignment="Center"
+                              Visibility="{x:Bind OutsideVisibility}"
+                              Foreground="{ThemeResource SystemFillColorCriticalBrush}" />
+                </Grid>
+            </DataTemplate>
+        </Grid.Resources>
+
+        <Grid.KeyboardAccelerators>
+            <KeyboardAccelerator Key="Z" Modifiers="Control" Invoked="OnUndoAccelerator" />
+            <KeyboardAccelerator Key="Y" Modifiers="Control" Invoked="OnRedoAccelerator" />
+            <KeyboardAccelerator Key="S" Modifiers="Control" Invoked="OnSaveAccelerator" />
+            <KeyboardAccelerator Key="D" Modifiers="Control" Invoked="OnDuplicateAccelerator" />
+            <KeyboardAccelerator Key="A" Modifiers="Control" Invoked="OnSelectAllAccelerator" />
+            <KeyboardAccelerator Key="Delete" Invoked="OnDeleteAccelerator" />
+
+            <!-- Puts the palette tool away, the way Esc does in a drawing app. -->
+            <KeyboardAccelerator Key="Escape" Invoked="OnEscapeAccelerator" />
+
+            <!-- Edit and Try, one keystroke apart. -->
+            <KeyboardAccelerator Key="Enter" Modifiers="Control" Invoked="OnTryAccelerator" />
+        </Grid.KeyboardAccelerators>
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <Border x:Name="WindowFill"
+                Grid.Row="0"
+                Grid.RowSpan="4"
+                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />
+
+        <Border x:Name="WindowTint" Grid.Row="0" Grid.RowSpan="4" Visibility="Collapsed" />
+
+        <!-- title bar -->
+        <Grid x:Name="AppTitleBar" Grid.Row="0" Height="40" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="TitleBarLeftInsetColumn" Width="0" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="TitleBarRightInsetColumn" Width="0" />
+            </Grid.ColumnDefinitions>
+
+            <Image x:Name="AppTitleBarIcon"
+                   Grid.Column="1"
+                   Width="16"
+                   Height="16"
+                   Margin="12,0,0,0"
+                   VerticalAlignment="Center" />
+
+            <TextBlock x:Name="AppTitleTextBlock"
+                       Grid.Column="2"
+                       Text="Windows MIDI Glass"
+                       Margin="12,0,0,0"
+                       VerticalAlignment="Center"
+                       Style="{ThemeResource CaptionTextBlockStyle}" />
+
+            <Grid x:Name="PreviewChiclet"
+                  Grid.Column="0"
+                  Grid.ColumnSpan="6"
+                  HorizontalAlignment="Center"
+                  VerticalAlignment="Center"
+                  Height="18"
+                  IsHitTestVisible="False">
+                <Rectangle RadiusX="9"
+                           RadiusY="9"
+                           StrokeThickness="1"
+                           UseLayoutRounding="False"
+                           Stroke="{ThemeResource SystemFillColorCautionBrush}"
+                           Fill="{ThemeResource SystemFillColorCautionBackgroundBrush}" />
+                <TextBlock x:Name="PreviewChicletText"
+                           x:Uid="PreviewChicletText"
+                           Text="PREVIEW"
+                           FontSize="10"
+                           FontWeight="SemiBold"
+                           Margin="9,0,9,0"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+            </Grid>
+
+            <Button x:Name="AppearanceButton"
+                    x:Uid="AppearanceButton"
+                    Grid.Column="3"
+                    Width="46"
+                    Height="32"
+                    VerticalAlignment="Top"
+                    Padding="0"
+                    BorderThickness="0"
+                    Background="Transparent"
+                    Click="OnAppearanceButtonClick">
+                <FontIcon Glyph="&#xE713;" FontSize="14" />
+            </Button>
+        </Grid>
+
+        <!-- toolbar -->
+        <Border Grid.Row="1"
+                Height="44"
+                Padding="12,0,12,0"
+                BorderThickness="0,0,0,1"
+                BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <!-- Tools, grouped by what they do, with a rule between groups. -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+
+                    <Button x:Name="LibraryButton"
+                            x:Uid="EditorLibraryButton"
+                            Style="{StaticResource EditorSubtleButtonStyle}"
+                            Click="OnLibraryClick">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE72B;" FontSize="14" />
+                            <TextBlock x:Uid="EditorLibraryLabel" Text="Library" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- Edit and Try are one keystroke apart, Ctrl+Enter, so somebody can feel a
+                         fader and then nudge it two pixels without leaving the editor. Two
+                         toggles rather than one, so the mode you are not in is still on screen
+                         and still has a name a screen reader can read.
+
+                         Checked and Unchecked rather than Click: a ToggleButton raises Click
+                         only for a pointer or a key, so a screen reader toggling it would move
+                         the highlight and change nothing else. -->
+                    <Border Style="{StaticResource SegmentHostStyle}">
+                        <StackPanel Orientation="Horizontal">
+                            <ToggleButton x:Name="EditModeToggle"
+                                          x:Uid="EditorEditModeToggle"
+                                          Style="{StaticResource SegmentStyle}"
+                                          IsChecked="True"
+                                          Checked="OnEditModeChecked"
+                                          Unchecked="OnEditModeUnchecked">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE70F;" FontSize="12" />
+                                    <TextBlock x:Uid="EditorEditModeLabel" Text="Edit" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <Rectangle Style="{StaticResource SegmentDividerStyle}" />
+
+                            <ToggleButton x:Name="TryModeToggle"
+                                          x:Uid="EditorTryModeToggle"
+                                          Style="{StaticResource SegmentStyle}"
+                                          Checked="OnTryModeChecked"
+                                          Unchecked="OnTryModeUnchecked">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE768;" FontSize="11" />
+                                    <TextBlock x:Uid="EditorTryModeLabel" Text="Try" />
+                                </StackPanel>
+                            </ToggleButton>
+                        </StackPanel>
+                    </Border>
+
+                    <Rectangle Style="{StaticResource ToolbarSeparatorStyle}" />
+
+                    <Button x:Name="UndoButton"
+                            x:Uid="EditorUndoButton"
+                            Style="{StaticResource EditorIconButtonStyle}"
+                            Click="OnUndoClick">
+                        <FontIcon Glyph="&#xE7A7;" FontSize="14" />
+                    </Button>
+
+                    <Button x:Name="RedoButton"
+                            x:Uid="EditorRedoButton"
+                            Style="{StaticResource EditorIconButtonStyle}"
+                            Click="OnRedoClick">
+                        <FontIcon Glyph="&#xE7A6;" FontSize="14" />
+                    </Button>
+
+                    <Rectangle Style="{StaticResource ToolbarSeparatorStyle}" />
+
+                    <ToggleButton x:Name="SnapToggle"
+                                  x:Uid="EditorSnapToggle"
+                                  Height="28"
+                                  Padding="10,0,10,0"
+                                  CornerRadius="4"
+                                  FontSize="12"
+                                  VerticalAlignment="Center"
+                                  IsChecked="True"
+                                  Checked="OnSnapToggled"
+                                  Unchecked="OnSnapToggled">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE80A;" FontSize="13" />
+                            <TextBlock x:Uid="EditorSnapLabel" Text="Snap" />
+                        </StackPanel>
+                    </ToggleButton>
+
+                    <ComboBox x:Name="GridSizeCombo"
+                              x:Uid="EditorGridSizeCombo"
+                              Height="28"
+                              MinWidth="0"
+                              Width="108"
+                              FontSize="12"
+                              CornerRadius="4"
+                              VerticalAlignment="Center"
+                              SelectionChanged="OnGridSizeChanged" />
+
+                    <Rectangle Style="{StaticResource ToolbarSeparatorStyle}" />
+
+                    <!-- The three arrange operations that get used constantly, direct rather
+                         than two clicks down a menu. The rest are on the chevron. -->
+                    <Button x:Name="AlignLeftButton"
+                            x:Uid="EditorAlignLeftButton"
+                            Style="{StaticResource EditorIconButtonStyle}"
+                            Tag="alignleft"
+                            Click="OnArrangeClick">
+                        <FontIcon Glyph="&#xE8E4;" FontSize="14" />
+                    </Button>
+
+                    <Button x:Name="AlignCenterButton"
+                            x:Uid="EditorAlignCenterButton"
+                            Style="{StaticResource EditorIconButtonStyle}"
+                            Tag="aligncenterx"
+                            Click="OnArrangeClick">
+                        <FontIcon Glyph="&#xE8E3;" FontSize="14" />
+                    </Button>
+
+                    <Button x:Name="ArrangeButton"
+                            x:Uid="EditorArrangeButton"
+                            Style="{StaticResource EditorIconButtonStyle}"
+                            Width="44">
+                        <StackPanel Orientation="Horizontal" Spacing="4">
+                            <FontIcon Glyph="&#xE8A1;" FontSize="14" />
+                            <FontIcon Glyph="&#xE70D;" FontSize="9" />
+                        </StackPanel>                        <Button.Flyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem x:Name="AlignLeftItem" x:Uid="ArrangeAlignLeft" Text="Align left edges" Tag="alignleft" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignCenterXItem" x:Uid="ArrangeAlignCenterX" Text="Align centers across" Tag="aligncenterx" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignRightItem" x:Uid="ArrangeAlignRight" Text="Align right edges" Tag="alignright" Click="OnArrangeClick" />
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem x:Name="AlignTopItem" x:Uid="ArrangeAlignTop" Text="Align top edges" Tag="aligntop" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignCenterYItem" x:Uid="ArrangeAlignCenterY" Text="Align centers down" Tag="aligncentery" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="AlignBottomItem" x:Uid="ArrangeAlignBottom" Text="Align bottom edges" Tag="alignbottom" Click="OnArrangeClick" />
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem x:Name="SpreadAcrossItem" x:Uid="ArrangeSpreadAcross" Text="Equal gaps across" Tag="spreadx" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="SpreadDownItem" x:Uid="ArrangeSpreadDown" Text="Equal gaps down" Tag="spready" Click="OnArrangeClick" />
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem x:Name="BringToFrontItem" x:Uid="ArrangeBringToFront" Text="Bring to front" Tag="tofront" Click="OnArrangeClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74A;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem x:Name="BringForwardItem" x:Uid="ArrangeBringForward" Text="Bring forward" Tag="forward" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="SendBackwardItem" x:Uid="ArrangeSendBackward" Text="Send backward" Tag="backward" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="SendToBackItem" x:Uid="ArrangeSendToBack" Text="Send to back" Tag="toback" Click="OnArrangeClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74B;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+
+                    <Rectangle Style="{StaticResource ToolbarSeparatorStyle}" />
+
+                    <Button x:Name="RepeatButton"
+                            x:Uid="EditorRepeatButton"
+                            Style="{StaticResource EditorSmallButtonStyle}"
+                            Click="OnRepeatClick">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE8C8;" FontSize="13" />
+                            <TextBlock x:Uid="EditorRepeatLabel" Text="Repeat" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- In the comp and not built yet. Shown so the shape of the toolbar is the
+                         shape that was agreed, and disabled so it is not a promise. -->
+                    <Button x:Name="GroupButton"
+                            x:Uid="EditorGroupButton"
+                            Style="{StaticResource EditorIconButtonStyle}"
+                            IsEnabled="False">
+                        <FontIcon Glyph="&#xE71D;" FontSize="14" />
+                    </Button>
+
+                    <Button x:Name="LockButton"
+                            x:Uid="EditorLockButton"
+                            Style="{StaticResource EditorIconButtonStyle}"
+                            IsEnabled="False">
+                        <FontIcon Glyph="&#xE72E;" FontSize="14" />
+                    </Button>
+                </StackPanel>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+
+                    <!-- How many controls the next arrange or repeat will act on. -->
+                    <Grid x:Name="SelectionChip" Height="22" VerticalAlignment="Center" Visibility="Collapsed">
+                        <Rectangle x:Name="SelectionChipShape" Style="{StaticResource ChipShapeStyle}" />
+                        <StackPanel Style="{StaticResource ChipPanelStyle}">
+                            <FontIcon Glyph="&#xE70F;" FontSize="11" VerticalAlignment="Center"
+                                      Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                            <TextBlock x:Name="SelectionChipText"
+                                       Style="{StaticResource ChipTextStyle}"
+                                       Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Saved or not saved, the way MIDI Patchbay says it. Written about a second
+                         and a half after the last edit, so nobody has to remember to save. -->
+                    <Grid x:Name="SavedChip" Height="22" VerticalAlignment="Center">
+                        <Rectangle x:Name="SavedChipShape" Style="{StaticResource ChipShapeStyle}" />
+                        <StackPanel Style="{StaticResource ChipPanelStyle}">
+                            <FontIcon x:Name="SavedChipGlyph" Glyph="&#xE73E;" FontSize="11" VerticalAlignment="Center" />
+                            <TextBlock x:Name="SavedChipText" Style="{StaticResource ChipTextStyle}" Text="Saved" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Button x:Name="LayoutSettingsButton"
+                            x:Uid="EditorLayoutSettingsButton"
+                            Style="{StaticResource EditorSmallButtonStyle}">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon Glyph="&#xE713;" FontSize="13" />
+                            <TextBlock x:Uid="EditorLayoutSettingsLabel" Text="Layout…" />
+                        </StackPanel>
+                        <Button.Flyout>
+                            <MenuFlyout>
+                                <MenuFlyoutItem x:Uid="LayoutMenuTheme" Text="Theme and colors…" Tag="appearance" Click="OnLayoutSettingsClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE790;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem x:Uid="LayoutMenuPagesDevices" Text="Pages and devices…" Tag="pages" Click="OnLayoutSettingsClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE964;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem x:Uid="LayoutMenuPageSize" Text="Page size…" Click="OnPageSizeClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE740;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem x:Uid="LayoutMenuBackground" Text="Background picture…" Click="OnBackgroundClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xEB9F;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem x:Uid="LayoutMenuRename" Text="Rename layout…" Click="OnRenameLayoutClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8AC;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem x:Uid="LayoutMenuKeyboardOrder" Text="Set the keyboard order…" Click="OnSortKeyboardOrderClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8FD;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem x:Uid="LayoutMenuRun" Text="Save and run" Click="OnRunClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE768;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                            </MenuFlyout>
+                        </Button.Flyout>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- body -->
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition x:Name="LeftColumn" Width="190" MinWidth="40" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="*" MinWidth="240" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition x:Name="InspectorColumn" Width="300" MinWidth="40" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Every divider on this screen can be dragged. The instinct to grab one and give
+                 the monitor more room, or the palette less, is the right instinct. WinUI has no
+                 splitter, so these are plain borders with pointer handlers: a transparent grab
+                 area wide enough to hit, with a hairline down the middle of it. -->
+            <Border x:Name="LeftSplitter"
+                    x:Uid="LeftSplitter"
+                    Grid.Column="1"
+                    Width="6"
+                    Background="Transparent"
+                    Tag="left"
+                    PointerPressed="OnSplitterPressed"
+                    PointerMoved="OnSplitterMoved"
+                    PointerReleased="OnSplitterReleased"
+                    PointerCaptureLost="OnSplitterReleased"
+                    PointerEntered="OnSplitterEntered"
+                    PointerExited="OnSplitterExited">
+                <Rectangle Width="2" HorizontalAlignment="Center"
+                           Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+            </Border>
+
+            <Border x:Name="InspectorSplitter"
+                    x:Uid="InspectorSplitter"
+                    Grid.Column="3"
+                    Width="6"
+                    Background="Transparent"
+                    Tag="inspector"
+                    PointerPressed="OnSplitterPressed"
+                    PointerMoved="OnSplitterMoved"
+                    PointerReleased="OnSplitterReleased"
+                    PointerCaptureLost="OnSplitterReleased"
+                    PointerEntered="OnSplitterEntered"
+                    PointerExited="OnSplitterExited">
+                <Rectangle Width="2" HorizontalAlignment="Center"
+                           Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+            </Border>
+
+            <!-- palette and outline -->
+            <Border Grid.Column="0"
+                    BorderThickness="0,0,1,0"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                <Grid RowSpacing="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Collapsed: a rail of two buttons. Clicking one opens the pane on that
+                         tab, so getting back is one click rather than a hunt. -->
+                    <StackPanel x:Name="LeftRail"
+                                Grid.Row="0" Grid.RowSpan="2"
+                                Orientation="Vertical"
+                                Spacing="4"
+                                Margin="4,8,4,0"
+                                Visibility="Collapsed">
+                        <Button x:Name="RailPaletteButton"
+                                x:Uid="RailPaletteButton"
+                                Style="{StaticResource EditorIconButtonStyle}"
+                                Width="32"
+                                Tag="0"
+                                Click="OnExpandLeftPaneClick">
+                            <FontIcon Glyph="&#xE710;" FontSize="14" />
+                        </Button>
+                        <Button x:Name="RailOutlineButton"
+                                x:Uid="RailOutlineButton"
+                                Style="{StaticResource EditorIconButtonStyle}"
+                                Width="32"
+                                Tag="1"
+                                Click="OnExpandLeftPaneClick">
+                            <FontIcon Glyph="&#xE8FD;" FontSize="14" />
+                        </Button>
+                    </StackPanel>
+
+                    <Grid x:Name="LeftPaneBody" Grid.Row="0" Grid.RowSpan="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" Style="{StaticResource TabStripStyle}" Padding="9,0,4,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Button x:Name="CollapseLeftButton"
+                                        x:Uid="CollapseLeftButton"
+                                        Grid.Column="1"
+                                        Style="{StaticResource EditorTinyButtonStyle}"
+                                        Width="22" Height="22" Padding="0"
+                                        VerticalAlignment="Center"
+                                        Click="OnCollapseLeftPaneClick">
+                                    <FontIcon Glyph="&#xE76B;" FontSize="10" />
+                                </Button>
+
+                                <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="14">
+                                <Grid>
+                                    <ToggleButton x:Name="PaletteTab" x:Uid="PalettePivotItem"
+                                                  Style="{StaticResource TabButtonStyle}"
+                                                  IsChecked="True" Tag="0"
+                                                  Content="Add"
+                                                  Checked="OnLeftTabChecked" Unchecked="OnLeftTabUnchecked" />
+                                    <Rectangle x:Name="PaletteTabLine" Style="{StaticResource TabUnderlineStyle}" />
+                                </Grid>
+                                <Grid>
+                                    <ToggleButton x:Name="OutlineTab" x:Uid="OutlinePivotItem"
+                                                  Style="{StaticResource TabButtonStyle}"
+                                                  Tag="1"
+                                                  Content="Outline"
+                                                  Checked="OnLeftTabChecked" Unchecked="OnLeftTabUnchecked" />
+                                    <Rectangle x:Name="OutlineTabLine" Style="{StaticResource TabUnderlineStyle}" Visibility="Collapsed" />
+                                </Grid>
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <Grid Grid.Row="1">
+                            <Grid x:Name="PalettePane" Margin="9,6,9,0" RowSpacing="6">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <AutoSuggestBox x:Name="PaletteSearch"
+                                                x:Uid="PaletteSearch"
+                                                Grid.Row="0"
+                                                Height="28"
+                                                FontSize="12"
+                                                QueryIcon="Find"
+                                                TextChanged="OnPaletteSearchChanged" />
+
+                                <!-- Grouped and drawn in code: a tile shows a miniature of the
+                                     control, and a font glyph cannot tell a fader from a fader
+                                     bank. -->
+                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                    <StackPanel x:Name="PaletteHost"
+                                                x:Uid="PaletteHost"
+                                                Margin="0,0,4,8" />
+                                </ScrollViewer>
+
+                                <!-- Not in the comp, which places by clicking the page. Kept
+                                     because that is a pointer-only path and this is not. -->
+                                <Button x:Name="AddToPageButton"
+                                        x:Uid="AddToPageButton"
+                                        Grid.Row="2"
+                                        Margin="0,0,0,8"
+                                        HorizontalAlignment="Stretch"
+                                        Style="{StaticResource EditorSmallButtonStyle}"
+                                        Click="OnAddToPageClick">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE710;" FontSize="12" />
+                                        <TextBlock x:Uid="AddToPageLabel" Text="Add to page" FontSize="12" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <Grid x:Name="OutlinePane" Margin="9,6,9,0" RowSpacing="6" Visibility="Collapsed">
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <ListView x:Name="OutlineList"
+                                          x:Uid="OutlineList"
+                                          Grid.Row="0"
+                                          SelectionMode="Single"
+                                          ItemTemplate="{StaticResource OutlineTemplate}"
+                                          SelectionChanged="OnOutlineSelectionChanged">
+                                    <ListView.ItemContainerTransitions>
+                                        <TransitionCollection />
+                                    </ListView.ItemContainerTransitions>
+                                </ListView>
+
+                                <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="6" Margin="0,0,0,8">
+                                    <Button x:Name="OutlineUpButton"
+                                            x:Uid="OutlineUpButton"
+                                            Style="{StaticResource EditorIconButtonStyle}"
+                                            Click="OnOutlineMoveUp">
+                                        <FontIcon Glyph="&#xE74A;" FontSize="12" />
+                                    </Button>
+                                    <Button x:Name="OutlineDownButton"
+                                            x:Uid="OutlineDownButton"
+                                            Style="{StaticResource EditorIconButtonStyle}"
+                                            Click="OnOutlineMoveDown">
+                                        <FontIcon Glyph="&#xE74B;" FontSize="12" />
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- canvas -->
+            <Grid Grid.Column="2">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" MinHeight="120" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <!-- A fixed height, never Auto. The rail filling up must not take room away
+                         from the canvas: somebody in Try mode is watching the surface, and a
+                         render area that shrinks under them is the one thing that makes trying a
+                         layout impossible. It scrolls instead. -->
+                    <RowDefinition x:Name="MonitorRow" Height="104" />
+                </Grid.RowDefinitions>
+
+                <!-- The work area fills the whole middle. Only the PAGE keeps its aspect ratio;
+                     letting the work area do it left a band of window chrome down both sides
+                     that read as part of the layout. -->
+                <Grid Grid.Row="0" Background="#0A0B0E">
+                    <ScrollViewer x:Name="CanvasScroll"
+                                  ZoomMode="Disabled"
+                                  IsTabStop="True"
+                                  UseSystemFocusVisuals="False"
+                                  HorizontalScrollBarVisibility="Auto"
+                                  VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollMode="Auto"
+                                  VerticalScrollMode="Auto"
+                                  SizeChanged="OnCanvasSizeChanged">
+                        <!-- The page is the bright rectangle and everything else is working
+                             space. The host carries the scaled size so the scroll viewer knows
+                             how much there is; the transform paints it. -->
+                        <Border x:Name="CanvasHost" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <Grid x:Name="WorkAreaHost" HorizontalAlignment="Left" VerticalAlignment="Top">
+                                <Grid.RenderTransform>
+                                    <ScaleTransform x:Name="CanvasScale" ScaleX="1" ScaleY="1" />
+                                </Grid.RenderTransform>
+
+                                <Border x:Name="WorkAreaFill" />
+
+                                <!-- A shape, not a Border: a Border's bounds and its corner
+                                     radius are both snapped to whole pixels, so the corner steps
+                                     at fractional display scaling. -->
+                                <Rectangle x:Name="PageDeck"
+                                           RadiusX="6"
+                                           RadiusY="6"
+                                           StrokeThickness="1"
+                                           UseLayoutRounding="False"
+                                           HorizontalAlignment="Left"
+                                           VerticalAlignment="Top" />
+
+                                <!-- The snap grid, drawn only where the eye can resolve it. -->
+                                <Canvas x:Name="GridCanvas" IsHitTestVisible="False" />
+
+                                <Canvas x:Name="SurfaceCanvas" />
+
+                                <Canvas x:Name="OverlayCanvas"
+                                        Background="Transparent"
+                                        PointerPressed="OnCanvasPointerPressed"
+                                        PointerMoved="OnCanvasPointerMoved"
+                                        PointerReleased="OnCanvasPointerReleased"
+                                        PointerCaptureLost="OnCanvasPointerCaptureLost" />
+                            </Grid>
+                        </Border>
+                    </ScrollViewer>
+
+                    <!-- Which page, how big it is, and the zoom, over the canvas in the corner
+                         rather than in a rail: it describes what is being looked at. On its own
+                         plate, because the page's edge can end up running straight through it. -->
+                    <Border HorizontalAlignment="Right"
+                            VerticalAlignment="Bottom"
+                            Margin="0,0,10,8"
+                            Padding="8,3,6,3"
+                            CornerRadius="5"
+                            Background="#B2000000">
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <TextBlock x:Name="CanvasStatusText"
+                                       FontFamily="Cascadia Mono, Consolas"
+                                       FontSize="10"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,4,0"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                            <Button x:Name="ZoomOutButton"
+                                    x:Uid="ZoomOutButton"
+                                    Style="{StaticResource EditorTinyButtonStyle}"
+                                    Width="24" Padding="0"
+                                    Click="OnZoomOutClick">
+                                <FontIcon Glyph="&#xE71F;" FontSize="10" />
+                            </Button>
+
+                            <Button x:Name="ZoomInButton"
+                                    x:Uid="ZoomInButton"
+                                    Style="{StaticResource EditorTinyButtonStyle}"
+                                    Width="24" Padding="0"
+                                    Click="OnZoomInClick">
+                                <FontIcon Glyph="&#xE8A3;" FontSize="10" />
+                            </Button>
+
+                            <Button x:Name="ZoomFitButton"
+                                    x:Uid="ZoomFitButton"
+                                    Style="{StaticResource EditorTinyButtonStyle}"
+                                    Click="OnZoomFitClick">
+                                <TextBlock x:Uid="ZoomFitLabel" Text="Fit" FontSize="11" />
+                            </Button>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Counted rather than hidden, and never moved back on their own: clamping is
+                     what would make a page resize unrecoverable. -->
+                <InfoBar x:Name="OffPageBar"
+                         x:Uid="OffPageBar"
+                         Grid.Row="1"
+                         IsOpen="False"
+                         IsClosable="False"
+                         Severity="Warning"
+                         Margin="8,0,8,8">
+                    <InfoBar.ActionButton>
+                        <Button x:Name="SelectOffPageButton"
+                                x:Uid="SelectOffPageButton"
+                                Content="Select them"
+                                Click="OnSelectOffPageClick" />
+                    </InfoBar.ActionButton>
+                </InfoBar>
+
+                <!-- Setting the keyboard order by clicking through the page. An order somebody
+                     cannot see is one they cannot fix, so every control wears its number for as
+                     long as this is up. -->
+                <InfoBar x:Name="KeyboardOrderBar"
+                         x:Uid="KeyboardOrderBar"
+                         Grid.Row="1"
+                         IsOpen="False"
+                         IsClosable="False"
+                         Severity="Informational"
+                         Margin="8,0,8,8">
+                    <!-- ActionButton takes one button, so the three live in the content. -->
+                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,4,0,4">
+                        <Button x:Name="KeyboardOrderDoneButton"
+                                x:Uid="KeyboardOrderDoneButton"
+                                Content="Done"
+                                Style="{StaticResource AccentButtonStyle}"
+                                Click="OnKeyboardOrderDoneClick" />
+                        <Button x:Name="KeyboardOrderRestartButton"
+                                x:Uid="KeyboardOrderRestartButton"
+                                Content="Start over"
+                                Click="OnKeyboardOrderRestartClick" />
+                        <Button x:Name="KeyboardOrderCancelButton"
+                                x:Uid="KeyboardOrderCancelButton"
+                                Content="Cancel"
+                                Click="OnKeyboardOrderCancelClick" />
+                    </StackPanel>
+                </InfoBar>
+
+                <!-- The page rail: one tab per page in that page's own hue, then the tools that
+                     act on the page rather than on a control. -->
+                <Border Grid.Row="2"
+                        Height="34"
+                        Padding="10,0,10,0"
+                        BorderThickness="0,1,0,0"
+                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                    <Grid ColumnSpacing="6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <ScrollViewer Grid.Column="0"
+                                      HorizontalScrollBarVisibility="Auto"
+                                      VerticalScrollMode="Disabled"
+                                      VerticalScrollBarVisibility="Disabled">
+                            <StackPanel Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                                <StackPanel x:Name="PageRail" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center" />
+
+                                <Button x:Name="AddPageButton"
+                                        x:Uid="AddPageButton"
+                                        Height="23"
+                                        Padding="10,0,10,0"
+                                        CornerRadius="4"
+                                        FontSize="11"
+                                        VerticalAlignment="Center"
+                                        Click="OnAddPageClick">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE710;" FontSize="10" />
+                                        <TextBlock x:Uid="AddPageLabel" Text="Page" FontSize="11" />
+                                    </StackPanel>
+                                </Button>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+                            <Button x:Name="KeyboardOrderButton"
+                                    x:Uid="KeyboardOrderButton"
+                                    Height="23"
+                                    Padding="10,0,10,0"
+                                    CornerRadius="4"
+                                    FontSize="11"
+                                    Click="OnSortKeyboardOrderClick">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE8FD;" FontSize="10" />
+                                    <TextBlock x:Uid="KeyboardOrderLabel" Text="Keyboard order" FontSize="11" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button x:Name="GridSettingsButton"
+                                    x:Uid="GridSettingsButton"
+                                    Height="23"
+                                    Padding="10,0,10,0"
+                                    CornerRadius="4"
+                                    FontSize="11"
+                                    Click="OnPageSizeClick">
+                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                    <FontIcon Glyph="&#xE740;" FontSize="10" />
+                                    <TextBlock x:Uid="GridSettingsLabel" Text="Page size…" FontSize="11" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- The monitor rail: what actually went out, filtered to the selected control
+                     by default. It answers "is this thing sending what I think it is" in about a
+                     second, which is the reason nobody has to open a second app to find out. -->
+                <Border x:Name="MonitorSplitter"
+                        x:Uid="MonitorSplitter"
+                        Grid.Row="3"
+                        Height="6"
+                        Background="Transparent"
+                        Tag="monitor"
+                        PointerPressed="OnSplitterPressed"
+                        PointerMoved="OnSplitterMoved"
+                        PointerReleased="OnSplitterReleased"
+                        PointerCaptureLost="OnSplitterReleased"
+                        PointerEntered="OnSplitterEntered"
+                        PointerExited="OnSplitterExited">
+                    <Rectangle Height="2" VerticalAlignment="Center"
+                               Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                </Border>
+
+                <Border Grid.Row="4"
+                        BorderThickness="0"
+                        Background="#2E000000">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Height="27" Padding="11,0,11,0" ColumnSpacing="8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                                <FontIcon Glyph="&#xE9D9;" FontSize="12"
+                                          Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                <TextBlock x:Uid="MonitorHeading"
+                                           Text="Sending"
+                                           FontSize="11"
+                                           VerticalAlignment="Center"
+                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                            </StackPanel>
+
+                            <!-- A chip, not a check box: it is a filter that is on, which is the
+                                 same thing the Saved chip beside it is saying. -->
+                            <ToggleButton x:Name="MonitorSelectedOnlyCheck"
+                                          x:Uid="MonitorSelectedOnlyCheck"
+                                          Grid.Column="1"
+                                          Style="{StaticResource FilterChipStyle}"
+                                          IsChecked="True"
+                                          Checked="OnMonitorSelectedOnlyToggled"
+                                          Unchecked="OnMonitorSelectedOnlyToggled">
+                                <TextBlock x:Uid="MonitorSelectedOnlyLabel"
+                                           Text="Selected control only"
+                                           FontSize="11" />
+                            </ToggleButton>
+
+                            <TextBlock x:Name="MonitorEmptyText"
+                                       Grid.Column="2"
+                                       FontSize="11"
+                                       Margin="8,0,8,0"
+                                       VerticalAlignment="Center"
+                                       HorizontalAlignment="Right"
+                                       TextTrimming="CharacterEllipsis"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                            <ToggleButton x:Name="MonitorPauseToggle"
+                                          x:Uid="MonitorPauseToggle"
+                                          Grid.Column="3"
+                                          Height="22"
+                                          Padding="8,0,8,0"
+                                          CornerRadius="3"
+                                          FontSize="11"
+                                          VerticalAlignment="Center"
+                                          Checked="OnMonitorPauseToggled"
+                                          Unchecked="OnMonitorPauseToggled">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <FontIcon Glyph="&#xE769;" FontSize="10" />
+                                    <TextBlock x:Uid="MonitorPauseLabel" Text="Pause" FontSize="11" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <Button x:Name="MonitorClearButton"
+                                    x:Uid="MonitorClearButton"
+                                    Grid.Column="4"
+                                    Style="{StaticResource EditorTinyButtonStyle}"
+                                    Height="22"
+                                    Click="OnMonitorClearClick">
+                                <StackPanel Orientation="Horizontal" Spacing="4">
+                                    <FontIcon Glyph="&#xE74D;" FontSize="10" />
+                                    <TextBlock x:Uid="MonitorClearLabel" Text="Clear" FontSize="11" />
+                                </StackPanel>
+                            </Button>
+
+                            <Button x:Name="MonitorExpandButton"
+                                    x:Uid="MonitorExpandButton"
+                                    Grid.Column="5"
+                                    Style="{StaticResource EditorTinyButtonStyle}"
+                                    Height="22"
+                                    Width="26"
+                                    Padding="0"
+                                    Click="OnMonitorExpandClick">
+                                <FontIcon x:Name="MonitorExpandGlyph" Glyph="&#xE70D;" FontSize="10" />
+                            </Button>
+                        </Grid>
+
+                        <ListView x:Name="MonitorList"
+                                  x:Uid="MonitorList"
+                                  Grid.Row="1"
+                                  Padding="0,0,0,4"
+                                  SelectionMode="None"
+                                  IsItemClickEnabled="False"
+                                  ScrollViewer.HorizontalScrollMode="Auto"
+                                  ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                                  ScrollViewer.VerticalScrollMode="Auto"
+                                  ScrollViewer.VerticalScrollBarVisibility="Auto">
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem" BasedOn="{StaticResource DefaultListViewItemStyle}">
+                                    <Setter Property="MinHeight" Value="18" />
+                                    <Setter Property="Height" Value="18" />
+                                    <Setter Property="Padding" Value="11,0,11,0" />
+                                    <Setter Property="Margin" Value="0" />
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.ItemTemplate>
+                                <DataTemplate x:DataType="local:MonitorItem">
+                                    <!-- The color IS the column: dim for when, cyan for what went
+                                         out, green for what it means, plain for where it went.
+                                         Eight bytes of hex in one color is unreadable. -->
+                                    <Grid ColumnSpacing="12"
+                                          AutomationProperties.Name="{x:Bind AutomationName}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="52" />
+                                            <ColumnDefinition Width="196" />
+                                            <ColumnDefinition Width="140" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0"
+                                                   Style="{StaticResource MonitorCellStyle}"
+                                                   Text="{x:Bind Elapsed}"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <TextBlock Grid.Column="1"
+                                                   Style="{StaticResource MonitorCellStyle}"
+                                                   Text="{x:Bind Words}"
+                                                   Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+
+                                        <TextBlock Grid.Column="2"
+                                                   Style="{StaticResource MonitorCellStyle}"
+                                                   Text="{x:Bind Meaning}"
+                                                   Foreground="{ThemeResource SystemFillColorSuccessBrush}" />
+
+                                        <TextBlock Grid.Column="3"
+                                                   Style="{StaticResource MonitorCellStyle}"
+                                                   Text="{x:Bind Destination}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- inspector -->
+            <Border Grid.Column="4"
+                    BorderThickness="1,0,0,0"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid x:Name="InspectorHeader" Grid.Row="0" Margin="13,11,13,8" ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Spacing="1">
+                            <TextBlock x:Name="InspectorKindText"
+                                       FontSize="11"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                            <!-- The name is the heading and the heading is editable: clicking
+                                 what a thing is called is where everybody tries to rename it. -->
+                            <TextBox x:Name="InspectorTitleText"
+                                     x:Uid="InspectorTitleText"
+                                     FontSize="14"
+                                     FontWeight="SemiBold"
+                                     Padding="4,1,4,1"
+                                     Margin="-5,0,0,0"
+                                     BorderThickness="0"
+                                     Background="Transparent"
+                                     TextChanged="OnLabelChanged" />
+                        </StackPanel>
+
+                        <Button x:Name="InspectorMoreButton"
+                                x:Uid="InspectorMoreButton"
+                                Grid.Column="1"
+                                Style="{StaticResource EditorIconButtonStyle}"
+                                Width="28"
+                                Height="26">
+                            <FontIcon Glyph="&#xE712;" FontSize="13" />
+                            <Button.Flyout>
+                                <MenuFlyout>
+                                    <MenuFlyoutItem x:Uid="InspectorMenuDuplicate" Text="Duplicate" Click="OnDuplicateSelectionClick">
+                                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
+                                    <MenuFlyoutItem x:Uid="InspectorMenuDelete" Text="Delete" Click="OnDeleteSelectionClick">
+                                        <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" /></MenuFlyoutItem.Icon>
+                                    </MenuFlyoutItem>
+                                </MenuFlyout>
+                            </Button.Flyout>
+                        </Button>
+                    </Grid>
+
+                    <!-- Nothing here is modal: the inspector always reflects the selection. With
+                         nothing selected it says so and nothing else, because a row of grayed
+                         tabs over empty boxes reads as broken rather than as not applicable. -->
+                    <TextBlock x:Name="InspectorEmptyText"
+                               x:Uid="InspectorEmptyText"
+                               Grid.Row="0"
+                               Grid.RowSpan="2"
+                               Text="Nothing is selected"
+                               Visibility="Collapsed"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center"
+                               TextAlignment="Center"
+                               TextWrapping="Wrap"
+                               Margin="16,0,16,0"
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                    <!-- Underline tabs, not a Pivot. A Pivot header is more than twice this
+                         tall and carries side padding a 288 px pane cannot spare. -->
+                    <Grid x:Name="InspectorBody" Grid.Row="1">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0" Style="{StaticResource TabStripStyle}" Padding="13,0,13,0">
+                            <StackPanel Orientation="Horizontal" Spacing="12">
+                                <Grid>
+                                    <ToggleButton x:Name="LookTab" x:Uid="InspectorLookItem"
+                                                  Style="{StaticResource TabButtonStyle}"
+                                                  IsChecked="True" Tag="0"
+                                                  Content="Look"
+                                                  Checked="OnInspectorTabChecked" Unchecked="OnInspectorTabUnchecked" />
+                                    <Rectangle x:Name="LookTabLine" Style="{StaticResource TabUnderlineStyle}" />
+                                </Grid>
+                                <Grid>
+                                    <ToggleButton x:Name="MidiTab" x:Uid="InspectorMidiItem"
+                                                  Style="{StaticResource TabButtonStyle}"
+                                                  Tag="1"
+                                                  Content="Sends"
+                                                  Checked="OnInspectorTabChecked" Unchecked="OnInspectorTabUnchecked" />
+                                    <Rectangle x:Name="MidiTabLine" Style="{StaticResource TabUnderlineStyle}" Visibility="Collapsed" />
+                                </Grid>
+                                <Grid>
+                                    <ToggleButton x:Name="MidiInTab" x:Uid="InspectorMidiInItem"
+                                                  Style="{StaticResource TabButtonStyle}"
+                                                  Tag="2"
+                                                  Content="Listens"
+                                                  Checked="OnInspectorTabChecked" Unchecked="OnInspectorTabUnchecked" />
+                                    <Rectangle x:Name="MidiInTabLine" Style="{StaticResource TabUnderlineStyle}" Visibility="Collapsed" />
+                                </Grid>
+                                <Grid>
+                                    <ToggleButton x:Name="BehaviorTab" x:Uid="InspectorBehaviorItem"
+                                                  Style="{StaticResource TabButtonStyle}"
+                                                  Tag="3"
+                                                  Content="Behavior"
+                                                  Checked="OnInspectorTabChecked" Unchecked="OnInspectorTabUnchecked" />
+                                    <Rectangle x:Name="BehaviorTabLine" Style="{StaticResource TabUnderlineStyle}" Visibility="Collapsed" />
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <Grid Grid.Row="1">
+                            <ScrollViewer x:Name="LookPane" VerticalScrollBarVisibility="Auto">
+                                <StackPanel x:Name="LookPanel" Margin="8,0,13,16">
+
+                                    <TextBlock x:Uid="InspectorColorHeading" Text="Color" Style="{StaticResource GroupHeadingStyle}" Margin="0,4,0,7" />
+                                    <ItemsControl x:Name="HueSlotHost">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <StackPanel Orientation="Horizontal" Spacing="6" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                    </ItemsControl>
+                                    <TextBlock x:Name="HueSlotCaption"
+                                               x:Uid="HueSlotCaption"
+                                               Style="{StaticResource CaptionTextStyle}"
+                                               Margin="0,6,0,0" />
+
+                                    <!-- How the control is drawn. "Theme" is a segment of its own
+                                         rather than the absence of one: exactly one is always on,
+                                         and handing the decision back to the theme is a thing you
+                                         pick, not a thing you undo. -->
+                                    <TextBlock x:Uid="InspectorStyleHeading" Text="Style" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+                                    <Border Style="{StaticResource SegmentHostStyle}" HorizontalAlignment="Stretch">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <ToggleButton x:Name="StyleThemeSegment" x:Uid="StyleThemeSegment" Grid.Column="0"
+                                                          Style="{StaticResource SegmentStyle}" Padding="0" Tag="theme"
+                                                          Checked="OnStyleChecked" Unchecked="OnStyleUnchecked">
+                                                <TextBlock x:Uid="StyleThemeLabel" Text="Theme" />
+                                            </ToggleButton>
+                                            <Rectangle Grid.Column="1" Style="{StaticResource SegmentDividerStyle}" />
+                                            <ToggleButton x:Name="StylePlateSegment" x:Uid="StylePlateSegment" Grid.Column="2"
+                                                          Style="{StaticResource SegmentStyle}" Padding="0" Tag="plate"
+                                                          Checked="OnStyleChecked" Unchecked="OnStyleUnchecked">
+                                                <TextBlock x:Uid="StylePlateLabel" Text="Plate" />
+                                            </ToggleButton>
+                                            <Rectangle Grid.Column="3" Style="{StaticResource SegmentDividerStyle}" />
+                                            <ToggleButton x:Name="StyleOutlineSegment" x:Uid="StyleOutlineSegment" Grid.Column="4"
+                                                          Style="{StaticResource SegmentStyle}" Padding="0" Tag="outline"
+                                                          Checked="OnStyleChecked" Unchecked="OnStyleUnchecked">
+                                                <TextBlock x:Uid="StyleOutlineLabel" Text="Outline" />
+                                            </ToggleButton>
+                                            <Rectangle Grid.Column="5" Style="{StaticResource SegmentDividerStyle}" />
+                                            <ToggleButton x:Name="StyleSolidSegment" x:Uid="StyleSolidSegment" Grid.Column="6"
+                                                          Style="{StaticResource SegmentStyle}" Padding="0" Tag="solid"
+                                                          Checked="OnStyleChecked" Unchecked="OnStyleUnchecked">
+                                                <TextBlock x:Uid="StyleSolidLabel" Text="Solid" />
+                                            </ToggleButton>
+                                            <Rectangle Grid.Column="7" Style="{StaticResource SegmentDividerStyle}" />
+                                            <ToggleButton x:Name="StyleBareSegment" x:Uid="StyleBareSegment" Grid.Column="8"
+                                                          Style="{StaticResource SegmentStyle}" Padding="0" Tag="bare"
+                                                          Checked="OnStyleChecked" Unchecked="OnStyleUnchecked">
+                                                <TextBlock x:Uid="StyleBareLabel" Text="Bare" />
+                                            </ToggleButton>
+                                        </Grid>
+                                    </Border>
+
+                                    <TextBlock x:Uid="InspectorPositionHeading" Text="Position and size" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+
+                                    <!-- Label left at a fixed width, fields filling the rest, so
+                                         every row in the pane lines up into one column. -->
+                                    <Grid ColumnSpacing="8" RowSpacing="7">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock x:Uid="InspectorXYLabel" Grid.Row="0" Grid.Column="0" Text="X, Y" Style="{StaticResource RowLabelStyle}" />
+                                        <TextBox x:Name="BoundsX" x:Uid="BoundsX" Grid.Row="0" Grid.Column="1"
+                                                 Style="{StaticResource RowFieldStyle}" TextChanged="OnBoundsChanged" />
+                                        <TextBox x:Name="BoundsY" x:Uid="BoundsY" Grid.Row="0" Grid.Column="2"
+                                                 Style="{StaticResource RowFieldStyle}" TextChanged="OnBoundsChanged" />
+
+                                        <TextBlock x:Uid="InspectorSizeLabel" Grid.Row="1" Grid.Column="0" Text="Width, height" Style="{StaticResource RowLabelStyle}" />
+                                        <TextBox x:Name="BoundsWidth" x:Uid="BoundsWidth" Grid.Row="1" Grid.Column="1"
+                                                 Style="{StaticResource RowFieldStyle}" TextChanged="OnBoundsChanged" />
+                                        <TextBox x:Name="BoundsHeight" x:Uid="BoundsHeight" Grid.Row="1" Grid.Column="2"
+                                                 Style="{StaticResource RowFieldStyle}" TextChanged="OnBoundsChanged" />
+
+                                        <ToggleButton x:Name="AspectLockToggle" x:Uid="AspectLockToggle"
+                                                      Grid.Row="1" Grid.Column="3" Height="30" Width="34" Padding="0"
+                                                      CornerRadius="4"
+                                                      Click="OnAspectLockToggled">
+                                            <FontIcon Glyph="&#xE72E;" FontSize="12" />
+                                        </ToggleButton>
+                                    </Grid>
+
+                                    <TextBlock x:Uid="InspectorLabelHeading" Text="Label" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+
+                                    <Grid ColumnSpacing="8" RowSpacing="7">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock x:Uid="InspectorLabelTextLabel" Grid.Row="0" Grid.Column="0" Text="Text" Style="{StaticResource RowLabelStyle}" />
+                                        <TextBox x:Name="LabelBox" x:Uid="LabelBox" Grid.Row="0" Grid.Column="1"
+                                                 Style="{StaticResource RowFieldStyle}" TextChanged="OnLabelChanged" />
+
+                                        <TextBlock x:Uid="InspectorLabelPlacedLabel" Grid.Row="1" Grid.Column="0" Text="Placed" Style="{StaticResource RowLabelStyle}" />
+                                        <ComboBox x:Name="LabelPlacedCombo" x:Uid="LabelPlacedCombo" Grid.Row="1" Grid.Column="1"
+                                                  Style="{StaticResource RowComboStyle}" SelectionChanged="OnLabelPlacedChanged" />
+
+                                        <TextBlock x:Uid="InspectorLabelWidthLabel" Grid.Row="2" Grid.Column="0" Text="Width" Style="{StaticResource RowLabelStyle}" />
+                                        <Grid Grid.Row="2" Grid.Column="1" ColumnSpacing="6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <NumberBox x:Name="LabelWidthBox"
+                                                       x:Uid="LabelWidthBox"
+                                                       Grid.Column="0"
+                                                       Minimum="10"
+                                                       Maximum="400"
+                                                       SmallChange="10"
+                                                       SpinButtonPlacementMode="Compact"
+                                                       ValueChanged="OnLabelWidthChanged" />
+
+                                            <Button x:Name="LabelFontButton"
+                                                    x:Uid="LabelFontButton"
+                                                    Grid.Column="1"
+                                                    Height="30"
+                                                    Padding="8,0,8,0"
+                                                    FontSize="11"
+                                                    Click="OnLabelFontClick">
+                                                <StackPanel Orientation="Horizontal" Spacing="5">
+                                                    <FontIcon Glyph="&#xE8D2;" FontSize="11" />
+                                                    <TextBlock x:Uid="LabelFontLabel" Text="Font…" FontSize="11" />
+                                                </StackPanel>
+                                            </Button>
+                                        </Grid>
+
+                                        <TextBlock x:Name="ShowValueLabel" x:Uid="InspectorShowValueLabel" Grid.Row="3" Grid.Column="0" Text="Show value" Style="{StaticResource RowLabelStyle}" />
+                                        <ComboBox x:Name="ShowValueCombo" x:Uid="ShowValueCombo" Grid.Row="3" Grid.Column="1"
+                                                  Style="{StaticResource RowComboStyle}" SelectionChanged="OnShowValueChanged" />
+
+                                        <TextBlock x:Uid="InspectorKindLabel" Grid.Row="4" Grid.Column="0" Text="Kind" Style="{StaticResource RowLabelStyle}" />
+                                        <ComboBox x:Name="KindCombo" x:Uid="KindCombo" Grid.Row="4" Grid.Column="1"
+                                                  Style="{StaticResource RowComboStyle}" SelectionChanged="OnKindChanged" />
+                                    </Grid>
+
+                                    <TextBlock x:Name="LabelFontCaption"
+                                               FontSize="11"
+                                               Margin="0,6,0,0"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                    <!-- Marks across the travel. A knob, a fader, a meter and a
+                                         ribbon draw them along one axis; a pad and a joystick
+                                         draw the same numbers as a grid. -->
+                                    <StackPanel x:Name="TicksPanel" Visibility="Collapsed">
+                                        <TextBlock x:Uid="InspectorMarksHeading" Text="Marks" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+
+                                        <CheckBox x:Name="TicksShowCheck"
+                                                  x:Uid="TicksShowCheck"
+                                                  Content="Show marks"
+                                                  Checked="OnTicksShowChanged"
+                                                  Unchecked="OnTicksShowChanged" />
+
+                                        <NumberBox x:Name="TickCountBox"
+                                                   x:Uid="TickCountBox"
+                                                   Minimum="2"
+                                                   Maximum="64"
+                                                   Margin="0,4,0,0"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnTickCountChanged" />
+
+                                        <TextBlock x:Name="TicksCaption"
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <CheckBox x:Name="ShowDetentValuesCheck"
+                                                  x:Uid="ShowDetentValuesCheck"
+                                                  Content="Print the value at each stop"
+                                                  Margin="0,6,0,0"
+                                                  Checked="OnShowDetentValuesChanged"
+                                                  Unchecked="OnShowDetentValuesChanged" />
+                                    </StackPanel>
+
+                                    <!-- A picture or a video, for an image control and for the
+                                         fill behind a grouping panel. -->
+                                    <StackPanel x:Name="PicturePanel" Visibility="Collapsed">
+                                        <TextBlock x:Uid="InspectorPictureHeading" Text="Picture" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <Button x:Name="ChoosePictureButton" x:Uid="ChoosePictureButton" FontSize="11" Click="OnChoosePictureClick">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon Glyph="&#xEB9F;" FontSize="11" />
+                                                    <TextBlock x:Uid="ChoosePictureLabel" Text="Choose…" FontSize="11" />
+                                                </StackPanel>
+                                            </Button>
+                                            <Button x:Name="RemovePictureButton" x:Uid="RemovePictureButton" FontSize="11" Click="OnRemovePictureClick">
+                                                <TextBlock x:Uid="RemovePictureLabel" Text="Remove" FontSize="11" />
+                                            </Button>
+                                        </StackPanel>
+
+                                        <TextBlock x:Name="PictureCaption"
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <ComboBox x:Name="PictureFitCombo"
+                                                  x:Uid="PictureFitCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,6,0,0"
+                                                  SelectionChanged="OnPictureFitChanged" />
+
+                                        <Slider x:Name="PictureOpacitySlider"
+                                                x:Uid="PictureOpacitySlider"
+                                                Minimum="0"
+                                                Maximum="100"
+                                                StepFrequency="1"
+                                                Margin="0,4,0,0"
+                                                ValueChanged="OnPictureOpacityChanged" />
+
+                                        <CheckBox x:Name="PictureLoopsCheck"
+                                                  x:Uid="PictureLoopsCheck"
+                                                  Content="Play a video on a loop"
+                                                  Checked="OnPictureLoopsChanged"
+                                                  Unchecked="OnPictureLoopsChanged" />
+
+                                        <TextBlock x:Uid="PictureCropHeading" Text="Crop" Style="{StaticResource InspectorHeadingStyle}" />
+
+                                        <Slider x:Name="PictureZoomSlider"
+                                                x:Uid="PictureZoomSlider"
+                                                Minimum="100"
+                                                Maximum="800"
+                                                StepFrequency="5"
+                                                ValueChanged="OnPictureZoomChanged" />
+
+                                        <Slider x:Name="PictureCenterXSlider"
+                                                x:Uid="PictureCenterXSlider"
+                                                Minimum="0"
+                                                Maximum="100"
+                                                StepFrequency="1"
+                                                ValueChanged="OnPictureCenterXChanged" />
+
+                                        <Slider x:Name="PictureCenterYSlider"
+                                                x:Uid="PictureCenterYSlider"
+                                                Minimum="0"
+                                                Maximum="100"
+                                                StepFrequency="1"
+                                                ValueChanged="OnPictureCenterYChanged" />
+
+                                        <TextBlock x:Uid="PictureCropCaption"
+                                                   Text="Zoom in and then move the middle to take a slice out of a picture or a clip. Set the fit above to Fill first, or there will be nothing to crop."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <TextBlock x:Uid="PictureTintHeading" Text="Wash of color" Style="{StaticResource InspectorHeadingStyle}" />
+
+                                        <Grid ColumnSpacing="6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBox x:Name="PictureTintBox"
+                                                     x:Uid="PictureTintBox"
+                                                     Grid.Column="0"
+                                                     PlaceholderText="#000000"
+                                                     LostFocus="OnPictureTintChanged" />
+
+                                            <Button x:Name="PictureTintColorButton"
+                                                    x:Uid="PictureTintColorButton"
+                                                    Grid.Column="1"
+                                                    VerticalAlignment="Bottom" />
+                                        </Grid>
+
+                                        <Slider x:Name="PictureTintStrengthSlider"
+                                                x:Uid="PictureTintStrengthSlider"
+                                                Minimum="0"
+                                                Maximum="100"
+                                                StepFrequency="1"
+                                                ValueChanged="OnPictureTintStrengthChanged" />
+
+                                        <TextBlock x:Uid="PictureTintCaption"
+                                                   Text="Black dims the picture, which is what a busy clip behind a page of controls usually needs. Any other color tints it."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="KeyboardPanel" Visibility="Collapsed">
+                                        <TextBlock x:Uid="InspectorKeysHeading" Text="Keys" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+
+                                        <TextBlock x:Uid="KeyCountLabel" Text="How many keys" Style="{StaticResource InspectorLabelStyle}" />
+                                        <NumberBox x:Name="KeyCountBox"
+                                                   x:Uid="KeyCountBox"
+                                                   Minimum="5"
+                                                   Maximum="128"
+                                                   Margin="0,2,0,0"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnKeyCountChanged" />
+
+                                        <TextBlock x:Uid="LowestNoteLabel" Text="Lowest key plays" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
+                                        <NumberBox x:Name="LowestNoteBox"
+                                                   x:Uid="LowestNoteBox"
+                                                   Minimum="0"
+                                                   Maximum="127"
+                                                   Margin="0,2,0,0"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnLowestNoteChanged" />
+                                        <TextBlock x:Name="KeyboardRangeCaption"
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <TextBlock x:Uid="KeyColorsLabel" Text="Key colors" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
+
+                                        <Grid ColumnSpacing="6" RowSpacing="4" Margin="0,2,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <TextBox x:Name="WhiteKeyColorBox"
+                                                     x:Uid="WhiteKeyColorBox"
+                                                     Grid.Row="0" Grid.Column="0"
+                                                     PlaceholderText="#E8EAEE"
+                                                     LostFocus="OnKeyColorChanged" />
+                                            <Button x:Name="WhiteKeyColorButton"
+                                                    x:Uid="WhiteKeyColorButton"
+                                                    Grid.Row="0" Grid.Column="1"
+                                                    VerticalAlignment="Bottom" />
+
+                                            <TextBox x:Name="BlackKeyColorBox"
+                                                     x:Uid="BlackKeyColorBox"
+                                                     Grid.Row="1" Grid.Column="0"
+                                                     PlaceholderText="#16191F"
+                                                     LostFocus="OnKeyColorChanged" />
+                                            <Button x:Name="BlackKeyColorButton"
+                                                    x:Uid="BlackKeyColorButton"
+                                                    Grid.Row="1" Grid.Column="1"
+                                                    VerticalAlignment="Bottom" />
+
+                                            <TextBox x:Name="PressedKeyColorBox"
+                                                     x:Uid="PressedKeyColorBox"
+                                                     Grid.Row="2" Grid.Column="0"
+                                                     PlaceholderText="the control's own color"
+                                                     LostFocus="OnKeyColorChanged" />
+                                            <Button x:Name="PressedKeyColorButton"
+                                                    x:Uid="PressedKeyColorButton"
+                                                    Grid.Row="2" Grid.Column="1"
+                                                    VerticalAlignment="Bottom" />
+                                        </Grid>
+
+                                        <CheckBox x:Name="KeyVelocityCheck"
+                                                  x:Uid="KeyVelocityCheck"
+                                                  Content="Velocity from where the key is touched"
+                                                  Margin="0,6,0,0"
+                                                  Checked="OnKeyVelocityChanged"
+                                                  Unchecked="OnKeyVelocityChanged" />
+                                    </StackPanel>
+
+                                    <!-- The control itself, drawn the way it will actually look,
+                                         so a style or a color is judged rather than imagined. -->
+                                    <TextBlock x:Uid="InspectorPreviewHeading" Text="Preview" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+                                    <Grid x:Name="PreviewHost" Height="92">
+                                        <Rectangle x:Name="PreviewDeck"
+                                                   RadiusX="6"
+                                                   RadiusY="6"
+                                                   UseLayoutRounding="False" />
+                                        <Canvas x:Name="PreviewCanvas" IsHitTestVisible="False" />
+                                    </Grid>
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <ScrollViewer x:Name="MidiPane" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                                <StackPanel x:Name="MidiPanel" Margin="8,0,16,16" Spacing="4">
+
+                                    <TextBlock x:Uid="InspectorMessagesHeading" Text="What it sends" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <ListView x:Name="MessageList"
+                                              x:Uid="MessageList"
+                                              SelectionMode="Single"
+                                              MaxHeight="150"
+                                              SelectionChanged="OnMessageSelectionChanged" />
+
+                                    <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,4,0,0">
+                                        <Button x:Name="AddMessageButton" x:Uid="AddMessageButton" Height="30" Click="OnAddMessageClick">
+                                            <FontIcon Glyph="&#xE710;" FontSize="12" />
+                                        </Button>
+                                        <Button x:Name="RemoveMessageButton" x:Uid="RemoveMessageButton" Height="30" Click="OnRemoveMessageClick">
+                                            <FontIcon Glyph="&#xE738;" FontSize="12" />
+                                        </Button>
+                                    </StackPanel>
+
+                                    <!-- Touching a control on hardware says five things, not one:
+                                         which endpoint it arrived on, which group, which channel,
+                                         which kind of message and which number. Capturing only the
+                                         number is why remapping a controller is usually an hour of
+                                         typing. -->
+                                    <TextBlock x:Uid="LearnHeading" Text="Learn from your hardware" Style="{StaticResource InspectorHeadingStyle}" Margin="0,12,0,0" />
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <ToggleButton x:Name="LearnOneToggle"
+                                                      x:Uid="LearnOneToggle"
+                                                      Height="30"
+                                                      FontSize="11"
+                                                      Checked="OnLearnOneToggled"
+                                                      Unchecked="OnLearnOneToggled">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="&#xE945;" FontSize="11" />
+                                                <TextBlock x:Uid="LearnOneLabel" Text="Learn" FontSize="11" />
+                                            </StackPanel>
+                                        </ToggleButton>
+                                        <ToggleButton x:Name="LearnBankToggle"
+                                                      x:Uid="LearnBankToggle"
+                                                      Height="30"
+                                                      FontSize="11"
+                                                      Checked="OnLearnBankToggled"
+                                                      Unchecked="OnLearnBankToggled">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="&#xE8FD;" FontSize="11" />
+                                                <TextBlock x:Uid="LearnBankLabel" Text="Learn a bank" FontSize="11" />
+                                            </StackPanel>
+                                        </ToggleButton>
+                                    </StackPanel>
+
+                                    <TextBlock x:Name="LearnStatusText"
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                    <!-- Somebody remapping within one device locks the endpoint
+                                         and takes only the number. -->
+                                    <StackPanel x:Name="LearnAcceptPanel" Visibility="Collapsed" Orientation="Horizontal" Spacing="4" Margin="0,2,0,0">
+                                        <CheckBox x:Name="LearnAcceptDevice" x:Uid="LearnAcceptDevice" IsChecked="True" MinWidth="0" FontSize="11" Content="Device" />
+                                        <CheckBox x:Name="LearnAcceptGroup" x:Uid="LearnAcceptGroup" IsChecked="True" MinWidth="0" FontSize="11" Content="Group" />
+                                        <CheckBox x:Name="LearnAcceptChannel" x:Uid="LearnAcceptChannel" IsChecked="True" MinWidth="0" FontSize="11" Content="Channel" />
+                                        <CheckBox x:Name="LearnAcceptKind" x:Uid="LearnAcceptKind" IsChecked="True" MinWidth="0" FontSize="11" Content="What" />
+                                        <CheckBox x:Name="LearnAcceptNumber" x:Uid="LearnAcceptNumber" IsChecked="True" MinWidth="0" FontSize="11" Content="Number" />
+                                    </StackPanel>
+
+                                    <Grid ColumnSpacing="8" RowSpacing="6" Margin="0,8,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <TextBlock x:Uid="MessageWhenLabel" Grid.Row="0" Grid.Column="0" Text="When" Style="{StaticResource InspectorLabelStyle}" />
+                                        <ComboBox x:Name="TriggerCombo" x:Uid="TriggerCombo" Grid.Row="0" Grid.Column="1"
+                                                  HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
+
+                                        <TextBlock x:Uid="MessageWhatLabel" Grid.Row="1" Grid.Column="0" Text="What" Style="{StaticResource InspectorLabelStyle}" />
+                                        <ComboBox x:Name="KindMessageCombo" x:Uid="KindMessageCombo" Grid.Row="1" Grid.Column="1"
+                                                  HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
+
+                                        <TextBlock x:Name="MessageDeviceLabel" x:Uid="MessageDeviceLabel" Grid.Row="2" Grid.Column="0" Text="To" Style="{StaticResource InspectorLabelStyle}" />
+                                        <StackPanel x:Name="DevicePanel" Grid.Row="2" Grid.Column="1" Spacing="3">
+                                            <ComboBox x:Name="DeviceCombo" x:Uid="DeviceCombo"
+                                                      HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
+
+                                            <!-- The name on the left is the layout's own, which is
+                                                 the whole point of the table, so this says what it
+                                                 found on this PC. Without it nobody can tell which
+                                                 endpoint to open a monitor on. -->
+                                            <TextBlock x:Name="DeviceResolvedText"
+                                                       FontSize="11"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                            <HyperlinkButton x:Name="EditDevicesLink"
+                                                             x:Uid="EditDevicesLink"
+                                                             Padding="0"
+                                                             FontSize="11"
+                                                             Content="Set up devices…"
+                                                             Click="OnLayoutSettingsClick" />
+                                        </StackPanel>
+
+                                        <TextBlock x:Name="MessageGroupLabel" x:Uid="MessageGroupLabel" Grid.Row="3" Grid.Column="0" Text="Group" Style="{StaticResource InspectorLabelStyle}" />
+                                        <StackPanel x:Name="GroupPanel" Grid.Row="3" Grid.Column="1" Spacing="3">
+                                            <ComboBox x:Name="GroupCombo" x:Uid="GroupCombo"
+                                                      HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
+
+                                            <!-- A device that declares four groups has twelve
+                                                 that go nowhere, and picking one of those is a
+                                                 control that silently does nothing. -->
+                                            <CheckBox x:Name="AllGroupsCheck"
+                                                      x:Uid="AllGroupsCheck"
+                                                      Content="Show all 16 groups"
+                                                      FontSize="11"
+                                                      MinHeight="0"
+                                                      Margin="0,1,0,0"
+                                                      Checked="OnShowAllGroupsChanged"
+                                                      Unchecked="OnShowAllGroupsChanged" />
+
+                                            <TextBlock x:Name="GroupSourceText"
+                                                       FontSize="11"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                        </StackPanel>
+
+                                        <TextBlock x:Name="MessageChannelLabel" x:Uid="MessageChannelLabel" Grid.Row="4" Grid.Column="0" Text="Channel" Style="{StaticResource InspectorLabelStyle}" />
+                                        <ComboBox x:Name="ChannelCombo" x:Uid="ChannelCombo" Grid.Row="4" Grid.Column="1"
+                                                  HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
+
+                                        <TextBlock x:Name="MessageNumberLabel" x:Uid="MessageNumberLabel" Grid.Row="5" Grid.Column="0" Text="Number" Style="{StaticResource InspectorLabelStyle}" />
+                                        <NumberBox x:Name="MessageNumberBox" x:Uid="MessageNumberBox" Grid.Row="5" Grid.Column="1"
+                                                   Minimum="0" Maximum="127" SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnMessageNumberChanged" />
+                                    </Grid>
+
+                                    <!-- Stops, so a control does not have to be smooth. A six
+                                         position mode switch and a volume fader are the same
+                                         control with different answers here. -->
+                                    <StackPanel x:Name="DetentPanel" Visibility="Collapsed" Spacing="4" Margin="0,10,0,0">
+                                        <TextBlock x:Uid="DetentHeading" Text="Stops" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <ComboBox x:Name="DetentModeCombo"
+                                                  x:Uid="DetentModeCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnDetentModeChanged" />
+
+                                        <NumberBox x:Name="DetentStepBox"
+                                                   x:Uid="DetentStepBox"
+                                                   Minimum="0"
+                                                   Maximum="100"
+                                                   Visibility="Collapsed"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnDetentStepChanged" />
+
+                                        <!-- One box per stop, not one line of text with commas
+                                             in it. A comma is a decimal point in most of the
+                                             world, so a typed list cannot be read the same way
+                                             twice. The first and last boxes are the two ends of
+                                             the range and are labeled as such. -->
+                                        <StackPanel x:Name="DetentStopsPanel" Visibility="Collapsed" Spacing="4">
+                                            <ItemsControl x:Name="DetentStopsHost">
+                                                <ItemsControl.ItemsPanel>
+                                                    <ItemsPanelTemplate>
+                                                        <StackPanel Spacing="4" />
+                                                    </ItemsPanelTemplate>
+                                                </ItemsControl.ItemsPanel>
+                                            </ItemsControl>
+
+                                            <Button x:Name="AddDetentStopButton"
+                                                    x:Uid="AddDetentStopButton"
+                                                    FontSize="11"
+                                                    HorizontalAlignment="Left"
+                                                    Click="OnAddDetentStopClick">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon Glyph="&#xE710;" FontSize="11" />
+                                                    <TextBlock x:Uid="AddDetentStopLabel" Text="Add a stop" FontSize="11" />
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+
+                                        <TextBlock x:Name="DetentCaption"
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+
+                                    <!-- Only one of these is ever shown, and only when the row
+                                         above it is that kind. A control change has no bytes and
+                                         a dump has no controller number, so showing both at once
+                                         would be asking for a number nobody can answer. -->
+                                    <StackPanel x:Name="SysExPanel" Visibility="Collapsed" Spacing="6" Margin="0,10,0,0">
+                                        <TextBlock x:Uid="SysExHeading" Text="The bytes to send" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <TextBox x:Name="SysExBox"
+                                                 x:Uid="SysExBox"
+                                                 AcceptsReturn="True"
+                                                 TextWrapping="Wrap"
+                                                 MinHeight="72"
+                                                 MaxHeight="150"
+                                                 FontFamily="Cascadia Mono, Consolas"
+                                                 FontSize="11"
+                                                 ScrollViewer.VerticalScrollBarVisibility="Auto"
+                                                 LostFocus="OnSysExChanged" />
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <Button x:Name="SysExFromFileButton" x:Uid="SysExFromFileButton" FontSize="11" Click="OnSysExFromFileClick">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon Glyph="&#xE8E5;" FontSize="11" />
+                                                    <TextBlock x:Uid="SysExFromFileLabel" Text="From a .syx file…" FontSize="11" />
+                                                </StackPanel>
+                                            </Button>
+                                            <TextBlock x:Name="SysExCaption"
+                                                       FontSize="11"
+                                                       VerticalAlignment="Center"
+                                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                        </StackPanel>
+                                        <TextBlock x:Uid="SysExHelp"
+                                                   Text="Hexadecimal, spaces optional. The leading F0 and trailing F7 are optional too."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="RawWordsPanel" Visibility="Collapsed" Spacing="6" Margin="0,10,0,0">
+                                        <TextBlock x:Uid="RawWordsHeading" Text="The words to send" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <TextBox x:Name="RawWordsBox"
+                                                 x:Uid="RawWordsBox"
+                                                 FontFamily="Cascadia Mono, Consolas"
+                                                 FontSize="11"
+                                                 LostFocus="OnRawWordsChanged" />
+                                        <TextBlock x:Uid="RawWordsHelp"
+                                                   Text="Up to four 32 bit words, hexadecimal, separated by spaces. Sent exactly as written."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="SequencePanel" Visibility="Collapsed" Spacing="6" Margin="0,10,0,0">
+                                        <TextBlock x:Uid="SequenceHeading" Text="Which sequence" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <ComboBox x:Name="SequenceCombo"
+                                                  x:Uid="SequenceCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnSequenceChanged" />
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <Button x:Name="NewSequenceButton" x:Uid="NewSequenceButton" FontSize="11" Click="OnNewSequenceClick">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon Glyph="&#xE710;" FontSize="11" />
+                                                    <TextBlock x:Uid="NewSequenceLabel" Text="New" FontSize="11" />
+                                                </StackPanel>
+                                            </Button>
+                                            <Button x:Name="EditSequenceButton" x:Uid="EditSequenceButton" FontSize="11" Click="OnEditSequenceClick">
+                                                <StackPanel Orientation="Horizontal" Spacing="6">
+                                                    <FontIcon Glyph="&#xE70F;" FontSize="11" />
+                                                    <TextBlock x:Uid="EditSequenceLabel" Text="Edit steps…" FontSize="11" />
+                                                </StackPanel>
+                                            </Button>
+                                        </StackPanel>
+                                        <TextBlock x:Name="SequenceCaption"
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="TargetPagePanel" Visibility="Collapsed" Spacing="6" Margin="0,10,0,0">
+                                        <TextBlock x:Uid="TargetPageHeading" Text="Which page" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <ComboBox x:Name="TargetPageCombo"
+                                                  x:Uid="TargetPageCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnTargetPageChanged" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <!-- What the control listens for. A meter and a lamp do nothing else;
+                                 a fader can both lead and follow, which is why this is its own
+                                 tab rather than a section at the bottom of the sends one. -->
+                            <ScrollViewer x:Name="MidiInPane" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                                <StackPanel x:Name="MidiInPanel" Margin="8,0,16,16" Spacing="4">
+
+                                    <ToggleSwitch x:Name="FeedbackEnabledSwitch"
+                                                  x:Uid="FeedbackEnabledSwitch"
+                                                  Header="Follow what arrives"
+                                                  Toggled="OnFeedbackEnabledToggled" />
+                                    <TextBlock x:Uid="FeedbackEnabledCaption"
+                                               Text="The control moves or lights when the device sends, instead of only when a finger does."
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                    <!-- A Grid rather than a StackPanel, because only a Control
+                                         carries IsEnabled and the whole block is grayed at once
+                                         while the switch above it is off. -->
+                                    <ContentControl x:Name="FeedbackFieldsPanel" IsEnabled="False"
+                                                    HorizontalContentAlignment="Stretch"
+                                                    HorizontalAlignment="Stretch">
+                                        <StackPanel Spacing="4">
+
+                                        <TextBlock x:Uid="FeedbackModeHeading" Text="What to listen for" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <ComboBox x:Name="FeedbackModeCombo"
+                                                  x:Uid="FeedbackModeCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnFeedbackModeChanged" />
+                                        <TextBlock x:Name="FeedbackModeCaption"
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <TextBlock x:Uid="FeedbackDeviceHeading" Text="From" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <ComboBox x:Name="FeedbackDeviceCombo"
+                                                  x:Uid="FeedbackDeviceCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnFeedbackDeviceChanged" />
+
+                                        <ComboBox x:Name="FeedbackGroupCombo"
+                                                  x:Uid="FeedbackGroupCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,4,0,0"
+                                                  SelectionChanged="OnFeedbackGroupChanged" />
+
+                                        <ComboBox x:Name="FeedbackChannelCombo"
+                                                  x:Uid="FeedbackChannelCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,4,0,0"
+                                                  SelectionChanged="OnFeedbackChannelChanged" />
+
+                                        <CheckBox x:Name="FeedbackMatchChannelCheck"
+                                                  x:Uid="FeedbackMatchChannelCheck"
+                                                  Content="Only that channel"
+                                                  Margin="0,4,0,0"
+                                                  Checked="OnFeedbackMatchChannelChanged"
+                                                  Unchecked="OnFeedbackMatchChannelChanged" />
+
+                                        <StackPanel x:Name="FeedbackMessagePanel" Spacing="4">
+                                            <TextBlock x:Uid="FeedbackKindHeading" Text="Which message" Style="{StaticResource InspectorHeadingStyle}" />
+                                            <ComboBox x:Name="FeedbackKindCombo"
+                                                      x:Uid="FeedbackKindCombo"
+                                                      HorizontalAlignment="Stretch"
+                                                      SelectionChanged="OnFeedbackKindChanged" />
+                                            <NumberBox x:Name="FeedbackNumberBox"
+                                                       x:Uid="FeedbackNumberBox"
+                                                       Minimum="0"
+                                                       Maximum="16383"
+                                                       SpinButtonPlacementMode="Compact"
+                                                       ValueChanged="OnFeedbackNumberChanged" />
+                                        </StackPanel>
+
+                                        <StackPanel x:Name="FeedbackTempoPanel" Spacing="4" Visibility="Collapsed">
+                                            <TextBlock x:Uid="FeedbackTempoHeading" Text="Whose beat" Style="{StaticResource InspectorHeadingStyle}" />
+                                            <ComboBox x:Name="FeedbackTempoCombo"
+                                                      x:Uid="FeedbackTempoCombo"
+                                                      HorizontalAlignment="Stretch"
+                                                      SelectionChanged="OnFeedbackTempoChanged" />
+                                            <TextBlock x:Uid="FeedbackTempoCaption"
+                                                       Text="Either the clock arriving from the device above, or a clock generator on this layout."
+                                                       FontSize="11"
+                                                       TextWrapping="Wrap"
+                                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                        </StackPanel>
+
+                                        <TextBlock x:Uid="FeedbackHoldHeading" Text="Stays lit for" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <NumberBox x:Name="FeedbackHoldBox"
+                                                   x:Uid="FeedbackHoldBox"
+                                                   Minimum="0"
+                                                   Maximum="5000"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnFeedbackHoldChanged" />
+                                        <TextBlock x:Uid="FeedbackHoldCaption"
+                                                   Text="Milliseconds. Long enough to see across a room, short enough not to smear into the next hit."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                        </StackPanel>
+                                    </ContentControl>
+                                </StackPanel>
+                            </ScrollViewer>
+
+                            <ScrollViewer x:Name="BehaviorPane" VerticalScrollBarVisibility="Auto" Visibility="Collapsed">
+                                <StackPanel x:Name="BehaviorPanel" Margin="8,0,16,16" Spacing="4">
+
+                                    <TextBlock x:Uid="InspectorStartHeading" Text="When the layout opens" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <ToggleSwitch x:Name="SendOnStartSwitch"
+                                                  x:Uid="SendOnStartSwitch"
+                                                  Header="Send this control's value"
+                                                  Toggled="OnSendOnStartToggled" />
+                                    <TextBlock x:Uid="SendOnStartCaption"
+                                               Text="A layout whose faders sit at zero, pushed to a live desk on load, mutes the show. Off unless this control genuinely has to put something into a known state."
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                    <TextBlock x:Uid="InspectorDefaultHeading" Text="Starting value" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <Slider x:Name="DefaultValueSlider"
+                                            x:Uid="DefaultValueSlider"
+                                            Minimum="0"
+                                            Maximum="100"
+                                            StepFrequency="1"
+                                            ValueChanged="OnDefaultValueChanged" />
+
+                                    <!-- A toggle is on or off, so it starts one way or the other rather than
+                                         somewhere along a percentage. -->
+                                    <ToggleSwitch x:Name="StartsOnSwitch"
+                                                  x:Uid="StartsOnSwitch"
+                                                  Header="Starts on"
+                                                  Visibility="Collapsed"
+                                                  Toggled="OnStartsOnToggled" />
+
+                                    <ToggleSwitch x:Name="ReturnsToDefaultSwitch"
+                                                  x:Uid="ReturnsToDefaultSwitch"
+                                                  Header="Springs back when released"
+                                                  Toggled="OnReturnsToDefaultToggled" />
+                                    <TextBlock x:Uid="ReturnsToDefaultCaption"
+                                               Text="What makes a pitch wheel a pitch wheel. The control goes back to its starting value the moment the finger comes off, and that value is sent."
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                    <ComboBox x:Name="SpringTargetCombo"
+                                              x:Uid="SpringTargetCombo"
+                                              HorizontalAlignment="Stretch"
+                                              Margin="0,4,0,0"
+                                              SelectionChanged="OnSpringTargetChanged" />
+
+                                    <StackPanel x:Name="DragAxisPanel" Visibility="Collapsed">
+                                        <TextBlock x:Uid="InspectorDragHeading" Text="Which way to drag" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <ComboBox x:Name="DragAxisCombo"
+                                                  x:Uid="DragAxisCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnDragAxisChanged" />
+                                        <TextBlock x:Uid="DragAxisCaption"
+                                                   Text="A circle is hard to trace on glass, so a knob is dragged in a straight line instead. Up is more, or right is more for a row of knobs in a narrow strip."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="PadVelocityPanel" Visibility="Collapsed">
+                                        <TextBlock x:Uid="InspectorPadVelocityHeading" Text="How hard it was hit" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <CheckBox x:Name="PadVelocityCheck"
+                                                  x:Uid="PadVelocityCheck"
+                                                  Content="Use pen or touch pressure for the value"
+                                                  Checked="OnPadVelocityChanged"
+                                                  Unchecked="OnPadVelocityChanged" />
+                                        <TextBlock x:Uid="PadVelocityCaption"
+                                                   Text="Only a pen and a few touch screens report pressure. Everything else, including a mouse, hits at full. Leave this off unless you have tried it on the machine you will play on."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="ClockPanel" Visibility="Collapsed">
+                                        <TextBlock x:Uid="InspectorClockHeading" Text="Tempo" Style="{StaticResource InspectorHeadingStyle}" />
+                                        <NumberBox x:Name="ClockBpmBox"
+                                                   x:Uid="ClockBpmBox"
+                                                   Minimum="20"
+                                                   Maximum="300"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnClockBpmChanged" />
+
+                                        <TextBlock x:Uid="ClockSourceLabel" Text="Take the tempo from" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
+                                        <ComboBox x:Name="ClockSourceCombo"
+                                                  x:Uid="ClockSourceCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,2,0,0"
+                                                  SelectionChanged="OnClockSourceChanged" />
+                                        <TextBlock x:Uid="ClockSourceCaption"
+                                                   Text="A knob or a fader on this layout can set the tempo while it runs. The two numbers below say what its ends mean."
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <NumberBox x:Name="ClockLowestBpmBox"
+                                                   x:Uid="ClockLowestBpmBox"
+                                                   Minimum="20"
+                                                   Maximum="300"
+                                                   Margin="0,4,0,0"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnClockRangeChanged" />
+                                        <NumberBox x:Name="ClockHighestBpmBox"
+                                                   x:Uid="ClockHighestBpmBox"
+                                                   Minimum="20"
+                                                   Maximum="300"
+                                                   Margin="0,4,0,0"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnClockRangeChanged" />
+
+                                        <CheckBox x:Name="ClockStartsRunningCheck"
+                                                  x:Uid="ClockStartsRunningCheck"
+                                                  Content="Running when the layout opens"
+                                                  Margin="0,6,0,0"
+                                                  Checked="OnClockFlagChanged"
+                                                  Unchecked="OnClockFlagChanged" />
+                                        <CheckBox x:Name="ClockSendsTransportCheck"
+                                                  x:Uid="ClockSendsTransportCheck"
+                                                  Content="Send start and stop as well"
+                                                  Checked="OnClockFlagChanged"
+                                                  Unchecked="OnClockFlagChanged" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="LfoPanel" Visibility="Collapsed">
+                                        <TextBlock x:Uid="InspectorLfoHeading" Text="Sweep" Style="{StaticResource InspectorHeadingStyle}" />
+
+                                        <ComboBox x:Name="LfoWaveCombo"
+                                                  x:Uid="LfoWaveCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnLfoWaveChanged" />
+
+                                        <ComboBox x:Name="LfoRateCombo"
+                                                  x:Uid="LfoRateCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,6,0,0"
+                                                  SelectionChanged="OnLfoRateChanged" />
+
+                                        <TextBlock x:Name="LfoRateCaption"
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <Slider x:Name="LfoLowestSlider"
+                                                x:Uid="LfoLowestSlider"
+                                                Minimum="0"
+                                                Maximum="100"
+                                                StepFrequency="1"
+                                                Margin="0,4,0,0"
+                                                ValueChanged="OnLfoRangeChanged" />
+
+                                        <Slider x:Name="LfoHighestSlider"
+                                                x:Uid="LfoHighestSlider"
+                                                Minimum="0"
+                                                Maximum="100"
+                                                StepFrequency="1"
+                                                ValueChanged="OnLfoRangeChanged" />
+
+                                        <TextBlock x:Uid="LfoRangeCaption"
+                                                   Text="How much of the travel the sweep covers. The middle of the wave lands halfway between the two. Setting the low end above the high one turns the wave upside down."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <TextBlock x:Uid="LfoUpdateLabel" Text="Send a value every" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
+                                        <NumberBox x:Name="LfoUpdateBox"
+                                                   x:Uid="LfoUpdateBox"
+                                                   Minimum="5"
+                                                   Maximum="1000"
+                                                   Margin="0,2,0,0"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnLfoUpdateChanged" />
+                                        <TextBlock x:Name="LfoUpdateCaption"
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <CheckBox x:Name="LfoLatchingCheck"
+                                                  x:Uid="LfoLatchingCheck"
+                                                  Content="Press to start, press again to stop"
+                                                  Margin="0,6,0,0"
+                                                  Checked="OnLfoFlagChanged"
+                                                  Unchecked="OnLfoFlagChanged" />
+                                        <CheckBox x:Name="LfoStartsRunningCheck"
+                                                  x:Uid="LfoStartsRunningCheck"
+                                                  Content="Running when the layout opens"
+                                                  Checked="OnLfoFlagChanged"
+                                                  Unchecked="OnLfoFlagChanged" />
+                                        <CheckBox x:Name="LfoReturnsToRestCheck"
+                                                  x:Uid="LfoReturnsToRestCheck"
+                                                  Content="Go back to the middle when it stops"
+                                                  Checked="OnLfoFlagChanged"
+                                                  Unchecked="OnLfoFlagChanged" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="TurntablePanel" Visibility="Collapsed">
+                                        <TextBlock x:Uid="InspectorTurntableHeading" Text="Platter" Style="{StaticResource InspectorHeadingStyle}" />
+
+                                        <NumberBox x:Name="TurntableDegreesBox"
+                                                   x:Uid="TurntableDegreesBox"
+                                                   Minimum="15"
+                                                   Maximum="1440"
+                                                   SmallChange="15"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnTurntableDegreesChanged" />
+
+                                        <TextBlock x:Uid="TurntableDegreesCaption"
+                                                   Text="How far you push the platter round to take it from one end to the other. Less is twitchier. The middle means the platter is not moving, so a pitch bend row nudges the track and a controller row set 0 to 127 sits at 64 at rest, which is how DJ software reads a jog wheel."
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <CheckBox x:Name="TurntableGripCheck"
+                                                  x:Uid="TurntableGripCheck"
+                                                  Content="Show the ridges around the edge"
+                                                  Margin="0,6,0,0"
+                                                  Checked="OnTurntableGripChanged"
+                                                  Unchecked="OnTurntableGripChanged" />
+                                    </StackPanel>
+
+                                    <TextBlock x:Uid="InspectorThrottleHeading" Text="Least time between sends" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <NumberBox x:Name="SendIntervalBox"
+                                               x:Uid="SendIntervalBox"
+                                               Minimum="0"
+                                               Maximum="1000"
+                                               SpinButtonPlacementMode="Compact"
+                                               ValueChanged="OnSendIntervalChanged" />
+                                    <TextBlock x:Uid="SendIntervalCaption"
+                                               Text="Milliseconds. Zero is no limit. A DIN cable carries about 350 three byte messages a second, so a fader dragged quickly can out-run it."
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                    <TextBlock x:Uid="InspectorPickupHeading" Text="Pickup" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <ComboBox x:Name="PickupCombo" x:Uid="PickupCombo" HorizontalAlignment="Stretch" SelectionChanged="OnPickupChanged" />
+
+                                    <TextBlock x:Uid="InspectorKeyboardOrderHeading" Text="Keyboard order" Style="{StaticResource InspectorHeadingStyle}" />
+                                    <NumberBox x:Name="KeyboardOrderBox"
+                                               x:Uid="KeyboardOrderBox"
+                                               Minimum="1"
+                                               Maximum="1024"
+                                               SpinButtonPlacementMode="Compact"
+                                               ValueChanged="OnKeyboardOrderChanged" />
+                                    <TextBlock x:Uid="KeyboardOrderCaption"
+                                               Text="The order the Tab key walks, and the order a screen reader reads. A hidden ordering is one nobody can fix."
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- status bar -->
+        <Border Grid.Row="3"
+                Height="30"
+                Padding="12,0,12,0"
+                BorderThickness="0,1,0,0"
+                BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock x:Name="StatusText"
+                           Grid.Column="0"
+                           FontSize="11"
+                           VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+
+                <TextBlock x:Name="SelectionText"
+                           Grid.Column="1"
+                           FontSize="11"
+                           VerticalAlignment="Center"
+                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+            </Grid>
+        </Border>
+
+        <!-- Layout settings. Everything in a layout that names real hardware lives here, in one
+             place, which is what makes a layout portable. It covers the editor rather than
+             opening a window, because it is a place in the app, not a question to answer. -->
+        <Grid x:Name="LayoutSettingsPanel"
+              Grid.Row="1"
+              Grid.RowSpan="3"
+              Visibility="Collapsed"
+              Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0"
+                    Height="44"
+                    Padding="10,0,12,0"
+                    BorderThickness="0,0,0,1"
+                    BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                <Grid ColumnSpacing="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Button x:Name="LayoutSettingsBackButton"
+                            x:Uid="LayoutSettingsBack"
+                            Grid.Column="0"
+                            Style="{StaticResource EditorSmallButtonStyle}"
+                            Click="OnCloseLayoutSettingsClick">
+                        <StackPanel Orientation="Horizontal" Spacing="7">
+                            <FontIcon Glyph="&#xE72B;" FontSize="13" />
+                            <TextBlock x:Uid="LayoutSettingsBackLabel" Text="Back to the editor" />
+                        </StackPanel>
+                    </Button>
+
+                    <TextBlock x:Uid="LayoutSettingsTitle"
+                               Grid.Column="1"
+                               Text="Layout settings"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center" />
+
+                    <TextBlock x:Name="LayoutSettingsWarningText"
+                               Grid.Column="3"
+                               FontSize="12"
+                               VerticalAlignment="Center"
+                               Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                </Grid>
+            </Border>
+
+            <Grid Grid.Row="1" ColumnSpacing="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="194" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <!-- The rail. Everything about the layout in one place, so somebody who wants to
+                     change how it looks does not have to guess which menu it is under. -->
+                <Border Grid.Column="0"
+                        BorderThickness="0,0,1,0"
+                        BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0,8,0,8">
+                        <StackPanel>
+                            <!-- Never IsChecked in markup. A Checked handler fires while
+                                 InitializeComponent is still building the tree, and every
+                                 x:Name field it reaches for is still null at that point, which
+                                 takes the whole window down with no crash and no event log.
+                                 The first pane is selected in ShowSettingsPane instead. -->
+                            <ToggleButton x:Name="NavAppearance"
+                                          x:Uid="SettingsNavAppearance"
+                                          Style="{StaticResource SettingsNavItemStyle}"
+                                          Tag="appearance"
+                                          Checked="OnSettingsNavChecked"
+                                          Unchecked="OnSettingsNavUnchecked">
+                                <StackPanel Orientation="Horizontal" Spacing="11">
+                                    <FontIcon Glyph="&#xE790;" FontSize="15" Width="16"
+                                              Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <TextBlock x:Uid="SettingsNavAppearanceLabel" Text="Appearance" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <ToggleButton x:Name="NavPages"
+                                          x:Uid="SettingsNavPages"
+                                          Style="{StaticResource SettingsNavItemStyle}"
+                                          Tag="pages"
+                                          Checked="OnSettingsNavChecked"
+                                          Unchecked="OnSettingsNavUnchecked">
+                                <StackPanel Orientation="Horizontal" Spacing="11">
+                                    <FontIcon Glyph="&#xE8A9;" FontSize="15" Width="16"
+                                              Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <TextBlock x:Uid="SettingsNavPagesLabel" Text="Pages and layers" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <ToggleButton x:Name="NavOutputs"
+                                          x:Uid="SettingsNavOutputs"
+                                          Style="{StaticResource SettingsNavItemStyle}"
+                                          Tag="outputs"
+                                          Checked="OnSettingsNavChecked"
+                                          Unchecked="OnSettingsNavUnchecked">
+                                <StackPanel Orientation="Horizontal" Spacing="11">
+                                    <FontIcon Glyph="&#xE9D9;" FontSize="15" Width="16"
+                                              Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <TextBlock x:Uid="SettingsNavOutputsLabel" Text="Outputs" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <ToggleButton x:Name="NavBehavior"
+                                          x:Uid="SettingsNavBehavior"
+                                          Style="{StaticResource SettingsNavItemStyle}"
+                                          Tag="behavior"
+                                          Checked="OnSettingsNavChecked"
+                                          Unchecked="OnSettingsNavUnchecked">
+                                <StackPanel Orientation="Horizontal" Spacing="11">
+                                    <FontIcon Glyph="&#xE713;" FontSize="15" Width="16"
+                                              Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <TextBlock x:Uid="SettingsNavBehaviorLabel" Text="Behavior" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <TextBlock x:Uid="SettingsNavThisLayout"
+                                       Text="This layout"
+                                       FontSize="11"
+                                       FontWeight="SemiBold"
+                                       Margin="15,12,0,4"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                            <ToggleButton x:Name="NavName"
+                                          x:Uid="SettingsNavName"
+                                          Style="{StaticResource SettingsNavItemStyle}"
+                                          Tag="name"
+                                          Checked="OnSettingsNavChecked"
+                                          Unchecked="OnSettingsNavUnchecked">
+                                <StackPanel Orientation="Horizontal" Spacing="11">
+                                    <FontIcon Glyph="&#xE8A5;" FontSize="15" Width="16"
+                                              Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <TextBlock x:Uid="SettingsNavNameLabel" Text="Name and description" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <ToggleButton x:Name="NavAccessibility"
+                                          x:Uid="SettingsNavAccessibility"
+                                          Style="{StaticResource SettingsNavItemStyle}"
+                                          Tag="accessibility"
+                                          Checked="OnSettingsNavChecked"
+                                          Unchecked="OnSettingsNavUnchecked">
+                                <StackPanel Orientation="Horizontal" Spacing="11">
+                                    <FontIcon Glyph="&#xE7B3;" FontSize="15" Width="16"
+                                              Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <TextBlock x:Uid="SettingsNavAccessibilityLabel" Text="Accessibility check" />
+                                </StackPanel>
+                            </ToggleButton>
+
+                            <!-- An action rather than a destination, so it is a button and never
+                                 stays selected. -->
+                            <Button x:Name="NavExport"
+                                    x:Uid="SettingsNavExport"
+                                    Height="34"
+                                    Margin="4,2,4,2"
+                                    Padding="11,0,11,0"
+                                    MinWidth="0"
+                                    MinHeight="0"
+                                    FontSize="13"
+                                    CornerRadius="5"
+                                    BorderThickness="0"
+                                    Background="Transparent"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Left"
+                                    Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                    Click="OnSettingsExportClick">
+                                <StackPanel Orientation="Horizontal" Spacing="11">
+                                    <FontIcon Glyph="&#xEDE1;" FontSize="15" Width="16"
+                                              Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    <TextBlock x:Uid="SettingsNavExportLabel" Text="Export…" />
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <Grid Grid.Column="1">
+
+                    <!-- ============================================ Appearance -->
+                    <Grid x:Name="AppearancePane">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" MinWidth="300" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+
+                        <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Padding="18,14,18,18">
+                            <StackPanel Spacing="0" MaxWidth="520" HorizontalAlignment="Left">
+                                <TextBlock x:Uid="ThemeHeading"
+                                           Text="Theme"
+                                           Style="{StaticResource SettingsHeadingStyle}" />
+
+                                <TextBlock x:Uid="ThemeCaption"
+                                           Text="Six colors, a deck and a set of control defaults. Every control points at a slot number, so switching theme keeps the meaning of the colors."
+                                           Style="{StaticResource SettingsCaptionStyle}"
+                                           Margin="0,0,0,9" />
+
+                                <!-- Filled in code: a theme card is a painted miniature of its own
+                                     deck, because a row of swatches cannot say what a theme is. -->
+                                <Grid x:Name="ThemeGallery" HorizontalAlignment="Left" />
+
+                                <TextBlock x:Uid="ThemeColorsHeading"
+                                           Text="Colors"
+                                           Style="{StaticResource SettingsHeadingStyle}"
+                                           Margin="0,18,0,7" />
+
+                                <StackPanel x:Name="ThemeSlotList" Spacing="6" />
+
+                                <Border x:Name="ThemeContrastWarning"
+                                        Visibility="Collapsed"
+                                        CornerRadius="6"
+                                        Padding="10,8,11,9"
+                                        Margin="0,8,0,0"
+                                        BorderThickness="1"
+                                        Background="{ThemeResource SystemFillColorCautionBackgroundBrush}"
+                                        BorderBrush="{ThemeResource SystemFillColorCautionBrush}">
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <FontIcon Grid.Column="0" Glyph="&#xE7BA;" FontSize="13"
+                                                  VerticalAlignment="Top"
+                                                  Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                                        <TextBlock x:Name="ThemeContrastWarningText"
+                                                   Grid.Column="1"
+                                                   FontSize="11"
+                                                   LineHeight="17"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </Grid>
+                                </Border>
+
+                                <TextBlock x:Uid="ThemeOwnHeading"
+                                           Text="Your own themes"
+                                           Style="{StaticResource SettingsHeadingStyle}"
+                                           Margin="0,18,0,2" />
+
+                                <TextBlock x:Uid="ThemeOwnCaption"
+                                           Text="A theme is a small file. Save one and it shows up in the gallery for every layout on this PC."
+                                           Style="{StaticResource SettingsCaptionStyle}"
+                                           Margin="0,0,0,7" />
+
+                                <StackPanel Orientation="Horizontal" Spacing="7">
+                                    <Button x:Name="SaveThemeButton"
+                                            x:Uid="SaveThemeButton"
+                                            Style="{StaticResource EditorSmallButtonStyle}"
+                                            Click="OnSaveThemeClick">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xE74E;" FontSize="12" />
+                                            <TextBlock x:Uid="SaveThemeLabel" Text="Save these colors as a theme…" />
+                                        </StackPanel>
+                                    </Button>
+
+                                    <Button x:Name="ImportThemeButton"
+                                            x:Uid="ImportThemeButton"
+                                            Style="{StaticResource EditorSmallButtonStyle}"
+                                            Click="OnImportThemeClick">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xE8B7;" FontSize="12" />
+                                            <TextBlock x:Uid="ImportThemeLabel" Text="Import a theme…" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+
+                                <Border CornerRadius="6"
+                                        Padding="11,9,11,10"
+                                        Margin="0,12,0,0"
+                                        BorderThickness="1"
+                                        Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                        BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+                                    <Grid ColumnSpacing="8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <FontIcon Grid.Column="0" Glyph="&#xE946;" FontSize="13"
+                                                  VerticalAlignment="Top"
+                                                  Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                        <TextBlock x:Uid="ThemeTravelsNote"
+                                                   Grid.Column="1"
+                                                   Text="The theme travels inside the layout file, so a layout you send to somebody looks the way you built it even if they have never seen your theme."
+                                                   FontSize="11"
+                                                   LineHeight="17"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                    </Grid>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
+
+                        <!-- The preview and every number the theme is made of. -->
+                        <Border Grid.Column="1"
+                                Width="316"
+                                BorderThickness="1,0,0,0"
+                                BorderBrush="{ThemeResource DividerStrokeColorDefaultBrush}">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="16,14,16,18">
+                                <StackPanel Spacing="0">
+                                    <TextBlock x:Uid="ThemePreviewHeading"
+                                               Text="Live preview"
+                                               Style="{StaticResource SettingsHeadingStyle}"
+                                               Margin="0,0,0,7" />
+
+                                    <Grid x:Name="ThemePreviewHost"
+                                          Height="236"
+                                          CornerRadius="8">
+                                        <Rectangle x:Name="ThemePreviewDeck" RadiusX="8" RadiusY="8" />
+                                        <Canvas x:Name="ThemePreviewCanvas" IsHitTestVisible="False" />
+                                        <Rectangle RadiusX="8" RadiusY="8" StrokeThickness="1"
+                                                   UseLayoutRounding="False"
+                                                   IsHitTestVisible="False"
+                                                   Stroke="{ThemeResource CardStrokeColorDefaultBrush}" />
+                                    </Grid>
+
+                                    <TextBlock x:Name="ThemeCautionText"
+                                               Visibility="Collapsed"
+                                               FontSize="11"
+                                               LineHeight="16"
+                                               TextWrapping="Wrap"
+                                               Margin="0,8,0,0"
+                                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                    <!-- Every property the theme has, grouped the way somebody
+                                         changing one would look for it. Built in code: the list
+                                         is long, the rows are all the same four shapes, and a
+                                         theme property that had no row here would be a property
+                                         nobody could reach. -->
+                                    <StackPanel x:Name="ThemePropertyPanel" Spacing="0" Margin="0,14,0,0" />
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+
+                    <!-- ====================================== Pages and layers -->
+                    <ScrollViewer x:Name="PagesPane"
+                                  Visibility="Collapsed"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Padding="18,14,18,18">
+                        <StackPanel Spacing="8" MaxWidth="520" HorizontalAlignment="Left">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock x:Uid="LayoutSettingsPagesHeader"
+                                           Grid.Column="0"
+                                           Text="Pages"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center" />
+
+                                <Button x:Name="SettingsAddPageButton"
+                                        x:Uid="LayoutSettingsAddPage"
+                                        Grid.Column="1"
+                                        Style="{StaticResource EditorSmallButtonStyle}"
+                                        Click="OnSettingsAddPageClick">
+                                    <StackPanel Orientation="Horizontal" Spacing="6">
+                                        <FontIcon Glyph="&#xE710;" FontSize="12" />
+                                        <TextBlock x:Uid="LayoutSettingsAddPageLabel" Text="Page" />
+                                    </StackPanel>
+                                </Button>
+                            </Grid>
+
+                            <TextBlock x:Uid="LayoutSettingsPagesCaption"
+                                       Text="The order here is the order of the tabs on the surface. Use the … menu to move a page."
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                            <StackPanel x:Name="SettingsPageList" Spacing="5" />
+
+                            <TextBlock x:Uid="LayoutSettingsBandHeader"
+                                       Text="Always on screen"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       Margin="0,8,0,0" />
+
+                            <TextBlock x:Uid="LayoutSettingsBandCaption"
+                                       Text="A band is pinned to every page, so transport and panic do not have to be rebuilt four times. Turn one on from a page's … menu."
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- ================================================ Outputs -->
+                    <ScrollViewer x:Name="OutputsPane"
+                                  Visibility="Collapsed"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Padding="18,14,18,18">
+                        <StackPanel Spacing="8" MaxWidth="560" HorizontalAlignment="Left">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock x:Uid="LayoutSettingsDevicesHeader"
+                                           Grid.Column="0"
+                                           Text="Devices this layout uses"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center" />
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                    <Button x:Name="SettingsLookAgainButton"
+                                            x:Uid="LayoutSettingsLookAgain"
+                                            Style="{StaticResource EditorSmallButtonStyle}"
+                                            Click="OnSettingsLookAgainClick">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xE72C;" FontSize="12" />
+                                            <TextBlock x:Uid="LayoutSettingsLookAgainLabel" Text="Look again" />
+                                        </StackPanel>
+                                    </Button>
+
+                                    <Button x:Name="SettingsAddDeviceButton"
+                                            x:Uid="LayoutSettingsAddDevice"
+                                            Style="{StaticResource EditorSmallButtonStyle}"
+                                            Click="OnSettingsAddDeviceClick">
+                                        <StackPanel Orientation="Horizontal" Spacing="6">
+                                            <FontIcon Glyph="&#xE710;" FontSize="12" />
+                                            <TextBlock x:Uid="LayoutSettingsAddDeviceLabel" Text="Device" />
+                                        </StackPanel>
+                                    </Button>
+                                </StackPanel>
+                            </Grid>
+
+                            <TextBlock x:Uid="LayoutSettingsDevicesCaption"
+                                       Text="Controls point at the name on the left, never at the hardware. Change the device here and every control that used it follows."
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                            <StackPanel x:Name="SettingsDeviceList" Spacing="7" />
+
+                            <Border Background="{ThemeResource SubtleFillColorSecondaryBrush}"
+                                    CornerRadius="6"
+                                    Padding="12,10,12,11"
+                                    Margin="0,8,0,0">
+                                <!-- A Grid, not a horizontal StackPanel: a stack hands its children
+                                     infinite width, so TextWrapping never takes effect in one. -->
+                                <Grid ColumnSpacing="10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <FontIcon Grid.Column="0" Glyph="&#xE946;" FontSize="14" VerticalAlignment="Top"
+                                              Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                    <TextBlock x:Uid="LayoutSettingsConnectionNote"
+                                               Grid.Column="1"
+                                               Text="One connection is opened per device when the layout loads, shared by every control and every page, and closed when the layout closes. Group and channel travel in the message, so hundreds of controls on four groups of one device still cost exactly one connection."
+                                               FontSize="11"
+                                               TextWrapping="Wrap"
+                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- =============================================== Behavior -->
+                    <ScrollViewer x:Name="SettingsBehaviorPane"
+                                  Visibility="Collapsed"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Padding="18,14,18,18">
+                        <StackPanel x:Name="SettingsBehaviorPanel" Spacing="0" MaxWidth="520" HorizontalAlignment="Left" />
+                    </ScrollViewer>
+
+                    <!-- =================================== Name and description -->
+                    <ScrollViewer x:Name="NamePane"
+                                  Visibility="Collapsed"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Padding="18,14,18,18">
+                        <StackPanel Spacing="0" MaxWidth="520" HorizontalAlignment="Left">
+                            <TextBlock x:Uid="SettingsNameHeading"
+                                       Text="Name and description"
+                                       Style="{StaticResource SettingsHeadingStyle}" />
+
+                            <TextBlock x:Uid="SettingsNameCaption"
+                                       Text="This is what the library shows on the card. The file keeps its own name on disk until you rename it."
+                                       Style="{StaticResource SettingsCaptionStyle}"
+                                       Margin="0,0,0,10" />
+
+                            <TextBox x:Name="SettingsNameBox"
+                                     x:Uid="SettingsNameBox"
+                                     Header="Name"
+                                     MaxLength="120"
+                                     TextChanged="OnSettingsNameChanged" />
+
+                            <TextBox x:Name="SettingsDescriptionBox"
+                                     x:Uid="SettingsDescriptionBox"
+                                     Header="Description"
+                                     Margin="0,12,0,0"
+                                     Height="110"
+                                     MaxLength="400"
+                                     AcceptsReturn="True"
+                                     TextWrapping="Wrap"
+                                     TextChanged="OnSettingsDescriptionChanged" />
+
+                            <TextBlock x:Name="SettingsFileText"
+                                       FontSize="11"
+                                       TextWrapping="Wrap"
+                                       Margin="0,12,0,0"
+                                       Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- ==================================== Accessibility check -->
+                    <ScrollViewer x:Name="AccessibilityPane"
+                                  Visibility="Collapsed"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Padding="18,14,18,18">
+                        <StackPanel Spacing="0" MaxWidth="560" HorizontalAlignment="Left">
+                            <TextBlock x:Uid="SettingsAccessibilityHeading"
+                                       Text="Accessibility check"
+                                       Style="{StaticResource SettingsHeadingStyle}" />
+
+                            <TextBlock x:Uid="SettingsAccessibilityCaption"
+                                       Text="Contrast is measured, not guessed. Every slot is checked against the deck before the layout goes near a stage. Not every theme can pass everything, and that is a choice rather than a fault - high contrast is always one press away."
+                                       Style="{StaticResource SettingsCaptionStyle}"
+                                       Margin="0,0,0,10" />
+
+                            <StackPanel x:Name="AccessibilityList" Spacing="7" />
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

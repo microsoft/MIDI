@@ -34,6 +34,18 @@ namespace midiclock
         constexpr wchar_t KeyPulsesPerQuarterNote[] = L"ppqn";
         constexpr wchar_t KeySendStartStop[] = L"sendStartStop";
         constexpr wchar_t KeyDisplayOrder[] = L"displayOrder";
+        constexpr wchar_t KeyClockRatioNumerator[] = L"clockRatioNumerator";
+        constexpr wchar_t KeyClockRatioDenominator[] = L"clockRatioDenominator";
+        constexpr wchar_t KeySwingPercent[] = L"swingPercent";
+        constexpr wchar_t KeySwingSubdivision[] = L"swingSubdivision";
+        constexpr wchar_t KeyOffsetMilliseconds[] = L"offsetMilliseconds";
+        constexpr wchar_t KeyKind[] = L"kind";
+        constexpr wchar_t KeyFrameRate[] = L"frameRate";
+        constexpr wchar_t KeyStartTimeCode[] = L"startTimeCode";
+        constexpr wchar_t KeySendFullFrameMessages[] = L"sendFullFrameMessages";
+
+        constexpr wchar_t KindBeatClock[] = L"beatClock";
+        constexpr wchar_t KindTimeCode[] = L"timeCode";
 
         constexpr wchar_t FileComment[] =
             L"Saved clocks for the Windows MIDI Clock app. The Windows MIDI Services service "
@@ -493,6 +505,15 @@ namespace midiclock
                 definition.GroupIndex = std::clamp(definition.GroupIndex, 0, 15);
             }
 
+            definition.ClockRatioNumerator = std::clamp(definition.ClockRatioNumerator, 1, MaximumClockRatioPart);
+            definition.ClockRatioDenominator = std::clamp(definition.ClockRatioDenominator, 1, MaximumClockRatioPart);
+            definition.SwingPercent = std::clamp(definition.SwingPercent, MinimumSwingPercent, MaximumSwingPercent);
+            definition.SwingSubdivision = std::clamp(definition.SwingSubdivision, 1, 16);
+            definition.OffsetMilliseconds =
+                std::clamp(definition.OffsetMilliseconds, -MaximumOffsetMilliseconds, MaximumOffsetMilliseconds);
+
+            definition.StartTimeCode = midiapp::ClampPosition(definition.StartTimeCode, definition.FrameRate);
+
             auto const match = std::find_if(m_clocks.begin(), m_clocks.end(),
                 [&definition](ClockDefinition const& entry) { return entry.Id == definition.Id; });
 
@@ -632,6 +653,49 @@ namespace midiclock
 
                 definition.SendStartStop = GetNamedBooleanOrDefault(entry, KeySendStartStop, true);
 
+                definition.ClockRatioNumerator = std::clamp(
+                    static_cast<int32_t>(GetNamedNumberOrDefault(
+                        entry, KeyClockRatioNumerator, DefaultClockRatioNumerator)),
+                    1, MaximumClockRatioPart);
+
+                definition.ClockRatioDenominator = std::clamp(
+                    static_cast<int32_t>(GetNamedNumberOrDefault(
+                        entry, KeyClockRatioDenominator, DefaultClockRatioDenominator)),
+                    1, MaximumClockRatioPart);
+
+                definition.SwingPercent = std::clamp(
+                    GetNamedNumberOrDefault(entry, KeySwingPercent, DefaultSwingPercent),
+                    MinimumSwingPercent, MaximumSwingPercent);
+
+                definition.SwingSubdivision = std::clamp(
+                    static_cast<int32_t>(GetNamedNumberOrDefault(
+                        entry, KeySwingSubdivision, DefaultSwingSubdivision)),
+                    1, 16);
+
+                definition.OffsetMilliseconds = std::clamp(
+                    GetNamedNumberOrDefault(entry, KeyOffsetMilliseconds, 0.0),
+                    -MaximumOffsetMilliseconds, MaximumOffsetMilliseconds);
+
+                definition.Kind = GetNamedStringOrEmpty(entry, KeyKind) == KindTimeCode
+                    ? ClockKind::TimeCode
+                    : ClockKind::BeatClock;
+
+                if (!midiapp::TryParseFrameRate(GetNamedStringOrEmpty(entry, KeyFrameRate), definition.FrameRate))
+                {
+                    definition.FrameRate = midiapp::MidiTimeCodeFrameRate::Frames30;
+                }
+
+                if (!midiapp::TryParsePosition(
+                    GetNamedStringOrEmpty(entry, KeyStartTimeCode), definition.FrameRate, definition.StartTimeCode))
+                {
+                    definition.StartTimeCode = midiapp::MidiTimeCodePosition{};
+                }
+
+                definition.StartTimeCode = midiapp::ClampPosition(definition.StartTimeCode, definition.FrameRate);
+
+                definition.SendFullFrameMessages =
+                    GetNamedBooleanOrDefault(entry, KeySendFullFrameMessages, true);
+
                 definition.DisplayOrder = static_cast<int32_t>(
                     std::clamp(GetNamedNumberOrDefault(entry, KeyDisplayOrder, static_cast<double>(index)),
                         0.0, static_cast<double>(MaximumClockCount)));
@@ -700,6 +764,18 @@ namespace midiclock
                 entry.SetNamedValue(KeyGroup, json::JsonValue::CreateNumberValue(definition.GroupIndex));
                 entry.SetNamedValue(KeyPulsesPerQuarterNote, json::JsonValue::CreateNumberValue(definition.PulsesPerQuarterNote));
                 entry.SetNamedValue(KeySendStartStop, json::JsonValue::CreateBooleanValue(definition.SendStartStop));
+                entry.SetNamedValue(KeyClockRatioNumerator, json::JsonValue::CreateNumberValue(definition.ClockRatioNumerator));
+                entry.SetNamedValue(KeyClockRatioDenominator, json::JsonValue::CreateNumberValue(definition.ClockRatioDenominator));
+                entry.SetNamedValue(KeySwingPercent, json::JsonValue::CreateNumberValue(definition.SwingPercent));
+                entry.SetNamedValue(KeySwingSubdivision, json::JsonValue::CreateNumberValue(definition.SwingSubdivision));
+                entry.SetNamedValue(KeyOffsetMilliseconds, json::JsonValue::CreateNumberValue(definition.OffsetMilliseconds));
+                entry.SetNamedValue(KeyKind, json::JsonValue::CreateStringValue(
+                    definition.Kind == ClockKind::TimeCode ? KindTimeCode : KindBeatClock));
+                entry.SetNamedValue(KeyFrameRate, json::JsonValue::CreateStringValue(
+                    winrt::hstring{ midiapp::FrameRateShortName(definition.FrameRate) }));
+                entry.SetNamedValue(KeyStartTimeCode, json::JsonValue::CreateStringValue(
+                    winrt::hstring{ midiapp::FormatPosition(definition.StartTimeCode, definition.FrameRate) }));
+                entry.SetNamedValue(KeySendFullFrameMessages, json::JsonValue::CreateBooleanValue(definition.SendFullFrameMessages));
                 entry.SetNamedValue(KeyDisplayOrder, json::JsonValue::CreateNumberValue(order++));
 
                 clocks.Append(entry);

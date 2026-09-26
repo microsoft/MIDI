@@ -140,6 +140,20 @@ namespace midi2console
         std::vector<int> GroupNumbers;
         bool SendStartMessage{ false };
         bool SendStopMessage{ false };
+        std::string ClockRatio{ "1" };
+        double SwingPercent{ 50.0 };
+        int SwingSubdivision{ 2 };
+        double OffsetMilliseconds{ 0.0 };
+    };
+
+    struct EndpointSendTimeCodeOptions
+    {
+        std::string EndpointDeviceId;
+        std::string FrameRate{ "30" };
+        std::string StartAt{ "00:00:00:00" };
+        std::vector<int> GroupNumbers;
+        bool SendFullFrameMessages{ true };
+        double OffsetMilliseconds{ 0.0 };
     };
 
     int RunEndpointPropertiesCommand(_In_ EndpointPropertiesOptions const& options);
@@ -155,4 +169,5 @@ namespace midi2console
     int RunEndpointShortIdCommand(_In_ EndpointIdOptions const& options);
     int RunEndpointFullIdCommand(_In_ EndpointIdOptions const& options);
     int RunEndpointSendClockCommand(_In_ EndpointSendClockOptions const& options);
+    int RunEndpointSendTimeCodeCommand(_In_ EndpointSendTimeCodeOptions const& options);
 }

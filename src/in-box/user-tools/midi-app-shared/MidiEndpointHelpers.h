@@ -29,6 +29,28 @@ namespace midiapp
     std::array<bool, 16> DeclaredGroups(
         winrt::Windows::Devices::Midi2::Enumeration::MidiEndpointDeviceInformation const& endpoint) noexcept;
 
+    // The same, split by which way the messages go. Block input and block output are named from
+    // the DEVICE's point of view, so a block the device takes input on is a destination for us,
+    // and one it sends output from is a source.
+    struct GroupDirections
+    {
+        std::array<bool, 16> Sources{};
+        std::array<bool, 16> Destinations{};
+
+        int32_t SourceCount() const noexcept;
+        int32_t DestinationCount() const noexcept;
+    };
+
+    GroupDirections DeclaredGroupDirections(
+        winrt::Windows::Devices::Midi2::Enumeration::MidiEndpointDeviceInformation const& endpoint) noexcept;
+
+    // The picture to show for an endpoint: the customer's own if they set one, otherwise the
+    // transport's default, otherwise the plain default. The installer puts one default per
+    // transport in the shared assets folder, named after the transport code.
+    winrt::hstring ResolveEndpointImageOrDefault(
+        winrt::hstring const& customImagePath,
+        std::wstring const& transportCode) noexcept;
+
     // Endpoints sorted by display name, the order every tool presents them in.
     std::vector<winrt::Windows::Devices::Midi2::Enumeration::MidiEndpointDeviceInformation>
         SortedEndpoints(

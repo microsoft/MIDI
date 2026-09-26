@@ -70,6 +70,20 @@ namespace midiapp
             int32_t defaultWidth,
             int32_t defaultHeight) noexcept;
 
+        // The same, for a tool that keeps more than one window's placement. Everything about
+        // pulling a window back onto a display that still exists is in here, so a second window
+        // does not get its own half-correct copy of it.
+        static void RestorePlacement(
+            winrt::Microsoft::UI::Xaml::Window const& window,
+            WindowPlacementInfo const& saved,
+            int32_t defaultWidth,
+            int32_t defaultHeight) noexcept;
+
+        // Where the window is right now, in restore coordinates, so a maximized window still
+        // reopens at the size it had before it was maximized.
+        static WindowPlacementInfo CapturePlacement(
+            winrt::Microsoft::UI::Xaml::Window const& window) noexcept;
+
         void SavePlacement() noexcept;
 
         // releases the backdrop controllers; call from the window's Closed handler

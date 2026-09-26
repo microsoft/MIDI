@@ -40,6 +40,32 @@ namespace winrt::midiclock::implementation
                 return {};
             }
         }
+
+        // The rates a clock divider normally offers. Everything here is exact, because the app
+        // is the clock source rather than a divider counting somebody else's pulses.
+        struct ClockRatioPreset
+        {
+            int32_t Numerator;
+            int32_t Denominator;
+            wchar_t const* ResourceKey;
+        };
+
+        constexpr ClockRatioPreset ClockRatioPresets[]
+        {
+            { 1, 8, L"ClockRatioEighthSpeed" },
+            { 1, 4, L"ClockRatioQuarterSpeed" },
+            { 1, 3, L"ClockRatioThirdSpeed" },
+            { 1, 2, L"ClockRatioHalfSpeed" },
+            { 2, 3, L"ClockRatioDotted" },
+            { 1, 1, L"ClockRatioNormal" },
+            { 3, 2, L"ClockRatioTriplet" },
+            { 2, 1, L"ClockRatioDoubleSpeed" },
+            { 3, 1, L"ClockRatioTripleSpeed" },
+            { 4, 1, L"ClockRatioQuadrupleSpeed" },
+            { 8, 1, L"ClockRatioEightTimesSpeed" }
+        };
+
+        constexpr int32_t NormalClockRatioIndex = 5;
     }
 
     _Use_decl_annotations_
@@ -112,9 +138,11 @@ namespace winrt::midiclock::implementation
                     RebuildTiles();
                     UpdateEmptyState();
 
-                    // a clock that is already running follows the new tempo rather than
-                    // having to be stopped and started again
+                    // a clock that is already running follows the new tempo and shaping rather
+                    // than having to be stopped and started again
                     m_engine.SetBeatsPerMinute(savedId, updated.BeatsPerMinute);
+                    m_engine.SetClockRatio(savedId, updated.ClockRatioNumerator, updated.ClockRatioDenominator);
+                    m_engine.SetSwingPercent(savedId, updated.SwingPercent);
                 }
             }
             else if (result == controls::ContentDialogResult::Secondary && !definition.Id.empty())
@@ -182,6 +210,108 @@ namespace winrt::midiclock::implementation
             RefreshEditorGroupList(definition.GroupIndex);
 
             EditSendStartStopToggle().IsOn(definition.SendStartStop);
+
+            {
+                auto const previous = m_suppressTimingHandlers;
+                m_suppressTimingHandlers = true;
+
+                if (m_clockKinds == nullptr)
+                {
+                    m_clockKinds = winrt::single_threaded_observable_vector<appshared::NamedChoice>();
+
+                    m_clockKinds.Append(winrt::make<appshared::implementation::NamedChoice>(
+                        res::GetString(L"ClockKindBeatClock"), static_cast<int32_t>(native::ClockKind::BeatClock)));
+                    m_clockKinds.Append(winrt::make<appshared::implementation::NamedChoice>(
+                        res::GetString(L"ClockKindTimeCode"), static_cast<int32_t>(native::ClockKind::TimeCode)));
+
+                    EditKindComboBox().ItemsSource(m_clockKinds);
+                }
+
+                if (m_frameRates == nullptr)
+                {
+                    m_frameRates = winrt::single_threaded_observable_vector<appshared::NamedChoice>();
+
+                    for (auto const key : { L"FrameRate24", L"FrameRate25", L"FrameRate2997Drop", L"FrameRate30" })
+                    {
+                        m_frameRates.Append(winrt::make<appshared::implementation::NamedChoice>(
+                            res::GetString(key), static_cast<int32_t>(m_frameRates.Size())));
+                    }
+
+                    EditFrameRateComboBox().ItemsSource(m_frameRates);
+                }
+
+                if (m_clockRatios == nullptr)
+                {
+                    m_clockRatios = winrt::single_threaded_observable_vector<appshared::NamedChoice>();
+
+                    for (int32_t index = 0; index < static_cast<int32_t>(std::size(ClockRatioPresets)); index++)
+                    {
+                        m_clockRatios.Append(winrt::make<appshared::implementation::NamedChoice>(
+                            res::GetString(ClockRatioPresets[index].ResourceKey), index));
+                    }
+
+                    EditClockRatioComboBox().ItemsSource(m_clockRatios);
+                }
+
+                if (m_swingSubdivisions == nullptr)
+                {
+                    m_swingSubdivisions = winrt::single_threaded_observable_vector<appshared::NamedChoice>();
+
+                    m_swingSubdivisions.Append(winrt::make<appshared::implementation::NamedChoice>(
+                        res::GetString(L"SwingSubdivisionEighths"), 2));
+                    m_swingSubdivisions.Append(winrt::make<appshared::implementation::NamedChoice>(
+                        res::GetString(L"SwingSubdivisionSixteenths"), 4));
+
+                    EditSwingSubdivisionComboBox().ItemsSource(m_swingSubdivisions);
+                }
+
+                int32_t ratioIndex{ NormalClockRatioIndex };
+
+                for (int32_t index = 0; index < static_cast<int32_t>(std::size(ClockRatioPresets)); index++)
+                {
+                    if (ClockRatioPresets[index].Numerator == definition.ClockRatioNumerator &&
+                        ClockRatioPresets[index].Denominator == definition.ClockRatioDenominator)
+                    {
+                        ratioIndex = index;
+                        break;
+                    }
+                }
+
+                EditClockRatioComboBox().SelectedIndex(ratioIndex);
+
+                EditSwingSlider().Value(std::clamp(
+                    definition.SwingPercent, native::MinimumSwingPercent, native::MaximumSwingPercent));
+
+                EditSwingSubdivisionComboBox().SelectedIndex(definition.SwingSubdivision >= 4 ? 1 : 0);
+
+                EditOffsetNumberBox().Value(std::clamp(
+                    definition.OffsetMilliseconds,
+                    -native::MaximumOffsetMilliseconds,
+                    native::MaximumOffsetMilliseconds));
+
+                EditKindComboBox().SelectedIndex(
+                    definition.Kind == native::ClockKind::TimeCode ? 1 : 0);
+
+                EditFrameRateComboBox().SelectedIndex(static_cast<int32_t>(definition.FrameRate));
+
+                EditStartTimeCodeTextBox().Text(winrt::hstring{
+                    midiapp::FormatPosition(definition.StartTimeCode, definition.FrameRate) });
+
+                EditSendFullFrameToggle().IsOn(definition.SendFullFrameMessages);
+
+                m_suppressTimingHandlers = previous;
+            }
+
+            RefreshEditorKindVisibility();
+
+            // Open it when there is something in it worth seeing, so a plain clock keeps the
+            // short dialog and a shaped one does not hide what it is doing.
+            EditTimingExpander().IsExpanded(
+                definition.ClockRatioNumerator != definition.ClockRatioDenominator ||
+                definition.SwingPercent > native::MinimumSwingPercent ||
+                definition.OffsetMilliseconds != 0.0);
+
+            RefreshEditorTimingCaptions();
 
             m_tapTempo.Reset();
             TapTempoHintTextBlock().Text(res::GetString(L"TapTempoHint"));
@@ -298,10 +428,204 @@ namespace winrt::midiclock::implementation
             }
 
             definition.SendStartStop = EditSendStartStopToggle().IsOn();
+
+            auto const ratioIndex = EditClockRatioComboBox().SelectedIndex();
+
+            if (ratioIndex >= 0 && ratioIndex < static_cast<int32_t>(std::size(ClockRatioPresets)))
+            {
+                definition.ClockRatioNumerator = ClockRatioPresets[ratioIndex].Numerator;
+                definition.ClockRatioDenominator = ClockRatioPresets[ratioIndex].Denominator;
+            }
+
+            auto const swing = EditSwingSlider().Value();
+
+            definition.SwingPercent = std::isfinite(swing)
+                ? std::clamp(swing, native::MinimumSwingPercent, native::MaximumSwingPercent)
+                : native::DefaultSwingPercent;
+
+            definition.SwingSubdivision = EditSwingSubdivisionComboBox().SelectedIndex() == 1 ? 4 : 2;
+
+            auto const offset = EditOffsetNumberBox().Value();
+
+            definition.OffsetMilliseconds = std::isfinite(offset)
+                ? std::clamp(offset, -native::MaximumOffsetMilliseconds, native::MaximumOffsetMilliseconds)
+                : 0.0;
+
+            definition.Kind = SelectedEditorKind();
+            definition.FrameRate = SelectedEditorFrameRate();
+            definition.SendFullFrameMessages = EditSendFullFrameToggle().IsOn();
+
+            if (!midiapp::TryParsePosition(
+                std::wstring{ EditStartTimeCodeTextBox().Text() }, definition.FrameRate, definition.StartTimeCode))
+            {
+                definition.StartTimeCode = midiapp::MidiTimeCodePosition{};
+            }
+
+            definition.StartTimeCode = midiapp::ClampPosition(definition.StartTimeCode, definition.FrameRate);
         }
         MIDI_CLOCK_CATCH_AND_LOG(L"Unable to read the clock editor.")
 
         return definition;
+    }
+
+    native::ClockKind MainWindow::SelectedEditorKind() noexcept
+    {
+        try
+        {
+            return EditKindComboBox().SelectedIndex() == 1
+                ? native::ClockKind::TimeCode
+                : native::ClockKind::BeatClock;
+        }
+        catch (...)
+        {
+            return native::ClockKind::BeatClock;
+        }
+    }
+
+    midiapp::MidiTimeCodeFrameRate MainWindow::SelectedEditorFrameRate() noexcept
+    {
+        try
+        {
+            return midiapp::FrameRateFromValue(EditFrameRateComboBox().SelectedIndex());
+        }
+        catch (...)
+        {
+            return midiapp::MidiTimeCodeFrameRate::Frames30;
+        }
+    }
+
+    void MainWindow::RefreshEditorKindVisibility() noexcept
+    {
+        try
+        {
+            auto const isTimeCode = SelectedEditorKind() == native::ClockKind::TimeCode;
+
+            auto const beatOnly = isTimeCode ? xaml::Visibility::Collapsed : xaml::Visibility::Visible;
+            auto const timeCodeOnly = isTimeCode ? xaml::Visibility::Visible : xaml::Visibility::Collapsed;
+
+            EditBeatClockPanel().Visibility(beatOnly);
+            EditSendStartStopToggle().Visibility(beatOnly);
+            EditBeatShapingPanel().Visibility(beatOnly);
+            EditTimeCodePanel().Visibility(timeCodeOnly);
+
+            // The offset is the only thing in the expander that applies to both, so the heading
+            // has to stop promising a divider and swing when there are none.
+            EditTimingExpander().Header(winrt::box_value(
+                res::GetString(isTimeCode ? L"EditOffsetOnlyExpanderHeader" : L"EditTimingExpanderHeader")));
+
+            if (isTimeCode)
+            {
+                EditTimingExpander().IsExpanded(EditOffsetNumberBox().Value() != 0.0);
+            }
+        }
+        MIDI_CLOCK_CATCH_AND_LOG(L"Unable to update the clock editor for its kind.")
+    }
+
+    void MainWindow::RefreshEditorTimingCaptions() noexcept
+    {
+        try
+        {
+            auto const ratioIndex = EditClockRatioComboBox().SelectedIndex();
+
+            if (ratioIndex >= 0 && ratioIndex < static_cast<int32_t>(std::size(ClockRatioPresets)))
+            {
+                auto const& preset = ClockRatioPresets[ratioIndex];
+
+                auto const tempo = EditTempoNumberBox().Value();
+
+                auto const effective = (std::isfinite(tempo) ? tempo : native::DefaultBeatsPerMinute) *
+                    static_cast<double>(preset.Numerator) / static_cast<double>(preset.Denominator);
+
+                EditClockRatioCaption().Text(
+                    res::FormatString(L"ClockRatioEffectiveTempoFormat", std::format(L"{:.1f}", effective)));
+            }
+
+            auto const swing = EditSwingSlider().Value();
+
+            EditSwingCaption().Text(swing <= native::MinimumSwingPercent
+                ? res::GetString(L"SwingStraight")
+                : res::FormatString(L"SwingValueFormat", std::format(L"{:.1f}", swing)));
+
+            auto const frameRate = SelectedEditorFrameRate();
+
+            midiapp::MidiTimeCodePosition position{};
+
+            if (midiapp::TryParsePosition(std::wstring{ EditStartTimeCodeTextBox().Text() }, frameRate, position))
+            {
+                auto const clamped = midiapp::ClampPosition(position, frameRate);
+
+                // A drop frame minute has no frame 0 or 1, so say what will actually be sent
+                // rather than silently changing what was typed.
+                EditStartTimeCodeCaption().Text(res::FormatString(
+                    L"StartTimeCodeReadingFormat", midiapp::FormatPosition(clamped, frameRate)));
+            }
+            else
+            {
+                EditStartTimeCodeCaption().Text(res::GetString(L"StartTimeCodeNotUnderstood"));
+            }
+        }
+        MIDI_CLOCK_CATCH_AND_LOG(L"Unable to update the timing captions.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnEditKindSelectionChanged(
+        foundation::IInspectable const&,
+        controls::SelectionChangedEventArgs const&)
+    {
+        try
+        {
+            RefreshEditorKindVisibility();
+            RefreshEditorTimingCaptions();
+        }
+        MIDI_CLOCK_CATCH_AND_LOG(L"Unable to change the clock kind.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnEditFrameRateSelectionChanged(
+        foundation::IInspectable const&,
+        controls::SelectionChangedEventArgs const&)
+    {
+        try
+        {
+            RefreshEditorTimingCaptions();
+        }
+        MIDI_CLOCK_CATCH_AND_LOG(L"Unable to change the frame rate.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnEditStartTimeCodeChanged(
+        foundation::IInspectable const&,
+        controls::TextChangedEventArgs const&)
+    {
+        try
+        {
+            RefreshEditorTimingCaptions();
+        }
+        MIDI_CLOCK_CATCH_AND_LOG(L"Unable to read the starting timecode.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnEditClockRatioSelectionChanged(
+        foundation::IInspectable const&,
+        controls::SelectionChangedEventArgs const&)
+    {
+        try
+        {
+            RefreshEditorTimingCaptions();
+        }
+        MIDI_CLOCK_CATCH_AND_LOG(L"Unable to change the clock ratio.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnEditSwingValueChanged(
+        foundation::IInspectable const&,
+        controls::Primitives::RangeBaseValueChangedEventArgs const&)
+    {
+        try
+        {
+            RefreshEditorTimingCaptions();
+        }
+        MIDI_CLOCK_CATCH_AND_LOG(L"Unable to change the swing.")
     }
 
     _Use_decl_annotations_

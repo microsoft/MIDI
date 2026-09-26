@@ -24,10 +24,29 @@ namespace midikeyboard
         // its bank variation the same title, so this is often the only thing telling them apart.
         std::wstring Tags{};
 
+        // "category" from the entry. M2-107-UM Appendix A suggests names but says a device is not
+        // limited to them, so these are shown as they arrive rather than matched against a list.
+        std::vector<std::wstring> Categories{};
+
         // "Factory Presets", "GM2 Programs" and so on, from the ChannelList link that led here.
         // Empty when the device only offers one collection.
         std::wstring CollectionTitle{};
     };
+
+    // The programs that share one category, in the order the device first mentioned it. A program
+    // declaring several categories appears under each of them, which is what the resource means.
+    struct ProgramCategoryGroup
+    {
+        std::wstring Name{};
+        std::vector<size_t> EntryIndexes{};
+    };
+
+    // Groups a program list by category. Comes back empty when no program carried one, which is
+    // how a caller knows not to offer the grouped view at all. Programs with no category of their
+    // own are collected under otherName, but only when some other program did have one.
+    std::vector<ProgramCategoryGroup> GroupProgramsByCategory(
+        _In_ std::vector<ProgramListEntry> const& entries,
+        _In_ std::wstring const& otherName) noexcept;
 
     enum class ProgramListResult : int32_t
     {
@@ -50,6 +69,10 @@ namespace midikeyboard
     // then fetches each of them. Everything underneath, the identifier, the request numbering, the
     // chunk reassembly, the paging and the timeouts, is the API's business.
     //
+    // The session is BORROWED, never closed. It belongs to MidiCiPresence and outlives any number
+    // of queries, because the identifier it carries is how this app is known on the wire and must
+    // not change every time a question is asked.
+    //
     // Results arrive on the completion handler, which runs on a background thread; callers needing
     // the UI thread must marshal for themselves.
     //
@@ -70,8 +93,7 @@ namespace midikeyboard
         // Pass a changed handler to be told when the answer stops being true. Doing so keeps the
         // query alive after its result arrives, so the caller must hold on to it and Cancel it.
         static std::shared_ptr<MidiCiProgramListQuery> Start(
-            _In_ winrt::Windows::Devices::Midi2::MidiEndpointConnection const& connection,
-            _In_ uint8_t group,
+            _In_ winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiCapabilityInquirySession const& session,
             _In_ uint8_t channel,
             _In_ CompletedHandler handler,
             _In_ ChangedHandler changed) noexcept;
@@ -86,8 +108,7 @@ namespace midikeyboard
 
     private:
         void Begin(
-            _In_ winrt::Windows::Devices::Midi2::MidiEndpointConnection const& connection,
-            _In_ uint8_t group,
+            _In_ winrt::Windows::Devices::Midi2::CapabilityInquiry::MidiCapabilityInquirySession const& session,
             _In_ uint8_t channel,
             _In_ CompletedHandler handler,
             _In_ ChangedHandler changed) noexcept;
@@ -138,8 +159,8 @@ namespace midikeyboard
         CompletedHandler m_handler{};
         ChangedHandler m_changedHandler{};
 
-        // Set once the device has accepted a subscription. The session is then kept open after
-        // the result goes out, because closing it would end the subscription.
+        // Set once the device has accepted a subscription. The session is borrowed, so this only
+        // records that there is a subscription on it to be ended in Cancel.
         winrt::event_token m_subscriptionToken{};
         std::atomic<bool> m_watching{ false };
 

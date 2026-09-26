@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>MIDI Glass - themes</title>
+<link rel="stylesheet" href="mock.css">
+<style>
+    .lnav {
+        width: 194px; flex: 0 0 194px; padding: 8px 4px;
+        border-right: 1px solid var(--divider);
+    }
+    .lnav .nav-item {
+        height: 34px; margin: 2px 4px; border-radius: 5px;
+        display: flex; align-items: center; gap: 11px; padding: 0 11px;
+        color: var(--text2); font-size: 13px; position: relative;
+    }
+    .lnav .nav-item .gl { font-size: 15px; width: 16px; text-align: center; color: var(--text3); }
+    .lnav .nav-item.sel { background: var(--nav-selected); color: var(--text); }
+    .lnav .nav-item.sel::before {
+        content: ""; position: absolute; left: -4px; top: 8px; bottom: 8px;
+        width: 3px; border-radius: 2px; background: var(--accent);
+    }
+    .lnav h4 { font-size: 11px; color: var(--text3); margin: 12px 0 4px 14px; font-weight: 600; }
+
+    .settings { flex: 1; display: flex; min-width: 0; }
+    .scol { flex: 1; padding: 14px 18px; overflow: hidden; min-width: 0; }
+    .pcol { width: 292px; flex: 0 0 292px; border-left: 1px solid var(--divider); padding: 14px 16px; }
+
+    .sh { font-size: 13.5px; font-weight: 600; margin: 0 0 9px 0; }
+    .sh.later { margin-top: 18px; }
+    .sub { font-size: 11px; color: var(--text3); margin: -5px 0 9px 0; line-height: 1.45; }
+
+    .themerow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+    .themecard {
+        border-radius: 7px; overflow: hidden; position: relative;
+        box-shadow: inset 0 0 0 1px var(--stroke);
+        background: var(--card);
+    }
+    .themecard.sel { box-shadow: inset 0 0 0 2px var(--accent-deep); }
+    .themecard .tp { height: 62px; position: relative; overflow: hidden; }
+    .themecard .tn { font-size: 11px; padding: 6px 8px; color: var(--text2); display: flex; align-items: center; gap: 5px; }
+    .themecard .tn .gl { font-size: 11px; color: var(--accent); margin-left: auto; }
+    .tp i { position: absolute; border-radius: 2px; }
+    .tp .rr { border-radius: 50%; }
+
+    .slotrow { display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
+    .slotrow .sw {
+        width: 26px; height: 26px; border-radius: 5px; flex: 0 0 26px;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.14);
+    }
+    .slotrow .sn { font-size: 12px; color: var(--text2); width: 82px; }
+    .slotrow .hex { font-family: "Cascadia Mono","Consolas",monospace; font-size: 11px; color: var(--text3); width: 68px; }
+    .slotrow .used { font-size: 10.5px; color: var(--text3); }
+    .slotrow .ratio {
+        font-family: "Cascadia Mono","Consolas",monospace; font-size: 10.5px;
+        margin-left: auto; padding: 1px 6px; border-radius: 3px;
+    }
+    .slotrow .ratio.ok { color: var(--success); background: rgba(108,203,95,.12); }
+    .slotrow .ratio.warn { color: var(--caution); background: var(--caution-bg); }
+
+    .slider { height: 22px; display: flex; align-items: center; flex: 1; position: relative; }
+    .slider .trk { height: 3px; border-radius: 2px; background: rgba(255,255,255,.14); width: 100%; }
+    .slider .fl { position: absolute; left: 0; height: 3px; border-radius: 2px; background: var(--accent-deep); }
+    .slider .th { position: absolute; width: 16px; height: 16px; border-radius: 8px; background: var(--accent-deep); box-shadow: 0 0 0 3px rgba(0,0,0,.45); }
+    .srow { display: flex; align-items: center; gap: 11px; margin-bottom: 8px; }
+    .srow .lbl { font-size: 12px; color: var(--text2); width: 128px; flex: 0 0 128px; }
+    .srow .num { font-family: "Cascadia Mono","Consolas",monospace; font-size: 11px; color: var(--text3); width: 44px; text-align: right; }
+
+    .previewdeck { height: 236px; border-radius: 8px; position: relative; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+</style>
+</head>
+<body>
+<div class="page">
+<p class="caption-above">Screen 8 &mdash; themes. A theme is six hue slots, a deck and a few control defaults, so re-skinning a whole surface is one click and the layout keeps its meaning.</p>
+
+<div class="window">
+
+    <div class="titlebar">
+        <div class="appmark"></div>
+        <div class="title">Live Rig &mdash; Windows MIDI Glass</div>
+        <div class="preview-chiclet">PREVIEW</div>
+        <div class="spacer"></div>
+        <div class="caption-btn gl">&#xE713;</div>
+        <div class="caption-btn gl">&#xE840;</div>
+        <div class="sys-btns"><div class="gl">&#xE921;</div><div class="gl">&#xE922;</div><div class="gl">&#xE8BB;</div></div>
+    </div>
+
+    <div class="toolbar">
+        <div class="btn subtle small"><span class="gl">&#xE72B;</span>Back to the editor</div>
+        <div class="sep"></div>
+        <div style="font-size:14px; font-weight:600">Layout settings</div>
+        <div class="spacer"></div>
+        <div class="chip on"><span class="gl">&#xE73E;</span>Saved</div>
+    </div>
+
+    <div class="shell">
+
+        <div class="lnav">
+            <div class="nav-item sel"><span class="gl">&#xE790;</span>Appearance</div>
+            <div class="nav-item"><span class="gl">&#xE8A9;</span>Pages and layers</div>
+            <div class="nav-item"><span class="gl">&#xE9D9;</span>Outputs</div>
+            <div class="nav-item"><span class="gl">&#xE713;</span>Behavior</div>
+            <h4>This layout</h4>
+            <div class="nav-item"><span class="gl">&#xE8A5;</span>Name and description</div>
+            <div class="nav-item"><span class="gl">&#xE7B3;</span>Accessibility check</div>
+            <div class="nav-item"><span class="gl">&#xEDE1;</span>Export&hellip;</div>
+        </div>
+
+        <div class="settings">
+
+            <!-- ------------------------------------------------- settings -->
+            <div class="scol">
+                <h3 class="sh">Theme</h3>
+                <p class="sub">Six colors, a deck and a set of control defaults. Every control points at a slot number, so switching theme keeps the meaning of the colors.</p>
+
+                <div class="themerow">
+                    <div class="themecard sel">
+                        <div class="tp" style="background:radial-gradient(130% 100% at 50% -10%, #171B22, #0C0E13 58%, #08090D)">
+                            <i class="rr" style="left:10px; top:12px; width:20px; height:20px; box-shadow:inset 0 0 0 2px rgba(76,224,255,.9)"></i>
+                            <i style="left:40px; top:10px; width:5px; height:38px; background:rgba(91,232,181,.9)"></i>
+                            <i style="left:52px; top:10px; width:5px; height:38px; background:rgba(91,232,181,.9)"></i>
+                            <i style="left:68px; top:14px; width:34px; height:16px; background:rgba(255,194,71,.75)"></i>
+                            <i style="left:68px; top:34px; width:34px; height:14px; box-shadow:inset 0 0 0 1px rgba(255,107,214,.8)"></i>
+                            <i style="left:112px; top:10px; width:26px; height:38px; box-shadow:inset 0 0 0 1px rgba(155,140,255,.7)"></i>
+                        </div>
+                        <div class="tn">Studio Dark<span class="gl">&#xE73E;</span></div>
+                    </div>
+
+                    <div class="themecard">
+                        <div class="tp" style="background:radial-gradient(120% 100% at 50% 110%, #16101E, #0A070E 62%, #060409)">
+                            <i class="rr" style="left:10px; top:12px; width:20px; height:20px; box-shadow:inset 0 0 0 2px rgba(255,62,165,.95)"></i>
+                            <i style="left:40px; top:10px; width:5px; height:38px; background:rgba(0,229,255,.95)"></i>
+                            <i style="left:52px; top:10px; width:5px; height:38px; background:rgba(0,229,255,.95)"></i>
+                            <i style="left:68px; top:14px; width:34px; height:16px; background:rgba(190,255,60,.85)"></i>
+                            <i style="left:68px; top:34px; width:34px; height:14px; box-shadow:inset 0 0 0 1px rgba(255,143,28,.9)"></i>
+                            <i style="left:112px; top:10px; width:26px; height:38px; box-shadow:inset 0 0 0 1px rgba(138,99,255,.8)"></i>
+                        </div>
+                        <div class="tn">Neon Booth</div>
+                    </div>
+
+                    <div class="themecard">
+                        <div class="tp" style="background:linear-gradient(180deg,#EEF1F5,#E2E7EE)">
+                            <i class="rr" style="left:10px; top:12px; width:20px; height:20px; box-shadow:inset 0 0 0 2px rgba(0,120,150,.95)"></i>
+                            <i style="left:40px; top:10px; width:5px; height:38px; background:rgba(0,140,100,.9)"></i>
+                            <i style="left:52px; top:10px; width:5px; height:38px; background:rgba(0,140,100,.9)"></i>
+                            <i style="left:68px; top:14px; width:34px; height:16px; background:rgba(190,110,0,.8)"></i>
+                            <i style="left:68px; top:34px; width:34px; height:14px; box-shadow:inset 0 0 0 1px rgba(170,30,130,.85)"></i>
+                            <i style="left:112px; top:10px; width:26px; height:38px; box-shadow:inset 0 0 0 1px rgba(80,60,190,.8)"></i>
+                        </div>
+                        <div class="tn">Daylight</div>
+                    </div>
+
+                    <div class="themecard">
+                        <div class="tp" style="background:linear-gradient(180deg,#14100A,#0A0805)">
+                            <i class="rr" style="left:10px; top:12px; width:20px; height:20px; box-shadow:inset 0 0 0 2px rgba(255,176,46,.95)"></i>
+                            <i style="left:40px; top:10px; width:5px; height:38px; background:rgba(255,176,46,.85)"></i>
+                            <i style="left:52px; top:10px; width:5px; height:38px; background:rgba(255,176,46,.85)"></i>
+                            <i style="left:68px; top:14px; width:34px; height:16px; background:rgba(255,210,120,.65)"></i>
+                            <i style="left:68px; top:34px; width:34px; height:14px; box-shadow:inset 0 0 0 1px rgba(255,176,46,.7)"></i>
+                            <i style="left:112px; top:10px; width:26px; height:38px; box-shadow:inset 0 0 0 1px rgba(255,140,30,.6)"></i>
+                        </div>
+                        <div class="tn">Amber Console</div>
+                    </div>
+
+                    <div class="themecard">
+                        <div class="tp" style="background:linear-gradient(180deg,#0B1830,#061021)">
+                            <i class="rr" style="left:10px; top:12px; width:20px; height:20px; box-shadow:inset 0 0 0 2px rgba(120,200,255,.9)"></i>
+                            <i style="left:40px; top:10px; width:5px; height:38px; background:rgba(120,200,255,.8)"></i>
+                            <i style="left:52px; top:10px; width:5px; height:38px; background:rgba(120,200,255,.8)"></i>
+                            <i style="left:68px; top:14px; width:34px; height:16px; background:rgba(120,200,255,.45)"></i>
+                            <i style="left:68px; top:34px; width:34px; height:14px; box-shadow:inset 0 0 0 1px rgba(120,200,255,.6)"></i>
+                            <i style="left:112px; top:10px; width:26px; height:38px; box-shadow:inset 0 0 0 1px rgba(120,200,255,.5)"></i>
+                        </div>
+                        <div class="tn">Blueprint</div>
+                    </div>
+
+                    <div class="themecard">
+                        <div class="tp" style="background:#000">
+                            <i class="rr" style="left:10px; top:12px; width:20px; height:20px; box-shadow:inset 0 0 0 2px #FFFF00"></i>
+                            <i style="left:40px; top:10px; width:5px; height:38px; background:#00FF00"></i>
+                            <i style="left:52px; top:10px; width:5px; height:38px; background:#00FF00"></i>
+                            <i style="left:68px; top:14px; width:34px; height:16px; background:#FFFFFF"></i>
+                            <i style="left:68px; top:34px; width:34px; height:14px; box-shadow:inset 0 0 0 1px #00FFFF"></i>
+                            <i style="left:112px; top:10px; width:26px; height:38px; box-shadow:inset 0 0 0 1px #FF00FF"></i>
+                        </div>
+                        <div class="tn">High contrast<span class="gl" style="color:var(--text3)">&#xE7B3;</span></div>
+                    </div>
+                </div>
+
+                <h3 class="sh later">Colors</h3>
+                <div class="slotrow">
+                    <div class="sw" style="background:rgb(var(--h1))"></div>
+                    <div class="sn">1 &middot; Cyan</div><div class="hex">#4CE0FF</div>
+                    <div class="used">28 controls</div>
+                    <div class="ratio ok">9.2 : 1</div>
+                </div>
+                <div class="slotrow">
+                    <div class="sw" style="background:rgb(var(--h2))"></div>
+                    <div class="sn">2 &middot; Mint</div><div class="hex">#5BE8B5</div>
+                    <div class="used">41 controls</div>
+                    <div class="ratio ok">11.0 : 1</div>
+                </div>
+                <div class="slotrow">
+                    <div class="sw" style="background:rgb(var(--h3))"></div>
+                    <div class="sn">3 &middot; Amber</div><div class="hex">#FFC247</div>
+                    <div class="used">12 controls</div>
+                    <div class="ratio ok">10.4 : 1</div>
+                </div>
+                <div class="slotrow">
+                    <div class="sw" style="background:rgb(var(--h4))"></div>
+                    <div class="sn">4 &middot; Magenta</div><div class="hex">#FF6BD6</div>
+                    <div class="used">9 controls</div>
+                    <div class="ratio ok">6.8 : 1</div>
+                </div>
+                <div class="slotrow">
+                    <div class="sw" style="background:rgb(var(--h5))"></div>
+                    <div class="sn">5 &middot; Violet</div><div class="hex">#9B8CFF</div>
+                    <div class="used">6 controls</div>
+                    <div class="ratio warn">4.1 : 1</div>
+                </div>
+                <div class="slotrow">
+                    <div class="sw" style="background:rgb(var(--h6))"></div>
+                    <div class="sn">6 &middot; Red</div><div class="hex">#FF6B6B</div>
+                    <div class="used">3 controls</div>
+                    <div class="ratio ok">5.9 : 1</div>
+                </div>
+
+                <div style="display:flex; align-items:flex-start; gap:8px; margin-top:8px; padding:8px 10px;
+                            border-radius:6px; background:var(--caution-bg); box-shadow:inset 0 0 0 1px rgba(252,225,0,.3);">
+                    <span class="gl" style="color:var(--caution); font-size:13px">&#xE7BA;</span>
+                    <span style="font-size:11px; color:var(--text2); line-height:1.5">
+                        Slot 5 is close to the deck. It will still be readable, but a label in it
+                        will be hard work on a dim stage. <b>Lighten it</b> or move those six controls to slot 1.
+                    </span>
+                </div>
+
+                <h3 class="sh later">Your own themes</h3>
+                <p class="sub">A theme is a small file. Save one and it shows up in the gallery for every layout on this PC.</p>
+                <div style="display:flex; gap:7px">
+                    <div class="btn small"><span class="gl">&#xE74E;</span>Save these colors as a theme&hellip;</div>
+                    <div class="btn small"><span class="gl">&#xE8B7;</span>Import a theme&hellip;</div>
+                </div>
+                <div style="display:flex; align-items:flex-start; gap:8px; margin-top:12px; padding:9px 11px;
+                            border-radius:6px; background:rgba(96,205,255,.07); box-shadow:inset 0 0 0 1px rgba(96,205,255,.22);">
+                    <span class="gl" style="color:var(--accent); font-size:13px">&#xE946;</span>
+                    <span style="font-size:11px; color:var(--text2); line-height:1.5">
+                        The theme travels inside the layout file, so a layout you send to somebody
+                        looks the way you built it even if they have never seen your theme.
+                    </span>
+                </div>
+            </div>
+
+            <!-- ------------------------------------------------- preview -->
+            <div class="pcol">
+                <h3 class="sh">Live preview</h3>
+                <div class="previewdeck surf">
+                    <div class="surftext h1" style="left:12px; top:10px; font-size:14px">Live Rig</div>
+
+                    <div class="ctl knob hue1" style="left:14px; top:44px; width:46px; height:46px;">
+                        <div class="dial"><div class="arc" style="--pct:.52turn"></div><div class="ptr" style="transform:rotate(46deg)"></div></div>
+                    </div>
+                    <div class="ctl knob hue5" style="left:72px; top:44px; width:46px; height:46px;">
+                        <div class="dial"><div class="arc" style="--pct:.30turn; background:conic-gradient(from 215deg, rgb(var(--h5)) 0 .30turn, rgba(255,255,255,.10) .30turn .805turn, transparent .805turn);"></div><div class="ptr" style="transform:rotate(-37deg)"></div></div>
+                    </div>
+                    <div class="ctl fader hue2" style="left:132px; top:40px; width:30px; height:94px;">
+                        <div class="slot"><div class="fill" style="height:66%"></div><div class="capbar" style="bottom:calc(66% - 7px); height:14px"></div></div>
+                    </div>
+                    <div class="ctl fader hue2" style="left:170px; top:40px; width:30px; height:94px;">
+                        <div class="slot"><div class="fill" style="height:41%"></div><div class="capbar" style="bottom:calc(41% - 7px); height:14px"></div></div>
+                    </div>
+                    <div class="ctl meter hue2" style="left:208px; top:40px; width:14px; height:94px; padding:4px 3px;">
+                        <i class="hot"></i><i class="warn"></i><i class="lit warn"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i><i class="lit"></i>
+                    </div>
+
+                    <div class="ctl btn-ctl hue3 on" style="left:14px; top:104px; width:50px; height:30px;"><div class="name" style="font-size:9px">On</div></div>
+                    <div class="ctl btn-ctl hue3" style="left:70px; top:104px; width:50px; height:30px;"><div class="name" style="font-size:9px">Off</div></div>
+
+                    <div class="ctl xy hue4" style="left:14px; top:146px; width:106px; height:76px;">
+                        <div class="field2">
+                            <div class="cross h" style="top:40%"></div><div class="cross v" style="left:60%"></div>
+                            <div class="puck" style="left:60%; top:40%"></div>
+                        </div>
+                    </div>
+                    <div class="ctl steps hue6" style="left:132px; top:146px; width:128px; height:34px; padding:5px">
+                        <div class="row" style="position:relative;"><i class="on"></i><i></i><i class="on cur"></i><i></i><i class="on"></i><i></i><i></i><i class="on"></i></div>
+                    </div>
+                    <div class="surftext readout" style="left:132px; top:190px; font-size:16px">128.0</div>
+                </div>
+
+                <h3 class="sh later">Deck</h3>
+                <div class="srow"><span class="lbl">Background</span><div class="field combo" style="flex:1">One color</div></div>
+                <div class="srow"><span class="lbl">Grid while running</span><div class="switch off"></div><span style="font-size:11.5px; color:var(--text3)">hidden</span></div>
+
+                <h3 class="sh later">Control defaults</h3>
+                <div class="srow"><span class="lbl">Corner rounding</span>
+                    <div class="slider"><div class="trk"></div><div class="fl" style="width:44%"></div><div class="th" style="left:calc(44% - 8px)"></div></div>
+                    <span class="num">7 px</span></div>
+                <div class="srow"><span class="lbl">Glass tint</span>
+                    <div class="slider"><div class="trk"></div><div class="fl" style="width:86%"></div><div class="th" style="left:calc(86% - 8px)"></div></div>
+                    <span class="num">86 %</span></div>
+                <div class="srow"><span class="lbl">Glow</span>
+                    <div class="slider"><div class="trk"></div><div class="fl" style="width:62%"></div><div class="th" style="left:calc(62% - 8px)"></div></div>
+                    <span class="num">62 %</span></div>
+                <div class="srow"><span class="lbl">Labels</span><div class="field combo" style="flex:1">Below the control</div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<p class="note">
+<b>Slots, not colors.</b> A control stores "slot 3", never <span class="mono">#FFC247</span>. Switch to Neon
+Booth and every amber control becomes lime together, and the mute buttons still all match. A control can still
+override with a literal color when it has to, and the theme editor tells you how many controls are using each
+slot, so you know what a change will touch.
+<br><br>
+<b>Contrast is measured, not guessed.</b> Each slot is checked against the deck and flagged before it ships to a
+stage. The <b>High contrast</b> theme is offered, never forced &mdash; if Windows switches to a high-contrast
+theme mid-set, the running layout is left alone and the offer waits until the layout is next opened.
+</p>
+
+</div>
+</body>
+</html>

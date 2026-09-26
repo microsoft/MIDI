@@ -193,9 +193,7 @@ namespace winrt::midipatchbay::implementation
             auto const endpointId = endpoint.Id;
             auto weak = get_weak();
 
-            auto& catalog = patchbay::EndpointCatalog::Current();
-
-            auto const live = catalog.Resolve(endpoint);
+            auto const live = patchbay::ResolveEndpoint(endpoint);
 
             // ------------------------------------------------------- identity
             {
@@ -216,6 +214,15 @@ namespace winrt::midipatchbay::implementation
                     auto line = ValueText(winrt::hstring{ detail }, 11, true);
                     line.Foreground(BrushOrNull(L"TextFillColorTertiaryBrush"));
                     body.Children().Append(line);
+
+                    // The catalog already prefers the customer's own description over the transport's.
+                    if (!live->Description.empty())
+                    {
+                        auto description = ValueText(winrt::hstring{ live->Description }, 12, true);
+                        description.Foreground(BrushOrNull(L"TextFillColorSecondaryBrush"));
+                        description.Margin(xaml::ThicknessHelper::FromLengths(0, 4, 0, 0));
+                        body.Children().Append(description);
+                    }
                 }
                 else
                 {
@@ -307,7 +314,7 @@ namespace winrt::midipatchbay::implementation
             // --------------------------------------------------- replacement
             if (!live.has_value())
             {
-                auto const suggestion = catalog.SuggestReplacement(endpoint);
+                auto const suggestion = patchbay::SuggestReplacementFor(endpoint);
 
                 if (suggestion.has_value())
                 {
@@ -470,10 +477,8 @@ namespace winrt::midipatchbay::implementation
             auto const* source = patch->FindEndpoint(connection.SourceEndpointId);
             auto const* destination = patch->FindEndpoint(connection.DestinationEndpointId);
 
-            auto& catalog = patchbay::EndpointCatalog::Current();
-
-            auto const liveSource = source == nullptr ? std::nullopt : catalog.Resolve(*source);
-            auto const liveDestination = destination == nullptr ? std::nullopt : catalog.Resolve(*destination);
+            auto const liveSource = source == nullptr ? std::nullopt : patchbay::ResolveEndpoint(*source);
+            auto const liveDestination = destination == nullptr ? std::nullopt : patchbay::ResolveEndpoint(*destination);
 
             // ----------------------------------------------------- from / to
             {
@@ -493,14 +498,14 @@ namespace winrt::midipatchbay::implementation
                         body.Children().Append(ValueText(
                             winrt::hstring{ endpoint == nullptr ? L"" : endpoint->DisplayName }, 13, true));
 
-                        std::wstring portName{};
+                        std::wstring groupName{};
 
                         if (live.has_value() && groupIndex != patchbay::AllGroups)
                         {
-                            portName = live->PortName(groupIndex, isOutput);
+                            groupName = live->GroupName(groupIndex, isOutput);
                         }
 
-                        auto detail = ValueText(patchbay::DescribeGroupIndex(groupIndex, portName), 11, true);
+                        auto detail = ValueText(patchbay::DescribeGroupIndex(groupIndex, groupName), 11, true);
                         detail.Foreground(BrushOrNull(L"TextFillColorTertiaryBrush"));
                         detail.Margin(xaml::ThicknessHelper::FromLengths(0, 0, 0, 6));
                         body.Children().Append(detail);
@@ -554,16 +559,16 @@ namespace winrt::midipatchbay::implementation
 
                 for (size_t i = 0; i < options.size(); i++)
                 {
-                    std::wstring portName{};
+                    std::wstring groupName{};
 
                     if (liveDestination.has_value() && options[i] != patchbay::AllGroups)
                     {
-                        portName = liveDestination->PortName(options[i], false);
+                        groupName = liveDestination->GroupName(options[i], false);
                     }
 
                     items.Append(winrt::box_value(options[i] == patchbay::AllGroups
                         ? resources::GetString(L"GroupSameAsSource")
-                        : patchbay::DescribeGroupIndex(options[i], portName)));
+                        : patchbay::DescribeGroupIndex(options[i], groupName)));
 
                     if (options[i] == connection.DestinationGroupIndex)
                     {

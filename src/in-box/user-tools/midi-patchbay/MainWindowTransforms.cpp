@@ -184,7 +184,7 @@ namespace winrt::midipatchbay::implementation
 
             if (auto const* destination = patch->FindEndpoint(connection->DestinationEndpointId))
             {
-                if (auto const live = patchbay::EndpointCatalog::Current().Resolve(*destination))
+                if (auto const live = patchbay::ResolveEndpoint(*destination))
                 {
                     m_testEndpointDeviceId = live->EndpointDeviceId;
                 }
