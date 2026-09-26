@@ -89,6 +89,9 @@ namespace glass
         constexpr wchar_t KeyFit[] = L"fit";
         constexpr wchar_t KeyOpacity[] = L"opacity";
         constexpr wchar_t KeyLoops[] = L"loops";
+        constexpr wchar_t KeyZoom[] = L"zoom";
+        constexpr wchar_t KeyCenterX[] = L"centerX";
+        constexpr wchar_t KeyCenterY[] = L"centerY";
         constexpr wchar_t KeyKeyboard[] = L"keyboard";
         constexpr wchar_t KeyKeyCount[] = L"keyCount";
         constexpr wchar_t KeyLowestNote[] = L"lowestNote";
@@ -304,6 +307,7 @@ namespace glass
             { BackgroundFit::Uniform, L"uniform" },
             { BackgroundFit::Stretch, L"stretch" },
             { BackgroundFit::Tiled, L"tiled" },
+            { BackgroundFit::Fill, L"fill" },
         };
 
         constexpr EnumName<ScreenCorner> CornerNames[]
@@ -796,8 +800,14 @@ namespace glass
             picture.Fit = ValueOf(BackgroundFitNames, ReadString(nested, KeyFit), BackgroundFit::Uniform);
             picture.Opacity = std::clamp(ReadNumber(nested, KeyOpacity, 1.0), 0.0, 1.0);
             picture.Loops = ReadBool(nested, KeyLoops, true);
+            picture.Zoom = std::clamp(
+                ReadNumber(nested, KeyZoom, 1.0), MinimumPictureZoom, MaximumPictureZoom);
+            picture.CenterX = std::clamp(ReadNumber(nested, KeyCenterX, 0.5), 0.0, 1.0);
+            picture.CenterY = std::clamp(ReadNumber(nested, KeyCenterY, 0.5), 0.0, 1.0);
 
-            picture.Unknown = CaptureUnknown(nested, { KeyFile, KeyFit, KeyOpacity, KeyLoops });
+            picture.Unknown = CaptureUnknown(
+                nested,
+                { KeyFile, KeyFit, KeyOpacity, KeyLoops, KeyZoom, KeyCenterX, KeyCenterY });
 
             return picture;
         }
@@ -1390,6 +1400,9 @@ namespace glass
                 writer.Write(KeyFit, NameOf(BackgroundFitNames, control.Image.Fit));
                 writer.Write(KeyOpacity, control.Image.Opacity);
                 writer.Write(KeyLoops, control.Image.Loops);
+                writer.Write(KeyZoom, control.Image.Zoom);
+                writer.Write(KeyCenterX, control.Image.CenterX);
+                writer.Write(KeyCenterY, control.Image.CenterY);
                 WriteUnknown(writer, control.Image.Unknown);
                 writer.EndObject();
             }

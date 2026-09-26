@@ -294,6 +294,23 @@ namespace glass
             _In_ size_t itemIndex,
             _In_ Control const& control);
 
+        // The two things a picture can turn out to be. Both hand back an element already sized
+        // and positioned for the crop, sitting inside the clipped container LayoutPicture made.
+        xaml::FrameworkElement BuildVideoContent(
+            _In_ foundation::Uri const& uri,
+            _In_ Picture const& picture,
+            _In_ double width,
+            _In_ double height);
+
+        xaml::FrameworkElement BuildImageContent(
+            _In_ foundation::Uri const& uri,
+            _In_ Picture const& picture,
+            _In_ double width,
+            _In_ double height);
+
+        // Shuts down the media player behind a video, if that is what this picture was.
+        static void ClosePicture(_In_ xaml::FrameworkElement const& element) noexcept;
+
         // The beat count inside a clock's ring, and where it sits. A XAML sibling like the
         // label, because composition has no text.
         void LayoutBeatText(

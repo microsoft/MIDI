@@ -301,6 +301,10 @@ namespace glass
 
         // Repeated at its own size from the top left.
         Tiled = 3,
+
+        // Filled corner to corner, keeping its shape, so whatever does not fit is cut off.
+        // This is the one to use with Zoom and Center below.
+        Fill = 4,
     };
 
     // A picture or a video shown by an image control, or filling a grouping panel. Stored as a
@@ -316,11 +320,43 @@ namespace glass
         // surface is a control that looks broken four seconds in.
         bool Loops{ true };
 
+        // How much larger than the fit size to draw it. Anything past the edges of the control
+        // is cut off, which is how a tall slice is taken out of a wide clip.
+        double Zoom{ 1.0 };
+
+        // Which point of the picture lands in the middle of the control, from 0 at the left or
+        // top to 1 at the right or bottom. Half and half is the middle of the picture.
+        double CenterX{ 0.5 };
+        double CenterY{ 0.5 };
+
         // Nothing at all to draw.
         bool IsEmpty() const noexcept { return FileName.empty(); }
 
         UnknownFields Unknown{ nullptr };
     };
+
+    constexpr double MinimumPictureZoom = 1.0;
+    constexpr double MaximumPictureZoom = 8.0;
+
+    // Where a picture ends up inside the control that shows it, in the control's own pixels.
+    // Anything outside the control is cut off by the caller.
+    struct PictureRect
+    {
+        double X{ 0.0 };
+        double Y{ 0.0 };
+        double Width{ 0.0 };
+        double Height{ 0.0 };
+    };
+
+    // Works out that rectangle from the fit, the zoom and the point of the picture the customer
+    // wants in the middle. A natural width or height of zero means the file has not been
+    // decoded yet, and the answer is simply the whole control.
+    PictureRect PictureCropRect(
+        _In_ Picture const& picture,
+        _In_ double controlWidth,
+        _In_ double controlHeight,
+        _In_ double naturalWidth,
+        _In_ double naturalHeight) noexcept;
 
     // The keys on a piano keyboard control. Width and height come from the control's own
     // rectangle; this is only what is drawn inside it.

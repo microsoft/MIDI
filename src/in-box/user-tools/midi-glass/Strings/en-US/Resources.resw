@@ -1145,6 +1145,30 @@
   <data name="PictureLoopsCheck.Content" xml:space="preserve">
     <value>Play a video on a loop</value>
   </data>
+  <data name="PictureCropHeading.Text" xml:space="preserve">
+    <value>Crop</value>
+  </data>
+  <data name="PictureZoomSlider.Header" xml:space="preserve">
+    <value>Zoom, as a percentage</value>
+  </data>
+  <data name="PictureCenterXSlider.Header" xml:space="preserve">
+    <value>Middle, left to right</value>
+  </data>
+  <data name="PictureCenterYSlider.Header" xml:space="preserve">
+    <value>Middle, top to bottom</value>
+  </data>
+  <data name="PictureCropCaption.Text" xml:space="preserve">
+    <value>Zoom in and then move the middle to take a slice out of a picture or a clip. Set the fit above to Fill first, or there will be nothing to crop.</value>
+  </data>
+  <data name="PictureFilterBothFormat" xml:space="preserve">
+    <value>Pictures and video ({0})</value>
+  </data>
+  <data name="PictureFilterPicturesFormat" xml:space="preserve">
+    <value>Pictures ({0})</value>
+  </data>
+  <data name="PictureFilterVideoFormat" xml:space="preserve">
+    <value>Video ({0})</value>
+  </data>
   <data name="InspectorKeysHeading.Text" xml:space="preserve">
     <value>Keys</value>
   </data>
@@ -1462,6 +1486,51 @@
   </data>
   <data name="SizeMegabytesFormat" xml:space="preserve">
     <value>{0} MB</value>
+  </data>
+  <data name="SizeGigabytesFormat" xml:space="preserve">
+    <value>{0} GB</value>
+  </data>
+  <data name="PackageLargeTitle" xml:space="preserve">
+    <value>This is a big one</value>
+  </data>
+  <data name="PackageLargeBodyFormat" xml:space="preserve">
+    <value>This layout comes to {0} across {1} file(s). Video is usually the reason.</value>
+  </data>
+  <data name="PackageLargestFormat" xml:space="preserve">
+    <value>The biggest is {0}, at {1}.</value>
+  </data>
+  <data name="PackageLargeCaption" xml:space="preserve">
+    <value>The package will be about that size, and it may take a minute to write. Carry on if that is what you want.</value>
+  </data>
+  <data name="BackupLargeCaption" xml:space="preserve">
+    <value>Every backup is a full copy, so each one costs about that much disk space again. Carry on if that is what you want.</value>
+  </data>
+  <data name="PackageLargeAction" xml:space="preserve">
+    <value>Package it</value>
+  </data>
+  <data name="BackupLargeAction" xml:space="preserve">
+    <value>Back it up</value>
+  </data>
+  <data name="BackupWithoutVideoAction" xml:space="preserve">
+    <value>Leave the video out</value>
+  </data>
+  <data name="BackupWithoutVideoCaptionFormat" xml:space="preserve">
+    <value>Without the video the backup is about {0}. Your video stays in the layouts folder either way, so the backup still puts everything back — unless you delete the video yourself.</value>
+  </data>
+  <data name="BackupDoneWithoutVideoFormat" xml:space="preserve">
+    <value>{0} holds the layout and {1} file(s). The video was left out, and is still in your layouts folder.</value>
+  </data>
+  <data name="PackageTooBigFormat" xml:space="preserve">
+    <value>This layout comes to {0}, and a package cannot be larger than {1}. Use a smaller video, or copy the layout folder across by hand.</value>
+  </data>
+  <data name="PictureLargeTitle" xml:space="preserve">
+    <value>That is a big file</value>
+  </data>
+  <data name="PictureLargeBodyFormat" xml:space="preserve">
+    <value>{0} is {1}. A copy of it goes next to your layout so the two travel together, which means that much disk space again, and every backup of this layout will carry it too.</value>
+  </data>
+  <data name="PictureLargeAction" xml:space="preserve">
+    <value>Use it anyway</value>
   </data>
   <data name="DetentHeading.Text" xml:space="preserve">
     <value>Stops</value>
@@ -2044,6 +2113,9 @@
   </data>
   <data name="BackgroundFitTiled" xml:space="preserve">
     <value>Tiled</value>
+  </data>
+  <data name="BackgroundFitFill" xml:space="preserve">
+    <value>Fill, cutting off what does not fit</value>
   </data>
   <data name="BackgroundWillCopyFormat" xml:space="preserve">
     <value>This picture will be copied to {0}, so that the layout and the picture travel together.</value>

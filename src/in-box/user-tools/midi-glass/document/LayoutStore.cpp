@@ -368,7 +368,9 @@ namespace glass
         {
             auto const extension = std::filesystem::path{ fileName }.extension().wstring();
 
-            for (auto const* const known : { L".mp4", L".m4v", L".mkv", L".webm", L".wmv" })
+            for (auto const* const known :
+                { L".mp4", L".m4v", L".mkv", L".webm", L".wmv", L".avi", L".mov",
+                  L".mpeg", L".mpg", L".m2v", L".asf" })
             {
                 if (_wcsicmp(extension.c_str(), known) == 0)
                 {

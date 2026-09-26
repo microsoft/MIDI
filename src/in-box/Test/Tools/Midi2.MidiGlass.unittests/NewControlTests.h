@@ -64,4 +64,15 @@ public:
     TEST_METHOD(ABeatLampCountsClockMessages);
     TEST_METHOD(AMessageBindingIsNotLitByActivity);
     TEST_METHOD(AnActivityBindingDoesNotMoveAControl);
+
+    // ---- cropping a picture or a video ----
+
+    TEST_METHOD(AFilledPictureCoversTheControl);
+    TEST_METHOD(AUniformPictureFitsInsideTheControl);
+    TEST_METHOD(AStretchedPictureTakesTheControlsShape);
+    TEST_METHOD(ZoomMakesThePictureLarger);
+    TEST_METHOD(TheMiddleDecidesWhichSliceIsShown);
+    TEST_METHOD(PanningCannotUncoverTheControl);
+    TEST_METHOD(APictureSmallerThanTheControlIsCentered);
+    TEST_METHOD(AnUndecodedPictureFillsTheControl);
 };

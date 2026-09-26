@@ -93,20 +93,7 @@ namespace winrt::midiglass::implementation
 
         std::wstring DescribeSize(_In_ uint64_t bytes) noexcept
         {
-            if (bytes < 1024)
-            {
-                return std::wstring{ resources::FormatString(
-                    L"SizeBytesFormat", std::to_wstring(bytes)) };
-            }
-
-            if (bytes < 1024 * 1024)
-            {
-                return std::wstring{ resources::FormatString(
-                    L"SizeKilobytesFormat", std::to_wstring((bytes + 512) / 1024)) };
-            }
-
-            return std::wstring{ resources::FormatString(
-                L"SizeMegabytesFormat", std::to_wstring((bytes + 512 * 1024) / (1024 * 1024))) };
+            return resources::DescribeFileSize(bytes);
         }
 
         // A failure key the document layer handed back, as something a person can read.
@@ -147,6 +134,141 @@ namespace winrt::midiglass::implementation
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to show a notice.")
     }
 
+    // A video on a layout can be larger than everything else this app has ever written put
+    // together, and both the backup and the package carry it. Say what it will cost and let the
+    // customer decide, rather than quietly writing two gigabytes or quietly refusing to.
+    _Use_decl_annotations_
+    winrt::Windows::Foundation::IAsyncOperation<int32_t> MainWindow::ConfirmPackageSizeAsync(
+        std::wstring layoutFilePath,
+        bool packaging)
+    {
+        auto lifetime = get_strong();
+
+        auto const answer = [](PackageChoice choice) { return static_cast<int32_t>(choice); };
+
+        auto const survey = glass::SurveyLayoutPackage(layoutFilePath);
+
+        // Leaving the video out only makes sense for a backup. A package crossing to another PC
+        // without its clips arrives as a surface full of empty rectangles.
+        auto const canDropVideo = !packaging && survey.VideoCount > 0;
+
+        if (survey.TooBig && !(canDropVideo && survey.FitsWithoutVideo))
+        {
+            ShowNoticeAsync(
+                std::wstring{ resources::GetString(
+                    packaging ? L"PackageFailedTitle" : L"BackupFailedTitle") },
+                std::wstring{ resources::FormatString(
+                    L"PackageTooBigFormat",
+                    DescribeSize(survey.TotalBytes),
+                    DescribeSize(glass::MaximumWritablePackageBytes)) });
+
+            co_return answer(PackageChoice::Cancel);
+        }
+
+        if (!survey.TooBig && survey.TotalBytes <= glass::LargePackageBytes)
+        {
+            co_return answer(PackageChoice::Everything);
+        }
+
+        try
+        {
+            controls::StackPanel panel{};
+
+            panel.Spacing(8.0);
+            panel.MaxWidth(420.0);
+
+            auto const paragraph = [&panel](std::wstring const& text, bool secondary)
+                {
+                    controls::TextBlock block{};
+
+                    block.Text(winrt::hstring{ text });
+                    block.TextWrapping(xaml::TextWrapping::Wrap);
+
+                    if (secondary)
+                    {
+                        block.FontSize(12.0);
+                        block.Foreground(xaml::Application::Current().Resources()
+                            .Lookup(box_value(L"TextFillColorSecondaryBrush")).as<media::Brush>());
+                    }
+
+                    panel.Children().Append(block);
+                };
+
+            paragraph(
+                std::wstring{ resources::FormatString(
+                    L"PackageLargeBodyFormat",
+                    DescribeSize(survey.TotalBytes),
+                    std::to_wstring(survey.FileCount)) },
+                false);
+
+            if (!survey.LargestName.empty())
+            {
+                paragraph(
+                    std::wstring{ resources::FormatString(
+                        L"PackageLargestFormat",
+                        survey.LargestName,
+                        DescribeSize(survey.LargestBytes)) },
+                    true);
+            }
+
+            if (canDropVideo)
+            {
+                paragraph(
+                    std::wstring{ resources::FormatString(
+                        L"BackupWithoutVideoCaptionFormat",
+                        DescribeSize(survey.BytesWithoutVideo())) },
+                    true);
+            }
+            else
+            {
+                paragraph(
+                    std::wstring{ resources::GetString(
+                        packaging ? L"PackageLargeCaption" : L"BackupLargeCaption") },
+                    true);
+            }
+
+            controls::ContentDialog dialog{};
+
+            dialog.XamlRoot(RootGrid().XamlRoot());
+            dialog.Title(box_value(resources::GetString(L"PackageLargeTitle")));
+            dialog.Content(panel);
+            dialog.CloseButtonText(resources::GetString(L"DialogCancel"));
+
+            if (canDropVideo)
+            {
+                // Without the video first and made the default: on this PC it is almost always
+                // the right answer, and it is the one that does not cost anything.
+                dialog.PrimaryButtonText(resources::GetString(L"BackupWithoutVideoAction"));
+                dialog.SecondaryButtonText(resources::GetString(L"BackupLargeAction"));
+                dialog.IsSecondaryButtonEnabled(!survey.TooBig);
+            }
+            else
+            {
+                dialog.PrimaryButtonText(resources::GetString(
+                    packaging ? L"PackageLargeAction" : L"BackupLargeAction"));
+            }
+
+            dialog.DefaultButton(controls::ContentDialogButton::Primary);
+
+            switch (co_await dialog.ShowAsync())
+            {
+            case controls::ContentDialogResult::Primary:
+                co_return answer(canDropVideo
+                    ? PackageChoice::WithoutVideo
+                    : PackageChoice::Everything);
+
+            case controls::ContentDialogResult::Secondary:
+                co_return answer(PackageChoice::Everything);
+
+            default:
+                co_return answer(PackageChoice::Cancel);
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to ask about the size of the package.")
+
+        co_return answer(PackageChoice::Cancel);
+    }
+
     // ---------------------------------------------------------------- back up
 
     _Use_decl_annotations_
@@ -157,14 +279,31 @@ namespace winrt::midiglass::implementation
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
 
-        if (m_menuCard == nullptr || m_menuCard.IsNewTile())
+        BackUpCardAsync(m_menuCard);
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::BackUpCardAsync(midiglass::LayoutCard card)
+    {
+        auto lifetime = get_strong();
+
+        if (card == nullptr || card.IsNewTile())
         {
-            return;
+            co_return;
         }
 
         try
         {
-            auto const path = std::wstring{ m_menuCard.FilePath() };
+            auto const path = std::wstring{ card.FilePath() };
+
+            auto const choice = static_cast<PackageChoice>(
+                co_await ConfirmPackageSizeAsync(path, false));
+
+            if (choice == PackageChoice::Cancel)
+            {
+                co_return;
+            }
+
             auto const target = glass::NextBackupPath(path);
 
             if (target.empty())
@@ -173,9 +312,11 @@ namespace winrt::midiglass::implementation
                     std::wstring{ resources::GetString(L"BackupFailedTitle") },
                     std::wstring{ resources::GetString(L"PackageFailedWrite") });
 
-                return;
+                co_return;
             }
-            auto const result = glass::WriteLayoutPackage(path, target);
+
+            auto const result = glass::WriteLayoutPackage(
+                path, target, choice == PackageChoice::Everything);
 
             if (!result.Succeeded)
             {
@@ -183,13 +324,15 @@ namespace winrt::midiglass::implementation
                     std::wstring{ resources::GetString(L"BackupFailedTitle") },
                     Explain(result.FailureKey));
 
-                return;
+                co_return;
             }
 
             ShowNoticeAsync(
                 std::wstring{ resources::GetString(L"BackupDoneTitle") },
                 std::wstring{ resources::FormatString(
-                    L"BackupDoneFormat",
+                    choice == PackageChoice::WithoutVideo
+                        ? L"BackupDoneWithoutVideoFormat"
+                        : L"BackupDoneFormat",
                     std::filesystem::path{ result.Path }.filename().wstring(),
                     std::to_wstring(result.FileCount)) });
         }
@@ -334,14 +477,29 @@ namespace winrt::midiglass::implementation
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
 
-        if (m_menuCard == nullptr || m_menuCard.IsNewTile())
+        PackageCardAsync(m_menuCard);
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget MainWindow::PackageCardAsync(midiglass::LayoutCard card)
+    {
+        auto lifetime = get_strong();
+
+        if (card == nullptr || card.IsNewTile())
         {
-            return;
+            co_return;
         }
 
         try
         {
-            auto const path = std::wstring{ m_menuCard.FilePath() };
+            auto const path = std::wstring{ card.FilePath() };
+
+            // Asked before the save dialog, so nobody names a file and then finds out.
+            if (static_cast<PackageChoice>(co_await ConfirmPackageSizeAsync(path, true)) ==
+                PackageChoice::Cancel)
+            {
+                co_return;
+            }
 
             auto suggested = std::filesystem::path{ path }.filename().wstring();
 
@@ -355,10 +513,10 @@ namespace winrt::midiglass::implementation
 
             if (target.empty())
             {
-                return;
+                co_return;
             }
 
-            auto const result = glass::WriteLayoutPackage(path, target);
+            auto const result = glass::WriteLayoutPackage(path, target, true);
 
             if (!result.Succeeded)
             {
@@ -366,7 +524,7 @@ namespace winrt::midiglass::implementation
                     std::wstring{ resources::GetString(L"PackageFailedTitle") },
                     Explain(result.FailureKey));
 
-                return;
+                co_return;
             }
 
             ShowNoticeAsync(

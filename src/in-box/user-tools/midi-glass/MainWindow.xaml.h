@@ -155,6 +155,29 @@ namespace winrt::midiglass::implementation
         // usually more than one and they are only told apart by their number.
         winrt::fire_and_forget RestoreCardAsync(_In_ midiglass::LayoutCard card);
 
+        winrt::fire_and_forget BackUpCardAsync(_In_ midiglass::LayoutCard card);
+        winrt::fire_and_forget PackageCardAsync(_In_ midiglass::LayoutCard card);
+
+        // What to write when a layout is big enough to be worth asking about.
+        enum class PackageChoice : int32_t
+        {
+            Cancel = 0,
+            Everything = 1,
+
+            // Backup only. The clip is still beside the layout on this PC, so a backup that
+            // leaves it out still puts the layout back exactly as it was.
+            WithoutVideo = 2,
+        };
+
+        // How big the zip is about to be, and what to do about it. A layout with a video on it
+        // can be larger than everything else this app has ever written put together.
+        //
+        // Answers as an int32_t because IAsyncOperation only carries WinRT types; the callers
+        // turn it straight back into a PackageChoice.
+        winrt::Windows::Foundation::IAsyncOperation<int32_t> ConfirmPackageSizeAsync(
+            _In_ std::wstring layoutFilePath,
+            _In_ bool packaging);
+
         // Says plainly what happened. A backup nobody was told about is a backup nobody trusts.
         winrt::fire_and_forget ShowNoticeAsync(
             _In_ std::wstring title,

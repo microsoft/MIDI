@@ -13,6 +13,10 @@ namespace midiglass::resources
     // resource subsystem is unavailable the key itself is returned so the UI still renders.
     winrt::hstring GetString(std::wstring_view resourceKey) noexcept;
 
+    // A file size in words. Gigabytes carry one decimal place, because the difference between
+    // one and two matters to somebody about to copy it onto a memory stick.
+    std::wstring DescribeFileSize(_In_ uint64_t bytes) noexcept;
+
     // Convenience for the very common "label: value" and templated messages. The format
     // string comes from resources and uses std::format placeholders.
     template <typename... TArgs>

@@ -509,11 +509,17 @@ namespace glass
         auto safe = picture;
         safe.FileName = SanitizeFileName(picture.FileName);
         safe.Opacity = std::clamp(picture.Opacity, 0.0, 1.0);
+        safe.Zoom = std::clamp(picture.Zoom, MinimumPictureZoom, MaximumPictureZoom);
+        safe.CenterX = std::clamp(picture.CenterX, 0.0, 1.0);
+        safe.CenterY = std::clamp(picture.CenterY, 0.0, 1.0);
 
         if (control->Image.FileName == safe.FileName &&
             control->Image.Fit == safe.Fit &&
             control->Image.Opacity == safe.Opacity &&
-            control->Image.Loops == safe.Loops)
+            control->Image.Loops == safe.Loops &&
+            control->Image.Zoom == safe.Zoom &&
+            control->Image.CenterX == safe.CenterX &&
+            control->Image.CenterY == safe.CenterY)
         {
             return false;
         }
@@ -522,6 +528,9 @@ namespace glass
         control->Image.Fit = safe.Fit;
         control->Image.Opacity = safe.Opacity;
         control->Image.Loops = safe.Loops;
+        control->Image.Zoom = safe.Zoom;
+        control->Image.CenterX = safe.CenterX;
+        control->Image.CenterY = safe.CenterY;
 
         Commit(EditNames::Properties);
 

@@ -56,4 +56,31 @@ namespace midiglass::resources
 
         return winrt::hstring{ resourceKey };
     }
+
+    _Use_decl_annotations_
+    std::wstring DescribeFileSize(uint64_t bytes) noexcept
+    {
+        if (bytes < 1024)
+        {
+            return std::wstring{ FormatString(L"SizeBytesFormat", std::to_wstring(bytes)) };
+        }
+
+        if (bytes < 1024 * 1024)
+        {
+            return std::wstring{ FormatString(
+                L"SizeKilobytesFormat", std::to_wstring((bytes + 512) / 1024)) };
+        }
+
+        if (bytes < 1024ull * 1024 * 1024)
+        {
+            return std::wstring{ FormatString(
+                L"SizeMegabytesFormat", std::to_wstring((bytes + 512 * 1024) / (1024 * 1024))) };
+        }
+
+        auto const tenths = (bytes * 10 + 512ull * 1024 * 1024) / (1024ull * 1024 * 1024);
+
+        return std::wstring{ FormatString(
+            L"SizeGigabytesFormat",
+            std::to_wstring(tenths / 10) + L"." + std::to_wstring(tenths % 10)) };
+    }
 }

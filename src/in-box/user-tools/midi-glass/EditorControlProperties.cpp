@@ -59,6 +59,7 @@ namespace winrt::midiglass::implementation
         constexpr glass::BackgroundFit PictureFitOrder[]
         {
             glass::BackgroundFit::Uniform,
+            glass::BackgroundFit::Fill,
             glass::BackgroundFit::Stretch,
             glass::BackgroundFit::Centered,
             glass::BackgroundFit::Tiled,
@@ -66,7 +67,7 @@ namespace winrt::midiglass::implementation
 
         constexpr wchar_t const* PictureFitKeys[]
         {
-            L"BackgroundFitUniform", L"BackgroundFitStretch",
+            L"BackgroundFitUniform", L"BackgroundFitFill", L"BackgroundFitStretch",
             L"BackgroundFitCentered", L"BackgroundFitTiled",
         };
 
@@ -255,6 +256,10 @@ namespace winrt::midiglass::implementation
                 PictureOpacitySlider().Value(image.Opacity * 100.0);
                 PictureLoopsCheck().IsChecked(image.Loops);
                 PictureLoopsCheck().IsEnabled(glass::IsVideoFileName(image.FileName));
+
+                PictureZoomSlider().Value(image.Zoom * 100.0);
+                PictureCenterXSlider().Value(image.CenterX * 100.0);
+                PictureCenterYSlider().Value(image.CenterY * 100.0);
             }
 
             // ---- keys ----

@@ -496,9 +496,87 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    PackageSurvey SurveyLayoutPackage(std::wstring const& layoutFilePath) noexcept
+    {
+        PackageSurvey survey{};
+
+        try
+        {
+            std::error_code ignored{};
+
+            if (layoutFilePath.empty() ||
+                !std::filesystem::is_regular_file(layoutFilePath, ignored))
+            {
+                return survey;
+            }
+
+            auto const read = ReadLayoutFile(layoutFilePath);
+
+            if (!read.Succeeded)
+            {
+                return survey;
+            }
+
+            auto const note = [&survey](std::wstring const& name, uint64_t bytes)
+                {
+                    survey.FileCount++;
+                    survey.TotalBytes += bytes;
+
+                    if (IsVideoFileName(name))
+                    {
+                        survey.VideoCount++;
+                        survey.VideoBytes += bytes;
+                    }
+
+                    if (bytes > survey.LargestBytes)
+                    {
+                        survey.LargestBytes = bytes;
+                        survey.LargestName = name;
+                    }
+                };
+
+            auto const layoutPath = std::filesystem::path{ layoutFilePath };
+
+            note(layoutPath.filename().wstring(),
+                static_cast<uint64_t>(std::filesystem::file_size(layoutPath, ignored)));
+
+            auto const folder = layoutPath.parent_path();
+
+            // The same rules the writer uses, so the two cannot disagree about what travels.
+            for (auto const& name : PicturesOf(read.Document))
+            {
+                if (SanitizeFileName(name).empty())
+                {
+                    continue;
+                }
+
+                auto const path = folder / name;
+
+                if (!std::filesystem::is_regular_file(path, ignored))
+                {
+                    continue;
+                }
+
+                note(name, static_cast<uint64_t>(std::filesystem::file_size(path, ignored)));
+            }
+
+            survey.TooBig = survey.TotalBytes > MaximumWritablePackageBytes;
+            survey.FitsWithoutVideo =
+                survey.VideoCount > 0 && survey.BytesWithoutVideo() <= MaximumWritablePackageBytes;
+        }
+        catch (...)
+        {
+            survey = PackageSurvey{};
+        }
+
+        return survey;
+    }
+
+    _Use_decl_annotations_
     PackageResult WriteLayoutPackage(
         std::wstring const& layoutFilePath,
-        std::wstring const& packagePath) noexcept
+        std::wstring const& packagePath,
+        bool includeVideo) noexcept
     {
         PackageResult result{};
 
@@ -523,6 +601,17 @@ namespace glass
             if (!read.Succeeded)
             {
                 result.FailureKey = L"PackageFailedUnreadable";
+                return result;
+            }
+
+            // Before a byte is read. The writer builds the whole zip in memory, so finding out
+            // afterwards would mean a multi gigabyte spike and then a refusal.
+            auto const survey = SurveyLayoutPackage(layoutFilePath);
+
+            if (includeVideo ? survey.TooBig
+                             : survey.BytesWithoutVideo() > MaximumWritablePackageBytes)
+            {
+                result.FailureKey = L"PackageFailedTooBig";
                 return result;
             }
 
@@ -553,6 +642,11 @@ namespace glass
                     continue;
                 }
 
+                if (!includeVideo && IsVideoFileName(name))
+                {
+                    continue;
+                }
+
                 auto const path = folder / name;
 
                 if (!std::filesystem::is_regular_file(path, ignored))
@@ -573,7 +667,7 @@ namespace glass
 
             auto const zip = BuildZip(files);
 
-            if (zip.size() > MaximumPackageBytes)
+            if (zip.size() > MaximumWritablePackageBytes)
             {
                 result.FailureKey = L"PackageFailedTooBig";
                 return result;
@@ -815,9 +909,14 @@ namespace glass
 
             // What is there now is backed up first. Restoring the wrong one has to be
             // recoverable, or nobody will ever press the button.
+            //
+            // Without the video: this copy exists to protect the layout being replaced, and a
+            // restore only writes the files the backup actually holds. Duplicating gigabytes of
+            // clip on every restore, to guard against a clip that is still sitting in the
+            // folder either way, is not worth the disk.
             if (std::filesystem::is_regular_file(layoutFilePath, ignored))
             {
-                WriteLayoutPackage(layoutFilePath, NextBackupPath(layoutFilePath));
+                WriteLayoutPackage(layoutFilePath, NextBackupPath(layoutFilePath), false);
             }
 
             auto const bytes = ReadAllBytes(backupPath);

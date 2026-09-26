@@ -1711,6 +1711,15 @@ namespace glass
             }
         }
 
+        // Before the children go, or every video on the page keeps decoding into nothing.
+        for (auto const& picture : m_pictures)
+        {
+            if (picture != nullptr)
+            {
+                ClosePicture(picture);
+            }
+        }
+
         if (m_host != nullptr)
         {
             m_host.Children().Clear();

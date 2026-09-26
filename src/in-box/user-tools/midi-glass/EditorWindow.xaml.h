@@ -188,6 +188,17 @@ namespace winrt::midiglass::implementation
         void OnRemovePictureClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnPictureFitChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnPictureOpacityChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
+        void OnPictureZoomChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
+        void OnPictureCenterXChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
+        void OnPictureCenterYChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
+        void ApplyPictureCropEdit(_In_ double value, _In_ void (*assign)(glass::Picture&, double));
+
+        winrt::fire_and_forget ChoosePictureAsync();
+
+        // How much disk a picture is about to cost, and whether to go ahead with it. A video
+        // can be larger than every other file the customer has made with this app.
+        winrt::Windows::Foundation::IAsyncOperation<bool> ConfirmPictureSizeAsync(
+            _In_ std::wstring filePath);
         void OnPictureLoopsChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
         void OnKeyCountChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);

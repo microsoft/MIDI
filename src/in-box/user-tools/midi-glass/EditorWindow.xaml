@@ -1382,6 +1382,35 @@
                                                   Content="Play a video on a loop"
                                                   Checked="OnPictureLoopsChanged"
                                                   Unchecked="OnPictureLoopsChanged" />
+
+                                        <TextBlock x:Uid="PictureCropHeading" Text="Crop" Style="{StaticResource InspectorHeadingStyle}" />
+
+                                        <Slider x:Name="PictureZoomSlider"
+                                                x:Uid="PictureZoomSlider"
+                                                Minimum="100"
+                                                Maximum="800"
+                                                StepFrequency="5"
+                                                ValueChanged="OnPictureZoomChanged" />
+
+                                        <Slider x:Name="PictureCenterXSlider"
+                                                x:Uid="PictureCenterXSlider"
+                                                Minimum="0"
+                                                Maximum="100"
+                                                StepFrequency="1"
+                                                ValueChanged="OnPictureCenterXChanged" />
+
+                                        <Slider x:Name="PictureCenterYSlider"
+                                                x:Uid="PictureCenterYSlider"
+                                                Minimum="0"
+                                                Maximum="100"
+                                                StepFrequency="1"
+                                                ValueChanged="OnPictureCenterYChanged" />
+
+                                        <TextBlock x:Uid="PictureCropCaption"
+                                                   Text="Zoom in and then move the middle to take a slice out of a picture or a clip. Set the fit above to Fill first, or there will be nothing to crop."
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                                     </StackPanel>
 
                                     <StackPanel x:Name="KeyboardPanel" Visibility="Collapsed">

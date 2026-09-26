@@ -13,6 +13,7 @@
 
 #include "StringResources.h"
 #include "LayoutStore.h"
+#include "LayoutPackage.h"
 
 #include <shobjidl.h>
 #include <filesystem>
@@ -36,6 +37,7 @@ namespace winrt::midiglass::implementation
         constexpr glass::BackgroundFit PictureFitOrder[]
         {
             glass::BackgroundFit::Uniform,
+            glass::BackgroundFit::Fill,
             glass::BackgroundFit::Stretch,
             glass::BackgroundFit::Centered,
             glass::BackgroundFit::Tiled,
@@ -211,11 +213,26 @@ namespace winrt::midiglass::implementation
                 return {};
             }
 
+            // Kept in step with IsSupportedPictureFileName. Anything not on this list is
+            // refused when it is copied beside the layout, so offering it here only wastes
+            // somebody's time.
+            constexpr wchar_t PictureExtensions[] = L"*.png;*.jpg;*.jpeg;*.svg";
+            constexpr wchar_t VideoExtensions[] =
+                L"*.mp4;*.m4v;*.mkv;*.webm;*.wmv;*.avi;*.mov;*.mpeg;*.mpg;*.m2v;*.asf";
+
+            auto const both = std::wstring{ PictureExtensions } + L";" + VideoExtensions;
+
+            auto const bothLabel = resources::FormatString(L"PictureFilterBothFormat", both);
+            auto const pictureLabel =
+                resources::FormatString(L"PictureFilterPicturesFormat", PictureExtensions);
+            auto const videoLabel =
+                resources::FormatString(L"PictureFilterVideoFormat", VideoExtensions);
+
             COMDLG_FILTERSPEC const filters[]
             {
-                { L"Pictures and video (*.png;*.jpg;*.jpeg;*.svg;*.mp4;*.m4v;*.mkv;*.webm;*.wmv)",
-                  L"*.png;*.jpg;*.jpeg;*.svg;*.mp4;*.m4v;*.mkv;*.webm;*.wmv" },
-                { L"Pictures (*.png;*.jpg;*.jpeg;*.svg)", L"*.png;*.jpg;*.jpeg;*.svg" },
+                { bothLabel.c_str(), both.c_str() },
+                { pictureLabel.c_str(), PictureExtensions },
+                { videoLabel.c_str(), VideoExtensions },
             };
 
             dialog->SetFileTypes(static_cast<UINT>(std::size(filters)), filters);
@@ -255,13 +272,21 @@ namespace winrt::midiglass::implementation
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
 
+        ChoosePictureAsync();
+    }
+
+    _Use_decl_annotations_
+    winrt::fire_and_forget EditorWindow::ChoosePictureAsync()
+    {
+        auto lifetime = get_strong();
+
         try
         {
             auto const* const control = SingleSelectedControl();
 
             if (control == nullptr)
             {
-                return;
+                co_return;
             }
 
             auto const id = control->Id;
@@ -271,12 +296,17 @@ namespace winrt::midiglass::implementation
 
             if (chosen.empty())
             {
-                return;
+                co_return;
             }
 
             if (!glass::IsSupportedPictureFileName(chosen))
             {
-                return;
+                co_return;
+            }
+
+            if (!co_await ConfirmPictureSizeAsync(chosen))
+            {
+                co_return;
             }
 
             // The picture lives beside the layout so the two travel together. A layout that has
@@ -291,7 +321,7 @@ namespace winrt::midiglass::implementation
 
             if (copied.empty())
             {
-                return;
+                co_return;
             }
 
             picture.FileName = copied;
@@ -300,6 +330,63 @@ namespace winrt::midiglass::implementation
                 { return m_editor.SetControlPicture(controlId, picture); });
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to set this control's picture.")
+    }
+
+    // A picture is copied next to the layout so the two travel together, which is fine for a
+    // photograph and quite a lot to spring on somebody for a two gigabyte video. Say the number
+    // before the copy starts, not after.
+    _Use_decl_annotations_
+    winrt::Windows::Foundation::IAsyncOperation<bool> EditorWindow::ConfirmPictureSizeAsync(
+        std::wstring filePath)
+    {
+        auto lifetime = get_strong();
+
+        uint64_t bytes{ 0 };
+
+        try
+        {
+            std::error_code ignored{};
+
+            bytes = static_cast<uint64_t>(std::filesystem::file_size(filePath, ignored));
+        }
+        catch (...)
+        {
+        }
+
+        if (bytes <= glass::LargePackageBytes)
+        {
+            co_return true;
+        }
+
+        try
+        {
+            controls::TextBlock text{};
+
+            text.TextWrapping(xaml::TextWrapping::Wrap);
+            text.MaxWidth(420.0);
+            text.Text(winrt::hstring{ resources::FormatString(
+                L"PictureLargeBodyFormat",
+                std::filesystem::path{ filePath }.filename().wstring(),
+                resources::DescribeFileSize(bytes)) });
+
+            controls::ContentDialog dialog{};
+
+            dialog.XamlRoot(RootGrid().XamlRoot());
+            dialog.Title(box_value(resources::GetString(L"PictureLargeTitle")));
+            dialog.Content(text);
+            dialog.PrimaryButtonText(resources::GetString(L"PictureLargeAction"));
+            dialog.CloseButtonText(resources::GetString(L"DialogCancel"));
+            dialog.DefaultButton(controls::ContentDialogButton::Primary);
+
+            m_openDialog = dialog.ShowAsync();
+            auto const result = co_await m_openDialog;
+            m_openDialog = nullptr;
+
+            co_return result == controls::ContentDialogResult::Primary;
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to ask about the size of the picture.")
+
+        co_return false;
     }
 
     _Use_decl_annotations_
@@ -381,6 +468,71 @@ namespace winrt::midiglass::implementation
 
         ApplyControlEdit(control->Id, [&](std::wstring const& id)
             { return m_editor.SetControlPicture(id, picture); });
+    }
+
+    // The three crop sliders, which differ only in which field they land in.
+    _Use_decl_annotations_
+    void EditorWindow::ApplyPictureCropEdit(
+        double value,
+        void (*assign)(glass::Picture&, double))
+    {
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control == nullptr)
+        {
+            return;
+        }
+
+        auto picture = control->Image;
+
+        assign(picture, value);
+
+        ApplyControlEdit(control->Id, [&](std::wstring const& id)
+            { return m_editor.SetControlPicture(id, picture); });
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnPictureZoomChanged(
+        foundation::IInspectable const& sender,
+        controls::Primitives::RangeBaseValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+
+        ApplyPictureCropEdit(args.NewValue() / 100.0, [](glass::Picture& picture, double value)
+            {
+                picture.Zoom = value;
+            });
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnPictureCenterXChanged(
+        foundation::IInspectable const& sender,
+        controls::Primitives::RangeBaseValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+
+        ApplyPictureCropEdit(args.NewValue() / 100.0, [](glass::Picture& picture, double value)
+            {
+                picture.CenterX = value;
+            });
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnPictureCenterYChanged(
+        foundation::IInspectable const& sender,
+        controls::Primitives::RangeBaseValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+
+        ApplyPictureCropEdit(args.NewValue() / 100.0, [](glass::Picture& picture, double value)
+            {
+                picture.CenterY = value;
+            });
     }
 
     _Use_decl_annotations_

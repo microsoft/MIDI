@@ -115,6 +115,88 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    PictureRect PictureCropRect(
+        Picture const& picture,
+        double controlWidth,
+        double controlHeight,
+        double naturalWidth,
+        double naturalHeight) noexcept
+    {
+        auto const available = PictureRect{
+            0.0, 0.0, std::max(controlWidth, 1.0), std::max(controlHeight, 1.0) };
+
+        auto const zoom = std::clamp(picture.Zoom, MinimumPictureZoom, MaximumPictureZoom);
+
+        // Nothing is known about the file yet, so it simply covers the control. A video looks
+        // like this for the moment between the element appearing and the first frame arriving.
+        if (naturalWidth <= 0.0 || naturalHeight <= 0.0)
+        {
+            return PictureRect{ 0.0, 0.0, available.Width * zoom, available.Height * zoom };
+        }
+
+        auto const byWidth = available.Width / naturalWidth;
+        auto const byHeight = available.Height / naturalHeight;
+
+        auto width = available.Width * zoom;
+        auto height = available.Height * zoom;
+
+        switch (picture.Fit)
+        {
+        case BackgroundFit::Centered:
+            width = naturalWidth * zoom;
+            height = naturalHeight * zoom;
+            break;
+
+        case BackgroundFit::Stretch:
+            // Its shape is thrown away on purpose, so both sides follow the control.
+            break;
+
+        case BackgroundFit::Uniform:
+        {
+            auto const scale = std::min(byWidth, byHeight) * zoom;
+
+            width = naturalWidth * scale;
+            height = naturalHeight * scale;
+            break;
+        }
+
+        default:
+        {
+            // Fill and Tiled both cover the control and cut off what does not fit.
+            auto const scale = std::max(byWidth, byHeight) * zoom;
+
+            width = naturalWidth * scale;
+            height = naturalHeight * scale;
+            break;
+        }
+        }
+
+        // Where the named point of the picture would put it, then held inside the control.
+        // Sliding a zoomed picture right up to its own edge is reasonable; sliding it past the
+        // edge and leaving a bare strip down one side of the control is not, so the pan runs
+        // out at the point where the picture stops covering.
+        auto const place = [](double centerFraction, double rendered, double space)
+            {
+                if (rendered <= space)
+                {
+                    // Smaller than the control, so there is nothing to pan.
+                    return (space - rendered) * 0.5;
+                }
+
+                return std::clamp(
+                    space * 0.5 - rendered * std::clamp(centerFraction, 0.0, 1.0),
+                    space - rendered,
+                    0.0);
+            };
+
+        return PictureRect{
+            place(picture.CenterX, width, available.Width),
+            place(picture.CenterY, height, available.Height),
+            std::max(width, 1.0),
+            std::max(height, 1.0) };
+    }
+
+    _Use_decl_annotations_
     int32_t DetentStopCount(Control const& control) noexcept
     {
         int32_t highest{ 0 };

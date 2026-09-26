@@ -104,6 +104,7 @@
     <ClInclude Include="MonitorFormatTests.h" />
     <ClInclude Include="ValueThrottleTests.h" />
     <ClInclude Include="NewControlTests.h" />
+    <ClInclude Include="PackageSurveyTests.h" />
     <ClInclude Include="RuntimeSurfaceTests.h" />
     <ClInclude Include="EditGeometryTests.h" />
     <ClInclude Include="EditorControllerTests.h" />
@@ -116,6 +117,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\ThemeModel.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\ThemeStore.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutStore.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutPackage.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutTemplates.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\runtime\PanicMessages.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\runtime\SurfaceScale.h" />
@@ -149,6 +151,7 @@
     <ClCompile Include="MonitorFormatTests.cpp" />
     <ClCompile Include="ValueThrottleTests.cpp" />
     <ClCompile Include="NewControlTests.cpp" />
+    <ClCompile Include="PackageSurveyTests.cpp" />
     <ClCompile Include="RuntimeSurfaceTests.cpp" />
     <ClCompile Include="EditGeometryTests.cpp" />
     <ClCompile Include="EditorControllerTests.cpp" />
@@ -160,6 +163,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\ThemeModel.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\ThemeStore.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutStore.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutPackage.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutTemplates.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\runtime\PanicMessages.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\runtime\SurfaceScale.cpp" />

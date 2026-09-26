@@ -1296,6 +1296,69 @@ namespace glass
 
     // ------------------------------------------------------------------ picture
 
+    namespace
+    {
+        // Puts the content at an exact size and position inside the clipped container, so that
+        // the point of the source the customer named lands in the middle of the control.
+        //
+        // The size is computed rather than left to Stretch because cropping needs to know where
+        // the edges of the source ended up, and Stretch does not say.
+        void ArrangePictureContent(
+            _In_ xaml::FrameworkElement const& content,
+            _In_ Picture const& picture,
+            _In_ double containerWidth,
+            _In_ double containerHeight,
+            _In_ double naturalWidth,
+            _In_ double naturalHeight)
+        {
+            auto const rect = PictureCropRect(
+                picture, containerWidth, containerHeight, naturalWidth, naturalHeight);
+
+            content.Width(rect.Width);
+            content.Height(rect.Height);
+
+            controls::Canvas::SetLeft(content, rect.X);
+            controls::Canvas::SetTop(content, rect.Y);
+        }
+    }
+
+    // The media player behind a video element, so it can be shut down. A player left open keeps
+    // a decoder and its threads alive long after the page it was on has gone.
+    _Use_decl_annotations_
+    void SurfaceRenderer::ClosePicture(xaml::FrameworkElement const& element) noexcept
+    {
+        try
+        {
+            auto const container = element.try_as<controls::Canvas>();
+
+            if (container == nullptr || container.Children().Size() == 0)
+            {
+                return;
+            }
+
+            auto const player =
+                container.Children().GetAt(0).try_as<controls::MediaPlayerElement>();
+
+            if (player == nullptr)
+            {
+                return;
+            }
+
+            auto const media = player.MediaPlayer();
+
+            player.SetMediaPlayer(nullptr);
+
+            if (media != nullptr)
+            {
+                media.Pause();
+                media.Close();
+            }
+        }
+        catch (...)
+        {
+        }
+    }
+
     _Use_decl_annotations_
     void SurfaceRenderer::LayoutPicture(size_t itemIndex, Control const& control)
     {
@@ -1310,6 +1373,8 @@ namespace glass
                 {
                     return;
                 }
+
+                ClosePicture(m_pictures[itemIndex]);
 
                 uint32_t index{ 0 };
 
@@ -1347,121 +1412,256 @@ namespace glass
 
             foundation::Uri const uri{ L"file:///" + winrt::hstring{ path } };
 
-            xaml::FrameworkElement element{ nullptr };
+            // The content is laid out oversized and the container does the cropping, so the
+            // container is what gets clipped and what the rest of the renderer moves around.
+            controls::Canvas container{};
+
+            container.Width(width);
+            container.Height(height);
+            container.IsHitTestVisible(false);
+            container.Opacity(std::clamp(control.Image.Opacity, 0.0, 1.0));
+
+            media::RectangleGeometry clip{};
+            clip.Rect(winrt::Windows::Foundation::Rect{
+                0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height) });
+            container.Clip(clip);
+
+            xaml::Automation::AutomationProperties::SetAccessibilityView(
+                container, xaml::Automation::Peers::AccessibilityView::Raw);
+
+            xaml::FrameworkElement content{ nullptr };
+
+            auto const picture = control.Image;
 
             if (IsVideoFileName(control.Image.FileName))
             {
-                // A video on a control surface that stops four seconds in looks broken, so a
-                // loop is the default and the customer turns it off rather than on.
-                winrt::Windows::Media::Playback::MediaPlayer media{};
-
-                media.IsLoopingEnabled(control.Image.Loops);
-                media.AutoPlay(true);
-
-                // Silent. A layout is a control surface, and audio out of a decorative clip
-                // during a set is never what anybody wanted.
-                media.IsMuted(true);
-                media.Source(winrt::Windows::Media::Core::MediaSource::CreateFromUri(uri));
-
-                controls::MediaPlayerElement player{};
-
-                player.AreTransportControlsEnabled(false);
-                player.Stretch(control.Image.Fit == BackgroundFit::Stretch
-                    ? media::Stretch::Fill
-                    : control.Image.Fit == BackgroundFit::Centered
-                        ? media::Stretch::None
-                        : media::Stretch::UniformToFill);
-
-                player.SetMediaPlayer(media);
-
-                element = player;
+                content = BuildVideoContent(uri, picture, width, height);
             }
             else
             {
-                controls::Image image{};
-
-                auto const extension = std::filesystem::path{ control.Image.FileName }
-                    .extension().wstring();
-
-                if (_wcsicmp(extension.c_str(), L".svg") == 0)
-                {
-                    media::Imaging::SvgImageSource source{};
-
-                    source.UriSource(uri);
-                    source.RasterizePixelWidth(width);
-                    source.RasterizePixelHeight(height);
-
-                    image.Source(source);
-                }
-                else
-                {
-                    media::Imaging::BitmapImage bitmap{};
-
-                    bitmap.UriSource(uri);
-                    image.Source(bitmap);
-                }
-
-                switch (control.Image.Fit)
-                {
-                case BackgroundFit::Centered:
-                    image.Stretch(media::Stretch::None);
-                    break;
-
-                case BackgroundFit::Stretch:
-                    image.Stretch(media::Stretch::Fill);
-                    break;
-
-                case BackgroundFit::Tiled:
-                    image.Stretch(media::Stretch::UniformToFill);
-                    break;
-
-                default:
-                    image.Stretch(media::Stretch::Uniform);
-                    break;
-                }
-
-                element = image;
+                content = BuildImageContent(uri, picture, width, height);
             }
 
-            if (element == nullptr)
+            if (content == nullptr)
             {
                 return;
             }
 
-            element.Width(width);
-            element.Height(height);
-            element.IsHitTestVisible(false);
-            element.Opacity(std::clamp(control.Image.Opacity, 0.0, 1.0));
+            // Everything is positioned in pixels by ArrangePictureContent, so the element must
+            // not second-guess it.
+            content.HorizontalAlignment(xaml::HorizontalAlignment::Left);
+            content.VerticalAlignment(xaml::VerticalAlignment::Top);
+            content.IsHitTestVisible(false);
 
-            // Trimmed to the control's own rectangle, so a picture that does not match the
-            // shape of the control does not spill over the controls next to it.
-            media::RectangleGeometry clip{};
-            clip.Rect(winrt::Windows::Foundation::Rect{
-                0.0f, 0.0f, static_cast<float>(width), static_cast<float>(height) });
-            element.Clip(clip);
+            ArrangePictureContent(content, picture, width, height, 0.0, 0.0);
 
-            xaml::Automation::AutomationProperties::SetAccessibilityView(
-                element, xaml::Automation::Peers::AccessibilityView::Raw);
+            container.Children().Append(content);
 
-            controls::Canvas::SetLeft(element, control.X);
-            controls::Canvas::SetTop(element, control.Y);
+            controls::Canvas::SetLeft(container, control.X);
+            controls::Canvas::SetTop(container, control.Y);
 
             // A grouping panel's fill belongs behind the controls it frames; an image control
             // draws where it was placed like anything else.
             if (control.Kind == ControlKind::Panel)
             {
-                controls::Canvas::SetZIndex(element, -1);
-                m_host.Children().InsertAt(0, element);
+                controls::Canvas::SetZIndex(container, -1);
+                m_host.Children().InsertAt(0, container);
             }
             else
             {
-                m_host.Children().Append(element);
+                m_host.Children().Append(container);
             }
 
-            m_pictures[itemIndex] = element;
+            m_pictures[itemIndex] = container;
         }
         catch (...)
         {
         }
+    }
+
+    _Use_decl_annotations_
+    xaml::FrameworkElement SurfaceRenderer::BuildVideoContent(
+        foundation::Uri const& uri,
+        Picture const& picture,
+        double width,
+        double height)
+    {
+        // A video on a control surface that stops four seconds in looks broken, so a loop is
+        // the default and the customer turns it off rather than on.
+        winrt::Windows::Media::Playback::MediaPlayer media{};
+
+        media.IsLoopingEnabled(picture.Loops);
+        media.AutoPlay(true);
+
+        // Silent, and silent the expensive way as well as the cheap one: muting stops the
+        // sound, deselecting the audio track stops it being decoded at all. A layout is a
+        // control surface, and audio out of a decorative clip during a set is never what
+        // anybody wanted.
+        media.IsMuted(true);
+        media.Volume(0.0);
+
+        // Everything from here to the source is a nicety. None of it is allowed to take the
+        // picture down with it if a particular file or a particular Windows build disagrees.
+        try
+        {
+            // Without this every clip on the page registers with the system media transport
+            // controls, so the keyboard's play button and the volume flyout start driving a
+            // piece of somebody's stage backdrop.
+            media.CommandManager().IsEnabled(false);
+        }
+        catch (...)
+        {
+        }
+
+        auto const source = winrt::Windows::Media::Core::MediaSource::CreateFromUri(uri);
+
+        try
+        {
+            // Muting stops the sound; deselecting the track stops it being decoded at all. The
+            // list is empty until the file has been opened, so the event is where the work
+            // really happens and this first call is only for a source that opened early.
+            winrt::Windows::Media::Playback::MediaPlaybackItem const item{ source };
+
+            item.AudioTracksChanged([](auto const& sender, auto const&)
+                {
+                    try
+                    {
+                        sender.AudioTracks().SelectedIndex(-1);
+                    }
+                    catch (...)
+                    {
+                    }
+                });
+
+            try
+            {
+                item.AudioTracks().SelectedIndex(-1);
+            }
+            catch (...)
+            {
+            }
+
+            media.Source(item);
+        }
+        catch (...)
+        {
+            media.Source(source);
+        }
+
+        controls::MediaPlayerElement player{};
+
+        player.AreTransportControlsEnabled(false);
+        player.AutoPlay(true);
+
+        // The element is already at the exact size the crop wants, so it must not do any
+        // fitting of its own on top of that.
+        player.Stretch(media::Stretch::Fill);
+        player.SetMediaPlayer(media);
+
+        // The natural size is not known until the file has been opened, and it arrives on a
+        // media thread. Until then the clip fills the control.
+        auto const weak = winrt::make_weak(player.as<xaml::FrameworkElement>());
+        auto const queue = player.DispatcherQueue();
+
+        media.PlaybackSession().NaturalVideoSizeChanged(
+            [weak, queue, picture, width, height](auto const& session, auto const&)
+            {
+                auto const naturalWidth = static_cast<double>(session.NaturalVideoWidth());
+                auto const naturalHeight = static_cast<double>(session.NaturalVideoHeight());
+
+                if (naturalWidth <= 0.0 || naturalHeight <= 0.0 || queue == nullptr)
+                {
+                    return;
+                }
+
+                queue.TryEnqueue([weak, picture, width, height, naturalWidth, naturalHeight]()
+                    {
+                        if (auto const element = weak.get())
+                        {
+                            ArrangePictureContent(
+                                element, picture, width, height, naturalWidth, naturalHeight);
+                        }
+                    });
+            });
+
+        return player;
+    }
+
+    _Use_decl_annotations_
+    xaml::FrameworkElement SurfaceRenderer::BuildImageContent(
+        foundation::Uri const& uri,
+        Picture const& picture,
+        double width,
+        double height)
+    {
+        controls::Image image{};
+
+        image.Stretch(media::Stretch::Fill);
+
+        auto const extension = std::filesystem::path{ picture.FileName }.extension().wstring();
+
+        if (_wcsicmp(extension.c_str(), L".svg") == 0)
+        {
+            // An SVG has no pixels of its own, so it is rasterized straight into the box the
+            // crop worked out. Zoom makes it sharper rather than blockier.
+            auto const zoom = std::clamp(picture.Zoom, MinimumPictureZoom, MaximumPictureZoom);
+
+            media::Imaging::SvgImageSource source{};
+
+            source.UriSource(uri);
+            source.RasterizePixelWidth(width * zoom);
+            source.RasterizePixelHeight(height * zoom);
+
+            image.Source(source);
+
+            return image;
+        }
+
+        media::Imaging::BitmapImage bitmap{};
+
+        bitmap.UriSource(uri);
+        image.Source(bitmap);
+
+        auto const weak = winrt::make_weak(image.as<xaml::FrameworkElement>());
+
+        // Same story as the video: the real size of the file only turns up once it is decoded.
+        // The size is read back off the element rather than captured, so the handler does not
+        // hold the bitmap alive by pointing at the thing that raised it.
+        image.ImageOpened([weak, picture, width, height](auto const&, auto const&)
+            {
+                auto const element = weak.get();
+
+                if (element == nullptr)
+                {
+                    return;
+                }
+
+                auto const target = element.try_as<controls::Image>();
+
+                if (target == nullptr)
+                {
+                    return;
+                }
+
+                auto const source = target.Source().try_as<media::Imaging::BitmapImage>();
+
+                if (source == nullptr)
+                {
+                    return;
+                }
+
+                auto const naturalWidth = static_cast<double>(source.PixelWidth());
+                auto const naturalHeight = static_cast<double>(source.PixelHeight());
+
+                if (naturalWidth <= 0.0 || naturalHeight <= 0.0)
+                {
+                    return;
+                }
+
+                ArrangePictureContent(
+                    element, picture, width, height, naturalWidth, naturalHeight);
+            });
+
+        return image;
     }
 }

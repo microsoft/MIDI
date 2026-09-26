@@ -705,3 +705,148 @@ void NewControlTests::AnActivityBindingDoesNotMoveAControl()
     // An activity light has no value to carry, so it must not be answered as a value move.
     VERIFY_IS_FALSE(engine.TryResolveFeedback(&word, 1, controlIndex, value));
 }
+
+// ------------------------------------------- cropping a picture or a video
+
+namespace
+{
+    glass::Picture Cropped(
+        _In_ glass::BackgroundFit fit,
+        _In_ double zoom = 1.0,
+        _In_ double centerX = 0.5,
+        _In_ double centerY = 0.5)
+    {
+        glass::Picture picture{};
+
+        picture.FileName = L"clip.mp4";
+        picture.Fit = fit;
+        picture.Zoom = zoom;
+        picture.CenterX = centerX;
+        picture.CenterY = centerY;
+
+        return picture;
+    }
+
+    bool Near(_In_ double actual, _In_ double wanted) noexcept
+    {
+        return std::abs(actual - wanted) < 0.01;
+    }
+}
+
+void NewControlTests::AFilledPictureCoversTheControl()
+{
+    // A wide clip in a tall narrow box. This is the slice out of the middle.
+    auto const rect = glass::PictureCropRect(
+        Cropped(glass::BackgroundFit::Fill), 90.0, 360.0, 1920.0, 1080.0);
+
+    // Scaled by height, because that is the side that has to reach: 360 / 1080 = 1/3.
+    VERIFY_IS_TRUE(Near(rect.Height, 360.0));
+    VERIFY_IS_TRUE(Near(rect.Width, 640.0));
+
+    // Covered in both directions, with the overflow split evenly.
+    VERIFY_IS_TRUE(rect.X <= 0.0 && rect.X + rect.Width >= 90.0);
+    VERIFY_IS_TRUE(Near(rect.X, (90.0 - 640.0) * 0.5));
+    VERIFY_IS_TRUE(Near(rect.Y, 0.0));
+}
+
+void NewControlTests::AUniformPictureFitsInsideTheControl()
+{
+    auto const rect = glass::PictureCropRect(
+        Cropped(glass::BackgroundFit::Uniform), 400.0, 400.0, 1920.0, 1080.0);
+
+    // Scaled by width this time, because nothing may be cut off.
+    VERIFY_IS_TRUE(Near(rect.Width, 400.0));
+    VERIFY_IS_TRUE(Near(rect.Height, 225.0));
+
+    // Nothing hangs over the edge, and the empty space is shared top and bottom.
+    VERIFY_IS_TRUE(Near(rect.X, 0.0));
+    VERIFY_IS_TRUE(Near(rect.Y, (400.0 - 225.0) * 0.5));
+}
+
+void NewControlTests::AStretchedPictureTakesTheControlsShape()
+{
+    auto const rect = glass::PictureCropRect(
+        Cropped(glass::BackgroundFit::Stretch), 300.0, 120.0, 1920.0, 1080.0);
+
+    VERIFY_IS_TRUE(Near(rect.Width, 300.0));
+    VERIFY_IS_TRUE(Near(rect.Height, 120.0));
+    VERIFY_IS_TRUE(Near(rect.X, 0.0));
+    VERIFY_IS_TRUE(Near(rect.Y, 0.0));
+}
+
+void NewControlTests::ZoomMakesThePictureLarger()
+{
+    auto const once = glass::PictureCropRect(
+        Cropped(glass::BackgroundFit::Fill, 1.0), 200.0, 200.0, 400.0, 400.0);
+
+    auto const thrice = glass::PictureCropRect(
+        Cropped(glass::BackgroundFit::Fill, 3.0), 200.0, 200.0, 400.0, 400.0);
+
+    VERIFY_IS_TRUE(Near(once.Width, 200.0));
+    VERIFY_IS_TRUE(Near(thrice.Width, 600.0));
+
+    // Past the top of the range it stops growing rather than running away.
+    auto const silly = glass::PictureCropRect(
+        Cropped(glass::BackgroundFit::Fill, 500.0), 200.0, 200.0, 400.0, 400.0);
+
+    VERIFY_IS_TRUE(Near(silly.Width, 200.0 * glass::MaximumPictureZoom));
+}
+
+void NewControlTests::TheMiddleDecidesWhichSliceIsShown()
+{
+    // A square hole in a wide clip: 600 wide rendered, 200 of it on show.
+    auto const left = glass::PictureCropRect(
+        Cropped(glass::BackgroundFit::Fill, 1.0, 0.0, 0.5), 200.0, 200.0, 600.0, 200.0);
+
+    auto const middle = glass::PictureCropRect(
+        Cropped(glass::BackgroundFit::Fill, 1.0, 0.5, 0.5), 200.0, 200.0, 600.0, 200.0);
+
+    auto const right = glass::PictureCropRect(
+        Cropped(glass::BackgroundFit::Fill, 1.0, 1.0, 0.5), 200.0, 200.0, 600.0, 200.0);
+
+    // Zero shows the left edge, one shows the right edge, and half is the middle.
+    VERIFY_IS_TRUE(Near(left.X, 0.0));
+    VERIFY_IS_TRUE(Near(middle.X, -200.0));
+    VERIFY_IS_TRUE(Near(right.X, -400.0));
+}
+
+void NewControlTests::PanningCannotUncoverTheControl()
+{
+    // The case that showed up on screen: zoomed in and pushed almost to a corner.
+    auto const rect = glass::PictureCropRect(
+        Cropped(glass::BackgroundFit::Fill, 2.0, 0.9, 0.1), 120.0, 120.0, 640.0, 480.0);
+
+    VERIFY_IS_TRUE(rect.Width >= 120.0);
+    VERIFY_IS_TRUE(rect.Height >= 120.0);
+
+    // No bare strip on any side, however far the middle was dragged.
+    VERIFY_IS_TRUE(rect.X <= 0.0);
+    VERIFY_IS_TRUE(rect.Y <= 0.0);
+    VERIFY_IS_TRUE(rect.X + rect.Width >= 120.0);
+    VERIFY_IS_TRUE(rect.Y + rect.Height >= 120.0);
+}
+
+void NewControlTests::APictureSmallerThanTheControlIsCentered()
+{
+    auto const rect = glass::PictureCropRect(
+        Cropped(glass::BackgroundFit::Centered, 1.0, 0.0, 0.0), 400.0, 400.0, 100.0, 50.0);
+
+    VERIFY_IS_TRUE(Near(rect.Width, 100.0));
+    VERIFY_IS_TRUE(Near(rect.Height, 50.0));
+
+    // There is nothing to pan, so the middle is ignored rather than shoving it into a corner.
+    VERIFY_IS_TRUE(Near(rect.X, 150.0));
+    VERIFY_IS_TRUE(Near(rect.Y, 175.0));
+}
+
+void NewControlTests::AnUndecodedPictureFillsTheControl()
+{
+    // What a video looks like between the element appearing and the first frame arriving.
+    auto const rect = glass::PictureCropRect(
+        Cropped(glass::BackgroundFit::Fill), 320.0, 240.0, 0.0, 0.0);
+
+    VERIFY_IS_TRUE(Near(rect.Width, 320.0));
+    VERIFY_IS_TRUE(Near(rect.Height, 240.0));
+    VERIFY_IS_TRUE(Near(rect.X, 0.0));
+    VERIFY_IS_TRUE(Near(rect.Y, 0.0));
+}
