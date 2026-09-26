@@ -108,8 +108,8 @@ namespace midipatchbay
         static std::wstring NewId() noexcept;
     };
 
-    // "Group 3 - Iridium Aux", or the all-groups caption. Never returns empty.
-    winrt::hstring DescribeGroupIndex(_In_ int32_t groupIndex, _In_ std::wstring const& portName) noexcept;
+    // "3 - Iridium Aux", "Group 3" when the group has no name, or the all-groups caption.
+    winrt::hstring DescribeGroupIndex(_In_ int32_t groupIndex, _In_ std::wstring const& groupName) noexcept;
 
     // The shared catalog matches on criteria alone, so these are the one place that knows a
     // saved endpoint keeps its criteria, its mode and the name it last went by.

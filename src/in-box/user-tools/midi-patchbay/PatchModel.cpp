@@ -105,7 +105,7 @@ namespace midipatchbay
     }
 
     _Use_decl_annotations_
-    winrt::hstring DescribeGroupIndex(int32_t groupIndex, std::wstring const& portName) noexcept
+    winrt::hstring DescribeGroupIndex(int32_t groupIndex, std::wstring const& groupName) noexcept
     {
         try
         {
@@ -116,12 +116,12 @@ namespace midipatchbay
 
             auto const groupNumber = groupIndex + 1;
 
-            if (portName.empty())
+            if (groupName.empty())
             {
                 return resources::FormatString(L"PortGroupOnlyFormat", groupNumber);
             }
 
-            return resources::FormatString(L"PortGroupWithNameFormat", groupNumber, portName);
+            return resources::FormatString(L"PortGroupWithNameFormat", groupNumber, groupName);
         }
         catch (...)
         {

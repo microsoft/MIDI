@@ -392,11 +392,6 @@
                                 Content="Auto arrange"
                                 Style="{StaticResource ToolbarButtonStyle}"
                                 Click="OnAutoArrangeClick" />
-                        <Button x:Name="FitButton"
-                                x:Uid="FitButton"
-                                Content="Fit"
-                                Style="{StaticResource ToolbarButtonStyle}"
-                                Click="OnFitClick" />
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Spacing="4">
@@ -418,11 +413,16 @@
                             <Button.Flyout>
                                 <Flyout x:Name="ZoomFlyout" Opening="OnZoomFlyoutOpening">
                                     <StackPanel Spacing="10" Width="188">
+                                        <Button x:Name="ZoomFitButton"
+                                                x:Uid="ZoomFitButton"
+                                                Content="Fit to screen"
+                                                HorizontalAlignment="Stretch"
+                                                Click="OnZoomFitClick" />
                                         <NumberBox x:Name="ZoomInputBox"
                                                    x:Uid="ZoomInputBox"
                                                    Header="Zoom percent"
-                                                   Minimum="40"
-                                                   Maximum="150"
+                                                   Minimum="10"
+                                                   Maximum="400"
                                                    SmallChange="5"
                                                    LargeChange="10"
                                                    SpinButtonPlacementMode="Inline"
@@ -473,8 +473,8 @@
                                           VerticalScrollMode="Enabled"
                                           VerticalScrollBarVisibility="Auto"
                                           ZoomMode="Enabled"
-                                          MinZoomFactor="0.4"
-                                          MaxZoomFactor="1.5"
+                                          MinZoomFactor="0.1"
+                                          MaxZoomFactor="4"
                                           Padding="0">
                                 <Canvas x:Name="CanvasSurface"
                                         HorizontalAlignment="Left"
@@ -520,10 +520,9 @@
                                     Padding="6"
                                     CornerRadius="5"
                                     BorderThickness="1"
-                                    IsHitTestVisible="False"
                                     BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
                                     Background="{ThemeResource CardBackgroundFillColorDefaultBrush}">
-                                <Canvas x:Name="MinimapSurface" Width="170" Height="116" />
+                                <Canvas x:Name="MinimapSurface" Width="170" Height="116" Background="Transparent" />
                             </Border>
                         </Grid>
                     </Border>

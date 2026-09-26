@@ -48,7 +48,7 @@ namespace winrt::midipatchbay::implementation
         void OnAddEndpointClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnCreateLoopbackClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnAutoArrangeClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
-        void OnFitClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+        void OnZoomFitClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnZoomInClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnZoomOutClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnZoomApplyClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);

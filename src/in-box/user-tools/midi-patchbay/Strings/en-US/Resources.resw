@@ -168,9 +168,6 @@
   <data name="AutoArrangeButton.Content" xml:space="preserve">
     <value>Auto arrange</value>
   </data>
-  <data name="FitButton.Content" xml:space="preserve">
-    <value>Fit</value>
-  </data>
   <data name="TestButton.Content" xml:space="preserve">
     <value>Test</value>
   </data>
@@ -185,6 +182,9 @@
   </data>
   <data name="ZoomButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve">
     <value>Set the zoom level</value>
+  </data>
+  <data name="ZoomFitButton.Content" xml:space="preserve">
+    <value>Fit to screen</value>
   </data>
   <data name="ZoomInputBox.Header" xml:space="preserve">
     <value>Zoom percent</value>
