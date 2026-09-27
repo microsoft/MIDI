@@ -70,17 +70,34 @@ Transforms change messages on the way past. They run after the filters, on the c
 - **Transpose** shifts every note, including aftertouch and the MIDI 2.0 per note messages. A note pushed past either end is clamped rather than wrapped, so nothing lands an octave out.
 - **Note mapping** is the list of exceptions to the transpose: a note listed here goes exactly where you send it, and everything else is transposed as usual. **Play** sends the destination note so you can hear where it lands.
 - **Note on velocity** reshapes the ramp, linear to curved or curved to linear. It can rescale into a narrower range so a light touch still speaks and a heavy one doesn't max out, or send every note at the same fixed velocity. Only note on messages are touched, and a MIDI 1.0 note on with velocity zero is a note off, so it's always left alone.
-- **Control change mapping** moves a controller to a different number and carries its value over untouched. Controllers you don't list are passed through.
+- **Aftertouch** reshapes channel pressure and poly pressure. Input low is how hard you have to press before anything is sent, input high is how hard counts as full, and the output range sets what comes out. Slow rise makes full pressure harder to reach, and fast rise makes it easier. A pressure of zero means you let go of the key, so zero always goes out as zero and no sound is left bent.
+- **Control change mapping** moves a controller to a different number. Its value only changes if you add a rule for it under control change values. Controllers you don't list are passed through.
+- **Control change values** changes what a controller's value does on its way out. See [Shaping controller values](#shaping-controller-values) below.
 - **Program mapping** picks a different sound on the destination, for an instrument whose programs aren't laid out the way the music expects. The numbers are the ones on the wire, 0 to 127, with the General MIDI name beside each one.
 - **Bank select** remaps the bank, as controller 0 and controller 32 on MIDI 1.0 and as the bank a MIDI 2.0 program change carries. Most instruments only use the MSB half.
 
 ![Moving one controller to another]({{ site.baseurl }}/assets/images/midipatchbay-control-change.png)
 
+### Shaping controller values
+
+Each rule under **Control change values** names one controller and says what happens to its value. A small graph beside the rule shows the result: the dashed line is the value going in, and the solid line is what comes out. Some everyday fixes:
+
+- **A sustain pedal that works backwards.** Add a rule for CC 64 and check **Invert**.
+- **An expression pedal that never reaches the ends.** If it only goes from 10 to 117, set input low to 10 and input high to 117. It then covers the whole range.
+- **A mod wheel that's too strong.** Set output high to 60, and the top of the wheel sends 60.
+- **A volume pedal that jumps too fast near the bottom.** Choose **Slow rise**, which gives you finer control at the quiet end. **Fast rise** does the opposite.
+
+Invert happens before the curve, so a backwards pedal is put the right way round first and then shaped like any other pedal. If you type the ends of a range high to low, that range runs backwards, so the numbers always mean what they say.
+
+A rule applies to the controller number as it leaves, after the control change mapping. So if CC 1 is moved to CC 11, the rule for CC 11 is the one that shapes it. MIDI 2.0 controllers are shaped at their full resolution.
+
+Rules work on one message at a time. Some controllers split a value across two controller numbers for extra detail, such as CC 1 with CC 33. Those are best left without a rule, because each half would be shaped on its own.
+
 ### Showing values as 0 to 127 or as a percentage
 
-MIDI 2.0 carries velocity in sixteen bits, so a percentage is what a velocity really means, and that's how Patchbay stores it. But plenty of controllers give each of the 128 MIDI 1.0 steps its own meaning, such as a pad color, and typing 0.79% when you mean step 1 is no fun.
+MIDI 2.0 carries velocity in sixteen bits and controller values in thirty-two, so a percentage is what those values really mean, and that's how Patchbay stores them. But plenty of controllers give each of the 128 MIDI 1.0 steps its own meaning, such as a pad color, and typing 0.79% when you mean step 1 is no fun.
 
-So the velocity section starts with a choice: **0 to 127** or **Percentage**. Everything below it follows that choice. The value is the same either way; only the way you type it changes. A patch saved before this choice existed opens as 0 to 127, because that's all it could have meant. A new one starts as a percentage.
+So the transforms dialog starts with a choice: **0 to 127** or **Percentage**. Velocity, aftertouch and controller values all follow it. The value is the same either way; only the way you type it changes. A patch saved before this choice existed opens as 0 to 127, because that's all it could have meant. A new one starts as a percentage.
 
 ### MIDI 2.0 notes that carry an exact pitch
 

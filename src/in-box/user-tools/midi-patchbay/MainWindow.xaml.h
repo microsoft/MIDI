@@ -80,6 +80,19 @@ namespace winrt::midipatchbay::implementation
 
         static constexpr size_t TransformMapCount = 6;
 
+        // Which end of which range a value shape box edits. Public for the same reason.
+        enum class ShapeField : int32_t
+        {
+            InputMinimum = 0,
+            InputMaximum = 1,
+            OutputMinimum = 2,
+            OutputMaximum = 3,
+        };
+
+        // A shape editor names its shape by this, not by pointer, because the controller rows
+        // are rebuilt whenever one is added or removed.
+        static constexpr int32_t AftertouchShapeIndex = -1;
+
     private:
         // ---- startup and chrome ----
         void InitializeWindowChrome() noexcept;
@@ -149,6 +162,16 @@ namespace winrt::midipatchbay::implementation
         void UpdateTransformSummary() noexcept;
         void DrawVelocityCurve() noexcept;
         winrt::fire_and_forget PlayTestNoteAsync(_In_ uint8_t note);
+
+        // Controller values and aftertouch share one editor, found through EditingShape.
+        xaml::UIElement BuildAftertouchSection() noexcept;
+        controls::StackPanel BuildControlValueSection() noexcept;
+        void RebuildControlValueRows() noexcept;
+        void DrawShapePreviews() noexcept;
+        ::midipatchbay::ValueShape* EditingShape(_In_ int32_t which) noexcept;
+        controls::ComboBox ShapeCurveBox(_In_ int32_t which) noexcept;
+        controls::CheckBox ShapeInvertBox(_In_ int32_t which) noexcept;
+        controls::NumberBox ShapeRangeBox(_In_ int32_t which, _In_ ShapeField field) noexcept;
 
         // ---- inspector, in MainWindowInspector.cpp ----
         void RefreshInspector() noexcept;
@@ -259,6 +282,33 @@ namespace winrt::midipatchbay::implementation
         controls::TextBlock m_transposeExampleText{ nullptr };
         controls::Canvas m_velocityCurveCanvas{ nullptr };
         bool m_applyingValueScale{ false };
+
+        // One row per controller whose value is reshaped, collected back into the dense array
+        // on Apply the same way the mapping tables are.
+        struct ControlValueRow
+        {
+            int32_t Controller{ 1 };
+            ::midipatchbay::ValueShape Shape{};
+        };
+
+        std::vector<ControlValueRow> m_controlValueRows{};
+        controls::StackPanel m_controlValuePanel{ nullptr };
+
+        // Parallel to m_controlValueRows.
+        std::vector<controls::Canvas> m_controlValuePreviews{};
+
+        controls::Canvas m_aftertouchPreview{ nullptr };
+
+        // Every range box in a shape editor, so switching between 0 to 127 and percent can
+        // retext them the way it does the velocity boxes.
+        struct ShapeRangeBoxEntry
+        {
+            controls::NumberBox Box{ nullptr };
+            int32_t Which{ AftertouchShapeIndex };
+            ShapeField Field{ ShapeField::InputMinimum };
+        };
+
+        std::vector<ShapeRangeBoxEntry> m_shapeRangeBoxes{};
 
         // Where the audition button plays, captured when the dialog opens.
         std::wstring m_testEndpointDeviceId{};
