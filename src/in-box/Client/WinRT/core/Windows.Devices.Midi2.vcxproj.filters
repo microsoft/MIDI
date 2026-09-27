@@ -266,6 +266,12 @@
     <Midl Include="MidiLoopbackErrorCodeEnum.idl">
       <Filter>SDK\Transports\Loopback</Filter>
     </Midl>
+    <Midl Include="MidiLoopbackFeedbackProtectionEnum.idl">
+      <Filter>SDK\Transports\Loopback</Filter>
+    </Midl>
+    <Midl Include="MidiBasicLoopbackFeedbackProtectionEnum.idl">
+      <Filter>SDK\Transports\BasicLoopback</Filter>
+    </Midl>
     <Midl Include="MidiLoopbackManager.idl">
       <Filter>SDK\Transports\Loopback</Filter>
     </Midl>

@@ -679,6 +679,72 @@ namespace midiloopbacksetup
     }
 
     _Use_decl_annotations_
+    bool LoopbackConfigFile::SetFeedbackProtection(
+        LoopbackKind const kind,
+        winrt::hstring const& associationKey,
+        bool const enabled) noexcept
+    {
+        json::JsonObject config{ nullptr };
+
+        if (!Load(config))
+        {
+            return false;
+        }
+
+        auto entries = GetCreateObject(config, kind, false);
+
+        auto entry = FindObject(entries, ResolveKey(entries, associationKey));
+
+        if (entry == nullptr)
+        {
+            m_lastError = resources::GetString(L"ConfigFileEntryMissingError");
+            return false;
+        }
+
+        try
+        {
+            auto const value = json::JsonValue::CreateStringValue(enabled ?
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_PROTECTION_VALUE_MUTE :
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_PROTECTION_VALUE_OFF);
+
+            // on the association for a pair and on the endpoint for a basic loopback, beside the
+            // muted flag in each case
+            json::JsonObject entryChange{};
+
+            if (kind == LoopbackKind::BasicLoopback)
+            {
+                if (FindObject(entry, MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_ENDPOINT_KEY) == nullptr)
+                {
+                    m_lastError = resources::GetString(L"ConfigFileEntryMissingError");
+                    return false;
+                }
+
+                json::JsonObject endpointChange{};
+                endpointChange.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_PROTECTION_PROPERTY, value);
+
+                entryChange.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_BASIC_LOOPBACK_DEVICE_ENDPOINT_KEY, endpointChange);
+            }
+            else
+            {
+                entryChange.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_PROTECTION_PROPERTY, value);
+            }
+
+            json::JsonObject entries2{};
+            entries2.SetNamedValue(ResolveKey(entries, associationKey), entryChange);
+
+            json::JsonObject section{};
+            section.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_CREATE_KEY, entries2);
+
+            return SaveSection(kind, section);
+        }
+        catch (...)
+        {
+            m_lastError = resources::FormatString(L"ConfigFileWriteError", m_path, L"0");
+            return false;
+        }
+    }
+
+    _Use_decl_annotations_
     bool LoopbackConfigFile::UpdateEntryDetails(
         LoopbackKind const kind,
         winrt::hstring const& associationKey,

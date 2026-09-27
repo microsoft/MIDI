@@ -100,6 +100,10 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiXProc.h"
 
+#include "MidiFeedbackGuard.h"
+#include "midi_feedback_protection_json.h"
+#include "midi_notification_signal.h"
+
 #include "basic_loopback_transport_defs.h"
 #include "basic_loopback_transport_error_codes.h"
 
@@ -116,6 +120,7 @@ class TransportState;
 #include "Midi2.BasicLoopbackMidiTransport.h"
 
 #include "MidiBasicLoopbackDeviceDefinition.h"
+#include "MidiBasicLoopbackFeedback.h"
 #include "MidiBasicLoopbackDevice.h"
 #include "MidiBasicLoopbackDeviceTable.h"
 

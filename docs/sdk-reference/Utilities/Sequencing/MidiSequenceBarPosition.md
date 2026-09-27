@@ -6,7 +6,7 @@ type: struct
 description: Where a tick falls in bars and beats
 ---
 
-`MidiSequenceBarPosition` is where a tick falls in the music, in the terms a player and a score use. Returned by `GetBarPositionAtTick` on [`MidiSequence`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequence/).
+`MidiSequenceBarPosition` is where a tick falls in the music, in bars and beats, the way a musician and a score count them. Returned by `GetBarPositionAtTick` on [`MidiSequence`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequence/).
 
 ## Struct Fields
 
@@ -18,4 +18,4 @@ description: Where a tick falls in bars and beats
 
 ## Remarks
 
-**Bars and beats are counted from one**, the way a player and a score show them, not from zero. Display them as they are.
+**Bars and beats are counted from one**, the way a musician and a score count them, not from zero. Show them as they are.

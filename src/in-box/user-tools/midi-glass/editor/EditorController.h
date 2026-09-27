@@ -45,6 +45,10 @@ namespace glass
         inline constexpr wchar_t LayoutProperties[]{ L"EditLayoutProperties" };
         inline constexpr wchar_t Devices[]{ L"EditDeviceTable" };
         inline constexpr wchar_t Sequence[]{ L"EditSequence" };
+        inline constexpr wchar_t Paste[]{ L"EditPasteControls" };
+        inline constexpr wchar_t Cut[]{ L"EditCutControls" };
+        inline constexpr wchar_t Group[]{ L"EditGroupControls" };
+        inline constexpr wchar_t Ungroup[]{ L"EditUngroupControls" };
     }
 
     // The page size is changing. What the grow and shrink dialogs hand back.
@@ -112,6 +116,38 @@ namespace glass
 
         std::vector<Control const*> SelectedControls() const;
 
+        // The outer edges of everything selected. Empty when nothing is.
+        EditRect SelectionBounds() const;
+
+        // ------------------------------------------------------------------ groups
+
+        // Controls that select and move as one. Flat rather than nested: grouping controls that
+        // are already grouped makes one bigger group, which is what somebody means when they
+        // pick several things and press Group.
+        bool GroupSelection();
+        bool UngroupSelection();
+
+        // Every member of one group is selected, and nothing else is.
+        bool SelectionIsOneGroup() const;
+        bool SelectionHasGroup() const;
+
+        // A click on the canvas picks the whole group a control is in. The outline, and a second
+        // click on a group that is already selected, pick the one member.
+        void SelectGroupOf(_In_ std::wstring const& id);
+        void ToggleGroupOf(_In_ std::wstring const& id);
+        void ExpandSelectionToGroups();
+
+        // ------------------------------------------------------------------ several at once
+
+        // Every edit between these two is one undo entry, however many controls it touched.
+        // For changing one property on every selected control.
+        void BeginEditBatch();
+        void EndEditBatch();
+
+        // Typed into the inspector with several controls selected: a new position moves them
+        // all, a new size scales them all within the new box.
+        bool SetSelectionBounds(_In_ double x, _In_ double y, _In_ double width, _In_ double height);
+
         // Where a control sits counting every page in order, which is how the binding engine and
         // the surface index them. -1 when nothing has that id. The monitor rail filters on it.
         int32_t ControlIndexOf(_In_ std::wstring const& id) const;
@@ -148,12 +184,35 @@ namespace glass
         bool DeleteSelection();
         bool DuplicateSelection();
 
+        // ------------------------------------------------------------------ the clipboard
+
+        // The selection as clipboard text: a layout of its own, one page holding copies of the
+        // selected controls, plus the devices and sequences they name so a paste into another
+        // layout still knows what those names mean. Empty when nothing is selected.
+        std::wstring CopySelection() const;
+
+        // Copied, then removed. One undo entry, named for what the customer did.
+        std::wstring CutSelection();
+
+        // Controls from CopySelection, added to this page with new ids and selected. Read with
+        // the same reader as a layout file, because the clipboard is exactly as untrusted as a
+        // stranger's file. A paste over the originals lands a step down and across, so it never
+        // hides under what it came from. False when the text is not a copy of controls, or the
+        // page cannot take that many more.
+        bool PasteControls(_In_ std::wstring const& text);
+
+        // Plain text becomes a text control showing it, centered on the point given.
+        bool PasteText(_In_ std::wstring const& text, _In_ double centerX, _In_ double centerY);
+
         // ------------------------------------------------------------------ moving and resizing
 
         // A drag is one undo entry, not a hundred. Begin records where everything started, so
         // every update is measured from there rather than accumulating rounding.
         void BeginDrag();
-        SnapOutcome UpdateDrag(_In_ double deltaX, _In_ double deltaY);
+        // A straight line, when asked: across or down, whichever way the pointer has traveled
+        // further from where the drag started. Decided again on every move, so a drag that
+        // sets off sideways and then turns downward follows the turn.
+        SnapOutcome UpdateDrag(_In_ double deltaX, _In_ double deltaY, _In_ bool straightLine = false);
         void EndDrag();
 
         void BeginResize(_In_ ResizeHandle handle);
@@ -234,12 +293,47 @@ namespace glass
         bool SetControlVelocityFromTouch(_In_ std::wstring const& id, _In_ bool fromTouch);
 
         // The picture or video an image control shows, and the fill behind a grouping panel.
-        bool SetControlPicture(_In_ std::wstring const& id, _In_ Picture const& picture);
+        // Coalesced when asked, so dragging the crop box is one undo step, closed by
+        // EndCoalescing when the drag ends.
+        bool SetControlPicture(
+            _In_ std::wstring const& id,
+            _In_ Picture const& picture,
+            _In_ bool coalesce = false);
+
+        // A switch's positions. Adding one gives it a message row of its own; removing one takes
+        // its rows with it and moves the rows after it down by one, so every row still names
+        // the position it meant.
+        bool SetSwitchPositionName(_In_ std::wstring const& id, _In_ size_t index, _In_ std::wstring const& name);
+        bool AddSwitchPosition(_In_ std::wstring const& id);
+        bool RemoveSwitchPosition(_In_ std::wstring const& id, _In_ size_t index);
 
         bool SetControlKeyboard(_In_ std::wstring const& id, _In_ KeyboardSpec const& keyboard);
         bool SetControlClock(_In_ std::wstring const& id, _In_ ClockSpec const& clock);
         bool SetControlLfo(_In_ std::wstring const& id, _In_ LfoSpec const& lfo);
+
+        // A step sequencer's own settings: its rate, gate, swing and direction, and how a press
+        // starts it. The steps themselves are left as they are.
+        bool SetStepsSettings(_In_ std::wstring const& id, _In_ StepsSpec const& settings);
+
+        // How many steps it has. New steps copy the last one, so a longer pattern carries on
+        // from where it ended rather than filling up with the same default note.
+        bool SetStepCount(_In_ std::wstring const& id, _In_ int32_t count);
+
+        // One step. Coalesced per step while a number is being typed or dragged.
+        bool SetStep(
+            _In_ std::wstring const& id,
+            _In_ int32_t index,
+            _In_ SequencerStep const& step,
+            _In_ bool coalesce = false);
+
         bool SetControlTurntable(_In_ std::wstring const& id, _In_ TurntableSpec const& turntable);
+
+        // A printed line's thickness, color and ends.
+        bool SetControlLine(_In_ std::wstring const& id, _In_ LineSpec const& line);
+
+        // The pads on a note pad or hex pad control: how many, how big, what they play, how they
+        // are colored and what a slide between them does.
+        bool SetControlPads(_In_ std::wstring const& id, _In_ PadGridSpec const& pads);
 
         // The second axis's starting value, for an XY pad and a joystick.
         bool SetControlDefaultValueY(_In_ std::wstring const& id, _In_ double value);
@@ -382,8 +476,36 @@ namespace glass
             EditRect Rect{};
         };
 
+        // Each control keeps its place within the box as the box goes from one rectangle to
+        // another. A control that keeps its shape is scaled evenly and stays centered where its
+        // middle went, so a row of knobs does not turn into a row of ellipses.
+        void PlaceWithin(
+            _In_ std::vector<DragOrigin> const& origins,
+            _In_ EditRect const& from,
+            _In_ EditRect const& to);
+
         std::vector<DragOrigin> m_dragOrigins{};
         bool m_dragging{ false };
         ResizeHandle m_resizeHandle{ ResizeHandle::None };
+
+        // The box around several controls being resized together.
+        EditRect m_resizeBounds{};
+
+        int32_t m_batchDepth{ 0 };
+        uint64_t m_batchNumber{ 0 };
+    };
+
+    // An edit batch for as long as it lives, so an early return cannot leave one open.
+    class EditBatch
+    {
+    public:
+        explicit EditBatch(_Inout_ EditorController& editor) : m_editor(editor) { m_editor.BeginEditBatch(); }
+        ~EditBatch() { m_editor.EndEditBatch(); }
+
+        EditBatch(EditBatch const&) = delete;
+        EditBatch& operator=(EditBatch const&) = delete;
+
+    private:
+        EditorController& m_editor;
     };
 }

@@ -20,6 +20,9 @@ class MidiBasicLoopbackDevice
 public:
     std::shared_ptr<MidiBasicLoopbackDeviceDefinition> Definition;
 
+    // Set once, before the device is published to the table, and never changed.
+    std::shared_ptr<MidiBasicLoopbackFeedback> Feedback;
+
 
     HRESULT Initialize(_In_ wil::com_ptr_nothrow<IMidiCallback> callback)
     {
@@ -65,6 +68,23 @@ public:
 
         if (!definition || definition->IsMuted) return S_OK;
         if (callback == nullptr) return S_OK;
+
+        auto const& feedback = Feedback;
+
+        if (feedback != nullptr && feedback->IsEnabled() && feedback->Guard() != nullptr)
+        {
+            bool dropped{ false };
+
+            RETURN_IF_FAILED(feedback->Guard()->Send(callback.get(), optionFlags, message, size, position, context, &dropped));
+
+            // held messages are counted now, because they go out later in order
+            if (!dropped)
+            {
+                m_messageCount.fetch_add(CountUmpMessages(message, size), std::memory_order_relaxed);
+            }
+
+            return S_OK;
+        }
 
         RETURN_IF_FAILED(callback->Callback(optionFlags, message, size, position, context));
 

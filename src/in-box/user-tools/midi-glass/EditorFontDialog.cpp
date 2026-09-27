@@ -182,6 +182,8 @@ namespace winrt::midiglass::implementation
             color.Header(box_value(resources::GetString(L"FontColorHeader")));
             color.Text(winrt::hstring{ working->Color });
             color.PlaceholderText(resources::GetString(L"FontColorPlaceholder"));
+            color.PlaceholderForeground(xaml::Application::Current().Resources()
+                .Lookup(box_value(L"TextFillColorTertiaryBrush")).as<media::Brush>());
 
             controls::Button colorButton{};
             colorButton.VerticalAlignment(xaml::VerticalAlignment::Bottom);
@@ -322,7 +324,40 @@ namespace winrt::midiglass::implementation
                 working->WidthPercent = width;
             }
 
-            if (m_editor.SetControlLabelStyle(controlId, *working))
+            // Every selected control takes the font, each keeping its own label width.
+            auto targets = EditTargets();
+
+            if (std::find(targets.begin(), targets.end(), controlId) == targets.end())
+            {
+                targets = { controlId };
+            }
+
+            auto changed = false;
+
+            {
+                glass::EditBatch batch{ m_editor };
+
+                for (auto const& id : targets)
+                {
+                    auto const* const target = m_editor.Document().FindControl(id);
+
+                    if (target == nullptr)
+                    {
+                        continue;
+                    }
+
+                    auto style = *working;
+
+                    if (id != controlId)
+                    {
+                        style.WidthPercent = target->LabelLook.WidthPercent;
+                    }
+
+                    changed = m_editor.SetControlLabelStyle(id, style) || changed;
+                }
+            }
+
+            if (changed)
             {
                 RebuildSurface();
                 RefreshInspector();

@@ -6,21 +6,21 @@ type: runtimeclass
 description: The interface to the service for creating a virtual device
 ---
 
-This is the class used by applications to create and start new virtual (app-to-app MIDI) devices.
+Apps use this class to create new virtual devices, for app-to-app MIDI.
 
 ## Static Properties
 
 | Name | Description |
 | --------------- | ----------- |
-| `IsTransportAvailable` | Returns true if this transport is installed and enabled in the service |
-| `TransportId` | Returns the GUID which uniquely identifies the Virtual Device transport |
+| `IsTransportAvailable` | True if this transport is installed and turned on in the service |
+| `TransportId` | The GUID of the virtual device transport |
 
 ## Static Methods
 
 | Name | Description |
 | --------------- | ----------- |
-| `CreateVirtualDevice(creationConfig)` | Creates a new virtual device with the specified configuration. Returns the `MidiVirtualDevice` instance. |
-| `GetAssociatedClientEndpointDeviceId(associationId)` | Returns the endpoint device id for the client-side endpoint associated with the given association id. |
+| `CreateVirtualDevice(creationConfig)` | Creates a new virtual device with this configuration. Returns the `MidiVirtualDevice` |
+| `GetAssociatedClientEndpointDeviceId(associationId)` | Returns the endpoint device id of the client endpoint for this association id |
 
 ## Examples
 

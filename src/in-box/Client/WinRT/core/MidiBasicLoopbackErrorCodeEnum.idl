@@ -28,11 +28,16 @@ namespace Windows.Devices.Midi2.Transports.BasicLoopback
         EndpointNotFound =                  BASIC_LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
 
         InvalidOrMissingAssociationId =     BASIC_LOOPBACK_ERROR_CODE_MISSING_ASSOCIATION_ID,
+        InvalidAssociationId =              BASIC_LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID,
 
         InvalidOrMissingUniqueId =          BASIC_LOOPBACK_ERROR_CODE_MISSING_UNIQUE_ID,
         DuplicateUniqueId =                 BASIC_LOOPBACK_ERROR_CODE_DUPLICATE_UNIQUE_ID,
         InvalidOrMissingEndpointName =      BASIC_LOOPBACK_ERROR_CODE_MISSING_ENDPOINT_NAME,
         DuplicateEndpointName =             BASIC_LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME,
+        UniqueIdTooLong =                   BASIC_LOOPBACK_ERROR_CODE_UNIQUE_ID_TOO_LONG,
+        InvalidUniqueId =                   BASIC_LOOPBACK_ERROR_CODE_INVALID_UNIQUE_ID,
+
+        FeedbackProtectionNotAvailable =    BASIC_LOOPBACK_ERROR_CODE_FEEDBACK_PROTECTION_NOT_AVAILABLE,
 
         ClientApiException =                0x11002011,
 

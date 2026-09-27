@@ -26,7 +26,12 @@ layout: default
                 {% else %}
                     {% assign idl_file_name = page.title | append: ".idl" %}
                 {% endif %}
-                {% assign idl_url = site.sdk_idl_root_url | append: idl_file_name %}
+                {% comment %} A page whose IDL is not in the core folder sets "idl_url" as well. {% endcomment %}
+                {% if page.idl_url != nil and page.idl_url != empty %}
+                    {% assign idl_url = page.idl_url %}
+                {% else %}
+                    {% assign idl_url = site.sdk_idl_root_url | append: idl_file_name %}
+                {% endif %}
 
                 <table>
                     <tr>
@@ -94,7 +99,7 @@ layout: default
 
             {% if page.status == "preview" %}
             <div class="sdk-preview-banner">
-                <span>This is a preview WinRT API feature and subject to change or removal. Shipping applications shall not use this API feature. There is no compatibility guaranteed.</span>
+                <span>This is a preview feature of the WinRT API. It may change or be removed, so don't use it in an application you ship. There's no promise it will stay compatible.</span>
             </div>
             {% endif %}
 

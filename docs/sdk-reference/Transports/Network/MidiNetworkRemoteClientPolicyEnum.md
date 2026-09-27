@@ -12,5 +12,5 @@ Used by `MidiNetworkHostCreationConfig.RemoteClientPolicy` and reported by `Midi
 
 | Value | Numeric Value | Description |
 | ----- | ------------- | ----------- |
-| `AllowAny` | `0` | Unknown remote clients are admitted unless explicitly denied |
-| `RequireApproval` | `1` | Unknown remote clients remain pending until approved or denied |
+| `AllowAny` | `0` | Unknown remote clients are let in, unless they've been denied |
+| `RequireApproval` | `1` | Unknown remote clients wait until they're approved or denied |

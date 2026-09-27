@@ -9,6 +9,7 @@ What a control puts on the wire, and how often.
 | `ActionPlan.*` | Everything a control does that is **not** an immediate channel voice message: a system exclusive dump, a raw message, a sequence of steps, a jump to another page. Flattened at prepare time into a straight list of actions. |
 | `LearnCapture.*` | An incoming message read back into a binding, and the rules for which of them are worth acting on. |
 | `MonitorFormat.*` | Words decoded back into something a person can read, for the editor's monitor rail. |
+| `PadVoices.*` | Which note each finger on a grid of pads is holding, so a slide between pads plays, glides or bends the right note and nothing is left sounding. Pure, and tested. |
 
 ## The hot path
 

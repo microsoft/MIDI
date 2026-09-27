@@ -13,8 +13,8 @@ Pass to `MidiNetworkTransportManager.RemoveNetworkHostAsync`.
 
 | Constructor | Description |
 | -------- | ----------- |
-| `MidiNetworkHostRemovalConfig()` | Create an empty config |
-| `MidiNetworkHostRemovalConfig(hostId)` | Create a config for the specified host |
+| `MidiNetworkHostRemovalConfig()` | Creates an empty configuration |
+| `MidiNetworkHostRemovalConfig(hostId)` | Creates a configuration for this host |
 
 ## Properties
 
@@ -24,4 +24,4 @@ Pass to `MidiNetworkTransportManager.RemoveNetworkHostAsync`.
 
 ## Remarks
 
-Removing a host disconnects every remote client connected to it and releases its UDP port and mDNS advertisement.
+Removing a host disconnects every remote client connected to it, and frees its UDP port and mDNS advertisement.

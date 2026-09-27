@@ -26,6 +26,8 @@
 #include "SequenceRunner.h"
 #include "ClockGenerator.h"
 #include "LfoGenerator.h"
+#include "StepSequencer.h"
+#include "PadVoices.h"
 
 namespace glass
 {
@@ -92,6 +94,10 @@ namespace glass
         // An LFO swept. The owner moves the bead along the cycle it drew.
         std::function<void(uint32_t controlIndex, double value, double phase, bool running)> LfoMoved{};
 
+        // A step sequencer moved on to a step, or stopped. The owner lights the step; -1 with
+        // running false means nothing is playing.
+        std::function<void(uint32_t controlIndex, int32_t stepIndex, bool running)> StepMoved{};
+
         // Every message that actually went out. Left empty by the runtime window, which pays
         // nothing for it; the editor's monitor rail sets it.
         std::function<void(SentMessage const& message)> Sent{};
@@ -131,7 +137,7 @@ namespace glass
         // gate instead: the watcher can still reopen connections underneath, but nothing reaches
         // the wire. Without this, a MIDI device arriving while the editor sat in Edit mode sent a
         // whole layout's worth of startup values.
-        void SetOutputEnabled(_In_ bool enabled) noexcept { m_outputEnabled = enabled; }
+        void SetOutputEnabled(_In_ bool enabled) noexcept;
 
         // Listen for something to bind to. Off by default, because reading every message that
         // arrives on every device costs something and nothing wants it until somebody asks.
@@ -152,6 +158,25 @@ namespace glass
             _In_ int32_t key,
             _In_ double velocity,
             _In_ bool isDown);
+
+        // A finger on a note pad or hex pad control. Touch is the pointer, so every finger holds
+        // its own note and a chord is a chord. Pitch is the pitch under the finger, which only a
+        // note that bends to follow it uses.
+        void PadPressed(
+            _In_ uint32_t controlIndex,
+            _In_ uint32_t touch,
+            _In_ int32_t note,
+            _In_ double velocity,
+            _In_ double pitch);
+
+        void PadMoved(
+            _In_ uint32_t controlIndex,
+            _In_ uint32_t touch,
+            _In_ int32_t note,
+            _In_ double velocity,
+            _In_ double pitch);
+
+        void PadReleased(_In_ uint32_t controlIndex, _In_ uint32_t touch);
 
         // Assistive technology setting a value is one discrete change, not a drag, so it is a
         // whole gesture. Going straight to the release would find nothing held back.
@@ -202,6 +227,10 @@ namespace glass
         // press is a toggle or a hold, and the answer is per control rather than per kind.
         bool LfoLatchesAt(_In_ uint32_t controlIndex) const noexcept;
 
+        // The same two questions for a step sequencer.
+        bool AreStepsRunning(_In_ uint32_t controlIndex) const noexcept;
+        bool StepsLatchAt(_In_ uint32_t controlIndex) const noexcept;
+
         // A control feeding a clock its tempo moved. Does nothing unless some clock on this
         // layout named that control.
         void TempoSourceMoved(_In_ uint32_t controlIndex, _In_ double value);
@@ -248,6 +277,42 @@ namespace glass
             _In_ double phase,
             _In_ bool running);
 
+        // Who is holding which note on each pad grid, and what they were set up to do with it.
+        struct PadEntry
+        {
+            uint32_t ControlIndex{ 0 };
+            int32_t StartNote{ 48 };
+            int32_t BendRange{ 48 };
+            PadVoices Voices{};
+        };
+
+        PadEntry* FindPadControl(_In_ uint32_t controlIndex) noexcept;
+
+        // What a finger's event came to, turned into words and sent.
+        void SendPadActions(
+            _In_ uint32_t controlIndex,
+            _In_ int32_t bendRange,
+            _In_ std::span<PadAction const> actions) noexcept;
+
+        // Every note every pad grid is holding, ended. Run before the engine that started them
+        // is replaced, so the note off goes where the note on went.
+        void ReleaseAllPads() noexcept;
+
+        // A step sequencer's step started or its note ended.
+        void OnStepChanged(
+            _In_ uint32_t controlIndex,
+            _In_ uint64_t run,
+            _In_ int32_t stepIndex,
+            _In_ bool starts) noexcept;
+
+        // Stops one sequencer and ends the note it was playing, now, on this thread. Announced
+        // unless it is about to be started again, so the surface does not let go of its latch.
+        void StopSteps(_In_ uint32_t controlIndex, _In_ bool announce) noexcept;
+
+        // Every sequencer stopped and every note they were playing ended. Run before the engine
+        // that started them is replaced, for the same reason as ReleaseAllPads.
+        void StopAllSteps(_In_ bool announce) noexcept;
+
         LayoutDocument m_document{};
 
         BindingEngine m_engine{};
@@ -257,6 +322,7 @@ namespace glass
         std::shared_ptr<SequenceRunner> m_runner{};
         std::shared_ptr<ClockGenerator> m_clocks{};
         std::shared_ptr<LfoGenerator> m_lfos{};
+        std::shared_ptr<StepSequencer> m_steps{};
 
         // Which control index each clock generator is, so the page can be walked once at load
         // rather than on every tick.
@@ -281,6 +347,24 @@ namespace glass
         };
 
         std::vector<LfoEntry> m_lfoControls{};
+
+        // The step sequencers, and the note each one has sounding. 0xFFFF is none. Only ever
+        // touched on the dispatcher's thread, which is also the thread every note is sent from,
+        // so a stop always knows which note to end.
+        struct StepsEntry
+        {
+            uint32_t ControlIndex{ 0 };
+            std::wstring ControlId{};
+            StepsSpec Spec{};
+            uint64_t Run{ 0 };
+            uint16_t SoundingNote{ 0xFFFF };
+        };
+
+        std::vector<StepsEntry> m_stepControls{};
+
+        StepsEntry* FindStepControl(_In_ uint32_t controlIndex) noexcept;
+
+        std::vector<PadEntry> m_padControls{};
 
         // One per control, so a fader on a DIN cable can be limited without touching a note on.
         std::vector<ValueThrottle> m_throttles{};

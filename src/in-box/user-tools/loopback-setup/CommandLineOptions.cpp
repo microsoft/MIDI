@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "CommandLineOptions.h"
+#include "loopback_setup_protocol_defs.h"
 
 namespace midiloopbacksetup
 {
@@ -41,6 +42,36 @@ namespace midiloopbacksetup
                 name.data(), static_cast<int>(name.size()),
                 TRUE) == CSTR_EQUAL;
         }
+
+        // Recognizes "ms-midi-loopback-setup:<path>" and hands back the path. Anything which is
+        // not this app's scheme is left for the ordinary switch parsing to reject.
+        bool TryGetProtocolPath(std::wstring const& argument, std::wstring& path) noexcept
+        {
+            constexpr std::wstring_view scheme{ MIDI_LOOPBACK_SETUP_PROTOCOL_SCHEME L":" };
+
+            if (argument.size() <= scheme.size())
+            {
+                return false;
+            }
+
+            if (::CompareStringOrdinal(
+                    argument.data(), static_cast<int>(scheme.size()),
+                    scheme.data(), static_cast<int>(scheme.size()),
+                    TRUE) != CSTR_EQUAL)
+            {
+                return false;
+            }
+
+            path = argument.substr(scheme.size());
+
+            // Shells commonly append a trailing slash to a bare scheme.
+            while (!path.empty() && (path.back() == L'/' || path.back() == L'\\'))
+            {
+                path.pop_back();
+            }
+
+            return true;
+        }
     }
 
     CommandLineOptions CommandLineOptions::Parse(std::vector<std::wstring> const& arguments) noexcept
@@ -55,6 +86,24 @@ namespace midiloopbacksetup
 
                 if (argument.empty())
                 {
+                    continue;
+                }
+
+                std::wstring protocolPath{};
+
+                if (TryGetProtocolPath(argument, protocolPath))
+                {
+                    // An unrecognized path only means a newer notification asked for a page this
+                    // build does not have. Opening the app is still the useful thing to do.
+                    if (::CompareStringOrdinal(
+                            protocolPath.data(), static_cast<int>(protocolPath.size()),
+                            MIDI_LOOPBACK_SETUP_PROTOCOL_PATH_FEEDBACK,
+                            static_cast<int>(wcslen(MIDI_LOOPBACK_SETUP_PROTOCOL_PATH_FEEDBACK)),
+                            TRUE) == CSTR_EQUAL)
+                    {
+                        options.ShowFeedback = true;
+                    }
+
                     continue;
                 }
 

@@ -189,6 +189,7 @@ namespace winrt::midiglass::implementation
                 m_player->Stop();
             }
 
+            StopVideoPlayheadTimer();
             m_renderer.Teardown();
             m_chrome.Shutdown();
         }
@@ -345,7 +346,9 @@ namespace winrt::midiglass::implementation
                 std::wstring missing{};
                 size_t available{ 0 };
 
-                for (auto const& device : m_player->Devices())
+                auto const devices = m_player->Devices();
+
+                for (auto const& device : devices)
                 {
                     if (device.IsAvailable)
                     {
@@ -362,7 +365,11 @@ namespace winrt::midiglass::implementation
                     }
                 }
 
-                SelectionText().Text(missing.empty()
+                // A layout with no devices at all has nothing that could fail to open, and
+                // saying one would not sends somebody looking for a fault that is not there.
+                SelectionText().Text(devices.empty()
+                    ? resources::GetString(L"TryNoDevices")
+                    : missing.empty()
                     ? (m_player->IsConnected()
                         ? resources::FormatString(L"TryDevicesReadyFormat", static_cast<int32_t>(available))
                         : resources::GetString(L"TryDevicesNotOpen"))
@@ -388,6 +395,17 @@ namespace winrt::midiglass::implementation
 
             SpreadAcrossItem().IsEnabled(selected > 2);
             SpreadDownItem().IsEnabled(selected > 2);
+
+            // Group while several loose controls are picked, Ungroup once a group is.
+            auto const oneGroup = m_editor.SelectionIsOneGroup();
+
+            GroupButton().IsEnabled(!m_tryMode && (oneGroup || selected > 1));
+
+            auto const groupName = resources::GetString(oneGroup ? L"EditorUngroupName" : L"EditorGroupName");
+            auto const groupTip = resources::GetString(oneGroup ? L"EditorUngroupToolTip" : L"EditorGroupToolTip");
+
+            xaml::Automation::AutomationProperties::SetName(GroupButton(), groupName);
+            controls::ToolTipService::SetToolTip(GroupButton(), box_value(groupTip));
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to update the status bar.")
     }
@@ -758,6 +776,12 @@ namespace winrt::midiglass::implementation
         xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args)
     {
         UNREFERENCED_PARAMETER(sender);
+
+        // Ctrl+A in a text box selects its text, not every control on the page.
+        if (IsTextEntryFocused())
+        {
+            return;
+        }
 
         args.Handled(true);
 

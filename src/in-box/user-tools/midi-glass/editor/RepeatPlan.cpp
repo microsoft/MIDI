@@ -229,6 +229,9 @@ namespace glass
 
             auto const step = options.Step * copy;
 
+            std::vector<Control> set{};
+            set.reserve(source.size());
+
             for (auto const& original : source)
             {
                 auto control = original;
@@ -249,6 +252,14 @@ namespace glass
 
                 StepFeedback(control.Feedback, options.Field, step);
 
+                set.push_back(std::move(control));
+            }
+
+            // A repeated channel strip is a strip of its own, not one more member of the first.
+            RegroupCopies(set);
+
+            for (auto& control : set)
+            {
                 result.Copies.push_back(std::move(control));
             }
         }

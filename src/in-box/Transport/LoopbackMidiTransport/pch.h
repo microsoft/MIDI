@@ -85,6 +85,7 @@ namespace json = ::winrt::Windows::Data::Json;
 #include "Feature_Servicing_MIDI2LoopbackErrorStringResources.h"
 #include "Feature_Servicing_MIDI2EndpointCustomizationEnhancements.h"
 #include "Feature_Servicing_MIDI2LoopbackUniqueEndpointNames.h"
+#include "Feature_Servicing_MIDI2LoopbackFeedbackProtection.h"
 
 // TransportUtilities
 #include "wstring_util.h"
@@ -103,6 +104,10 @@ namespace internal = ::WindowsMidiServicesInternal;
 
 #include "MidiXProc.h"
 
+#include "MidiFeedbackGuard.h"
+#include "midi_feedback_protection_json.h"
+#include "midi_notification_signal.h"
+
 #include "loopback_transport_defs.h"
 #include "loopback_transport_error_codes.h"
 
@@ -117,6 +122,7 @@ class CMidi2LoopbackMidiBidi;
 class TransportState;
 
 #include "MidiLoopbackDeviceDefinition.h"
+#include "MidiLoopbackFeedback.h"
 #include "MidiLoopbackDevice.h"
 #include "MidiLoopbackDeviceTable.h"
 

@@ -6,18 +6,18 @@ type: enum
 description: The protocol information for a Group Terminal Block
 ---
 
-Indicates the protocol specifics for the Group Terminal Block. Group terminal blocks are still available, but are generally deprecated by the MIDI Association in favor of function blocks, endpoint discovery and protocol negotiation, when available.
+Which protocol a group terminal block uses. Group terminal blocks still work, but the MIDI Association now recommends function blocks, endpoint discovery, and protocol negotiation instead, when a device supports them.
 
 ## Properties
 
 | Property | Value | Description |
 | -------- | ------- | ------ |
-| `Unknown` | `0x00000000` | Unknown or undefined |
-| `Midi1Message64` | `0x00000001` | Supports MIDI 1.0 messages, including 64 bit System Exclusive messages  |
-| `Midi1Message64WithJitterReduction` | `0x00000002` | Supports MIDI 1.0 messages, including 64 bit System Exclusive messages * |
-| `Midi1Message128` | `0x00000003` | Supports MIDI 1.0 messages, including 128 bit System Exclusive messages |
-| `Midi1Message128WithJitterReduction` | `0x00000004` | Supports MIDI 1.0 messages, including 128 bit System Exclusive messages * |
-| `Midi2` | `0x00000011` | Supports MIDI 2.0 messages |
-| `Midi2WithJitterReduction` | `0x00000012` | Supports MIDI 2.0 messages, including 128 bit System Exclusive messages * |
+| `Unknown` | `0x00000000` | Not known or not set |
+| `Midi1Message64` | `0x00000001` | MIDI 1.0 protocol, using packets up to 64 bits long |
+| `Midi1Message64WithJitterReduction` | `0x00000002` | MIDI 1.0 protocol, using packets up to 64 bits long, with jitter reduction timestamps * |
+| `Midi1Message128` | `0x00000003` | MIDI 1.0 protocol, using packets up to 128 bits long |
+| `Midi1Message128WithJitterReduction` | `0x00000004` | MIDI 1.0 protocol, using packets up to 128 bits long, with jitter reduction timestamps * |
+| `Midi2` | `0x00000011` | MIDI 2.0 protocol |
+| `Midi2WithJitterReduction` | `0x00000012` | MIDI 2.0 protocol, with jitter reduction timestamps * |
 
-\* Note. Jitter Reduction indicators in group terminal blocks should be ignored. These are now specified through endpoint discovery and protocol negotiation, and are handled completely in the MIDI service. Do not send jitter reduction messages from your application.
+\* **Note:** Ignore the jitter reduction part of these values. Jitter reduction is now agreed on through endpoint discovery and protocol negotiation, and the MIDI service handles it completely. Don't send jitter reduction messages from your application.

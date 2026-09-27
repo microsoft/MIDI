@@ -373,7 +373,7 @@ void RuntimeSurfaceTests::ADisplayOnlyControlTakesNoInput()
 
 void RuntimeSurfaceTests::ATonalThemeTintsThePlateWithTheControlHue()
 {
-    auto const theme = ThemeNamed(L"Pigment Light");
+    auto const theme = ThemeNamed(L"Tonal Light");
     auto const control = MakeControl(glass::ControlKind::Fader, 0);
 
     auto const colors = glass::ResolveControlColors(control, theme);
@@ -441,7 +441,7 @@ void RuntimeSurfaceTests::AFaderCapCarriesTheHueWhenItIsNotTheHue()
     VERIFY_IS_TRUE(colors.Thumb != colors.ThumbEnd);
 
     // A tonal theme's cap is the hue itself, so a line of the same color would be invisible.
-    auto const pigment = ThemeNamed(L"Pigment Light");
+    auto const pigment = ThemeNamed(L"Tonal Light");
     auto const solid = glass::ResolveControlColors(control, pigment);
 
     VERIFY_ARE_EQUAL(glass::ThumbStyle::Hue, pigment.Thumb);
@@ -465,7 +465,7 @@ void RuntimeSurfaceTests::AFlatThemeAsksForAFlatValueBar()
     auto const studio = glass::ResolveControlColors(control, ThemeNamed(L"Studio Dark"));
     VERIFY_IS_LESS_THAN(studio.PipeEnd.A, studio.Pipe.A);
 
-    for (auto const* name : { L"Pigment Light", L"Pigment Dark", L"High contrast", L"Bone" })
+    for (auto const* name : { L"Tonal Light", L"Tonal Dark", L"High contrast", L"Bone" })
     {
         auto const colors = glass::ResolveControlColors(control, ThemeNamed(name));
 

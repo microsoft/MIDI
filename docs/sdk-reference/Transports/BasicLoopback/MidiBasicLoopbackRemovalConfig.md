@@ -7,16 +7,16 @@ implements: Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfi
 description: Config sent to the service to remove a basic MIDI 1.0-style loopback endpoint
 ---
 
-This is the configuration sent to the service when an application wants to remove a transient basic loopback endpoint.
+The configuration your app sends to the service to remove a temporary basic loopback endpoint.
 
 ## Constructors
 
 | Constructor | Description |
 | -------- | ----------- |
-| `MidiBasicLoopbackRemovalConfig(associationId)` | Create a removal config for the loopback with the specified association id |
+| `MidiBasicLoopbackRemovalConfig(associationId)` | Creates a removal configuration for the loopback with this association id |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `AssociationId` | The GUID identifying the loopback to remove |
+| `AssociationId` | The GUID of the loopback to remove |

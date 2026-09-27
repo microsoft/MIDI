@@ -23,6 +23,9 @@ namespace midisettings
         static bool NetworkApprovalEnabled() noexcept;
         static void NetworkApprovalEnabled(_In_ bool const value) noexcept;
 
+        static bool LoopbackFeedbackEnabled() noexcept;
+        static void LoopbackFeedbackEnabled(_In_ bool const value) noexcept;
+
         // This user's own Run entry, which needs no administrator.
         static bool StartsAtSignIn() noexcept;
         static bool TrySetStartsAtSignIn(_In_ bool const value) noexcept;

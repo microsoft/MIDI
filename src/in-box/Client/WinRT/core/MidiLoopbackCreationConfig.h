@@ -27,6 +27,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
         bool IsMuted() const noexcept { return m_isMuted; }
         void IsMuted(_In_ bool value) noexcept { m_isMuted = value; }
 
+        loop::MidiLoopbackFeedbackProtection FeedbackProtection() const noexcept { return m_feedbackProtection; }
+        void FeedbackProtection(_In_ loop::MidiLoopbackFeedbackProtection const value) noexcept { m_feedbackProtection = value; }
+
         winrt::guid AssociationId() noexcept { return m_associationId; }
         //void AssociationId(_In_ winrt::guid const& value) noexcept { m_associationId = value; }
 
@@ -53,6 +56,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
     private:
         winrt::guid m_associationId{ foundation::GuidHelper::CreateNewGuid() };
         bool m_isMuted{ false };
+        loop::MidiLoopbackFeedbackProtection m_feedbackProtection{ loop::MidiLoopbackFeedbackProtection::Mute };
         // Created up front, like the basic loopback config, so a default-constructed config can
         // be filled in through the accessors. Left null, every caller which did that faulted.
         loop::MidiLoopbackEndpointDefinition m_definitionA{ };

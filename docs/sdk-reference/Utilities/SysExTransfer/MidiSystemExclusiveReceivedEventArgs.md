@@ -6,16 +6,16 @@ type: runtimeclass
 description: Event data produced when SysEx data is received by MidiSystemExclusiveReceiver
 ---
 
-Provided in `MidiSystemExclusiveReceiver.BytesReceived`.
+Comes with the `MidiSystemExclusiveReceiver.BytesReceived` event.
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `Group` | The source `MidiGroup` |
-| `Bytes` | Received bytes, including `0xF0` and `0xF7` framing bytes |
-| `IsPartial` | True when the block does not contain a complete matched `F0`/`F7` message pair |
+| `Group` | The `MidiGroup` the data came from |
+| `Bytes` | The bytes received, including the `0xF0` and `0xF7` bytes that start and end each message |
+| `IsPartial` | True when the block doesn't hold a complete message, from `F0` to `F7` |
 
 ## Remarks
 
-A single event may contain one complete message, multiple complete messages, or a partial fragment, depending on buffering and pacing.
+One event may hold one complete message, several complete messages, or part of a message. It depends on how the data was buffered and how fast it arrived.

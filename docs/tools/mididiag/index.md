@@ -26,6 +26,8 @@ The report tells you:
 - The status of the SDK installation
 - Every installed and enabled Windows MIDI Services transport
 - Every Windows MIDI Services endpoint, with its MIDI 1.0 ports, its group terminal blocks, its name tables and more
+- The device behind each endpoint, including its USB vendor and product IDs and serial number, and the driver it uses: the driver's service name, .inf file and version
+- Every app that's connected to the MIDI service right now, and the endpoints and ports it has open
 - The results of a ping test
 
 ![mididiag]({{ site.baseurl }}/assets/images/mididiag-output-1.png) ... ![mididiag]({{ site.baseurl }}/assets/images/mididiag-output-2.png)
@@ -45,6 +47,6 @@ The [MIDI Troubleshooting and Repair]({{ site.baseurl }}/tools/miditroubleshoote
 
 We may add fields or sections in the future. If you're parsing this file with a script, don't rely on the order of the fields or sections. Field names and section headers stay the same, so it's safe to match on those. They aren't translated.
 
-The date at the top of the file is in YYYY-MM-DD format. Time is in 24-hour format.
+The date and time at the top of the file, and the times in the list of connected apps, use the PC's own time zone. Dates are in YYYY-MM-DD format, and times use a 24-hour clock.
 
 The program returns 0 when it succeeds, and non-zero when it fails.

@@ -66,6 +66,24 @@ public:
     TEST_METHOD(ALampThemeLightsItsOwnLampColor);
     TEST_METHOD(ADefaultThemeAsksForNoneOfTheNewLooks);
     TEST_METHOD(TheDeckColorIsReadDownThePage);
+
+    // ---- Five-iSH and Airy System, and what they added to the engine ----
+
+    TEST_METHOD(FiveIshPrintsTwoInksOnTwoSurfaces);
+    TEST_METHOD(FiveIshShowsColorOnlyInItsLamps);
+    TEST_METHOD(ANeutralCapIsTheNeutralOnlyWhereTheThemeAsks);
+    TEST_METHOD(AirySwitchesRestDarkWhileKnobsAndFadersStayLit);
+    TEST_METHOD(AiryPadsAreColoredPlasticThatReadsLitOrNot);
+    TEST_METHOD(AnAirySliderLightsTheFrameAroundItsSlot);
+    TEST_METHOD(AKnobRingCanBeItsOwnColor);
+    TEST_METHOD(ARimOfZeroIsNoRim);
+    TEST_METHOD(ASectionIsRaisedLikeAControlUnlessTheThemeSaysOtherwise);
+    TEST_METHOD(ARuleIsTheInkTurnedDownUnlessTheThemeNamesOne);
+    TEST_METHOD(APadNameReadsOnEveryThemeLitOrNot);
+    TEST_METHOD(TheRootTheKeyAndTheRestAreThreeDifferentPads);
+    TEST_METHOD(APadColorTypedInWinsAndABadOneFallsBack);
+    TEST_METHOD(ATypedPadColorIsTheColorOfThePadOnEveryTheme);
+    TEST_METHOD(PadsAreRimmedTheWayTheThemeRimsItsControls);
 };
 
 

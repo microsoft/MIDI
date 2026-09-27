@@ -76,6 +76,12 @@ namespace midiloopbacksetup
             _In_ winrt::hstring const& associationKey,
             _In_ bool const isMuted) noexcept;
 
+        // Saved where the SDK creation config puts it, so the service reads it back from there.
+        bool SetFeedbackProtection(
+            _In_ LoopbackKind const kind,
+            _In_ winrt::hstring const& associationKey,
+            _In_ bool const enabled) noexcept;
+
         // A loopback is entirely user-owned, so an edit overwrites the entry it was created
         // from rather than layering a separate customization on top of it. For a pair, an empty
         // nameB leaves the B side alone.

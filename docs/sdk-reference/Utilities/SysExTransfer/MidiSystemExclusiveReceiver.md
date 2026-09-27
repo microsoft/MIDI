@@ -7,42 +7,42 @@ implements: Windows.Foundation.IClosable
 description: Receives SysEx 7 data from an endpoint connection and raises byte events
 ---
 
-Use this type to assemble incoming SysEx 7 traffic from a `MidiEndpointConnection` and receive it as byte blocks.
+Use this type to collect incoming SysEx 7 messages from a `MidiEndpointConnection`, and get them as blocks of bytes.
 
-## Constructor
+## Constructors
 
 | Constructor | Description |
 | ----------- | ----------- |
-| `MidiSystemExclusiveReceiver(sourceConnection, sourceGroup, maximumBytesPerEvent)` | Creates a receiver bound to one connection and group. `maximumBytesPerEvent` bounds buffering before events are raised |
+| `MidiSystemExclusiveReceiver(sourceConnection, sourceGroup, maximumBytesPerEvent)` | Creates a receiver for one connection and group. `maximumBytesPerEvent` is the most bytes it collects before it raises an event |
 
-## Event
+## Events
 
 | Event | Description |
 | ----- | ----------- |
-| `BytesReceived` | Raised when a complete SysEx message is available, or when the buffered byte count reaches `maximumBytesPerEvent` |
+| `BytesReceived` | Raised when a complete SysEx message is ready, or when the collected bytes reach `maximumBytesPerEvent` |
 
 ## Methods
 
 | Method | Description |
 | ------ | ----------- |
-| `Start()` | Starts receiving and returns true on success |
-| `Stop()` | Stops receiving and flushes any buffered bytes (may raise additional `BytesReceived` events before returning) |
+| `Start()` | Starts receiving. Returns true if it worked |
+| `Stop()` | Stops receiving, and passes on any bytes it's holding. That may raise more `BytesReceived` events before it returns |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `IsReceiving` | True while actively receiving |
-| `CountBytesReceived` | Total count of bytes received |
-| `CountMessagesReceived` | Total count of completed SysEx messages received |
+| `IsReceiving` | True while it's receiving |
+| `CountBytesReceived` | The total number of bytes received |
+| `CountMessagesReceived` | The total number of complete SysEx messages received |
 
 ## Remarks
 
-`maximumBytesPerEvent` controls the memory/per-event tradeoff. Smaller values produce more frequent events; larger values reduce event frequency.
+`maximumBytesPerEvent` trades memory for how often events are raised. A smaller value means more frequent events. A larger value means fewer events, but more memory held between them.
 
 ## Samples
 
-These receive a System Exclusive message and write it to a `.syx` file. They replace handling `MIM_LONGDATA`, preparing and requeueing `MIDIHDR` buffers, and reassembling a message which arrived across several of them.
+These samples receive a System Exclusive message and write it to a `.syx` file. They replace the WinMM work of handling `MIM_LONGDATA`, preparing and queuing `MIDIHDR` buffers again and again, and putting back together a message that arrived across several of them.
 
 * [C++/WinRT sysex-file-receiver](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/sysex-file-receiver)
 * [C# sysex-file-receiver](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/sysex-file-receiver)

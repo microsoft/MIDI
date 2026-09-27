@@ -123,6 +123,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
                 MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY,
                 json::JsonValue::CreateBooleanValue(IsMuted()));
 
+            // anything that is not Off is treated as Mute, which is also the transport's default
+            endpointAssociationObject.SetNamedValue(
+                MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_PROTECTION_PROPERTY,
+                json::JsonValue::CreateStringValue(internal::FeedbackProtectionJsonValue(
+                    m_feedbackProtection != loop::MidiLoopbackFeedbackProtection::Off)));
+
             // create the creation node with the association object as the child property
 
             endpointCreationObject.SetNamedValue(

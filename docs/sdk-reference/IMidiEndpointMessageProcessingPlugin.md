@@ -6,38 +6,38 @@ type: interface
 description: Interface implemented by any type which can be an endpoint processing plugin in the client WinRT API
 ---
 
-This interface is implemented by any type which can be an endpoint processing plugin in the client WinRT API. These plugins are used to process or manipulate messages coming from an endpoint. 
+Any type that implements this interface can be a message processing plugin. A plugin gets each incoming message from an endpoint connection and can act on it, change it, or stop it from going any further.
 
-Microsoft provides several plugins in the API, including the `MidiVirtualEndpointDevice`, the `MidiChannelEndpointListener`, and the `MidiGroupEndpointListener`. All of these types implement the `IMidiEndpointMessageProcessingPlugin` interface and operate in the same way.
+The API includes several plugins: `MidiVirtualDevice`, `MidiChannelEndpointListener`, `MidiGroupEndpointListener`, and `MidiMessageTypeEndpointListener`. They all implement this interface and work the same way. You can write your own, too.
 
-The main part of message processing is the `ProcessIncomingMessage` callback.
+Most of a plugin's work happens in `ProcessIncomingMessage`.
 
 ## Properties
 
 | Property | Description |
 | ---- | ---- |
-| `PluginId` | Generated GUID for this plugin instance. This is needed if you want to remove the plugin from the endpoint connection |
-| `PluginName` | Optional application-supplied name for this plugin instance. |
-| `PluginTag` | Optional application-supplied arbitrary data to associate with this plugin instance |
-| `IsEnabled` | True if the plugin is enabled and should participate in message processing |
+| `PluginId` | A GUID for this plugin object. You need it to remove the plugin from the connection |
+| `PluginName` | A name your application can give this plugin. Optional |
+| `PluginTag` | Any extra data your application wants to keep with this plugin. Optional |
+| `IsEnabled` | True if the plugin is turned on and should take part in handling messages |
 
 ## Functions
 
-The `ProcessIncomingMessage` callback is synchronous, and needs to be handled quickly and efficiently by the calling application.
+The connection waits for `ProcessIncomingMessage` to finish before it moves on, so keep it fast.
 
-Applications are typically much faster than devices at handling messages. However, failing to drain the incoming message queue fast enough can result in transmission errors. With MIDI 2.0 there is no upper performance limit on devices, and USB 3 and Network MIDI devices, among others, are capable of transmitting a large number of messages in a very short period of time.
+Applications are usually much faster than devices. But if your plugin can't keep up, the incoming message queue can fill up and cause errors. MIDI 2.0 has no speed limit for devices, and USB 3 and network devices, among others, can send a lot of messages in a very short time.
 
-If you need to do long-running processing of incoming messages, add them to your own incoming queue and have them processed by another application thread.
+If you need to do slow work with incoming messages, copy them to your own queue and process them on another thread.
 
 | Function | Description |
 | ---- | ---- |
-| `Initialize (endpointConnection)` | Called by the endpoint connection. Perform any setup code which requires the endpoint connection pointer here. |
-| `OnEndpointConnectionOpened()` | Callback when the endpoint connection is opened. If the plugin is added after the endpoint connection has already been opened, this is called immediately. |
-| `ProcessIncomingMessage (args, skipFurtherListeners, skipMainMessageReceivedEvent)` | Callback for processing an incoming message. Set `skipFurtherListeners` to true to stop the message being passed to any plugin after this one. Set `skipMainMessageReceivedEvent` to true to stop the endpoint connection raising its own `MessageReceived` event for this message. |
-| `Cleanup()` | Called when the endpoint is tearing down |
+| `Initialize(endpointConnection)` | The connection calls this when the plugin is added. Do any setup that needs the connection here |
+| `OnEndpointConnectionOpened()` | Called when the connection opens. If the plugin is added after the connection is already open, it's called right away |
+| `ProcessIncomingMessage(args, skipFurtherListeners, skipMainMessageReceivedEvent)` | Called for each incoming message. Set `skipFurtherListeners` to true to keep the message from reaching any plugin after this one. Set `skipMainMessageReceivedEvent` to true to keep the connection from raising its own `MessageReceived` event for this message |
+| `Cleanup()` | Called when the connection is shutting down |
 
 ## The two skip flags
 
-They suppress different things and are independent of each other. `skipFurtherListeners` ends the plugin chain for this message; `skipMainMessageReceivedEvent` suppresses the connection's own event. Setting either one has no effect on the other, so a plugin which wants both must set both.
+The two flags control different things, and each one works on its own. `skipFurtherListeners` stops the message from reaching the rest of the plugins. `skipMainMessageReceivedEvent` stops the connection's own event. Setting one has no effect on the other, so a plugin that wants both must set both.
 
-Both are output parameters, and each plugin reports only its own decision. Do not read the value passed in and do not try to carry forward what an earlier plugin asked for — the endpoint connection combines the answers from every plugin itself, and a value set by one plugin cannot be cleared by a later one. Write both on every path through your implementation, including the paths where the message is not one you handle.
+Both are output parameters, and each plugin reports only its own choice. Don't read the value that's passed in, and don't try to carry forward what an earlier plugin asked for. The connection combines the answers from every plugin itself, and a later plugin can't clear a flag an earlier plugin set. Set both flags on every path through your code, including the paths for messages you don't handle.

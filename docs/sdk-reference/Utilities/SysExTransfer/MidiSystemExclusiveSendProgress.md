@@ -6,17 +6,17 @@ type: runtimeclass
 description: Progress information reported during a System Exclusive data transfer
 ---
 
-This class carries the progress information reported by the asynchronous send operations on `MidiSystemExclusiveSender`. You receive an instance of it through the progress callback of the `IAsyncOperationWithProgress` returned by those methods.
+The progress reported while `MidiSystemExclusiveSender` sends data. You get one in the progress callback of the `IAsyncOperationWithProgress` that the send method returns.
 
-Instances are created and updated by the sender. Applications do not create this type directly.
+The sender creates and updates these. Your app doesn't create them.
 
 ## Properties
 
 | Property | Description |
 | --------------- | ----------- |
-| `CountBytesRead` | The total number of bytes read so far from the source data stream. |
-| `CountMessagesSent` | The total number of UMP messages sent so far to the destination endpoint. |
+| `CountBytesRead` | How many bytes have been read from the source data so far |
+| `CountMessagesSent` | How many UMP messages have been sent to the destination endpoint so far |
 
 ## Notes
 
-The source data is MIDI 1.0 bytestream-format SysEx, and each SysEx 7 UMP message carries up to six data bytes, so `CountBytesRead` typically advances much faster than `CountMessagesSent`. If you want to show a percentage-complete indicator, compare `CountBytesRead` against the known size of your source data rather than using the message count.
+The source data is MIDI 1.0 bytestream SysEx, and each SysEx 7 UMP message carries up to six data bytes. So `CountBytesRead` usually goes up much faster than `CountMessagesSent`. To show a percent-complete bar, compare `CountBytesRead` to the size of your source data, instead of using the message count.

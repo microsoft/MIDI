@@ -42,6 +42,7 @@
 #include <Feature_Servicing_MIDI2TransportConfigRejectionReasons.h>
 #include <Feature_Servicing_MIDI2EndpointCustomizationEnhancements.h>
 #include <Feature_Servicing_MIDI2LoopbackUniqueEndpointNames.h>
+#include <Feature_Servicing_MIDI2LoopbackFeedbackProtection.h>
 
 // generated service interfaces, so tests can push configuration the same way the SDK does
 #include <WindowsMidiServices.h>

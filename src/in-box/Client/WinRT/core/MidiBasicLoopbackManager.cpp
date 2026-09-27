@@ -163,6 +163,13 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
                         // nothing has passed through a loopback which was created a moment ago
                         0);
 
+                    entry->InternalSetFeedbackStatus(
+                        IsFeedbackProtectionAvailable() && creationConfig.FeedbackProtection() != bloop::MidiBasicLoopbackFeedbackProtection::Off ?
+                            bloop::MidiBasicLoopbackFeedbackProtection::Mute :
+                            bloop::MidiBasicLoopbackFeedbackProtection::Off,
+                        false,
+                        foundation::DateTime{});
+
                     result->InternalSetSuccess(creationConfig.AssociationId(), *entry);
 
 
@@ -589,6 +596,65 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
     }
 
 
+    // Read defensively: a field this entry cannot read leaves it reported as not watching.
+    static void ApplyFeedbackStatusFromListEntry(
+        _In_ implementation::MidiBasicLoopbackEntry& entry,
+        _In_ json::JsonObject const& entryObject) noexcept
+    {
+        try
+        {
+            // Absent means the transport cannot watch for feedback, so it is honestly off.
+            auto feedbackProtection = bloop::MidiBasicLoopbackFeedbackProtection::Off;
+
+            if (entryObject.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_PROTECTION_PROPERTY))
+            {
+                auto const value = entryObject.Lookup(MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_PROTECTION_PROPERTY);
+
+                bool enabled{ false };
+
+                if (value != nullptr &&
+                    value.ValueType() == json::JsonValueType::String &&
+                    internal::TryParseFeedbackProtectionValue(std::wstring{ value.GetString() }, enabled) &&
+                    enabled)
+                {
+                    feedbackProtection = bloop::MidiBasicLoopbackFeedbackProtection::Mute;
+                }
+            }
+
+            bool isMutedForFeedback{ false };
+
+            if (entryObject.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_FOR_FEEDBACK_PROPERTY))
+            {
+                auto const value = entryObject.Lookup(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_FOR_FEEDBACK_PROPERTY);
+
+                isMutedForFeedback = value != nullptr && value.ValueType() == json::JsonValueType::Boolean && value.GetBoolean();
+            }
+
+            foundation::DateTime detectedTime{};
+
+            if (isMutedForFeedback && entryObject.HasKey(MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_DETECTED_TIME_PROPERTY))
+            {
+                auto const value = entryObject.Lookup(MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_DETECTED_TIME_PROPERTY);
+
+                int64_t ticks{ 0 };
+
+                if (value != nullptr &&
+                    value.ValueType() == json::JsonValueType::String &&
+                    internal::TryParseDecimalFileTime(std::wstring{ value.GetString() }, ticks))
+                {
+                    // a FILETIME and a DateTime count the same ticks from the same epoch
+                    detectedTime = foundation::DateTime{ foundation::TimeSpan{ ticks } };
+                }
+            }
+
+            entry.InternalSetFeedbackStatus(feedbackProtection, isMutedForFeedback, detectedTime);
+        }
+        catch (...)
+        {
+        }
+    }
+
+
     collections::IVector<bloop::MidiBasicLoopbackEntry> MidiBasicLoopbackManager::GetActiveLoopbackEntries()
     {
         auto results = winrt::single_threaded_vector<bloop::MidiBasicLoopbackEntry>();
@@ -647,6 +713,8 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
                                 messageCount > 0.0 ? static_cast<uint64_t>(messageCount) : 0
                             );
 
+                            ApplyFeedbackStatusFromListEntry(*entry, entryObject);
+
                             results.Append(*entry);
                         }
                     }
@@ -664,6 +732,93 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
 
         return results;
 
+    }
+
+
+    bool MidiBasicLoopbackManager::IsFeedbackProtectionAvailable() noexcept
+    {
+        try
+        {
+            return svc::MidiServiceTransportPluginConfigManager::QueryCapability(
+                TransportId(),
+                MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_FEEDBACK_PROTECTION);
+        }
+        catch (...)
+        {
+            return false;
+        }
+    }
+
+
+    _Use_decl_annotations_
+    bloop::MidiBasicLoopbackUpdateResponse MidiBasicLoopbackManager::SetFeedbackProtection(
+        winrt::guid const& associationId,
+        bloop::MidiBasicLoopbackFeedbackProtection const& feedbackProtection) noexcept
+    {
+        auto result = winrt::make_self<MidiBasicLoopbackUpdateResponse>();
+
+        if (result == nullptr)
+        {
+            return nullptr;
+        }
+
+        try
+        {
+            if (feedbackProtection != bloop::MidiBasicLoopbackFeedbackProtection::Mute &&
+                feedbackProtection != bloop::MidiBasicLoopbackFeedbackProtection::Off)
+            {
+                result->InternalSetFailure(
+                    bloop::MidiBasicLoopbackErrorCode::InvalidArgument,
+                    internal::ResourceGetHString(IDS_LOOPBACK_ERROR_INVALID_FEEDBACK_PROTECTION));
+
+                return *result;
+            }
+
+            if (!IsFeedbackProtectionAvailable())
+            {
+                result->InternalSetFailure(
+                    bloop::MidiBasicLoopbackErrorCode::FeedbackProtectionNotAvailable,
+                    internal::ResourceGetHString(IDS_LOOPBACK_ERROR_FEEDBACK_PROTECTION_NOT_SUPPORTED));
+
+                return *result;
+            }
+
+            svc::MidiServiceTransportCommand cmd(TransportId());
+
+            cmd.Arguments().Insert(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID, internal::GuidToString(associationId));
+            cmd.Arguments().Insert(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_PARAMETER_FEEDBACK_PROTECTION,
+                internal::FeedbackProtectionJsonValue(feedbackProtection == bloop::MidiBasicLoopbackFeedbackProtection::Mute));
+            cmd.Verb(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_SET_FEEDBACK_PROTECTION);
+
+            auto serviceResponse = svc::MidiServiceTransportPluginConfigManager::SendCommand(cmd);
+
+            if (serviceResponse.Status() == svc::MidiServiceConfigResponseStatus::Success)
+            {
+                result->InternalSetSuccess();
+            }
+            else
+            {
+                result->InternalSetFailure(
+                    static_cast<bloop::MidiBasicLoopbackErrorCode>(serviceResponse.ServiceErrorCode()),
+                    serviceResponse.ServiceErrorMessage());
+            }
+        }
+        catch (winrt::hresult_error const& ex)
+        {
+            MIDI_SDK_LOG_HRESULT_EXCEPTION(nullptr, ex, L"hresult error setting basic loopback feedback protection.");
+
+            result->InternalSetFailure(bloop::MidiBasicLoopbackErrorCode::ClientApiException, ex.message());
+        }
+        catch (...)
+        {
+            MIDI_SDK_LOG_GENERAL_EXCEPTION(nullptr, L"General exception setting basic loopback feedback protection.");
+
+            result->InternalSetFailure(
+                bloop::MidiBasicLoopbackErrorCode::ClientApiException,
+                internal::ResourceGetHString(IDS_ERROR_GENERAL_EXCEPTION));
+        }
+
+        return *result;
     }
 
 

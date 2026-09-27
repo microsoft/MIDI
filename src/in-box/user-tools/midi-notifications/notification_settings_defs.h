@@ -20,6 +20,7 @@
 
 // Per-category switches, so a customer can keep the ones they want.
 #define MIDI_NOTIFICATIONS_VALUE_NETWORK_APPROVAL       L"NetworkApprovalEnabled"
+#define MIDI_NOTIFICATIONS_VALUE_LOOPBACK_FEEDBACK      L"LoopbackFeedbackEnabled"
 
 // The identity the app publishes toasts under. It has to match the AppUserModelID on the Start
 // Menu shortcut the installer writes, or the notification platform will not accept a toast.

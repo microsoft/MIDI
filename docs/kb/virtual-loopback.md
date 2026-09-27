@@ -89,3 +89,7 @@ Each loopback endpoint pair is identified by a GUID for the association id. The 
 ## Implementation
 
 Internally, the Virtual Loopback is implemented as two endpoints which are cross-wired, so anything sent out to Loopback A arrives on the input of Loopback B, and vice versa. Each declared pair has an exclusive relationship, and there's no practical limit to the number of loopback pairs you can define.
+
+## Feedback protection
+
+On versions of Windows MIDI Services that support it, a loopback pair mutes itself when MIDI keeps coming back into it, which stops a feedback loop before it takes over the PC. Both directions are watched, and a loop in either one mutes the whole pair, just like muting it by hand. See [Why a loopback mutes itself]({{ site.baseurl }}/kb/loopback-feedback-protection/).

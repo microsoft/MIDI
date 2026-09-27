@@ -65,6 +65,46 @@ namespace midipatchbay
     // "72" or "56.69%", for a summary line.
     winrt::hstring DescribeScaledValue(_In_ int32_t hundredths, _In_ ValueScale scale) noexcept;
 
+    // How a controller or aftertouch value rises from the bottom of its range to the top.
+    enum class ValueCurve : int32_t
+    {
+        Linear = 0,
+
+        // Rises slowly at first, which gives finer control near the bottom.
+        SlowRise = 1,
+
+        // Rises quickly at first, which gives finer control near the top.
+        FastRise = 2,
+    };
+
+    // Reshapes one continuous value, in this order: find where it sits in the input range,
+    // flip it, bend it, then place it in the output range. Ranges are in hundredths of a percent.
+    // A range typed high to low runs backwards, so the numbers always mean what they say.
+    struct ValueShape
+    {
+        bool Invert{ false };
+        ValueCurve Curve{ ValueCurve::Linear };
+
+        // Anything outside the input range is held at its nearest end, so a pedal that never
+        // reaches either end can still cover the whole output range.
+        int32_t InputMinimumHundredths{ 0 };
+        int32_t InputMaximumHundredths{ FullScaleHundredths };
+
+        int32_t OutputMinimumHundredths{ 0 };
+        int32_t OutputMaximumHundredths{ FullScaleHundredths };
+
+        bool ChangesNothing() const noexcept;
+
+        // 0 to 1 in, 0 to 1 out. The dialog draws the preview with this.
+        double ShapeUnit(_In_ double value) const noexcept;
+
+        // Worked out in whole MIDI 1.0 steps, so a range typed as 0 to 127 lands on exactly the
+        // steps that were typed.
+        uint8_t Shape7(_In_ uint8_t value) const noexcept;
+
+        uint32_t Shape32(_In_ uint32_t value) const noexcept;
+    };
+
     // What one connection does to the messages it passes on.
     //
     // Like MessageFilter this is a plain value with no UI and no WinRT, because it runs on the
@@ -103,8 +143,17 @@ namespace midipatchbay
         int32_t MinimumVelocityHundredths{ 0 };
         int32_t MaximumVelocityHundredths{ FullScaleHundredths };
 
-        // -1 where a controller is not remapped. Values are carried over untouched.
+        // -1 where a controller is not remapped. The map moves the controller; the value shapes
+        // below are what change its value.
         std::array<int16_t, ControlMapSize> ControlMap{};
+
+        // Indexed by the controller number AFTER the map above, so a shape describes what the
+        // destination receives. A shape that changes nothing is the same as no shape.
+        std::array<ValueShape, ControlMapSize> ControlValueShapes{};
+
+        // Channel pressure and poly pressure. A pressure of zero always goes out as zero, because
+        // it means the key was let go.
+        ValueShape AftertouchShape{};
 
         // Program change. The bank tables cover bank select MSB (controller 0) and LSB
         // (controller 32) on MIDI 1.0, and the bank fields a MIDI 2.0 program change carries.

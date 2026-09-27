@@ -12,6 +12,26 @@
 
 namespace glass
 {
+    // What a finger on a pad grid did.
+    enum class PadTouchPhase
+    {
+        Down = 0,
+        Move = 1,
+        Up = 2,
+    };
+
+    // One finger on a pad grid. Touch is the pointer, so two fingers are two notes. Note is the
+    // pad under it, and pitch is the pitch under it in semitones, which only a note that bends to
+    // follow the finger listens to.
+    struct PadTouch
+    {
+        PadTouchPhase Phase{ PadTouchPhase::Down };
+        uint32_t Touch{ 0 };
+        int32_t Note{ -1 };
+        double Velocity{ 1.0 };
+        double Pitch{ 0.0 };
+    };
+
     // Pointer, pen and touch to a control to a value.
     //
     // Handlers are attached to each control element rather than to the page, so XAML routes the
@@ -41,6 +61,10 @@ namespace glass
         // counted from the leftmost drawn, not from note zero.
         std::function<void(size_t itemIndex, int32_t key, double velocity, bool isDown)> KeyChanged{};
 
+        // A finger landed on a pad grid, moved on it, or came off it. Unlike every other control,
+        // a pad grid takes a finger per pad, because a chord is several fingers on one control.
+        std::function<void(size_t itemIndex, PadTouch const& touch)> PadTouched{};
+
         // Where the nearest stop is, or the position unchanged. The engine owns the stops; the
         // surface only has to put the finger on one.
         std::function<double(size_t itemIndex, double position)> Snap{};
@@ -63,6 +87,9 @@ namespace glass
         bool IsViewMode() const noexcept { return m_viewMode; }
 
     private:
+        // Ten fingers on one grid. A pen or a mouse is one more pointer, and a hand has five.
+        static constexpr size_t MaximumPadFingers = 10;
+
         struct Binding
         {
             GlassControlElement Element{ nullptr };
@@ -100,11 +127,17 @@ namespace glass
             double TurnedDegrees{ 0.0 };
             double TurnDegreesForFullRange{ 180.0 };
 
+            // A switch: how many slices its face is cut into.
+            int32_t SwitchPositions{ 0 };
+
             // Which way a finger drags this control up. Knobs and encoders only.
             DragAxis Drag{ DragAxis::Vertical };
 
             // A pad that takes its velocity from how hard it was hit.
             bool VelocityFromTouch{ false };
+
+            // A finger dragging a video's bar, rather than doing anything a control does.
+            bool Scrubbing{ false };
 
             // Whether a press has to be held or latches. Per control rather than per kind,
             // because an LFO is one or the other depending on what the customer asked for.
@@ -116,6 +149,21 @@ namespace glass
             KeyboardSpec Keyboard{};
 
             int32_t PressedKey{ -1 };
+
+            // A pad grid: what it plays, where its pads were drawn, and which pad each finger
+            // on it is holding. Copies for the same reason as the keyboard.
+            bool PlaysPads{ false };
+            PadGridSpec PadGrid{};
+            PadGridLayout PadLayout{};
+
+            struct PadFinger
+            {
+                uint32_t PointerId{ 0 };
+                int32_t Cell{ -1 };
+            };
+
+            std::array<PadFinger, MaximumPadFingers> PadFingers{};
+            size_t PadFingerCount{ 0 };
         };
 
         void OnPressed(_In_ size_t index, _In_ xaml::Input::PointerRoutedEventArgs const& args);
@@ -134,6 +182,16 @@ namespace glass
             _In_ double x,
             _In_ double y,
             _In_ bool down);
+
+        // One finger on a pad grid, landing, moving and lifting. Every finger is tracked on its
+        // own, so a finger lifting ends its own note and nobody else's.
+        void PressPad(_In_ Binding& binding, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+        void MovePad(_In_ Binding& binding, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+        void ReleasePad(_In_ Binding& binding, _In_ uint32_t pointerId);
+
+        // An image control sends nothing. A press on its video's bar scrubs, and a press
+        // anywhere else stops or starts the video, if the layout asked for either.
+        void PressPicture(_In_ Binding& binding, _In_ xaml::Input::PointerRoutedEventArgs const& args);
 
         std::vector<Binding> m_bindings{};
         SurfaceRenderer* m_renderer{ nullptr };

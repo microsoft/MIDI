@@ -12,11 +12,11 @@ Returned by `MidiNetworkTransportManager.RemoveNetworkHostAsync`.
 
 | Property | Description |
 | -------- | ----------- |
-| `HostId` | The GUID of the host the request referred to |
+| `HostId` | The GUID of the host the request was about |
 | `Success` | True if the host was removed |
 | `ErrorCode` | A `MidiNetworkHostRemovalErrorCode` when `Success` is false |
-| `ErrorMessage` | A human-readable description of the failure |
+| `ErrorMessage` | A description of the failure that people can read |
 
 ## Remarks
 
-Check `Success` first. When it is false, `ErrorCode` gives the machine-readable reason and `ErrorMessage` a localized description suitable for display.
+Check `Success` first. When it's false, `ErrorCode` tells your code why, and `ErrorMessage` is a translated description you can show to people.

@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdio>
 #include <unordered_set>
 
 namespace glass
@@ -179,8 +180,9 @@ namespace glass
             {
                 if (rendered <= space)
                 {
-                    // Smaller than the control, so there is nothing to pan.
-                    return (space - rendered) * 0.5;
+                    // Smaller than the control, so the same number says where it sits instead:
+                    // 0 against the left or top, 1 against the right or bottom.
+                    return (space - rendered) * std::clamp(centerFraction, 0.0, 1.0);
                 }
 
                 return std::clamp(
@@ -194,6 +196,140 @@ namespace glass
             place(picture.CenterY, height, available.Height),
             std::max(width, 1.0),
             std::max(height, 1.0) };
+    }
+
+    _Use_decl_annotations_
+    PictureRect VisiblePictureRect(
+        PictureRect const& content,
+        double controlWidth,
+        double controlHeight) noexcept
+    {
+        auto const left = std::max(content.X, 0.0);
+        auto const top = std::max(content.Y, 0.0);
+        auto const right = std::min(content.X + content.Width, std::max(controlWidth, 0.0));
+        auto const bottom = std::min(content.Y + content.Height, std::max(controlHeight, 0.0));
+
+        if (!(right > left) || !(bottom > top))
+        {
+            return PictureRect{};
+        }
+
+        return PictureRect{ left, top, right - left, bottom - top };
+    }
+
+    _Use_decl_annotations_
+    VideoRange VideoPlayRange(Picture const& picture, double durationSeconds) noexcept
+    {
+        auto const finiteOrZero = [](double value) noexcept
+            {
+                return std::isfinite(value) ? std::clamp(value, 0.0, MaximumVideoSeconds) : 0.0;
+            };
+
+        auto const duration = finiteOrZero(durationSeconds);
+        auto start = finiteOrZero(picture.VideoStartSeconds);
+        auto end = finiteOrZero(picture.VideoEndSeconds);
+
+        // Not opened yet. The points are taken at their word, and a stop that is not after the
+        // start means the end of the file, whenever that turns out to be.
+        if (duration <= 0.0)
+        {
+            return VideoRange{ start, end > start ? end : 0.0 };
+        }
+
+        if (start >= duration)
+        {
+            start = 0.0;
+        }
+
+        if (end <= start || end > duration)
+        {
+            end = duration;
+        }
+
+        // Too short to be worth playing, so the start gives way. A clip shorter than the minimum
+        // plays whole.
+        if (end - start < MinimumVideoPlaySeconds)
+        {
+            start = std::max(0.0, end - MinimumVideoPlaySeconds);
+        }
+
+        return VideoRange{ start, end };
+    }
+
+    _Use_decl_annotations_
+    double VideoRangeFraction(VideoRange const& range, double seconds) noexcept
+    {
+        auto const length = range.Length();
+
+        if (length <= 0.0 || !std::isfinite(seconds))
+        {
+            return 0.0;
+        }
+
+        return std::clamp((seconds - range.StartSeconds) / length, 0.0, 1.0);
+    }
+
+    _Use_decl_annotations_
+    double VideoRangeSeconds(VideoRange const& range, double fraction) noexcept
+    {
+        auto const clamped = std::isfinite(fraction) ? std::clamp(fraction, 0.0, 1.0) : 0.0;
+
+        return range.StartSeconds + (range.Length() * clamped);
+    }
+
+    _Use_decl_annotations_
+    std::wstring FormatVideoTime(double seconds)
+    {
+        auto const safe = std::isfinite(seconds) ? std::clamp(seconds, 0.0, MaximumVideoSeconds) : 0.0;
+        auto const tenths = static_cast<long long>(std::llround(safe * 10.0));
+        auto const whole = tenths / 10;
+
+        wchar_t text[32]{};
+
+        if (whole >= 3600)
+        {
+            swprintf_s(text, L"%lld:%02lld:%02lld.%lld",
+                whole / 3600, (whole / 60) % 60, whole % 60, tenths % 10);
+        }
+        else
+        {
+            swprintf_s(text, L"%lld:%02lld.%lld", whole / 60, whole % 60, tenths % 10);
+        }
+
+        return text;
+    }
+
+    _Use_decl_annotations_
+    int32_t SwitchPositionCount(Control const& control) noexcept
+    {
+        return std::clamp(
+            static_cast<int32_t>(control.Switch.Positions.size()),
+            MinimumSwitchPositions,
+            MaximumSwitchPositions);
+    }
+
+    _Use_decl_annotations_
+    int32_t SwitchPositionAt(double value, int32_t positions) noexcept
+    {
+        auto const count = std::max(positions, MinimumSwitchPositions);
+
+        if (!std::isfinite(value))
+        {
+            return 0;
+        }
+
+        return std::clamp(
+            static_cast<int32_t>(std::lround(std::clamp(value, 0.0, 1.0) * (count - 1))),
+            0,
+            count - 1);
+    }
+
+    _Use_decl_annotations_
+    double SwitchValueOf(int32_t position, int32_t positions) noexcept
+    {
+        auto const count = std::max(positions, MinimumSwitchPositions);
+
+        return static_cast<double>(std::clamp(position, 0, count - 1)) / static_cast<double>(count - 1);
     }
 
     _Use_decl_annotations_
@@ -470,6 +606,42 @@ namespace glass
         return midiapp::SanitizeStoredString(std::move(value));
     }
 
+    _Use_decl_annotations_
+    void RegroupCopies(std::vector<Control>& copies)
+    {
+        std::vector<std::pair<std::wstring, std::wstring>> renamed{};
+
+        for (auto& copy : copies)
+        {
+            if (copy.GroupId.empty())
+            {
+                continue;
+            }
+
+            auto found = std::find_if(renamed.begin(), renamed.end(),
+                [&copy](auto const& pair) { return pair.first == copy.GroupId; });
+
+            if (found == renamed.end())
+            {
+                renamed.emplace_back(copy.GroupId, LayoutDocument::NewId());
+                found = std::prev(renamed.end());
+            }
+
+            copy.GroupId = found->second;
+        }
+
+        // A copy of one member of a group is a control on its own, not a group of one.
+        for (auto& copy : copies)
+        {
+            if (!copy.GroupId.empty() &&
+                std::count_if(copies.begin(), copies.end(),
+                    [&copy](Control const& other) { return other.GroupId == copy.GroupId; }) < 2)
+            {
+                copy.GroupId.clear();
+            }
+        }
+    }
+
     namespace
     {
         void CheckMessage(
@@ -728,5 +900,78 @@ namespace glass
         }
 
         return masks;
+    }
+
+    _Use_decl_annotations_
+    bool PanelIsFilled(Control const& panel, Theme const& theme) noexcept
+    {
+        switch (panel.Style)
+        {
+        case ControlStyleOverride::Outline:
+        case ControlStyleOverride::Bare:
+            return false;
+
+        case ControlStyleOverride::Solid:
+            return true;
+
+        default:
+            return theme.PanelFill != PanelFillStyle::None;
+        }
+    }
+
+    _Use_decl_annotations_
+    std::vector<PanelFootprint> PanelFootprints(Page const& page, Theme const& theme) noexcept
+    {
+        std::vector<PanelFootprint> panels{};
+
+        try
+        {
+            for (size_t order = 0; order < page.Controls.size(); ++order)
+            {
+                auto const& control = page.Controls[order];
+
+                if (control.Kind != ControlKind::Panel || !PanelIsFilled(control, theme))
+                {
+                    continue;
+                }
+
+                PanelFootprint footprint{ control.X, control.Y, control.Width, control.Height, order, false };
+
+                // Its middle rather than its whole rectangle, so an inset drawn a pixel over the
+                // edge of the section it belongs to is still that section's inset.
+                footprint.IsInset = SurfaceAt(
+                    panels,
+                    control.X + control.Width * 0.5,
+                    control.Y + control.Height * 0.5,
+                    order) != PrintSurface::Deck;
+
+                panels.push_back(footprint);
+            }
+        }
+        catch (...)
+        {
+        }
+
+        return panels;
+    }
+
+    _Use_decl_annotations_
+    PrintSurface SurfaceAt(std::vector<PanelFootprint> const& panels, double x, double y, size_t order) noexcept
+    {
+        for (auto walk = panels.rbegin(); walk != panels.rend(); ++walk)
+        {
+            if (walk->Order >= order)
+            {
+                continue;
+            }
+
+            if (x >= walk->X && x < walk->X + walk->Width &&
+                y >= walk->Y && y < walk->Y + walk->Height)
+            {
+                return walk->IsInset ? PrintSurface::Inset : PrintSurface::Section;
+            }
+        }
+
+        return PrintSurface::Deck;
     }
 }

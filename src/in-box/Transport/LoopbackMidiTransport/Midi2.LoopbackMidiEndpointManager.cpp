@@ -559,6 +559,11 @@ CMidi2LoopbackMidiEndpointManager::CreateEndpointPair(
                 device.IsMuted = definitionA->IsMuted;
             }
 
+            if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
+            {
+                device.Feedback = MidiLoopbackFeedback::Create(associationId, definitionA->FeedbackProtectionEnabled);
+            }
+
             TransportState::Current().GetEndpointTable()->SetDevice(associationId, device);
         }
         else

@@ -18,6 +18,10 @@ struct MidiBasicLoopbackDeviceSnapshot
     MidiBasicLoopbackDeviceDefinition Definition{};
 
     uint64_t MessageCount{ 0 };
+
+    // what is actually running, which is not always what the definition asked for
+    bool FeedbackProtectionEnabled{ false };
+    MidiBasicLoopbackFeedback::Status FeedbackStatus{};
 };
 
 

@@ -217,6 +217,9 @@ namespace glass
             stage.Children().Append(root);
             host.Children().Append(stage);
 
+            // A card is a still, so nothing on it plays.
+            renderer.SetVideosLive(false);
+
             renderer.Build(surface, document, theme, 0);
 
             // A stopwatch on a card reads zero, the way the layout opens.

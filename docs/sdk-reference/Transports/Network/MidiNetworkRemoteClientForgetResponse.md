@@ -12,15 +12,15 @@ Returned by `MidiNetworkTransportManager.ForgetRemoteClientAsync`.
 
 | Property | Description |
 | -------- | ----------- |
-| `HostId` | Host GUID targeted by the request |
-| `RemoteClientName` | Remote client UMP Endpoint Name targeted by the request |
-| `RemoteClientProductInstanceId` | Remote client Product Instance Id targeted by the request |
-| `Success` | True if the host no longer holds a decision for that remote client |
-| `ErrorCode` | `MidiNetworkRemoteClientForgetErrorCode` when `Success` is false |
-| `ErrorMessage` | Human-readable error text |
+| `HostId` | The GUID of the host the request was about |
+| `RemoteClientName` | The UMP Endpoint Name of the remote client the request was about |
+| `RemoteClientProductInstanceId` | The Product Instance Id of the remote client the request was about |
+| `Success` | True if the host no longer has a decision for that remote client |
+| `ErrorCode` | A `MidiNetworkRemoteClientForgetErrorCode` when `Success` is false |
+| `ErrorMessage` | An error message people can read |
 
 ## Remarks
 
-Forgetting an identity the host holds no decision for reports success, because what the caller asked for is already true.
+Forgetting a client the host has no decision for reports success, because what you asked for is already true.
 
-`Success` being false with `UnrecognizedCommand` means the service predates this command. The saved lists can still be rewritten, but the old decision stays in force until the service restarts.
+If `Success` is false and the error is `UnrecognizedCommand`, the service is older than this command. You can still save the lists, but the old decision stays until the service restarts.

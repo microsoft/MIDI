@@ -200,7 +200,6 @@ namespace winrt::midiglass::implementation
                 controls::ComboBox scale{};
 
                 scale.Header(box_value(resources::GetString(L"BehaviorScaleLabel")));
-                scale.Height(32.0);
                 scale.MinWidth(220.0);
                 scale.FontSize(12.0);
                 scale.Margin({ 0, 0, 0, 10 });
@@ -246,7 +245,6 @@ namespace winrt::midiglass::implementation
                 controls::ComboBox corner{};
 
                 corner.Header(box_value(resources::GetString(L"BehaviorCornerLabel")));
-                corner.Height(32.0);
                 corner.MinWidth(220.0);
                 corner.FontSize(12.0);
                 corner.Margin({ 0, 0, 0, 4 });
@@ -325,7 +323,6 @@ namespace winrt::midiglass::implementation
                 controls::ComboBox source{};
 
                 source.Header(box_value(resources::GetString(L"BehaviorTempoSourceLabel")));
-                source.Height(32.0);
                 source.MinWidth(220.0);
                 source.FontSize(12.0);
                 source.Margin({ 0, 0, 0, 8 });
@@ -675,7 +672,8 @@ namespace winrt::midiglass::implementation
                         if (control.Label.empty() &&
                             control.Kind != glass::ControlKind::Panel &&
                             control.Kind != glass::ControlKind::Image &&
-                            control.Kind != glass::ControlKind::Label)
+                            control.Kind != glass::ControlKind::Label &&
+                            control.Kind != glass::ControlKind::Line)
                         {
                             unnamed++;
                         }

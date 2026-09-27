@@ -7,23 +7,24 @@ implements: Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfi
 description: Config sent to the service to create a basic MIDI 1.0-style loopback endpoint
 ---
 
-This is the configuration sent to the service when an application wants to create a transient basic loopback endpoint.
+The configuration your app sends to the service to create a temporary basic loopback endpoint.
 
 ## Constructors
 
 | Constructor | Description |
 | -------- | ----------- |
-| `MidiBasicLoopbackCreationConfig()` | Create an empty config |
-| `MidiBasicLoopbackCreationConfig(endpointDefinition)` | Create a configuration with the specified endpoint definition |
+| `MidiBasicLoopbackCreationConfig()` | Creates an empty configuration |
+| `MidiBasicLoopbackCreationConfig(endpointDefinition)` | Creates a configuration with this endpoint definition |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `AssociationId` | Read-only. The GUID which uniquely identifies this loopback, generated when the configuration is created. Use it to remove the loopback later. |
+| `AssociationId` | Read-only. A GUID that identifies this loopback. It's made when the configuration is created. Use it to remove the loopback later |
 | `EndpointDefinition` | The `MidiBasicLoopbackEndpointDefinition` for this loopback |
-| `IsMuted` | When true, the loopback endpoint is created but all messages are suppressed |
+| `IsMuted` | When true, the loopback endpoint is created, but no messages get through |
+| `FeedbackProtection` | What the loopback does if MIDI feeds back into it, as a [`MidiBasicLoopbackFeedbackProtection`]({{ site.baseurl }}/sdk-reference/Transports/BasicLoopback/MidiBasicLoopbackFeedbackProtectionEnum/). `Mute` by default. Ignored when the transport can't watch for feedback |
 
 ## Remarks
 
-The association id is generated rather than supplied, because it is an internal identifier with no meaning to the user. Assigning the definition also fills in its `UniqueId` if you left that empty, so a caller who only wants to name the endpoint does not have to invent any identifiers.
+The association id is made for you, not supplied by you, because it's an internal id that means nothing to people. Setting the definition also fills in its `UniqueId` if you left that empty. So if you only want to name the endpoint, you don't have to make up any ids.

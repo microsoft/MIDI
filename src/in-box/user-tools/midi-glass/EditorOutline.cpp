@@ -281,6 +281,97 @@ namespace winrt::midiglass::implementation
                 return grid;
             }
 
+            case glass::PaletteArtShape::PadGrid:
+            {
+                // Two rows of four, with one pad lit the way a root note is.
+                controls::Canvas canvas{};
+
+                canvas.Width(art.Width);
+                canvas.Height(art.Height);
+
+                constexpr int32_t columns = 4;
+                constexpr int32_t rows = 2;
+                constexpr double gap = 1.5;
+
+                auto const cell = std::min(
+                    (art.Width - gap * (columns - 1)) / columns,
+                    (art.Height - gap * (rows - 1)) / rows);
+
+                for (int32_t row = 0; row < rows; ++row)
+                {
+                    for (int32_t column = 0; column < columns; ++column)
+                    {
+                        shapes::Rectangle pad{};
+
+                        pad.Width(cell);
+                        pad.Height(cell);
+                        pad.RadiusX(art.CornerRadius);
+                        pad.RadiusY(art.CornerRadius);
+                        pad.UseLayoutRounding(false);
+                        pad.Fill(AccentAt(row == 1 && column == 0 ? 1.0 : 0.45));
+
+                        controls::Canvas::SetLeft(pad, column * (cell + gap));
+                        controls::Canvas::SetTop(pad, row * (cell + gap));
+
+                        canvas.Children().Append(pad);
+                    }
+                }
+
+                return canvas;
+            }
+
+            case glass::PaletteArtShape::HexGrid:
+            {
+                // Three hexagons along the bottom and two nested above them, one lit.
+                controls::Canvas canvas{};
+
+                canvas.Width(art.Width);
+                canvas.Height(art.Height);
+
+                constexpr double gap = 1.2;
+
+                auto const width = (art.Width - gap * 2.0) / 3.0;
+                auto const height = width * 2.0 / 1.7320508075688772;
+                auto const rowPitch = (width + gap) * 0.8660254037844386;
+
+                auto const hexagon = [&](double left, double top, double opacity)
+                    {
+                        shapes::Polygon shape{};
+
+                        media::PointCollection points{};
+
+                        points.Append({ static_cast<float>(width * 0.5), 0.0f });
+                        points.Append({ static_cast<float>(width), static_cast<float>(height * 0.25) });
+                        points.Append({ static_cast<float>(width), static_cast<float>(height * 0.75) });
+                        points.Append({ static_cast<float>(width * 0.5), static_cast<float>(height) });
+                        points.Append({ 0.0f, static_cast<float>(height * 0.75) });
+                        points.Append({ 0.0f, static_cast<float>(height * 0.25) });
+
+                        shape.Points(points);
+                        shape.UseLayoutRounding(false);
+                        shape.Fill(AccentAt(opacity));
+
+                        controls::Canvas::SetLeft(shape, left);
+                        controls::Canvas::SetTop(shape, top);
+
+                        canvas.Children().Append(shape);
+                    };
+
+                auto const bottom = art.Height - height;
+
+                for (int32_t column = 0; column < 3; ++column)
+                {
+                    hexagon(column * (width + gap), bottom, column == 0 ? 1.0 : 0.45);
+                }
+
+                for (int32_t column = 0; column < 2; ++column)
+                {
+                    hexagon(column * (width + gap) + (width + gap) * 0.5, bottom - rowPitch, 0.45);
+                }
+
+                return canvas;
+            }
+
             case glass::PaletteArtShape::Rectangle:
             default:
             {

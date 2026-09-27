@@ -60,6 +60,11 @@
 // the transport reports whether apps are connected to a virtual device's client-visible endpoint
 #define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CLIENT_ENDPOINT_IN_USE_NOTIFICATION    L"clientEndpointInUseNotification"
 
+// the loopback watches for MIDI feeding back into itself and can mute itself when it does
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_FEEDBACK_PROTECTION                   L"feedbackProtection"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_SET_FEEDBACK_PROTECTION                          L"setFeedbackProtection"
+#define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_PARAMETER_FEEDBACK_PROTECTION                    L"feedbackProtection"
+
 #define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ID                     L"endpointId"
 #define MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID         L"associationId"
 
@@ -77,6 +82,24 @@
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_ENABLED_PROPERTY                                   L"enabled"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_UMP_ONLY_PROPERTY                                  L"umpOnly"
 #define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY                                     L"muted"
+
+// What a loopback does when MIDI feeds back into it. Missing or not recognized means mute.
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_PROTECTION_PROPERTY                       L"feedbackProtection"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_PROTECTION_VALUE_MUTE                     L"mute"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_PROTECTION_VALUE_OFF                      L"off"
+
+// Reported by listEntries only, never read from a configuration: why the loopback is muted.
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_FOR_FEEDBACK_PROPERTY                        L"mutedForFeedback"
+// FILETIME, UTC, as a decimal string because a json number cannot hold 64 bits exactly
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_DETECTED_TIME_PROPERTY                    L"feedbackDetectedTime"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_TEST_PROPERTY                             L"feedbackTest"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_TEST_VALUE_REPEAT                         L"repeat"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_TEST_VALUE_RUNAWAY                        L"runaway"
+#define MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_MESSAGES_PER_SECOND_PROPERTY              L"feedbackMessagesPerSecond"
+// MIDI 2.0 loopback only: which way the feedback was going
+#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_FEEDBACK_DIRECTION_PROPERTY                      L"feedbackDirection"
+#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_FEEDBACK_DIRECTION_VALUE_A_TO_B                  L"aToB"
+#define MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_FEEDBACK_DIRECTION_VALUE_B_TO_A                  L"bToA"
 
 // bare file name within the shared endpoint assets folder. Same key the endpoint customization
 // path uses, so one endpoint has one place its picture is named.

@@ -12,15 +12,15 @@ Implements `IMidiServiceTransportPluginConfig`.
 
 | Constructor | Description |
 | -------- | ----------- |
-| `MidiBluetoothDeviceConnectConfig(bluetoothDeviceId)` | Creates a configuration for the device at the given twelve hex digit Bluetooth address. |
+| `MidiBluetoothDeviceConnectConfig(bluetoothDeviceId)` | Creates a configuration for the device with this Bluetooth address, as twelve hex digits |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `BluetoothDeviceId` | The twelve hex digit Bluetooth address of the device. |
-| `Comment` | An optional comment written into the configuration file alongside the entry. It has no effect on the connection and exists to make the file readable. |
-| `TransportId` | The Bluetooth transport's GUID. |
-| `ConfigJson` | The configuration file representation of this connection. |
+| `BluetoothDeviceId` | The device's Bluetooth address, as twelve hex digits |
+| `Comment` | An optional comment saved with the entry in the configuration. It doesn't change the connection. It's there to make the entry easier for a person to recognize |
+| `TransportId` | The Bluetooth transport's GUID |
+| `ConfigJson` | This connection, as JSON |
 
-Pass this to `MidiBluetoothTransportManager.ConnectDeviceAsync` to connect now, and to `MidiServiceTransportPluginConfigManager.SaveUpdate` to have the device reconnect after the service restarts. The two are separate steps, so a connection which the service rejects is never written to the configuration file.
+Pass this to `MidiBluetoothTransportManager.ConnectDeviceAsync` to connect now. Pass it to `MidiServiceTransportPluginConfigManager.SaveUpdate` to have the device connect again after the service restarts. They're separate steps, so a connection the service rejects is never saved.

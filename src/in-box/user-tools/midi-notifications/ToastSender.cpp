@@ -63,17 +63,35 @@ try
 {
     // Everything interpolated below is either a resource string or has already been through
     // SanitizeForToast. Nothing straight off the network reaches this.
-    std::wstring xml{ L"<toast scenario=\"reminder\" activationType=\"protocol\" launch=\"" };
-    xml += buttonProtocolUri;
-    xml += L"\">";
+    //
+    // No URI means nothing is registered to open, so the toast is text only: a button that led
+    // to "find an app to open this link" would be worse than none.
+    std::wstring xml{};
+
+    if (buttonProtocolUri.empty())
+    {
+        xml += L"<toast>";
+    }
+    else
+    {
+        xml += L"<toast scenario=\"reminder\" activationType=\"protocol\" launch=\"";
+        xml += buttonProtocolUri;
+        xml += L"\">";
+    }
+
     xml += L"<visual><binding template=\"ToastGeneric\">";
     xml += L"<text>" + title + L"</text>";
     xml += L"<text>" + body + L"</text>";
     xml += L"<text placement=\"attribution\">" + attribution + L"</text>";
     xml += L"</binding></visual>";
-    xml += L"<actions>";
-    xml += L"<action content=\"" + buttonText + L"\" activationType=\"protocol\" arguments=\"" + buttonProtocolUri + L"\" />";
-    xml += L"</actions>";
+
+    if (!buttonProtocolUri.empty())
+    {
+        xml += L"<actions>";
+        xml += L"<action content=\"" + buttonText + L"\" activationType=\"protocol\" arguments=\"" + buttonProtocolUri + L"\" />";
+        xml += L"</actions>";
+    }
+
     xml += L"</toast>";
 
     xmldom::XmlDocument document{ };

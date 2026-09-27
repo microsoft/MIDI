@@ -6,13 +6,13 @@ type: runtimeclass
 description: Response from the attempt to create a loopback endpoint pair
 ---
 
-This class represents the result of an attempt to create runtime transient loopback endpoints.
+The result of trying to create a temporary loopback endpoint pair.
 
 ## Properties
 
 | Property | Description |
 |---|---|
-| `Success` | True if the creation of both endpoints was a success |
-| `ErrorCode` | A `MidiLoopbackErrorCode` value if `Success` is false |
-| `ErrorMessage` | A human-readable error message if `Success` is false |
-| `CreatedLoopbackEntry` | A `MidiLoopbackEntry` object with information about the created loopback pair, if successful |
+| `Success` | True if both endpoints were created |
+| `ErrorCode` | A `MidiLoopbackErrorCode`, if `Success` is false |
+| `ErrorMessage` | An error message people can read, if `Success` is false |
+| `CreatedLoopbackEntry` | A `MidiLoopbackEntry` with information about the new loopback pair, if it worked |

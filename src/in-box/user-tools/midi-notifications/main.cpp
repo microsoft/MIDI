@@ -29,6 +29,7 @@ namespace
     constexpr wchar_t WindowClassName[]{ L"MidiNotificationsMessageWindow" };
 
     NetworkApprovalNotifier g_networkNotifier{ };
+    LoopbackFeedbackNotifier g_loopbackFeedbackNotifier{ };
     RegistryChangeWatcher g_signalWatcher{ };
     RegistryChangeWatcher g_settingsWatcher{ };
 
@@ -174,6 +175,7 @@ namespace
                 }
 
                 g_networkNotifier.Evaluate();
+                g_loopbackFeedbackNotifier.Evaluate();
             }
             return 0;
 

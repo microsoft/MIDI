@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{7C3E9B52-1D84-4F6A-A0B7-3E5C2D9F8141}</ProjectGuid>
+    <RootNamespace>rtpmidispike</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Debug'">true</UseDebugLibraries>
+    <UseDebugLibraries Condition="'$(Configuration)'=='Release'">false</UseDebugLibraries>
+    <WholeProgramOptimization Condition="'$(Configuration)'=='Release'">true</WholeProgramOptimization>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <PropertyGroup>
+    <OutDir>$(MSBuildThisFileDirectory)..\out\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(MSBuildThisFileDirectory)..\out\intermediate\$(Platform)\$(Configuration)\</IntDir>
+
+    <!-- The SDK cross-check is compiled in only once the rtpMIDI SDK has been built -->
+    <RtpSdkWinmd>$(MSBuildThisFileDirectory)..\out\$(Platform)\Release\sdk\Windows.Devices.Midi2.Transports.Rtp.winmd</RtpSdkWinmd>
+    <Midi2Winmd>$(MSBuildThisFileDirectory)..\..\..\in-box\vsfiles-sdk\out\Windows.Devices.Midi2\$(Platform)\Release\Windows.Devices.Midi2.winmd</Midi2Winmd>
+    <RtpProjectionDir>$(MSBuildThisFileDirectory)..\out\intermediate\projection\$(Platform)\</RtpProjectionDir>
+    <RtpSdkCheck Condition="Exists('$(RtpSdkWinmd)') And Exists('$(Midi2Winmd)')">true</RtpSdkCheck>
+
+    <!-- The transport harness needs the service interfaces from an in-box build -->
+    <InBoxIdlDir>$(MSBuildThisFileDirectory)..\..\..\in-box\VSFiles\intermediate\IDL\$(Platform)\Release\</InBoxIdlDir>
+    <RtpTransportTest Condition="Exists('$(InBoxIdlDir)WindowsMidiServices.h')">true</RtpTransportTest>
+    <RtpSdkCheck Condition="'$(RtpTransportTest)'!='true'"></RtpSdkCheck>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..\lib;$(MSBuildThisFileDirectory)..\..\..\in-box\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Optimization Condition="'$(Configuration)'=='Debug'">Disabled</Optimization>
+      <Optimization Condition="'$(Configuration)'=='Release'">MaxSpeed</Optimization>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>ws2_32.lib;Dnsapi.lib;bcrypt.lib;iphlpapi.lib;WindowsApp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(RtpTransportTest)'=='true'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(InBoxIdlDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>RTP_TRANSPORT_TEST;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(RtpSdkCheck)'=='true'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(RtpProjectionDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>RTP_SDK_CHECK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="selftest.cpp" />
+    <ClCompile Include="spike_winrt.cpp" />
+    <ClCompile Include="spike_transport_test.cpp" Condition="'$(RtpTransportTest)'=='true'" />
+    <ClCompile Include="spike_sdk_check.cpp" Condition="'$(RtpSdkCheck)'=='true'" />
+    <ClCompile Include="spike_service.cpp" Condition="'$(RtpSdkCheck)'=='true'" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClInclude Include="..\lib\rtpmidi_protocol.h" />
+    <ClInclude Include="..\lib\rtpmidi_journal.h" />
+    <ClInclude Include="..\lib\rtpmidi_session.h" />
+    <ClInclude Include="..\transport\RtpMidiMdns.h" />
+    <ClInclude Include="spike_common.h" />
+    <ClInclude Include="spike_dnssd.h" />
+    <ClInclude Include="spike_mdns_watch.h" />
+    <ClInclude Include="spike_net.h" />
+  </ItemGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+
+  <!-- Uses the Windows SDK's cppwinrt, which matches the C++/WinRT headers this project compiles with -->
+  <Target Name="GenerateRtpSdkProjection" BeforeTargets="ClCompile" Condition="'$(RtpSdkCheck)'=='true'"
+          Inputs="$(RtpSdkWinmd);$(Midi2Winmd)" Outputs="$(RtpProjectionDir)winrt\Windows.Devices.Midi2.Transports.Rtp.h">
+    <Exec Command="&quot;$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\cppwinrt.exe&quot; -in &quot;$(RtpSdkWinmd)&quot; -in &quot;$(Midi2Winmd)&quot; -ref sdk -out &quot;$(RtpProjectionDir.TrimEnd('\'))&quot;" />
+  </Target>
+</Project>

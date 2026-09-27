@@ -32,10 +32,17 @@ public:
 
     TEST_METHOD(AControlThatAgreesWithItsThemeWritesNoOverrides);
     TEST_METHOD(OverridesOfTheThemeSurviveARoundTrip);
+    TEST_METHOD(AnOldThemeNameReadsAsTheNewOne);
     TEST_METHOD(ALabelBoxSurvivesARoundTrip);
     TEST_METHOD(ALabelWithNoBoxWritesNoBox);
     TEST_METHOD(ACustomPlacementWithNoBoxFallsBackToTheTheme);
     TEST_METHOD(ALabelBoxFromAFileIsBounded);
+
+    // ---- lines, and what a control is printed on ----
+
+    TEST_METHOD(ALineSurvivesARoundTrip);
+    TEST_METHOD(ALineFromAFileIsBounded);
+    TEST_METHOD(ASectionKnowsWhatIsPrintedOnIt);
 
     // ---- the forward rule ----
     TEST_METHOD(KeepsFieldsFromANewerVersion);
@@ -52,6 +59,7 @@ public:
 
     TEST_METHOD(ABackgroundPictureSurvivesARoundTrip);
     TEST_METHOD(AControlPictureSurvivesARoundTrip);
+    TEST_METHOD(AVideoFromBeforeTrimmingPlaysWhole);
     TEST_METHOD(ABackgroundPictureThatIsAPathIsRefused);
     TEST_METHOD(NoBackgroundPictureWritesNothing);
 

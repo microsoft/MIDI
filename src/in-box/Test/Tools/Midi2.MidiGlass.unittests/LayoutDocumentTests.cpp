@@ -13,6 +13,7 @@
 #include "LayoutModel.h"
 #include "LayoutSerializer.h"
 #include "HexText.h"
+#include "ThemeModel.h"
 
 using namespace WEX::Common;
 using namespace WEX::Logging;
@@ -247,6 +248,18 @@ void LayoutDocumentTests::OverridesOfTheThemeSurviveARoundTrip()
     VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(reread.Document));
 }
 
+void LayoutDocumentTests::AnOldThemeNameReadsAsTheNewOne()
+{
+    auto document = LoadHandAuthored();
+
+    document.ThemeName = L"Amber Console";
+
+    auto const reread = glass::ReadLayoutFromJson(glass::WriteLayoutToJson(document));
+
+    VERIFY_IS_TRUE(reread.Succeeded);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Terminal Amber" }, reread.Document.ThemeName);
+}
+
 void LayoutDocumentTests::ALabelBoxSurvivesARoundTrip()
 {
     auto document = LoadHandAuthored();
@@ -326,6 +339,127 @@ void LayoutDocumentTests::ALabelBoxFromAFileIsBounded()
     VERIFY_ARE_EQUAL(glass::MaximumLabelBoxExtent, look.BoxY);
     VERIFY_ARE_EQUAL(glass::MaximumLabelBoxExtent, look.BoxWidth);
     VERIFY_ARE_EQUAL(glass::MaximumLabelBoxExtent, look.BoxHeight);
+}
+
+// ---- lines, and what a control is printed on ----
+
+void LayoutDocumentTests::ALineSurvivesARoundTrip()
+{
+    auto document = MinimalDocument();
+
+    glass::Control line{};
+    line.Id = L"rule";
+    line.Kind = glass::ControlKind::Line;
+    line.X = 20;
+    line.Y = 100;
+    line.Width = 240;
+    line.Height = 8;
+    line.Line.Thickness = 3;
+    line.Line.Color = L"#FF4B36";
+    line.Line.Ends = glass::LineEnds::Faded;
+
+    document.Pages[0].Controls.push_back(line);
+
+    auto const text = glass::WriteLayoutToJson(document);
+
+    VERIFY_IS_TRUE(text.find(L"\"kind\": \"line\"") != std::wstring::npos);
+    VERIFY_IS_TRUE(text.find(L"\"ends\": \"faded\"") != std::wstring::npos);
+
+    // A knob has no line to write, so it writes none.
+    VERIFY_ARE_EQUAL(text.find(L"\"line\": {"), text.rfind(L"\"line\": {"));
+
+    auto const reread = glass::ReadLayoutFromJson(text);
+    VERIFY_IS_TRUE(reread.Succeeded);
+
+    auto const* back = reread.Document.FindControl(L"rule");
+    VERIFY_IS_NOT_NULL(back);
+
+    VERIFY_IS_TRUE(back->Kind == glass::ControlKind::Line);
+    VERIFY_ARE_EQUAL(3.0, back->Line.Thickness);
+    VERIFY_ARE_EQUAL(std::wstring{ L"#FF4B36" }, back->Line.Color);
+    VERIFY_IS_TRUE(back->Line.Ends == glass::LineEnds::Faded);
+
+    VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(reread.Document));
+}
+
+void LayoutDocumentTests::ALineFromAFileIsBounded()
+{
+    // A stranger's file must not be able to ask for a line thicker than the page, and a finish
+    // this build has never heard of falls back to the theme's rather than failing the file.
+    auto const result = glass::ReadLayoutFromJson(
+        LR"({ "fileVersion": 1, "name": "T", "pages": [ { "id": "p", "name": "P", "controls": [
+            { "id": "a", "kind": "line", "line": { "thickness": 1e9, "ends": "sparkly", "glow": 3 } },
+            { "id": "b", "kind": "line", "line": { "thickness": -5 } } ] } ] })");
+
+    VERIFY_IS_TRUE(result.Succeeded);
+
+    auto const& controls = result.Document.Pages[0].Controls;
+
+    VERIFY_ARE_EQUAL(glass::MaximumLineThickness, controls[0].Line.Thickness);
+    VERIFY_IS_TRUE(controls[0].Line.Ends == glass::LineEnds::UseTheme);
+    VERIFY_ARE_EQUAL(glass::MinimumLineThickness, controls[1].Line.Thickness);
+
+    // and what it did not understand goes back out with it
+    VERIFY_IS_TRUE(glass::WriteLayoutToJson(result.Document).find(L"\"glow\"") != std::wstring::npos);
+}
+
+void LayoutDocumentTests::ASectionKnowsWhatIsPrintedOnIt()
+{
+    glass::Theme theme{};
+    theme.PanelFill = glass::PanelFillStyle::Color;
+    theme.PanelColor = { 0xCA, 0xC5, 0xAC, 255 };
+
+    auto const make = [](wchar_t const* id, glass::ControlKind kind, double x, double y, double width, double height)
+        {
+            glass::Control control{};
+            control.Id = id;
+            control.Kind = kind;
+            control.X = x;
+            control.Y = y;
+            control.Width = width;
+            control.Height = height;
+
+            return control;
+        };
+
+    glass::Page page{};
+
+    // In drawing order: a section, an inset inside it, an outlined frame that fills nothing, and
+    // then the controls.
+    page.Controls.push_back(make(L"section", glass::ControlKind::Panel, 0, 0, 400, 300));
+    page.Controls.push_back(make(L"inset", glass::ControlKind::Panel, 40, 60, 200, 160));
+
+    auto frame = make(L"frame", glass::ControlKind::Panel, 500, 0, 300, 300);
+    frame.Style = glass::ControlStyleOverride::Outline;
+    page.Controls.push_back(frame);
+
+    page.Controls.push_back(make(L"onInset", glass::ControlKind::Knob, 100, 100, 56, 56));
+    page.Controls.push_back(make(L"onSection", glass::ControlKind::Knob, 300, 200, 56, 56));
+    page.Controls.push_back(make(L"inFrame", glass::ControlKind::Knob, 600, 100, 56, 56));
+
+    auto const panels = glass::PanelFootprints(page, theme);
+
+    // The outline fills nothing, so nothing is printed on it.
+    VERIFY_ARE_EQUAL(size_t{ 2 }, panels.size());
+    VERIFY_IS_FALSE(panels[0].IsInset);
+    VERIFY_IS_TRUE(panels[1].IsInset);
+
+    VERIFY_IS_TRUE(glass::SurfaceAt(panels, 128, 128, 3) == glass::PrintSurface::Inset);
+    VERIFY_IS_TRUE(glass::SurfaceAt(panels, 328, 228, 4) == glass::PrintSurface::Section);
+    VERIFY_IS_TRUE(glass::SurfaceAt(panels, 628, 128, 5) == glass::PrintSurface::Deck);
+
+    // Only what was drawn before a control is under it. The section is not under itself, but its
+    // own name, looked up one step later, is printed on it.
+    VERIFY_IS_TRUE(glass::SurfaceAt(panels, 200, 10, 0) == glass::PrintSurface::Deck);
+    VERIFY_IS_TRUE(glass::SurfaceAt(panels, 200, 10, 1) == glass::PrintSurface::Section);
+
+    // A theme that fills no sections has nothing to print on at all.
+    theme.PanelFill = glass::PanelFillStyle::None;
+    VERIFY_ARE_EQUAL(size_t{ 0 }, glass::PanelFootprints(page, theme).size());
+
+    // but one section a customer asked to be solid is still filled
+    page.Controls[0].Style = glass::ControlStyleOverride::Solid;
+    VERIFY_ARE_EQUAL(size_t{ 1 }, glass::PanelFootprints(page, theme).size());
 }
 
 void LayoutDocumentTests::KeepsFieldsFromANewerVersion()
@@ -492,6 +626,11 @@ void LayoutDocumentTests::AControlPictureSurvivesARoundTrip()
     control.Image.CenterY = 0.75;
     control.Image.TintColor = L"#2E6CC8";
     control.Image.TintStrength = 0.55;
+    control.Image.VideoStartSeconds = 2.5;
+    control.Image.VideoEndSeconds = 9.75;
+    control.Image.AutoPlays = false;
+    control.Image.ClickToPlay = true;
+    control.Image.ShowsScrubber = true;
 
     document.Pages[0].Controls.push_back(control);
 
@@ -510,8 +649,43 @@ void LayoutDocumentTests::AControlPictureSurvivesARoundTrip()
     VERIFY_ARE_EQUAL(0.75, back.CenterY);
     VERIFY_ARE_EQUAL(std::wstring{ L"#2E6CC8" }, back.TintColor);
     VERIFY_ARE_EQUAL(0.55, back.TintStrength);
+    VERIFY_ARE_EQUAL(2.5, back.VideoStartSeconds);
+    VERIFY_ARE_EQUAL(9.75, back.VideoEndSeconds);
+    VERIFY_IS_FALSE(back.AutoPlays);
+    VERIFY_IS_TRUE(back.ClickToPlay);
+    VERIFY_IS_TRUE(back.ShowsScrubber);
 
     VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(reread.Document));
+}
+
+void LayoutDocumentTests::AVideoFromBeforeTrimmingPlaysWhole()
+{
+    // A layout saved before a video could be trimmed, clicked or scrubbed.
+    auto const reread = glass::ReadLayoutFromJson(LR"({
+        "fileVersion": 1,
+        "name": "Old clip",
+        "pages": [ { "id": "p", "name": "Page", "controls": [
+            { "id": "clip", "kind": "image", "label": "Clip", "x": 0, "y": 0, "width": 320, "height": 180,
+              "picture": { "file": "stage clip.mp4", "fit": "fill", "loops": true } } ] } ] })");
+
+    VERIFY_IS_TRUE(reread.Succeeded);
+
+    auto const& picture = reread.Document.Pages[0].Controls[0].Image;
+
+    // The whole file, on its own, on a loop, exactly as it always played.
+    VERIFY_ARE_EQUAL(0.0, picture.VideoStartSeconds);
+    VERIFY_ARE_EQUAL(0.0, picture.VideoEndSeconds);
+    VERIFY_IS_TRUE(picture.AutoPlays);
+    VERIFY_IS_FALSE(picture.ClickToPlay);
+    VERIFY_IS_FALSE(picture.ShowsScrubber);
+    VERIFY_IS_TRUE(picture.Loops);
+
+    // And written back without any of the new keys.
+    auto const written = glass::WriteLayoutToJson(reread.Document);
+
+    VERIFY_IS_TRUE(written.find(L"startSeconds") == std::wstring::npos);
+    VERIFY_IS_TRUE(written.find(L"autoPlays") == std::wstring::npos);
+    VERIFY_IS_TRUE(written.find(L"showsScrubber") == std::wstring::npos);
 }
 
 void LayoutDocumentTests::ABackgroundPictureThatIsAPathIsRefused()

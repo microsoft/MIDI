@@ -12,8 +12,8 @@ Returned by `MidiBluetoothTransportManager.StartPeripheralAsync` and `MidiBlueto
 
 | Property | Description |
 | -------- | ----------- |
-| `Success` | True when the operation succeeded. |
-| `ErrorCode` | A `MidiBluetoothPeripheralErrorCode`. |
-| `ErrorMessage` | The transport's own wording for the failure. |
-| `ErrorHResult` | The raw HRESULT. |
-| `Status` | The `MidiBluetoothPeripheralStatus` after the operation, whether or not it succeeded. |
+| `Success` | True when it worked |
+| `ErrorCode` | A `MidiBluetoothPeripheralErrorCode` |
+| `ErrorMessage` | The transport's own wording for the failure |
+| `ErrorHResult` | The original HRESULT error number |
+| `Status` | The `MidiBluetoothPeripheralStatus` afterward, whether or not it worked |

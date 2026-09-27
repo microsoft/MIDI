@@ -20,6 +20,20 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
         loop::MidiLoopbackEndpointEntry EndpointB() const noexcept { return m_endpointB; }
         bool IsMuted() const noexcept { return m_isMuted; }
 
+        loop::MidiLoopbackFeedbackProtection FeedbackProtection() const noexcept { return m_feedbackProtection; }
+        bool IsMutedForFeedback() const noexcept { return m_isMutedForFeedback; }
+        foundation::DateTime FeedbackDetectedTime() const noexcept { return m_feedbackDetectedTime; }
+
+        void InternalSetFeedbackStatus(
+            _In_ loop::MidiLoopbackFeedbackProtection const feedbackProtection,
+            _In_ bool const isMutedForFeedback,
+            _In_ foundation::DateTime const& feedbackDetectedTime) noexcept
+        {
+            m_feedbackProtection = feedbackProtection;
+            m_isMutedForFeedback = isMutedForFeedback;
+            m_feedbackDetectedTime = feedbackDetectedTime;
+        }
+
         void InternalSetAssociationId(_In_ winrt::guid const& associationId) noexcept { m_associationId = associationId; }
         void InternalSetEndpointEntries(
             _In_ loop::MidiLoopbackEndpointEntry const& endpointA, 
@@ -36,5 +50,10 @@ namespace winrt::Windows::Devices::Midi2::Transports::Loopback::implementation
         loop::MidiLoopbackEndpointEntry m_endpointA{ nullptr };
         loop::MidiLoopbackEndpointEntry m_endpointB{ nullptr };
         bool m_isMuted{ false };
+
+        // a transport which does not report it is not watching
+        loop::MidiLoopbackFeedbackProtection m_feedbackProtection{ loop::MidiLoopbackFeedbackProtection::Off };
+        bool m_isMutedForFeedback{ false };
+        foundation::DateTime m_feedbackDetectedTime{};
     };
 }

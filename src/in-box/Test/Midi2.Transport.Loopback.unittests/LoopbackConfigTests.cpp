@@ -13,6 +13,7 @@
 // the transport's own error codes, so the test asserts the exact rejection reason rather than
 // just "it failed"
 #include "..\..\Transport\LoopbackMidiTransport\loopback_transport_error_codes.h"
+#include "..\..\Transport\BasicLoopbackMidiTransport\basic_loopback_transport_error_codes.h"
 
 using namespace WEX::Common;
 using namespace WEX::Logging;
@@ -1359,4 +1360,419 @@ void LoopbackConfigTests::TestUpdateSwappingNamesWithinAPairIsAllowed()
     VERIFY_IS_TRUE(after.Found);
     VERIFY_ARE_EQUAL(pair.B.Name, after.A.Name);
     VERIFY_ARE_EQUAL(pair.A.Name, after.B.Name);
+}
+
+
+
+// ============================================================================
+// Feedback protection
+// ============================================================================
+
+namespace
+{
+    // Key names and values are spelled out rather than taken from the transport's own headers, so
+    // this stays an independent check of the wire shape.
+    constexpr wchar_t FeedbackProtectionKey[]{ L"feedbackProtection" };
+
+    // Reads the feedback protection value a transport reports for one association. Returns nothing
+    // when the entry is not listed, or lists no value.
+    std::optional<std::wstring> GetReportedFeedbackProtection(
+        GUID const& transportId,
+        std::wstring const& transportIdString,
+        std::wstring const& associationId)
+    {
+        auto result = SendTransportConfig(
+            transportId,
+            transportIdString,
+            LR"({"transportCommand":{"commandName":"listEntries"}})");
+
+        if (!result.IsSuccess())
+        {
+            return std::nullopt;
+        }
+
+        winrt::Windows::Data::Json::JsonObject response{ nullptr };
+
+        if (!winrt::Windows::Data::Json::JsonObject::TryParse(winrt::hstring{ result.ResponseJson }, response) ||
+            response == nullptr ||
+            !response.HasKey(L"entries"))
+        {
+            return std::nullopt;
+        }
+
+        auto const wanted = winrt::guid{ associationId };
+
+        for (auto const& value : response.GetNamedArray(L"entries"))
+        {
+            auto entry = value.GetObject();
+
+            if (entry == nullptr ||
+                !ReportedAssociationMatches(entry.GetNamedString(L"associationIdentifier", L""), wanted))
+            {
+                continue;
+            }
+
+            if (!entry.HasKey(FeedbackProtectionKey) ||
+                entry.Lookup(FeedbackProtectionKey).ValueType() != winrt::Windows::Data::Json::JsonValueType::String)
+            {
+                return std::nullopt;
+            }
+
+            return std::wstring{ entry.GetNamedString(FeedbackProtectionKey) };
+        }
+
+        return std::nullopt;
+    }
+
+    // valueJson is inserted as it is, so a test can send a number or any other wrong type
+    std::wstring BuildCreateJsonWithFeedbackProtection(
+        std::wstring const& associationId,
+        std::wstring const& nameA,
+        std::wstring const& nameB,
+        std::wstring const& uniqueId,
+        std::wstring const& valueJson)
+    {
+        return
+            L"{\"create\":{\"" + EscapeJsonString(associationId) + L"\":{"
+            L"\"feedbackProtection\":" + valueJson + L","
+            L"\"endpointA\":{"
+            L"\"name\":\"" + EscapeJsonString(nameA) + L"\","
+            L"\"description\":\"Service test endpoint A\","
+            L"\"uniqueIdentifier\":\"" + EscapeJsonString(uniqueId) + L"\""
+            L"},"
+            L"\"endpointB\":{"
+            L"\"name\":\"" + EscapeJsonString(nameB) + L"\","
+            L"\"description\":\"Service test endpoint B\","
+            L"\"uniqueIdentifier\":\"" + EscapeJsonString(uniqueId) + L"\""
+            L"}}}}";
+    }
+
+    std::wstring BuildSetFeedbackProtectionJson(std::wstring const& associationId, std::wstring const& value)
+    {
+        return
+            L"{\"transportCommand\":{\"commandName\":\"setFeedbackProtection\",\"commandArguments\":{"
+            L"\"associationId\":\"" + EscapeJsonString(associationId) + L"\","
+            L"\"feedbackProtection\":\"" + EscapeJsonString(value) + L"\"}}}";
+    }
+
+    // The behavior under test is KIR-gated, so the tests have to no-op when the KIR is off,
+    // otherwise a rollback turns this suite red.
+    bool LoopbackFeedbackProtectionTestable()
+    {
+        if (!Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
+        {
+            Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackFeedbackProtection is disabled.");
+            return false;
+        }
+
+        // protection acts by muting, and the list is how it is reported
+        if (!Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
+        {
+            Log::Result(TestResults::Skipped, L"Feature_Servicing_MIDI2LoopbackMuteAndList is disabled.");
+            return false;
+        }
+
+        if (!LoopbackAvailable())
+        {
+            Log::Result(TestResults::Skipped, L"Loopback transport is not available.");
+            return false;
+        }
+
+        return true;
+    }
+
+    bool BasicLoopbackAvailable()
+    {
+        return IsTransportAvailable(BasicLoopbackTransportId, BasicLoopbackTransportIdString);
+    }
+
+    ServiceConfigResult SendBasicLoopbackConfig(std::wstring const& json)
+    {
+        return SendTransportConfig(BasicLoopbackTransportId, BasicLoopbackTransportIdString, json);
+    }
+}
+
+
+void LoopbackConfigTests::TestTransportDeclaresFeedbackProtectionCapability()
+{
+    if (!LoopbackAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Loopback transport is not available.");
+        return;
+    }
+
+    auto result = SendLoopbackConfig(
+        LR"({"transportCommand":{"commandName":"queryCapabilities"}})");
+
+    VERIFY_IS_TRUE(result.IsSuccess());
+
+    // A client offers the setting, and sends the command, only when this says so. A rolled back
+    // build must not mention it at all, because that is exactly what shipped before it.
+    bool declared{ false };
+
+    if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
+    {
+        if (Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
+        {
+            declared = true;
+        }
+    }
+
+    if (declared)
+    {
+        VERIFY_IS_TRUE(result.ResponseJson.find(L"\"feedbackProtection\":true") != std::wstring::npos);
+    }
+    else
+    {
+        VERIFY_IS_TRUE(result.ResponseJson.find(L"feedbackProtection") == std::wstring::npos);
+    }
+}
+
+
+void LoopbackConfigTests::TestCreateReportsFeedbackProtectionOnByDefault()
+{
+    if (!LoopbackFeedbackProtectionTestable())
+    {
+        return;
+    }
+
+    // an older configuration file has no feedback key at all, and gets protection
+    auto associationId = MakeGuidString();
+    auto uniqueId = MakeUniqueIdString();
+
+    auto result = SendLoopbackConfig(
+        BuildCreateJson(associationId, L"Service Test Feedback A", uniqueId, L"Service Test Feedback B", uniqueId));
+
+    VERIFY_IS_TRUE(result.IsSuccess());
+
+    auto cleanup = wil::scope_exit([&] { RemoveLoopback(associationId); });
+
+    auto const reported = GetReportedFeedbackProtection(LoopbackTransportId, LoopbackTransportIdString, associationId);
+
+    VERIFY_IS_TRUE(reported.has_value());
+    VERIFY_ARE_EQUAL(std::wstring{ L"mute" }, reported.value());
+}
+
+
+void LoopbackConfigTests::TestCreateWithFeedbackProtectionOffIsReported()
+{
+    if (!LoopbackFeedbackProtectionTestable())
+    {
+        return;
+    }
+
+    auto associationId = MakeGuidString();
+    auto uniqueId = MakeUniqueIdString();
+
+    auto result = SendLoopbackConfig(
+        BuildCreateJsonWithFeedbackProtection(associationId, L"Service Test Feedback Off A", L"Service Test Feedback Off B", uniqueId, L"\"off\""));
+
+    VERIFY_IS_TRUE(result.IsSuccess());
+
+    auto cleanup = wil::scope_exit([&] { RemoveLoopback(associationId); });
+
+    auto const reported = GetReportedFeedbackProtection(LoopbackTransportId, LoopbackTransportIdString, associationId);
+
+    VERIFY_IS_TRUE(reported.has_value());
+    VERIFY_ARE_EQUAL(std::wstring{ L"off" }, reported.value());
+}
+
+
+void LoopbackConfigTests::TestCreateWithMalformedFeedbackProtectionKeepsProtectionOn()
+{
+    if (!LoopbackFeedbackProtectionTestable())
+    {
+        return;
+    }
+
+    // A number where a string belongs makes a default-value getter throw, which would lose the
+    // whole loopback. An unknown word must not be read as "off" either.
+    for (auto const& valueJson : { std::wstring{ L"7" }, std::wstring{ L"\"sideways\"" }, std::wstring{ L"{}" }, std::wstring{ L"null" } })
+    {
+        auto associationId = MakeGuidString();
+        auto uniqueId = MakeUniqueIdString();
+
+        auto result = SendLoopbackConfig(
+            BuildCreateJsonWithFeedbackProtection(associationId, L"Service Test Feedback Bad A", L"Service Test Feedback Bad B", uniqueId, valueJson));
+
+        auto cleanup = wil::scope_exit([&] { RemoveLoopback(associationId); });
+
+        Log::Comment(String().Format(L"feedbackProtection: %s", valueJson.c_str()));
+
+        VERIFY_IS_TRUE(result.IsSuccess(), L"a bad feedback value must not cost the loopback");
+
+        auto const reported = GetReportedFeedbackProtection(LoopbackTransportId, LoopbackTransportIdString, associationId);
+
+        VERIFY_IS_TRUE(reported.has_value());
+        VERIFY_ARE_EQUAL(std::wstring{ L"mute" }, reported.value());
+    }
+}
+
+
+void LoopbackConfigTests::TestSetFeedbackProtectionChangesReportedValue()
+{
+    if (!LoopbackFeedbackProtectionTestable())
+    {
+        return;
+    }
+
+    auto associationId = MakeGuidString();
+    auto uniqueId = MakeUniqueIdString();
+
+    auto result = SendLoopbackConfig(
+        BuildCreateJson(associationId, L"Service Test Feedback Set A", uniqueId, L"Service Test Feedback Set B", uniqueId));
+
+    VERIFY_IS_TRUE(result.IsSuccess());
+
+    auto cleanup = wil::scope_exit([&] { RemoveLoopback(associationId); });
+
+    auto const offResult = SendLoopbackConfig(BuildSetFeedbackProtectionJson(associationId, L"off"));
+    VERIFY_IS_TRUE(offResult.IsSuccess());
+
+    auto reported = GetReportedFeedbackProtection(LoopbackTransportId, LoopbackTransportIdString, associationId);
+    VERIFY_IS_TRUE(reported.has_value());
+    VERIFY_ARE_EQUAL(std::wstring{ L"off" }, reported.value());
+
+    // the muted state is its own setting, and this must not touch it
+    auto const muted = GetReportedMutedState(associationId);
+    VERIFY_IS_TRUE(muted.has_value());
+    VERIFY_IS_FALSE(muted.value());
+
+    auto const muteResult = SendLoopbackConfig(BuildSetFeedbackProtectionJson(associationId, L"mute"));
+    VERIFY_IS_TRUE(muteResult.IsSuccess());
+
+    reported = GetReportedFeedbackProtection(LoopbackTransportId, LoopbackTransportIdString, associationId);
+    VERIFY_IS_TRUE(reported.has_value());
+    VERIFY_ARE_EQUAL(std::wstring{ L"mute" }, reported.value());
+}
+
+
+void LoopbackConfigTests::TestSetFeedbackProtectionWithUnknownValueIsRejected()
+{
+    if (!LoopbackFeedbackProtectionTestable())
+    {
+        return;
+    }
+
+    auto associationId = MakeGuidString();
+    auto uniqueId = MakeUniqueIdString();
+
+    auto result = SendLoopbackConfig(
+        BuildCreateJson(associationId, L"Service Test Feedback Unknown A", uniqueId, L"Service Test Feedback Unknown B", uniqueId));
+
+    VERIFY_IS_TRUE(result.IsSuccess());
+
+    auto cleanup = wil::scope_exit([&] { RemoveLoopback(associationId); });
+
+    // a live command is answered, rather than guessed at the way a stored value has to be
+    for (auto const& value : { std::wstring{ L"sideways" }, std::wstring{ L"" }, std::wstring{ L"muted" } })
+    {
+        auto const setResult = SendLoopbackConfig(BuildSetFeedbackProtectionJson(associationId, value));
+
+        VERIFY_IS_TRUE(setResult.CallSucceeded);
+        VERIFY_IS_FALSE(setResult.IsSuccess());
+        VERIFY_ARE_EQUAL(static_cast<uint32_t>(LOOPBACK_ERROR_CODE_INVALID_JSON), ReportedErrorCode(setResult));
+    }
+
+    auto const reported = GetReportedFeedbackProtection(LoopbackTransportId, LoopbackTransportIdString, associationId);
+    VERIFY_IS_TRUE(reported.has_value());
+    VERIFY_ARE_EQUAL(std::wstring{ L"mute" }, reported.value());
+}
+
+
+void LoopbackConfigTests::TestSetFeedbackProtectionWithMalformedAssociationIdIsRejected()
+{
+    if (!LoopbackFeedbackProtectionTestable())
+    {
+        return;
+    }
+
+    // right shape and length, but 'M' is not a hexadecimal digit
+    auto const result = SendLoopbackConfig(
+        BuildSetFeedbackProtectionJson(L"{1E5A0001-0000-4000-8000-00000000BMC1}", L"off"));
+
+    VERIFY_IS_TRUE(result.CallSucceeded);
+    VERIFY_IS_FALSE(result.IsSuccess());
+    VERIFY_ARE_EQUAL(static_cast<uint32_t>(LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID), ReportedErrorCode(result));
+
+    // and a well formed one which names nothing
+    auto const missing = SendLoopbackConfig(BuildSetFeedbackProtectionJson(MakeGuidString(), L"off"));
+
+    VERIFY_IS_TRUE(missing.CallSucceeded);
+    VERIFY_IS_FALSE(missing.IsSuccess());
+    VERIFY_ARE_EQUAL(static_cast<uint32_t>(LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND), ReportedErrorCode(missing));
+
+    VERIFY_IS_TRUE(LoopbackAvailable());
+}
+
+
+void LoopbackConfigTests::TestBasicLoopbackDeclaresFeedbackProtectionCapability()
+{
+    if (!BasicLoopbackAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Basic loopback transport is not available.");
+        return;
+    }
+
+    auto result = SendBasicLoopbackConfig(
+        LR"({"transportCommand":{"commandName":"queryCapabilities"}})");
+
+    VERIFY_IS_TRUE(result.IsSuccess());
+    VERIFY_IS_TRUE(result.ResponseJson.find(L"\"feedbackProtection\":true") != std::wstring::npos);
+}
+
+
+void LoopbackConfigTests::TestBasicLoopbackFeedbackProtectionCreateAndSet()
+{
+    if (!BasicLoopbackAvailable())
+    {
+        Log::Result(TestResults::Skipped, L"Basic loopback transport is not available.");
+        return;
+    }
+
+    auto const associationId = MakeGuidString();
+
+    // on the endpoint object, beside the muted flag
+    std::wstring const json =
+        L"{\"create\":{\"" + EscapeJsonString(associationId) + L"\":{\"endpoint\":{"
+        L"\"name\":\"Service Test Basic Feedback\","
+        L"\"description\":\"Service test basic loopback\","
+        L"\"uniqueIdentifier\":\"" + MakeUniqueIdString() + L"\","
+        L"\"feedbackProtection\":\"off\"}}}}";
+
+    auto const result = SendBasicLoopbackConfig(json);
+
+    VERIFY_IS_TRUE(result.IsSuccess());
+
+    auto cleanup = wil::scope_exit([&]
+        {
+            SendBasicLoopbackConfig(L"{\"remove\":[\"" + EscapeJsonString(associationId) + L"\"]}");
+        });
+
+    auto reported = GetReportedFeedbackProtection(BasicLoopbackTransportId, BasicLoopbackTransportIdString, associationId);
+    VERIFY_IS_TRUE(reported.has_value());
+    VERIFY_ARE_EQUAL(std::wstring{ L"off" }, reported.value());
+
+    auto const muteResult = SendBasicLoopbackConfig(BuildSetFeedbackProtectionJson(associationId, L"mute"));
+    VERIFY_IS_TRUE(muteResult.IsSuccess());
+
+    reported = GetReportedFeedbackProtection(BasicLoopbackTransportId, BasicLoopbackTransportIdString, associationId);
+    VERIFY_IS_TRUE(reported.has_value());
+    VERIFY_ARE_EQUAL(std::wstring{ L"mute" }, reported.value());
+
+    auto const unknownResult = SendBasicLoopbackConfig(BuildSetFeedbackProtectionJson(associationId, L"sideways"));
+    VERIFY_IS_TRUE(unknownResult.CallSucceeded);
+    VERIFY_IS_FALSE(unknownResult.IsSuccess());
+    VERIFY_ARE_EQUAL(static_cast<uint32_t>(BASIC_LOOPBACK_ERROR_CODE_INVALID_JSON), ReportedErrorCode(unknownResult));
+
+    auto const badIdResult = SendBasicLoopbackConfig(
+        BuildSetFeedbackProtectionJson(L"{1E5A0001-0000-4000-8000-00000000BMC1}", L"off"));
+    VERIFY_IS_TRUE(badIdResult.CallSucceeded);
+    VERIFY_IS_FALSE(badIdResult.IsSuccess());
+    VERIFY_ARE_EQUAL(static_cast<uint32_t>(BASIC_LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID), ReportedErrorCode(badIdResult));
+
+    // still what it was before the two bad commands
+    reported = GetReportedFeedbackProtection(BasicLoopbackTransportId, BasicLoopbackTransportIdString, associationId);
+    VERIFY_IS_TRUE(reported.has_value());
+    VERIFY_ARE_EQUAL(std::wstring{ L"mute" }, reported.value());
 }

@@ -16,10 +16,10 @@ description: The outcome of writing a sequence out as a Standard MIDI File
 | `Status` | The [`MidiFileWriteStatus`]({{ site.baseurl }}/sdk-reference/Utilities/Files/MidiFileWriteStatusEnum/) describing what happened |
 | `TrackCount` | How many tracks were written |
 | `ByteCount` | How large the file is |
-| `SkippedEventCount` | How many messages were left out because MIDI 1.0 has no way to express them |
+| `SkippedEventCount` | How many messages were left out because MIDI 1.0 can't express them |
 
 ## Remarks
 
-`SkippedEventCount` is zero for any sequence which came from a Standard MIDI File, because everything in such a sequence is already MIDI 1.0. It only becomes interesting when the sequence holds Universal MIDI Packets: a per-note controller, a per-note pitch bend and 8-bit system exclusive have no MIDI 1.0 form, so there is nothing to write for them.
+`SkippedEventCount` is zero for any sequence that came from a Standard MIDI File, because everything in it is already MIDI 1.0. It only matters when the sequence has Universal MIDI Packets. A per-note controller, a per-note pitch bend, and 8-bit System Exclusive have no MIDI 1.0 form, so there's nothing to write for them.
 
-A non-zero count is not a failure. The rest of the file was written, and `Succeeded` is still true. Whether it is worth telling the customer depends on what they were saving; for a capture of a MIDI 2.0 device it usually is.
+A count above zero isn't a failure. The rest of the file was written, and `Succeeded` is still true. Whether to tell people depends on what they were saving. For a recording of a MIDI 2.0 device, it's usually worth telling them.

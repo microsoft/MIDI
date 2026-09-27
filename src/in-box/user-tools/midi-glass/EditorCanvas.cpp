@@ -96,6 +96,10 @@ namespace winrt::midiglass::implementation
             UpdateWorkArea();
 
             m_renderer.Teardown();
+
+            // Before the build, so a video on a page being designed never gets a frame of
+            // playing in before it is told to stop.
+            m_renderer.SetVideosLive(m_tryMode);
             m_renderer.Build(SurfaceCanvas(), document, m_theme, m_editor.PageIndex());
 
             auto weak = get_weak();
@@ -116,6 +120,10 @@ namespace winrt::midiglass::implementation
             // overlay, which knows about selection, handles and guides. Try mode flips it, and
             // has to be re-applied here because a rebuild makes new elements.
             ApplySurfaceInputMode();
+
+            // A rebuild makes new players too. One the inspector was playing carries on, so
+            // changing a setting while it plays shows the change rather than stopping it.
+            ResumeVideoPreview();
 
             ApplyCanvasScale();
             RebuildGrid();
@@ -622,13 +630,42 @@ namespace winrt::midiglass::implementation
                 return;
             }
 
-            // Eight handles, on a single selection only. Sizing several controls at once happens
-            // through the inspector, where the numbers are visible.
+            // Eight handles. Several controls share one box around them all, dashed so it reads
+            // as the selection rather than as another control, and its handles scale everything
+            // inside it.
             auto const selected = m_editor.SelectedControls();
 
-            if (selected.size() == 1)
+            if (!selected.empty())
             {
-                auto const rect = RectOf(*selected[0]);
+                auto const rect = selected.size() == 1 ? RectOf(*selected[0]) : m_editor.SelectionBounds();
+
+                if (selected.size() > 1)
+                {
+                    auto box = addRectangle({ rect.X - 3.0, rect.Y - 3.0, rect.Width + 6.0, rect.Height + 6.0 }, accent, 1.0, true);
+                    box.Fill(nullptr);
+                }
+                else if (!selected[0]->GroupId.empty())
+                {
+                    // One member picked out of a group: the group it belongs to, faintly.
+                    auto left = rect.X;
+                    auto top = rect.Y;
+                    auto right = rect.Right();
+                    auto bottom = rect.Bottom();
+
+                    for (auto const& member : page->Controls)
+                    {
+                        if (member.GroupId == selected[0]->GroupId)
+                        {
+                            left = std::min(left, member.X);
+                            top = std::min(top, member.Y);
+                            right = std::max(right, member.X + member.Width);
+                            bottom = std::max(bottom, member.Y + member.Height);
+                        }
+                    }
+
+                    auto group = addRectangle({ left - 3.0, top - 3.0, right - left + 6.0, bottom - top + 6.0 }, tertiary, 1.0, true);
+                    group.Fill(nullptr);
+                }
 
                 double const xs[]{ rect.X, rect.CenterX(), rect.Right() };
                 double const ys[]{ rect.Y, rect.CenterY(), rect.Bottom() };
@@ -665,7 +702,7 @@ namespace winrt::midiglass::implementation
                 // given room a narrow control does not have.
                 glass::EditRect labelRect{};
 
-                if (TryGetLabelRect(*selected[0], labelRect))
+                if (selected.size() == 1 && TryGetLabelRect(*selected[0], labelRect))
                 {
                     auto dashed = addRectangle(labelRect, tertiary, 1.0, true);
                     dashed.Fill(nullptr);
@@ -847,12 +884,13 @@ namespace winrt::midiglass::implementation
 
         auto const selected = m_editor.SelectedControls();
 
-        if (selected.size() != 1)
+        if (selected.empty())
         {
             return glass::ResizeHandle::None;
         }
 
-        auto const rect = RectOf(*selected[0]);
+        // Several controls share the handles of the box drawn around them all.
+        auto const rect = selected.size() == 1 ? RectOf(*selected[0]) : m_editor.SelectionBounds();
 
         // The handles are drawn at a fixed size on screen, so their reach in page coordinates
         // grows as the canvas is scaled down. Anything else would make them unhittable on a
@@ -1060,6 +1098,42 @@ namespace winrt::midiglass::implementation
             m_dragStartPageY = pageY;
             m_dragMoved = false;
             m_pendingSelectId.clear();
+            m_pendingToggleId.clear();
+            m_labelEditOnRelease = false;
+
+            auto const secondClick = IsSecondClick(args.GetCurrentPoint(CanvasScroll()));
+
+            // A right click is for the menu. It picks what is under it the way a file list does,
+            // and moves nothing; the menu itself opens on its own when the button comes up.
+            if (point.Properties().IsRightButtonPressed())
+            {
+                m_dragMode = DragMode::None;
+                m_hasMenuPoint = true;
+                m_menuPageX = pageX;
+                m_menuPageY = pageY;
+
+                if (m_hasArmedKind)
+                {
+                    m_hasArmedKind = false;
+                    SyncPaletteSelection();
+                }
+
+                auto const hit = HitTest(pageX, pageY);
+
+                if (hit.empty())
+                {
+                    m_editor.ClearSelection();
+                }
+                else if (!m_editor.IsSelected(hit))
+                {
+                    m_editor.SelectGroupOf(hit);
+                }
+
+                UpdateOverlay();
+                RefreshInspector();
+                UpdateStatusBar();
+                return;
+            }
 
             // While the order is being set, a press numbers a control rather than selecting or
             // moving it.
@@ -1103,6 +1177,9 @@ namespace winrt::midiglass::implementation
                 OverlayCanvas().CapturePointer(args.Pointer());
                 return;
             }
+
+            // Typed into when the button comes up, if the pointer stays put.
+            m_labelEditOnRelease = secondClick;
 
             double controlAway{ 0.0 };
             double labelAway{ 0.0 };
@@ -1174,11 +1251,21 @@ namespace winrt::midiglass::implementation
 
             if (extend)
             {
-                m_editor.ToggleSelected(hit);
+                if (m_editor.IsSelected(hit))
+                {
+                    // Shift is also the straight-line key, so this press may be the start of a
+                    // Shift drag of the whole selection. Unpicking it waits until the pointer
+                    // comes up without having moved.
+                    m_pendingToggleId = hit;
+                }
+                else
+                {
+                    m_editor.ToggleGroupOf(hit);
+                }
             }
             else if (!m_editor.IsSelected(hit))
             {
-                m_editor.SelectOnly(hit);
+                m_editor.SelectGroupOf(hit);
             }
             else
             {
@@ -1244,9 +1331,15 @@ namespace winrt::midiglass::implementation
             switch (m_dragMode)
             {
             case DragMode::Move:
-                outcome = m_editor.UpdateDrag(deltaX, deltaY);
+            {
+                // Shift holds the drag to a straight line, across or down.
+                auto const straight = (modifiers & winrt::Windows::System::VirtualKeyModifiers::Shift)
+                    == winrt::Windows::System::VirtualKeyModifiers::Shift;
+
+                outcome = m_editor.UpdateDrag(deltaX, deltaY, straight);
                 MoveDraggedItems();
                 break;
+            }
 
             case DragMode::Resize:
             {
@@ -1277,6 +1370,7 @@ namespace winrt::midiglass::implementation
                 m_hasBand = true;
 
                 m_editor.SelectInRectangle(band, m_bandExtends);
+                m_editor.ExpandSelectionToGroups();
                 break;
             }
 
@@ -1338,7 +1432,22 @@ namespace winrt::midiglass::implementation
 
                 if (!m_dragMoved && !m_pendingSelectId.empty())
                 {
-                    m_editor.SelectOnly(m_pendingSelectId);
+                    // A second click on a group that is already selected picks the one member
+                    // under the pointer, the way PowerPoint does. Otherwise it narrows the
+                    // selection to whatever was clicked, group and all.
+                    if (m_editor.SelectionIsOneGroup())
+                    {
+                        m_editor.SelectOnly(m_pendingSelectId);
+                    }
+                    else
+                    {
+                        m_editor.SelectGroupOf(m_pendingSelectId);
+                    }
+                }
+
+                if (!m_dragMoved && !m_pendingToggleId.empty())
+                {
+                    m_editor.ToggleGroupOf(m_pendingToggleId);
                 }
             }
             else if (m_dragMode == DragMode::Resize)
@@ -1353,10 +1462,13 @@ namespace winrt::midiglass::implementation
             m_hasBand = false;
 
             auto const moved = m_dragMoved;
+            auto const typeLabel = m_labelEditOnRelease && !moved;
 
             m_dragMode = DragMode::None;
             m_dragMoved = false;
+            m_labelEditOnRelease = false;
             m_pendingSelectId.clear();
+            m_pendingToggleId.clear();
             m_editor.SetSnapSuspended(false);
 
             // Back to a full build, so a label beside a moved control catches up and a resized
@@ -1378,6 +1490,12 @@ namespace winrt::midiglass::implementation
             if (moved)
             {
                 MarkChanged();
+            }
+
+            // Last, so nothing above takes the keyboard back from the box.
+            if (typeLabel)
+            {
+                TryBeginLabelEditAt(m_dragStartPageX, m_dragStartPageY);
             }
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to finish a drag on the canvas.")
@@ -1405,6 +1523,267 @@ namespace winrt::midiglass::implementation
         m_dragMode = DragMode::None;
         m_dragMoved = false;
         m_editor.SetSnapSuspended(false);
+    }
+
+    // ---------------------------------------------------------------- typing a label in place
+
+    _Use_decl_annotations_
+    bool EditorWindow::IsSecondClick(winrt::Microsoft::UI::Input::PointerPoint const& point)
+    {
+        using winrt::Microsoft::UI::Input::PointerDeviceType;
+
+        if (!point.Properties().IsLeftButtonPressed())
+        {
+            m_lastPressTimestamp = 0;
+            return false;
+        }
+
+        auto const device = point.PointerDeviceType();
+        auto const position = point.Position();
+
+        // The system's own double click time and distance for a mouse. A finger or a pen never
+        // lands twice on the same pixel, so they get more room.
+        auto const slopX = device == PointerDeviceType::Mouse
+            ? std::max(GetSystemMetrics(SM_CXDOUBLECLK) / 2.0, 2.0)
+            : 12.0;
+        auto const slopY = device == PointerDeviceType::Mouse
+            ? std::max(GetSystemMetrics(SM_CYDOUBLECLK) / 2.0, 2.0)
+            : 12.0;
+
+        // Timestamps are in microseconds.
+        auto const window = static_cast<uint64_t>(GetDoubleClickTime()) * 1000u;
+
+        auto const second =
+            m_lastPressTimestamp != 0 &&
+            device == m_lastPressDevice &&
+            point.Timestamp() >= m_lastPressTimestamp &&
+            point.Timestamp() - m_lastPressTimestamp <= window &&
+            std::abs(position.X - m_lastPressPoint.X) <= slopX &&
+            std::abs(position.Y - m_lastPressPoint.Y) <= slopY;
+
+        if (second)
+        {
+            // A third click starts over rather than being a second double click.
+            m_lastPressTimestamp = 0;
+        }
+        else
+        {
+            m_lastPressTimestamp = point.Timestamp();
+            m_lastPressDevice = device;
+            m_lastPressPoint = position;
+        }
+
+        return second;
+    }
+
+    _Use_decl_annotations_
+    bool EditorWindow::TryBeginLabelEditAt(double pageX, double pageY)
+    {
+        try
+        {
+            if (m_tryMode)
+            {
+                return false;
+            }
+
+            std::wstring id{};
+            glass::EditRect rect{};
+
+            auto const selected = m_editor.SelectedControls();
+
+            if (selected.size() == 1 &&
+                TryGetLabelRect(*selected[0], rect) &&
+                glass::ContainsPoint(rect, pageX, pageY))
+            {
+                id = selected[0]->Id;
+            }
+            else
+            {
+                auto const hit = HitTest(pageX, pageY);
+                auto const* control = hit.empty() ? nullptr : m_editor.Document().FindControl(hit);
+
+                // A label drawn outside its control is not part of the control, so a double click
+                // on one is matched against the labels themselves, front to back.
+                if (control == nullptr)
+                {
+                    if (auto const* const page = m_editor.CurrentPage(); page != nullptr)
+                    {
+                        for (auto iterator = page->Controls.rbegin(); iterator != page->Controls.rend(); ++iterator)
+                        {
+                            glass::EditRect labelRect{};
+
+                            if (TryGetLabelRect(*iterator, labelRect) && glass::ContainsPoint(labelRect, pageX, pageY))
+                            {
+                                control = &*iterator;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (control == nullptr)
+                {
+                    return false;
+                }
+
+                if (TryGetLabelRect(*control, rect) && glass::ContainsPoint(rect, pageX, pageY))
+                {
+                    id = control->Id;
+                }
+                else if (control->Kind == glass::ControlKind::Label)
+                {
+                    // A text control is all label, including a new one with nothing typed yet.
+                    id = control->Id;
+
+                    if (!TryGetLabelRect(*control, rect))
+                    {
+                        rect = RectOf(*control);
+                    }
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            if (!m_editor.IsSelected(id) || m_editor.Selection().size() != 1)
+            {
+                m_editor.SelectOnly(id);
+                UpdateOverlay();
+                RefreshInspector();
+                UpdateStatusBar();
+            }
+
+            BeginLabelEdit(id, rect);
+            return true;
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to start typing a label.")
+
+        return false;
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::BeginLabelEdit(std::wstring const& id, glass::EditRect const& rect)
+    {
+        EndLabelEdit(true);
+
+        auto const* const control = m_editor.Document().FindControl(id);
+
+        if (control == nullptr)
+        {
+            return;
+        }
+
+        controls::TextBox box{};
+
+        auto const fontSize = std::clamp(
+            control->LabelLook.FontSize > 0.0 ? control->LabelLook.FontSize : 13.0, 9.0, 72.0);
+
+        auto const width = std::max(rect.Width, 96.0);
+        auto const height = std::max(rect.Height, (fontSize * 1.5) + 12.0);
+
+        box.Text(winrt::hstring{ control->Label });
+        box.FontSize(fontSize);
+        box.Width(width);
+        box.Height(height);
+        box.MinWidth(0.0);
+        box.MinHeight(0.0);
+        box.Padding(xaml::Thickness{ 6.0, 2.0, 6.0, 2.0 });
+        box.TextAlignment(xaml::TextAlignment::Center);
+        box.VerticalContentAlignment(xaml::VerticalAlignment::Center);
+        box.MaxLength(static_cast<int32_t>(glass::MaximumStringLength));
+
+        xaml::Automation::AutomationProperties::SetName(box, resources::GetString(L"LabelEditBoxName"));
+
+        // Centered on the label it replaces, however much wider or taller the box is.
+        controls::Canvas::SetLeft(box, rect.X - m_workArea.X - ((width - rect.Width) / 2.0));
+        controls::Canvas::SetTop(box, rect.Y - m_workArea.Y - ((height - rect.Height) / 2.0));
+
+        box.KeyDown([weak = get_weak()](foundation::IInspectable const&, xaml::Input::KeyRoutedEventArgs const& keyArgs)
+            {
+                auto strong = weak.get();
+
+                if (strong == nullptr)
+                {
+                    return;
+                }
+
+                if (keyArgs.Key() == winrt::Windows::System::VirtualKey::Enter)
+                {
+                    keyArgs.Handled(true);
+                    strong->EndLabelEdit(true);
+                }
+                else if (keyArgs.Key() == winrt::Windows::System::VirtualKey::Escape)
+                {
+                    keyArgs.Handled(true);
+                    strong->EndLabelEdit(false);
+                }
+            });
+
+        // Clicking anywhere else keeps what was typed, the way renaming a file does.
+        box.LostFocus([weak = get_weak()](foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->EndLabelEdit(true);
+                }
+            });
+
+        box.Loaded([](foundation::IInspectable const& loaded, xaml::RoutedEventArgs const&)
+            {
+                if (auto const target = loaded.try_as<controls::TextBox>())
+                {
+                    target.Focus(xaml::FocusState::Programmatic);
+                    target.SelectAll();
+                }
+            });
+
+        m_labelEditor = box;
+        m_labelEditId = id;
+
+        LabelEditCanvas().Children().Append(box);
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::EndLabelEdit(bool keep)
+    {
+        if (m_labelEditor == nullptr)
+        {
+            return;
+        }
+
+        // Taken first: removing the box moves focus, and LostFocus would come straight back in.
+        auto const box = m_labelEditor;
+        auto const id = m_labelEditId;
+
+        m_labelEditor = nullptr;
+        m_labelEditId.clear();
+
+        try
+        {
+            auto const text = std::wstring{ box.Text() };
+
+            uint32_t index{ 0 };
+
+            if (LabelEditCanvas().Children().IndexOf(box, index))
+            {
+                LabelEditCanvas().Children().RemoveAt(index);
+            }
+
+            if (keep && m_editor.SetControlLabel(id, text))
+            {
+                // One undo entry for the whole word, and not merged into the next edit.
+                m_editor.EndCoalescing();
+
+                RebuildSurface();
+                RebuildOutline();
+                RefreshInspector();
+                MarkChanged();
+            }
+
+            CanvasScroll().Focus(xaml::FocusState::Programmatic);
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to finish typing a label.")
     }
 
     _Use_decl_annotations_

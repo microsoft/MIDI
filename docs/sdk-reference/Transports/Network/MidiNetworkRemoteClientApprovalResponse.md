@@ -18,8 +18,8 @@ Returned by `MidiNetworkTransportManager.ApproveOrDenyRemoteClientConnectRequest
 | `RemoteClientProductInstanceId` | The Product Instance Id of the remote client |
 | `Success` | True if the decision was applied |
 | `ErrorCode` | A `MidiNetworkRemoteClientApprovalErrorCode` when `Success` is false |
-| `ErrorMessage` | A human-readable description of the failure |
+| `ErrorMessage` | A description of the failure that people can read |
 
 ## Remarks
 
-A decision naming a client the service has never seen returns `PendingRemoteClientNotFound`. This is normal if the client gave up while the user was deciding.
+A decision about a client the service has never seen returns `PendingRemoteClientNotFound`. That's normal if the client gave up while someone was deciding.

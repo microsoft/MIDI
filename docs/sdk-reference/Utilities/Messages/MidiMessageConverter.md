@@ -6,55 +6,55 @@ type: runtimeclass
 description: Helper class to convert MIDI 1.0 byte format messages into UMP messages
 ---
 
-This class provides support for representing MIDI 1.0 messages in the Universal MIDI Packet format.
+This class turns MIDI 1.0 messages into Universal MIDI Packets, and back.
 
-## Generic MIDI 1.0 Conversion Functions
+## MIDI 1.0 bytes to UMP
 
-| Function | Description |
+| Static Method | Description |
 | --------------- | ----------- |
-| `ConvertMidi1Message (timestamp, group, statusByte)` | Convert MIDI 1.0 raw data into a `MidiMessage32` message |
-| `ConvertMidi1Message (timestamp, group, statusByte, dataByte1)` | Convert MIDI 1.0 raw data into a `MidiMessage32` message |
-| `ConvertMidi1Message (timestamp, group, statusByte, dataByte1, dataByte2)` | Convert MIDI 1.0 raw data into a `MidiMessage32` message |
+| `ConvertMidi1Message(timestamp, group, statusByte)` | Turns a MIDI 1.0 message that has only a status byte into a `MidiMessage32` |
+| `ConvertMidi1Message(timestamp, group, statusByte, dataByte1)` | Turns a MIDI 1.0 message with one data byte into a `MidiMessage32` |
+| `ConvertMidi1Message(timestamp, group, statusByte, dataByte1, dataByte2)` | Turns a MIDI 1.0 message with two data bytes into a `MidiMessage32` |
 
-## WinRT MIDI 1.0 System Message Conversion Functions
+## WinRT MIDI 1.0 system messages
 
-| Function | Description |
+| Static Method | Description |
 | --------------- | ----------- |
-| `ConvertMidi1TimeCodeMessage (timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiTimeCodeMessage` message to `MidiMessage32`|
-| `ConvertMidi1SongPositionPointerMessage (timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiSongPositionPointerMessage` message to `MidiMessage32`|
-| `ConvertMidi1SongSelectMessage (timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiSongSelectMessage` message to `MidiMessage32`|
-| `ConvertMidi1TuneRequestMessage (timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiTuneRequestMessage` message to `MidiMessage32`|
-| `ConvertMidi1TimingClockMessage (timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiTimingClockMessage` message to `MidiMessage32`|
-| `ConvertMidi1StartMessage (timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiStartMessage` message to `MidiMessage32`|
-| `ConvertMidi1ContinueMessage (timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiContinueMessage` message to `MidiMessage32`|
-| `ConvertMidi1StopMessage (timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiStopMessage` message to `MidiMessage32`|
-| `ConvertMidi1ActiveSensingMessage (timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiActiveSensingMessage` message to `MidiMessage32`|
-| `ConvertMidi1SystemResetMessage (timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiSystemResetMessage` message to `MidiMessage32`|
+| `ConvertMidi1TimeCodeMessage(timestamp, group, originalMessage)` | Turns a WinRT MIDI 1.0 `MidiTimeCodeMessage` into a `MidiMessage32` |
+| `ConvertMidi1SongPositionPointerMessage(timestamp, group, originalMessage)` | Turns a WinRT MIDI 1.0 `MidiSongPositionPointerMessage` into a `MidiMessage32` |
+| `ConvertMidi1SongSelectMessage(timestamp, group, originalMessage)` | Turns a WinRT MIDI 1.0 `MidiSongSelectMessage` into a `MidiMessage32` |
+| `ConvertMidi1TuneRequestMessage(timestamp, group, originalMessage)` | Turns a WinRT MIDI 1.0 `MidiTuneRequestMessage` into a `MidiMessage32` |
+| `ConvertMidi1TimingClockMessage(timestamp, group, originalMessage)` | Turns a WinRT MIDI 1.0 `MidiTimingClockMessage` into a `MidiMessage32` |
+| `ConvertMidi1StartMessage(timestamp, group, originalMessage)` | Turns a WinRT MIDI 1.0 `MidiStartMessage` into a `MidiMessage32` |
+| `ConvertMidi1ContinueMessage(timestamp, group, originalMessage)` | Turns a WinRT MIDI 1.0 `MidiContinueMessage` into a `MidiMessage32` |
+| `ConvertMidi1StopMessage(timestamp, group, originalMessage)` | Turns a WinRT MIDI 1.0 `MidiStopMessage` into a `MidiMessage32` |
+| `ConvertMidi1ActiveSensingMessage(timestamp, group, originalMessage)` | Turns a WinRT MIDI 1.0 `MidiActiveSensingMessage` into a `MidiMessage32` |
+| `ConvertMidi1SystemResetMessage(timestamp, group, originalMessage)` | Turns a WinRT MIDI 1.0 `MidiSystemResetMessage` into a `MidiMessage32` |
 
-## WinRT MIDI 1.0 Channel Voice Message Conversion Functions
+## WinRT MIDI 1.0 channel voice messages
 
-| Function | Description |
+| Static Method | Description |
 | --------------- | ----------- |
-| `ConvertMidi1ChannelPressureMessage (timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiChannelPressureMessage` message to `MidiMessage32`|
-| `ConvertMidi1NoteOffMessage (timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiNoteOffMessage` message to `MidiMessage32`|
-| `ConvertMidi1NoteOnMessage(timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiNoteOnMessage` message to `MidiMessage32`|
-| `ConvertMidi1PitchBendChangeMessage(timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiPitchBendChangeMessage` message to `MidiMessage32`|
-| `ConvertMidi1PolyphonicKeyPressureMessage(timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiPolyphonicKeyPressureMessage` message to `MidiMessage32`|
-| `ConvertMidi1ProgramChangeMessage(timestamp, group, originalMessage)` | Converts a WinRT MIDI 1.0 `MidiProgramChangeMessage` message to `MidiMessage32`|
+| `ConvertMidi1ChannelPressureMessage(timestamp, group, originalMessage)` | Turns a WinRT MIDI 1.0 `MidiChannelPressureMessage` into a `MidiMessage32` |
+| `ConvertMidi1NoteOffMessage(timestamp, group, originalMessage)` | Turns a WinRT MIDI 1.0 `MidiNoteOffMessage` into a `MidiMessage32` |
+| `ConvertMidi1NoteOnMessage(timestamp, group, originalMessage)` | Turns a WinRT MIDI 1.0 `MidiNoteOnMessage` into a `MidiMessage32` |
+| `ConvertMidi1PitchBendChangeMessage(timestamp, group, originalMessage)` | Turns a WinRT MIDI 1.0 `MidiPitchBendChangeMessage` into a `MidiMessage32` |
+| `ConvertMidi1PolyphonicKeyPressureMessage(timestamp, group, originalMessage)` | Turns a WinRT MIDI 1.0 `MidiPolyphonicKeyPressureMessage` into a `MidiMessage32` |
+| `ConvertMidi1ProgramChangeMessage(timestamp, group, originalMessage)` | Turns a WinRT MIDI 1.0 `MidiProgramChangeMessage` into a `MidiMessage32` |
 
-## Byte Array Conversion Functions
+## Byte and word lists
 
 | Static Method | Description |
 | ------------- | ----------- |
-| `ConvertMidi1MessageToUmpWords(group, originalMessage)` | Converts a WinRT `IMidiMessage` to a list of UMP words for the given group. |
-| `ConvertMidi1CompleteMessageBytesToUmpWords(group, midi1Bytes, allowRunningStatus)` | Converts a sequence of raw MIDI 1.0 bytes to UMP words. Set `allowRunningStatus` to `true` to handle running status encoding. |
-| `ConvertMidi1CompleteMessageBytesToUmpWords(group, midi1Bytes, allowRunningStatus, converterState)` | Converts a sequence of raw MIDI 1.0 bytes to UMP words, using the supplied [`MidiBytestreamToUmpMessageConverterState`]({{ site.baseurl }}/sdk-reference/Utilities/Messages/MidiBytestreamToUmpMessageConverterState/) to preserve conversion state (partial messages, running status) across calls for a continuous stream. |
-| `ConvertSingleGroupCompleteMessageUmpWordsToMidi1Bytes(umpWords)` | Converts a sequence of UMP words (all from one group) back to MIDI 1.0 bytes. |
-| `ConvertHexByteStringToByteArray(hexByteString)` | Converts a space-separated or plain hex byte string (e.g., `"F0 41 10 F7"`) to a byte array. Useful for parsing SysEx strings from user input. |
+| `ConvertMidi1MessageToUmpWords(group, originalMessage)` | Turns a WinRT MIDI 1.0 `IMidiMessage` into a list of UMP words for this group |
+| `ConvertMidi1CompleteMessageBytesToUmpWords(group, midi1Bytes, allowRunningStatus)` | Turns a list of raw MIDI 1.0 bytes into UMP words. Set `allowRunningStatus` to `true` to handle running status |
+| `ConvertMidi1CompleteMessageBytesToUmpWords(group, midi1Bytes, allowRunningStatus, converterState)` | The same, but uses a [`MidiBytestreamToUmpMessageConverterState`]({{ site.baseurl }}/sdk-reference/Utilities/Messages/MidiBytestreamToUmpMessageConverterState/) to remember partial messages and running status between calls on the same stream |
+| `ConvertSingleGroupCompleteMessageUmpWordsToMidi1Bytes(umpWords)` | Turns UMP words, all from one group, back into MIDI 1.0 bytes |
+| `ConvertHexByteStringToByteArray(hexByteString)` | Turns a string of hex bytes, with or without spaces (such as `"F0 41 10 F7"`), into a byte array. Handy for reading SysEx that someone typed in |
 
 ## Samples
 
-This is the path to use when your application already holds MIDI 1.0 bytestream data, which is the usual situation when porting from WinMM.
+Use this class when your app already has MIDI 1.0 bytestream data, which is usually the case when you move an app from WinMM.
 
 * [C++/WinRT sysex-send-bytes](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/sysex-send-bytes)
 * [C# sysex-send-bytes](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/sysex-send-bytes)

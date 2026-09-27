@@ -6,16 +6,15 @@ type: runtimeclass
 description: Response from the service from a configuration attempt
 ---
 
-Plugin-specific configuration return results.
+What the service sent back after you sent it a configuration or a command. The details depend on the transport.
 
-> <h3>Important Note</h3>
-> The json config sent to and received from the service is an implementation detail, not a contract, and is subject to change. Do not attempt to manually manipulate or create json to send to the MIDI Service, or manually parse the json return results, unless you are creating a transport yourself.
+> **Important:** The JSON that goes to and from the service is an implementation detail, not a contract, and it can change. Don't build or edit this JSON by hand, and don't parse what comes back, unless you're writing a transport yourself.
 
 ## Properties
 
 | Property | Description |
 | --- | --- |
-| `Status` | A `MidiServiceConfigResponseStatus` value indicating success or failure. |
-| `ServiceErrorCode` | A transport-specific error code if the operation failed. |
-| `ServiceErrorMessage` | A human-readable error message from the service if the operation failed. |
-| `ResponseJson` | A `JsonObject` with transport-specific response details. |
+| `Status` | A `MidiServiceConfigResponseStatus` that says whether it worked |
+| `ServiceErrorCode` | An error code from the transport, if it failed |
+| `ServiceErrorMessage` | An error message from the service that people can read, if it failed |
+| `ResponseJson` | A `JsonObject` with more details from the transport |

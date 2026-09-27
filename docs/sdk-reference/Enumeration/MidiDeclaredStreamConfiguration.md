@@ -6,13 +6,20 @@ type: runtimeclass
 description: Configuration information supplied by the endpoint.
 ---
 
-This information is populated by the Windows Service during the MIDI 2.0 endpoint protocol negotiation process. When retrieved from a `MidiEndpointDeviceInformation` object, it is read-only.
+The MIDI service fills this in during MIDI 2.0 protocol negotiation. When you get one from `MidiEndpointDeviceInformation`, treat it as read-only. Changing it doesn't change the endpoint.
+
+## Constructors
+
+| Constructor | Description |
+| ----------- | ----------- |
+| `MidiDeclaredStreamConfiguration()` | Creates an empty object |
+| `MidiDeclaredStreamConfiguration(protocol, receiveJitterReductionTimestamps, sendJitterReductionTimestamps)` | Creates an object with these values |
 
 ## Properties
 
 | Property | Description |
 | --------------- | ----------- |
-| `IsReadOnly` | True if this object should be treated as read-only |
-| `Protocol` | The agreed upon [MIDI protocol]({{ site.baseurl }}/sdk-reference/Enumeration/MidiProtocolEnum/) |
-| `ReceiveJitterReductionTimestamps` | True if the endpoint is configured to receive JR timestamps |
-| `SendJitterReductionTimestamps` | True if the endpoint is configured to send JR timestamps |
+| `IsReadOnly` | True if you should treat this object as read-only |
+| `Protocol` | The [MIDI protocol]({{ site.baseurl }}/sdk-reference/Enumeration/MidiProtocolEnum/) the service and the endpoint agreed on |
+| `ReceiveJitterReductionTimestamps` | True if the endpoint is set up to receive jitter reduction (JR) timestamps |
+| `SendJitterReductionTimestamps` | True if the endpoint is set up to send jitter reduction timestamps |

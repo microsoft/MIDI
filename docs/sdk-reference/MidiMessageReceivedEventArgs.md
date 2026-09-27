@@ -6,31 +6,31 @@ type: runtimeclass
 description: Argument supplied when an incoming MIDI message is received
 ---
 
-This is the main class to use when receving MIDI data from a message source such as a connection or a message processing plugin.
+Every incoming message reaches you as one of these, whether it comes from a connection or from a message processing plugin.
 
-> Note: Do not keep a copy of the `MidiMessageReceivedEventArgs` class, as the data it points to is guaranteed to exist for only the duration of the event handler call for which this instance was an argument.
+> **Note:** Don't hold on to a `MidiMessageReceivedEventArgs` after your event handler returns. The data it points to exists only while the handler runs. If you need the message later, copy it out first, for example with `GetMessagePacket()` or `FillMessageStruct()`.
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `Timestamp` | The 64-bit MIDI Clock timestamp set by the service when this message was received |
-| `PacketType` | Type of Universal MIDI Packet. This value can be cast to get the number of valid words in the data. You can  use this value to determine which of the `FillMessageXX` methods would be appropriate to call. For example, if the value is  `MidiPacketType.UniversalMidiPacket64` you would call `FillMessage64` |
-| `MessageType` | The type of Universal MIDI Packet Message. This comes from the first 4 bits of the data. |
+| `Timestamp` | The `MidiClock` timestamp the service gave the message when it arrived |
+| `PacketType` | The size of the packet. Its number value is the count of valid words. Use it to pick which `FillMessage` function to call. For example, if it's `MidiPacketType.UniversalMidiPacket64`, call `FillMessage64` |
+| `MessageType` | The message type, from the first 4 bits of the message |
 
 ## Functions
 
 | Function | Description |
 | -------- | ----------- |
-| `PeekFirstWord()` | Returns the first word of the message data without removing it. |
-| `GetMessagePacket()` | Returns an `IMidiUniversalPacket` runtime class representing the data. This requires an allocation. |
-| `FillWords(word0, word1, word2, word3)` | Puts the data in the supplied words and returns the number of valid words to read. If the return value is 2, for example, then only `word0` and `word1` contain valid data. |
-| `FillMessageStruct(message)` | Fills the provided lightweight structure with the message data. Returns the number of valid words in the updated struct. |
-| `FillMessage32(message)` | Adds the data to the provided MidiMessage32 runtimeclass. The reference behavior is projection-dependent. Returns true if the provided type matches the expected packet type and the data has been written. |
-| `FillMessage64(message)` | Adds the data to the provided MidiMessage64 runtimeclass. The reference behavior is projection-dependent. Returns true if the provided type matches the expected packet type and the data has been written. |
-| `FillMessage96(message)` | Adds the data to the provided MidiMessage96 runtimeclass. The reference behavior is projection-dependent. Returns true if the provided type matches the expected packet type and the data has been written. |
-| `FillMessage128(message)` | Adds the data to the provided MidiMessage128 runtimeclass. The reference behavior is projection-dependent. Returns true if the provided type matches the expected packet type and the data has been written. |
-| `FillWordArray(startIndex, words)`| Writes the data starting at the zero-based `startIndex`. Some projections pass a copy of all the data, so this may not always be an efficient approach. Returns the number of words written. |
-| `FillByteArray(startIndex, bytes)`| Writes the data starting at the zero-based `startIndex`. Some projections pass a copy of all the data, so this may not always be an efficient approach. Returns the number of bytes written. |
-| `FillBuffer(byteOffset, buffer)`| Writes the data to the buffer starting at byteOffset. Returns the number of bytes written. |
-| `AppendWordsToList(wordList)`| Adds the message words to the end of the provided list, and returns the number of words added. |
+| `PeekFirstWord()` | Returns the first word of the message |
+| `GetMessagePacket()` | Returns the message as a new `IMidiUniversalPacket` object. It creates a new object every time, which takes a little extra time |
+| `FillWords(word0, word1, word2, word3)` | Copies the message into the four words you pass, and returns how many of them are valid. For example, if it returns 2, only `word0` and `word1` hold message data |
+| `FillMessageStruct(message)` | Copies the message into a `MidiMessageStruct`, and returns how many of its words are valid |
+| `FillMessage32(message)` | Copies the message into the `MidiMessage32` you pass. Returns true if the message is the right size for that class and was copied |
+| `FillMessage64(message)` | Copies the message into the `MidiMessage64` you pass. Returns true if the message is the right size for that class and was copied |
+| `FillMessage96(message)` | Copies the message into the `MidiMessage96` you pass. Returns true if the message is the right size for that class and was copied |
+| `FillMessage128(message)` | Copies the message into the `MidiMessage128` you pass. Returns true if the message is the right size for that class and was copied |
+| `FillWordArray(startIndex, words)`| Copies the message's words into the array, starting at the zero-based `startIndex`, and returns how many words were written. Some languages copy the whole array to make this call, so it may not be the fastest choice |
+| `FillByteArray(startIndex, bytes)`| Copies the message's bytes into the array, starting at the zero-based `startIndex`, and returns how many bytes were written. Some languages copy the whole array to make this call, so it may not be the fastest choice |
+| `FillBuffer(byteOffset, buffer)`| Copies the message's bytes into the buffer, starting at `byteOffset`, and returns how many bytes were written |
+| `AppendWordsToList(wordList)`| Adds the message's words to the end of the list, and returns how many were added |

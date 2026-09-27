@@ -7,26 +7,26 @@ implements: Windows.Foundation.IStringable, Windows.Devices.Midi2.IMidiUniversal
 description: Represents a three-word (96-bit) UMP message
 ---
 
-`MidiMessage96` is currently unused in the MIDI 2.0 UMP specification.
+`MidiMessage96` holds a three-word (96-bit) Universal MIDI Packet. The UMP specification sets this size aside, but no messages use it yet.
 
 ## Properties and Methods
 
-Includes all functions and properties in `IMidiUniversalPacket`, as well as:
+It has everything in [`IMidiUniversalPacket`]({{ site.baseurl }}/sdk-reference/IMidiUniversalPacket/), plus:
 
 | Property | Description |
 | -------- | ----------- |
-| `Word0` | First 32-bit MIDI word |
-| `Word1` | Second 32-bit MIDI word |
-| `Word2` | Third 32-bit MIDI word |
+| `Word0` | The first 32-bit word |
+| `Word1` | The second 32-bit word |
+| `Word2` | The third 32-bit word |
 
-| Function | Description |
+| Constructor | Description |
 | -------- | ----------- |
-| `MidiMessage96()` | Default constructor |
-| `MidiMessage96(timestamp, word0, word1, word2)` | Construct a new message with a timestamp and all 32-bit MIDI words |
-| `MidiMessage96(timestamp, words)` | Construct a new message from a timestamp and array of 32-bit words |
+| `MidiMessage96()` | Creates an empty message |
+| `MidiMessage96(timestamp, word0, word1, word2)` | Creates a message with this timestamp and all three words |
+| `MidiMessage96(timestamp, words)` | Creates a message with this timestamp from an array of 32-bit words |
 
 ## Static Methods
 
 | Static Method | Description |
 | ------------- | ----------- |
-| `CreateFromStruct(timestamp, message)` | Creates a `MidiMessage96` from a `MidiMessageStruct` and a timestamp |
+| `CreateFromStruct(timestamp, message)` | Creates a `MidiMessage96` from a `MidiMessageStruct`, with this timestamp |

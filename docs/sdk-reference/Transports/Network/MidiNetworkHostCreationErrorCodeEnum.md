@@ -13,27 +13,27 @@ Returned in `MidiNetworkHostCreationResponse.ErrorCode`.
 | Value | Numeric Value | Description |
 | ----- | ------------- | ----------- |
 | `NoErrorInformationAvailable` | `0x00000000` | No additional error information is available |
-| `UnrecognizedCommand` | `0x00000001` | The command sent to the service was not recognized |
-| `InvalidJson` | `0x00000011` | The configuration sent to the service was not valid JSON |
-| `HostCreationFailed` | `0x00000021` | The host could not be created in the service |
+| `UnrecognizedCommand` | `0x00000001` | The service didn't recognize the command |
+| `InvalidJson` | `0x00000011` | The configuration sent to the service wasn't valid JSON |
+| `HostCreationFailed` | `0x00000021` | The service couldn't create the host |
 | `InvalidOrMissingEntryIdentifier` | `0x00000031` | `HostId` was missing |
-| `MalformedEntryIdentifier` | `0x00000032` | `HostId` was not a valid GUID |
+| `MalformedEntryIdentifier` | `0x00000032` | `HostId` wasn't a valid GUID |
 | `InvalidOrMissingEndpointName` | `0x00000041` | `Name` was missing or blank |
 | `EndpointNameTooLong` | `0x00000045` | `Name` is longer than the 98 bytes the MIDI 2.0 specification allows |
 | `InvalidOrMissingProductInstanceId` | `0x00000042` | `ProductInstanceId` was missing or blank |
 | `ProductInstanceIdTooLong` | `0x00000046` | `ProductInstanceId` is longer than the 42 bytes the specification allows |
 | `ServiceInstanceNameInUse` | `0x00000043` | Another host is already using this `ServiceInstanceName` |
 | `ServiceInstanceNameTooLong` | `0x0000004A` | `ServiceInstanceName` is longer than mDNS allows |
-| `InvalidNetworkProtocol` | `0x00000044` | The network protocol specified is not supported. Only UDP is |
-| `InvalidNetworkPort` | `0x00000048` | The requested port is outside the range of valid UDP ports |
-| `NetworkPortInUse` | `0x00000049` | The requested port is already in use on this PC |
-| `InvalidOrMissingCredentialIdentifier` | `0x00000051` | Authentication was requested but no credential identifier was supplied |
-| `MalformedCredentialIdentifier` | `0x00000052` | The supplied credential identifier is not valid |
-| `AuthenticationNotImplemented` | `0x00000053` | Authentication is not yet implemented. Configure the host for no authentication |
-| `InvalidArgument` | `0x11000055` | An invalid argument was supplied by the caller |
-| `ClientApiException` | `0x11002011` | An exception occurred in the client API |
-| `TimedOutWaitingForHostToStart` | `0x110005B4` | The service accepted the definition, but the host did not start in time |
+| `InvalidNetworkProtocol` | `0x00000044` | That network protocol isn't supported. Only UDP is |
+| `InvalidNetworkPort` | `0x00000048` | The port is outside the range of valid UDP ports |
+| `NetworkPortInUse` | `0x00000049` | The port is already in use on this PC |
+| `InvalidOrMissingCredentialIdentifier` | `0x00000051` | Authentication was asked for, but no credential id was supplied |
+| `MalformedCredentialIdentifier` | `0x00000052` | The credential id isn't valid |
+| `AuthenticationNotImplemented` | `0x00000053` | Authentication isn't built yet. Set up the host with no authentication |
+| `InvalidArgument` | `0x11000055` | Your code passed an argument that isn't valid |
+| `ClientApiException` | `0x11002011` | An exception happened in the client API |
+| `TimedOutWaitingForHostToStart` | `0x110005B4` | The service accepted the host, but the host didn't start in time |
 
 ## Remarks
 
-`TimedOutWaitingForHostToStart` is raised by the client API rather than the service. `CreateNetworkHostAsync` waits for the host to actually come up, and reports this rather than a false success if it does not.
+`TimedOutWaitingForHostToStart` comes from the client API, not the service. `CreateNetworkHostAsync` waits for the host to start, and reports this if it doesn't, instead of reporting success that isn't true.

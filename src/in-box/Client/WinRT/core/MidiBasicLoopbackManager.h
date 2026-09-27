@@ -36,6 +36,12 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
 
 
         static collections::IVector<bloop::MidiBasicLoopbackEntry> GetActiveLoopbackEntries();
+
+        static bool IsFeedbackProtectionAvailable() noexcept;
+
+        static bloop::MidiBasicLoopbackUpdateResponse SetFeedbackProtection(
+            _In_ winrt::guid const& associationId,
+            _In_ bloop::MidiBasicLoopbackFeedbackProtection const& feedbackProtection) noexcept;
     };
 }
 namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::factory_implementation

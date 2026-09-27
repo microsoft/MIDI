@@ -14,6 +14,8 @@
 #include "ControlFactory.h"
 #include "PageTemplates.h"
 #include "LayoutSerializer.h"
+#include "PadGrid.h"
+#include "StepPattern.h"
 
 #include <algorithm>
 #include <cmath>
@@ -64,7 +66,8 @@ namespace glass
                 left.SequenceName == right.SequenceName &&
                 left.TargetPageId == right.TargetPageId &&
                 left.TargetLayerId == right.TargetLayerId &&
-                left.Axis == right.Axis;
+                left.Axis == right.Axis &&
+                left.Position == right.Position;
         }
 
         bool SameFeedback(_In_ FeedbackBinding const& left, _In_ FeedbackBinding const& right) noexcept
@@ -112,8 +115,66 @@ namespace glass
             return false;
         }
 
+        auto const previous = control->Kind;
+
         control->Kind = kind;
         control->AspectLocked = IsSquareByNature(kind);
+
+        // Square pads and hexagons want different intervals out of the box. Switching between
+        // the two carries the other one's starting layout across, but only while nobody has
+        // changed it: a layout somebody chose is theirs.
+        if (IsPadGrid(previous) && IsPadGrid(kind))
+        {
+            PadGridSpec const square{};
+
+            auto& pads = control->Pads;
+
+            if (IsHexPadGrid(kind) &&
+                pads.RightInterval == square.RightInterval &&
+                pads.RowInterval == square.RowInterval)
+            {
+                pads.RightInterval = WickiHaydenLayout.RightInterval;
+                pads.RowInterval = WickiHaydenLayout.RowInterval;
+            }
+            else if (!IsHexPadGrid(kind) &&
+                pads.RightInterval == WickiHaydenLayout.RightInterval &&
+                pads.RowInterval == WickiHaydenLayout.RowInterval)
+            {
+                pads.RightInterval = square.RightInterval;
+                pads.RowInterval = square.RowInterval;
+            }
+        }
+
+        // A control turned into a sequencer has no steps to play, which would look like a
+        // sequencer that is broken. It gets the same pattern a new one does, and a note row to
+        // play it on, pointed wherever the control was already sending.
+        if (kind == ControlKind::Steps)
+        {
+            if (control->Steps.Pattern.empty())
+            {
+                FillStarterPattern(control->Steps, 48);
+            }
+
+            auto const plays = std::any_of(control->Messages.begin(), control->Messages.end(),
+                [](ControlMessage const& message) { return message.Kind == MessageKind::Note; });
+
+            if (!plays && control->Messages.size() < MaximumMessagesPerControl)
+            {
+                ControlMessage row{};
+
+                if (!control->Messages.empty())
+                {
+                    row.DeviceName = control->Messages.front().DeviceName;
+                    row.GroupIndex = control->Messages.front().GroupIndex;
+                    row.ChannelIndex = control->Messages.front().ChannelIndex;
+                }
+
+                row.Trigger = MessageTrigger::Changes;
+                row.Kind = MessageKind::Note;
+
+                control->Messages.push_back(std::move(row));
+            }
+        }
 
         // Changing a fader into a lamp leaves messages that no longer have anything to send
         // them. They are kept rather than thrown away, because changing back has to be free.
@@ -495,7 +556,10 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    bool EditorController::SetControlPicture(std::wstring const& id, Picture const& picture)
+    bool EditorController::SetControlPicture(
+        std::wstring const& id,
+        Picture const& picture,
+        bool coalesce)
     {
         auto* const control = MutableControl(id);
 
@@ -514,6 +578,20 @@ namespace glass
         safe.CenterY = std::clamp(picture.CenterY, 0.0, 1.0);
         safe.TintStrength = std::clamp(picture.TintStrength, 0.0, 1.0);
 
+        auto const seconds = [](double value) noexcept
+            {
+                return std::isfinite(value) ? std::clamp(value, 0.0, MaximumVideoSeconds) : 0.0;
+            };
+
+        safe.VideoStartSeconds = seconds(picture.VideoStartSeconds);
+        safe.VideoEndSeconds = seconds(picture.VideoEndSeconds);
+
+        // A stop that is not after the start would play nothing, so it means the end of the file.
+        if (safe.VideoEndSeconds > 0.0 && safe.VideoEndSeconds <= safe.VideoStartSeconds)
+        {
+            safe.VideoEndSeconds = 0.0;
+        }
+
         if (control->Image.FileName == safe.FileName &&
             control->Image.Fit == safe.Fit &&
             control->Image.Opacity == safe.Opacity &&
@@ -522,7 +600,12 @@ namespace glass
             control->Image.CenterX == safe.CenterX &&
             control->Image.CenterY == safe.CenterY &&
             control->Image.TintColor == safe.TintColor &&
-            control->Image.TintStrength == safe.TintStrength)
+            control->Image.TintStrength == safe.TintStrength &&
+            control->Image.VideoStartSeconds == safe.VideoStartSeconds &&
+            control->Image.VideoEndSeconds == safe.VideoEndSeconds &&
+            control->Image.AutoPlays == safe.AutoPlays &&
+            control->Image.ClickToPlay == safe.ClickToPlay &&
+            control->Image.ShowsScrubber == safe.ShowsScrubber)
         {
             return false;
         }
@@ -536,6 +619,119 @@ namespace glass
         control->Image.CenterY = safe.CenterY;
         control->Image.TintColor = safe.TintColor;
         control->Image.TintStrength = safe.TintStrength;
+        control->Image.VideoStartSeconds = safe.VideoStartSeconds;
+        control->Image.VideoEndSeconds = safe.VideoEndSeconds;
+        control->Image.AutoPlays = safe.AutoPlays;
+        control->Image.ClickToPlay = safe.ClickToPlay;
+        control->Image.ShowsScrubber = safe.ShowsScrubber;
+
+        if (coalesce)
+        {
+            CommitCoalesced(EditNames::Properties, L"picture:" + id);
+        }
+        else
+        {
+            Commit(EditNames::Properties);
+        }
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetSwitchPositionName(std::wstring const& id, size_t index, std::wstring const& name)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr || index >= control->Switch.Positions.size() || name.size() > MaximumStringLength)
+        {
+            return false;
+        }
+
+        auto clean = SanitizeStoredString(name);
+
+        if (control->Switch.Positions[index] == clean)
+        {
+            return false;
+        }
+
+        control->Switch.Positions[index] = std::move(clean);
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::AddSwitchPosition(std::wstring const& id)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr ||
+            control->Kind != ControlKind::Switch ||
+            control->Switch.Positions.size() >= static_cast<size_t>(MaximumSwitchPositions))
+        {
+            return false;
+        }
+
+        // A switch read from a file with fewer names than it shows gets its missing names first,
+        // so the new one lands after the positions somebody could already see.
+        while (control->Switch.Positions.size() < static_cast<size_t>(MinimumSwitchPositions))
+        {
+            control->Switch.Positions.push_back(std::to_wstring(control->Switch.Positions.size() + 1));
+        }
+
+        auto const added = static_cast<int32_t>(control->Switch.Positions.size());
+
+        control->Switch.Positions.push_back(std::to_wstring(added + 1));
+
+        // A copy of the last position's row, so the new position sends the same kind of thing to
+        // the same place and only its value needs changing.
+        auto const last = std::find_if(control->Messages.rbegin(), control->Messages.rend(),
+            [added](ControlMessage const& message) { return message.Position == added - 1; });
+
+        if (last != control->Messages.rend() && control->Messages.size() < MaximumMessagesPerControl)
+        {
+            auto row = *last;
+
+            row.Position = added;
+            row.Unknown = nullptr;
+
+            control->Messages.push_back(std::move(row));
+        }
+
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::RemoveSwitchPosition(std::wstring const& id, size_t index)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr ||
+            control->Kind != ControlKind::Switch ||
+            index >= control->Switch.Positions.size() ||
+            control->Switch.Positions.size() <= static_cast<size_t>(MinimumSwitchPositions))
+        {
+            return false;
+        }
+
+        auto const removed = static_cast<int32_t>(index);
+
+        control->Switch.Positions.erase(control->Switch.Positions.begin() + static_cast<ptrdiff_t>(index));
+
+        control->Messages.erase(
+            std::remove_if(control->Messages.begin(), control->Messages.end(),
+                [removed](ControlMessage const& message) { return message.Position == removed; }),
+            control->Messages.end());
+
+        for (auto& message : control->Messages)
+        {
+            if (message.Position > removed)
+            {
+                --message.Position;
+            }
+        }
 
         Commit(EditNames::Properties);
 
@@ -683,6 +879,117 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    bool EditorController::SetStepsSettings(std::wstring const& id, StepsSpec const& settings)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr)
+        {
+            return false;
+        }
+
+        auto const perBeat = std::clamp(settings.StepsPerBeat, MinimumStepsPerBeat, MaximumStepsPerBeat);
+        auto const gate = std::clamp(settings.Gate, MinimumStepGate, MaximumStepGate);
+        auto const swing = std::clamp(settings.Swing, MinimumStepSwing, MaximumStepSwing);
+
+        auto& current = control->Steps;
+
+        if (current.StepsPerBeat == perBeat &&
+            current.Gate == gate &&
+            current.Swing == swing &&
+            current.Direction == settings.Direction &&
+            current.Latching == settings.Latching &&
+            current.StartsRunning == settings.StartsRunning)
+        {
+            return false;
+        }
+
+        current.StepsPerBeat = perBeat;
+        current.Gate = gate;
+        current.Swing = swing;
+        current.Direction = settings.Direction;
+        current.Latching = settings.Latching;
+        current.StartsRunning = settings.StartsRunning;
+
+        // A slider being dragged is one undo step, not one per notch.
+        CommitCoalesced(EditNames::Properties, L"steps:" + id);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetStepCount(std::wstring const& id, int32_t count)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr)
+        {
+            return false;
+        }
+
+        auto const wanted = static_cast<size_t>(std::clamp(count, MinimumSequencerSteps, MaximumSequencerSteps));
+        auto& pattern = control->Steps.Pattern;
+
+        if (pattern.size() == wanted)
+        {
+            return false;
+        }
+
+        if (pattern.size() > wanted)
+        {
+            pattern.resize(wanted);
+        }
+        else
+        {
+            auto copy = pattern.empty() ? SequencerStep{} : pattern.back();
+
+            copy.Unknown = nullptr;
+
+            pattern.resize(wanted, copy);
+        }
+
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetStep(std::wstring const& id, int32_t index, SequencerStep const& step, bool coalesce)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr || index < 0 || static_cast<size_t>(index) >= control->Steps.Pattern.size())
+        {
+            return false;
+        }
+
+        auto& current = control->Steps.Pattern[static_cast<size_t>(index)];
+
+        auto const note = std::clamp(step.Note, 0, 127);
+        auto const velocity = std::isfinite(step.Velocity) ? std::clamp(step.Velocity, 0.0, 1.0) : current.Velocity;
+
+        if (current.On == step.On && current.Note == note && current.Velocity == velocity)
+        {
+            return false;
+        }
+
+        current.On = step.On;
+        current.Note = note;
+        current.Velocity = velocity;
+
+        if (coalesce)
+        {
+            CommitCoalesced(EditNames::Properties, L"step:" + id + L":" + std::to_wstring(index));
+        }
+        else
+        {
+            Commit(EditNames::Properties);
+        }
+
+        return true;
+    }
+
+    _Use_decl_annotations_
     bool EditorController::SetControlTurntable(std::wstring const& id, TurntableSpec const& turntable)
     {
         auto* const control = MutableControl(id);
@@ -703,6 +1010,95 @@ namespace glass
 
         control->Turntable.DegreesForFullRange = degrees;
         control->Turntable.ShowsGrip = turntable.ShowsGrip;
+
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetControlLine(std::wstring const& id, LineSpec const& line)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr)
+        {
+            return false;
+        }
+
+        auto const thickness = std::clamp(line.Thickness, MinimumLineThickness, MaximumLineThickness);
+
+        if (control->Line.Thickness == thickness &&
+            control->Line.Color == line.Color &&
+            control->Line.Ends == line.Ends)
+        {
+            return false;
+        }
+
+        // Field by field, so anything a newer version wrote into the line survives the edit.
+        control->Line.Thickness = thickness;
+        control->Line.Color = line.Color;
+        control->Line.Ends = line.Ends;
+
+        Commit(EditNames::Properties);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetControlPads(std::wstring const& id, PadGridSpec const& pads)
+    {
+        auto* const control = MutableControl(id);
+
+        if (control == nullptr ||
+            pads.RootColor.size() > MaximumStringLength ||
+            pads.InKeyColor.size() > MaximumStringLength ||
+            pads.OutOfKeyColor.size() > MaximumStringLength ||
+            pads.PressedColor.size() > MaximumStringLength)
+        {
+            return false;
+        }
+
+        auto wanted = pads;
+
+        wanted.PadCount = std::clamp(pads.PadCount, MinimumPadCount, MaximumPadCount);
+        wanted.PadSize = std::isfinite(pads.PadSize)
+            ? std::clamp(pads.PadSize, MinimumPadSize, MaximumPadSize)
+            : control->Pads.PadSize;
+        wanted.StartNote = std::clamp(pads.StartNote, 0, 127);
+        wanted.RightInterval = std::clamp(pads.RightInterval, MinimumRightInterval, MaximumPadInterval);
+        wanted.RowInterval = std::clamp(pads.RowInterval, MinimumRowInterval, MaximumPadInterval);
+        wanted.KeyRoot = pads.KeyRoot >= 0 && pads.KeyRoot <= 11 ? pads.KeyRoot : NoKey;
+        wanted.NoteNameSize = std::isfinite(pads.NoteNameSize)
+            ? std::clamp(pads.NoteNameSize, 0.0, MaximumPadNoteNameSize)
+            : 0.0;
+        wanted.BendRangeSemitones = std::clamp(
+            pads.BendRangeSemitones, MinimumBendRangeSemitones, MaximumBendRangeSemitones);
+
+        auto const& current = control->Pads;
+
+        if (current.PadCount == wanted.PadCount &&
+            current.PadSize == wanted.PadSize &&
+            current.StartNote == wanted.StartNote &&
+            current.RightInterval == wanted.RightInterval &&
+            current.RowInterval == wanted.RowInterval &&
+            current.KeyRoot == wanted.KeyRoot &&
+            current.Scale == wanted.Scale &&
+            current.NoteNames == wanted.NoteNames &&
+            current.NoteNameSize == wanted.NoteNameSize &&
+            current.RootColor == wanted.RootColor &&
+            current.InKeyColor == wanted.InKeyColor &&
+            current.OutOfKeyColor == wanted.OutOfKeyColor &&
+            current.PressedColor == wanted.PressedColor &&
+            current.Glide == wanted.Glide &&
+            current.BendRangeSemitones == wanted.BendRangeSemitones)
+        {
+            return false;
+        }
+
+        // Everything but the fields this build does not know, which stay as they were.
+        wanted.Unknown = current.Unknown;
+        control->Pads = std::move(wanted);
 
         Commit(EditNames::Properties);
 
@@ -1792,6 +2188,349 @@ namespace glass
         // gone sends nothing, and the editor can still show what it was meant to play, which is
         // more use than silently clearing the row.
         Commit(EditNames::Sequence);
+
+        return true;
+    }
+
+    // ---------------------------------------------------------------- the clipboard
+
+    std::wstring EditorController::CopySelection() const
+    {
+        auto const selected = SelectedControls();
+
+        if (selected.empty())
+        {
+            return {};
+        }
+
+        LayoutDocument clip{};
+
+        clip.Name = m_document.Name;
+        clip.PageWidth = m_document.PageWidth;
+        clip.PageHeight = m_document.PageHeight;
+        clip.CanvasWidth = m_document.CanvasWidth;
+        clip.CanvasHeight = m_document.CanvasHeight;
+
+        Page page{};
+        page.Id = LayoutDocument::NewId();
+
+        for (auto const* const control : selected)
+        {
+            page.Controls.push_back(*control);
+        }
+
+        // The devices and sequences the copies name. Everything else about the layout stays
+        // behind: a paste adds controls, it does not change somebody's theme or page size.
+        auto const namesDevice = [&page](std::wstring const& name)
+            {
+                for (auto const& control : page.Controls)
+                {
+                    if (control.Feedback.DeviceName == name)
+                    {
+                        return true;
+                    }
+
+                    for (auto const& message : control.Messages)
+                    {
+                        if (message.DeviceName == name)
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            };
+
+        auto const namesSequence = [&page](std::wstring const& name)
+            {
+                for (auto const& control : page.Controls)
+                {
+                    for (auto const& message : control.Messages)
+                    {
+                        if (message.SequenceName == name)
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            };
+
+        for (auto const& device : m_document.Devices)
+        {
+            if (namesDevice(device.Name))
+            {
+                clip.Devices.push_back(device);
+            }
+        }
+
+        for (auto const& sequence : m_document.Sequences)
+        {
+            if (namesSequence(sequence.Name))
+            {
+                clip.Sequences.push_back(sequence);
+            }
+        }
+
+        clip.Pages.push_back(std::move(page));
+
+        return WriteLayoutToJson(clip);
+    }
+
+    std::wstring EditorController::CutSelection()
+    {
+        auto text = CopySelection();
+
+        if (text.empty())
+        {
+            return {};
+        }
+
+        auto* const page = MutablePage();
+
+        if (page == nullptr)
+        {
+            return {};
+        }
+
+        page->Controls.erase(
+            std::remove_if(
+                page->Controls.begin(),
+                page->Controls.end(),
+                [this](Control const& control) { return IsSelected(control.Id); }),
+            page->Controls.end());
+
+        m_selection.clear();
+        Commit(EditNames::Cut);
+
+        return text;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::PasteControls(std::wstring const& text)
+    {
+        auto* const page = MutablePage();
+
+        if (page == nullptr || text.empty())
+        {
+            return false;
+        }
+
+        auto read = ReadLayoutFromJson(text);
+
+        if (!read.Succeeded || read.Document.Pages.empty())
+        {
+            return false;
+        }
+
+        auto copies = std::move(read.Document.Pages.front().Controls);
+
+        if (copies.empty() || page->Controls.size() + copies.size() > MaximumControlsPerPage)
+        {
+            return false;
+        }
+
+        // New ids, and every reference from one copy to another follows it to its new id. A
+        // reference to a control that was not copied still means something if that control is
+        // on this layout, and nothing at all if it is not, so it is kept or dropped on that.
+        std::vector<std::pair<std::wstring, std::wstring>> renamed{};
+
+        for (auto& copy : copies)
+        {
+            auto fresh = LayoutDocument::NewId();
+
+            renamed.emplace_back(copy.Id, fresh);
+            copy.Id = std::move(fresh);
+        }
+
+        auto const follow = [this, &renamed](std::wstring& id)
+            {
+                if (id.empty())
+                {
+                    return;
+                }
+
+                for (auto const& [from, to] : renamed)
+                {
+                    if (from == id)
+                    {
+                        id = to;
+                        return;
+                    }
+                }
+
+                if (m_document.FindControl(id) == nullptr)
+                {
+                    id.clear();
+                }
+            };
+
+        for (auto& copy : copies)
+        {
+            follow(copy.Clock.TempoControlId);
+            follow(copy.Feedback.TempoControlId);
+        }
+
+        RegroupCopies(copies);
+
+        // Devices and sequences this layout does not have yet. One it already has by that name
+        // is left alone: it is this layout's idea of what the name means.
+        for (auto const& device : read.Document.Devices)
+        {
+            if (m_document.FindDevice(device.Name) == nullptr)
+            {
+                m_document.Devices.push_back(device);
+            }
+        }
+
+        for (auto sequence : read.Document.Sequences)
+        {
+            if (m_document.FindSequence(sequence.Name) == nullptr)
+            {
+                for (auto& step : sequence.Steps)
+                {
+                    follow(step.TargetControlId);
+                }
+
+                m_document.Sequences.push_back(std::move(sequence));
+            }
+        }
+
+        // Pasted over the originals, a step down and across, and another step for each paste
+        // after that, so the copies are never hidden exactly under the controls they came from.
+        auto const step = m_snap.GridSize > 0.0 ? m_snap.GridSize * 2.0 : 16.0;
+
+        auto const coversSomething = [&copies, page](double offset)
+            {
+                for (auto const& copy : copies)
+                {
+                    for (auto const& existing : page->Controls)
+                    {
+                        if (std::abs(existing.X - (copy.X + offset)) < 0.5 &&
+                            std::abs(existing.Y - (copy.Y + offset)) < 0.5 &&
+                            std::abs(existing.Width - copy.Width) < 0.5 &&
+                            std::abs(existing.Height - copy.Height) < 0.5)
+                        {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            };
+
+        auto offset = 0.0;
+
+        for (int32_t attempt = 0; attempt < 64 && coversSomething(offset); ++attempt)
+        {
+            offset += step;
+        }
+
+        auto order = 0;
+
+        for (auto const& control : page->Controls)
+        {
+            order = std::max(order, control.KeyboardOrder);
+        }
+
+        std::vector<std::wstring> selection{};
+
+        for (auto& copy : copies)
+        {
+            copy.X += offset;
+            copy.Y += offset;
+            copy.KeyboardOrder = ++order;
+
+            selection.push_back(copy.Id);
+            page->Controls.push_back(std::move(copy));
+        }
+
+        m_selection = std::move(selection);
+        Commit(EditNames::Paste);
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::PasteText(std::wstring const& text, double centerX, double centerY)
+    {
+        auto* const page = MutablePage();
+
+        if (page == nullptr || page->Controls.size() >= MaximumControlsPerPage)
+        {
+            return false;
+        }
+
+        // One line. A label is a caption, and text copied out of a document arrives with line
+        // breaks and tabs that would only print as nothing.
+        std::wstring flattened{};
+        flattened.reserve(std::min(text.size(), MaximumStringLength));
+
+        for (auto const character : text)
+        {
+            if (flattened.size() >= MaximumStringLength)
+            {
+                break;
+            }
+
+            flattened.push_back(
+                (character == L'\r' || character == L'\n' || character == L'\t') ? L' ' : character);
+        }
+
+        auto label = SanitizeStoredString(std::move(flattened));
+
+        // Runs of spaces left behind by the line breaks.
+        label.erase(
+            std::unique(label.begin(), label.end(),
+                [](wchar_t left, wchar_t right) { return left == L' ' && right == L' '; }),
+            label.end());
+
+        if (label.empty())
+        {
+            return false;
+        }
+
+        std::wstring deviceName{};
+
+        if (!m_document.Devices.empty())
+        {
+            deviceName = m_document.Devices[0].Name;
+        }
+
+        auto control = MakeNewControl(
+            ControlKind::Label, 0.0, 0.0, m_document.PageWidth, m_document.PageHeight, deviceName, *page);
+
+        control.Label = label;
+
+        // Wide enough for the words at the default text size, up to most of the page. The
+        // customer resizes it from there, the same as a text control from the palette.
+        auto const settings = EffectiveSnap();
+        auto const grid = settings.GridSize > 0.0 ? settings.GridSize : DefaultGridSize;
+
+        auto const wanted = (static_cast<double>(label.size()) * 8.0) + (grid * 2.0);
+
+        control.Width = std::clamp(
+            std::ceil(wanted / grid) * grid,
+            control.Width,
+            std::max(control.Width, std::floor(m_document.PageWidth * 0.8)));
+
+        control.X = centerX - (control.Width / 2.0);
+        control.Y = centerY - (control.Height / 2.0);
+
+        if (settings.GridEnabled)
+        {
+            control.X = SnapToGrid(control.X, settings.GridSize);
+            control.Y = SnapToGrid(control.Y, settings.GridSize);
+        }
+
+        auto const id = control.Id;
+
+        page->Controls.push_back(std::move(control));
+
+        m_selection = { id };
+        Commit(EditNames::Paste);
 
         return true;
     }

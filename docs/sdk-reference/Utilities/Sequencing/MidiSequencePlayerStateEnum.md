@@ -7,15 +7,16 @@ description: What a sequence player is currently doing
 ---
 
 `MidiSequencePlayerState` is the `State` of a [`MidiSequencePlayer`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequencePlayer/), and is also carried in [`MidiSequencePlayerPosition`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequencePlayerPosition/).
+
 ## Values
 
 | Value | Numeric Value | Description |
 | ----- | ------------- | ----------- |
-| `NoSequence` | `0` | No sequence has been loaded yet, so there is nothing to play |
-| `Stopped` | `1` | A sequence is loaded and the position is at the start |
+| `NoSequence` | `0` | No sequence has been loaded yet, so there's nothing to play |
+| `Stopped` | `1` | A sequence is loaded, and the position is at the start |
 | `Playing` | `2` | Messages are being scheduled and sent |
-| `Paused` | `3` | Playback is suspended, keeping the current position |
+| `Paused` | `3` | Playback is paused, and the current position is kept |
 
 ## Remarks
 
-Handle the player's `StateChanged` event to keep your transport buttons in step, rather than assuming the state after each call. Playback reaching the end of a sequence moves the player out of `Playing` on its own, and raises `PlaybackEnded` as well.
+Handle the player's `StateChanged` event to keep your transport buttons up to date, instead of assuming the state after each call. When playback reaches the end of a sequence, the player leaves `Playing` on its own, and also raises `PlaybackEnded`.

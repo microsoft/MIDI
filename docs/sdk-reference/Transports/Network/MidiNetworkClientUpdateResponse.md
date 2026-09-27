@@ -12,15 +12,15 @@ Returned by `MidiNetworkTransportManager.UpdateNetworkClientAsync`.
 
 | Property | Description |
 | -------- | ----------- |
-| `ClientId` | The GUID of the client entry the request referred to |
+| `ClientId` | The GUID of the client entry the request was about |
 | `Success` | True if the settings were applied |
 | `ErrorCode` | A `MidiNetworkClientUpdateErrorCode` when `Success` is false |
-| `ErrorMessage` | A human-readable description of the failure |
+| `ErrorMessage` | A description of the failure that people can read |
 
 ## Remarks
 
-Check `Success` first. When it is false, `ErrorCode` gives the machine-readable reason and `ErrorMessage` a localized description suitable for display.
+Check `Success` first. When it's false, `ErrorCode` tells your code why, and `ErrorMessage` is a translated description you can show to people.
 
-Updating a client the service does not have returns `ClientNotFound` rather than reporting success.
+Updating a client the service doesn't have returns `ClientNotFound`, not success.
 
-`Success` means the service accepted and applied the settings, not that every one of them changed something observable. A setting which only takes effect on the next connection, or which is outranked by the remote's function blocks, still reports success. See [MidiNetworkClientUpdateConfig]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkClientUpdateConfig/) for which is which.
+`Success` means the service accepted and applied the settings, not that every one of them changed something you can see. A setting that only takes effect on the next connection, or that the remote device's function blocks override, still reports success. [MidiNetworkClientUpdateConfig]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkClientUpdateConfig/) says which is which.

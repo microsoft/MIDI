@@ -6,7 +6,7 @@ type: runtimeclass
 description: A Network MIDI 2.0 host discovered on the network over mDNS
 ---
 
-Describes a host advertised on the local network. Obtained from `MidiNetworkAdvertisedHostWatcher` or `MidiNetworkTransportManager.GetAdvertisedHosts()`.
+Describes a host advertised on the local network. Get these from `MidiNetworkAdvertisedHostWatcher` or `MidiNetworkTransportManager.GetAdvertisedHosts()`.
 
 ## Properties
 
@@ -22,12 +22,12 @@ Describes a host advertised on the local network. Obtained from `MidiNetworkAdve
 | `Domain` | The DNS-SD domain |
 | `UmpEndpointName` | The UMP Endpoint Name advertised by the host |
 | `ProductInstanceId` | The Product Instance Id advertised by the host |
-| `TextAttributes` | Everything the mDNS TXT record carried, as a map. A device using a key this API predates is still readable through this without an API update |
-| `IPAddresses` | The IP addresses the host advertised. May contain more than one |
+| `TextAttributes` | Everything the mDNS TXT record had in it, as a map. If a device uses a key that's newer than this API, you can still read it here without an API update |
+| `IPAddresses` | The IP addresses the host advertised. There may be more than one |
 | `IPv4Addresses` | Just the IPv4 addresses, from the A records |
 | `IPv6Addresses` | Just the IPv6 addresses, from the AAAA records |
-| `LastSeenTime` | When this host was last heard from, for a UI which shows how stale an entry is |
+| `LastSeenTime` | When this host was last heard, so your app can show how out of date an entry is |
 
 ## Remarks
 
-Prefer `DeviceId` when connecting. The MIDI 2.0 specification nominates the `UmpEndpointName` and `ProductInstanceId` pair as the identity used to recall a device's settings across reconnects; addresses and ports change and are not identity.
+Use `DeviceId` to connect when you can. The MIDI 2.0 specification says to use the `UmpEndpointName` and `ProductInstanceId` pair to recognize a device and bring back its settings when it reconnects. Addresses and ports change, so they don't identify a device.

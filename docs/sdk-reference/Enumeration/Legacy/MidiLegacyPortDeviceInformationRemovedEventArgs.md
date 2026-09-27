@@ -6,7 +6,7 @@ type: runtimeclass
 description: Event args for when a MIDI 1.0 port is removed
 ---
 
-Raised by `MidiLegacyPortDeviceWatcher` when a MIDI 1.0 port is removed.
+`MidiLegacyPortDeviceWatcher` passes this to your `Removed` handler when a MIDI 1.0 port is removed.
 
 ## Properties
 

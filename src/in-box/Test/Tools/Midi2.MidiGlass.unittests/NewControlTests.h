@@ -34,6 +34,9 @@ public:
     TEST_METHOD(ATouchOutsideTheKeyboardIsNoKey);
     TEST_METHOD(VelocityRisesTowardTheFrontOfAKey);
     TEST_METHOD(AKeyPlaysItsOwnNoteRatherThanTheRowNumber);
+    TEST_METHOD(ASoftKeyStillPlaysANoteOn);
+    TEST_METHOD(ALightPadPressStillPlaysANoteOn);
+    TEST_METHOD(ANoteOnNeverGoesOutAtVelocityZero);
 
     // ---- the clock ----
 
@@ -73,6 +76,32 @@ public:
     TEST_METHOD(ZoomMakesThePictureLarger);
     TEST_METHOD(TheMiddleDecidesWhichSliceIsShown);
     TEST_METHOD(PanningCannotUncoverTheControl);
-    TEST_METHOD(APictureSmallerThanTheControlIsCentered);
+    TEST_METHOD(ASmallPictureSitsWhereTheMiddleSays);
+    TEST_METHOD(AlignmentAndCropShareOneNumberPerAxis);
     TEST_METHOD(AnUndecodedPictureFillsTheControl);
+
+    // ---- the part of a video that plays ----
+
+    TEST_METHOD(ThePartThatPlaysStaysInsideTheFile);
+    TEST_METHOD(APartTooShortToPlayIsLengthened);
+    TEST_METHOD(AnUnopenedVideoKeepsItsPoints);
+    TEST_METHOD(TheBarMapsAcrossThePartThatPlays);
+    TEST_METHOD(AVideoTimeReadsLikeAPlayer);
+    TEST_METHOD(TheBarSpansOnlyWhatIsShown);
+
+    // ---- wheel and switch ----
+
+    TEST_METHOD(ANewWheelIsAPitchWheel);
+    TEST_METHOD(ASwitchPicksThePositionUnderTheFinger);
+    TEST_METHOD(ASwitchSendsOnlyTheRowForItsPosition);
+    TEST_METHOD(ASwitchSurvivesSavingAndLoading);
+
+    // The step sequencer.
+    TEST_METHOD(StepsWalkForwardBackwardAndBothWays);
+    TEST_METHOD(RandomStepsStayOnThePattern);
+    TEST_METHOD(SwingHoldsBackEverySecondStep);
+    TEST_METHOD(AStepsNoteEndsBeforeTheNextStepStarts);
+    TEST_METHOD(ANewStepsControlPlaysAnArpeggioOnANoteRow);
+    TEST_METHOD(AStepsControlSurvivesSavingAndLoading);
+    TEST_METHOD(AStepsFileCannotAskForTooMuch);
 };

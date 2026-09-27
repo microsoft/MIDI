@@ -87,6 +87,7 @@ namespace internal =        ::WindowsMidiServicesInternal;
 #include <hstring_util.h>
 #include <wstring_util.h>
 #include <json_helpers.h>
+#include <midi_feedback_protection_json.h>
 #include <resource_util.h>
 #include <swd_helpers.h>
 #include <midi_ump_message_defs.h>

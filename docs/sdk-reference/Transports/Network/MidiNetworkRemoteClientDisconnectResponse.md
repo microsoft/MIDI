@@ -12,13 +12,13 @@ Returned by `MidiNetworkTransportManager.DisconnectRemoteClientAsync`.
 
 | Property | Description |
 | -------- | ----------- |
-| `HostId` | Host GUID targeted by the request |
-| `RemoteClientName` | Remote client UMP Endpoint Name targeted by the request |
-| `RemoteClientProductInstanceId` | Remote client Product Instance Id targeted by the request |
-| `Success` | True if the client session was disconnected |
-| `ErrorCode` | `MidiNetworkRemoteClientDisconnectErrorCode` when `Success` is false |
-| `ErrorMessage` | Human-readable error text |
+| `HostId` | The GUID of the host the request was about |
+| `RemoteClientName` | The UMP Endpoint Name of the remote client the request was about |
+| `RemoteClientProductInstanceId` | The Product Instance Id of the remote client the request was about |
+| `Success` | True if the client's session was ended |
+| `ErrorCode` | A `MidiNetworkRemoteClientDisconnectErrorCode` when `Success` is false |
+| `ErrorMessage` | An error message people can read |
 
 ## Remarks
 
-A successful disconnect does not deny future reconnect requests from that remote client.
+A successful disconnect doesn't stop that remote client from asking to connect again later.

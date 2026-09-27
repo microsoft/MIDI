@@ -236,7 +236,8 @@ namespace winrt::midiglass::implementation
 
                 RefreshLibrary();
 
-                App::OpenRuntimeWindow(path);
+                // A layout nobody has built yet is something to edit, not something to play.
+                App::OpenEditorWindow(path);
             }
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to create a layout.")

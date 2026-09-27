@@ -6,25 +6,25 @@ type: runtimeclass
 description: Holds conversion state used when converting a stream of MIDI 1.0 bytes into UMP words
 ---
 
-This class holds the state required when converting a continuous stream of MIDI 1.0 bytestream data into Universal MIDI Packet (UMP) words across multiple calls. Because MIDI 1.0 bytestream data can span message boundaries, and can use features like running status, the converter needs a place to keep track of what it has seen so far.
+This class remembers where the converter is, when you turn a continuous stream of MIDI 1.0 bytes into Universal MIDI Packet (UMP) words over several calls. A MIDI 1.0 message can be split across two calls, and the bytes can use features like running status, so the converter needs a place to keep track of what it has seen so far.
 
-Create an instance of this class and pass it to the `MidiMessageConverter.ConvertMidi1CompleteMessageBytesToUmpWords` overload which accepts a converter state. Reuse the same state instance across calls for a given stream so that partial messages and running status are handled correctly.
+Create one and pass it to the `MidiMessageConverter.ConvertMidi1CompleteMessageBytesToUmpWords` overload that takes a converter state. Use the same state object for every call on the same stream, so partial messages and running status are handled correctly.
 
 ## Constructors
 
 | Constructor | Description |
 | --------------- | ----------- |
-| `MidiBytestreamToUmpMessageConverterState ()` | Creates a new, empty converter state instance. |
+| `MidiBytestreamToUmpMessageConverterState()` | Creates a new, empty converter state |
 
 ## Properties
 
 | Property | Description |
 | --------------- | ----------- |
-| `Tag` | An optional application-defined string you may use to identify or annotate this state instance (for example, the source endpoint or group it is tracking). |
+| `Tag` | An optional string your app can use to label this object, for example with the endpoint or group it's tracking |
 
 ## Samples
 
-This state object is what remembers you are mid-System-Exclusive between calls. Without it, a continuation buffer is parsed as though it were the start of a new message.
+This object is what remembers that you're in the middle of a System Exclusive message between calls. Without it, the next buffer is read as if it were the start of a new message.
 
 * [C++/WinRT sysex-send-bytes](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/sysex-send-bytes)
 * [C# sysex-send-bytes](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/sysex-send-bytes)

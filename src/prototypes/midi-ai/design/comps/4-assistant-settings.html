@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+<meta charset="utf-8">
+<title>AI drafts - 4 - AI assistant settings</title>
+<link rel="stylesheet" href="mock.css">
+<link rel="stylesheet" href="ai.css">
+</head>
+<body>
+<div class="page">
+
+<div class="caption-above"><b>4. The assistant section of the settings flyout.</b> Same section in MIDI Patchbay and MIDI Glass. The fixed row is a promise, not a setting: no switch can let an assistant start routing or send MIDI.</div>
+
+<div class="window" style="width:640px;height:560px">
+
+  <div class="titlebar">
+    <img src="appicon.png" alt="">
+    <div class="title">Windows MIDI Patchbay</div>
+    <div class="spacer"></div>
+    <div class="caption-btn hover">&#xE713;</div>
+    <div class="caption-btn">&#xE718;</div>
+    <div class="sys-btns"><div>&#xE921;</div><div>&#xE922;</div><div>&#xE8BB;</div></div>
+  </div>
+
+  <div class="content" style="border-left:0;border-top-left-radius:0">
+    <div class="settings">
+      <h2>AI assistants</h2>
+
+      <div class="setting">
+        <div class="gl">&#xE8BD;</div>
+        <div class="txt">
+          <div class="t">Let assistants draft patches</div>
+          <div class="d">An assistant you have connected can list your MIDI devices and save drafts here for you to review.</div>
+        </div>
+        <div class="toggle-sw"></div>
+      </div>
+
+      <div class="setting fixed">
+        <div class="gl">&#xE73E;</div>
+        <div class="txt">
+          <div class="t">Drafts always wait for you</div>
+          <div class="d">An assistant cannot start routing, change a patch, delete one, or send any MIDI. You do those here.</div>
+        </div>
+      </div>
+
+      <div class="setting">
+        <div class="gl">&#xE71B;</div>
+        <div class="txt">
+          <div class="t">Connect an assistant</div>
+          <div class="d">For GitHub Copilot, Claude and other apps that support MCP. Copies the few lines their settings need.</div>
+        </div>
+        <div class="btn small"><span class="gl">&#xE8C8;</span>Copy setup</div>
+      </div>
+
+      <div class="setting">
+        <div class="gl">&#xE7F8;</div>
+        <div class="txt">
+          <div class="t">What assistants can see</div>
+          <div class="d">Device and group names, and your patch names and what they do. Never your MIDI messages, and never device serial numbers.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="insp-label">Recent</div>
+        <div class="activity">
+          <div>GitHub Copilot saved the draft <b>Keyboard split</b> <span class="when">&middot; 2 minutes ago</span></div>
+          <div>GitHub Copilot checked a patch <span class="when">&middot; 3 minutes ago</span></div>
+          <div>GitHub Copilot listed your MIDI devices <span class="when">&middot; 3 minutes ago</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>

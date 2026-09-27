@@ -6,21 +6,23 @@ type: runtimeclass
 description: The information supplied when creating a loopback endpoint pair
 ---
 
+The name and other details for one side of a loopback endpoint pair you want to create.
+
 ## Constructors
 
 | Constructor | Description |
 | --- | --- |
-| `MidiLoopbackEndpointDefinition()` | Create an empty definition |
-| `MidiLoopbackEndpointDefinition(name)` | Create a definition with the specified name. The unique id is generated for you |
-| `MidiLoopbackEndpointDefinition(name, description)` | Create a definition with the specified name and description. The unique id is generated for you |
-| `MidiLoopbackEndpointDefinition(name, description, uniqueId)` | Create a definition with the specified name, description, and your own unique id |
+| `MidiLoopbackEndpointDefinition()` | Creates an empty definition |
+| `MidiLoopbackEndpointDefinition(name)` | Creates a definition with this name. The unique id is made for you |
+| `MidiLoopbackEndpointDefinition(name, description)` | Creates a definition with this name and description. The unique id is made for you |
+| `MidiLoopbackEndpointDefinition(name, description, uniqueId)` | Creates a definition with this name, description, and your own unique id |
 
 ## Properties
 
 | Property | Description |
 |---|---|
-| `Name` | The name of the endpoint. Cleaned and shortened to the specification limit, which is a UTF-8 byte count rather than a character count, so a name using non-ASCII characters may be shortened sooner than expected. |
-| `UniqueId` | A short unique identifier for this endpoint, used when building the endpoint id. Invalid characters are removed and the value is limited to `MIDI_MAX_UMP_ENDPOINT_UNIQUE_ID_CHARACTER_COUNT` characters. If left empty, one is generated from the association id when the configuration is created. If the id is not unique among all loopback endpoints for this side (A or B), endpoint creation will fail. |
-| `Description` | Optional description for the endpoint |
-| `ImageFileName` | Optional bare file name of a picture in the shared endpoint assets folder, used as the icon for the endpoint. This is a file name, not a path: any path supplied here is reduced to its file name. The app is responsible for copying the picture into the assets folder first. |
-| `CreateOnlyUmpEndpoint` | When true, only the UMP endpoint is created. When false, the default, MIDI 1.0 ports are created alongside it for older apps. |
+| `Name` | The endpoint's name. It's cleaned up and shortened to the MIDI specification's limit. That limit counts UTF-8 bytes, not characters, so a name with non-ASCII characters, such as accented letters, may be shortened sooner than you expect |
+| `UniqueId` | A short unique id for this endpoint, used to build the endpoint device id. Characters that aren't allowed are removed, and it's limited to `MIDI_MAX_UMP_ENDPOINT_UNIQUE_ID_CHARACTER_COUNT` characters. If you leave it empty, one is made from the association id when the configuration is created. The endpoint can't be created if another loopback endpoint on the same side (A or B) already uses this id |
+| `Description` | An optional description for the endpoint |
+| `ImageFileName` | An optional file name of a picture in the shared endpoint assets folder, used as the endpoint's icon. It's a file name, not a path. If you supply a path, only the file name is kept. Your app has to copy the picture into the assets folder first |
+| `CreateOnlyUmpEndpoint` | When true, only the UMP endpoint is created. When false, which is the default, MIDI 1.0 ports are created with it for older apps |

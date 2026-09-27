@@ -7,86 +7,79 @@ implements: Windows.Foundation.IStringable
 description: Class containing all the information and metadata about an endpoint you can connect to
 ---
 
-This class is a specialized equivalent of the `DeviceInformation` WinRT class. It handles requesting all of the additional properties necessary for MIDI devices, and also goes a step further to retrieve parent device information so that applications can display the endpoints and parent devices in context.
+This class is like the WinRT `DeviceInformation` class, built for MIDI. It asks Windows for all the extra properties MIDI devices need. It also gets information about the parent device, so your application can show each endpoint along with the device it belongs to.
 
-We've heard from developers that we did not provide sufficient information about devices in the past, so we created this class and the associated properties to remedy that. We also heard that Async calls were a non-starter for most DAW applications, so everything in this class is synchronous. Finally, because we don't want apps to have to rely upon static port names like they have had to with the WinMM API, there are plenty of properties available here which can be used to identify a UMP endpoint.
+Developers told us that, in the past, we didn't give them enough information about devices, so we created this class to fix that. They also told us that async calls don't work for most DAW applications, so everything in this class is synchronous. And because we don't want applications to depend on fixed port names, the way they had to with WinMM, there are plenty of properties here you can use to identify a UMP endpoint.
 
-> # Note 
-> Rather than the `FindAll` or `CreateFrom...` methods, the `MidiEndpointDeviceWatcher` is a better way to retrieve a list of endpoints because you can then keep the watcher open in a background thread, and be notified of property changes, device add/remove, etc. You can find example code for using the `MidiEndpointDeviceWatcher` in the `samples` [folder in the MIDI repo on GitHub](https://github.com/microsoft/MIDI/tree/main/samples).
+> **Note:** `MidiEndpointDeviceWatcher` is a better way to get a list of endpoints than the `FindAll` or `CreateFrom...` methods. You can keep the watcher running on a background thread, and it tells you when devices are added or removed, and when their properties change. You'll find example code for `MidiEndpointDeviceWatcher` in the [samples folder in the MIDI repo on GitHub](https://github.com/microsoft/MIDI/tree/main/samples).
 
-## Choosing which endpoints to display to your users
+## Choosing which endpoints to show
 
-When displaying endpoint devices to users, you'll typically want to stick to the defaults: `StandardNativeUniversalMidiPacketFormat | StandardNativeMidi1ByteFormat` which is helpfully combined into `AllStandardEndpoints` value of the `MidiEndpointDeviceInformationFilters` type. You do not want to ever show the Diagnostic Ping in any typical application, and you are unlikely to need to show the system-wide Diagnostic Loopback singletons unless you are specifically offering a diagnostic capability. Finally, you don't want to show the Virtual Device Responder endpoints because those should be reserved only for the "device" application in app-to-app MIDI. 
+When you show endpoints to people, you'll usually want the defaults: `StandardNativeUniversalMidiPacketFormat | StandardNativeMidi1ByteFormat`. The `MidiEndpointDeviceInformationFilters` type combines those two into `AllStandardEndpoints` for you. Never show the diagnostic ping endpoint in a normal application. You probably don't need to show the two built-in diagnostic loopback endpoints either, unless your application offers diagnostic features. And don't show the virtual device responder endpoints, because only the "device" application in app-to-app MIDI should use those.
 
-## In-protocol discovered information
+## Information the device gives during discovery
 
-When a device is first enumerated by the MIDI Service, if it is a UMP-native device, we will attempt endpoint discovery and protocol negotiation. During that, we request all endpoint information and all function block information. The received data is then cached in the device properties so that applications do not need to perform this process themselves. This process completes either when a short timeout is hit, or all requested information has been received. Only at that point are MIDI 1.0 API ports created for the MIDI 2.0 device.
+When the MIDI service first finds a device that natively uses UMP, it tries endpoint discovery and protocol negotiation. It asks for all the endpoint information and all the function block information. The answers are saved in the device properties, so applications don't have to do this themselves. This finishes when all the requested information has arrived, or after a short timeout. Only then are the MIDI 1.0 ports created for the MIDI 2.0 device.
 
-For more information about the Endpoint Discovery and Protocol Negotiation aspect of MIDI 2.0, please [see the MIDI 2.0 UMP specification at the MIDI Association web site](https://midi.org/specs).
+To learn more about endpoint discovery and protocol negotiation in MIDI 2.0, [see the UMP specification on the MIDI Association web site](https://midi.org/specs).
 
 ### Knowing when discovery has finished
 
-`IsEndpointDiscoveryComplete` becomes true when discovery completes or when the timeout is reached, and the watcher raises `Updated` with `IsEndpointDiscoveryStateUpdated` set. For an endpoint which does not use in-protocol discovery, such as a MIDI 1.0 device, it is true from the moment the endpoint is created.
+`IsEndpointDiscoveryComplete` becomes true when discovery finishes or times out. The watcher then raises `Updated` with `IsEndpointDiscoveryStateUpdated` set. For an endpoint that doesn't use discovery in the protocol, such as a MIDI 1.0 device, it's true from the moment the endpoint is created.
 
-It is a useful hint, not a guarantee. It stays false if discovery was abandoned, for example because the device was removed part way through. Do not block your application waiting for it, and keep handling later updates after you have seen it — function block names and MIDI 1.0 port names in particular can still arrive afterwards.
+It's a useful hint, not a promise. It stays false if discovery was stopped partway, for example because the device was unplugged. Don't make your application wait for it. And keep handling updates after you see it, because function block names and MIDI 1.0 port names in particular can still arrive later.
 
 ## Properties
 
 | Property | Source | Description |
 | --------------- | ------ | ----------- |
-| `EndpointDeviceId` | Windows | The endpoint device interface id. This is sometimes called "the SWD" in short-hand because it's the string that uniquely identifies the software device interface that represents the endpoint. |
-| `Name` | Various | This is the name which should be displayed in any application. It calculates the correct name based on the hierarchy of possible names, including a user-specified name. Always respect the user's choice here. The name could be changed at any time and should not be relied upon to be constant from session to session, or even within a single session. |
-| `ContainerId` | Windows | The [device container GUID](https://learn.microsoft.com/windows-hardware/drivers/install/container-ids). |
-| `DeviceInstanceId` | Windows | The [device instance id](https://learn.microsoft.com/windows-hardware/drivers/install/device-instance-ids) of the endpoint. | 
-| `EndpointPurpose` | Windows | The purpose of the endpoint. This is used primarily for filtering. |
-| `ParentDeviceInstanceId` | Windows | The device instance id of the parent device. |
-| `DeclaredEndpointInfoLastUpdateTime` | Discovery | The time of the last update for endpoint information discovered in-protocol |
-| `DeclaredDeviceIdentityLastUpdateTime` | Discovery | The time of the last update for device identity information discovered in-protocol |
-| `DeclaredStreamConfigurationLastUpdateTime` | Protocol Negotiation | The time of the last update from protocol negotiation |
-| `DeclaredFunctionBlocksLastUpdateTime` | Discovery | The time of the last update of function blocks |
-| `Midi1PortNamingApproach` | User/Config | The naming approach used when generating MIDI 1.0 port names for this endpoint. |
-| `IsMuted` | Config | True if this endpoint is muted (all MIDI communication suppressed). |
-| `IsEndpointDiscoveryComplete` | Discovery | True when the service has finished gathering in-protocol information for this endpoint. See the note below. |
-| `Properties` | Windows | Returns the raw device properties for this endpoint. The property values and their ids are not something an application should rely upon -- they are an implementation detail subject to change, and are not part of the contract with apps. Instead, all of the interesting/useful properties have been broken out in other ways with strong types. |
-
-## Static Properties
-
-| Static Property | Description |
-| --------------- | ----------- |
-| `EndpointInterfaceClass` | The class GUID which appears at the end of the Endpoint Ids |
+| `EndpointDeviceId` | Windows | The endpoint's device interface id, which you pass to `MidiSession.CreateEndpointConnection`. It's sometimes called "the SWD" for short, because it's the text that identifies the software device (SWD) interface for the endpoint |
+| `Name` | Various | The name to show in your application. It picks the right name from all the names the endpoint has, including one the user set. Always respect the user's choice. The name can change at any time, so don't count on it staying the same between sessions, or even during one |
+| `ContainerId` | Windows | The [device container GUID](https://learn.microsoft.com/windows-hardware/drivers/install/container-ids) |
+| `DeviceInstanceId` | Windows | The [device instance id](https://learn.microsoft.com/windows-hardware/drivers/install/device-instance-ids) of the endpoint | 
+| `EndpointPurpose` | Windows | What the endpoint is for. Mostly used for filtering |
+| `ParentDeviceInstanceId` | Windows | The device instance id of the parent device |
+| `DeclaredEndpointInfoLastUpdateTime` | Discovery | When the endpoint information from discovery last changed |
+| `DeclaredDeviceIdentityLastUpdateTime` | Discovery | When the device identity from discovery last changed |
+| `DeclaredStreamConfigurationLastUpdateTime` | Protocol Negotiation | When the stream configuration from protocol negotiation last changed |
+| `DeclaredFunctionBlocksLastUpdateTime` | Discovery | When the function blocks last changed |
+| `Midi1PortNamingApproach` | User/Config | How this endpoint's MIDI 1.0 port names are made |
+| `IsMuted` | Config | True if this endpoint is muted, which means no MIDI messages get through |
+| `IsEndpointDiscoveryComplete` | Discovery | True when the service has finished asking the device about itself. See [Knowing when discovery has finished](#knowing-when-discovery-has-finished) |
+| `Properties` | Windows | The endpoint's raw device properties. Don't depend on these values or their ids. They're internal details that can change, and they aren't part of what the API promises. Everything useful in them is also available through the other properties and functions, with proper types |
 
 ## Functions
 
 | Function | Description |
 | --------------- | ----------- |
-| `GetDeclaredEndpointInfo()` | Returns a `MidiDeclaredEndpointInfo` structure with the currently stored endpoint discovery information |
-| `GetDeclaredDeviceIdentity()` | Returns a `MidiDeclaredDeviceIdentity` structure with the currently stored device identity information |
-| `GetDeclaredStreamConfiguration()` | Returns a `MidiDeclaredStreamConfiguration` structure with the currently stored stream configuration |
-| `GetDeclaredFunctionBlocks()` | Returns a snapshot of the currently stored function blocks |
-| `GetGroupTerminalBlocks()` | Returns the currently stored group terminal blocks (USB devices only) |
-| `GetUserSuppliedInfo()` | Returns a `MidiEndpointUserSuppliedInfo` structure with the currently stored user-supplied information |
-| `GetTransportSuppliedInfo()` | Returns a `MidiEndpointTransportSuppliedInfo` with the currently stored transport-supplied information |
-| `GetParentDeviceInformation()` | Retrieves the parent `MidiParentDeviceInformation` type. |
-| `GetContainerDeviceInformation()` | Gets the device container information as a `Windows.Devices.Enumeration.DeviceInformation` with appropriate properties |
-| `GetNameTable()` | Returns all the candidate names for MIDI 1.0 API ports created from this UMP endpoint. This is primarily used by the Settings app to enable changing the name of future-created ports. |
+| `GetDeclaredEndpointInfo()` | Returns the saved endpoint information from discovery, as a `MidiDeclaredEndpointInfo` |
+| `GetDeclaredDeviceIdentity()` | Returns the saved device identity from discovery, as a `MidiDeclaredDeviceIdentity` |
+| `GetDeclaredStreamConfiguration()` | Returns the saved stream configuration, as a `MidiDeclaredStreamConfiguration` |
+| `GetDeclaredFunctionBlocks()` | Returns a copy of the saved function blocks |
+| `GetGroupTerminalBlocks()` | Returns the saved group terminal blocks. Only USB devices have these |
+| `GetUserSuppliedInfo()` | Returns the saved information the user supplied, as a `MidiEndpointUserSuppliedInfo` |
+| `GetTransportSuppliedInfo()` | Returns the saved information the transport supplied, as a `MidiEndpointTransportSuppliedInfo` |
+| `GetParentDeviceInformation()` | Returns the parent device, as a `MidiParentDeviceInformation` |
+| `GetContainerDeviceInformation()` | Returns the device container as a `Windows.Devices.Enumeration.DeviceInformation`, with the right properties filled in |
+| `GetNameTable()` | Returns all the possible names for the MIDI 1.0 ports made from this UMP endpoint. Mostly used by MIDI Settings, so people can change the names of ports that will be created later |
 
 ## Static Properties
 
 | Static Property | Description |
 | --------------- | ----------- |
-| `EndpointInterfaceClass` | The class GUID which appears at the end of the Endpoint Ids |
+| `EndpointInterfaceClass` | The class GUID at the end of every endpoint id |
 
 ## Static Functions
 
 | Static Function | Description |
 | --------------- | ----------- |
-| `CreateFromEndpointDeviceId(endpointDeviceId)` | Creates a new `MidiEndpointDeviceInformation` object from the specified endpoint device id |
-| `FindAll()` | Searches for all endpoint devices and returns a list in the default sort order |
-| `FindAll(sortOrder)` | Searches for all endpoint devices and returns a list in the specified sort order |
-| `FindAll(sortOrder, endpointFilter)` | Searches for all endpoint devices which match the filter, and returns a list in the specified sort order. |
-| `FindAllForContainer(containerId)` | Returns all endpoint devices in the specified device container. |
-| `DeviceMatchesFilter(deviceInformation, endpointFilter)` | A helper function to compare a device against the filter. |
-| `GetAdditionalPropertiesList()` | Returns the list of properties which must be requested during enumeration. Typically not needed for applications, as the watcher calls this function |
+| `CreateFromEndpointDeviceId(endpointDeviceId)` | Creates a new `MidiEndpointDeviceInformation` for the endpoint with this id |
+| `FindAll()` | Finds all endpoint devices and returns them in the default sort order |
+| `FindAll(sortOrder)` | Finds all endpoint devices and returns them in the sort order you choose |
+| `FindAll(sortOrder, endpointTypesToInclude)` | Finds all endpoint devices that match the filter, and returns them in the sort order you choose |
+| `FindAllForContainer(containerId)` | Returns all endpoint devices in this device container |
+| `DeviceMatchesFilter(deviceInformation, endpointTypesToInclude)` | Returns true if the device matches the filter |
+| `GetAdditionalPropertiesList()` | Returns the list of extra properties to ask for when you enumerate devices yourself. Most applications don't need it, because the watcher calls it for you |
 
 ## Samples
 
@@ -94,4 +87,4 @@ It is a useful hint, not a guarantee. It stays false if discovery was abandoned,
 * [C++/WinRT get-vid-pid](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/get-vid-pid) and [C# get-vid-pid](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/get-vid-pid) for the parent device and transport-supplied metadata
 * [C++/WinRT identify-endpoint-type](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/identify-endpoint-type) and [C# identify-endpoint-type](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/identify-endpoint-type) for working out what kind of device an endpoint is
 
-For anything with a device picker, prefer the [`MidiEndpointDeviceWatcher`]({{ site.baseurl }}/sdk-reference/Enumeration/MidiEndpointDeviceWatcher/) over these static methods.
+If your application has a device picker, use [`MidiEndpointDeviceWatcher`]({{ site.baseurl }}/sdk-reference/Enumeration/MidiEndpointDeviceWatcher/) instead of these static methods.

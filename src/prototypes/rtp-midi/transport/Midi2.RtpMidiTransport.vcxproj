@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  PROTOTYPE. rtpMIDI service transport plugin. Deliberately not part of Midi2.sln.
+
+  Builds against the in-box tree without project references: build Midi2.sln (Release) for the
+  same platform first, so the IDL output and the static libraries below exist.
+-->
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|ARM64">
+      <Configuration>Release</Configuration>
+      <Platform>ARM64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>17.0</VCProjectVersion>
+    <ProjectGuid>{5E7A2C41-93B8-4D0F-B6E2-8A4C1F3D7E95}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Midi2RtpMidiTransport</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+
+  <!-- The two settings src/in-box/Directory.Build.props gives every in-box project -->
+  <PropertyGroup>
+    <InBoxDir>$(MSBuildThisFileDirectory)..\..\..\in-box\</InBoxDir>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+    <VcpkgAdditionalInstallOptions>$(VcpkgAdditionalInstallOptions) --overlay-ports="$(InBoxDir)Libs\LibMidi2\overlay-ports"</VcpkgAdditionalInstallOptions>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+
+  <PropertyGroup Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v145</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+
+  <PropertyGroup>
+    <OutDir>$(MSBuildThisFileDirectory)..\out\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(MSBuildThisFileDirectory)..\out\intermediate\transport\$(Platform)\$(Configuration)\</IntDir>
+    <InBoxLibDir>$(InBoxDir)VSFiles\$(Platform)\$(Configuration)\</InBoxLibDir>
+    <InBoxIdlDir>$(InBoxDir)VSFiles\intermediate\IDL\$(Platform)\$(Configuration)\</InBoxIdlDir>
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+
+  <PropertyGroup Label="Vcpkg">
+    <VcpkgEnableManifest>true</VcpkgEnableManifest>
+    <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows</VcpkgTriplet>
+    <VcpkgTriplet Condition="'$(Platform)'=='ARM64'">arm64-windows</VcpkgTriplet>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <WarningLevel>Level4</WarningLevel>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <SDLCheck>true</SDLCheck>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <AdditionalOptions>/bigobj %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>$(InBoxDir)Inc;$(InBoxIdlDir);$(IntDir);$(MSBuildThisFileDirectory)..\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>$(InBoxDir)idl;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+    </Midl>
+    <Link>
+      <AdditionalDependencies>$(InBoxLibDir)MidiEndpointNamingLib.lib;$(InBoxLibDir)MidiPluginConfigurationLib.lib;$(InBoxLibDir)MidiSrvTransportLib.lib;ws2_32.lib;Dnsapi.lib;iphlpapi.lib;bcrypt.lib;onecoreuap.lib;avrt.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>Midi2.RtpMidiTransport.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+    </Link>
+  </ItemDefinitionGroup>
+
+  <ItemGroup>
+    <ClCompile Include="pch.cpp">
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="Midi2.RtpMidiTransport.cpp" />
+    <ClCompile Include="Midi2.RtpMidiBidi.cpp" />
+    <ClCompile Include="Midi2.RtpMidiEndpointManager.cpp" />
+    <ClCompile Include="Midi2.RtpMidiConfigurationManager.cpp" />
+    <ClCompile Include="Midi2.RtpMidiPluginMetadataProvider.cpp" />
+    <ClCompile Include="RtpMidiConnection.cpp" />
+    <ClCompile Include="RtpMidiNode.cpp" />
+    <ClCompile Include="TransportState.cpp" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ClInclude Include="..\lib\rtpmidi_journal.h" />
+    <ClInclude Include="..\lib\rtpmidi_protocol.h" />
+    <ClInclude Include="..\lib\rtpmidi_session.h" />
+    <ClInclude Include="dllmain.h" />
+    <ClInclude Include="Midi2.RtpMidiBidi.h" />
+    <ClInclude Include="Midi2.RtpMidiConfigurationManager.h" />
+    <ClInclude Include="Midi2.RtpMidiEndpointManager.h" />
+    <ClInclude Include="Midi2.RtpMidiPluginMetadataProvider.h" />
+    <ClInclude Include="Midi2.RtpMidiTransport.h" />
+    <ClInclude Include="pch.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="rtp_json_defs.h" />
+    <ClInclude Include="rtp_transport_error_codes.h" />
+    <ClInclude Include="RtpMidiConnection.h" />
+    <ClInclude Include="RtpMidiDefinitions.h" />
+    <ClInclude Include="RtpMidiEndpointProperties.h" />
+    <ClInclude Include="RtpMidiMdns.h" />
+    <ClInclude Include="RtpMidiNet.h" />
+    <ClInclude Include="RtpMidiNode.h" />
+    <ClInclude Include="transport_defs.h" />
+    <ClInclude Include="TransportState.h" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Midl Include="Midi2RtpMidiTransport.idl" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ResourceCompile Include="Midi2.RtpMidiTransport.rc" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Midi2.RtpMidiTransport.def" />
+    <None Include="Midi2.RtpMidiTransport.rgs" />
+    <None Include="packages.config" />
+    <None Include="vcpkg.json" />
+  </ItemGroup>
+
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+
+  <ImportGroup Label="ExtensionTargets">
+    <Import Project="$(InBoxDir)packages\Microsoft.Windows.ImplementationLibrary.1.0.260126.7\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('$(InBoxDir)packages\Microsoft.Windows.ImplementationLibrary.1.0.260126.7\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
+  </ImportGroup>
+
+  <Target Name="EnsureInBoxInputs" BeforeTargets="PrepareForBuild">
+    <Error Condition="!Exists('$(InBoxDir)packages\Microsoft.Windows.ImplementationLibrary.1.0.260126.7\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="WIL is missing from $(InBoxDir)packages. Restore Midi2.sln first." />
+    <Error Condition="!Exists('$(InBoxIdlDir)WindowsMidiServices.h')" Text="$(InBoxIdlDir)WindowsMidiServices.h is missing. Build Midi2.sln $(Configuration)|$(Platform) first." />
+    <Error Condition="!Exists('$(InBoxLibDir)MidiSrvTransportLib.lib')" Text="$(InBoxLibDir)MidiSrvTransportLib.lib is missing. Build Midi2.sln $(Configuration)|$(Platform) first." />
+  </Target>
+</Project>

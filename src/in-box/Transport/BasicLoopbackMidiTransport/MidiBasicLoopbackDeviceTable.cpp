@@ -173,7 +173,15 @@ std::vector<MidiBasicLoopbackDeviceSnapshot> MidiBasicLoopbackDeviceTable::GetDe
         if (device && device->Definition)
         {
             // snapshot so no pointer issues if removed from table after this point
-            results.push_back({ *(device->Definition), device->MessageCount() });
+            MidiBasicLoopbackDeviceSnapshot snapshot{ *(device->Definition), device->MessageCount() };
+
+            if (device->Feedback != nullptr)
+            {
+                snapshot.FeedbackProtectionEnabled = device->Feedback->IsEnabled();
+                snapshot.FeedbackStatus = device->Feedback->GetStatus();
+            }
+
+            results.push_back(std::move(snapshot));
         }
     }
 

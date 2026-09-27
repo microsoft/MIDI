@@ -13,7 +13,7 @@ Reported on `MidiBluetoothPeripheralClient`.
 | Value | Numeric Value | Description |
 | ----- | ------------- | ----------- |
 | `Unknown` | `0` | Not reported |
-| `Public` | `1` | A public address, which is stable |
-| `Random` | `2` | A random address, re-generated periodically for privacy |
+| `Public` | `1` | A public address, which doesn't change |
+| `Random` | `2` | A random address, which the device changes every so often for privacy |
 
-A random address is not a durable way to recognize a phone or tablet which has connected to this PC. Pairing is what gives a remote device a stable identity.
+You can't use a random address to recognize a phone or tablet the next time it connects to this PC. Pairing is what gives a remote device an identity that doesn't change.

@@ -33,4 +33,7 @@ struct MidiBasicLoopbackDeviceDefinition
 //    std::vector<winrt::hstring> CreatedMidi1DestinationPorts{};
 
     bool IsMuted{ false };
+
+    // on unless the configuration turns it off
+    bool FeedbackProtectionEnabled{ true };
 };

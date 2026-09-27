@@ -111,9 +111,11 @@ namespace winrt::midisettings::implementation
 
             NotificationsEnabledToggle().IsOn(enabled);
             NotificationsNetworkToggle().IsOn(native::NotificationSettings::NetworkApprovalEnabled());
+            NotificationsLoopbackFeedbackToggle().IsOn(native::NotificationSettings::LoopbackFeedbackEnabled());
 
             // The categories are meaningless while nothing is being shown at all.
             NotificationsNetworkToggle().IsEnabled(enabled);
+            NotificationsLoopbackFeedbackToggle().IsEnabled(enabled);
 
             auto const elevated = ::winrt::midisettings::implementation::App::IsElevated();
             auto const forEveryone = native::NotificationSettings::StartsForAllUsers();
@@ -135,6 +137,7 @@ namespace winrt::midisettings::implementation
             {
                 NotificationsEnabledToggle().IsEnabled(false);
                 NotificationsNetworkToggle().IsEnabled(false);
+                NotificationsLoopbackFeedbackToggle().IsEnabled(false);
                 NotificationsStartupToggle().IsEnabled(false);
                 NotificationsAllUsersToggle().IsEnabled(false);
 
@@ -187,6 +190,7 @@ namespace winrt::midisettings::implementation
             native::NotificationSettings::NotificationsEnabled(enabled);
 
             NotificationsNetworkToggle().IsEnabled(enabled);
+            NotificationsLoopbackFeedbackToggle().IsEnabled(enabled);
 
             if (enabled)
             {
@@ -208,6 +212,21 @@ namespace winrt::midisettings::implementation
         try
         {
             native::NotificationSettings::NetworkApprovalEnabled(NotificationsNetworkToggle().IsOn());
+        }
+        MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to change the notification setting.")
+    }
+
+    _Use_decl_annotations_
+    void MainWindow::OnNotificationsLoopbackFeedbackToggled(foundation::IInspectable const&, xaml::RoutedEventArgs const&)
+    {
+        if (m_updatingNotificationToggles)
+        {
+            return;
+        }
+
+        try
+        {
+            native::NotificationSettings::LoopbackFeedbackEnabled(NotificationsLoopbackFeedbackToggle().IsOn());
         }
         MIDI_SETTINGS_CATCH_AND_LOG(L"Unable to change the notification setting.")
     }

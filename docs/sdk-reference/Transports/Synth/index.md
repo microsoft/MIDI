@@ -7,9 +7,9 @@ description: Namespace for reading and changing the settings of the built-in Gen
 
 Types for reading the state of the built-in General MIDI synthesizer, changing its settings, and finding its endpoint so you can play it.
 
-The synthesizer is a service transport, not a device driver, so it appears in enumeration as an ordinary MIDI 2.0 endpoint alongside everything else on the PC. You do not need anything in this namespace to play it. Open a connection to its endpoint like any other and send it Universal MIDI Packets. This namespace is for applications that want to *configure* it, or that want to find its endpoint without enumerating.
+The synthesizer is a service transport, not a device driver. So it shows up in enumeration as a normal MIDI 2.0 endpoint, along with everything else on the PC. You don't need anything in this namespace to play it. Open a connection to its endpoint, like any other, and send it Universal MIDI Packets. This namespace is for applications that want to *change its settings*, or that want to find its endpoint without enumerating.
 
-Everything is reached through the static [MidiSynthManager]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthManager/) class.
+Start with the static [MidiSynthManager]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthManager/) class.
 
 ## Playing the synthesizer
 
@@ -23,11 +23,11 @@ if (!string.IsNullOrEmpty(endpointId))
 }
 ```
 
-`EndpointDeviceId` is empty when the transport is not installed, and also when the synthesizer is switched off, because then the endpoint genuinely does not exist. Treat an empty string as "there is no synthesizer to play right now" rather than as an error.
+`EndpointDeviceId` is empty when the transport isn't installed. It's also empty when the synthesizer is turned off, because then the endpoint doesn't exist. Treat an empty string as "there's no synthesizer to play right now," not as an error.
 
 ## Changing a setting
 
-Settings are a complete set, not a patch. Build a [MidiSynthConfig]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthConfig/) from the current [MidiSynthStatus]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthStatus/), change what you mean to change, and send the whole thing back.
+You always send all of the settings at once, not just the one you changed. Build a [MidiSynthConfig]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthConfig/) from the current [MidiSynthStatus]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthStatus/), change what you want to change, and send the whole thing back.
 
 ```csharp
 var config = new MidiSynthConfig(MidiSynthManager.GetStatus());
@@ -37,19 +37,19 @@ MidiServiceTransportPluginConfigManager.SendUpdate(config);      // apply now
 MidiServiceTransportPluginConfigManager.SaveUpdate(config);      // and keep it
 ```
 
-`SendUpdate` applies the change to the running service. `SaveUpdate` writes it to the configuration so it survives a service restart. Sending without saving gives the customer a change they can undo by restarting; saving without sending stages one for next time.
+`SendUpdate` changes the running service. `SaveUpdate` writes the change to the configuration, so it stays after the service restarts. If you send without saving, restarting the service undoes the change. If you save without sending, the change takes effect the next time the service starts.
 
-## Switching the synthesizer off removes its endpoint
+## Turning the synthesizer off removes its endpoint
 
-`IsEnabled` set to false does not mute the synthesizer, it removes the endpoint entirely and releases the audio device. That is deliberate. An application that opens every MIDI port it can find — which some browser-based Web MIDI pages do — would otherwise hold the synthesizer endpoint open, which holds the audio device, which keeps it away from an application that wants it in WASAPI exclusive mode or through ASIO.
+Setting `IsEnabled` to false doesn't mute the synthesizer. It removes the endpoint completely and lets go of the audio device. That's on purpose. Some apps open every MIDI port they can find, and so do some Web MIDI pages in a browser. If the endpoint stayed, an app like that would keep the synthesizer open, which keeps the audio device open. Then an app that needs the audio device all to itself, in WASAPI exclusive mode or through ASIO, couldn't have it.
 
-Enabling it again recreates the endpoint with the same device identifier, so an application that remembered the identifier finds it again.
+Turning it back on creates the endpoint again with the same device id, so an app that saved the id finds it again.
 
 ## Reading the instrument list
 
-A connected application should ask the synthesizer what it can play using MIDI Capability Inquiry Property Exchange, the same way it would ask any other device. The synthesizer answers `ResourceList`, `DeviceInfo`, `ChannelList` and a full `ProgramList`. See [How to read a device's patch list]({{ site.baseurl }}/kb/how-to-read-a-device-patch-list/).
+A connected app should ask the synthesizer what it can play with MIDI Capability Inquiry Property Exchange, the same way it would ask any other device. The synthesizer answers `ResourceList`, `DeviceInfo`, `ChannelList`, and a full `ProgramList`. See [How to read a device's patch list]({{ site.baseurl }}/kb/how-to-read-a-device-patch-list/).
 
-[MidiSynthManager.GetMelodicInstruments()]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthManager/) exists for the case Property Exchange cannot serve: browsing instruments in a settings or patch-picking UI before any connection is open. The list is a property of the sound set, so it does not change with configuration.
+[MidiSynthManager.GetMelodicInstruments()]({{ site.baseurl }}/sdk-reference/Transports/Synth/MidiSynthManager/) is for when Property Exchange can't help: showing instruments in a settings screen or instrument picker before any connection is open. The list comes from the sound set, so it doesn't change when the settings do.
 
 ## See also
 

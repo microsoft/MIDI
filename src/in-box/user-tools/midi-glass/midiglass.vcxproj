@@ -166,6 +166,8 @@
     <ClInclude Include="document\LayoutStore.h" />
     <ClInclude Include="document\PageTemplates.h" />
     <ClInclude Include="document\LfoShape.h" />
+    <ClInclude Include="document\StepPattern.h" />
+    <ClInclude Include="document\PadGrid.h" />
     <ClInclude Include="document\LayoutTemplates.h" />
     <ClInclude Include="document\ThemeModel.h" />
     <ClInclude Include="document\ThemeStore.h" />
@@ -187,12 +189,14 @@
     <ClInclude Include="surface\SurfaceRenderer.h" />
     <ClInclude Include="runtime\ClockGenerator.h" />
     <ClInclude Include="runtime\LfoGenerator.h" />
+    <ClInclude Include="runtime\StepSequencer.h" />
     <ClInclude Include="binding\BindingEngine.h" />
     <ClInclude Include="binding\ActionPlan.h" />
     <ClInclude Include="binding\LearnCapture.h" />
     <ClInclude Include="document\HexText.h" />
     <ClInclude Include="binding\MonitorFormat.h" />
     <ClInclude Include="binding\ValueThrottle.h" />
+    <ClInclude Include="binding\PadVoices.h" />
     <ClInclude Include="editor\ArrangeOps.h" />
     <ClInclude Include="editor\ControlFactory.h" />
     <ClInclude Include="editor\EditGeometry.h" />
@@ -233,6 +237,10 @@
     <ClCompile Include="EditorThemeProperties.cpp" />
     <ClCompile Include="EditorLayoutPanes.cpp" />
     <ClCompile Include="EditorControlProperties.cpp" />
+    <ClCompile Include="EditorPicturePanel.cpp" />
+    <ClCompile Include="EditorPictureVideo.cpp" />
+    <ClCompile Include="EditorClipboard.cpp" />
+    <ClCompile Include="EditorStepsPanel.cpp" />
     <ClCompile Include="EditorControlEdits.cpp" />
     <ClCompile Include="EditorInspector.cpp" />
     <ClCompile Include="EditorOutline.cpp" />
@@ -279,6 +287,12 @@
     <ClCompile Include="document\LfoShape.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="document\StepPattern.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="document\PadGrid.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="document\LayoutTemplates.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -304,6 +318,9 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="binding\ValueThrottle.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="binding\PadVoices.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="binding\MonitorFormat.cpp">
@@ -348,6 +365,7 @@
     <ClCompile Include="runtime\DeviceCatalog.cpp" />
     <ClCompile Include="runtime\ClockGenerator.cpp" />
     <ClCompile Include="runtime\LfoGenerator.cpp" />
+    <ClCompile Include="runtime\StepSequencer.cpp" />
     <ClCompile Include="surface\DeckBrush.cpp" />
     <ClCompile Include="runtime\LivePlayer.cpp" />
     <ClCompile Include="runtime\SequenceRunner.cpp" />
@@ -356,7 +374,9 @@
     <ClCompile Include="surface\InputRouter.cpp" />
     <ClCompile Include="surface\SurfaceAutomationPeer.cpp" />
     <ClCompile Include="surface\SurfaceControls.cpp" />
+    <ClCompile Include="surface\SurfacePads.cpp" />
     <ClCompile Include="surface\SurfaceRenderer.cpp" />
+    <ClCompile Include="surface\SurfaceVideo.cpp" />
     <ClCompile Include="thumbnail\ThumbnailRenderer.cpp" />
     <ClCompile Include="thumbnail\SurfaceThumbnail.cpp" />
     <ClCompile Include="..\midi-app-shared\AppearanceFlyout.cpp" />

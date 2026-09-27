@@ -6,7 +6,7 @@ type: enum
 description: MIDI 1.0 channel voice message status values
 ---
 
-Status to use for MIDI 1.0 Channel Voice messages. Note that not all MIDI 1.0 messages are channel voice messages, so this is not an exhaustive list of MIDI 1.0 messages. However, this is the total set of MIDI 1.0 messages which can be used in a MIDI Universal MIDI Packet Message type 2.
+The status values for MIDI 1.0 channel voice messages. Not every MIDI 1.0 message is a channel voice message, so this isn't a full list of MIDI 1.0 messages. But it is every MIDI 1.0 message that can go in a Universal MIDI Packet of message type 2.
 
 ## Properties
 

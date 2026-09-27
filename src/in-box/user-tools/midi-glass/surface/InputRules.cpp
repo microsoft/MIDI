@@ -93,6 +93,7 @@ namespace glass
         case ControlKind::XYPad:
         case ControlKind::Joystick:
         case ControlKind::Ribbon:
+        case ControlKind::Wheel:
             return true;
 
         default:
@@ -138,6 +139,7 @@ namespace glass
         case ControlKind::Label:
         case ControlKind::Image:
         case ControlKind::Panel:
+        case ControlKind::Line:
             return false;
 
         default:
@@ -192,6 +194,25 @@ namespace glass
         }
 
         return std::clamp(1.0 - (y / height), 0.0, 1.0);
+    }
+
+    _Use_decl_annotations_
+    double SwitchValueAtPoint(double width, double height, double x, double y, int32_t positions) noexcept
+    {
+        auto const count = std::max(positions, MinimumSwitchPositions);
+        auto const across = width >= height;
+        auto const length = across ? width : height;
+
+        if (length <= 0.0)
+        {
+            return 0.0;
+        }
+
+        auto const along = across ? x : y;
+        auto const slice = length / count;
+        auto const position = std::clamp(static_cast<int32_t>(std::floor(along / slice)), 0, count - 1);
+
+        return SwitchValueOf(position, count);
     }
 
     namespace

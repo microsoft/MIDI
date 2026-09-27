@@ -1470,6 +1470,8 @@
     <Midl Include="MidiBasicLoopbackUpdateResponse.idl" />
     <Midl Include="MidiLoopbackUpdateResponse.idl" />
     <Midl Include="MidiLoopbackErrorCodeEnum.idl" />
+    <Midl Include="MidiLoopbackFeedbackProtectionEnum.idl" />
+    <Midl Include="MidiBasicLoopbackFeedbackProtectionEnum.idl" />
     <Midl Include="MidiLoopbackEndpointEntry.idl" />
     <Midl Include="MidiLoopbackRemovalConfig.idl" />
     <Midl Include="MidiLoopbackManager.idl" />

@@ -8,10 +8,13 @@
 #pragma once
 
 #include "LayoutModel.h"
+#include "PadGrid.h"
 #include "ThemeModel.h"
 #include "ThemeStore.h"
 #include "SurfaceColors.h"
 #include "GlassControl.h"
+
+#include <winrt/Windows.Media.Playback.h>
 
 namespace glass
 {
@@ -48,6 +51,14 @@ namespace glass
         float RestingGlow{ 0.0f };
 
         comp::ShapeVisual Shape{ nullptr };
+
+        // Light that has to reach past the control's own edges: a knob's glowing arc, the line
+        // of light round an outlined section, a lit lamp. Larger than the control and offset so
+        // nothing is cut at its bounding box. Null on every control that has none.
+        comp::ShapeVisual Halo{ nullptr };
+
+        // The halo is a lamp's, so it is only shown while the switch is on.
+        bool HaloFollowsLamp{ false };
 
         // Struck through when the device this control sends to is not here. Built once and
         // hidden, because a device coming and going must not rebuild a page.
@@ -157,12 +168,59 @@ namespace glass
         std::vector<comp::CompositionRoundedRectangleGeometry> RibbonGlow{};
         float RibbonSpan{ 0.0f };
 
+        // ---- wheel: ridges and a painted line that roll past as it turns ----
+
+        comp::CompositionContainerShape WheelDrum{ nullptr };
+        float WheelTravel{ 0.0f };
+        bool WheelVertical{ true };
+
+        // ---- switch: one slice per position, the chosen one lit ----
+
+        int32_t SwitchPositions{ 0 };
+        std::vector<comp::CompositionSpriteShape> SwitchSegments{};
+        std::vector<winrt::Windows::Foundation::Numerics::float4> SwitchCells{};
+        comp::CompositionBrush SwitchLitFill{ nullptr };
+        comp::CompositionBrush SwitchRestFill{ nullptr };
+        ThemeColor SwitchLitInk{};
+        ThemeColor SwitchRestInk{};
+
+        // ---- step sequencer: a slot per step, a bar in it as tall as the step plays hard ----
+
+        std::vector<comp::CompositionSpriteShape> StepSlots{};
+        std::vector<comp::CompositionSpriteShape> StepBars{};
+        std::vector<comp::CompositionBrush> StepSlotRestFills{};
+        comp::CompositionBrush StepSlotLitFill{ nullptr };
+        comp::CompositionBrush StepBarRestFill{ nullptr };
+        comp::CompositionBrush StepBarLitFill{ nullptr };
+        int32_t CurrentStep{ -1 };
+
         // ---- piano keyboard ----
 
         std::vector<comp::CompositionSpriteShape> KeyShapes{};
         std::vector<comp::CompositionBrush> KeyRestBrushes{};
         comp::CompositionBrush KeyPressedBrush{ nullptr };
         int32_t PressedKey{ -1 };
+
+        // ---- note pads and hex pads ----
+
+        // One shape per pad, in the order the pads flow, painted from the brushes beside it.
+        std::vector<comp::CompositionSpriteShape> PadShapes{};
+        std::vector<comp::CompositionBrush> PadRestFills{};
+        std::vector<comp::CompositionBrush> PadRestRims{};
+        std::vector<comp::CompositionBrush> PadLitFills{};
+        comp::CompositionBrush PadLitRim{ nullptr };
+
+        // How many fingers are on each pad. Two on one pad is one lit pad, and it stays lit
+        // until both have gone.
+        std::vector<uint8_t> PadHeld{};
+
+        // Where the pads were drawn, which is where a finger has to land to play one.
+        PadGridLayout PadLayout{};
+
+        // One shadow for every pad, cast through a mask built from their shapes. The mask's
+        // source has to stay alive for the mask to render.
+        comp::SpriteVisual PadShadow{ nullptr };
+        comp::ShapeVisual PadShadowSource{ nullptr };
 
         // ---- beat clock ----
 
@@ -233,6 +291,7 @@ namespace glass
 
         // How far a platter has to be pushed round to drive it from one end to the other.
         double TurnDegreesAt(_In_ size_t itemIndex) const noexcept;
+        int32_t SwitchPositionsAt(_In_ size_t itemIndex) const noexcept;
 
         // Where this control sits when nothing is holding it, and whether it goes back there on
         // its own. A pitch wheel does; a volume fader had better not.
@@ -252,6 +311,16 @@ namespace glass
 
         // Which key on a piano keyboard is down, counted from the leftmost. -1 is none.
         void SetPressedKey(_In_ size_t itemIndex, _In_ int32_t key) noexcept;
+
+        // What a note pad or hex pad control plays, and where its pads were drawn. Kept here for
+        // the same reason the keyboard is: input runs on the hot path, and a finger has to land
+        // on the pad it can see rather than on one worked out again from a document that may
+        // have been edited underneath it.
+        PadGridSpec const& PadGridAt(_In_ size_t itemIndex) const noexcept;
+        PadGridLayout const& PadLayoutAt(_In_ size_t itemIndex) const noexcept;
+
+        // A finger went onto a pad or came off it. Counted, because two fingers can share one.
+        void SetPadHeld(_In_ size_t itemIndex, _In_ int32_t cell, _In_ bool held) noexcept;
 
         // The beat a clock generator is on, and how far through it. Drawn by the compositor
         // from two numbers rather than animated, so the picture can never disagree with the
@@ -273,6 +342,10 @@ namespace glass
             _In_ double phase,
             _In_ bool running) noexcept;
 
+        // Which step a step sequencer is playing. -1 lights none, which is what a stopped
+        // sequencer shows.
+        void SetCurrentStep(_In_ size_t itemIndex, _In_ int32_t stepIndex) noexcept;
+
         // A time display was tapped, so it counts again from zero.
         void ResetElapsed(_In_ size_t itemIndex) noexcept;
 
@@ -280,6 +353,48 @@ namespace glass
         // somebody is placing controls is a moving thing in the corner of the eye that has
         // nothing to do with the work, and the number it reaches is the time spent editing.
         void SetElapsedRunning(_In_ bool running) noexcept;
+
+        // Whether videos play. The designer holds every video still on the first frame of the
+        // part that plays, for the same reason it holds a stopwatch at zero, and plays one only
+        // when the inspector's play button asks. Try mode and the running window play them.
+        void SetVideosLive(_In_ bool live) noexcept;
+
+        // Whether this item shows a video at all, and whether a click on it stops and starts it.
+        bool HasVideo(_In_ size_t itemIndex) const noexcept;
+        bool VideoTakesClicks(_In_ size_t itemIndex) const noexcept;
+        bool VideoShowsScrubber(_In_ size_t itemIndex) const noexcept;
+
+        // Plays or stops one video: the inspector's play button, and a click on a running video.
+        bool IsVideoPlaying(_In_ size_t itemIndex) const noexcept;
+        void SetVideoPlaying(_In_ size_t itemIndex, _In_ bool playing) noexcept;
+        void ToggleVideo(_In_ size_t itemIndex) noexcept;
+
+        // Stops a video on the frame at this time, while one end of the part that plays is
+        // being dragged in the inspector.
+        void ShowVideoFrame(_In_ size_t itemIndex, _In_ double seconds) noexcept;
+
+        // Where a video is and how long its file is, for the inspector's timeline. False until
+        // the file has opened.
+        bool TryGetVideoPosition(
+            _In_ size_t itemIndex,
+            _Out_ double& seconds,
+            _Out_ double& durationSeconds,
+            _Out_ bool& playing) const noexcept;
+
+        // A point in the control's own units, as a fraction along the video's bar. False off the
+        // bar, unless `anywhere` is set: a drag that started on the bar keeps scrubbing when the
+        // finger wanders off it.
+        bool TryGetScrubFraction(
+            _In_ size_t itemIndex,
+            _In_ double x,
+            _In_ double y,
+            _In_ bool anywhere,
+            _Out_ double& fraction) const noexcept;
+
+        // A finger on the bar. The video holds still under it, and carries on when the finger
+        // comes off if it was playing before.
+        void ScrubVideo(_In_ size_t itemIndex, _In_ double fraction) noexcept;
+        void EndScrub(_In_ size_t itemIndex) noexcept;
 
         // The device this control sends to is not here. It is struck through rather than hidden
         // or disabled: a layout with a missing device still has to be editable, and the person
@@ -333,6 +448,85 @@ namespace glass
         ThemeColor DeckColor() const noexcept { return m_deck; }
 
     private:
+        // A video on the page: its player, what it was asked to do, and the bar along its bottom.
+        // Shared, so the player's events, which arrive on media threads and are handed to the UI
+        // thread, can tell when the page they were meant for has gone.
+        struct SurfaceVideo
+        {
+            winrt::Windows::Media::Playback::MediaPlayer Player{ nullptr };
+            Picture Spec{};
+
+            // The element the frames land in, so a closed player can be taken out of it.
+            controls::MediaPlayerElement Element{ nullptr };
+
+            // The control it belongs to, for its status, or null for the page background.
+            GlassControlElement Owner{ nullptr };
+
+            // A panel's fill and the page background play and loop, but take no clicks and
+            // draw no bar: both sit behind the controls.
+            bool TakesInput{ false };
+
+            // The control's own size, which the bar is laid out inside.
+            double Width{ 0.0 };
+            double Height{ 0.0 };
+
+            // Known once the file has opened. Until then the part that plays is whatever the
+            // layout says.
+            bool Opened{ false };
+            double DurationSeconds{ 0.0 };
+
+            // What it has been asked to do. The player is told the same whenever it can listen.
+            bool Playing{ false };
+
+            // A frame asked for before the file had opened, or below zero for none.
+            double PendingFrameSeconds{ -1.0 };
+
+            // Held still under a finger on the bar, and whether to carry on afterward.
+            bool Scrubbing{ false };
+            bool ResumeAfterScrub{ false };
+
+            // The part of the control the video covers, which the bar spans.
+            PictureRect Visible{};
+
+            controls::Canvas Scrubber{ nullptr };
+            xaml::Shapes::Rectangle ScrubTrack{ nullptr };
+            xaml::Shapes::Rectangle ScrubFill{ nullptr };
+            xaml::Shapes::Ellipse ScrubThumb{ nullptr };
+
+            // What a screen reader was last told, so it is only told again when it changes.
+            std::wstring Status{};
+        };
+
+        // A new video on the page, silent, paused and waiting for its file to open.
+        std::shared_ptr<SurfaceVideo> CreateVideo(
+            _In_ foundation::Uri const& uri,
+            _In_ Picture const& picture,
+            _In_ double width,
+            _In_ double height,
+            _In_ bool takesInput);
+
+        // Shuts a video's player down. A player left open keeps a decoder and its threads alive
+        // long after the page it was on has gone.
+        static void CloseVideo(_Inout_ SurfaceVideo& video) noexcept;
+
+        SurfaceVideo* VideoAt(_In_ size_t itemIndex) const noexcept;
+
+        // Tells the player what the video was asked to do, once it can listen.
+        void ApplyVideoState(_Inout_ SurfaceVideo& video) noexcept;
+
+        // The file opened, or played through to its end.
+        void OnVideoOpened(_Inout_ SurfaceVideo& video) noexcept;
+        void OnVideoEnded(_Inout_ SurfaceVideo& video) noexcept;
+
+        // The bar along the bottom, across the part of the control the video covers.
+        void LayoutScrubber(_Inout_ SurfaceVideo& video) noexcept;
+        void RefreshScrubber(_Inout_ SurfaceVideo& video, _In_ double seconds) noexcept;
+
+        // Ticks while any video plays: holds each to the part it plays and moves the bars.
+        void RefreshVideos() noexcept;
+        void StartVideoTimerIfNeeded();
+        void StopVideoTimer() noexcept;
+
         void BuildBackground(_In_ LayoutDocument const& document);
 
         void BuildControl(
@@ -347,7 +541,33 @@ namespace glass
             _In_ comp::Compositor const& compositor,
             _Inout_ SurfaceVisual& visual,
             _In_ Control const& control,
-            _In_ Theme const& theme);
+            _In_ Theme const& theme,
+            _In_ PrintSurface surface);
+
+        // What is printed under the middle of this item: the deck, a section or an inset.
+        PrintSurface SurfaceFor(_In_ size_t itemIndex, _In_ Control const& control) const noexcept;
+
+        // Concentric strokes of a shape's own geometry, widest and faintest first, into the
+        // item's halo visual. `baseThickness` is the stroke the shape itself is drawn with.
+        void AppendHalo(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ comp::CompositionGeometry const& geometry,
+            _In_ ThemeColor const& color,
+            _In_ float baseThickness,
+            _In_ float reach,
+            _In_ double peak,
+            _In_ bool roundCaps);
+
+        // A printed rule, across or down.
+        void LayoutLine(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Control const& control,
+            _In_ ThemeColor const& ruleColor,
+            _In_ bool fades,
+            _In_ float width,
+            _In_ float height);
 
         void LayoutLabel(
             _In_ size_t itemIndex,
@@ -361,14 +581,9 @@ namespace glass
             _In_ size_t itemIndex,
             _In_ Control const& control);
 
-        // The two things a picture can turn out to be. Both hand back an element already sized
+        // The two things a picture can turn out to be. Both end up as an element already sized
         // and positioned for the crop, sitting inside the clipped container LayoutPicture made.
-        xaml::FrameworkElement BuildVideoContent(
-            _In_ foundation::Uri const& uri,
-            _In_ Picture const& picture,
-            _In_ double width,
-            _In_ double height);
-
+        // A video's element is the one in the SurfaceVideo that CreateVideo hands back.
         xaml::FrameworkElement BuildImageContent(
             _In_ foundation::Uri const& uri,
             _In_ Picture const& picture,
@@ -445,6 +660,26 @@ namespace glass
             _In_ float width,
             _In_ float height);
 
+        // The pads of a note pad or hex pad control (SurfacePads.cpp).
+        void LayoutPads(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Control const& control,
+            _In_ ControlColors const& colors,
+            _In_ Theme const& theme,
+            _In_ float width,
+            _In_ float height);
+
+        // The name printed on each pad. XAML text, like a label, because composition has none.
+        void LayoutPadNames(
+            _In_ size_t itemIndex,
+            _In_ Control const& control,
+            _In_ Theme const& theme);
+
+        // What a pad grid's plate comes out as over the deck, which is what every color on its
+        // pads is measured against.
+        ThemeColor PadBackdrop(_In_ Control const& control, _In_ Theme const& theme) const noexcept;
+
         void LayoutClock(
             _In_ comp::Compositor const& compositor,
             _Inout_ SurfaceVisual& visual,
@@ -468,6 +703,34 @@ namespace glass
             _In_ ControlColors const& colors,
             _In_ float width,
             _In_ float height);
+
+        void LayoutWheel(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Control const& control,
+            _In_ ControlColors const& colors,
+            _In_ float width,
+            _In_ float height);
+
+        void LayoutSwitch(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Control const& control,
+            _In_ ControlColors const& colors,
+            _In_ float width,
+            _In_ float height);
+
+        void LayoutSteps(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Control const& control,
+            _In_ ControlColors const& colors,
+            _In_ float width,
+            _In_ float height);
+
+        // The name on each position of a switch. Kept in the same per-control slot as the note
+        // names on a pad grid, because a control is one or the other.
+        void LayoutSwitchLabels(_In_ size_t itemIndex, _In_ Control const& control);
 
         // Puts a two axis control's puck and crosshair where its two values say, and a ribbon's
         // light where its one value says.
@@ -514,6 +777,12 @@ namespace glass
         comp::CompositionLinearGradientBrush ShadeBrush(
             _In_ comp::Compositor const& compositor,
             _In_ ThemeColor const& color);
+
+        // Clear at both ends and the color in the middle, along a line.
+        comp::CompositionLinearGradientBrush FadedLineBrush(
+            _In_ comp::Compositor const& compositor,
+            _In_ ThemeColor const& color,
+            _In_ bool across);
 
         // The shadow inside something cut into the surface: strongest at its top edge and gone a
         // few pixels down. The fade is a fraction of the recess's own height.
@@ -563,6 +832,7 @@ namespace glass
         std::vector<bool> m_returnsToRest{};
         std::vector<DragAxis> m_dragAxes{};
         std::vector<KeyboardSpec> m_keyboards{};
+        std::vector<PadGridSpec> m_padGrids{};
         std::vector<bool> m_velocityFromTouch{};
         std::vector<bool> m_latches{};
         std::vector<double> m_turnDegrees{};
@@ -571,8 +841,32 @@ namespace glass
         // child of the host like the label, so it has to be carried when the control moves.
         std::vector<xaml::FrameworkElement> m_pictures{};
 
+        // Parallel to m_pictures: the video each one plays, null for a still picture.
+        std::vector<std::shared_ptr<SurfaceVideo>> m_videos{};
+
+        // A video behind the whole page, or null.
+        std::shared_ptr<SurfaceVideo> m_backgroundVideo{};
+
+        // Ticks only while a video is playing.
+        winrt::Microsoft::UI::Dispatching::DispatcherQueueTimer m_videoTimer{ nullptr };
+
+        // False while a layout is being designed rather than run.
+        bool m_videosLive{ true };
+
         // The numbers beside a stepped control's marks, one canvas per control.
         std::vector<controls::Canvas> m_detentTexts{};
+
+        // The note printed on each pad of a pad grid: one canvas per control holding a text block
+        // per pad, and the ink each wears at rest and lit, so a pad lighting up keeps its name.
+        struct PadNameTexts
+        {
+            controls::Canvas Host{ nullptr };
+            std::vector<controls::TextBlock> Texts{};
+            std::vector<media::Brush> RestInks{};
+            std::vector<media::Brush> LitInks{};
+        };
+
+        std::vector<PadNameTexts> m_padNames{};
 
         // The beat count a clock generator shows. One text block per clock, null everywhere
         // else, so a page with no clock on it pays nothing.
@@ -647,6 +941,10 @@ namespace glass
         std::vector<comp::Visual> m_maskSources{};
 
         ThemeColor m_deck{};
+
+        // Every filled grouping panel on the page, so a control or a label can be inked for the
+        // surface it is printed on.
+        std::vector<PanelFootprint> m_panels{};
 
         // How tall the page is, so a notch in a panel's frame can be filled with the deck color
         // at that height rather than the color at the top of the page.

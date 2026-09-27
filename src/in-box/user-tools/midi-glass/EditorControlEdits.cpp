@@ -14,6 +14,7 @@
 #include "StringResources.h"
 #include "LayoutStore.h"
 #include "LayoutPackage.h"
+#include "PadGrid.h"
 
 #include <shobjidl.h>
 #include <filesystem>
@@ -324,6 +325,13 @@ namespace winrt::midiglass::implementation
                 co_return;
             }
 
+            // The part to play belonged to the old clip, and means nothing in a new one.
+            if (copied != picture.FileName)
+            {
+                picture.VideoStartSeconds = 0.0;
+                picture.VideoEndSeconds = 0.0;
+            }
+
             picture.FileName = copied;
 
             ApplyControlEdit(id, [&](std::wstring const& controlId)
@@ -510,32 +518,6 @@ namespace winrt::midiglass::implementation
     }
 
     _Use_decl_annotations_
-    void EditorWindow::OnPictureCenterXChanged(
-        foundation::IInspectable const& sender,
-        controls::Primitives::RangeBaseValueChangedEventArgs const& args)
-    {
-        UNREFERENCED_PARAMETER(sender);
-
-        ApplyPictureCropEdit(args.NewValue() / 100.0, [](glass::Picture& picture, double value)
-            {
-                picture.CenterX = value;
-            });
-    }
-
-    _Use_decl_annotations_
-    void EditorWindow::OnPictureCenterYChanged(
-        foundation::IInspectable const& sender,
-        controls::Primitives::RangeBaseValueChangedEventArgs const& args)
-    {
-        UNREFERENCED_PARAMETER(sender);
-
-        ApplyPictureCropEdit(args.NewValue() / 100.0, [](glass::Picture& picture, double value)
-            {
-                picture.CenterY = value;
-            });
-    }
-
-    _Use_decl_annotations_
     void EditorWindow::OnPictureTintStrengthChanged(
         foundation::IInspectable const& sender,
         controls::Primitives::RangeBaseValueChangedEventArgs const& args)
@@ -681,6 +663,175 @@ namespace winrt::midiglass::implementation
         UNREFERENCED_PARAMETER(args);
 
         ApplyKeyboardEdit();
+    }
+
+    // ---------------------------------------------------------------- the pads
+
+    void EditorWindow::ApplyPadGridEdit()
+    {
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control == nullptr || !glass::IsPadGrid(control->Kind))
+        {
+            return;
+        }
+
+        auto pads = control->Pads;
+
+        // A number box someone has cleared reads as not a number, and leaves its value alone.
+        auto const whole = [](controls::NumberBox const& box, int32_t& target)
+            {
+                if (!std::isnan(box.Value()))
+                {
+                    target = static_cast<int32_t>(std::lround(box.Value()));
+                }
+            };
+
+        whole(PadCountBox(), pads.PadCount);
+        whole(PadStartNoteBox(), pads.StartNote);
+        whole(PadRightIntervalBox(), pads.RightInterval);
+        whole(PadBendRangeBox(), pads.BendRangeSemitones);
+
+        if (!std::isnan(PadSizeBox().Value()))
+        {
+            pads.PadSize = PadSizeBox().Value();
+        }
+
+        if (!std::isnan(PadNameSizeBox().Value()))
+        {
+            pads.NoteNameSize = PadNameSizeBox().Value();
+        }
+
+        // Hexagons take the step up and to the right from its own box. Square pads take where
+        // each row starts from the list, and a blank list is a step the list cannot show, which
+        // stays as it is.
+        if (glass::IsHexPadGrid(control->Kind))
+        {
+            whole(PadUpIntervalBox(), pads.RowInterval);
+        }
+        else if (PadRowCombo().SelectedIndex() >= 0)
+        {
+            pads.RowInterval = PadRowCombo().SelectedIndex();
+        }
+
+        auto const keyIndex = PadKeyCombo().SelectedIndex();
+
+        if (keyIndex >= 0)
+        {
+            pads.KeyRoot = keyIndex == 0 ? glass::NoKey : keyIndex - 1;
+        }
+
+        auto const scaleIndex = PadScaleCombo().SelectedIndex();
+
+        if (scaleIndex >= 0 && scaleIndex < static_cast<int32_t>(std::size(glass::PadScaleOrder)))
+        {
+            pads.Scale = glass::PadScaleOrder[scaleIndex];
+        }
+
+        auto const namesIndex = PadNamesCombo().SelectedIndex();
+
+        if (namesIndex >= 0 && namesIndex < static_cast<int32_t>(std::size(glass::PadNoteNamesOrder)))
+        {
+            pads.NoteNames = glass::PadNoteNamesOrder[namesIndex];
+        }
+
+        auto const glideIndex = PadGlideCombo().SelectedIndex();
+
+        if (glideIndex >= 0 && glideIndex < static_cast<int32_t>(std::size(glass::PadGlideOrder)))
+        {
+            pads.Glide = glass::PadGlideOrder[glideIndex];
+        }
+
+        pads.RootColor = std::wstring{ PadRootColorBox().Text() };
+        pads.InKeyColor = std::wstring{ PadInKeyColorBox().Text() };
+        pads.OutOfKeyColor = std::wstring{ PadOutOfKeyColorBox().Text() };
+        pads.PressedColor = std::wstring{ PadPressedColorBox().Text() };
+
+        ApplyControlEdit(control->Id, [&](std::wstring const& id)
+            { return m_editor.SetControlPads(id, pads); });
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnPadGridNumberChanged(
+        controls::NumberBox const& sender,
+        controls::NumberBoxValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ApplyPadGridEdit();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnPadGridChoiceChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ApplyPadGridEdit();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnPadGridColorChanged(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ApplyPadGridEdit();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnPadRowChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ApplyPadGridEdit();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnPadHexLayoutChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const index = PadHexLayoutCombo().SelectedIndex();
+
+        // The last entry is the customer's own layout, which is whatever the two boxes say.
+        if (index < 0 || index >= static_cast<int32_t>(std::size(glass::HexLayoutOrder)))
+        {
+            return;
+        }
+
+        // Both boxes first and then one edit, rather than two edits with a layout between them
+        // that nobody chose.
+        auto const previous = m_updatingInspector;
+        m_updatingInspector = true;
+
+        PadRightIntervalBox().Value(glass::HexLayoutOrder[index].RightInterval);
+        PadUpIntervalBox().Value(glass::HexLayoutOrder[index].RowInterval);
+
+        m_updatingInspector = previous;
+
+        ApplyPadGridEdit();
     }
 
     // ---------------------------------------------------------------- how it behaves
@@ -988,6 +1139,133 @@ namespace winrt::midiglass::implementation
         UNREFERENCED_PARAMETER(args);
 
         ApplyTurntableEdit();
+    }
+
+    // ---------------------------------------------------------------- the line
+
+    void EditorWindow::ApplyLineEdit()
+    {
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control == nullptr)
+        {
+            return;
+        }
+
+        auto line = control->Line;
+
+        if (!std::isnan(LineThicknessBox().Value()))
+        {
+            line.Thickness = LineThicknessBox().Value();
+        }
+
+        // Kept as typed, the way every other color in the inspector is. The surface ignores a
+        // code it cannot read and falls back to the theme's line color.
+        line.Color = std::wstring{ LineColorBox().Text() };
+
+        auto const ends = LineEndsCombo().SelectedIndex();
+
+        if (ends >= 0)
+        {
+            line.Ends = static_cast<glass::LineEnds>(std::clamp(
+                ends, static_cast<int32_t>(glass::LineEnds::UseTheme), static_cast<int32_t>(glass::LineEnds::Faded)));
+        }
+
+        ApplyControlEdit(control->Id, [&](std::wstring const& id)
+            { return m_editor.SetControlLine(id, line); });
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLineDirectionChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        if (m_updatingInspector)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const* const control = SingleSelectedControl();
+
+            if (control == nullptr)
+            {
+                return;
+            }
+
+            auto const index = LineDirectionCombo().SelectedIndex();
+
+            if (index < 0)
+            {
+                return;
+            }
+
+            // A line runs the long way across its rectangle, so turning it is swapping the two
+            // sides. Turned about its own middle, so it stays where it was put.
+            auto const across = control->Width >= control->Height;
+
+            if ((index == 0) == across)
+            {
+                return;
+            }
+
+            auto const id = control->Id;
+            auto const width = control->Height;
+            auto const height = control->Width;
+            auto const x = control->X + (control->Width - control->Height) * 0.5;
+            auto const y = control->Y + (control->Height - control->Width) * 0.5;
+
+            if (m_editor.SetControlBounds(id, x, y, width, height))
+            {
+                RebuildSurface();
+                UpdateStatusBar();
+                MarkChanged();
+                RefreshInspector();
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to turn the line.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLineThicknessChanged(
+        controls::NumberBox const& sender,
+        controls::NumberBoxValueChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ApplyLineEdit();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLineColorChanged(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ApplyLineEdit();
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnLineEndsChanged(
+        foundation::IInspectable const& sender,
+        controls::SelectionChangedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        ApplyLineEdit();
     }
 
     // ---------------------------------------------------------------- the stops
@@ -1500,5 +1778,136 @@ namespace winrt::midiglass::implementation
         UNREFERENCED_PARAMETER(args);
 
         ApplyFeedbackEdit();
+    }
+
+    // ---------------------------------------------------------------- switch positions
+
+    // One row per position: its name, and a button to take it away. Rebuilt whenever the panel
+    // is filled in; a name is only written when its box loses focus or Enter is pressed, so a
+    // rebuild never lands in the middle of somebody typing.
+    _Use_decl_annotations_
+    void EditorWindow::RefreshSwitchPositions(glass::Control const& control)
+    {
+        try
+        {
+            auto const rows = SwitchPositionRows();
+
+            rows.Children().Clear();
+
+            auto const positions = glass::SwitchPositionCount(control);
+            auto const canRemove = control.Switch.Positions.size() > static_cast<size_t>(glass::MinimumSwitchPositions);
+
+            AddSwitchPositionButton().IsEnabled(positions < glass::MaximumSwitchPositions);
+
+            for (int32_t position = 0; position < positions; ++position)
+            {
+                auto const index = static_cast<size_t>(position);
+                auto const number = std::to_wstring(position + 1);
+
+                controls::Grid row{};
+                row.ColumnSpacing(6.0);
+
+                controls::ColumnDefinition nameColumn{};
+                nameColumn.Width(xaml::GridLengthHelper::FromValueAndType(1, xaml::GridUnitType::Star));
+                row.ColumnDefinitions().Append(nameColumn);
+
+                controls::ColumnDefinition removeColumn{};
+                removeColumn.Width(xaml::GridLengthHelper::FromValueAndType(0, xaml::GridUnitType::Auto));
+                row.ColumnDefinitions().Append(removeColumn);
+
+                controls::TextBox name{};
+                name.Text(winrt::hstring{ index < control.Switch.Positions.size() ? control.Switch.Positions[index] : number });
+                name.PlaceholderText(winrt::hstring{ number });
+                name.MaxLength(static_cast<int32_t>(glass::MaximumStringLength));
+
+                xaml::Automation::AutomationProperties::SetName(
+                    name, winrt::hstring{ resources::FormatString(L"SwitchPositionNameFormat", number) });
+
+                auto const commit = [weak = get_weak(), id = control.Id, index](controls::TextBox const& box)
+                    {
+                        auto strong = weak.get();
+
+                        if (strong == nullptr || strong->m_updatingInspector)
+                        {
+                            return;
+                        }
+
+                        strong->ApplyControlEdit(id, [&](std::wstring const& controlId)
+                            { return strong->m_editor.SetSwitchPositionName(controlId, index, std::wstring{ box.Text() }); });
+                    };
+
+                name.LostFocus([commit](foundation::IInspectable const& sender, xaml::RoutedEventArgs const&)
+                    {
+                        if (auto const box = sender.try_as<controls::TextBox>())
+                        {
+                            commit(box);
+                        }
+                    });
+
+                name.KeyDown([commit](foundation::IInspectable const& sender, xaml::Input::KeyRoutedEventArgs const& keyArgs)
+                    {
+                        if (keyArgs.Key() == winrt::Windows::System::VirtualKey::Enter)
+                        {
+                            if (auto const box = sender.try_as<controls::TextBox>())
+                            {
+                                keyArgs.Handled(true);
+                                commit(box);
+                            }
+                        }
+                    });
+
+                controls::Button remove{};
+                remove.Content(box_value(winrt::hstring{ L"\uE711" }));
+                remove.FontFamily(media::FontFamily{ L"Segoe Fluent Icons, Segoe MDL2 Assets" });
+                remove.FontSize(11.0);
+                remove.VerticalAlignment(xaml::VerticalAlignment::Stretch);
+                remove.IsEnabled(canRemove);
+
+                auto const removeName = resources::FormatString(L"SwitchPositionRemoveFormat", number);
+
+                xaml::Automation::AutomationProperties::SetName(remove, winrt::hstring{ removeName });
+                controls::ToolTipService::SetToolTip(remove, box_value(winrt::hstring{ removeName }));
+
+                remove.Click([weak = get_weak(), id = control.Id, index](auto&&, auto&&)
+                    {
+                        if (auto strong = weak.get())
+                        {
+                            strong->ApplyControlEdit(id, [&](std::wstring const& controlId)
+                                { return strong->m_editor.RemoveSwitchPosition(controlId, index); });
+
+                            strong->RefreshMessageList();
+                        }
+                    });
+
+                controls::Grid::SetColumn(remove, 1);
+
+                row.Children().Append(name);
+                row.Children().Append(remove);
+
+                rows.Children().Append(row);
+            }
+        }
+        MIDI_GLASS_CATCH_AND_LOG(L"Unable to show the switch positions.")
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::OnAddSwitchPositionClick(
+        foundation::IInspectable const& sender,
+        xaml::RoutedEventArgs const& args)
+    {
+        UNREFERENCED_PARAMETER(sender);
+        UNREFERENCED_PARAMETER(args);
+
+        auto const* const control = SingleSelectedControl();
+
+        if (control == nullptr)
+        {
+            return;
+        }
+
+        ApplyControlEdit(control->Id, [&](std::wstring const& id)
+            { return m_editor.AddSwitchPosition(id); });
+
+        RefreshMessageList();
     }
 }

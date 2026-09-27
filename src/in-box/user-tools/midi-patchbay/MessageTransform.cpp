@@ -31,6 +31,20 @@ namespace midipatchbay
         constexpr wchar_t KeyFrom[] = L"from";
         constexpr wchar_t KeyTo[] = L"to";
 
+        constexpr wchar_t KeyControlValueShapes[] = L"controlValueShapes";
+        constexpr wchar_t KeyAftertouchShape[] = L"aftertouchShape";
+        constexpr wchar_t KeyController[] = L"controller";
+        constexpr wchar_t KeyInvert[] = L"invert";
+        constexpr wchar_t KeyShapeCurve[] = L"curve";
+        constexpr wchar_t KeyInputMinimumPercent[] = L"inputMinimumPercent";
+        constexpr wchar_t KeyInputMaximumPercent[] = L"inputMaximumPercent";
+        constexpr wchar_t KeyOutputMinimumPercent[] = L"outputMinimumPercent";
+        constexpr wchar_t KeyOutputMaximumPercent[] = L"outputMaximumPercent";
+
+        constexpr wchar_t CurveNameLinear[] = L"linear";
+        constexpr wchar_t CurveNameSlowRise[] = L"slowRise";
+        constexpr wchar_t CurveNameFastRise[] = L"fastRise";
+
         // Written by the preview that only ever had 0 to 127 velocities, and still written
         // beside the percentages so rolling a preview back does not lose the range.
         constexpr wchar_t KeyLegacyMinimumVelocity[] = L"minimumVelocity";
@@ -41,8 +55,13 @@ namespace midipatchbay
 
         constexpr uint8_t StatusNoteOff = 0x8;
         constexpr uint8_t StatusNoteOn = 0x9;
+        constexpr uint8_t StatusPolyPressure = 0xA;
         constexpr uint8_t StatusControlChange = 0xB;
         constexpr uint8_t StatusProgramChange = 0xC;
+        constexpr uint8_t StatusChannelPressure = 0xD;
+
+        // Full scale for a MIDI 2.0 controller or pressure value.
+        constexpr double FullScale32 = 4294967295.0;
 
         constexpr uint8_t BankSelectMsbController = 0;
         constexpr uint8_t BankSelectLsbController = 32;
@@ -108,6 +127,248 @@ namespace midipatchbay
             }
 
             return array;
+        }
+
+        // Where a value sits between the two ends, from 0 to 1. A range typed high to low runs
+        // backwards, and a range with no width turns the value into a switch at that point.
+        double PositionInRange(_In_ double value, _In_ double from, _In_ double to) noexcept
+        {
+            if (from == to)
+            {
+                return value < from ? 0.0 : 1.0;
+            }
+
+            return std::clamp((value - from) / (to - from), 0.0, 1.0);
+        }
+
+        double PointInRange(_In_ double unit, _In_ double from, _In_ double to) noexcept
+        {
+            return from + std::clamp(unit, 0.0, 1.0) * (to - from);
+        }
+
+        double FractionFromHundredths(_In_ int32_t hundredths) noexcept
+        {
+            return std::clamp(hundredths, 0, FullScaleHundredths) / static_cast<double>(FullScaleHundredths);
+        }
+
+        // Invert comes before the curve, so a pedal that works backwards is put the right way
+        // round first and then bent like any other pedal.
+        double BendUnit(_In_ bool invert, _In_ ValueCurve curve, _In_ double unit) noexcept
+        {
+            auto bent = invert ? 1.0 - unit : unit;
+
+            switch (curve)
+            {
+            case ValueCurve::SlowRise:
+                bent = bent * bent;
+                break;
+
+            case ValueCurve::FastRise:
+                bent = std::sqrt(bent);
+                break;
+
+            default:
+                break;
+            }
+
+            return bent;
+        }
+
+        // Zero pressure means the key was let go, so it stays zero or the sound is left bent.
+        uint8_t ShapePressure7(_In_ ValueShape const& shape, _In_ uint8_t pressure) noexcept
+        {
+            return pressure == 0 ? static_cast<uint8_t>(0) : shape.Shape7(pressure);
+        }
+
+        uint32_t ShapePressure32(_In_ ValueShape const& shape, _In_ uint32_t pressure) noexcept
+        {
+            return pressure == 0 ? 0u : shape.Shape32(pressure);
+        }
+
+        wchar_t const* CurveName(_In_ ValueCurve curve) noexcept
+        {
+            switch (curve)
+            {
+            case ValueCurve::SlowRise:
+                return CurveNameSlowRise;
+
+            case ValueCurve::FastRise:
+                return CurveNameFastRise;
+
+            default:
+                return CurveNameLinear;
+            }
+        }
+
+        std::wstring ShapeSignature(_In_ ValueShape const& shape)
+        {
+            return std::wstring{ shape.Invert ? L"i" : L"-" } +
+                std::to_wstring(static_cast<int32_t>(shape.Curve)) + L':' +
+                std::to_wstring(shape.InputMinimumHundredths) + L'-' +
+                std::to_wstring(shape.InputMaximumHundredths) + L':' +
+                std::to_wstring(shape.OutputMinimumHundredths) + L'-' +
+                std::to_wstring(shape.OutputMaximumHundredths);
+        }
+
+        // Aftertouch offers no invert, so its object never carries one.
+        json::JsonObject ShapeToJson(_In_ ValueShape const& shape, _In_ bool includeInvert) noexcept
+        {
+            json::JsonObject object{};
+
+            try
+            {
+                if (includeInvert)
+                {
+                    object.SetNamedValue(KeyInvert, json::JsonValue::CreateBooleanValue(shape.Invert));
+                }
+
+                object.SetNamedValue(KeyShapeCurve, json::JsonValue::CreateStringValue(CurveName(shape.Curve)));
+
+                object.SetNamedValue(KeyInputMinimumPercent,
+                    json::JsonValue::CreateNumberValue(shape.InputMinimumHundredths / 100.0));
+                object.SetNamedValue(KeyInputMaximumPercent,
+                    json::JsonValue::CreateNumberValue(shape.InputMaximumHundredths / 100.0));
+                object.SetNamedValue(KeyOutputMinimumPercent,
+                    json::JsonValue::CreateNumberValue(shape.OutputMinimumHundredths / 100.0));
+                object.SetNamedValue(KeyOutputMaximumPercent,
+                    json::JsonValue::CreateNumberValue(shape.OutputMaximumHundredths / 100.0));
+            }
+            catch (...)
+            {
+            }
+
+            return object;
+        }
+
+        ValueShape ShapeFromJson(_In_ json::JsonObject const& object, _In_ bool includeInvert) noexcept
+        {
+            ValueShape shape{};
+
+            if (object == nullptr)
+            {
+                return shape;
+            }
+
+            try
+            {
+                auto const readPercent = [&object](std::wstring_view key, int32_t fallback)
+                    {
+                        if (!object.HasKey(key))
+                        {
+                            return fallback;
+                        }
+
+                        auto const value = object.GetNamedValue(key);
+
+                        if (value == nullptr || value.ValueType() != json::JsonValueType::Number)
+                        {
+                            return fallback;
+                        }
+
+                        auto const number = value.GetNumber();
+
+                        return std::isfinite(number) && number >= 0 && number <= 100
+                            ? static_cast<int32_t>(std::lround(number * 100.0))
+                            : fallback;
+                    };
+
+                if (includeInvert && object.HasKey(KeyInvert))
+                {
+                    auto const value = object.GetNamedValue(KeyInvert);
+
+                    shape.Invert = value != nullptr && value.ValueType() == json::JsonValueType::Boolean &&
+                        value.GetBoolean();
+                }
+
+                if (object.HasKey(KeyShapeCurve))
+                {
+                    auto const value = object.GetNamedValue(KeyShapeCurve);
+
+                    if (value != nullptr && value.ValueType() == json::JsonValueType::String)
+                    {
+                        auto const name = value.GetString();
+
+                        shape.Curve = name == CurveNameSlowRise ? ValueCurve::SlowRise
+                            : name == CurveNameFastRise ? ValueCurve::FastRise
+                            : ValueCurve::Linear;
+                    }
+                }
+
+                shape.InputMinimumHundredths = readPercent(KeyInputMinimumPercent, 0);
+                shape.InputMaximumHundredths = readPercent(KeyInputMaximumPercent, FullScaleHundredths);
+                shape.OutputMinimumHundredths = readPercent(KeyOutputMinimumPercent, 0);
+                shape.OutputMaximumHundredths = readPercent(KeyOutputMaximumPercent, FullScaleHundredths);
+            }
+            catch (...)
+            {
+            }
+
+            return shape;
+        }
+
+        void ControlValueShapesFromJson(
+            _In_ json::JsonObject const& object,
+            _Inout_ std::array<ValueShape, ControlMapSize>& shapes) noexcept
+        {
+            shapes.fill(ValueShape{});
+
+            try
+            {
+                if (!object.HasKey(KeyControlValueShapes))
+                {
+                    return;
+                }
+
+                auto const value = object.GetNamedValue(KeyControlValueShapes);
+
+                if (value == nullptr || value.ValueType() != json::JsonValueType::Array)
+                {
+                    return;
+                }
+
+                size_t added{ 0 };
+
+                for (auto const& item : value.GetArray())
+                {
+                    if (added >= MaximumMapEntries)
+                    {
+                        break;
+                    }
+
+                    if (item == nullptr || item.ValueType() != json::JsonValueType::Object)
+                    {
+                        continue;
+                    }
+
+                    auto const entry = item.GetObject();
+
+                    if (!entry.HasKey(KeyController))
+                    {
+                        continue;
+                    }
+
+                    auto const controllerValue = entry.GetNamedValue(KeyController);
+
+                    if (controllerValue == nullptr || controllerValue.ValueType() != json::JsonValueType::Number)
+                    {
+                        continue;
+                    }
+
+                    auto const controller = controllerValue.GetNumber();
+
+                    if (!std::isfinite(controller) || controller < 0 ||
+                        controller > static_cast<double>(ControlMapSize - 1))
+                    {
+                        continue;
+                    }
+
+                    shapes[static_cast<size_t>(controller)] = ShapeFromJson(entry, true);
+                    added++;
+                }
+            }
+            catch (...)
+            {
+            }
         }
 
         void MapFromJson(
@@ -247,6 +508,50 @@ namespace midipatchbay
         return {};
     }
 
+    bool ValueShape::ChangesNothing() const noexcept
+    {
+        return !Invert &&
+            Curve == ValueCurve::Linear &&
+            InputMinimumHundredths == 0 &&
+            InputMaximumHundredths == FullScaleHundredths &&
+            OutputMinimumHundredths == 0 &&
+            OutputMaximumHundredths == FullScaleHundredths;
+    }
+
+    _Use_decl_annotations_
+    double ValueShape::ShapeUnit(double value) const noexcept
+    {
+        auto const unit = BendUnit(Invert, Curve, PositionInRange(std::clamp(value, 0.0, 1.0),
+            FractionFromHundredths(InputMinimumHundredths),
+            FractionFromHundredths(InputMaximumHundredths)));
+
+        return std::clamp(PointInRange(unit,
+            FractionFromHundredths(OutputMinimumHundredths),
+            FractionFromHundredths(OutputMaximumHundredths)), 0.0, 1.0);
+    }
+
+    _Use_decl_annotations_
+    uint8_t ValueShape::Shape7(uint8_t value) const noexcept
+    {
+        auto const unit = BendUnit(Invert, Curve, PositionInRange(static_cast<double>(value & 0x7F),
+            SevenBitFromHundredths(InputMinimumHundredths),
+            SevenBitFromHundredths(InputMaximumHundredths)));
+
+        auto const shaped = PointInRange(unit,
+            SevenBitFromHundredths(OutputMinimumHundredths),
+            SevenBitFromHundredths(OutputMaximumHundredths));
+
+        return static_cast<uint8_t>(std::clamp(std::lround(shaped), 0L, 127L));
+    }
+
+    _Use_decl_annotations_
+    uint32_t ValueShape::Shape32(uint32_t value) const noexcept
+    {
+        auto const shaped = ShapeUnit(value / FullScale32);
+
+        return static_cast<uint32_t>(std::clamp(std::llround(shaped * FullScale32), 0LL, 0xFFFFFFFFLL));
+    }
+
     MessageTransform::MessageTransform() noexcept
     {
         Reset();
@@ -272,6 +577,9 @@ namespace midipatchbay
         RescaleVelocity = false;
         MinimumVelocityHundredths = 0;
         MaximumVelocityHundredths = FullScaleHundredths;
+
+        ControlValueShapes.fill(ValueShape{});
+        AftertouchShape = ValueShape{};
     }
 
     bool MessageTransform::ChangesNothing() const noexcept
@@ -281,9 +589,14 @@ namespace midipatchbay
             return true;
         }
 
+        auto const shapesAnyControl = std::any_of(ControlValueShapes.begin(), ControlValueShapes.end(),
+            [](ValueShape const& shape) { return !shape.ChangesNothing(); });
+
         return TransposeSemitones == 0 &&
             Curve == VelocityCurve::Unchanged &&
             !RescaleVelocity &&
+            !shapesAnyControl &&
+            AftertouchShape.ChangesNothing() &&
             !HasAnyEntry(ChannelMap.data(), ChannelMap.size()) &&
             !HasAnyEntry(NoteMap.data(), NoteMap.size()) &&
             !HasAnyEntry(ControlMap.data(), ControlMap.size()) &&
@@ -435,6 +748,38 @@ namespace midipatchbay
                 }
             }
 
+            auto const& valueShape = ControlValueShapes[index];
+
+            if (!valueShape.ChangesNothing())
+            {
+                if (isMidi1)
+                {
+                    words[0] = (words[0] & ~0x7Fu) | valueShape.Shape7(static_cast<uint8_t>(words[0] & 0x7F));
+                }
+                else if (wordCount >= 2)
+                {
+                    words[1] = valueShape.Shape32(words[1]);
+                }
+            }
+
+            return;
+        }
+
+        if (status == StatusChannelPressure)
+        {
+            if (!AftertouchShape.ChangesNothing())
+            {
+                if (isMidi1)
+                {
+                    words[0] = (words[0] & ~NoteFieldMask) | (static_cast<uint32_t>(
+                        ShapePressure7(AftertouchShape, static_cast<uint8_t>((words[0] >> 8) & 0x7F))) << 8);
+                }
+                else if (wordCount >= 2)
+                {
+                    words[1] = ShapePressure32(AftertouchShape, words[1]);
+                }
+            }
+
             return;
         }
 
@@ -524,6 +869,25 @@ namespace midipatchbay
             }
         }
 
+        // The note has already moved above, so the pressure lands on the transposed note.
+        if (status == StatusPolyPressure)
+        {
+            if (!AftertouchShape.ChangesNothing())
+            {
+                if (isMidi1)
+                {
+                    words[0] = (words[0] & ~0x7Fu) |
+                        ShapePressure7(AftertouchShape, static_cast<uint8_t>(words[0] & 0x7F));
+                }
+                else if (wordCount >= 2)
+                {
+                    words[1] = ShapePressure32(AftertouchShape, words[1]);
+                }
+            }
+
+            return;
+        }
+
         if (status != StatusNoteOn || (Curve == VelocityCurve::Unchanged && !RescaleVelocity))
         {
             return;
@@ -601,6 +965,31 @@ namespace midipatchbay
                     DescribeScaledValue(transform.MaximumVelocityHundredths, transform.Scale)) });
             }
 
+            auto const& aftertouch = transform.AftertouchShape;
+
+            if (aftertouch.Curve == ValueCurve::SlowRise)
+            {
+                parts.push_back(std::wstring{ resources::GetString(L"TransformSummaryAftertouchSlowRise") });
+            }
+            else if (aftertouch.Curve == ValueCurve::FastRise)
+            {
+                parts.push_back(std::wstring{ resources::GetString(L"TransformSummaryAftertouchFastRise") });
+            }
+
+            if (aftertouch.InputMinimumHundredths != 0 || aftertouch.InputMaximumHundredths != FullScaleHundredths)
+            {
+                parts.push_back(std::wstring{ resources::FormatString(L"TransformSummaryAftertouchInputFormat",
+                    DescribeScaledValue(aftertouch.InputMinimumHundredths, transform.Scale),
+                    DescribeScaledValue(aftertouch.InputMaximumHundredths, transform.Scale)) });
+            }
+
+            if (aftertouch.OutputMinimumHundredths != 0 || aftertouch.OutputMaximumHundredths != FullScaleHundredths)
+            {
+                parts.push_back(std::wstring{ resources::FormatString(L"TransformSummaryAftertouchOutputFormat",
+                    DescribeScaledValue(aftertouch.OutputMinimumHundredths, transform.Scale),
+                    DescribeScaledValue(aftertouch.OutputMaximumHundredths, transform.Scale)) });
+            }
+
             auto const controls = CountEntries(transform.ControlMap.data(), transform.ControlMap.size());
 
             if (controls > 0)
@@ -608,6 +997,17 @@ namespace midipatchbay
                 parts.push_back(std::wstring{ controls == 1
                     ? resources::GetString(L"TransformSummaryOneControlMap")
                     : resources::FormatString(L"TransformSummaryControlMapFormat", static_cast<int>(controls)) });
+            }
+
+            auto const shapedControls = std::count_if(
+                transform.ControlValueShapes.begin(), transform.ControlValueShapes.end(),
+                [](ValueShape const& shape) { return !shape.ChangesNothing(); });
+
+            if (shapedControls > 0)
+            {
+                parts.push_back(std::wstring{ shapedControls == 1
+                    ? resources::GetString(L"TransformSummaryOneControlValue")
+                    : resources::FormatString(L"TransformSummaryControlValueFormat", static_cast<int>(shapedControls)) });
             }
 
             auto const programs = CountEntries(transform.ProgramMap.data(), transform.ProgramMap.size());
@@ -687,6 +1087,26 @@ namespace midipatchbay
             object.SetNamedValue(KeyProgramMap, MapToJson(transform.ProgramMap.data(), transform.ProgramMap.size()));
             object.SetNamedValue(KeyBankMsbMap, MapToJson(transform.BankMsbMap.data(), transform.BankMsbMap.size()));
             object.SetNamedValue(KeyBankLsbMap, MapToJson(transform.BankLsbMap.data(), transform.BankLsbMap.size()));
+
+            json::JsonArray valueShapes{};
+
+            for (size_t i = 0; i < transform.ControlValueShapes.size(); i++)
+            {
+                auto const& shape = transform.ControlValueShapes[i];
+
+                if (shape.ChangesNothing())
+                {
+                    continue;
+                }
+
+                auto entry = ShapeToJson(shape, true);
+                entry.SetNamedValue(KeyController, json::JsonValue::CreateNumberValue(static_cast<double>(i)));
+
+                valueShapes.Append(entry);
+            }
+
+            object.SetNamedValue(KeyControlValueShapes, valueShapes);
+            object.SetNamedValue(KeyAftertouchShape, ShapeToJson(transform.AftertouchShape, false));
         }
         catch (...)
         {
@@ -790,6 +1210,18 @@ namespace midipatchbay
             MapFromJson(object, KeyProgramMap, transform.ProgramMap.data(), transform.ProgramMap.size());
             MapFromJson(object, KeyBankMsbMap, transform.BankMsbMap.data(), transform.BankMsbMap.size());
             MapFromJson(object, KeyBankLsbMap, transform.BankLsbMap.data(), transform.BankLsbMap.size());
+
+            ControlValueShapesFromJson(object, transform.ControlValueShapes);
+
+            if (object.HasKey(KeyAftertouchShape))
+            {
+                auto const value = object.GetNamedValue(KeyAftertouchShape);
+
+                if (value != nullptr && value.ValueType() == json::JsonValueType::Object)
+                {
+                    transform.AftertouchShape = ShapeFromJson(value.GetObject(), false);
+                }
+            }
         }
         catch (...)
         {
@@ -835,6 +1267,19 @@ namespace midipatchbay
         appendMap(transform.ProgramMap.data(), transform.ProgramMap.size(), L".g");
         appendMap(transform.BankMsbMap.data(), transform.BankMsbMap.size(), L".m");
         appendMap(transform.BankLsbMap.data(), transform.BankLsbMap.size(), L".l");
+
+        for (size_t i = 0; i < transform.ControlValueShapes.size(); i++)
+        {
+            if (!transform.ControlValueShapes[i].ChangesNothing())
+            {
+                signature += L".v" + std::to_wstring(i) + L'=' + ShapeSignature(transform.ControlValueShapes[i]);
+            }
+        }
+
+        if (!transform.AftertouchShape.ChangesNothing())
+        {
+            signature += L".a=" + ShapeSignature(transform.AftertouchShape);
+        }
 
         return signature;
     }

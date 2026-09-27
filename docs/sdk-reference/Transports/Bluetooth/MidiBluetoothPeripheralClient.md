@@ -6,20 +6,20 @@ type: runtimeclass
 description: The remote device connected to this PC while it is published as a Bluetooth MIDI peripheral
 ---
 
-The remote Central which has connected to this PC. This is the opposite direction to `MidiBluetoothDeviceInformation`, so the identifiers differ: the remote chose the connection parameters, and Windows supplies a device interface id for it rather than an address being used as the key.
+The remote device, such as a phone or tablet, that connected to this PC. This is the opposite direction from `MidiBluetoothDeviceInformation`, so the ids are different. The remote device chose the connection settings, and Windows gives it a device interface id, instead of using its address as the key.
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `Name` | The name the remote device reports. |
-| `HasGenericName` | True when the remote reports something like "iPhone" rather than a distinguishing name. Phones and tablets withhold their real name from an unpaired PC. |
-| `BluetoothAddress` | The remote's Bluetooth address. |
-| `BluetoothAddressType` | Whether that address is public or random. |
-| `IsPaired` | True when the remote is paired with this PC. |
-| `IsRememberable` | False when the device's address rotates for privacy, which means it cannot be recognized again and `MidiBluetoothApprovalScope.Always` cannot be used for it. Pairing the device makes it rememberable. |
-| `ApprovalRequestedTime` | When this device started waiting for a decision. Zero for a client which is already connected, because nothing is waiting on it. |
-| `WindowsDeviceId` | A Windows device interface id, unlike the address-based ids used elsewhere in this namespace. |
-| `ConnectionInterval` | The interval the remote asked for when it connected. |
+| `Name` | The name the remote device reports |
+| `HasGenericName` | True when the remote device reports a general name like "iPhone" instead of one that tells it apart. Phones and tablets hide their real name from a PC they aren't paired with |
+| `BluetoothAddress` | The remote device's Bluetooth address |
+| `BluetoothAddressType` | Whether that address is public or random |
+| `IsPaired` | True when the remote device is paired with this PC |
+| `IsRememberable` | False when the device changes its address for privacy. Then it can't be recognized again, and `MidiBluetoothApprovalScope.Always` can't be used for it. Pairing the device makes it rememberable |
+| `ApprovalRequestedTime` | When this device started waiting for a decision. Zero for a device that's already connected, because nothing is waiting on it |
+| `WindowsDeviceId` | A Windows device interface id, unlike the address-based ids used elsewhere in this namespace |
+| `ConnectionInterval` | The time between data exchanges that the remote device asked for when it connected |
 
-An unpaired device has no stable identity, so any endpoint customization applied to it will apply to whichever unpaired device connects next. Pairing has to be initiated from the remote device, since that is the side which scanned for and connected to this PC.
+A device that isn't paired has no identity that stays the same. So an endpoint customization you apply to it applies to whichever unpaired device connects next. Pairing has to be started from the remote device, because that's the side that found and connected to this PC.

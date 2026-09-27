@@ -10,6 +10,7 @@
 import "MidiApiContracts.idl";
 
 import "MidiLoopbackEndpointDefinition.idl";
+import "MidiLoopbackFeedbackProtectionEnum.idl";
 import "IMidiServiceTransportPluginConfig.idl";
 
 
@@ -33,6 +34,9 @@ namespace Windows.Devices.Midi2.Transports.Loopback
         [noexcept] MidiLoopbackEndpointDefinition EndpointDefinitionB;
 
         [noexcept] Boolean IsMuted;
+
+        // Mute unless set otherwise. A transport which cannot watch for feedback ignores it.
+        [noexcept] MidiLoopbackFeedbackProtection FeedbackProtection;
     }
 }
 

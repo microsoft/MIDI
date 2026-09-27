@@ -34,4 +34,8 @@ struct MidiLoopbackDeviceDefinition
     // what the configuration asked for, so a loopback which was saved muted comes back muted
     bool IsMuted{ false };
 
+    // Net-new for Feature_Servicing_MIDI2LoopbackFeedbackProtection. On unless the configuration
+    // turns it off.
+    bool FeedbackProtectionEnabled{ true };
+
 };

@@ -174,6 +174,37 @@ namespace winrt::midiglass::implementation
                 }
             };
 
+        m_player->StepMoved = [weak](uint32_t controlIndex, int32_t stepIndex, bool running)
+            {
+                auto strong = weak.get();
+
+                if (strong == nullptr)
+                {
+                    return;
+                }
+
+                size_t itemIndex{ 0 };
+
+                if (!strong->m_renderer.TryFindItem(controlIndex, itemIndex))
+                {
+                    return;
+                }
+
+                strong->m_renderer.SetCurrentStep(itemIndex, running ? stepIndex : -1);
+
+                // Stopped by something other than a press, such as leaving Try mode, so the
+                // control lets go of its latch as well. A press that stopped it already has.
+                if (!running)
+                {
+                    strong->m_renderer.SetValue(itemIndex, 0.0);
+
+                    if (auto element = strong->m_renderer.ElementAt(itemIndex))
+                    {
+                        winrt::get_self<implementation::GlassControl>(element)->SetValueDirect(0.0);
+                    }
+                }
+            };
+
         m_player->Sent = [weak](glass::SentMessage const& message)
             {
                 if (auto strong = weak.get())
@@ -228,6 +259,10 @@ namespace winrt::midiglass::implementation
         {
             m_tryMode = tryMode;
 
+            // A video played from the inspector was a look at one clip. Either mode starts
+            // every video over from its own rules.
+            m_previewingVideoId.clear();
+
             EditModeToggle().IsChecked(!tryMode);
             TryModeToggle().IsChecked(tryMode);
 
@@ -257,6 +292,7 @@ namespace winrt::midiglass::implementation
             }
 
             ApplySurfaceInputMode();
+            RefreshPictureVideoPanel();
 
             // The snap grid is for placing things. In Try mode the page is being played, and a
             // field of dots over it is the one thing that makes it look like the editor still.
@@ -284,6 +320,10 @@ namespace winrt::midiglass::implementation
             // is being designed.
             m_renderer.SetElapsedRunning(m_tryMode);
 
+            // Videos the same way. The inspector's play button is the one way to watch one
+            // while designing.
+            m_renderer.SetVideosLive(m_tryMode);
+
             for (size_t index = 0; index < m_renderer.ItemCount(); ++index)
             {
                 if (auto const element = m_renderer.ElementAt(index))
@@ -295,6 +335,9 @@ namespace winrt::midiglass::implementation
             // The overlay sits on top of the surface and is transparent to the eye but not to a
             // pointer, so it has to stand aside for Try mode to reach anything.
             OverlayCanvas().IsHitTestVisible(!m_tryMode);
+
+            // Cut and paste are for building. In Try mode a right click belongs to the surface.
+            CanvasScroll().ContextFlyout(m_tryMode ? nullptr : CanvasMenu());
 
             if (!m_tryMode)
             {
@@ -361,10 +404,46 @@ namespace winrt::midiglass::implementation
                         strong->m_renderer.Bloom(itemIndex);
                     }
 
-                    if (strong->m_tryMode && strong->m_player != nullptr)
+                    // A key let go as Try mode ends still has to end its note.
+                    if ((strong->m_tryMode || !isDown) && strong->m_player != nullptr)
                     {
                         strong->m_player->KeyChanged(
                             strong->m_renderer.ControlIndexOf(itemIndex), key, velocity, isDown);
+                    }
+                };
+
+            m_input.PadTouched = [weak](size_t itemIndex, glass::PadTouch const& touch)
+                {
+                    auto strong = weak.get();
+
+                    if (strong == nullptr || strong->m_player == nullptr)
+                    {
+                        return;
+                    }
+
+                    // Leaving Try mode releases every finger after the mode has already changed,
+                    // and those releases still have to end their notes. The player's own gate
+                    // shuts straight afterwards.
+                    if (!strong->m_tryMode && touch.Phase != glass::PadTouchPhase::Up)
+                    {
+                        return;
+                    }
+
+                    auto const controlIndex = strong->m_renderer.ControlIndexOf(itemIndex);
+
+                    switch (touch.Phase)
+                    {
+                    case glass::PadTouchPhase::Down:
+                        strong->m_player->PadPressed(controlIndex, touch.Touch, touch.Note, touch.Velocity, touch.Pitch);
+                        break;
+
+                    case glass::PadTouchPhase::Move:
+                        strong->m_player->PadMoved(controlIndex, touch.Touch, touch.Note, touch.Velocity, touch.Pitch);
+                        break;
+
+                    case glass::PadTouchPhase::Up:
+                        strong->m_player->PadReleased(controlIndex, touch.Touch);
+                        break;
                     }
                 };
 
@@ -534,7 +613,9 @@ namespace winrt::midiglass::implementation
             return;
         }
 
-        if (m_tryMode && m_player != nullptr)
+        // A pad let go as Try mode ends still has to end its note, so a release goes through
+        // whatever the mode. The player's own gate is what keeps Edit mode silent.
+        if ((m_tryMode || !isOn) && m_player != nullptr)
         {
             m_player->Switched(m_renderer.ControlIndexOf(itemIndex), isOn, velocity);
         }

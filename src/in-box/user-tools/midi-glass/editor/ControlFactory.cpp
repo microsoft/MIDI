@@ -9,8 +9,11 @@
 
 #include "ControlFactory.h"
 #include "PageTemplates.h"
+#include "PadGrid.h"
+#include "StepPattern.h"
 
 #include <algorithm>
+#include <cmath>
 #include <set>
 
 namespace glass
@@ -20,6 +23,10 @@ namespace glass
         // Where a new control starts, when nothing on the page suggests otherwise.
         constexpr uint32_t FirstController = 1;
         constexpr uint32_t FirstNote = 36;
+
+        // A new grid of pads is three rows of eight.
+        constexpr int32_t NewPadColumns = 8;
+        constexpr int32_t NewPadRows = 3;
 
         int32_t NextKeyboardOrder(_In_ Page const& page) noexcept
         {
@@ -60,6 +67,8 @@ namespace glass
                 { PaletteArtShape::Rectangle, 22, 14, 7, 0.80, 0.00 }, true },
             { ControlKind::Knob,    L"PaletteStepper", L"PaletteGroupButtons", L'\uE8CB',
                 { PaletteArtShape::Sample, 22, 14, 0, 0.00, 0.00, L"1" }, true },
+            { ControlKind::Switch,  L"PaletteSwitch",  L"PaletteGroupButtons", L'\uE9E9',
+                { PaletteArtShape::Rectangle, 24, 8, 3, 0.80, 0.00 } },
 
             // ---- Knobs and faders ----
             { ControlKind::Knob,    L"PaletteKnob",    L"PaletteGroupKnobs",   L'\uEA3A',
@@ -70,10 +79,8 @@ namespace glass
                 { PaletteArtShape::Ellipse, 19, 19, 0, 0.25, 0.00 } },
             { ControlKind::Fader,   L"PaletteFader",   L"PaletteGroupKnobs",   L'\uE9E9',
                 { PaletteArtShape::Rectangle, 5, 19, 3, 0.00, 0.70 } },
-            { ControlKind::Fader,   L"PaletteWheel",   L"PaletteGroupKnobs",   L'\uE9E9',
-                { PaletteArtShape::Rectangle, 10, 19, 3, 0.80, 0.00 }, true },
-            { ControlKind::Fader,   L"PaletteRange",   L"PaletteGroupKnobs",   L'\uE9E9',
-                { PaletteArtShape::Rectangle, 20, 6, 3, 0.80, 0.00 }, true },
+            { ControlKind::Wheel,   L"PaletteWheel",   L"PaletteGroupKnobs",   L'\uE9E9',
+                { PaletteArtShape::Rectangle, 10, 19, 3, 0.80, 0.00 } },
 
             // ---- Two axis ----
             { ControlKind::XYPad,   L"PaletteXYPad",   L"PaletteGroupTwoAxis", L'\uE80A',
@@ -88,12 +95,16 @@ namespace glass
                 { PaletteArtShape::Glyph, 18, 18, 0, 0.00, 0.00, L"\uE916" } },
             { ControlKind::Lfo,     L"PaletteLfo",     L"PaletteGroupGenerators", L'\uE9E9',
                 { PaletteArtShape::Wave, 20, 12, 0, 0.85, 0.00 } },
-            { ControlKind::Knob,    L"PaletteSteps",   L"PaletteGroupGenerators", L'\uE8FD',
-                { PaletteArtShape::HorizontalBars, 20, 10, 0, 0.00, 0.80 }, true },
+            { ControlKind::Steps,   L"PaletteSteps",   L"PaletteGroupGenerators", L'\uE8FD',
+                { PaletteArtShape::HorizontalBars, 20, 10, 0, 0.00, 0.80 } },
 
             // ---- Keys ----
             { ControlKind::PianoKeyboard, L"PaletteKeyboard", L"PaletteGroupKeys", L'\uEC4F',
                 { PaletteArtShape::Keys, 26, 14, 1, 0.00, 0.00 } },
+            { ControlKind::NotePads, L"PaletteNotePads", L"PaletteGroupKeys", L'\uF0E2',
+                { PaletteArtShape::PadGrid, 26, 14, 1, 0.00, 0.00 } },
+            { ControlKind::HexPads, L"PaletteHexPads", L"PaletteGroupKeys", L'\uF0E2',
+                { PaletteArtShape::HexGrid, 26, 17, 0, 0.00, 0.00 } },
 
             // ---- Feedback and text ----
             { ControlKind::Meter,   L"PaletteMeter",   L"PaletteGroupDisplay", L'\uE9D9',
@@ -112,6 +123,8 @@ namespace glass
             // ---- Grouping ----
             { ControlKind::Panel,   L"PalettePanel",   L"PaletteGroupLayout", L'\uE7C1',
                 { PaletteArtShape::Rectangle, 24, 16, 3, 0.70, 0.00 } },
+            { ControlKind::Line,    L"PaletteLine",    L"PaletteGroupLayout", L'\uE738',
+                { PaletteArtShape::Rectangle, 24, 2, 1, 0.00, 0.85 } },
         };
 
         return entries;
@@ -145,6 +158,7 @@ namespace glass
         case ControlKind::PageTab:
         case ControlKind::Panel:
         case ControlKind::TimeDisplay:
+        case ControlKind::Line:
             return false;
 
         default:
@@ -231,6 +245,13 @@ namespace glass
             control.LabelPlaced = LabelPlacementOverride::InsideCenter;
         }
 
+        // A rule has no name to show, and the theme's own rule color rather than a hue.
+        if (kind == ControlKind::Line)
+        {
+            control.LabelPlaced = LabelPlacementOverride::None;
+            control.Ticks.Show = false;
+        }
+
         // A joystick that does not recenter is an XY pad drawn as a circle, so the spring is on
         // from the start and the middle is where it sits.
         if (kind == ControlKind::Joystick)
@@ -251,6 +272,28 @@ namespace glass
         {
             control.Ticks.Show = false;
             control.LabelPlaced = LabelPlacementOverride::None;
+        }
+
+        // Three full rows of pads at whatever size the page template gave the control, so the
+        // pad size and the rectangle agree from the start and a resize flows rather than jumps.
+        if (IsPadGrid(kind))
+        {
+            auto const hex = IsHexPadGrid(kind);
+
+            control.Ticks.Show = false;
+            control.LabelPlaced = LabelPlacementOverride::None;
+
+            control.Pads.PadCount = NewPadColumns * NewPadRows;
+
+            auto const fitted = std::floor(PadSizeToFit(hex, NewPadColumns, NewPadRows, control.Width, control.Height));
+
+            control.Pads.PadSize = std::clamp(fitted, MinimumPadSize, MaximumPadSize);
+
+            if (hex)
+            {
+                control.Pads.RightInterval = WickiHaydenLayout.RightInterval;
+                control.Pads.RowInterval = WickiHaydenLayout.RowInterval;
+            }
         }
 
         // A lamp sends nothing, so without a listener it is a dark circle that never does
@@ -286,6 +329,32 @@ namespace glass
             control.LabelPlaced = LabelPlacementOverride::Below;
         }
 
+        // A pitch wheel out of the box: centered, and back to the middle when the thumb comes
+        // off. Turning the spring off in the inspector makes it a modulation wheel.
+        if (kind == ControlKind::Wheel)
+        {
+            control.ReturnsToDefault = true;
+            control.DefaultValue = 0.5;
+            control.Ticks.Show = false;
+            control.LabelPlaced = LabelPlacementOverride::Below;
+        }
+
+        // Three positions to start from, each already sending something, so a switch dropped on
+        // the page works before anybody opens the inspector.
+        if (kind == ControlKind::Switch)
+        {
+            control.Switch.Positions = { L"1", L"2", L"3" };
+            control.Ticks.Show = false;
+            control.LabelPlaced = LabelPlacementOverride::Above;
+        }
+
+        // Something to hear on the first press: a minor arpeggio from C3, up and back down.
+        if (kind == ControlKind::Steps)
+        {
+            FillStarterPattern(control.Steps, 48);
+            control.Ticks.Show = false;
+        }
+
         if (!SendsAnything(kind))
         {
             return control;
@@ -316,8 +385,12 @@ namespace glass
         }
 
         // A keyboard plays whatever key was pressed, so the note number comes from the key
-        // rather than from a row. One row says which device and channel, and that is all.
+        // rather than from a row. One row says which device and channel, and that is all. A
+        // step sequencer is the same: each step names its own note.
         case ControlKind::PianoKeyboard:
+        case ControlKind::NotePads:
+        case ControlKind::HexPads:
+        case ControlKind::Steps:
         {
             message.Trigger = MessageTrigger::Changes;
             message.Kind = MessageKind::Note;
@@ -359,11 +432,35 @@ namespace glass
         // runs a little fast, let go and it settles back. A controller row set 0 to 127 gives
         // the other convention, where 64 means the wheel is not moving.
         case ControlKind::Turntable:
+        case ControlKind::Wheel:
         {
             message.Trigger = MessageTrigger::Changes;
             message.Kind = MessageKind::PitchBend;
 
             control.Messages.push_back(std::move(message));
+            break;
+        }
+
+        // One row per position, on one controller, spread from the bottom of its range to the
+        // top. Any row can be changed to a program change or a note without touching the others.
+        case ControlKind::Switch:
+        {
+            message.Trigger = MessageTrigger::Changes;
+            message.Kind = MessageKind::ControlChange;
+            message.Number = NextFreeNumber(page, MessageKind::ControlChange, FirstController);
+
+            auto const positions = SwitchPositionCount(control);
+
+            for (int32_t position = 0; position < positions; ++position)
+            {
+                auto row = message;
+
+                row.Position = position;
+                row.Maximum = { SwitchValueOf(position, positions), ValueScaling::Fraction };
+
+                control.Messages.push_back(std::move(row));
+            }
+
             break;
         }
 

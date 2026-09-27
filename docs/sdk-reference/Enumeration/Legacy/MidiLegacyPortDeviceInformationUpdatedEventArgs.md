@@ -6,13 +6,13 @@ type: runtimeclass
 description: Event args for when a MIDI 1.0 port is updated
 ---
 
-Raised by `MidiLegacyPortDeviceWatcher` when a MIDI 1.0 port's properties have been updated.
+`MidiLegacyPortDeviceWatcher` passes this to your `Updated` handler when a MIDI 1.0 port's properties change.
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `UpdatedDevice` | The updated `MidiLegacyPortDeviceInformation` |
-| `DeviceInformationUpdate` | The underlying `Windows.Devices.Enumeration.DeviceInformationUpdate`, for an application which needs the raw changed properties |
-| `IsNameUpdated` | True if the name was updated |  
-| `IsNumberUpdated` | True if the WinMM port number was updated |
+| `UpdatedDevice` | The `MidiLegacyPortDeviceInformation` for the port, with its current values |
+| `DeviceInformationUpdate` | The `Windows.Devices.Enumeration.DeviceInformationUpdate` this came from, for an application that needs the raw changed properties |
+| `IsNameUpdated` | True if the name changed |  
+| `IsNumberUpdated` | True if the WinMM port number changed |

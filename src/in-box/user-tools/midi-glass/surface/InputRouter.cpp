@@ -27,7 +27,12 @@ namespace glass
         {
             auto const kind = renderer.KindAt(i);
 
-            if (!IsInteractive(kind))
+            // A picture sends nothing, but a video on one can be asked to take clicks or to
+            // draw a bar, and then it needs a pointer like anything else.
+            auto const takesPictureInput = kind == ControlKind::Image &&
+                (renderer.VideoTakesClicks(i) || renderer.VideoShowsScrubber(i));
+
+            if (!IsInteractive(kind) && !takesPictureInput)
             {
                 continue;
             }
@@ -53,11 +58,22 @@ namespace glass
             binding.Keyboard = renderer.KeyboardAt(i);
             binding.VelocityFromTouch = renderer.VelocityFromTouchAt(i);
 
-            auto const latches = kind != ControlKind::Lfo || renderer.LatchesAt(i);
+            if (IsPadGrid(kind))
+            {
+                binding.PlaysPads = true;
+                binding.PadGrid = renderer.PadGridAt(i);
+                binding.PadLayout = renderer.PadLayoutAt(i);
+            }
 
-            binding.Momentary = IsMomentary(kind) || (kind == ControlKind::Lfo && !latches);
-            binding.Toggling = IsToggling(kind) || (kind == ControlKind::Lfo && latches);
+            // A generator runs while held or latches on a press, and which one is the control's
+            // own setting rather than its kind's.
+            auto const generator = kind == ControlKind::Lfo || kind == ControlKind::Steps;
+            auto const latches = !generator || renderer.LatchesAt(i);
+
+            binding.Momentary = IsMomentary(kind) || (generator && !latches);
+            binding.Toggling = IsToggling(kind) || (generator && latches);
             binding.TurnDegreesForFullRange = renderer.TurnDegreesAt(i);
+            binding.SwitchPositions = renderer.SwitchPositionsAt(i);
 
             m_bindings.push_back(std::move(binding));
         }
@@ -85,8 +101,16 @@ namespace glass
                 });
 
             binding.CaptureLostHandler = PointerEventHandler(
-                [this, index](foundation::IInspectable const&, PointerRoutedEventArgs const&)
+                [this, index](foundation::IInspectable const&, PointerRoutedEventArgs const& args)
                 {
+                    // A pad grid holds a finger per pad, so losing one pointer ends that finger
+                    // and leaves the rest of the chord alone.
+                    if (index < m_bindings.size() && m_bindings[index].PlaysPads)
+                    {
+                        ReleasePad(m_bindings[index], args.Pointer().PointerId());
+                        return;
+                    }
+
                     OnCaptureLost(index);
                 });
 
@@ -121,9 +145,44 @@ namespace glass
     {
         for (auto& binding : m_bindings)
         {
+            // Every finger on a pad grid ends its own note. A grid never sets the single
+            // pointer below, so it is handled before that is looked at.
+            if (binding.PlaysPads)
+            {
+                for (auto const& finger : binding.PadFingers)
+                {
+                    if (finger.PointerId != 0)
+                    {
+                        ReleasePad(binding, finger.PointerId);
+                    }
+                }
+
+                continue;
+            }
+
             if (binding.PointerId == 0)
             {
                 continue;
+            }
+
+            if (binding.Scrubbing)
+            {
+                binding.PointerId = 0;
+                binding.Scrubbing = false;
+
+                if (m_renderer != nullptr)
+                {
+                    m_renderer->EndScrub(binding.ItemIndex);
+                }
+
+                continue;
+            }
+
+            // A key held on a keyboard ends its note the same way a pad does, or a layout that
+            // loses focus mid press leaves it sounding.
+            if (PlaysKeys(binding.Kind))
+            {
+                TouchKeyboard(binding, 0.0, 0.0, false);
             }
 
             binding.PointerId = 0;
@@ -242,6 +301,19 @@ namespace glass
 
         auto& binding = m_bindings[index];
 
+        // A pad grid takes a finger per pad, so the one-finger rule below does not apply to it.
+        if (binding.PlaysPads)
+        {
+            PressPad(binding, args);
+            return;
+        }
+
+        if (binding.Kind == ControlKind::Image)
+        {
+            PressPicture(binding, args);
+            return;
+        }
+
         // One finger per control. A second on the same control is ignored rather than fought
         // over, which would make the value jump between two positions.
         if (binding.PointerId != 0 || binding.Element == nullptr)
@@ -353,6 +425,19 @@ namespace glass
             return;
         }
 
+        // A switch goes to the position under the finger, and follows it across.
+        if (binding.Kind == ControlKind::Switch)
+        {
+            Publish(binding, SwitchValueAtPoint(
+                binding.Element.ActualWidth(),
+                binding.Element.ActualHeight(),
+                point.Position().X,
+                point.Position().Y,
+                binding.SwitchPositions), false);
+
+            return;
+        }
+
         if (UsesAbsolutePosition(binding.Kind))
         {
             Publish(binding, PositionToValue(
@@ -380,8 +465,30 @@ namespace glass
 
         auto& binding = m_bindings[index];
 
+        if (binding.PlaysPads)
+        {
+            MovePad(binding, args);
+            return;
+        }
+
         if (binding.PointerId != args.Pointer().PointerId() || binding.Element == nullptr)
         {
+            return;
+        }
+
+        if (binding.Scrubbing)
+        {
+            auto const position = args.GetCurrentPoint(binding.Element).Position();
+            double fraction{ 0.0 };
+
+            args.Handled(true);
+
+            if (m_renderer != nullptr &&
+                m_renderer->TryGetScrubFraction(binding.ItemIndex, position.X, position.Y, true, fraction))
+            {
+                m_renderer->ScrubVideo(binding.ItemIndex, fraction);
+            }
+
             return;
         }
 
@@ -430,6 +537,18 @@ namespace glass
             return;
         }
 
+        if (binding.Kind == ControlKind::Switch)
+        {
+            Publish(binding, SwitchValueAtPoint(
+                binding.Element.ActualWidth(),
+                binding.Element.ActualHeight(),
+                point.Position().X,
+                point.Position().Y,
+                binding.SwitchPositions), false);
+
+            return;
+        }
+
         if (UsesAbsolutePosition(binding.Kind))
         {
             Publish(binding, PositionToValue(
@@ -445,6 +564,21 @@ namespace glass
                     binding.Element.ActualHeight(), point.Position().Y), false);
             }
 
+            return;
+        }
+
+        // A wheel turns under the thumb: it moves by how far the finger travels, never jumps to
+        // where it lands, and its own length is the whole range, like the wheel on a keyboard.
+        if (binding.Kind == ControlKind::Wheel)
+        {
+            auto const width = binding.Element.ActualWidth();
+            auto const height = binding.Element.ActualHeight();
+
+            auto const moved = height >= width
+                ? (binding.StartY - point.Position().Y) / std::max(height, 40.0)
+                : (point.Position().X - binding.StartX) / std::max(width, 40.0);
+
+            Publish(binding, binding.StartValue + moved, false);
             return;
         }
 
@@ -467,6 +601,23 @@ namespace glass
         }
 
         auto& binding = m_bindings[index];
+
+        if (binding.PlaysPads)
+        {
+            auto const pointerId = args.Pointer().PointerId();
+
+            if (binding.Element != nullptr)
+            {
+                binding.Element.ReleasePointerCapture(args.Pointer());
+            }
+
+            args.Handled(true);
+
+            // Releasing the capture may already have ended this finger through the capture
+            // lost handler. Ending it twice is harmless: the second finds nothing.
+            ReleasePad(binding, pointerId);
+            return;
+        }
 
         if (binding.PointerId != args.Pointer().PointerId())
         {
@@ -500,6 +651,20 @@ namespace glass
 
         binding.PointerId = 0;
         m_heldCount = std::max(0, m_heldCount - 1);
+
+        // A finger coming off a video's bar lets the video carry on. Nothing was sent, so there
+        // is nothing to put back.
+        if (binding.Scrubbing)
+        {
+            binding.Scrubbing = false;
+
+            if (m_renderer != nullptr)
+            {
+                m_renderer->EndScrub(binding.ItemIndex);
+            }
+
+            return;
+        }
 
         if (TouchChanged)
         {
@@ -553,5 +718,279 @@ namespace glass
         // where the finger left it, and the surface and the desk disagree for the rest of the
         // session.
         Publish(binding, binding.Value, true);
+    }
+
+    namespace
+    {
+        // How hard a pad was hit, where the hardware says and the customer asked for it. A
+        // mouse reports one number every time and most touch screens report nothing at all.
+        double PadVelocity(_In_ bool fromTouch, _In_ winrt::Microsoft::UI::Input::PointerPoint const& point)
+        {
+            if (!fromTouch)
+            {
+                return 1.0;
+            }
+
+            auto const pressure = point.Properties().Pressure();
+
+            return pressure > 0.0f && pressure <= 1.0f ? pressure : 1.0;
+        }
+    }
+
+    _Use_decl_annotations_
+    void InputRouter::PressPicture(Binding& binding, PointerRoutedEventArgs const& args)
+    {
+        if (m_renderer == nullptr || binding.Element == nullptr || binding.PointerId != 0 ||
+            !m_renderer->HasVideo(binding.ItemIndex))
+        {
+            return;
+        }
+
+        auto const position = args.GetCurrentPoint(binding.Element).Position();
+        double fraction{ 0.0 };
+
+        // On the bar: held, so the drag can carry on past the ends of the bar.
+        if (m_renderer->TryGetScrubFraction(binding.ItemIndex, position.X, position.Y, false, fraction))
+        {
+            if (!binding.Element.CapturePointer(args.Pointer()))
+            {
+                return;
+            }
+
+            binding.PointerId = args.Pointer().PointerId();
+            binding.Scrubbing = true;
+            m_heldCount++;
+
+            args.Handled(true);
+
+            m_renderer->ScrubVideo(binding.ItemIndex, fraction);
+            return;
+        }
+
+        if (m_renderer->VideoTakesClicks(binding.ItemIndex))
+        {
+            args.Handled(true);
+
+            m_renderer->ToggleVideo(binding.ItemIndex);
+        }
+    }
+
+    _Use_decl_annotations_
+    void InputRouter::PressPad(Binding& binding, PointerRoutedEventArgs const& args)
+    {
+        if (binding.Element == nullptr)
+        {
+            return;
+        }
+
+        auto const pointerId = args.Pointer().PointerId();
+
+        Binding::PadFinger* slot{ nullptr };
+
+        for (auto& finger : binding.PadFingers)
+        {
+            // Already down on this grid. It must not become a second note for one finger.
+            if (finger.PointerId == pointerId)
+            {
+                return;
+            }
+
+            if (slot == nullptr && finger.PointerId == 0)
+            {
+                slot = &finger;
+            }
+        }
+
+        if (slot == nullptr)
+        {
+            return;
+        }
+
+        // Called once and passed down, for the same reason as everywhere else here.
+        auto const point = args.GetCurrentPoint(binding.Element);
+        auto const x = point.Position().X;
+        auto const y = point.Position().Y;
+
+        auto const cell = PadAtPoint(binding.PadLayout, x, y);
+
+        // Past the end of a short row, or on a pad off the end of the note range.
+        if (cell < 0 || binding.PadLayout.Cells[static_cast<size_t>(cell)].Note < 0)
+        {
+            return;
+        }
+
+        if (!binding.Element.CapturePointer(args.Pointer()))
+        {
+            return;
+        }
+
+        m_heldCount++;
+        args.Handled(true);
+
+        auto const first = binding.PadFingerCount == 0;
+
+        slot->PointerId = pointerId;
+        slot->Cell = cell;
+        binding.PadFingerCount++;
+
+        if (first)
+        {
+            binding.Element.Focus(xaml::FocusState::Pointer);
+
+            if (TouchChanged)
+            {
+                TouchChanged(binding.ItemIndex, true);
+            }
+        }
+
+        if (m_renderer != nullptr)
+        {
+            m_renderer->SetPadHeld(binding.ItemIndex, cell, true);
+        }
+
+        if (PadTouched)
+        {
+            PadTouch touch{};
+
+            touch.Phase = PadTouchPhase::Down;
+            touch.Touch = pointerId;
+            touch.Note = binding.PadLayout.Cells[static_cast<size_t>(cell)].Note;
+            touch.Velocity = PadVelocity(binding.VelocityFromTouch, point);
+            touch.Pitch = PitchAtPoint(binding.PadLayout, binding.PadGrid, cell, x);
+
+            PadTouched(binding.ItemIndex, touch);
+        }
+    }
+
+    _Use_decl_annotations_
+    void InputRouter::MovePad(Binding& binding, PointerRoutedEventArgs const& args)
+    {
+        if (binding.Element == nullptr)
+        {
+            return;
+        }
+
+        auto const pointerId = args.Pointer().PointerId();
+
+        Binding::PadFinger* held{ nullptr };
+
+        for (auto& finger : binding.PadFingers)
+        {
+            if (finger.PointerId == pointerId)
+            {
+                held = &finger;
+                break;
+            }
+        }
+
+        if (held == nullptr)
+        {
+            return;
+        }
+
+        auto const point = args.GetCurrentPoint(binding.Element);
+        auto const x = point.Position().X;
+        auto const y = point.Position().Y;
+
+        args.Handled(true);
+
+        auto cell = PadAtPoint(binding.PadLayout, x, y);
+
+        // Off the grid, or onto a pad that plays nothing: the finger keeps the pad it was on,
+        // rather than a slide ending the note the moment it strays past an edge.
+        if (cell < 0 || binding.PadLayout.Cells[static_cast<size_t>(cell)].Note < 0)
+        {
+            cell = held->Cell;
+        }
+
+        auto const changed = cell != held->Cell;
+
+        if (changed)
+        {
+            if (m_renderer != nullptr)
+            {
+                m_renderer->SetPadHeld(binding.ItemIndex, held->Cell, false);
+                m_renderer->SetPadHeld(binding.ItemIndex, cell, true);
+            }
+
+            held->Cell = cell;
+        }
+
+        // Only a note that bends cares how far across its pad a finger has gone. For anything
+        // else, a finger moving about on one pad is not news.
+        if (!changed && binding.PadGrid.Glide != PadGlide::PerNoteBend)
+        {
+            return;
+        }
+
+        if (PadTouched)
+        {
+            PadTouch touch{};
+
+            touch.Phase = PadTouchPhase::Move;
+            touch.Touch = pointerId;
+            touch.Note = binding.PadLayout.Cells[static_cast<size_t>(cell)].Note;
+            touch.Velocity = PadVelocity(binding.VelocityFromTouch, point);
+            touch.Pitch = PitchAtPoint(binding.PadLayout, binding.PadGrid, cell, x);
+
+            PadTouched(binding.ItemIndex, touch);
+        }
+    }
+
+    _Use_decl_annotations_
+    void InputRouter::ReleasePad(Binding& binding, uint32_t pointerId)
+    {
+        if (pointerId == 0)
+        {
+            return;
+        }
+
+        for (auto& finger : binding.PadFingers)
+        {
+            if (finger.PointerId != pointerId)
+            {
+                continue;
+            }
+
+            auto const cell = finger.Cell;
+
+            finger.PointerId = 0;
+            finger.Cell = -1;
+
+            if (binding.PadFingerCount > 0)
+            {
+                binding.PadFingerCount--;
+            }
+
+            m_heldCount = std::max(0, m_heldCount - 1);
+
+            if (m_renderer != nullptr)
+            {
+                m_renderer->SetPadHeld(binding.ItemIndex, cell, false);
+            }
+
+            if (PadTouched)
+            {
+                PadTouch touch{};
+
+                touch.Phase = PadTouchPhase::Up;
+                touch.Touch = pointerId;
+                touch.Velocity = 0.0;
+
+                if (cell >= 0 && static_cast<size_t>(cell) < binding.PadLayout.Cells.size())
+                {
+                    touch.Note = binding.PadLayout.Cells[static_cast<size_t>(cell)].Note;
+                }
+
+                PadTouched(binding.ItemIndex, touch);
+            }
+
+            if (binding.PadFingerCount == 0 && TouchChanged)
+            {
+                TouchChanged(binding.ItemIndex, false);
+            }
+
+            return;
+        }
     }
 }

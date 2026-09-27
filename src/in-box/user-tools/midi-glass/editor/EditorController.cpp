@@ -64,14 +64,42 @@ namespace glass
 
     void EditorController::Commit(_In_ wchar_t const* name)
     {
+        if (m_batchDepth > 0)
+        {
+            m_undo.CommitCoalesced(m_document, name, L"batch:" + std::to_wstring(m_batchNumber));
+            m_dirty = true;
+            return;
+        }
+
         m_undo.Commit(m_document, name);
         m_dirty = true;
     }
 
     void EditorController::CommitCoalesced(_In_ wchar_t const* name, _In_ std::wstring const& key)
     {
-        m_undo.CommitCoalesced(m_document, name, key);
+        m_undo.CommitCoalesced(
+            m_document, name, m_batchDepth > 0 ? L"batch:" + std::to_wstring(m_batchNumber) : key);
         m_dirty = true;
+    }
+
+    void EditorController::BeginEditBatch()
+    {
+        if (m_batchDepth++ == 0)
+        {
+            ++m_batchNumber;
+
+            // Typing that was still being gathered into one entry is its own edit, not part of
+            // this one.
+            m_undo.EndCoalescing();
+        }
+    }
+
+    void EditorController::EndEditBatch()
+    {
+        if (m_batchDepth > 0 && --m_batchDepth == 0)
+        {
+            m_undo.EndCoalescing();
+        }
     }
 
     bool EditorController::Undo()
@@ -285,6 +313,240 @@ namespace glass
         }
 
         return selected;
+    }
+
+    EditRect EditorController::SelectionBounds() const
+    {
+        auto const selected = SelectedControls();
+
+        if (selected.empty())
+        {
+            return {};
+        }
+
+        auto left = selected.front()->X;
+        auto top = selected.front()->Y;
+        auto right = selected.front()->X + selected.front()->Width;
+        auto bottom = selected.front()->Y + selected.front()->Height;
+
+        for (auto const* const control : selected)
+        {
+            left = std::min(left, control->X);
+            top = std::min(top, control->Y);
+            right = std::max(right, control->X + control->Width);
+            bottom = std::max(bottom, control->Y + control->Height);
+        }
+
+        return { left, top, right - left, bottom - top };
+    }
+
+    // ---------------------------------------------------------------- groups
+
+    bool EditorController::GroupSelection()
+    {
+        auto const selected = SelectedControls();
+
+        if (selected.size() < 2 || SelectionIsOneGroup())
+        {
+            return false;
+        }
+
+        auto const group = LayoutDocument::NewId();
+
+        for (auto const* const control : selected)
+        {
+            if (auto* const member = MutableControl(control->Id))
+            {
+                member->GroupId = group;
+            }
+        }
+
+        Commit(EditNames::Group);
+
+        return true;
+    }
+
+    bool EditorController::UngroupSelection()
+    {
+        auto changed = false;
+
+        for (auto const* const control : SelectedControls())
+        {
+            if (auto* const member = MutableControl(control->Id); member != nullptr && !member->GroupId.empty())
+            {
+                member->GroupId.clear();
+                changed = true;
+            }
+        }
+
+        if (changed)
+        {
+            Commit(EditNames::Ungroup);
+        }
+
+        return changed;
+    }
+
+    bool EditorController::SelectionIsOneGroup() const
+    {
+        auto const selected = SelectedControls();
+
+        if (selected.size() < 2 || selected.front()->GroupId.empty())
+        {
+            return false;
+        }
+
+        auto const& group = selected.front()->GroupId;
+
+        for (auto const* const control : selected)
+        {
+            if (control->GroupId != group)
+            {
+                return false;
+            }
+        }
+
+        // And none of the group left out.
+        auto const* const page = CurrentPage();
+
+        for (auto const& control : page->Controls)
+        {
+            if (control.GroupId == group && !IsSelected(control.Id))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    bool EditorController::SelectionHasGroup() const
+    {
+        for (auto const* const control : SelectedControls())
+        {
+            if (!control->GroupId.empty())
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    _Use_decl_annotations_
+    void EditorController::SelectGroupOf(std::wstring const& id)
+    {
+        SelectOnly(id);
+        ExpandSelectionToGroups();
+    }
+
+    _Use_decl_annotations_
+    void EditorController::ToggleGroupOf(std::wstring const& id)
+    {
+        auto const* const control = m_document.FindControl(id);
+        auto const* const page = CurrentPage();
+
+        if (control == nullptr || page == nullptr || control->GroupId.empty())
+        {
+            ToggleSelected(id);
+            return;
+        }
+
+        auto everyMember = true;
+
+        for (auto const& member : page->Controls)
+        {
+            if (member.GroupId == control->GroupId && !IsSelected(member.Id))
+            {
+                everyMember = false;
+                break;
+            }
+        }
+
+        // All of it on comes off together; anything less is finished off.
+        for (auto const& member : page->Controls)
+        {
+            if (member.GroupId != control->GroupId)
+            {
+                continue;
+            }
+
+            if (everyMember)
+            {
+                m_selection.erase(std::remove(m_selection.begin(), m_selection.end(), member.Id), m_selection.end());
+            }
+            else
+            {
+                AddToSelection(member.Id);
+            }
+        }
+    }
+
+    void EditorController::ExpandSelectionToGroups()
+    {
+        auto const* const page = CurrentPage();
+
+        if (page == nullptr)
+        {
+            return;
+        }
+
+        std::vector<std::wstring> groups{};
+
+        for (auto const* const control : SelectedControls())
+        {
+            if (!control->GroupId.empty() &&
+                std::find(groups.begin(), groups.end(), control->GroupId) == groups.end())
+            {
+                groups.push_back(control->GroupId);
+            }
+        }
+
+        for (auto const& control : page->Controls)
+        {
+            if (!control.GroupId.empty() &&
+                std::find(groups.begin(), groups.end(), control.GroupId) != groups.end())
+            {
+                AddToSelection(control.Id);
+            }
+        }
+    }
+
+    _Use_decl_annotations_
+    bool EditorController::SetSelectionBounds(double x, double y, double width, double height)
+    {
+        if (!std::isfinite(x) || !std::isfinite(y) || !std::isfinite(width) || !std::isfinite(height))
+        {
+            return false;
+        }
+
+        auto const from = SelectionBounds();
+
+        if (from.Width <= 0.0 || from.Height <= 0.0)
+        {
+            return false;
+        }
+
+        EditRect const to{ x, y, std::max(MinimumControlSize, width), std::max(MinimumControlSize, height) };
+
+        if (to.X == from.X && to.Y == from.Y && to.Width == from.Width && to.Height == from.Height)
+        {
+            return false;
+        }
+
+        std::vector<DragOrigin> origins{};
+
+        for (auto const* const control : SelectedControls())
+        {
+            origins.push_back({ control->Id, RectOf(*control) });
+        }
+
+        PlaceWithin(origins, from, to);
+
+        // Typing a number arrives a character at a time. One entry for the run.
+        CommitCoalesced(EditNames::Resize, L"selectionbounds");
+
+        return true;
     }
 
     _Use_decl_annotations_
@@ -634,6 +896,8 @@ namespace glass
             copies.push_back(std::move(copy));
         }
 
+        RegroupCopies(copies);
+
         for (auto& copy : copies)
         {
             page->Controls.push_back(std::move(copy));
@@ -661,13 +925,26 @@ namespace glass
     }
 
     _Use_decl_annotations_
-    SnapOutcome EditorController::UpdateDrag(double deltaX, double deltaY)
+    SnapOutcome EditorController::UpdateDrag(double deltaX, double deltaY, bool straightLine)
     {
         SnapOutcome outcome{};
 
         if (!m_dragging || m_dragOrigins.empty())
         {
             return outcome;
+        }
+
+        auto const holdY = straightLine && std::abs(deltaX) >= std::abs(deltaY);
+        auto const holdX = straightLine && !holdY;
+
+        if (holdY)
+        {
+            deltaY = 0.0;
+        }
+
+        if (holdX)
+        {
+            deltaX = 0.0;
         }
 
         // The whole selection follows one rectangle, so a bank keeps its own spacing rather
@@ -677,6 +954,28 @@ namespace glass
         lead.Y += deltaY;
 
         outcome = SnapMove(lead, OtherRects(m_selection), PageRect(), EffectiveSnap());
+
+        // A guide may pull on the axis that is being held. A straight line stays straight, and
+        // a guide for an axis that cannot move would only be a promise it cannot keep.
+        if (holdX || holdY)
+        {
+            if (holdX)
+            {
+                outcome.X = m_dragOrigins.front().Rect.X;
+            }
+
+            if (holdY)
+            {
+                outcome.Y = m_dragOrigins.front().Rect.Y;
+            }
+
+            auto const heldAxis = holdX ? GuideAxis::Vertical : GuideAxis::Horizontal;
+
+            outcome.Guides.erase(
+                std::remove_if(outcome.Guides.begin(), outcome.Guides.end(),
+                    [heldAxis](SnapGuide const& guide) { return guide.Axis == heldAxis; }),
+                outcome.Guides.end());
+        }
 
         auto const adjustedX = outcome.X - m_dragOrigins.front().Rect.X;
         auto const adjustedY = outcome.Y - m_dragOrigins.front().Rect.Y;
@@ -714,6 +1013,7 @@ namespace glass
             m_dragOrigins.push_back({ control->Id, RectOf(*control) });
         }
 
+        m_resizeBounds = SelectionBounds();
         m_resizeHandle = handle;
         m_dragging = !m_dragOrigins.empty() && handle != ResizeHandle::None;
     }
@@ -728,12 +1028,16 @@ namespace glass
             return outcome;
         }
 
+        // Several controls are resized as one box drawn around them all.
+        auto const many = m_dragOrigins.size() > 1;
+
         auto const& lead = m_dragOrigins.front();
+        auto const base = many ? m_resizeBounds : lead.Rect;
 
         auto const* const leadControl = MutableControl(lead.Id);
-        auto const locked = preserveAspect || (leadControl != nullptr && leadControl->AspectLocked);
+        auto const locked = preserveAspect || (!many && leadControl != nullptr && leadControl->AspectLocked);
 
-        auto const dragged = ApplyResize(lead.Rect, m_resizeHandle, deltaX, deltaY, locked);
+        auto const dragged = ApplyResize(base, m_resizeHandle, deltaX, deltaY, locked);
 
         outcome = SnapResize(dragged, m_resizeHandle, OtherRects(m_selection), PageRect(), EffectiveSnap());
 
@@ -744,28 +1048,48 @@ namespace glass
 
         if (MovesLeftEdge(m_resizeHandle))
         {
-            snappedDeltaX = outcome.X - lead.Rect.X;
+            snappedDeltaX = outcome.X - base.X;
         }
         else if (MovesRightEdge(m_resizeHandle))
         {
-            snappedDeltaX = outcome.X - lead.Rect.Right();
+            snappedDeltaX = outcome.X - base.Right();
         }
 
         if (MovesTopEdge(m_resizeHandle))
         {
-            snappedDeltaY = outcome.Y - lead.Rect.Y;
+            snappedDeltaY = outcome.Y - base.Y;
         }
         else if (MovesBottomEdge(m_resizeHandle))
         {
-            snappedDeltaY = outcome.Y - lead.Rect.Bottom();
+            snappedDeltaY = outcome.Y - base.Bottom();
         }
 
-        auto const leadRect = ApplyResize(lead.Rect, m_resizeHandle, snappedDeltaX, snappedDeltaY, locked);
+        auto const resized = ApplyResize(base, m_resizeHandle, snappedDeltaX, snappedDeltaY, locked);
 
-        auto const scaleX = lead.Rect.Width > 0.0 ? leadRect.Width / lead.Rect.Width : 1.0;
-        auto const scaleY = lead.Rect.Height > 0.0 ? leadRect.Height / lead.Rect.Height : 1.0;
+        if (many)
+        {
+            PlaceWithin(m_dragOrigins, base, resized);
+        }
+        else if (auto* const control = MutableControl(lead.Id))
+        {
+            ApplyRect(*control, resized);
+        }
 
-        for (auto const& origin : m_dragOrigins)
+        CommitCoalesced(EditNames::Resize, L"resize");
+
+        return outcome;
+    }
+
+    _Use_decl_annotations_
+    void EditorController::PlaceWithin(
+        std::vector<DragOrigin> const& origins,
+        EditRect const& from,
+        EditRect const& to)
+    {
+        auto const scaleX = from.Width > 0.0 ? to.Width / from.Width : 1.0;
+        auto const scaleY = from.Height > 0.0 ? to.Height / from.Height : 1.0;
+
+        for (auto const& origin : origins)
         {
             auto* const control = MutableControl(origin.Id);
 
@@ -774,27 +1098,25 @@ namespace glass
                 continue;
             }
 
-            if (origin.Id == lead.Id)
+            auto width = origin.Rect.Width * scaleX;
+            auto height = origin.Rect.Height * scaleY;
+
+            if (control->AspectLocked)
             {
-                ApplyRect(*control, leadRect);
-                continue;
+                auto const even = std::min(scaleX, scaleY);
+
+                width = origin.Rect.Width * even;
+                height = origin.Rect.Height * even;
             }
 
-            // Everything else in the selection follows the same proportions, measured from the
-            // handle's own corner, so resizing a bank keeps it a bank.
-            EditRect rect{};
+            width = std::max(MinimumControlSize, width);
+            height = std::max(MinimumControlSize, height);
 
-            rect.Width = std::max(MinimumControlSize, origin.Rect.Width * scaleX);
-            rect.Height = std::max(MinimumControlSize, origin.Rect.Height * scaleY);
-            rect.X = leadRect.X + (origin.Rect.X - lead.Rect.X) * scaleX;
-            rect.Y = leadRect.Y + (origin.Rect.Y - lead.Rect.Y) * scaleY;
+            auto const centerX = to.X + ((origin.Rect.CenterX() - from.X) * scaleX);
+            auto const centerY = to.Y + ((origin.Rect.CenterY() - from.Y) * scaleY);
 
-            ApplyRect(*control, rect);
+            ApplyRect(*control, { centerX - (width / 2.0), centerY - (height / 2.0), width, height });
         }
-
-        CommitCoalesced(EditNames::Resize, L"resize");
-
-        return outcome;
     }
 
     void EditorController::EndResize()

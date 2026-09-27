@@ -136,7 +136,8 @@
                          render in front of the canvas instead. -->
                     <Border x:Name="SurfaceGrain" IsHitTestVisible="False" />
 
-                    <Canvas x:Name="SurfaceCanvas">
+                    <!-- Top left, or a page scaled above actual size is pushed right and down. -->
+                    <Canvas x:Name="SurfaceCanvas" HorizontalAlignment="Left" VerticalAlignment="Top">
                         <Canvas.RenderTransform>
                             <ScaleTransform x:Name="SurfaceScale" ScaleX="1" ScaleY="1" />
                         </Canvas.RenderTransform>

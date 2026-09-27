@@ -12,10 +12,10 @@ Set on `MidiNetworkHostCreationConfig.AuthenticationType`.
 
 | Value | Numeric Value | Description |
 | ----- | ------------- | ----------- |
-| `NoAuthentication` | `0` | No authentication. Any client which passes the host's approval policy may connect |
-| `PasswordAuthentication` | `1` | A shared secret is required. Not yet implemented |
-| `UserAuthentication` | `2` | A user name and password are required. Not yet implemented |
+| `NoAuthentication` | `0` | No authentication. Any client that gets past the host's approval policy can connect |
+| `PasswordAuthentication` | `1` | A shared secret is required. Not built yet |
+| `UserAuthentication` | `2` | A user name and password are required. Not built yet |
 
 ## Remarks
 
-Only `NoAuthentication` is currently accepted. A host configured for either of the others is rejected at configuration time with `AuthenticationNotImplemented` rather than starting and silently accepting unauthenticated connections. See [issue 733](https://github.com/microsoft/MIDI/issues/733).
+Only `NoAuthentication` is accepted right now. A host set up for either of the others is rejected when it's configured, with `AuthenticationNotImplemented`. That's better than starting and quietly accepting connections that aren't authenticated. See [issue 733](https://github.com/microsoft/MIDI/issues/733).

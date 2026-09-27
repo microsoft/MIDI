@@ -17,6 +17,7 @@
 #include "SurfaceRenderer.h"
 #include "LayoutStore.h"
 #include "LfoShape.h"
+#include "StepPattern.h"
 #include "ThemeStore.h"
 
 #include <winrt/Windows.Media.Core.h>
@@ -432,6 +433,482 @@ namespace glass
         // Where the platter is now. A control loaded at its default is not being pushed, so it
         // starts square.
         visual.ArcGeometry = nullptr;
+    }
+
+    // ---------------------------------------------------------------- the wheel
+
+    // A drum in a slot, the way the wheel beside a keyboard looks: ridges to grip and one
+    // painted line that says where it is. Only the drum moves, clipped to its window, so a turn
+    // costs one offset.
+    _Use_decl_annotations_
+    void SurfaceRenderer::LayoutWheel(
+        Compositor const& compositor,
+        SurfaceVisual& visual,
+        Control const& control,
+        ControlColors const& colors,
+        float width,
+        float height)
+    {
+        auto const vertical = height >= width;
+
+        visual.WheelVertical = vertical;
+
+        auto const inset = std::max(3.0f, std::min(width, height) * 0.12f);
+        auto const slotX = inset;
+        auto const slotY = inset;
+        auto const slotW = std::max(width - (inset * 2.0f), 4.0f);
+        auto const slotH = std::max(height - (inset * 2.0f), 4.0f);
+
+        AppendWell(compositor, visual, colors, slotX, slotY, slotW, slotH);
+
+        auto const drumInset = std::max(1.5f, std::min(slotW, slotH) * 0.08f);
+        auto const drumX = slotX + drumInset;
+        auto const drumY = slotY + drumInset;
+        auto const drumW = std::max(slotW - (drumInset * 2.0f), 2.0f);
+        auto const drumH = std::max(slotH - (drumInset * 2.0f), 2.0f);
+        auto const drumCorner = std::min(drumW, drumH) * 0.3f;
+
+        auto const drumGeometry = [&]()
+            {
+                auto geometry = compositor.CreateRoundedRectangleGeometry();
+                geometry.Size(float2{ drumW, drumH });
+                geometry.Offset(float2{ drumX, drumY });
+                geometry.CornerRadius(float2{ drumCorner, drumCorner });
+
+                return geometry;
+            };
+
+        auto drumShape = compositor.CreateSpriteShape(drumGeometry());
+        drumShape.FillBrush(BrushFor(compositor, colors.Thumb));
+        drumShape.StrokeBrush(BrushFor(compositor, colors.Rim));
+        drumShape.StrokeThickness(1.0f);
+
+        visual.Shape.Shapes().Append(drumShape);
+
+        visual.ValueShape.Clip(compositor.CreateGeometricClip(drumGeometry()));
+
+        auto const length = vertical ? drumH : drumW;
+        auto const across = vertical ? drumW : drumH;
+
+        // How far the painted line travels from one end of the range to the other.
+        visual.WheelTravel = length * 0.8f;
+
+        visual.WheelDrum = compositor.CreateContainerShape();
+
+        // Ridges past both ends by the whole travel, so however far it turns there is never a
+        // bare patch rolling into view.
+        auto const spacing = std::clamp(length / 14.0f, 4.0f, 9.0f);
+        auto const ridgeBrush = BrushFor(compositor, colors.Marks);
+
+        for (auto along = -visual.WheelTravel; along <= length + visual.WheelTravel; along += spacing)
+        {
+            auto line = compositor.CreateLineGeometry();
+
+            if (vertical)
+            {
+                line.Start(float2{ drumX + (across * 0.15f), drumY + along });
+                line.End(float2{ drumX + (across * 0.85f), drumY + along });
+            }
+            else
+            {
+                line.Start(float2{ drumX + along, drumY + (across * 0.15f) });
+                line.End(float2{ drumX + along, drumY + (across * 0.85f) });
+            }
+
+            auto ridge = compositor.CreateSpriteShape(line);
+            ridge.StrokeBrush(ridgeBrush);
+            ridge.StrokeThickness(1.0f);
+
+            visual.WheelDrum.Shapes().Append(ridge);
+        }
+
+        // The painted line, in the control's own color. In the middle of the drum when the
+        // value is in the middle; the drum's offset does the rest.
+        auto const markThickness = std::max(2.0f, length * 0.035f);
+
+        auto markGeometry = compositor.CreateRoundedRectangleGeometry();
+
+        if (vertical)
+        {
+            markGeometry.Size(float2{ across * 0.9f, markThickness });
+            markGeometry.Offset(float2{ drumX + (across * 0.05f), drumY + (length * 0.5f) - (markThickness * 0.5f) });
+        }
+        else
+        {
+            markGeometry.Size(float2{ markThickness, across * 0.9f });
+            markGeometry.Offset(float2{ drumX + (length * 0.5f) - (markThickness * 0.5f), drumY + (across * 0.05f) });
+        }
+
+        markGeometry.CornerRadius(float2{ markThickness * 0.5f, markThickness * 0.5f });
+
+        auto mark = compositor.CreateSpriteShape(markGeometry);
+        mark.FillBrush(BrushFor(compositor, colors.Pipe));
+
+        visual.WheelDrum.Shapes().Append(mark);
+        visual.ValueShape.Shapes().Append(visual.WheelDrum);
+
+        // A drum is round, so its ends turn away into shadow. Fixed over the moving part.
+        auto shade = compositor.CreateLinearGradientBrush();
+
+        shade.StartPoint(vertical ? float2{ 0.0f, 0.0f } : float2{ 0.0f, 0.0f });
+        shade.EndPoint(vertical ? float2{ 0.0f, 1.0f } : float2{ 1.0f, 0.0f });
+        shade.ColorStops().Append(compositor.CreateColorGradientStop(0.0f, winrt::Windows::UI::ColorHelper::FromArgb(150, 0, 0, 0)));
+        shade.ColorStops().Append(compositor.CreateColorGradientStop(0.3f, winrt::Windows::UI::ColorHelper::FromArgb(0, 0, 0, 0)));
+        shade.ColorStops().Append(compositor.CreateColorGradientStop(0.7f, winrt::Windows::UI::ColorHelper::FromArgb(0, 0, 0, 0)));
+        shade.ColorStops().Append(compositor.CreateColorGradientStop(1.0f, winrt::Windows::UI::ColorHelper::FromArgb(150, 0, 0, 0)));
+
+        auto shadeShape = compositor.CreateSpriteShape(drumGeometry());
+        shadeShape.FillBrush(shade);
+
+        visual.ValueShape.Shapes().Append(shadeShape);
+
+        // Where a spring brings it back to, marked on the housing either side of the slot.
+        if (control.ReturnsToDefault)
+        {
+            auto const rest = static_cast<float>(std::clamp(control.DefaultValue, 0.0, 1.0));
+            auto const at = (length * 0.5f) + ((0.5f - rest) * visual.WheelTravel);
+            auto const markBrush = BrushFor(compositor, colors.Marks);
+
+            for (auto const side : { 0, 1 })
+            {
+                auto notch = compositor.CreateLineGeometry();
+
+                if (vertical)
+                {
+                    auto const y = drumY + at;
+                    auto const x = side == 0 ? slotX - inset * 0.8f : slotX + slotW + inset * 0.2f;
+
+                    notch.Start(float2{ x, y });
+                    notch.End(float2{ x + (inset * 0.6f), y });
+                }
+                else
+                {
+                    auto const x = drumX + (length - at);
+                    auto const y = side == 0 ? slotY - inset * 0.8f : slotY + slotH + inset * 0.2f;
+
+                    notch.Start(float2{ x, y });
+                    notch.End(float2{ x, y + (inset * 0.6f) });
+                }
+
+                auto notchShape = compositor.CreateSpriteShape(notch);
+                notchShape.StrokeBrush(markBrush);
+                notchShape.StrokeThickness(1.5f);
+
+                visual.Shape.Shapes().Append(notchShape);
+            }
+        }
+
+        visual.ArcGeometry = nullptr;
+    }
+
+    // ---------------------------------------------------------------- the switch
+
+    // One slice of the face per position, in a well, with the chosen one lit in the control's
+    // own color. The names are XAML text laid over the slices by LayoutSwitchLabels.
+    _Use_decl_annotations_
+    void SurfaceRenderer::LayoutSwitch(
+        Compositor const& compositor,
+        SurfaceVisual& visual,
+        Control const& control,
+        ControlColors const& colors,
+        float width,
+        float height)
+    {
+        auto const count = SwitchPositionCount(control);
+        auto const across = width >= height;
+
+        visual.SwitchPositions = count;
+        visual.SwitchSegments.clear();
+        visual.SwitchCells.clear();
+
+        auto const fieldX = FieldInset;
+        auto const fieldY = FieldInset;
+        auto const fieldW = std::max(width - (FieldInset * 2.0f), 4.0f);
+        auto const fieldH = std::max(height - (FieldInset * 2.0f), 4.0f);
+
+        AppendWell(compositor, visual, colors, fieldX, fieldY, fieldW, fieldH);
+
+        constexpr float gap = 3.0f;
+
+        auto const length = across ? fieldW : fieldH;
+        auto const slice = std::max((length - (gap * static_cast<float>(count + 1))) / static_cast<float>(count), 2.0f);
+        auto const thickness = std::max((across ? fieldH : fieldW) - (gap * 2.0f), 2.0f);
+        auto const corner = std::min(4.0f, std::min(slice, thickness) * 0.25f);
+
+        auto rest = colors.Marks;
+        rest.A = static_cast<uint8_t>(std::min<int>(rest.A, 44));
+
+        visual.SwitchRestFill = BrushFor(compositor, rest);
+        visual.SwitchLitFill = BrushFor(compositor, colors.Pipe);
+        visual.SwitchRestInk = ReadableInk(colors.Track);
+        visual.SwitchLitInk = ReadableInk(colors.Pipe);
+
+        for (int32_t position = 0; position < count; ++position)
+        {
+            auto const start = gap + (static_cast<float>(position) * (slice + gap));
+
+            auto const x = across ? fieldX + start : fieldX + gap;
+            auto const y = across ? fieldY + gap : fieldY + start;
+            auto const w = across ? slice : thickness;
+            auto const h = across ? thickness : slice;
+
+            auto geometry = compositor.CreateRoundedRectangleGeometry();
+            geometry.Size(float2{ w, h });
+            geometry.Offset(float2{ x, y });
+            geometry.CornerRadius(float2{ corner, corner });
+
+            auto segment = compositor.CreateSpriteShape(geometry);
+            segment.FillBrush(visual.SwitchRestFill);
+
+            visual.ValueShape.Shapes().Append(segment);
+            visual.SwitchSegments.push_back(segment);
+            visual.SwitchCells.push_back({ x, y, w, h });
+        }
+
+        visual.ArcGeometry = nullptr;
+    }
+
+    // ---------------------------------------------------------------- the step sequencer
+
+    // A slot per step, in a well, with a bar in each step that plays, as tall as it plays hard.
+    // A rest is an empty slot. The slot on each beat is a little brighter, so a pattern can be
+    // counted by eye, and the step being played is lit in the control's own color.
+    _Use_decl_annotations_
+    void SurfaceRenderer::LayoutSteps(
+        Compositor const& compositor,
+        SurfaceVisual& visual,
+        Control const& control,
+        ControlColors const& colors,
+        float width,
+        float height)
+    {
+        auto const count = SequencerStepCount(control.Steps);
+
+        visual.StepSlots.clear();
+        visual.StepBars.clear();
+        visual.StepSlotRestFills.clear();
+        visual.CurrentStep = -1;
+        visual.ArcGeometry = nullptr;
+
+        auto const fieldX = FieldInset;
+        auto const fieldY = FieldInset;
+        auto const fieldW = std::max(width - (FieldInset * 2.0f), 4.0f);
+        auto const fieldH = std::max(height - (FieldInset * 2.0f), 4.0f);
+
+        AppendWell(compositor, visual, colors, fieldX, fieldY, fieldW, fieldH);
+
+        if (count == 0)
+        {
+            return;
+        }
+
+        // Rows of up to sixteen, the way the step buttons on a drum machine wrap.
+        constexpr int32_t StepsPerRow = 16;
+        constexpr float gap = 3.0f;
+
+        auto const rows = (count + StepsPerRow - 1) / StepsPerRow;
+        auto const columns = (count + rows - 1) / rows;
+
+        auto const cellW = std::max((fieldW - (gap * static_cast<float>(columns + 1))) / static_cast<float>(columns), 2.0f);
+        auto const cellH = std::max((fieldH - (gap * static_cast<float>(rows + 1))) / static_cast<float>(rows), 2.0f);
+        auto const corner = std::min(3.0f, std::min(cellW, cellH) * 0.2f);
+        auto const inset = std::min(2.0f, cellW * 0.15f);
+
+        auto slot = colors.Marks;
+        slot.A = static_cast<uint8_t>(std::min<int>(slot.A, 34));
+
+        auto beat = colors.Marks;
+        beat.A = static_cast<uint8_t>(std::min<int>(beat.A, 62));
+
+        auto litSlot = colors.Pipe;
+        litSlot.A = static_cast<uint8_t>(std::lround(litSlot.A * 0.45));
+
+        // Dimmer at rest than the pipe on other controls, so the step being played stands out
+        // from across a room.
+        auto restBar = colors.Pipe;
+        restBar.A = static_cast<uint8_t>(std::lround(restBar.A * 0.40));
+
+        auto const slotBrush = BrushFor(compositor, slot);
+        auto const beatBrush = BrushFor(compositor, beat);
+
+        visual.StepSlotLitFill = BrushFor(compositor, litSlot);
+        visual.StepBarRestFill = BrushFor(compositor, restBar);
+        visual.StepBarLitFill = BrushFor(compositor, colors.Pipe);
+
+        // Triplets count in threes; anything slower than a step a beat puts every step on one.
+        auto const perBeat = std::max(1, static_cast<int32_t>(std::lround(control.Steps.StepsPerBeat)));
+
+        for (int32_t index = 0; index < count; ++index)
+        {
+            auto const x = fieldX + gap + (static_cast<float>(index % columns) * (cellW + gap));
+            auto const y = fieldY + gap + (static_cast<float>(index / columns) * (cellH + gap));
+
+            auto slotGeometry = compositor.CreateRoundedRectangleGeometry();
+            slotGeometry.Size(float2{ cellW, cellH });
+            slotGeometry.Offset(float2{ x, y });
+            slotGeometry.CornerRadius(float2{ corner, corner });
+
+            auto const restFill = (index % perBeat) == 0 ? beatBrush : slotBrush;
+
+            auto slotShape = compositor.CreateSpriteShape(slotGeometry);
+            slotShape.FillBrush(restFill);
+
+            visual.ValueShape.Shapes().Append(slotShape);
+            visual.StepSlots.push_back(slotShape);
+            visual.StepSlotRestFills.push_back(restFill);
+
+            auto const& step = control.Steps.Pattern[static_cast<size_t>(index)];
+
+            CompositionSpriteShape barShape{ nullptr };
+
+            if (step.On)
+            {
+                // Never so short it vanishes: a quiet step still plays.
+                auto const velocity = static_cast<float>(std::clamp(step.Velocity, 0.0, 1.0));
+                auto const barW = std::max(cellW - (inset * 2.0f), 1.0f);
+                auto const barH = std::max((cellH - (inset * 2.0f)) * (0.15f + (0.85f * velocity)), 1.0f);
+
+                auto barGeometry = compositor.CreateRoundedRectangleGeometry();
+                barGeometry.Size(float2{ barW, barH });
+                barGeometry.Offset(float2{ x + inset, y + cellH - inset - barH });
+                barGeometry.CornerRadius(float2{ std::min(corner, barW * 0.3f), std::min(corner, barW * 0.3f) });
+
+                barShape = compositor.CreateSpriteShape(barGeometry);
+                barShape.FillBrush(visual.StepBarRestFill);
+
+                visual.ValueShape.Shapes().Append(barShape);
+            }
+
+            visual.StepBars.push_back(barShape);
+        }
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::SetCurrentStep(size_t itemIndex, int32_t stepIndex) noexcept
+    {
+        if (itemIndex >= m_visuals.size())
+        {
+            return;
+        }
+
+        auto& visual = m_visuals[itemIndex];
+
+        if (visual.Kind != ControlKind::Steps || visual.StepSlots.empty() || visual.CurrentStep == stepIndex)
+        {
+            return;
+        }
+
+        try
+        {
+            auto const paint = [&visual](int32_t index, bool lit)
+                {
+                    if (index < 0 || static_cast<size_t>(index) >= visual.StepSlots.size())
+                    {
+                        return;
+                    }
+
+                    auto const at = static_cast<size_t>(index);
+
+                    visual.StepSlots[at].FillBrush(lit ? visual.StepSlotLitFill : visual.StepSlotRestFills[at]);
+
+                    if (auto const& bar = visual.StepBars[at])
+                    {
+                        bar.FillBrush(lit ? visual.StepBarLitFill : visual.StepBarRestFill);
+                    }
+                };
+
+            paint(visual.CurrentStep, false);
+            paint(stepIndex, true);
+
+            visual.CurrentStep = stepIndex;
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void SurfaceRenderer::LayoutSwitchLabels(size_t itemIndex, Control const& control)
+    {
+        if (itemIndex >= m_padNames.size() || itemIndex >= m_visuals.size() || m_host == nullptr)
+        {
+            return;
+        }
+
+        auto& names = m_padNames[itemIndex];
+        auto const& visual = m_visuals[itemIndex];
+
+        if (visual.SwitchCells.empty())
+        {
+            return;
+        }
+
+        try
+        {
+            controls::Canvas host{};
+
+            host.IsHitTestVisible(false);
+            host.Width(std::max(control.Width, 4.0));
+            host.Height(std::max(control.Height, 4.0));
+
+            // The switch is one control to a screen reader, which reads the chosen position as
+            // its value. Every name read out again would be noise.
+            xaml::Automation::AutomationProperties::SetAccessibilityView(
+                host, xaml::Automation::Peers::AccessibilityView::Raw);
+
+            media::Brush const restInk = media::SolidColorBrush{ ToWindowsColor(visual.SwitchRestInk) };
+            media::Brush const litInk = media::SolidColorBrush{ ToWindowsColor(visual.SwitchLitInk) };
+
+            auto const chosen = static_cast<size_t>(SwitchPositionAt(
+                itemIndex < m_values.size() ? m_values[itemIndex] : 0.0, visual.SwitchPositions));
+
+            auto const unbounded = winrt::Windows::Foundation::Size{
+                std::numeric_limits<float>::infinity(),
+                std::numeric_limits<float>::infinity() };
+
+            for (size_t position = 0; position < visual.SwitchCells.size(); ++position)
+            {
+                auto const& cell = visual.SwitchCells[position];
+
+                auto const name = position < control.Switch.Positions.size()
+                    ? control.Switch.Positions[position]
+                    : std::to_wstring(position + 1);
+
+                controls::TextBlock text{};
+
+                text.Text(winrt::hstring{ name });
+                text.FontSize(std::clamp(cell.w * 0.42f, 9.0f, 16.0f));
+                text.FontFamily(media::FontFamily{ L"Segoe UI Variable Text" });
+                text.FontWeight(winrt::Windows::UI::Text::FontWeight{ 600 });
+                text.TextAlignment(xaml::TextAlignment::Center);
+                text.TextTrimming(xaml::TextTrimming::CharacterEllipsis);
+                text.MaxLines(1);
+                text.Width(std::max(cell.z - 4.0f, 1.0f));
+                text.IsHitTestVisible(false);
+                text.Foreground(position == chosen ? litInk : restInk);
+
+                text.Measure(unbounded);
+
+                controls::Canvas::SetLeft(text, cell.x + 2.0f);
+                controls::Canvas::SetTop(text, cell.y + ((cell.w - text.DesiredSize().Height) * 0.5f));
+
+                host.Children().Append(text);
+
+                names.Texts.push_back(text);
+                names.RestInks.push_back(restInk);
+                names.LitInks.push_back(litInk);
+            }
+
+            controls::Canvas::SetLeft(host, control.X);
+            controls::Canvas::SetTop(host, control.Y);
+
+            m_host.Children().Append(host);
+            names.Host = host;
+        }
+        catch (...)
+        {
+            names = PadNameTexts{};
+        }
     }
 
     // ------------------------------------------------------------------ two axis
@@ -1804,6 +2281,12 @@ namespace glass
 
         auto const drop = [&]()
             {
+                if (itemIndex < m_videos.size() && m_videos[itemIndex] != nullptr)
+                {
+                    CloseVideo(*m_videos[itemIndex]);
+                    m_videos[itemIndex] = nullptr;
+                }
+
                 if (m_pictures[itemIndex] == nullptr)
                 {
                     return;
@@ -1865,12 +2348,22 @@ namespace glass
                 container, xaml::Automation::Peers::AccessibilityView::Raw);
 
             xaml::FrameworkElement content{ nullptr };
+            std::shared_ptr<SurfaceVideo> video{};
 
             auto const picture = control.Image;
 
             if (IsVideoFileName(control.Image.FileName))
             {
-                content = BuildVideoContent(uri, picture, width, height);
+                // Clicks and the bar belong to an image control. A panel's fill sits behind the
+                // controls on the panel, so it only plays.
+                video = CreateVideo(uri, picture, width, height, control.Kind == ControlKind::Image);
+
+                if (control.Kind == ControlKind::Image && itemIndex < m_elements.size())
+                {
+                    video->Owner = m_elements[itemIndex];
+                }
+
+                content = video->Element;
             }
             else
             {
@@ -1898,6 +2391,13 @@ namespace glass
             if (auto const wash = BuildPictureTint(picture, width, height); wash != nullptr)
             {
                 container.Children().Append(wash);
+            }
+
+            // The bar goes over both, so it can always be seen.
+            if (video != nullptr && itemIndex < m_videos.size())
+            {
+                m_videos[itemIndex] = video;
+                LayoutScrubber(*video);
             }
 
             controls::Canvas::SetLeft(container, control.X);
@@ -1957,114 +2457,6 @@ namespace glass
         controls::Canvas::SetTop(wash, 0.0);
 
         return wash;
-    }
-
-    _Use_decl_annotations_
-    xaml::FrameworkElement SurfaceRenderer::BuildVideoContent(
-        foundation::Uri const& uri,
-        Picture const& picture,
-        double width,
-        double height)
-    {
-        // A video on a control surface that stops four seconds in looks broken, so a loop is
-        // the default and the customer turns it off rather than on.
-        winrt::Windows::Media::Playback::MediaPlayer media{};
-
-        media.IsLoopingEnabled(picture.Loops);
-        media.AutoPlay(true);
-
-        // Silent, and silent the expensive way as well as the cheap one: muting stops the
-        // sound, deselecting the audio track stops it being decoded at all. A layout is a
-        // control surface, and audio out of a decorative clip during a set is never what
-        // anybody wanted.
-        media.IsMuted(true);
-        media.Volume(0.0);
-
-        // Everything from here to the source is a nicety. None of it is allowed to take the
-        // picture down with it if a particular file or a particular Windows build disagrees.
-        try
-        {
-            // Without this every clip on the page registers with the system media transport
-            // controls, so the keyboard's play button and the volume flyout start driving a
-            // piece of somebody's stage backdrop.
-            media.CommandManager().IsEnabled(false);
-        }
-        catch (...)
-        {
-        }
-
-        auto const source = winrt::Windows::Media::Core::MediaSource::CreateFromUri(uri);
-
-        try
-        {
-            // Muting stops the sound; deselecting the track stops it being decoded at all. The
-            // list is empty until the file has been opened, so the event is where the work
-            // really happens and this first call is only for a source that opened early.
-            winrt::Windows::Media::Playback::MediaPlaybackItem const item{ source };
-
-            item.AudioTracksChanged([](auto const& sender, auto const&)
-                {
-                    try
-                    {
-                        sender.AudioTracks().SelectedIndex(-1);
-                    }
-                    catch (...)
-                    {
-                    }
-                });
-
-            try
-            {
-                item.AudioTracks().SelectedIndex(-1);
-            }
-            catch (...)
-            {
-            }
-
-            media.Source(item);
-        }
-        catch (...)
-        {
-            media.Source(source);
-        }
-
-        controls::MediaPlayerElement player{};
-
-        player.AreTransportControlsEnabled(false);
-        player.AutoPlay(true);
-
-        // The element is already at the exact size the crop wants, so it must not do any
-        // fitting of its own on top of that.
-        player.Stretch(media::Stretch::Fill);
-        player.SetMediaPlayer(media);
-
-        // The natural size is not known until the file has been opened, and it arrives on a
-        // media thread. Until then the clip fills the control.
-        auto const weak = winrt::make_weak(player.as<xaml::FrameworkElement>());
-        auto const queue = player.DispatcherQueue();
-
-        media.PlaybackSession().NaturalVideoSizeChanged(
-            [weak, queue, picture, width, height](auto const& session, auto const&)
-            {
-                auto const naturalWidth = static_cast<double>(session.NaturalVideoWidth());
-                auto const naturalHeight = static_cast<double>(session.NaturalVideoHeight());
-
-                if (naturalWidth <= 0.0 || naturalHeight <= 0.0 || queue == nullptr)
-                {
-                    return;
-                }
-
-                queue.TryEnqueue([weak, picture, width, height, naturalWidth, naturalHeight]()
-                    {
-                        if (auto const element = weak.get())
-                        {
-                            ArrangePictureContent(
-                                element, picture, width, height, naturalWidth, naturalHeight);
-                        }
-                    });
-            });
-
-        return player;
     }
 
     _Use_decl_annotations_

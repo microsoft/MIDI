@@ -7,25 +7,25 @@ implements: Windows.Foundation.IStringable, Windows.Devices.Midi2.IMidiUniversal
 description: Represents a two-word (64-bit) UMP message
 ---
 
-`MidiMessage64` is used for some data messages and for MIDI 2.0 Channel Voice messages.
+`MidiMessage64` holds a two-word (64-bit) Universal MIDI Packet. MIDI 2.0 channel voice messages and System Exclusive 7 messages are this size.
 
 ## Properties and Methods
 
-Includes all functions and properties in `IMidiUniversalPacket`, as well as:
+It has everything in [`IMidiUniversalPacket`]({{ site.baseurl }}/sdk-reference/IMidiUniversalPacket/), plus:
 
 | Property | Description |
 | -------- | ----------- |
-| `Word0` | First 32-bit MIDI word|
-| `Word1` | Second 32-bit MIDI word |
+| `Word0` | The first 32-bit word |
+| `Word1` | The second 32-bit word |
 
-| Function | Description |
+| Constructor | Description |
 | -------- | ----------- |
-| `MidiMessage64()` | Default constructor |
-| `MidiMessage64(timestamp, word0, word1)` | Construct a new message with a timestamp and all 32-bit MIDI words |
-| `MidiMessage64(timestamp, words)` | Construct a new message from a timestamp and array of 32-bit words |
+| `MidiMessage64()` | Creates an empty message |
+| `MidiMessage64(timestamp, word0, word1)` | Creates a message with this timestamp and both words |
+| `MidiMessage64(timestamp, words)` | Creates a message with this timestamp from an array of 32-bit words |
 
 ## Static Methods
 
 | Static Method | Description |
 | ------------- | ----------- |
-| `CreateFromStruct(timestamp, message)` | Creates a `MidiMessage64` from a `MidiMessageStruct` and a timestamp |
+| `CreateFromStruct(timestamp, message)` | Creates a `MidiMessage64` from a `MidiMessageStruct`, with this timestamp |

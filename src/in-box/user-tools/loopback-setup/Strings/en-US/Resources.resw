@@ -672,4 +672,31 @@
     <value>{0} is not an option this tool understands.</value>
     <comment>{0} is the argument as the customer typed it</comment>
   </data>
+
+  <!-- feedback protection -->
+  <data name="LoopbackFeedbackBar.Title" xml:space="preserve">
+    <value>Feedback detected</value>
+  </data>
+  <data name="LoopbackFeedbackBar.Message" xml:space="preserve">
+    <value>MIDI sent into a loopback kept coming back into it, so that loopback was muted to stop it. Find the app that sends what it receives back out to the same loopback, and turn that off. Then unmute the loopback.</value>
+  </data>
+  <data name="FeedbackProtectionComboBox.Header" xml:space="preserve">
+    <value>If MIDI feeds back into this loopback</value>
+  </data>
+  <data name="FeedbackProtectionMuteItem.Content" xml:space="preserve">
+    <value>Mute the loopback (recommended)</value>
+  </data>
+  <data name="FeedbackProtectionOffItem.Content" xml:space="preserve">
+    <value>Do nothing</value>
+  </data>
+  <data name="FeedbackProtectionHelp.Text" xml:space="preserve">
+    <value>Feedback is when an app sends what it receives back out to the same loopback, so the same MIDI goes around and around.</value>
+  </data>
+  <data name="MutedForFeedbackTextFormat" xml:space="preserve">
+    <value>Muted on {0} at {1} because MIDI was feeding back into it. Fix the loop, then unmute.</value>
+    <comment>{0} is a short date and {1} a time, both in the customer's own format</comment>
+  </data>
+  <data name="MutedForFeedbackText" xml:space="preserve">
+    <value>Muted because MIDI was feeding back into it. Fix the loop, then unmute.</value>
+  </data>
 </root>

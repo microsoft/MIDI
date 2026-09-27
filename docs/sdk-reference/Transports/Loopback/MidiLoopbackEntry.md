@@ -6,13 +6,16 @@ type: runtimeclass
 description: Represents an active loopback endpoint pair instance
 ---
 
-This class represents an active transient loopback endpoint pair. Instances are returned by `MidiLoopbackManager.GetActiveLoopbackEntries()` and in `MidiLoopbackCreationResponse.CreatedLoopbackEntry`.
+A temporary loopback endpoint pair that exists right now. You get these from `MidiLoopbackManager.GetActiveLoopbackEntries()` and `MidiLoopbackCreationResponse.CreatedLoopbackEntry`.
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `AssociationId` | The GUID that uniquely identifies this loopback pair |
-| `EndpointA` | A `MidiLoopbackEndpointEntry` with information about the A-side endpoint |
-| `EndpointB` | A `MidiLoopbackEndpointEntry` with information about the B-side endpoint |
-| `IsMuted` | True if this loopback pair is currently muted |
+| `AssociationId` | The GUID that identifies this loopback pair |
+| `EndpointA` | A `MidiLoopbackEndpointEntry` for the A side |
+| `EndpointB` | A `MidiLoopbackEndpointEntry` for the B side |
+| `IsMuted` | True if this loopback pair is muted now |
+| `FeedbackProtection` | The pair's [`MidiLoopbackFeedbackProtection`]({{ site.baseurl }}/sdk-reference/Transports/Loopback/MidiLoopbackFeedbackProtectionEnum/) setting. `Off` when the transport on this PC can't watch for feedback |
+| `IsMutedForFeedback` | True when the pair was muted because MIDI was feeding back into it. Any change to the muted state clears it |
+| `FeedbackDetectedTime` | When the feedback was found. Zero unless `IsMutedForFeedback` is true |

@@ -12,13 +12,13 @@ Reported by `MidiNetworkConfiguredClient.EntryState`.
 
 | Value | Numeric Value | Description |
 | ----- | ------------- | ----------- |
-| `Pending` | `0` | Configured, and waiting for the service to connect it |
-| `Active` | `1` | The service has created the client. Use `IsSessionActive` for whether MIDI is flowing |
-| `Failed` | `2` | The configuration entry itself was rejected, so retrying cannot help |
-| `Unavailable` | `3` | A direct connection which stopped answering. The service will not retry it on its own |
+| `Pending` | `0` | Set up, and waiting for the service to connect it |
+| `Active` | `1` | The service has created the client. Use `IsSessionActive` to see whether MIDI is flowing |
+| `Failed` | `2` | The configuration entry itself was rejected, so trying again can't help |
+| `Unavailable` | `3` | A direct connection that stopped answering. The service won't try it again on its own |
 
 ## Remarks
 
-`Unavailable` applies only to direct address connections. Nothing announces that a fixed address has come back, so the service stops inviting it rather than putting traffic on the wire indefinitely. Call `ConnectNetworkClientAsync` again with the same `ClientId` to retry.
+`Unavailable` only applies to direct address connections. Nothing announces that a fixed address is back, so the service stops sending it invitations, instead of sending network traffic forever. Call `ConnectNetworkClientAsync` again with the same `ClientId` to retry.
 
-A discovered (mDNS) client never reaches `Unavailable`: it returns to `Pending` and is picked up again whenever the host advertises.
+A discovered (mDNS) client never becomes `Unavailable`. It goes back to `Pending`, and it's picked up again whenever the host advertises.

@@ -36,6 +36,9 @@
     <ClCompile Include="Midi2.LoopbackMidiBidi.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="MidiLoopbackFeedback.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Midi2LoopbackMidiPluginMetadataProvider.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -83,6 +86,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MidiLoopbackDevice.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MidiLoopbackFeedback.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="MidiLoopbackDeviceTable.h">

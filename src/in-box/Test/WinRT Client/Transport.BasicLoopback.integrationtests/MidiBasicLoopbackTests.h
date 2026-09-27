@@ -53,6 +53,15 @@ public:
 
     TEST_METHOD(TestUnicodeGtbAndDeviceNames);
 
+    // Feedback protection. Each skips when the transport on this PC cannot watch for feedback.
+    TEST_METHOD(TestFeedbackProtectionDefaultsToMute);
+    TEST_METHOD(TestCreateWithFeedbackProtectionOff);
+    TEST_METHOD(TestSetFeedbackProtection);
+    TEST_METHOD(TestSetFeedbackProtectionRejectsUnknownValue);
+    TEST_METHOD(TestFeedbackLoopMutesLoopback);
+    TEST_METHOD(TestFeedbackLoopWithProtectionOffIsNotMuted);
+    TEST_METHOD(TestSteadyTrafficIsNotMuted);
+
 private:
 
     MidiTest::DeviceNodeTracker m_deviceNodeTracker{};

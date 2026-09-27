@@ -7,36 +7,36 @@ implements: Windows.Foundation.IClosable, Windows.Foundation.IStringable
 description: The first class you will create when connecting to an endpoint
 ---
 
-Before you can connect to an endpoint, you must start a new MIDI session. 
+You need a session before you can connect to an endpoint.
 
-An application may have any number of sessions open. For example, the application may open one session per open project, or one session per tab in the case of a browser. The lifetime of endpoint connections opened through a session are controlled through the session.
+An application can have as many sessions open as it needs. For example, it might open one session for each open project, or a browser might open one for each tab. The connections you open through a session last only as long as the session does.
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `SessionId`  | Generated Id for the session |
-| `Name` | Name for this session. To change the name after creating the session, use the `UpdateName()` function. This will update the service |
+| `SessionId`  | A GUID that identifies the session. The API creates it for you |
+| `Name` | The session's name. To change it later, call `UpdateName()`, which also tells the service |
 | `IsOpen` | True if this session is open and ready to use |
-| `Connections` | Map of all endpoint connections created through this session. Disconnecting an endpoint using `DisconnectEndpointConnection` will remove the connection from this map. The map key is the generated connection GUID that identifies an instance of an endpoint connection |
+| `Connections` | A map of every connection created through this session. The key is each connection's `ConnectionId`. Calling `DisconnectEndpointConnection` removes the connection from the map |
 
 ## Static Methods
 
-The two static functions are factory-pattern methods for creating a new session.
-
-| `Create(sessionName)` | Create and return a new session with the specified name |
+| Static Method | Description |
+| ------------- | ----------- |
+| `Create(sessionName)` | Creates and returns a new session with this name. Tools that list sessions show the name, so pick one that tells people which application it belongs to |
 
 ## Methods
 
 | Method | Description |
 | ------ | ----------- |
-| `CreateEndpointConnection(endpointDeviceId)` | Create a new connection to the specified endpoint device Id |
-| `CreateEndpointConnection(endpointDeviceId, settings)` | Create a new connection to the specified endpoint device Id, with the provided [`MidiEndpointConnectionSettings`]({{ site.baseurl }}/sdk-reference/MidiEndpointConnectionSettings/) |
-| `DisconnectEndpointConnection(endpointConnectionId)` | Cleanly disconnect an endpoint connection and remove it from the connection map |
-| `UpdateName(newName)` | Update the name of this session locally and in the MIDI Service |
+| `CreateEndpointConnection(endpointDeviceId)` | Creates a connection to the endpoint with this id. The connection isn't open yet: attach your event handlers, and then call `Open()` |
+| `CreateEndpointConnection(endpointDeviceId, settings)` | The same, using the [`MidiEndpointConnectionSettings`]({{ site.baseurl }}/sdk-reference/MidiEndpointConnectionSettings/) you pass in |
+| `DisconnectEndpointConnection(endpointConnectionId)` | Closes a connection and removes it from `Connections` |
+| `UpdateName(newName)` | Changes the session's name, both here and in the MIDI service |
+| `Close()` | (From `IClosable`) Closes the session and every connection opened through it |
 
-> <h4>Note</h4>
-> If you manually close a MidiEndpointConnection using `IClosable` (or `IDisposable`), it will not be removed from the MidiSession's collection of endpoints. Instead, use the `DisconnectEndpointConnection` method of the session to keep both in sync. For that reason, we do not recommend that you wrap the `CreateEndpointConnection` calls in a using statement.
+> **Note:** If you close a `MidiEndpointConnection` yourself through `IClosable` (or `IDisposable` in C#), the session doesn't know, and the connection stays in its `Connections` map. Call the session's `DisconnectEndpointConnection` instead so the two stay in step. That's also why we don't recommend putting `CreateEndpointConnection` calls in a `using` statement.
 
 ### Samples
 
@@ -50,8 +50,8 @@ using (var session = MidiSession.Create("API Sample Session"))
 
 C++
 ```cpp
-// remember to initialize the WinRT apartment and also initialize the WinRT API 
-// runtime first. See samples for example code 
+// Initialize the WinRT apartment and the WinRT API runtime first.
+// The samples show how.
 
 auto session = MidiSession::Create("API Sample Session");
 

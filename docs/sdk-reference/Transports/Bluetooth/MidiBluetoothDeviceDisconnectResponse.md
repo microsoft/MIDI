@@ -12,9 +12,9 @@ Returned by `MidiBluetoothTransportManager.DisconnectDeviceAsync`.
 
 | Property | Description |
 | -------- | ----------- |
-| `Success` | True when the device was disconnected. |
-| `ErrorCode` | A `MidiBluetoothDeviceDisconnectErrorCode`. |
-| `ErrorMessage` | The transport's own wording for the failure. |
-| `ErrorHResult` | The raw HRESULT. |
+| `Success` | True when the device was disconnected |
+| `ErrorCode` | A `MidiBluetoothDeviceDisconnectErrorCode` |
+| `ErrorMessage` | The transport's own wording for the failure |
+| `ErrorHResult` | The original HRESULT error number |
 
-`NotConnected` and `DeviceNotFound` are not necessarily failures worth stopping for. Removing a device from the configuration file is still meaningful when it is not connected, which is exactly when a customer is most likely to want it.
+`NotConnected` and `DeviceNotDiscovered` aren't always failures worth stopping for. Removing a device from the configuration still makes sense when it isn't connected, and that's exactly when people are most likely to want to do it.

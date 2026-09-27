@@ -6,19 +6,19 @@ type: struct
 description: One tempo change in a sequence, in both the file's terms and in beats per minute
 ---
 
-`MidiSequenceTempoChange` is one entry in the tempo map of a [`MidiSequence`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequence/). Get them from the sequence's `TempoMap` collection, which is sparse enough to hand over whole.
+`MidiSequenceTempoChange` is one entry in the tempo map of a [`MidiSequence`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequence/). Get them from the sequence's `TempoMap` collection, which is small enough to hand over whole.
 
 ## Struct Fields
 
 | Field | Description |
 | ----- | ----------- |
 | `Tick` | Where the change takes effect |
-| `MicrosecondsPerQuarterNote` | The tempo as the file stores it |
-| `BeatsPerMinute` | The same tempo, derived, as quarter notes per minute |
-| `MicrosecondsAtTick` | Where this tick falls in time, so a position lookup does not have to walk the map |
+| `MicrosecondsPerQuarterNote` | The tempo the way the file stores it |
+| `BeatsPerMinute` | The same tempo, worked out as quarter notes per minute |
+| `MicrosecondsAtTick` | Where this tick falls in time, so looking up a position doesn't have to go through the whole map |
 
 ## Remarks
 
-A file stores tempo as microseconds per quarter note and never as a beats per minute value, so `BeatsPerMinute` here is derived.
+A file stores tempo as microseconds per quarter note, never as beats per minute, so `BeatsPerMinute` here is worked out from it.
 
-It is also **always quarter notes per minute regardless of the meter in force**, which is what the file format defines and what a sequencer transport shows. In a compound meter such as 6/8 the conducted pulse is a dotted quarter, so this number is exact but is not the felt tempo. If your application shows a conductor's tempo rather than a transport tempo, convert it yourself using the [`MidiSequenceTimeSignature`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequenceTimeSignature/) in force.
+It's also **always quarter notes per minute, whatever the time signature**. That's what the file format defines, and what a sequencer's transport shows. In a time signature like 6/8, the beat you'd count or conduct is a dotted quarter note, so this number is correct but isn't the tempo you feel. If your app shows a conductor's tempo instead of a transport tempo, convert it yourself, using the [`MidiSequenceTimeSignature`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequenceTimeSignature/) in effect.

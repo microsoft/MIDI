@@ -638,6 +638,8 @@ namespace winrt::midiloopbacksetup::implementation
                 snapshot.Loopback.CanCustomize = midi2svc::MidiServiceTransportPluginConfigManager::QueryCapability(
                     transportId, MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_ENDPOINT);
 
+                snapshot.Loopback.CanProtectFromFeedback = midi2loop::MidiLoopbackManager::IsFeedbackProtectionAvailable();
+
                 // either side answering means the pair is there, which is what the settings app
                 // used to check before offering to make one
                 snapshot.Loopback.DefaultExists =
@@ -672,6 +674,8 @@ namespace winrt::midiloopbacksetup::implementation
 
                 snapshot.BasicLoopback.CanCustomize = midi2svc::MidiServiceTransportPluginConfigManager::QueryCapability(
                     transportId, MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_CUSTOMIZE_ENDPOINT);
+
+                snapshot.BasicLoopback.CanProtectFromFeedback = midi2bloop::MidiBasicLoopbackManager::IsFeedbackProtectionAvailable();
 
                 snapshot.BasicLoopback.DefaultExists =
                     midi2bloop::MidiBasicLoopbackManager::DoesLoopbackExist(native::DefaultBasicLoopbackUniqueId);
@@ -773,6 +777,47 @@ namespace winrt::midiloopbacksetup::implementation
 
             m_appliedPageFallback = true;
 
+            // Opened from a feedback notification: start where the muted loopback is, if only one
+            // page has one. Otherwise the usual rules below apply.
+            if (App::StartupOptions().ShowFeedback)
+            {
+                bool loopbackHasFeedback{ false };
+                bool basicHasFeedback{ false };
+
+                if (snapshot.Loopback.CanProtectFromFeedback && snapshot.LoopbackEntries != nullptr)
+                {
+                    for (auto const& entry : snapshot.LoopbackEntries)
+                    {
+                        if (entry != nullptr && entry.IsMutedForFeedback())
+                        {
+                            loopbackHasFeedback = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (snapshot.BasicLoopback.CanProtectFromFeedback && snapshot.BasicLoopbackEntries != nullptr)
+                {
+                    for (auto const& entry : snapshot.BasicLoopbackEntries)
+                    {
+                        if (entry != nullptr && entry.IsMutedForFeedback())
+                        {
+                            basicHasFeedback = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (loopbackHasFeedback != basicHasFeedback)
+                {
+                    MainNavigation().SelectedItem(loopbackHasFeedback ?
+                        LoopbacksNavigationItem().as<foundation::IInspectable>() :
+                        BasicLoopbacksNavigationItem().as<foundation::IInspectable>());
+
+                    return;
+                }
+            }
+
             auto const basicUsable = snapshot.BasicLoopback.Available && snapshot.BasicLoopback.CanList;
             auto const loopbackUsable = snapshot.Loopback.Available;
 
@@ -832,6 +877,14 @@ namespace winrt::midiloopbacksetup::implementation
             EditLoopbackImagePanel().Visibility(
                 transport.CanSetImage ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
+            m_loopbackCanProtectFromFeedback = transport.CanProtectFromFeedback;
+
+            LoopbackFeedbackPanel().Visibility(
+                transport.CanProtectFromFeedback ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            EditLoopbackFeedbackPanel().Visibility(
+                transport.CanProtectFromFeedback ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
             // there is only ever one default pair, so the offer disappears once it exists
             CreateDefaultLoopbackButton().Visibility(
                 (usable && !transport.DefaultExists) ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
@@ -840,9 +893,12 @@ namespace winrt::midiloopbacksetup::implementation
             {
                 m_loopbacks.Clear();
                 NoLoopbacksText().Visibility(xaml::Visibility::Collapsed);
+                LoopbackFeedbackBar().IsOpen(false);
 
                 return;
             }
+
+            bool anyMutedForFeedback{ false };
 
             std::vector<native::LoopbackRowData> incoming{};
 
@@ -874,6 +930,14 @@ namespace winrt::midiloopbacksetup::implementation
                     row.DisplayName = PairDisplayName(row.NameA, row.NameB);
 
                     row.IsMuted = entry.IsMuted();
+
+                    // an older transport never reports these, and the SDK then says it is off
+                    row.IsMutedForFeedback = transport.CanProtectFromFeedback && entry.IsMutedForFeedback();
+                    row.IsFeedbackProtectionOn = transport.CanProtectFromFeedback &&
+                        entry.FeedbackProtection() == midi2loop::MidiLoopbackFeedbackProtection::Mute;
+                    row.FeedbackText = FeedbackStatusText(row.IsMutedForFeedback, entry.FeedbackDetectedTime());
+                    anyMutedForFeedback = anyMutedForFeedback || row.IsMutedForFeedback;
+
                     row.MuteButtonLabel = res::GetString(row.IsMuted ? L"UnmuteButtonText" : L"MuteButtonText");
                     row.MuteButtonAccessibleName = res::FormatString(
                         row.IsMuted ? L"UnmuteButtonAccessibleNameFormat" : L"MuteButtonAccessibleNameFormat",
@@ -892,6 +956,8 @@ namespace winrt::midiloopbacksetup::implementation
             }
 
             ReconcileRows(m_loopbacks, incoming, transport.DisplayOrders, m_loopbackOrder, transport.CanMute, transport.CanCustomize);
+
+            LoopbackFeedbackBar().IsOpen(anyMutedForFeedback);
 
             NoLoopbacksText().Visibility(
                 m_loopbacks.Size() == 0 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
@@ -921,6 +987,14 @@ namespace winrt::midiloopbacksetup::implementation
             EditBasicLoopbackImagePanel().Visibility(
                 transport.CanSetImage ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
+            m_basicLoopbackCanProtectFromFeedback = transport.CanProtectFromFeedback;
+
+            BasicLoopbackFeedbackPanel().Visibility(
+                transport.CanProtectFromFeedback ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            EditBasicLoopbackFeedbackPanel().Visibility(
+                transport.CanProtectFromFeedback ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
             CreateDefaultBasicLoopbackButton().Visibility(
                 (usable && !transport.DefaultExists) ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
 
@@ -928,9 +1002,12 @@ namespace winrt::midiloopbacksetup::implementation
             {
                 m_basicLoopbacks.Clear();
                 NoBasicLoopbacksText().Visibility(xaml::Visibility::Collapsed);
+                BasicLoopbackFeedbackBar().IsOpen(false);
 
                 return;
             }
+
+            bool anyMutedForFeedback{ false };
 
             std::vector<native::LoopbackRowData> incoming{};
 
@@ -956,6 +1033,13 @@ namespace winrt::midiloopbacksetup::implementation
                     row.DisplayName = row.NameA.empty() ? res::GetString(L"UnnamedLoopback") : row.NameA;
 
                     row.IsMuted = entry.IsMuted();
+
+                    row.IsMutedForFeedback = transport.CanProtectFromFeedback && entry.IsMutedForFeedback();
+                    row.IsFeedbackProtectionOn = transport.CanProtectFromFeedback &&
+                        entry.FeedbackProtection() == midi2bloop::MidiBasicLoopbackFeedbackProtection::Mute;
+                    row.FeedbackText = FeedbackStatusText(row.IsMutedForFeedback, entry.FeedbackDetectedTime());
+                    anyMutedForFeedback = anyMutedForFeedback || row.IsMutedForFeedback;
+
                     row.MuteButtonLabel = res::GetString(row.IsMuted ? L"UnmuteButtonText" : L"MuteButtonText");
                     row.MuteButtonAccessibleName = res::FormatString(
                         row.IsMuted ? L"UnmuteButtonAccessibleNameFormat" : L"MuteButtonAccessibleNameFormat",
@@ -978,10 +1062,58 @@ namespace winrt::midiloopbacksetup::implementation
 
             ReconcileRows(m_basicLoopbacks, incoming, transport.DisplayOrders, m_basicLoopbackOrder, transport.CanMute, transport.CanCustomize);
 
+            BasicLoopbackFeedbackBar().IsOpen(anyMutedForFeedback);
+
             NoBasicLoopbacksText().Visibility(
                 m_basicLoopbacks.Size() == 0 ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
         }
         MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to show the current basic loopbacks.")
+    }
+
+    _Use_decl_annotations_
+    winrt::hstring MainWindow::FeedbackStatusText(
+        bool const isMutedForFeedback,
+        foundation::DateTime const& detectedTime) noexcept
+    {
+        if (!isMutedForFeedback)
+        {
+            return {};
+        }
+
+        try
+        {
+            auto const ticks = detectedTime.time_since_epoch().count();
+
+            SYSTEMTIME utc{};
+            SYSTEMTIME local{};
+
+            // a DateTime and a FILETIME count the same ticks from the same epoch
+            FILETIME fileTime{};
+            fileTime.dwLowDateTime = static_cast<DWORD>(static_cast<uint64_t>(ticks) & 0xFFFFFFFF);
+            fileTime.dwHighDateTime = static_cast<DWORD>(static_cast<uint64_t>(ticks) >> 32);
+
+            if (ticks <= 0 ||
+                !::FileTimeToSystemTime(&fileTime, &utc) ||
+                !::SystemTimeToTzSpecificLocalTime(nullptr, &utc, &local))
+            {
+                return res::GetString(L"MutedForFeedbackText");
+            }
+
+            wchar_t date[80]{};
+            wchar_t time[80]{};
+
+            if (::GetDateFormatEx(LOCALE_NAME_USER_DEFAULT, DATE_SHORTDATE, &local, nullptr, date, ARRAYSIZE(date), nullptr) == 0 ||
+                ::GetTimeFormatEx(LOCALE_NAME_USER_DEFAULT, TIME_NOSECONDS, &local, nullptr, time, ARRAYSIZE(time)) == 0)
+            {
+                return res::GetString(L"MutedForFeedbackText");
+            }
+
+            return res::FormatString(L"MutedForFeedbackTextFormat", std::wstring{ date }, std::wstring{ time });
+        }
+        catch (...)
+        {
+            return res::GetString(L"MutedForFeedbackText");
+        }
     }
 
     _Use_decl_annotations_

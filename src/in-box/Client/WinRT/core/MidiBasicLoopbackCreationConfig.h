@@ -25,6 +25,9 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
         bool IsMuted() const noexcept { return m_isMuted; }
         void IsMuted(_In_ bool value) { m_isMuted = value; }
 
+        bloop::MidiBasicLoopbackFeedbackProtection FeedbackProtection() const noexcept { return m_feedbackProtection; }
+        void FeedbackProtection(_In_ bloop::MidiBasicLoopbackFeedbackProtection const value) noexcept { m_feedbackProtection = value; }
+
         winrt::guid AssociationId() const noexcept { return m_associationId; }
         //void AssociationId(_In_ winrt::guid const& value) { m_associationId = value; }
 
@@ -43,6 +46,7 @@ namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::implementat
         winrt::guid m_associationId{ foundation::GuidHelper::CreateNewGuid() };
         bloop::MidiBasicLoopbackEndpointDefinition m_definition{};
         bool m_isMuted{ false };
+        bloop::MidiBasicLoopbackFeedbackProtection m_feedbackProtection{ bloop::MidiBasicLoopbackFeedbackProtection::Mute };
     };
 }
 namespace winrt::Windows::Devices::Midi2::Transports::BasicLoopback::factory_implementation

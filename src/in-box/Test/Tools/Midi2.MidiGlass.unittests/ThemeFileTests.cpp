@@ -139,6 +139,28 @@ void ThemeFileTests::EveryShippedThemeSurvivesARoundTrip()
         VERIFY_ARE_EQUAL(theme.FillWhenOnPercent, read.Value.FillWhenOnPercent);
         VERIFY_ARE_EQUAL(theme.SwitchFillAtRest, read.Value.SwitchFillAtRest);
 
+        // Everything Five-iSH and Airy System added.
+        VERIFY_IS_TRUE(theme.InsetPanelColor == read.Value.InsetPanelColor);
+        VERIFY_IS_TRUE(theme.InsetPanelEndColor == read.Value.InsetPanelEndColor);
+        VERIFY_ARE_EQUAL(theme.PanelElevation, read.Value.PanelElevation);
+        VERIFY_IS_TRUE(theme.SectionInkColor == read.Value.SectionInkColor);
+        VERIFY_ARE_EQUAL(theme.PointerOnCap, read.Value.PointerOnCap);
+        VERIFY_ARE_EQUAL(theme.ArcGlow, read.Value.ArcGlow);
+        VERIFY_ARE_EQUAL(theme.ArcTrackHuePercent, read.Value.ArcTrackHuePercent);
+        VERIFY_IS_TRUE(theme.LampShape == read.Value.LampShape);
+        VERIFY_ARE_EQUAL(theme.SwitchRimStrengthPercent, read.Value.SwitchRimStrengthPercent);
+        VERIFY_ARE_EQUAL(theme.SwitchRestingGlowPercent, read.Value.SwitchRestingGlowPercent);
+        VERIFY_ARE_EQUAL(theme.PadFillAtRest, read.Value.PadFillAtRest);
+        VERIFY_ARE_EQUAL(theme.PadFillWhenOnPercent, read.Value.PadFillWhenOnPercent);
+        VERIFY_ARE_EQUAL(theme.NeutralCaps, read.Value.NeutralCaps);
+        VERIFY_ARE_EQUAL(theme.FaderScalePercent, read.Value.FaderScalePercent);
+        VERIFY_IS_TRUE(theme.RuleColor == read.Value.RuleColor);
+        VERIFY_ARE_EQUAL(theme.RuleFades, read.Value.RuleFades);
+        VERIFY_ARE_EQUAL(theme.Overlay.GrainPercent, read.Value.Overlay.GrainPercent);
+        VERIFY_IS_TRUE(theme.Overlay.GrainColor == read.Value.Overlay.GrainColor);
+        VERIFY_ARE_EQUAL(theme.Overlay.GrainStreak, read.Value.Overlay.GrainStreak);
+        VERIFY_IS_TRUE(theme.NeutralColor == read.Value.NeutralColor);
+
         for (int32_t zone = 0; zone < glass::MeterZoneCount; ++zone)
         {
             VERIFY_ARE_EQUAL(

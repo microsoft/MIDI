@@ -39,6 +39,8 @@ namespace Windows.Devices.Midi2.Transports.Loopback
         InvalidOrMissingEndpointNameB =     LOOPBACK_ERROR_CODE_INVALID_ENDPOINT_NAME_B,
         DuplicateNameB =                    LOOPBACK_ERROR_CODE_DUPLICATE_ENDPOINT_NAME_B,
 
+        FeedbackProtectionNotAvailable =    LOOPBACK_ERROR_CODE_FEEDBACK_PROTECTION_NOT_AVAILABLE,
+
         ClientApiException =                0x11000035,
         InvalidArgument =                   0x11000055,
 

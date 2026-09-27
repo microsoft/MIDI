@@ -34,15 +34,20 @@ namespace winrt::midiglass::implementation
             glass::ControlKind::Encoder,
             glass::ControlKind::Turntable,
             glass::ControlKind::Fader,
+            glass::ControlKind::Wheel,
             glass::ControlKind::Pad,
             glass::ControlKind::Button,
             glass::ControlKind::Toggle,
+            glass::ControlKind::Switch,
             glass::ControlKind::XYPad,
             glass::ControlKind::Joystick,
             glass::ControlKind::Ribbon,
             glass::ControlKind::PianoKeyboard,
+            glass::ControlKind::NotePads,
+            glass::ControlKind::HexPads,
             glass::ControlKind::BeatClock,
             glass::ControlKind::Lfo,
+            glass::ControlKind::Steps,
             glass::ControlKind::TimeDisplay,
             glass::ControlKind::Meter,
             glass::ControlKind::Lamp,
@@ -51,17 +56,19 @@ namespace winrt::midiglass::implementation
             glass::ControlKind::Image,
             glass::ControlKind::PageTab,
             glass::ControlKind::Panel,
+            glass::ControlKind::Line,
         };
 
         constexpr wchar_t const* KindResourceKeys[]
         {
-            L"PaletteKnob", L"PaletteEncoder", L"PaletteTurntable", L"PaletteFader", L"PalettePad", L"PaletteButton",
-            L"PaletteToggle", L"PaletteXYPad", L"PaletteJoystick", L"PaletteRibbon",
-            L"PaletteKeyboard", L"PaletteBeatClock",
+            L"PaletteKnob", L"PaletteEncoder", L"PaletteTurntable", L"PaletteFader", L"PaletteWheel", L"PalettePad", L"PaletteButton",
+            L"PaletteToggle", L"PaletteSwitch", L"PaletteXYPad", L"PaletteJoystick", L"PaletteRibbon",
+            L"PaletteKeyboard", L"PaletteNotePads", L"PaletteHexPads", L"PaletteBeatClock",
             L"PaletteLfo",
+            L"PaletteSteps",
             L"PaletteTimeDisplay",
             L"PaletteMeter", L"PaletteLamp", L"PaletteReadout",
-            L"PaletteLabel", L"PaletteImage", L"PalettePageTab", L"PalettePanel",
+            L"PaletteLabel", L"PaletteImage", L"PalettePageTab", L"PalettePanel", L"PaletteLine",
         };
 
         static_assert(std::size(KindOrder) == std::size(KindResourceKeys));
@@ -400,6 +407,130 @@ namespace winrt::midiglass::implementation
         return selected.size() == 1 ? selected[0] : nullptr;
     }
 
+    std::vector<std::wstring> EditorWindow::EditTargets() const
+    {
+        std::vector<std::wstring> targets{};
+
+        for (auto const* const control : m_editor.SelectedControls())
+        {
+            targets.push_back(control->Id);
+        }
+
+        return targets;
+    }
+
+    _Use_decl_annotations_
+    void EditorWindow::SetManyEditMode(bool many)
+    {
+        auto const shown = many ? xaml::Visibility::Collapsed : xaml::Visibility::Visible;
+
+        // Things only one control can answer: its text, its kind, its own picture or keys.
+        LabelBox().IsEnabled(!many);
+        KindCombo().IsEnabled(!many);
+        AspectLockToggle().IsEnabled(!many);
+        PreviewHeading().Visibility(shown);
+        PreviewHost().Visibility(shown);
+
+        if (many)
+        {
+            TicksPanel().Visibility(xaml::Visibility::Collapsed);
+            PicturePanel().Visibility(xaml::Visibility::Collapsed);
+            LinePanel().Visibility(xaml::Visibility::Collapsed);
+            SwitchPanel().Visibility(xaml::Visibility::Collapsed);
+            KeyboardPanel().Visibility(xaml::Visibility::Collapsed);
+            PadGridPanel().Visibility(xaml::Visibility::Collapsed);
+        }
+    }
+
+    // What several selected controls have in common. A setting they disagree on shows blank,
+    // and picking a value for it sets it on all of them.
+    void EditorWindow::RefreshCommonProperties()
+    {
+        auto const selected = m_editor.SelectedControls();
+
+        if (selected.empty())
+        {
+            return;
+        }
+
+        auto const& first = *selected.front();
+
+        auto const allShare = [&selected](auto const& same)
+            {
+                for (auto const* const control : selected)
+                {
+                    if (!same(*control))
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            };
+
+        // The box around all of them. Typing a new one moves or scales the lot.
+        auto const bounds = m_editor.SelectionBounds();
+
+        BoundsX().Text(winrt::hstring{ FormatNumber(bounds.X) });
+        BoundsY().Text(winrt::hstring{ FormatNumber(bounds.Y) });
+        BoundsWidth().Text(winrt::hstring{ FormatNumber(bounds.Width) });
+        BoundsHeight().Text(winrt::hstring{ FormatNumber(bounds.Height) });
+
+        LabelBox().Text(L"");
+        KindCombo().SelectedIndex(-1);
+        AspectLockToggle().IsChecked(false);
+
+        SyncStyleSegments(allShare([&first](glass::Control const& control) { return control.Style == first.Style; })
+            ? first.Style
+            : static_cast<glass::ControlStyleOverride>(-1));
+
+        auto const placed = [](glass::LabelPlacementOverride placement)
+            {
+                return placement == glass::LabelPlacementOverride::Inside
+                    ? glass::LabelPlacementOverride::InsideBottom
+                    : placement;
+            };
+
+        LabelPlacedCombo().SelectedIndex(
+            allShare([&](glass::Control const& control) { return placed(control.LabelPlaced) == placed(first.LabelPlaced); })
+                ? IndexOf(LabelPlacedOrder, placed(first.LabelPlaced))
+                : -1);
+
+        ShowValueCombo().SelectedIndex(
+            allShare([&first](glass::Control const& control) { return control.ShowValue == first.ShowValue; })
+                ? IndexOf(ShowValueOrder, first.ShowValue)
+                : -1);
+
+        auto anyShowsAValue = false;
+
+        for (auto const* const control : selected)
+        {
+            anyShowsAValue = anyShowsAValue || glass::ShowsAValueReadout(control->Kind);
+        }
+
+        ShowValueLabel().Visibility(anyShowsAValue ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+        ShowValueCombo().Visibility(anyShowsAValue ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+        LabelWidthBox().Value(
+            allShare([&first](glass::Control const& control) { return control.LabelLook.WidthPercent == first.LabelLook.WidthPercent; })
+                ? first.LabelLook.WidthPercent
+                : std::numeric_limits<double>::quiet_NaN());
+
+        auto const sameFont = allShare([&first](glass::Control const& control)
+            {
+                auto const& left = control.LabelLook;
+                auto const& right = first.LabelLook;
+
+                return left.FontFamily == right.FontFamily && left.FontSize == right.FontSize &&
+                    left.FontWeight == right.FontWeight && left.Italic == right.Italic &&
+                    left.Underline == right.Underline && left.Color == right.Color;
+            });
+
+        LabelFontCaption().Text(sameFont
+            ? winrt::hstring{ DescribeLabelFont(first.LabelLook) }
+            : resources::GetString(L"InspectorMixedFonts"));
+    }
+
     // The position and size boxes and nothing else, for the pointer-move path.
     void EditorWindow::RefreshInspectorGeometry()
     {
@@ -407,7 +538,17 @@ namespace winrt::midiglass::implementation
         {
             auto const* const control = SingleSelectedControl();
 
-            if (control == nullptr)
+            glass::EditRect bounds{};
+
+            if (control != nullptr)
+            {
+                bounds = { control->X, control->Y, control->Width, control->Height };
+            }
+            else if (m_editor.Selection().size() > 1)
+            {
+                bounds = m_editor.SelectionBounds();
+            }
+            else
             {
                 return;
             }
@@ -415,10 +556,10 @@ namespace winrt::midiglass::implementation
             auto const previous = m_updatingInspector;
             m_updatingInspector = true;
 
-            BoundsX().Text(winrt::hstring{ FormatNumber(control->X) });
-            BoundsY().Text(winrt::hstring{ FormatNumber(control->Y) });
-            BoundsWidth().Text(winrt::hstring{ FormatNumber(control->Width) });
-            BoundsHeight().Text(winrt::hstring{ FormatNumber(control->Height) });
+            BoundsX().Text(winrt::hstring{ FormatNumber(bounds.X) });
+            BoundsY().Text(winrt::hstring{ FormatNumber(bounds.Y) });
+            BoundsWidth().Text(winrt::hstring{ FormatNumber(bounds.Width) });
+            BoundsHeight().Text(winrt::hstring{ FormatNumber(bounds.Height) });
 
             m_updatingInspector = previous;
         }
@@ -438,15 +579,16 @@ namespace winrt::midiglass::implementation
 
             auto const* const control = SingleSelectedControl();
             auto const selectedCount = m_editor.Selection().size();
+            auto const many = control == nullptr && selectedCount > 1;
 
-            LookTab().IsEnabled(control != nullptr);
+            LookTab().IsEnabled(control != nullptr || many);
             BehaviorTab().IsEnabled(control != nullptr);
             MidiTab().IsEnabled(control != nullptr);
             MidiInTab().IsEnabled(control != nullptr);
 
             // Nothing selected says so and nothing else. A selection of several keeps its heading,
-            // which counts them and carries Duplicate and Delete, but has no tabs to show: there
-            // is no one control for them to describe.
+            // which counts them and carries Duplicate and Delete, and a Look tab of what they
+            // share: color, style, how the labels sit, the box around them all.
             InspectorEmptyText().Visibility(selectedCount == 0
                 ? xaml::Visibility::Visible
                 : xaml::Visibility::Collapsed);
@@ -455,18 +597,45 @@ namespace winrt::midiglass::implementation
                 ? xaml::Visibility::Collapsed
                 : xaml::Visibility::Visible);
 
-            InspectorBody().Visibility(control == nullptr
+            InspectorBody().Visibility(control == nullptr && !many
                 ? xaml::Visibility::Collapsed
                 : xaml::Visibility::Visible);
+
+            SetManyEditMode(many);
 
             if (control == nullptr)
             {
                 InspectorKindText().Text(resources::GetString(L"InspectorManySelected"));
                 InspectorTitleText().Text(
                     resources::FormatString(L"EditorSelectedFormat", std::to_wstring(selectedCount)));
+                InspectorTitleText().PlaceholderText(L"");
 
                 // "11 selected" is a count, not a name. Nothing to rename, so nothing to type in.
                 InspectorTitleText().IsReadOnly(true);
+
+                m_preview.Teardown();
+
+                m_messageIndex = -1;
+                MessageList().Items().Clear();
+
+                MidiPane().IsEnabled(false);
+                MidiInPane().IsEnabled(false);
+                BehaviorPane().IsEnabled(false);
+
+                if (many)
+                {
+                    LookPane().IsEnabled(true);
+
+                    if (m_inspectorTab != 0)
+                    {
+                        SelectInspectorTab(0);
+                    }
+
+                    RefreshCommonProperties();
+
+                    m_updatingInspector = previous;
+                    return;
+                }
 
                 // Emptied and grayed, not left as they were. Leaving the last control's numbers
                 // under a heading that says "Page" is what made three disabled tabs look like
@@ -479,14 +648,6 @@ namespace winrt::midiglass::implementation
                 LabelFontCaption().Text(L"");
 
                 LookPane().IsEnabled(false);
-                MidiPane().IsEnabled(false);
-                MidiInPane().IsEnabled(false);
-                BehaviorPane().IsEnabled(false);
-
-                m_preview.Teardown();
-
-                m_messageIndex = -1;
-                MessageList().Items().Clear();
 
                 m_updatingInspector = previous;
                 return;
@@ -501,10 +662,9 @@ namespace winrt::midiglass::implementation
 
             InspectorKindText().Text(resources::GetString(KindResourceKeys[kindIndex]));
 
-            InspectorTitleText().Text(winrt::hstring{
-                control->Label.empty()
-                    ? std::wstring{ resources::GetString(L"InspectorUnnamedControl") }
-                    : control->Label });
+            // A placeholder, not text: whatever the box holds is written back into the label.
+            InspectorTitleText().Text(winrt::hstring{ control->Label });
+            InspectorTitleText().PlaceholderText(resources::GetString(L"InspectorUnnamedControl"));
 
             InspectorTitleText().IsReadOnly(false);
 
@@ -561,7 +721,8 @@ namespace winrt::midiglass::implementation
             auto const passive =
                 control->Kind == glass::ControlKind::Label ||
                 control->Kind == glass::ControlKind::Image ||
-                control->Kind == glass::ControlKind::Panel;
+                control->Kind == glass::ControlKind::Panel ||
+                control->Kind == glass::ControlKind::Line;
 
             MidiInTab().IsEnabled(!passive);
             BehaviorTab().IsEnabled(!passive);
@@ -604,7 +765,7 @@ namespace winrt::midiglass::implementation
             {
                 auto const& message = control->Messages[index];
 
-                auto const text = resources::FormatString(
+                auto text = resources::FormatString(
                     L"MessageRowFormat",
                     resources::GetString(TriggerResourceKeys[IndexOf(TriggerOrder, message.Trigger)]),
                     resources::GetString(MessageKindResourceKeys[IndexOf(MessageKindOrder, message.Kind)]),
@@ -612,6 +773,19 @@ namespace winrt::midiglass::implementation
                     message.DeviceName.empty()
                         ? std::wstring{ resources::GetString(L"MessageNoDevice") }
                         : message.DeviceName);
+
+                // Every row of a switch otherwise reads the same. The position is the difference.
+                if (control->Kind == glass::ControlKind::Switch && message.Position >= 0)
+                {
+                    auto const position = static_cast<size_t>(message.Position);
+
+                    text = resources::FormatString(
+                        L"SwitchPositionItemFormat",
+                        position < control->Switch.Positions.size() && !control->Switch.Positions[position].empty()
+                            ? control->Switch.Positions[position]
+                            : std::to_wstring(position + 1),
+                        text);
+                }
 
                 controls::ListViewItem item{};
 
@@ -675,6 +849,7 @@ namespace winrt::midiglass::implementation
 
             if (!valid)
             {
+                SwitchPositionRow().Visibility(xaml::Visibility::Collapsed);
                 SysExPanel().Visibility(xaml::Visibility::Collapsed);
                 RawWordsPanel().Visibility(xaml::Visibility::Collapsed);
                 SequencePanel().Visibility(xaml::Visibility::Collapsed);
@@ -685,6 +860,31 @@ namespace winrt::midiglass::implementation
             }
 
             auto const& message = control->Messages[static_cast<size_t>(m_messageIndex)];
+
+            // A switch row says which position sends it. Every other control has no such thing.
+            auto const isSwitch = control->Kind == glass::ControlKind::Switch;
+
+            SwitchPositionRow().Visibility(isSwitch ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+
+            if (isSwitch)
+            {
+                SwitchPositionCombo().Items().Clear();
+                SwitchPositionCombo().Items().Append(box_value(resources::GetString(L"SwitchPositionEvery")));
+
+                auto const positions = glass::SwitchPositionCount(*control);
+
+                for (int32_t position = 0; position < positions; ++position)
+                {
+                    auto const name = static_cast<size_t>(position) < control->Switch.Positions.size()
+                        ? control->Switch.Positions[static_cast<size_t>(position)]
+                        : std::wstring{};
+
+                    SwitchPositionCombo().Items().Append(box_value(winrt::hstring{ resources::FormatString(
+                        L"SwitchPositionItemFormat", std::to_wstring(position + 1), name) }));
+                }
+
+                SwitchPositionCombo().SelectedIndex(std::clamp(message.Position + 1, 0, positions));
+            }
 
             TriggerCombo().SelectedIndex(IndexOf(TriggerOrder, message.Trigger));
             KindMessageCombo().SelectedIndex(IndexOf(MessageKindOrder, message.Kind));
@@ -827,9 +1027,9 @@ namespace winrt::midiglass::implementation
             MessageNumberBox().Visibility(xaml::Visibility::Collapsed);
         }
 
-        // Same for a keyboard: the key decides the note, so the number on the row is not a
-        // question anybody can answer.
-        if (control.Kind == glass::ControlKind::PianoKeyboard)
+        // Same for a keyboard and a grid of pads: the key or the pad decides the note, so the
+        // number on the row is not a question anybody can answer.
+        if (control.Kind == glass::ControlKind::PianoKeyboard || glass::IsPadGrid(control.Kind))
         {
             MessageNumberLabel().Visibility(xaml::Visibility::Collapsed);
             MessageNumberBox().Visibility(xaml::Visibility::Collapsed);
@@ -992,6 +1192,23 @@ namespace winrt::midiglass::implementation
 
             if (control == nullptr)
             {
+                // Several: the numbers are the box around them all.
+                if (m_editor.Selection().size() > 1)
+                {
+                    auto const bounds = m_editor.SelectionBounds();
+
+                    if (m_editor.SetSelectionBounds(
+                        ParseNumber(BoundsX().Text(), bounds.X),
+                        ParseNumber(BoundsY().Text(), bounds.Y),
+                        ParseNumber(BoundsWidth().Text(), bounds.Width),
+                        ParseNumber(BoundsHeight().Text(), bounds.Height)))
+                    {
+                        RebuildSurface();
+                        UpdateStatusBar();
+                        MarkChanged();
+                    }
+                }
+
                 return;
             }
 
@@ -1099,18 +1316,31 @@ namespace winrt::midiglass::implementation
             return;
         }
 
-        auto const* const control = SingleSelectedControl();
         auto const value = LabelWidthBox().Value();
 
-        if (control == nullptr || !std::isfinite(value))
+        if (!std::isfinite(value))
         {
             return;
         }
 
-        auto style = control->LabelLook;
-        style.WidthPercent = value;
+        auto changed = false;
 
-        if (m_editor.SetControlLabelStyle(control->Id, style))
+        {
+            glass::EditBatch batch{ m_editor };
+
+            for (auto const& id : EditTargets())
+            {
+                if (auto const* const control = m_editor.Document().FindControl(id))
+                {
+                    auto style = control->LabelLook;
+                    style.WidthPercent = value;
+
+                    changed = m_editor.SetControlLabelStyle(id, style) || changed;
+                }
+            }
+        }
+
+        if (changed)
         {
             RebuildSurface();
             MarkChanged();
@@ -1123,9 +1353,10 @@ namespace winrt::midiglass::implementation
         UNREFERENCED_PARAMETER(sender);
         UNREFERENCED_PARAMETER(args);
 
-        if (auto const* const control = SingleSelectedControl())
+        // Several at once start from the first one's font, and the result goes on all of them.
+        if (auto const targets = EditTargets(); !targets.empty())
         {
-            ShowLabelFontDialog(control->Id);
+            ShowLabelFontDialog(targets.front());
         }
     }
 
@@ -1182,9 +1413,9 @@ namespace winrt::midiglass::implementation
         try
         {
             auto const toggle = sender.try_as<controls::Primitives::ToggleButton>();
-            auto const* const control = SingleSelectedControl();
+            auto const targets = EditTargets();
 
-            if (toggle == nullptr || control == nullptr)
+            if (toggle == nullptr || targets.empty())
             {
                 return;
             }
@@ -1198,8 +1429,6 @@ namespace winrt::midiglass::implementation
                 tag == L"solid" ? glass::ControlStyleOverride::Solid :
                 glass::ControlStyleOverride::Bare;
 
-            auto const id = control->Id;
-
             // One group, so picking a segment turns the others off. Nothing else does that for
             // a row of ToggleButtons.
             auto const previous = m_updatingInspector;
@@ -1207,7 +1436,18 @@ namespace winrt::midiglass::implementation
             SyncStyleSegments(style);
             m_updatingInspector = previous;
 
-            if (m_editor.SetControlStyle(id, style))
+            auto changed = false;
+
+            {
+                glass::EditBatch batch{ m_editor };
+
+                for (auto const& id : targets)
+                {
+                    changed = m_editor.SetControlStyle(id, style) || changed;
+                }
+            }
+
+            if (changed)
             {
                 RebuildSurface();
                 RefreshInspector();
@@ -1230,9 +1470,9 @@ namespace winrt::midiglass::implementation
         try
         {
             auto const toggle = sender.try_as<controls::Primitives::ToggleButton>();
-            auto const* const control = SingleSelectedControl();
+            auto const selected = m_editor.SelectedControls();
 
-            if (toggle == nullptr || control == nullptr)
+            if (toggle == nullptr || selected.empty())
             {
                 return;
             }
@@ -1248,7 +1488,10 @@ namespace winrt::midiglass::implementation
                 tag == L"solid" ? glass::ControlStyleOverride::Solid :
                 glass::ControlStyleOverride::Bare;
 
-            if (style == control->Style)
+            auto const allThisStyle = std::all_of(selected.begin(), selected.end(),
+                [style](glass::Control const* control) { return control->Style == style; });
+
+            if (allThisStyle)
             {
                 auto const previous = m_updatingInspector;
                 m_updatingInspector = true;
@@ -1272,28 +1515,33 @@ namespace winrt::midiglass::implementation
             return;
         }
 
-        auto const* const control = SingleSelectedControl();
         auto const index = LabelPlacedCombo().SelectedIndex();
+        auto const targets = EditTargets();
 
-        if (control == nullptr || index < 0 || index >= static_cast<int32_t>(std::size(LabelPlacedOrder)))
+        if (targets.empty() || index < 0 || index >= static_cast<int32_t>(std::size(LabelPlacedOrder)))
         {
             return;
         }
 
         auto const placement = LabelPlacedOrder[index];
 
-        auto const id = control->Id;
+        auto changed = false;
 
-        // Choosing a placement from the list is choosing a rule, so it throws away the box that
-        // was dragged by hand. Custom itself is not choosable from here: it only means "wherever
-        // the handles were dragged to", and with no box there is nothing for it to mean.
-        auto changed = placement == glass::LabelPlacementOverride::Custom
-            ? false
-            : m_editor.ClearControlLabelBox(id);
-
-        if (placement != glass::LabelPlacementOverride::Custom)
         {
-            changed = m_editor.SetControlLabelPlacement(id, placement) || changed;
+            glass::EditBatch batch{ m_editor };
+
+            for (auto const& id : targets)
+            {
+                // Choosing a placement from the list is choosing a rule, so it throws away the
+                // box that was dragged by hand. Custom itself is not choosable from here: it only
+                // means "wherever the handles were dragged to", and with no box there is nothing
+                // for it to mean.
+                if (placement != glass::LabelPlacementOverride::Custom)
+                {
+                    changed = m_editor.ClearControlLabelBox(id) || changed;
+                    changed = m_editor.SetControlLabelPlacement(id, placement) || changed;
+                }
+            }
         }
 
         if (changed)
@@ -1323,16 +1571,28 @@ namespace winrt::midiglass::implementation
             return;
         }
 
-        auto const* const control = SingleSelectedControl();
         auto const index = ShowValueCombo().SelectedIndex();
+        auto const targets = EditTargets();
 
-        if (control == nullptr || index < 0 || index >= static_cast<int32_t>(std::size(ShowValueOrder)))
+        if (targets.empty() || index < 0 || index >= static_cast<int32_t>(std::size(ShowValueOrder)))
         {
             return;
         }
 
-        if (m_editor.SetControlShowValue(control->Id, ShowValueOrder[index]))
+        auto changed = false;
+
         {
+            glass::EditBatch batch{ m_editor };
+
+            for (auto const& id : targets)
+            {
+                changed = m_editor.SetControlShowValue(id, ShowValueOrder[index]) || changed;
+            }
+        }
+
+        if (changed)
+        {
+            RebuildSurface();
             MarkChanged();
         }
     }
@@ -1588,17 +1848,28 @@ namespace winrt::midiglass::implementation
     {
         UNREFERENCED_PARAMETER(args);
 
-        auto const* const control = SingleSelectedControl();
         auto const button = sender.try_as<controls::Button>();
+        auto const targets = EditTargets();
 
-        if (control == nullptr || button == nullptr)
+        if (targets.empty() || button == nullptr)
         {
             return;
         }
 
         auto const slot = winrt::unbox_value_or<int32_t>(button.Tag(), 0);
 
-        if (m_editor.SetControlHueSlot(control->Id, slot))
+        auto changed = false;
+
+        {
+            glass::EditBatch batch{ m_editor };
+
+            for (auto const& id : targets)
+            {
+                changed = m_editor.SetControlHueSlot(id, slot) || changed;
+            }
+        }
+
+        if (changed)
         {
             RebuildSurface();
             MarkChanged();
@@ -1719,6 +1990,16 @@ namespace winrt::midiglass::implementation
             if (channelIndex >= 0)
             {
                 message.ChannelIndex = channelIndex;
+            }
+
+            if (control->Kind == glass::ControlKind::Switch)
+            {
+                auto const positionIndex = SwitchPositionCombo().SelectedIndex();
+
+                if (positionIndex >= 0)
+                {
+                    message.Position = positionIndex - 1;
+                }
             }
 
             auto const id = control->Id;

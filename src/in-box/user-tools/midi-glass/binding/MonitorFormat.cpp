@@ -183,6 +183,10 @@ namespace glass
                     result.Meaning = L"Pitch bend = " + asFraction;
                     break;
 
+                case 0x6:
+                    result.Meaning = L"Per-note bend " + Number(byte2 & 0x7F) + L" = " + asFraction;
+                    break;
+
                 case 0x2:
                     result.Meaning = L"RPN " + Number(byte2 & 0x7F) + L":" + Number(byte3 & 0x7F) +
                         L" = " + asFraction;

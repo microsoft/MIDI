@@ -119,6 +119,30 @@ namespace winrt::midiglass::implementation
 
         void OnZOrderAccelerator(xaml::Input::KeyboardAccelerator const& sender, xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
 
+        // ---- the clipboard and the canvas menu (EditorClipboard.cpp) ----
+
+        void OnCutAccelerator(_In_ xaml::Input::KeyboardAccelerator const& sender, _In_ xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnCopyAccelerator(_In_ xaml::Input::KeyboardAccelerator const& sender, _In_ xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnPasteAccelerator(_In_ xaml::Input::KeyboardAccelerator const& sender, _In_ xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnCutClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnCopyClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnPasteClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnCanvasMenuOpening(_In_ foundation::IInspectable const& sender, _In_ foundation::IInspectable const& args);
+        void OnCanvasMenuClosed(_In_ foundation::IInspectable const& sender, _In_ foundation::IInspectable const& args);
+
+        // A text box, a number box or a search box has focus, so Ctrl+C and the rest are its.
+        bool IsTextEntryFocused();
+
+        winrt::fire_and_forget CopySelectionToClipboardAsync(_In_ bool cut);
+        winrt::fire_and_forget PasteFromClipboardAsync(_In_ bool atMenuPoint);
+
+        void OnGroupClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnGroupMenuClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnUngroupMenuClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnGroupAccelerator(_In_ xaml::Input::KeyboardAccelerator const& sender, _In_ xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void OnUngroupAccelerator(_In_ xaml::Input::KeyboardAccelerator const& sender, _In_ xaml::Input::KeyboardAcceleratorInvokedEventArgs const& args);
+        void ApplyGrouping(_In_ bool group);
+
         // ---- palette and outline ----
 
         void OnPaletteSearchChanged(controls::AutoSuggestBox const& sender, controls::AutoSuggestBoxTextChangedEventArgs const& args);
@@ -134,6 +158,12 @@ namespace winrt::midiglass::implementation
         void OnCanvasPointerMoved(foundation::IInspectable const& sender, xaml::Input::PointerRoutedEventArgs const& args);
         void OnCanvasPointerReleased(foundation::IInspectable const& sender, xaml::Input::PointerRoutedEventArgs const& args);
         void OnCanvasPointerCaptureLost(foundation::IInspectable const& sender, xaml::Input::PointerRoutedEventArgs const& args);
+
+        // Typing a label straight onto the canvas, over where it is drawn.
+        bool IsSecondClick(_In_ winrt::Microsoft::UI::Input::PointerPoint const& point);
+        bool TryBeginLabelEditAt(_In_ double pageX, _In_ double pageY);
+        void BeginLabelEdit(_In_ std::wstring const& id, _In_ glass::EditRect const& rect);
+        void EndLabelEdit(_In_ bool keep);
         void OnSelectOffPageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnAddPageClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnZoomInClick(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
@@ -206,11 +236,19 @@ namespace winrt::midiglass::implementation
         void OnPictureFitChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnPictureOpacityChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
         void OnPictureZoomChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
-        void OnPictureCenterXChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
-        void OnPictureCenterYChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
         void OnPictureTintChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnPictureTintStrengthChanged(foundation::IInspectable const& sender, controls::Primitives::RangeBaseValueChangedEventArgs const& args);
         void ApplyPictureCropEdit(_In_ double value, _In_ void (*assign)(glass::Picture&, double));
+
+        // ---- the picture's position, crop box and opacity track (EditorPicturePanel.cpp) ----
+
+        void OnPictureOpacityRampSizeChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::SizeChangedEventArgs const& args);
+        void OnPictureCropBoxSizeChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::SizeChangedEventArgs const& args);
+        void OnPictureCropPressed(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+        void OnPictureCropMoved(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+        void OnPictureCropReleased(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+        void OnPictureCropCaptureLost(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+        void OnPictureCropKeyDown(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::KeyRoutedEventArgs const& args);
 
         winrt::fire_and_forget ChoosePictureAsync();
 
@@ -220,10 +258,53 @@ namespace winrt::midiglass::implementation
             _In_ std::wstring filePath);
         void OnPictureLoopsChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        // ---- a video's own settings (EditorPictureVideo.cpp) ----
+
+        void OnPictureVideoPlayClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnPictureVideoFlagChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnPictureVideoRangeChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
+        void OnPictureTimelineSizeChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::SizeChangedEventArgs const& args);
+        void OnPictureTimelinePressed(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+        void OnPictureTimelineMoved(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+        void OnPictureTimelineReleased(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+        void OnPictureTimelineCaptureLost(_In_ foundation::IInspectable const& sender, _In_ xaml::Input::PointerRoutedEventArgs const& args);
+
+        // Brings the play button, the timeline and the two times into step with the selected
+        // control and with what its video on the canvas is doing.
+        void RefreshPictureVideoPanel();
+
+        // A rebuild makes new players. The one the inspector was playing is started again.
+        void ResumeVideoPreview();
+
+        // The strip, the two handles and the line for where the video is now.
+        void DrawPictureTimeline();
+
+        // Where a control sits among the items the canvas drew. False when it is not on the
+        // page being shown.
+        bool TryFindCanvasItem(_In_ std::wstring const& controlId, _Out_ size_t& itemIndex) const;
+
+        // A dragged end of the part that plays, committed as one edit.
+        void DragPictureTimelineTo(_In_ double x);
+        void CommitPictureTimelineDrag();
+
+        // How long the selected video is: from the shell, or from the canvas's own player when
+        // the shell could not say. Zero while neither knows.
+        double KnownVideoDuration(_In_ glass::Control const& control) const;
+
+        void StartVideoPlayheadTimer();
+        void StopVideoPlayheadTimer();
+        void OnAddSwitchPositionClick(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+
         void OnKeyCountChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnLowestNoteChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnKeyColorChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
         void OnKeyVelocityChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        void OnPadGridNumberChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
+        void OnPadGridChoiceChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnPadGridColorChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnPadRowChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnPadHexLayoutChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
 
         void OnSpringTargetChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
         void OnDragAxisChanged(foundation::IInspectable const& sender, controls::SelectionChangedEventArgs const& args);
@@ -239,8 +320,25 @@ namespace winrt::midiglass::implementation
         void OnLfoUpdateChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnLfoFlagChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
 
+        // ---- the step sequencer (EditorStepsPanel.cpp) ----
+
+        void BuildStepsChoices();
+        void RefreshStepsPanel(_In_ glass::Control const& control);
+        void RefreshStepRows(_In_ glass::Control const& control);
+        void ApplyStepsSettingsEdit();
+        void ApplyStepEdit(_In_ size_t index, _In_ bool coalesce);
+        void OnStepsChoiceChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnStepsSliderChanged(_In_ foundation::IInspectable const& sender, _In_ controls::Primitives::RangeBaseValueChangedEventArgs const& args);
+        void OnStepsFlagChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnStepCountChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
+
         void OnTurntableDegreesChanged(controls::NumberBox const& sender, controls::NumberBoxValueChangedEventArgs const& args);
         void OnTurntableGripChanged(foundation::IInspectable const& sender, xaml::RoutedEventArgs const& args);
+
+        void OnLineDirectionChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
+        void OnLineThicknessChanged(_In_ controls::NumberBox const& sender, _In_ controls::NumberBoxValueChangedEventArgs const& args);
+        void OnLineColorChanged(_In_ foundation::IInspectable const& sender, _In_ xaml::RoutedEventArgs const& args);
+        void OnLineEndsChanged(_In_ foundation::IInspectable const& sender, _In_ controls::SelectionChangedEventArgs const& args);
 
         // ---- what a control listens for (EditorControlProperties.cpp) ----
 
@@ -386,7 +484,23 @@ namespace winrt::midiglass::implementation
         // The panels only some kinds of control have. A page of settings that do nothing for
         // the control in front of you is worse than a shorter page.
         void RefreshKindPanels(_In_ glass::Control const& control);
+        void RefreshPadGridPanel(_In_ glass::Control const& control);
         void RefreshFeedbackPanel(_In_ glass::Control const& control);
+        void RefreshSwitchPositions(_In_ glass::Control const& control);
+
+        // The nine alignment buttons, the crop box and the opacity track. Built once; brought
+        // into step with the selected control every time the inspector is filled in.
+        void BuildPicturePanel();
+        void RefreshPicturePosition(_In_ glass::Control const& control);
+        void DrawPictureCropBox();
+        void DrawPictureOpacityRamp();
+        winrt::fire_and_forget LoadPictureCropThumbnail(_In_ std::wstring path, _In_ bool isVideo, _In_ double frameSeconds);
+
+        // Where the picture's middle goes, from the alignment buttons, the crop box and the
+        // arrow keys. Only moves what can move: a picture that fits across has nothing to crop
+        // across, so a drag leaves that number alone.
+        void SetPictureCenter(_In_ double centerX, _In_ double centerY, _In_ bool coalesce);
+        void MovePictureCropTo(_In_ double boxX, _In_ double boxY);
 
         // The knobs and faders a clock can take its tempo from, and the clocks a lamp can
         // follow. Both map a combo index back to a control id.
@@ -403,9 +517,11 @@ namespace winrt::midiglass::implementation
             _In_ std::function<bool(std::wstring const&)> const& edit);
 
         void ApplyKeyboardEdit();
+        void ApplyPadGridEdit();
         void ApplyClockEdit();
         void ApplyLfoEdit();
         void ApplyTurntableEdit();
+        void ApplyLineEdit();
         void ApplyFeedbackEdit();
 
         // One number box per stop, rather than one line of text with separators in it. A comma
@@ -422,6 +538,14 @@ namespace winrt::midiglass::implementation
         std::wstring NameForArmedKind() const;
 
         glass::Control const* SingleSelectedControl() const;
+
+        // The one selected control, or every selected control, for a property that several
+        // controls can share. Empty when nothing is selected.
+        std::vector<std::wstring> EditTargets() const;
+
+        // Several controls picked: the Look tab shows what they share and edits all of them.
+        void RefreshCommonProperties();
+        void SetManyEditMode(_In_ bool many);
 
         // ---- saving ----
 
@@ -440,7 +564,7 @@ namespace winrt::midiglass::implementation
         winrt::fire_and_forget ShowBackgroundDialog();
 
         // The full path of a picture the customer chose, or empty. Does not copy anything.
-        std::wstring PickBackgroundImageFile();
+        std::wstring PickBackgroundImageFile(_In_ bool picturesOnly);
         winrt::fire_and_forget ShowRenameDialog();
 
         // ---- the sequence editor (EditorSequenceDialog.cpp) ----
@@ -641,6 +765,38 @@ namespace winrt::midiglass::implementation
         uint32_t m_dragPointerId{ 0 };
         double m_dragStartPageX{ 0.0 };
         double m_dragStartPageY{ 0.0 };
+
+        // Where the right click that opened the canvas menu landed, so Paste puts text there.
+        bool m_hasMenuPoint{ false };
+        double m_menuPageX{ 0.0 };
+        double m_menuPageY{ 0.0 };
+
+        // The box a label is being typed into on the canvas, and whose label it is.
+        controls::TextBox m_labelEditor{ nullptr };
+        std::wstring m_labelEditId{};
+
+        // One row per step in the sequencer panel. Kept so an edit can update the numbers in
+        // place: rebuilding the rows under a spin button takes the keyboard away mid-change.
+        struct StepRowControls
+        {
+            controls::CheckBox Plays{ nullptr };
+            controls::NumberBox Note{ nullptr };
+            controls::TextBlock NoteName{ nullptr };
+            controls::NumberBox Velocity{ nullptr };
+        };
+
+        std::vector<StepRowControls> m_stepRows{};
+        std::wstring m_stepRowsControlId{};
+
+        // The last left press, to tell the second click of a double click. The canvas works this
+        // out itself: DoubleTapped never started an edit here, where every press captures the
+        // pointer. The edit starts when the button comes up, once the press has finished moving
+        // the keyboard to the canvas.
+        uint64_t m_lastPressTimestamp{ 0 };
+        winrt::Microsoft::UI::Input::PointerDeviceType m_lastPressDevice{ winrt::Microsoft::UI::Input::PointerDeviceType::Mouse };
+        foundation::Point m_lastPressPoint{};
+        bool m_labelEditOnRelease{ false };
+
         bool m_dragMoved{ false };
 
         // The rubber band, so the overlay can draw it. Without something on screen a band
@@ -653,6 +809,10 @@ namespace winrt::midiglass::implementation
         // until the pointer comes up without having moved, or a drag of a multiple selection
         // would collapse it on the first press.
         std::wstring m_pendingSelectId{};
+
+        // The same, for Shift or Ctrl on a control that is already selected: unpicked on the way
+        // up only if the pointer never moved, because it may be a straight-line drag instead.
+        std::wstring m_pendingToggleId{};
 
         // Where the label box was when a label drag started, relative to its control.
         glass::EditRect m_labelDragStart{};
@@ -703,6 +863,63 @@ namespace winrt::midiglass::implementation
 
         // The same, for the devices a control can listen to. The first entry is "any device".
         std::vector<std::wstring> m_feedbackDeviceNames{};
+
+        // ---- picture position and crop ----
+
+        std::vector<controls::Primitives::ToggleButton> m_pictureAlignCells{};
+
+        // The picture the crop box is drawing, its real size once known, and the small copy of
+        // it. The token throws away a thumbnail that finishes loading after the selection moved
+        // on to a different picture.
+        std::wstring m_cropPicturePath{};
+        double m_cropNaturalWidth{ 0.0 };
+        double m_cropNaturalHeight{ 0.0 };
+        xaml::Media::ImageSource m_cropThumbnail{ nullptr };
+        uint64_t m_cropLoadToken{ 0 };
+
+        // For a video, the time the small copy was taken at.
+        double m_cropFrameSeconds{ 0.0 };
+
+        // Where the drag started, in box coordinates, and the middle it started from.
+        bool m_cropDragging{ false };
+        double m_cropGrabOffsetX{ 0.0 };
+        double m_cropGrabOffsetY{ 0.0 };
+
+        // Where the picture sits inside the box and where the visible window sits inside the
+        // picture, from the last draw. The pointer handlers work in these.
+        double m_cropImageLeft{ 0.0 };
+        double m_cropImageTop{ 0.0 };
+        double m_cropImageWidth{ 0.0 };
+        double m_cropImageHeight{ 0.0 };
+        double m_cropWindowLeft{ 0.0 };
+        double m_cropWindowTop{ 0.0 };
+        double m_cropWindowWidth{ 1.0 };
+        double m_cropWindowHeight{ 1.0 };
+
+        // ---- a video's own settings ----
+
+        // How long the selected video's file is, read from the shell with the thumbnail. Zero
+        // until it is known.
+        double m_videoDurationSeconds{ 0.0 };
+
+        // The control whose video the inspector's play button started, so a rebuild can start
+        // it again. Empty when nothing is playing in the designer.
+        std::wstring m_previewingVideoId{};
+
+        // An end of the part that plays being dragged: which one, and where it is now.
+        bool m_timelineDragging{ false };
+        bool m_timelineDraggingEnd{ false };
+        double m_timelineDragSeconds{ 0.0 };
+
+        // The shapes on the strip, made once and moved after that.
+        xaml::Shapes::Rectangle m_timelineTrack{ nullptr };
+        xaml::Shapes::Rectangle m_timelineRange{ nullptr };
+        xaml::Shapes::Rectangle m_timelineStartHandle{ nullptr };
+        xaml::Shapes::Rectangle m_timelineEndHandle{ nullptr };
+        xaml::Shapes::Rectangle m_timelinePlayhead{ nullptr };
+
+        // Moves the line on the strip while the selected video plays.
+        xaml::DispatcherTimer m_videoPlayheadTimer{ nullptr };
 
         // ---- pane dividers ----
 

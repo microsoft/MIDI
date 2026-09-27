@@ -69,6 +69,20 @@ public:
     TEST_METHOD(TestUpdateKeepingTheSameNamesIsAllowed);
     TEST_METHOD(TestUpdateSwappingNamesWithinAPairIsAllowed);
 
+    // Feedback protection. The setting comes from a file anyone can edit, so a bad value must
+    // never cost the customer the loopback, and never switch protection off by accident.
+    TEST_METHOD(TestTransportDeclaresFeedbackProtectionCapability);
+    TEST_METHOD(TestCreateReportsFeedbackProtectionOnByDefault);
+    TEST_METHOD(TestCreateWithFeedbackProtectionOffIsReported);
+    TEST_METHOD(TestCreateWithMalformedFeedbackProtectionKeepsProtectionOn);
+    TEST_METHOD(TestSetFeedbackProtectionChangesReportedValue);
+    TEST_METHOD(TestSetFeedbackProtectionWithUnknownValueIsRejected);
+    TEST_METHOD(TestSetFeedbackProtectionWithMalformedAssociationIdIsRejected);
+
+    // Basic Loopback has the same protection, with no servicing gate
+    TEST_METHOD(TestBasicLoopbackDeclaresFeedbackProtectionCapability);
+    TEST_METHOD(TestBasicLoopbackFeedbackProtectionCreateAndSet);
+
 private:
 
     MidiTest::DeviceNodeTracker m_deviceNodeTracker{};

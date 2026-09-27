@@ -6,32 +6,32 @@ type: runtimeclass
 description: Describes how to locate the remote host a client should connect to
 ---
 
-Supplies either a discovered device id or a direct address. Used by `MidiNetworkClientConnectConfig`.
+Holds either the device id of a discovered host, or a direct address. Used by `MidiNetworkClientConnectConfig`.
 
 ## Constructors
 
 | Constructor | Description |
 | -------- | ----------- |
-| `MidiNetworkClientMatchCriteria()` | Create empty criteria |
+| `MidiNetworkClientMatchCriteria()` | Creates empty criteria |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `DeviceId` | The device id of a host discovered over mDNS, as reported by `MidiNetworkAdvertisedHost.DeviceId` |
-| `ProductInstanceId` | The device's own product instance id, per the specification's recall pair |
+| `DeviceId` | The device id of a host found over mDNS, as reported by `MidiNetworkAdvertisedHost.DeviceId` |
+| `ProductInstanceId` | The device's own product instance id. The MIDI 2.0 specification uses this and the UMP Endpoint Name together to recognize a device |
 | `UmpEndpointName` | The device's own UMP Endpoint Name, the other half of that pair |
-| `DirectHostNameOrIPAddress` | Host name or IP address of the remote host, for a direct connection |
-| `DirectPort` | UDP port of the remote host, for a direct connection |
+| `DirectHostNameOrIPAddress` | The host name or IP address of the remote host, for a direct connection |
+| `DirectPort` | The UDP port of the remote host, for a direct connection |
 
-Supplying `ProductInstanceId` and `UmpEndpointName` as well as `DeviceId` is worth doing. The DNS-SD instance label behind `DeviceId` is a name, not an identity: a responder renames it to resolve a collision, and a customer or a firmware update can change it. The identity pair lets a reconnect still find the device after that happens.
+It's worth setting `ProductInstanceId` and `UmpEndpointName` as well as `DeviceId`. The DNS-SD name behind `DeviceId` is just a name, and it can change. The network renames it when two devices use the same name, and a person or a firmware update can change it too. The id pair still finds the device when it reconnects after that happens.
 
 ## Methods
 
 | Method | Description |
 | -------- | ----------- |
-| `GetConfigJson()` | Returns the JSON fragment this object produces, for writing to the configuration file |
+| `GetConfigJson()` | Returns the JSON for this object, for saving in the configuration |
 
 ## Remarks
 
-Set `DeviceId` for a discovered host, or `DirectHostNameOrIPAddress` and `DirectPort` for a direct one. The choice determines how the service behaves when the host is unreachable: a discovered host is retried whenever it advertises again, whereas a direct address is tried once and then marked unavailable. See the [namespace overview]({{ site.baseurl }}/sdk-reference/Transports/Network/) for the full table.
+Set `DeviceId` for a discovered host, or `DirectHostNameOrIPAddress` and `DirectPort` for a direct one. Your choice decides what the service does when the host can't be reached. A discovered host is tried again whenever it advertises. A direct address is tried once, and then marked unavailable. See the [namespace overview]({{ site.baseurl }}/sdk-reference/Transports/Network/) for the full table.

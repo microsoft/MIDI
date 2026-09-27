@@ -65,6 +65,11 @@ CMidi2LoopbackMidiConfigurationManager::ExecuteCommandListEntries(
         obj.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_LIST_ENTRY_MUTED_KEY,
             json::JsonValue::CreateBooleanValue(device->IsMuted));
 
+        if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
+        {
+            AddFeedbackStatusToListEntry(obj, device);
+        }
+
 
         auto objEndpointA = json::JsonObject();
 
@@ -140,6 +145,15 @@ CMidi2LoopbackMidiConfigurationManager::ExecuteCommandChangeMutedState(
     auto device = TransportState::Current().GetEndpointTable()->GetDevice(associationIdString);
     RETURN_HR_IF_NULL(E_NOTFOUND, device);
 
+    if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
+    {
+        // before the flag changes, so a trip still being handled cannot mute it again afterward
+        if (device->Feedback != nullptr)
+        {
+            device->Feedback->OnMutedStateChanging();
+        }
+    }
+
     device->IsMuted = isMuted;
 
     RETURN_HR_IF_NULL(E_UNEXPECTED, TransportState::Current().GetEndpointManager());
@@ -150,6 +164,102 @@ CMidi2LoopbackMidiConfigurationManager::ExecuteCommandChangeMutedState(
     RETURN_IF_FAILED(TransportState::Current().GetEndpointManager()->UpdateSingleEndpointMutedStateProperty(device->DefinitionB, isMuted));
 
     return S_OK;
+}
+
+
+_Use_decl_annotations_
+HRESULT
+CMidi2LoopbackMidiConfigurationManager::ExecuteCommandSetFeedbackProtection(
+    std::map<std::wstring, std::wstring> const& arguments,
+    json::JsonObject& responseObject)
+{
+    auto const associationArgument = arguments.find(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_COMMON_PARAMETER_ENDPOINT_ASSOCIATION_ID);
+
+    GUID associationId{};
+
+    if (associationArgument == arguments.end() || !internal::TryParseGuidString(associationArgument->second, associationId))
+    {
+        internal::SetConfigurationResponseObjectFailWithErrorCode(
+            responseObject,
+            LOOPBACK_ERROR_CODE_INVALID_ASSOCIATION_ID,
+            internal::ResourceGetWString(IDS_ERROR_INVALID_ASSOCIATION_ID));
+
+        return S_OK;
+    }
+
+    auto const protectionArgument = arguments.find(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_PARAMETER_FEEDBACK_PROTECTION);
+
+    bool enabled{ true };
+
+    if (protectionArgument == arguments.end() || !internal::TryParseFeedbackProtectionValue(protectionArgument->second, enabled))
+    {
+        internal::SetConfigurationResponseObjectFailWithErrorCode(
+            responseObject,
+            LOOPBACK_ERROR_CODE_INVALID_JSON,
+            internal::ResourceGetWString(IDS_ERROR_INVALID_FEEDBACK_PROTECTION));
+
+        return S_OK;
+    }
+
+    auto const table = TransportState::Current().GetEndpointTable();
+    auto const device = table == nullptr ? nullptr :
+        table->GetDevice(internal::ToLowerTrimmedWStringCopy(winrt::to_hstring(associationId).c_str()));
+
+    if (device == nullptr || device->Feedback == nullptr)
+    {
+        internal::SetConfigurationResponseObjectFailWithErrorCode(
+            responseObject,
+            LOOPBACK_ERROR_CODE_ENDPOINT_NOT_FOUND,
+            internal::ResourceGetWString(IDS_ERROR_ENDPOINT_NOT_FOUND));
+
+        return S_OK;
+    }
+
+    device->Feedback->SetEnabled(enabled);
+
+    internal::SetConfigurationResponseObjectSuccess(responseObject);
+
+    return S_OK;
+}
+
+
+_Use_decl_annotations_
+void
+CMidi2LoopbackMidiConfigurationManager::AddFeedbackStatusToListEntry(
+    json::JsonObject& entryObject,
+    std::shared_ptr<MidiLoopbackDevice> const& device)
+{
+    auto const& feedback = device->Feedback;
+
+    // no guards means nothing is watching, and saying so is the honest answer
+    entryObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_PROTECTION_PROPERTY,
+        json::JsonValue::CreateStringValue(internal::FeedbackProtectionJsonValue(feedback != nullptr && feedback->IsEnabled())));
+
+    auto const status = feedback == nullptr ? MidiLoopbackFeedback::Status{} : feedback->GetStatus();
+
+    entryObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_FOR_FEEDBACK_PROPERTY,
+        json::JsonValue::CreateBooleanValue(status.MutedForFeedback));
+
+    if (!status.MutedForFeedback)
+    {
+        return;
+    }
+
+    entryObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_DETECTED_TIME_PROPERTY,
+        json::JsonValue::CreateStringValue(internal::FileTimeToDecimalString(status.DetectedTime)));
+
+    entryObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_TEST_PROPERTY,
+        json::JsonValue::CreateStringValue(status.Info.Test == internal::MidiFeedbackTest::Runaway ?
+            MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_TEST_VALUE_RUNAWAY :
+            MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_TEST_VALUE_REPEAT));
+
+    entryObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_COMMON_FEEDBACK_MESSAGES_PER_SECOND_PROPERTY,
+        json::JsonValue::CreateNumberValue(static_cast<double>(status.Info.MessagesPerSecond)));
+
+    entryObject.SetNamedValue(MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_FEEDBACK_DIRECTION_PROPERTY,
+        json::JsonValue::CreateStringValue(status.DirectionAToB ?
+            MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_FEEDBACK_DIRECTION_VALUE_A_TO_B :
+            MIDI_CONFIG_JSON_ENDPOINT_LOOPBACK_FEEDBACK_DIRECTION_VALUE_B_TO_A));
 }
 
 
@@ -197,6 +307,15 @@ CMidi2LoopbackMidiConfigurationManager::ProcessCommand(
             capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_LIST_ENTRIES, true);
         }
 
+        if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
+        {
+            // protection acts by muting, so it is only offered where muting works
+            if (Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
+            {
+                capabilities.emplace(MIDI_CONFIG_JSON_TRANSPORT_COMMAND_CAPABILITY_FEEDBACK_PROTECTION, true);
+            }
+        }
+
         // A rolled back build ignores the image, so it must not claim to honor one or a client
         // offers the customer a picture that never appears.
         if (Feature_Servicing_MIDI2EndpointCustomizationEnhancements::IsEnabled())
@@ -215,6 +334,14 @@ CMidi2LoopbackMidiConfigurationManager::ProcessCommand(
     else
     {
         // having it in the else block is kludgy, but required for the KIR check.
+
+        if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
+        {
+            if (commandHelper.Command() == MIDI_CONFIG_JSON_TRANSPORT_COMMAND_SET_FEEDBACK_PROTECTION)
+            {
+                return ExecuteCommandSetFeedbackProtection(*commandHelper.Arguments(), responseObject);
+            }
+        }
 
         if (Feature_Servicing_MIDI2LoopbackMuteAndList::IsEnabled())
         {
@@ -574,6 +701,13 @@ CMidi2LoopbackMidiConfigurationManager::UpdateConfiguration(
                             MIDI_CONFIG_JSON_ENDPOINT_COMMON_MUTED_PROPERTY, false);
 
                         definitionB->IsMuted = definitionA->IsMuted;
+                    }
+
+                    if (Feature_Servicing_MIDI2LoopbackFeedbackProtection::IsEnabled())
+                    {
+                        // on the association, like the muted flag, because it mutes both directions
+                        definitionA->FeedbackProtectionEnabled = internal::ReadFeedbackProtectionEnabled(associationObj);
+                        definitionB->FeedbackProtectionEnabled = definitionA->FeedbackProtectionEnabled;
                     }
 
 

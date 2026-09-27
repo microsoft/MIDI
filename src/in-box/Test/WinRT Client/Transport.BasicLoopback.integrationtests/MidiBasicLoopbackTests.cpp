@@ -12,6 +12,7 @@
 #include <mmsystem.h>
 #include <vector>
 #include <atomic>
+#include <chrono>
 
 #include <io.h>
 #include <fcntl.h>
@@ -1110,6 +1111,520 @@ void MidiBasicLoopbackTests::TestUmpSendReceive()
 
         VERIFY_FAIL();
     }
+}
+
+
+
+// ============================================================================
+// Feedback protection
+// ============================================================================
+
+// TAEF only knows how to print its own types, so a WinRT enum needs telling.
+namespace WEX::TestExecution
+{
+    template <>
+    class VerifyOutputTraits<MidiBasicLoopbackFeedbackProtection>
+    {
+    public:
+        static WEX::Common::NoThrowString ToString(MidiBasicLoopbackFeedbackProtection const& value)
+        {
+            return WEX::Common::NoThrowString().Format(L"%d", static_cast<int32_t>(value));
+        }
+    };
+
+    template <>
+    class VerifyOutputTraits<MidiBasicLoopbackErrorCode>
+    {
+    public:
+        static WEX::Common::NoThrowString ToString(MidiBasicLoopbackErrorCode const& value)
+        {
+            return WEX::Common::NoThrowString().Format(L"0x%08x", static_cast<uint32_t>(value));
+        }
+    };
+}
+
+namespace
+{
+    // Where the basic loopback transport cannot watch for feedback, the typed properties report
+    // Off and there is nothing to test, so these skip rather than fail.
+    bool FeedbackProtectionAvailableOrSkip()
+    {
+        if (!MidiBasicLoopbackManager::IsFeedbackProtectionAvailable())
+        {
+            WEX::Logging::Log::Result(WEX::Logging::TestResults::Skipped, L"The basic loopback transport on this PC cannot watch for feedback.");
+            return false;
+        }
+
+        return true;
+    }
+
+    // The detector needs about a second of sustained feedback, and a work item applies the mute
+    // after that, so this polls.
+    bool WaitForFeedbackMute(_In_ winrt::guid const& associationId, _In_ std::chrono::milliseconds const timeout)
+    {
+        auto const deadline = std::chrono::steady_clock::now() + timeout;
+
+        do
+        {
+            auto const entry = FindActiveLoopbackEntry(associationId);
+
+            if (entry != nullptr && entry.IsMutedForFeedback())
+            {
+                return true;
+            }
+
+            ::Sleep(100);
+        } while (std::chrono::steady_clock::now() < deadline);
+
+        return false;
+    }
+
+    // The loop a customer makes by accident with a basic loopback: an app with MIDI thru on,
+    // listening to the loopback and sending to the same loopback. Whatever comes in goes straight
+    // back out, and comes in again. A fixed set of different messages keeps going around, so the
+    // loop runs as fast as the service can carry it without ever filling a buffer.
+    class ThruFeedbackLoop
+    {
+    public:
+        ThruFeedbackLoop(_In_ MidiBasicLoopbackEntry const& loopback, _In_ winrt::hstring const& sessionName)
+        {
+            m_session = MidiSession::Create(sessionName);
+            VERIFY_IS_NOT_NULL(m_session);
+
+            m_connection = m_session.CreateEndpointConnection(loopback.EndpointDeviceId());
+            VERIFY_IS_NOT_NULL(m_connection);
+
+            // Captured by value so a callback still running after Stop() touches nothing freed.
+            auto state = m_state;
+            auto connection = m_connection;
+
+            m_token = m_connection.MessageReceived([state, connection](auto&&, MidiMessageReceivedEventArgs const& args)
+                {
+                    if (!state->Echoing)
+                    {
+                        return;
+                    }
+
+                    uint32_t word0{ 0 };
+                    uint32_t word1{ 0 };
+                    uint32_t word2{ 0 };
+                    uint32_t word3{ 0 };
+
+                    if (args.FillWords(word0, word1, word2, word3) != 2)
+                    {
+                        return;
+                    }
+
+                    state->EchoCount++;
+
+                    connection.SendSingleMessageWords(MidiClock::TimestampConstantSendImmediately(), word0, word1);
+                });
+
+            VERIFY_IS_TRUE(m_connection.Open());
+        }
+
+        ~ThruFeedbackLoop()
+        {
+            Stop();
+        }
+
+        // Different notes, as a chord would have, and every one of them keeps going around.
+        void Start(_In_ uint32_t const distinctMessageCount)
+        {
+            for (uint32_t i = 0; i < distinctMessageCount; i++)
+            {
+                uint32_t const word0{ 0x40900000 | ((i & 0x7F) << 8) };
+                uint32_t const word1{ 0x80000000 };
+
+                VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(
+                    m_connection.SendSingleMessageWords(MidiClock::TimestampConstantSendImmediately(), word0, word1)));
+            }
+        }
+
+        void Stop() noexcept
+        {
+            m_state->Echoing = false;
+
+            try
+            {
+                if (m_session == nullptr)
+                {
+                    return;
+                }
+
+                m_connection.MessageReceived(m_token);
+
+                m_session.DisconnectEndpointConnection(m_connection.ConnectionId());
+                m_session.Close();
+
+                m_session = nullptr;
+            }
+            catch (...)
+            {
+            }
+        }
+
+        uint64_t EchoCount() const noexcept
+        {
+            return m_state->EchoCount;
+        }
+
+    private:
+        struct State
+        {
+            std::atomic<bool> Echoing{ true };
+            std::atomic<uint64_t> EchoCount{ 0 };
+        };
+
+        std::shared_ptr<State> m_state{ std::make_shared<State>() };
+
+        MidiSession m_session{ nullptr };
+        MidiEndpointConnection m_connection{ nullptr };
+        winrt::event_token m_token{};
+    };
+
+    constexpr uint32_t FeedbackLoopMessageCount{ 32 };
+}
+
+
+void MidiBasicLoopbackTests::TestFeedbackProtectionDefaultsToMute()
+{
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
+
+    if (!FeedbackProtectionAvailableOrSkip())
+    {
+        return;
+    }
+
+    // what a loopback gets when the app says nothing about feedback
+    VERIFY_ARE_EQUAL(MidiBasicLoopbackCreationConfig{}.FeedbackProtection(), MidiBasicLoopbackFeedbackProtection::Mute);
+
+    auto response = CreateTestLoopback(L"Test Basic Loopback Feedback Default");
+    auto associationId = response.CreatedLoopbackEntry().AssociationId();
+
+    auto cleanupLoopback = wil::scope_exit([&] { RemoveTestLoopback(associationId); });
+
+    VERIFY_ARE_EQUAL(response.CreatedLoopbackEntry().FeedbackProtection(), MidiBasicLoopbackFeedbackProtection::Mute);
+    VERIFY_IS_FALSE(response.CreatedLoopbackEntry().IsMutedForFeedback());
+
+    auto const entry = FindActiveLoopbackEntry(associationId);
+    VERIFY_IS_NOT_NULL(entry);
+
+    VERIFY_ARE_EQUAL(entry.FeedbackProtection(), MidiBasicLoopbackFeedbackProtection::Mute);
+    VERIFY_IS_FALSE(entry.IsMutedForFeedback());
+    VERIFY_ARE_EQUAL(entry.FeedbackDetectedTime().time_since_epoch().count(), (int64_t)0);
+}
+
+
+void MidiBasicLoopbackTests::TestCreateWithFeedbackProtectionOff()
+{
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
+
+    if (!FeedbackProtectionAvailableOrSkip())
+    {
+        return;
+    }
+
+    auto uniqueId = L"ID" + winrt::to_hstring(MidiClock::Now()) + winrt::to_hstring(rand());
+
+    MidiBasicLoopbackEndpointDefinition definition;
+    definition.Name(L"Test Basic Loopback Feedback Off");
+    definition.Description(L"Basic loopback created by the Windows MIDI Services TAEF tests.");
+    definition.UniqueId(uniqueId);
+
+    MidiBasicLoopbackCreationConfig creationConfig(definition);
+    creationConfig.FeedbackProtection(MidiBasicLoopbackFeedbackProtection::Off);
+
+    auto response = MidiBasicLoopbackManager::CreateTransientLoopback(creationConfig);
+    VERIFY_IS_NOT_NULL(response);
+
+    if (!response.Success())
+    {
+        std::wcout << L"Error Message: " << response.ErrorMessage().c_str() << std::endl;
+    }
+
+    VERIFY_IS_TRUE(response.Success());
+
+    auto associationId = response.CreatedLoopbackEntry().AssociationId();
+
+    auto cleanupLoopback = wil::scope_exit([&] { RemoveTestLoopback(associationId); });
+
+    VERIFY_ARE_EQUAL(response.CreatedLoopbackEntry().FeedbackProtection(), MidiBasicLoopbackFeedbackProtection::Off);
+
+    // and the service agrees, rather than only the SDK echoing back what it was given
+    auto const entry = FindActiveLoopbackEntry(associationId);
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_ARE_EQUAL(entry.FeedbackProtection(), MidiBasicLoopbackFeedbackProtection::Off);
+}
+
+
+void MidiBasicLoopbackTests::TestSetFeedbackProtection()
+{
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
+
+    if (!FeedbackProtectionAvailableOrSkip())
+    {
+        return;
+    }
+
+    auto response = CreateTestLoopback(L"Test Basic Loopback Feedback Set");
+    auto associationId = response.CreatedLoopbackEntry().AssociationId();
+
+    auto cleanupLoopback = wil::scope_exit([&] { RemoveTestLoopback(associationId); });
+
+    auto offResponse = MidiBasicLoopbackManager::SetFeedbackProtection(associationId, MidiBasicLoopbackFeedbackProtection::Off);
+    VERIFY_IS_NOT_NULL(offResponse);
+
+    if (!offResponse.Success())
+    {
+        std::wcout << L"Error Message: " << offResponse.ErrorMessage().c_str() << std::endl;
+    }
+
+    VERIFY_IS_TRUE(offResponse.Success());
+
+    auto entry = FindActiveLoopbackEntry(associationId);
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_ARE_EQUAL(entry.FeedbackProtection(), MidiBasicLoopbackFeedbackProtection::Off);
+
+    // the muted state is a separate thing, and changing protection must not touch it
+    VERIFY_IS_FALSE(entry.IsMuted());
+
+    auto muteResponse = MidiBasicLoopbackManager::SetFeedbackProtection(associationId, MidiBasicLoopbackFeedbackProtection::Mute);
+    VERIFY_IS_NOT_NULL(muteResponse);
+    VERIFY_IS_TRUE(muteResponse.Success());
+
+    entry = FindActiveLoopbackEntry(associationId);
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_ARE_EQUAL(entry.FeedbackProtection(), MidiBasicLoopbackFeedbackProtection::Mute);
+
+    // a loopback that is not there is reported as such
+    auto missingResponse = MidiBasicLoopbackManager::SetFeedbackProtection(
+        winrt::Windows::Foundation::GuidHelper::CreateNewGuid(),
+        MidiBasicLoopbackFeedbackProtection::Off);
+
+    VERIFY_IS_NOT_NULL(missingResponse);
+    VERIFY_IS_FALSE(missingResponse.Success());
+}
+
+
+void MidiBasicLoopbackTests::TestSetFeedbackProtectionRejectsUnknownValue()
+{
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
+
+    if (!FeedbackProtectionAvailableOrSkip())
+    {
+        return;
+    }
+
+    auto response = CreateTestLoopback(L"Test Basic Loopback Feedback Unknown");
+    auto associationId = response.CreatedLoopbackEntry().AssociationId();
+
+    auto cleanupLoopback = wil::scope_exit([&] { RemoveTestLoopback(associationId); });
+
+    // an enum from a newer SDK, or a cast, is refused rather than guessed at
+    auto unknownResponse = MidiBasicLoopbackManager::SetFeedbackProtection(
+        associationId,
+        static_cast<MidiBasicLoopbackFeedbackProtection>(99));
+
+    VERIFY_IS_NOT_NULL(unknownResponse);
+    VERIFY_IS_FALSE(unknownResponse.Success());
+    VERIFY_ARE_EQUAL(unknownResponse.ErrorCode(), MidiBasicLoopbackErrorCode::InvalidArgument);
+
+    // and nothing changed
+    auto const entry = FindActiveLoopbackEntry(associationId);
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_ARE_EQUAL(entry.FeedbackProtection(), MidiBasicLoopbackFeedbackProtection::Mute);
+}
+
+
+void MidiBasicLoopbackTests::TestFeedbackLoopMutesLoopback()
+{
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
+
+    if (!FeedbackProtectionAvailableOrSkip())
+    {
+        return;
+    }
+
+    auto response = CreateTestLoopback(L"Test Basic Loopback Feedback Loop");
+    auto associationId = response.CreatedLoopbackEntry().AssociationId();
+
+    auto cleanupLoopback = wil::scope_exit([&] { RemoveTestLoopback(associationId); });
+
+    ThruFeedbackLoop loop(response.CreatedLoopbackEntry(), L"TestFeedbackLoopMutesLoopback");
+
+    auto const beforeLoop = winrt::clock::now();
+
+    LOG_OUTPUT(L"Starting a feedback loop");
+    loop.Start(FeedbackLoopMessageCount);
+
+    auto const muted = WaitForFeedbackMute(associationId, std::chrono::seconds(15));
+
+    std::cout << "Messages echoed: " << loop.EchoCount() << std::endl;
+
+    loop.Stop();
+
+    VERIFY_IS_TRUE(muted, L"the loopback should have muted itself");
+
+    auto const entry = FindActiveLoopbackEntry(associationId);
+    VERIFY_IS_NOT_NULL(entry);
+
+    // the same mute a customer applies by hand, so every app sees it the same way
+    VERIFY_IS_TRUE(entry.IsMuted());
+    VERIFY_IS_TRUE(entry.IsMutedForFeedback());
+    VERIFY_IS_TRUE(entry.FeedbackDetectedTime() >= beforeLoop - std::chrono::seconds(5));
+
+    // Unmuting is how the customer says the loop is fixed, and it clears the report.
+    auto unmuteResponse = MidiBasicLoopbackManager::UnmuteLoopback(associationId);
+    VERIFY_IS_NOT_NULL(unmuteResponse);
+    VERIFY_IS_TRUE(unmuteResponse.Success());
+
+    auto const unmutedEntry = FindActiveLoopbackEntry(associationId);
+    VERIFY_IS_NOT_NULL(unmutedEntry);
+    VERIFY_IS_FALSE(unmutedEntry.IsMuted());
+    VERIFY_IS_FALSE(unmutedEntry.IsMutedForFeedback());
+    VERIFY_ARE_EQUAL(unmutedEntry.FeedbackProtection(), MidiBasicLoopbackFeedbackProtection::Mute);
+}
+
+
+void MidiBasicLoopbackTests::TestFeedbackLoopWithProtectionOffIsNotMuted()
+{
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
+
+    if (!FeedbackProtectionAvailableOrSkip())
+    {
+        return;
+    }
+
+    auto response = CreateTestLoopback(L"Test Basic Loopback Feedback Loop Off");
+    auto associationId = response.CreatedLoopbackEntry().AssociationId();
+
+    auto cleanupLoopback = wil::scope_exit([&] { RemoveTestLoopback(associationId); });
+
+    auto offResponse = MidiBasicLoopbackManager::SetFeedbackProtection(associationId, MidiBasicLoopbackFeedbackProtection::Off);
+    VERIFY_IS_NOT_NULL(offResponse);
+    VERIFY_IS_TRUE(offResponse.Success());
+
+    ThruFeedbackLoop loop(response.CreatedLoopbackEntry(), L"TestFeedbackLoopWithProtectionOffIsNotMuted");
+
+    LOG_OUTPUT(L"Starting a feedback loop on a loopback which is not watched");
+    loop.Start(FeedbackLoopMessageCount);
+
+    // several times longer than the protection needs to act
+    auto const muted = WaitForFeedbackMute(associationId, std::chrono::seconds(5));
+
+    auto const echoed = loop.EchoCount();
+    std::cout << "Messages echoed: " << echoed << std::endl;
+
+    loop.Stop();
+
+    VERIFY_IS_FALSE(muted, L"Do nothing means do nothing");
+
+    // and the loop really was running, or not muting it proves nothing
+    VERIFY_IS_GREATER_THAN(echoed, (uint64_t)10'000);
+
+    auto const entry = FindActiveLoopbackEntry(associationId);
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_IS_FALSE(entry.IsMuted());
+}
+
+
+// A sender that keeps sending, fast and repetitive, looks like a loop until the pause shows it is
+// not. It must never be muted, and the check must not lose or reorder anything.
+void MidiBasicLoopbackTests::TestSteadyTrafficIsNotMuted()
+{
+    VERIFY_IS_TRUE(MidiApi::EnsureServiceAvailable());
+    VERIFY_IS_TRUE(MidiBasicLoopbackManager::IsTransportAvailable());
+
+    if (!FeedbackProtectionAvailableOrSkip())
+    {
+        return;
+    }
+
+    auto response = CreateTestLoopback(L"Test Basic Loopback Steady Traffic");
+    auto associationId = response.CreatedLoopbackEntry().AssociationId();
+
+    auto cleanupLoopback = wil::scope_exit([&] { RemoveTestLoopback(associationId); });
+
+    auto session = MidiSession::Create(L"TestSteadyTrafficIsNotMuted");
+    VERIFY_IS_NOT_NULL(session);
+
+    auto connection = session.CreateEndpointConnection(response.CreatedLoopbackEntry().EndpointDeviceId());
+    VERIFY_IS_NOT_NULL(connection);
+
+    std::atomic<uint32_t> receivedCount{ 0 };
+    std::atomic<uint32_t> outOfOrderCount{ 0 };
+
+    wil::unique_event_nothrow allReceived;
+    allReceived.create();
+
+    constexpr uint32_t messageCount{ 30'000 };
+
+    // Sixteen notes over and over, identical each time around. That is what makes it look like a
+    // loop, and it also means the order can be checked: message n is always note n % 16.
+    auto token = connection.MessageReceived([&](auto&&, MidiMessageReceivedEventArgs const& args)
+        {
+            uint32_t word0{ 0 };
+            uint32_t word1{ 0 };
+            uint32_t word2{ 0 };
+            uint32_t word3{ 0 };
+
+            if (args.FillWords(word0, word1, word2, word3) != 2)
+            {
+                return;
+            }
+
+            auto const index = receivedCount.fetch_add(1);
+
+            if (((word0 >> 8) & 0x7F) != (index & 0x0F))
+            {
+                outOfOrderCount++;
+            }
+
+            if (index + 1 == messageCount)
+            {
+                allReceived.SetEvent();
+            }
+        });
+
+    VERIFY_IS_TRUE(connection.Open());
+
+    // several thousand a second for a few seconds: well past the point where the checks start
+    for (uint32_t i = 0; i < messageCount; i++)
+    {
+        uint32_t const word0{ 0x40900000 | ((i & 0x0F) << 8) };
+        uint32_t const word1{ 0x80000000 };
+
+        VERIFY_IS_TRUE(MidiEndpointConnection::SendMessageSucceeded(
+            connection.SendSingleMessageWords(MidiClock::TimestampConstantSendImmediately(), word0, word1)));
+
+        if ((i % 100) == 99)
+        {
+            ::Sleep(10);
+        }
+    }
+
+    auto const gotEverything = allReceived.wait(15000);
+
+    connection.MessageReceived(token);
+    session.DisconnectEndpointConnection(connection.ConnectionId());
+    session.Close();
+
+    std::cout << "Received " << receivedCount << " of " << messageCount << ", " << outOfOrderCount << " out of order" << std::endl;
+
+    VERIFY_IS_TRUE(gotEverything, L"a pause to check for feedback must not lose anything");
+    VERIFY_ARE_EQUAL(outOfOrderCount.load(), (uint32_t)0);
+
+    auto const entry = FindActiveLoopbackEntry(associationId);
+    VERIFY_IS_NOT_NULL(entry);
+    VERIFY_IS_FALSE(entry.IsMuted());
+    VERIFY_IS_FALSE(entry.IsMutedForFeedback());
 }
 
 

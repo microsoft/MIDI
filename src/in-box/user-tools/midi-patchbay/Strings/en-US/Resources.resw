@@ -440,7 +440,7 @@
     <value>Percentage</value>
   </data>
   <data name="TransformValueScaleHint" xml:space="preserve">
-    <value>MIDI 2.0 carries velocity in sixteen bits, so a percentage is what the number really means. Pick 0 to 127 when your instrument gives each of those 128 steps its own meaning, such as a pad color. The value is the same either way; only the way you type it changes.</value>
+    <value>Applies to velocity, aftertouch and controller values. MIDI 2.0 carries velocity in sixteen bits and controller values in thirty-two, so a percentage is what the number really means. Pick 0 to 127 when your instrument gives each of those 128 steps its own meaning, such as a pad color. The value is the same either way; only the way you type it changes.</value>
   </data>
   <data name="TransformCurveUnchanged" xml:space="preserve">
     <value>Leave the velocity alone</value>
@@ -536,7 +536,7 @@
     <value>Control change mapping</value>
   </data>
   <data name="TransformSectionControlMapHint" xml:space="preserve">
-    <value>Moves a controller to a different number and carries its value over untouched. Controllers you do not list are passed through.</value>
+    <value>Moves a controller to a different number. Its value only changes if you add a rule for it under Control change values. Controllers you do not list are passed through.</value>
   </data>
   <data name="TransformAddControlMapping" xml:space="preserve">
     <value>Add a control change mapping</value>
@@ -614,6 +614,74 @@
        language that writes 56,69 changes the separator here. -->
   <data name="TransformPercentFormat" xml:space="preserve">
     <value>{0}.{1:02}%</value>
+  </data>
+
+  <!-- Control change values and aftertouch. Both use the same editor. -->
+  <data name="TransformSectionControlValues" xml:space="preserve">
+    <value>Control change values</value>
+  </data>
+  <data name="TransformSectionControlValuesHint" xml:space="preserve">
+    <value>Changes a controller's value on its way out. Invert flips it, for a pedal that works backwards. Input low and input high are the ends of the pedal or knob's travel, so one that stops short of either end can still cover the whole range. Output low and output high set how far it goes. Slow rise gives finer control near the bottom, and fast rise near the top. A rule applies to the controller number after the mapping above, and controllers without a rule are passed through.</value>
+  </data>
+  <data name="TransformAddControlValue" xml:space="preserve">
+    <value>Add a controller</value>
+  </data>
+  <data name="TransformNoControlValues" xml:space="preserve">
+    <value>No controller values are changed.</value>
+  </data>
+  <data name="TransformSectionAftertouch" xml:space="preserve">
+    <value>Aftertouch</value>
+  </data>
+  <data name="TransformSectionAftertouchHint" xml:space="preserve">
+    <value>Channel pressure and poly pressure, which is how hard a key is pressed after it is down. Input low is how hard you have to press before anything is sent, and input high is how hard counts as full. Slow rise makes full pressure harder to reach, and fast rise makes it easier. A pressure of zero means the key was let go, so it is always sent as zero and no sound is left bent.</value>
+  </data>
+  <data name="TransformShapeController" xml:space="preserve">
+    <value>CC</value>
+  </data>
+  <data name="TransformShapeCurve" xml:space="preserve">
+    <value>Curve</value>
+  </data>
+  <data name="TransformShapeCurveLinear" xml:space="preserve">
+    <value>Linear</value>
+  </data>
+  <data name="TransformShapeCurveSlowRise" xml:space="preserve">
+    <value>Slow rise</value>
+  </data>
+  <data name="TransformShapeCurveFastRise" xml:space="preserve">
+    <value>Fast rise</value>
+  </data>
+  <data name="TransformShapeInvert" xml:space="preserve">
+    <value>Invert</value>
+  </data>
+  <data name="TransformShapeInputLow" xml:space="preserve">
+    <value>Input low</value>
+  </data>
+  <data name="TransformShapeInputHigh" xml:space="preserve">
+    <value>Input high</value>
+  </data>
+  <data name="TransformShapeOutputLow" xml:space="preserve">
+    <value>Output low</value>
+  </data>
+  <data name="TransformShapeOutputHigh" xml:space="preserve">
+    <value>Output high</value>
+  </data>
+  <data name="TransformSummaryAftertouchSlowRise" xml:space="preserve">
+    <value>Aftertouch slow rise</value>
+  </data>
+  <data name="TransformSummaryAftertouchFastRise" xml:space="preserve">
+    <value>Aftertouch fast rise</value>
+  </data>
+  <data name="TransformSummaryAftertouchInputFormat" xml:space="preserve">
+    <value>Aftertouch input {0} to {1}</value>
+  </data>
+  <data name="TransformSummaryAftertouchOutputFormat" xml:space="preserve">
+    <value>Aftertouch output {0} to {1}</value>
+  </data>
+  <data name="TransformSummaryControlValueFormat" xml:space="preserve">
+    <value>Values changed on {0} controllers</value>
+  </data>
+  <data name="TransformSummaryOneControlValue" xml:space="preserve">
+    <value>Values changed on 1 controller</value>
   </data>
 
   <!-- ============================================================== filters -->

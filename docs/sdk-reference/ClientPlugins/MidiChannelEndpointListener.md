@@ -7,39 +7,43 @@ implements: Windows.Devices.Midi2.IMidiEndpointMessageProcessingPlugin, Windows.
 description: Provides a way to filter incoming messages by group and channel without opening separate connections
 ---
 
-This class acts as a client-side filter. Incoming messages with the specified group and channel will be provided through the `MessageReceived` event. Other messages will be ignored. 
+This class filters incoming messages in your application. Messages on the group and channels you choose are passed to its `MessageReceived` event, and other messages are ignored.
 
-That means system real-time messages, SysEx messages, and any other messages without an explicit channel field (that we know about at API compile time) will be ignored here by default. If you want any of those, like the real-time messages like Clock, you can set up a `MidiMessageTypeEndpointListener` and have it listen to `MidiMessageType::SystemCommon32` or, just for real-time and system common messages, use the `IncludeSystemCommonAndRealTimeMessages` flag. Please refer to the MIDI UMP Specification for details on what types of messages are included in each message type. You could also set up a `MidiGroupEndpointListener` and get the entire stream of messages for that single group. That behaves most like a classic MIDI 1.0 API Port.
+So by default, it ignores system real-time messages, System Exclusive messages, and any other message that has no channel field, as far as this API knows. If you want some of those, you have three choices:
 
-In addition to the properties and methods in `IMidiEndpointMessageProcessingPlugin`, and the `MessageReceived` event from `IMidiMessageReceivedEventSource` the class provides the following:
+- For system common and real-time messages, such as Timing Clock, set `IncludeSystemCommonAndRealTimeMessages`.
+- Add a `MidiMessageTypeEndpointListener` that listens for `MidiMessageType::SystemCommon32`, or any other message type. The UMP specification says which messages each message type includes.
+- Add a `MidiGroupEndpointListener` to get every message for one group. That works most like a port in the older MIDI 1.0 APIs.
+
+Along with everything in `IMidiEndpointMessageProcessingPlugin`, and the `MessageReceived` event from `IMidiMessageReceivedEventSource`, this class has:
 
 ## Properties
 
 | Property | Description |
 | ---- | ---- |
-| `IncludedGroup` | The single `MidiGroup` that this listener will listen to. If unspecified, all groups will be included in scope and only the channel will be evaluated. |
-| `IncludedChannels` | The channels that this listener will listen to on the group. |
-| `IncludeSystemCommonAndRealTimeMessages` | True if this plugin should fire MessageReceived events for system common/real-time messages like clock, which do not have a channel. False by default. |
-| `PreventFiringMainMessageReceivedEvent` | True if this plugin should prevent the endpoint's `MessageReceived` event from firing if the message was in-scope for this plugin. |
-| `PreventCallingFurtherListeners` | True if this plugin should prevent any plugins after this one from executing if the message was handled by this plugin instance. |
+| `IncludedGroup` | The one `MidiGroup` this listener listens to. If you don't set it, every group is included, and only the channel is checked |
+| `IncludedChannels` | The channels this listener listens to on the group |
+| `IncludeSystemCommonAndRealTimeMessages` | True if this listener should also raise `MessageReceived` for system common and real-time messages, such as Timing Clock, which have no channel. False by default |
+| `PreventFiringMainMessageReceivedEvent` | True to stop the connection's own `MessageReceived` event from firing for the messages this listener handles |
+| `PreventCallingFurtherListeners` | True to keep plugins after this one from getting the messages this listener handles |
 
-## Functions
+## Constructors
 
-| Property | Description |
+| Constructor | Description |
 | ---- | ---- |
-| `MidiChannelEndpointListener()` | Construct a new instance of this type |
+| `MidiChannelEndpointListener()` | Creates a new listener |
 
 ## Events
 
-The `MessageReceived` event is raised synchronously, and needs to be handled quickly and efficiently by the calling application.
+The listener waits for your `MessageReceived` handler to finish before it moves on, so keep your handler fast.
 
-Applications are typically much faster than devices at handling messages. However, failing to drain the incoming message queue fast enough can result in transmission errors. With MIDI 2.0 there is no upper performance limit on devices, and USB 3 and Network MIDI devices, among others, are capable of transmitting a large number of messages in a very short period of time.
+Applications are usually much faster than devices. But if your handler can't keep up, the incoming message queue can fill up and cause errors. MIDI 2.0 has no speed limit for devices, and USB 3 and network devices, among others, can send a lot of messages in a very short time.
 
-If you need to do long-running processing of incoming messages, add them to your own incoming queue and have them processed by another application thread.
+If you need to do slow work with incoming messages, copy them to your own queue and process them on another thread.
 
 | Event | Description |
 | ---- | ---- |
-| `MessageReceived (source, args)` | From `IMidiMessageReceivedEventSource`. Raised for each incoming message which is in scope for this listener. |
+| `MessageReceived(source, args)` | From `IMidiMessageReceivedEventSource`. Raised for each incoming message this listener is set to pass on |
 
 ## Examples
 
@@ -113,4 +117,4 @@ myConnection.Open();
 // ...
 ```
 
-More complete examples [available on Github](https://aka.ms/midirepo)
+More complete examples are [available on GitHub](https://aka.ms/midirepo)

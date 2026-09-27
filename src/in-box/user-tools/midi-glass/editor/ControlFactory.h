@@ -52,6 +52,12 @@ namespace glass
 
         // White keys with a few black ones on top, for the piano keyboard.
         Keys = 8,
+
+        // Two rows of small squares, one of them lit, for the note pads.
+        PadGrid = 9,
+
+        // A few hexagons nested together, for the hex pads.
+        HexGrid = 10,
     };
 
     struct PaletteArt

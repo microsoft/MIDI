@@ -1548,6 +1548,18 @@
                                            TextWrapping="Wrap"
                                            Style="{StaticResource PropertyLabelStyle}" />
 
+                                <ToggleSwitch x:Name="NotificationsLoopbackFeedbackToggle"
+                                              x:Uid="NotificationsLoopbackFeedbackToggle"
+                                              Header="Loopbacks muted because of feedback"
+                                              OnContent="On"
+                                              OffContent="Off"
+                                              Toggled="OnNotificationsLoopbackFeedbackToggled" />
+
+                                <TextBlock x:Uid="NotificationsLoopbackFeedbackHelp"
+                                           Text="Tells you when a loopback muted itself because MIDI kept coming back into it. Unmuting is still done in MIDI Loopback Setup."
+                                           TextWrapping="Wrap"
+                                           Style="{StaticResource PropertyLabelStyle}" />
+
                             </StackPanel>
                         </Border>
                     </StackPanel>

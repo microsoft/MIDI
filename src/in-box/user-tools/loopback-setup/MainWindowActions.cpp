@@ -327,6 +327,7 @@ namespace winrt::midiloopbacksetup::implementation
             LoopbackDescriptionATextBox().Text(L"");
             LoopbackDescriptionBTextBox().Text(L"");
             LoopbackUniqueIdTextBox().Text(GenerateUniqueId());
+            LoopbackFeedbackComboBox().SelectedIndex(0);
 
             m_pendingLoopbackImage = L"";
             ShowChosenImage(
@@ -397,6 +398,11 @@ namespace winrt::midiloopbacksetup::implementation
             definitionB.ImageFileName(m_pendingLoopbackImage);
 
             creationConfig = midi2loop::MidiLoopbackCreationConfig{ definitionA, definitionB };
+
+            // a transport which cannot watch for feedback ignores this
+            creationConfig.FeedbackProtection(LoopbackFeedbackComboBox().SelectedIndex() == 1 ?
+                midi2loop::MidiLoopbackFeedbackProtection::Off :
+                midi2loop::MidiLoopbackFeedbackProtection::Mute);
 
             persist = IsCheckBoxChecked(LoopbackPersistCheckBox());
         }
@@ -541,6 +547,7 @@ namespace winrt::midiloopbacksetup::implementation
             BasicLoopbackNameTextBox().Text(L"");
             BasicLoopbackDescriptionTextBox().Text(L"");
             BasicLoopbackUniqueIdTextBox().Text(GenerateUniqueId());
+            BasicLoopbackFeedbackComboBox().SelectedIndex(0);
 
             m_pendingBasicLoopbackImage = L"";
             ShowChosenImage(
@@ -581,6 +588,10 @@ namespace winrt::midiloopbacksetup::implementation
             definition.ImageFileName(m_pendingBasicLoopbackImage);
 
             creationConfig = midi2bloop::MidiBasicLoopbackCreationConfig{ definition };
+
+            creationConfig.FeedbackProtection(BasicLoopbackFeedbackComboBox().SelectedIndex() == 1 ?
+                midi2bloop::MidiBasicLoopbackFeedbackProtection::Off :
+                midi2bloop::MidiBasicLoopbackFeedbackProtection::Mute);
 
             persist = IsCheckBoxChecked(BasicLoopbackPersistCheckBox());
         }
@@ -1640,6 +1651,7 @@ namespace winrt::midiloopbacksetup::implementation
             EditLoopbackDescriptionATextBox().Text(item.DescriptionA());
             EditLoopbackNameBTextBox().Text(item.NameB());
             EditLoopbackDescriptionBTextBox().Text(item.DescriptionB());
+            EditLoopbackFeedbackComboBox().SelectedIndex(item.IsFeedbackProtectionOn() ? 0 : 1);
 
             m_pendingEditImage = item.ImageFileName();
 
@@ -1696,6 +1708,7 @@ namespace winrt::midiloopbacksetup::implementation
 
             EditBasicLoopbackNameTextBox().Text(item.NameA());
             EditBasicLoopbackDescriptionTextBox().Text(item.DescriptionA());
+            EditBasicLoopbackFeedbackComboBox().SelectedIndex(item.IsFeedbackProtectionOn() ? 0 : 1);
 
             m_pendingEditImage = item.ImageFileName();
 
@@ -1750,6 +1763,24 @@ namespace winrt::midiloopbacksetup::implementation
         winrt::hstring descriptionB{};
         winrt::hstring image{ m_pendingEditImage };
 
+        // Sent only when the transport can watch and the customer actually changed it, so an edit
+        // of a name never touches the setting.
+        bool const canProtect = isBasic ? m_basicLoopbackCanProtectFromFeedback : m_loopbackCanProtectFromFeedback;
+        bool wantProtection{ true };
+        bool protectionChanged{ false };
+
+        try
+        {
+            wantProtection = (isBasic ?
+                EditBasicLoopbackFeedbackComboBox().SelectedIndex() :
+                EditLoopbackFeedbackComboBox().SelectedIndex()) != 1;
+
+            protectionChanged = canProtect && wantProtection != item.IsFeedbackProtectionOn();
+        }
+        catch (...)
+        {
+        }
+
         try
         {
             if (isBasic)
@@ -1802,6 +1833,7 @@ namespace winrt::midiloopbacksetup::implementation
         auto weak = get_weak();
         auto queue = DispatcherQueue();
         auto const associationKey = item.AssociationId();
+        auto const isPersisted = item.IsPersisted();
 
         co_await winrt::resume_background();
 
@@ -1826,6 +1858,42 @@ namespace winrt::midiloopbacksetup::implementation
                 // rather than a separate customization being stored beside it.
                 saved = native::LoopbackConfigFile::Current().UpdateEntryDetails(
                     kind, associationKey, nameA, descriptionA, nameB, descriptionB, image);
+            }
+
+            winrt::guid associationId{};
+
+            if (applied && protectionChanged && TryParseAssociationId(associationKey, associationId))
+            {
+                bool protectionApplied{ false };
+
+                if (isBasic)
+                {
+                    auto const protectionResponse = midi2bloop::MidiBasicLoopbackManager::SetFeedbackProtection(
+                        associationId,
+                        wantProtection ?
+                            midi2bloop::MidiBasicLoopbackFeedbackProtection::Mute :
+                            midi2bloop::MidiBasicLoopbackFeedbackProtection::Off);
+
+                    protectionApplied = protectionResponse != nullptr && protectionResponse.Success();
+                }
+                else
+                {
+                    auto const protectionResponse = midi2loop::MidiLoopbackManager::SetFeedbackProtection(
+                        associationId,
+                        wantProtection ?
+                            midi2loop::MidiLoopbackFeedbackProtection::Mute :
+                            midi2loop::MidiLoopbackFeedbackProtection::Off);
+
+                    protectionApplied = protectionResponse != nullptr && protectionResponse.Success();
+                }
+
+                applied = protectionApplied;
+
+                // a transient loopback has no entry to record it in, and that is not a failure
+                if (protectionApplied && isPersisted)
+                {
+                    saved = native::LoopbackConfigFile::Current().SetFeedbackProtection(kind, associationKey, wantProtection) && saved;
+                }
             }
         }
         MIDI_LOOPSETUP_CATCH_AND_LOG(L"Unable to save the loopback edit.")

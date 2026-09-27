@@ -7,28 +7,28 @@ implements: Windows.Devices.Midi2.ServiceConfig.IMidiServiceTransportPluginConfi
 description: The allow and deny decisions saved for a Network MIDI 2.0 host
 ---
 
-Pass to `MidiServiceTransportPluginConfigManager.SaveUpdate` to make a host's allow and deny decisions outlive a service restart.
+Pass this to `MidiServiceTransportPluginConfigManager.SaveUpdate` so a host's allow and deny decisions are kept after the service restarts.
 
 ## Constructors
 
 | Constructor | Description |
 | -------- | ----------- |
-| `MidiNetworkHostKnownClientsConfig()` | Create an empty config |
-| `MidiNetworkHostKnownClientsConfig(hostId)` | Create a config for the specified host |
+| `MidiNetworkHostKnownClientsConfig()` | Creates an empty configuration |
+| `MidiNetworkHostKnownClientsConfig(hostId)` | Creates a configuration for this host |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
 | `HostId` | The GUID of the host entry these decisions belong to |
-| `KnownClients` | The complete set of [MidiNetworkKnownRemoteClient]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkKnownRemoteClient/) the host has been told about |
+| `KnownClients` | Every [MidiNetworkKnownRemoteClient]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkKnownRemoteClient/) the host has a decision for |
 
 ## Remarks
 
-This is a saved record, not a command. Telling the service about a single decision is done with `MidiNetworkTransportManager.ApproveOrDenyRemoteClientConnectRequestAsync`, which acts on it immediately. The service remembers a decision for as long as it is running but never writes the configuration file, so saving one of these is what makes a decision survive a restart.
+This is a saved record, not a command. To tell the service about one decision, use `MidiNetworkTransportManager.ApproveOrDenyRemoteClientConnectRequestAsync`, which acts on it right away. The service remembers a decision while it's running, but never saves the configuration. Saving one of these is what keeps a decision after a restart.
 
-`KnownClients` must hold the complete set for the host, not only what changed. Both saved lists are replaced by what it holds, so read the current set first, change it, and save the whole thing. Leaving a client out is how a decision is withdrawn, which puts the client back to being one the host has never been told about.
+`KnownClients` must hold every client for the host, not just the ones that changed. Both saved lists are replaced with what it holds. So read the current list first, change it, and save the whole thing. Leaving a client out is how you take back a decision. The client goes back to being one the host has never been told about.
 
-Leaving a client out only changes what the next service start reads. The running service keeps its own copy of the lists, so withdraw the decision from it with [ForgetRemoteClientAsync]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkRemoteClientForgetConfig/) as well, or the old decision stays in force until the service restarts.
+Leaving a client out only changes what's read the next time the service starts. The running service keeps its own copy of the lists, so also take the decision back there with [ForgetRemoteClientAsync]({{ site.baseurl }}/sdk-reference/Transports/Network/MidiNetworkRemoteClientForgetConfig/). Otherwise, the old decision stays until the service restarts.
 
 Saving an empty `KnownClients` clears both lists for the host.

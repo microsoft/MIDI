@@ -8,24 +8,24 @@ description: Saves the remembered allow and deny lists to the configuration file
 
 Implements `IMidiServiceTransportPluginConfig`.
 
-Writes the remembered allow and deny lists to the configuration file, so decisions made with `MidiBluetoothApprovalScope.Always` survive a service restart. The service applies those decisions immediately but never writes that file itself, which is why this exists as a separate step.
+Saves the remembered allow and deny lists to the configuration, so decisions made with `MidiBluetoothApprovalScope.Always` are kept after the service restarts. The service applies those decisions right away, but never saves them itself. That's why this is a separate step.
 
 ## Constructors
 
 | Constructor | Description |
 | -------- | ----------- |
-| `MidiBluetoothPeripheralClientListConfig(currentStatus)` | Builds the configuration from a `MidiBluetoothPeripheralStatus`. |
+| `MidiBluetoothPeripheralClientListConfig(currentStatus)` | Builds the configuration from a `MidiBluetoothPeripheralStatus` |
 
 ## Properties
 
 | Property | Description |
 | -------- | ----------- |
-| `TransportId` | The Bluetooth transport's GUID. |
-| `ConfigJson` | The configuration file representation of both lists. |
+| `TransportId` | The Bluetooth transport's GUID |
+| `ConfigJson` | Both lists, as JSON |
 
 ## Why it takes the whole status
 
-Both lists are stored whole rather than merged entry by entry, so this must always carry the complete set. Constructing it from a `MidiBluetoothPeripheralStatus` fetched from the service is the reliable way to do that, because the service is what holds the current lists:
+Both lists are saved whole, not merged one entry at a time, so this must always hold the complete lists. The safe way to do that is to create it from a `MidiBluetoothPeripheralStatus` you just got from the service, because the service holds the current lists:
 
 ```cpp
 auto status = MidiBluetoothTransportManager::GetPeripheralStatus();
@@ -35,4 +35,4 @@ MidiBluetoothPeripheralClientListConfig config{ status };
 MidiServiceTransportPluginConfigManager::SaveUpdate(config);
 ```
 
-Building the lists from an application's own copy risks writing back a stale set and dropping a decision made somewhere else in the meantime.
+If you build the lists from your app's own copy, you might save an old version and lose a decision made somewhere else in the meantime.

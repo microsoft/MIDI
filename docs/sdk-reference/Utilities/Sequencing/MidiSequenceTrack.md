@@ -12,17 +12,17 @@ description: One track of a sequence, and what the file said about it
 
 | Property | Description |
 | -------- | ----------- |
-| `TrackIndex` | Index of this track within the sequence |
-| `Name` | The track name, where the file carried one |
-| `InstrumentName` | The instrument name, where the file carried one |
-| `SuggestedDeviceName` | The port the track was written for, when the file names one |
-| `UsedChannelMask` | Bit zero is channel one. A track is not obliged to use only one |
-| `NoteCount` | Number of paired notes on this track |
-| `EventCount` | Number of events on this track |
-| `LastTick` | Tick of the final event on this track |
+| `TrackIndex` | The track's index in the sequence |
+| `Name` | The track name, if the file has one |
+| `InstrumentName` | The instrument name, if the file has one |
+| `SuggestedDeviceName` | The port the track was written for, if the file names one |
+| `UsedChannelMask` | Which channels the track uses, one bit per channel. Bit zero is channel one. A track doesn't have to use only one channel |
+| `NoteCount` | How many notes are on this track, each with its start and end paired up |
+| `EventCount` | How many events are on this track |
+| `LastTick` | The tick of the last event on this track |
 
 ## Remarks
 
-A file meant for several instruments at once carries `SuggestedDeviceName` on each track, so it is the starting point for deciding where a track should be sent. Use it to build a default [`MidiSequenceTrackRouting`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequenceTrackRouting/), but let the person using your application override it.
+A file meant for several instruments at once has a `SuggestedDeviceName` on each track, so start there when you decide where a track should go. Use it to build a default [`MidiSequenceTrackRouting`]({{ site.baseurl }}/sdk-reference/Utilities/Sequencing/MidiSequenceTrackRouting/), but let the person using your app change it.
 
-Do not assume one channel per track. `UsedChannelMask` exists because plenty of real files put several channels on a single track, and a format 0 file puts all sixteen on one.
+Don't assume one channel per track. `UsedChannelMask` exists because plenty of real files put several channels on a single track, and a format 0 file puts all sixteen on one.

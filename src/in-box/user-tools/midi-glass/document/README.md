@@ -11,6 +11,8 @@ The layout document, its file format, the page size templates and the theme mode
 | `LayoutStore.*` | The layouts folder, reading, writing and listing. The only part of this layer that touches a disk. |
 | `JsonText.*` | The deterministic writer, and the machinery that keeps fields this build does not understand. |
 | `PageTemplates.*` | The page sizes a new layout starts from, and the control sizes derived from them. |
+| `PadGrid.*` | Note pads and hex pads worked out: where each pad goes as the control is resized, which note it plays, and whether that note is the key's root, in the key or outside it. Pure, and tested. |
+| `StepPattern.*` | The step sequencer worked out: which step plays next in each direction, when each step starts with swing, and how long its note sounds. Pure, and tested. The thread that keeps time is `runtime/StepSequencer`. |
 | `ThemeModel.*` | The theme property table, the nine shipped themes, and measured contrast. |
 | `ThemeStore.*` | Themes as their own shareable `.miditheme.json` files. |
 

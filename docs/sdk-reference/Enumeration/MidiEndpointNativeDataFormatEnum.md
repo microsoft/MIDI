@@ -6,22 +6,22 @@ type: enum
 description: The data format that the device expects to send to and receive from Windows
 ---
 
-Represents the data format that the device expects to send to and to receive from Windows. This is not necessarily the same format as what the driver receives from Windows.
+The data format the device itself sends to and receives from Windows. It isn't always the format the driver gets from Windows.
 
-| Scenario | Value  |
-| --------------- | ---------- | ----------- |
+| Scenario | Value |
+| -------- | ----- |
 | MIDI 2.0 device connected to the new UMP MIDI 2.0 driver | `UniversalMidiPacketFormat` |
 | MIDI 2.0 device connected to the MIDI 1.0 class driver, using fallback mode | `Midi1ByteFormat` |
 | MIDI 1.0 device connected to the new UMP MIDI 2.0 driver | `Midi1ByteFormat` |
 | MIDI 1.0 device connected to a vendor driver | `Midi1ByteFormat` |
 | MIDI 1.0 device connected to the MIDI 1.0 class driver | `Midi1ByteFormat` |
 
-Of course, when sending messages through the WinRT API, you always use the Universal MIDI Packet (UMP) format. The MIDI Service will handle the translation between formats.
+When you send messages through the WinRT API, you always use the Universal MIDI Packet (UMP) format, whatever the device's own format is. The MIDI service converts between the formats for you.
 
 ## Properties
 
 | Property | Value | Description |
 | --------------- | ---------- | ----------- |
-| `Unknown` | `0x00000000` | Unknown native data format |
-| `Midi1ByteFormat` | `0x00000001` | The native data format is the MIDI 1.0 byte message format |
-| `UniversalMidiPacketFormat` | `0x00000002` | The native data format is the Universal MIDI Packet data format |
+| `Unknown` | `0x00000000` | The format isn't known |
+| `Midi1ByteFormat` | `0x00000001` | The device uses the MIDI 1.0 byte format |
+| `UniversalMidiPacketFormat` | `0x00000002` | The device uses the Universal MIDI Packet format |

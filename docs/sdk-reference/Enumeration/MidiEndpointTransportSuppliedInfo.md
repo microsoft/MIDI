@@ -6,26 +6,35 @@ type: runtimeclass
 description: Metadata for an endpoint supplied by the transport in the MIDI Service
 ---
 
+What the transport knows about an endpoint, such as the name Windows has for the device, its USB ids, and how it's connected. When you get one from `MidiEndpointDeviceInformation`, treat it as read-only. Changing it doesn't change the endpoint.
+
+## Constructors
+
+| Constructor | Description |
+| ----------- | ----------- |
+| `MidiEndpointTransportSuppliedInfo()` | Creates an empty object |
+| `MidiEndpointTransportSuppliedInfo(name, description, serialNumber, vendorId, productId, manufacturerName, supportsMultiClient, nativeDataFormat, transportId, transportCode, driverDeviceInterfaceId)` | Creates an object with every value filled in |
+
 ## Properties
 
 | Property | Description |
 | --------------- | ----------- |
-| `IsReadOnly` | True if this object should be treated as read-only |
-| `Name` | The endpoint name as provided by the transport |
-| `Description` | The description, if any, as provided by the transport |
-| `SerialNumber` | Any unique serial number (iSerial in USB, for example) from the transport |
-| `VendorId` | If the device is connected to the new UMP USB driver, or we can otherwise obtain it, this is the USB VID `idVendor` |
-| `ProductId` | If the device is connected to the new UMP USB driver, or we can otherwise obtain it, this is the USB PID `idProduct` |
-| `ManufacturerName` | If the device is connected to the new UMP USB driver, this is the manufacturer name from the USB headers |
-| `SupportsMultiClient` | True if the endpoint supports multi-client use through Windows MIDI Services |
-| `NativeDataFormat` | The `MidiEndpointNativeDataFormat` indicating if this device natively uses the MIDI 1.0 byte format, or the UMP format |
-| `TransportId` | GUID identifying the transport in use |
-| `TransportCode` | Short identifier for the transport, such as `KS` or `BLE` |
-| `DriverDeviceInterfaceId` | The driver device interface id for this endpoint, if applicable |
+| `IsReadOnly` | True if you should treat this object as read-only |
+| `Name` | The endpoint name from the transport |
+| `Description` | The description from the transport, if there is one |
+| `SerialNumber` | A serial number from the transport, if there is one, such as `iSerial` for a USB device |
+| `VendorId` | The USB vendor id (`idVendor`), when the device uses the new UMP USB driver or the id is available another way |
+| `ProductId` | The USB product id (`idProduct`), when the device uses the new UMP USB driver or the id is available another way |
+| `ManufacturerName` | The manufacturer name from the USB descriptors, when the device uses the new UMP USB driver |
+| `SupportsMultiClient` | True if more than one application can use the endpoint at the same time through Windows MIDI Services |
+| `NativeDataFormat` | A `MidiEndpointNativeDataFormat` that says whether the device itself uses the MIDI 1.0 byte format or UMP |
+| `TransportId` | A GUID that identifies the transport |
+| `TransportCode` | A short code for the transport, such as `KS` or `BLE` |
+| `DriverDeviceInterfaceId` | The driver's device interface id for this endpoint, if it has one |
 
 ## Samples
 
-`TransportId` and `TransportCode` are how you tell what kind of thing an endpoint actually is, which WinMM never really answered. `VendorId` and `ProductId` here come from the transport, and are not the same as the parent device's identifiers.
+`TransportId` and `TransportCode` tell you what kind of endpoint this really is, which WinMM never could. `VendorId` and `ProductId` here come from the transport, and aren't the same as the parent device's ids.
 
 * [C++/WinRT identify-endpoint-type](https://github.com/microsoft/MIDI/tree/main/samples/cpp-winrt/identify-endpoint-type)
 * [C# identify-endpoint-type](https://github.com/microsoft/MIDI/tree/main/samples/csharp-net/identify-endpoint-type)
