@@ -129,6 +129,7 @@ namespace winrt::midiglass::implementation
             _In_ int32_t key,
             _In_ double velocity,
             _In_ bool isDown);
+        void OnControlPadTouched(_In_ size_t itemIndex, _In_ glass::PadTouch const& touch);
 
         void OnFeedbackMoved(_In_ uint32_t controlIndex, _In_ double value);
         void OnActivitySeen(

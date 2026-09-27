@@ -71,6 +71,15 @@ namespace glass
         _In_ double height,
         _In_ double y) noexcept;
 
+    // The value of the switch position under a point: equal slices along the long side, the
+    // first on the left, or at the top of an upright switch, the way a list reads.
+    double SwitchValueAtPoint(
+        _In_ double width,
+        _In_ double height,
+        _In_ double x,
+        _In_ double y,
+        _In_ int32_t positions) noexcept;
+
     // Which key a point lands on, counted from the leftmost, or -1 for none. White and black
     // keys overlap, so the black ones are tested first: a finger in the top part of a white
     // key where a black one sits is on the black one, the way a real keyboard behaves.

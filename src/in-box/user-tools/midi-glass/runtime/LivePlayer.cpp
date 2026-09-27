@@ -7,6 +7,7 @@
 
 #include "pch.h"
 #include "LivePlayer.h"
+#include "PadGrid.h"
 
 #include <ump_helpers.h>
 
@@ -165,6 +166,18 @@ namespace glass
 
         m_lfos->Start(dispatcher);
 
+        m_steps = StepSequencer::Create();
+
+        m_steps->StepChanged = [weak](uint32_t controlIndex, uint64_t run, int32_t stepIndex, bool starts)
+            {
+                if (auto strong = weak.lock())
+                {
+                    strong->OnStepChanged(controlIndex, run, stepIndex, starts);
+                }
+            };
+
+        m_steps->Start(dispatcher);
+
         m_devices.SetChangedHandler([weak]()
             {
                 auto strong = weak.lock();
@@ -254,6 +267,17 @@ namespace glass
             m_lfos->Stop();
         }
 
+        // Its last note ends while there is still somewhere to send the note off.
+        StopAllSteps(false);
+
+        if (m_steps != nullptr)
+        {
+            m_steps->Stop();
+        }
+
+        // A note held on a pad grid as the window closes still has to end.
+        ReleaseAllPads();
+
         m_sendTable.clear();
 
         if (m_runner != nullptr)
@@ -281,12 +305,33 @@ namespace glass
 
     void LivePlayer::RebuildThrottles()
     {
+        // An edit can renumber or remove a grid while a finger is on it. Its notes end now,
+        // through the engine that started them, rather than being left sounding with nothing
+        // that remembers them.
+        ReleaseAllPads();
+
+        // A sequencer is stopped for the same reason, and started again afterwards from its
+        // first step if it is still there, so an edit made while it plays is heard at once.
+        std::vector<std::wstring> runningSteps{};
+
+        for (auto const& steps : m_stepControls)
+        {
+            if (steps.Run != 0)
+            {
+                runningSteps.push_back(steps.ControlId);
+            }
+        }
+
+        StopAllSteps(false);
+
         m_throttles.assign(m_document.ControlCount(), ValueThrottle{});
         m_throttlesY.assign(m_document.ControlCount(), ValueThrottle{});
         m_soundingNotes.assign(m_document.ControlCount(), 0xFFFF);
         m_clockTickCounts.assign(m_document.ControlCount(), 0);
         m_clockControls.clear();
         m_lfoControls.clear();
+        m_stepControls.clear();
+        m_padControls.clear();
 
         size_t index{ 0 };
 
@@ -330,6 +375,30 @@ namespace glass
                     m_lfoControls.push_back(std::move(entry));
                 }
 
+                if (control.Kind == ControlKind::Steps)
+                {
+                    StepsEntry entry{};
+
+                    entry.ControlIndex = static_cast<uint32_t>(index);
+                    entry.ControlId = control.Id;
+                    entry.Spec = control.Steps;
+
+                    m_stepControls.push_back(std::move(entry));
+                }
+
+                if (IsPadGrid(control.Kind))
+                {
+                    PadEntry entry{};
+
+                    entry.ControlIndex = static_cast<uint32_t>(index);
+                    entry.StartNote = std::clamp(control.Pads.StartNote, 0, 127);
+                    entry.BendRange = std::clamp(
+                        control.Pads.BendRangeSemitones, MinimumBendRangeSemitones, MaximumBendRangeSemitones);
+                    entry.Voices.Configure(control.Pads.Glide, entry.BendRange);
+
+                    m_padControls.push_back(std::move(entry));
+                }
+
                 index++;
             }
         }
@@ -349,6 +418,18 @@ namespace glass
                 {
                     clock.TempoSourceIndex = static_cast<int32_t>(at);
                     break;
+                }
+            }
+        }
+
+        // The sequencers that were playing before the edit, now playing the edited pattern.
+        if (m_steps != nullptr && !runningSteps.empty())
+        {
+            for (auto& steps : m_stepControls)
+            {
+                if (std::find(runningSteps.begin(), runningSteps.end(), steps.ControlId) != runningSteps.end())
+                {
+                    steps.Run = m_steps->Run(steps.ControlIndex, steps.Spec, m_document.Tempo.BeatsPerMinute);
                 }
             }
         }
@@ -409,12 +490,187 @@ namespace glass
 
             m_lfos->Run(lfo.ControlIndex, lfo.Spec, m_document.Tempo.BeatsPerMinute);
         }
+
+        if (m_steps == nullptr)
+        {
+            return;
+        }
+
+        for (auto& steps : m_stepControls)
+        {
+            if (!steps.Spec.StartsRunning || steps.Run != 0)
+            {
+                continue;
+            }
+
+            steps.Run = m_steps->Run(steps.ControlIndex, steps.Spec, m_document.Tempo.BeatsPerMinute);
+        }
     }
 
     _Use_decl_annotations_
     bool LivePlayer::IsLfoRunning(uint32_t controlIndex) const noexcept
     {
         return m_lfos != nullptr && m_lfos->IsRunning(controlIndex);
+    }
+
+    _Use_decl_annotations_
+    bool LivePlayer::AreStepsRunning(uint32_t controlIndex) const noexcept
+    {
+        for (auto const& steps : m_stepControls)
+        {
+            if (steps.ControlIndex == controlIndex)
+            {
+                return steps.Run != 0;
+            }
+        }
+
+        return false;
+    }
+
+    _Use_decl_annotations_
+    bool LivePlayer::StepsLatchAt(uint32_t controlIndex) const noexcept
+    {
+        for (auto const& steps : m_stepControls)
+        {
+            if (steps.ControlIndex == controlIndex)
+            {
+                return steps.Spec.Latching;
+            }
+        }
+
+        return true;
+    }
+
+    _Use_decl_annotations_
+    LivePlayer::StepsEntry* LivePlayer::FindStepControl(uint32_t controlIndex) noexcept
+    {
+        for (auto& steps : m_stepControls)
+        {
+            if (steps.ControlIndex == controlIndex)
+            {
+                return &steps;
+            }
+        }
+
+        return nullptr;
+    }
+
+    _Use_decl_annotations_
+    void LivePlayer::OnStepChanged(uint32_t controlIndex, uint64_t run, int32_t stepIndex, bool starts) noexcept
+    {
+        try
+        {
+            auto* const entry = FindStepControl(controlIndex);
+
+            // Queued before a stop and arrived after it. Playing it would start a note that
+            // nothing is left to end.
+            if (entry == nullptr || run == 0 || entry->Run != run)
+            {
+                return;
+            }
+
+            // The note before ends first, whether its time ran out or the next step came early.
+            if (entry->SoundingNote != 0xFFFF)
+            {
+                auto const sounding = entry->SoundingNote;
+
+                entry->SoundingNote = 0xFFFF;
+
+                SendPrepared(controlIndex, m_engine.EvaluateNote(controlIndex, sounding, 0.0, false, m_sends));
+            }
+
+            if (!starts)
+            {
+                return;
+            }
+
+            if (stepIndex >= 0 && static_cast<size_t>(stepIndex) < entry->Spec.Pattern.size())
+            {
+                auto const& step = entry->Spec.Pattern[static_cast<size_t>(stepIndex)];
+
+                if (step.On)
+                {
+                    auto const note = static_cast<uint16_t>(std::clamp(step.Note, 0, 127));
+
+                    entry->SoundingNote = note;
+
+                    SendPrepared(
+                        controlIndex,
+                        m_engine.EvaluateNote(controlIndex, note, step.Velocity, true, m_sends));
+                }
+            }
+
+            if (StepMoved)
+            {
+                StepMoved(controlIndex, stepIndex, true);
+            }
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void LivePlayer::StopSteps(uint32_t controlIndex, bool announce) noexcept
+    {
+        try
+        {
+            auto* const entry = FindStepControl(controlIndex);
+
+            if (entry == nullptr)
+            {
+                return;
+            }
+
+            if (m_steps != nullptr)
+            {
+                m_steps->CancelFor(controlIndex);
+            }
+
+            auto const wasRunning = entry->Run != 0;
+
+            entry->Run = 0;
+
+            if (entry->SoundingNote != 0xFFFF)
+            {
+                auto const sounding = entry->SoundingNote;
+
+                entry->SoundingNote = 0xFFFF;
+
+                SendPrepared(controlIndex, m_engine.EvaluateNote(controlIndex, sounding, 0.0, false, m_sends));
+            }
+
+            if (wasRunning && announce && StepMoved)
+            {
+                StepMoved(controlIndex, -1, false);
+            }
+        }
+        catch (...)
+        {
+        }
+    }
+
+    _Use_decl_annotations_
+    void LivePlayer::StopAllSteps(bool announce) noexcept
+    {
+        for (auto const& steps : m_stepControls)
+        {
+            StopSteps(steps.ControlIndex, announce);
+        }
+    }
+
+    _Use_decl_annotations_
+    void LivePlayer::SetOutputEnabled(bool enabled) noexcept
+    {
+        // A sequencer left running behind a shut gate would pick up mid pattern the next time it
+        // opened, with its last note never ended. It stops, and its note off goes out while the
+        // gate is still open.
+        if (!enabled && m_outputEnabled)
+        {
+            StopAllSteps(true);
+        }
+
+        m_outputEnabled = enabled;
     }
 
     _Use_decl_annotations_
@@ -800,6 +1056,132 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    LivePlayer::PadEntry* LivePlayer::FindPadControl(uint32_t controlIndex) noexcept
+    {
+        for (auto& entry : m_padControls)
+        {
+            if (entry.ControlIndex == controlIndex)
+            {
+                return &entry;
+            }
+        }
+
+        return nullptr;
+    }
+
+    _Use_decl_annotations_
+    void LivePlayer::SendPadActions(
+        uint32_t controlIndex,
+        int32_t bendRange,
+        std::span<PadAction const> actions) noexcept
+    {
+        for (auto const& action : actions)
+        {
+            uint32_t written{ 0 };
+
+            switch (action.Kind)
+            {
+            case PadActionKind::NoteOn:
+                written = m_engine.EvaluateNote(controlIndex, action.Note, action.Value, true, m_sends);
+                break;
+
+            case PadActionKind::NoteOff:
+                written = m_engine.EvaluateNote(controlIndex, action.Note, 0.0, false, m_sends);
+                break;
+
+            case PadActionKind::PortamentoFrom:
+                written = m_engine.EvaluatePortamento(controlIndex, action.Note, m_sends);
+                break;
+
+            case PadActionKind::Bend:
+                written = m_engine.EvaluatePerNotePitchBend(
+                    controlIndex, action.Note, action.Value, static_cast<double>(bendRange), m_sends);
+                break;
+
+            case PadActionKind::BendRange:
+                written = m_engine.EvaluatePerNoteBendRange(controlIndex, action.Value, m_sends);
+                break;
+
+            default:
+                break;
+            }
+
+            // Straight out, in order, and never through a throttle: a note on held back is a
+            // defect, and the portamento message has to reach the instrument before the note
+            // it names the start of.
+            SendPrepared(controlIndex, written);
+        }
+    }
+
+    _Use_decl_annotations_
+    void LivePlayer::PadPressed(uint32_t controlIndex, uint32_t touch, int32_t note, double velocity, double pitch)
+    {
+        auto* const entry = FindPadControl(controlIndex);
+
+        if (entry == nullptr)
+        {
+            return;
+        }
+
+        std::array<PadAction, MaximumPadActions> actions{};
+
+        auto const count = entry->Voices.Press(touch, note, velocity, pitch, actions);
+
+        SendPadActions(controlIndex, entry->BendRange, std::span<PadAction const>{ actions.data(), count });
+    }
+
+    _Use_decl_annotations_
+    void LivePlayer::PadMoved(uint32_t controlIndex, uint32_t touch, int32_t note, double velocity, double pitch)
+    {
+        auto* const entry = FindPadControl(controlIndex);
+
+        if (entry == nullptr)
+        {
+            return;
+        }
+
+        std::array<PadAction, MaximumPadActions> actions{};
+
+        auto const count = entry->Voices.Move(touch, note, velocity, pitch, actions);
+
+        SendPadActions(controlIndex, entry->BendRange, std::span<PadAction const>{ actions.data(), count });
+    }
+
+    _Use_decl_annotations_
+    void LivePlayer::PadReleased(uint32_t controlIndex, uint32_t touch)
+    {
+        auto* const entry = FindPadControl(controlIndex);
+
+        if (entry == nullptr)
+        {
+            return;
+        }
+
+        std::array<PadAction, MaximumPadActions> actions{};
+
+        auto const count = entry->Voices.Release(touch, actions);
+
+        SendPadActions(controlIndex, entry->BendRange, std::span<PadAction const>{ actions.data(), count });
+    }
+
+    void LivePlayer::ReleaseAllPads() noexcept
+    {
+        for (auto& entry : m_padControls)
+        {
+            if (entry.Voices.HeldCount() == 0)
+            {
+                continue;
+            }
+
+            std::array<PadAction, PadVoices::MaximumTouches> actions{};
+
+            auto const count = entry.Voices.ReleaseAll(actions);
+
+            SendPadActions(entry.ControlIndex, entry.BendRange, std::span<PadAction const>{ actions.data(), count });
+        }
+    }
+
+    _Use_decl_annotations_
     void LivePlayer::Switched(uint32_t controlIndex, bool isOn)
     {
         Switched(controlIndex, isOn, 1.0);
@@ -857,26 +1239,63 @@ namespace glass
             }
         }
 
+        // A sequencer is the same: a press starts it from its first step and a release or a
+        // second press stops it, and a stop always ends the note it was playing.
+        if (auto* const steps = FindStepControl(controlIndex))
+        {
+            if (!isOn)
+            {
+                StopSteps(controlIndex, true);
+            }
+            else if (steps->Run == 0 && m_steps != nullptr)
+            {
+                steps->Run = m_steps->Run(controlIndex, steps->Spec, m_document.Tempo.BeatsPerMinute);
+            }
+
+            return;
+        }
+
+        // A pad grid pressed through assistive technology has no finger to say which pad, so
+        // it plays its first one, the note the grid starts from. Its note row has no number of
+        // its own, so going on below would play note zero.
+        if (auto* const pads = FindPadControl(controlIndex))
+        {
+            constexpr uint32_t AutomationTouch = 0xFFFFFFFFu;
+
+            if (isOn)
+            {
+                PadPressed(controlIndex, AutomationTouch, pads->StartNote, velocity, pads->StartNote);
+            }
+            else
+            {
+                PadReleased(controlIndex, AutomationTouch);
+            }
+
+            return;
+        }
+
         // Nothing but a continuous control is ever throttled. Rate limiting a note on would be a
         // defect, not a feature.
         //
         // How hard it was hit rides in as the value, which is what the message's own two ends
         // then scale. A pad that does not measure pressure passes 1.0 and lands on the top end,
-        // exactly as it did before.
+        // exactly as it did before. A note row is told on or off by the press itself, so a
+        // light touch with a pen still plays a note rather than sending a note off.
         auto const hit = isOn ? std::clamp(velocity, 0.0, 1.0) : 0.0;
 
         SendPrepared(
             controlIndex,
-            m_engine.Evaluate(
+            m_engine.EvaluatePress(
                 controlIndex,
                 isOn ? MessageTrigger::TurnsOn : MessageTrigger::TurnsOff,
+                isOn,
                 hit,
                 m_sends));
 
         // A control that only declares "changes" still has to do something when a pad is hit.
         SendPrepared(
             controlIndex,
-            m_engine.Evaluate(controlIndex, MessageTrigger::Changes, hit, m_sends));
+            m_engine.EvaluatePress(controlIndex, MessageTrigger::Changes, isOn, hit, m_sends));
 
         RunPlan(controlIndex, isOn ? MessageTrigger::TurnsOn : MessageTrigger::TurnsOff);
     }

@@ -104,6 +104,7 @@
     <ClInclude Include="MonitorFormatTests.h" />
     <ClInclude Include="ValueThrottleTests.h" />
     <ClInclude Include="NewControlTests.h" />
+    <ClInclude Include="PadGridTests.h" />
     <ClInclude Include="GeneratorTests.h" />
     <ClInclude Include="PackageSurveyTests.h" />
     <ClInclude Include="RuntimeSurfaceTests.h" />
@@ -116,6 +117,8 @@
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutSerializer.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\PageTemplates.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LfoShape.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\document\StepPattern.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\document\PadGrid.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\ThemeModel.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\ThemeStore.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\LayoutStore.h" />
@@ -132,6 +135,7 @@
     <ClInclude Include="..\..\..\user-tools\midi-glass\document\HexText.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\binding\MonitorFormat.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\binding\ValueThrottle.h" />
+    <ClInclude Include="..\..\..\user-tools\midi-glass\binding\PadVoices.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\editor\ArrangeOps.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\editor\ControlFactory.h" />
     <ClInclude Include="..\..\..\user-tools\midi-glass\editor\EditGeometry.h" />
@@ -153,6 +157,7 @@
     <ClCompile Include="MonitorFormatTests.cpp" />
     <ClCompile Include="ValueThrottleTests.cpp" />
     <ClCompile Include="NewControlTests.cpp" />
+    <ClCompile Include="PadGridTests.cpp" />
     <ClCompile Include="GeneratorTests.cpp" />
     <ClCompile Include="PackageSurveyTests.cpp" />
     <ClCompile Include="RuntimeSurfaceTests.cpp" />
@@ -164,6 +169,8 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutSerializer.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\PageTemplates.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LfoShape.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\document\StepPattern.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\document\PadGrid.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\ThemeModel.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\ThemeStore.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\LayoutStore.cpp" />
@@ -180,6 +187,7 @@
     <ClCompile Include="..\..\..\user-tools\midi-glass\document\HexText.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\binding\MonitorFormat.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\binding\ValueThrottle.cpp" />
+    <ClCompile Include="..\..\..\user-tools\midi-glass\binding\PadVoices.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\ArrangeOps.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\ControlFactory.cpp" />
     <ClCompile Include="..\..\..\user-tools\midi-glass\editor\EditGeometry.cpp" />

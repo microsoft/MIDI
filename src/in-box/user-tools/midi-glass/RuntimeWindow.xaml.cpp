@@ -281,6 +281,14 @@ namespace winrt::midiglass::implementation
                 }
             };
 
+        m_input.PadTouched = [weak](size_t itemIndex, glass::PadTouch const& touch)
+            {
+                if (auto strong = weak.get())
+                {
+                    strong->OnControlPadTouched(itemIndex, touch);
+                }
+            };
+
         m_input.Switched = [weak](size_t itemIndex, bool isOn, double velocity)
             {
                 if (auto strong = weak.get())

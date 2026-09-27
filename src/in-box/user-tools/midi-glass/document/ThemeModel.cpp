@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cwchar>
 
 namespace glass
 {
@@ -263,7 +264,7 @@ namespace glass
                     // stays, because it is the color that makes the theme look real, and the
                     // rule that replaces the fudge is that the ember slot carries a rim, a value
                     // or a fill and never type.
-                    auto amber = MakeTubeTheme(L"Amber Console",
+                    auto amber = MakeTubeTheme(L"Terminal Amber",
                         0x33200F, 0x24160C, 0x140B07,
                         0x48301C, 0x3A2413,
                         0xFF6010,
@@ -349,46 +350,46 @@ namespace glass
                 {
                     // The orange is darker than the dark themes use it. On a near-white deck the
                     // usual #EF6C00 measures 2.9 : 1, which a thin rim cannot carry.
-                    auto pigment = MakeDarkTheme(L"Pigment Light", 0xFAF8F5,
+                    auto tonal = MakeDarkTheme(L"Tonal Light", 0xFAF8F5,
                         { 0x1565C0, 0x2E7D32, 0xB35400, 0xC2185B, 0x6A1B9A, 0x00838F });
 
-                    pigment.GlassTintPercent = 0;
-                    pigment.GlowStrength = 0;
-                    pigment.FillAtRest = 0.14;
-                    pigment.TouchFillPercent = 27;
-                    pigment.TrackColor = Rgb(0xE3DFD9);
-                    pigment.CornerRadius = 14;
+                    tonal.GlassTintPercent = 0;
+                    tonal.GlowStrength = 0;
+                    tonal.FillAtRest = 0.14;
+                    tonal.TouchFillPercent = 27;
+                    tonal.TrackColor = Rgb(0xE3DFD9);
+                    tonal.CornerRadius = 14;
 
                     // Flat and tonal. Depth is the wash of the control's own color, so a sheen
                     // and a shadow would both be saying it a second time.
-                    pigment.PlateSheenPercent = 0;
-                    pigment.PlateElevation = 0;
-                    pigment.PipeFalloff = 1.0;
-                    pigment.Thumb = ThumbStyle::Hue;
+                    tonal.PlateSheenPercent = 0;
+                    tonal.PlateElevation = 0;
+                    tonal.PipeFalloff = 1.0;
+                    tonal.Thumb = ThumbStyle::Hue;
 
-                    pigment.CautionResourceKey = L"ThemeCautionPigment";
+                    tonal.CautionResourceKey = L"ThemeCautionTonal";
 
-                    list.push_back(pigment);
+                    list.push_back(tonal);
                 }
 
                 {
-                    auto pigment = MakeDarkTheme(L"Pigment Dark", 0x16151A,
+                    auto tonal = MakeDarkTheme(L"Tonal Dark", 0x16151A,
                         { 0x64B5F6, 0x81C784, 0xFFB74D, 0xF06292, 0xBA68C8, 0x4DD0E1 });
 
-                    pigment.GlassTintPercent = 0;
-                    pigment.GlowStrength = 0;
-                    pigment.FillAtRest = 0.18;
-                    pigment.TouchFillPercent = 32;
-                    pigment.CornerRadius = 14;
+                    tonal.GlassTintPercent = 0;
+                    tonal.GlowStrength = 0;
+                    tonal.FillAtRest = 0.18;
+                    tonal.TouchFillPercent = 32;
+                    tonal.CornerRadius = 14;
 
-                    pigment.PlateSheenPercent = 0;
-                    pigment.PlateElevation = 0;
-                    pigment.PipeFalloff = 1.0;
-                    pigment.Thumb = ThumbStyle::Hue;
+                    tonal.PlateSheenPercent = 0;
+                    tonal.PlateElevation = 0;
+                    tonal.PipeFalloff = 1.0;
+                    tonal.Thumb = ThumbStyle::Hue;
 
-                    pigment.CautionResourceKey = L"ThemeCautionPigment";
+                    tonal.CautionResourceKey = L"ThemeCautionTonal";
 
-                    list.push_back(pigment);
+                    list.push_back(tonal);
                 }
 
                 // ---- Bigwig ----
@@ -1054,6 +1055,13 @@ namespace glass
                     list.push_back(airy);
                 }
 
+                // Studio Dark stays first as the default; the rest are alphabetical, so a family
+                // like Terminal Amber and Terminal Green sits together in the picker.
+                std::sort(list.begin() + 1, list.end(), [](Theme const& a, Theme const& b)
+                    {
+                        return _wcsicmp(a.Name.c_str(), b.Name.c_str()) < 0;
+                    });
+
                 return list;
             }();
 
@@ -1061,12 +1069,51 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    std::wstring CurrentThemeName(std::wstring const& name)
+    {
+        struct Renamed
+        {
+            wchar_t const* Was;
+            wchar_t const* Now;
+        };
+
+        // Pigments is a synth, and the name suggested a design link that is not there.
+        constexpr Renamed renamed[]
+        {
+            { L"Pigment Light", L"Tonal Light" },
+            { L"Pigment Dark", L"Tonal Dark" },
+            { L"Amber Console", L"Terminal Amber" },
+        };
+
+        for (auto const& entry : renamed)
+        {
+            if (name == entry.Was)
+            {
+                return entry.Now;
+            }
+        }
+
+        return name;
+    }
+
+    _Use_decl_annotations_
     Theme const* FindBuiltInTheme(std::wstring const& name) noexcept
     {
         auto const& themes = BuiltInThemes();
 
+        std::wstring current{};
+
+        try
+        {
+            current = CurrentThemeName(name);
+        }
+        catch (...)
+        {
+            return nullptr;
+        }
+
         auto it = std::find_if(themes.begin(), themes.end(),
-            [&name](Theme const& t) { return t.Name == name; });
+            [&current](Theme const& t) { return t.Name == current; });
 
         return it == themes.end() ? nullptr : &(*it);
     }

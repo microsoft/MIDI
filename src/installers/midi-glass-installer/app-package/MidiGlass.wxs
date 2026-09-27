@@ -1,0 +1,67 @@
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+
+    <?define StagingSourceRootFolder=$(env.MIDI_REPO_ROOT)\build\staging ?>
+    <?define StagingVersionIncludeFile=$(StagingSourceRootFolder)\version\MidiGlassVersion.wxi ?>
+    <?include $(StagingVersionIncludeFile) ?>
+
+    <Package Name="Microsoft Windows MIDI Services MIDI Glass $(var.Platform)"
+             Manufacturer="Microsoft Corporation"
+             Version="$(MidiGlassNumericVersion)"
+             UpgradeCode="8359fabf-562c-4226-b9ee-b915adc7cc07"
+             Scope="perMachine"
+             Compressed="true">
+
+        <MediaTemplate EmbedCab="yes" />
+
+        <!-- Same version upgrades are allowed because preview builds do not always carry a new
+             version number, and without this two of them install side by side. -->
+        <MajorUpgrade
+            AllowSameVersionUpgrades="yes"
+            DowngradeErrorMessage="A newer version of MIDI Glass is already installed. Uninstall it first to install this version." />
+
+        <!-- The same folder MIDI Glass has always installed to. MIDI Settings launches the tools
+             by this path, so the name under Tools is a contract. -->
+        <StandardDirectory Id="ProgramFiles64Folder">
+            <Directory Id="ROOTINSTALLFOLDER" Name="Windows MIDI Services">
+                <Directory Id="TOOLSROOT_INSTALLFOLDER" Name="Tools">
+                    <Directory Id="TOOL_GLASS_FOLDER" Name="Glass" />
+                </Directory>
+            </Directory>
+        </StandardDirectory>
+
+        <StandardDirectory Id="ProgramMenuFolder">
+            <Directory Id="MIDI_PROGRAMS_FOLDER" Name="Windows MIDI (Preview)" />
+        </StandardDirectory>
+
+        <!-- The app itself, with its own copy of the API. The list is generated from the staged
+             build output by build\build-midi-glass.ps1, so the .xbf files keep their folders
+             (Themes\Generic.xbf holds the templates the surface's controls are drawn with). -->
+
+        <Component Id="MidiGlassShortcut"
+                   Bitness="always64"
+                   Directory="MIDI_PROGRAMS_FOLDER"
+                   Guid="a88e689b-da0e-40ea-a63e-17bcb07de0bf">
+
+            <Shortcut Id="Shortcut_midiglass"
+                      Name="MIDI Glass"
+                      Target="[#midiglassExe]"
+                      WorkingDirectory="TOOL_GLASS_FOLDER" />
+
+            <!-- Only removes the folder if no other Windows MIDI Services installer still has
+                 shortcuts in it -->
+            <RemoveFolder Id="RemoveMidiProgramsFolder_Glass"
+                          Directory="MIDI_PROGRAMS_FOLDER"
+                          On="uninstall" />
+
+            <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\MIDI Glass">
+                <RegistryValue Type="string" Name="MidiGlassShortcut" Value="installed" KeyPath="yes" />
+            </RegistryKey>
+        </Component>
+
+        <Feature Id="MidiGlass">
+            <ComponentGroupRef Id="MidiGlassFiles" />
+            <ComponentRef Id="MidiGlassShortcut" />
+        </Feature>
+
+    </Package>
+</Wix>

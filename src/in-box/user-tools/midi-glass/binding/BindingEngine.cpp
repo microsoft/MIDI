@@ -27,6 +27,13 @@ namespace glass
         constexpr uint8_t StatusRegisteredController = 0x2;
         constexpr uint8_t StatusAssignedController = 0x3;
         constexpr uint8_t StatusPerNoteController = 0x0;
+        constexpr uint8_t StatusPerNotePitchBend = 0x6;
+
+        // Portamento Control: the note the next note on glides from.
+        constexpr uint8_t PortamentoControlNumber = 84;
+
+        // Registered controller bank 0, index 7: the sensitivity of per-note pitch bend.
+        constexpr uint8_t PerNoteBendRangeIndex = 7;
 
         // System real time, whole status bytes rather than nibbles.
         constexpr uint8_t StatusTimingClock = 0xF8;
@@ -403,6 +410,52 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    uint32_t BuildNoteWords(
+        PreparedMessage const& message,
+        bool isOn,
+        double velocity,
+        uint32_t* words) noexcept
+    {
+        if (message.Kind != MessageKind::Note)
+        {
+            return 0;
+        }
+
+        // A note off lands on the bottom of the row's range, as it always has.
+        auto const position = isOn && std::isfinite(velocity) ? std::clamp(velocity, 0.0, 1.0) : 0.0;
+
+        auto const status = isOn ? StatusNoteOn : StatusNoteOff;
+        auto const note = static_cast<uint8_t>(message.Number & 0x7F);
+
+        if (message.UseMidi1Protocol)
+        {
+            auto seven = static_cast<uint8_t>(FieldValue(message, position, 7));
+
+            if (isOn && seven == 0)
+            {
+                seven = 1;
+            }
+
+            words[0] = BuildMidi1ChannelVoice(message.GroupIndex, status, message.ChannelIndex, note, seven);
+            return 1;
+        }
+
+        auto sixteen = FieldValue(message, position, 16);
+
+        // Anything under this folds to zero when the service takes it down to seven bits for a
+        // MIDI 1.0 device, and there a note on at zero is a note off.
+        constexpr uint32_t QuietestNoteOn = 0x0200;
+
+        if (isOn && sixteen < QuietestNoteOn)
+        {
+            sixteen = QuietestNoteOn;
+        }
+
+        BuildMidi2ChannelVoice(message.GroupIndex, status, message.ChannelIndex, note, 0, sixteen << 16, words);
+        return 2;
+    }
+
+    _Use_decl_annotations_
     void BindingEngine::Prepare(
         LayoutDocument const& document,
         std::vector<PreparedDestination> destinations) noexcept
@@ -443,6 +496,7 @@ namespace glass
                     prepared.FirstMessage = static_cast<uint32_t>(m_messages.size());
                     prepared.DefaultValue = static_cast<float>(control.DefaultValue);
                     prepared.SendsValueOnStart = control.SendsValueOnStart && !document.SuppressAllStartupValues;
+                    prepared.SwitchPositions = control.Kind == ControlKind::Switch ? SwitchPositionCount(control) : 0;
 
                     for (auto const& message : control.Messages)
                     {
@@ -460,6 +514,7 @@ namespace glass
                         entry.Detents = message.Detents;
                         entry.Axis = message.Axis;
                         entry.UseMidi1Protocol = message.UseMidi1Protocol;
+                        entry.Position = message.Position;
 
                         m_messages.push_back(entry);
                     }
@@ -537,6 +592,35 @@ namespace glass
         ValueAxis axis,
         std::span<PreparedSend> sends) const noexcept
     {
+        return EvaluateRows(controlIndex, trigger, value, axis, NoteGate::FromValue, sends);
+    }
+
+    _Use_decl_annotations_
+    uint32_t BindingEngine::EvaluatePress(
+        size_t controlIndex,
+        MessageTrigger trigger,
+        bool isOn,
+        double velocity,
+        std::span<PreparedSend> sends) const noexcept
+    {
+        return EvaluateRows(
+            controlIndex,
+            trigger,
+            isOn ? velocity : 0.0,
+            ValueAxis::X,
+            isOn ? NoteGate::On : NoteGate::Off,
+            sends);
+    }
+
+    _Use_decl_annotations_
+    uint32_t BindingEngine::EvaluateRows(
+        size_t controlIndex,
+        MessageTrigger trigger,
+        double value,
+        ValueAxis axis,
+        NoteGate gate,
+        std::span<PreparedSend> sends) const noexcept
+    {
         if (controlIndex >= m_controls.size() || sends.empty())
         {
             return 0;
@@ -560,6 +644,21 @@ namespace glass
                 continue;
             }
 
+            // A row for one position of a switch goes out only when the switch lands there, and
+            // then it sends its maximum, the way a button sends its on value.
+            auto rowValue = value;
+
+            if (message.Position >= 0)
+            {
+                if (control.SwitchPositions < MinimumSwitchPositions ||
+                    SwitchPositionAt(value, control.SwitchPositions) != message.Position)
+                {
+                    continue;
+                }
+
+                rowValue = 1.0;
+            }
+
             if (message.DestinationIndex < 0 ||
                 static_cast<size_t>(message.DestinationIndex) >= m_destinations.size())
             {
@@ -578,7 +677,9 @@ namespace glass
 
             auto& send = sends[written];
 
-            send.WordCount = BuildMessageWords(message, value, send.Words);
+            send.WordCount = message.Kind == MessageKind::Note && gate != NoteGate::FromValue
+                ? BuildNoteWords(message, gate == NoteGate::On, rowValue, send.Words)
+                : BuildMessageWords(message, rowValue, send.Words);
 
             if (send.WordCount == 0)
             {
@@ -635,15 +736,194 @@ namespace glass
 
             auto& send = sends[written];
 
-            // A note off is the same row at the bottom of its range, which is how the note
-            // builder already tells the two apart.
-            send.WordCount = BuildMessageWords(entry, isOn ? std::clamp(velocity, 0.0, 1.0) : 0.0, send.Words);
+            // On or off is the key's to say. Reading it from the velocity, as a note row bound to
+            // a fader does, turned every key struck softer than half way into a note off.
+            send.WordCount = BuildNoteWords(entry, isOn, velocity, send.Words);
 
             if (send.WordCount == 0)
             {
                 continue;
             }
 
+            send.DestinationIndex = entry.DestinationIndex;
+            ++written;
+        }
+
+        return written;
+    }
+
+    _Use_decl_annotations_
+    uint32_t PerNotePitchBendValue(double semitones, double rangeSemitones) noexcept
+    {
+        if (!std::isfinite(semitones) || !std::isfinite(rangeSemitones) || rangeSemitones <= 0.0)
+        {
+            return 0x80000000u;
+        }
+
+        auto const fraction = std::clamp(semitones / rangeSemitones, -1.0, 1.0);
+
+        // Centered on 0x80000000, with a whole range either way. The top is one short of what
+        // the arithmetic asks for, because that is the largest thing thirty two bits can hold.
+        auto const value = std::llround(2147483648.0 + fraction * 2147483648.0);
+
+        return static_cast<uint32_t>(std::clamp(value, 0LL, 4294967295LL));
+    }
+
+    _Use_decl_annotations_
+    uint32_t SemitonesAsPitch725(double semitones) noexcept
+    {
+        if (!std::isfinite(semitones))
+        {
+            return 0;
+        }
+
+        return static_cast<uint32_t>(std::llround(std::clamp(semitones, 0.0, 127.0) * 33554432.0));
+    }
+
+    _Use_decl_annotations_
+    uint32_t BindingEngine::EvaluatePortamento(
+        size_t controlIndex,
+        uint16_t fromNote,
+        std::span<PreparedSend> sends) const noexcept
+    {
+        if (controlIndex >= m_controls.size() || sends.empty())
+        {
+            return 0;
+        }
+
+        auto const& control = m_controls[controlIndex];
+
+        uint32_t written{ 0 };
+
+        for (uint32_t i = 0; i < control.MessageCount && written < sends.size(); ++i)
+        {
+            auto const& entry = m_messages[control.FirstMessage + i];
+
+            if (entry.Kind != MessageKind::Note)
+            {
+                continue;
+            }
+
+            if (entry.DestinationIndex < 0 ||
+                static_cast<size_t>(entry.DestinationIndex) >= m_destinations.size() ||
+                !m_destinations[static_cast<size_t>(entry.DestinationIndex)].IsAvailable)
+            {
+                continue;
+            }
+
+            auto& send = sends[written];
+            auto const note = static_cast<uint8_t>(fromNote & 0x7F);
+
+            if (entry.UseMidi1Protocol)
+            {
+                send.Words[0] = BuildMidi1ChannelVoice(
+                    entry.GroupIndex, StatusControlChange, entry.ChannelIndex, PortamentoControlNumber, note);
+                send.WordCount = 1;
+            }
+            else
+            {
+                // The UMP specification puts the note in the top seven bits of the value and
+                // says the rest is ignored.
+                BuildMidi2ChannelVoice(
+                    entry.GroupIndex, StatusControlChange, entry.ChannelIndex, PortamentoControlNumber, 0,
+                    static_cast<uint32_t>(note) << 25, send.Words);
+                send.WordCount = 2;
+            }
+
+            send.DestinationIndex = entry.DestinationIndex;
+            ++written;
+        }
+
+        return written;
+    }
+
+    _Use_decl_annotations_
+    uint32_t BindingEngine::EvaluatePerNotePitchBend(
+        size_t controlIndex,
+        uint16_t note,
+        double semitones,
+        double rangeSemitones,
+        std::span<PreparedSend> sends) const noexcept
+    {
+        if (controlIndex >= m_controls.size() || sends.empty())
+        {
+            return 0;
+        }
+
+        auto const& control = m_controls[controlIndex];
+
+        uint32_t written{ 0 };
+
+        for (uint32_t i = 0; i < control.MessageCount && written < sends.size(); ++i)
+        {
+            auto const& entry = m_messages[control.FirstMessage + i];
+
+            if (entry.Kind != MessageKind::Note || entry.UseMidi1Protocol)
+            {
+                continue;
+            }
+
+            if (entry.DestinationIndex < 0 ||
+                static_cast<size_t>(entry.DestinationIndex) >= m_destinations.size() ||
+                !m_destinations[static_cast<size_t>(entry.DestinationIndex)].IsAvailable)
+            {
+                continue;
+            }
+
+            auto& send = sends[written];
+
+            BuildMidi2ChannelVoice(
+                entry.GroupIndex, StatusPerNotePitchBend, entry.ChannelIndex,
+                static_cast<uint8_t>(note & 0x7F), 0,
+                PerNotePitchBendValue(semitones, rangeSemitones), send.Words);
+
+            send.WordCount = 2;
+            send.DestinationIndex = entry.DestinationIndex;
+            ++written;
+        }
+
+        return written;
+    }
+
+    _Use_decl_annotations_
+    uint32_t BindingEngine::EvaluatePerNoteBendRange(
+        size_t controlIndex,
+        double rangeSemitones,
+        std::span<PreparedSend> sends) const noexcept
+    {
+        if (controlIndex >= m_controls.size() || sends.empty())
+        {
+            return 0;
+        }
+
+        auto const& control = m_controls[controlIndex];
+
+        uint32_t written{ 0 };
+
+        for (uint32_t i = 0; i < control.MessageCount && written < sends.size(); ++i)
+        {
+            auto const& entry = m_messages[control.FirstMessage + i];
+
+            if (entry.Kind != MessageKind::Note || entry.UseMidi1Protocol)
+            {
+                continue;
+            }
+
+            if (entry.DestinationIndex < 0 ||
+                static_cast<size_t>(entry.DestinationIndex) >= m_destinations.size() ||
+                !m_destinations[static_cast<size_t>(entry.DestinationIndex)].IsAvailable)
+            {
+                continue;
+            }
+
+            auto& send = sends[written];
+
+            BuildMidi2ChannelVoice(
+                entry.GroupIndex, StatusRegisteredController, entry.ChannelIndex,
+                0, PerNoteBendRangeIndex,
+                SemitonesAsPitch725(rangeSemitones), send.Words);
+
+            send.WordCount = 2;
             send.DestinationIndex = entry.DestinationIndex;
             ++written;
         }

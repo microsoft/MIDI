@@ -10,6 +10,7 @@
 #include "EditorController.h"
 #include "ControlFactory.h"
 #include "InputRules.h"
+#include "LayoutSerializer.h"
 
 #include <cmath>
 
@@ -518,6 +519,55 @@ void EditorControllerTests::DraggingSnapsTheLeadAndCarriesTheRest()
     auto const gap = ControlAt(controller, 1)->X - ControlAt(controller, 0)->X;
 
     VerifyNear(53.0, gap);
+}
+
+void EditorControllerTests::AStraightLineDragFollowsTheLongerWay()
+{
+    auto controller = LoadedController();
+
+    auto const id = PlaceExactly(controller, glass::ControlKind::Fader, 100, 100, 40, 180);
+
+    controller.SelectOnly(id);
+    controller.SetSnapSuspended(true);
+
+    controller.BeginDrag();
+
+    // Mostly across, so it moves across only.
+    controller.UpdateDrag(60.0, 20.0, true);
+
+    VerifyNear(160.0, ControlAt(controller, 0)->X);
+    VerifyNear(100.0, ControlAt(controller, 0)->Y);
+
+    // The same drag turned downward. Measured from the start, down is now the longer way.
+    controller.UpdateDrag(10.0, 70.0, true);
+
+    VerifyNear(100.0, ControlAt(controller, 0)->X);
+    VerifyNear(170.0, ControlAt(controller, 0)->Y);
+
+    controller.EndDrag();
+}
+
+void EditorControllerTests::AStraightLineDragIsNotPulledOffItsLine()
+{
+    // Two faders a few pixels out of line. Dragging the first across, with guides on, would
+    // pull its top onto the second's; held to a straight line, it must not move down at all.
+    auto controller = LoadedController();
+
+    auto const first = PlaceExactly(controller, glass::ControlKind::Fader, 100, 100, 40, 180);
+    PlaceExactly(controller, glass::ControlKind::Fader, 300, 103, 40, 180);
+
+    controller.SelectOnly(first);
+
+    controller.BeginDrag();
+    auto const outcome = controller.UpdateDrag(120.0, 1.0, true);
+    controller.EndDrag();
+
+    VerifyNear(100.0, ControlAt(controller, 0)->Y);
+
+    for (auto const& guide : outcome.Guides)
+    {
+        VERIFY_ARE_NOT_EQUAL(static_cast<int>(glass::GuideAxis::Horizontal), static_cast<int>(guide.Axis));
+    }
 }
 
 void EditorControllerTests::ADragIsMeasuredFromWhereItStarted()
@@ -1479,4 +1529,349 @@ void EditorControllerTests::SavingClearsIt()
     // And taking an edit back is itself a change that has to be saved.
     VERIFY_IS_TRUE(controller.Undo());
     VERIFY_IS_TRUE(controller.IsDirty());
+}
+
+// ---- the clipboard ----
+
+void EditorControllerTests::APasteLandsBesideTheOriginalsWithNewIds()
+{
+    auto controller = LoadedController();
+
+    auto const first = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+    auto const second = PlaceExactly(controller, glass::ControlKind::Fader, 200, 96, 40, 180);
+
+    controller.SelectOnly(first);
+    controller.AddToSelection(second);
+
+    auto const text = controller.CopySelection();
+
+    VERIFY_IS_FALSE(text.empty());
+    VERIFY_IS_TRUE(controller.PasteControls(text));
+    VERIFY_ARE_EQUAL(size_t{ 4 }, ControlCount(controller));
+
+    // The copies are what is selected now, under ids of their own.
+    VERIFY_ARE_EQUAL(size_t{ 2 }, controller.Selection().size());
+    VERIFY_IS_FALSE(controller.IsSelected(first));
+    VERIFY_IS_FALSE(controller.IsSelected(second));
+
+    // One step down and across, so they are not hidden under the controls they came from.
+    auto const* const copy = ControlAt(controller, 2);
+
+    VERIFY_IS_TRUE(copy->X > 96.0);
+    VERIFY_IS_TRUE(copy->Y > 96.0);
+    VerifyNear(copy->X - 96.0, copy->Y - 96.0);
+
+    // A second paste goes a step further rather than on top of the first.
+    VERIFY_IS_TRUE(controller.PasteControls(text));
+    VERIFY_IS_TRUE(ControlAt(controller, 4)->X > copy->X);
+}
+
+void EditorControllerTests::ACutThenPasteLandsWhereItWas()
+{
+    auto controller = LoadedController();
+
+    auto const id = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+
+    controller.SelectOnly(id);
+
+    auto const text = controller.CutSelection();
+
+    VERIFY_IS_FALSE(text.empty());
+    VERIFY_ARE_EQUAL(size_t{ 0 }, ControlCount(controller));
+
+    VERIFY_IS_TRUE(controller.PasteControls(text));
+    VERIFY_ARE_EQUAL(size_t{ 1 }, ControlCount(controller));
+    VerifyNear(96.0, ControlAt(controller, 0)->X);
+    VerifyNear(96.0, ControlAt(controller, 0)->Y);
+}
+
+void EditorControllerTests::APasteIntoAnotherLayoutBringsItsDevice()
+{
+    auto source = LoadedController();
+
+    auto const id = PlaceExactly(source, glass::ControlKind::Fader, 96, 96, 40, 180);
+
+    source.SelectOnly(id);
+
+    auto const text = source.CopySelection();
+
+    auto document = EmptyDocument();
+    document.Devices.clear();
+
+    glass::EditorController target{};
+    target.Load(std::move(document));
+
+    VERIFY_IS_TRUE(target.PasteControls(text));
+
+    // The fader sends to "Synth", so the layout it lands in learns what "Synth" is.
+    VERIFY_IS_NOT_NULL(target.Document().FindDevice(L"Synth"));
+    VERIFY_ARE_EQUAL(size_t{ 1 }, target.Document().Devices.size());
+}
+
+void EditorControllerTests::AReferenceBetweenCopiesFollowsThem()
+{
+    auto controller = LoadedController();
+
+    auto const knob = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+    auto const clock = PlaceExactly(controller, glass::ControlKind::BeatClock, 200, 96, 64, 64);
+
+    auto spec = controller.Document().FindControl(clock)->Clock;
+    spec.TempoControlId = knob;
+
+    VERIFY_IS_TRUE(controller.SetControlClock(clock, spec));
+
+    controller.SelectOnly(knob);
+    controller.AddToSelection(clock);
+
+    VERIFY_IS_TRUE(controller.PasteControls(controller.CopySelection()));
+
+    // The pasted clock follows the pasted knob, not the one it was copied beside.
+    auto const* const pastedKnob = ControlAt(controller, 2);
+    auto const* const pastedClock = ControlAt(controller, 3);
+
+    VERIFY_ARE_EQUAL(pastedKnob->Id, pastedClock->Clock.TempoControlId);
+}
+
+void EditorControllerTests::PastedTextBecomesOneTextControl()
+{
+    auto controller = LoadedController();
+
+    VERIFY_IS_TRUE(controller.PasteText(L"  Filter\r\n\tcutoff  ", 640.0, 400.0));
+    VERIFY_ARE_EQUAL(size_t{ 1 }, ControlCount(controller));
+
+    auto const* const text = ControlAt(controller, 0);
+
+    VERIFY_ARE_EQUAL(static_cast<int>(glass::ControlKind::Label), static_cast<int>(text->Kind));
+    VERIFY_ARE_EQUAL(std::wstring{ L"Filter cutoff" }, text->Label);
+    VERIFY_IS_TRUE(controller.IsSelected(text->Id));
+
+    // Roughly where it was asked for.
+    VERIFY_IS_TRUE(std::abs((text->X + text->Width / 2.0) - 640.0) <= 16.0);
+
+    // Nothing to show is not a control.
+    VERIFY_IS_FALSE(controller.PasteText(L" \r\n ", 640.0, 400.0));
+}
+
+void EditorControllerTests::APasteOfSomethingElseDoesNothing()
+{
+    auto controller = LoadedController();
+
+    VERIFY_IS_FALSE(controller.PasteControls(L""));
+    VERIFY_IS_FALSE(controller.PasteControls(L"this is not a layout"));
+    VERIFY_IS_FALSE(controller.PasteControls(L"{\"name\":\"x\"}"));
+    VERIFY_ARE_EQUAL(size_t{ 0 }, ControlCount(controller));
+    VERIFY_IS_FALSE(controller.CanUndo());
+}
+
+// ---- groups and several at once ----
+
+void EditorControllerTests::GroupingMakesOneClickPickTheWholeGroup()
+{
+    auto controller = LoadedController();
+
+    auto const first = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+    auto const second = PlaceExactly(controller, glass::ControlKind::Fader, 200, 96, 40, 180);
+    auto const loose = PlaceExactly(controller, glass::ControlKind::Pad, 400, 96, 64, 64);
+
+    controller.SelectOnly(first);
+    controller.AddToSelection(second);
+
+    VERIFY_IS_TRUE(controller.GroupSelection());
+    VERIFY_IS_TRUE(controller.SelectionIsOneGroup());
+
+    // Grouping a group again changes nothing.
+    VERIFY_IS_FALSE(controller.GroupSelection());
+
+    controller.SelectGroupOf(loose);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, controller.Selection().size());
+
+    controller.SelectGroupOf(second);
+    VERIFY_ARE_EQUAL(size_t{ 2 }, controller.Selection().size());
+    VERIFY_IS_TRUE(controller.IsSelected(first));
+
+    // Adding the loose pad with Shift takes it alone; taking the group back out takes both.
+    controller.ToggleGroupOf(loose);
+    VERIFY_ARE_EQUAL(size_t{ 3 }, controller.Selection().size());
+
+    controller.ToggleGroupOf(first);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, controller.Selection().size());
+    VERIFY_IS_TRUE(controller.IsSelected(loose));
+
+    // A rubber band touching one member brings the rest along.
+    controller.SelectInRectangle({ 90, 90, 20, 20 }, false);
+    controller.ExpandSelectionToGroups();
+    VERIFY_ARE_EQUAL(size_t{ 2 }, controller.Selection().size());
+}
+
+void EditorControllerTests::UngroupingLetsThemGoTheirOwnWay()
+{
+    auto controller = LoadedController();
+
+    auto const first = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+    auto const second = PlaceExactly(controller, glass::ControlKind::Fader, 200, 96, 40, 180);
+
+    controller.SelectOnly(first);
+    controller.AddToSelection(second);
+    VERIFY_IS_TRUE(controller.GroupSelection());
+
+    VERIFY_IS_TRUE(controller.UngroupSelection());
+    VERIFY_IS_FALSE(controller.SelectionHasGroup());
+    VERIFY_IS_FALSE(controller.UngroupSelection());
+
+    controller.SelectGroupOf(first);
+    VERIFY_ARE_EQUAL(size_t{ 1 }, controller.Selection().size());
+
+    // And it is one undo step back to a group.
+    VERIFY_IS_TRUE(controller.Undo());
+    VERIFY_IS_FALSE(ControlAt(controller, 0)->GroupId.empty());
+    VERIFY_ARE_EQUAL(ControlAt(controller, 0)->GroupId, ControlAt(controller, 1)->GroupId);
+}
+
+void EditorControllerTests::ACopyOfAGroupIsAGroupOfItsOwn()
+{
+    auto controller = LoadedController();
+
+    auto const first = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+    auto const second = PlaceExactly(controller, glass::ControlKind::Fader, 200, 96, 40, 180);
+
+    controller.SelectOnly(first);
+    controller.AddToSelection(second);
+    VERIFY_IS_TRUE(controller.GroupSelection());
+
+    VERIFY_IS_TRUE(controller.DuplicateSelection());
+
+    auto const original = ControlAt(controller, 0)->GroupId;
+    auto const copy = ControlAt(controller, 2)->GroupId;
+
+    VERIFY_IS_FALSE(copy.empty());
+    VERIFY_ARE_NOT_EQUAL(original, copy);
+    VERIFY_ARE_EQUAL(copy, ControlAt(controller, 3)->GroupId);
+
+    // One member on its own is copied as a control on its own, not a group of one.
+    controller.SelectOnly(first);
+    VERIFY_IS_TRUE(controller.PasteControls(controller.CopySelection()));
+    VERIFY_IS_TRUE(ControlAt(controller, 4)->GroupId.empty());
+}
+
+void EditorControllerTests::AnEditBatchIsOneUndoStep()
+{
+    auto controller = LoadedController();
+
+    auto const first = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+    auto const second = PlaceExactly(controller, glass::ControlKind::Knob, 200, 96, 64, 64);
+
+    auto const depth = controller.UndoDepth();
+
+    {
+        glass::EditBatch batch{ controller };
+
+        VERIFY_IS_TRUE(controller.SetControlStyle(first, glass::ControlStyleOverride::Outline));
+        VERIFY_IS_TRUE(controller.SetControlStyle(second, glass::ControlStyleOverride::Outline));
+    }
+
+    VERIFY_ARE_EQUAL(depth + 1, controller.UndoDepth());
+
+    // The next edit is its own step, not part of the batch.
+    VERIFY_IS_TRUE(controller.SetControlStyle(first, glass::ControlStyleOverride::Solid));
+    VERIFY_ARE_EQUAL(depth + 2, controller.UndoDepth());
+
+    VERIFY_IS_TRUE(controller.Undo());
+    VERIFY_IS_TRUE(controller.Undo());
+
+    VERIFY_ARE_EQUAL(static_cast<int>(glass::ControlStyleOverride::UseTheme), static_cast<int>(ControlAt(controller, 0)->Style));
+    VERIFY_ARE_EQUAL(static_cast<int>(glass::ControlStyleOverride::UseTheme), static_cast<int>(ControlAt(controller, 1)->Style));
+}
+
+void EditorControllerTests::ScalingSeveralKeepsTheirPlacesInTheBox()
+{
+    auto controller = LoadedController();
+
+    auto const fader = PlaceExactly(controller, glass::ControlKind::Fader, 100, 100, 40, 200);
+    auto const knob = PlaceExactly(controller, glass::ControlKind::Knob, 240, 100, 60, 60);
+
+    controller.SelectOnly(fader);
+    controller.AddToSelection(knob);
+
+    auto const before = controller.SelectionBounds();
+
+    VerifyNear(100.0, before.X);
+    VerifyNear(200.0, before.Width);
+    VerifyNear(200.0, before.Height);
+
+    // Twice as wide, the same height, from the same corner.
+    VERIFY_IS_TRUE(controller.SetSelectionBounds(100.0, 100.0, 400.0, 200.0));
+
+    auto const* const stretched = controller.Document().FindControl(fader);
+    auto const* const round = controller.Document().FindControl(knob);
+
+    VerifyNear(100.0, stretched->X);
+    VerifyNear(80.0, stretched->Width);
+    VerifyNear(200.0, stretched->Height);
+
+    // A knob keeps its shape, and stays centered where its middle went.
+    VerifyNear(round->Width, round->Height);
+    VerifyNear(100.0 + ((270.0 - 100.0) * 2.0), round->X + (round->Width / 2.0));
+
+    // Moving only moves.
+    auto const now = controller.SelectionBounds();
+
+    VERIFY_IS_TRUE(controller.SetSelectionBounds(now.X + 50.0, now.Y, now.Width, now.Height));
+    VerifyNear(150.0, controller.Document().FindControl(fader)->X);
+    VerifyNear(80.0, controller.Document().FindControl(fader)->Width);
+}
+
+void EditorControllerTests::AGroupSurvivesSavingAndLoading()
+{
+    auto controller = LoadedController();
+
+    auto const first = PlaceExactly(controller, glass::ControlKind::Knob, 96, 96, 64, 64);
+    auto const second = PlaceExactly(controller, glass::ControlKind::Fader, 200, 96, 40, 180);
+
+    controller.SelectOnly(first);
+    controller.AddToSelection(second);
+    VERIFY_IS_TRUE(controller.GroupSelection());
+
+    auto const read = glass::ReadLayoutFromJson(glass::WriteLayoutToJson(controller.Document()));
+
+    VERIFY_IS_TRUE(read.Succeeded);
+
+    auto const& controls = read.Document.Pages.front().Controls;
+
+    VERIFY_ARE_EQUAL(size_t{ 2 }, controls.size());
+    VERIFY_IS_FALSE(controls[0].GroupId.empty());
+    VERIFY_ARE_EQUAL(controls[0].GroupId, controls[1].GroupId);
+}
+
+void EditorControllerTests::RemovingASwitchPositionRenumbersItsRows()
+{
+    auto controller = LoadedController();
+
+    auto const id = controller.AddControl(glass::ControlKind::Switch, 100, 100);
+
+    // Three positions, three rows. A fourth brings a row of its own.
+    VERIFY_IS_TRUE(controller.AddSwitchPosition(id));
+
+    auto const* switched = controller.Document().FindControl(id);
+
+    VERIFY_ARE_EQUAL(size_t{ 4 }, switched->Switch.Positions.size());
+    VERIFY_ARE_EQUAL(size_t{ 4 }, switched->Messages.size());
+    VERIFY_ARE_EQUAL(3, switched->Messages[3].Position);
+
+    // Taking the second away takes its row, and the rows after it move down one.
+    VERIFY_IS_TRUE(controller.RemoveSwitchPosition(id, 1));
+
+    switched = controller.Document().FindControl(id);
+
+    VERIFY_ARE_EQUAL(size_t{ 3 }, switched->Switch.Positions.size());
+    VERIFY_ARE_EQUAL(size_t{ 3 }, switched->Messages.size());
+    VERIFY_ARE_EQUAL(0, switched->Messages[0].Position);
+    VERIFY_ARE_EQUAL(1, switched->Messages[1].Position);
+    VERIFY_ARE_EQUAL(2, switched->Messages[2].Position);
+
+    // Never fewer than two.
+    VERIFY_IS_TRUE(controller.RemoveSwitchPosition(id, 0));
+    VERIFY_IS_FALSE(controller.RemoveSwitchPosition(id, 0));
+
+    VERIFY_IS_TRUE(controller.SetSwitchPositionName(id, 1, L"Wide"));
+    VERIFY_ARE_EQUAL(std::wstring{ L"Wide" }, controller.Document().FindControl(id)->Switch.Positions[1]);
 }

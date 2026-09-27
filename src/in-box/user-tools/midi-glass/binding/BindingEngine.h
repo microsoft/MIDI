@@ -69,6 +69,9 @@ namespace glass
 
         // Send as MIDI 1.0 protocol so the seven bit value is exactly what was typed.
         bool UseMidi1Protocol{ false };
+
+        // On a switch, the one position that sends this row; -1 for every change.
+        int32_t Position{ -1 };
     };
 
     struct PreparedControl
@@ -78,6 +81,9 @@ namespace glass
 
         float DefaultValue{ 0.0f };
         bool SendsValueOnStart{ false };
+
+        // How many positions a switch has. Zero for every other kind of control.
+        int32_t SwitchPositions{ 0 };
     };
 
     // One message ready to hand to a connection. Fixed size on purpose: the hot path fills a
@@ -132,6 +138,16 @@ namespace glass
             _In_ ValueAxis axis,
             _Inout_ std::span<PreparedSend> sends) const noexcept;
 
+        // A press or a release, carrying how hard it was hit. The same as Evaluate at that
+        // velocity, except that a note row plays a note on for a press and a note off for a
+        // release whatever the velocity, where Evaluate would turn a light press into a note off.
+        uint32_t EvaluatePress(
+            _In_ size_t controlIndex,
+            _In_ MessageTrigger trigger,
+            _In_ bool isOn,
+            _In_ double velocity,
+            _Inout_ std::span<PreparedSend> sends) const noexcept;
+
         // A key on a piano keyboard. The note number comes from the key rather than from the
         // message's own number, which is the whole difference between a keyboard and a pad.
         uint32_t EvaluateNote(
@@ -139,6 +155,31 @@ namespace glass
             _In_ uint16_t note,
             _In_ double velocity,
             _In_ bool isOn,
+            _Inout_ std::span<PreparedSend> sends) const noexcept;
+
+        // Control change 84 on every row that plays notes, naming the note the next note on
+        // glides from. That is the one portamento message MIDI has: the instrument glides at its
+        // own portamento time, whether or not its portamento switch is on.
+        uint32_t EvaluatePortamento(
+            _In_ size_t controlIndex,
+            _In_ uint16_t fromNote,
+            _Inout_ std::span<PreparedSend> sends) const noexcept;
+
+        // MIDI 2.0 per-note pitch bend on every row that plays notes, in semitones either side of
+        // the note. A row set to MIDI 1.0 protocol sends nothing, because MIDI 1.0 has no message
+        // that bends one note on its own.
+        uint32_t EvaluatePerNotePitchBend(
+            _In_ size_t controlIndex,
+            _In_ uint16_t note,
+            _In_ double semitones,
+            _In_ double rangeSemitones,
+            _Inout_ std::span<PreparedSend> sends) const noexcept;
+
+        // How far a per-note pitch bend reaches either way: the registered controller at bank 0,
+        // index 7, on every row that plays notes. MIDI 2.0 rows only, for the same reason.
+        uint32_t EvaluatePerNoteBendRange(
+            _In_ size_t controlIndex,
+            _In_ double rangeSemitones,
             _Inout_ std::span<PreparedSend> sends) const noexcept;
 
         // A system real time byte from a clock generator, to every device this control names.
@@ -230,6 +271,23 @@ namespace glass
             _Out_ bool& isAbsolute) const noexcept;
 
     private:
+        // Whether a note row reads the value as a gate, as a fader bound to a note does, or has
+        // been told on or off by a press.
+        enum class NoteGate
+        {
+            FromValue = 0,
+            On = 1,
+            Off = 2,
+        };
+
+        uint32_t EvaluateRows(
+            _In_ size_t controlIndex,
+            _In_ MessageTrigger trigger,
+            _In_ double value,
+            _In_ ValueAxis axis,
+            _In_ NoteGate gate,
+            _Inout_ std::span<PreparedSend> sends) const noexcept;
+
         struct PreparedFeedback
         {
             size_t ControlIndex{ 0 };
@@ -332,4 +390,25 @@ namespace glass
         _In_ PreparedMessage const& message,
         _In_ double value,
         _Out_writes_(4) uint32_t* words) noexcept;
+
+    // A note on or off from a note row, where the gesture decides which one and the velocity
+    // only decides how hard. BuildMessageWords reads a note row's value as a gate, on from half
+    // way up, which is right for a fader bound to a note and wrong for a key or a pad: a soft
+    // touch would go out as a note off and play nothing.
+    //
+    // A note on never goes out at the very bottom of the velocity field, because a MIDI 1.0 note
+    // on at velocity 0 is a note off. Returns 0 for any row that is not a note.
+    uint32_t BuildNoteWords(
+        _In_ PreparedMessage const& message,
+        _In_ bool isOn,
+        _In_ double velocity,
+        _Out_writes_(4) uint32_t* words) noexcept;
+
+    // A bend in semitones as the value of a MIDI 2.0 per-note pitch bend: 0x80000000 is no bend,
+    // and the full range down and up reaches the two ends. Anything past the range is held at it.
+    uint32_t PerNotePitchBendValue(_In_ double semitones, _In_ double rangeSemitones) noexcept;
+
+    // Semitones as the 7.25 fixed point number the per-note bend range is given in: seven bits
+    // of whole semitones and twenty five of fraction.
+    uint32_t SemitonesAsPitch725(_In_ double semitones) noexcept;
 }

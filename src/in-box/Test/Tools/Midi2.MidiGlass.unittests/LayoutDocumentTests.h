@@ -32,6 +32,7 @@ public:
 
     TEST_METHOD(AControlThatAgreesWithItsThemeWritesNoOverrides);
     TEST_METHOD(OverridesOfTheThemeSurviveARoundTrip);
+    TEST_METHOD(AnOldThemeNameReadsAsTheNewOne);
     TEST_METHOD(ALabelBoxSurvivesARoundTrip);
     TEST_METHOD(ALabelWithNoBoxWritesNoBox);
     TEST_METHOD(ACustomPlacementWithNoBoxFallsBackToTheTheme);

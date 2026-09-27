@@ -45,7 +45,19 @@
             <Style x:Key="InspectorHeadingStyle" TargetType="TextBlock">
                 <Setter Property="FontSize" Value="12" />
                 <Setter Property="FontWeight" Value="SemiBold" />
-                <Setter Property="Margin" Value="0,8,0,4" />
+                <Setter Property="Margin" Value="0,12,0,4" />
+            </Style>
+
+            <!-- The line that runs to the right of a section heading. -->
+            <Style x:Key="InspectorSectionRowStyle" TargetType="Grid">
+                <Setter Property="Margin" Value="0,22,0,8" />
+                <Setter Property="ColumnSpacing" Value="8" />
+            </Style>
+
+            <Style x:Key="InspectorSectionRuleStyle" TargetType="Rectangle">
+                <Setter Property="Height" Value="1" />
+                <Setter Property="VerticalAlignment" Value="Center" />
+                <Setter Property="Fill" Value="{ThemeResource DividerStrokeColorDefaultBrush}" />
             </Style>
 
             <Style x:Key="InspectorNumberStyle" TargetType="TextBox">
@@ -104,6 +116,11 @@
             <KeyboardAccelerator Key="Y" Modifiers="Control" Invoked="OnRedoAccelerator" />
             <KeyboardAccelerator Key="S" Modifiers="Control" Invoked="OnSaveAccelerator" />
             <KeyboardAccelerator Key="D" Modifiers="Control" Invoked="OnDuplicateAccelerator" />
+            <KeyboardAccelerator Key="X" Modifiers="Control" Invoked="OnCutAccelerator" />
+            <KeyboardAccelerator Key="C" Modifiers="Control" Invoked="OnCopyAccelerator" />
+            <KeyboardAccelerator Key="V" Modifiers="Control" Invoked="OnPasteAccelerator" />
+            <KeyboardAccelerator Key="G" Modifiers="Control" Invoked="OnGroupAccelerator" />
+            <KeyboardAccelerator Key="G" Modifiers="Control,Shift" Invoked="OnUngroupAccelerator" />
             <KeyboardAccelerator Key="A" Modifiers="Control" Invoked="OnSelectAllAccelerator" />
             <KeyboardAccelerator Key="Delete" Invoked="OnDeleteAccelerator" />
 
@@ -334,8 +351,8 @@
                                 <MenuFlyoutItem x:Name="AlignCenterYItem" x:Uid="ArrangeAlignCenterY" Text="Align centers down" Tag="aligncentery" Click="OnArrangeClick" />
                                 <MenuFlyoutItem x:Name="AlignBottomItem" x:Uid="ArrangeAlignBottom" Text="Align bottom edges" Tag="alignbottom" Click="OnArrangeClick" />
                                 <MenuFlyoutSeparator />
-                                <MenuFlyoutItem x:Name="SpreadAcrossItem" x:Uid="ArrangeSpreadAcross" Text="Equal gaps across" Tag="spreadx" Click="OnArrangeClick" />
-                                <MenuFlyoutItem x:Name="SpreadDownItem" x:Uid="ArrangeSpreadDown" Text="Equal gaps down" Tag="spready" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="SpreadAcrossItem" x:Uid="ArrangeSpreadAcross" Text="Distribute horizontally" Tag="spreadx" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="SpreadDownItem" x:Uid="ArrangeSpreadDown" Text="Distribute vertically" Tag="spready" Click="OnArrangeClick" />
                                 <MenuFlyoutSeparator />
                                 <MenuFlyoutItem x:Name="BringToFrontItem" x:Uid="ArrangeBringToFront" Text="Bring to front" Tag="tofront" Click="OnArrangeClick">
                                     <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74A;" /></MenuFlyoutItem.Icon>
@@ -361,15 +378,17 @@
                         </StackPanel>
                     </Button>
 
-                    <!-- In the comp and not built yet. Shown so the shape of the toolbar is the
-                         shape that was agreed, and disabled so it is not a promise. -->
+                    <!-- Group when several are picked, Ungroup when a group is. -->
                     <Button x:Name="GroupButton"
                             x:Uid="EditorGroupButton"
                             Style="{StaticResource EditorIconButtonStyle}"
-                            IsEnabled="False">
-                        <FontIcon Glyph="&#xE71D;" FontSize="14" />
+                            IsEnabled="False"
+                            Click="OnGroupClick">
+                        <FontIcon x:Name="GroupButtonGlyph" Glyph="&#xE71D;" FontSize="14" />
                     </Button>
 
+                    <!-- In the comp and not built yet. Shown so the shape of the toolbar is the
+                         shape that was agreed, and disabled so it is not a promise. -->
                     <Button x:Name="LockButton"
                             x:Uid="EditorLockButton"
                             Style="{StaticResource EditorIconButtonStyle}"
@@ -673,6 +692,32 @@
                                   HorizontalScrollMode="Auto"
                                   VerticalScrollMode="Auto"
                                   SizeChanged="OnCanvasSizeChanged">
+                        <ScrollViewer.ContextFlyout>
+                            <MenuFlyout x:Name="CanvasMenu" Opening="OnCanvasMenuOpening" Closed="OnCanvasMenuClosed">
+                                <MenuFlyoutItem x:Name="CanvasCutItem" x:Uid="CanvasMenuCut" Text="Cut" Click="OnCutClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C6;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem x:Name="CanvasCopyItem" x:Uid="CanvasMenuCopy" Text="Copy" Click="OnCopyClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE8C8;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem x:Name="CanvasPasteItem" x:Uid="CanvasMenuPaste" Text="Paste" Click="OnPasteClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE77F;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem x:Name="CanvasDuplicateItem" x:Uid="CanvasMenuDuplicate" Text="Duplicate" Click="OnDuplicateSelectionClick" />
+                                <MenuFlyoutItem x:Name="CanvasDeleteItem" x:Uid="CanvasMenuDelete" Text="Delete" Click="OnDeleteSelectionClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE74D;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem x:Name="CanvasGroupItem" x:Uid="CanvasMenuGroup" Text="Group" Click="OnGroupMenuClick">
+                                    <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE71D;" /></MenuFlyoutItem.Icon>
+                                </MenuFlyoutItem>
+                                <MenuFlyoutItem x:Name="CanvasUngroupItem" x:Uid="CanvasMenuUngroup" Text="Ungroup" Click="OnUngroupMenuClick" />
+                                <MenuFlyoutSeparator />
+                                <MenuFlyoutItem x:Name="CanvasToFrontItem" x:Uid="CanvasMenuToFront" Text="Bring to front" Tag="tofront" Click="OnArrangeClick" />
+                                <MenuFlyoutItem x:Name="CanvasToBackItem" x:Uid="CanvasMenuToBack" Text="Send to back" Tag="toback" Click="OnArrangeClick" />
+                            </MenuFlyout>
+                        </ScrollViewer.ContextFlyout>
                         <!-- The page is the bright rectangle and everything else is working
                              space. The host carries the scaled size so the scroll viewer knows
                              how much there is; the transform paints it. -->
@@ -706,6 +751,10 @@
                                         PointerMoved="OnCanvasPointerMoved"
                                         PointerReleased="OnCanvasPointerReleased"
                                         PointerCaptureLost="OnCanvasPointerCaptureLost" />
+
+                                <!-- Holds the box a label is typed into after a double click.
+                                     No background, so it only takes the pointer where the box is. -->
+                                <Canvas x:Name="LabelEditCanvas" />
                             </Grid>
                         </Border>
                     </ScrollViewer>
@@ -1155,7 +1204,14 @@
                             <ScrollViewer x:Name="LookPane" VerticalScrollBarVisibility="Auto">
                                 <StackPanel x:Name="LookPanel" Margin="8,0,13,16">
 
-                                    <TextBlock x:Uid="InspectorColorHeading" Text="Color" Style="{StaticResource GroupHeadingStyle}" Margin="0,4,0,7" />
+                                    <Grid Style="{StaticResource InspectorSectionRowStyle}" Margin="0,4,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Uid="InspectorColorHeading" Text="Color" Style="{StaticResource GroupHeadingStyle}" Margin="0" />
+                                        <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
+                                    </Grid>
                                     <ItemsControl x:Name="HueSlotHost">
                                         <ItemsControl.ItemsPanel>
                                             <ItemsPanelTemplate>
@@ -1172,7 +1228,14 @@
                                          rather than the absence of one: exactly one is always on,
                                          and handing the decision back to the theme is a thing you
                                          pick, not a thing you undo. -->
-                                    <TextBlock x:Uid="InspectorStyleHeading" Text="Style" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+                                    <Grid Style="{StaticResource InspectorSectionRowStyle}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Uid="InspectorStyleHeading" Text="Style" Style="{StaticResource GroupHeadingStyle}" Margin="0" />
+                                        <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
+                                    </Grid>
                                     <Border Style="{StaticResource SegmentHostStyle}" HorizontalAlignment="Stretch">
                                         <Grid>
                                             <Grid.ColumnDefinitions>
@@ -1219,7 +1282,14 @@
                                         </Grid>
                                     </Border>
 
-                                    <TextBlock x:Uid="InspectorPositionHeading" Text="Position and size" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+                                    <Grid Style="{StaticResource InspectorSectionRowStyle}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Uid="InspectorPositionHeading" Text="Position and size" Style="{StaticResource GroupHeadingStyle}" Margin="0" />
+                                        <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
+                                    </Grid>
 
                                     <!-- Label left at a fixed width, fields filling the rest, so
                                          every row in the pane lines up into one column. -->
@@ -1255,7 +1325,14 @@
                                         </ToggleButton>
                                     </Grid>
 
-                                    <TextBlock x:Uid="InspectorLabelHeading" Text="Label" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+                                    <Grid Style="{StaticResource InspectorSectionRowStyle}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Uid="InspectorLabelHeading" Text="Label" Style="{StaticResource GroupHeadingStyle}" Margin="0" />
+                                        <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
+                                    </Grid>
 
                                     <Grid ColumnSpacing="8" RowSpacing="7">
                                         <Grid.ColumnDefinitions>
@@ -1327,7 +1404,14 @@
                                          ribbon draw them along one axis; a pad and a joystick
                                          draw the same numbers as a grid. -->
                                     <StackPanel x:Name="TicksPanel" Visibility="Collapsed">
-                                        <TextBlock x:Uid="InspectorMarksHeading" Text="Marks" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+                                        <Grid Style="{StaticResource InspectorSectionRowStyle}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Uid="InspectorMarksHeading" Text="Marks" Style="{StaticResource GroupHeadingStyle}" Margin="0" />
+                                            <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
+                                        </Grid>
 
                                         <CheckBox x:Name="TicksShowCheck"
                                                   x:Uid="TicksShowCheck"
@@ -1360,7 +1444,14 @@
                                     <!-- A picture or a video, for an image control and for the
                                          fill behind a grouping panel. -->
                                     <StackPanel x:Name="PicturePanel" Visibility="Collapsed">
-                                        <TextBlock x:Uid="InspectorPictureHeading" Text="Picture" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+                                        <Grid Style="{StaticResource InspectorSectionRowStyle}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Uid="InspectorPictureHeading" Text="Picture or Video" Style="{StaticResource GroupHeadingStyle}" Margin="0" />
+                                            <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
+                                        </Grid>
 
                                         <StackPanel Orientation="Horizontal" Spacing="6">
                                             <Button x:Name="ChoosePictureButton" x:Uid="ChoosePictureButton" FontSize="11" Click="OnChoosePictureClick">
@@ -1380,93 +1471,156 @@
                                                    TextWrapping="Wrap"
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
-                                        <ComboBox x:Name="PictureFitCombo"
-                                                  x:Uid="PictureFitCombo"
-                                                  HorizontalAlignment="Stretch"
-                                                  Margin="0,6,0,0"
-                                                  SelectionChanged="OnPictureFitChanged" />
+                                        <!-- Everything below does nothing until there is a
+                                             picture, so it stays switched off until then. -->
+                                        <ContentControl x:Name="PictureSettings"
+                                                        HorizontalContentAlignment="Stretch"
+                                                        IsTabStop="False">
+                                            <StackPanel>
+                                                <ComboBox x:Name="PictureFitCombo"
+                                                          x:Uid="PictureFitCombo"
+                                                          HorizontalAlignment="Stretch"
+                                                          Margin="0,6,0,0"
+                                                          SelectionChanged="OnPictureFitChanged" />
 
-                                        <Slider x:Name="PictureOpacitySlider"
-                                                x:Uid="PictureOpacitySlider"
-                                                Minimum="0"
-                                                Maximum="100"
-                                                StepFrequency="1"
-                                                Margin="0,4,0,0"
-                                                ValueChanged="OnPictureOpacityChanged" />
+                                                <!-- The track shows what the number does, the
+                                                     way a paint program does: a checkerboard for
+                                                     see-through on the left, solid on the right. -->
+                                                <TextBlock x:Uid="PictureOpacityLabel" Text="Opacity" Margin="0,10,0,0" />
 
-                                        <CheckBox x:Name="PictureLoopsCheck"
-                                                  x:Uid="PictureLoopsCheck"
-                                                  Content="Play a video on a loop"
-                                                  Checked="OnPictureLoopsChanged"
-                                                  Unchecked="OnPictureLoopsChanged" />
+                                                <Grid Margin="0,2,0,0">
+                                                    <Rectangle x:Name="PictureOpacityRamp"
+                                                               Height="12"
+                                                               Margin="2,0,2,0"
+                                                               RadiusX="6"
+                                                               RadiusY="6"
+                                                               VerticalAlignment="Center"
+                                                               StrokeThickness="1"
+                                                               Stroke="{ThemeResource ControlStrokeColorDefaultBrush}"
+                                                               SizeChanged="OnPictureOpacityRampSizeChanged" />
 
-                                        <TextBlock x:Uid="PictureCropHeading" Text="Crop" Style="{StaticResource InspectorHeadingStyle}" />
+                                                    <Slider x:Name="PictureOpacitySlider"
+                                                            x:Uid="PictureOpacitySlider"
+                                                            Minimum="0"
+                                                            Maximum="100"
+                                                            StepFrequency="1"
+                                                            ValueChanged="OnPictureOpacityChanged">
+                                                        <Slider.Resources>
+                                                            <SolidColorBrush x:Key="SliderTrackFill" Color="Transparent" />
+                                                            <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="Transparent" />
+                                                            <SolidColorBrush x:Key="SliderTrackFillPressed" Color="Transparent" />
+                                                            <SolidColorBrush x:Key="SliderTrackFillDisabled" Color="Transparent" />
+                                                            <SolidColorBrush x:Key="SliderTrackValueFill" Color="Transparent" />
+                                                            <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="Transparent" />
+                                                            <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="Transparent" />
+                                                            <SolidColorBrush x:Key="SliderTrackValueFillDisabled" Color="Transparent" />
+                                                        </Slider.Resources>
+                                                    </Slider>
+                                                </Grid>
 
-                                        <Slider x:Name="PictureZoomSlider"
-                                                x:Uid="PictureZoomSlider"
-                                                Minimum="100"
-                                                Maximum="800"
-                                                StepFrequency="5"
-                                                ValueChanged="OnPictureZoomChanged" />
+                                                <CheckBox x:Name="PictureLoopsCheck"
+                                                          x:Uid="PictureLoopsCheck"
+                                                          Content="Play a video in a loop"
+                                                          Checked="OnPictureLoopsChanged"
+                                                          Unchecked="OnPictureLoopsChanged" />
 
-                                        <Slider x:Name="PictureCenterXSlider"
-                                                x:Uid="PictureCenterXSlider"
-                                                Minimum="0"
-                                                Maximum="100"
-                                                StepFrequency="1"
-                                                ValueChanged="OnPictureCenterXChanged" />
+                                                <TextBlock x:Uid="PicturePositionHeading" Text="Position and crop" Style="{StaticResource InspectorHeadingStyle}" />
 
-                                        <Slider x:Name="PictureCenterYSlider"
-                                                x:Uid="PictureCenterYSlider"
-                                                Minimum="0"
-                                                Maximum="100"
-                                                StepFrequency="1"
-                                                ValueChanged="OnPictureCenterYChanged" />
+                                                <!-- Nine buttons that push the picture to an edge
+                                                     or a corner, beside a small copy of the whole
+                                                     picture with a box around the part that shows.
+                                                     Dragging the box is the crop. -->
+                                                <Grid ColumnSpacing="10">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
 
-                                        <TextBlock x:Uid="PictureCropCaption"
-                                                   Text="Zoom in and then move the middle to take a slice out of a picture or a clip. Set the fit above to Fill first, or there will be nothing to crop."
-                                                   FontSize="11"
-                                                   TextWrapping="Wrap"
-                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                    <Grid x:Name="PictureAlignGrid" VerticalAlignment="Top" />
 
-                                        <TextBlock x:Uid="PictureTintHeading" Text="Wash of color" Style="{StaticResource InspectorHeadingStyle}" />
+                                                    <ContentControl x:Name="PictureCropFrame"
+                                                                    x:Uid="PictureCropFrame"
+                                                                    Grid.Column="1"
+                                                                    IsTabStop="True"
+                                                                    UseSystemFocusVisuals="True"
+                                                                    HorizontalContentAlignment="Stretch"
+                                                                    VerticalContentAlignment="Stretch"
+                                                                    KeyDown="OnPictureCropKeyDown">
+                                                        <Grid x:Name="PictureCropBox"
+                                                              Height="100"
+                                                              CornerRadius="4"
+                                                              Background="{ThemeResource ControlFillColorSecondaryBrush}"
+                                                              PointerPressed="OnPictureCropPressed"
+                                                              PointerMoved="OnPictureCropMoved"
+                                                              PointerReleased="OnPictureCropReleased"
+                                                              PointerCaptureLost="OnPictureCropCaptureLost"
+                                                              SizeChanged="OnPictureCropBoxSizeChanged">
+                                                            <Canvas x:Name="PictureCropCanvas" />
+                                                        </Grid>
+                                                    </ContentControl>
+                                                </Grid>
 
-                                        <Grid ColumnSpacing="6">
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
+                                                <Slider x:Name="PictureZoomSlider"
+                                                        x:Uid="PictureZoomSlider"
+                                                        Minimum="100"
+                                                        Maximum="800"
+                                                        StepFrequency="5"
+                                                        Margin="0,6,0,0"
+                                                        ValueChanged="OnPictureZoomChanged" />
 
-                                            <TextBox x:Name="PictureTintBox"
-                                                     x:Uid="PictureTintBox"
-                                                     Grid.Column="0"
-                                                     PlaceholderText="#000000"
-                                                     LostFocus="OnPictureTintChanged" />
+                                                <TextBlock x:Uid="PictureCropCaption"
+                                                           Text="The buttons push the picture to an edge or a corner. To crop, zoom in and drag the box to the part you want. Fill in Scale and Stretch crops too."
+                                                           FontSize="11"
+                                                           TextWrapping="Wrap"
+                                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
 
-                                            <Button x:Name="PictureTintColorButton"
-                                                    x:Uid="PictureTintColorButton"
-                                                    Grid.Column="1"
-                                                    VerticalAlignment="Bottom" />
-                                        </Grid>
+                                                <TextBlock x:Uid="PictureTintHeading" Text="Color overlay" Style="{StaticResource InspectorHeadingStyle}" />
 
-                                        <Slider x:Name="PictureTintStrengthSlider"
-                                                x:Uid="PictureTintStrengthSlider"
-                                                Minimum="0"
-                                                Maximum="100"
-                                                StepFrequency="1"
-                                                ValueChanged="OnPictureTintStrengthChanged" />
+                                                <Grid ColumnSpacing="6">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
 
-                                        <TextBlock x:Uid="PictureTintCaption"
-                                                   Text="Black dims the picture, which is what a busy clip behind a page of controls usually needs. Any other color tints it."
-                                                   FontSize="11"
-                                                   TextWrapping="Wrap"
-                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                                    <TextBox x:Name="PictureTintBox"
+                                                             x:Uid="PictureTintBox"
+                                                             Grid.Column="0"
+                                                             PlaceholderForeground="{ThemeResource TextFillColorTertiaryBrush}"
+                                                             LostFocus="OnPictureTintChanged" />
+
+                                                    <Button x:Name="PictureTintColorButton"
+                                                            x:Uid="PictureTintColorButton"
+                                                            Grid.Column="1"
+                                                            VerticalAlignment="Bottom" />
+                                                </Grid>
+
+                                                <Slider x:Name="PictureTintStrengthSlider"
+                                                        x:Uid="PictureTintStrengthSlider"
+                                                        Minimum="0"
+                                                        Maximum="100"
+                                                        StepFrequency="1"
+                                                        ValueChanged="OnPictureTintStrengthChanged" />
+
+                                                <TextBlock x:Uid="PictureTintCaption"
+                                                           Text="Black dims the picture, which is what a busy clip behind a page of controls usually needs. Any other color tints it."
+                                                           FontSize="11"
+                                                           TextWrapping="Wrap"
+                                                           Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                            </StackPanel>
+                                        </ContentControl>
                                     </StackPanel>
 
                                     <!-- A printed line: which way it runs, how thick it is, its
                                          color and how its ends finish. -->
                                     <StackPanel x:Name="LinePanel" Visibility="Collapsed">
-                                        <TextBlock x:Uid="InspectorLineHeading" Text="Line" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+                                        <Grid Style="{StaticResource InspectorSectionRowStyle}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Uid="InspectorLineHeading" Text="Line" Style="{StaticResource GroupHeadingStyle}" Margin="0" />
+                                            <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
+                                        </Grid>
 
                                         <ComboBox x:Name="LineDirectionCombo"
                                                   x:Uid="LineDirectionCombo"
@@ -1490,7 +1644,7 @@
                                             <TextBox x:Name="LineColorBox"
                                                      x:Uid="LineColorBox"
                                                      Grid.Column="0"
-                                                     PlaceholderText="the theme's line color"
+                                                     PlaceholderForeground="{ThemeResource TextFillColorTertiaryBrush}"
                                                      LostFocus="OnLineColorChanged" />
 
                                             <Button x:Name="LineColorButton"
@@ -1513,8 +1667,48 @@
                                                    Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
                                     </StackPanel>
 
+                                    <!-- A switch's positions, each with the name printed on it.
+                                         The rows are built in code, one per position. -->
+                                    <StackPanel x:Name="SwitchPanel" Visibility="Collapsed">
+                                        <Grid Style="{StaticResource InspectorSectionRowStyle}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Uid="InspectorSwitchHeading" Text="Positions" Style="{StaticResource GroupHeadingStyle}" Margin="0" />
+                                            <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
+                                        </Grid>
+
+                                        <StackPanel x:Name="SwitchPositionRows" Spacing="6" />
+
+                                        <Button x:Name="AddSwitchPositionButton"
+                                                x:Uid="AddSwitchPositionButton"
+                                                Margin="0,8,0,0"
+                                                FontSize="11"
+                                                Click="OnAddSwitchPositionClick">
+                                            <StackPanel Orientation="Horizontal" Spacing="6">
+                                                <FontIcon Glyph="&#xE710;" FontSize="11" />
+                                                <TextBlock x:Uid="AddSwitchPositionLabel" Text="Add a position" FontSize="11" />
+                                            </StackPanel>
+                                        </Button>
+
+                                        <TextBlock x:Uid="SwitchPositionsCaption"
+                                                   Text="Each position sends its own message. Choose what each one sends on the Sends tab."
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                                    </StackPanel>
+
                                     <StackPanel x:Name="KeyboardPanel" Visibility="Collapsed">
-                                        <TextBlock x:Uid="InspectorKeysHeading" Text="Keys" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+                                        <Grid Style="{StaticResource InspectorSectionRowStyle}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Uid="InspectorKeysHeading" Text="Keys" Style="{StaticResource GroupHeadingStyle}" Margin="0" />
+                                            <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
+                                        </Grid>
 
                                         <TextBlock x:Uid="KeyCountLabel" Text="How many keys" Style="{StaticResource InspectorLabelStyle}" />
                                         <NumberBox x:Name="KeyCountBox"
@@ -1555,7 +1749,7 @@
                                             <TextBox x:Name="WhiteKeyColorBox"
                                                      x:Uid="WhiteKeyColorBox"
                                                      Grid.Row="0" Grid.Column="0"
-                                                     PlaceholderText="#E8EAEE"
+                                                     PlaceholderForeground="{ThemeResource TextFillColorTertiaryBrush}"
                                                      LostFocus="OnKeyColorChanged" />
                                             <Button x:Name="WhiteKeyColorButton"
                                                     x:Uid="WhiteKeyColorButton"
@@ -1565,7 +1759,7 @@
                                             <TextBox x:Name="BlackKeyColorBox"
                                                      x:Uid="BlackKeyColorBox"
                                                      Grid.Row="1" Grid.Column="0"
-                                                     PlaceholderText="#16191F"
+                                                     PlaceholderForeground="{ThemeResource TextFillColorTertiaryBrush}"
                                                      LostFocus="OnKeyColorChanged" />
                                             <Button x:Name="BlackKeyColorButton"
                                                     x:Uid="BlackKeyColorButton"
@@ -1575,7 +1769,7 @@
                                             <TextBox x:Name="PressedKeyColorBox"
                                                      x:Uid="PressedKeyColorBox"
                                                      Grid.Row="2" Grid.Column="0"
-                                                     PlaceholderText="the control's own color"
+                                                     PlaceholderForeground="{ThemeResource TextFillColorTertiaryBrush}"
                                                      LostFocus="OnKeyColorChanged" />
                                             <Button x:Name="PressedKeyColorButton"
                                                     x:Uid="PressedKeyColorButton"
@@ -1591,9 +1785,232 @@
                                                   Unchecked="OnKeyVelocityChanged" />
                                     </StackPanel>
 
+                                    <!-- The pads on a note pad or hex pad control: how many, how
+                                         big, what they play, how the key colors them, and what a
+                                         finger sliding from one to the next does. -->
+                                    <StackPanel x:Name="PadGridPanel" Visibility="Collapsed">
+                                        <Grid Style="{StaticResource InspectorSectionRowStyle}">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Uid="InspectorPadsHeading" Text="Pads" Style="{StaticResource GroupHeadingStyle}" Margin="0" />
+                                            <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
+                                        </Grid>
+
+                                        <Grid ColumnSpacing="6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <NumberBox x:Name="PadCountBox"
+                                                       x:Uid="PadCountBox"
+                                                       Grid.Column="0"
+                                                       Minimum="1"
+                                                       Maximum="128"
+                                                       SpinButtonPlacementMode="Compact"
+                                                       ValueChanged="OnPadGridNumberChanged" />
+
+                                            <NumberBox x:Name="PadSizeBox"
+                                                       x:Uid="PadSizeBox"
+                                                       Grid.Column="1"
+                                                       Minimum="12"
+                                                       Maximum="240"
+                                                       SmallChange="4"
+                                                       SpinButtonPlacementMode="Compact"
+                                                       ValueChanged="OnPadGridNumberChanged" />
+                                        </Grid>
+
+                                        <TextBlock x:Name="PadFlowCaption"
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <NumberBox x:Name="PadStartNoteBox"
+                                                   x:Uid="PadStartNoteBox"
+                                                   Minimum="0"
+                                                   Maximum="127"
+                                                   Margin="0,8,0,0"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnPadGridNumberChanged" />
+
+                                        <TextBlock x:Name="PadRangeCaption"
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <!-- Square pads: where each row starts. -->
+                                        <ComboBox x:Name="PadRowCombo"
+                                                  x:Uid="PadRowCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,8,0,0"
+                                                  SelectionChanged="OnPadRowChanged" />
+
+                                        <!-- Hexagons: a layout somebody might know by name, or two
+                                             intervals of their own. -->
+                                        <ComboBox x:Name="PadHexLayoutCombo"
+                                                  x:Uid="PadHexLayoutCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,8,0,0"
+                                                  SelectionChanged="OnPadHexLayoutChanged" />
+
+                                        <Grid ColumnSpacing="6" Margin="0,6,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <NumberBox x:Name="PadRightIntervalBox"
+                                                       x:Uid="PadRightIntervalBox"
+                                                       Grid.Column="0"
+                                                       Minimum="1"
+                                                       Maximum="24"
+                                                       SpinButtonPlacementMode="Compact"
+                                                       ValueChanged="OnPadGridNumberChanged" />
+
+                                            <NumberBox x:Name="PadUpIntervalBox"
+                                                       x:Uid="PadUpIntervalBox"
+                                                       Grid.Column="1"
+                                                       Minimum="0"
+                                                       Maximum="24"
+                                                       SpinButtonPlacementMode="Compact"
+                                                       ValueChanged="OnPadGridNumberChanged" />
+                                        </Grid>
+
+                                        <TextBlock x:Uid="PadKeyHeading" Text="Key" Style="{StaticResource InspectorHeadingStyle}" />
+
+                                        <Grid ColumnSpacing="6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <ComboBox x:Name="PadKeyCombo"
+                                                      x:Uid="PadKeyCombo"
+                                                      Grid.Column="0"
+                                                      HorizontalAlignment="Stretch"
+                                                      SelectionChanged="OnPadGridChoiceChanged" />
+
+                                            <ComboBox x:Name="PadScaleCombo"
+                                                      x:Uid="PadScaleCombo"
+                                                      Grid.Column="1"
+                                                      HorizontalAlignment="Stretch"
+                                                      SelectionChanged="OnPadGridChoiceChanged" />
+                                        </Grid>
+
+                                        <TextBlock x:Uid="PadColorsLabel" Text="Pad colors" Style="{StaticResource InspectorLabelStyle}" Margin="0,8,0,0" />
+
+                                        <Grid ColumnSpacing="6" RowSpacing="4" Margin="0,2,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+
+                                            <TextBox x:Name="PadRootColorBox"
+                                                     x:Uid="PadRootColorBox"
+                                                     Grid.Row="0" Grid.Column="0"
+                                                     PlaceholderForeground="{ThemeResource TextFillColorTertiaryBrush}"
+                                                     LostFocus="OnPadGridColorChanged" />
+                                            <Button x:Name="PadRootColorButton"
+                                                    x:Uid="PadRootColorButton"
+                                                    Grid.Row="0" Grid.Column="1"
+                                                    VerticalAlignment="Bottom" />
+
+                                            <TextBox x:Name="PadInKeyColorBox"
+                                                     x:Uid="PadInKeyColorBox"
+                                                     Grid.Row="1" Grid.Column="0"
+                                                     PlaceholderForeground="{ThemeResource TextFillColorTertiaryBrush}"
+                                                     LostFocus="OnPadGridColorChanged" />
+                                            <Button x:Name="PadInKeyColorButton"
+                                                    x:Uid="PadInKeyColorButton"
+                                                    Grid.Row="1" Grid.Column="1"
+                                                    VerticalAlignment="Bottom" />
+
+                                            <TextBox x:Name="PadOutOfKeyColorBox"
+                                                     x:Uid="PadOutOfKeyColorBox"
+                                                     Grid.Row="2" Grid.Column="0"
+                                                     PlaceholderForeground="{ThemeResource TextFillColorTertiaryBrush}"
+                                                     LostFocus="OnPadGridColorChanged" />
+                                            <Button x:Name="PadOutOfKeyColorButton"
+                                                    x:Uid="PadOutOfKeyColorButton"
+                                                    Grid.Row="2" Grid.Column="1"
+                                                    VerticalAlignment="Bottom" />
+
+                                            <TextBox x:Name="PadPressedColorBox"
+                                                     x:Uid="PadPressedColorBox"
+                                                     Grid.Row="3" Grid.Column="0"
+                                                     PlaceholderForeground="{ThemeResource TextFillColorTertiaryBrush}"
+                                                     LostFocus="OnPadGridColorChanged" />
+                                            <Button x:Name="PadPressedColorButton"
+                                                    x:Uid="PadPressedColorButton"
+                                                    Grid.Row="3" Grid.Column="1"
+                                                    VerticalAlignment="Bottom" />
+                                        </Grid>
+
+                                        <TextBlock x:Uid="PadNamesHeading" Text="Note names" Style="{StaticResource InspectorHeadingStyle}" />
+
+                                        <Grid ColumnSpacing="6">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <ComboBox x:Name="PadNamesCombo"
+                                                      x:Uid="PadNamesCombo"
+                                                      Grid.Column="0"
+                                                      HorizontalAlignment="Stretch"
+                                                      SelectionChanged="OnPadGridChoiceChanged" />
+
+                                            <NumberBox x:Name="PadNameSizeBox"
+                                                       x:Uid="PadNameSizeBox"
+                                                       Grid.Column="1"
+                                                       Minimum="0"
+                                                       Maximum="64"
+                                                       SpinButtonPlacementMode="Compact"
+                                                       ValueChanged="OnPadGridNumberChanged" />
+                                        </Grid>
+
+                                        <TextBlock x:Uid="PadGlideHeading" Text="Sliding from pad to pad" Style="{StaticResource InspectorHeadingStyle}" />
+
+                                        <ComboBox x:Name="PadGlideCombo"
+                                                  x:Uid="PadGlideCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnPadGridChoiceChanged" />
+
+                                        <TextBlock x:Name="PadGlideCaption"
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <NumberBox x:Name="PadBendRangeBox"
+                                                   x:Uid="PadBendRangeBox"
+                                                   Minimum="1"
+                                                   Maximum="96"
+                                                   Margin="0,6,0,0"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnPadGridNumberChanged" />
+                                    </StackPanel>
+
                                     <!-- The control itself, drawn the way it will actually look,
                                          so a style or a color is judged rather than imagined. -->
-                                    <TextBlock x:Uid="InspectorPreviewHeading" Text="Preview" Style="{StaticResource GroupHeadingStyle}" Margin="0,14,0,7" />
+                                    <Grid x:Name="PreviewHeading" Style="{StaticResource InspectorSectionRowStyle}">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Uid="InspectorPreviewHeading" Text="Preview" Style="{StaticResource GroupHeadingStyle}" Margin="0" />
+                                        <Rectangle Grid.Column="1" Style="{StaticResource InspectorSectionRuleStyle}" />
+                                    </Grid>
                                     <Grid x:Name="PreviewHost" Height="92">
                                         <Rectangle x:Name="PreviewDeck"
                                                    RadiusX="6"
@@ -1668,6 +2085,17 @@
                                         <CheckBox x:Name="LearnAcceptKind" x:Uid="LearnAcceptKind" IsChecked="True" MinWidth="0" FontSize="11" Content="What" />
                                         <CheckBox x:Name="LearnAcceptNumber" x:Uid="LearnAcceptNumber" IsChecked="True" MinWidth="0" FontSize="11" Content="Number" />
                                     </StackPanel>
+
+                                    <!-- Which position of a switch sends the selected row. -->
+                                    <Grid x:Name="SwitchPositionRow" ColumnSpacing="8" Margin="0,8,0,0" Visibility="Collapsed">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock x:Uid="MessagePositionLabel" Text="Position" Style="{StaticResource InspectorLabelStyle}" />
+                                        <ComboBox x:Name="SwitchPositionCombo" x:Uid="SwitchPositionCombo" Grid.Column="1"
+                                                  HorizontalAlignment="Stretch" SelectionChanged="OnMessageFieldChanged" />
+                                    </Grid>
 
                                     <Grid ColumnSpacing="8" RowSpacing="6" Margin="0,8,0,0">
                                         <Grid.ColumnDefinitions>
@@ -2180,6 +2608,71 @@
                                                   Unchecked="OnLfoFlagChanged" />
                                     </StackPanel>
 
+                                    <StackPanel x:Name="StepsPanel" Visibility="Collapsed">
+                                        <TextBlock x:Uid="InspectorStepsHeading" Text="Sequence" Style="{StaticResource InspectorHeadingStyle}" />
+
+                                        <ComboBox x:Name="StepsRateCombo"
+                                                  x:Uid="StepsRateCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  SelectionChanged="OnStepsChoiceChanged" />
+
+                                        <ComboBox x:Name="StepsDirectionCombo"
+                                                  x:Uid="StepsDirectionCombo"
+                                                  HorizontalAlignment="Stretch"
+                                                  Margin="0,6,0,0"
+                                                  SelectionChanged="OnStepsChoiceChanged" />
+
+                                        <Slider x:Name="StepsGateSlider"
+                                                x:Uid="StepsGateSlider"
+                                                Minimum="5"
+                                                Maximum="100"
+                                                StepFrequency="1"
+                                                Margin="0,6,0,0"
+                                                ValueChanged="OnStepsSliderChanged" />
+
+                                        <Slider x:Name="StepsSwingSlider"
+                                                x:Uid="StepsSwingSlider"
+                                                Minimum="50"
+                                                Maximum="75"
+                                                StepFrequency="1"
+                                                ValueChanged="OnStepsSliderChanged" />
+
+                                        <TextBlock x:Name="StepsTimingCaption"
+                                                   FontSize="11"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <CheckBox x:Name="StepsLatchingCheck"
+                                                  x:Uid="StepsLatchingCheck"
+                                                  Content="Press to start, press again to stop"
+                                                  Margin="0,6,0,0"
+                                                  Checked="OnStepsFlagChanged"
+                                                  Unchecked="OnStepsFlagChanged" />
+                                        <CheckBox x:Name="StepsStartsRunningCheck"
+                                                  x:Uid="StepsStartsRunningCheck"
+                                                  Content="Running when the layout opens"
+                                                  Checked="OnStepsFlagChanged"
+                                                  Unchecked="OnStepsFlagChanged" />
+
+                                        <TextBlock x:Uid="InspectorStepListHeading" Text="Steps" Style="{StaticResource InspectorHeadingStyle}" />
+
+                                        <NumberBox x:Name="StepCountBox"
+                                                   x:Uid="StepCountBox"
+                                                   Minimum="1"
+                                                   Maximum="64"
+                                                   SpinButtonPlacementMode="Compact"
+                                                   ValueChanged="OnStepCountChanged" />
+
+                                        <TextBlock x:Uid="StepListCaption"
+                                                   Text="Each step plays its own note through the note row on the Sends tab, or rests when it is off. Velocity is how hard, from 1 to 100."
+                                                   FontSize="11"
+                                                   Margin="0,6,0,0"
+                                                   TextWrapping="Wrap"
+                                                   Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+
+                                        <StackPanel x:Name="StepRows" Spacing="4" Margin="0,6,0,0" />
+                                    </StackPanel>
+
                                     <StackPanel x:Name="TurntablePanel" Visibility="Collapsed">
                                         <TextBlock x:Uid="InspectorTurntableHeading" Text="Platter" Style="{StaticResource InspectorHeadingStyle}" />
 
@@ -2461,7 +2954,7 @@
                         </Grid.ColumnDefinitions>
 
                         <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto" Padding="18,14,18,18">
-                            <StackPanel Spacing="0" MaxWidth="520" HorizontalAlignment="Left">
+                            <StackPanel Spacing="0" MaxWidth="620" HorizontalAlignment="Left">
                                 <TextBlock x:Uid="ThemeHeading"
                                            Text="Theme"
                                            Style="{StaticResource SettingsHeadingStyle}" />

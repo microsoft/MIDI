@@ -8,6 +8,7 @@
 #pragma once
 
 #include "LayoutModel.h"
+#include "PadGrid.h"
 #include "ThemeModel.h"
 #include "ThemeStore.h"
 #include "SurfaceColors.h"
@@ -165,12 +166,59 @@ namespace glass
         std::vector<comp::CompositionRoundedRectangleGeometry> RibbonGlow{};
         float RibbonSpan{ 0.0f };
 
+        // ---- wheel: ridges and a painted line that roll past as it turns ----
+
+        comp::CompositionContainerShape WheelDrum{ nullptr };
+        float WheelTravel{ 0.0f };
+        bool WheelVertical{ true };
+
+        // ---- switch: one slice per position, the chosen one lit ----
+
+        int32_t SwitchPositions{ 0 };
+        std::vector<comp::CompositionSpriteShape> SwitchSegments{};
+        std::vector<winrt::Windows::Foundation::Numerics::float4> SwitchCells{};
+        comp::CompositionBrush SwitchLitFill{ nullptr };
+        comp::CompositionBrush SwitchRestFill{ nullptr };
+        ThemeColor SwitchLitInk{};
+        ThemeColor SwitchRestInk{};
+
+        // ---- step sequencer: a slot per step, a bar in it as tall as the step plays hard ----
+
+        std::vector<comp::CompositionSpriteShape> StepSlots{};
+        std::vector<comp::CompositionSpriteShape> StepBars{};
+        std::vector<comp::CompositionBrush> StepSlotRestFills{};
+        comp::CompositionBrush StepSlotLitFill{ nullptr };
+        comp::CompositionBrush StepBarRestFill{ nullptr };
+        comp::CompositionBrush StepBarLitFill{ nullptr };
+        int32_t CurrentStep{ -1 };
+
         // ---- piano keyboard ----
 
         std::vector<comp::CompositionSpriteShape> KeyShapes{};
         std::vector<comp::CompositionBrush> KeyRestBrushes{};
         comp::CompositionBrush KeyPressedBrush{ nullptr };
         int32_t PressedKey{ -1 };
+
+        // ---- note pads and hex pads ----
+
+        // One shape per pad, in the order the pads flow, painted from the brushes beside it.
+        std::vector<comp::CompositionSpriteShape> PadShapes{};
+        std::vector<comp::CompositionBrush> PadRestFills{};
+        std::vector<comp::CompositionBrush> PadRestRims{};
+        std::vector<comp::CompositionBrush> PadLitFills{};
+        comp::CompositionBrush PadLitRim{ nullptr };
+
+        // How many fingers are on each pad. Two on one pad is one lit pad, and it stays lit
+        // until both have gone.
+        std::vector<uint8_t> PadHeld{};
+
+        // Where the pads were drawn, which is where a finger has to land to play one.
+        PadGridLayout PadLayout{};
+
+        // One shadow for every pad, cast through a mask built from their shapes. The mask's
+        // source has to stay alive for the mask to render.
+        comp::SpriteVisual PadShadow{ nullptr };
+        comp::ShapeVisual PadShadowSource{ nullptr };
 
         // ---- beat clock ----
 
@@ -241,6 +289,7 @@ namespace glass
 
         // How far a platter has to be pushed round to drive it from one end to the other.
         double TurnDegreesAt(_In_ size_t itemIndex) const noexcept;
+        int32_t SwitchPositionsAt(_In_ size_t itemIndex) const noexcept;
 
         // Where this control sits when nothing is holding it, and whether it goes back there on
         // its own. A pitch wheel does; a volume fader had better not.
@@ -261,6 +310,16 @@ namespace glass
         // Which key on a piano keyboard is down, counted from the leftmost. -1 is none.
         void SetPressedKey(_In_ size_t itemIndex, _In_ int32_t key) noexcept;
 
+        // What a note pad or hex pad control plays, and where its pads were drawn. Kept here for
+        // the same reason the keyboard is: input runs on the hot path, and a finger has to land
+        // on the pad it can see rather than on one worked out again from a document that may
+        // have been edited underneath it.
+        PadGridSpec const& PadGridAt(_In_ size_t itemIndex) const noexcept;
+        PadGridLayout const& PadLayoutAt(_In_ size_t itemIndex) const noexcept;
+
+        // A finger went onto a pad or came off it. Counted, because two fingers can share one.
+        void SetPadHeld(_In_ size_t itemIndex, _In_ int32_t cell, _In_ bool held) noexcept;
+
         // The beat a clock generator is on, and how far through it. Drawn by the compositor
         // from two numbers rather than animated, so the picture can never disagree with the
         // clock that is actually sending.
@@ -280,6 +339,10 @@ namespace glass
             _In_ double value,
             _In_ double phase,
             _In_ bool running) noexcept;
+
+        // Which step a step sequencer is playing. -1 lights none, which is what a stopped
+        // sequencer shows.
+        void SetCurrentStep(_In_ size_t itemIndex, _In_ int32_t stepIndex) noexcept;
 
         // A time display was tapped, so it counts again from zero.
         void ResetElapsed(_In_ size_t itemIndex) noexcept;
@@ -479,6 +542,26 @@ namespace glass
             _In_ float width,
             _In_ float height);
 
+        // The pads of a note pad or hex pad control (SurfacePads.cpp).
+        void LayoutPads(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Control const& control,
+            _In_ ControlColors const& colors,
+            _In_ Theme const& theme,
+            _In_ float width,
+            _In_ float height);
+
+        // The name printed on each pad. XAML text, like a label, because composition has none.
+        void LayoutPadNames(
+            _In_ size_t itemIndex,
+            _In_ Control const& control,
+            _In_ Theme const& theme);
+
+        // What a pad grid's plate comes out as over the deck, which is what every color on its
+        // pads is measured against.
+        ThemeColor PadBackdrop(_In_ Control const& control, _In_ Theme const& theme) const noexcept;
+
         void LayoutClock(
             _In_ comp::Compositor const& compositor,
             _Inout_ SurfaceVisual& visual,
@@ -502,6 +585,34 @@ namespace glass
             _In_ ControlColors const& colors,
             _In_ float width,
             _In_ float height);
+
+        void LayoutWheel(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Control const& control,
+            _In_ ControlColors const& colors,
+            _In_ float width,
+            _In_ float height);
+
+        void LayoutSwitch(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Control const& control,
+            _In_ ControlColors const& colors,
+            _In_ float width,
+            _In_ float height);
+
+        void LayoutSteps(
+            _In_ comp::Compositor const& compositor,
+            _Inout_ SurfaceVisual& visual,
+            _In_ Control const& control,
+            _In_ ControlColors const& colors,
+            _In_ float width,
+            _In_ float height);
+
+        // The name on each position of a switch. Kept in the same per-control slot as the note
+        // names on a pad grid, because a control is one or the other.
+        void LayoutSwitchLabels(_In_ size_t itemIndex, _In_ Control const& control);
 
         // Puts a two axis control's puck and crosshair where its two values say, and a ribbon's
         // light where its one value says.
@@ -603,6 +714,7 @@ namespace glass
         std::vector<bool> m_returnsToRest{};
         std::vector<DragAxis> m_dragAxes{};
         std::vector<KeyboardSpec> m_keyboards{};
+        std::vector<PadGridSpec> m_padGrids{};
         std::vector<bool> m_velocityFromTouch{};
         std::vector<bool> m_latches{};
         std::vector<double> m_turnDegrees{};
@@ -613,6 +725,18 @@ namespace glass
 
         // The numbers beside a stepped control's marks, one canvas per control.
         std::vector<controls::Canvas> m_detentTexts{};
+
+        // The note printed on each pad of a pad grid: one canvas per control holding a text block
+        // per pad, and the ink each wears at rest and lit, so a pad lighting up keeps its name.
+        struct PadNameTexts
+        {
+            controls::Canvas Host{ nullptr };
+            std::vector<controls::TextBlock> Texts{};
+            std::vector<media::Brush> RestInks{};
+            std::vector<media::Brush> LitInks{};
+        };
+
+        std::vector<PadNameTexts> m_padNames{};
 
         // The beat count a clock generator shows. One text block per clock, null everywhere
         // else, so a page with no clock on it pays nothing.

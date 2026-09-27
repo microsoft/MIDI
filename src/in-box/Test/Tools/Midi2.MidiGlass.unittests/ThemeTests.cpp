@@ -8,9 +8,12 @@
 #include "ThemeTests.h"
 
 #include <algorithm>
+#include <cstdlib>
+#include <cwchar>
 
 #include "ThemeModel.h"
 #include "SurfaceColors.h"
+#include "PadGrid.h"
 
 using namespace WEX::Common;
 using namespace WEX::Logging;
@@ -24,8 +27,8 @@ void ThemeTests::ShipsTheThemesTheDesignNames()
 
     wchar_t const* expected[]
     {
-        L"Studio Dark", L"Neon Booth", L"Daylight", L"Amber Console", L"Blueprint",
-        L"High contrast", L"Pigment Light", L"Pigment Dark", L"Bigwig", L"Bone",
+        L"Studio Dark", L"Neon Booth", L"Daylight", L"Terminal Amber", L"Blueprint",
+        L"High contrast", L"Tonal Light", L"Tonal Dark", L"Bigwig", L"Bone",
         L"Cathode", L"Terminal Green", L"Jove", L"Supersaw", L"Five-iSH", L"Airy System",
     };
 
@@ -38,7 +41,19 @@ void ThemeTests::ShipsTheThemesTheDesignNames()
     // first rather than alphabetical.
     VERIFY_ARE_EQUAL(std::wstring{ L"Studio Dark" }, themes[0].Name);
 
+    // After it, alphabetical, so a family of themes sits together in the picker.
+    for (size_t index = 2; index < themes.size(); ++index)
+    {
+        VERIFY_IS_TRUE(_wcsicmp(themes[index - 1].Name.c_str(), themes[index].Name.c_str()) < 0);
+    }
+
     VERIFY_IS_NULL(glass::FindBuiltInTheme(L"Not A Theme"));
+
+    // A layout saved before a theme was renamed still finds it.
+    VERIFY_ARE_EQUAL(std::wstring{ L"Tonal Light" }, glass::FindBuiltInTheme(L"Pigment Light")->Name);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Tonal Dark" }, glass::FindBuiltInTheme(L"Pigment Dark")->Name);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Terminal Amber" }, glass::FindBuiltInTheme(L"Amber Console")->Name);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Bone" }, glass::CurrentThemeName(L"Bone"));
 }
 
 void ThemeTests::EveryBuiltInThemeFillsAllSixSlots()
@@ -202,7 +217,7 @@ void ThemeTests::BigwigIsALadderOfGraysWithColorOnlyForTheValue()
 
 void ThemeTests::TheTonalThemesTurnOffTheGlass()
 {
-    for (auto const* name : { L"Pigment Light", L"Pigment Dark" })
+    for (auto const* name : { L"Tonal Light", L"Tonal Dark" })
     {
         auto const* theme = glass::FindBuiltInTheme(name);
         VERIFY_IS_NOT_NULL(theme);
@@ -339,7 +354,7 @@ void ThemeTests::OnlyALightThemeRaisesItsRestingRim()
     // rule produces. This is the guard on that: a theme needing a stronger hairline must not
     // drag the others up with it.
     for (auto const* name : { L"Studio Dark", L"Neon Booth", L"Blueprint",
-        L"High contrast", L"Pigment Dark" })
+        L"High contrast", L"Tonal Dark" })
     {
         auto const* theme = glass::FindBuiltInTheme(name);
         VERIFY_IS_NOT_NULL(theme);
@@ -354,7 +369,7 @@ void ThemeTests::OnlyALightThemeRaisesItsRestingRim()
 
     // A tube sits between the two: the rim is one of only two things separating a raster box
     // from the glass, and the other one is the spill.
-    for (auto const* name : { L"Cathode", L"Amber Console", L"Terminal Green" })
+    for (auto const* name : { L"Cathode", L"Terminal Amber", L"Terminal Green" })
     {
         auto const* theme = glass::FindBuiltInTheme(name);
         VERIFY_IS_NOT_NULL(theme);
@@ -431,7 +446,7 @@ void ThemeTests::OnlyBoneMovesTheShadowOffItsShippedGeometry()
 
 namespace
 {
-    wchar_t const* const TubeThemeNames[]{ L"Cathode", L"Amber Console", L"Terminal Green" };
+    wchar_t const* const TubeThemeNames[]{ L"Cathode", L"Terminal Amber", L"Terminal Green" };
 
     bool IsTubeTheme(_In_ glass::Theme const& theme) noexcept
     {
@@ -482,7 +497,7 @@ void ThemeTests::OnlyATubeThemeLaysAnOverlayOverTheDeck()
     VERIFY_IS_NOT_NULL(green);
     VERIFY_IS_GREATER_THAN(green->Overlay.FaceplateSheenPercent, 0);
 
-    for (auto const* name : { L"Cathode", L"Amber Console" })
+    for (auto const* name : { L"Cathode", L"Terminal Amber" })
     {
         VERIFY_ARE_EQUAL(0, glass::FindBuiltInTheme(name)->Overlay.FaceplateSheenPercent);
     }
@@ -564,7 +579,7 @@ void ThemeTests::ATubeThemeLightsUpInAColorThatIsNeitherTheHueNorWhite()
     Expected const expected[]
     {
         { L"Cathode", { 0xCF, 0xE0, 0xF3, 255 } },
-        { L"Amber Console", { 0xFF, 0x60, 0x10, 255 } },
+        { L"Terminal Amber", { 0xFF, 0x60, 0x10, 255 } },
         { L"Terminal Green", { 0x86, 0xF2, 0x60, 255 } },
     };
 
@@ -591,7 +606,7 @@ void ThemeTests::ATubeThemeLightsUpInAColorThatIsNeitherTheHueNorWhite()
     }
 
     // Amber's halo really is redder than its own default slot, which is the whole claim.
-    auto const* amber = glass::FindBuiltInTheme(L"Amber Console");
+    auto const* amber = glass::FindBuiltInTheme(L"Terminal Amber");
     auto const halo = glass::NamedBloomColor(*amber);
 
     VERIFY_IS_LESS_THAN(static_cast<int32_t>(halo.G), static_cast<int32_t>(amber->HueSlots[0].G));
@@ -740,7 +755,7 @@ void ThemeTests::TheAmberRampIsARisingBrightnessAsWellAsARisingHue()
     // What keeps the theme honest with no color vision at all. The ramp runs ember, orange,
     // amber, standard, yellow, white hot, and every step up that ladder is also brighter, so
     // stripping the color out leaves a wider ladder than Cathode's rather than six of the same.
-    auto const* amber = glass::FindBuiltInTheme(L"Amber Console");
+    auto const* amber = glass::FindBuiltInTheme(L"Terminal Amber");
     VERIFY_IS_NOT_NULL(amber);
 
     // Ramp order, which is not slot order: h1 stays the default slot.
@@ -2025,4 +2040,220 @@ void ThemeTests::ARuleIsTheInkTurnedDownUnlessTheThemeNamesOne()
 
     VERIFY_IS_TRUE((airyLine.Rule == airy->RuleColor));
     VERIFY_IS_FALSE(airy->RuleFades);
+}
+
+namespace
+{
+    // What a pad sits on: the control's plate over the deck, the way the renderer lays it.
+    glass::ThemeColor PadBehind(glass::Control const& control, glass::Theme const& theme)
+    {
+        return glass::BlendOver(theme.Deck.Color, glass::ResolveControlColors(control, theme).Plate, 1.0);
+    }
+
+    int32_t LargestChannelGap(glass::ThemeColor const& a, glass::ThemeColor const& b)
+    {
+        return std::max({
+            std::abs(static_cast<int32_t>(a.R) - static_cast<int32_t>(b.R)),
+            std::abs(static_cast<int32_t>(a.G) - static_cast<int32_t>(b.G)),
+            std::abs(static_cast<int32_t>(a.B) - static_cast<int32_t>(b.B)) });
+    }
+}
+
+void ThemeTests::APadNameReadsOnEveryThemeLitOrNot()
+{
+    int32_t unreadable = 0;
+
+    for (auto const& theme : glass::BuiltInThemes())
+    {
+        for (int32_t slot = 0; slot < glass::ThemeHueSlotCount; ++slot)
+        {
+            glass::Control control{};
+            control.Kind = glass::ControlKind::NotePads;
+            control.HueSlot = slot;
+
+            auto const behind = PadBehind(control, theme);
+            auto const colors = glass::ResolvePadColors(control, theme, behind);
+
+            for (size_t role = 0; role < 3; ++role)
+            {
+                auto const resting = glass::BlendOver(behind, colors.RestFill[role], 1.0);
+
+                auto const atRest = glass::ContrastRatio(colors.RestInk[role], resting);
+                auto const lit = glass::ContrastRatio(colors.LitInk[role], colors.LitFill[role]);
+                auto const pressGap = LargestChannelGap(colors.LitFill[role], resting);
+
+                // Every theme and slot is measured before failing, so one run shows all of them.
+                if (atRest < 4.5 || lit < 4.5 || pressGap < 24)
+                {
+                    Log::Comment(String().Format(L"%s, slot %d, role %d: %.2f at rest, %.2f lit, press moves %d",
+                        theme.Name.c_str(), slot, static_cast<int32_t>(role), atRest, lit, pressGap));
+
+                    ++unreadable;
+                }
+
+                // Lit is opaque so a held pad looks the same over any plate.
+                VERIFY_ARE_EQUAL(uint8_t{ 255 }, colors.LitFill[role].A);
+
+                // And so is a resting pad: it stands up off the plate and casts a shadow on it.
+                VERIFY_ARE_EQUAL(uint8_t{ 255 }, colors.RestFill[role].A);
+            }
+        }
+    }
+
+    VERIFY_ARE_EQUAL(0, unreadable);
+}
+
+void ThemeTests::TheRootTheKeyAndTheRestAreThreeDifferentPads()
+{
+    // The colors are how a player finds the key without hunting for it, so two roles that come
+    // out looking alike on one theme are a grid that cannot be played on that theme.
+    constexpr int32_t distinguishable = 24;
+
+    int32_t alike = 0;
+
+    for (auto const& theme : glass::BuiltInThemes())
+    {
+        for (int32_t slot = 0; slot < glass::ThemeHueSlotCount; ++slot)
+        {
+            glass::Control control{};
+            control.Kind = glass::ControlKind::HexPads;
+            control.HueSlot = slot;
+
+            auto const behind = PadBehind(control, theme);
+            auto const colors = glass::ResolvePadColors(control, theme, behind);
+
+            auto const outOfKey = glass::BlendOver(behind, colors.RestFill[static_cast<size_t>(glass::PadRole::OutOfKey)], 1.0);
+            auto const inKey = glass::BlendOver(behind, colors.RestFill[static_cast<size_t>(glass::PadRole::InKey)], 1.0);
+            auto const root = glass::BlendOver(behind, colors.RestFill[static_cast<size_t>(glass::PadRole::Root)], 1.0);
+
+            auto const outToIn = LargestChannelGap(outOfKey, inKey);
+            auto const inToRoot = LargestChannelGap(inKey, root);
+            auto const outToRoot = LargestChannelGap(outOfKey, root);
+
+            if (outToIn < distinguishable || inToRoot < distinguishable || outToRoot < distinguishable)
+            {
+                Log::Comment(String().Format(L"%s, slot %d: %d, %d, %d", theme.Name.c_str(), slot, outToIn, inToRoot, outToRoot));
+
+                ++alike;
+            }
+        }
+    }
+
+    VERIFY_ARE_EQUAL(0, alike);
+}
+
+void ThemeTests::APadColorTypedInWinsAndABadOneFallsBack()
+{
+    auto const* studio = glass::FindBuiltInTheme(L"Studio Dark");
+    VERIFY_IS_NOT_NULL(studio);
+
+    glass::Control control{};
+    control.Kind = glass::ControlKind::NotePads;
+    control.HueSlot = 1;
+    control.Pads.RootColor = L"#FF0000";
+    control.Pads.PressedColor = L"#00FF00";
+
+    auto const behind = PadBehind(control, *studio);
+    auto const typed = glass::ResolvePadColors(control, *studio, behind);
+
+    auto const& rootRim = typed.RestRim[static_cast<size_t>(glass::PadRole::Root)];
+
+    VERIFY_ARE_EQUAL(uint8_t{ 255 }, rootRim.R);
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, rootRim.G);
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, rootRim.B);
+
+    for (auto const& lit : typed.LitFill)
+    {
+        VERIFY_IS_TRUE((lit == glass::ThemeColor{ 0, 255, 0, 255 }));
+    }
+
+    // Something that is not a color is the palette again, not black. Black on a dark deck is a
+    // root nobody can find.
+    control.Pads.RootColor = L"not a color";
+    control.Pads.PressedColor.clear();
+
+    auto const fallback = glass::ResolvePadColors(control, *studio, behind);
+
+    auto const& across = studio->HueSlots[static_cast<size_t>((1 + glass::ThemeHueSlotCount / 2) % glass::ThemeHueSlotCount)];
+    auto const& fallbackRim = fallback.RestRim[static_cast<size_t>(glass::PadRole::Root)];
+
+    VERIFY_ARE_EQUAL(across.R, fallbackRim.R);
+    VERIFY_ARE_EQUAL(across.G, fallbackRim.G);
+    VERIFY_ARE_EQUAL(across.B, fallbackRim.B);
+
+    // And with nothing typed, a held pad is its own color lifted, so it lights rather than
+    // turning into some other color.
+    auto const& inKeyRest = fallback.RestRim[static_cast<size_t>(glass::PadRole::InKey)];
+    auto const& inKeyLit = fallback.LitFill[static_cast<size_t>(glass::PadRole::InKey)];
+
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(inKeyLit.R, inKeyRest.R);
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(inKeyLit.G, inKeyRest.G);
+    VERIFY_IS_GREATER_THAN_OR_EQUAL(inKeyLit.B, inKeyRest.B);
+}
+
+void ThemeTests::ATypedPadColorIsTheColorOfThePadOnEveryTheme()
+{
+    // The three colors of the pads Pete sent: white outside the key, blue in it, pink roots.
+    glass::ThemeColor const typed[3]{ { 255, 255, 255, 255 }, { 0x3D, 0x8B, 0xFF, 255 }, { 0xFF, 0x4F, 0xA3, 255 } };
+
+    int32_t wrong = 0;
+
+    for (auto const& theme : glass::BuiltInThemes())
+    {
+        glass::Control control{};
+        control.Kind = glass::ControlKind::NotePads;
+        control.Pads.OutOfKeyColor = L"#FFFFFF";
+        control.Pads.InKeyColor = L"#3D8BFF";
+        control.Pads.RootColor = L"#FF4FA3";
+
+        auto const behind = PadBehind(control, theme);
+        auto const colors = glass::ResolvePadColors(control, theme, behind);
+
+        for (size_t role = 0; role < 3; ++role)
+        {
+            auto const resting = glass::BlendOver(behind, colors.RestFill[role], 1.0);
+            auto const edge = glass::BlendOver(behind, colors.RestRim[role], 1.0);
+
+            auto const asTyped = resting == typed[role];
+            auto const findable = LargestChannelGap(resting, behind) >= 24 || LargestChannelGap(edge, behind) >= 24;
+            auto const pressGap = LargestChannelGap(colors.LitFill[role], resting);
+            auto const atRest = glass::ContrastRatio(colors.RestInk[role], resting);
+            auto const lit = glass::ContrastRatio(colors.LitInk[role], colors.LitFill[role]);
+
+            if (!asTyped || !findable || pressGap < 24 || atRest < 4.5 || lit < 4.5)
+            {
+                Log::Comment(String().Format(L"%s, role %d: typed %d, findable %d, press moves %d, %.2f at rest, %.2f lit",
+                    theme.Name.c_str(), static_cast<int32_t>(role), asTyped, findable, pressGap, atRest, lit));
+
+                ++wrong;
+            }
+        }
+    }
+
+    VERIFY_ARE_EQUAL(0, wrong);
+}
+
+void ThemeTests::PadsAreRimmedTheWayTheThemeRimsItsControls()
+{
+    // A pad on the grid is a small version of the theme's own pad control, so Supersaw's rimless
+    // black molding gives rimless pads and Studio Dark's hairline gives every pad one.
+    auto const* supersaw = glass::FindBuiltInTheme(L"Supersaw");
+    auto const* studio = glass::FindBuiltInTheme(L"Studio Dark");
+
+    VERIFY_IS_NOT_NULL(supersaw);
+    VERIFY_IS_NOT_NULL(studio);
+
+    glass::Control control{};
+    control.Kind = glass::ControlKind::NotePads;
+
+    VERIFY_ARE_EQUAL(uint8_t{ 0 }, glass::ResolveControlColors(control, *supersaw).Rim.A);
+
+    auto const bare = glass::ResolvePadColors(control, *supersaw, PadBehind(control, *supersaw));
+    auto const lined = glass::ResolvePadColors(control, *studio, PadBehind(control, *studio));
+
+    for (size_t role = 0; role < 3; ++role)
+    {
+        VERIFY_ARE_EQUAL(uint8_t{ 0 }, bare.RestRim[role].A);
+        VERIFY_ARE_NOT_EQUAL(uint8_t{ 0 }, lined.RestRim[role].A);
+    }
 }

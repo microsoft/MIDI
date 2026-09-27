@@ -79,6 +79,11 @@ public:
     TEST_METHOD(ARimOfZeroIsNoRim);
     TEST_METHOD(ASectionIsRaisedLikeAControlUnlessTheThemeSaysOtherwise);
     TEST_METHOD(ARuleIsTheInkTurnedDownUnlessTheThemeNamesOne);
+    TEST_METHOD(APadNameReadsOnEveryThemeLitOrNot);
+    TEST_METHOD(TheRootTheKeyAndTheRestAreThreeDifferentPads);
+    TEST_METHOD(APadColorTypedInWinsAndABadOneFallsBack);
+    TEST_METHOD(ATypedPadColorIsTheColorOfThePadOnEveryTheme);
+    TEST_METHOD(PadsAreRimmedTheWayTheThemeRimsItsControls);
 };
 
 

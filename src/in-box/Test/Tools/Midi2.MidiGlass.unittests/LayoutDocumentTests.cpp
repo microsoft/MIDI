@@ -248,6 +248,18 @@ void LayoutDocumentTests::OverridesOfTheThemeSurviveARoundTrip()
     VERIFY_ARE_EQUAL(text, glass::WriteLayoutToJson(reread.Document));
 }
 
+void LayoutDocumentTests::AnOldThemeNameReadsAsTheNewOne()
+{
+    auto document = LoadHandAuthored();
+
+    document.ThemeName = L"Amber Console";
+
+    auto const reread = glass::ReadLayoutFromJson(glass::WriteLayoutToJson(document));
+
+    VERIFY_IS_TRUE(reread.Succeeded);
+    VERIFY_ARE_EQUAL(std::wstring{ L"Terminal Amber" }, reread.Document.ThemeName);
+}
+
 void LayoutDocumentTests::ALabelBoxSurvivesARoundTrip()
 {
     auto document = LoadHandAuthored();

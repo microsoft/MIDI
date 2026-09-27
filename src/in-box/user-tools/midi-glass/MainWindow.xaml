@@ -237,8 +237,8 @@
                                         Height="28"
                                         Padding="10,0,10,0"
                                         BorderThickness="1"
-                                        BorderBrush="{ThemeResource ControlElevationBorderBrush}"
-                                        Background="{ThemeResource ControlFillColorDefaultBrush}"
+                                        BorderBrush="{ThemeResource ControlStrongStrokeColorDefaultBrush}"
+                                        Background="{ThemeResource ControlSolidFillColorDefaultBrush}"
                                         Click="OnEditLayoutClick"
                                         AutomationProperties.Name="{x:Bind EditAccessibleName}">
                                     <StackPanel Orientation="Horizontal" Spacing="6">
@@ -251,6 +251,9 @@
                                         Width="32"
                                         Height="28"
                                         Padding="0"
+                                        BorderThickness="1"
+                                        BorderBrush="{ThemeResource ControlStrongStrokeColorDefaultBrush}"
+                                        Background="{ThemeResource ControlSolidFillColorDefaultBrush}"
                                         Click="OnCardMoreClick"
                                         AutomationProperties.Name="{x:Bind MoreAccessibleName}">
                                     <FontIcon Glyph="&#xE712;" FontSize="12" />

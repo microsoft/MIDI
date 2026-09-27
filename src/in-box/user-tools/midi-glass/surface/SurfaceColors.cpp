@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstdlib>
 
 namespace glass
 {
@@ -129,6 +130,7 @@ namespace glass
         case ControlKind::PageTab:
         case ControlKind::Lamp:
         case ControlKind::Lfo:
+        case ControlKind::Steps:
             return true;
 
         default:
@@ -139,7 +141,7 @@ namespace glass
     _Use_decl_annotations_
     bool FillsLikeASwitch(ControlKind kind) noexcept
     {
-        return IsSwitchControl(kind) && kind != ControlKind::Lfo;
+        return IsSwitchControl(kind) && kind != ControlKind::Lfo && kind != ControlKind::Steps;
     }
 
     _Use_decl_annotations_
@@ -154,6 +156,7 @@ namespace glass
         case ControlKind::Joystick:
         case ControlKind::Ribbon:
         case ControlKind::Turntable:
+        case ControlKind::Wheel:
             return true;
 
         default:
@@ -612,5 +615,228 @@ namespace glass
     {
         return theme.ValueIndicator == ValueIndicatorStyle::SegmentedLamps &&
             std::min(controlWidth, controlHeight) >= theme.MinimumLampRingSize;
+    }
+
+    namespace
+    {
+        // How much of its role's color a resting pad carries, and its rim, in the order of
+        // PadRole: out of the key, in it, and the root. Stronger than anything else on a
+        // resting surface, because on a grid of pads the colors ARE the information: they are
+        // how a player finds the key without looking for it.
+        constexpr double PadRestFillStrength[3]{ 0.16, 0.38, 0.70 };
+        constexpr double PadRestRimStrength[3]{ 0.30, 0.60, 0.90 };
+
+        // A pad under a finger is its own color lifted toward white, so it lights rather than
+        // turning into a different color.
+        constexpr double PadLitTowardWhite = 0.35;
+
+        constexpr double PadDeadStrength = 0.06;
+
+        // The outline a pad gets when its own rim would vanish into the plate: a white pad typed
+        // in on a white theme.
+        constexpr double PadEdgeStrength = 0.30;
+
+        // How far apart two resting pads have to land, in the largest of their three channels,
+        // before a player can tell their roles apart at a glance. The fixed strengths above miss
+        // it on a few shipped themes: on Cathode every slot is the same phosphor, and on Bone
+        // the hues are muted enough to sit close to the dark pads outside the key.
+        constexpr int32_t PadRoleSeparation = 24;
+
+        // How far the key's pads and the root may be raised to get that far apart. Past these a
+        // resting grid starts to look like one that is being played.
+        constexpr double PadInKeyStrengthLimit = 0.56;
+        constexpr double PadRootStrengthLimit = 0.90;
+        constexpr double PadStrengthStep = 0.04;
+
+        int32_t LargestChannelGap(_In_ ThemeColor const& a, _In_ ThemeColor const& b) noexcept
+        {
+            return std::max({
+                std::abs(static_cast<int32_t>(a.R) - static_cast<int32_t>(b.R)),
+                std::abs(static_cast<int32_t>(a.G) - static_cast<int32_t>(b.G)),
+                std::abs(static_cast<int32_t>(a.B) - static_cast<int32_t>(b.B)) });
+        }
+
+        // ReadableInk's candidate, pushed toward pure white or pure black only as far as a note
+        // name needs to clear 4.5 : 1. A pad's fill can land in the middle of the gray scale,
+        // where neither softened candidate gets past about 4.1. The pure color on the same side
+        // always does, so the loop always ends on a readable ink.
+        ThemeColor PadInk(_In_ ThemeColor const& background) noexcept
+        {
+            auto const ink = ReadableInk(background);
+
+            if (ContrastRatio(ink, background) >= 4.5)
+            {
+                return ink;
+            }
+
+            auto const extreme = ink.R > 127 ? ThemeColor{ 255, 255, 255, 255 } : ThemeColor{ 0, 0, 0, 255 };
+
+            for (int32_t step = 1; step < 10; ++step)
+            {
+                auto candidate = BlendOver(ink, extreme, step / 10.0);
+                candidate.A = 255;
+
+                if (ContrastRatio(candidate, background) >= 4.5)
+                {
+                    return candidate;
+                }
+            }
+
+            return extreme;
+        }
+    }
+
+    _Use_decl_annotations_
+    PadColors ResolvePadColors(Control const& control, Theme const& theme, ThemeColor const& behind) noexcept
+    {
+        PadColors colors{};
+
+        auto const& spec = control.Pads;
+
+        ThemeColor parsed{};
+
+        auto const namedIn = TryParseColor(spec.InKeyColor, parsed);
+        auto const inKey = namedIn ? parsed : ResolveHue(control, theme);
+
+        // Across the palette from the control's own slot, so the root can never come out the
+        // same color as the rest of the key, and a theme swap still reaches it.
+        ThemeColor root{};
+
+        auto const namedRoot = TryParseColor(spec.RootColor, parsed);
+
+        if (namedRoot)
+        {
+            root = parsed;
+        }
+        else
+        {
+            auto const slot = control.HueSlot >= 0 && control.HueSlot < ThemeHueSlotCount ? control.HueSlot : 0;
+
+            root = theme.HueSlots[static_cast<size_t>((slot + ThemeHueSlotCount / 2) % ThemeHueSlotCount)];
+        }
+
+        // The theme's one un-hued color, or the deck's own ink: white pads on a dark theme and
+        // dark ones on a light theme, the way the pads outside the key are on the hardware.
+        auto const namedOut = TryParseColor(spec.OutOfKeyColor, parsed);
+        auto const outOfKey = namedOut
+            ? parsed
+            : (HasNeutralColor(theme) ? theme.NeutralColor : ReadableInk(behind));
+
+        ThemeColor pressed{};
+
+        auto const namedPressed = TryParseColor(spec.PressedColor, pressed);
+
+        // Where a resting pad of a color and a strength actually lands on the plate, with the
+        // fill's alpha rounded to a byte the way it is drawn. Measuring the unrounded blend put
+        // a name at 4.48 : 1 that this said was 4.5.
+        auto const landed = [&behind](ThemeColor color, double strength) noexcept
+            {
+                color.A = 255;
+
+                return BlendOver(behind, AtStrength(color, strength), 1.0);
+            };
+
+        // A color somebody typed in is the color of the pad, not a tint of it: white means white.
+        std::array<bool, 3> const named{ namedOut, namedIn, namedRoot };
+        std::array<double, 3> strength{};
+
+        for (size_t index = 0; index < strength.size(); ++index)
+        {
+            strength[index] = named[index] ? 1.0 : PadRestFillStrength[index];
+        }
+
+        auto const outLanded = landed(outOfKey, strength[0]);
+
+        // The key's pads come up until they clear the pads outside it.
+        while (!namedIn && strength[1] < PadInKeyStrengthLimit &&
+            LargestChannelGap(outLanded, landed(inKey, strength[1])) < PadRoleSeparation)
+        {
+            strength[1] = std::min(strength[1] + PadStrengthStep, PadInKeyStrengthLimit);
+        }
+
+        auto const inLanded = landed(inKey, strength[1]);
+
+        auto const rootGap = [&](ThemeColor const& color, double rootStrength) noexcept
+            {
+                auto const at = landed(color, rootStrength);
+
+                return std::min(LargestChannelGap(at, inLanded), LargestChannelGap(at, outLanded));
+            };
+
+        // Then the root, until it clears both. Brighter first, because that keeps the color the
+        // theme put across the palette.
+        while (!namedRoot && strength[2] < PadRootStrengthLimit &&
+            rootGap(root, strength[2]) < PadRoleSeparation)
+        {
+            strength[2] = std::min(strength[2] + PadStrengthStep, PadRootStrengthLimit);
+        }
+
+        // A theme whose opposite slots are the same color at the same brightness gets whichever
+        // slot lands furthest from the rest. A root somebody typed in is theirs to keep.
+        if (!namedRoot && rootGap(root, strength[2]) < PadRoleSeparation)
+        {
+            auto bestGap = rootGap(root, strength[2]);
+
+            for (auto const& candidate : theme.HueSlots)
+            {
+                auto const gap = rootGap(candidate, strength[2]);
+
+                if (gap > bestGap)
+                {
+                    root = candidate;
+                    bestGap = gap;
+                }
+            }
+        }
+
+        std::array<ThemeColor, 3> const roles{ outOfKey, inKey, root };
+
+        // Rimmed the way the theme rims its own pad control: Supersaw's molding has no rim.
+        auto const rimmed = ResolveControlColors(control, theme).Rim.A != 0;
+
+        for (size_t index = 0; index < roles.size(); ++index)
+        {
+            auto solid = roles[index];
+            solid.A = 255;
+
+            // Solid, because a pad stands up off the plate and casts a shadow onto it.
+            colors.RestFill[index] = landed(solid, strength[index]);
+            colors.RestRim[index] = rimmed
+                ? AtStrength(solid, std::max(PadRestRimStrength[index], strength[index]))
+                : ThemeColor{ 0, 0, 0, 0 };
+            colors.RestInk[index] = PadInk(colors.RestFill[index]);
+
+            auto const fillShows = LargestChannelGap(colors.RestFill[index], behind) >= PadRoleSeparation;
+            auto const rimShows = colors.RestRim[index].A != 0 &&
+                LargestChannelGap(BlendOver(behind, colors.RestRim[index], 1.0), behind) >= PadRoleSeparation;
+
+            if (!fillShows && !rimShows)
+            {
+                colors.RestRim[index] = AtStrength(ReadableInk(behind), PadEdgeStrength);
+            }
+
+            auto lit = namedPressed ? pressed : BlendOver(solid, ThemeColor{ 255, 255, 255, 255 }, PadLitTowardWhite);
+            lit.A = 255;
+
+            // A pad already close to white has nowhere brighter to go, so it darkens instead of
+            // looking the same under a finger.
+            if (!namedPressed && LargestChannelGap(lit, colors.RestFill[index]) < PadRoleSeparation)
+            {
+                lit = BlendOver(solid, ThemeColor{ 0, 0, 0, 255 }, PadLitTowardWhite);
+                lit.A = 255;
+            }
+
+            colors.LitFill[index] = lit;
+            colors.LitInk[index] = PadInk(lit);
+        }
+
+        colors.LitRim = AtStrength(ReadableInk(behind), 0.9);
+
+        auto dead = outOfKey;
+        dead.A = 255;
+
+        colors.DeadFill = AtStrength(dead, PadDeadStrength);
+
+        return colors;
     }
 }

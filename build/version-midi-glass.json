@@ -1,0 +1,32 @@
+{
+  "$comment": [
+    "Single source of truth for the MIDI Glass installer version.",
+    "MIDI Glass is its own release train, separate from the App SDK (build/version.json) and",
+    "the service plugins (build/version-plugins.json). build-midi-glass.ps1 stamps this into",
+    "build/staging/version/MidiGlassVersion.wxi, which only the MIDI Glass installer reads.",
+    "",
+    "channel:       devpreview | preview | rc | stable",
+    "channelNumber: ignored when channel is 'stable'",
+    "",
+    "SemVer string is <major>.<minor>.<patch>-<channel>.<channelNumber>, for example",
+    "0.9.0-preview.1. Bump 'patch' for each release; that is what distinguishes builds.",
+    "",
+    "build:         4th field of the numeric MSI version only. It does NOT appear in the SemVer",
+    "               string. CI can override with -BuildNumber <n> without touching this file;",
+    "               -BumpBuildNumber increments and persists it.",
+    "",
+    "IMPORTANT: Windows Installer only compares the first THREE fields of a version.",
+    "Bump 'patch' for any release that must upgrade over a previously installed one."
+  ],
+
+  "major": 0,
+  "minor": 9,
+  "patch": 0,
+
+  "channel": "preview",
+  "channelNumber": 1,
+
+  "build": 0,
+
+  "versionName": "MIDI Glass Preview 1"
+}

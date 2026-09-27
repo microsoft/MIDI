@@ -183,7 +183,8 @@ $ConsoleTools = @(
 # the part that got cut. The group these all sit in is already called Windows MIDI (Preview).
 # Network MIDI 2.0 Setup and Bluetooth MIDI Setup are deliberately NOT here: each ships in the
 # installer that carries its transport, because the app is useless without it, and two installers
-# writing the same files to the same folder would break each other's uninstall.
+# writing the same files to the same folder would break each other's uninstall. MIDI Glass is not
+# here either: it has its own installer and release train, built by build\build-midi-glass.ps1.
 $GuiTools = @(
     [pscustomobject]@{ Name = 'midisettings';      Folder = 'Settings';     Display = 'MIDI Settings';          DirectoryId = 'TOOL_SETTINGS_FOLDER' }
     [pscustomobject]@{ Name = 'midiloopbacksetup'; Folder = 'LoopSetup';    Display = 'MIDI Loopback Setup';    DirectoryId = 'TOOL_LOOPSETUP_FOLDER' }
@@ -194,7 +195,6 @@ $GuiTools = @(
     [pscustomobject]@{ Name = 'midisysextool';     Folder = 'SysEx';        Display = 'MIDI SysEx Tool';        DirectoryId = 'TOOL_SYSEX_FOLDER' }
     [pscustomobject]@{ Name = 'midi2monitor';      Folder = 'Monitor';      Display = 'MIDI Monitor';           DirectoryId = 'TOOL_MONITOR_FOLDER' }
     [pscustomobject]@{ Name = 'midipatchbay';      Folder = 'Patchbay';     Display = 'MIDI Patchbay';          DirectoryId = 'TOOL_PATCHBAY_FOLDER' }
-    [pscustomobject]@{ Name = 'midiglass';         Folder = 'Glass';        Display = 'MIDI Glass';             DirectoryId = 'TOOL_GLASS_FOLDER' }
     [pscustomobject]@{ Name = 'miditroubleshooter'; Folder = 'Troubleshooter'; Display = 'MIDI Troubleshooting and Repair'; DirectoryId = 'TOOL_TROUBLESHOOTER_FOLDER' }
     # Aumid: the notification platform will not accept a toast from an unpackaged app unless the
     # identity it publishes under is on a Start Menu shortcut. RunAtLogon means the installer

@@ -1150,8 +1150,9 @@ namespace glass
                 // A customer theme named after a shipped one does not replace it. Two entries with
                 // the same name in a picker is confusing; silently losing a shipped theme because
                 // of a file somebody was sent is worse.
-                auto const clash = std::any_of(themes.begin(), themes.end(),
-                    [&read](Theme const& existing) { return existing.Name == read.Value.Name; });
+                auto const clash = FindBuiltInTheme(read.Value.Name) != nullptr ||
+                    std::any_of(themes.begin(), themes.end(),
+                        [&read](Theme const& existing) { return existing.Name == read.Value.Name; });
 
                 if (!clash)
                 {
@@ -1179,10 +1180,11 @@ namespace glass
         try
         {
             auto const themes = AllThemes();
+            auto const wanted = CurrentThemeName(document.ThemeName);
 
             for (auto const& theme : themes)
             {
-                if (theme.Name == document.ThemeName)
+                if (theme.Name == wanted)
                 {
                     return theme;
                 }

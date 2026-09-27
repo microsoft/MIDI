@@ -258,7 +258,7 @@ namespace glass
         int32_t PlateSheenPercent{ 6 };
 
         // What that sheen is made of. Alpha 0 means white, which is where it started and what
-        // every dark theme wants. A warm plate does not: measured on Amber Console, white at
+        // every dark theme wants. A warm plate does not: measured on Terminal Amber, white at
         // 7 per cent over #3A2413 overshoots blue by eight counts and the warm lift goes gray.
         //
         // This is the third time a percentage of pure white has needed a color of its own, after
@@ -329,7 +329,7 @@ namespace glass
 
         LabelPlacement Labels{ LabelPlacement::Below };
 
-        // Pigment. A wash of the control's own hue at rest, instead of an outline. This is what
+        // Tonal. A wash of the control's own hue at rest, instead of an outline. This is what
         // makes the tonal themes read as a different family rather than a recolor.
         double FillAtRest{ 0.0 };
 
@@ -554,7 +554,7 @@ namespace glass
         // all look the same. Bone runs 85.
         int32_t RimStrengthPercent{ 28 };
 
-        // Pigment. The empty part of a fader slot or a knob arc. The dark themes get away with
+        // Tonal. The empty part of a fader slot or a knob arc. The dark themes get away with
         // hardcoding this black, which is a gap in the model rather than a cost of those themes:
         // the first customer to build a light theme of their own would have hit it.
         ThemeColor TrackColor{ 0, 0, 0, 255 };
@@ -619,8 +619,12 @@ namespace glass
     };
 
     // The ones that ship. Studio Dark first, because it is the default and the one that stays
-    // readable on the densest page.
+    // readable on the densest page; the rest in alphabetical order.
     std::vector<Theme> const& BuiltInThemes() noexcept;
+
+    // A shipped theme that has since been renamed answers to its old name as well, so a layout
+    // saved before the rename still opens in the theme it was made with.
+    std::wstring CurrentThemeName(_In_ std::wstring const& name);
 
     Theme const* FindBuiltInTheme(_In_ std::wstring const& name) noexcept;
 

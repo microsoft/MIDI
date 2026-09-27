@@ -12,6 +12,7 @@
 // that only shows up on one theme out of nine. So it is arithmetic, and it is tested.
 
 #include <sal.h>
+#include <array>
 #include <cstdint>
 
 #include "LayoutModel.h"
@@ -186,6 +187,32 @@ namespace glass
     ThemeColor InkOn(_In_ ThemeColor const& themeInk, _In_ ThemeColor const& background) noexcept;
 
     ControlColors ResolveControlColors(_In_ Control const& control, _In_ Theme const& theme) noexcept;
+
+    // Every color a note pad or hex pad control paints its pads with, by role: out of the key,
+    // in it, and its root, in that order, so a PadRole is an index. Pads are laid over the
+    // control's own plate, which is what `behind` is once it is on the deck, and every ink is
+    // measured against what it actually lands on.
+    struct PadColors
+    {
+        // Solid, already laid over the plate. The rim is transparent where the theme's own
+        // controls have none, unless the pad would vanish into the plate without it.
+        std::array<ThemeColor, 3> RestFill{};
+        std::array<ThemeColor, 3> RestRim{};
+        std::array<ThemeColor, 3> RestInk{};
+
+        // A pad under a finger. Opaque, so a lit pad reads the same over any plate.
+        std::array<ThemeColor, 3> LitFill{};
+        std::array<ThemeColor, 3> LitInk{};
+        ThemeColor LitRim{};
+
+        // A pad off either end of the note range: there, and plainly not playing anything.
+        ThemeColor DeadFill{};
+    };
+
+    PadColors ResolvePadColors(
+        _In_ Control const& control,
+        _In_ Theme const& theme,
+        _In_ ThemeColor const& behind) noexcept;
 
     // Straight source-over, with the amount scaling the top color's own alpha.
     ThemeColor BlendOver(

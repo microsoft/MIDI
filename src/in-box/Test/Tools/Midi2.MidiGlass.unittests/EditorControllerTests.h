@@ -54,6 +54,8 @@ public:
 
     TEST_METHOD(DraggingMovesTheWholeSelectionTogether);
     TEST_METHOD(DraggingSnapsTheLeadAndCarriesTheRest);
+    TEST_METHOD(AStraightLineDragFollowsTheLongerWay);
+    TEST_METHOD(AStraightLineDragIsNotPulledOffItsLine);
     TEST_METHOD(ADragIsMeasuredFromWhereItStarted);
     TEST_METHOD(NudgingMovesBySomethingExact);
     TEST_METHOD(TypedBoundsAreNotSnapped);
@@ -131,4 +133,23 @@ public:
     TEST_METHOD(AFreshDocumentIsNotDirty);
     TEST_METHOD(AnEditMakesItDirty);
     TEST_METHOD(SavingClearsIt);
+
+    // ---- the clipboard ----
+
+    TEST_METHOD(APasteLandsBesideTheOriginalsWithNewIds);
+    TEST_METHOD(ACutThenPasteLandsWhereItWas);
+    TEST_METHOD(APasteIntoAnotherLayoutBringsItsDevice);
+    TEST_METHOD(AReferenceBetweenCopiesFollowsThem);
+    TEST_METHOD(PastedTextBecomesOneTextControl);
+    TEST_METHOD(APasteOfSomethingElseDoesNothing);
+
+    // ---- groups and several at once ----
+
+    TEST_METHOD(GroupingMakesOneClickPickTheWholeGroup);
+    TEST_METHOD(UngroupingLetsThemGoTheirOwnWay);
+    TEST_METHOD(ACopyOfAGroupIsAGroupOfItsOwn);
+    TEST_METHOD(AnEditBatchIsOneUndoStep);
+    TEST_METHOD(ScalingSeveralKeepsTheirPlacesInTheBox);
+    TEST_METHOD(AGroupSurvivesSavingAndLoading);
+    TEST_METHOD(RemovingASwitchPositionRenumbersItsRows);
 };

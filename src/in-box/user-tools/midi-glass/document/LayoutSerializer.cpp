@@ -62,6 +62,7 @@ namespace glass
         constexpr wchar_t KeyHeight[] = L"height";
         constexpr wchar_t KeyLiteralColor[] = L"literalColor";
         constexpr wchar_t KeyAspectLocked[] = L"aspectLocked";
+        constexpr wchar_t KeyControlGroup[] = L"controlGroup";
         constexpr wchar_t KeyStyle[] = L"style";
         constexpr wchar_t KeyLabelPlaced[] = L"labelPlaced";
         constexpr wchar_t KeyLabelStyle[] = L"labelStyle";
@@ -117,8 +118,39 @@ namespace glass
         constexpr wchar_t KeyDegreesForFullRange[] = L"degreesForFullRange";
         constexpr wchar_t KeyShowsGrip[] = L"showsGrip";
         constexpr wchar_t KeyLine[] = L"line";
+        constexpr wchar_t KeySwitch[] = L"switch";
+        constexpr wchar_t KeyPositions[] = L"positions";
+        constexpr wchar_t KeyPosition[] = L"position";
+
+        // A Steps control's sequence. Not "steps": a sequence of actions already uses that name
+        // for its list, and one word meaning two things in one file is how files get misread.
+        constexpr wchar_t KeySequencer[] = L"sequencer";
+        constexpr wchar_t KeyPattern[] = L"pattern";
+        constexpr wchar_t KeyOn[] = L"on";
+        constexpr wchar_t KeyNote[] = L"note";
+        constexpr wchar_t KeyVelocity[] = L"velocity";
+        constexpr wchar_t KeyStepsPerBeat[] = L"stepsPerBeat";
+        constexpr wchar_t KeyGate[] = L"gate";
+        constexpr wchar_t KeySwing[] = L"swing";
+        constexpr wchar_t KeyDirection[] = L"direction";
         constexpr wchar_t KeyThickness[] = L"thickness";
         constexpr wchar_t KeyEnds[] = L"ends";
+        constexpr wchar_t KeyPads[] = L"pads";
+        constexpr wchar_t KeyPadCount[] = L"padCount";
+        constexpr wchar_t KeyPadSize[] = L"padSize";
+        constexpr wchar_t KeyStartNote[] = L"startNote";
+        constexpr wchar_t KeyRightInterval[] = L"rightInterval";
+        constexpr wchar_t KeyRowInterval[] = L"rowInterval";
+        constexpr wchar_t KeyMusicalKey[] = L"key";
+        constexpr wchar_t KeyScale[] = L"scale";
+        constexpr wchar_t KeyNoteNames[] = L"noteNames";
+        constexpr wchar_t KeyNoteNameSize[] = L"noteNameSize";
+        constexpr wchar_t KeyRootColor[] = L"rootColor";
+        constexpr wchar_t KeyInKeyColor[] = L"inKeyColor";
+        constexpr wchar_t KeyOutOfKeyColor[] = L"outOfKeyColor";
+        constexpr wchar_t KeyPressedColor[] = L"pressedColor";
+        constexpr wchar_t KeyGlide[] = L"glide";
+        constexpr wchar_t KeyBendRange[] = L"bendRange";
         constexpr wchar_t KeyTempoControl[] = L"tempoControl";
         constexpr wchar_t KeyLowestBeatsPerMinute[] = L"lowestBeatsPerMinute";
         constexpr wchar_t KeyHighestBeatsPerMinute[] = L"highestBeatsPerMinute";
@@ -203,7 +235,67 @@ namespace glass
             { ControlKind::TimeDisplay, L"timeDisplay" },
             { ControlKind::Lfo, L"lfo" },
             { ControlKind::Turntable, L"turntable" },
+            { ControlKind::Wheel, L"wheel" },
+            { ControlKind::Switch, L"switch" },
+            { ControlKind::Steps, L"steps" },
             { ControlKind::Line, L"line" },
+            { ControlKind::NotePads, L"notePads" },
+            { ControlKind::HexPads, L"hexPads" },
+        };
+
+        constexpr EnumName<MusicalScale> ScaleNames[]
+        {
+            { MusicalScale::Major, L"major" },
+            { MusicalScale::Minor, L"minor" },
+            { MusicalScale::HarmonicMinor, L"harmonicMinor" },
+            { MusicalScale::MelodicMinor, L"melodicMinor" },
+            { MusicalScale::Dorian, L"dorian" },
+            { MusicalScale::Phrygian, L"phrygian" },
+            { MusicalScale::Lydian, L"lydian" },
+            { MusicalScale::Mixolydian, L"mixolydian" },
+            { MusicalScale::Locrian, L"locrian" },
+            { MusicalScale::MajorPentatonic, L"majorPentatonic" },
+            { MusicalScale::MinorPentatonic, L"minorPentatonic" },
+            { MusicalScale::Blues, L"blues" },
+            { MusicalScale::WholeTone, L"wholeTone" },
+        };
+
+        // A key's root travels as a name for the same reason an enum does: a number in a file
+        // is unreadable. Sharps throughout, because this is an identity and not something shown.
+        constexpr EnumName<int32_t> KeyRootNames[]
+        {
+            { NoKey, L"none" },
+            { 0, L"c" },
+            { 1, L"cSharp" },
+            { 2, L"d" },
+            { 3, L"dSharp" },
+            { 4, L"e" },
+            { 5, L"f" },
+            { 6, L"fSharp" },
+            { 7, L"g" },
+            { 8, L"gSharp" },
+            { 9, L"a" },
+            { 10, L"aSharp" },
+            { 11, L"b" },
+        };
+
+        constexpr EnumName<PadNoteNames> NoteNamesNames[]
+        {
+            { PadNoteNames::Hidden, L"hidden" },
+            { PadNoteNames::Center, L"center" },
+            { PadNoteNames::Top, L"top" },
+            { PadNoteNames::Bottom, L"bottom" },
+            { PadNoteNames::TopLeft, L"topLeft" },
+            { PadNoteNames::TopRight, L"topRight" },
+            { PadNoteNames::BottomLeft, L"bottomLeft" },
+            { PadNoteNames::BottomRight, L"bottomRight" },
+        };
+
+        constexpr EnumName<PadGlide> GlideNames[]
+        {
+            { PadGlide::Off, L"off" },
+            { PadGlide::Portamento, L"portamento" },
+            { PadGlide::PerNoteBend, L"perNoteBend" },
         };
 
         constexpr EnumName<LineEnds> LineEndsNames[]
@@ -211,6 +303,14 @@ namespace glass
             { LineEnds::UseTheme, L"useTheme" },
             { LineEnds::Square, L"square" },
             { LineEnds::Faded, L"faded" },
+        };
+
+        constexpr EnumName<StepDirection> StepDirectionNames[]
+        {
+            { StepDirection::Forward, L"forward" },
+            { StepDirection::Backward, L"backward" },
+            { StepDirection::PingPong, L"pingPong" },
+            { StepDirection::Random, L"random" },
         };
 
         constexpr EnumName<LfoWave> LfoWaveNames[]
@@ -756,6 +856,7 @@ namespace glass
             message.SequenceName = ReadString(object, KeySequence);
             message.TargetPageId = ReadString(object, KeyTargetPage);
             message.TargetLayerId = ReadString(object, KeyTargetLayer);
+            message.Position = ReadInt(object, KeyPosition, -1, -1, MaximumSwitchPositions - 1);
 
             if (auto const words = ReadArray(object, KeyWords))
             {
@@ -778,7 +879,7 @@ namespace glass
             message.Unknown = CaptureUnknown(object,
                 { KeyTrigger, KeyKind, KeyDevice, KeyGroup, KeyChannel, KeyNumber, KeyMinimum,
                   KeyMaximum, KeySystemExclusive, KeyWords, KeySequence, KeyTargetPage,
-                  KeyTargetLayer, KeyMidi1Protocol, KeyDetents, KeyAxis });
+                  KeyTargetLayer, KeyMidi1Protocol, KeyDetents, KeyAxis, KeyPosition });
 
             return message;
         }
@@ -983,6 +1084,124 @@ namespace glass
             return line;
         }
 
+        SwitchSpec ReadSwitch(_In_ mjson::JsonObject const& object) noexcept
+        {
+            SwitchSpec spec{};
+
+            auto const nested = ReadObject(object, KeySwitch);
+
+            if (nested == nullptr)
+            {
+                return spec;
+            }
+
+            if (auto const positions = ReadArray(nested, KeyPositions))
+            {
+                for (uint32_t i = 0;
+                    i < positions.Size() && spec.Positions.size() < static_cast<size_t>(MaximumSwitchPositions);
+                    ++i)
+                {
+                    auto const value = positions.GetAt(i);
+
+                    if (value != nullptr && value.ValueType() == mjson::JsonValueType::String)
+                    {
+                        spec.Positions.push_back(SanitizeStoredString(std::wstring{ value.GetString() }));
+                    }
+                }
+            }
+
+            spec.Unknown = CaptureUnknown(nested, { KeyPositions });
+
+            return spec;
+        }
+
+        StepsSpec ReadSteps(_In_ mjson::JsonObject const& object) noexcept
+        {
+            StepsSpec spec{};
+
+            auto const nested = ReadObject(object, KeySequencer);
+
+            if (nested == nullptr)
+            {
+                return spec;
+            }
+
+            if (auto const pattern = ReadArray(nested, KeyPattern))
+            {
+                for (uint32_t i = 0;
+                    i < pattern.Size() && spec.Pattern.size() < static_cast<size_t>(MaximumSequencerSteps);
+                    ++i)
+                {
+                    auto const value = pattern.GetAt(i);
+
+                    if (value == nullptr || value.ValueType() != mjson::JsonValueType::Object)
+                    {
+                        continue;
+                    }
+
+                    auto const entry = value.GetObject();
+
+                    SequencerStep step{};
+
+                    step.On = ReadBool(entry, KeyOn, true);
+                    step.Note = ReadInt(entry, KeyNote, 60, 0, 127);
+                    step.Velocity = std::clamp(ReadNumber(entry, KeyVelocity, 0.8), 0.0, 1.0);
+                    step.Unknown = CaptureUnknown(entry, { KeyOn, KeyNote, KeyVelocity });
+
+                    spec.Pattern.push_back(std::move(step));
+                }
+            }
+
+            spec.StepsPerBeat = std::clamp(
+                ReadNumber(nested, KeyStepsPerBeat, 4.0), MinimumStepsPerBeat, MaximumStepsPerBeat);
+            spec.Gate = std::clamp(ReadNumber(nested, KeyGate, 0.5), MinimumStepGate, MaximumStepGate);
+            spec.Swing = std::clamp(ReadNumber(nested, KeySwing, 0.5), MinimumStepSwing, MaximumStepSwing);
+            spec.Direction = ValueOf(StepDirectionNames, ReadString(nested, KeyDirection), StepDirection::Forward);
+            spec.Latching = ReadBool(nested, KeyLatching, true);
+            spec.StartsRunning = ReadBool(nested, KeyStartsRunning, false);
+
+            spec.Unknown = CaptureUnknown(nested,
+                { KeyPattern, KeyStepsPerBeat, KeyGate, KeySwing, KeyDirection, KeyLatching, KeyStartsRunning });
+
+            return spec;
+        }
+
+        PadGridSpec ReadPads(_In_ mjson::JsonObject const& object) noexcept
+        {
+            PadGridSpec pads{};
+
+            auto const nested = ReadObject(object, KeyPads);
+
+            if (nested == nullptr)
+            {
+                return pads;
+            }
+
+            pads.PadCount = ReadInt(nested, KeyPadCount, 24, MinimumPadCount, MaximumPadCount);
+            pads.PadSize = std::clamp(ReadNumber(nested, KeyPadSize, 48.0), MinimumPadSize, MaximumPadSize);
+            pads.StartNote = ReadInt(nested, KeyStartNote, 48, 0, 127);
+            pads.RightInterval = ReadInt(nested, KeyRightInterval, 1, MinimumRightInterval, MaximumPadInterval);
+            pads.RowInterval = ReadInt(nested, KeyRowInterval, 5, MinimumRowInterval, MaximumPadInterval);
+            pads.KeyRoot = ValueOf(KeyRootNames, ReadString(nested, KeyMusicalKey), 0);
+            pads.Scale = ValueOf(ScaleNames, ReadString(nested, KeyScale), MusicalScale::Major);
+            pads.NoteNames = ValueOf(NoteNamesNames, ReadString(nested, KeyNoteNames), PadNoteNames::Center);
+            pads.NoteNameSize = std::clamp(ReadNumber(nested, KeyNoteNameSize, 0.0), 0.0, MaximumPadNoteNameSize);
+            pads.RootColor = ReadString(nested, KeyRootColor);
+            pads.InKeyColor = ReadString(nested, KeyInKeyColor);
+            pads.OutOfKeyColor = ReadString(nested, KeyOutOfKeyColor);
+            pads.PressedColor = ReadString(nested, KeyPressedColor);
+            pads.Glide = ValueOf(GlideNames, ReadString(nested, KeyGlide), PadGlide::Off);
+            pads.BendRangeSemitones = ReadInt(
+                nested, KeyBendRange, 48, MinimumBendRangeSemitones, MaximumBendRangeSemitones);
+
+            pads.Unknown = CaptureUnknown(nested,
+                { KeyPadCount, KeyPadSize, KeyStartNote, KeyRightInterval, KeyRowInterval,
+                  KeyMusicalKey, KeyScale, KeyNoteNames, KeyNoteNameSize, KeyRootColor,
+                  KeyInKeyColor, KeyOutOfKeyColor, KeyPressedColor, KeyGlide, KeyBendRange });
+
+            return pads;
+        }
+
         Control ReadControl(_In_ mjson::JsonObject const& object) noexcept
         {            Control control{};
 
@@ -996,6 +1215,7 @@ namespace glass
             control.HueSlot = ReadInt(object, KeyHueSlot, 0, LiteralHue, NeutralSlot);
             control.LiteralColor = ReadString(object, KeyLiteralColor);
             control.AspectLocked = ReadBool(object, KeyAspectLocked, false);
+            control.GroupId = ReadString(object, KeyControlGroup);
             control.Style = ValueOf(StyleNames, ReadString(object, KeyStyle), ControlStyleOverride::UseTheme);
             control.LabelPlaced = ValueOf(LabelPlacedNames, ReadString(object, KeyLabelPlaced), LabelPlacementOverride::UseTheme);
 
@@ -1042,6 +1262,9 @@ namespace glass
             control.Lfo = ReadLfo(object);
             control.Turntable = ReadTurntable(object);
             control.Line = ReadLine(object);
+            control.Switch = ReadSwitch(object);
+            control.Steps = ReadSteps(object);
+            control.Pads = ReadPads(object);
             control.DefaultValue = std::clamp(ReadNumber(object, KeyDefaultValue, 0.0), 0.0, 1.0);
             control.DefaultValueY = std::clamp(ReadNumber(object, KeyDefaultValueY, 0.0), 0.0, 1.0);
             control.ReturnsToDefault = ReadBool(object, KeyReturnsToDefault, false);
@@ -1068,9 +1291,9 @@ namespace glass
 
             control.Unknown = CaptureUnknown(object,
                 { KeyId, KeyKind, KeyLabel, KeyX, KeyY, KeyWidth, KeyHeight, KeyHueSlot,
-                  KeyLiteralColor, KeyAspectLocked, KeyKeyboardOrder, KeyPickup, KeyDefaultValue,
+                  KeyLiteralColor, KeyAspectLocked, KeyControlGroup, KeyKeyboardOrder, KeyPickup, KeyDefaultValue,
                   KeyReturnsToDefault, KeyDrag, KeyTicks, KeyShowDetentValues, KeyPicture,
-                  KeyKeyboard, KeyClock, KeyLfo, KeyTurntable, KeyLine, KeyDefaultValueY, KeyVelocityFromTouch,
+                  KeyKeyboard, KeyClock, KeyLfo, KeyTurntable, KeyLine, KeySwitch, KeySequencer, KeyPads, KeyDefaultValueY, KeyVelocityFromTouch,
                   KeySendsValueOnStart, KeySendInterval, KeyMessages, KeyFeedback,
                   KeyStyle, KeyLabelPlaced, KeyLabelStyle, KeyShowValue });
 
@@ -1269,7 +1492,7 @@ namespace glass
             document.CanvasWidth = ReadInt(root, KeyCanvasWidth, document.PageWidth, 1, 32768);
             document.CanvasHeight = ReadInt(root, KeyCanvasHeight, document.PageHeight, 1, 32768);
 
-            document.ThemeName = ReadString(root, KeyTheme);
+            document.ThemeName = CurrentThemeName(ReadString(root, KeyTheme));
 
             // A theme travels inside the layout file where it has been edited, so a layout sent
             // to somebody looks the way it was built even though they have never seen it. A
@@ -1421,6 +1644,11 @@ namespace glass
                 writer.Write(KeyTargetLayer, message.TargetLayerId);
             }
 
+            if (message.Position >= 0)
+            {
+                writer.Write(KeyPosition, static_cast<int64_t>(message.Position));
+            }
+
             WriteUnknown(writer, message.Unknown);
         }
 
@@ -1443,6 +1671,11 @@ namespace glass
             }
 
             writer.Write(KeyAspectLocked, control.AspectLocked);
+
+            if (!control.GroupId.empty())
+            {
+                writer.Write(KeyControlGroup, control.GroupId);
+            }
 
             // Written only when the control actually disagrees with its theme.
             if (control.Style != ControlStyleOverride::UseTheme)
@@ -1601,6 +1834,75 @@ namespace glass
                 writer.Write(KeyColor, control.Line.Color);
                 writer.Write(KeyEnds, NameOf(LineEndsNames, control.Line.Ends));
                 WriteUnknown(writer, control.Line.Unknown);
+                writer.EndObject();
+            }
+
+            if (control.Kind == ControlKind::Switch || !control.Switch.Positions.empty() || control.Switch.Unknown != nullptr)
+            {
+                writer.BeginObject(KeySwitch);
+                writer.BeginArray(KeyPositions);
+
+                for (auto const& position : control.Switch.Positions)
+                {
+                    writer.WriteArrayString(position);
+                }
+
+                writer.EndArray();
+                WriteUnknown(writer, control.Switch.Unknown);
+                writer.EndObject();
+            }
+
+            if (control.Kind == ControlKind::Steps || !control.Steps.Pattern.empty() || control.Steps.Unknown != nullptr)
+            {
+                auto const& steps = control.Steps;
+
+                writer.BeginObject(KeySequencer);
+                writer.BeginArray(KeyPattern);
+
+                for (auto const& step : steps.Pattern)
+                {
+                    writer.BeginObject();
+                    writer.Write(KeyOn, step.On);
+                    writer.Write(KeyNote, static_cast<int64_t>(step.Note));
+                    writer.Write(KeyVelocity, step.Velocity);
+                    WriteUnknown(writer, step.Unknown);
+                    writer.EndObject();
+                }
+
+                writer.EndArray();
+                writer.Write(KeyStepsPerBeat, steps.StepsPerBeat);
+                writer.Write(KeyGate, steps.Gate);
+                writer.Write(KeySwing, steps.Swing);
+                writer.Write(KeyDirection, NameOf(StepDirectionNames, steps.Direction));
+                writer.Write(KeyLatching, steps.Latching);
+                writer.Write(KeyStartsRunning, steps.StartsRunning);
+                WriteUnknown(writer, steps.Unknown);
+                writer.EndObject();
+            }
+
+            if (control.Kind == ControlKind::NotePads ||
+                control.Kind == ControlKind::HexPads ||
+                control.Pads.Unknown != nullptr)
+            {
+                auto const& pads = control.Pads;
+
+                writer.BeginObject(KeyPads);
+                writer.Write(KeyPadCount, static_cast<int64_t>(pads.PadCount));
+                writer.Write(KeyPadSize, pads.PadSize);
+                writer.Write(KeyStartNote, static_cast<int64_t>(pads.StartNote));
+                writer.Write(KeyRightInterval, static_cast<int64_t>(pads.RightInterval));
+                writer.Write(KeyRowInterval, static_cast<int64_t>(pads.RowInterval));
+                writer.Write(KeyMusicalKey, NameOf(KeyRootNames, pads.KeyRoot));
+                writer.Write(KeyScale, NameOf(ScaleNames, pads.Scale));
+                writer.Write(KeyNoteNames, NameOf(NoteNamesNames, pads.NoteNames));
+                writer.Write(KeyNoteNameSize, pads.NoteNameSize);
+                writer.Write(KeyRootColor, pads.RootColor);
+                writer.Write(KeyInKeyColor, pads.InKeyColor);
+                writer.Write(KeyOutOfKeyColor, pads.OutOfKeyColor);
+                writer.Write(KeyPressedColor, pads.PressedColor);
+                writer.Write(KeyGlide, NameOf(GlideNames, pads.Glide));
+                writer.Write(KeyBendRange, static_cast<int64_t>(pads.BendRangeSemitones));
+                WriteUnknown(writer, pads.Unknown);
                 writer.EndObject();
             }
 

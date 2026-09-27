@@ -40,9 +40,9 @@ namespace winrt::midiglass::implementation
     {
         namespace automation = ::winrt::Microsoft::UI::Xaml::Automation;
 
-        // The comp's gallery: three cards across, 9 px apart, each one a 62 px painted miniature
-        // of its own deck with its name under it.
-        constexpr int32_t GalleryColumns = 3;
+        // The gallery: four cards across, 9 px apart, each one a 62 px painted miniature of its
+        // own deck with its name under it.
+        constexpr int32_t GalleryColumns = 4;
         constexpr double GalleryCardWidth = 152.0;
         constexpr double GalleryGap = 9.0;
         constexpr double GalleryPreviewHeight = 62.0;

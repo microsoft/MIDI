@@ -165,7 +165,7 @@ If it ever does need more, the right escape hatch is a **tiny expression grammar
 
 A theme is **six hue slots, a deck, and a handful of control defaults**. A control stores "slot 3", never `#FFC247`. Switch theme and every amber control becomes lime together, and the mute buttons still all match. A control can still override with a literal color when it has to, and the theme editor says how many controls are using each slot so a customer knows what a change will touch.
 
-- Shipped themes: **Studio Dark**, **Neon Booth**, **Daylight**, **Blueprint**, **High contrast**, and the nine worked out below — Pigment Light, Pigment Dark, Bigwig, Bone, Cathode, **Amber Console**, Terminal Green, Jove and Supersaw. Amber Console was a swatch in this picker from the start; screen 17 is that swatch finally built, which is why it keeps the name rather than getting a new one. Two more, **Five-iSH** and **Airy System**, are designed on screens 21 and 22 and not built yet.
+- Shipped themes: **Studio Dark**, **Neon Booth**, **Daylight**, **Blueprint**, **High contrast**, and the nine worked out below — Tonal Light, Tonal Dark, Bigwig, Bone, Cathode, **Terminal Amber**, Terminal Green, Jove and Supersaw. Terminal Amber was a swatch in this picker from the start, called Amber Console; screen 17 is that swatch finally built. It was renamed so it sorts beside Terminal Green, and Pigment Light and Pigment Dark became Tonal Light and Tonal Dark because Pigments is a synth and the name suggested a link that is not there. A layout that names an old theme still opens in it. Two more, **Five-iSH** and **Airy System**, are designed on screens 21 and 22.
 - Deck: one color, a two-stop gradient, or an image.
 - Control defaults in the theme: corner rounding, glass tint percentage, glow strength, label placement. This is how a customer makes their whole surface squarer or flatter in one move.
 - **Contrast is measured, not guessed.** Each slot is checked against the deck and flagged before it ships to a stage. In the mockup, slot 5 at 4.1 : 1 is called out with what to do about it.
@@ -173,7 +173,7 @@ A theme is **six hue slots, a deck, and a handful of control defaults**. A contr
 - A theme is a small separate file, so one can be saved and reused across layouts, or shared.
 - The **High contrast** theme is *offered, never forced*. If Windows switches to a high-contrast theme while a layout is running, the running layout is left alone and the offer waits until it is next opened. Reskinning a performer's surface mid-set would be worse than the problem it solves.
 
-### Two tonal themes: Pigment Light and Pigment Dark
+### Two tonal themes: Tonal Light and Tonal Dark (designed as Pigment Light and Pigment Dark)
 
 **Screen 11** (`11-tonal-themes.html`). Flat opaque plates instead of glass, and depth carried by a **tonal wash of the control's own hue** instead of a glow. A control at rest is filled rather than outlined, corners are rounder, and pressing it deepens the wash rather than lighting it up. The result reads friendlier and less like stage equipment, which suits a studio, a classroom or a desk in daylight.
 
@@ -226,13 +226,13 @@ The honest trade: in a dark room this is a lamp pointed at the performer. Bone i
 
 Bone and Shadow are the two given colors. The other four slots — sage `#5C6E4E`, ochre `#8F6318`, clay `#9A543E`, slate `#5A647C` and brick `#9B3D34` — are chosen to sit with them, and every one measures 3 : 1 or better against both the plate and the deck.
 
-### The retro set — Cathode, Amber Console and Terminal Green
+### The retro set — Cathode, Terminal Amber and Terminal Green
 
 **Screens 16, 17 and 18.** Three old screens, one ramp machine. Each is the tonal machinery with the hue wash off, the way Bigwig and Bone are, and together they are what finished the theme model — by the third one, nothing new had to be added.
 
 **Cathode** is a black and white television, and it is neither. The glass is a sour olive green when nothing is driving it, the phosphor is blue-white, every edge is soft because a beam has no hard edge, and there is no pure black or pure white anywhere — the palette runs `#101611` to `#F4F8FF` and a sweep of the rendered deck never leaves it except where a scan line crosses a carved slot. What makes it unlike every other theme is that **a tube has one phosphor, so there is no color to tell one control from another with**. Brightness has to carry identity, value and state at once and it cannot: the widest pair of its six slots is 2.32 : 1. So a control here is known by where it sits and what it is called, which is also the first time the full-screen rule about Panic keeping its place has had to do all the work on its own.
 
-**Amber Console** is the P3 terminal, and it is the swatch that had been sitting in the picker since the beginning. Three things make it: the glass is a warm maroon, **the glow is redder than the thing casting it** because P3 decays through red, and brightness moves hue — the ramp runs like heat, from deep ember through orange and amber and yellow to white. That last part gives it something Cathode has not got at all, a second channel, and the numbers say so. What it costs is stated rather than engineered away: the deepest ember fails as type, so the bottom rung of the ramp carries light and never letters.
+**Terminal Amber** (designed as Amber Console) is the P3 terminal, and it is the swatch that had been sitting in the picker since the beginning. Three things make it: the glass is a warm maroon, **the glow is redder than the thing casting it** because P3 decays through red, and brightness moves hue — the ramp runs like heat, from deep ember through orange and amber and yellow to white. That last part gives it something Cathode has not got at all, a second channel, and the numbers say so. What it costs is stated rather than engineered away: the deepest ember fails as type, so the bottom rung of the ramp carries light and never letters.
 
 **Terminal Green** is the green screen, and **the glass is not green**. A terminal has a tinted anti-glare faceplate, so the unlit screen is a cool blue-slate and the phosphor sits a long way from it in hue — built from memory this comes out as green on dark green, which is Cathode with the colors swapped and makes two of the three look like one idea. Every photograph of real hardware also has the room reflected across the upper left of the glass, which is what makes a faceplate read as glass rather than as paint. It has the highest rim contrast of the three and it is the only one where every slot still works filled with a label on it.
 
@@ -363,7 +363,7 @@ Contrast answers "can this be read". It does not answer "can these two controls 
 | --- | --- | --- | --- | --- |
 | Cathode | 6.5 | 5.3 | 2.32 : 1 | 4.53 : 1, the only one that passes |
 | Terminal Green | 20.4 | 8.7 | 3.60 : 1 | 3.25 : 1, fails |
-| Amber Console | 21.9 | 13.6 | 4.18 : 1 | 3.02 : 1, fails |
+| Terminal Amber | 21.9 | 13.6 | 4.18 : 1 | 3.02 : 1, fails |
 
 No pair of Cathode's six slots reaches 3 : 1, so **nothing on that theme can be grouped by color** and the picker has to say so. Amber and Terminal Green both can. And each of the three fails somewhere different — Cathode is the only one whose dimmest slot can carry type, because it has no dim end; Terminal Green is the only one where every slot still works filled with a dark label on it; Amber has the widest pair. None of them wins outright, so the picker should say what each one is for rather than ranking them.
 
@@ -501,7 +501,7 @@ Either MIDI Glass keeps a small scheduler of its own for short sequences and use
 
 ## 13. The name — settled
 
-**MIDI Glass.** Executable `midiglass`, title bar **Windows MIDI Glass**, Start menu **MIDI Glass**. The theme names **Pigment Light**, **Pigment Dark**, **Bigwig** and **Bone** stay too.
+**MIDI Glass.** Executable `midiglass`, title bar **Windows MIDI Glass**, Start menu **MIDI Glass**. The theme names **Bigwig** and **Bone** stay too. **Pigment Light** and **Pigment Dark** were later renamed **Tonal Light** and **Tonal Dark**, and **Amber Console** became **Terminal Amber**.
 
 ---
 

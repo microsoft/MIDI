@@ -18,8 +18,10 @@
 #include "StringResources.h"
 #include "LayoutStore.h"
 #include "ControlFactory.h"
+#include "PadGrid.h"
 
 #include <shobjidl.h>
+#include <cwctype>
 #include <filesystem>
 
 namespace resources = ::midiglass::resources;
@@ -102,6 +104,77 @@ namespace winrt::midiglass::implementation
         };
 
         static_assert(std::size(glass::LfoRateChoices) == std::size(LfoRateKeys));
+
+        constexpr wchar_t const* PadScaleKeys[]
+        {
+            L"PadScaleMajor", L"PadScaleMinor", L"PadScaleHarmonicMinor", L"PadScaleMelodicMinor",
+            L"PadScaleDorian", L"PadScalePhrygian", L"PadScaleLydian", L"PadScaleMixolydian",
+            L"PadScaleLocrian", L"PadScaleMajorPentatonic", L"PadScaleMinorPentatonic",
+            L"PadScaleBlues", L"PadScaleWholeTone",
+        };
+
+        static_assert(std::size(glass::PadScaleOrder) == std::size(PadScaleKeys));
+
+        constexpr wchar_t const* PadNoteNamesKeys[]
+        {
+            L"PadNamesCenter", L"PadNamesTop", L"PadNamesBottom", L"PadNamesTopLeft",
+            L"PadNamesTopRight", L"PadNamesBottomLeft", L"PadNamesBottomRight", L"PadNamesHidden",
+        };
+
+        static_assert(std::size(glass::PadNoteNamesOrder) == std::size(PadNoteNamesKeys));
+
+        constexpr wchar_t const* PadGlideKeys[]
+        {
+            L"PadGlideOff", L"PadGlidePortamento", L"PadGlidePerNoteBend",
+        };
+
+        constexpr wchar_t const* PadGlideCaptionKeys[]
+        {
+            L"PadGlideOffCaption", L"PadGlidePortamentoCaption", L"PadGlidePerNoteBendCaption",
+        };
+
+        static_assert(std::size(glass::PadGlideOrder) == std::size(PadGlideKeys));
+        static_assert(std::size(glass::PadGlideOrder) == std::size(PadGlideCaptionKeys));
+
+        // The named hexagon layouts, then the customer's own.
+        constexpr wchar_t const* PadHexLayoutKeys[]
+        {
+            L"PadHexLayoutWickiHayden", L"PadHexLayoutHarmonicTable", L"PadHexLayoutJanko",
+            L"PadHexLayoutCustom",
+        };
+
+        static_assert(std::size(glass::HexLayoutOrder) + 1 == std::size(PadHexLayoutKeys));
+
+        // Where each row of square pads starts, from the end of the row below up to an octave.
+        constexpr wchar_t const* PadRowKeys[]
+        {
+            L"PadRowCarryOn", L"PadRowSemitone", L"PadRowWholeTone", L"PadRowMinorThird",
+            L"PadRowMajorThird", L"PadRowFourth", L"PadRowTritone", L"PadRowFifth",
+            L"PadRowMinorSixth", L"PadRowMajorSixth", L"PadRowMinorSeventh",
+            L"PadRowMajorSeventh", L"PadRowOctave",
+        };
+
+        static_assert(glass::PadRowChoiceCount == std::size(PadRowKeys));
+
+        // A key as a person picks it: one name for a natural, both names for a black key.
+        std::wstring KeyChoiceName(_In_ int32_t root)
+        {
+            auto const sharp = glass::PadNoteName(60 + root, false);
+            auto const flat = glass::PadNoteName(60 + root, true);
+
+            // The octave number is not part of a key.
+            auto const letter = [](std::wstring name)
+                {
+                    while (!name.empty() && (std::iswdigit(name.back()) || name.back() == L'-'))
+                    {
+                        name.pop_back();
+                    }
+
+                    return name;
+                };
+
+            return sharp == flat ? letter(sharp) : letter(sharp) + L" / " + letter(flat);
+        }
 
         // A figure a person reads, not a float: 4 rather than 4.000000, 1.5 rather than 1.500000.
         std::wstring TrimNumber(_In_ double value)
@@ -220,9 +293,43 @@ namespace winrt::midiglass::implementation
                 LfoRateCombo().Items().Append(box_value(resources::GetString(key)));
             }
 
+            BuildStepsChoices();
+
             for (auto const* const key : SpringTargetKeys)
             {
                 SpringTargetCombo().Items().Append(box_value(resources::GetString(key)));
+            }
+
+            for (auto const* const key : PadScaleKeys)
+            {
+                PadScaleCombo().Items().Append(box_value(resources::GetString(key)));
+            }
+
+            for (auto const* const key : PadNoteNamesKeys)
+            {
+                PadNamesCombo().Items().Append(box_value(resources::GetString(key)));
+            }
+
+            for (auto const* const key : PadGlideKeys)
+            {
+                PadGlideCombo().Items().Append(box_value(resources::GetString(key)));
+            }
+
+            for (auto const* const key : PadHexLayoutKeys)
+            {
+                PadHexLayoutCombo().Items().Append(box_value(resources::GetString(key)));
+            }
+
+            for (auto const* const key : PadRowKeys)
+            {
+                PadRowCombo().Items().Append(box_value(resources::GetString(key)));
+            }
+
+            PadKeyCombo().Items().Append(box_value(resources::GetString(L"PadKeyNone")));
+
+            for (int32_t root = 0; root < 12; ++root)
+            {
+                PadKeyCombo().Items().Append(box_value(winrt::hstring{ KeyChoiceName(root) }));
             }
 
             // The message kinds a control can be driven by. A subset of what it can send:
@@ -270,6 +377,20 @@ namespace winrt::midiglass::implementation
             AttachColorPicker(BlackKeyColorButton(), BlackKeyColorBox(), true, keyboardEdit);
             AttachColorPicker(PressedKeyColorButton(), PressedKeyColorBox(), true, keyboardEdit);
 
+            // Blank is a real answer on all four pad colors too: the theme decides.
+            auto const padEdit = [weak = get_weak()]()
+                {
+                    if (auto strong = weak.get())
+                    {
+                        strong->ApplyPadGridEdit();
+                    }
+                };
+
+            AttachColorPicker(PadRootColorButton(), PadRootColorBox(), true, padEdit);
+            AttachColorPicker(PadInKeyColorButton(), PadInKeyColorBox(), true, padEdit);
+            AttachColorPicker(PadOutOfKeyColorButton(), PadOutOfKeyColorBox(), true, padEdit);
+            AttachColorPicker(PadPressedColorButton(), PadPressedColorBox(), true, padEdit);
+
             AttachColorPicker(PictureTintColorButton(), PictureTintBox(), true,
                 [weak = get_weak()]()
                 {
@@ -287,6 +408,8 @@ namespace winrt::midiglass::implementation
                         strong->ApplyLineEdit();
                     }
                 });
+
+            BuildPicturePanel();
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to build the control property choices.")
     }
@@ -333,22 +456,50 @@ namespace winrt::midiglass::implementation
             if (picture)
             {
                 auto const& image = control.Image;
+                auto const chosen = !image.IsEmpty();
 
-                PictureCaption().Text(winrt::hstring{ image.IsEmpty()
-                    ? std::wstring{ resources::GetString(L"PictureNoneCaption") }
-                    : image.FileName });
+                PictureCaption().Text(winrt::hstring{ chosen
+                    ? image.FileName
+                    : std::wstring{ resources::GetString(L"PictureNoneCaption") } });
 
-                RemovePictureButton().IsEnabled(!image.IsEmpty());
+                RemovePictureButton().IsEnabled(chosen);
+
+                // Nothing below changes anything until there is a picture to change. A switched
+                // off control dims itself; the headings and labels between them do not, so they
+                // are dimmed to match.
+                PictureSettings().IsEnabled(chosen);
+
+                if (chosen)
+                {
+                    PictureSettings().ClearValue(controls::Control::ForegroundProperty());
+                }
+                else
+                {
+                    PictureSettings().Foreground(xaml::Application::Current().Resources()
+                        .Lookup(box_value(L"TextFillColorDisabledBrush")).as<media::Brush>());
+                }
+
                 PictureFitCombo().SelectedIndex(IndexOfValue(PictureFitOrder, image.Fit));
                 PictureOpacitySlider().Value(image.Opacity * 100.0);
                 PictureLoopsCheck().IsChecked(image.Loops);
                 PictureLoopsCheck().IsEnabled(glass::IsVideoFileName(image.FileName));
 
                 PictureZoomSlider().Value(image.Zoom * 100.0);
-                PictureCenterXSlider().Value(image.CenterX * 100.0);
-                PictureCenterYSlider().Value(image.CenterY * 100.0);
                 PictureTintBox().Text(winrt::hstring{ image.TintColor });
                 PictureTintStrengthSlider().Value(image.TintStrength * 100.0);
+
+                RefreshPicturePosition(control);
+            }
+
+            // ---- switch positions ----
+
+            auto const selector = control.Kind == glass::ControlKind::Switch;
+
+            show(SwitchPanel(), selector);
+
+            if (selector)
+            {
+                RefreshSwitchPositions(control);
             }
 
             // ---- keys ----
@@ -372,6 +523,17 @@ namespace winrt::midiglass::implementation
 
                 KeyboardRangeCaption().Text(winrt::hstring{ resources::FormatString(
                     L"KeyboardRangeFormat", NoteName(spec.LowestNote), NoteName(highest)) });
+            }
+
+            // ---- pads ----
+
+            auto const pads = glass::IsPadGrid(control.Kind);
+
+            show(PadGridPanel(), pads);
+
+            if (pads)
+            {
+                RefreshPadGridPanel(control);
             }
 
             // ---- where it starts ----
@@ -402,8 +564,8 @@ namespace winrt::midiglass::implementation
             // ---- how hard it was hit ----
             //
             // A pad and a button are the same control until this is on. It is what makes a pad
-            // worth having its own entry in the palette.
-            auto const padded = control.Kind == glass::ControlKind::Pad;
+            // worth having its own entry in the palette. A grid of pads is pads too.
+            auto const padded = control.Kind == glass::ControlKind::Pad || glass::IsPadGrid(control.Kind);
 
             show(PadVelocityPanel(), padded);
 
@@ -480,6 +642,17 @@ namespace winrt::midiglass::implementation
                 LfoReturnsToRestCheck().IsChecked(spec.ReturnsToRestWhenStopped);
             }
 
+            // ---- the step sequencer ----
+
+            auto const sequencer = control.Kind == glass::ControlKind::Steps;
+
+            show(StepsPanel(), sequencer);
+
+            if (sequencer)
+            {
+                RefreshStepsPanel(control);
+            }
+
             // ---- the platter ----
 
             auto const platter = control.Kind == glass::ControlKind::Turntable;
@@ -524,6 +697,125 @@ namespace winrt::midiglass::implementation
             SpringTargetCombo().SelectedIndex(springIndex);
         }
         MIDI_GLASS_CATCH_AND_LOG(L"Unable to show this control's own properties.")
+    }
+
+    // The pads on a note pad or hex pad control. Called with the inspector already marked as
+    // filling itself in, so nothing set here records an edit.
+    _Use_decl_annotations_
+    void EditorWindow::RefreshPadGridPanel(glass::Control const& control)
+    {
+        auto const show = [](xaml::UIElement const& element, bool visible)
+            {
+                element.Visibility(visible ? xaml::Visibility::Visible : xaml::Visibility::Collapsed);
+            };
+
+        auto const& spec = control.Pads;
+        auto const hex = glass::IsHexPadGrid(control.Kind);
+        auto const keyed = spec.KeyRoot != glass::NoKey;
+
+        PadCountBox().Value(spec.PadCount);
+        PadSizeBox().Value(spec.PadSize);
+        PadStartNoteBox().Value(spec.StartNote);
+        PadRightIntervalBox().Value(spec.RightInterval);
+        PadUpIntervalBox().Value(spec.RowInterval);
+
+        // Square pads pick where each row starts from a list. Hexagons pick a layout by name, or
+        // give both of their intervals.
+        show(PadRowCombo(), !hex);
+        show(PadHexLayoutCombo(), hex);
+        show(PadUpIntervalBox(), hex);
+
+        if (hex)
+        {
+            auto layoutIndex = static_cast<int32_t>(std::size(glass::HexLayoutOrder));
+
+            for (size_t index = 0; index < std::size(glass::HexLayoutOrder); ++index)
+            {
+                if (glass::HexLayoutOrder[index].RightInterval == spec.RightInterval &&
+                    glass::HexLayoutOrder[index].RowInterval == spec.RowInterval)
+                {
+                    layoutIndex = static_cast<int32_t>(index);
+                    break;
+                }
+            }
+
+            PadHexLayoutCombo().SelectedIndex(layoutIndex);
+        }
+        else
+        {
+            // A file can carry a step past an octave. The list is left blank rather than showing
+            // something that is not what the pads do.
+            PadRowCombo().SelectedIndex(
+                spec.RowInterval >= 0 && spec.RowInterval < glass::PadRowChoiceCount ? spec.RowInterval : -1);
+        }
+
+        PadKeyCombo().SelectedIndex(keyed && spec.KeyRoot <= 11 ? spec.KeyRoot + 1 : 0);
+        PadScaleCombo().SelectedIndex(IndexOfValue(glass::PadScaleOrder, spec.Scale));
+        PadScaleCombo().IsEnabled(keyed);
+
+        PadRootColorBox().Text(winrt::hstring{ spec.RootColor });
+        PadInKeyColorBox().Text(winrt::hstring{ spec.InKeyColor });
+        PadOutOfKeyColorBox().Text(winrt::hstring{ spec.OutOfKeyColor });
+        PadPressedColorBox().Text(winrt::hstring{ spec.PressedColor });
+
+        // With no key every pad is in it, so the root and the notes outside it have no color
+        // to set.
+        PadRootColorBox().IsEnabled(keyed);
+        PadRootColorButton().IsEnabled(keyed);
+        PadOutOfKeyColorBox().IsEnabled(keyed);
+        PadOutOfKeyColorButton().IsEnabled(keyed);
+
+        PadNamesCombo().SelectedIndex(IndexOfValue(glass::PadNoteNamesOrder, spec.NoteNames));
+        PadNameSizeBox().Value(spec.NoteNameSize);
+        PadNameSizeBox().IsEnabled(spec.NoteNames != glass::PadNoteNames::Hidden);
+
+        auto const glideIndex = IndexOfValue(glass::PadGlideOrder, spec.Glide);
+
+        PadGlideCombo().SelectedIndex(glideIndex);
+        PadGlideCaption().Text(resources::GetString(PadGlideCaptionKeys[glideIndex]));
+        PadBendRangeBox().Value(spec.BendRangeSemitones);
+        show(PadBendRangeBox(), spec.Glide == glass::PadGlide::PerNoteBend);
+
+        // How the pads actually flowed in this control, worked out the same way the surface
+        // draws them, so the caption can never describe a grid that is not on the page.
+        auto const layout = glass::LayOutPadGrid(spec, hex, control.Width, control.Height);
+        auto const asked = std::clamp(spec.PadSize, glass::MinimumPadSize, glass::MaximumPadSize);
+
+        if (layout.PadWidth + 0.01 < asked)
+        {
+            PadFlowCaption().Text(resources::FormatString(
+                L"PadFlowShrunkFormat",
+                std::to_wstring(layout.Columns),
+                std::to_wstring(layout.Rows),
+                TrimNumber(layout.PadWidth),
+                TrimNumber(asked)));
+        }
+        else
+        {
+            PadFlowCaption().Text(resources::FormatString(
+                L"PadFlowFormat",
+                std::to_wstring(layout.Columns),
+                std::to_wstring(layout.Rows)));
+        }
+
+        auto lowest = 128;
+        auto highest = -1;
+
+        for (auto const& cell : layout.Cells)
+        {
+            if (cell.Note >= 0)
+            {
+                lowest = std::min(lowest, cell.Note);
+                highest = std::max(highest, cell.Note);
+            }
+        }
+
+        auto const flats = keyed && glass::KeyUsesFlats(spec.KeyRoot, spec.Scale);
+
+        PadRangeCaption().Text(highest >= 0
+            ? resources::FormatString(
+                L"PadRangeFormat", glass::PadNoteName(lowest, flats), glass::PadNoteName(highest, flats))
+            : resources::GetString(L"PadRangeNone"));
     }
 
     // Every knob and fader on the layout, so a clock can be told where to get its tempo.

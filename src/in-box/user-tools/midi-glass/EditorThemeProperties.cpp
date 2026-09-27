@@ -9,7 +9,7 @@
 //
 // The rule this file exists to keep: a theme property with no row here is a property nobody can
 // reach. The shipped themes between them use all of it - Bone's warm shadow, Bigwig's neutral
-// rim and lamp ring, Pigment's wash at rest, and the three tube themes' scan lines, corner
+// rim and lamp ring, the tonal themes' wash at rest, and the three tube themes' scan lines, corner
 // fall-off, faceplate reflection, resting glow and bloom color. If a property is added to the
 // model, it gets a row in here in the same change.
 //

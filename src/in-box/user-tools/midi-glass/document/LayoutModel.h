@@ -123,6 +123,29 @@ namespace glass
         // and takes no input: it divides a page the way the lines between groups of sections
         // on a hardware panel do.
         Line = 21,
+
+        // A grid of square pads, each playing a note, colored by whether that note is in the
+        // key. The pads keep their size and flow into rows as the control is resized. Every
+        // finger is its own note, so a chord is a chord.
+        NotePads = 22,
+
+        // The same, with hexagons in rows that sit half a pad over from the row below. With
+        // the right two intervals it is an isomorphic keyboard: a chord or a scale is the same
+        // shape anywhere on it.
+        HexPads = 23,
+
+        // The wheel beside a keyboard. It turns under the thumb rather than jumping to it, and
+        // springs back to the middle when the customer asks for that, which makes it a pitch
+        // wheel; left where it is put, it is a modulation wheel.
+        Wheel = 24,
+
+        // A selector with two or more named positions, like the waveform switch on a synth.
+        // Each position can send its own message, so it can pick a program, a mode or a value.
+        Switch = 25,
+
+        // A step sequencer: a row of notes and rests played in time with the layout's tempo
+        // while it runs. Pressed, it starts or stops, the way an LFO does.
+        Steps = 26,
     };
 
     // The shape an LFO sweeps. The first five repeat, so one cycle of them can be drawn with a
@@ -379,7 +402,9 @@ namespace glass
         double Zoom{ 1.0 };
 
         // Which point of the picture lands in the middle of the control, from 0 at the left or
-        // top to 1 at the right or bottom. Half and half is the middle of the picture.
+        // top to 1 at the right or bottom. Half and half is the middle of the picture. Where the
+        // picture is smaller than the control, the same number is where it sits: 0 against the
+        // left or top edge, 1 against the right or bottom.
         double CenterX{ 0.5 };
         double CenterY{ 0.5 };
 
@@ -566,6 +591,198 @@ namespace glass
     constexpr double MinimumLineThickness = 1.0;
     constexpr double MaximumLineThickness = 64.0;
 
+    // The positions of a switch, in order, by the name printed on each. The first position is
+    // the value 0 and the last is 1, so a message row that follows the value still works.
+    struct SwitchSpec
+    {
+        std::vector<std::wstring> Positions{};
+
+        UnknownFields Unknown{ nullptr };
+    };
+
+    constexpr int32_t MinimumSwitchPositions = 2;
+    constexpr int32_t MaximumSwitchPositions = 16;
+
+    // Which way a step sequencer walks its steps.
+    enum class StepDirection
+    {
+        Forward = 0,
+        Backward = 1,
+
+        // To the last step and back again, without playing either end twice in a row.
+        PingPong = 2,
+
+        // Any step, every time. The same step can come up twice running.
+        Random = 3,
+    };
+
+    // One step of a step sequencer: a note, or a rest.
+    struct SequencerStep
+    {
+        // A step that is off is a rest. It still takes its turn; it just plays nothing.
+        bool On{ true };
+
+        int32_t Note{ 60 };
+
+        // How hard, from 0 to 1 of the note row's own range.
+        double Velocity{ 0.8 };
+
+        UnknownFields Unknown{ nullptr };
+    };
+
+    // A step sequencer: a row of steps, each a note or a rest, played in time with the layout's
+    // tempo while it runs. Where the notes go is the control's ordinary note row, so it plays on
+    // whatever device and channel a keyboard pointed at the same row would.
+    struct StepsSpec
+    {
+        std::vector<SequencerStep> Pattern{};
+
+        // How many steps fit in a beat. Four is sixteenth notes; three is eighth note triplets.
+        double StepsPerBeat{ 4.0 };
+
+        // How much of its step each note sounds for. A little is staccato; all of it is legato.
+        double Gate{ 0.5 };
+
+        // How late every second step lands, the way drum machines count it: 0.5 is straight,
+        // two thirds is a triplet shuffle, and 0.75 is as far as it goes.
+        double Swing{ 0.5 };
+
+        StepDirection Direction{ StepDirection::Forward };
+
+        // Press to start and press again to stop, rather than running only while held.
+        bool Latching{ true };
+
+        // Running the moment the layout opens.
+        bool StartsRunning{ false };
+
+        UnknownFields Unknown{ nullptr };
+    };
+
+    constexpr int32_t MinimumSequencerSteps = 1;
+    constexpr int32_t MaximumSequencerSteps = 64;
+    constexpr int32_t DefaultSequencerSteps = 8;
+
+    constexpr double MinimumStepsPerBeat = 0.25;
+    constexpr double MaximumStepsPerBeat = 8.0;
+
+    constexpr double MinimumStepGate = 0.05;
+    constexpr double MaximumStepGate = 1.0;
+
+    constexpr double MinimumStepSwing = 0.5;
+    constexpr double MaximumStepSwing = 0.75;
+
+    // Which notes a key holds, counted up from its root.
+    enum class MusicalScale
+    {
+        Major = 0,
+        Minor = 1,
+        HarmonicMinor = 2,
+        MelodicMinor = 3,
+        Dorian = 4,
+        Phrygian = 5,
+        Lydian = 6,
+        Mixolydian = 7,
+        Locrian = 8,
+        MajorPentatonic = 9,
+        MinorPentatonic = 10,
+        Blues = 11,
+        WholeTone = 12,
+    };
+
+    // Where the note's name is printed on each pad.
+    enum class PadNoteNames
+    {
+        Hidden = 0,
+        Center = 1,
+        Top = 2,
+        Bottom = 3,
+        TopLeft = 4,
+        TopRight = 5,
+        BottomLeft = 6,
+        BottomRight = 7,
+    };
+
+    // What a finger sliding from one pad onto the next does.
+    enum class PadGlide
+    {
+        // The first note ends and the next one starts, the way a finger dragged along a
+        // keyboard plays each key it crosses.
+        Off = 0,
+
+        // The next note starts before the last one ends, with a Portamento Control message
+        // (control change 84) naming the note it came from. A synth that follows it glides
+        // between the two at its own portamento time, and a mono synth set to legato glides
+        // without it.
+        Portamento = 1,
+
+        // The note that was struck keeps sounding and bends to follow the finger, using MIDI
+        // 2.0 per-note pitch bend, so each finger in a chord bends on its own. A MIDI 1.0
+        // instrument only hears the note that was struck.
+        PerNoteBend = 2,
+    };
+
+    // No key: every pad is the same color.
+    constexpr int32_t NoKey = -1;
+
+    // The pads on a note pad or hex pad control. Width and height come from the control's own
+    // rectangle; this is what is drawn inside it and what each pad plays.
+    struct PadGridSpec
+    {
+        // How many pads there are. They flow into as many rows as the control's width needs.
+        int32_t PadCount{ 24 };
+
+        // How wide one pad is, in page units. The pads shrink to fit only when the control is
+        // too small to hold them all at this size.
+        double PadSize{ 48.0 };
+
+        // The note the bottom left pad plays. 48 is C3 in the naming this app uses everywhere
+        // else.
+        int32_t StartNote{ 48 };
+
+        // Semitones from one pad to the next one on its right.
+        int32_t RightInterval{ 1 };
+
+        // Semitones from one pad to the one above it on square pads, or to the one above and to
+        // the right on hexagons. Zero on square pads means each row carries on from the end of
+        // the row below, so no note appears twice.
+        int32_t RowInterval{ 5 };
+
+        // The key's root, 0 for C up to 11 for B, or NoKey.
+        int32_t KeyRoot{ 0 };
+        MusicalScale Scale{ MusicalScale::Major };
+
+        PadNoteNames NoteNames{ PadNoteNames::Center };
+
+        // Zero means the name is sized to the pad.
+        double NoteNameSize{ 0.0 };
+
+        // Empty means the theme decides. The root is the one pad that has to be found without
+        // looking for it, so it gets a color of its own.
+        std::wstring RootColor{};
+        std::wstring InKeyColor{};
+        std::wstring OutOfKeyColor{};
+        std::wstring PressedColor{};
+
+        PadGlide Glide{ PadGlide::Off };
+
+        // How far a per-note pitch bend reaches either way, in semitones. Sent to the
+        // instrument ahead of every note, so the bend lands on the pitch under the finger.
+        int32_t BendRangeSemitones{ 48 };
+
+        UnknownFields Unknown{ nullptr };
+    };
+
+    constexpr int32_t MinimumPadCount = 1;
+    constexpr int32_t MaximumPadCount = 128;
+    constexpr double MinimumPadSize = 12.0;
+    constexpr double MaximumPadSize = 240.0;
+    constexpr int32_t MinimumRightInterval = 1;
+    constexpr int32_t MinimumRowInterval = 0;
+    constexpr int32_t MaximumPadInterval = 24;
+    constexpr double MaximumPadNoteNameSize = 64.0;
+    constexpr int32_t MinimumBendRangeSemitones = 1;
+    constexpr int32_t MaximumBendRangeSemitones = 96;
+
     // What lights a lamp or moves a meter. A meter following one controller is the ordinary
     // case; a lamp is more often "is anything coming from this device at all".
     enum class FeedbackMode
@@ -732,6 +949,10 @@ namespace glass
         std::wstring TargetPageId{};
         std::wstring TargetLayerId{};
 
+        // On a switch, the one position that sends this row, counted from 0, and it sends its
+        // maximum. -1 is every change, the way a row on any other control works.
+        int32_t Position{ -1 };
+
         UnknownFields Unknown{ nullptr };
     };
 
@@ -766,6 +987,9 @@ namespace glass
         std::wstring Id{};
         ControlKind Kind{ ControlKind::Knob };
         std::wstring Label{};
+
+        // Controls that share this select and move as one. Empty for a control on its own.
+        std::wstring GroupId{};
 
         double X{ 0 };
         double Y{ 0 };
@@ -824,6 +1048,15 @@ namespace glass
         // Only read when the kind is Line.
         LineSpec Line{};
 
+        // Only read when the kind is Switch.
+        SwitchSpec Switch{};
+
+        // Only read when the kind is Steps.
+        StepsSpec Steps{};
+
+        // Only read when the kind is NotePads or HexPads.
+        PadGridSpec Pads{};
+
         // A layout always starts from its own defaults; this is the value it starts at.
         double DefaultValue{ 0.0 };
 
@@ -858,6 +1091,11 @@ namespace glass
     // things and only one of them steps. A finger has one position, so where the messages
     // disagree the widest set wins.
     int32_t DetentStopCount(_In_ Control const& control) noexcept;
+
+    // How many positions a switch has, never fewer than two, and which one a value lands on.
+    int32_t SwitchPositionCount(_In_ Control const& control) noexcept;
+    int32_t SwitchPositionAt(_In_ double value, _In_ int32_t positions) noexcept;
+    double SwitchValueOf(_In_ int32_t position, _In_ int32_t positions) noexcept;
 
     // A list of stops as somebody types it, and back again. Separators are forgiving because a
     // customer copying "10, 17, 38" out of a manual should not have to think about commas.
@@ -1059,6 +1297,10 @@ namespace glass
 
     // Trims, bounds and strips control characters. Used on everything read from a layout file.
     std::wstring SanitizeStoredString(_In_ std::wstring value) noexcept;
+
+    // Copies of grouped controls get groups of their own, so a copy never joins the group it
+    // was copied from. Copies that were together are still together.
+    void RegroupCopies(_Inout_ std::vector<Control>& copies);
 
     // What is wrong with a document, in the order a person would want to fix it. An empty result
     // means the document is safe to run; it never means the document is beautiful.

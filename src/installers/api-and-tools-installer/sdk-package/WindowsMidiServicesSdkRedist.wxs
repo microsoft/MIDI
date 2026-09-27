@@ -23,7 +23,8 @@
                          These names are a contract with ToolLauncher.cpp in midi-settings, which
                          resolves the other tools by convention path.
                          NetworkSetup and BluetoothSetup are not here: those apps ship in the
-                         installer that carries their transport. -->
+                         installer that carries their transport. Glass is not here either: MIDI
+                         Glass has an installer of its own. -->
                     <Directory Id="TOOL_SETTINGS_FOLDER" Name="Settings" />
                     <Directory Id="TOOL_LOOPSETUP_FOLDER" Name="LoopSetup" />
                     <Directory Id="TOOL_SCRATCHPAD_FOLDER" Name="ScratchPad" />
@@ -33,7 +34,6 @@
                     <Directory Id="TOOL_SYSEX_FOLDER" Name="SysEx" />
                     <Directory Id="TOOL_MONITOR_FOLDER" Name="Monitor" />
                     <Directory Id="TOOL_PATCHBAY_FOLDER" Name="Patchbay" />
-                    <Directory Id="TOOL_GLASS_FOLDER" Name="Glass" />
                     <Directory Id="TOOL_TROUBLESHOOTER_FOLDER" Name="Troubleshooter" />
                     <Directory Id="TOOL_NOTIFICATIONS_FOLDER" Name="Notifications" />
                 </Directory>
@@ -177,6 +177,7 @@
             <ComponentRef Id="WindowsMidiServicesToolsRegistration" />
             <ComponentRef Id="WindowsMidiServicesCollectMidiLogsRegistration"/>
             <ComponentRef Id="WindowsMidiServicesMidiFileAssociation"/>
+            <ComponentRef Id="LoopbackSetupProtocol"/>
     </Feature>
 
     <!-- Only for a PC which already had the notifications app starting at sign-in, so that an

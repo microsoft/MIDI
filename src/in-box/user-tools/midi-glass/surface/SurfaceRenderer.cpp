@@ -234,10 +234,15 @@ namespace glass
             case ControlKind::Joystick:
             case ControlKind::Ribbon:
             case ControlKind::PianoKeyboard:
+            case ControlKind::NotePads:
+            case ControlKind::HexPads:
             case ControlKind::BeatClock:
             case ControlKind::TimeDisplay:
             case ControlKind::Lfo:
             case ControlKind::Turntable:
+            case ControlKind::Wheel:
+            case ControlKind::Switch:
+            case ControlKind::Steps:
             case ControlKind::Line:
                 return true;
 
@@ -322,11 +327,14 @@ namespace glass
             case ControlKind::Button:
             case ControlKind::PageTab:
             case ControlKind::PianoKeyboard:
+            case ControlKind::NotePads:
+            case ControlKind::HexPads:
                 return projected::SurfaceControlRole::Button;
 
             case ControlKind::Toggle:
             case ControlKind::BeatClock:
             case ControlKind::Lfo:
+            case ControlKind::Steps:
                 return projected::SurfaceControlRole::Toggle;
 
             case ControlKind::Label:
@@ -933,14 +941,19 @@ namespace glass
         m_returnsToRest.push_back(control.ReturnsToDefault);
         m_dragAxes.push_back(control.Drag);
         m_keyboards.push_back(control.Keyboard);
+        m_padGrids.push_back(control.Pads);
         m_velocityFromTouch.push_back(control.VelocityFromTouch);
-        m_latches.push_back(control.Kind != ControlKind::Lfo || control.Lfo.Latching);
+        m_latches.push_back(
+            control.Kind == ControlKind::Lfo ? control.Lfo.Latching :
+            control.Kind == ControlKind::Steps ? control.Steps.Latching :
+            true);
         m_turnDegrees.push_back(std::clamp(
             control.Turntable.DegreesForFullRange,
             MinimumTurntableDegrees,
             MaximumTurntableDegrees));
         m_pictures.push_back(nullptr);
         m_detentTexts.push_back(nullptr);
+        m_padNames.push_back({});
         m_beatTexts.push_back(nullptr);
         m_beatTextOffsets.push_back(0.0);
         m_tempoTexts.push_back(nullptr);
@@ -976,6 +989,7 @@ namespace glass
         LayoutValueText(itemIndex, control, theme);
         LayoutPicture(itemIndex, control);
         LayoutDetentValues(itemIndex, control, theme);
+        LayoutPadNames(itemIndex, control, theme);
         LayoutBeatText(itemIndex, control, theme);
         LayoutElapsedText(itemIndex, control, theme);
     }
@@ -1265,6 +1279,14 @@ namespace glass
         visual.TouchOverlayBrush = nullptr;
         visual.NotchShape = nullptr;
 
+        visual.PadShapes.clear();
+        visual.PadRestFills.clear();
+        visual.PadRestRims.clear();
+        visual.PadLitFills.clear();
+        visual.PadLitRim = nullptr;
+        visual.PadHeld.clear();
+        visual.PadLayout = PadGridLayout{};
+
         auto const round = IsRoundControl(control.Kind);
 
         // A lamp on its own, on a theme whose lamps are round lenses, is the lens.
@@ -1327,6 +1349,13 @@ namespace glass
                 visual.Root.Children().Remove(visual.Halo);
                 visual.Halo = nullptr;
             }
+
+            if (visual.PadShadow != nullptr)
+            {
+                visual.Root.Children().Remove(visual.PadShadow);
+                visual.PadShadow = nullptr;
+                visual.PadShadowSource = nullptr;
+            }
         }
 
         visual.Root.Size(float2{ width, height });
@@ -1370,6 +1399,10 @@ namespace glass
         auto const isPanel = control.Kind == ControlKind::Panel;
         auto const isLine = control.Kind == ControlKind::Line;
         auto const isFader = control.Kind == ControlKind::Fader;
+
+        // The pads on a grid are what a finger plays. The grid's own plate is only what they sit
+        // on, and it never reacts.
+        auto const isPadGrid = IsPadGrid(control.Kind);
         auto const vertical = IsTallControl(control.Kind, control.Width, control.Height);
         auto const themed = style == ControlStyleOverride::UseTheme || style == ControlStyleOverride::Plate;
 
@@ -1544,6 +1577,7 @@ namespace glass
         // rule and a printed inset do not glow at all.
         auto const glows = colors.Bloom.A > 0 &&
             !isLine &&
+            !isPadGrid &&
             !(isPanel && (plateColor.A == 0 || printedInset));
 
         if (glows)
@@ -1621,6 +1655,7 @@ namespace glass
         // A turned face keeps its shading, so there the wash goes over it rather than in place
         // of it.
         if (colors.TouchPlate.A != 0 &&
+            !isPadGrid &&
             style != ControlStyleOverride::Solid &&
             style != ControlStyleOverride::Bare &&
             !hasFace)
@@ -1635,7 +1670,7 @@ namespace glass
             visual.PlateTouchBrush = nullptr;
         }
 
-        visual.RimTouchBrush = (rimColor.A != 0 && colors.TouchRim.A != 0)
+        visual.RimTouchBrush = (rimColor.A != 0 && colors.TouchRim.A != 0 && !isPadGrid)
             ? BrushFor(compositor, colors.TouchRim).as<CompositionBrush>()
             : nullptr;
 
@@ -1893,6 +1928,11 @@ namespace glass
                 LayoutKeyboard(compositor, visual, control, colors, width, height);
                 break;
 
+            case ControlKind::NotePads:
+            case ControlKind::HexPads:
+                LayoutPads(compositor, visual, control, colors, theme, width, height);
+                break;
+
             case ControlKind::BeatClock:
                 LayoutClock(compositor, visual, control, colors, width, height);
                 break;
@@ -1903,6 +1943,18 @@ namespace glass
 
             case ControlKind::Turntable:
                 LayoutTurntable(compositor, visual, control, colors, width, height);
+                break;
+
+            case ControlKind::Wheel:
+                LayoutWheel(compositor, visual, control, colors, width, height);
+                break;
+
+            case ControlKind::Switch:
+                LayoutSwitch(compositor, visual, control, colors, width, height);
+                break;
+
+            case ControlKind::Steps:
+                LayoutSteps(compositor, visual, control, colors, width, height);
                 break;
 
             case ControlKind::Line:
@@ -2886,6 +2938,11 @@ namespace glass
             controls::Canvas::SetLeft(element, control.X);
             controls::Canvas::SetTop(element, control.Y);
 
+            if (itemIndex < m_padGrids.size())
+            {
+                m_padGrids[itemIndex] = control.Pads;
+            }
+
             LayoutVisual(compositor, m_visuals[itemIndex], control, theme, SurfaceFor(itemIndex, control));
             SetValue(itemIndex, m_values[itemIndex]);
             SetValueY(itemIndex, m_valuesY[itemIndex]);
@@ -2893,6 +2950,7 @@ namespace glass
             LayoutValueText(itemIndex, control, theme);
             LayoutPicture(itemIndex, control);
             LayoutDetentValues(itemIndex, control, theme);
+            LayoutPadNames(itemIndex, control, theme);
             LayoutBeatText(itemIndex, control, theme);
             LayoutElapsedText(itemIndex, control, theme);
         }
@@ -2934,11 +2992,13 @@ namespace glass
         m_returnsToRest.clear();
         m_dragAxes.clear();
         m_keyboards.clear();
+        m_padGrids.clear();
         m_velocityFromTouch.clear();
         m_latches.clear();
         m_turnDegrees.clear();
         m_pictures.clear();
         m_detentTexts.clear();
+        m_padNames.clear();
         m_beatTexts.clear();
         m_beatTextOffsets.clear();
         m_tempoTexts.clear();
@@ -3178,6 +3238,12 @@ namespace glass
     }
 
     _Use_decl_annotations_
+    int32_t SurfaceRenderer::SwitchPositionsAt(size_t itemIndex) const noexcept
+    {
+        return itemIndex < m_visuals.size() ? m_visuals[itemIndex].SwitchPositions : 0;
+    }
+
+    _Use_decl_annotations_
     bool SurfaceRenderer::ReturnsToRestAt(size_t itemIndex) const noexcept
     {
         return itemIndex < m_returnsToRest.size() && m_returnsToRest[itemIndex];
@@ -3237,6 +3303,12 @@ namespace glass
         {
             controls::Canvas::SetLeft(m_detentTexts[itemIndex], x);
             controls::Canvas::SetTop(m_detentTexts[itemIndex], y);
+        }
+
+        if (itemIndex < m_padNames.size() && m_padNames[itemIndex].Host != nullptr)
+        {
+            controls::Canvas::SetLeft(m_padNames[itemIndex].Host, x);
+            controls::Canvas::SetTop(m_padNames[itemIndex].Host, y);
         }
 
         if (itemIndex < m_beatTexts.size() && m_beatTexts[itemIndex] != nullptr)
@@ -3306,6 +3378,49 @@ namespace glass
                 {
                     visual.PointerShape.RotationAngleInDegrees(
                         static_cast<float>((clamped - 0.5f) * TurnDegreesAt(itemIndex)));
+                }
+
+                return;
+            }
+
+            // The drum rolls: the middle of the travel puts the painted line in the middle.
+            if (visual.Kind == ControlKind::Wheel)
+            {
+                if (visual.WheelDrum != nullptr)
+                {
+                    auto const shift = (0.5f - clamped) * visual.WheelTravel;
+
+                    visual.WheelDrum.Offset(visual.WheelVertical
+                        ? float2{ 0.0f, shift }
+                        : float2{ -shift, 0.0f });
+                }
+
+                return;
+            }
+
+            // One position lit, and its name inked to read on the light.
+            if (visual.Kind == ControlKind::Switch)
+            {
+                auto const chosen = static_cast<size_t>(SwitchPositionAt(clamped, visual.SwitchPositions));
+
+                for (size_t position = 0; position < visual.SwitchSegments.size(); ++position)
+                {
+                    visual.SwitchSegments[position].FillBrush(
+                        position == chosen ? visual.SwitchLitFill : visual.SwitchRestFill);
+                }
+
+                if (itemIndex < m_padNames.size())
+                {
+                    auto const& names = m_padNames[itemIndex];
+
+                    for (size_t position = 0; position < names.Texts.size(); ++position)
+                    {
+                        if (names.Texts[position] != nullptr)
+                        {
+                            names.Texts[position].Foreground(
+                                position == chosen ? names.LitInks[position] : names.RestInks[position]);
+                        }
+                    }
                 }
 
                 return;

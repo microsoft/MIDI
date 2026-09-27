@@ -7,6 +7,7 @@ Painting a page, and turning a finger on it into a value.
 | `GlassControl.*` | One XAML element per control: a place in the tree, hit testing, focus, automation. |
 | `SurfaceAutomationPeer.*` | What that element owes a screen reader. |
 | `SurfaceRenderer.*` | The composition visuals drawn inside each element. |
+| `SurfacePads.cpp` | The rest of `SurfaceRenderer` for note pads and hex pads: one shape per pad, its color, its note name, and which pads are held. |
 | `InputRouter.*` | Pointer, pen and touch to a control to a value. |
 | `InputRules.*` | Which way a finger moves a control. Pure, and tested. |
 | `SurfaceColors.*` | What color a control ends up, given a theme. Pure, and tested. |
@@ -36,10 +37,11 @@ From a finger touching glass to a message leaving there is one frame of budget a
 | Fader, XY pad | Jumps to where it was touched, and follows |
 | Knob, encoder | Nudged, not set. A knob has no travel under the finger, so jumping would make every touch a wild move |
 | Pad, button, page tab | Momentary: sends on press and again on release |
+| Note pads, hex pads | Every finger plays its own pad, so chords work. A finger that slides onto another pad does what the control's glide setting says: plays the new note, glides to it with portamento, or bends the note it started on. Only the pads light; the grid they sit on never reacts |
 | Toggle | Flips on press |
 | Meter, lamp, readout, label, image | Nothing. They display |
 
-**One finger per control.** A second pointer on a control somebody is already using is ignored rather than fought over, which would make the value jump between two positions.
+**One finger per control.** A second pointer on a control somebody is already using is ignored rather than fought over, which would make the value jump between two positions. Note pads and hex pads are the exception: there, each finger is its own note.
 
 **A fader laid out wider than it is tall is a horizontal fader.** The axis follows the rectangle rather than the name of the control.
 

@@ -75,6 +75,35 @@ namespace winrt::midiglass::implementation
                 }
             };
 
+        m_player->StepMoved = [weak](uint32_t controlIndex, int32_t stepIndex, bool running)
+            {
+                auto strong = weak.get();
+
+                if (strong == nullptr || strong->m_closing)
+                {
+                    return;
+                }
+
+                size_t itemIndex{ 0 };
+
+                if (!strong->m_renderer.TryFindItem(controlIndex, itemIndex))
+                {
+                    return;
+                }
+
+                strong->m_renderer.SetCurrentStep(itemIndex, running ? stepIndex : -1);
+
+                if (!running)
+                {
+                    strong->m_renderer.SetValue(itemIndex, 0.0);
+
+                    if (auto element = strong->m_renderer.ElementAt(itemIndex))
+                    {
+                        winrt::get_self<implementation::GlassControl>(element)->SetValueDirect(0.0);
+                    }
+                }
+            };
+
         m_player->TempoChanged = [weak](uint32_t controlIndex, double beatsPerMinute)
             {
                 auto strong = weak.get();
@@ -252,6 +281,32 @@ namespace winrt::midiglass::implementation
         if (m_player != nullptr)
         {
             m_player->KeyChanged(m_renderer.ControlIndexOf(itemIndex), key, velocity, isDown);
+        }
+    }
+
+    _Use_decl_annotations_
+    void RuntimeWindow::OnControlPadTouched(size_t itemIndex, glass::PadTouch const& touch)
+    {
+        if (m_player == nullptr)
+        {
+            return;
+        }
+
+        auto const controlIndex = m_renderer.ControlIndexOf(itemIndex);
+
+        switch (touch.Phase)
+        {
+        case glass::PadTouchPhase::Down:
+            m_player->PadPressed(controlIndex, touch.Touch, touch.Note, touch.Velocity, touch.Pitch);
+            break;
+
+        case glass::PadTouchPhase::Move:
+            m_player->PadMoved(controlIndex, touch.Touch, touch.Note, touch.Velocity, touch.Pitch);
+            break;
+
+        case glass::PadTouchPhase::Up:
+            m_player->PadReleased(controlIndex, touch.Touch);
+            break;
         }
     }
 

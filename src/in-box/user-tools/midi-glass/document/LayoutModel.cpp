@@ -179,8 +179,9 @@ namespace glass
             {
                 if (rendered <= space)
                 {
-                    // Smaller than the control, so there is nothing to pan.
-                    return (space - rendered) * 0.5;
+                    // Smaller than the control, so the same number says where it sits instead:
+                    // 0 against the left or top, 1 against the right or bottom.
+                    return (space - rendered) * std::clamp(centerFraction, 0.0, 1.0);
                 }
 
                 return std::clamp(
@@ -194,6 +195,39 @@ namespace glass
             place(picture.CenterY, height, available.Height),
             std::max(width, 1.0),
             std::max(height, 1.0) };
+    }
+
+    _Use_decl_annotations_
+    int32_t SwitchPositionCount(Control const& control) noexcept
+    {
+        return std::clamp(
+            static_cast<int32_t>(control.Switch.Positions.size()),
+            MinimumSwitchPositions,
+            MaximumSwitchPositions);
+    }
+
+    _Use_decl_annotations_
+    int32_t SwitchPositionAt(double value, int32_t positions) noexcept
+    {
+        auto const count = std::max(positions, MinimumSwitchPositions);
+
+        if (!std::isfinite(value))
+        {
+            return 0;
+        }
+
+        return std::clamp(
+            static_cast<int32_t>(std::lround(std::clamp(value, 0.0, 1.0) * (count - 1))),
+            0,
+            count - 1);
+    }
+
+    _Use_decl_annotations_
+    double SwitchValueOf(int32_t position, int32_t positions) noexcept
+    {
+        auto const count = std::max(positions, MinimumSwitchPositions);
+
+        return static_cast<double>(std::clamp(position, 0, count - 1)) / static_cast<double>(count - 1);
     }
 
     _Use_decl_annotations_
@@ -468,6 +502,42 @@ namespace glass
     std::wstring SanitizeStoredString(std::wstring value) noexcept
     {
         return midiapp::SanitizeStoredString(std::move(value));
+    }
+
+    _Use_decl_annotations_
+    void RegroupCopies(std::vector<Control>& copies)
+    {
+        std::vector<std::pair<std::wstring, std::wstring>> renamed{};
+
+        for (auto& copy : copies)
+        {
+            if (copy.GroupId.empty())
+            {
+                continue;
+            }
+
+            auto found = std::find_if(renamed.begin(), renamed.end(),
+                [&copy](auto const& pair) { return pair.first == copy.GroupId; });
+
+            if (found == renamed.end())
+            {
+                renamed.emplace_back(copy.GroupId, LayoutDocument::NewId());
+                found = std::prev(renamed.end());
+            }
+
+            copy.GroupId = found->second;
+        }
+
+        // A copy of one member of a group is a control on its own, not a group of one.
+        for (auto& copy : copies)
+        {
+            if (!copy.GroupId.empty() &&
+                std::count_if(copies.begin(), copies.end(),
+                    [&copy](Control const& other) { return other.GroupId == copy.GroupId; }) < 2)
+            {
+                copy.GroupId.clear();
+            }
+        }
     }
 
     namespace

@@ -59,9 +59,24 @@ namespace glass
             // A platter is pushed with a whole hand, so it is the biggest round thing on the
             // page by some way.
             case ControlKind::Turntable: return { 160, 160 };
+            case ControlKind::Wheel: return { 44, 160 };
+            case ControlKind::Switch: return { 180, 44 };
+
+            // Eight steps at a width a finger can pick one out of, and tall enough for a bar
+            // per step to show how hard it plays.
+            case ControlKind::Steps: return { 320, 96 };
 
             // Across by default. The short side is the handle the editor grabs, not the line.
             case ControlKind::Line: return { 240, 8 };
+
+            // Three rows of eight 48 px pads, with the gap between them and round the outside.
+            // A new control works this back into a pad size, so the three rows survive whatever
+            // the page template scales it to.
+            case ControlKind::NotePads: return { 428, 164 };
+
+            // The same for hexagons, whose rows nest half a pad into each other and whose
+            // second row sits half a pad to the right.
+            case ControlKind::HexPads: return { 456, 160 };
             }
 
             return { 56, 56 };
