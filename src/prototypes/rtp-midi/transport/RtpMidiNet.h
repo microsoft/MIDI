@@ -434,7 +434,7 @@ namespace RtpMidiNet
     // DNS-SD registration through the Windows DNS client. Registered once for the life of a host:
     // every new registration announces the shared PTR record with the cache-flush bit set, which
     // briefly removes other devices' AppleMIDI sessions from caches on the network. The endpoint
-    // manager repeats the announcement correctly afterward. See RtpMidiMdns.h.
+    // manager repeats the announcement correctly afterward. See midi_dnssd_announcer.h.
     class DnssdAdvertiser
     {
     public:

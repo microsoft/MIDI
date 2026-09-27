@@ -318,9 +318,10 @@ namespace
 
     // An advertised name as the service sees it, from what was typed. Exact matches win, then a
     // name which contains what was typed, as long as only one does.
-    bool TryMatchPeer(std::wstring const& typed, rtp::MidiRtpAdvertisedPeer& match)
+    bool TryMatchPeer(std::wstring const& typed, rtp::MidiRtpAdvertisedPeer& match, bool& ambiguous)
     {
         match = nullptr;
+        ambiguous = false;
 
         auto const wanted = Fold(typed);
         std::vector<rtp::MidiRtpAdvertisedPeer> partial;
@@ -346,6 +347,8 @@ namespace
 
         if (partial.size() > 1)
         {
+            ambiguous = true;
+
             Print("More than one advertised device matches \"%s\":", ToUtf8(typed).c_str());
             for (auto const& peer : partial) Print("  \"%s\"", Text(peer.ServiceInstanceName()).c_str());
         }
@@ -412,12 +415,18 @@ namespace
         else
         {
             rtp::MidiRtpAdvertisedPeer peer{ nullptr };
+            bool ambiguous{ false };
 
-            if (TryMatchPeer(target, peer))
+            if (TryMatchPeer(target, peer, ambiguous))
             {
                 config.RemoteServiceInstanceName(peer.ServiceInstanceName());
                 Print("Connecting to \"%s\" as \"%s\"...%s", Text(peer.ServiceInstanceName()).c_str(), ToUtf8(ourName).c_str(),
                     peer.IsThisPc() ? " (a host on this PC)" : "");
+            }
+            else if (ambiguous)
+            {
+                Print("Nothing was created. Type the whole name, in quotes if it has spaces.");
+                return 1;
             }
             else
             {

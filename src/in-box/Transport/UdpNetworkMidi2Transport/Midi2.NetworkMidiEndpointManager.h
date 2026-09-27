@@ -122,6 +122,11 @@ public:
         _In_ winrt::hstring const& hostNameOrIPAddress,
         _In_ uint16_t const hostPort);
 
+    // A host's DNS-SD registration, for the repeated announcements in midi_dnssd_announcer.h.
+    // The label is the one actually on the network. Withdraw it before the registration is.
+    void OnHostRegistered(_In_ std::wstring_view const serviceInstanceLabel);
+    void OnHostRegistrationEnding(_In_ std::wstring_view const serviceInstanceLabel) noexcept;
+
 
 private:
     STDMETHOD(CreateNewEndpoint(
@@ -149,6 +154,7 @@ private:
         _Inout_ std::vector<DEVPROPERTY>& properties);
 
     ::WindowsMidiServicesInternal::MidiDnssdBrowser m_browser;
+    ::WindowsMidiServicesInternal::MidiDnssdFollowUpAnnouncer m_dnssdAnnouncer;
 
     void OnAdvertisedHostAdded(_In_ ::WindowsMidiServicesInternal::MidiDnssdService const& service);
     void OnAdvertisedHostUpdated(_In_ ::WindowsMidiServicesInternal::MidiDnssdService const& service);

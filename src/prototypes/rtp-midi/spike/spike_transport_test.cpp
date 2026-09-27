@@ -16,6 +16,7 @@
 #include "spike_mdns_watch.h"
 
 #include "../transport/RtpMidiMdns.h"
+#include "midi_dnssd_announcer.h"
 
 #include <objbase.h>
 #include "WindowsMidiServices.h"
@@ -1288,7 +1289,7 @@ int RunTransportTest(std::wstring const& dllPath)
             "host name: none when two different hosts list the same address");
 
         std::string const macName{ "Pete\xE2\x80\x99s MacBook Pro" };
-        auto const packets = RtpMidiMdns::BuildPtrAnnouncements("_apple-midi._udp.local", { "Pete PC", macName }, 4500, 1200);
+        auto const packets = WindowsMidiServicesInternal::BuildDnssdPtrAnnouncements("_apple-midi._udp.local", { "Pete PC", macName }, 4500, 1200);
 
         Check(packets.size() == 1, "announcement: two hosts fit in one packet");
 
@@ -1315,16 +1316,16 @@ int RunTransportTest(std::wstring const& dllPath)
             }
         }
 
-        Check(RtpMidiMdns::BuildPtrAnnouncements("_apple-midi._udp.local", { "", "a.b", std::string(64, 'x') }, 4500, 1200).empty(),
+        Check(WindowsMidiServicesInternal::BuildDnssdPtrAnnouncements("_apple-midi._udp.local", { "", "a.b", std::string(64, 'x') }, 4500, 1200).empty(),
             "announcement: empty, dotted and over-long labels are left out");
-        Check(RtpMidiMdns::BuildPtrAnnouncements("", { "Pete PC" }, 4500, 1200).empty(), "announcement: nothing without a service type");
-        Check(RtpMidiMdns::BuildPtrAnnouncements("_apple-midi..local", { "Pete PC" }, 4500, 1200).empty(),
+        Check(WindowsMidiServicesInternal::BuildDnssdPtrAnnouncements("", { "Pete PC" }, 4500, 1200).empty(), "announcement: nothing without a service type");
+        Check(WindowsMidiServicesInternal::BuildDnssdPtrAnnouncements("_apple-midi..local", { "Pete PC" }, 4500, 1200).empty(),
             "announcement: nothing for a service type with an empty label");
 
         std::vector<std::string> many;
         for (int i = 0; i < 40; i++) many.push_back("Host " + std::to_string(i) + std::string(50, 'h'));
 
-        auto const split = RtpMidiMdns::BuildPtrAnnouncements("_apple-midi._udp.local", many, 4500, 1200);
+        auto const split = WindowsMidiServicesInternal::BuildDnssdPtrAnnouncements("_apple-midi._udp.local", many, 4500, 1200);
 
         bool splitRight = split.size() > 1;
         size_t splitRecords{ 0 };
@@ -1337,6 +1338,122 @@ int RunTransportTest(std::wstring const& dllPath)
         }
 
         Check(splitRight && splitRecords == many.size(), "announcement: forty hosts split across packets under the limit, none lost");
+    }
+
+    // ------------------------------------------------------------------------------------------
+    Print("10. When the follow-up announcer repeats, with the network replaced by a recorder");
+
+    {
+        using WindowsMidiServicesInternal::MidiDnssdAnnouncementResult;
+        using WindowsMidiServicesInternal::MidiDnssdFollowUpAnnouncer;
+
+        struct SentRepeat
+        {
+            uint64_t Tick{ 0 };
+            std::vector<std::string> Records;
+        };
+
+        std::mutex sentLock;
+        std::vector<SentRepeat> sent;
+
+        auto const recorder = [&](std::vector<std::vector<uint8_t>> const& repeatPackets)
+        {
+            SentRepeat repeat{ GetTickCount64(), {} };
+
+            for (auto const& packet : repeatPackets)
+            {
+                Spike::Mdns::Message message{};
+                if (!Spike::Mdns::Parse(packet.data(), packet.size(), message)) continue;
+
+                for (auto const& record : message.Records) repeat.Records.push_back(record.Data);
+            }
+
+            auto lock = std::scoped_lock{ sentLock };
+            sent.push_back(std::move(repeat));
+
+            return MidiDnssdAnnouncementResult{ 1, 1, 0 };
+        };
+
+        auto const sentSoFar = [&]() { auto lock = std::scoped_lock{ sentLock }; return sent; };
+        auto const forget = [&]() { auto lock = std::scoped_lock{ sentLock }; sent.clear(); };
+
+        {
+            MidiDnssdFollowUpAnnouncer announcer;
+            Check(announcer.Start(L"_apple-midi._udp.local", nullptr, recorder, 150, 450) == S_OK, "announcer: starts");
+
+            auto const added = GetTickCount64();
+            announcer.AddRegistration(L"Pete PC");
+
+            Check(WaitFor([&]() { return sentSoFar().size() >= 2; }, 3000), "announcer: two repeats after one registration");
+
+            auto const repeats = sentSoFar();
+
+            if (repeats.size() >= 2)
+            {
+                Check(repeats[0].Tick >= added + 150 && repeats[1].Tick >= added + 450, "announcer: neither repeat comes early");
+                Check(repeats[0].Records == std::vector<std::string>{ "-> Pete PC._apple-midi._udp.local" } && repeats[1].Records == repeats[0].Records,
+                    "announcer: each repeat names the host");
+            }
+
+            Sleep(600);
+            Check(sentSoFar().size() == 2, "announcer: nothing more once both repeats are out");
+        }
+
+        forget();
+
+        {
+            MidiDnssdFollowUpAnnouncer announcer;
+            announcer.Start(L"_apple-midi._udp.local", nullptr, recorder, 150, 450);
+
+            announcer.AddRegistration(L"Gone Host");
+            announcer.RemoveRegistration(L"gone host");
+
+            Sleep(700);
+            Check(sentSoFar().empty(), "announcer: a withdrawn host is never repeated, matched without regard to case");
+        }
+
+        forget();
+
+        {
+            MidiDnssdFollowUpAnnouncer announcer;
+            announcer.Start(L"_apple-midi._udp.local", nullptr, recorder, 300, 900);
+
+            auto const firstAdded = GetTickCount64();
+            announcer.AddRegistration(L"First");
+
+            Sleep(200);
+
+            auto const secondAdded = GetTickCount64();
+            announcer.AddRegistration(L"Second");
+            announcer.AddRegistration(L"SECOND");
+
+            Check(WaitFor([&]() { return sentSoFar().size() >= 2; }, 3000), "announcer: two repeats for a burst of registrations");
+
+            auto const repeats = sentSoFar();
+
+            if (repeats.size() >= 2)
+            {
+                // held back, it would come 300 ms after the second registration instead of about 100
+                Check(repeats[0].Tick >= firstAdded + 300 && repeats[0].Tick < secondAdded + 200,
+                    "announcer: a later registration does not hold back the first repeat");
+                Check(repeats[1].Tick >= secondAdded + 900, "announcer: the last repeat waits for the last registration");
+                Check(repeats[0].Records.size() == 2 && repeats[1].Records.size() == 2, "announcer: each repeat names every host, once");
+            }
+        }
+
+        forget();
+
+        {
+            MidiDnssdFollowUpAnnouncer announcer;
+            announcer.Start(L"_apple-midi._udp.local", nullptr, recorder, 150, 450);
+
+            announcer.AddRegistration(L"Stopped Host");
+            announcer.Stop();
+            announcer.AddRegistration(L"Added After Stop");
+
+            Sleep(700);
+            Check(sentSoFar().empty(), "announcer: nothing is sent once it has stopped");
+        }
     }
 
     Print("");

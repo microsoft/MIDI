@@ -29,7 +29,7 @@
 #include "spike_mdns_watch.h"
 #include "spike_net.h"
 
-#include "../transport/RtpMidiMdns.h"
+#include "midi_dnssd_announcer.h"
 
 #include <map>
 #include <set>
@@ -485,14 +485,16 @@ namespace
                 registeredLabel.resize(registeredLabel.size() - suffix.size());
             }
 
-            auto const packets = RtpMidiMdns::BuildPtrAnnouncements(ToUtf8(type), { ToUtf8(registeredLabel) }, 4500, 1200);
+            auto const packets = WindowsMidiServicesInternal::BuildDnssdPtrAnnouncements(ToUtf8(type), { ToUtf8(registeredLabel) },
+                WindowsMidiServicesInternal::MidiDnssdAnnouncedPtrTtlSeconds, WindowsMidiServicesInternal::MidiDnssdAnnouncementMaxPacketBytes);
+
             auto const registeredAt = started + elapsed;
 
-            for (auto const delay : { 1500ull, 4500ull })
+            for (auto const delay : { WindowsMidiServicesInternal::MidiDnssdFirstRepeatDelayMilliseconds, WindowsMidiServicesInternal::MidiDnssdSecondRepeatDelayMilliseconds })
             {
                 while (GetTickCount64() < registeredAt + delay) Sleep(10);
 
-                auto const result = RtpMidiMdns::SendAnnouncements(packets);
+                auto const result = WindowsMidiServicesInternal::SendDnssdAnnouncements(packets);
 
                 Print("  follow-up announcement at +%llu ms: %zu packet(s) on %u IPv4 and %u IPv6 interfaces, last error %d",
                     delay, packets.size(), result.IPv4Interfaces, result.IPv6Interfaces, result.LastError);

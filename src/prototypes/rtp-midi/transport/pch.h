@@ -100,6 +100,7 @@ namespace internal = ::WindowsMidiServicesInternal;
 #include "Feature_Servicing_MIDI2SchedulerV2.h"
 
 #include "midi_dnssd_browser.h"
+#include "midi_dnssd_announcer.h"
 
 #include "Midi2RtpMidiTransport_i.c"
 #include "Midi2RtpMidiTransport.h"

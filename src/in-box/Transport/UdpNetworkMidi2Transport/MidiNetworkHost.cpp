@@ -361,6 +361,12 @@ MidiNetworkHost::Stop()
     // First step: stop advertising so no one is encouraged to bug us
     if (m_advertiser)
     {
+        // before the goodbye, so no repeat of the announcement can follow it
+        if (auto endpointManager = TransportState::Current().GetEndpointManager())
+        {
+            endpointManager->OnHostRegistrationEnding(ActualServiceInstanceName());
+        }
+
         RETURN_IF_FAILED(m_advertiser->Shutdown());
         m_advertiser.reset();
     }
@@ -426,6 +432,15 @@ MidiNetworkHost::Start()
         TraceLoggingWideString(L"Enter", MIDI_TRACE_EVENT_MESSAGE_FIELD)
     );
 
+    // Started again while running, the host replaces its socket and its registration below.
+    // Withdrawn first, so no repeat of the old announcement can follow the old one's goodbye.
+    if (m_advertiser != nullptr)
+    {
+        if (auto runningEndpointManager = TransportState::Current().GetEndpointManager())
+        {
+            runningEndpointManager->OnHostRegistrationEnding(ActualServiceInstanceName());
+        }
+    }
 
     {
         DatagramSocket socket;
@@ -604,6 +619,14 @@ MidiNetworkHost::Start()
             m_hostDefinition.UmpEndpointName,
             m_hostDefinition.ProductInstanceId
         ));
+
+        // The DNS client announces a new registration once, and wrongly, so the transport repeats
+        // it. See midi_dnssd_announcer.h.
+        try
+        {
+            endpointManager->OnHostRegistered(ActualServiceInstanceName());
+        }
+        CATCH_LOG();
     }
 
     m_started = true;

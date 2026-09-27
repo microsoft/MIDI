@@ -6,6 +6,9 @@
 #define STRICT
 #endif
 
+// before windows.h, which otherwise brings in the older winsock.h that winsock2.h cannot follow
+#include <winsock2.h>
+#include <ws2tcpip.h>
 #include <windows.h>
 #include <mmdeviceapi.h>        // mostly for E_NOTFOUND
 #include <hstring.h>
@@ -151,6 +154,9 @@ struct MidiNetworkHostDefinition;
 // Shared with the SDK. Windows.Devices.Enumeration is not used for discovery because its
 // DNS-SD watcher never reports a service going away. See the header for the measurements.
 #include "midi_dnssd_browser.h"
+
+// Repeats the DNS client's announcements of this PC's hosts, which it gets wrong
+#include "midi_dnssd_announcer.h"
 
 
 #include "Midi2.NetworkMidiTransport.h"
