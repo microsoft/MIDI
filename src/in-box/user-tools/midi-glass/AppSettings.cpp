@@ -251,4 +251,35 @@ namespace midiglass
 
         SaveRecentLayouts();
     }
+
+    _Use_decl_annotations_
+    void AppSettings::RenameLayouts(std::vector<std::pair<std::wstring, std::wstring>> const& renamed) noexcept
+    {
+        try
+        {
+            auto changed = false;
+
+            for (auto const& [from, to] : renamed)
+            {
+                auto const oldKey = LowerCopy(from);
+
+                for (auto& entry : m_recentLayouts)
+                {
+                    if (entry.first == oldKey)
+                    {
+                        entry.first = LowerCopy(to);
+                        changed = true;
+                    }
+                }
+            }
+
+            if (changed)
+            {
+                SaveRecentLayouts();
+            }
+        }
+        catch (...)
+        {
+        }
+    }
 }

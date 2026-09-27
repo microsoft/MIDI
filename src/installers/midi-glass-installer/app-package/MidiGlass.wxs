@@ -58,9 +58,74 @@
             </RegistryKey>
         </Component>
 
+        <!--
+            Lets the customer double-click a .midilayout file to run it in MIDI Glass.
+
+            !! THIS DELIBERATELY DOES NOT TAKE THE DEFAULT ASSOCIATION. !!
+            Same rules as the MIDI file association for the player in the SDK installer: this
+            registers a ProgId, adds it to the extension's OpenWithProgIds list and publishes the
+            app's capabilities. The extension's own default value is never written, so Windows asks
+            the customer once, on the first double-click.
+
+            Themes (.miditheme) are not registered. They are imported from inside the app, which
+            does nothing with a theme named on its command line.
+
+            The names are indirect string references into the executable (see resource.h there),
+            so they are localized along with the rest of the app.
+        -->
+        <Component Id="MidiGlassLayoutFileAssociation"
+                   Bitness="always64"
+                   Directory="TOOL_GLASS_FOLDER"
+                   Guid="fede6a6b-7ae8-404b-aea1-d870fa45e08f">
+
+            <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\WindowsMidiServices.MidiLayout" ForceDeleteOnUninstall="yes">
+                <RegistryValue Type="string" Value="MIDI Glass layout" />
+                <RegistryValue Type="string" Name="FriendlyTypeName" Value="@[#midiglassExe],-101" />
+                <RegistryKey Key="DefaultIcon">
+                    <RegistryValue Type="string" Value="[#midiglassExe],0" />
+                </RegistryKey>
+                <RegistryKey Key="shell\open\command">
+                    <RegistryValue Type="string" Value="&quot;[#midiglassExe]&quot; &quot;%1&quot;" />
+                </RegistryKey>
+            </RegistryKey>
+
+            <!-- Adding to the list, not replacing the default. -->
+            <RegistryValue Root="HKLM" Key="SOFTWARE\Classes\.midilayout\OpenWithProgIds" Name="WindowsMidiServices.MidiLayout" Type="string" Value="" />
+
+            <!-- What puts the app in the Open With list, and gives it a name there. -->
+            <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Applications\midiglass.exe" ForceDeleteOnUninstall="yes">
+                <RegistryValue Type="string" Name="FriendlyAppName" Value="@[#midiglassExe],-102" />
+                <RegistryKey Key="shell\open\command">
+                    <RegistryValue Type="string" Value="&quot;[#midiglassExe]&quot; &quot;%1&quot;" />
+                </RegistryKey>
+                <RegistryKey Key="SupportedTypes">
+                    <RegistryValue Type="string" Name=".midilayout" Value="" />
+                </RegistryKey>
+            </RegistryKey>
+
+            <!-- Default apps in Settings reads this. -->
+            <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\MIDI Glass\Capabilities" ForceDeleteOnUninstall="yes">
+                <RegistryValue Type="string" Name="ApplicationName" Value="@[#midiglassExe],-102" />
+                <RegistryValue Type="string" Name="ApplicationDescription" Value="@[#midiglassExe],-103" />
+                <RegistryKey Key="FileAssociations">
+                    <RegistryValue Type="string" Name=".midilayout" Value="WindowsMidiServices.MidiLayout" />
+                </RegistryKey>
+            </RegistryKey>
+
+            <RegistryValue Root="HKLM" Key="SOFTWARE\RegisteredApplications"
+                           Name="Windows MIDI Glass"
+                           Type="string"
+                           Value="SOFTWARE\Microsoft\Windows MIDI Services\MIDI Glass\Capabilities" />
+
+            <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows MIDI Services\MIDI Glass">
+                <RegistryValue Type="string" Name="LayoutFileAssociation" Value="registered" KeyPath="yes" />
+            </RegistryKey>
+        </Component>
+
         <Feature Id="MidiGlass">
             <ComponentGroupRef Id="MidiGlassFiles" />
             <ComponentRef Id="MidiGlassShortcut" />
+            <ComponentRef Id="MidiGlassLayoutFileAssociation" />
         </Feature>
 
     </Package>

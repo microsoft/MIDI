@@ -80,7 +80,7 @@ Sixteen themes come with MIDI Glass. They're part of the app rather than files o
 
 ### Your own theme files
 
-Your own themes are files in this folder, one theme per file, each ending in `.miditheme.json`:
+Your own themes are files in this folder, one theme per file, each ending in `.miditheme`:
 
 ```
 Documents\MIDI Layouts\Themes
@@ -91,6 +91,7 @@ Documents\MIDI Layouts\Themes
 - Every theme in the folder shows up in the gallery for every layout on that PC, after the sixteen built-in ones.
 - The file name doesn't have to match the theme's name. When MIDI Glass saves a theme, it names the file after the theme and swaps any character Windows doesn't allow in a file name (`\ / : * ? " < > |`) for an underscore.
 - MIDI Glass reads the folder each time it shows the gallery. If you add a file while the app is open, open the layout's **Appearance** settings again to see it.
+- Older versions of MIDI Glass named theme files `.miditheme.json`. The app still reads those, and renames them to `.miditheme` the next time it starts.
 
 A theme file shows up in the gallery only if all of these are true:
 
@@ -130,7 +131,7 @@ Picking a theme in the gallery drops any copy the layout was carrying and makes 
 
 ### Sharing and installing a theme
 
-- **To share a theme,** send its `.miditheme.json` file.
+- **To share a theme,** send its `.miditheme` file.
 - **To install a theme you were sent,** copy the file into `Documents\MIDI Layouts\Themes`, or open a layout in the editor and use **Import a theme…** on its **Appearance** page. Import copies the file into the Themes folder under the theme's name, replacing an older file with that name, and puts the theme on the layout you have open.
 - **To save a theme from the app,** use **Save these colors as a theme…** on the **Appearance** page. MIDI Glass won't save under a built-in theme's name. After saving, the layout points at the new file by name instead of carrying its own copy.
 - **To share a layout that uses a theme of your own,** make sure the layout carries the theme. Exporting a layout package doesn't include files from your Themes folder, so if the layout only names your theme, the person you send it to sees Studio Dark. Send the theme file along with it, or change any setting on the layout's **Appearance** page so the layout stores its own copy.
@@ -604,7 +605,7 @@ Save the file as UTF-8 without a byte order mark, in the customer's Themes folde
 $folder = Join-Path ([Environment]::GetFolderPath('MyDocuments')) 'MIDI Layouts\Themes'
 New-Item -ItemType Directory -Path $folder -Force | Out-Null
 
-$path = Join-Path $folder 'Harbor.miditheme.json'
+$path = Join-Path $folder 'Harbor.miditheme'
 [IO.File]::WriteAllText($path, $json, [Text.UTF8Encoding]::new($false))   # $false: no byte order mark
 
 # Check it the way the app reads it. ReadAllText hides a byte order mark, so look at the bytes.
